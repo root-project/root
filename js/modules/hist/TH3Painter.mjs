@@ -1,4 +1,4 @@
-import { gStyle, settings, kInspect, clTF3, clTProfile3D, isFunc } from '../core.mjs';
+import { gStyle, settings, kInspect, clTF1, clTF3, clTProfile3D, BIT, isFunc } from '../core.mjs';
 import { Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
@@ -7,6 +7,7 @@ import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { createLineSegments, PointsCreator, Box3D } from '../base/base3d.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { assignFrame3DMethods } from './hist3d.mjs';
+import { proivdeEvalPar, getTF1Value } from './TF1Painter.mjs';
 
 
 /**
@@ -51,6 +52,10 @@ class TH3Painter extends THistPainter {
          this.gminposbin = this.gmaxbin*1e-4;
 
       this.draw_content = this.gmaxbin > 0;
+
+      this.transferFunc = this.findFunction(clTF1, 'TransferFunction');
+      if (this.transferFunc && !this.transferFunc.TestBit(BIT(9))) // TF1::kNotDraw
+         this.transferFunc.InvertBit(BIT(9));
    }
 
    /** @summary Count TH3 statistic */
@@ -241,7 +246,6 @@ class TH3Painter extends THistPainter {
          stat.addText(`Kurtosis z = ${stat.format(data.kurtz)}`);
       }
 
-
       if (dofit) stat.fillFunctionStat(this.findFunction(clTF3), dofit, 3);
 
       return true;
@@ -381,9 +385,8 @@ class TH3Painter extends THistPainter {
       const histo = this.getHisto(),
             main = this.getFramePainter();
 
-
       let buffer_size = 0, use_lambert = false,
-          use_helper = false, use_colors = false, use_opacity = 1,
+          use_helper = false, use_colors = false, use_opacity = 1, exclude_content = -1,
           logv = this.getPadPainter()?.getRootPad()?.fLogv,
           use_scale = true, scale_offset = 0,
           single_bin_verts, single_bin_norms,
@@ -451,6 +454,7 @@ class TH3Painter extends THistPainter {
             use_opacity = 0.5;
             use_scale = false;
             use_helper = false;
+            exclude_content = 0;
             use_lambert = true;
          }
       }
@@ -469,6 +473,7 @@ class TH3Painter extends THistPainter {
          use_scale = (this.gminbin || this.gmaxbin) ? 1 / Math.max(Math.abs(this.gminbin), Math.abs(this.gmaxbin)) : 1;
 
       const get_bin_weight = content => {
+         if ((exclude_content >= 0) && (content < exclude_content)) return 0;
          if (!use_scale) return 1;
          if (logv) {
             if (content <= 0) return 0;
@@ -488,10 +493,19 @@ class TH3Painter extends THistPainter {
       const scalex = (main.grx(histo.fXaxis.GetBinLowEdge(i2+1)) - main.grx(histo.fXaxis.GetBinLowEdge(i1+1))) / (i2-i1),
             scaley = (main.gry(histo.fYaxis.GetBinLowEdge(j2+1)) - main.gry(histo.fYaxis.GetBinLowEdge(j1+1))) / (j2-j1),
             scalez = (main.grz(histo.fZaxis.GetBinLowEdge(k2+1)) - main.grz(histo.fZaxis.GetBinLowEdge(k1+1))) / (k2-k1),
-            cols_size = [],
+            cols_size = {}, cols_sequence = {},
             cntr = use_colors ? this.getContour() : null,
             palette = use_colors ? this.getHistPalette() : null;
-      let nbins = 0, i, j, k, wei, bin_content, num_colors = 0, cols_sequence = [];
+      let nbins = 0, i, j, k, wei, bin_content, num_colors = 0, transfer = null;
+
+      if (this.transferFunc && proivdeEvalPar(this.transferFunc, true))
+         transfer = this.transferFunc;
+      const getOpacityIndex = colindx => {
+         const bin_opactity = getTF1Value(transfer, bin_content, false) * 3; // try to get opacity
+         if (!bin_opactity || (bin_opactity < 0) || (bin_opactity >= 1))
+            return colindx;
+         return colindx + Math.round(bin_opactity * 200) * 10000; // 200 steps between 0..1
+      };
 
       for (i = i1; i < i2; ++i) {
          for (j = j1; j < j2; ++j) {
@@ -506,8 +520,11 @@ class TH3Painter extends THistPainter {
 
                if (!use_colors) continue;
 
-               const colindx = cntr.getPaletteIndex(palette, bin_content);
+               let colindx = cntr.getPaletteIndex(palette, bin_content);
                if (colindx !== null) {
+                  if (transfer)
+                     colindx = getOpacityIndex(colindx);
+
                   if (cols_size[colindx] === undefined) {
                      cols_size[colindx] = 0;
                      cols_sequence[colindx] = num_colors++;
@@ -520,9 +537,9 @@ class TH3Painter extends THistPainter {
       }
 
       if (!use_colors) {
-         cols_size.push(nbins);
+         cols_size[0] = nbins;
          num_colors = 1;
-         cols_sequence = [0];
+         cols_sequence[0] = 0;
       }
 
       const cols_nbins = new Array(num_colors),
@@ -533,11 +550,9 @@ class TH3Painter extends THistPainter {
             helper_indexes = new Array(num_colors),  // helper_kind === 1, use original vertices
             helper_positions = new Array(num_colors);  // helper_kind === 2, all vertices copied into separate buffer
 
-      for (let ncol = 0; ncol < cols_size.length; ++ncol) {
-         if (!cols_size[ncol]) continue; // ignore dummy colors
-
-         nbins = cols_size[ncol]; // how many bins with specified color
-         const nseq = cols_sequence[ncol];
+      for (const colindx in cols_size) {
+         nbins = cols_size[colindx]; // how many bins with specified color
+         const nseq = cols_sequence[colindx];
 
          cols_nbins[nseq] = helper_kind[nseq] = 0; // counter for the filled bins
 
@@ -572,8 +587,10 @@ class TH3Painter extends THistPainter {
 
                let nseq = 0;
                if (use_colors) {
-                  const colindx = cntr.getPaletteIndex(palette, bin_content);
+                  let colindx = cntr.getPaletteIndex(palette, bin_content);
                   if (colindx === null) continue;
+                  if (transfer)
+                     colindx = getOpacityIndex(colindx);
                   nseq = cols_sequence[colindx];
                }
 
@@ -625,21 +642,24 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      for (let ncol = 0; ncol < cols_size.length; ++ncol) {
-         if (!cols_size[ncol]) continue; // ignore dummy colors
-
-         const nseq = cols_sequence[ncol],
+      for (const colindx in cols_size) {
+         const nseq = cols_sequence[colindx],
                all_bins_buffgeom = new BufferGeometry(); // BufferGeometries that store geometry of all bins
 
          // Create mesh from bin buffergeometry
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
-         if (use_colors) fillcolor = this._color_palette.getColor(ncol);
+         let opacity = use_opacity;
+
+         if (use_colors) {
+            fillcolor = this._color_palette.getColor(colindx % 10000);
+            if (colindx > 10000) opacity = Math.floor(colindx / 10000) / 200;
+         }
 
          const material = use_lambert
-                            ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
-                            : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false }),
+                            ? new MeshLambertMaterial({ color: fillcolor, opacity, transparent: opacity < 1, vertexColors: false })
+                            : new MeshBasicMaterial({ color: fillcolor, opacity, transparent: opacity < 1, vertexColors: false }),
               combined_bins = new Mesh(all_bins_buffgeom, material);
 
          combined_bins.bins = bin_tooltips[nseq];

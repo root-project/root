@@ -1,15 +1,18 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Implement tickz draw option, used for color palette ticks
+1. Implement "tickz" draw option, used for color palette ticks
 2. Implement skewness and kurtosis calculations for histogram stats box
-3. Introduce "logv" draw option for TH3, use logarithmic scale for box volume
-4. Implement color palette drawing for TH3
-5. Implement "[cutg]" draw option for TH2/TF2 surface plots
+3. Introduce "logv" draw option for `TH3`, configures logarithmic scale for box volume
+4. Implement color palette drawing for `TH3`
+5. Implement cutg draw option for `TH2`/`TF2` surface plots
 6. Implement `TMath::Sq()` function and several others like SinH, ASinH, ...
-7. Implement histogram drawing build from TGraph2D using Delaunay interpolation
+7. Implement histogram drawing build from `TGraph2D` using Delaunay interpolation
 8. Provide preliminary `TF3` support
 9. Support `TLinearGradient` and `TRadialGradient` colors
+10. Support LZMA decompression of ROOT files #272
+11. Include ZSTD decompression to repository #274
+12. Support opacity transfer function for `TH3`, see tutorials/gl/glvox2.C
 
 
 ## Changes in 7.5.2
