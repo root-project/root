@@ -43,24 +43,24 @@ Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
    // Bin values in our example range from -2 to 1.
    // Let's make values from -2. to -1.5 more transparent:
    if (*x < -1.5)
-      return 0.08;
+      return 0.008;
 
-   if (*x > -1.5 && *x < -0.5)
+   if (*x < -0.5)
       return 0.015;
 
-   if (*x < -0.5 && *x < 0.)
+   if (*x < 0.)
       return 0.02;
 
-   if (*x > 0 && *x < 0.5)
+   if (*x < 0.5)
       return 0.03;
 
-   if (*x > 0.8)
-      return 0.01;
+   if (*x < 0.8)
+      return 0.04;
 
-   return 0.2;
+   return 0.05;
 }
 
-}
+} // namespace
 
 void glvox2()
 {
@@ -76,7 +76,7 @@ void glvox2()
 
    TH3F *hist = new TH3F("glvoxel", "glvoxel", nX, -1., 1., nY, -1., 1., nZ, -1., 1.);
 
-   //Fill the histogram to create a "sphere".
+   // Fill the histogram to create a "sphere".
    for (UInt_t i = 0; i < nZ; ++i) {
       const Double_t z = zMin + i * zStep;
 
@@ -92,10 +92,10 @@ void glvox2()
       }
    }
 
-   //Now, specify the transfer function.
+   // Now, specify the transfer function.
    TList * lf = hist->GetListOfFunctions();
    if (lf) {
-      TF1 * tf = new TF1("TransferFunction", my_transfer_function);
+      TF1 * tf = new TF1("TransferFunction", my_transfer_function, -2., 1.);
       lf->Add(tf);
    }
 
