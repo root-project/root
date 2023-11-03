@@ -430,3 +430,52 @@ TEST(RNTupleMerger, MergeVector)
       ASSERT_EQ(bar2->at(1), bar3->at(1));
    }
 }
+
+TEST(RNTupleMerger, MergeInconsistentTypes)
+{
+   // Write two test ntuples to be merged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 123;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<float>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 5.67;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Create the output
+      RNTupleWriteOptions writeOpts;
+      writeOpts.SetUseBufferedWrite(false);
+      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+
+      // Now Merge the inputs
+      // We expect this to fail since the fields between the sources do NOT match
+      RNTupleMerger merger;
+      EXPECT_THROW(merger.Merge(sourcePtrs, *destination), ROOT::Experimental::RException);
+   }
+}
