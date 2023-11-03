@@ -64,7 +64,7 @@ public:
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
   bool positiveDefinite() const {return _positiveDefinite;}
 
-  void setInterpCode(RooAbsReal& param, int code, bool silent=false);
+  void setInterpCode(RooAbsReal& param, int code, bool silent=true);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
@@ -98,12 +98,16 @@ protected:
   RooListProxy _highSet ;          ///< High-side variation
   RooListProxy _paramSet ;         ///< interpolation parameters
   RooListProxy _normSet ;          ///< interpolation parameters
-  bool _positiveDefinite;        ///< protect against negative and 0 bins.
+  bool _positiveDefinite = false;  ///< protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
 
   double evaluate() const override;
   void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+
+private:
+
+  void setInterpCodeForParam(int iParam, int code);
 
   ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };
