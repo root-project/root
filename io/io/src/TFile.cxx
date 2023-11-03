@@ -4068,6 +4068,13 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// In RECREATE mode, a nullptr is returned if the file can not be created.
 /// In UPDATE mode, a nullptr is returned if the file cannot be created or opened.
 
+std::unique_ptr<TFile> OpenU(const char *url, Option_t *options, const char *ftitle,
+                   Int_t compress, Int_t netopt)
+{
+   std::unique_ptr<TFile> uniquePtr = std::make_unique<TFile>(&url, &options, &ftitle, compress, netopt);
+   return(uniquePtr);
+}
+
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
