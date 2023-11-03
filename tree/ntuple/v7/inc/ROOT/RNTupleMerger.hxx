@@ -58,11 +58,13 @@ private:
    // Struct to hold column information
    struct RColumnInfo {
       std::string fColumnName;
+      std::string fColumnTypeAndVersion;
       DescriptorId_t fColumnInputId;
       DescriptorId_t fColumnOutputId;
 
-      RColumnInfo(const std::string &name, const DescriptorId_t &inputId, const DescriptorId_t &outputId)
-         : fColumnName(name), fColumnInputId(inputId), fColumnOutputId(outputId)
+      RColumnInfo(const std::string &name, const std::string &typeAndVersion, const DescriptorId_t &inputId,
+                  const DescriptorId_t &outputId)
+         : fColumnName(name), fColumnTypeAndVersion(typeAndVersion), fColumnInputId(inputId), fColumnOutputId(outputId)
       {
       }
    };
@@ -72,8 +74,8 @@ private:
    void BuildColumnIdMap(std::vector<RColumnInfo> &columns)
    {
       for (auto &column : columns) {
-         column.fColumnOutputId = fNameToOutputIdMap.size();
-         fNameToOutputIdMap[column.fColumnName] = column.fColumnOutputId;
+         column.fColumnOutputId = fOutputIdMap.size();
+         fOutputIdMap[column.fColumnName + "." + column.fColumnTypeAndVersion] = column.fColumnOutputId;
       }
    }
 
@@ -82,27 +84,29 @@ private:
    void ValidateColumns(std::vector<RColumnInfo> &columns)
    {
       // First ensure that we have the same number of columns
-      if (fNameToOutputIdMap.size() != columns.size()) {
+      if (fOutputIdMap.size() != columns.size()) {
          throw RException(R__FAIL("Columns between sources do NOT match"));
       }
       // Then ensure that we have the same names of columns and assign the ids
       for (auto &column : columns) {
          try {
-            column.fColumnOutputId = fNameToOutputIdMap.at(column.fColumnName);
+            column.fColumnOutputId = fOutputIdMap.at(column.fColumnName + "." + column.fColumnTypeAndVersion);
          } catch (const std::out_of_range &) {
-            throw RException(R__FAIL("Column NOT found in the first source: " + column.fColumnName));
+            throw RException(R__FAIL("Column NOT found in the first source w/ name " + column.fColumnName +
+                                     " type and version " + column.fColumnTypeAndVersion));
          }
       }
    }
 
-   /// Recursively add columns from a given filed
+   /// Recursively add columns from a given field
    void AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
                             const RFieldDescriptor &fieldDesc, const std::string &suffix = "")
    {
       for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
-         std::string name = suffix + field.GetFieldName();
+         std::string name = suffix + field.GetFieldName() + ".";
+         const std::string typeAndVersion = field.GetTypeName() + "." + std::to_string(field.GetTypeVersion());
          for (const auto &column : desc.GetColumnIterable(field)) {
-            columns.emplace_back(name + std::to_string(column.GetIndex()), column.GetPhysicalId(),
+            columns.emplace_back(name + std::to_string(column.GetIndex()), typeAndVersion, column.GetPhysicalId(),
                                  kInvalidDescriptorId);
          }
          AddColumnsFromField(columns, desc, field, name);
@@ -126,8 +130,8 @@ private:
       return columns;
    }
 
-   // Internal map that holds column name : output ID information
-   std::unordered_map<std::string, DescriptorId_t> fNameToOutputIdMap;
+   // Internal map that holds column name, type, and type id : output ID information
+   std::unordered_map<std::string, DescriptorId_t> fOutputIdMap;
 
 public:
    /// Merge a given set of sources into the destination
