@@ -25,8 +25,8 @@ using namespace std ;
 
 ClassImp(RooBSplineBases)
 
-using namespace RooStats;
-using namespace HistFactory;
+//using namespace RooStats;
+//using namespace HistFactory;
 
 //_____________________________________________________________________________
 RooBSplineBases::RooBSplineBases()

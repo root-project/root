@@ -24,13 +24,14 @@
 #include "TMath.h"
 
 #include "RooBSpline.h"
+#include "RooBSplineBases.h"
 
 using namespace std ;
 
 ClassImp(RooBSpline)
 
-using namespace RooStats;
-using namespace HistFactory;
+//using namespace RooStats;
+//using namespace HistFactory;
 
 //_____________________________________________________________________________
 RooBSpline::RooBSpline()
@@ -443,88 +444,3 @@ RooBSpline::CacheElem::~CacheElem()
 {
   // Destructor
 }
-
-
-
-//_____________________________________________________________________________
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,27,0)
-
-#include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFit/Detail/JSONInterface.h>
-#include <RooFitHS3/JSONIO.h>
-#include <RooWorkspace.h>
-
-using namespace RooFit::Detail;
-
-namespace {
-class RooBSplineStreamer : public RooFit::JSONIO::Exporter {
-public:
-  virtual const std::string& key() const override {
-    static const std::string _key = "BSpline";
-    return _key;
-  }
-  
-  virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
-  {
-    const RooBSpline *spline = static_cast<const RooBSpline *>(func);
-    elem["type"] << key();
-
-    auto &bases = elem["bases"];
-    bases << spline->getBases()->GetName();
-    
-    auto &vars = elem["variables"];
-    vars.set_seq();
-    for(auto w:spline->getVariables()){
-      vars.append_child() << w->GetName();
-    }
-    auto &controlPoints = elem["controlPoints"];
-    controlPoints.set_seq();
-    for(auto w:spline->getControlPoints()){
-      controlPoints.append_child() << w->GetName();
-    }    
-
-    return true;
-  }
-};
-} // namespace
-
-
-namespace {
-class RooBSplineFactory : public RooFit::JSONIO::Importer {
-public:
-   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-     std::string name = RooJSONFactoryWSTool::name(p);
-
-     RooArgList controlPoints;
-     for(const auto& point:p["controlPoints"].children()){
-       controlPoints.add(*tool->workspace()->var(point.val().c_str()));
-     }
-     RooArgList vars;
-     for(const auto& var:p["variables"].children()){
-       controlPoints.add(*tool->workspace()->var(var.val().c_str()));
-     }     
-					
-     
-     RooBSpline* spline = new RooBSpline(name.c_str(),name.c_str(),
-					 controlPoints,
-					 *(RooBSplineBases*)tool->workspace()->function(p["bases"].val().c_str()),
-					 vars);
-     tool->workspace()->import(*spline);
-     delete spline;
-     return true;
-   }
-};
-} // namespace
-
-
-namespace {
-  int register_serializations(){
-    RooFit::JSONIO::registerImporter("BSpline", std::make_unique<RooBSplineFactory>());
-    RooFit::JSONIO::registerExporter(RooBSpline::Class(), std::make_unique<RooBSplineStreamer>());
-    return 1;
-  }
-  int _dummy = register_serializations();
-}
-
-#endif

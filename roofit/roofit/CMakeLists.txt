@@ -87,8 +87,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooBlindTools.cxx
     src/RooBMixDecay.cxx
     src/RooBreitWigner.cxx
-    src/RooBSpline.h
-    src/RooBSplineBases.h
+    src/RooBSpline.cxx
+    src/RooBSplineBases.cxx
     src/RooBukinPdf.cxx
     src/RooCBShape.cxx
     src/RooCrystalBall.cxx
