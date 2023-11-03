@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '1/11/2023',
+version_date = '3/11/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -79898,6 +79898,500 @@ __proto__: null,
 TH2Painter: TH2Painter
 });
 
+/** @summary Assign `evalPar` function for TF1 object
+  * @private */
+
+function proivdeEvalPar(obj, check_save) {
+   obj._math = jsroot_math;
+
+   let _func = obj.fTitle, isformula = false, pprefix = '[';
+   if (_func === 'gaus') _func = 'gaus(0)';
+   if (isStr(obj.fFormula?.fFormula)) {
+     if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') === 0) {
+        isformula = true; pprefix = 'p[';
+        _func = obj.fFormula.fFormula.slice(21);
+     } else {
+        _func = obj.fFormula.fFormula;
+        pprefix = '[p';
+     }
+
+     if (obj.fFormula.fClingParameters && obj.fFormula.fParams) {
+        obj.fFormula.fParams.forEach(pair => {
+           const regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
+               parvalue = obj.fFormula.fClingParameters[pair.second];
+           _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
+        });
+      }
+   }
+
+   if (!_func)
+      return !check_save || (obj.fSave?.length > 2);
+
+   obj.formulas?.forEach(entry => {
+      _func = _func.replaceAll(entry.fName, entry.fTitle);
+   });
+
+   _func = _func.replace(/\b(TMath::SinH)\b/g, 'Math.sinh')
+                .replace(/\b(TMath::CosH)\b/g, 'Math.cosh')
+                .replace(/\b(TMath::TanH)\b/g, 'Math.tanh')
+                .replace(/\b(TMath::ASinH)\b/g, 'Math.asinh')
+                .replace(/\b(TMath::ACosH)\b/g, 'Math.acosh')
+                .replace(/\b(TMath::ATanH)\b/g, 'Math.atanh')
+                .replace(/\b(TMath::ASin)\b/g, 'Math.asin')
+                .replace(/\b(TMath::ACos)\b/g, 'Math.acos')
+                .replace(/\b(TMath::Atan)\b/g, 'Math.atan')
+                .replace(/\b(TMath::ATan2)\b/g, 'Math.atan2')
+                .replace(/\b(sin|SIN|TMath::Sin)\b/g, 'Math.sin')
+                .replace(/\b(cos|COS|TMath::Cos)\b/g, 'Math.cos')
+                .replace(/\b(tan|TAN|TMath::Tan)\b/g, 'Math.tan')
+                .replace(/\b(exp|EXP|TMath::Exp)\b/g, 'Math.exp')
+                .replace(/\b(log|LOG|TMath::Log)\b/g, 'Math.log')
+                .replace(/\b(log10|LOG10|TMath::Log10)\b/g, 'Math.log10')
+                .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
+                .replace(/\b(pi|PI)\b/g, 'Math.PI')
+                .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
+                .replace(/\bxygaus\(/g, 'this._math.gausxy(this, x, y, ')
+                .replace(/\bgaus\(/g, 'this._math.gaus(this, x, ')
+                .replace(/\bgausn\(/g, 'this._math.gausn(this, x, ')
+                .replace(/\bexpo\(/g, 'this._math.expo(this, x, ')
+                .replace(/\blandau\(/g, 'this._math.landau(this, x, ')
+                .replace(/\blandaun\(/g, 'this._math.landaun(this, x, ')
+                .replace(/\bTMath::/g, 'this._math.')
+                .replace(/\bROOT::Math::/g, 'this._math.');
+
+   if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
+      _func = '[0]';
+      for (let k = 1; k < obj.fNpar; ++k)
+         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
+   }
+
+   if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
+      _func = `this._math.ChebyshevN(${obj.fNpar-1}, x, `;
+      for (let k = 0; k < obj.fNpar; ++k)
+         _func += (k === 0 ? '[' : ', ') + `[${k}]`;
+      _func += '])';
+   }
+
+   for (let i = 0; i < obj.fNpar; ++i)
+      _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
+
+   for (let n = 2; n < 10; ++n)
+      _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
+
+   if (isformula) {
+      _func = _func.replace(/x\[0\]/g, 'x');
+      if (obj._typename === clTF3) {
+         _func = _func.replace(/x\[1\]/g, 'y');
+         _func = _func.replace(/x\[2\]/g, 'z');
+         obj.evalPar = new Function('x', 'y', 'z', _func).bind(obj);
+      } else if (obj._typename === clTF2) {
+         _func = _func.replace(/x\[1\]/g, 'y');
+         obj.evalPar = new Function('x', 'y', _func).bind(obj);
+      } else
+         obj.evalPar = new Function('x', _func).bind(obj);
+   } else if (obj._typename === clTF3)
+      obj.evalPar = new Function('x', 'y', 'z', 'return ' + _func).bind(obj);
+   else if (obj._typename === clTF2)
+      obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
+   else
+      obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
+
+   return true;
+}
+
+
+/** @summary Get interpolation in saved buffer
+  * @desc Several checks must be done before function can be used
+  * @private */
+function _getTF1Save(func, x) {
+   const np = func.fSave.length - 3,
+         xmin = func.fSave[np + 1],
+        xmax = func.fSave[np + 2],
+        dx = (xmax - xmin) / np;
+    if (x < xmin)
+       return func.fSave[0];
+    if (x > xmax)
+       return func.fSave[np];
+
+    const bin = Math.min(np - 1, Math.floor((x - xmin) / dx));
+    let xlow = xmin + bin * dx,
+        xup = xlow + dx,
+        ylow = func.fSave[bin],
+        yup = func.fSave[bin + 1];
+
+    if (!Number.isFinite(ylow) && (bin < np - 1)) {
+       xlow += dx; xup += dx;
+       ylow = yup; yup = func.fSave[bin + 2];
+    } else if (!Number.isFinite(yup) && (bin > 0)) {
+       xup -= dx; xlow -= dx;
+       yup = ylow; ylow = func.fSave[bin - 1];
+    }
+
+    return ((xup * ylow - xlow * yup) + x * (yup - ylow)) / dx;
+}
+
+/** @summary Provide TF1 value
+  * @desc First try evaluate, if not possible - check saved buffer
+  * @private */
+function getTF1Value(func, x, skip_eval = undefined) {
+   let y = 0;
+   if (!func)
+      return 0;
+
+   if (!skip_eval && !func.evalPar)
+      proivdeEvalPar(func);
+
+   if (func.evalPar) {
+      try {
+         y = func.evalPar(x);
+         return y;
+      } catch {
+         y = 0;
+      }
+   }
+
+   const np = func.fSave.length - 3;
+   if ((np < 2) || (func.fSave[np + 1] === func.fSave[np + 2])) return 0;
+   return _getTF1Save(func, x);
+}
+
+/** @summary Create log scale for axis bins
+  * @private */
+function produceTAxisLogScale(axis, num, min, max) {
+   let lmin, lmax;
+
+   if (max > 0) {
+      lmax = Math.log(max);
+      lmin = min > 0 ? Math.log(min) : lmax - 5;
+   } else {
+      lmax = -10;
+      lmax = -15;
+   }
+
+   axis.fNbins = num;
+   axis.fXbins = new Array(num + 1);
+   for (let i = 0; i <= num; ++i)
+      axis.fXbins[i] = Math.exp(lmin + i / num * (lmax - lmin));
+   axis.fXmin = Math.exp(lmin);
+   axis.fXmax = Math.exp(lmax);
+}
+
+/**
+  * @summary Painter for TF1 object
+  *
+  * @private
+  */
+
+class TF1Painter extends TH1Painter$2 {
+
+   /** @summary Returns drawn object name */
+   getObjectName() { return this.$func?.fName ?? 'func'; }
+
+   /** @summary Returns drawn object class name */
+   getClassName() { return this.$func?._typename ?? clTF1; }
+
+   /** @summary Returns true while function is drawn */
+   isTF1() { return true; }
+
+   /** @summary Update function */
+   updateObject(obj /*, opt */) {
+      if (!obj || (this.getClassName() !== obj._typename)) return false;
+      delete obj.evalPar;
+      const histo = this.getHisto();
+
+      if (this.webcanv_hist) {
+         const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH1D);
+         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
+      }
+
+      this.$func = obj;
+      this.createTF1Histogram(obj, histo);
+      this.scanContent();
+      return true;
+   }
+
+   /** @summary Redraw TF1
+     * @private */
+   redraw(reason) {
+      if (!this._use_saved_points && (reason === 'logx' || reason === 'zoom')) {
+         this.createTF1Histogram(this.$func, this.getHisto());
+         this.scanContent();
+      }
+
+      return super.redraw(reason);
+   }
+
+   /** @summary Create histogram for TF1 drawing
+     * @private */
+   createTF1Histogram(tf1, hist) {
+      const fp = this.getFramePainter(),
+            pad = this.getPadPainter()?.getRootPad(true),
+            logx = pad?.fLogx,
+            gr = fp?.getGrFuncs(this.second_x, this.second_y);
+      let xmin = tf1.fXmin, xmax = tf1.fXmax;
+
+      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
+         xmin = Math.min(xmin, gr.zoom_xmin);
+         xmax = Math.max(xmax, gr.zoom_xmax);
+      }
+
+      this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || this.force_saved);
+
+      const ensureBins = num => {
+         if (hist.fNcells !== num + 2) {
+            hist.fNcells = num + 2;
+            hist.fArray = new Float32Array(hist.fNcells);
+         }
+         hist.fArray.fill(0);
+         hist.fXaxis.fNbins = num;
+         hist.fXaxis.fXbins = [];
+      };
+
+      delete this._fail_eval;
+
+      // this._use_saved_points = true;
+
+      if (!this._use_saved_points) {
+         const np = Math.max(tf1.fNpx, 100);
+         let iserror = false;
+
+         if (!tf1.evalPar && !proivdeEvalPar(tf1))
+            iserror = true;
+
+         ensureBins(np);
+
+         if (logx)
+            produceTAxisLogScale(hist.fXaxis, np, xmin, xmax);
+          else {
+            hist.fXaxis.fXmin = xmin;
+            hist.fXaxis.fXmax = xmax;
+         }
+
+         for (let n = 0; (n < np) && !iserror; n++) {
+            const x = hist.fXaxis.GetBinCenter(n + 1);
+            let y = 0;
+            try {
+               y = tf1.evalPar(x);
+            } catch (err) {
+               iserror = true;
+            }
+
+            if (!iserror)
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+         }
+
+         if (iserror)
+            this._fail_eval = true;
+
+         if (iserror && (tf1.fSave.length > 3))
+            this._use_saved_points = true;
+      }
+
+      // in the case there were points have saved and we cannot calculate function
+      // if we don't have the user's function
+      if (this._use_saved_points) {
+         const np = tf1.fSave.length - 3;
+         let custom_xaxis = null;
+         xmin = tf1.fSave[np + 1];
+         xmax = tf1.fSave[np + 2];
+
+         if (xmin === xmax) {
+            xmin = tf1.fSave[np];
+            const mp = this.getMainPainter();
+            if (isFunc(mp?.getHisto))
+               custom_xaxis = mp?.getHisto()?.fXaxis;
+            if (!custom_xaxis) {
+               xmin = tf1.fXmin;
+               xmax = tf1.fXmax;
+            }
+         }
+
+         if (custom_xaxis) {
+            ensureBins(hist.fXaxis.fNbins);
+            Object.assign(hist.fXaxis, custom_xaxis);
+            // TODO: find first bin
+
+            for (let n = 0; n < np; ++n) {
+               const y = tf1.fSave[n];
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+            }
+         } else {
+            ensureBins(tf1.fNpx);
+            hist.fXaxis.fXmin = tf1.fXmin;
+            hist.fXaxis.fXmax = tf1.fXmax;
+
+            for (let n = 0; n < tf1.fNpx; ++n) {
+               const y = _getTF1Save(tf1, hist.fXaxis.GetBinCenter(n + 1));
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+            }
+         }
+      }
+
+      hist.fName = 'Func';
+      setHistogramTitle(hist, tf1.fTitle);
+      hist.fMinimum = tf1.fMinimum;
+      hist.fMaximum = tf1.fMaximum;
+      hist.fLineColor = tf1.fLineColor;
+      hist.fLineStyle = tf1.fLineStyle;
+      hist.fLineWidth = tf1.fLineWidth;
+      hist.fFillColor = tf1.fFillColor;
+      hist.fFillStyle = tf1.fFillStyle;
+      hist.fMarkerColor = tf1.fMarkerColor;
+      hist.fMarkerStyle = tf1.fMarkerStyle;
+      hist.fMarkerSize = tf1.fMarkerSize;
+      hist.fBits |= kNoStats;
+   }
+
+   extractAxesProperties(ndim) {
+      super.extractAxesProperties(ndim);
+
+      const func = this.$func, nsave = func?.fSave.length ?? 0;
+
+      if (nsave > 3 && this._use_saved_points) {
+         this.xmin = Math.min(this.xmin, func.fSave[nsave - 2]);
+         this.xmax = Math.max(this.xmax, func.fSave[nsave - 1]);
+      }
+      if (func) {
+         this.xmin = Math.min(this.xmin, func.fXmin);
+         this.xmax = Math.max(this.xmax, func.fXmax);
+      }
+   }
+
+   /** @summary Checks if it makes sense to zoom inside specified axis range */
+   canZoomInside(axis, min, max) {
+      if ((this.$func?.fSave.length > 0) && this._use_saved_points && (axis === 'x')) {
+         // in the case where the points have been saved, useful for example
+         // if we don't have the user's function
+         const nb_points = this.$func.fNpx,
+             xmin = this.$func.fSave[nb_points + 1],
+             xmax = this.$func.fSave[nb_points + 2];
+
+         return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
+      }
+
+      // if function calculated, one always could zoom inside
+      return (axis === 'x') || (axis === 'y');
+   }
+
+      /** @summary retrurn tooltips for TF2 */
+   getTF1Tooltips(pnt) {
+      delete this.$tmp_tooltip;
+      const lines = [this.getObjectHint()],
+            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
+
+      if (!funcs || !isFunc(this.$func?.evalPar)) {
+         lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
+         return lines;
+      }
+
+      const x = funcs.revertAxis('x', pnt.x);
+      let y = 0, gry = 0, iserror = false;
+
+       try {
+          y = this.$func.evalPar(x);
+          gry = Math.round(funcs.gry(y));
+       } catch {
+          iserror = true;
+       }
+
+      lines.push('x = ' + funcs.axisAsText('x', x),
+                 'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
+
+      if (!iserror)
+         this.$tmp_tooltip = { y, gry };
+      return lines;
+   }
+
+   /** @summary process tooltip event for TF1 object */
+   processTooltipEvent(pnt) {
+      if (this._use_saved_points)
+         return super.processTooltipEvent(pnt);
+
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!this.draw_g || !pnt) {
+         ttrect?.remove();
+         return null;
+      }
+
+      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
+                  x: pnt.x, y: pnt.y,
+                  color1: this.lineatt?.color ?? 'green',
+                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+                  lines: this.getTF1Tooltips(pnt), exact: true, menu: true };
+
+      if (ttrect.empty()) {
+         ttrect = this.draw_g.append('svg:circle')
+                             .attr('class', 'tooltip_bin')
+                             .style('pointer-events', 'none')
+                             .style('fill', 'none')
+                             .attr('r', (this.lineatt?.width ?? 1) + 4);
+      }
+
+      ttrect.attr('cx', pnt.x)
+            .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
+            .call(this.lineatt?.func);
+
+      return res;
+   }
+
+   /** @summary fill information for TWebCanvas
+     * @private */
+   fillWebObjectOptions(opt) {
+      // mark that saved points are used or evaluation failed
+      opt.fcust = this._fail_eval ? 'func_fail' : '';
+   }
+
+   /** @summary draw TF1 object */
+   static async draw(dom, tf1, opt) {
+     if (!isStr(opt)) opt = '';
+      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
+      if (p >= 0) {
+         webcanv_hist = true;
+         opt = opt.slice(0, p);
+      }
+      p = opt.indexOf(';force_saved');
+      if (p >= 0) {
+         force_saved = true;
+         opt = opt.slice(0, p);
+      }
+
+      let hist;
+
+      if (webcanv_hist) {
+         const dummy = new ObjectPainter(dom);
+         hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
+      }
+
+      if (!hist) {
+         hist = createHistogram(clTH1D, 100);
+         hist.fBits |= kNoStats;
+      }
+
+      if (!opt && getElementMainPainter(dom))
+         opt = 'same';
+
+      const painter = new TF1Painter(dom, hist);
+
+      painter.$func = tf1;
+      painter.webcanv_hist = webcanv_hist;
+      painter.force_saved = force_saved;
+
+      painter.createTF1Histogram(tf1, hist);
+
+      return THistPainter._drawHist(painter, opt);
+   }
+
+} // class TF1Painter
+
+var TF1Painter$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
+TF1Painter: TF1Painter,
+getTF1Value: getTF1Value,
+produceTAxisLogScale: produceTAxisLogScale,
+proivdeEvalPar: proivdeEvalPar
+});
+
 /**
  * @summary Painter for TH3 classes
  * @private
@@ -79940,6 +80434,10 @@ class TH3Painter extends THistPainter {
          this.gminposbin = this.gmaxbin*1e-4;
 
       this.draw_content = this.gmaxbin > 0;
+
+      this.transferFunc = this.findFunction(clTF1, 'TransferFunction');
+      if (this.transferFunc && !this.transferFunc.TestBit(BIT(9))) // TF1::kNotDraw
+         this.transferFunc.InvertBit(BIT(9));
    }
 
    /** @summary Count TH3 statistic */
@@ -80130,7 +80628,6 @@ class TH3Painter extends THistPainter {
          stat.addText(`Kurtosis z = ${stat.format(data.kurtz)}`);
       }
 
-
       if (dofit) stat.fillFunctionStat(this.findFunction(clTF3), dofit, 3);
 
       return true;
@@ -80270,9 +80767,8 @@ class TH3Painter extends THistPainter {
       const histo = this.getHisto(),
             main = this.getFramePainter();
 
-
       let buffer_size = 0, use_lambert = false,
-          use_helper = false, use_colors = false, use_opacity = 1,
+          use_helper = false, use_colors = false, use_opacity = 1, exclude_content = -1,
           logv = this.getPadPainter()?.getRootPad()?.fLogv,
           use_scale = true, scale_offset = 0,
           single_bin_verts, single_bin_norms,
@@ -80340,6 +80836,7 @@ class TH3Painter extends THistPainter {
             use_opacity = 0.5;
             use_scale = false;
             use_helper = false;
+            exclude_content = 0;
             use_lambert = true;
          }
       }
@@ -80358,6 +80855,7 @@ class TH3Painter extends THistPainter {
          use_scale = (this.gminbin || this.gmaxbin) ? 1 / Math.max(Math.abs(this.gminbin), Math.abs(this.gmaxbin)) : 1;
 
       const get_bin_weight = content => {
+         if ((exclude_content >= 0) && (content < exclude_content)) return 0;
          if (!use_scale) return 1;
          if (logv) {
             if (content <= 0) return 0;
@@ -80377,10 +80875,19 @@ class TH3Painter extends THistPainter {
       const scalex = (main.grx(histo.fXaxis.GetBinLowEdge(i2+1)) - main.grx(histo.fXaxis.GetBinLowEdge(i1+1))) / (i2-i1),
             scaley = (main.gry(histo.fYaxis.GetBinLowEdge(j2+1)) - main.gry(histo.fYaxis.GetBinLowEdge(j1+1))) / (j2-j1),
             scalez = (main.grz(histo.fZaxis.GetBinLowEdge(k2+1)) - main.grz(histo.fZaxis.GetBinLowEdge(k1+1))) / (k2-k1),
-            cols_size = [],
+            cols_size = {}, cols_sequence = {},
             cntr = use_colors ? this.getContour() : null,
             palette = use_colors ? this.getHistPalette() : null;
-      let nbins = 0, i, j, k, wei, bin_content, num_colors = 0, cols_sequence = [];
+      let nbins = 0, i, j, k, wei, bin_content, num_colors = 0, transfer = null;
+
+      if (this.transferFunc && proivdeEvalPar(this.transferFunc, true))
+         transfer = this.transferFunc;
+      const getOpacityIndex = colindx => {
+         const bin_opactity = getTF1Value(transfer, bin_content, false) * 3; // try to get opacity
+         if (!bin_opactity || (bin_opactity < 0) || (bin_opactity >= 1))
+            return colindx;
+         return colindx + Math.round(bin_opactity * 200) * 10000; // 200 steps between 0..1
+      };
 
       for (i = i1; i < i2; ++i) {
          for (j = j1; j < j2; ++j) {
@@ -80395,8 +80902,11 @@ class TH3Painter extends THistPainter {
 
                if (!use_colors) continue;
 
-               const colindx = cntr.getPaletteIndex(palette, bin_content);
+               let colindx = cntr.getPaletteIndex(palette, bin_content);
                if (colindx !== null) {
+                  if (transfer)
+                     colindx = getOpacityIndex(colindx);
+
                   if (cols_size[colindx] === undefined) {
                      cols_size[colindx] = 0;
                      cols_sequence[colindx] = num_colors++;
@@ -80409,9 +80919,9 @@ class TH3Painter extends THistPainter {
       }
 
       if (!use_colors) {
-         cols_size.push(nbins);
+         cols_size[0] = nbins;
          num_colors = 1;
-         cols_sequence = [0];
+         cols_sequence[0] = 0;
       }
 
       const cols_nbins = new Array(num_colors),
@@ -80422,11 +80932,9 @@ class TH3Painter extends THistPainter {
             helper_indexes = new Array(num_colors),  // helper_kind === 1, use original vertices
             helper_positions = new Array(num_colors);  // helper_kind === 2, all vertices copied into separate buffer
 
-      for (let ncol = 0; ncol < cols_size.length; ++ncol) {
-         if (!cols_size[ncol]) continue; // ignore dummy colors
-
-         nbins = cols_size[ncol]; // how many bins with specified color
-         const nseq = cols_sequence[ncol];
+      for (const colindx in cols_size) {
+         nbins = cols_size[colindx]; // how many bins with specified color
+         const nseq = cols_sequence[colindx];
 
          cols_nbins[nseq] = helper_kind[nseq] = 0; // counter for the filled bins
 
@@ -80461,8 +80969,10 @@ class TH3Painter extends THistPainter {
 
                let nseq = 0;
                if (use_colors) {
-                  const colindx = cntr.getPaletteIndex(palette, bin_content);
+                  let colindx = cntr.getPaletteIndex(palette, bin_content);
                   if (colindx === null) continue;
+                  if (transfer)
+                     colindx = getOpacityIndex(colindx);
                   nseq = cols_sequence[colindx];
                }
 
@@ -80514,21 +81024,24 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      for (let ncol = 0; ncol < cols_size.length; ++ncol) {
-         if (!cols_size[ncol]) continue; // ignore dummy colors
-
-         const nseq = cols_sequence[ncol],
+      for (const colindx in cols_size) {
+         const nseq = cols_sequence[colindx],
                all_bins_buffgeom = new BufferGeometry(); // BufferGeometries that store geometry of all bins
 
          // Create mesh from bin buffergeometry
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
-         if (use_colors) fillcolor = this._color_palette.getColor(ncol);
+         let opacity = use_opacity;
+
+         if (use_colors) {
+            fillcolor = this._color_palette.getColor(colindx % 10000);
+            if (colindx > 10000) opacity = Math.floor(colindx / 10000) / 200;
+         }
 
          const material = use_lambert
-                            ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
-                            : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false }),
+                            ? new MeshLambertMaterial({ color: fillcolor, opacity, transparent: opacity < 1, vertexColors: false })
+                            : new MeshBasicMaterial({ color: fillcolor, opacity, transparent: opacity < 1, vertexColors: false }),
               combined_bins = new Mesh(all_bins_buffgeom, material);
 
          combined_bins.bins = bin_tooltips[nseq];
@@ -95905,6 +96418,7 @@ function LZ4_uncompress(input, output, sIdx, eIdx) {
    return j;
 }
 
+
 /** @summary Reads header envelope, determines zipped size and unzip content
   * @return {Promise} with unzipped content
   * @private */
@@ -95926,12 +96440,12 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
 
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'L') && getCode(curr + 2) === 8) { fmt = 'new'; off = 2; } else
          if (checkChar(curr, 'C') && checkChar(curr+1, 'S') && getCode(curr + 2) === 8) { fmt = 'old'; off = 0; } else
-         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) fmt = 'LZMA'; else
+         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) { fmt = 'LZMA'; off = 0; } else
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'S') && getCode(curr + 2) === 1) fmt = 'ZSTD'; else
          if (checkChar(curr, 'L') && checkChar(curr+1, '4')) { fmt = 'LZ4'; off = 0; CHKSUM = 8; }
 
          /*   C H E C K   H E A D E R   */
-         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD')) {
+         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD') && (fmt !== 'LZMA')) {
             if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
             return Promise.resolve(null);
          }
@@ -95939,52 +96453,38 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
          const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
                uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
 
+         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const tgt8arr = new Uint8Array(tgtbuf, fullres);
+
          if (fmt === 'ZSTD') {
-            const handleZsdt = ZstdCodec => {
-               return new Promise((resolveFunc, rejectFunc) => {
-                  ZstdCodec.run(zstd => {
-                     // const simple = new zstd.Simple();
-                     const streaming = new zstd.Streaming(),
-                           data2 = streaming.decompress(uint8arr),
-                           reslen = data2.length;
+            const promise = internals._ZstdStream
+                            ? Promise.resolve(internals._ZstdStream)
+                            : (isNodeJs() ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }) : Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }))
+                              .then(({ ZstdInit }) => ZstdInit()).then(({ ZstdStream }) => { internals._ZstdStream = ZstdStream; return ZstdStream; });
+            return promise.then(ZstdStream => {
+               const data2 = ZstdStream.decompress(uint8arr),
+                     reslen = data2.length;
 
-                     if (data2.byteOffset !== 0)
-                        return rejectFunc(Error('ZSTD result with byteOffset != 0'));
+               for (let i = 0; i < reslen; ++i)
+                   tgt8arr[i] = data2[i];
 
-                     // shortcut when exactly required data unpacked
-                     // if ((tgtsize == reslen) && data2.buffer)
-                     //    resolveFunc(new DataView(data2.buffer));
-
-                     // need to copy data while zstd does not provide simple way of doing it
-                     if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-                     const tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-                     for (let i = 0; i < reslen; ++i)
-                        tgt8arr[i] = data2[i];
-
-                     fullres += reslen;
-                     curr += srcsize;
-                     resolveFunc(true);
-                  });
-               });
-            },
-
-            promise = isNodeJs()
-                        ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(handle => handleZsdt(handle.ZstdCodec))
-                        : loadScript('../../zstd/zstd-codec.min.js')
-                          .catch(() => loadScript('https://root.cern/js/zstd/zstd-codec.min.js'))
-                          // eslint-disable-next-line no-undef
-                         .then(() => handleZsdt(ZstdCodec));
-            return promise.then(() => nextPortion());
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
+         } else if (fmt === 'LZMA') {
+            return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(lzma => {
+               const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
+                     reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
          }
 
-         //  place for unpacking
-         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
 
-         const tgt8arr = new Uint8Array(tgtbuf, fullres),
-               reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
          if (reslen <= 0) break;
-
          fullres += reslen;
          curr += srcsize;
       }
@@ -96948,7 +97448,9 @@ class TFile {
          }
 
          return R__unzip(blob1, key.fObjlen).then(objbuf => {
-            if (!objbuf) return Promise.reject(Error('Fail to UNZIP buffer'));
+            if (!objbuf)
+               return Promise.reject(Error(`Fail to UNZIP buffer for ${key.fName}`));
+
             const buf = new TBuffer(objbuf, 0, this);
             buf.fTagOffset = key.fKeylen;
             return buf;
@@ -97036,7 +97538,13 @@ class TFile {
 
       const lst = {};
       buf.mapObject(1, lst);
-      buf.classStreamer(lst, clTList);
+
+      try {
+         buf.classStreamer(lst, clTList);
+      } catch (err) {
+          console.error('Fail extract streamer infos', err);
+          return;
+      }
 
       lst._typename = clTStreamerInfoList;
 
@@ -110475,467 +110983,6 @@ var TGraphPolarPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TGraphPolarPainter: TGraphPolarPainter,
 TGraphPolargramPainter: TGraphPolargramPainter
-});
-
-/** @summary Assign `evalPar` function for TF1 object
-  * @private */
-
-function proivdeEvalPar(obj) {
-   obj._math = jsroot_math;
-
-   let _func = obj.fTitle, isformula = false, pprefix = '[';
-   if (_func === 'gaus') _func = 'gaus(0)';
-   if (isStr(obj.fFormula?.fFormula)) {
-     if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') === 0) {
-        isformula = true; pprefix = 'p[';
-        _func = obj.fFormula.fFormula.slice(21);
-     } else {
-        _func = obj.fFormula.fFormula;
-        pprefix = '[p';
-     }
-
-     if (obj.fFormula.fClingParameters && obj.fFormula.fParams) {
-        obj.fFormula.fParams.forEach(pair => {
-           const regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
-               parvalue = obj.fFormula.fClingParameters[pair.second];
-           _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
-        });
-      }
-   }
-
-   if (!_func)
-      return false;
-
-   obj.formulas?.forEach(entry => {
-      _func = _func.replaceAll(entry.fName, entry.fTitle);
-   });
-
-   _func = _func.replace(/\b(TMath::SinH)\b/g, 'Math.sinh')
-                .replace(/\b(TMath::CosH)\b/g, 'Math.cosh')
-                .replace(/\b(TMath::TanH)\b/g, 'Math.tanh')
-                .replace(/\b(TMath::ASinH)\b/g, 'Math.asinh')
-                .replace(/\b(TMath::ACosH)\b/g, 'Math.acosh')
-                .replace(/\b(TMath::ATanH)\b/g, 'Math.atanh')
-                .replace(/\b(TMath::ASin)\b/g, 'Math.asin')
-                .replace(/\b(TMath::ACos)\b/g, 'Math.acos')
-                .replace(/\b(TMath::Atan)\b/g, 'Math.atan')
-                .replace(/\b(TMath::ATan2)\b/g, 'Math.atan2')
-                .replace(/\b(sin|SIN|TMath::Sin)\b/g, 'Math.sin')
-                .replace(/\b(cos|COS|TMath::Cos)\b/g, 'Math.cos')
-                .replace(/\b(tan|TAN|TMath::Tan)\b/g, 'Math.tan')
-                .replace(/\b(exp|EXP|TMath::Exp)\b/g, 'Math.exp')
-                .replace(/\b(log|LOG|TMath::Log)\b/g, 'Math.log')
-                .replace(/\b(log10|LOG10|TMath::Log10)\b/g, 'Math.log10')
-                .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
-                .replace(/\b(pi|PI)\b/g, 'Math.PI')
-                .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
-                .replace(/\bxygaus\(/g, 'this._math.gausxy(this, x, y, ')
-                .replace(/\bgaus\(/g, 'this._math.gaus(this, x, ')
-                .replace(/\bgausn\(/g, 'this._math.gausn(this, x, ')
-                .replace(/\bexpo\(/g, 'this._math.expo(this, x, ')
-                .replace(/\blandau\(/g, 'this._math.landau(this, x, ')
-                .replace(/\blandaun\(/g, 'this._math.landaun(this, x, ')
-                .replace(/\bTMath::/g, 'this._math.')
-                .replace(/\bROOT::Math::/g, 'this._math.');
-
-   if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
-      _func = '[0]';
-      for (let k = 1; k < obj.fNpar; ++k)
-         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
-   }
-
-   if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
-      _func = `this._math.ChebyshevN(${obj.fNpar-1}, x, `;
-      for (let k = 0; k < obj.fNpar; ++k)
-         _func += (k === 0 ? '[' : ', ') + `[${k}]`;
-      _func += '])';
-   }
-
-   for (let i = 0; i < obj.fNpar; ++i)
-      _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
-
-   for (let n = 2; n < 10; ++n)
-      _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
-
-   if (isformula) {
-      _func = _func.replace(/x\[0\]/g, 'x');
-      if (obj._typename === clTF3) {
-         _func = _func.replace(/x\[1\]/g, 'y');
-         _func = _func.replace(/x\[2\]/g, 'z');
-         obj.evalPar = new Function('x', 'y', 'z', _func).bind(obj);
-      } else if (obj._typename === clTF2) {
-         _func = _func.replace(/x\[1\]/g, 'y');
-         obj.evalPar = new Function('x', 'y', _func).bind(obj);
-      } else
-         obj.evalPar = new Function('x', _func).bind(obj);
-   } else if (obj._typename === clTF3)
-      obj.evalPar = new Function('x', 'y', 'z', 'return ' + _func).bind(obj);
-   else if (obj._typename === clTF2)
-      obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
-   else
-      obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
-
-   return true;
-}
-
-
-/** @summary Create log scale for axis bins
-  * @private */
-function produceTAxisLogScale(axis, num, min, max) {
-   let lmin, lmax;
-
-   if (max > 0) {
-      lmax = Math.log(max);
-      lmin = min > 0 ? Math.log(min) : lmax - 5;
-   } else {
-      lmax = -10;
-      lmax = -15;
-   }
-
-   axis.fNbins = num;
-   axis.fXbins = new Array(num + 1);
-   for (let i = 0; i <= num; ++i)
-      axis.fXbins[i] = Math.exp(lmin + i / num * (lmax - lmin));
-   axis.fXmin = Math.exp(lmin);
-   axis.fXmax = Math.exp(lmax);
-}
-
-/**
-  * @summary Painter for TF1 object
-  *
-  * @private
-  */
-
-class TF1Painter extends TH1Painter$2 {
-
-   /** @summary Returns drawn object name */
-   getObjectName() { return this.$func?.fName ?? 'func'; }
-
-   /** @summary Returns drawn object class name */
-   getClassName() { return this.$func?._typename ?? clTF1; }
-
-   /** @summary Returns true while function is drawn */
-   isTF1() { return true; }
-
-   /** @summary Update function */
-   updateObject(obj /*, opt */) {
-      if (!obj || (this.getClassName() !== obj._typename)) return false;
-      delete obj.evalPar;
-      const histo = this.getHisto();
-
-      if (this.webcanv_hist) {
-         const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH1D);
-         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
-      }
-
-      this.$func = obj;
-      this.createTF1Histogram(obj, histo);
-      this.scanContent();
-      return true;
-   }
-
-   /** @summary Redraw TF1
-     * @private */
-   redraw(reason) {
-      if (!this._use_saved_points && (reason === 'logx' || reason === 'zoom')) {
-         this.createTF1Histogram(this.$func, this.getHisto());
-         this.scanContent();
-      }
-
-      return super.redraw(reason);
-   }
-
-   /** @summary Create histogram for TF1 drawing
-     * @private */
-   createTF1Histogram(tf1, hist) {
-      const fp = this.getFramePainter(),
-            pad = this.getPadPainter()?.getRootPad(true),
-            logx = pad?.fLogx,
-            gr = fp?.getGrFuncs(this.second_x, this.second_y);
-      let xmin = tf1.fXmin, xmax = tf1.fXmax;
-
-      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
-         xmin = Math.min(xmin, gr.zoom_xmin);
-         xmax = Math.max(xmax, gr.zoom_xmax);
-      }
-
-      this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || this.force_saved);
-
-      const ensureBins = num => {
-         if (hist.fNcells !== num + 2) {
-            hist.fNcells = num + 2;
-            hist.fArray = new Float32Array(hist.fNcells);
-         }
-         hist.fArray.fill(0);
-         hist.fXaxis.fNbins = num;
-         hist.fXaxis.fXbins = [];
-      };
-
-      delete this._fail_eval;
-
-      // this._use_saved_points = true;
-
-      if (!this._use_saved_points) {
-         const np = Math.max(tf1.fNpx, 100);
-         let iserror = false;
-
-         if (!tf1.evalPar && !proivdeEvalPar(tf1))
-            iserror = true;
-
-         ensureBins(np);
-
-         if (logx)
-            produceTAxisLogScale(hist.fXaxis, np, xmin, xmax);
-          else {
-            hist.fXaxis.fXmin = xmin;
-            hist.fXaxis.fXmax = xmax;
-         }
-
-         for (let n = 0; (n < np) && !iserror; n++) {
-            const x = hist.fXaxis.GetBinCenter(n + 1);
-            let y = 0;
-            try {
-               y = tf1.evalPar(x);
-            } catch (err) {
-               iserror = true;
-            }
-
-            if (!iserror)
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
-         }
-
-         if (iserror)
-            this._fail_eval = true;
-
-         if (iserror && (tf1.fSave.length > 3))
-            this._use_saved_points = true;
-      }
-
-      // in the case there were points have saved and we cannot calculate function
-      // if we don't have the user's function
-      if (this._use_saved_points) {
-         const np = tf1.fSave.length - 3;
-         let custom_xaxis = null;
-         xmin = tf1.fSave[np + 1];
-         xmax = tf1.fSave[np + 2];
-
-         if (xmin === xmax) {
-            xmin = tf1.fSave[np];
-            const mp = this.getMainPainter();
-            if (isFunc(mp?.getHisto))
-               custom_xaxis = mp?.getHisto()?.fXaxis;
-            if (!custom_xaxis) {
-               xmin = tf1.fXmin;
-               xmax = tf1.fXmax;
-            }
-         }
-
-         if (custom_xaxis) {
-            ensureBins(hist.fXaxis.fNbins);
-            Object.assign(hist.fXaxis, custom_xaxis);
-            // TODO: find first bin
-
-            for (let n = 0; n < np; ++n) {
-               const y = tf1.fSave[n];
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
-            }
-         } else {
-            const dx = (xmax - xmin) / np;
-            function getSave(x) {
-               if (x < xmin)
-                  return tf1.fSave[0];
-               if (x > xmax)
-                  return tf1.fSave[np];
-
-               const bin = Math.min(np - 1, Math.floor((x - xmin) / dx));
-               let xlow = xmin + bin * dx,
-                   xup = xlow + dx,
-                   ylow = tf1.fSave[bin],
-                   yup = tf1.fSave[bin + 1];
-
-               if (!Number.isFinite(ylow) && (bin < np - 1)) {
-                  xlow += dx; xup += dx;
-                  ylow = yup; yup = tf1.fSave[bin + 2];
-               } else if (!Number.isFinite(yup) && (bin > 0)) {
-                  xup -= dx; xlow -= dx;
-                  yup = ylow; ylow = tf1.fSave[bin - 1];
-               }
-               return ((xup * ylow - xlow * yup) + x * (yup - ylow)) / dx;
-            }
-
-            ensureBins(tf1.fNpx);
-            hist.fXaxis.fXmin = tf1.fXmin;
-            hist.fXaxis.fXmax = tf1.fXmax;
-
-            for (let n = 0; n < tf1.fNpx; ++n) {
-               const y = getSave(hist.fXaxis.GetBinCenter(n + 1));
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
-            }
-         }
-      }
-
-      hist.fName = 'Func';
-      setHistogramTitle(hist, tf1.fTitle);
-      hist.fMinimum = tf1.fMinimum;
-      hist.fMaximum = tf1.fMaximum;
-      hist.fLineColor = tf1.fLineColor;
-      hist.fLineStyle = tf1.fLineStyle;
-      hist.fLineWidth = tf1.fLineWidth;
-      hist.fFillColor = tf1.fFillColor;
-      hist.fFillStyle = tf1.fFillStyle;
-      hist.fMarkerColor = tf1.fMarkerColor;
-      hist.fMarkerStyle = tf1.fMarkerStyle;
-      hist.fMarkerSize = tf1.fMarkerSize;
-      hist.fBits |= kNoStats;
-   }
-
-   extractAxesProperties(ndim) {
-      super.extractAxesProperties(ndim);
-
-      const func = this.$func, nsave = func?.fSave.length ?? 0;
-
-      if (nsave > 3 && this._use_saved_points) {
-         this.xmin = Math.min(this.xmin, func.fSave[nsave - 2]);
-         this.xmax = Math.max(this.xmax, func.fSave[nsave - 1]);
-      }
-      if (func) {
-         this.xmin = Math.min(this.xmin, func.fXmin);
-         this.xmax = Math.max(this.xmax, func.fXmax);
-      }
-   }
-
-   /** @summary Checks if it makes sense to zoom inside specified axis range */
-   canZoomInside(axis, min, max) {
-      if ((this.$func?.fSave.length > 0) && this._use_saved_points && (axis === 'x')) {
-         // in the case where the points have been saved, useful for example
-         // if we don't have the user's function
-         const nb_points = this.$func.fNpx,
-             xmin = this.$func.fSave[nb_points + 1],
-             xmax = this.$func.fSave[nb_points + 2];
-
-         return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
-      }
-
-      // if function calculated, one always could zoom inside
-      return (axis === 'x') || (axis === 'y');
-   }
-
-      /** @summary retrurn tooltips for TF2 */
-   getTF1Tooltips(pnt) {
-      delete this.$tmp_tooltip;
-      const lines = [this.getObjectHint()],
-            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
-
-      if (!funcs || !isFunc(this.$func?.evalPar)) {
-         lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
-         return lines;
-      }
-
-      const x = funcs.revertAxis('x', pnt.x);
-      let y = 0, gry = 0, iserror = false;
-
-       try {
-          y = this.$func.evalPar(x);
-          gry = Math.round(funcs.gry(y));
-       } catch {
-          iserror = true;
-       }
-
-      lines.push('x = ' + funcs.axisAsText('x', x),
-                 'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
-
-      if (!iserror)
-         this.$tmp_tooltip = { y, gry };
-      return lines;
-   }
-
-   /** @summary process tooltip event for TF1 object */
-   processTooltipEvent(pnt) {
-      if (this._use_saved_points)
-         return super.processTooltipEvent(pnt);
-
-      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
-
-      if (!this.draw_g || !pnt) {
-         ttrect?.remove();
-         return null;
-      }
-
-      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
-                  x: pnt.x, y: pnt.y,
-                  color1: this.lineatt?.color ?? 'green',
-                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                  lines: this.getTF1Tooltips(pnt), exact: true, menu: true };
-
-      if (ttrect.empty()) {
-         ttrect = this.draw_g.append('svg:circle')
-                             .attr('class', 'tooltip_bin')
-                             .style('pointer-events', 'none')
-                             .style('fill', 'none')
-                             .attr('r', (this.lineatt?.width ?? 1) + 4);
-      }
-
-      ttrect.attr('cx', pnt.x)
-            .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
-            .call(this.lineatt?.func);
-
-      return res;
-   }
-
-   /** @summary fill information for TWebCanvas
-     * @private */
-   fillWebObjectOptions(opt) {
-      // mark that saved points are used or evaluation failed
-      opt.fcust = this._fail_eval ? 'func_fail' : '';
-   }
-
-   /** @summary draw TF1 object */
-   static async draw(dom, tf1, opt) {
-     if (!isStr(opt)) opt = '';
-      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
-      if (p >= 0) {
-         webcanv_hist = true;
-         opt = opt.slice(0, p);
-      }
-      p = opt.indexOf(';force_saved');
-      if (p >= 0) {
-         force_saved = true;
-         opt = opt.slice(0, p);
-      }
-
-      let hist;
-
-      if (webcanv_hist) {
-         const dummy = new ObjectPainter(dom);
-         hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
-      }
-
-      if (!hist) {
-         hist = createHistogram(clTH1D, 100);
-         hist.fBits |= kNoStats;
-      }
-
-      if (!opt && getElementMainPainter(dom))
-         opt = 'same';
-
-      const painter = new TF1Painter(dom, hist);
-
-      painter.$func = tf1;
-      painter.webcanv_hist = webcanv_hist;
-      painter.force_saved = force_saved;
-
-      painter.createTF1Histogram(tf1, hist);
-
-      return THistPainter._drawHist(painter, opt);
-   }
-
-} // class TF1Painter
-
-var TF1Painter$1 = /*#__PURE__*/Object.freeze({
-__proto__: null,
-TF1Painter: TF1Painter,
-produceTAxisLogScale: produceTAxisLogScale,
-proivdeEvalPar: proivdeEvalPar
 });
 
 const kIsBayesian = BIT(14),  // Bayesian statistics are used

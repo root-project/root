@@ -1,4 +1,4 @@
-import { createHttpRequest, BIT, loadScript, internals, settings, browser,
+import { createHttpRequest, BIT, internals, settings, browser,
          create, getMethods, addMethods, isNodeJs, isObject, isFunc, isStr,
          clTObject, clTNamed, clTString, clTObjString, clTKey, clTFile, clTList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTStyle, clTImagePalette,
@@ -2019,6 +2019,7 @@ function LZ4_uncompress(input, output, sIdx, eIdx) {
    return j;
 }
 
+
 /** @summary Reads header envelope, determines zipped size and unzip content
   * @return {Promise} with unzipped content
   * @private */
@@ -2040,12 +2041,12 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
 
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'L') && getCode(curr + 2) === 8) { fmt = 'new'; off = 2; } else
          if (checkChar(curr, 'C') && checkChar(curr+1, 'S') && getCode(curr + 2) === 8) { fmt = 'old'; off = 0; } else
-         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) fmt = 'LZMA'; else
+         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) { fmt = 'LZMA'; off = 0; } else
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'S') && getCode(curr + 2) === 1) fmt = 'ZSTD'; else
          if (checkChar(curr, 'L') && checkChar(curr+1, '4')) { fmt = 'LZ4'; off = 0; CHKSUM = 8; }
 
          /*   C H E C K   H E A D E R   */
-         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD')) {
+         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD') && (fmt !== 'LZMA')) {
             if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
             return Promise.resolve(null);
          }
@@ -2053,52 +2054,38 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
          const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
                uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
 
+         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const tgt8arr = new Uint8Array(tgtbuf, fullres);
+
          if (fmt === 'ZSTD') {
-            const handleZsdt = ZstdCodec => {
-               return new Promise((resolveFunc, rejectFunc) => {
-                  ZstdCodec.run(zstd => {
-                     // const simple = new zstd.Simple();
-                     const streaming = new zstd.Streaming(),
-                           data2 = streaming.decompress(uint8arr),
-                           reslen = data2.length;
+            const promise = internals._ZstdStream
+                            ? Promise.resolve(internals._ZstdStream)
+                            : (isNodeJs() ? import('@oneidentity/zstd-js') : import(/* webpackIgnore: true */ './base/zstd.mjs'))
+                              .then(({ ZstdInit }) => ZstdInit()).then(({ ZstdStream }) => { internals._ZstdStream = ZstdStream; return ZstdStream; });
+            return promise.then(ZstdStream => {
+               const data2 = ZstdStream.decompress(uint8arr),
+                     reslen = data2.length;
 
-                     if (data2.byteOffset !== 0)
-                        return rejectFunc(Error('ZSTD result with byteOffset != 0'));
+               for (let i = 0; i < reslen; ++i)
+                   tgt8arr[i] = data2[i];
 
-                     // shortcut when exactly required data unpacked
-                     // if ((tgtsize == reslen) && data2.buffer)
-                     //    resolveFunc(new DataView(data2.buffer));
-
-                     // need to copy data while zstd does not provide simple way of doing it
-                     if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-                     const tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-                     for (let i = 0; i < reslen; ++i)
-                        tgt8arr[i] = data2[i];
-
-                     fullres += reslen;
-                     curr += srcsize;
-                     resolveFunc(true);
-                  });
-               });
-            },
-
-            promise = isNodeJs()
-                        ? import('zstd-codec').then(handle => handleZsdt(handle.ZstdCodec))
-                        : loadScript('../../zstd/zstd-codec.min.js')
-                          .catch(() => loadScript('https://root.cern/js/zstd/zstd-codec.min.js'))
-                          // eslint-disable-next-line no-undef
-                         .then(() => handleZsdt(ZstdCodec));
-            return promise.then(() => nextPortion());
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
+         } else if (fmt === 'LZMA') {
+            return import(/* webpackIgnore: true */ './base/lzma.mjs').then(lzma => {
+               const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
+                     reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
          }
 
-         //  place for unpacking
-         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
 
-         const tgt8arr = new Uint8Array(tgtbuf, fullres),
-               reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
          if (reslen <= 0) break;
-
          fullres += reslen;
          curr += srcsize;
       }
@@ -3062,7 +3049,9 @@ class TFile {
          }
 
          return R__unzip(blob1, key.fObjlen).then(objbuf => {
-            if (!objbuf) return Promise.reject(Error('Fail to UNZIP buffer'));
+            if (!objbuf)
+               return Promise.reject(Error(`Fail to UNZIP buffer for ${key.fName}`));
+
             const buf = new TBuffer(objbuf, 0, this);
             buf.fTagOffset = key.fKeylen;
             return buf;
@@ -3150,7 +3139,13 @@ class TFile {
 
       const lst = {};
       buf.mapObject(1, lst);
-      buf.classStreamer(lst, clTList);
+
+      try {
+         buf.classStreamer(lst, clTList);
+      } catch (err) {
+          console.error('Fail extract streamer infos', err);
+          return;
+      }
 
       lst._typename = clTStreamerInfoList;
 
