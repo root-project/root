@@ -22,6 +22,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooBlindTools.h
     RooBMixDecay.h
     RooBreitWigner.h
+    RooBSpline.h
+    RooBSplineBases.h
     RooBukinPdf.h
     RooCBShape.h
     RooCrystalBall.h
@@ -85,6 +87,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooBlindTools.cxx
     src/RooBMixDecay.cxx
     src/RooBreitWigner.cxx
+    src/RooBSpline.h
+    src/RooBSplineBases.h
     src/RooBukinPdf.cxx
     src/RooCBShape.cxx
     src/RooCrystalBall.cxx
