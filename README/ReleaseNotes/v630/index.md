@@ -354,6 +354,65 @@ method now does an extended fit by default if the pdf is extendible. This makes
 the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
 `RooAbsPdf::createChi2()`.
 
+## TMVA
+### SOFIE : Code generation for fast inference of Deep Learning models
+TMVA SOFIE now supports parsing and further inference of Graph Neural Networks based on DeepMind's [graph_nets](https://github.com/google-deepmind/graph_nets). The list of all operators supported in the `RModel` class is the one provided below for the ONNX parser. 
+
+#### SOFIE-GNN
+1. The SOFIE-GNN implementation brought a major change in SOFIE's architecture. Instead of having only the RModel class to store model information, now SOFIE has RModel, RModel_GNN and RModel_GraphIndependent classes which are inherited from RModel_Base.
+2. **RModel_GNN** is used to store a GNN model having nodes, edges, and globals with functions for their update and aggregate(for inter-relationships).
+3. **RModel_GraphIndependent** is used to store an independent Graph model with nodes, edges and globals with their individual update functions.
+4. **RFunctions** are used to declare update/aggregate operations over graph components. Currently supported RFunctions include:
+    - **Update Functions**
+        - RFunction_MLP
+    - **Aggregate Functions**
+        - RFunction_Mean
+        - RFunction_Sum
+5. Pythonized functions for parsing a Graphnets' model can be used to generate inference code
+```
+   import graph_nets as gn
+   from graph_nets import utils_tf
+
+   GraphModule = gn.modules.GraphNetwork(
+      edge_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
+      node_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
+      global_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True))
+
+   GraphData = get_graph_data_dict(2,1,2,2,2)
+
+   model = ROOT.TMVA.Experimental.SOFIE.RModel_GNN.ParseFromMemory(GraphModule, GraphData)
+   model.Generate()
+   model.OutputGenerated()
+
+```
+A complete tutorial for the SOFIE-GNN implementation can be found [here](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_GNN.py)
+
+#### SOFIE ONNX Parser
+
+The ONNX parser supports now several new ONNX operators. The list of the current supported ONNX operator is the following:
+- Gemm
+- Conv (in 1D,2D and 3D)
+- RNN, GRU, LSTM
+- Relu, Selu, Sigmoid, Softmax, Tanh, LeakyRelu
+- BatchNormalization
+- MaxPool, AveragePool, GlobalAverage
+- ConvTranspose
+- Gather
+- Expand, Reduce
+- Neg, Exp, Sqrt, Reciprocal
+- Add, Sum, Mul, Div
+- Reshape, Flatten, Transpose
+- Squeeze, Unsqueeze, Slice
+- Concat, Reduce
+- Identity
+- Shape
+- Custom
+- Error
+- Log
+
+#### SOFIE Keras Parser
+- The Swish Activation function is now supported in the SOFIE Keras parser.
+
 ## 2D Graphics Libraries
 
 - Introduce `TAxis::ChangeLabelByValue` to set custom label defined by axis value. It works also
