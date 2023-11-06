@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
+#include <array>
 #include <cctype>
 #include <climits>
-#include <sstream>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <sstream>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -6749,7 +6750,8 @@ void TH1::SetTitle(const char *title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Smooth array xx, translation of Hbook routine `hsmoof.F`.
 /// Based on algorithm 353QH twice presented by J. Friedman
-/// in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
+/// in [Proc. of the 1974 CERN School of Computing, Norway, 11-24 August, 1974](https://cds.cern.ch/record/186223).
+/// See also Section 4.2 in [J. Friedman, Data Analysis Techniques for High Energy Physics](https://www.slac.stanford.edu/pubs/slacreports/reports16/slac-r-176.pdf).
 
 void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
 {
@@ -6759,7 +6761,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
    }
 
    Int_t ii;
-   Double_t hh[6] = {0,0,0,0,0,0};
+   std::array<double, 3> hh{};
 
    std::vector<double> yy(nn);
    std::vector<double> zz(nn);
@@ -6781,11 +6783,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
             // do all elements beside the first and last point for median 3
             //  and first two and last 2 for median 5
             for  ( ii = ifirst; ii < ilast; ii++)  {
-               assert(ii - ifirst >= 0);
-               for  (int jj = 0; jj < medianType; jj++)   {
-                  hh[jj] = yy[ii - ifirst + jj ];
-               }
-               zz[ii] = TMath::Median(medianType, hh);
+               zz[ii] = TMath::Median(medianType, yy.data() + ii - ifirst);
             }
 
             if  (kk == 0)  {   // first median 3
@@ -6793,26 +6791,23 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
                hh[0] = zz[1];
                hh[1] = zz[0];
                hh[2] = 3*zz[1] - 2*zz[2];
-               zz[0] = TMath::Median(3, hh);
+               zz[0] = TMath::Median(3, hh.data());
                // last point
                hh[0] = zz[nn - 2];
                hh[1] = zz[nn - 1];
                hh[2] = 3*zz[nn - 2] - 2*zz[nn - 3];
-               zz[nn - 1] = TMath::Median(3, hh);
+               zz[nn - 1] = TMath::Median(3, hh.data());
             }
 
             if  (kk == 1)  {   //  median 5
-               for  (ii = 0; ii < 3; ii++) {
-                  hh[ii] = yy[ii];
-               }
-               zz[1] = TMath::Median(3, hh);
-               // last two points
-               for  (ii = 0; ii < 3; ii++) {
-                  hh[ii] = yy[nn - 3 + ii];
-               }
-               zz[nn - 2] = TMath::Median(3, hh);
+               // second point with window length 3
+               zz[1] = TMath::Median(3, yy.data());
+               // second-to-last point with window length 3
+               zz[nn - 2] = TMath::Median(3, yy.data() + nn - 3);
             }
 
+            // In the third iteration (kk == 2), the first and last point stay
+            // the same (see paper linked in the documentation).
          }
 
          std::copy ( zz.begin(), zz.end(), yy.begin() );
@@ -6821,11 +6816,11 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
          for (ii = 2; ii < (nn - 2); ii++) {
             if  (zz[ii - 1] != zz[ii]) continue;
             if  (zz[ii] != zz[ii + 1]) continue;
-            hh[0] = zz[ii - 2] - zz[ii];
-            hh[1] = zz[ii + 2] - zz[ii];
-            if  (hh[0] * hh[1] <= 0) continue;
+            const double tmp0 = zz[ii - 2] - zz[ii];
+            const double tmp1 = zz[ii + 2] - zz[ii];
+            if  (tmp0 * tmp1 <= 0) continue;
             int jk = 1;
-            if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
+            if  ( std::abs(tmp0) > std::abs(tmp0) ) jk = -1;
             yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk] /6.;
             yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii];
          }
@@ -6856,7 +6851,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
       for  (ii = 0; ii < nn; ii++) {
          if (xmin < 0) xx[ii] = rr[ii] + zz[ii];
          // make smoothing defined positive - not better using 0 ?
-         else  xx[ii] = TMath::Max((rr[ii] + zz[ii]),0.0 );
+         else  xx[ii] = std::max((rr[ii] + zz[ii]),0.0 );
       }
    }
 }

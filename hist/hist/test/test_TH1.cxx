@@ -4,6 +4,8 @@
 #include "TH1F.h"
 #include "THLimitsFinder.h"
 
+#include <vector>
+
 // StatOverflows TH1
 TEST(TH1, StatOverflows)
 {
@@ -45,4 +47,19 @@ TEST(THLimitsFinder, Degenerate)
    EXPECT_LT(xmin, xmax);
    EXPECT_LE(xmin, centralValue - 5.);
    EXPECT_GE(xmax, centralValue + 5.);
+}
+
+// Simple cross-check that TH1::SmoothArray() is not doing anything if input
+// array is already smooth.
+TEST(TH1, SmoothArrayCrossCheck)
+{
+   std::vector<double> arr1{0., 1., 2., 3., 4.};
+   std::vector<double> arr2{1., 1., 1., 1., 1.};
+   TH1::SmoothArray(arr1.size(), arr1.data());
+   TH1::SmoothArray(arr2.size(), arr2.data());
+
+   for (std::size_t i = 0; i < arr1.size(); ++i) {
+      EXPECT_FLOAT_EQ(arr1[i], i);
+      EXPECT_FLOAT_EQ(arr2[i], 1.0);
+   }
 }
