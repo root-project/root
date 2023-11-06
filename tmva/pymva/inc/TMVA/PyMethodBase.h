@@ -135,7 +135,9 @@ namespace TMVA {
       PyObject *fLocalNS; // local namesapace
 
    public:
-      static void PyRunString(TString code, PyObject *globalNS, PyObject* localNS); // Overloaded static Python utlity function for running Python code
+      static void PyRunStringGlobal(TString code)  { PyRunString(code, fGlobalNS, fGlobalNS);}   // run in global namespace
+      void PyRunStringLocal(TString code)  { PyRunString(code, fGlobalNS, fLocalNS);}   // run in local namespace
+      static void PyRunString(TString code, PyObject *globalNS, PyObject* localNS); // Overloaded static Python utility function for running Python code
       static const char* PyStringAsString(PyObject *string); // Python Utility function for converting a Python String object to const char*
       static std::vector<size_t> GetDataFromTuple(PyObject *tupleObject);  // Function casts Python Tuple object into vector of size_t
       static std::vector<size_t> GetDataFromList(PyObject *listObject);    // Function casts Python List object into vector of size_t

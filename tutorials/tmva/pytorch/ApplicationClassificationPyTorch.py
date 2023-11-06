@@ -9,12 +9,12 @@
 ## \date 2020
 ## \author Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee
 
+import torch
 
 from ROOT import TMVA, TFile, TString
 from array import array
 from subprocess import call
 from os.path import isfile
-
 
 # Setup TMVA
 TMVA.Tools.Instance()
@@ -43,7 +43,7 @@ for branch in signal.GetListOfBranches():
 def predict(model, test_X, batch_size=32):
     # Set to eval mode
     model.eval()
-   
+
     test_dataset = torch.utils.data.TensorDataset(torch.Tensor(test_X))
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -54,7 +54,7 @@ def predict(model, test_X, batch_size=32):
             outputs = model(X)
             predictions.append(outputs)
         preds = torch.cat(predictions)
-   
+
     return preds.numpy()
 
 

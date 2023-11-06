@@ -10,7 +10,7 @@
 ## \date 2020
 ## \author Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee
 
-
+import torch
 from ROOT import TMVA, TFile, TTree, TCut, gROOT
 from os.path import isfile
 
