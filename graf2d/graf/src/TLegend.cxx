@@ -946,8 +946,10 @@ void TLegend::PaintPrimitives()
             dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
          }
          if ( !opt.Contains("p")) {
-            TLine entryline(xsym, ysym - yspace*0.30,
-                            xsym, ysym + yspace*0.30);
+            float arrow_shift = 0.3;
+            if (endcaps == 3) arrow_shift = 0.2;
+            TLine entryline(xsym, ysym - yspace*arrow_shift,
+                            xsym, ysym + yspace*arrow_shift);
             entryline.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entryline);
             entryline.Paint();
@@ -998,11 +1000,11 @@ void TLegend::PaintPrimitives()
             }
             TPolyLine ple1(3,xe1,ye1);
             ple1.SetFillColor(entry->GetLineColor());
-            ple1.SetFillStyle(1001);
+            ple1.SetFillStyle(entry->GetFillStyle());
             ple1.Paint("f");
             TPolyLine ple2(3,xe2,ye2);
             ple2.SetFillColor(entry->GetLineColor());
-            ple2.SetFillStyle(1001);
+            ple2.SetFillStyle(entry->GetFillStyle());
             ple2.Paint("f");
          }
       }
