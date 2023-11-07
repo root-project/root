@@ -68,17 +68,6 @@ RooAbsCachedReal::RooAbsCachedReal(const RooAbsCachedReal& other, const char* na
  {
  }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsCachedReal::~RooAbsCachedReal()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of getVal() overriding default implementation
 /// of RooAbsReal. Return value stored in cache p.d.f

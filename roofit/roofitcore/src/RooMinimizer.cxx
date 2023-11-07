@@ -373,7 +373,7 @@ int RooMinimizer::migrad()
 
 int RooMinimizer::hesse()
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!" << endl;
       _status = -1;
    } else {
@@ -404,7 +404,7 @@ int RooMinimizer::hesse()
 
 int RooMinimizer::minos()
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
       _status = -1;
    } else {
@@ -436,7 +436,7 @@ int RooMinimizer::minos()
 
 int RooMinimizer::minos(const RooArgSet &minosParamList)
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
       _status = -1;
    } else if (!minosParamList.empty()) {
@@ -456,7 +456,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
             }
          }
 
-         if (paramInd.size()) {
+         if (!paramInd.empty()) {
             // set the parameter indices
             _theFitter->Config().SetMinosErrors(paramInd);
 
@@ -586,7 +586,7 @@ void RooMinimizer::optimizeConst(int flag)
 
 RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const char *userTitle)
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << endl;
       return nullptr;
    }
@@ -690,7 +690,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
    // check first if a inimizer is available. If not means
    // the minimization is not done , so do it
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!" << endl;
       return frame;
    }
@@ -818,7 +818,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    // Import the results of the last fit performed, interpreting
    // the fit parameters as the given varList of parameters.
 
-   if (_theFitter == 0 || _theFitter->GetMinimizer() == 0) {
+   if (_theFitter == nullptr || _theFitter->GetMinimizer() == nullptr) {
       oocoutE(nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << endl;
       return nullptr;
    }

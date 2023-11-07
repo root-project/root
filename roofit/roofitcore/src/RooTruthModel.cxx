@@ -406,7 +406,7 @@ inline double indefiniteIntegralCoshBasisPlus(double x, double tau, double dm)
 }
 
 // Integrate one of the basis functions. Takes a function that represents the
-// indefinite integral, some parameters, and a flag that indicats whether the
+// indefinite integral, some parameters, and a flag that indicates whether the
 // basis function is symmetric or antisymmetric. This information is used to
 // evaluate the integrals for the "Minus" and "Sum" cases.
 template <class Function>

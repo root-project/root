@@ -32,7 +32,6 @@ any external RooAbsReal input function provided in the constructor.
 using namespace std;
 
 ClassImp(RooCachedReal);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,16 +92,6 @@ RooCachedReal::RooCachedReal(const RooCachedReal& other, const char* name) :
    _cacheSource(other._cacheSource)
  {
  }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooCachedReal::~RooCachedReal()
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to create an internal cache object that represent

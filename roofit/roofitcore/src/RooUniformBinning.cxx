@@ -19,7 +19,7 @@
 \class RooUniformBinning
 \ingroup Roofitcore
 
-RooUniformBinning is an implementation of RooAbsBinning that provides
+Implementation of RooAbsBinning that provides
 a uniform binning in 'n' bins between the range end points. A RooUniformBinning
 is 'elastic': if the range changes the binning will change accordingly, unlike
 e.g. the binning of class RooBinning.
@@ -34,8 +34,6 @@ e.g. the binning of class RooBinning.
 using namespace std;
 
 ClassImp(RooUniformBinning);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

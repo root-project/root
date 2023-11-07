@@ -36,7 +36,6 @@ and it has a protected version of getVal()
 using namespace std;
 
 ClassImp(RooAbsHiddenReal);
-;
 
 RooCategory* RooAbsHiddenReal::_dummyBlindState = nullptr;
 
@@ -71,16 +70,6 @@ RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* na
   _state("state",this,other._state)
 {
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsHiddenReal::~RooAbsHiddenReal()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
