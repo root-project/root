@@ -265,6 +265,7 @@ jobs:
                     --incremental  ${{ inputs.incremental }}
                     --base_ref     ${{ inputs.base_ref }}
                     --head_ref     ${{ inputs.head_ref }}
+                    --binaries     ${{ inputs.binaries }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}"
 
@@ -290,6 +291,7 @@ jobs:
                     --platform     windows10
                     --incremental  false
                     --base_ref     ${{ github.ref_name }}
+                    --binaries     ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}"
 
@@ -434,6 +436,7 @@ jobs:
                     --incremental    ${{ inputs.incremental }}
                     --base_ref       ${{ inputs.base_ref }}
                     --head_ref       ${{ inputs.head_ref }}
+                    --binaries       ${{ inputs.binaries }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
@@ -455,6 +458,7 @@ jobs:
                     --platform       ${{ matrix.image }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
+                    --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
