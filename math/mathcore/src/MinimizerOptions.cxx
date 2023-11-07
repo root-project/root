@@ -12,8 +12,6 @@
 
 #include "Math/GenAlgoOptions.h"
 
-#include <RConfig.h>
-
 // case of using ROOT plug-in manager
 #ifndef MATH_NO_PLUGIN_MANAGER
 #include "TEnv.h"
@@ -106,11 +104,11 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 
 
    // The "default default" minimizer in case there is nothing set in .rootrc
-#ifdef R__HAS_MINUIT2
+#ifndef MATH_USE_LEGACY_MINUIT_AS_DEFAULT
    static constexpr auto defaultDefaultMinimizer = "Minuit2";
 #else
    static constexpr auto defaultDefaultMinimizer = "Minuit";
-#endif // R__HAS_MINUIT2
+#endif // MATH_USE_LEGACY_MINUIT_AS_DEFAULT
 
 
 #ifdef MATH_NO_PLUGIN_MANAGER
