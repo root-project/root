@@ -763,7 +763,7 @@ def BookDNN(self, loader, title="DNN"):
         return
     __BookDNNHelper = __bookDNN
     clear_output()
-    JPyInterface.JsDraw.InsertCSS("NetworkDesigner.min.css")
+    JPyInterface.JsDraw.InsertCSS("NetworkDesigner.css")
     JPyInterface.JsDraw.Draw("", "NetworkDesigner", True)
 
 ## This function gets the classifier information and weights in JSON formats, and the selected layers and it will create

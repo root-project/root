@@ -19,7 +19,7 @@
         paths: {
             "jquery-connections": baseURL + "jquery.connections.min",
             "jquery-timing": baseURL + "jquery-timing.min",
-            "d3": "/static/scripts/d3.min"
+            "d3": "https://d3js.org/d3.v6.min"
         },
         shim: {
             "jquery-ui": {
@@ -78,7 +78,7 @@
         }
     };
 
-    var layer_color = d3.scale.linear()
+    var layer_color = d3.scaleLinear()
         .domain([0, 100]).range(colors.layer.hidden)
         .interpolate(d3.interpolateRgb);
 
@@ -600,7 +600,7 @@
         html += "</ul></div>";
 
         $("#"+containerID).append(html);
-        
+
     };
 
     var scale_colors = function () {
