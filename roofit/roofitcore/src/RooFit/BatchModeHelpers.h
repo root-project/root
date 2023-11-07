@@ -9,7 +9,7 @@
  *
  * Redistribution and use in source and binary forms,
  * with or without modification, are permitted according to the terms
- * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ * listed in roofit/LICENSE
  */
 
 #ifndef RooFit_BatchModeHelpers_h
