@@ -19,7 +19,7 @@
 \class RooRangeBoolean
 \ingroup Roofitcore
 
-RooRangeBoolean
+Returns `1.0` if variable is within given a range and `0.0` otherwise.
 **/
 
 #include "Riostream.h"
@@ -31,18 +31,7 @@ RooRangeBoolean
 #include "RooArgList.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooRangeBoolean);
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooRangeBoolean::RooRangeBoolean()
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,18 +55,6 @@ RooRangeBoolean::RooRangeBoolean(const RooRangeBoolean& other, const char* name)
 }
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooRangeBoolean::~RooRangeBoolean()
-{
-}
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 1 if x is in range, zero otherwise.
 
@@ -96,11 +73,11 @@ double RooRangeBoolean::evaluate() const
 
 std::list<double>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, double /*xlo*/, double /*xhi*/) const
 {
-  if (string(obs.GetName())!=_x.arg().GetName()) {
+  if (std::string(obs.GetName())!=_x.arg().GetName()) {
     return nullptr ;
   }
 
-  list<double>* hint = new list<double> ;
+  std::list<double>* hint = new std::list<double> ;
   hint->push_back(((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data())-1e-6) ;
   hint->push_back(((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data())+1e-6) ;
   hint->push_back(((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data())-1e-6) ;

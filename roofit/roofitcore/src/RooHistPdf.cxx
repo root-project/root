@@ -178,17 +178,6 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
 
 }
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooHistPdf::~RooHistPdf()
-{
-
-}
-
 RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
    if (_ownedDataHist) return _ownedDataHist.get();
    _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));

@@ -30,7 +30,7 @@
 
 #include <cassert>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 #include <gtest/gtest.h>
 
@@ -451,7 +451,7 @@ private:
       if (minimizerType == "Minuit") {
          if (gMinuit) {
             delete gMinuit;
-            gMinuit = 0;
+            gMinuit = nullptr;
          }
       }
       std::unique_ptr<RooFitResult> r2{

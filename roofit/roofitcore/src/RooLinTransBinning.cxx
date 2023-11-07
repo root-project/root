@@ -31,8 +31,6 @@ way that RooLinearVar does
 using namespace std;
 
 ClassImp(RooLinTransBinning);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,18 +56,6 @@ RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const ch
   _offset = other._offset ;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooLinTransBinning::~RooLinTransBinning()
-{
-  if (_array) delete[] _array ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooLinTransBinning::setRange(double /*xlo*/, double /*xhi*/)
@@ -85,8 +71,7 @@ double* RooLinTransBinning::array() const
 {
   const int n = numBoundaries();
   // Return array with boundary values
-  if (_array) delete[] _array ;
-  _array = new double[n] ;
+  _array.resize(n);
 
   const double* inputArray = _input->array() ;
 
@@ -100,7 +85,7 @@ double* RooLinTransBinning::array() const
     }
   }
 
-  return _array;
+  return _array.data();
 }
 
 

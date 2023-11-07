@@ -26,7 +26,6 @@ public:
   RooLinTransBinning(const RooAbsBinning& input, double slope=1.0, double offset=0.0, const char* name=nullptr);
   RooLinTransBinning(const RooLinTransBinning&, const char* name=nullptr);
   RooAbsBinning* clone(const char* name=nullptr) const override { return new RooLinTransBinning(*this,name) ; }
-  ~RooLinTransBinning() override ;
 
   Int_t numBoundaries() const override { return _input->numBoundaries() ; }
   void binNumbers(double const * x, int * bins, std::size_t n, int coef) const override;
@@ -56,7 +55,7 @@ protected:
   double _slope{0.};   ///< Slope of transformation
   double _offset{0.};  ///< Offset of transformation
   RooAbsBinning* _input{nullptr};    ///< Input binning
-  mutable double *_array{nullptr}; ///<! Array of transformed bin boundaries
+  mutable std::vector<double> _array; ///<! Array of transformed bin boundaries
 
   ClassDefOverride(RooLinTransBinning,1) // Linear transformation of binning specification
 };

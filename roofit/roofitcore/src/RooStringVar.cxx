@@ -19,7 +19,7 @@
 \class RooStringVar
 \ingroup Roofitcore
 
-RooStringVar is a RooAbsArg implementing string values.
+A RooAbsArg implementing string values.
 **/
 
 #include "RooStringVar.h"
