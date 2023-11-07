@@ -660,14 +660,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (hist->GetDimension() == 2)
             check_cutg_in_options(iter.GetOption());
 
-         // do not extract objects from list of functions - stats and func need to be handled together with hist
-         //
-         // fiter.Reset();
-         // while ((fobj = fiter()) != nullptr)
-         //    CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
-
-         // fPrimitivesLists.Add(hist->GetListOfFunctions());
-
          first_obj = false;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          flush_master();
@@ -697,12 +689,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
-         fiter.Reset();
-         while (auto fobj = fiter())
-            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
-
-         if (funcs)
-            fPrimitivesLists.Add(funcs);
          first_obj = false;
       } else if (obj->InheritsFrom(TGraph2D::Class())) {
          flush_master();
@@ -740,13 +726,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          }
 
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
-
-         fiter.Reset();
-         while (auto fobj = fiter())
-            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
-
-         if (funcs)
-            fPrimitivesLists.Add(funcs);
 
          first_obj = false;
       } else if (obj->InheritsFrom(TScatter::Class())) {
@@ -2434,15 +2413,39 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (h1 && (kind == "z"))
             return h1->GetZaxis();
 
-         if ((h1 || gr || scatter) && !kind.empty() && (kind.compare(0,5,"func_") == 0)) {
+         if ((h1 || gr || scatter || mg) && !kind.empty() && ((kind.compare(0,5,"func_") == 0) || (kind.compare(0,5,"indx_") == 0))) {
             auto funcname = kind.substr(5);
-            TCollection *col = h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions());
-            return col ? col->FindObject(funcname.c_str()) : nullptr;
+            TList *col = nullptr;
+
+            if (h1)
+               col = h1->GetListOfFunctions();
+            else if (gr)
+               col = gr->GetListOfFunctions();
+            else if (mg)
+               col = mg->GetListOfFunctions();
+            else if (scatter->GetGraph())
+               col = scatter->GetGraph()->GetListOfFunctions();
+
+            if (!col) return nullptr;
+            if (kind.compare(0,5,"func_") == 0)
+               return col->FindObject(funcname.c_str());
+
+            return col->At(std::stoi(funcname));
          }
 
-         if ((h1 || gr) && !kind.empty() && (kind.compare(0,5,"indx_") == 0)) {
-            auto col = h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions();
-            return col ? col->At(std::stoi(kind.substr(5))) : nullptr;
+         if (mg && kind.compare(0,6,"graph_") == 0) {
+            auto graphs = mg->GetListOfGraphs();
+            return graphs ? graphs->At(std::stoi(kind.substr(6))) : nullptr;
+         }
+
+         if (hs && kind.compare(0,6,"hists_") == 0) {
+            auto hists = hs->GetHists();
+            return hists ? hists->At(std::stoi(kind.substr(6))) : nullptr;
+         }
+
+         if (hs && kind.compare(0,6,"stack_") == 0) {
+            auto hists = hs->GetStack();
+            return hists ? hists->At(std::stoi(kind.substr(6))) : nullptr;
          }
 
          if (!kind.empty() && (kind.compare(0,7,"member_") == 0)) {
