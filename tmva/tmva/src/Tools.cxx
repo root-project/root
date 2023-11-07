@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Tools                                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::Tools
@@ -1348,8 +1348,7 @@ void TMVA::Tools::TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage msgType
    case kStandardWelcomeMsg:
       logger << Color("white") << "TMVA -- Toolkit for Multivariate Analysis" << Color("reset") << Endl;
       logger << "Copyright (C) 2005-2006 CERN, LAPP & MPI-K Heidelberg and Victoria U." << Endl;
-      logger << "Home page http://tmva.sourceforge.net" << Endl;
-      logger << "All rights reserved, please read http://tmva.sf.net/license.txt" << Endl << Endl;
+      logger << "Home page https://root.cern/manual/tmva/" << Endl;
       break;
 
    case kIsometricWelcomeMsg:

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodPDEFoam                                                         *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      The PDEFoam method is an extension of the PDERS method, which divides     *
@@ -29,7 +29,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodPDEFoam
