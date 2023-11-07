@@ -5,7 +5,11 @@ The TMVA Multi-Variate-Analysis classes.
 
  See:
 
-  - [The full description of the Multi Variate Analysis package.](http://tmva.sourceforge.net)
-  - [The TMVA Users Guide.](http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf)
-  - [The TMVA Options Reference.](http://tmva.sourceforge.net/optionRef.html)
+  - [The TMVA Web manual in ROOT Web site](https://root.cern/manual/tmva/)
+  - [The TMVA Users Guide.](https://github.com/root-project/root/blob/master/documentation/tmva/UsersGuide/TMVAUsersGuide.pdf)
+
+Old links, referring to old TMVA versions, but they can still be useful for some of the TMVA methods:
+
+  - [Description of the traditional TMVA Methods](http://tmva.sourceforge.net/old_site)
+  - [The TMVA Options Reference.](http://tmva.sourceforge.net/old_site/optionRef.html)
 

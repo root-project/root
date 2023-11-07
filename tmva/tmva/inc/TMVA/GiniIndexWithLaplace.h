@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : GiniIndexWithLaplace                                                  *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description: Implementation of the GiniIndex With Laplace correction           *
  *              as separation criterion                                           *

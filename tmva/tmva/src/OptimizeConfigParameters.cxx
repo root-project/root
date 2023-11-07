@@ -2,7 +2,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : OptimizeConfigParameters                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description: The OptimizeConfigParameters takes care of "scanning/fitting"     *
  *              different tuning parameters in order to find the best set of      *

@@ -3169,4 +3169,4 @@ details the chapter "Neural Networks").
 determinant estimator (MCD).
 
 **`TMVA`** is a package for multivariate data analysis (see
-<http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf> the User's Guide).
+<https://github.com/root-project/root/blob/master/documentation/tmva/UsersGuide/TMVAUsersGuide.pdf> the User's Guide).

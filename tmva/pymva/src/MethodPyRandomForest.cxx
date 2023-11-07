@@ -13,7 +13,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  *                                                                                *
  **********************************************************************************/
 #include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
