@@ -12,9 +12,11 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Daniel Álvarez Conde, CERN/EP-SFT,\
  Guilherme Amadio, CERN/IT,\
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
+ Patrick Bos, Netherlands eScience Center,\
  Rene Brun,\
  Carsten Burgard, TU Dortmund,\
  Will Buttinger, Rutherford Appleton Lab,\
@@ -24,11 +26,15 @@ The following people have contributed to this new version:
  Mattias Ellert, Uppsala Uni,\
  Edward Finkelstein, JGU Mainz,\
  Gerri Ganis, CERN/EP-SFT,\
+ Paul Gessinger, CERN/EP-SFT,\
  Florine de Geus, CERN/ATLAS,\
  Andrei Gheata, CERN/EP-SFT,\
  Enrico Guiraud, CERN/EP-SFT and Princeton,\
+ Ahmat Hamdan, CERN/EP-SFT,\
+ Stephan Hageboeck, CERN/IT,\
  Jonas Hahnfeld, CERN/EP-SFT,\
  Fernando Hueso González, CSIC/UV,\
+ Attila Krasznahorkay, CERN/ATLAS,\
  Baidyanath Kundu, CERN/EP-SFT and Princeton,\
  Giovanna Lazzari Miotto, CERN/EP-SFT,\
  Sergey Linev, GSI,\
@@ -39,17 +45,25 @@ The following people have contributed to this new version:
  Ole Morud, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
+ Dante Niewenhuis, CERN/EP-SFT,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
+ Ioanna Maria Panagou, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
  [QuillPusher](https://github.com/QuillPusher), [Compiler Research Group](https://compiler-research.org/team/),\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
+ Jakob Schneekloth, CERN/EP-SFT,\
  Sanjiban Sengupta, CERN/EP-SFT,\
+ Neel Shah, GSoC,\
  Garima Singh, CERN/EP-SFT and Princeton,\
- Enric Tejedor Saavedra, CERN/EP-SFT,\
+ Yash Solanki, GSoC,\
+ Uri Stern, CERN/EP-SFT,\
+ Enric Tejedor Saavedra, CERN/IT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
+ Wouter Verkerke, NIKHEF/ATLAS,\
+ Daniel Werner, CERN/EP-SFT,\
+ Zef Wolffs, NIKHEF/ATLAS
 
 ## Platform support
 
@@ -356,7 +370,7 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
 
 ## TMVA
 ### SOFIE : Code generation for fast inference of Deep Learning models
-TMVA SOFIE now supports parsing and further inference of Graph Neural Networks based on DeepMind's [graph_nets](https://github.com/google-deepmind/graph_nets). The list of all operators supported in the `RModel` class is the one provided below for the ONNX parser. 
+TMVA SOFIE now supports parsing and further inference of Graph Neural Networks based on DeepMind's [graph_nets](https://github.com/google-deepmind/graph_nets). The list of all operators supported in the `RModel` class is the one provided below for the ONNX parser.
 
 #### SOFIE-GNN
 1. The SOFIE-GNN implementation brought a major change in SOFIE's architecture. Instead of having only the RModel class to store model information, now SOFIE has RModel, RModel_GNN and RModel_GraphIndependent classes which are inherited from RModel_Base.
