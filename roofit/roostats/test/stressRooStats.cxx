@@ -92,7 +92,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
       RooNumIntConfig::defaultConfig();
       RooResolutionModel::identity();
 
-      RooTrace::active(1);
+      RooTrace::active(true);
    }
 
    // Add dedicated logging stream for errors that will remain active in silent mode

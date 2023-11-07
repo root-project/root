@@ -30,7 +30,6 @@ public:
   RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance,
         GeneratorType genType= QuasiRandom, bool verbose= false);
   RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config);
-  ~RooMCIntegrator() override;
 
   bool checkLimits() const override;
   double integral(const double* yvec=nullptr) override;

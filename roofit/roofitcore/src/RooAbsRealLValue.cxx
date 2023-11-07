@@ -77,16 +77,6 @@ RooAbsRealLValue::RooAbsRealLValue(const RooAbsRealLValue& other, const char* na
 {
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsRealLValue::~RooAbsRealLValue()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the input value is within our fit range. Otherwise, return
 /// false and write a clipped value into clippedValPtr if it is non-zero.

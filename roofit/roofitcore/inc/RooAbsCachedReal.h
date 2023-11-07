@@ -27,7 +27,6 @@ public:
   RooAbsCachedReal() : _cacheMgr(this,10) {}
   RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder=0);
   RooAbsCachedReal(const RooAbsCachedReal& other, const char* name=nullptr) ;
-  ~RooAbsCachedReal() override ;
 
   double getValV(const RooArgSet* set=nullptr) const override ;
   virtual bool selfNormalized() const {

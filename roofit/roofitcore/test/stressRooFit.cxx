@@ -21,7 +21,7 @@
 #include <string>
 #include <list>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 using namespace RooFit;
@@ -90,7 +90,7 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
       RooNumIntConfig::defaultConfig();
       RooResolutionModel::identity();
 
-      RooTrace::active(1);
+      RooTrace::active(true);
    }
 
    // Add dedicated logging stream for errors that will remain active in silent mode

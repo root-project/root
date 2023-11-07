@@ -118,14 +118,6 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBinIntegrator::~RooBinIntegrator()
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Change our integration limits. Return true if the new limits are
 /// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.

@@ -38,7 +38,6 @@ public:
              std::unique_ptr<RooDataHist> dhist, int intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHistPdf(*this,newname); }
-  ~RooHistPdf() override ;
 
   RooDataHist& dataHist()  {
     // Return RooDataHist that is represented

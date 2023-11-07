@@ -36,8 +36,6 @@ error, such as calculating the pull value.
 using namespace std;
 
 ClassImp(RooErrorVar);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +45,7 @@ RooErrorVar::RooErrorVar(const char *name, const char *title, const RooRealVar& 
   RooAbsRealLValue(name,title),
   _realVar("realVar","RooRealVar with error",this,(RooAbsReal&)input)
 {
-  _binning = new RooUniformBinning(-1,1,100) ;
+  _binning = std::make_unique<RooUniformBinning>(-1,1,100) ;
 }
 
 
@@ -58,23 +56,13 @@ RooErrorVar::RooErrorVar(const RooErrorVar& other, const char* name) :
   RooAbsRealLValue(other,name),
   _realVar("realVar",this,other._realVar)
 {
-  _binning = other._binning->clone() ;
+  _binning = std::unique_ptr<RooAbsBinning>{other._binning->clone()};
 
   // Copy constructor
   for(auto * binning : static_range_cast<RooAbsBinning*>(other._altBinning)) _altBinning.Add(binning->clone());
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooErrorVar::~RooErrorVar()
-{
-  delete _binning ;
-}
-
-
+RooErrorVar::~RooErrorVar() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value, i.e. error on input variable
@@ -93,7 +81,6 @@ bool RooErrorVar::hasBinning(const char* name) const
 {
   return _altBinning.FindObject(name) ? true : false ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,8 +167,7 @@ void RooErrorVar::removeRange(const char* name) {
 void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
 {
   if (!name) {
-    if (_binning) delete _binning ;
-    _binning = binning.clone() ;
+    _binning = std::unique_ptr<RooAbsBinning>{binning.clone()};
   } else {
 
     // Remove any old binning with this name

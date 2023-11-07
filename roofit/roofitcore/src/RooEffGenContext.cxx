@@ -45,16 +45,8 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf,
    RooArgSet x(eff, eff.GetName());
    x.snapshot(_cloneSet, true);
    _eff = dynamic_cast<RooAbsReal *>(_cloneSet.find(eff.GetName()));
-   _generator = pdf.genContext(vars, prototype, auxProto, verbose);
+   _generator = std::unique_ptr<RooAbsGenContext>{pdf.genContext(vars, prototype, auxProto, verbose)};
    vars.snapshot(_vars, true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooEffGenContext::~RooEffGenContext()
-{
-   delete _generator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

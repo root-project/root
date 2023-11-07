@@ -31,7 +31,6 @@ public:
   RooAbsHiddenReal(const char *name, const char *title, const char *unit= "") ;
   RooAbsHiddenReal(const char *name, const char *title, RooAbsCategory& blindState, const char *unit= "") ;
   RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name=nullptr) ;
-  ~RooAbsHiddenReal() override;
 
   // I/O streaming interface (machine readable)
   bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;

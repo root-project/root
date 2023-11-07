@@ -35,21 +35,7 @@ from a set of recursive fractions: for a given set of input fractions
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooRecursiveFraction);
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooRecursiveFraction::RooRecursiveFraction()
-{
-
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of plain RooAddPdf fraction from list of recursive fractions
@@ -63,7 +49,7 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       std::stringstream errorMsg;
       errorMsg << "RooRecursiveFraction::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << std::endl;
       coutE(InputArguments) << errorMsg.str();
       throw std::invalid_argument(errorMsg.str());
     }
@@ -84,18 +70,6 @@ RooRecursiveFraction::RooRecursiveFraction(const RooRecursiveFraction& other, co
 
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooRecursiveFraction::~RooRecursiveFraction()
-{
-
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.
 double RooRecursiveFraction::evaluate() const
@@ -111,4 +85,3 @@ double RooRecursiveFraction::evaluate() const
 
   return prod ;
 }
-

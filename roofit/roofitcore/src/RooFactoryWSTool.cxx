@@ -124,32 +124,6 @@ Int_t init()
 
 }
 
-#ifndef _WIN32
-#include <strings.h>
-#endif
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0), _autoClassPostFix("")
-
-{
-  // Default constructor
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFactoryWSTool::~RooFactoryWSTool()
-{
-}
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Low-level factory interface for creating a RooRealVar with a given range and initial value
 

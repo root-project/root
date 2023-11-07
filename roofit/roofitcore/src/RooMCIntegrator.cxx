@@ -43,7 +43,6 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 using namespace std;
 
 ClassImp(RooMCIntegrator);
-;
 
 // Register this class with RooNumIntFactory
 
@@ -133,16 +132,6 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.print(std::cout);
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMCIntegrator::~RooMCIntegrator()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if we can integrate over the current domain. If return value

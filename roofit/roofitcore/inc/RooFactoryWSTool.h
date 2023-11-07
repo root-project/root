@@ -49,8 +49,9 @@ class RooFactoryWSTool : public TNamed, public RooPrintable {
 public:
 
   // Constructors, assignment etc
-  RooFactoryWSTool(RooWorkspace& ws) ;
-  ~RooFactoryWSTool() override ;
+  RooFactoryWSTool(RooWorkspace& ws) : _ws{&ws} {}
+
+  RooFactoryWSTool(const RooFactoryWSTool&) = delete;
 
   // --- low level factory interface ---
 
@@ -191,11 +192,9 @@ protected:
   void clearError() { _errorCount = 0 ; }
   Int_t errorCount() { return _errorCount ; }
 
-  Int_t _errorCount ; // Error counter for a given expression processing
+  Int_t _errorCount = 0; // Error counter for a given expression processing
 
-  std::string _autoClassPostFix ;
-
-  RooFactoryWSTool(const RooFactoryWSTool&) ;
+  std::string _autoClassPostFix;
 
   ClassDefOverride(RooFactoryWSTool,0) // RooFit class code and instance factory
 

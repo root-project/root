@@ -34,7 +34,6 @@ public:
   inline RooAbsRealLValue() { }
   RooAbsRealLValue(const char *name, const char *title, const char *unit= "") ;
   RooAbsRealLValue(const RooAbsRealLValue& other, const char* name=nullptr);
-  ~RooAbsRealLValue() override;
 
   // Parameter value and error accessors
   /// Set the current value of the object. Needs to be overridden by implementations.

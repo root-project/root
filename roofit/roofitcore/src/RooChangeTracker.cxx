@@ -40,19 +40,7 @@ though usually only one observable actually changes.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-using namespace std ;
-
 ClassImp(RooChangeTracker);
-;
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooChangeTracker::RooChangeTracker() : _checkVal(false), _init(false)
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. The set trackSet contains the observables to be
@@ -197,18 +185,6 @@ bool RooChangeTracker::hasChanged(bool clearState)
   return false ;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooChangeTracker::~RooChangeTracker()
-{
-
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooArgSet RooChangeTracker::parameters() const
@@ -218,6 +194,3 @@ RooArgSet RooChangeTracker::parameters() const
   ret.add(_catSet) ;
   return ret ;
 }
-
-
-

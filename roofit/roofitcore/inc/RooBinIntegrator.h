@@ -29,8 +29,6 @@ public:
   RooBinIntegrator(const RooAbsFunc& function, int numBins=100) ;
   RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
-  ~RooBinIntegrator() override;
-
   bool checkLimits() const override;
   double integral(const double *yvec=nullptr) override ;
 

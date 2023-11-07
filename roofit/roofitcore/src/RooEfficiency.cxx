@@ -39,7 +39,6 @@ F may have an arbitrary number of dependents and parameters
 using namespace std;
 
 ClassImp(RooEfficiency);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,17 +66,6 @@ RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
   _sigCatName(other._sigCatName)
 {
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooEfficiency::~RooEfficiency()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the raw value of this p.d.f which is the effFunc

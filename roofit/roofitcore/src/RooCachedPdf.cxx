@@ -30,8 +30,6 @@ any external RooAbsPdf input function provided in the constructor.
 using namespace std;
 
 ClassImp(RooCachedPdf);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,17 +82,6 @@ RooCachedPdf::RooCachedPdf(const RooCachedPdf& other, const char* name) :
    _cacheObs("cacheObs",this,other._cacheObs)
  {
  }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooCachedPdf::~RooCachedPdf()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update contents of cache histogram by resampling the input p.d.f. Note that
