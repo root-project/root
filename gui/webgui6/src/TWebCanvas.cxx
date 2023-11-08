@@ -552,6 +552,63 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       f1->Save(0, 0, 0, 0, 0, 0);
    };
 
+   auto create_stats = [&]() {
+      TPaveStats *stats = nullptr;
+      if ((gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
+         stats = new TPaveStats(
+                        gStyle->GetStatX() - gStyle->GetStatW(),
+                        gStyle->GetStatY() - gStyle->GetStatH(),
+                        gStyle->GetStatX(),
+                        gStyle->GetStatY(), "brNDC");
+
+          // do not set optfit and optstat, they calling pad->Update,
+          // values correctly set already in TPaveStats constructor
+          // stats->SetOptFit(gStyle->GetOptFit());
+          // stats->SetOptStat(gStyle->GetOptStat());
+          stats->SetFillColor(gStyle->GetStatColor());
+          stats->SetFillStyle(gStyle->GetStatStyle());
+          stats->SetBorderSize(gStyle->GetStatBorderSize());
+          stats->SetTextFont(gStyle->GetStatFont());
+          if (gStyle->GetStatFont()%10 > 2)
+             stats->SetTextSize(gStyle->GetStatFontSize());
+          stats->SetFitFormat(gStyle->GetFitFormat());
+          stats->SetStatFormat(gStyle->GetStatFormat());
+          stats->SetName("stats");
+
+          stats->SetTextColor(gStyle->GetStatTextColor());
+          stats->SetTextAlign(12);
+          stats->SetBit(kCanDelete);
+          stats->SetBit(kMustCleanup);
+      }
+
+      return stats;
+   };
+
+   auto check_graph_funcs = [&](TGraph *gr) {
+      auto funcs = gr->GetListOfFunctions();
+
+      TIter fiter(funcs);
+      TPaveStats *stats = nullptr;
+      bool has_tf1 = false;
+
+      while (auto fobj = fiter()) {
+        if (fobj->InheritsFrom(TPaveStats::Class()))
+            stats = dynamic_cast<TPaveStats *> (fobj);
+        else if (fobj->InheritsFrom(TF1::Class())) {
+           check_save_tf1(fobj);
+           has_tf1 = true;
+        }
+      }
+
+      if (!stats && has_tf1 && !gr->TestBit(TGraph::kNoStats)) {
+         stats = create_stats();
+         if (stats) {
+            stats->SetParent(funcs);
+            funcs->Add(stats);
+         }
+      }
+   };
+
    iter.Reset();
 
    bool first_obj = true;
@@ -613,34 +670,12 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString o = hopt;
          o.ToUpper();
 
-         if (!stats && (first_obj || o.Contains("SAMES")) && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
-            stats = new TPaveStats(
-                           gStyle->GetStatX() - gStyle->GetStatW(),
-                           gStyle->GetStatY() - gStyle->GetStatH(),
-                           gStyle->GetStatX(),
-                           gStyle->GetStatY(), "brNDC");
-
-             stats->SetParent(hist);
-             // do not set optfit and optstat, they calling pad->Update,
-             // values correctly set already in TPaveStats constructor
-             // stats->SetOptFit(gStyle->GetOptFit());
-             // stats->SetOptStat(gStyle->GetOptStat());
-             stats->SetFillColor(gStyle->GetStatColor());
-             stats->SetFillStyle(gStyle->GetStatStyle());
-             stats->SetBorderSize(gStyle->GetStatBorderSize());
-             stats->SetTextFont(gStyle->GetStatFont());
-             if (gStyle->GetStatFont()%10 > 2)
-                stats->SetTextSize(gStyle->GetStatFontSize());
-             stats->SetFitFormat(gStyle->GetFitFormat());
-             stats->SetStatFormat(gStyle->GetStatFormat());
-             stats->SetName("stats");
-
-             stats->SetTextColor(gStyle->GetStatTextColor());
-             stats->SetTextAlign(12);
-             stats->SetBit(kCanDelete);
-             stats->SetBit(kMustCleanup);
-
-             hist->GetListOfFunctions()->Add(stats);
+         if (!stats && (first_obj || o.Contains("SAMES"))) {
+            stats = create_stats();
+            if (stats) {
+                stats->SetParent(hist);
+                hist->GetListOfFunctions()->Add(stats);
+            }
          }
 
          if (!palette && CanCreateObject("TPaletteAxis") && checkNeedPalette(hist, o)) {
@@ -667,17 +702,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          flush_master();
 
          TGraph *gr = static_cast<TGraph *>(obj);
-         auto funcs = gr->GetListOfFunctions();
 
-         TIter fiter(funcs);
-         TPaveStats *stats = nullptr;
-
-         while (auto fobj = fiter()) {
-           if (fobj->InheritsFrom(TPaveStats::Class()))
-               stats = dynamic_cast<TPaveStats *> (fobj);
-           else if (fobj->InheritsFrom(TF1::Class()))
-              check_save_tf1(fobj);
-         }
+         check_graph_funcs(gr);
 
          TString gropt = iter.GetOption();
 
@@ -687,7 +713,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             gr->GetHistogram();
 
          if (title && first_obj) gropt.Append(";;use_pad_title");
-         if (stats) gropt.Append(";;use_pad_stats");
 
          paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
@@ -719,13 +744,15 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          flush_master();
 
          TMultiGraph *mgr = static_cast<TMultiGraph *>(obj);
-         auto funcs = mgr->GetListOfFunctions();
-
-         TIter fiter(funcs);
+         TIter fiter(mgr->GetListOfFunctions());
          while (auto fobj = fiter()) {
             if (fobj->InheritsFrom(TF1::Class()))
                check_save_tf1(fobj);
          }
+
+         TIter giter(mgr->GetListOfGraphs());
+         while (auto gobj = giter())
+            check_graph_funcs(static_cast<TGraph *>(gobj));
 
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
