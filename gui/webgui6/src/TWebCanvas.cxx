@@ -116,6 +116,8 @@ Either by specifying `root --web=off` when starting ROOT or by setting `Canvas.N
 
 using namespace std::string_literals;
 
+static const std::string sid_pad_histogram = "__pad_histogram__";
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
@@ -688,10 +690,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          if (title && first_obj) hopt.Append(";;use_pad_title");
 
-         // if (stats) hopt.Append(";;use_pad_stats");
-
-         if (palette) hopt.Append(";;use_pad_palette");
-
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          if (hist->GetDimension() == 2)
@@ -1242,6 +1240,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
    for (unsigned n = 0; n < arr->size(); ++n) {
       auto &r = arr->at(n);
+
       TPad *pad = dynamic_cast<TPad *>(FindPrimitive(r.snapid));
 
       if (!pad)
@@ -1352,7 +1351,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
       TObjLink *objlnk = nullptr;
 
-      TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", 1, pad, &objlnk));
+      TH1 *hist = static_cast<TH1 *>(FindPrimitive(sid_pad_histogram, 1, pad, &objlnk));
 
       if (hist) {
 
@@ -2348,27 +2347,26 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
       pad = Canvas();
 
    std::string subelement;
-   auto separ = sid.find("#");
    long unsigned id = 0;
+   bool search_hist = (sid == sid_pad_histogram);
+   if (!search_hist) {
+      auto separ = sid.find("#");
 
-   if (separ == std::string::npos) {
-      id = std::stoul(sid);
-   } else {
-      subelement = sid.substr(separ + 1);
-      id = std::stoul(sid.substr(0, separ));
+      if (separ == std::string::npos) {
+         id = std::stoul(sid);
+      } else {
+         subelement = sid.substr(separ + 1);
+         id = std::stoul(sid.substr(0, separ));
+      }
+      if (TString::Hash(&pad, sizeof(pad)) == id)
+         return pad;
    }
 
-   if (TString::Hash(&pad, sizeof(pad)) == id)
-      return pad;
-
-   auto lnk = pad->GetListOfPrimitives()->FirstLink();
-   TObject *obj = nullptr;
-
-   for (; lnk != nullptr; lnk = lnk->Next()) {
-      obj = lnk->GetObject();
+   for (auto lnk = pad->GetListOfPrimitives()->FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
+      TObject *obj = lnk->GetObject();
       if (!obj) continue;
 
-      if (TString::Hash(&obj, sizeof(obj)) != id) {
+      if (!search_hist && (TString::Hash(&obj, sizeof(obj)) != id)) {
          if (obj->InheritsFrom(TPad::Class())) {
             obj = FindPrimitive(sid, idcnt, (TPad *)obj, objlnk, objpad);
             if (objpad && !*objpad)
@@ -2380,105 +2378,111 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
       }
 
       // one may require to access n-th object
-      if (--idcnt > 0)
+      if (!search_hist && --idcnt > 0)
          continue;
 
-      break;
-   }
+      if (objpad)
+         *objpad = pad;
 
-   if (!lnk)
-      return nullptr;
-
-   if (objpad)
-      *objpad = pad;
-
-   if (subelement.empty()) {
       if (objlnk)
          *objlnk = lnk;
-      return obj;
-   }
 
-   auto getHistogram = [](TObject *container) -> TH1* {
-      auto offset = container->IsA()->GetDataMemberOffset("fHistogram");
-      if (offset > 0)
-         return *((TH1 **)((char *)container + offset));
-      ::Error("getHistogram", "Cannot access fHistogram data member in %s", container->ClassName());
-      return nullptr;
-   };
+      if (search_hist)
+         subelement = "hist";
 
-   while(!subelement.empty() && obj) {
-      std::string kind = subelement;
-      separ = kind.find("#");
-      if (separ == std::string::npos) {
-         subelement.clear();
-      } else {
-         kind.resize(separ);
-         subelement = subelement.substr(separ + 1);
+      auto getHistogram = [](TObject *container) -> TH1* {
+         auto offset = container->IsA()->GetDataMemberOffset("fHistogram");
+         if (offset > 0)
+            return *((TH1 **)((char *)container + offset));
+         ::Error("getHistogram", "Cannot access fHistogram data member in %s", container->ClassName());
+         return nullptr;
+      };
+
+      while(!subelement.empty() && obj) {
+         // do not return link if sub-selement is searched - except for histogram
+         if (!search_hist && objlnk)
+            *objlnk = nullptr;
+
+         std::string kind = subelement;
+         auto separ = kind.find("#");
+         if (separ == std::string::npos) {
+            subelement.clear();
+         } else {
+            kind.resize(separ);
+            subelement = subelement.substr(separ + 1);
+         }
+
+         TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
+         TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
+         TGraph2D *gr2d = obj->InheritsFrom(TGraph2D::Class()) ? static_cast<TGraph2D *>(obj) : nullptr;
+         TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
+         TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
+         THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
+         TF1 *f1 = obj->InheritsFrom(TF1::Class()) ? static_cast<TF1 *>(obj) : nullptr;
+
+         if (kind.compare("hist") == 0) {
+            if (h1)
+               obj = h1;
+            else if (gr)
+               obj = getHistogram(gr);
+            else if (mg)
+               obj = getHistogram(mg);
+            else if (hs)
+               obj = getHistogram(hs);
+            else if (scatter)
+               obj = getHistogram(scatter);
+            else if (f1)
+               obj = getHistogram(f1);
+            else if (gr2d)
+               obj = getHistogram(gr2d);
+            else
+               obj = nullptr;
+         } else if (kind.compare("x") == 0) {
+            obj = h1 ? h1->GetXaxis() : nullptr;
+         } else if (kind.compare("y") == 0) {
+            obj = h1 ? h1->GetYaxis() : nullptr;
+         } else if (kind.compare("z") == 0) {
+            obj = h1 ? h1->GetZaxis() : nullptr;
+         } else if ((kind.compare(0,5,"func_") == 0) || (kind.compare(0,5,"indx_") == 0)) {
+            auto funcname = kind.substr(5);
+            TList *col = nullptr;
+            if (h1)
+               col = h1->GetListOfFunctions();
+            else if (gr)
+               col = gr->GetListOfFunctions();
+            else if (mg)
+               col = mg->GetListOfFunctions();
+            else if (scatter->GetGraph())
+               col = scatter->GetGraph()->GetListOfFunctions();
+            if (!col)
+               obj = nullptr;
+            else if (kind.compare(0,5,"func_") == 0)
+               obj = col->FindObject(funcname.c_str());
+            else
+               obj = col->At(std::stoi(funcname));
+         } else if (kind.compare(0,7,"graphs_") == 0) {
+            TList *graphs = mg ? mg->GetListOfGraphs() : nullptr;
+            obj = graphs ? graphs->At(std::stoi(kind.substr(7))) : nullptr;
+         } else if (kind.compare(0,6,"hists_") == 0) {
+            TList *hists = hs ? hs->GetHists() : nullptr;
+            obj = hists ? hists->At(std::stoi(kind.substr(6))) : nullptr;
+         } else if (kind.compare(0,6,"stack_") == 0) {
+            auto stack = hs ? hs->GetStack() : nullptr;
+            obj = stack ? stack->At(std::stoi(kind.substr(6))) : nullptr;
+         } else if (kind.compare(0,7,"member_") == 0) {
+            auto member = kind.substr(7);
+            auto offset = obj->IsA() ? obj->IsA()->GetDataMemberOffset(member.c_str()) : 0;
+            obj = (offset > 0) ? *((TObject **)((char *) obj + offset)) : nullptr;
+         } else {
+             obj = nullptr;
+         }
       }
 
-      TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
-      TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
-      TGraph2D *gr2d = obj->InheritsFrom(TGraph2D::Class()) ? static_cast<TGraph2D *>(obj) : nullptr;
-      TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
-      TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
-      THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
-      TF1 *f1 = obj->InheritsFrom(TF1::Class()) ? static_cast<TF1 *>(obj) : nullptr;
-
-      if (kind.compare("hist") == 0) {
-         if (gr)
-            obj = getHistogram(gr);
-         else if (mg)
-            obj = getHistogram(mg);
-         else if (hs)
-            obj = getHistogram(hs);
-         else if (scatter)
-            obj = getHistogram(scatter);
-         else if (f1)
-            obj = getHistogram(f1);
-         else if (gr2d)
-            obj = getHistogram(gr2d);
-      } else if (kind.compare("x") == 0) {
-         obj = h1 ? h1->GetXaxis() : nullptr;
-      } else if (kind.compare("y") == 0) {
-         obj = h1 ? h1->GetYaxis() : nullptr;
-      } else if (kind.compare("z") == 0) {
-         obj = h1 ? h1->GetZaxis() : nullptr;
-      } else if ((kind.compare(0,5,"func_") == 0) || (kind.compare(0,5,"indx_") == 0)) {
-         auto funcname = kind.substr(5);
-         TList *col = nullptr;
-         if (h1)
-            col = h1->GetListOfFunctions();
-         else if (gr)
-            col = gr->GetListOfFunctions();
-         else if (mg)
-            col = mg->GetListOfFunctions();
-         else if (scatter->GetGraph())
-            col = scatter->GetGraph()->GetListOfFunctions();
-         if (!col)
-            obj = nullptr;
-         else if (kind.compare(0,5,"func_") == 0)
-            obj = col->FindObject(funcname.c_str());
-         else
-            obj = col->At(std::stoi(funcname));
-      } else if (kind.compare(0,7,"graphs_") == 0) {
-         TList *graphs = mg ? mg->GetListOfGraphs() : nullptr;
-         obj = graphs ? graphs->At(std::stoi(kind.substr(7))) : nullptr;
-      } else if (kind.compare(0,6,"hists_") == 0) {
-         TList *hists = hs ? hs->GetHists() : nullptr;
-         obj = hists ? hists->At(std::stoi(kind.substr(6))) : nullptr;
-      } else if (kind.compare(0,6,"stack_") == 0) {
-         auto stack = hs ? hs->GetStack() : nullptr;
-         obj = stack ? stack->At(std::stoi(kind.substr(6))) : nullptr;
-      } else if (kind.compare(0,7,"member_") == 0) {
-         auto member = kind.substr(7);
-         auto offset = obj->IsA() ? obj->IsA()->GetDataMemberOffset(member.c_str()) : 0;
-         obj = (offset > 0) ? *((TObject **)((char *) obj + offset)) : nullptr;
-      } else {
-          obj = nullptr;
-      }
+      if (!search_hist || obj)
+         return obj;
    }
 
-   return obj;
+   return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
