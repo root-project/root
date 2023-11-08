@@ -3527,6 +3527,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
    TArrow arrow;
    arrow.SetLineWidth(theGraph->GetLineWidth());
+   arrow.SetLineStyle(theGraph->GetLineStyle());
    arrow.SetLineColor(theGraph->GetLineColor());
    arrow.SetFillColor(theGraph->GetFillColor());
 
