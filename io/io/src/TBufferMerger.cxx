@@ -62,6 +62,7 @@ std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
    std::shared_ptr<TBufferMergerFile> f(new TBufferMergerFile(*this));
    gROOT->GetListOfFiles()->Remove(f.get());
    fAttachedFiles.push_back(f);
+   fNumAttachedFiles++;
    return f;
 }
 
@@ -140,8 +141,21 @@ bool TBufferMerger::TryMerge(ROOT::TBufferMergerFile *memfile)
       MergeImpl();
       fMergeMutex.unlock();
       return true;
-   } else
-      return false;
+   }
+
+   // Otherwise peek into the current queue: If it holds more buffers than open
+   // files, heuristically decide to wait for the current merge to finish. This
+   // avoids ever increasing memory usage.
+   size_t queueSize = GetQueueSize();
+   if (queueSize > fNumAttachedFiles) {
+      std::lock_guard q(fMergeMutex);
+      memfile->WriteStreamerInfo();
+      fMerger.AddFile(memfile);
+      MergeImpl();
+      return true;
+   }
+
+   return false;
 }
 
 } // namespace ROOT
