@@ -211,6 +211,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
 
 void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const RNTuple &anchor)
 {
+   // TOOD(jblomer): can the epoch check be factored out across anchors?
    if (anchor.fVersionEpoch != RNTuple::kVersionEpoch) {
       throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
    }
