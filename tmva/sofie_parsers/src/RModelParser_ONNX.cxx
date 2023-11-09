@@ -63,6 +63,7 @@ extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseErf;
+extern ParserFuncSignature ParseWhere;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -132,6 +133,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Expand", ParseExpand);
    RegisterOperator("Gather", ParseGather);
    RegisterOperator("Erf", ParseErf);
+   RegisterOperator("Where", ParseWhere);
 }
 
 // Destructor of the parser
@@ -285,7 +287,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       std::string input_name = valueinfoproto.name();
 
       ETensorType type = static_cast<ETensorType>(valueinfoproto.type().tensor_type().elem_type());
-      if (type != ETensorType::FLOAT && type != ETensorType::INT32 && type != ETensorType::INT64) {
+      if (type != ETensorType::FLOAT && type != ETensorType::INT32 && type != ETensorType::INT64 && type!= ETensorType::BOOL) {
          throw std::runtime_error("TMVA::SOFIE Data type in input tensor " + input_name + " not supported!\n");
       }
 
