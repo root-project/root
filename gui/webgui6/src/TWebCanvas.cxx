@@ -643,10 +643,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          while (auto fobj = fiter())
             h1->GetListOfFunctions()->Add(fobj->Clone());
 
-         TString hopt = iter.GetOption();
-         if (title && first_obj) hopt.Append(";;use_pad_title");
-
-         paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
 
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
@@ -688,8 +685,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                hist->GetListOfFunctions()->AddFirst(palette);
          }
 
-         if (title && first_obj) hopt.Append(";;use_pad_title");
-
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          if (hist->GetDimension() == 2)
@@ -709,8 +704,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (!IsReadOnly() && (first_obj || gropt.Index("A", 0, TString::kIgnoreCase) != kNPOS ||
                (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS) || (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS)))
             gr->GetHistogram();
-
-         if (title && first_obj) gropt.Append(";;use_pad_title");
 
          paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
@@ -758,13 +751,12 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TScatter::Class())) {
          flush_master();
 
-         TScatter *scatter = (TScatter *)obj;
-         auto funcs = scatter->GetGraph()->GetListOfFunctions();
+         TScatter *scatter = static_cast<TScatter *>(obj);
 
-         TIter fiter(funcs);
-         TObject *fobj = nullptr, *palette = nullptr;
+         TIter fiter(scatter->GetGraph()->GetListOfFunctions());
+         TObject *palette = nullptr;
 
-         while ((fobj = fiter()) != nullptr) {
+         while (auto fobj = fiter()) {
             if (fobj->InheritsFrom("TPaletteAxis"))
                palette = fobj;
          }
@@ -778,21 +770,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             exec << "new TPaletteAxis(0,0,0,0,0,0);";
             palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
             if (palette)
-               funcs->AddFirst(palette);
+               scatter->GetGraph()->GetListOfFunctions()->AddFirst(palette);
          }
 
-         TString scopt = iter.GetOption();
-         if (title && first_obj) scopt.Append(";;use_pad_title");
-         if (palette) scopt.Append(";;use_pad_palette");
-
-         paddata.NewPrimitive(obj, scopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
-
-         fiter.Reset();
-         while ((fobj = fiter()) != nullptr)
-            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
-
-         if (funcs)
-            fPrimitivesLists.Add(funcs);
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          first_obj = false;
       } else if (obj->InheritsFrom(TF1::Class())) {
