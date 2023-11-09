@@ -46,9 +46,6 @@ TBufferMerger::~TBufferMerger()
    for (const auto &f : fAttachedFiles)
       if (!f.expired()) Fatal("TBufferMerger", " TBufferMergerFiles must be destroyed before the server");
 
-   if (!fQueue.empty())
-      Merge();
-
    // Since we support purely incremental merging, Merge does not write the target objects
    // that are attached to the file (TTree and histograms) and thus we need to write them
    // now.
@@ -62,31 +59,7 @@ std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
    std::shared_ptr<TBufferMergerFile> f(new TBufferMergerFile(*this));
    gROOT->GetListOfFiles()->Remove(f.get());
    fAttachedFiles.push_back(f);
-   fNumAttachedFiles++;
    return f;
-}
-
-size_t TBufferMerger::GetQueueSize() const
-{
-   std::lock_guard<std::mutex> lock(fQueueMutex);
-   return fQueue.size();
-}
-
-void TBufferMerger::Push(TBufferFile *buffer)
-{
-   {
-      std::lock_guard<std::mutex> lock(fQueueMutex);
-      fBuffered += buffer->BufferSize();
-      fQueue.push(buffer);
-   }
-
-   if (fBuffered > fAutoSave)
-      Merge();
-}
-
-size_t TBufferMerger::GetAutoSave() const
-{
-   return fAutoSave;
 }
 
 const char *TBufferMerger::GetMergeOptions()
@@ -95,67 +68,19 @@ const char *TBufferMerger::GetMergeOptions()
 }
 
 
-void TBufferMerger::SetAutoSave(size_t size)
-{
-   fAutoSave = size;
-}
-
 void TBufferMerger::SetMergeOptions(const TString& options)
 {
    fMerger.SetMergeOptions(options);
 }
 
-void TBufferMerger::Merge()
+void TBufferMerger::Merge(ROOT::TBufferMergerFile *memfile)
 {
-   if (fMergeMutex.try_lock()) {
-      MergeImpl();
-      fMergeMutex.unlock();
-   }
-}
-
-void TBufferMerger::MergeImpl()
-{
-   std::queue<TBufferFile *> queue;
-   {
-      std::lock_guard<std::mutex> q(fQueueMutex);
-      std::swap(queue, fQueue);
-      fBuffered = 0;
-   }
-
-   while (!queue.empty()) {
-      std::unique_ptr<TBufferFile> buffer{queue.front()};
-      fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
-      queue.pop();
-   }
-
+   std::lock_guard q(fMergeMutex);
+   memfile->WriteStreamerInfo();
+   fMerger.AddFile(memfile);
    fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite |
                         TFileMerger::kKeepCompression);
    fMerger.Reset();
-}
-
-bool TBufferMerger::TryMerge(ROOT::TBufferMergerFile *memfile)
-{
-   if (fMergeMutex.try_lock()) {
-      memfile->WriteStreamerInfo();
-      fMerger.AddFile(memfile);
-      MergeImpl();
-      fMergeMutex.unlock();
-      return true;
-   }
-
-   // Otherwise peek into the current queue: If it holds more buffers than open
-   // files, heuristically decide to wait for the current merge to finish. This
-   // avoids ever increasing memory usage.
-   size_t queueSize = GetQueueSize();
-   if (queueSize > fNumAttachedFiles) {
-      std::lock_guard q(fMergeMutex);
-      memfile->WriteStreamerInfo();
-      fMerger.AddFile(memfile);
-      MergeImpl();
-      return true;
-   }
-
-   return false;
 }
 
 } // namespace ROOT
