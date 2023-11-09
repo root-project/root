@@ -164,7 +164,7 @@ ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer, s
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fLenHeader);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fNBytesFooter);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fLenFooter);
-   auto result = RNTupleSerializer::DeserializeString(bytes, bufSize - 20, fObjClass);
+   auto result = RNTupleSerializer::DeserializeString(bytes, bufSize - 32, fObjClass);
    if (!result)
       return R__FORWARD_ERROR(result);
    return result.Unwrap() + 32;
