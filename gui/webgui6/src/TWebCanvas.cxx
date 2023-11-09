@@ -417,9 +417,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
    }
 
-   TList *primitives = pad->GetListOfPrimitives();
+   fAllPads.emplace_back(pad);
 
-   if (primitives) fPrimitivesLists.Add(primitives); // add list of primitives
+   TList *primitives = pad->GetListOfPrimitives();
 
    TWebPS masterps;
    bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
@@ -849,39 +849,27 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    if (!resfunc)
       return;
 
-   // now move all primitives and functions into separate list to perform I/O
-
-   TList save_lst;
-   TIter diter(&fPrimitivesLists);
-   TList *dlst = nullptr;
-   while ((dlst = (TList *)diter()) != nullptr) {
-      TIter fiter(dlst);
-      while ((obj = fiter()) != nullptr)
-         save_lst.Add(obj, fiter.GetOption());
-      save_lst.Add(dlst); // add list itself to have marker
-      dlst->Clear("nodelete");
+   // now hide all primitives to perform I/O
+   std::vector<TList *> all_primitives(fAllPads.size());
+   for (unsigned n = 0; n < fAllPads.size(); ++n) {
+      all_primitives[n] = fAllPads[n]->fPrimitives;
+      fAllPads[n]->fPrimitives = nullptr;
    }
 
    // execute function to prevent storing of colors with custom TCanvas streamer
    // TODO: Olivier - we need to change logic here!
    TColor::DefinedColors();
 
-   // invoke callback for master painting
+   // invoke callback for streaming
    resfunc(&paddata);
 
-   TIter siter(&save_lst);
-   diter.Reset();
-   while ((dlst = (TList *)diter()) != nullptr) {
-      while ((obj = siter()) != nullptr) {
-         if (obj == dlst)
-            break;
-         dlst->Add(obj, siter.GetOption());
-      }
+   // and restore back primitives - delete any temporary if necessary
+   for (unsigned n = 0; n < fAllPads.size(); ++n) {
+      if (fAllPads[n]->fPrimitives)
+         delete fAllPads[n]->fPrimitives;
+      fAllPads[n]->fPrimitives = all_primitives[n];
    }
-
-   save_lst.Clear("nodelete");
-
-   fPrimitivesLists.Clear("nodelete");
+   fAllPads.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

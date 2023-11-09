@@ -90,7 +90,7 @@ protected:
    Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
-   TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
+   std::vector<TPad *> fAllPads;   ///<! list of all pads recognized during streaming
    Int_t fStyleDelivery{0};        ///<! gStyle delivery to clients: 0:never, 1:once, 2:always
    Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
