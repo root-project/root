@@ -4071,8 +4071,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 std::unique_ptr<TFile> OpenU(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
-   std::unique_ptr<TFile> uniquePtr { TFile::Open(&url, &options, &title, compress, netopt) };
-   return(uniquePtr);
+   return std::unique_ptr<TFile>{ TFile::Open(&url, &options, &title, compress, netopt) };
 }
 
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
