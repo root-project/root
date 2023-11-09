@@ -467,66 +467,57 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 /// Set \f$ x \f$ must be contained in \f$ v \f$ and set \f$ y \f$ must be contained in \f$ w \f$.
 ///
 
-double RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
+double RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const
 {
-  // WVE needs adaptation to handle new rangeName feature
+   // WVE needs adaptation to handle new rangeName feature
 
-  // Handle trivial passthrough scenario
-  if (code==0) return getVal(normSet) ;
+   // Handle trivial passthrough scenario
+   if (code == 0)
+      return getVal(normSet);
 
-  // Unpack master code
-  RooArgSet *intCoefSet, *intConvSet, *normCoefSet, *normConvSet ;
-  _codeReg.retrieve(code-1,intCoefSet,intConvSet,normCoefSet,normConvSet) ;
+   // Unpack master code
+   RooArgSet *intCoefSet, *intConvSet, *normCoefSet, *normConvSet;
+   _codeReg.retrieve(code - 1, intCoefSet, intConvSet, normCoefSet, normConvSet);
 
-  Int_t index(0) ;
-  double answer(0) ;
+   Int_t index(0);
 
-  if (normCoefSet==nullptr&&normConvSet==nullptr) {
+   if (normCoefSet == nullptr && normConvSet == nullptr) {
+      // Integral over unnormalized function
+      double integral(0);
+      const TNamed *rangeNamePtr = RooNameReg::ptr(rangeName);
+      for (auto *conv : static_range_cast<RooAbsPdf *>(_convSet)) {
+         double coef = getCoefNorm(index++, intCoefSet, rangeNamePtr);
+         if (coef != 0) {
+            const double term = coef * conv->getNormObj(nullptr, intConvSet, rangeNamePtr)->getVal();
+            integral += term;
+            cxcoutD(Eval) << "RooAbsAnaConv::aiWN(" << GetName() << ") [" << index - 1 << "] integral += " << term
+                          << std::endl;
+         }
+      }
+      return integral;
+   }
 
-    // Integral over unnormalized function
-    double integral(0) ;
-    const TNamed *_rangeName = RooNameReg::ptr(rangeName);
-    for (auto convArg : _convSet) {
-      auto conv = static_cast<RooAbsPdf*>(convArg);
-      double coef = getCoefNorm(index++,intCoefSet,_rangeName) ;
-      //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ;
-      if (coef!=0) {
-   integral += coef* conv->getNormObj(nullptr,intConvSet,_rangeName)->getVal();
-   cxcoutD(Eval) << "RooAbsAnaConv::aiWN(" << GetName() << ") [" << index-1 << "] integral += " << conv->getNorm(intConvSet) << endl ;
+   // Integral over normalized function
+   double integral(0);
+   double norm(0);
+   const TNamed *rangeNamePtr = RooNameReg::ptr(rangeName);
+   for (auto *conv : static_range_cast<RooAbsPdf *>(_convSet)) {
+
+      double coefInt = getCoefNorm(index, intCoefSet, rangeNamePtr);
+      if (coefInt != 0) {
+         double term = conv->getNormObj(nullptr, intConvSet, rangeNamePtr)->getVal();
+         integral += coefInt * term;
       }
 
-    }
-    answer = integral ;
-
-  } else {
-
-    // Integral over normalized function
-    double integral(0) ;
-    double norm(0) ;
-    const TNamed *_rangeName = RooNameReg::ptr(rangeName);
-    for (auto convArg : _convSet) {
-      auto conv = static_cast<RooAbsPdf*>(convArg);
-
-      double coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
-      //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
-      if (coefInt!=0) {
-   double term = conv->getNormObj(nullptr,intConvSet,_rangeName)->getVal();
-   integral += coefInt*term ;
+      double coefNorm = getCoefNorm(index, normCoefSet);
+      if (coefNorm != 0) {
+         double term = conv->getNormObj(nullptr, normConvSet)->getVal();
+         norm += coefNorm * term;
       }
 
-      double coefNorm = getCoefNorm(index,normCoefSet) ;
-      //cout << "coefNorm[" << index << "] = " << coefNorm << "*" << term << " " << (normCoefSet?*normCoefSet:RooArgSet()) << endl ;
-      if (coefNorm!=0) {
-   double term = conv->getNormObj(nullptr,normConvSet)->getVal();
-   norm += coefNorm*term ;
-      }
-
-      index++ ;
-    }
-    answer = integral/norm ;
-  }
-
-  return answer ;
+      index++;
+   }
+   return integral / norm;
 }
 
 

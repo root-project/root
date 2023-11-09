@@ -29,8 +29,8 @@ public:
                  kLightMask     = 0x001f,
                  kLightSpecular = 0x0100 };
 private:
-   TGLLightSet(const TGLLightSet&);            // Not implemented
-   TGLLightSet& operator=(const TGLLightSet&); // Not implemented
+   TGLLightSet(const TGLLightSet&) = delete;
+   TGLLightSet& operator=(const TGLLightSet&) = delete;
 
 protected:
    UInt_t        fLightState;   //! light states (on/off) mask

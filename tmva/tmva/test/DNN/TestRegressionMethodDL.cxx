@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  :                                                                       *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Testing Method DL for Regression                                          *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef TMVA_TEST_DNN_TEST_REGRESSION_TEST_METHOD_DL_H
