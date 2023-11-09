@@ -69,8 +69,6 @@ struct RDaosNTupleAnchor {
    std::uint16_t fVersionMajor = RNTuple::kVersionMajor;
    std::uint16_t fVersionMinor = RNTuple::kVersionMinor;
    std::uint16_t fVersionPatch = RNTuple::kVersionPatch;
-   /// The file offset of the header excluding the TKey part
-   /// The file offset of the header excluding the TKey part
    /// The size of the compressed ntuple header
    std::uint32_t fNBytesHeader = 0;
    /// The size of the uncompressed ntuple header
