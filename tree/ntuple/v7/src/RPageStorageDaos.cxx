@@ -132,8 +132,8 @@ std::uint32_t ROOT::Experimental::Detail::RDaosNTupleAnchor::Serialize(void *buf
       bytes += RNTupleSerializer::SerializeUInt64(fVersionAnchor, bytes);
       bytes += RNTupleSerializer::SerializeUInt16(fVersionEpoch, bytes);
       bytes += RNTupleSerializer::SerializeUInt16(fVersionMajor, bytes);
-      bytes += RNTupleSerializer::SerializeUInt16(fVersionMajor, bytes);
-      bytes += RNTupleSerializer::SerializeUInt16(fVersionMajor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionMinor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionPatch, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fNBytesHeader, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fLenHeader, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fNBytesFooter, bytes);
