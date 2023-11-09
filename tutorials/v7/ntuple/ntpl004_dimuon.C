@@ -54,8 +54,7 @@ void ntpl004_dimuon() {
 
    auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
 
-   // The tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
-   // InvariantMassStdVector instead of InvariantMass (to be fixed in a later version of RNTuple)
+   // The tutorial is identical to df102_NanoAODDimuonAnalysis except the use of RNTuple.
 
    // For simplicity, select only events with exactly two muons and require opposite charge
    auto df_2mu = df.Filter("#Muon == 2", "Events with exactly two muons");
