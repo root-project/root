@@ -27,7 +27,11 @@ void multigraph()
    auto gr1 = new TGraphErrors(n1,px1,py1,ex1,ey1);
    gr1->SetMarkerColor(kBlue);
    gr1->SetMarkerStyle(21);
-   gr1->Fit("pol6","q");
+
+   gr1->Fit("gaus","q");
+   auto func1 = (TF1 *) gr1->GetListOfFunctions()->FindObject("gaus");
+   func1->SetLineColor(kBlue);
+
    mg->Add(gr1);
 
    // create second graph
@@ -39,7 +43,11 @@ void multigraph()
    auto gr2 = new TGraphErrors(n2,x2,y2,ex2,ey2);
    gr2->SetMarkerColor(kRed);
    gr2->SetMarkerStyle(20);
+
    gr2->Fit("pol5","q");
+   auto func2 = (TF1 *) gr2->GetListOfFunctions()->FindObject("pol5");
+   func2->SetLineColor(kRed);
+   func2->SetLineStyle(2);
 
    mg->Add(gr2);
 
@@ -47,14 +55,15 @@ void multigraph()
 
    //force drawing of canvas to generate the fit TPaveStats
    c1->Update();
-   auto stats1 = (TPaveStats*)gr1->GetListOfFunctions()->FindObject("stats");
-   auto stats2 = (TPaveStats*)gr2->GetListOfFunctions()->FindObject("stats");
+
+   auto stats1 = (TPaveStats*) gr1->GetListOfFunctions()->FindObject("stats");
+   auto stats2 = (TPaveStats*) gr2->GetListOfFunctions()->FindObject("stats");
 
    if (stats1 && stats2) {
       stats1->SetTextColor(kBlue);
       stats2->SetTextColor(kRed);
-      stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
-      stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
+      stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.82);
+      stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.75);
       c1->Modified();
    }
 }
