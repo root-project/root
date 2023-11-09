@@ -164,6 +164,7 @@ private:
    std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
    mutable std::mutex fQueueMutex;                               //< Mutex used to lock fQueue
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
+   std::atomic<size_t> fNumAttachedFiles{0};                     //< Number of attached files
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
 };
 
