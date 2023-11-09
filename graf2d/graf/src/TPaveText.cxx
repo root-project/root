@@ -576,7 +576,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
       x2 = fX2 - 0.25*dx;
       y1 = fY2 - 0.02*dy;
       y2 = fY2 + 0.02*dy;
-      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
+      TString opt = GetDrawOption(); opt.ReplaceAll("NDC", "");
+      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),opt.Data());
       title.SetFillColor(GetFillColor());
       title.SetTextColor(GetTextColor());
       title.SetTextFont(GetTextFont());
