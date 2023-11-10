@@ -586,8 +586,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       return stats;
    };
 
-   auto check_graph_funcs = [&](TGraph *gr) {
-      auto funcs = gr->GetListOfFunctions();
+   auto check_graph_funcs = [&](TGraph *gr, TList *funcs = nullptr) {
+      if (!funcs && gr)
+         funcs = gr->GetListOfFunctions();
+      if (!funcs)
+         return;
 
       TIter fiter(funcs);
       TPaveStats *stats = nullptr;
@@ -602,7 +605,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
         }
       }
 
-      if (!stats && has_tf1 && !gr->TestBit(TGraph::kNoStats)) {
+      if (!stats && has_tf1 && gr && !gr->TestBit(TGraph::kNoStats)) {
          stats = create_stats();
          if (stats) {
             stats->SetParent(funcs);
@@ -626,7 +629,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          continue;
       } else if (obj->InheritsFrom(TH1K::Class())) {
          flush_master();
-         TH1K *hist = (TH1K *)obj;
+         TH1K *hist = static_cast<TH1K *>(obj);
 
          Int_t nbins = hist->GetXaxis()->GetNbins();
 
@@ -649,14 +652,13 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          flush_master();
 
          TH1 *hist = static_cast<TH1 *>(obj);
-         TIter fiter(hist->GetListOfFunctions());
-         TObject *fobj = nullptr;
+         hist->BufferEmpty();
+
          TPaveStats *stats = nullptr;
          TObject *palette = nullptr;
 
-         hist->BufferEmpty();
-
-         while ((fobj = fiter()) != nullptr) {
+         TIter fiter(hist->GetListOfFunctions());
+         while (auto fobj = fiter()) {
             if (fobj->InheritsFrom(TPaveStats::Class()))
                stats = dynamic_cast<TPaveStats *> (fobj);
             else if (fobj->InheritsFrom("TPaletteAxis"))
@@ -713,6 +715,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          TGraph2D *gr2d = static_cast<TGraph2D *>(obj);
 
+         check_graph_funcs(nullptr, gr2d->GetListOfFunctions());
+
          // ensure correct range of histogram
          if (!IsReadOnly() && first_obj) {
             TString gropt = iter.GetOption();
@@ -753,9 +757,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          TScatter *scatter = static_cast<TScatter *>(obj);
 
-         TIter fiter(scatter->GetGraph()->GetListOfFunctions());
          TObject *palette = nullptr;
 
+         TIter fiter(scatter->GetGraph()->GetListOfFunctions());
          while (auto fobj = fiter()) {
             if (fobj->InheritsFrom("TPaletteAxis"))
                palette = fobj;
@@ -857,7 +861,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    }
 
    // execute function to prevent storing of colors with custom TCanvas streamer
-   // TODO: Olivier - we need to change logic here!
    TColor::DefinedColors();
 
    // invoke callback for streaming
