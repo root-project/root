@@ -253,12 +253,13 @@ class RH2Painter extends RHistPainter {
       this.zmax = this.gmaxbin;
 
       // this value used for logz scale drawing
-      if (this.gminposbin === null) this.gminposbin = this.gmaxbin*1e-4;
+      if ((this.gminposbin === null) && (this.gmaxbin > 0))
+         this.gminposbin = this.gmaxbin*1e-4;
 
-      if (this.options.Axis > 0) { // Paint histogram axis only
+      if (this.options.Axis > 0)  // Paint histogram axis only
          this.draw_content = false;
-      } else
-         this.draw_content = this.gmaxbin > 0;
+      else
+         this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
    }
 
    /** @summary Count statistic */

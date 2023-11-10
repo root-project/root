@@ -172,6 +172,29 @@ class RPadPainter extends RObjectPainter {
       }
    }
 
+   /** @summary Removes and cleanup specified primitive
+     * @desc also secondary primitives will be removed
+     * @return new index of the object
+    * @private */
+   removePrimitive(indx) {
+      const prim = this.painters[indx], arr = [];
+      let resindx = indx;
+      for (let k = this.painters.length-1; k >= 0; --k) {
+         if ((k === indx) || this.painters[k].isSecondary(prim)) {
+            arr.push(this.painters[k]);
+            this.painters.splice(k, 1);
+            if (k < indx) resindx--;
+         }
+      }
+
+      arr.forEach(painter => painter.cleanup());
+      if (this.main_painter_ref === prim)
+         delete this.main_painter_ref;
+
+      return resindx;
+   }
+
+
    /** @summary try to find object by name in list of pad primitives
      * @desc used to find title drawing
      * @private */
@@ -637,10 +660,10 @@ class RPadPainter extends RObjectPainter {
       }
 
       // handle used to invoke callback only when necessary
-      return this.drawObject(this.getDom(), this.pad.fPrimitives[indx], '').then(ppainter => {
+      return this.drawObject(this.getDom(), this.pad.fPrimitives[indx], '').then(op => {
          // mark painter as belonging to primitives
-         if (isObject(ppainter))
-            ppainter._primitive = true;
+         if (isObject(op))
+            op._primitive = true;
 
          return this.drawPrimitives(indx+1);
       });
@@ -1243,7 +1266,8 @@ class RPadPainter extends RObjectPainter {
        if (!isFunc(selp?.fillContextMenu)) return;
 
        return createMenu(evnt, selp).then(menu => {
-          if (selp.fillContextMenu(menu, selkind))
+          const offline_menu = selp.fillContextMenu(menu, selkind);
+          if (offline_menu || selp.snapid)
              selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
        });
    }
@@ -1414,8 +1438,7 @@ class RPadPainter extends RObjectPainter {
                const shown = [];
                this.painters.forEach((pp, indx) => {
                   const obj = pp?.getObject();
-                  if (!obj || (shown.indexOf(obj) >= 0)) return;
-                  if (pp.$secondary) return;
+                  if (!obj || (shown.indexOf(obj) >= 0) || pp.isSecondary()) return;
                   let name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
                   if (name) name += '::';
                   name += isFunc(pp.getObjectName) ? pp.getObjectName() : (obj.fName || `item${indx}`);

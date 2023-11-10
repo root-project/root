@@ -726,10 +726,16 @@ class JSRootMenu {
       this.add('endsub:');
 
       if (with_hierarchy) {
+         this.add('sub:Browser');
          this.add('Hierarchy limit:  ' + settings.HierarchyLimit, () => this.input('Max number of items in hierarchy', settings.HierarchyLimit, 'int', 10, 100000).then(val => {
             settings.HierarchyLimit = val;
             if (handle_func) handle_func('refresh');
          }));
+         this.add('Browser width:  ' + settings.BrowserWidth, () => this.input('Browser width in px', settings.BrowserWidth, 'int', 50, 2000).then(val => {
+            settings.BrowserWidth = val;
+            if (handle_func) handle_func('width');
+         }));
+         this.add('endsub:');
       }
 
       this.add('Dark mode: ' + (settings.DarkMode ? 'On' : 'Off'), () => {
@@ -1298,7 +1304,7 @@ class StandaloneMenu extends JSRootMenu {
       if (!event && this.show_evnt) event = this.show_evnt;
 
       const doc = getDocument(),
-            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.pageXOffset, y: window.pageYOffset };
+            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.scrollX, y: window.scrollY };
 
       doc.body.addEventListener('click', this.remove_handler);
 

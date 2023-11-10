@@ -382,7 +382,7 @@ class TASImagePainter extends ObjectPainter {
 
          this.selectCurrentPad(prev_name);
          // mark painter as secondary - not in list of TCanvas primitives
-         pal_painter.$secondary = true;
+         pal_painter.setSecondary(this);
 
          // make dummy redraw, palette will be updated only from histogram painter
          pal_painter.redraw = function() {};

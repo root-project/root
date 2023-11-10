@@ -3,6 +3,7 @@ import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFu
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttFillHandler } from '../base/TAttFillHandler.mjs';
@@ -59,11 +60,15 @@ class TGraphPainter extends ObjectPainter {
       if (this.$redraw_hist) {
          delete this.$redraw_hist;
          const hist_painter = this.getMainPainter();
-         if (hist_painter?.$secondary && this.axes_draw)
+         if (hist_painter?.isSecondary(this) && this.axes_draw)
             promise = hist_painter.redraw();
       }
 
-      return promise.then(() => this.drawGraph());
+      return promise.then(() => this.drawGraph()).then(() => {
+         const res = this._funcHandler?.drawNext(0) ?? this;
+         delete this._funcHandler;
+         return res;
+      });
    }
 
    /** @summary Cleanup graph painter */
@@ -131,14 +136,9 @@ class TGraphPainter extends ObjectPainter {
          }
       }
 
-      const res = this.options;
-      let d = new DrawOptions(opt);
+      const res = this.options, _a = 'AXIS;FORCE_TITLE;';
+      let d = new DrawOptions(opt), hopt = '';
 
-      // check pad options first
-      res.PadStats = d.check('USE_PAD_STATS');
-      res.PadPalette = d.check('USE_PAD_PALETTE');
-
-      let hopt = '';
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
       if (d.check('XAXIS_', true)) hopt += ';XAXIS_' + d.part;
       if (d.check('YAXIS_', true)) hopt += ';YAXIS_' + d.part;
@@ -156,7 +156,7 @@ class TGraphPainter extends ObjectPainter {
       res._plc = d.check('PLC');
       res._pmc = d.check('PMC');
 
-      if (d.check('A')) res.Axis = d.check('I') ? 'A' : 'AXIS;'; // I means invisible axis
+      if (d.check('A')) res.Axis = d.check('I') ? 'A;' : _a; // I means invisible axis
       if (d.check('X+')) { res.Axis += 'X+'; res.second_x = has_main; }
       if (d.check('Y+')) { res.Axis += 'Y+'; res.second_y = has_main; }
       if (d.check('RX')) res.Axis += 'RX';
@@ -206,9 +206,9 @@ class TGraphPainter extends ObjectPainter {
          // either graph drawn directly or
          // graph is first object in list of primitives
          const pad = this.getPadPainter()?.getRootPad(true);
-         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject())) res.Axis = 'AXIS;';
+         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject())) res.Axis = _a;
       } else if (res.Axis.indexOf('A') < 0)
-         res.Axis = 'AXIS;' + res.Axis;
+         res.Axis = _a + res.Axis;
 
       res.Axis += hopt;
 
@@ -402,6 +402,17 @@ class TGraphPainter extends ObjectPainter {
          optbins.push(selbins[n]);
 
       return optbins;
+   }
+
+   /** @summary Check if such function should be drawn directly */
+   needDrawFunc(graph, func) {
+      if (func._typename === clTPaveStats)
+          return (func.fName !== 'stats') || !graph.TestBit(kNoStats); // kNoStats is same for graph and histogram
+
+       if ((func._typename === clTF1) || (func._typename === clTF2))
+          return !func.TestBit(BIT(9)); // TF1::kNotDraw
+
+       return true;
    }
 
    /** @summary Returns tooltip for specified bin */
@@ -863,7 +874,7 @@ class TGraphPainter extends ObjectPainter {
    /** @summary draw TGraph */
    drawGraph() {
       const pmain = this.get_main(),
-          graph = this.getGraph();
+            graph = this.getGraph();
       if (!pmain) return;
 
       // special mode for TMultiGraph 3d drawing
@@ -871,9 +882,9 @@ class TGraphPainter extends ObjectPainter {
          return this.drawBins3D(pmain, graph);
 
       const is_gme = !!this.get_gme(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          w = pmain.getFrameWidth(),
-          h = pmain.getFrameHeight();
+            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            w = pmain.getFrameWidth(),
+            h = pmain.getFrameHeight();
 
       this.createG(!pmain.pad_layer);
 
@@ -1389,12 +1400,14 @@ class TGraphPainter extends ObjectPainter {
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
          const histo = this.createHistogram(),
-             hist_painter = this.getMainPainter();
-         if (hist_painter?.$secondary) {
+               hist_painter = this.getMainPainter();
+         if (hist_painter?.isSecondary(this)) {
             hist_painter.updateObject(histo, this.options.Axis);
             this.$redraw_hist = true;
          }
       }
+
+      this._funcHandler = new FunctionsHandler(this, this.getPadPainter(), obj.fFunctions);
 
       return true;
    }
@@ -1439,22 +1452,16 @@ class TGraphPainter extends ObjectPainter {
       if (stats) return stats;
 
       // do not create stats box when drawing canvas
-      if (this.getCanvPainter()?.normal_canvas || this.options.PadStats) return null;
+      if (this.getCanvPainter()?.normal_canvas) return null;
 
       this.create_stats = true;
 
       const st = gStyle;
 
       stats = create(clTPaveStats);
-      Object.assign(stats, { fName: 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1 });
-
-      stats.fX1NDC = st.fStatX - st.fStatW;
-      stats.fY1NDC = st.fStatY - st.fStatH;
-      stats.fX2NDC = st.fStatX;
-      stats.fY2NDC = st.fStatY;
-
-      stats.fFillColor = st.fStatColor;
-      stats.fFillStyle = st.fStatStyle;
+      Object.assign(stats, { fName: 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1,
+                             fX1NDC: st.fStatX - st.fStatW, fY1NDC: st.fStatY - st.fStatH, fX2NDC: st.fStatX, fY2NDC: st.fStatY,
+                             fFillColor: st.fStatColor, fFillStyle: st.fStatStyle });
 
       stats.fTextAngle = 0;
       stats.fTextSize = st.fStatFontSize; // 9 ??
@@ -1471,51 +1478,23 @@ class TGraphPainter extends ObjectPainter {
    }
 
    /** @summary Fill statistic */
-   fillStatistic(stat, dostat, dofit) {
-      // cannot fill stats without func
+   fillStatistic(stat, _dostat, dofit) {
       const func = this.findFunc();
 
-      if (!func || !dofit || !this.create_stats) return false;
+      if (!func || !dofit) return false;
 
       stat.clearPave();
 
-      stat.fillFunctionStat(func, dofit);
+      stat.fillFunctionStat(func, (dofit === 1) ? 111 : dofit, 1);
 
       return true;
-   }
-
-   /** @summary method draws next function from the functions list
-     * @return {Promise} */
-   async drawNextFunction(indx) {
-      const graph = this.getGraph();
-
-      if (indx >= (graph?.fFunctions?.arr?.length || 0))
-         return this;
-
-      const func = graph.fFunctions.arr[indx],
-            opt = graph.fFunctions.opt[indx];
-
-      //  required for stats filling
-      // TODO: use weak reference (via pad list of painters and any kind of string)
-      func.$main_painter = this;
-
-      return this.getPadPainter().drawObject(this.getDom(), func, opt).then(() => this.drawNextFunction(indx+1));
-   }
-
-   /** @summary Return draw option for axis histogram
-     * @private */
-   getHistoOpt() {
-      let hopt = this.options.Axis;
-      if (hopt.indexOf('AXIS;') === 0)
-         hopt = hopt.slice(5);
-      return hopt;
    }
 
    /** @summary Draw axis histogram
      * @private */
    async drawAxisHisto() {
       const histo = this.createHistogram();
-      return TH1Painter.draw(this.getDom(), histo, this.getHistoOpt());
+      return TH1Painter.draw(this.getDom(), histo, this.options.Axis);
    }
 
    /** @summary Draw TGraph
@@ -1532,18 +1511,18 @@ class TGraphPainter extends ObjectPainter {
 
       if ((!painter.getMainPainter() || painter.options.second_x || painter.options.second_y) && painter.options.Axis) {
          promise = painter.drawAxisHisto().then(hist_painter => {
-            if (!hist_painter) return;
-            painter.axes_draw = true;
-            if (!painter._own_histogram)
-               painter.$primary = true;
-            hist_painter.$secondary = 'hist';
+            hist_painter?.setSecondaryId(painter, 'hist');
+            painter.axes_draw = !!hist_painter;
          });
       }
 
       return promise.then(() => {
          painter.addToPadPrimitives();
          return painter.drawGraph();
-      }).then(() => painter.drawNextFunction(0));
+      }).then(() => {
+         const handler = new FunctionsHandler(painter, painter.getPadPainter(), graph.fFunctions, true);
+         return handler.drawNext(0); // returns painter
+      });
    }
 
    static async draw(dom, graph, opt) {
