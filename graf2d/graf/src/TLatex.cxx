@@ -1395,15 +1395,20 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
             y1 = y-sub-fs1.Over() ;
             DrawLine(x1,y1,x2,y1,spec);
             break;
-         case 3: // hat
-            x2 = x+fs1.Width()/2 ;
-            y1 = y -9*sub;
-            y2 = y1-2*sub;
-            x1 = x2-fs1.Width()/3 ;
-            x3 = x2+fs1.Width()/3 ;
-            DrawLine(x1,y1,x2,y2,spec);
-            DrawLine(x2,y2,x3,y1,spec);
+         case 3: { // hat
+            Bool_t small = kTRUE; // by default position was optimized for small letters, but make several exceptions
+            for (int pos = strlen(tab3[opAbove])+2; pos < length - 1; ++pos)
+               if (strchr("tdbfhkli", text[pos]) || (text[pos] >= 'A' && text[pos] <= 'Z')) small = kFALSE;
+            Double_t xx[3], yy[3];
+            xx[1] = x + fs1.Width()/2 ;
+            xx[0] = xx[1] - fs1.Width()/3;
+            xx[2] = xx[1] + fs1.Width()/3;
+            yy[0] = y - (small ? 9*sub : sub + fs1.Over());
+            yy[1] = yy[0] - 2*sub;
+            yy[2] = yy[0];
+            DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
+         }
          case 4: // ddot
             x1 = x+fs1.Width()/2-9*sub/4 ;
             x2 = x+fs1.Width()/2-3*sub/4 ;
@@ -1947,6 +1952,37 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
    newtext->SetNDC();
    return newtext;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a poly line in a Latex formula
+void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width)
+{
+   if (!gPad) return ;
+   Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
+   Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
+   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   for (Int_t n = 0; n < npoints; ++n) {
+      Double_t mx  = gPad->AbsPixeltoX(Int_t((xx[n]-xOrigin)*cosang+(yy[n]-yOrigin)*sinang+xOrigin));
+      Double_t my  = gPad->AbsPixeltoY(Int_t((xx[n]-xOrigin)*-sinang+(yy[n]-yOrigin)*cosang+yOrigin));
+      xx[n] = mx;
+      yy[n] = my;
+   }
+
+   auto prevWidth = GetLineWidth();
+   if (scale_width) {
+      Int_t lineWidth = TMath::Nint(gVirtualX->GetTextSize() * scale_width);
+      SetLineWidth(lineWidth > 0 ? lineWidth : 1);
+   }
+
+   SetLineColor(spec.fColor);
+   TAttLine::Modify();
+   gPad->PaintPolyLine(npoints, xx, yy);
+   if (scale_width)
+      SetLineWidth(prevWidth);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line in a Latex formula
