@@ -193,6 +193,7 @@ class TF2Painter extends TH2Painter {
       return hist;
    }
 
+   /** @summary Extract function ranges */
    extractAxesProperties(ndim) {
       super.extractAxesProperties(ndim);
 
@@ -256,17 +257,21 @@ class TF2Painter extends TH2Painter {
                   color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
                   lines: this.getTF2Tooltips(pnt), exact: true, menu: true };
 
-      if (ttrect.empty()) {
-         ttrect = this.draw_g.append('svg:circle')
-                             .attr('class', 'tooltip_bin')
-                             .style('pointer-events', 'none')
-                             .style('fill', 'none')
-                             .attr('r', (this.lineatt?.width ?? 1) + 4);
-      }
+      if (pnt.disabled)
+         ttrect.remove();
+      else {
+         if (ttrect.empty()) {
+            ttrect = this.draw_g.append('svg:circle')
+                                .attr('class', 'tooltip_bin')
+                                .style('pointer-events', 'none')
+                                .style('fill', 'none')
+                                .attr('r', (this.lineatt?.width ?? 1) + 4);
+         }
 
-      ttrect.attr('cx', pnt.x)
-            .attr('cy', pnt.y)
-            .call(this.lineatt?.func);
+         ttrect.attr('cx', pnt.x)
+               .attr('cy', pnt.y)
+               .call(this.lineatt?.func);
+      }
 
       return res;
    }

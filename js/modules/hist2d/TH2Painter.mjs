@@ -904,14 +904,14 @@ class TH2Painter extends THistPainter {
       }
 
       // this value used for logz scale drawing
-      if (this.gminposbin === null)
+      if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
       if (this.options.Axis > 0) {
          // Paint histogram axis only
          this.draw_content = false;
       } else {
-         this.draw_content = this.gmaxbin > 0;
+         this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
          if (!this.draw_content && this.options.Zero && this.isTH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
@@ -3146,7 +3146,7 @@ class TH2Painter extends THistPainter {
       const need_palette = this.options.Zscale && this.options.canHavePalette();
 
       // draw new palette, resize frame if required
-      return this.drawColorPalette(need_palette, true).then(pp => {
+      return this.drawColorPalette(need_palette, true).then(async pp => {
          let pr;
          if (this.options.Circular && this.isMainPainter())
             pr = this.drawBinsCircular();
@@ -3157,7 +3157,7 @@ class TH2Painter extends THistPainter {
 
          return pr.then(() => this.completePalette(pp));
       }).then(() => this.drawHistTitle())
-        .then(() => this.drawNextFunction(0, true))
+        .then(() => this.updateFunctions())
         .then(() => {
             this.updateStatWebCanvas();
             return this.addInteractivity();

@@ -2,12 +2,11 @@
   * Code extracted from https://github.com/LZMA-JS/LZMA-JS */
 
 const __4294967296 = 4294967296,
-      N1_longLit = [4294967295, -__4294967296],
       P0_longLit = [0, 0],
       P1_longLit = [1, 0];
 
 function initDim(len) {
-   /// NOTE: This is MUCH faster than "new Array(len)" in newer versions of v8 (starting with Node.js 0.11.15, which uses v8 3.28.73).
+   // This is MUCH faster than "new Array(len)" in newer versions of v8 (starting with Node.js 0.11.15, which uses v8 3.28.73).
    const a = [];
    a[len - 1] = undefined;
    return a;
@@ -21,7 +20,7 @@ function compare(a, b) {
    if (a[0] === b[0] && a[1] === b[1])
       return 0;
    const nega = a[1] < 0,
-      negb = b[1] < 0;
+         negb = b[1] < 0;
    if (nega && !negb)
       return -1;
    if (!nega && negb)
@@ -72,9 +71,9 @@ function sub(a, b) {
    return create(a[0] - b[0], a[1] - b[1]);
 }
 
-function $ByteArrayInputStream(this$static, buf) {
+function $ByteArrayInputStream(this$static, buf, offset) {
    this$static.buf = buf;
-   this$static.pos = 0;
+   this$static.pos = offset ?? 0;
    this$static.count = buf.length;
    return this$static;
 }
@@ -82,21 +81,13 @@ function $ByteArrayInputStream(this$static, buf) {
 function $read(this$static) {
    if (this$static.pos >= this$static.count)
       return -1;
-   return this$static.buf[this$static.pos++] & 255;
+   return this$static.buf[this$static.pos++]; //  & 255; not needed, input always uint8
 }
 
-function $ByteArrayOutputStream(this$static) {
-   if (!this$static.buf)
-      this$static.buf = initDim(32);
-
+function $ByteArrayOutputStream(this$static, buf) {
+   this$static.buf = buf;
    this$static.count = 0;
    return this$static;
-}
-
-function $toByteArray(this$static) {
-   const data = this$static.buf;
-   data.length = this$static.count;
-   return data;
 }
 
 function $write_0(this$static, buf, off, len) {
@@ -109,55 +100,22 @@ function arraycopy(src, srcOfs, dest, destOfs, len) {
       dest[destOfs + i] = src[srcOfs + i];
 }
 
-function $init_0(this$static, input, output) {
-   let hex_length = '', r, tmp_length;
-
-   const properties = [];
-   for (let i = 0; i < 5; ++i) {
-      r = $read(input);
-      if (r === -1)
-         throw new Error('truncated input');
-      properties[i] = r << 24 >> 24;
-   }
-
+function $init_0(this$static, input, output, output_size) {
    const decoder = $Decoder({});
-   if (!$SetDecoderProperties(decoder, properties))
+   if (!$SetDecoderProperties(decoder, $read(input)))
       throw new Error('corrupted input');
 
-   for (let i = 0; i < 64; i += 8) {
-      r = $read(input);
-      if (r === -1)
-         throw new Error('truncated input');
-      r = r.toString(16);
-      if (r.length === 1) r = '0' + r;
-      hex_length = r + '' + hex_length;
-   }
-
-   /// Was the length set in the header (if it was compressed from a stream, the length is all f"s).
-   if (/^0+$|^f+$/i.test(hex_length)) {
-      /// The length is unknown, so set to -1.
-      this$static.length_0 = N1_longLit;
-   } else {
-      /// NOTE: If there is a problem with the decoder because of the length, you can always set the length to -1 (N1_longLit) which means unknown.
-      tmp_length = parseInt(hex_length, 16);
-      /// If the length is too long to handle, just set it to unknown.
-      if (tmp_length > 4294967295)
-         this$static.length_0 = N1_longLit;
-      else
-         this$static.length_0 = fromInt(tmp_length);
-   }
+   this$static.length_0 = [output_size, 0];
 
    this$static.chunker = $CodeInChunks(decoder, input, output, this$static.length_0);
 }
 
-function $LZMAByteArrayDecompressor(this$static, data) {
-   this$static.output = $ByteArrayOutputStream({});
-   $init_0(this$static, $ByteArrayInputStream({}, data), this$static.output);
+function $LZMAByteArrayDecompressor(this$static, data, offset, output_size, outbuf) {
+   this$static.output = $ByteArrayOutputStream({}, outbuf);
+   $init_0(this$static, $ByteArrayInputStream({}, data, offset), this$static.output, output_size);
    return this$static;
 }
-/** de */
 
-/** ds */
 function $CopyBlock(this$static, distance, len) {
    let pos = this$static._pos - distance - 1;
    if (pos < 0)
@@ -215,20 +173,14 @@ function $ReleaseStream(this$static) {
 
 function GetLenToPosState(len) {
    len -= 2;
-   if (len < 4)
-      return len;
-
-   return 3;
+   return (len < 4) ? len : 3;
 }
 
 function StateUpdateChar(index) {
    if (index < 4)
       return 0;
 
-   if (index < 10)
-      return index - 3;
-
-   return index - 6;
+   return index < 10 ? index - 3 : index - 6;
 }
 
 function $Chunker(this$static, decoder) {
@@ -254,8 +206,6 @@ function $processDecoderChunk(this$static) {
    const result = $CodeOneChunk(this$static.decoder);
    if (result === -1)
       throw new Error('corrupted input');
-   this$static.inBytesProcessed = N1_longLit;
-   this$static.outBytesProcessed = this$static.decoder.nowPos64;
    if ((result || compare(this$static.decoder.outSize, P0_longLit) >= 0) && compare(this$static.decoder.nowPos64, this$static.decoder.outSize) >= 0) {
       $Flush_0(this$static.decoder.m_OutWindow);
       $ReleaseStream(this$static.decoder.m_OutWindow);
@@ -263,9 +213,7 @@ function $processDecoderChunk(this$static) {
       this$static.alive = 0;
    }
 }
-/** de */
 
-/** ds */
 function $CodeInChunks(this$static, inStream, outStream, outSize) {
    this$static.m_RangeDecoder.Stream = inStream;
    $ReleaseStream(this$static.m_OutWindow);
@@ -399,22 +347,19 @@ function $Init_1(this$static) {
    $Init_8(this$static.m_RangeDecoder);
 }
 
-function $SetDecoderProperties(this$static, properties) {
-   if (properties.length < 5)
-      return 0;
-   const val = properties[0] & 255,
-      lc = val % 9,
-      remainder = ~~(val / 9),
-      lp = remainder % 5,
-      pb = ~~(remainder / 5);
-   let dictionarySize = 0;
-   for (let i = 0; i < 4; ++i)
-      dictionarySize += (properties[1 + i] & 255) << i * 8;
-   /// NOTE: If the input is bad, it might call for an insanely large dictionary size, which would crash the script.
-   if (dictionarySize > 99999999 || !$SetLcLpPb(this$static, lc, lp, pb))
-      return 0;
+function $SetDecoderProperties(this$static, val) {
+   if (val === -1)
+      return false;
 
-   return $SetDictionarySize(this$static, dictionarySize);
+   const lc = val % 9,
+         remainder = ~~(val / 9),
+         lp = remainder % 5,
+         pb = ~~(remainder / 5);
+
+   if (!$SetLcLpPb(this$static, lc, lp, pb))
+      return false;
+
+   return $SetDictionarySize(this$static, 0x800000);
 }
 
 function $SetDictionarySize(this$static, dictionarySize) {
@@ -570,7 +515,7 @@ function ReverseDecode(Models, startIndex, rangeDecoder, NumBitLevels) {
 
 function $DecodeBit(this$static, probs, index) {
    const prob = probs[index],
-      newBound = (this$static.Range >>> 11) * prob;
+         newBound = (this$static.Range >>> 11) * prob;
    if ((this$static.Code ^ -2147483648) < (newBound ^ -2147483648)) {
       this$static.Range = newBound;
       probs[index] = prob + (2048 - prob >>> 5) << 16 >> 16;
@@ -612,51 +557,30 @@ function $Init_8(this$static) {
    for (let i = 0; i < 5; ++i)
       this$static.Code = this$static.Code << 8 | $read(this$static.Stream);
 }
-/** de */
 
 function InitBitModels(probs) {
    for (let i = probs.length - 1; i >= 0; --i)
       probs[i] = 1024;
 }
 
-
-/** @summary decompress LZMA buffer
-  * @desc Includes special part to reorder header provided by ROOT implementation */
+/** @summary decompress ROOT LZMA buffer
+  * @desc ROOT buffer has internal header of 29 bytes long which can be simply ignored */
 function decompress(uint8arr, tgt8arr, expected_size) {
-   // ROOT magic, try to recode data from ROOT buffer to those which accepted by LZMA implementation
-   const arr = new Array(uint8arr.length - 31 + 12).fill(0);
-   arr[0] = 93;
-   arr[1] = 0;
-   arr[2] = 0;
-   arr[3] = -128; // maximal dictionary size
-   arr[4] = 0;
-   arr[5] = expected_size & 0xff;
-   arr[6] = (expected_size >> 8) & 0xff;
-   arr[7] = (expected_size >> 16) & 0xff;
-   arr[8] = 0;
-   arr[9] = 0;
-   arr[10] = 0;
-   arr[11] = 0;
-   arr[12] = 0;
+   const d = $LZMAByteArrayDecompressor({}, uint8arr, 29, expected_size, tgt8arr);
 
-   for (let n = 5; n <= 7; ++n)
-      if (arr[n] > 127) arr[n] -= 256;
+   let cnt = 0;
 
-   for (let n = 1; n < uint8arr.length - 31; ++n)
-      arr[12 + n] = (uint8arr[n + 29] < 128) ? uint8arr[n + 29] : (uint8arr[n + 29] - 256);
+   while ($processChunk(d.chunker) && (cnt <= expected_size)) cnt++;
 
-   const d = $LZMAByteArrayDecompressor({}, arr);
-   while ($processChunk(d.chunker));
+   if (cnt > expected_size)
+      throw Error('Endless loop in LZMA decompress');
 
-   const res = $toByteArray(d.output);
+   const res_length = d.output.count;
 
-   if (res.length !== expected_size)
-      throw Error(`LZMA: mismatch unpacked buffer size ${res.length} != ${expected_size}}`);
+   if (res_length !== expected_size)
+      throw Error(`LZMA: mismatch unpacked buffer size ${res_length} != ${expected_size}}`);
 
-   for (let k = 0; k < expected_size; ++k)
-      tgt8arr[k] = res[k];
-
-   return expected_size;
+   return res_length;
 }
 
 export { decompress };

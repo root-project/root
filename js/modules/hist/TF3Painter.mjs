@@ -1,8 +1,8 @@
-import { createHistogram, setHistogramTitle, kNoStats, settings, gStyle, clTF3, clTH2F, isStr, isFunc } from '../core.mjs';
+import { createHistogram, setHistogramTitle, kNoStats, settings, clTF3, clTH2F, isStr } from '../core.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar, produceTAxisLogScale } from '../hist/TF1Painter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
-import { DrawOptions, floatToString } from '../base/BasePainter.mjs';
+import { DrawOptions } from '../base/BasePainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 
 
@@ -209,6 +209,7 @@ class TF3Painter extends TH2Painter {
       return hist;
    }
 
+   /** @summary Extract function ranges */
    extractAxesProperties(ndim) {
       super.extractAxesProperties(ndim);
 
@@ -230,65 +231,6 @@ class TF3Painter extends TH2Painter {
          this.zmin = Math.min(this.zmin, func.fZmin);
          this.zmax = Math.max(this.zmax, func.fZmax);
       }
-   }
-
-   /** @summary retrurn tooltips for TF2 */
-   getTF3Tooltips(pnt) {
-      const lines = [this.getObjectHint()],
-            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
-
-      if (!funcs || !isFunc(this.$func?.evalPar)) {
-         lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
-         return lines;
-      }
-
-      const x = funcs.revertAxis('x', pnt.x),
-            y = funcs.revertAxis('y', pnt.y);
-      let z = 0, iserror = false;
-
-       try {
-          z = this.$func.evalPar(x, y);
-       } catch {
-          iserror = true;
-       }
-
-      lines.push('x = ' + funcs.axisAsText('x', x),
-                 'y = ' + funcs.axisAsText('y', y),
-                 'value = ' + (iserror ? '<fail>' : floatToString(z, gStyle.fStatFormat)));
-      return lines;
-   }
-
-   /** @summary process tooltip event for TF2 object */
-   processTooltipEvent(pnt) {
-      if (this._use_saved_points)
-         return super.processTooltipEvent(pnt);
-
-      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
-
-      if (!this.draw_g || !pnt) {
-         ttrect?.remove();
-         return null;
-      }
-
-      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
-                  x: pnt.x, y: pnt.y,
-                  color1: this.lineatt?.color ?? 'green',
-                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                  lines: this.getTF3Tooltips(pnt), exact: true, menu: true };
-
-      if (ttrect.empty()) {
-         ttrect = this.draw_g.append('svg:circle')
-                             .attr('class', 'tooltip_bin')
-                             .style('pointer-events', 'none')
-                             .style('fill', 'none')
-                             .attr('r', (this.lineatt?.width ?? 1) + 4);
-      }
-
-      ttrect.attr('cx', pnt.x)
-            .attr('cy', pnt.y)
-            .call(this.lineatt?.func);
-
-      return res;
    }
 
    /** @summary fill information for TWebCanvas

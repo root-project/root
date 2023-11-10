@@ -52,7 +52,7 @@ class TH1Painter extends TH1Painter2D {
                 .then(() => this.drawHistTitle());
       }
 
-      return pr.then(() => this);
+      return pr.then(() => this.updateFunctions()).then(() => this);
    }
 
    /** @summary draw TH1 object */

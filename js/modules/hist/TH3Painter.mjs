@@ -48,10 +48,10 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      if (this.gminposbin === null)
+      if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
-      this.draw_content = this.gmaxbin > 0;
+      this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
 
       this.transferFunc = this.findFunction(clTF1, 'TransferFunction');
       if (this.transferFunc && !this.transferFunc.TestBit(BIT(9))) // TF1::kNotDraw
@@ -462,7 +462,7 @@ class TH3Painter extends THistPainter {
       this._box_option = box_option;
 
       if (use_scale && logv) {
-         if (this.gminposbin && this.gmaxbin > this.gminposbin) {
+         if (this.gminposbin && (this.gmaxbin > this.gminposbin)) {
             scale_offset = Math.log(this.gminposbin) - 0.1;
             use_scale = 1/(Math.log(this.gmaxbin) - scale_offset);
          } else {
@@ -736,7 +736,7 @@ class TH3Painter extends THistPainter {
       if (this.isMainPainter())
         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13))).then(() => this.drawHistTitle());
 
-      return pr.then(() => this);
+      return pr.then(() => this.updateFunctions()).then(() => this);
    }
 
    /** @summary Fill pad toolbar with TH3-related functions */
@@ -852,7 +852,7 @@ class TH3Painter extends THistPainter {
          painter.createStat(); // only when required
          return painter.redraw();
       })
-      .then(() => painter.drawNextFunction(0))
+      .then(() => painter.drawFunctions())
       .then(() => {
          painter.fillToolbar();
          return painter;
