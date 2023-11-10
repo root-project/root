@@ -184,25 +184,27 @@ void Delaunay2D::DoFindTriangles() {
    cdt.insertVertices(points);
    cdt.eraseSuperTriangle();
 
-   auto triangles        = cdt.triangles;
-   auto vertices         = cdt.vertices;
+   auto Triangles        = cdt.triangles;
+   auto Vertices         = cdt.vertices;
    int numberoftriangles = cdt.triangles.size();
 
    fTriangles.resize(numberoftriangles);
 
    for(i = 0; i < numberoftriangles; i++){
       Triangle tri;
-      const auto& t = triangles[i];
+      const auto& t = Triangles[i];
 
-      const auto& v0  = vertices[t.vertices[0]];
+      const auto& v0  = Vertices[t.vertices[0]];
       tri.x[0]   = v0.x;
       tri.y[0]   = v0.y;
       tri.idx[0] = t.vertices[0];
-      const auto& v1  = vertices[t.vertices[1]];
+
+      const auto& v1  = Vertices[t.vertices[1]];
       tri.x[1]   = v1.x;
       tri.y[1]   = v1.y;
       tri.idx[1] = t.vertices[1];
-      const auto& v2  = vertices[t.vertices[2]];
+
+      const auto& v2  = Vertices[t.vertices[2]];
       tri.x[2]   = v2.x;
       tri.y[2]   = v2.y;
       tri.idx[2] = t.vertices[2];
