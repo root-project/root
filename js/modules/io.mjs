@@ -1342,16 +1342,6 @@ zip_MASK_BITS = [
    zip_border = [  // Order of the bit length code lengths
    16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
 
-//    zip_STORED_BLOCK = 0,
-//    zip_STATIC_TREES = 1,
-//    zip_DYN_TREES    = 2,
-
-/* for inflate */
-//    zip_lbits = 9,            // bits in base literal/length lookup table
-//    zip_dbits = 6,            // bits in base distance lookup table
-//    zip_INBUFSIZ = 32768,     // Input buffer size
-//    zip_INBUF_EXTRA = 64,     // Extra buffer
-
 function ZIP_inflate(arr, tgt) {
    /* variables (inflate) */
    const zip_slide = new Array(2 * zip_WSIZE),
@@ -1389,35 +1379,27 @@ function ZIP_inflate(arr, tgt) {
    }
 
    /* objects (inflate) */
-   function ZIP_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
+   function zip_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
                           n,     // number of codes (assumed <= N_MAX)
                           s,     // number of simple-valued codes (0..s-1)
                           d,     // list of base values for non-simple codes
                           e,     // list of extra bits for non-simple codes
                           mm) {  // maximum lookup bits
-      this.status = 0;     // 0: success, 1: incomplete table, 2: bad input
-      this.root = null;    // (zip_HuftList) starting table
-      this.m = 0;          // maximum lookup bits, returns actual
-
-   /* Given a list of code lengths and a maximum table size, make a set of
-      tables to decode that set of codes. Return zero on success, one if
-      the given code set is incomplete (the tables are still built in this
-      case), two if the input is invalid (all zero length codes or an
-      oversubscribed set of lengths), and three if not enough memory.
-      The code with value 256 is special, and the tables are constructed
-      so that no bits beyond that code are fetched when that code is
-      decoded. */
-
-      const BMAX = 16,      // maximum bit length of any code
-            N_MAX = 288,    // maximum number of codes in any set
-            c = Array(BMAX+1).fill(0),  // bit length count table
-            lx = Array(BMAX+1).fill(0), // stack of bits per table
-            u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
-            v = Array(N_MAX).fill(0), // values in order of bit length
-            x = Array(BMAX+1).fill(0), // bit offsets, then code stack
-            r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
-            el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
-       let rr = null, // temporary variable, use in assignment
+      const res = {
+         status: 0,    // 0: success, 1: incomplete table, 2: bad input
+         root: null,   // (zip_HuftList) starting table
+         m: 0          // maximum lookup bits, returns actual
+      },
+      BMAX = 16,      // maximum bit length of any code
+      N_MAX = 288,    // maximum number of codes in any set
+      c = Array(BMAX+1).fill(0),  // bit length count table
+      lx = Array(BMAX+1).fill(0), // stack of bits per table
+      u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
+      v = Array(N_MAX).fill(0), // values in order of bit length
+      x = Array(BMAX+1).fill(0), // bit offsets, then code stack
+      r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
+      el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
+      let rr = null, // temporary variable, use in assignment
           a,         // counter for codes of length k
           f,         // i repeats in table every f entries
           h,         // table level
@@ -1431,7 +1413,7 @@ function ZIP_inflate(arr, tgt) {
           y,         // number of dummy codes added
           z,         // number of entries in current table
           o,
-          tail = this.root = null, // (zip_HuftList)
+          tail = null,   // (zip_HuftList)
           i = n;         // counter, current code
 
       // Generate counts for each bit length
@@ -1439,12 +1421,8 @@ function ZIP_inflate(arr, tgt) {
          c[p[pidx++]]++; // assume all entries <= BMAX
       while (--i > 0);
 
-      if (c[0] === n) {   // null input--all zero length codes
-         this.root = null;
-         this.m = 0;
-         this.status = 0;
-         return this;
-      }
+      if (c[0] === n)    // null input--all zero length codes
+         return res;
 
       // Find minimum and maximum length, bound *m by those
       for (j = 1; j <= BMAX; ++j)
@@ -1463,15 +1441,15 @@ function ZIP_inflate(arr, tgt) {
       // Adjust last length count to fill out codes, if needed
       for (y = 1 << j; j < i; ++j, y <<= 1) {
          if ((y -= c[j]) < 0) {
-            this.status = 2;  // bad input: more codes than bits
-            this.m = mm;
-            return this;
+            res.status = 2;  // bad input: more codes than bits
+            res.m = mm;
+            return res;
          }
       }
       if ((y -= c[i]) < 0) {
-         this.status = 2;
-         this.m = mm;
-         return this;
+         res.status = 2;
+         res.m = mm;
+         return res;
       }
       c[i] += y;
 
@@ -1532,7 +1510,7 @@ function ZIP_inflate(arr, tgt) {
                   q[o] = { e: 0, b: 0, n: 0, t: null }; // new zip_HuftNode
 
                if (tail == null)
-                  tail = this.root = { next: null, list: null }; // new zip_HuftList();
+                  tail = res.root = { next: null, list: null }; // new zip_HuftList();
                else
                   tail = tail.next = { next: null, list: null }; // new zip_HuftList();
                tail.next = null;
@@ -1588,13 +1566,12 @@ function ZIP_inflate(arr, tgt) {
       }
 
       /* return actual size of base table */
-      this.m = lx[1];
+      res.m = lx[1];
 
       /* Return true (1) if we were given an incomplete table */
-      this.status = ((y !== 0 && g !== 1) ? 1 : 0);
-     /* end of constructor */
+      res.status = ((y !== 0 && g !== 1) ? 1 : 0);
 
-      return this;
+      return res;
    }
 
    /* routines (inflate) */
@@ -1724,7 +1701,7 @@ function ZIP_inflate(arr, tgt) {
          // make a complete, but wrong code set
          zip_fixed_bl = 7;
 
-         let h = new ZIP_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
+         let h = zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
          if (h.status !== 0)
             throw new Error('HufBuild error: ' + h.status);
          zip_fixed_tl = h.root;
@@ -1734,7 +1711,7 @@ function ZIP_inflate(arr, tgt) {
          l.fill(5, 0, 30); // make an incomplete code set
          zip_fixed_bd = 5;
 
-         h = new ZIP_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
+         h = zip_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
          if (h.status > 1) {
             zip_fixed_tl = null;
             throw new Error('HufBuild error: '+h.status);
@@ -1755,7 +1732,7 @@ function ZIP_inflate(arr, tgt) {
       let i, j,  // temporary variables
           l,     // last length
           t,     // (zip_HuftNode) literal/length code table
-          h;     // (ZIP_HuftBuild)
+          h;     // (zip_HuftBuild)
       const ll = new Array(286+30).fill(0); // literal/length and distance code lengths
 
       // read in table lengths
@@ -1782,7 +1759,7 @@ function ZIP_inflate(arr, tgt) {
 
       // build decoding table for trees--single level, 7 bit lookup
       zip_bl = 7;
-      h = new ZIP_HuftBuild(ll, 19, 19, null, null, zip_bl);
+      h = zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
       if (h.status !== 0)
          return -1;  // incomplete code set
 
@@ -1831,31 +1808,23 @@ function ZIP_inflate(arr, tgt) {
 
       // build the decoding tables for literal/length and distance codes
       zip_bl = 9; // zip_lbits;
-      h = new ZIP_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
+      h = zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
       if (zip_bl === 0)  // no literals or lengths
          h.status = 1;
-      if (h.status !== 0) {
-         // if (h.status == 1); // **incomplete literal tree**
+      if (h.status !== 0)
          return -1;     // incomplete code set
-      }
       zip_tl = h.root;
       zip_bl = h.m;
 
       for (i = 0; i < nd; ++i)
          ll[i] = ll[i + nl];
       zip_bd = 6; // zip_dbits;
-      h = new ZIP_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
+      h = zip_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
       zip_td = h.root;
       zip_bd = h.m;
 
-      if (zip_bd === 0 && nl > 257) {   // lengths but no distances
-         // **incomplete distance tree**
-         return -1;
-      }
-
-      // if (h.status == 1); // **incomplete distance tree**
-
-      if (h.status !== 0)
+      // incomplete distance tree
+      if ((zip_bd === 0 && nl > 257) || (h.status !== 0))   // lengths but no distances
          return -1;
 
       // decompress until an end-of-block code

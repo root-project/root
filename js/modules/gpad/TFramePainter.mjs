@@ -2670,14 +2670,8 @@ class TFramePainter extends ObjectPainter {
    /** @summary Fill option object used in TWebCanvas
      * @private */
    fillWebObjectOptions(res) {
-      if (!res) {
-         if (!this.snapid) return null;
-         res = { _typename: 'TWebObjectOptions', snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: '', fopt: [] };
-       }
-
       res.fcust = 'frame';
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
-      return res;
    }
 
    /** @summary Returns frame X position */
