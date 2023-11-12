@@ -1770,6 +1770,7 @@ public:
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
                         0};
       (void)expander; // avoid unused parameter warnings (gcc 12.1)
+      (void)slot; // Also "slot" might be unused, in case "values" is empty
    }
 
    template <std::size_t... S>
