@@ -582,12 +582,20 @@ extern void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a);
 extern void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-// Internal exceptions for the CheckConsistency method
-class DifferentDimension: public std::exception {};
-class DifferentNumberOfBins: public std::exception {};
-class DifferentAxisLimits: public std::exception {};
-class DifferentBinLimits: public std::exception {};
-class DifferentLabels: public std::exception {};
+namespace {
+
+/// Enumeration specifying inconsistencies between two histograms,
+/// in increasing severity.
+enum EInconsistencyBits {
+   kFullyConsistent = 0,
+   kDifferentLabels = BIT(0),
+   kDifferentBinLimits = BIT(1),
+   kDifferentAxisLimits = BIT(2),
+   kDifferentNumberOfBins = BIT(3),
+   kDifferentDimensions = BIT(4)
+};
+
+} // namespace
 
 ClassImp(TH1);
 
@@ -862,6 +870,43 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    return kTRUE;
 }
 
+int TH1::LoggedInconsistency(const char *name, const TH1 *h1, const TH1 *h2, bool useMerge) const
+{
+   const auto inconsistency = CheckConsistency(h1, h2);
+
+   if (inconsistency & kDifferentDimensions) {
+      if (useMerge)
+         Info(name, "Histograms have different dimensions - trying to use TH1::Merge");
+      else {
+         Error(name, "Histograms have different dimensions");
+      }
+   } else if (inconsistency & kDifferentNumberOfBins) {
+      if (useMerge)
+         Info(name, "Histograms have different number of bins - trying to use TH1::Merge");
+      else {
+         Error(name, "Histograms have different number of bins");
+      }
+   } else if (inconsistency & kDifferentAxisLimits) {
+      if (useMerge)
+         Info(name, "Histograms have different axis limits - trying to use TH1::Merge");
+      else
+         Warning(name, "Histograms have different axis limits");
+   } else if (inconsistency & kDifferentBinLimits) {
+      if (useMerge)
+         Info(name, "Histograms have different bin limits - trying to use TH1::Merge");
+      else
+         Warning(name, "Histograms have different bin limits");
+   } else if (inconsistency & kDifferentLabels) {
+      // in case of different labels -
+      if (useMerge)
+         Info(name, "Histograms have different labels - trying to use TH1::Merge");
+      else
+         Info(name, "Histograms have different labels");
+   }
+
+   return inconsistency;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: `this = this + c1*h1`
 /// If errors are defined (see TH1::Sumw2), errors are also recalculated.
@@ -906,33 +951,16 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   bool useMerge = (c1 == 1. &&  !this->TestBit(kIsAverage) && !h1->TestBit(kIsAverage) );
-   try {
-      CheckConsistency(this,h1);
-      useMerge = kFALSE;
-   } catch(DifferentNumberOfBins&) {
-      if (useMerge)
-         Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
-      else {
-         Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
-         return kFALSE;
-      }
-   } catch(DifferentAxisLimits&) {
-      if (useMerge)
-         Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
-      else
-         Warning("Add","Attempt to add histograms with different axis limits");
-   } catch(DifferentBinLimits&) {
-      if (useMerge)
-         Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
-      else
-         Warning("Add","Attempt to add histograms with different bin limits");
-   } catch(DifferentLabels&) {
-      // in case of different labels -
-      if (useMerge)
-         Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
-      else
-         Info("Warning","Attempt to add histograms with different labels");
+   bool useMerge = false;
+   const bool considerMerge = (c1 == 1. &&  !this->TestBit(kIsAverage) && !h1->TestBit(kIsAverage) );
+   const auto inconsistency = LoggedInconsistency("Add", this, h1, considerMerge);
+   // If there is a bad inconsistency and we can't even consider merging, just give up
+   if(inconsistency >= kDifferentNumberOfBins && !considerMerge) {
+       return false;
+   }
+   // If there is an inconsistency, we try to use merging
+   if(inconsistency > kFullyConsistent) {
+      useMerge = considerMerge;
    }
 
    if (useMerge) {
@@ -1078,35 +1106,21 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    if (h1 == h2 && c2 < 0) {c2 = 0; normWidth = kTRUE;}
 
    if (h1 != h2) {
-      bool useMerge = (c1 == 1. && c2 == 1. &&  !this->TestBit(kIsAverage) && !h1->TestBit(kIsAverage) );
+      bool useMerge = false;
+      const bool considerMerge = (c1 == 1. && c2 == 1. &&  !this->TestBit(kIsAverage) && !h1->TestBit(kIsAverage) );
 
-      try {
-         CheckConsistency(h1,h2);
-         CheckConsistency(this,h1);
-         useMerge = kFALSE;
-      } catch(DifferentNumberOfBins&) {
-         if (useMerge)
-            Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
-         else {
-            Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
-            return kFALSE;
-         }
-      } catch(DifferentAxisLimits&) {
-         if (useMerge)
-            Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
-         else
-            Warning("Add","Attempt to add histograms with different axis limits");
-      } catch(DifferentBinLimits&) {
-         if (useMerge)
-            Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
-         else
-            Warning("Add","Attempt to add histograms with different bin limits");
-      } catch(DifferentLabels&) {
-         // in case of different labels -
-         if (useMerge)
-            Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
-         else
-            Info("Warning","Attempt to add histograms with different labels");
+      // We can combine inconsistencies like this, since they are ordered and a
+      // higher inconsistency is worse
+      auto const inconsistency = std::max(LoggedInconsistency("Add", this, h1, considerMerge),
+                                          LoggedInconsistency("Add", h1, h2, considerMerge));
+
+      // If there is a bad inconsistency and we can't even consider merging, just give up
+      if(inconsistency >= kDifferentNumberOfBins && !considerMerge) {
+          return false;
+      }
+      // If there is an inconsistency, we try to use merging
+      if(inconsistency > kFullyConsistent) {
+         useMerge = considerMerge;
       }
 
       if (useMerge) {
@@ -1519,7 +1533,6 @@ bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
    Int_t fN = h1Array->fN;
    if ( fN != 0 ) {
       if ( h2Array->fN != fN ) {
-         throw DifferentBinLimits();
          return false;
       }
       else {
@@ -1528,7 +1541,6 @@ bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
             // we do not need to exclude that case
             double binWidth = a1->GetBinWidth(i);
             if ( ! TMath::AreEqualAbs( h1Array->GetAt(i), h2Array->GetAt(i), binWidth*1E-10 ) ) {
-               throw DifferentBinLimits();
                return false;
             }
          }
@@ -1549,19 +1561,16 @@ bool TH1::CheckBinLabels(const TAxis* a1, const TAxis * a2)
    if (!l1 && !l2 )
       return true;
    if (!l1 ||  !l2 ) {
-      throw DifferentLabels();
       return false;
    }
    // check now labels sizes  are the same
    if (l1->GetSize() != l2->GetSize() ) {
-      throw DifferentLabels();
       return false;
    }
    for (int i = 1; i <= a1->GetNbins(); ++i) {
       TString label1 = a1->GetBinLabel(i);
       TString label2 = a2->GetBinLabel(i);
       if (label1 != label2) {
-         throw DifferentLabels();
          return false;
       }
    }
@@ -1579,7 +1588,6 @@ bool TH1::CheckAxisLimits(const TAxis *a1, const TAxis *a2 )
    double lastBin = a1->GetBinWidth( a1->GetNbins() );
    if ( ! TMath::AreEqualAbs(a1->GetXmin(), a2->GetXmin(), firstBin* 1.E-10) ||
         ! TMath::AreEqualAbs(a1->GetXmax(), a2->GetXmax(), lastBin*1.E-10) ) {
-      throw DifferentAxisLimits();
       return false;
    }
    return true;
@@ -1591,27 +1599,20 @@ bool TH1::CheckAxisLimits(const TAxis *a1, const TAxis *a2 )
 bool TH1::CheckEqualAxes(const TAxis *a1, const TAxis *a2 )
 {
    if (a1->GetNbins() != a2->GetNbins() ) {
-      //throw DifferentNumberOfBins();
       ::Info("CheckEqualAxes","Axes have different number of bins : nbin1 = %d nbin2 = %d",a1->GetNbins(),a2->GetNbins() );
       return false;
    }
-   try {
-      CheckAxisLimits(a1,a2);
-   } catch (DifferentAxisLimits&) {
+   if(!CheckAxisLimits(a1,a2)) {
       ::Info("CheckEqualAxes","Axes have different limits");
       return false;
    }
-   try {
-      CheckBinLimits(a1,a2);
-   } catch (DifferentBinLimits&) {
+   if(!CheckBinLimits(a1,a2)) {
       ::Info("CheckEqualAxes","Axes have different bin limits");
       return false;
    }
 
    // check labels
-   try {
-      CheckBinLabels(a1,a2);
-   } catch (DifferentLabels&) {
+   if(!CheckBinLabels(a1,a2)) {
       ::Info("CheckEqualAxes","Axes have different labels");
       return false;
    }
@@ -1661,13 +1662,12 @@ bool TH1::CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin
 ////////////////////////////////////////////////////////////////////////////////
 /// Check histogram compatibility.
 
-bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
+int TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 {
-   if (h1 == h2) return true;
+   if (h1 == h2) return kFullyConsistent;
 
    if (h1->GetDimension() != h2->GetDimension() ) {
-      throw DifferentDimension();
-      return false;
+      return kDifferentDimensions;
    }
    Int_t dim = h1->GetDimension();
 
@@ -1680,8 +1680,7 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
    if (nbinsx != h2->GetNbinsX() ||
        (dim > 1 && nbinsy != h2->GetNbinsY())  ||
        (dim > 2 && nbinsz != h2->GetNbinsZ()) ) {
-      throw DifferentNumberOfBins();
-      return false;
+      return kDifferentNumberOfBins;
    }
 
    bool ret = true;
@@ -1690,20 +1689,23 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
    ret &= CheckAxisLimits(h1->GetXaxis(), h2->GetXaxis());
    if (dim > 1) ret &= CheckAxisLimits(h1->GetYaxis(), h2->GetYaxis());
    if (dim > 2) ret &= CheckAxisLimits(h1->GetZaxis(), h2->GetZaxis());
+   if (!ret) return kDifferentAxisLimits;
 
    // check bin limits
    ret &= CheckBinLimits(h1->GetXaxis(), h2->GetXaxis());
    if (dim > 1) ret &= CheckBinLimits(h1->GetYaxis(), h2->GetYaxis());
    if (dim > 2) ret &= CheckBinLimits(h1->GetZaxis(), h2->GetZaxis());
+   if (!ret) return kDifferentBinLimits;
 
    // check labels if histograms are both not empty
    if ( !h1->IsEmpty() && !h2->IsEmpty() ) {
       ret &= CheckBinLabels(h1->GetXaxis(), h2->GetXaxis());
       if (dim > 1) ret &= CheckBinLabels(h1->GetYaxis(), h2->GetYaxis());
       if (dim > 2) ret &= CheckBinLabels(h1->GetZaxis(), h2->GetZaxis());
+      if (!ret) return kDifferentLabels;
    }
 
-   return ret;
+   return kFullyConsistent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2896,17 +2898,8 @@ Bool_t TH1::Divide(const TH1 *h1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   try {
-      CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins&) {
-      Error("Divide","Cannot divide histograms with different number of bins");
-      return kFALSE;
-   } catch(DifferentAxisLimits&) {
-      Warning("Divide","Dividing histograms with different axis limits");
-   } catch(DifferentBinLimits&) {
-      Warning("Divide","Dividing histograms with different bin limits");
-   } catch(DifferentLabels&) {
-      Warning("Divide","Dividing histograms with different labels");
+   if (LoggedInconsistency("Divide", this, h1) >= kDifferentNumberOfBins) {
+      return false;
    }
 
    //    Create Sumw2 if h1 has Sumw2 set
@@ -2968,20 +2961,10 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   try {
-      CheckConsistency(h1,h2);
-      CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins&) {
-      Error("Divide","Cannot divide histograms with different number of bins");
-      return kFALSE;
-   } catch(DifferentAxisLimits&) {
-      Warning("Divide","Dividing histograms with different axis limits");
-   } catch(DifferentBinLimits&) {
-      Warning("Divide","Dividing histograms with different bin limits");
-   }  catch(DifferentLabels&) {
-      Warning("Divide","Dividing histograms with different labels");
+   if (LoggedInconsistency("Divide", this, h1) >= kDifferentNumberOfBins ||
+       LoggedInconsistency("Divide", h1, h2) >= kDifferentNumberOfBins) {
+      return false;
    }
-
 
    if (!c2) {
       Error("Divide","Coefficient of dividing histogram cannot be zero");
@@ -3604,8 +3587,8 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes, TRandom * rng)
    Int_t last   = fXaxis.GetLast();
    Int_t nbins = last-first+1;
    if (ntimes > 10*nbins) {
-      try {
-         CheckConsistency(this,h);
+         auto inconsistency = CheckConsistency(this,h);
+         if (inconsistency != kFullyConsistent) return; // do nothing
          Double_t sumw = h->Integral(first,last);
          if (sumw == 0) return;
          Double_t sumgen = 0;
@@ -3646,8 +3629,6 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes, TRandom * rng)
 
          ResetStats();
          return;
-      }
-      catch(std::exception&) {}  // do nothing
    }
    // case of different axis and not too large ntimes
 
@@ -6088,17 +6069,8 @@ Bool_t TH1::Multiply(const TH1 *h1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   try {
-      CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins&) {
-      Error("Multiply","Attempt to multiply histograms with different number of bins");
-      return kFALSE;
-   } catch(DifferentAxisLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different axis limits");
-   } catch(DifferentBinLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different bin limits");
-   } catch(DifferentLabels&) {
-      Warning("Multiply","Attempt to multiply histograms with different labels");
+   if (LoggedInconsistency("Multiply", this, h1) >= kDifferentNumberOfBins) {
+      return false;
    }
 
    //    Create Sumw2 if h1 has Sumw2 set
@@ -6150,18 +6122,9 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   try {
-      CheckConsistency(h1,h2);
-      CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins&) {
-      Error("Multiply","Attempt to multiply histograms with different number of bins");
-      return kFALSE;
-   } catch(DifferentAxisLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different axis limits");
-   } catch(DifferentBinLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different bin limits");
-   } catch(DifferentLabels&) {
-      Warning("Multiply","Attempt to multiply histograms with different labels");
+   if (LoggedInconsistency("Multiply", this, h1) >= kDifferentNumberOfBins ||
+       LoggedInconsistency("Multiply", h1, h2) >= kDifferentNumberOfBins) {
+      return false;
    }
 
    //    Create Sumw2 if h1 or h2 have Sumw2 set
