@@ -1427,20 +1427,22 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             DrawPolyLine(5, xx2, yy2, spec, 10.);
             break;
          }
-         case 5: // acute
-            x1 = x+fs1.Width()/2;
-            y1 = y +sub -fs1.Over() ;
-            x2 = x1 +3*sub;
-            y2 = y1 -2.5*sub;
-            DrawLine(x1,y1,x2,y2,spec);
+         case 5: { // acute
+            Double_t xx[2], yy[2];
+            xx[0] = x + fs1.Width()/2; xx[1] = xx[0] + 3*sub;
+            yy[0] = y - sub - fs1.Over();
+            yy[1] = yy[0] - 2.5*sub;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
-         case 6: // grave
-            x1 = x+fs1.Width()/2-sub;
-            y1 = y-sub-fs1.Over() ;
-            x2 = x1 +2*sub;
-            y2 = y1 +2*sub;
-            DrawLine(x1,y1,x2,y2,spec);
+         }
+         case 6: { // grave
+            Double_t xx[2], yy[2];
+            xx[0] = x + fs1.Width()/2 + sub; xx[1] = xx[0] - 2*sub;
+            yy[0] = y - sub - fs1.Over();
+            yy[1] = yy[0] - 2*sub;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
+         }
          case 7: // check
             x1 = x+fs1.Width()/2 ;
             x2 = x1 -2*sub ;
