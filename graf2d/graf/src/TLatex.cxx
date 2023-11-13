@@ -1373,7 +1373,6 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          fs1 = Readfs();
          Analyse(x,y,spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
          Double_t sub = GetHeight()*spec.fSize/14;
-         Double_t x2, y2;
          switch(opAbove) {
          case 0: { // bar
             Double_t xx[2], yy[2];
@@ -1451,39 +1450,37 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
          }
-         case 8: // tilde
-            x2 = x+fs1.Width()/2 ;
-            y2 = y -fs1.Over() ;
-            {
-               // tilde must be drawn separately on screen and on PostScript
-               // because an adjustment is required along Y for PostScript.
-               TVirtualPS *saveps = gVirtualPS;
-               if (gVirtualPS) gVirtualPS = nullptr;
-               Double_t y22 = y2;
-               if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
-               Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
-               Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-               Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-               Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-               Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
-               Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
-               TText tilde;
-               tilde.SetTextFont(fTextFont);
-               tilde.SetTextColor(spec.fColor);
-               tilde.SetTextSize(0.9*spec.fSize);
-               tilde.SetTextAlign(22);
-               tilde.SetTextAngle(fTextAngle);
-               tilde.PaintText(xx,yy,"~");
-               if (saveps) {
-                  gVirtualPS = saveps;
-                  if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;
-                  xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y22-yOrigin)*sinang+xOrigin));
-                  yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y22-yOrigin)*cosang+yOrigin));
-                  gVirtualPS->SetTextAlign(22);
-                  gVirtualPS->Text(xx, yy, "~");
-               }
+         case 8: { // tilde
+            Double_t x2 = x+fs1.Width()/2, y2 = y -fs1.Over();
+            // tilde must be drawn separately on screen and on PostScript
+            // because an adjustment is required along Y for PostScript.
+            TVirtualPS *saveps = gVirtualPS;
+            if (gVirtualPS) gVirtualPS = nullptr;
+            Double_t y22 = y2;
+            if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
+            Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
+            Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
+            Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+            Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+            Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
+            Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
+            TText tilde;
+            tilde.SetTextFont(fTextFont);
+            tilde.SetTextColor(spec.fColor);
+            tilde.SetTextSize(0.9*spec.fSize);
+            tilde.SetTextAlign(22);
+            tilde.SetTextAngle(fTextAngle);
+            tilde.PaintText(xx,yy,"~");
+            if (saveps) {
+               gVirtualPS = saveps;
+               if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;
+               xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y22-yOrigin)*sinang+xOrigin));
+               yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y22-yOrigin)*cosang+yOrigin));
+               gVirtualPS->SetTextAlign(22);
+               gVirtualPS->Text(xx, yy, "~");
             }
             break;
+         }
          case 9: { // slash
             Double_t xx[2], yy[2];
             xx[0] = x + 0.8*fs1.Width();
