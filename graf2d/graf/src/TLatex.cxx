@@ -489,9 +489,9 @@ void TLatex::Copy(TObject &obj) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Analyse function.
 
-TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t length)
+TLatex::TLatexFormSize TLatex::Anal1(const TextSpec_t &spec, const Char_t *t, Int_t length)
 {
-   return Analyse(0,0,spec,t,length);
+   return Analyse(0, 0, spec, t, length);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +521,7 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 ///  - `t` : chain to be analyzed
 ///  - `length` : number of chars in t.
 
-TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t, Int_t length)
+TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t, Int_t length)
 {
    const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
                 "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varomega","omega","xi","psi","zeta",
@@ -1987,7 +1987,7 @@ void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextS
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line in a Latex formula
 
-void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec)
+void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec)
 {
    if (!gPad) return ;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -2008,7 +2008,7 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSp
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
 
-void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
+void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec)
 {
    if (!gPad) return ;
    if (r < 1) r = 1;
@@ -2039,7 +2039,7 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
 
 void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
-                     Double_t  phimin, Double_t  phimax, TextSpec_t spec )
+                             Double_t  phimin, Double_t  phimax, const TextSpec_t &spec)
 {
    if (!gPad) return ;
    if (r1 < 1) r1 = 1;
