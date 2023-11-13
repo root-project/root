@@ -2702,20 +2702,20 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 /// The possible options are:
 ///    - k : keep the shared library after the session end.
 ///    - f : force recompilation.
-///    - g : compile with debug symbol
-///    - O : optimized the code
+///    - g : compile with debug symbol.
+///    - O : optimize the code.
 ///    - c : compile only, do not attempt to load the library.
-///    - s : silence all informational output
-///    - v : output all information output
+///    - s : silence all information output.
+///    - v : print all information output.
 ///    - d : debug ACLiC, keep all the output files.
-///    - - : if buildir is set, use a flat structure (see buildir below)
+///    - - : if buildir is set, use a flat structure (see buildir below).
 ///
 /// If library_specified is specified, CompileMacro generates the file
 /// "library_specified".soext where soext is the shared library extension for
 /// the current platform.
 ///
 /// If build_dir is specified, it is used as an alternative 'root' for the
-/// generation of the shared library.  The library is stored in a sub-directories
+/// generation of the shared library. The library is stored in a sub-directories
 /// of 'build_dir' including the full pathname of the script unless a flat
 /// directory structure is requested ('-' option).  With the '-' option the libraries
 /// are created directly in the directory 'build_dir'; in particular this means that
@@ -2783,7 +2783,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 /// root[2] .x myfunc.C++(10,20);
 /// ~~~
 /// The user may sometimes try to compile a script before it has loaded all the
-/// needed shared libraries.  In this case we want to be helpful and output a
+/// needed shared libraries. In this case we want to be helpful and output a
 /// list of the unresolved symbols. So if the loading of the created shared
 /// library fails, we will try to build a executable that contains the
 /// script. The linker should then output a list of missing symbols.
@@ -2804,8 +2804,8 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 /// Unix.*.Root.IncludePath:     -I$ROOTSYS/include
 /// WinNT.*.Root.IncludePath:    -I%ROOTSYS%/include
 ///
-/// Unix.*.Root.LinkedLibs:      -L$ROOTSYS/lib -lBase ....
-/// WinNT.*.Root.LinkedLibs:     %ROOTSYS%/lib/*.lib msvcrt.lib ....
+/// Unix.*.Root.LinkedLibs:      -L$ROOTSYS/lib -lBase ...
+/// WinNT.*.Root.LinkedLibs:     %ROOTSYS%/lib/*.lib msvcrt.lib ...
 /// ~~~
 /// And also support for MakeSharedLibs() and MakeExe().
 ///
