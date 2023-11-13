@@ -1373,7 +1373,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          fs1 = Readfs();
          Analyse(x,y,spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
          Double_t sub = GetHeight()*spec.fSize/14;
-         Double_t x1 , y1 , x2, y2, x3;
+         Double_t x2, y2;
          switch(opAbove) {
          case 0: { // bar
             Double_t xx[2], yy[2];
@@ -1443,14 +1443,14 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
          }
-         case 7: // check
-            x1 = x+fs1.Width()/2 ;
-            x2 = x1 -2*sub ;
-            x3 = x1 +2*sub ;
-            y1 = y-sub-fs1.Over() ;
-            DrawLine(x2,y-3*sub-fs1.Over(),x1,y1,spec);
-            DrawLine(x3,y-3*sub-fs1.Over(),x1,y1,spec);
+         case 7: { // check
+            Double_t xx[3], yy[3];
+            xx[1] = x+fs1.Width()/2; xx[0] = xx[1] - 2*sub; xx[2] = xx[1] + 2*sub;
+            yy[1] = y - sub - fs1.Over();
+            yy[0] = yy[2] = yy[1] - 2*sub;
+            DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
+         }
          case 8: // tilde
             x2 = x+fs1.Width()/2 ;
             y2 = y -fs1.Over() ;
@@ -1484,13 +1484,15 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                }
             }
             break;
-         case 9: // slash
-            x1 = x + 0.8*fs1.Width();
-            y1 = y -fs1.Over() ;
-            x2 = x + 0.3*fs1.Width();
-            y2 = y1 + 1.2*fs1.Height();
-            DrawLine(x1,y1,x2,y2,spec);
+         case 9: { // slash
+            Double_t xx[2], yy[2];
+            xx[0] = x + 0.8*fs1.Width();
+            yy[0] = y - fs1.Over() - sub;
+            xx[1] = x + 0.3*fs1.Width();
+            yy[1] = yy[0] + fs1.Height() + 2*sub;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
+         }
          }
       }
       Double_t div = 3;
