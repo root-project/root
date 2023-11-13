@@ -262,6 +262,43 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(5U, p4.fReqsClusterIds[3]);
 }
 
+TEST(ClusterPool, SetEntryRange)
+{
+   RPageSourceMock p1;
+   p1.SetEntryRange({0, 6});
+   RClusterPool c1(p1, 1);
+   c1.GetCluster(3, {0});
+   c1.WaitForInFlightClusters();
+   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
+   EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
+
+   RPageSourceMock p2;
+   p2.SetEntryRange({3, 1});
+   RClusterPool c2(p2, 1);
+   c2.GetCluster(3, {0});
+   c2.WaitForInFlightClusters();
+   ASSERT_EQ(1U, p2.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p2.fReqsClusterIds[0]);
+
+   RPageSourceMock p3;
+   p3.SetEntryRange({0, 1});
+   RClusterPool c3(p3, 1);
+   c3.GetCluster(3, {0});
+   c3.WaitForInFlightClusters();
+   ASSERT_EQ(1U, p3.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p3.fReqsClusterIds[0]);
+
+   RPageSourceMock p4;
+   p4.SetEntryRange({0, 3});
+   RClusterPool c4(p4, 2);
+   c4.GetCluster(0, {0});
+   c4.WaitForInFlightClusters();
+   ASSERT_EQ(3U, p4.fReqsClusterIds.size());
+   EXPECT_EQ(0U, p4.fReqsClusterIds[0]);
+   EXPECT_EQ(1U, p4.fReqsClusterIds[1]);
+   EXPECT_EQ(2U, p4.fReqsClusterIds[2]);
+}
 
 TEST(ClusterPool, GetClusterIncrementally)
 {

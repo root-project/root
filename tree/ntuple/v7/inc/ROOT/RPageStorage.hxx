@@ -314,6 +314,15 @@ The page source also gives access to the ntuple's meta-data.
 // clang-format on
 class RPageSource : public RPageStorage {
 public:
+   /// Used in SetEntryRange / GetEntryRange
+   struct REntryRange {
+      NTupleSize_t fFirstEntry = kInvalidNTupleIndex;
+      NTupleSize_t fNEntries = 0;
+
+      /// Returns true if the given cluster has entries within the entry range
+      bool IntersectsWith(const RClusterDescriptor &clusterDesc) const;
+   };
+
    /// An RAII wrapper used for the read-only access to RPageSource::fDescriptor. See GetExclDescriptorGuard().
    class RSharedDescriptorGuard {
       const RNTupleDescriptor &fDescriptor;
@@ -359,6 +368,7 @@ public:
 private:
    RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
+   REntryRange fEntryRange; ///< Used by the cluster pool to prevent reading beyond the given range
 
 protected:
    /// Default I/O performance counters that get registered in fMetrics
@@ -474,6 +484,11 @@ public:
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
+
+   /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
+   /// the given range. The range needs to be within [0, GetNEntries()).
+   void SetEntryRange(const REntryRange &range);
+   REntryRange GetEntryRange() const { return fEntryRange; }
 
    /// Allocates and fills a page that contains the index-th element
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
