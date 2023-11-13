@@ -21,3 +21,23 @@ TEST(StringUtils, Split)
    test(",,a", {"", "", "a"}, false);
    test("", {""}, false);
 }
+
+TEST(StringUtils, Join)
+{
+   // Test that ROOT::Join behaves like str.join from Python.
+
+   auto test = [](const std::string &ref, const std::string &sep, const std::vector<std::string> &strings) {
+      auto out = ROOT::Join(sep, strings);
+      EXPECT_EQ(out, ref) << "ROOT::Join gave wrong result.";
+   };
+   test("apple,orange,banana", ",", {"apple", "orange", "banana"});
+   test("apple.orange.banana", ".", {"apple", "orange", "banana"});
+   test("apple::orange::banana", "::", {"apple", "orange", "banana"});
+   test("appleorangebanana", "", {"apple", "orange", "banana"});
+   test("apple,,banana", ",", {"apple", "", "banana"});
+   test("apple", ",", {"apple"});
+   test("", ",", {""});
+   test("", "", {""});
+   test("", "", {});
+   test("", ";;", {""});
+}
