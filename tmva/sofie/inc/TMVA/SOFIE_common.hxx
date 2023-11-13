@@ -444,8 +444,12 @@ TMVA::Experimental::RTensor<T> Concatenate( TMVA::Experimental::RTensor<T> & t1,
       throw std::runtime_error("TMVA RTensor Concatenate - tensors have different memory layout");
    auto & shape1 = t1.GetShape();
    auto & shape2 = t2.GetShape();
-   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis])
+   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis]) {
+      std::cout << "axis " << axis << " sizes " << t1.GetSize() << " " << t2.GetSize() << "  ";
+      std::cout << "shape 1 : " << ConvertShapeToString(t1.GetShape());
+      std::cout << " shape 2 : " << ConvertShapeToString(t2.GetShape()) << std::endl;
       throw std::runtime_error("TMVA RTensor Concatenate - tensors have incompatible shapes");
+   }
    std::vector<size_t> outShape = shape1;
    outShape[axis] = shape1[axis] + shape2[axis];
    TMVA::Experimental::RTensor<T> tout(outShape, t1.GetMemoryLayout());

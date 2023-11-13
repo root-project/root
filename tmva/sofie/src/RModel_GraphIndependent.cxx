@@ -137,7 +137,8 @@ void RModel_GraphIndependent::Generate() {
     fGC += "\n// --- Edge Update ---\n";
 
     std::string e_size_input =  std::to_string(num_edge_features_input);
-    fGC += "for (int k = 0; k < " + std::to_string(num_edges) + "; k++) { \n";
+    fGC +=  "size_t n_edges = input_graph.edge_data.GetShape()[0];\n";
+    fGC += "for (size_t k = 0; k < n_edges; k++) { \n";
     fGC += "   std::copy(input_graph.edge_data.GetData() + k * " + e_size_input +
            ", input_graph.edge_data.GetData() + (k + 1) * " + e_size_input +
            ", fEdgeInputs.begin() + k * " + e_size_input + ");\n";
@@ -147,10 +148,10 @@ void RModel_GraphIndependent::Generate() {
 
     if(num_edge_features != num_edge_features_input) {
         fGC += "\n//  resize edge graph data since output feature size is not equal to input size\n";
-        fGC+="input_graph.edge_data = input_graph.edge_data.Resize({"+std::to_string(num_edges)+", "+std::to_string(num_edge_features)+"});\n";
+        fGC+="input_graph.edge_data = input_graph.edge_data.Resize({ n_edges, "+ std::to_string(num_edge_features) + "});\n";
     }
     // copy output
-    fGC += "\nfor (int k = 0; k < " + std::to_string(num_edges) + "; k++) { \n";
+    fGC += "\nfor (size_t k = 0; k < n_edges; k++) { \n";
     fGC += "   std::copy(fEdgeUpdates.begin()+ k * " + std::to_string(num_edge_features) + ", fEdgeUpdates.begin()+ (k+1) * " + std::to_string(num_edge_features) +
            ",input_graph.edge_data.GetData() + k * " + std::to_string(num_edge_features)+ ");\n";
     fGC += "}\n";
@@ -158,8 +159,9 @@ void RModel_GraphIndependent::Generate() {
 
     // computing updated node attributes
     std::string n_size_input =  std::to_string(num_node_features_input);
-    fGC += "\n// --- Node Update ---";
-    fGC += "\nfor (int k = 0; k < " + std::to_string(num_nodes) + "; k++) { \n";
+    fGC += "\n// --- Node Update ---\n";
+    fGC += "size_t n_nodes = input_graph.node_data.GetShape()[0];\n";
+    fGC += "for (size_t k = 0; k < n_nodes; k++) { \n";
     fGC += "   std::copy(input_graph.node_data.GetData() + k * " + n_size_input +
            ", input_graph.node_data.GetData() + (k + 1) * " + n_size_input +
            ", fNodeInputs.begin() + k * " + n_size_input + ");\n";
@@ -171,10 +173,10 @@ void RModel_GraphIndependent::Generate() {
 
     if(num_node_features != num_node_features_input) {
         fGC += "\n//  resize node graph data since output feature size is not equal to input size\n";
-        fGC+="input_graph.node_data = input_graph.node_data.Resize({"+std::to_string(num_nodes)+", "+std::to_string(num_node_features)+"});\n";
+        fGC+="input_graph.node_data = input_graph.node_data.Resize({ n_nodes, "+std::to_string(num_node_features) + "});\n";
     }
     // copy output
-    fGC += "\nfor (int k = 0; k < " + std::to_string(num_nodes) + "; k++) { \n";
+    fGC += "\nfor (size_t k = 0; k < n_nodes; k++) { \n";
     fGC += "   std::copy(fNodeUpdates.begin()+ k * " + std::to_string(num_node_features) + ", fNodeUpdates.begin() + (k+1) * " + std::to_string(num_node_features) +
            ",input_graph.node_data.GetData() + k * " + std::to_string(num_node_features)+ ");\n";
     fGC += "}\n";
