@@ -324,6 +324,7 @@ struct CDT_EXPORT PtTriLocation
         OnEdge1,
         OnEdge2,
         OnEdge3,
+        OnVertex,
     };
 };
 
@@ -424,6 +425,9 @@ CDT_EXPORT T distance(const V2d<T>& a, const V2d<T>& b);
 /// Squared distance between two 2D points
 template <typename T>
 CDT_EXPORT T distanceSquared(const V2d<T>& a, const V2d<T>& b);
+
+/// Check if any of triangle's vertices belongs to a super-triangle
+CDT_INLINE_IF_HEADER_ONLY bool touchesSuperTriangle(const Triangle& t);
 
 } // namespace CDT
 

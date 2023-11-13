@@ -84,12 +84,14 @@ CDT_INLINE_IF_HEADER_ONLY Index cw(Index i)
 
 CDT_INLINE_IF_HEADER_ONLY bool isOnEdge(const PtTriLocation::Enum location)
 {
-    return location > PtTriLocation::Outside;
+    return location == PtTriLocation::OnEdge1 ||
+           location == PtTriLocation::OnEdge2 ||
+           location == PtTriLocation::OnEdge3;
 }
 
 CDT_INLINE_IF_HEADER_ONLY Index edgeNeighbor(const PtTriLocation::Enum location)
 {
-    assert(location >= PtTriLocation::OnEdge1);
+    assert(isOnEdge(location));
     return static_cast<Index>(location - PtTriLocation::OnEdge1);
 }
 
@@ -138,12 +140,18 @@ PtTriLocation::Enum locatePointTriangle(
     if(edgeCheck == PtLineLocation::Right)
         return PtTriLocation::Outside;
     if(edgeCheck == PtLineLocation::OnLine)
-        result = PtTriLocation::OnEdge2;
+    {
+        result = (result == PtTriLocation::Inside) ? PtTriLocation::OnEdge2
+                                                   : PtTriLocation::OnVertex;
+    }
     edgeCheck = locatePointLine(p, v3, v1);
     if(edgeCheck == PtLineLocation::Right)
         return PtTriLocation::Outside;
     if(edgeCheck == PtLineLocation::OnLine)
-        result = PtTriLocation::OnEdge3;
+    {
+        result = (result == PtTriLocation::Inside) ? PtTriLocation::OnEdge3
+                                                   : PtTriLocation::OnVertex;
+    }
     return result;
 }
 
@@ -155,6 +163,7 @@ CDT_INLINE_IF_HEADER_ONLY Index opoNbr(const Index vertIndex)
         return Index(2);
     if(vertIndex == Index(2))
         return Index(0);
+    assert(false && "Invalid vertex index");
     throw std::runtime_error("Invalid vertex index");
 }
 
@@ -166,6 +175,7 @@ CDT_INLINE_IF_HEADER_ONLY Index opoVrt(const Index neighborIndex)
         return Index(0);
     if(neighborIndex == Index(2))
         return Index(1);
+    assert(false && "Invalid neighbor index");
     throw std::runtime_error("Invalid neighbor index");
 }
 
@@ -298,6 +308,11 @@ template <typename T>
 T distanceSquared(const V2d<T>& a, const V2d<T>& b)
 {
     return distanceSquared(a.x, a.y, b.x, b.y);
+}
+
+bool touchesSuperTriangle(const Triangle& t)
+{
+    return t.vertices[0] < 3 || t.vertices[1] < 3 || t.vertices[2] < 3;
 }
 
 } // namespace CDT

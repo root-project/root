@@ -18,6 +18,7 @@
 #include <iterator>
 #include <stack>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -78,8 +79,13 @@ struct CDT_EXPORT IntersectingConstraintEdges
      */
     enum Enum
     {
-        Ignore,  ///< constraint edge intersections are not checked
-        Resolve, ///< constraint edge intersections are resolved
+        NotAllowed, ///< constraint edge intersections are not allowed
+        TryResolve, ///< attempt to resolve constraint edge intersections
+        /**
+         * No checks: slightly faster but less safe.
+         * User must provide a valid input without intersecting constraints.
+         */
+        DontCheck,
     };
 };
 
@@ -90,6 +96,149 @@ struct CDT_EXPORT IntersectingConstraintEdges
  */
 typedef unsigned short LayerDepth;
 typedef LayerDepth BoundaryOverlapCount;
+
+/**
+ * Contains source location info: file, function, line
+ */
+class SourceLocation
+{
+public:
+    SourceLocation(const std::string& file, const std::string& func, int line)
+        : m_file(file)
+        , m_func(func)
+        , m_line(line)
+    {}
+    const std::string& file() const
+    {
+        return m_file;
+    }
+    const std::string& func() const
+    {
+        return m_func;
+    }
+    int line() const
+    {
+        return m_line;
+    }
+
+private:
+    std::string m_file;
+    std::string m_func;
+    int m_line;
+};
+
+/// Macro for getting source location
+#define CDT_SOURCE_LOCATION                                                    \
+    SourceLocation(std::string(__FILE__), std::string(__func__), __LINE__)
+
+/**
+ * Base class for errors. Contains error description and source location: file,
+ * function, line
+ */
+class Error : public std::runtime_error
+{
+public:
+    /// Constructor
+    Error(const std::string& description, const SourceLocation& srcLoc)
+        : std::runtime_error(
+              description + "\nin '" + srcLoc.func() + "' at " + srcLoc.file() +
+              ":" + std::to_string(srcLoc.line()))
+        , m_description(description)
+        , m_srcLoc(srcLoc)
+    {}
+    /// Get error description
+    const std::string& description() const
+    {
+        return m_description;
+    }
+    /// Get source location from where the error was thrown
+    const SourceLocation& sourceLocation() const
+    {
+        return m_srcLoc;
+    }
+
+private:
+    std::string m_description;
+    SourceLocation m_srcLoc;
+};
+
+/**
+ * Error thrown when triangulation modification is attempted after it was
+ * finalized
+ */
+class FinalizedError : public Error
+{
+public:
+    FinalizedError(const SourceLocation& srcLoc)
+        : Error(
+              "Triangulation was finalized with 'erase...' method. Further "
+              "modification is not possible.",
+              srcLoc)
+    {}
+};
+
+/**
+ * Error thrown when duplicate vertex is detected during vertex insertion
+ */
+class DuplicateVertexError : public Error
+{
+public:
+    DuplicateVertexError(
+        const VertInd v1,
+        const VertInd v2,
+        const SourceLocation& srcLoc)
+        : Error(
+              "Duplicate vertex detected: #" + std::to_string(v1) +
+                  " is a duplicate of #" + std::to_string(v2),
+              srcLoc)
+        , m_v1(v1)
+        , m_v2(v2)
+    {}
+    VertInd v1() const
+    {
+        return m_v1;
+    }
+    VertInd v2() const
+    {
+        return m_v2;
+    }
+
+private:
+    VertInd m_v1, m_v2;
+};
+
+/**
+ * Error thrown when intersecting constraint edges are detected, but
+ * triangulation is not configured to attempt to resolve them
+ */
+class IntersectingConstraintsError : public Error
+{
+public:
+    IntersectingConstraintsError(
+        const Edge& e1,
+        const Edge& e2,
+        const SourceLocation& srcLoc)
+        : Error(
+              "Intersecting constraint edges detected: (" +
+                  std::to_string(e1.v1()) + ", " + std::to_string(e1.v2()) +
+                  ") intersects (" + std::to_string(e2.v1()) + ", " +
+                  std::to_string(e2.v2()) + ")",
+              srcLoc)
+        , m_e1(e1)
+        , m_e2(e2)
+    {}
+    const Edge& e1() const
+    {
+        return m_e1;
+    }
+    const Edge& e2() const
+    {
+        return m_e2;
+    }
+
+private:
+    Edge m_e1, m_e2;
+};
 
 /**
  * @defgroup Triangulation Triangulation Class
@@ -355,6 +504,8 @@ public:
 
     /// Access internal vertex adjacent triangles
     TriIndVec& VertTrisInternal();
+    /// Access internal vertex adjacent triangles
+    const TriIndVec& VertTrisInternal() const;
     /// @}
 
 private:
@@ -363,16 +514,13 @@ private:
     void addNewVertex(const V2d<T>& pos, TriInd iT);
     void insertVertex(VertInd iVert);
     void insertVertex(VertInd iVert, VertInd walkStart);
-    void ensureDelaunayByEdgeFlips(
-        const V2d<T>& v1,
-        VertInd iV1,
-        std::stack<TriInd>& triStack);
+    void ensureDelaunayByEdgeFlips(VertInd iV1, std::stack<TriInd>& triStack);
     /// Flip fixed edges and return a list of flipped fixed edges
     std::vector<Edge> insertVertex_FlipFixedEdges(VertInd iV1);
 
     /// State for an iteration of triangulate pseudo-polygon
     typedef tuple<IndexSizeType, IndexSizeType, TriInd, TriInd, Index>
-        TriangulatePseudopolygonTask;
+        TriangulatePseudoPolygonTask;
 
     /**
      * Insert an edge into constraint Delaunay triangulation
@@ -390,7 +538,7 @@ private:
         Edge edge,
         Edge originalEdge,
         EdgeVec& remaining,
-        std::vector<TriangulatePseudopolygonTask>& tppIterations);
+        std::vector<TriangulatePseudoPolygonTask>& tppIterations);
 
     /**
      * Insert an edge or its part into constraint Delaunay triangulation
@@ -408,7 +556,7 @@ private:
         Edge edge,
         Edge originalEdge,
         EdgeVec& remaining,
-        std::vector<TriangulatePseudopolygonTask>& tppIterations);
+        std::vector<TriangulatePseudoPolygonTask>& tppIterations);
 
     /// State for iteration of conforming to edge
     typedef tuple<Edge, EdgeVec, BoundaryOverlapCount> ConformToEdgeTask;
@@ -459,7 +607,7 @@ private:
     std::stack<TriInd> insertVertexOnEdge(VertInd v, TriInd iT1, TriInd iT2);
     array<TriInd, 2> trianglesAt(const V2d<T>& pos) const;
     array<TriInd, 2>
-    walkingSearchTrianglesAt(const V2d<T>& pos, VertInd startVertex) const;
+    walkingSearchTrianglesAt(VertInd iV, VertInd startVertex) const;
     TriInd walkTriangles(VertInd startVertex, const V2d<T>& pos) const;
     /// Given triangle and its vertex find opposite triangle and the other three
     /// vertices and surrounding neighbors
@@ -474,28 +622,23 @@ private:
         TriInd& n2,
         TriInd& n3,
         TriInd& n4);
-    bool isFlipNeeded(
-        const V2d<T>& v,
-        VertInd iV1,
-        VertInd iV2,
-        VertInd iV3,
-        VertInd iV4) const;
+    bool isFlipNeeded(VertInd iV1, VertInd iV2, VertInd iV3, VertInd iV4) const;
     void changeNeighbor(TriInd iT, TriInd oldNeighbor, TriInd newNeighbor);
     void changeNeighbor(
         TriInd iT,
         VertInd iVedge1,
         VertInd iVedge2,
         TriInd newNeighbor);
-    void triangulatePseudopolygon(
+    void triangulatePseudoPolygon(
         const std::vector<VertInd>& poly,
-        const std::vector<TriInd>& outerTris,
+        unordered_map<Edge, TriInd>& outerTris,
         TriInd iT,
         TriInd iN,
-        std::vector<TriangulatePseudopolygonTask>& iterations);
-    void triangulatePseudopolygonIteration(
+        std::vector<TriangulatePseudoPolygonTask>& iterations);
+    void triangulatePseudoPolygonIteration(
         const std::vector<VertInd>& poly,
-        const std::vector<TriInd>& outerTris,
-        std::vector<TriangulatePseudopolygonTask>& iterations);
+        unordered_map<Edge, TriInd>& outerTris,
+        std::vector<TriangulatePseudoPolygonTask>& iterations);
     IndexSizeType findDelaunayPoint(
         const std::vector<VertInd>& poly,
         IndexSizeType iA,
@@ -509,9 +652,40 @@ private:
      */
     void finalizeTriangulation(const TriIndUSet& removedTriangles);
     TriIndUSet growToBoundary(std::stack<TriInd> seeds) const;
-    void fixEdge(const Edge& edge, BoundaryOverlapCount overlaps);
     void fixEdge(const Edge& edge);
     void fixEdge(const Edge& edge, const Edge& originalEdge);
+    /**
+     *  Split existing constraint (fixed) edge
+     * @param edge fixed edge to split
+     * @param iSplitVert index of the vertex to be used as a split vertex
+     */
+    void splitFixedEdge(const Edge& edge, const VertInd iSplitVert);
+    /**
+     * Add a vertex that splits an edge into the triangulation
+     * @param splitVert position of split vertex
+     * @param iT index of a first triangle adjacent to the split edge
+     * @param iTopo index of a second triangle adjacent to the split edge
+     * (opposed to the first triangle)
+     * @return index of a newly added split vertex
+     */
+    VertInd addSplitEdgeVertex(
+        const V2d<T>& splitVert,
+        const TriInd iT,
+        const TriInd iTopo);
+    /**
+     * Split fixed edge and add a split vertex into the triangulation
+     * @param edge fixed edge to split
+     * @param splitVert position of split vertex
+     * @param iT index of a first triangle adjacent to the split edge
+     * @param iTopo index of a second triangle adjacent to the split edge
+     * (opposed to the first triangle)
+     * @return index of a newly added split vertex
+     */
+    VertInd splitFixedEdgeAt(
+        const Edge& edge,
+        const V2d<T>& splitVert,
+        const TriInd iT,
+        const TriInd iTopo);
     /**
      * Flag triangle as dummy
      * @note Advanced method for manually modifying the triangulation from
@@ -551,10 +725,10 @@ private:
         VertInd superGeomVertCount,
         V2d<T> boxMin,
         V2d<T> boxMax);
+    std::pair<TriInd, TriInd> edgeTriangles(VertInd a, VertInd b) const;
     bool hasEdge(VertInd a, VertInd b) const;
     void setAdjacentTriangle(const VertInd v, const TriInd t);
     void pivotVertexTriangleCW(VertInd v);
-    void removeAdjacentTriangle(VertInd v);
     /// Add vertex to nearest-point locator if locator is initialized
     void tryAddVertexToLocator(const VertInd v);
     /// Perform lazy initialization of nearest-point locator after the Kd-tree
@@ -637,11 +811,7 @@ void Triangulation<T, TNearPointLocator>::insertVertices(
     TGetVertexCoordY getY)
 {
     if(isFinalized())
-    {
-        throw std::runtime_error(
-            "Triangulation was finalized with 'erase...' method. Inserting new "
-            "vertices is not possible");
-    }
+        throw FinalizedError(CDT_SOURCE_LOCATION);
 
     const bool isFirstTime = vertices.empty();
     const T max = std::numeric_limits<T>::max();
@@ -686,15 +856,11 @@ void Triangulation<T, TNearPointLocator>::insertEdges(
     TGetEdgeVertexStart getStart,
     TGetEdgeVertexEnd getEnd)
 {
-    // state shared between different runs for performance gains
-    std::vector<TriangulatePseudopolygonTask> tppIterations;
-    EdgeVec remaining;
     if(isFinalized())
-    {
-        throw std::runtime_error(
-            "Triangulation was finalized with 'erase...' method. Inserting new "
-            "edges is not possible");
-    }
+        throw FinalizedError(CDT_SOURCE_LOCATION);
+
+    std::vector<TriangulatePseudoPolygonTask> tppIterations;
+    EdgeVec remaining;
     for(; first != last; ++first)
     {
         // +3 to account for super-triangle vertices
@@ -718,11 +884,8 @@ void Triangulation<T, TNearPointLocator>::conformToEdges(
     TGetEdgeVertexEnd getEnd)
 {
     if(isFinalized())
-    {
-        throw std::runtime_error(
-            "Triangulation was finalized with 'erase...' method. Conforming to "
-            "new edges is not possible");
-    }
+        throw FinalizedError(CDT_SOURCE_LOCATION);
+
     tryInitNearestPointLocator();
     // state shared between different runs for performance gains
     std::vector<ConformToEdgeTask> remaining;
