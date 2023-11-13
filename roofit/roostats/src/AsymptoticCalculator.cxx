@@ -956,8 +956,7 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
    RooRealVar *myobs = nullptr;
    RooAbsReal *myexp = nullptr;
    const char * pdfName = pdf.ClassName();
-   RooFIter iter(pdf.serverMIterator());
-   for (RooAbsArg *a =  iter.next(); a != nullptr; a = iter.next()) {
+   for (RooAbsArg *a : pdf.servers()) {
       if (obs.contains(*a)) {
          if (myobs != nullptr) {
             oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two observables ?? " << endl;
@@ -1479,8 +1478,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          // we assume that the global observable is defined as ngobs = k-1 and the theta parameter has the name theta otherwise we use other procedure which might be wrong
          RooAbsReal * thetaGamma = nullptr;
          if ( cClass == RooGamma::Class() ) {
-            RooFIter itc(cterm->serverMIterator() );
-            for (RooAbsArg *a2 = itc.next(); a2 != nullptr; a2 = itc.next()) {
+            for (RooAbsArg *a2 : cterm->servers()) {
                if (TString(a2->GetName()).Contains("theta") ) {
                   thetaGamma = dynamic_cast<RooAbsReal*>(a2);
                   break;
@@ -1496,8 +1494,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                   std::cout << "Gamma constraint has a scale " << thetaGamma->GetName() << "  = " << thetaGamma->getVal() << std::endl;
             }
          }
-         RooFIter iter2(cterm->serverMIterator() );
-         for (RooAbsArg *a2 = iter2.next(); a2 != nullptr; a2 = iter2.next()) {
+         for (RooAbsArg *a2 : cterm->servers()) {
             RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2);
             if (verbose > 2) std::cout << "Loop on constraint server term  " << a2->GetName() << std::endl;
             if (rrv2 && rrv2->dependsOn(nuis) ) {
