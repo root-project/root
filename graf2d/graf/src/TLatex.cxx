@@ -1373,7 +1373,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          fs1 = Readfs();
          Analyse(x,y,spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
          Double_t sub = GetHeight()*spec.fSize/14;
-         Double_t x1 , y1 , x2, y2, x3, x4;
+         Double_t x1 , y1 , x2, y2, x3;
          switch(opAbove) {
          case 0: { // bar
             Double_t xx[2], yy[2];
@@ -1394,12 +1394,15 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
          }
-         case 2: // dot
-            x1 = x+fs1.Width()/2-3*sub/4 ;
-            x2 = x+fs1.Width()/2+3*sub/4 ;
-            y1 = y-sub-fs1.Over() ;
-            DrawLine(x1,y1,x2,y1,spec);
+         case 2: { // dot
+            Double_t dd = TMath::Max(0.5*GetLineWidth(), 0.5*sub), // dot size
+                     midx = x + fs1.Width()/2,
+                     midy = y - sub - fs1.Over() - dd;
+            Double_t xx[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
+                     yy[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
+            DrawPolyLine(5, xx, yy, spec, 10.);
             break;
+         }
          case 3: { // hat
             Double_t xx[3], yy[3];
             xx[1] = x + fs1.Width()/2;
@@ -1411,15 +1414,19 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
          }
-         case 4: // ddot
-            x1 = x+fs1.Width()/2-9*sub/4 ;
-            x2 = x+fs1.Width()/2-3*sub/4 ;
-            x3 = x+fs1.Width()/2+9*sub/4 ;
-            x4 = x+fs1.Width()/2+3*sub/4 ;
-            y1 = y-sub-fs1.Over() ;
-            DrawLine(x1,y1,x2,y1,spec);
-            DrawLine(x3,y1,x4,y1,spec);
+         case 4: { // ddot
+            Double_t dd = TMath::Max(0.5*GetLineWidth(), 0.5*sub), // dot size
+                     midx = x + fs1.Width()/2 - 1.5*sub,
+                     midy = y - sub - fs1.Over() - dd;
+            Double_t xx1[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
+                     yy1[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
+            DrawPolyLine(5, xx1, yy1, spec, 10.);
+            midx = x + fs1.Width()/2 + 1.5*sub;
+            Double_t xx2[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
+                     yy2[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
+            DrawPolyLine(5, xx2, yy2, spec, 10.);
             break;
+         }
          case 5: // acute
             x1 = x+fs1.Width()/2;
             y1 = y +sub -fs1.Over() ;
@@ -1958,6 +1965,9 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a poly line in a Latex formula
+/// Is scale_width parameter >=1, fill area will be drawn
+/// Otherwise line width will be scaled proportional to current font size
+/// If not specified - default line width will be used
 void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width)
 {
    if (!gPad) return ;
@@ -1972,14 +1982,22 @@ void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextS
       yy[n] = my;
    }
 
+   if (scale_width >= 1.) {
+      TAttFill fill(spec.fColor, 1001);
+      fill.Modify();
+      gPad->PaintFillArea(npoints, xx, yy, "f");
+      return;
+   }
+
    auto prevWidth = GetLineWidth();
    if (scale_width) {
-      Int_t lineWidth = TMath::Nint(gVirtualX->GetTextSize() * scale_width);
+      Int_t lineWidth = TMath::Nint(GetHeight() * spec.fSize * scale_width);
       SetLineWidth(lineWidth > prevWidth ? lineWidth : prevWidth);
    }
 
    SetLineColor(spec.fColor);
    TAttLine::Modify();
+
    gPad->PaintPolyLine(npoints, xx, yy);
    if (scale_width)
       SetLineWidth(prevWidth);
