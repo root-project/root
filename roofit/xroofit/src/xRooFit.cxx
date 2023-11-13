@@ -238,8 +238,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                      // name theta otherwise we use other procedure which might be wrong
                      RooAbsReal *thetaGamma = 0;
                      if (cClass == RooGamma::Class()) {
-                        RooFIter itc(thePdf->serverMIterator());
-                        for (RooAbsArg *a2 = itc.next(); a2 != 0; a2 = itc.next()) {
+                        for (RooAbsArg *a2 : thePdf->servers()) {
                            if (TString(a2->GetName()).Contains("theta")) {
                               thetaGamma = dynamic_cast<RooAbsReal *>(a2);
                               break;
@@ -253,8 +252,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                               << std::endl;
                         }
                      }
-                     RooFIter iter2(thePdf->serverMIterator());
-                     for (RooAbsArg *a2 = iter2.next(); a2 != 0; a2 = iter2.next()) {
+                     for (RooAbsArg *a2 : thePdf->servers()) {
                         RooAbsReal *rrv2 = dynamic_cast<RooAbsReal *>(a2);
                         if (rrv2 && !rrv2->dependsOn(*gob) &&
                             (!rrv2->isConstant() || !rrv2->InheritsFrom("RooConstVar"))) {
@@ -1155,12 +1153,9 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       if (boundaryCheck) {
          // check if any of the parameters are at their limits (potentially a problem with fit)
          // or their errors go over their limits (just a warning)
-         RooFIter itr = floatPars->fwdIterator();
-         RooAbsArg *a = 0;
          int limit_status = 0;
          std::string listpars;
-         while ((a = itr.next())) {
-            RooRealVar *v = dynamic_cast<RooRealVar *>(a);
+         for (auto *v : dynamic_range_cast<RooRealVar *>(*floatPars)) {
             if (!v)
                continue;
             double vRange = v->getMax() - v->getMin();

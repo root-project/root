@@ -6975,9 +6975,7 @@ public:
 
       // Strip out parameters with zero error
       RooArgList fpf_stripped;
-      RooFIter fi = fr.floatParsFinal().fwdIterator();
-      RooRealVar *frv;
-      while ((frv = (RooRealVar *)fi.next())) {
+      for (auto * frv : static_range_cast<RooRealVar *>(fi.floatParsFinal())) {
          if (frv->getError() > 1e-20) {
             fpf_stripped.add(*frv);
          }

@@ -284,10 +284,7 @@ private:
       if (!CompareParameters(*set1, *set2))
          return false;
 
-      RooLinkedListIter it = set1->iterator();
-      RooAbsArg *arg = 0;
-      while ((arg = (RooAbsArg *)it.Next())) {
-         RooRealVar *par = dynamic_cast<RooRealVar *>(arg);
+      for (auto * par : dynamic_range_cast<RooRealVar *>(*set1)) {
          if (!par)
             continue; // do not test RooCategory
          if (!TMath::AreEqualAbs(rData1.mean(*par), rData2.mean(*par), fTolerance)) {
@@ -308,23 +305,18 @@ private:
 
    bool CompareParameters(const RooArgSet &rPars1, const RooArgSet &rPars2, bool bAllowForError = false)
    {
-      if (rPars1.getSize() != rPars2.getSize()) {
+      if (rPars1.size() != rPars2.size()) {
          Warning("CompareParameters", "got different numbers of parameters: %d vs %d", rPars1.getSize(),
                  rPars2.getSize());
          return false;
       }
 
-      RooLinkedListIter it = rPars1.iterator();
-      RooRealVar *arg1 = 0;
-      RooRealVar *arg2 = 0;
-      TObject *obj = 0;
-      while ((obj = it.Next())) {
+      for(auto *arg1 : dynamic_range_cast<RooRealVar *>(rPars1)) {
          // checks only for RooRealVars implemented
-         arg1 = dynamic_cast<RooRealVar *>(obj);
          if (!arg1)
             continue;
 
-         arg2 = (RooRealVar *)rPars2.find(arg1->GetName());
+         RooRealVar *arg2 = (RooRealVar *)rPars2.find(arg1->GetName());
 
          if (!arg2) {
             Warning("CompareParameters", "did not find observable with name \"%s\"", arg1->GetName());

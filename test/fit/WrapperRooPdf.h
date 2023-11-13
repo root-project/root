@@ -87,38 +87,23 @@ public:
    }
 
    unsigned int NPar() const override {
-      return fParams->getSize();
+      return fParams->size();
    }
    unsigned int NDim() const override {
-      return fX->getSize();
+      return fX->size();
    }
    const double * Parameters() const override {
-      if (fParamValues.size() != NPar() )
-         fParamValues.resize(NPar() );
-
+      fParamValues.resize(0);
       // iterate on parameters and set values
-      TIter itr = fParams->createIterator() ;
-      std::vector<double>::iterator vpitr = fParamValues.begin();
-
-      RooRealVar* var = nullptr;
-      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
+      for (auto * var : dynamic_range_cast<RooRealVar *>(*fParams)) {
          assert(var != nullptr);
-         *vpitr++ = var->getVal();
+         fParamValues.push_back(var->getVal());
       }
-      return &fParamValues.front();
+      return fParamValues.data();
    }
 
    std::string ParameterName(unsigned int i) const override {
-      // iterate on parameters and set values
-      TIter itr = fParams->createIterator() ;
-      RooRealVar* var = nullptr;
-      unsigned int index = 0;
-      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != nullptr);
-         if (index == i) return std::string(var->GetName() );
-         index++;
-      }
-      return "not_found";
+      return i < fParams->size() ? (*fParams)[i]->GetName() : "not_found";
    }
 
 
@@ -157,17 +142,13 @@ private:
       DoSetParameters(p);
 
       // iterate on observables
-      TIter itr = fX->createIterator() ;
-      RooRealVar* var = nullptr;
-      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
+      for (auto *var : dynamic_range_cast<RooRealVar *>(*fX)) {
          assert(var != nullptr);
 #ifndef _WIN32
          var->setDirtyInhibit(true);
 #endif
          var->setVal(*x++);
       }
-      // debug
-      //fX->Print("v");
 
       if (fNorm)
          return fPdf->getVal(fX.get());
@@ -179,14 +160,10 @@ private:
 
    void DoSetParameters(const double * p) const {
       // iterate on parameters and set values
-      TIter itr = fParams->createIterator() ;
-      RooRealVar* var = nullptr;
-      while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
+      for (auto *var : dynamic_range_cast<RooRealVar *>(*fParams)) {
          assert(var != nullptr);
          var->setVal(*p++);
       }
-      // debug
-      //fParams->Print("v");
    }
 
 
