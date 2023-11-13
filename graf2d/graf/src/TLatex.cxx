@@ -1375,20 +1375,25 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          Double_t sub = GetHeight()*spec.fSize/14;
          Double_t x1 , y1 , x2, y2, x3, x4;
          switch(opAbove) {
-         case 0: // bar
-            Double_t ypos  ;
-            ypos = y-fs1.Over()-sub ;//-GetHeight()*spec.fSize/4. ;
-            DrawLine(x,ypos,x+fs1.Width(),ypos,spec);
+         case 0: { // bar
+            Double_t xx[2], yy[2];
+            xx[0] = x; xx[1] = x + fs1.Width();
+            yy[0] = yy[1] = y - sub - fs1.Over();
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
-         case 1: // vec
-            Double_t y0 ;
-            y0 = y-sub-fs1.Over() ;
-            y1 = y0-GetHeight()*spec.fSize/8 ;
-            x1 = x+fs1.Width() ;
-            DrawLine(x,y1,x1,y1,spec);
-            DrawLine(x1,y1,x1-GetHeight()*spec.fSize/4,y0-GetHeight()*spec.fSize/4,spec);
-            DrawLine(x1,y1,x1-GetHeight()*spec.fSize/4,y0,spec);
+         }
+         case 1: { // vec
+            Double_t xx[3], yy[3],
+                     dd = GetHeight()*spec.fSize/8, // arrow size
+                     midy = y - sub - fs1.Over() - dd; // middle arrow line
+            xx[0] = x; xx[1] = x + fs1.Width();
+            yy[0] = yy[1] = midy;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
+            xx[1] = x + fs1.Width(); xx[0] = xx[2] = xx[1] - 2*dd;
+            yy[0] = midy - dd; yy[1] = midy; yy[2] = midy + dd;
+            DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
+         }
          case 2: // dot
             x1 = x+fs1.Width()/2-3*sub/4 ;
             x2 = x+fs1.Width()/2+3*sub/4 ;
@@ -1396,14 +1401,11 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             DrawLine(x1,y1,x2,y1,spec);
             break;
          case 3: { // hat
-            Bool_t small = kTRUE; // by default position was optimized for small letters, but make several exceptions
-            for (int pos = strlen(tab3[opAbove])+2; pos < length - 1; ++pos)
-               if (strchr("tdbfhkli", text[pos]) || (text[pos] >= 'A' && text[pos] <= 'Z')) small = kFALSE;
             Double_t xx[3], yy[3];
-            xx[1] = x + fs1.Width()/2 ;
+            xx[1] = x + fs1.Width()/2;
             xx[0] = xx[1] - fs1.Width()/3;
             xx[2] = xx[1] + fs1.Width()/3;
-            yy[0] = y - (small ? 9*sub : sub + fs1.Over());
+            yy[0] = y - sub - fs1.Over();
             yy[1] = yy[0] - 2*sub;
             yy[2] = yy[0];
             DrawPolyLine(3, xx, yy, spec, 0.03);
@@ -1973,7 +1975,7 @@ void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextS
    auto prevWidth = GetLineWidth();
    if (scale_width) {
       Int_t lineWidth = TMath::Nint(gVirtualX->GetTextSize() * scale_width);
-      SetLineWidth(lineWidth > 0 ? lineWidth : 1);
+      SetLineWidth(lineWidth > prevWidth ? lineWidth : prevWidth);
    }
 
    SetLineColor(spec.fColor);
