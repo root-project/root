@@ -286,3 +286,25 @@ hDg.Draw()
 
 c0.Draw()
 
+
+print("try running with a dynamic Gnn ")
+def get_graph_data_dict2(n_nodes, n_edges, NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2, GLOBAL_FEATURE_SIZE=1):
+    return {
+      "globals": 10*np.random.rand(GLOBAL_FEATURE_SIZE).astype(np.float32)-5.,
+      "nodes": 10*np.random.rand(n_nodes, NODE_FEATURE_SIZE).astype(np.float32)-5.,
+      "edges": 10*np.random.rand(n_edges, EDGE_FEATURE_SIZE).astype(np.float32)-5.,
+      "senders": np.random.randint(n_nodes, size=n_edges, dtype=np.int32),
+      "receivers": np.random.randint(n_nodes, size=n_edges, dtype=np.int32),
+    }
+gnetData = []
+for i in range(0,5):
+    n_nodes = ROOT.gRandom.Integer(num_nodes) + 5
+    n_edges = ROOT.gRandom.Integer(num_edges) + 10
+    n_size =  ROOT.gRandom.Integer(node_size) + int(node_size/2)
+    e_size =  ROOT.gRandom.Integer(edge_size) + int(edge_size/2)
+    g_size =  ROOT.gRandom.Integer(global_size) + int(global_size/2)
+    gData = get_graph_data_dict2(n_nodes, n_edges, n_size, e_size, g_size)
+    gnetData = utils_tf.data_dicts_to_graphs_tuple([gData])
+    out_gnet = ep_model(gnetData, processing_steps)
+    print(out_gnet[-1])
+

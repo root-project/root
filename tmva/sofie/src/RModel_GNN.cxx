@@ -179,7 +179,9 @@ void RModel_GNN::Generate() {
 
     // computing updated edge attributes
     fGC += "\n// --- Edge Update ---\n";
-    fGC += "for (int k = 0; k < " + e_num + "; k++) { \n";
+    fGC +=  "size_t n_edges = input_graph.edge_data.GetShape()[0];\n";
+
+    fGC += "for (size_t k = 0; k < n_edges; k++) { \n";
     fGC += "   std::copy(input_graph.edge_data.GetData() + k * " + e_size_input +
            ", input_graph.edge_data.GetData() + (k + 1) * " + e_size_input +
            ", fEdgeInputs.begin() + k * " + e_size_input + ");\n";
@@ -198,19 +200,19 @@ void RModel_GNN::Generate() {
 
     if(num_edge_features != num_edge_features_input) {
         fGC += "\n//  resize edge graph data since output feature size is not equal to input size\n";
-        fGC+="input_graph.edge_data = input_graph.edge_data.Resize({"+e_num+", "+e_size+"});\n";
+        fGC+="input_graph.edge_data = input_graph.edge_data.Resize({n_edges, "+e_size+"});\n";
     }
     // copy output
-    fGC += "\nfor (int k = 0; k < " + e_num + "; k++) { \n";
+    fGC += "\nfor (size_t k = 0; k < n_edges; k++) { \n";
     fGC += "   std::copy(fEdgeUpdates.begin()+ k * " + e_size + ", fEdgeUpdates.begin()+ (k+1) * " + e_size +
-           ",input_graph.edge_data.GetData() + k * " + e_size+ ");\n";
+           ",input_graph.edge_data.GetData() + k * " + e_size + ");\n";
     fGC += "}\n";
     fGC += "\n";
 
     fGC += "\n\n// --- Node Update ---\n";
-
-    // computing updated edge attributes
-    fGC += "for (int k = 0; k < " + n_num + "; k++) { \n";
+    fGC += "size_t n_nodes = input_graph.node_data.GetShape()[0];\n";
+    // computing updated node attributes
+    fGC += "for (size_t k = 0; k < n_nodes; k++) { \n";
     fGC += "   std::copy(input_graph.node_data.GetData() + k * " + n_size_input +
            ", input_graph.node_data.GetData() + (k + 1) * " + n_size_input +
            ", fNodeInputs.begin() + k * " + n_size_input + ");\n";
@@ -219,21 +221,22 @@ void RModel_GNN::Generate() {
     fGC += "\nstd::fill(fNodeEdgeAggregate.begin(), fNodeEdgeAggregate.end(), 0.);\n";
     // fGlobInputs is size { nedges, ngloblas}. It needs to be here { nnodes, nglobals}
     // if number of nodes is larger than edges we need to resize it and copy values
-    if (num_nodes > num_edges) {
-        fGC += "\n// resize global vector feature to number of nodes\n";
-        fGC += "fGlobInputs.resize( " + std::to_string(num_nodes * num_global_features_input) + ");";
-        fGC += "for (size_t k = " + e_num + "; k < " + n_num + "; k++)";
-            fGC += "   std::copy(fGlobInputs.begin(), fGlobInputs.begin() + " + g_size_input +
-                   " , fGlobInputs.begin() + k * " + g_size_input + ");\n";
-    }
 
-    // aggregating edge if it's a receiver node and then updating corresponding node
-    // loop on nodes
-    fGC += "\nfor (int j = 0; j < " + n_num + "; j++) {\n";
-    int naprec = int(num_edges/num_nodes) +1;  // approximate number of receivers/node
-    fGC += "   std::vector<float *> edgesData; edgesData.reserve(" + std::to_string(naprec) + ");\n";
+    fGC += "\n// resize global vector feature to number of nodes if needed\n";
+    fGC += "if (n_nodes > n_edges) {\n";
+    fGC += "   fGlobInputs.resize( n_nodes * " + std::to_string(num_global_features_input) + ");\n";
+    fGC += "   for (size_t k = n_edges; k < n_nodes; k++)\n";
+    fGC += "      std::copy(fGlobInputs.begin(), fGlobInputs.begin() + " + g_size_input +
+                   " , fGlobInputs.begin() + k * " + g_size_input + ");\n";
+    fGC += "}\n";
+
+    // loop on nodes and aggregate incoming edges
+    fGC += "\n// aggregate edges going to a node\n";
+    fGC += "for (size_t j = 0; j < n_nodes; j++) {\n";
+    // approximate number of receivers/node to allocate vector
+    fGC += "   std::vector<float *> edgesData; edgesData.reserve( int(n_edges/n_nodes) +1);\n";
     // loop on edges
-    fGC += "   for (int k = 0; k < " + e_num + "; k++) {\n";
+    fGC += "   for (size_t k = 0; k < n_edges; k++) {\n";
     fGC += "      if (input_graph.receivers[k] == j) \n";
     fGC += "         edgesData.emplace_back(input_graph.edge_data.GetData() + k * " + e_size + ");\n";
     fGC += "   }\n";
@@ -250,34 +253,34 @@ void RModel_GNN::Generate() {
 
     if(num_node_features != num_node_features_input) {
         fGC += "\n//  resize node graph data since output feature size is not equal to input size\n";
-        fGC+="input_graph.node_data = input_graph.node_data.Resize({"+n_num+", "+n_size+"});\n";
+        fGC+="input_graph.node_data = input_graph.node_data.Resize({n_nodes, " + n_size + "});\n";
     }
     // copy output
-    fGC += "\nfor (int k = 0; k < " + n_num + "; k++) { \n";
+    fGC += "\nfor (size_t k = 0; k < n_nodes; k++) { \n";
     fGC += "   std::copy(fNodeUpdates.begin()+ k * " + n_size + ", fNodeUpdates.begin() + (k+1) * " + n_size +
            ",input_graph.node_data.GetData() + k * " + n_size+ ");\n";
     fGC += "}\n";
     fGC += "\n";
 
     // aggregating edges & nodes for global update
-    std::vector<std::string> Node_Global_Aggregate_String;
-    for(int k=0; k<num_nodes; ++k) {
-        Node_Global_Aggregate_String.emplace_back("input_graph.node_data.GetData()+"+std::to_string(k*num_node_features));
-    }
+    fGC += "std::vector<float *> allEdgesData; allEdgesData.reserve(n_edges);\n";
+    fGC += "for (size_t k = 0; k < n_edges; k++) {\n";
+    fGC += "   allEdgesData.emplace_back(input_graph.edge_data.GetData() + k * " + e_size + ");\n";
+    fGC += "}\n";
+    fGC += "std::vector<float *> allNodesData; allNodesData.reserve(n_nodes);\n";
+    fGC += "for (size_t k = 0; k < n_nodes; k++) {\n";
+    fGC += "   allNodesData.emplace_back(input_graph.node_data.GetData() + k * " + n_size + ");\n";
+    fGC += "}\n";
 
-    std::vector<std::string> Edge_Global_Aggregate_String;
-    for(int k=0; k<num_edges; ++k) {
-        Edge_Global_Aggregate_String.emplace_back("input_graph.edge_data.GetData()+"+std::to_string(k*num_edge_features));
-    }
 
     fGC += "\n// --- Global Update ---\n";
     fGC+="std::vector<float> Edge_Global_Aggregate = ";
-    fGC+=edge_global_agg_block->Generate(num_edge_features, Edge_Global_Aggregate_String);     // aggregating edge attributes globally
-    fGC+="\n";
+    fGC+=edge_global_agg_block->Generate(num_edge_features, "allEdgesData");     // aggregating edge attributes globally
+    fGC+=";\n";
 
     fGC+="std::vector<float> Node_Global_Aggregate = ";
-    fGC+=node_global_agg_block->Generate(num_node_features, Node_Global_Aggregate_String);     // aggregating node attributes globally
-    fGC+="\n";
+    fGC+=node_global_agg_block->Generate(num_node_features, "allNodesData");     // aggregating node attributes globally
+    fGC+=";\n";
 
     // computing updated global attributes
     fGC += "std::vector<float> Global_Data = ";
