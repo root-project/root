@@ -300,25 +300,40 @@ bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
-   // TODO(jblomer): use cluster boundaries for the entry ranges
-   std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
+   std::vector<std::pair<ULong64_t, ULong64_t>> rangesBySlot;
    if (fHasSeenAllRanges)
-      return ranges;
+      return rangesBySlot;
 
-   auto nEntries = fSources[0]->GetNEntries();
-   const auto chunkSize = nEntries / fNSlots;
-   const auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;
-   auto start = 0UL;
-   auto end = 0UL;
-   for (auto i : ROOT::TSeqU(fNSlots)) {
-      start = end;
-      end += chunkSize;
-      ranges.emplace_back(start, end);
-      (void)i;
+   std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
+   {
+      auto descriptorGuard = fSources[0]->GetSharedDescriptorGuard();
+      auto clusterId = descriptorGuard->FindClusterId(0, 0);
+      while (clusterId != kInvalidDescriptorId) {
+         const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
+         rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
+            clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
+         clusterId = descriptorGuard->FindNextClusterId(clusterId);
+      }
    }
-   ranges.back().second += reminder;
+
+   // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
+   const unsigned int nRangesByCluster = rangesByCluster.size();
+   const auto chunkSize = nRangesByCluster / fNSlots;
+   const auto remainder = (1U == fNSlots) ? 0 : nRangesByCluster % fNSlots;
+   std::size_t iRange = 0;
+   const unsigned int N = std::min(fNSlots, nRangesByCluster);
+   for (unsigned int i = 0; i < N; ++i) {
+      auto start = rangesByCluster[iRange].first;
+      iRange += chunkSize + static_cast<int>(i < remainder);
+      R__ASSERT(iRange > 0);
+      auto end = rangesByCluster[iRange - 1].second;
+      rangesBySlot.emplace_back(start, end);
+
+      fSources[i]->SetEntryRange({start, end - start});
+   }
+
    fHasSeenAllRanges = true;
-   return ranges;
+   return rangesBySlot;
 }
 
 std::string RNTupleDS::GetTypeName(std::string_view colName) const

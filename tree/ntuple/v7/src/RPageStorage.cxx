@@ -77,6 +77,22 @@ ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::ToColumnSet() c
    return result;
 }
 
+bool ROOT::Experimental::Detail::RPageSource::REntryRange::IntersectsWith(const RClusterDescriptor &clusterDesc) const
+{
+   if (fFirstEntry == kInvalidNTupleIndex) {
+      /// Entry range unset, we assume that the entry range covers the complete source
+      return true;
+   }
+
+   if (clusterDesc.GetNEntries() == 0)
+      return true;
+   if ((clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()) <= fFirstEntry)
+      return false;
+   if (clusterDesc.GetFirstEntryIndex() >= (fFirstEntry + fNEntries))
+      return false;
+   return true;
+}
+
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
    : RPageStorage(name), fMetrics(""), fOptions(options)
 {
@@ -118,6 +134,14 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
 void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHandle)
 {
    fActivePhysicalColumns.Erase(columnHandle.fPhysicalId);
+}
+
+void ROOT::Experimental::Detail::RPageSource::SetEntryRange(const REntryRange &range)
+{
+   if ((range.fFirstEntry + range.fNEntries) > GetNEntries()) {
+      throw RException(R__FAIL("invalid entry range"));
+   }
+   fEntryRange = range;
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()

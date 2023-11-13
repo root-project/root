@@ -19,6 +19,14 @@ TEST(RNTuple, ReconstructModel)
 
    RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
+   try {
+      source.SetEntryRange({0, 2});
+      FAIL() << "invalid entry range should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid entry range"));
+   }
+   // Should not throw
+   source.SetEntryRange({0, source.GetNEntries()});
 
    auto modelReconstructed = source.GetSharedDescriptorGuard()->GenerateModel();
    try {
