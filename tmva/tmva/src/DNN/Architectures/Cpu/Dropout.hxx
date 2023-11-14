@@ -24,7 +24,7 @@ template<typename AFloat>
 void TCpu<AFloat>::DropoutForward(TCpuTensor<AFloat> & A, 
                                   TDescriptors * /*descriptors*/,
                                   TWorkspace   * /*workspace*/,
-                                  Scalar_t dropoutProbability)
+                                  TCpu<AFloat>::Scalar_t dropoutProbability)
 {
    AFloat *data = A.GetData();
 
