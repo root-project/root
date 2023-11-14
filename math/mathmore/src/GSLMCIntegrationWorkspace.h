@@ -69,7 +69,10 @@ namespace Math {
 
       /// retrieve option pointer corresponding to parameters
       /// create a new object to be managed by the user
-      virtual ROOT::Math::IOptions * Options() const = 0;
+      virtual std::unique_ptr<ROOT::Math::IOptions>  Options() const = 0;
+
+      /// set options
+      virtual void SetOptions(const ROOT::Math::IOptions &)  = 0;
 
    private:
 
@@ -128,10 +131,13 @@ namespace Math {
       const VegasParameters & Parameters() const { return fParams; }
       VegasParameters & Parameters()  { return fParams; }
 
-      ROOT::Math::IOptions * Options() const override {
+      std::unique_ptr<IOptions> Options() const override {
          return fParams();
       }
-
+      /// set options
+      virtual void SetOptions(const ROOT::Math::IOptions & opt) override {
+         SetParameters(VegasParameters(opt));
+      }
 
    private:
 
@@ -202,8 +208,11 @@ namespace Math {
       const MiserParameters & Parameters() const { return fParams; }
       MiserParameters & Parameters()  { return fParams; }
 
-      ROOT::Math::IOptions * Options() const override {
+      std::unique_ptr<ROOT::Math::IOptions> Options() const override {
          return fParams();
+      }
+      virtual void SetOptions(const ROOT::Math::IOptions & opt) override {
+         SetParameters(MiserParameters(opt));
       }
 
    private:
@@ -260,9 +269,11 @@ namespace Math {
 
       size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
-      ROOT::Math::IOptions * Options() const override {
-         return nullptr;
+      std::unique_ptr<ROOT::Math::IOptions>  Options() const override {
+         return std::unique_ptr<ROOT::Math::IOptions>();
       }
+
+      virtual void SetOptions(const ROOT::Math::IOptions &) override {}
 
 
    private:
