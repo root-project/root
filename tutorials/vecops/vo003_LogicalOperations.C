@@ -18,7 +18,7 @@ void vo003_LogicalOperations()
    ROOT::RVecD v2{3., 2., 1.};
 
    // Let's start with operations which act element by element. In this case
-   // we expext a RVec which holds {1. > 3., 2. > 2., 3. > 1.}, i.e. {1, 0, 0}:
+   // we expect a RVec which holds {1. > 3., 2. > 2., 3. > 1.}, i.e. {1, 0, 0}:
    auto v1_gr_v2 = v1 > v2;
    std::cout << v1 << " > " << v2 << " = " << v1_gr_v2 << std::endl;
 
@@ -40,7 +40,7 @@ void vo003_LogicalOperations()
    auto v_filtered = v[v > 3.];
    std::cout << "v = " << v << ". v[ v > 3. ] = " << v_filtered << std::endl;
 
-   // This filtering operation can be particularely useful when cleaning collections of
+   // This filtering operation can be particularly useful when cleaning collections of
    // objects coming from HEP events. For example:
    ROOT::RVecD mu_pt{15., 12., 10.6, 2.3, 4., 3.};
    ROOT::RVecD mu_eta{1.2, -0.2, 4.2, -5.3, 0.4, -2.};
