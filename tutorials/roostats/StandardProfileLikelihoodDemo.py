@@ -27,7 +27,6 @@
 ## \authors Akeem Hart, Kyle Cranmer (C++ Version)
 
 import ROOT
-import sys
 
 workspaceName = "combined"
 modelConfigName = "ModelConfig"
@@ -50,13 +49,7 @@ if ROOT.gSystem.AccessPathName(filename):
     print("Done creating example input")
     print("---------------------\n\n")
 
-# Try to open the file
-try:
-    file = ROOT.TFile.Open(filename)
-except:
-    # if input file was specified but not found, quit
-    print("StandardRooStatsDemoMacro: Input file %s is not found" % filename)
-    sys.exit()
+file = ROOT.TFile.Open(filename)
 
 # -------------------------------------------------------
 # Tutorial starts here
@@ -65,21 +58,12 @@ except:
 # get the workspace out of the file
 
 w = file.Get(workspaceName)
-if not w:
-    print("Workspace not found")
-    sys.exit()
 
 # get the modelConfig out of the file
-mc = w.obj(modelConfigName)
+mc = w[modelConfigName]
 
 # get the modelConfig out of the file
-data = w.data(dataName)
-
-# make sure ingredients are found
-if not data or not mc:
-    w.Print()
-    print("data or ModelConfig was not found")
-    sys.exit()
+data = w[dataName]
 
 # ---------------------------------------------
 # create and use the ProfileLikelihoodCalculator
@@ -93,17 +77,8 @@ interval = pl.GetInterval()
 
 # print out the interval on the first Parameter of Interest
 firstPOI = mc.GetParametersOfInterest().first()
-print(
-    "\n>>>> RESULT : "
-    + str(confLevel * 100)
-    + "% interval on "
-    + firstPOI.GetName()
-    + " is : ["
-    + str(interval.LowerLimit(firstPOI))
-    + ", "
-    + str(interval.UpperLimit(firstPOI))
-    + "]\n\n"
-)
+limit_lower, limit_upper = interval.LowerLimit(firstPOI), interval.UpperLimit(firstPOI)
+print(f"\n>>>> RESULT : {confLevel * 100}% interval on {firstPOI.GetName()} is : [{limit_lower}, {limit_upper}]\n")
 
 # make a plot
 
@@ -115,10 +90,10 @@ plot = ROOT.RooStats.LikelihoodIntervalPlot(interval)
 plot.SetNPoints(nScanPoints)  # do not use too many points, it could become very slow for some models
 if poiXMin < poiXMax:
     plot.SetRange(poiXMin, poiXMax)
-opt = ROOT.TString("")
+opt = ""
 if plotAsTF1:
-    opt += ROOT.TString("tf1")
-plot.Draw(opt.Data())  # use option TF1 if too slow (plot.Draw("tf1")
+    opt += "tf1"
+plot.Draw(opt)  # use option TF1 if too slow (plot.Draw("tf1")
 
 # if requested perform also an hypothesis test for the significance
 if doHypoTest:
