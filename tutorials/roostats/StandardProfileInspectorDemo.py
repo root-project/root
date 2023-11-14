@@ -29,8 +29,6 @@
 ## \authors Akeem Hart, Kyle Cranmer (C++ Version)
 
 import ROOT
-import sys
-import math
 
 # -------------------------------------------------------
 # First part is just to access a user-defined file
@@ -50,13 +48,7 @@ if ROOT.gSystem.AccessPathName(filename):
     print("Done creating example input")
     print("---------------------\n\n")
 
-# Try to open the file
-try:
-    file = ROOT.TFile.Open(filename)
-except:
-    # if input file was specified but not found, quit
-    print("StandardRooStatsDemoMacro: Input file %s is not found" % filename)
-    sys.exit()
+file = ROOT.TFile.Open(filename)
 
 # -------------------------------------------------------
 # Tutorial starts here
@@ -65,39 +57,30 @@ except:
 # get the workspace out of the file
 
 w = file.Get(workspaceName)
-if not w:
-    print("Workspace not found")
-    sys.exit()
 
 # get the modelConfig out of the file
-mc = w.obj(modelConfigName)
+mc = w[modelConfigName]
 
 # get the modelConfig out of the file
-data = w.data(dataName)
-
-# make sure ingredients are found
-if not data or not mc:
-    w.Print()
-    print("data or ModelConfig was not found")
-    sys.exit()
+data = w[dataName]
 
 # -----------------------------
 # now use the profile inspector
 p = ROOT.RooStats.ProfileInspector()
-list = p.GetListOfProfilePlots(data, mc)
+profile_plots = p.GetListOfProfilePlots(data, mc)
 
 # now make plots
 c1 = ROOT.TCanvas("c1", "ProfileInspectorDemo", 800, 200)
-n = list.GetSize()
+n = len(profile_plots)
 if n > 4:
-    nx = int(math.sqrt(n))
+    nx = int(n**0.5)
     ny = ROOT.TMath.CeilNint(n / nx)
-    nx = ROOT.TMath.CeilNint(math.sqrt(n))
+    nx = ROOT.TMath.CeilNint(n**0.5)
     c1.Divide(ny, nx)
 else:
     c1.Divide(n)
-for i in range(n):
+for i, plot in enumerate(profile_plots):
     c1.cd(i + 1)
-    list.At(i).Draw("al")
+    plot.Draw("al")
 
 c1.Update()
