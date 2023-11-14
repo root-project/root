@@ -8,6 +8,7 @@ import textwrap
 from functools import wraps
 from http import HTTPStatus
 from typing import Callable, Dict
+from collections import namedtuple
 
 from openstack.connection import Connection
 from requests import get
@@ -119,7 +120,12 @@ def subprocess_with_capture(command: str):
     if os.name == 'nt':
         command = "$env:comspec = 'cmd.exe'; " + command
 
-    result = subprocess.run(command, capture_output=True, text=True, shell=True, check=False)
+    if sys.version_info.major <= 3 and sys.version_info.minor <= 6:
+      res = subprocess.getstatusoutput(command)
+      Results = namedtuple('Results', ['returncode', 'stdout', 'stderr'])
+      result = Results(res[0], res[1], "")
+    else:
+      result = subprocess.run(command, capture_output=True, text=True, shell=True, check=False)
 
     print("\033[0m", end='')
 
