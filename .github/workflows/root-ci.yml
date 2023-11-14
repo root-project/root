@@ -153,12 +153,13 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      RelWithDebInfo
-                    --platform       ${{ matrix.platform }}
-                    --incremental    $INCREMENTAL
-                    --base_ref       ${{ github.base_ref }}
-                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+                    --buildtype       RelWithDebInfo
+                    --platform        ${{ matrix.platform }}
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
@@ -262,13 +263,14 @@ jobs:
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
-                    --buildtype    ${{ matrix.config }}
-                    --platform     windows10
-                    --incremental  $INCREMENTAL
-                    --base_ref     ${{ github.base_ref }}
-                    --head_ref     refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --repository   ${{ github.server_url }}/${{ github.repository }}
-                    --architecture ${{ matrix.target_arch }}"
+                    --buildtype       ${{ matrix.config }}
+                    --platform        windows10
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --architecture    ${{ matrix.target_arch }}"
 
       - name: Workflow dispatch/call
         if:   github.event_name == 'workflow_dispatch'
@@ -437,14 +439,15 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      RelWithDebInfo
-                    --platform       ${{ matrix.image }}
-                    --image          registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-                    --dockeropts     '--security-opt label=disable --rm'
-                    --incremental    $INCREMENTAL
-                    --base_ref       ${{ github.base_ref }}
-                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --buildtype       RelWithDebInfo
+                    --platform        ${{ matrix.image }}
+                    --image           registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+                    --dockeropts      '--security-opt label=disable --rm'
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
               "
 
       - name: Workflow dispatch
