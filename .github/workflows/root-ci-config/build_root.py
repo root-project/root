@@ -171,17 +171,18 @@ def parse_args():
         # it is difficult to use boolean flags from github actions, use strings to convey
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
-    parser.add_argument("--platform",                        help="Platform to build on")
-    parser.add_argument("--image",        default=None,      help="Container image, if any")
-    parser.add_argument("--dockeropts",   default=None,      help="Extra docker options, if any")
-    parser.add_argument("--incremental",  default="false",   help="Do incremental build")
-    parser.add_argument("--buildtype",    default="Release", help="Release|Debug|RelWithDebInfo")
-    parser.add_argument("--coverage",     default="false",   help="Create Coverage report in XML")
-    parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
-    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
-    parser.add_argument("--binaries",     default="false",   help="Whether to create binary artifacts")
-    parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
-    parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
+    parser.add_argument("--platform",                           help="Platform to build on")
+    parser.add_argument("--image",           default=None,      help="Container image, if any")
+    parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
+    parser.add_argument("--incremental",     default="false",   help="Do incremental build")
+    parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
+    parser.add_argument("--coverage",        default="false",   help="Create Coverage report in XML")
+    parser.add_argument("--base_ref",        default=None,      help="Ref to target branch")
+    parser.add_argument("--pull_repository", default="",        help="Url to the pull request incoming repository")
+    parser.add_argument("--head_ref",        default=None,      help="Ref to feature branch; it may contain a :<dst> part")
+    parser.add_argument("--binaries",        default="false",   help="Whether to create binary artifacts")
+    parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
+    parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
 
     args = parser.parse_args()
