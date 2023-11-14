@@ -160,6 +160,9 @@ void GSLMCIntegrator::SetFunction(const IMultiGenFunction &f)
    if(fFunction == nullptr) fFunction = new  GSLMonteFunctionWrapper();
    fFunction->SetFunction(f);
    fDim = f.NDim();
+
+   // now we can initialize the workspace
+   DoInitialize();
 }
 
 void GSLMCIntegrator::SetFunction( GSLMonteFuncPointer f,  unsigned int dim, void * p  )
@@ -169,6 +172,9 @@ void GSLMCIntegrator::SetFunction( GSLMonteFuncPointer f,  unsigned int dim, voi
    fFunction->SetFuncPointer( f );
    fFunction->SetParams ( p );
    fDim = dim;
+
+   // now we can initialize the workspace
+   DoInitialize();
 }
 
 
@@ -183,7 +189,7 @@ double GSLMCIntegrator::Integral(const double* a, const double* b)
 
    // initialize by  creating the right WS
    // (if dimension and type are different than previous calculation)
-   DoInitialize();
+   DoInitialize();  // this is still needed if type is changed after setting the function
 
    if ( fType == MCIntegration::kVEGAS)
    {
@@ -266,9 +272,9 @@ void GSLMCIntegrator::SetAbsTolerance(double absTol){ this->fAbsTol = absTol; }
 
 void GSLMCIntegrator::SetGenerator(GSLRandomEngine & r){
    // delete previous exist generator
-   if (fRng && !fExtGen) delete fRng; 
+   if (fRng && !fExtGen) delete fRng;
    fRng = r.Engine();
-   fExtGen = true; 
+   fExtGen = true;
 }
 
 void GSLMCIntegrator::SetType (MCIntegration::Type type)
@@ -329,6 +335,7 @@ void GSLMCIntegrator::SetMode(MCIntegration::Mode mode)
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace);
       assert(ws != nullptr);
+      assert(ws->GetWS() != nullptr);
       if(mode == MCIntegration::kIMPORTANCE) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE;
       else if(mode == MCIntegration::kSTRATIFIED) ws->GetWS()->mode = GSL_VEGAS_MODE_STRATIFIED;
       else if(mode == MCIntegration::kIMPORTANCE_ONLY) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE_ONLY;
@@ -344,8 +351,6 @@ void GSLMCIntegrator::SetOptions(const ROOT::Math::IntegratorMultiDimOptions & o
    SetAbsTolerance( opt.AbsTolerance() );
    SetRelTolerance( opt.RelTolerance() );
    fCalls = opt.NCalls();
-
-   //std::cout << fType << "   " <<  MCIntegration::kVEGAS << std::endl;
 
    // specific options
    ROOT::Math::IOptions * extraOpt = opt.ExtraOptions();
@@ -393,16 +398,16 @@ void GSLMCIntegrator::SetParameters(const MiserParameters &p)
 }
 
 
-void GSLMCIntegrator::DoInitialize ( )
+void GSLMCIntegrator::DoInitialize ()
 {
    //    initialize by setting  integration type
 
    if (fWorkspace == nullptr) return;
-   if (fDim == fWorkspace->NDim() && fType == fWorkspace->Type() )
+   if (fDim > 0 && fDim == fWorkspace->NDim() && fType == fWorkspace->Type() )
       return; // can use previously existing ws
 
-   // otherwise clear workspace
-   fWorkspace->Clear();
+   // otherwise clear workspace (if existing)
+   if (fWorkspace->NDim() > 0 ) fWorkspace->Clear();
    // and create a new one
    fWorkspace->Init(fDim);
 }
@@ -453,7 +458,7 @@ bool GSLMCIntegrator::CheckFunction()
 {
    // internal method to check validity of GSL function pointer
 
-   if (fFunction && fFunction->GetFunc() ) return true; 
+   if (fFunction && fFunction->GetFunc() ) return true;
    MATH_ERROR_MSG("GSLMCIntegrator::CheckFunction","Function has not been specified");
    return false;
 }
@@ -466,8 +471,8 @@ const char * GSLMCIntegrator::GetTypeName() const {
 }
 
 ROOT::Math::IntegratorMultiDimOptions  GSLMCIntegrator::Options() const {
-   IOptions * extraOpts = ExtraOptions();
-   ROOT::Math::IntegratorMultiDimOptions opt(extraOpts);
+   auto extraOpts = ExtraOptions();
+   ROOT::Math::IntegratorMultiDimOptions opt(extraOpts.release());
    opt.SetAbsTolerance(fAbsTol);
    opt.SetRelTolerance(fRelTol);
    opt.SetNCalls(fCalls);
@@ -476,9 +481,15 @@ ROOT::Math::IntegratorMultiDimOptions  GSLMCIntegrator::Options() const {
    return opt;
 }
 
-ROOT::Math::IOptions *  GSLMCIntegrator::ExtraOptions() const {
+/// return a new option object which is managed by user
+std::unique_ptr<ROOT::Math::IOptions>  GSLMCIntegrator::ExtraOptions() const {
    if (!fWorkspace) return nullptr;
    return fWorkspace->Options();
+}
+
+void GSLMCIntegrator::SetExtraOptions(const ROOT::Math::IOptions & opt) {
+   // set the additional options
+   fWorkspace->SetOptions(opt);
 }
 
 
