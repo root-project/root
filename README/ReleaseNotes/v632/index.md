@@ -23,6 +23,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/EP-SFT,\
  Enrico Guiraud, CERN/EP-SFT and Princeton,\
  Jonas Hahnfeld, CERN/EP-SFT,\
+ Akeem Hart, Queen Mary University of London/DUNE and MINERvA,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/EP-SFT,\
  Lorenzo Moneta, CERN/EP-SFT,\
