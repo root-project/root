@@ -63,7 +63,7 @@ void CheckInterpolation(RooWorkspace* ws);
 
 // Codes for interpolation
 // code = 0: piece-wise linear
-// code = 1: pice-wise log
+// code = 1: piece-wise log
 // code = 2: parabolic interp with linear extrap
 // code = 3: parabolic version of log-normal
 
