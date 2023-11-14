@@ -16,6 +16,7 @@
 import argparse
 import datetime
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -101,10 +102,23 @@ def main():
             build_utils.print_warning(f'Failed to download: {err}')
             args.incremental = False
 
-    git_pull(args.repository, args.base_ref)
+    git_pull("src", args.repository, args.base_ref)
 
     if pull_request:
-        rebase(args.base_ref, args.head_ref)
+        rebase("src", "origin", args.base_ref, args.head_ref)
+
+    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
+
+    if testing:
+      # Where to find the target branch
+      roottest_origin_repository = re.sub( "/root(.git)*$", "/roottest.git", args.repository)
+      # Where to find the incoming branch
+      roottest_repository, roottest_head_ref = relatedrepo_GetClosestMatch("roottest", args.pull_repository, args.repository)
+
+      git_pull("roottest", roottest_origin_repository, args.base_ref)
+
+      if pull_request:
+        rebase("roottest", roottest_repository, args.base_ref, roottest_head_ref + ":" + roottest_head_ref)
 
     if not WINDOWS:
         show_node_state()
@@ -120,8 +134,6 @@ def main():
 
     if args.binaries:
         create_binaries(args.buildtype)
-
-    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
     if testing:
         extra_ctest_flags = ""
@@ -222,23 +234,23 @@ def cleanup_previous_build():
 
 
 @github_log_group("Pull/clone branch")
-def git_pull(repository: str, branch: str):
+def git_pull(directory: str, repository: str, branch: str):
     returncode = 1
 
     for _ in range(5):
         if returncode == 0:
             break
 
-        if os.path.exists(f"{WORKDIR}/src/.git"):
+        if os.path.exists(f"{WORKDIR}/{directory}/.git"):
             returncode = subprocess_with_log(f"""
-                cd '{WORKDIR}/src'
+                cd '{WORKDIR}/{directory}'
                 git checkout {branch}
                 git fetch
                 git reset --hard @{{u}}
             """)
         else:
             returncode = subprocess_with_log(f"""
-                git clone --branch {branch} --single-branch {repository} "{WORKDIR}/src"
+                git clone --branch {branch} --single-branch {repository} "{WORKDIR}/{directory}"
             """)
 
     if returncode != 0:
@@ -379,23 +391,90 @@ def create_binaries(buildtype):
 
 
 @github_log_group("Rebase")
-def rebase(base_ref, head_ref) -> None:
+def rebase(directory: str, repository:str, base_ref: str, head_ref: str) -> None:
     head_ref_src, _, head_ref_dst = head_ref.partition(":")
     head_ref_dst = head_ref_dst or "__tmp"
     # rebase fails unless user.email and user.name is set
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/src'
+        cd '{WORKDIR}/{directory}'
 
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
 
-        git fetch origin {head_ref_src}:{head_ref_dst}
+        git fetch {repository} {head_ref_src}:{head_ref_dst}
         git checkout {head_ref_dst}
         git rebase {base_ref}
     """)
 
     if result != 0:
         die(result, "Rebase failed")
+
+# get_stdout_subprocess_with_log
+# execute and log a command.
+# capture the stdout, strip white space and return it
+# die in case of failed execution unless the error_message is empty.
+def get_stdout_subprocess_with_log(command: str, error_message: str) -> str:
+
+  result  = subprocess_with_log(command, capture_output=True, text=True)
+  if result != 0 and error_message != "":
+    die(result, error_message)
+  string_result = result.stdout
+  string_result = string_result.strip()
+  return string_result
+
+
+@github_log_group("Pull/clone roottest branch")
+# relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
+#                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
+# Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
+# current head name.
+#
+# See relatedrepo_GetClosestMatch in toplevel CMakeLists.txt
+def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
+
+  # Alternatively, we could use: re.sub( "/root(.git)*$", "", varname)
+  origin_prefix = origin[:origin.rfind('/')]
+  upstream_prefix = upstream[:upstream.rfind('/')]
+
+  fetch_url = upstream_prefix + "/" + repo_name
+
+  current_head = get_stdout_subprocess_with_log(f"""
+      git --git-dir={WORKDIR}/src/.git rev-parse --abbrev-ref HEAD
+      """, "Failed capture of current branch name")
+
+  # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
+  # upstream as the fork repository may be out-of-sync
+  branch_regex = re.compile("^(master|latest-stable|v[0-9]+-[0-9]+-[0-9]+(-patches)?)$")
+  known_head = branch_regex.match(current_head)
+
+  if known_head:
+    if current_head == "latest-stable":
+      # Resolve the 'latest-stable' branch to the latest merged head/tag
+      current_head = get_stdout_subprocess_with_log(f"""
+           git --git-dir={WORKDIR}/src/.git for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\))
+           """, "Failed capture of lastest-stable underlying branch name")
+      return fetch_url, current_head
+
+  # Otherwise, try to use a branch that matches `current_head` in the fork repository
+  matching_refs = get_stdout_subprocess_with_log(f"""
+       git ls-remote --heads --tags {origin_prefix}/{repo_name} {current_head}
+       """, "")
+  if matching_refs != "":
+    fetch_url = origin_prefix + "/" + repo_name
+    return fetch_url, current_head
+
+  # Finally, try upstream using the closest head/tag below the parent commit of the current head
+  closest_ref = get_stdout_subprocess_with_log(f"""
+       git --git-dir={WORKDIR}/src/.git describe --all --abbrev=0 HEAD^
+       """, "") # Empty error means, ignore errors.
+  candidate_head = re.sub("^(heads|tags)/", "", closest_ref)
+
+  matching_refs = get_stdout_subprocess(f"""
+       git ls-remote --heads --tags {upstream_prefix}/{repo_name} {candidate_head}
+       """, "")
+  if matching_refs != "":
+    return fetch_url, candidate_head
+  return "", ""
 
 
 @github_log_group("Create Test Coverage in XML")
