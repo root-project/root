@@ -233,7 +233,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
    // --------------------------------------------------------------------------
 
    //
-   // Process some output programatically, printing the ROC score for each
+   // Process some output programmatically, printing the ROC score for each
    // booked method.
    //
    size_t iMethod = 0;

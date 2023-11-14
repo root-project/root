@@ -51,7 +51,7 @@ void GammaFun() {
 
    //setting graph
    // draw axis first (use TH1 to draw the frame)
-   TH1F * h = new TH1F("htmp","",500,-2,5);
+   TH1F * h = new TH1F("hTemp","",500,-2,5);
    h->SetMinimum(-20);
    h->SetMaximum(20);
    h->GetXaxis()->SetTitleSize(0.06);

@@ -137,7 +137,7 @@ def MakeSimpleMeasurement( signal_val, background_val, data_val, signal_uncertai
 
     # Create a channel and set
     # the measured value of data 
-    # (no extenal hist necessar for cut-and-count)
+    # (no external hist necessary for cut-and-count)
     chan = ROOT.RooStats.HistFactory.Channel( "channel" )
     chan.SetData( data_val )
 
@@ -147,7 +147,7 @@ def MakeSimpleMeasurement( signal_val, background_val, data_val, signal_uncertai
     signal.SetValue( signal_val )
     #signal.SetValue( 10 )
 
-    # Add the parmaeter of interest and a systematic
+    # Add the parameter of interest and a systematic
     # Try to make intelligent choice of upper bound
     import math
     upper_bound = 3*math.ceil( (data_val - background_val) / signal_val )

@@ -13,7 +13,7 @@
 from ROOT import TF1, TCanvas, TSystem, TAxis, TLegend
 from ROOT import kRed, kGreen, kBlue
 
-# Create the one dimentional functions for normal distribution.
+# Create the one dimensional functions for normal distribution.
 pdfunc  = TF1("pdf","ROOT::Math::normal_pdf(x, [0],[1])", -5, 5)
 cdfunc  = TF1("cdf","ROOT::Math::normal_cdf(x, [0],[1])", -5, 5)
 ccdfunc = TF1("cdf_c","ROOT::Math::normal_cdf_c(x, [0])", -5, 5)

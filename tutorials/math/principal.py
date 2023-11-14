@@ -39,7 +39,7 @@ print ("""*************************************************
 principal = TPrincipal(n, "ND")
 
 # Use a pseudo-random number generator
-randumNum = gRandom
+randomNum = gRandom
 
 # Make the m data-points
 # Make a variable to hold our data
@@ -50,11 +50,11 @@ for i in range(m):
     # to one of three distributions
     for j in range(n - c):
         if j % 3 == 0:
-            data.push_back(randumNum.Gaus(5, 1))
+            data.push_back(randomNum.Gaus(5, 1))
         elif j % 3 == 1:
-            data.push_back(randumNum.Poisson(8))
+            data.push_back(randomNum.Poisson(8))
         else:
-            data.push_back(randumNum.Exp(2))
+            data.push_back(randomNum.Exp(2))
 
     # Then we create the correlated variables
     for j in range(c):
@@ -75,7 +75,7 @@ principal.Print()
 # Test the PCA
 principal.Test()
 
-# Make some histograms of the orginal, principal, residue, etc data
+# Make some histograms of the original, principal, residue, etc data
 principal.MakeHistograms()
 
 # Make two functions to map between feature and pattern space

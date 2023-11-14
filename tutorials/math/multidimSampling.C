@@ -34,7 +34,7 @@
 
 bool debug = false;
 
-// Define the GausND strcture
+// Define the GausND structure
 struct GausND {
 
    TVectorD X;

@@ -34,7 +34,7 @@ model.add(Dense(nodes_hidden_layer, activation='relu', kernel_regularizer=l2(l2_
 for k in range(num_hidden_layers-1):
     model.add(Dense(nodes_hidden_layer, activation='relu', kernel_regularizer=l2(l2_val)))
 
-# Ouput layer
+# Output layer
 # NOTE: Use following output types for the different tasks
 # Binary classification: 2 output nodes with 'softmax' activation
 # Regression: 1 output with any activation ('linear' recommended)

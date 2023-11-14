@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -nodraw
-/// Script illustrating the use of the TParalleCoord class
+/// Script illustrating the use of the TParallelCoord class
 ///
 /// \macro_image
 /// \macro_code
