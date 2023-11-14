@@ -229,21 +229,21 @@ printout given by this command:
 ### List of the currently supported fonts
 
 ~~~ {.cpp}
-   Font number         X11 Names             Win32/TTF Names
-       1 :       times-medium-i-normal      "Times New Roman"
-       2 :       times-bold-r-normal        "Times New Roman"
-       3 :       times-bold-i-normal        "Times New Roman"
-       4 :       helvetica-medium-r-normal  "Arial"
-       5 :       helvetica-medium-o-normal  "Arial"
-       6 :       helvetica-bold-r-normal    "Arial"
-       7 :       helvetica-bold-o-normal    "Arial"
-       8 :       courier-medium-r-normal    "Courier New"
-       9 :       courier-medium-o-normal    "Courier New"
-      10 :       courier-bold-r-normal      "Courier New"
-      11 :       courier-bold-o-normal      "Courier New"
-      12 :       symbol-medium-r-normal     "Symbol"
-      13 :       times-medium-r-normal      "Times New Roman"
-      14 :                                  "Wingdings"
+   Font number         X11 Names             TTF Names                  PDF Names
+       1 :       times-medium-i-normal      "Free Serif Italic"         "Times-Italic"
+       2 :       times-bold-r-normal        "Free Serif Bold"           "Times-Bold"
+       3 :       times-bold-i-normal        "Free Serif Bold Italic"    "Times-BoldItalic"
+       4 :       helvetica-medium-r-normal  "Free Sans"                 "Helvetica"
+       5 :       helvetica-medium-o-normal  "Free Sans Oblique"         "Helvetica-Oblique"
+       6 :       helvetica-bold-r-normal    "Free Sans Bold"            "Helvetica-Bold"
+       7 :       helvetica-bold-o-normal    "Free Sans Bold Oblique"    "Helvetica-BoldOblique"
+       8 :       courier-medium-r-normal    "Free Mono"                 "Courier"
+       9 :       courier-medium-o-normal    "Free Mono Oblique"         "Courier-Oblique"
+      10 :       courier-bold-r-normal      "Free Mono Bold"            "Courier-Bold"
+      11 :       courier-bold-o-normal      "Free Mono Bold Oblique"    "Courier-BoldOblique"
+      12 :       symbol-medium-r-normal     "Symbol"                    "Symbol"
+      13 :       times-medium-r-normal      "Free Serif"                "Times-Roman"
+      14 :                                  "Wingdings"                 "ZapfDingbats"
       15 :       Symbol italic (derived from Symbol)
 ~~~
 

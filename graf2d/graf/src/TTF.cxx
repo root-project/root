@@ -470,23 +470,23 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 /// Set specified font.
 /// List of the currently supported fonts (screen and PostScript)
 ///
-/// | Font ID |   X11                     |     TTF          |
-/// |---------|---------------------------|------------------|
-/// |      1  | times-medium-i-normal     | timesi.ttf       |
-/// |      2  | times-bold-r-normal       | timesbd.ttf      |
-/// |      3  | times-bold-i-normal       | timesbi.ttf      |
-/// |      4  | helvetica-medium-r-normal | arial.ttf        |
-/// |      5  | helvetica-medium-o-normal | ariali.ttf       |
-/// |      6  | helvetica-bold-r-normal   | arialbd.ttf      |
-/// |      7  | helvetica-bold-o-normal   | arialbi.ttf      |
-/// |      8  | courier-medium-r-normal   | cour.ttf         |
-/// |      9  | courier-medium-o-normal   | couri.ttf        |
-/// |     10  | courier-bold-r-normal     | courbd.ttf       |
-/// |     11  | courier-bold-o-normal     | courbi.ttf       |
-/// |     12  | symbol-medium-r-normal    | symbol.ttf       |
-/// |     13  | times-medium-r-normal     | times.ttf        |
-/// |     14  |                           | wingding.ttf     |
-/// |     15  | symbol oblique is emulated from symbol.ttf | |
+/// | Font ID | X11                       | TTF                           |
+/// |---------|---------------------------|-------------------------------|
+/// |      1  | times-medium-i-normal     | FreeSerifItalic.otf           |
+/// |      2  | times-bold-r-normal       | FreeSerifBold.otf             |
+/// |      3  | times-bold-i-normal       | FreeSerifBoldItalic.otf       |
+/// |      4  | helvetica-medium-r-normal | FreeSans.otf                  |
+/// |      5  | helvetica-medium-o-normal | FreeSansOblique.otf           |
+/// |      6  | helvetica-bold-r-normal   | FreeSansBold.otf              |
+/// |      7  | helvetica-bold-o-normal   | FreeSansBoldOblique.otf       |
+/// |      8  | courier-medium-r-normal   | FreeMono.otf                  |
+/// |      9  | courier-medium-o-normal   | FreeMonoOblique.otf           |
+/// |     10  | courier-bold-r-normal     | FreeMonoBold.otf              |
+/// |     11  | courier-bold-o-normal     | FreeMonoBoldOblique.otf       |
+/// |     12  | symbol-medium-r-normal    | symbol.ttf                    |
+/// |     13  | times-medium-r-normal     | FreeSerif.otf                 |
+/// |     14  |                           | wingding.ttf                  |
+/// |     15  | symbol oblique is emulated from symbol.ttf |              |
 
 void TTF::SetTextFont(Font_t fontnumber)
 {
