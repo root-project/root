@@ -239,8 +239,9 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
    ProcessGeometry(exec, args);
 
-   std::string rmdir = MakeProfile(exec, args.IsHeadless());
+   std::string rmdir = MakeProfile(exec, args.IsBatchMode() || args.IsHeadless());
 
+   exec = std::regex_replace(exec, std::regex("\\$rootetcdir"), TROOT::GetEtcDir().Data());
    exec = std::regex_replace(exec, std::regex("\\$url"), url);
    exec = std::regex_replace(exec, std::regex("\\$width"), swidth);
    exec = std::regex_replace(exec, std::regex("\\$height"), sheight);
@@ -497,7 +498,7 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 #else
    fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window -no-remote $profile $url");
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window -no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry -url \'$url\' &");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$rootetcdir/runfirefox.sh $cleanup_profile $prog -no-remote $profile $geometry -url \'$url\' &");
 #endif
 }
 
@@ -581,6 +582,12 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
    }
 
    exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
+
+   if (exec.find("$profile") == std::string::npos) {
+      if (rmdir.empty()) rmdir = "<dummy>";
+      exec = std::regex_replace(exec, std::regex("\\$cleanup_profile"), rmdir);
+      rmdir.clear(); // no need to delete directory - it will be removed by script
+   }
 
    return rmdir;
 }

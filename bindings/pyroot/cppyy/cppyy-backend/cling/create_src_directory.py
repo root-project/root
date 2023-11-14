@@ -43,7 +43,7 @@ ROOT_BUILTINS_KEEP = ['openssl', 'pcre', 'xxhash', 'zlib']
 ROOT_IO_KEEP = ['CMakeLists.txt', 'io', 'rootpcm']
 ROOT_MATH_KEEP = ['CMakeLists.txt', 'mathcore']
 ROOT_ETC_KEEP = ['Makefile.arch', 'class.rules', 'cmake', 'dictpch',
-                 'gdb-backtrace.sh', 'gitinfo.txt', 'helgrind-root.supp',
+                 'gdb-backtrace.sh', 'runfirefox.sh', 'gitinfo.txt', 'helgrind-root.supp',
                  'hostcert.conf', 'plugins', 'system.plugins-ios',
                  'valgrind-root-python.supp', 'valgrind-root.supp']
 ROOT_PLUGINS_KEEP = ['TVirtualStreamerInfo']
