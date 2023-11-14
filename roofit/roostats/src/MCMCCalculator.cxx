@@ -170,8 +170,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       prodPdf = new RooProdPdf(prodName,prodName,RooArgList(*fPdf,*fPriorPdf) );
    }
 
-   std::unique_ptr<RooArgSet> constrainedParams{prodPdf->getParameters(*fData)};
-   std::unique_ptr<RooAbsReal> nll{prodPdf->createNLL(*fData, Constrain(*constrainedParams),ConditionalObservables(fConditionalObs),GlobalObservables(fGlobalObs))};
+   std::unique_ptr<RooAbsReal> nll{prodPdf->createNLL(*fData, ConditionalObservables(fConditionalObs),GlobalObservables(fGlobalObs))};
 
    std::unique_ptr<RooArgSet> params{nll->getParameters(*fData)};
    RemoveConstantParameters(&*params);

@@ -302,7 +302,7 @@ double AsymptoticCalculator::EvaluateNLL(RooStats::ModelConfig const& modelConfi
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
     auto& config = GetGlobalRooStatsConfig();
-    std::unique_ptr<RooAbsReal> nll{modelConfig.createNLL(data, RooFit::Constrain(*allParams), RooFit::Offset(config.useLikelihoodOffset))};
+    std::unique_ptr<RooAbsReal> nll{modelConfig.createNLL(data, RooFit::Offset(config.useLikelihoodOffset))};
 
     std::unique_ptr<RooArgSet> attachedSet{nll->getVariables()};
 
@@ -1270,7 +1270,6 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       args.push_back(RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()));
       args.push_back(RooFit::PrintLevel(minimPrintLevel-1));
       args.push_back(RooFit::Hesse(false));
-      args.push_back(RooFit::Constrain(constrainParams));
       args.push_back(RooFit::GlobalObservables(globalObs));
       args.push_back(RooFit::ConditionalObservables(conditionalObs));
       args.push_back(RooFit::Offset(GetGlobalRooStatsConfig().useLikelihoodOffset));
