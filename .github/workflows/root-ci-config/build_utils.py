@@ -109,6 +109,26 @@ def subprocess_with_log(command: str) -> int:
 
     return result.returncode
 
+def subprocess_with_capture(command: str):
+    """Runs <command> in shell, capture output and appends <command> to log"""
+
+    print_fancy(textwrap.dedent(command), sgr=1)
+
+    print("\033[90m", end='')
+
+    if os.name == 'nt':
+        command = "$env:comspec = 'cmd.exe'; " + command
+
+    result = subprocess.run(command, capture_output=True, text=True, shell=True, check=False)
+
+    print("\033[0m", end='')
+
+    # Since we are capturing the result and using it in other command later,
+    # we don't need it for the reproducing steps.
+    # So no call to: log.add(command)
+
+    return result
+
 
 def die(code: int = 1, msg: str = "") -> None:
     log.print()

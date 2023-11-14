@@ -30,6 +30,7 @@ from build_utils import (
     github_log_group,
     load_config,
     subprocess_with_log,
+    subprocess_with_capture,
     upload_file
 )
 import build_utils
@@ -409,15 +410,27 @@ def rebase(directory: str, repository:str, base_ref: str, head_ref: str) -> None
     if result != 0:
         die(result, "Rebase failed")
 
-# get_stdout_subprocess_with_log
+# get_stdout_subprocess
 # execute and log a command.
 # capture the stdout, strip white space and return it
 # die in case of failed execution unless the error_message is empty.
-def get_stdout_subprocess_with_log(command: str, error_message: str) -> str:
+def get_stdout_subprocess(command: str, error_message: str) -> str:
 
-  result  = subprocess_with_log(command, capture_output=True, text=True)
-  if result != 0 and error_message != "":
-    die(result, error_message)
+  result  = subprocess_with_capture(command)
+  if result.returncode != 0:
+    if error_message != "":
+      die(result, error_message)
+    else:
+      print("\033[90m", end='')
+      print(result.stdout)
+      print(result.stderr)
+      print("\033[0m", end='')
+      return ""
+  if result.stderr != "":
+    print("\033[90m", end='')
+    print(result.stdout)
+    print(result.stderr)
+    print("\033[0m", end='')
   string_result = result.stdout
   string_result = string_result.strip()
   return string_result
@@ -438,7 +451,7 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
 
   fetch_url = upstream_prefix + "/" + repo_name
 
-  current_head = get_stdout_subprocess_with_log(f"""
+  current_head = get_stdout_subprocess(f"""
       git --git-dir={WORKDIR}/src/.git rev-parse --abbrev-ref HEAD
       """, "Failed capture of current branch name")
 
@@ -450,13 +463,13 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
   if known_head:
     if current_head == "latest-stable":
       # Resolve the 'latest-stable' branch to the latest merged head/tag
-      current_head = get_stdout_subprocess_with_log(f"""
+      current_head = get_stdout_subprocess(f"""
            git --git-dir={WORKDIR}/src/.git for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\))
            """, "Failed capture of lastest-stable underlying branch name")
       return fetch_url, current_head
 
   # Otherwise, try to use a branch that matches `current_head` in the fork repository
-  matching_refs = get_stdout_subprocess_with_log(f"""
+  matching_refs = get_stdout_subprocess(f"""
        git ls-remote --heads --tags {origin_prefix}/{repo_name} {current_head}
        """, "")
   if matching_refs != "":
@@ -464,7 +477,7 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
     return fetch_url, current_head
 
   # Finally, try upstream using the closest head/tag below the parent commit of the current head
-  closest_ref = get_stdout_subprocess_with_log(f"""
+  closest_ref = get_stdout_subprocess(f"""
        git --git-dir={WORKDIR}/src/.git describe --all --abbrev=0 HEAD^
        """, "") # Empty error means, ignore errors.
   candidate_head = re.sub("^(heads|tags)/", "", closest_ref)
