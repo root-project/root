@@ -135,7 +135,7 @@ public:
       if (!fTmpDir.empty())
          gSystem->Exec((rmdir + fTmpDir).c_str());
    }
-
+   
 };
 
 } // namespace ROOT
@@ -493,12 +493,24 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
    fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog -headless -no-remote $profile $url");
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "$prog -headless -no-remote $profile $url &");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url &");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry $url &");
 #else
-   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window --no-remote $profile $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window --no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog --private-window \'$url\' &");
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window -no-remote $profile $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window -no-remote $profile $url");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry -url \'$url\' &");
 #endif
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Process window geometry for Firefox
+
+void RWebDisplayHandle::FirefoxCreator::ProcessGeometry(std::string &exec, const RWebDisplayArgs &args)
+{
+   std::string geometry;
+   if ((args.GetWidth() > 0) && (args.GetHeight() > 0) && !args.IsHeadless())
+      geometry = "-width="s + std::to_string(args.GetWidth()) + " -height=" + std::to_string(args.GetHeight());
+
+   exec = std::regex_replace(exec, std::regex("\\$geometry"), geometry);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -507,18 +519,18 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bool batch_mode)
 {
    std::string rmdir, profile_arg;
-
+  
    if (exec.find("$profile") == std::string::npos)
       return rmdir;
-
+   
    const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile", "");
    const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath", "");
-   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", (Int_t) 0);
+   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", (Int_t) 1);
    if (ff_profile && *ff_profile) {
       profile_arg = "-P "s + ff_profile;
    } else if (ff_profilepath && *ff_profilepath) {
       profile_arg = "-profile "s + ff_profilepath;
-   } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile >= 0))) {
+   } else if (ff_randomprofile > 0) {
 
       gRandom->SetSeed(0);
       std::string rnd_profile = "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
@@ -541,6 +553,26 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
             // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
             user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
             user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
+         } else {
+            std::ofstream times_json(profile_dir + "/times.json", std::ios::trunc);
+            times_json << "{" << std::endl;
+            times_json << "   \"created\": 1699968480952," << std::endl;
+            times_json << "   \"firstUse\": null" << std::endl;
+            times_json << "}" << std::endl;
+            std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
+            // to suppress annoying privacy tab
+            user_js << "user_pref(\"datareporting.policy.firstRunURL\", \"\");" << std::endl;
+            // to use custom userChrome.css files
+            user_js << "user_pref(\"toolkit.legacyUserProfileCustomizations.stylesheets\", true);" << std::endl;
+            // do not put tabs in title
+            user_js << "user_pref(\"browser.tabs.inTitlebar\", 0);" << std::endl;
+            if (gSystem->mkdir((profile_dir + "/chrome").c_str()) == 0) {
+               std::ofstream style(profile_dir + "/chrome/userChrome.css", std::ios::trunc);
+               // do not show tabs 
+               style << "#TabsToolbar { visibility: collapse; }" << std::endl;
+               // do not show URL 
+               style << "#nav-bar, #urlbar-container, #searchbar { visibility: collapse !important; }" << std::endl;
+            }
          }
 
       } else {

@@ -65,7 +65,7 @@ protected:
       ChromeCreator(bool is_edge = false);
       ~ChromeCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
-      void ProcessGeometry(std::string &, const RWebDisplayArgs &args) override;
+      void ProcessGeometry(std::string &, const RWebDisplayArgs &) override;
       std::string MakeProfile(std::string &exec, bool) override;
    };
 
@@ -74,6 +74,7 @@ protected:
       FirefoxCreator();
       ~FirefoxCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
+      void ProcessGeometry(std::string &, const RWebDisplayArgs &) override;
       std::string MakeProfile(std::string &exec, bool batch) override;
    };
 
