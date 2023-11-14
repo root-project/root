@@ -24,11 +24,12 @@ SOFIE works in a parser-generator working architecture. With SOFIE, the user get
 
 From ROOT command line, or in a ROOT macro, we can proceed with an ONNX model:
 
-    using namespace TMVA::Experimental;
-    SOFIE::RModelParser_ONNX parser;
-    SOFIE::RModel model = parser.Parse(“./example_model.onnx”);
-    model.Generate();
-    model.OutputGenerated(“./example_output.hxx”);
+```c++
+using namespace TMVA::Experimental;
+SOFIE::RModelParser_ONNX parser;
+SOFIE::RModel model = parser.Parse(“./example_model.onnx”);
+model.Generate();
+model.OutputGenerated(“./example_output.hxx”);
 
 And an C++ header file and a `.dat` file containing the model weights will be generated. You can also use
 
