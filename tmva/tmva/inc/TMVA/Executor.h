@@ -48,7 +48,9 @@ public:
    /// if ROOT::EnableImplicitMT has not been called then by default a serial executor will be created
    /// A user can create a thread pool and enable multi-thread excution by calling
    /// 
-   ///     TMVA::Config::Instance()::%EnableMT(int nthreads);
+   /// ~~~{.cpp}
+   /// TMVA::Config::Instance()::%EnableMT(int nthreads);
+   /// ~~~
    ///
    /// For releasing the thread pool used by TMVA one can do it by calling
    ///
