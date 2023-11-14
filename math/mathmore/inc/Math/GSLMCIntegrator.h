@@ -254,7 +254,7 @@ public:
       /**
        set parameters for PLAIN method
       */
-      //void SetPParameters(const PlainParameters &p);
+      //void SetParameters(const PlainParameters &p);
 
       /**
        returns the error sigma from the last iteration of the Vegas algorithm
@@ -284,9 +284,15 @@ public:
 
       /**
          get the specific options (for Vegas or Miser)
-         in term of string-  name
+         in term of string-  name. This is for querying existing options and
+         return object is managed by the user
       */
-      ROOT::Math::IOptions * ExtraOptions() const;
+      std::unique_ptr<ROOT::Math::IOptions> ExtraOptions() const;
+
+      /**
+       * set the extra options for Vegas and Miser
+      */
+      void SetExtraOptions(const ROOT::Math::IOptions & opt);
 
 
    protected:
