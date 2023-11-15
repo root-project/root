@@ -701,15 +701,6 @@ TMVA::IMethod* TMVA::Reader::FindMVA( const TString& methodTag )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// special function for Cuts to avoid dynamic_casts in ROOT macros,
-/// which are not properly handled by CINT
-
-TMVA::MethodCuts* TMVA::Reader::FindCutsMVA( const TString& methodTag )
-{
-   return dynamic_cast<MethodCuts*>(FindMVA(methodTag));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// evaluates probability of MVA for given set of input variables
 
 Double_t TMVA::Reader::GetProba( const TString& methodTag,  Double_t ap_sig, Double_t mvaVal )

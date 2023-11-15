@@ -26,11 +26,9 @@
 #include "TH1F.h"
 #include "TStopwatch.h"
 
-#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #include "TMVA/MethodCuts.h"
-#endif
 
 // two types of category methods are implemented
 Bool_t UseOffsetMethod = kTRUE;
