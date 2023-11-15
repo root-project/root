@@ -24,20 +24,8 @@
 
 class RooGaussModel : public RooResolutionModel {
 public:
-
-  enum RooGaussBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
-                                  sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
-                                  cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
-                                                                    linBasisPlus=33,
-                                                                   quadBasisPlus=43,
-              coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
-                 sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63};
-  enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3,
-         linBasis=4, quadBasis=5, coshBasis=6, sinhBasis=7 } ;
-  enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
-
   // Constructors, assignment etc
-  inline RooGaussModel() : _flatSFInt(false), _asympInt(false) { }
+  RooGaussModel() = default;
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma) ;
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
@@ -60,7 +48,7 @@ public:
 
   void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-  bool canComputeBatchWithCuda() const override { return getBasisType(_basisCode) == expBasis; }
+  bool canComputeBatchWithCuda() const override;
 
 protected:
 
@@ -71,15 +59,9 @@ protected:
   std::complex<double> evalCerfInt(double sign, double wt, double tau, double umin, double umax, double c) const;
 
 private:
+  bool _flatSFInt = false;
 
-  static BasisType getBasisType(int basisCode)
-  {
-    return static_cast<BasisType>(basisCode == 0 ? 0 : (basisCode / 10) + 1);
-  }
-
-  bool _flatSFInt ;
-
-  bool _asympInt ;  // added FMV,07/24/03
+  bool _asympInt = false;  // added FMV,07/24/03
 
   RooRealProxy mean ;
   RooRealProxy sigma ;
