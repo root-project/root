@@ -111,15 +111,22 @@ def main():
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
     if testing:
+      # Where to put the roottest directory
+      if os.path.exists(f"{WORKDIR}/src/roottest/.git"):
+         roottest_dir = "src/roottest"
+      else:
+         roottest_dir = "roottest"
+
       # Where to find the target branch
       roottest_origin_repository = re.sub( "/root(.git)*$", "/roottest.git", args.repository)
+
       # Where to find the incoming branch
       roottest_repository, roottest_head_ref = relatedrepo_GetClosestMatch("roottest", args.pull_repository, args.repository)
 
-      git_pull("roottest", roottest_origin_repository, args.base_ref)
+      git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
 
       if pull_request:
-        rebase("roottest", roottest_repository, args.base_ref, roottest_head_ref + ":" + roottest_head_ref)
+        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref + ":" + roottest_head_ref)
 
     if not WINDOWS:
         show_node_state()
