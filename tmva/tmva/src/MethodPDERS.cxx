@@ -223,7 +223,7 @@ TMVA::MethodPDERS::~MethodPDERS( void )
 ///    - Unscaled
 ///    - RMS
 ///    - kNN
-///    - Adaptive <default>
+///    - Adaptive `<default>`
 ///
 ///  - KernelEstimator   `<string>`  Kernel estimation function
 ///    available values are:

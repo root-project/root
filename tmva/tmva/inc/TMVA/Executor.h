@@ -46,9 +46,15 @@ public:
    //////////////////////////////////////
    /// Default constructor of TMVA Executor class
    /// if ROOT::EnableImplicitMT has not been called then by default a serial executor will be created
-   /// A user can create a thread pool and enable multi-thread execution by calling TMVA::Config::Instance()::EnableMT(nthreads)
-   /// For releasing the thread pool used by TMVA one can do it by calling  TMVA::Config::Instance()::DisableMT() or
-   /// calling TMVA::Config::Instance()::EnableMT() with only one thread
+   /// A user can create a thread pool and enable multi-thread excution by calling
+   /// 
+   /// ~~~{.cpp}
+   /// TMVA::Config::Instance()::%EnableMT(int nthreads);
+   /// ~~~
+   ///
+   /// For releasing the thread pool used by TMVA one can do it by calling
+   ///
+   ///     TMVA::Config::Instance()::%DisableMT();
    ////////////////////////////////////////////
    Executor() {
       // enable MT in TMVA if ROOT::IsImplicitMT is enabled
