@@ -1956,10 +1956,10 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
    if (gColorThreshold >= 0) {
       thres = gColorThreshold;
    } else {
-      Int_t nplanes = 16;
-      thres = 1.0f/31.0f;   // 5 bits per color : 0 - 0x1F !
+      Int_t nplanes = 24;
+      thres = 1.0f/255.0f;       // 8 bits per color : 0 - 0xFF !
       if (gVirtualX) gVirtualX->GetPlanes(nplanes);
-      if (nplanes >= 24) thres = 1.0f/255.0f;       // 8 bits per color : 0 - 0xFF !
+      if ((nplanes > 0) && (nplanes <= 16)) thres = 1.0f/31.0f; // 5 bits per color : 0 - 0x1F !
    }
 
    // Loop over all defined colors
