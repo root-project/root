@@ -454,14 +454,16 @@ std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, boo
       profile_arg = chrome_profile;
    } else {
       gRandom->SetSeed(0);
-      std::string rnd_profile = "root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
       profile_arg = gSystem->TempDirectory();
-
 #ifdef _MSC_VER
-      profile_arg += "\\"s + rnd_profile;
+      char slash = '\\';
 #else
-      profile_arg += "/"s + rnd_profile;
+      char slash = '/';
 #endif
+      if (!profile_arg.empty() && (profile_arg[profile_arg.length()-1] != slash)) 
+         profile_arg += slash;
+      profile_arg += "root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
+
       rmdir = profile_arg;
    }
 
@@ -534,14 +536,16 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
    } else if (ff_randomprofile > 0) {
 
       gRandom->SetSeed(0);
-      std::string rnd_profile = "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
       std::string profile_dir = gSystem->TempDirectory();
 
 #ifdef _MSC_VER
-      profile_dir += "\\"s + rnd_profile;
+      char slash = '\\';
 #else
-      profile_dir += "/"s + rnd_profile;
+      char slash = '/';
 #endif
+      if (!profile_dir.empty() && (profile_dir[profile_dir.length()-1] != slash)) 
+         profile_dir += slash;
+      profile_dir += "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
 
       profile_arg = "-profile "s + profile_dir;
 
@@ -584,7 +588,7 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
 
    exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
 
-   if (exec.find("$profile") == std::string::npos) {
+   if (exec.find("$cleanup_profile") != std::string::npos) {
       if (rmdir.empty()) rmdir = "<dummy>";
       exec = std::regex_replace(exec, std::regex("\\$cleanup_profile"), rmdir);
       rmdir.clear(); // no need to delete directory - it will be removed by script
