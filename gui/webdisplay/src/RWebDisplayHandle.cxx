@@ -553,13 +553,20 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
          rmdir = profile_dir;
 
          std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
-         user_js << "user_pref(\"browser.dom.window.dump.enabled\", true);" << std::endl;
          // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
          // also disable question about upload of data
          user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
          user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
 
-         if (!batch_mode) {
+         // try to ensure that window closes with last tab
+         user_js << "user_pref(\"browser.tabs.closeWindowWithLastTab\", true);" << std::endl;
+         user_js << "user_pref(\"dom.allow_scripts_to_close_windows\", true);" << std::endl;
+         user_js << "user_pref(\"browser.sessionstore.resume_from_crash\", false);" << std::endl;
+
+         if (batch_mode) {
+            // allow to dump messages to std output
+            user_js << "user_pref(\"browser.dom.window.dump.enabled\", true);" << std::endl;
+         } else {
             // to suppress annoying privacy tab
             user_js << "user_pref(\"datareporting.policy.firstRunURL\", \"\");" << std::endl;
             // to use custom userChrome.css files
