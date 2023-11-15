@@ -119,8 +119,6 @@ ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler f
 ROOT_ADD_C_FLAG(_flags -Wno-maybe-uninitialized)  # Avoid what it seems a compiler false positive warning
 ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)
 
-set_source_files_properties(src/triangle.c COMPILE_FLAGS "${_flags}")
-
 if(imt)
   set(MATHCORE_DEPENDENCIES Imt)
 endif()
@@ -191,7 +189,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/TRandomGen.cxx
     src/TStatistic.cxx
     src/UnBinData.cxx
-    src/triangle.c
     src/VectorizedTMath.cxx
   LIBRARIES
     ${MATHCORE_LIBRARIES}

@@ -42,9 +42,9 @@ TEST(Delaunay2D,interpolation_at_edges)
    EXPECT_DOUBLE_EQ( d.Interpolate(750,490),  235);
 
    // interpolate now on diagonal edge (P1,P4)
-   EXPECT_DOUBLE_EQ( d.Interpolate(800,480),  220.);
-   EXPECT_DOUBLE_EQ( d.Interpolate(900,440),  160.);
-   EXPECT_DOUBLE_EQ( d.Interpolate(950,420),  130.);
+   EXPECT_DOUBLE_EQ( d.Interpolate(800,420),  180.);
+   EXPECT_DOUBLE_EQ( d.Interpolate(850,440),  260.);
+   EXPECT_DOUBLE_EQ( d.Interpolate(950,480),  420.);
 
    // interpolate on vertices
    EXPECT_DOUBLE_EQ( d.Interpolate(750,400),  z[0]);

@@ -399,6 +399,14 @@ The ONNX parser supports now several new ONNX operators. The list of the current
   Have to be used if called from other web-based widget to avoid logical dead-locks.
   In case of normal canvas just canvas->Update() is performed.
 
+- The Delaunay triangles (used by TGraph2D) were computed by the external package `triangle.c`
+  included in the ROOT distribution. This package had several issues:
+     - It was not maintained anymore.
+     - Its license was not compatible with LGPL
+  This code is now replaced by the [CDT package](https://github.com/artem-ogre/CDT) which is
+  properly maintained and has a license (MLP) compatible with LGPL. It will appear in 6.03.02.
+
+
 ## Machine Learning integration
 
 - ROOT now offers functionality to extract batches of events out of a dataset for use in common ML training workflows. For example, one can generate PyTorch tensors from a TTree. The functionality is available through the `RBatchGenerator` class and can be seamlessly integrated in user code, for example:
