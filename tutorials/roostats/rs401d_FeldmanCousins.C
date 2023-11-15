@@ -50,14 +50,6 @@
 
 #include <iostream>
 
-// PDF class created for this macro
-#if !defined(__CINT__) || defined(__MAKECINT__)
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly
-#else
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly
-#endif
-
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
@@ -96,10 +88,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    // RooRealVar deltaMSq("deltaMSq","#Delta m^{2}",40,20,70,"eV/c^{2}");
    //  RooRealVar sinSq2theta("sinSq2theta","sin^{2}(2#theta)", .006,.001,.01);
    // PDF for oscillation only describes deltaMSq dependence, sinSq2theta goes into sigNorm
-   // 1) The code for this PDF was created by issuing these commands
-   //    root [0] RooClassFactory x
-   //    root [1] x.makePdf("NuMuToNuE_Oscillation","L,E,deltaMSq","","pow(sin(1.27*deltaMSq*L/E),2)")
-   NuMuToNuE_Oscillation PnmuTone("PnmuTone", "P(#nu_{#mu} #rightarrow #nu_{e}", L, E, deltaMSq);
+   auto oscillationFormula = "std::pow(std::sin(1.27 * x[2] * x[0] / x[1]), 2)";
+   RooGenericPdf PnmuTone("PnmuTone", "P(#nu_{#mu} #rightarrow #nu_{e}", oscillationFormula, {L, E, deltaMSq});
 
    // only E is observable, so create the signal model by integrating out L
    RooAbsPdf *sigModel = PnmuTone.createProjection(L);
@@ -116,7 +106,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    // Independent copy for Integral
    RooRealVar EPrime("EPrime", "", 15, 10, 60, "GeV");
    RooRealVar LPrime("LPrime", "", .800, .600, 1.0, "km"); // need these units in formula
-   NuMuToNuE_Oscillation PnmuTonePrime("PnmuTonePrime", "P(#nu_{#mu} #rightarrow #nu_{e}", LPrime, EPrime, deltaMSq);
+   RooGenericPdf PnmuTonePrime("PnmuTonePrime", "P(#nu_{#mu} #rightarrow #nu_{e}", oscillationFormula, {LPrime, EPrime, deltaMSq});
    RooAbsReal *intProbToOscInExp = PnmuTonePrime.createIntegral(RooArgSet(EPrime, LPrime));
 
    // Getting the flux is a bit tricky.  It is more clear to include a cross section term that is not
