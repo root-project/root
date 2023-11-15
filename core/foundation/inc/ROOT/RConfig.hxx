@@ -495,7 +495,7 @@
 # else
 #   define _R__DEPRECATED_LATER(REASON) __attribute__((deprecated(REASON)))
 # endif
-#elif defined(_MSC_VER) || !defined(R__NO_DEPRECATION)
+#elif defined(_MSC_VER) && !defined(R__NO_DEPRECATION)
 #   define _R__DEPRECATED_LATER(REASON) __pragma(deprecated(REASON))
 #else
 /* Deprecation not supported for this compiler. */
