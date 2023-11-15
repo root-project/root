@@ -106,7 +106,7 @@ def main():
     git_pull("src", args.repository, args.base_ref)
 
     if pull_request:
-        rebase("src", "origin", args.base_ref, args.head_ref)
+        rebase("src", "origin", args.base_ref, args.head_ref, args.head_sha)
 
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
@@ -126,7 +126,7 @@ def main():
       git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
 
       if pull_request:
-        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref + ":" + roottest_head_ref)
+        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref + ":" + roottest_head_ref, args.head_sha)
 
     if not WINDOWS:
         show_node_state()
@@ -187,6 +187,7 @@ def parse_args():
     parser.add_argument("--base_ref",        default=None,      help="Ref to target branch")
     parser.add_argument("--pull_repository", default="",        help="Url to the pull request incoming repository")
     parser.add_argument("--head_ref",        default=None,      help="Ref to feature branch; it may contain a :<dst> part")
+    parser.add_argument("--head_sha",        default=None,      help="Sha of commit that triggered the event")
     parser.add_argument("--binaries",        default="false",   help="Whether to create binary artifacts")
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
@@ -400,7 +401,7 @@ def create_binaries(buildtype):
 
 
 @github_log_group("Rebase")
-def rebase(directory: str, repository:str, base_ref: str, head_ref: str) -> None:
+def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str) -> None:
     head_ref_src, _, head_ref_dst = head_ref.partition(":")
     head_ref_dst = head_ref_dst or "__tmp"
     # rebase fails unless user.email and user.name is set
