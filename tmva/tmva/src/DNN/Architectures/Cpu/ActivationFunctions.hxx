@@ -79,7 +79,7 @@ void TCpu<AFloat>::ReluDerivative(TCpuTensor<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::Sigmoid(TCpuTensor<AFloat> & B)
+void TCpu<AFloat>::Sigmoid(TCpu<AFloat>::Tensor_t & B)
 {
    auto f = [](AFloat x) {return 1.0 / (1.0 + exp(-x));};
    B.Map(f);

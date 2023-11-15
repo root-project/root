@@ -150,7 +150,7 @@ void TCpu<AFloat>::InitializeIdentity(TCpuMatrix<AFloat> & A)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::InitializeZero(TCpuMatrix<AFloat> & A)
+void TCpu<AFloat>::InitializeZero(TCpu<AFloat>::Matrix_t & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -164,7 +164,7 @@ void TCpu<AFloat>::InitializeZero(TCpuMatrix<AFloat> & A)
 }
 //______________________________________________________________________________
 template <typename AFloat>
-void TCpu<AFloat>::InitializeZero(TCpuTensor<AFloat> &A)
+void TCpu<AFloat>::InitializeZero(TCpu<AFloat>::Tensor_t &A)
 {
    size_t n = A.GetSize();
 
