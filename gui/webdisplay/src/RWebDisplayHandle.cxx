@@ -548,25 +548,26 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
       if (gSystem->mkdir(profile_dir.c_str()) == 0) {
          rmdir = profile_dir;
 
-         if (batch_mode) {
-            std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
-            user_js << "user_pref(\"browser.dom.window.dump.enabled\", true);" << std::endl;
-            // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
-            user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
-            user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
-         } else {
-            std::ofstream times_json(profile_dir + "/times.json", std::ios::trunc);
-            times_json << "{" << std::endl;
-            times_json << "   \"created\": 1699968480952," << std::endl;
-            times_json << "   \"firstUse\": null" << std::endl;
-            times_json << "}" << std::endl;
-            std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
+         std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
+         user_js << "user_pref(\"browser.dom.window.dump.enabled\", true);" << std::endl;
+         // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
+         // also disable question about upload of data
+         user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
+         user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
+
+         if (!batch_mode) {
             // to suppress annoying privacy tab
             user_js << "user_pref(\"datareporting.policy.firstRunURL\", \"\");" << std::endl;
             // to use custom userChrome.css files
             user_js << "user_pref(\"toolkit.legacyUserProfileCustomizations.stylesheets\", true);" << std::endl;
             // do not put tabs in title
             user_js << "user_pref(\"browser.tabs.inTitlebar\", 0);" << std::endl;
+
+            std::ofstream times_json(profile_dir + "/times.json", std::ios::trunc);
+            times_json << "{" << std::endl;
+            times_json << "   \"created\": 1699968480952," << std::endl;
+            times_json << "   \"firstUse\": null" << std::endl;
+            times_json << "}" << std::endl;
             if (gSystem->mkdir((profile_dir + "/chrome").c_str()) == 0) {
                std::ofstream style(profile_dir + "/chrome/userChrome.css", std::ios::trunc);
                // do not show tabs 
