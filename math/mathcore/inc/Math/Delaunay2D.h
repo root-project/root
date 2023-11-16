@@ -59,10 +59,8 @@ namespace ROOT {
 /**
 
    Class to generate a Delaunay triangulation of a 2D set of points.
-   Algorithm based on **CDT**, a C++ library for generating constraint or
-   conforming Delaunay triangulations.
-
-   See [https://github.com/artem-ogre/CDT]
+   Algorithm based on [CDT](https://github.com/artem-ogre/CDT), a C++ library for
+   generating constraint or conforming Delaunay triangulations.
 
    After having found the triangles using the above library,  barycentric coordinates are used
    to test whether a point is inside a triangle (inTriangle test) and for interpolation.
