@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -36,6 +37,11 @@ struct CustomStruct {
    bool operator<(const CustomStruct &c) const { return a < c.a && v1 < c.v1 && v2 < c.v2 && s < c.s; }
 
    bool operator==(const CustomStruct &c) const { return a == c.a && v1 == c.v1 && v2 == c.v2 && s == c.s; }
+};
+
+template <>
+struct std::hash<CustomStruct> {
+   std::size_t operator()(const CustomStruct &c) const noexcept { return std::hash<float>{}(c.a); }
 };
 
 struct DerivedA : public CustomStruct {

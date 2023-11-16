@@ -186,6 +186,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 4) == "set<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 14) == "unordered_set<")
+      normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "atomic<")
       normalizedType = "std::" + normalizedType;
    if (normalizedType == "byte")
@@ -456,6 +458,12 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto normalizedInnerTypeName = itemField->GetType();
       result =
          std::make_unique<RSetField>(fieldName, "std::set<" + normalizedInnerTypeName + ">", std::move(itemField));
+   } else if (canonicalType.substr(0, 19) == "std::unordered_set<") {
+      std::string itemTypeName = canonicalType.substr(19, canonicalType.length() - 20);
+      auto itemField = Create("_0", itemTypeName).Unwrap();
+      auto normalizedInnerTypeName = itemField->GetType();
+      result = std::make_unique<RSetField>(fieldName, "std::unordered_set<" + normalizedInnerTypeName + ">",
+                                           std::move(itemField));
    } else if (canonicalType.substr(0, 12) == "std::atomic<") {
       std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
       auto itemField = Create("_0", itemTypeName).Unwrap();

@@ -1141,7 +1141,7 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
 };
 
-/// The generic field for a std::set<Type>
+/// The generic field for a std::set<Type> and std::unordered_set<Type>
 class RSetField : public RProxiedCollectionField {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -2227,6 +2227,31 @@ protected:
 
 public:
    static std::string TypeName() { return "std::set<" + RField<ItemT>::TypeName() + ">"; }
+
+   explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+};
+
+template <typename ItemT>
+class RField<std::unordered_set<ItemT>> : public RSetField {
+   using ContainerT = typename std::unordered_set<ItemT>;
+
+protected:
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   }
+
+public:
+   static std::string TypeName() { return "std::unordered_set<" + RField<ItemT>::TypeName() + ">"; }
 
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
