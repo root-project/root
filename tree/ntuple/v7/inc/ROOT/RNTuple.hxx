@@ -380,7 +380,7 @@ private:
    /// Limit for committing cluster no matter the other tunables
    std::size_t fMaxUnzippedClusterSize;
    /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
-   NTupleSize_t fUnzippedClusterSizeEst;
+   std::size_t fUnzippedClusterSizeEst;
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
