@@ -45,27 +45,30 @@ ulimit -s
 and try reading again.
 **/
 
-#include "RooWorkspace.h"
-#include "RooWorkspaceHandle.h"
-#include "RooAbsPdf.h"
-#include "RooRealVar.h"
-#include "RooCategory.h"
-#include "RooAbsData.h"
-#include "RooCmdConfig.h"
-#include "RooMsgService.h"
-#include "RooConstVar.h"
-#include "RooResolutionModel.h"
-#include "RooPlot.h"
-#include "RooRandom.h"
+#include <RooWorkspace.h>
+
+#include <RooAbsData.h>
+#include <RooAbsPdf.h>
+#include <RooAbsStudy.h>
+#include <RooCategory.h>
+#include <RooCmdConfig.h>
+#include <RooConstVar.h>
+#include <RooFactoryWSTool.h>
+#include <RooLinkedListIter.h>
+#include <RooMsgService.h>
+#include <RooPlot.h>
+#include <RooRandom.h>
+#include <RooRealVar.h>
+#include <RooResolutionModel.h>
+#include <RooTObjWrap.h>
+#include <RooWorkspaceHandle.h>
+
 #include "TBuffer.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
 #include "TSystem.h"
 #include "TRegexp.h"
-#include "RooFactoryWSTool.h"
-#include "RooAbsStudy.h"
-#include "RooTObjWrap.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -2937,4 +2940,9 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    }
 
    _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
+}
+
+TIterator *RooWorkspace::componentIterator() const
+{
+   return new RooLinkedListIter(_allOwnedNodes.makeLegacyIterator());
 }
