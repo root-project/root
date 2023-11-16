@@ -127,6 +127,8 @@ def subprocess_with_capture(command: str):
     else:
       result = subprocess.run(command, capture_output=True, text=True, shell=True, check=False)
 
+    print(result.stdout)
+    print(result.stderr)
     print("\033[0m", end='')
 
     # Since we are capturing the result and using it in other command later,
