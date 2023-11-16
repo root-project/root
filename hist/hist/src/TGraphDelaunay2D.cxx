@@ -18,9 +18,8 @@ ClassImp(TGraphDelaunay2D);
 /** \class TGraphDelaunay2D
     \ingroup Graphs
 TGraphDelaunay2D generates a Delaunay triangulation of a TGraph2D.
-The algorithm used for finding the triangles is based on **CDT**, a C++ library
-for generating constraint or conforming Delaunay triangulations.
-See [https://github.com/artem-ogre/CDT]
+The algorithm used for finding the triangles is based on [CDT](https://github.com/artem-ogre/CDT),
+a C++ library for generating constraint or conforming Delaunay triangulations.
 
 The ROOT::Math::Delaunay2D class provides a wrapper for using
 the **CDT** library.
