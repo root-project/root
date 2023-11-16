@@ -61,12 +61,17 @@ TEST(RNTuple, Basics)
       RNTupleWriteOptions options;
       options.SetContainerFormat(ENTupleContainerFormat::kBare);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      EXPECT_EQ(ntuple->GetNEntries(), 0);
       ntuple->Fill();
+      EXPECT_EQ(ntuple->GetNEntries(), 1);
+      EXPECT_EQ(ntuple->GetLastCommitted(), 0);
       ntuple->CommitCluster();
+      EXPECT_EQ(ntuple->GetLastCommitted(), 1);
       *wrPt = 24.0;
       ntuple->Fill();
       *wrPt = 12.0;
       ntuple->Fill();
+      EXPECT_EQ(ntuple->GetNEntries(), 3);
    }
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
