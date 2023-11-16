@@ -370,6 +370,69 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ(pairSet, *mySet2);
 }
 
+TEST(RNTuple, StdUnorderedSet)
+{
+   auto field = RField<std::unordered_set<int64_t>>("setField");
+   EXPECT_STREQ("std::unordered_set<std::int64_t>", field.GetType().c_str());
+   auto otherField = RFieldBase::Create("test", "std::unordered_set<int64_t>").Unwrap();
+   EXPECT_STREQ(field.GetType().c_str(), otherField->GetType().c_str());
+   EXPECT_EQ((sizeof(std::unordered_set<int64_t>)), field.GetValueSize());
+   EXPECT_EQ((sizeof(std::unordered_set<int64_t>)), otherField->GetValueSize());
+   EXPECT_EQ((alignof(std::unordered_set<int64_t>)), field.GetAlignment());
+   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
+   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_set<int64_t>)), otherField->GetAlignment());
+
+   FileRaii fileGuard("test_ntuple_rfield_stdunorderedset.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto set_field = model->MakeField<std::unordered_set<float>>({"mySet", "unordered float set"});
+      auto set_field2 = model->MakeField<std::unordered_set<CustomStruct>>({"mySet2"});
+
+      auto mySet3 = RFieldBase::Create("mySet3", "std::unordered_set<std::string>").Unwrap();
+      auto mySet4 = RFieldBase::Create("mySet4", "std::unordered_set<std::vector<bool>>").Unwrap();
+
+      model->AddField(std::move(mySet3));
+      model->AddField(std::move(mySet4));
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
+      auto set_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_set<std::string>>("mySet3");
+      auto set_field4 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_set<std::vector<bool>>>("mySet4");
+      for (int i = 0; i < 2; i++) {
+         *set_field = {static_cast<float>(i), 3.14, 0.42};
+         *set_field2 = {CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"},
+                        CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"}};
+         *set_field3 = {"Hello", "world!", std::to_string(i)};
+         *set_field4 = {{(i % 2 == 0)}, {}, {false, true}};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("set_ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+
+   auto viewSet = ntuple->GetView<std::unordered_set<float>>("mySet");
+   auto viewSet2 = ntuple->GetView<std::unordered_set<CustomStruct>>("mySet2");
+   auto viewSet3 = ntuple->GetView<std::unordered_set<std::string>>("mySet3");
+   auto viewSet4 = ntuple->GetView<std::unordered_set<std::vector<bool>>>("mySet4");
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(std::unordered_set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
+
+      auto pairSet = std::unordered_set<CustomStruct>(
+         {CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"}});
+      EXPECT_EQ(pairSet, viewSet2(i));
+
+      EXPECT_EQ(std::unordered_set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet3(i));
+      EXPECT_EQ(std::unordered_set<std::vector<bool>>({{(i % 2 == 0)}, {}, {false, true}}), viewSet4(i));
+   }
+
+   ntuple->LoadEntry(0);
+   auto mySet2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_set<CustomStruct>>("mySet2");
+   auto pairSet = std::unordered_set<CustomStruct>(
+      {CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"}});
+   EXPECT_EQ(pairSet, *mySet2);
+}
+
 TEST(RNTuple, Int64)
 {
    auto field = RFieldBase::Create("test", "std::int64_t").Unwrap();
