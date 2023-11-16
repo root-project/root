@@ -42,32 +42,15 @@ static const char* DATASET_NAME = "dataset_MarkovChain_local_";
 static const char* DEFAULT_NAME = "_markov_chain";
 static const char* DEFAULT_TITLE = "Markov Chain";
 
-MarkovChain::MarkovChain() :
-   TNamed(DEFAULT_NAME, DEFAULT_TITLE)
-{
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
-}
+MarkovChain::MarkovChain() : TNamed(DEFAULT_NAME, DEFAULT_TITLE) {}
 
-MarkovChain::MarkovChain(RooArgSet& parameters) :
-   TNamed(DEFAULT_NAME, DEFAULT_TITLE)
+MarkovChain::MarkovChain(RooArgSet &parameters) : TNamed(DEFAULT_NAME, DEFAULT_TITLE)
 {
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
    SetParameters(parameters);
 }
 
-MarkovChain::MarkovChain(const char* name, const char* title,
-      RooArgSet& parameters) : TNamed(name, title)
+MarkovChain::MarkovChain(const char *name, const char *title, RooArgSet &parameters) : TNamed(name, title)
 {
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
    SetParameters(parameters);
 }
 

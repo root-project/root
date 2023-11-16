@@ -78,24 +78,24 @@ HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
 ////////////////////////////////////////////////////////////////////////////////
 /// copy constructor
 
-HypoTestInverterResult::HypoTestInverterResult( const HypoTestInverterResult& other, const char * name ) :
-   SimpleInterval(other,name),
-   fUseCLs(other.fUseCLs),
-   fIsTwoSided(other.fIsTwoSided),
-   fInterpolateLowerLimit(other.fInterpolateLowerLimit),
-   fInterpolateUpperLimit(other.fInterpolateUpperLimit),
-   fFittedLowerLimit(other.fFittedLowerLimit),
-   fFittedUpperLimit(other.fFittedUpperLimit),
-   fInterpolOption(other.fInterpolOption),
-   fLowerLimitError(other.fLowerLimitError),
-   fUpperLimitError(other.fUpperLimitError),
-   fCLsCleanupThreshold(other.fCLsCleanupThreshold)
+HypoTestInverterResult::HypoTestInverterResult(const HypoTestInverterResult &other, const char *name)
+   : SimpleInterval(other, name),
+     fUseCLs(other.fUseCLs),
+     fIsTwoSided(other.fIsTwoSided),
+     fInterpolateLowerLimit(other.fInterpolateLowerLimit),
+     fInterpolateUpperLimit(other.fInterpolateUpperLimit),
+     fFittedLowerLimit(other.fFittedLowerLimit),
+     fFittedUpperLimit(other.fFittedUpperLimit),
+     fInterpolOption(other.fInterpolOption),
+     fLowerLimitError(other.fLowerLimitError),
+     fUpperLimitError(other.fUpperLimitError),
+     fCLsCleanupThreshold(other.fCLsCleanupThreshold),
+     fXValues(other.fXValues)
 {
    fLowerLimit = TMath::QuietNaN();
    fUpperLimit = TMath::QuietNaN();
    int nOther = other.ArraySize();
 
-   fXValues = other.fXValues;
    for (int i = 0; i < nOther; ++i)
      fYObjects.Add( other.fYObjects.At(i)->Clone() );
    for (int i = 0; i <  fExpPValues.GetSize() ; ++i)

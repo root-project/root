@@ -112,10 +112,10 @@ namespace RooStats {
       }
 
    protected:
-      RooArgSet * fParameters;
-      RooArgSet * fDataEntry;
-      RooDataSet* fChain;
-      RooRealVar* fNLL;
+      RooArgSet *fParameters = nullptr;
+      RooArgSet *fDataEntry = nullptr;
+      RooDataSet *fChain = nullptr;
+      RooRealVar *fNLL = nullptr;
 
       ClassDefOverride(MarkovChain,2);
    };

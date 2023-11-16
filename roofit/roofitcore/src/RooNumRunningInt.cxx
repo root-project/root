@@ -99,15 +99,17 @@ const char* RooNumRunningInt::inputBaseName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct RunningIntegral CacheElement
 
-RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const RooArgSet* nset) :
-  FuncCacheElem(self,nset), _self(&const_cast<RooNumRunningInt&>(self))
+RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt &self, const RooArgSet *nset)
+   : FuncCacheElem(self, nset),
+     _self(&const_cast<RooNumRunningInt &>(self)),
+     _xx((RooRealVar *)hist()->get()->find(self.x.arg().GetName()))
 {
   // Instantiate temp arrays
   _ax.resize(hist()->numEntries());
   _ay.resize(hist()->numEntries());
 
   // Copy X values from histo
-  _xx = (RooRealVar*) hist()->get()->find(self.x.arg().GetName()) ;
+
   for (int i=0 ; i<hist()->numEntries() ; i++) {
     hist()->get(i) ;
     _ax[i] = _xx->getVal() ;

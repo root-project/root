@@ -50,26 +50,7 @@ static const double SIGMA_RANGE_DIVISOR = 5;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ProposalHelper::ProposalHelper()
-{
-   fPdfProp = new PdfProposal();
-   fVars = nullptr;
-   fOwnsPdfProp = true;
-   fOwnsPdf = false;
-   fOwnsCluesPdf = false;
-   fOwnsVars = false;
-   fUseUpdates = false;
-   fPdf = nullptr;
-   fSigmaRangeDivisor = SIGMA_RANGE_DIVISOR;
-   fCluesPdf = nullptr;
-   fUniformPdf = nullptr;
-   fClues = nullptr;
-   fCovMatrix = nullptr;
-   fCluesFrac = -1;
-   fUniFrac = -1;
-   fCacheSize = -1;
-   fCluesOptions = nullptr;
-}
+ProposalHelper::ProposalHelper() : fPdfProp(new PdfProposal()), fSigmaRangeDivisor(SIGMA_RANGE_DIVISOR) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -71,16 +71,15 @@ void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
 /// variables to be generated, genVars. The function and its dependents are
 /// cloned and so will not be disturbed during the generation process.
 
-RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose, const RooAbsReal* maxFuncVal) :
-  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
+RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig &config,
+                                 bool verbose, const RooAbsReal *maxFuncVal)
+   : RooAbsNumGenerator(func, genVars, verbose, maxFuncVal), _realSampleDim(_realVars.getSize()), _catSampleMult(1)
 {
   _minTrialsArray[0] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial0D")) ;
   _minTrialsArray[1] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial1D")) ;
   _minTrialsArray[2] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial2D")) ;
   _minTrialsArray[3] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial3D")) ;
 
-  _realSampleDim = _realVars.getSize() ;
-  _catSampleMult = 1 ;
   for (auto * cat : static_range_cast<RooAbsCategory*>(_catVars)) {
     _catSampleMult *=  cat->numTypes() ;
   }

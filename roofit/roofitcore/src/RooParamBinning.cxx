@@ -76,10 +76,8 @@ RooParamBinning::~RooParamBinning()
 /// Copy constructor
 ///   cout << "RooParamBinning::cctor(" << this << ") orig = " << &other << endl ;
 
-RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name) :
-  RooAbsBinning(name), _binw(0), _owner(nullptr)
+RooParamBinning::RooParamBinning(const RooParamBinning &other, const char *name) : RooAbsBinning(name)
 {
-  _array = nullptr ;
 
   if (other._lp) {
 //     cout << "RooParamBinning::cctor(this = " << this << ") taking addresses from orig  ListProxy" << endl ;

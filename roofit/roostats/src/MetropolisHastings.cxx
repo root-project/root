@@ -65,29 +65,12 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MetropolisHastings::MetropolisHastings()
+MetropolisHastings::MetropolisHastings(RooAbsReal &function, const RooArgSet &paramsOfInterest,
+                                       ProposalFunction &proposalFunction, Int_t numIters)
+   : fFunction(&function), fNumIters(numIters)
 {
-   // default constructor
-   fFunction = nullptr;
-   fPropFunc = nullptr;
-   fNumIters = 0;
-   fNumBurnInSteps = 0;
-   fSign = kSignUnset;
-   fType = kTypeUnset;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MetropolisHastings::MetropolisHastings(RooAbsReal& function, const RooArgSet& paramsOfInterest,
-      ProposalFunction& proposalFunction, Int_t numIters)
-{
-   fFunction = &function;
    SetParameters(paramsOfInterest);
    SetProposalFunction(proposalFunction);
-   fNumIters = numIters;
-   fNumBurnInSteps = 0;
-   fSign = kSignUnset;
-   fType = kTypeUnset;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

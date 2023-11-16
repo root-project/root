@@ -108,7 +108,8 @@ namespace RooStats {
 struct  LikelihoodFunction {
    LikelihoodFunction(RooFunctor & f, RooFunctor * prior = nullptr, double offset = 0) :
       fFunc(f), fPrior(prior),
-      fOffset(offset), fMaxL(0) {
+      fOffset(offset)
+   {
       fFunc.binding().resetNumCall();
    }
 
@@ -153,7 +154,7 @@ struct  LikelihoodFunction {
    RooFunctor & fFunc;     // functor representing the nll function
    RooFunctor * fPrior;     // functor representing the prior function
    double fOffset;         //  offset used to bring the nll in a reasonable range for computing the exponent
-   mutable double fMaxL;
+   mutable double fMaxL = 0;
 };
 
 
@@ -170,12 +171,9 @@ public:
       fPriorFunc(nullptr),
       fLikelihood(fFunctor, nullptr, nllMinimum),         // integral of exp(-nll) function
       fIntegrator(ROOT::Math::IntegratorMultiDim::GetType(integType) ),  // integrator
-      fXmin(bindParams.getSize() ),               // vector of parameters (min values)
-      fXmax(bindParams.getSize() ),               // vector of parameter (max values)
-      fNorm(1.0), fNormErr(0.0), fOffset(0), fMaxPOI(0),
-      fHasNorm(false),  fUseOldValues(true), fError(false)
+      fXmin(bindParams.getSize()),               // vector of parameters (min values)
+      fXmax(bindParams.getSize())
    {
-
       if (prior) {
          fPriorFunc = std::make_shared<RooFunctor>(*prior, bindParams, RooArgList());
          fLikelihood.SetPrior(fPriorFunc.get() );
@@ -330,13 +328,13 @@ private:
    mutable ROOT::Math::IntegratorMultiDim  fIntegrator; // integrator  (mutable because Integral() is not const
    mutable std::vector<double> fXmin;    // min value of parameters (poi+nuis) -
    mutable std::vector<double> fXmax;   // max value of parameters (poi+nuis) - max poi changes so it is mutable
-   double fNorm;      // normalization value (computed in ctor)
-   mutable double fNormErr;    // normalization error value (computed in ctor)
-   double fOffset;   // offset for computing the root
-   double fMaxPOI;  // maximum value of POI
-   bool fHasNorm; // flag to control first call to the function
-   bool fUseOldValues;  // use old cdf values
-   mutable bool fError;     // flag to indicate if a numerical evaluation error occurred
+   double fNorm = 1.0;                  // normalization value (computed in ctor)
+   mutable double fNormErr = 0.0;       // normalization error value (computed in ctor)
+   double fOffset = 0;                  // offset for computing the root
+   double fMaxPOI = 0;                  // maximum value of POI
+   bool fHasNorm = false;               // flag to control first call to the function
+   bool fUseOldValues = true;           // use old cdf values
+   mutable bool fError = false;         // flag to indicate if a numerical evaluation error occurred
    mutable std::map<double,double> fNormCdfValues;
 };
 
@@ -356,10 +354,9 @@ public:
       fPriorFunc(nullptr),
       fLikelihood(fFunctor, nullptr, nllOffset),
       fPoi(&poi),
-      fXmin(nuisParams.getSize() ),
-      fXmax(nuisParams.getSize() ),
-      fNorm(norm),
-      fError(0)
+      fXmin(nuisParams.getSize()),
+      fXmax(nuisParams.getSize()),
+      fNorm(norm)
    {
 
       if (prior) {
@@ -455,7 +452,7 @@ private:
    std::vector<double> fXmin;
    std::vector<double> fXmax;
    double fNorm;
-   mutable double fError;
+   mutable double fError = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -464,19 +461,17 @@ private:
 class PosteriorFunctionFromToyMC : public ROOT::Math::IGenFunction {
 
 public:
+   PosteriorFunctionFromToyMC(RooAbsReal &nll, RooAbsPdf &pdf, RooRealVar &poi, RooArgList &nuisParams,
+                              RooAbsReal *prior = nullptr, double nllOffset = 0, int niter = 0, bool redoToys = true)
+      : fFunctor(nll, nuisParams, RooArgList()),
+        fPriorFunc(nullptr),
+        fLikelihood(fFunctor, nullptr, nllOffset),
+        fPdf(&pdf),
+        fPoi(&poi),
+        fNuisParams(nuisParams),
+        fNumIterations(niter),
 
-
-   PosteriorFunctionFromToyMC(RooAbsReal & nll, RooAbsPdf & pdf, RooRealVar & poi, RooArgList & nuisParams, RooAbsReal * prior = nullptr, double
-                              nllOffset = 0, int niter = 0, bool redoToys = true ) :
-      fFunctor(nll, nuisParams, RooArgList() ),
-      fPriorFunc(nullptr),
-      fLikelihood(fFunctor, nullptr, nllOffset),
-      fPdf(&pdf),
-      fPoi(&poi),
-      fNuisParams(nuisParams),
-      fNumIterations(niter),
-      fError(-1),
-      fRedoToys(redoToys)
+        fRedoToys(redoToys)
    {
       if (niter == 0) fNumIterations = 100; // default value
 
@@ -624,7 +619,7 @@ private:
    RooArgList fNuisParams;
    mutable std::unique_ptr<RooDataSet> fGenParams;
    int fNumIterations;
-   mutable double fError;
+   mutable double fError = -1;
    bool fRedoToys;                    // do toys every iteration
 
 };
