@@ -145,10 +145,12 @@ jobs:
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.platform }}
                     --incremental     $INCREMENTAL
+                    --sha             ${{ github.sha }}
                     --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
                     --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.sha }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
                     --repository      ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Workflow dispatch
@@ -253,9 +255,10 @@ jobs:
                     --platform        windows10
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
                     --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.sha }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
                     --repository      ${{ github.server_url }}/${{ github.repository }}
                     --architecture    ${{ matrix.target_arch }}"
 
@@ -428,9 +431,10 @@ jobs:
                     --dockeropts      '--security-opt label=disable --rm'
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
                     --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.sha }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
                     --repository      ${{ github.server_url }}/${{ github.repository }}
               "
 
