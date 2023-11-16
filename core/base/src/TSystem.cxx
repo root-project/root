@@ -46,6 +46,7 @@ allows a simple partial implementation for new OS'es.
 #include "THashList.h"
 #include "ThreadLocalStorage.h"
 
+#include <dlfcn.h>
 #include <functional>
 #include <iostream>
 #include <fstream>
@@ -2705,8 +2706,9 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 ///    - g : compile with debug symbol.
 ///    - O : optimize the code.
 ///    - c : compile only, do not attempt to load the library.
+///    - h : compile only if the macro changed or it's the first time it's compiled and loaded.
 ///    - s : silence all information output.
-///    - v : print all information output.
+///    - v : printgi all information output.
 ///    - d : debug ACLiC, keep all the output files.
 ///    - - : if buildir is set, use a flat structure (see buildir below).
 ///
@@ -2827,6 +2829,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t withInfo = kTRUE;
    Bool_t verbose = kFALSE;
    Bool_t internalDebug = kFALSE;
+   Bool_t compileIfDifferent = kFALSE;
    if (opt) {
       keep = (strchr(opt,'k')!=nullptr);
       recompile = (strchr(opt,'f')!=nullptr);
@@ -2842,7 +2845,50 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       withInfo = strchr(opt, 's') == nullptr;
       verbose = strchr(opt, 'v') != nullptr;
       internalDebug = strchr(opt, 'd') != nullptr;
+      compileIfDifferent = strchr(opt,'h') != nullptr;
    }
+
+   // ======= Get the right file names for the dictionary and the shared library
+   TString expFileName(filename);
+   ExpandPathName( expFileName );
+   expFileName = gSystem->UnixPathName(expFileName);
+
+   std::string hash_symbol_name = "__ROOT_Internal_CompileMacro_";
+   if (compileIfDifferent) {
+      std::ifstream inputFile(expFileName);
+      if (!inputFile) {
+         ::Error("ACLiC", "The input macro file '%s' could not be opened.", expFileName.Data());
+         return 0;
+      }
+      std::string fileContent((std::istreambuf_iterator<char>(inputFile)), (std::istreambuf_iterator<char>()));
+      inputFile.close();
+      fileContent += expFileName;
+      auto hash = std::hash<std::string>{}(fileContent);
+      hash_symbol_name += std::to_string(hash);
+
+      // We need to check for the existence of the symbol from within libCling. This is because that library
+      // is loaded specifying RTLD_LOCAL and therefore hiding all symbols from the process as well as all the
+      // symbols of the libraries it loads. Therefore, we jit a helper for that.
+      static void* (*dlsym_jit)(const char *) = nullptr;
+      if (!dlsym_jit) {
+         const std::string dlsym_jit_name("__ROOT_Internal_CompileMacro_lsym_jit");
+         std::string dlsym_jit_code = "void *";
+         dlsym_jit_code +=
+            dlsym_jit_name + "(const char* hash_symbol_name) {return dlsym(RTLD_DEFAULT, hash_symbol_name);} ";
+         gInterpreter->Declare(dlsym_jit_code.c_str());
+         dlsym_jit = (void *(*)(const char *))gInterpreter->Calc(dlsym_jit_name.c_str());
+      }
+
+      auto hash_symbol = dlsym_jit(hash_symbol_name.c_str());
+      if (hash_symbol) {
+         // We found the symbol that signals that the macro has been compiled and that the library is loaded.
+         // We have nothing else to do but to return happiness.
+         if (withInfo)
+            ::Info("ACLiC", "The macro has been already built and loaded according to its checksum.");
+         return 1;
+      }
+   }
+
    if (mode==kDefault) {
       TString rootbuild = ROOTBUILD;
       if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
@@ -2889,10 +2935,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend(":.:");
    incPath.Prepend(WorkingDirectory());
 
-   // ======= Get the right file names for the dictionary and the shared library
-   TString expFileName(filename);
-   ExpandPathName( expFileName );
-   expFileName = gSystem->UnixPathName(expFileName);
+   // ======= Get the right file names for the shared library
    TString library = expFileName;
    if (! IsAbsoluteFileName(library) )
    {
@@ -3580,6 +3623,24 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Load the library the script might depend on
    if (result) {
+      if (compileIfDifferent) {
+         // Add to the dictionary the symbol which will be checked
+         // to avoid to rebuild, unload and reload the library if requested by the user
+         // with the "h" option
+         std::ofstream dictfile(dict, std::ios::app);
+         if (!dictfile) {
+            // This is a sign of a serious issue
+            ::Error("ACLiC", "Trying to append symbol '%s' to the dictionary file failed.", hash_symbol_name.c_str());
+            return 0;
+         }
+         dictfile
+            << "// This symbol is added to check if the library is already loaded without using the interpreter."
+            << std::endl
+            << "extern \"C\"" << std::endl
+            << "{void* " + hash_symbol_name + "() {return (void*) &__TheDictionaryInitializer;}}" << std::endl;
+         dictfile.close();
+      }
+
       TString linkedlibs = GetLibraries("", "S");
       TString libtoload;
       TString all_libtoload;
