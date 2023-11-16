@@ -73,22 +73,25 @@ RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, t
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooFitResult::RooFitResult(const RooFitResult& other) :
-  TNamed(other),
-  RooPrintable(other),
-  RooDirItem(other),
-  _status(other._status),
-  _covQual(other._covQual),
-  _numBadNLL(other._numBadNLL),
-  _minNLL(other._minNLL),
-  _edm(other._edm),
-  _statusHistory(other._statusHistory)
+RooFitResult::RooFitResult(const RooFitResult &other)
+   : TNamed(other),
+     RooPrintable(other),
+     RooDirItem(other),
+     _status(other._status),
+     _covQual(other._covQual),
+     _numBadNLL(other._numBadNLL),
+     _minNLL(other._minNLL),
+     _edm(other._edm),
+     _constPars(new RooArgList),
+     _initPars(new RooArgList),
+     _finalPars(new RooArgList),
+     _statusHistory(other._statusHistory)
 {
-  _constPars = new RooArgList;
+
   other._constPars->snapshot(*_constPars);
-  _initPars = new RooArgList;
+
   other._initPars->snapshot(*_initPars);
-  _finalPars = new RooArgList;
+
   other._finalPars->snapshot(*_finalPars);
   if (other._randomPars) {
     _randomPars = new RooArgList;

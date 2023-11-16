@@ -60,12 +60,12 @@ ClassImp(RooAddModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAddModel::RooAddModel() :
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _projCacheMgr(this,10),
-  _intCacheMgr(this,10)
+RooAddModel::RooAddModel()
+   : _refCoefNorm("!refCoefNorm", "Reference coefficient normalization set", this, false, false),
+     _projCacheMgr(this, 10),
+     _intCacheMgr(this, 10),
+     _coefErrCount(_errorCount)
 {
-  _coefErrCount = _errorCount ;
 }
 
 
@@ -85,9 +85,7 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   _intCacheMgr(this,10),
   _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
-  _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(false),
-  _allExtendable(false)
+  _coefList("!coefficients","List of coefficients",this)
 {
    const std::string ownName(GetName() ? GetName() : "");
    if (inPdfList.size() > inCoefList.size() + 1 || inPdfList.size() < inCoefList.size()) {
@@ -157,19 +155,19 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
-  RooResolutionModel(other,name),
-  _refCoefNorm("!refCoefNorm",this,other._refCoefNorm),
-  _refCoefRangeName((TNamed*)other._refCoefRangeName),
-  _projCacheMgr(other._projCacheMgr,this),
-  _intCacheMgr(other._intCacheMgr,this),
-  _codeReg(other._codeReg),
-  _pdfList("!pdfs",this,other._pdfList),
-  _coefList("!coefficients",this,other._coefList),
-  _haveLastCoef(other._haveLastCoef),
-  _allExtendable(other._allExtendable)
+RooAddModel::RooAddModel(const RooAddModel &other, const char *name)
+   : RooResolutionModel(other, name),
+     _refCoefNorm("!refCoefNorm", this, other._refCoefNorm),
+     _refCoefRangeName((TNamed *)other._refCoefRangeName),
+     _projCacheMgr(other._projCacheMgr, this),
+     _intCacheMgr(other._intCacheMgr, this),
+     _codeReg(other._codeReg),
+     _pdfList("!pdfs", this, other._pdfList),
+     _coefList("!coefficients", this, other._coefList),
+     _haveLastCoef(other._haveLastCoef),
+     _allExtendable(other._allExtendable),
+     _coefErrCount(_errorCount)
 {
-  _coefErrCount = _errorCount ;
 }
 
 

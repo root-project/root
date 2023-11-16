@@ -57,8 +57,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(vars) ;
   _pdfObsList.add(vars) ;
@@ -107,8 +106,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(histObs) ;
   _pdfObsList.add(pdfObs) ;
@@ -146,16 +144,15 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   }
 }
 
-
-RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistPdf{name, title, vars, *dhist, intOrder}
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet &vars, std::unique_ptr<RooDataHist> dhist,
+                       int intOrder)
+   : RooHistPdf{name, title, vars, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   _ownedDataHist = std::move(dhist);
 }
-RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistPdf{name, title, pdfObs, histObs, *dhist, intOrder}
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList &pdfObs, const RooArgList &histObs,
+                       std::unique_ptr<RooDataHist> dhist, int intOrder)
+   : RooHistPdf{name, title, pdfObs, histObs, *dhist, intOrder}
 {
   _ownedDataHist = std::move(dhist);
 }

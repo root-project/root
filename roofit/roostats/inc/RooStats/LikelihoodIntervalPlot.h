@@ -34,10 +34,6 @@ namespace RooStats {
 
     LikelihoodIntervalPlot(LikelihoodInterval* theInterval);
 
-    /// Destructor of SamplingDistribution
-    ~LikelihoodIntervalPlot() override;
-
-
     /// returned plotted object (RooPlot or histograms)
     TObject * GetPlottedObject() const { return fPlotObject; }
 
@@ -73,26 +69,24 @@ namespace RooStats {
     void Draw(const Option_t *options=nullptr) override;
 
   private:
+     Color_t fColor = 0;        ///< color for the contour (for 2D) or function (in 1D)
+     Style_t fFillStyle = 4050; ///< fill style for contours, half transparent by default
+     Color_t fLineColor = 0;    ///< line color for the interval (1D) or for other contours (2D)
+     Int_t fNdimPlot = 0;
+     Int_t fNPoints = 0; ///< number of points used to scan the PL, default depends if 1D or 2D
 
-    Color_t fColor;      ///< color for the contour (for 2D) or function (in 1D)
-    Style_t fFillStyle;  ///< fill style for contours
-    Color_t fLineColor;  ///< line color for the interval (1D) or for other contours (2D)
-    Int_t fNdimPlot;
-    Int_t fNPoints;      ///< number of points used to scan the PL
+     double fMaximum = -1; ///< function maximum
+     // ranges for plots, default is variable range
+     double fXmin = 0;
+     double fXmax = -1;
+     double fYmin = 0;
+     double fYmax = -1;
+     double fPrecision = -1; ///< RooCurve precision, use default in case of -1
 
-    double fMaximum;   ///< function maximum
-    // ranges for plots
-    double fXmin;
-    double fXmax;
-    double fYmin;
-    double fYmax;
-    double fPrecision; ///< RooCurve precision
+     LikelihoodInterval *fInterval = nullptr;
 
-    LikelihoodInterval *fInterval;
-
-    RooArgSet *fParamsPlot;
-    TObject * fPlotObject; ///< plotted object
-
+     RooArgSet *fParamsPlot = nullptr;
+     TObject *fPlotObject = nullptr; ///< plotted object
 
   protected:
 

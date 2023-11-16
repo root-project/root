@@ -57,7 +57,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
                  std::vector<int> const& code) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code), _interpBoundary(1.)
+  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code)
 {
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {

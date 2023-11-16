@@ -71,25 +71,13 @@ using namespace std;
 /// By default, PdfProposal does NOT own the PDF that serves as the
 /// proposal density function
 
-PdfProposal::PdfProposal() : ProposalFunction()
-{
-   fPdf = nullptr;
-   fOwnsPdf = false;
-   fCacheSize = 1;
-   fCachePosition = 0;
-}
+PdfProposal::PdfProposal() : ProposalFunction() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// By default, PdfProposal does NOT own the PDF that serves as the
 /// proposal density function
 
-PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
-{
-   fPdf = &pdf;
-   fOwnsPdf = false;
-   fCacheSize = 1;
-   fCachePosition = 0;
-}
+PdfProposal::PdfProposal(RooAbsPdf &pdf) : ProposalFunction(), fPdf(&pdf) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// determine whether these two RooArgSets represent the same point

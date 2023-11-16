@@ -59,39 +59,37 @@ ClassImp(RooNonCentralChiSquare);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNonCentralChiSquare::RooNonCentralChiSquare(const char *name, const char *title,
-                                               RooAbsReal& _x,
-                                               RooAbsReal& _k,
-                                               RooAbsReal& _lambda) :
-   RooAbsPdf(name,title),
-   x("x","x",this,_x),
-   k("k","k",this,_k),
-   lambda("lambda","lambda",this,_lambda),
-   fErrorTol(1E-3),
-   fMaxIters(10),
-   fHasIssuedConvWarning(false),
-   fHasIssuedSumWarning(false)
+RooNonCentralChiSquare::RooNonCentralChiSquare(const char *name, const char *title, RooAbsReal &_x, RooAbsReal &_k,
+                                               RooAbsReal &_lambda)
+   : RooAbsPdf(name, title),
+     x("x", "x", this, _x),
+     k("k", "k", this, _k),
+     lambda("lambda", "lambda", this, _lambda),
+     fErrorTol(1E-3),
+     fMaxIters(10),
+     fForceSum(false),
+     fHasIssuedConvWarning(false),
+     fHasIssuedSumWarning(false)
 {
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
       "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
-   fForceSum = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNonCentralChiSquare::RooNonCentralChiSquare(const RooNonCentralChiSquare& other, const char* name) :
-   RooAbsPdf(other,name),
-   x("x",this,other.x),
-   k("k",this,other.k),
-   lambda("lambda",this,other.lambda),
-   fErrorTol(other.fErrorTol),
-   fMaxIters(other.fMaxIters),
-   fHasIssuedConvWarning(false),
-   fHasIssuedSumWarning(false)
+RooNonCentralChiSquare::RooNonCentralChiSquare(const RooNonCentralChiSquare &other, const char *name)
+   : RooAbsPdf(other, name),
+     x("x", this, other.x),
+     k("k", this, other.k),
+     lambda("lambda", this, other.lambda),
+     fErrorTol(other.fErrorTol),
+     fMaxIters(other.fMaxIters),
+     fForceSum(other.fForceSum),
+     fHasIssuedConvWarning(false),
+     fHasIssuedSumWarning(false)
 {
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
      "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
-   fForceSum = other.fForceSum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

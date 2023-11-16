@@ -33,15 +33,6 @@ using namespace RooStats;
 using namespace HistFactory;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-LinInterpVar::LinInterpVar()
-{
-  _nominal = 0 ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 LinInterpVar::LinInterpVar(const char* name, const char* title,
              const RooArgList& paramList,

@@ -235,37 +235,38 @@ RooArgList RooIntegralMorph::MorphCacheElem::containedArgs(Action action)
 /// create the cdfs from the input p.d.fs and instantiate the root finders
 /// on the cdfs to perform the inversion.
 
-RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph& self, const RooArgSet* nsetIn) : PdfCacheElem(self,nsetIn)
+RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph &self, const RooArgSet *nsetIn)
+   : PdfCacheElem(self, nsetIn),
+     _self(&self),
+     _pdf1((RooAbsPdf *)(self.pdf1.absArg())),
+     _pdf2((RooAbsPdf *)(self.pdf2.absArg())),
+     _x((RooRealVar *)self.x.absArg()),
+     _alpha((RooAbsReal *)self.alpha.absArg()),
+     _yatXmin(0),
+     _yatXmax(0),
+     _ccounter(0),
+     _ycutoff(1e-7)
 {
   // Mark in base class that normalization of cached pdf is invariant under pdf parameters
-  _x = (RooRealVar*)self.x.absArg() ;
+
   _nset = std::make_unique<RooArgSet>(*_x);
 
-  _alpha = (RooAbsReal*)self.alpha.absArg() ;
-  _pdf1 = (RooAbsPdf*)(self.pdf1.absArg()) ;
-  _pdf2 = (RooAbsPdf*)(self.pdf2.absArg()) ;
   _c1 = std::unique_ptr<RooAbsReal>{_pdf1->createCdf(*_x)};
   _c2 = std::unique_ptr<RooAbsReal>{_pdf2->createCdf(*_x)};
   _cb1 = std::unique_ptr<RooAbsFunc>{_c1->bindVars(*_x,_nset.get())};
   _cb2 = std::unique_ptr<RooAbsFunc>{_c2->bindVars(*_x,_nset.get())};
-  _self = &self ;
 
   _rf1 = std::make_unique<RooBrentRootFinder>(*_cb1);
   _rf2 = std::make_unique<RooBrentRootFinder>(*_cb2);
-  _ccounter = 0 ;
 
   _rf1->setTol(1e-12) ;
   _rf2->setTol(1e-12) ;
-  _ycutoff = 1e-7 ;
 
   // _yatX = 0 ;
   // _calcX = 0 ;
 
   // Must do this here too: fillCache() may not be called if cache contents is retrieved from EOcache
   pdf()->setUnitNorm(true) ;
-
-  _yatXmax = 0 ;
-  _yatXmin = 0 ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

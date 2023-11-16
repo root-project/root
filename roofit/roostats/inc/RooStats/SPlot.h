@@ -79,7 +79,7 @@ namespace RooStats{
 
     //  RooListProxy fSWeightVars;
 
-    RooDataSet* fSData;
+    RooDataSet *fSData = nullptr;
 
     ClassDefOverride(SPlot,1)   // Class used for making sPlots
 

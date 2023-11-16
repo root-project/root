@@ -74,16 +74,16 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-                const RooArgList& xvec, const RooFitResult& fr, bool reduceToConditional) :
-  RooAbsPdf(name,title),
-  _x("x","Observables",this,true,false),
-  _mu("mu","Offset vector",this,true,false),
-  _cov(reduceToConditional ? fr.conditionalCovarianceMatrix(xvec) : fr.reducedCovarianceMatrix(xvec)),
-  _covI(_cov),
-  _z(4)
+RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title, const RooArgList &xvec,
+                                         const RooFitResult &fr, bool reduceToConditional)
+   : RooAbsPdf(name, title),
+     _x("x", "Observables", this, true, false),
+     _mu("mu", "Offset vector", this, true, false),
+     _cov(reduceToConditional ? fr.conditionalCovarianceMatrix(xvec) : fr.reducedCovarianceMatrix(xvec)),
+     _covI(_cov),
+     _det(_cov.Determinant()),
+     _z(4)
 {
-  _det = _cov.Determinant() ;
 
   // Fill mu vector with constant RooRealVars
   list<string> munames ;

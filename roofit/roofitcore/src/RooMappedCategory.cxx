@@ -93,11 +93,12 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
   }
 }
 
-
-RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
-  RooAbsCategory(other,name), _inputCat("input",this,other._inputCat), _mapArray(other._mapArray)
+RooMappedCategory::RooMappedCategory(const RooMappedCategory &other, const char *name)
+   : RooAbsCategory(other, name),
+     _inputCat("input", this, other._inputCat),
+     _mapArray(other._mapArray)
 {
-  _defCat = lookupIndex(other.lookupName(other._defCat));
+   _defCat = lookupIndex(other.lookupName(other._defCat));
 }
 
 RooMappedCategory::~RooMappedCategory() = default;
@@ -314,11 +315,8 @@ void RooMappedCategory::recomputeShape() {
   }
 }
 
-
-RooMappedCategory::Entry::Entry(const char* exp, RooAbsCategory::value_type cat) :
-    _expr(exp), _regexp(nullptr), _catIdx(cat) {}
-RooMappedCategory::Entry::Entry(const Entry& other) :
-    _expr(other._expr), _regexp(nullptr), _catIdx(other._catIdx) {}
+RooMappedCategory::Entry::Entry(const char *exp, RooAbsCategory::value_type cat) : _expr(exp), _catIdx(cat) {}
+RooMappedCategory::Entry::Entry(const Entry &other) : _expr(other._expr), _catIdx(other._catIdx) {}
 RooMappedCategory::Entry::~Entry() { delete _regexp; }
 bool RooMappedCategory::Entry::ok() { return (const_cast<TRegexp*>(regexp())->Status()==TRegexp::kOK) ; }
 

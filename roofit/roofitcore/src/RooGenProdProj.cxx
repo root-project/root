@@ -83,11 +83,12 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
-  RooAbsReal(other, name),
-  _compSetN("compSetN","Set of integral components owned by numerator",this),
-  _compSetD("compSetD","Set of integral components owned by denominator",this),
-  _intList("intList","List of integrals",this)
+RooGenProdProj::RooGenProdProj(const RooGenProdProj &other, const char *name)
+   : RooAbsReal(other, name),
+     _compSetN("compSetN", "Set of integral components owned by numerator", this),
+     _compSetD("compSetD", "Set of integral components owned by denominator", this),
+     _intList("intList", "List of integrals", this),
+     _haveD(other._haveD)
 {
   // Copy constructor
   _compSetOwnedN = std::make_unique<RooArgSet>();
@@ -106,7 +107,7 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   }
 
   // Fill _intList
-  _haveD = other._haveD ;
+
   _intList.add(*_compSetN.find(other._intList.at(0)->GetName())) ;
   if (other._haveD) {
     _intList.add(*_compSetD.find(other._intList.at(1)->GetName())) ;

@@ -141,8 +141,7 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   TObject(other),
   RooPrintable(other),
   _name(name),
-  _allRRV(other._allRRV),
-  _sizeThresholdForMapSearch(100)
+  _allRRV(other._allRRV)
 {
   RooTrace::create(this) ;
   if (!name) setName(other.GetName()) ;

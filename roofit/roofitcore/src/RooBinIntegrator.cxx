@@ -73,10 +73,9 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integrator on given function binding binding
 
-RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
-  RooAbsIntegrator(function)
+RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
+   : RooAbsIntegrator(function), _useIntegrandLimits(true)
 {
-  _useIntegrandLimits= true;
   assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions

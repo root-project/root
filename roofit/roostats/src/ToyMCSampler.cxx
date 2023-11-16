@@ -146,69 +146,29 @@ void ToyMCSampler::SetAlwaysUseMultiGen(bool flag) { fgAlwaysUseMultiGen = flag 
 ////////////////////////////////////////////////////////////////////////////////
 /// Proof constructor. Do not use.
 
-ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
+ToyMCSampler::ToyMCSampler()
+   : fSamplingDistName("SD"),
+     fNToys(1),
+     fMaxToys(RooNumber::infinity()),
+     fAdaptiveLowLimit(-RooNumber::infinity()),
+     fAdaptiveHighLimit(RooNumber::infinity())
 {
-
-   fPdf = nullptr;
-   fPriorNuisance = nullptr;
-   fNuisancePars = nullptr;
-   fObservables = nullptr;
-   fGlobalObservables = nullptr;
-
-   fSize = 0.05;
-   fNEvents = 0;
-   fGenerateBinned = false;
-   fGenerateBinnedTag = "";
-   fGenerateAutoBinned = true;
-   fExpectedNuisancePar = false;
-
-   fToysInTails = 0.0;
-   fMaxToys = RooNumber::infinity();
-   fAdaptiveLowLimit = -RooNumber::infinity();
-   fAdaptiveHighLimit = RooNumber::infinity();
-
-   fProtoData = nullptr;
-
-   fProofConfig = nullptr;
-   fNuisanceParametersSampler = nullptr;
-
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
-
-   fUseMultiGen = false ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(ts.GetVarName().Data()), fNToys(ntoys)
+ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys)
+   : fSamplingDistName(ts.GetVarName().Data()),
+     fNToys(ntoys),
+     fMaxToys(RooNumber::infinity()),
+     fAdaptiveLowLimit(-RooNumber::infinity()),
+     fAdaptiveHighLimit(RooNumber::infinity())
 {
-   fPdf = nullptr;
-   fPriorNuisance = nullptr;
-   fNuisancePars = nullptr;
-   fObservables = nullptr;
-   fGlobalObservables = nullptr;
-
-   fSize = 0.05;
-   fNEvents = 0;
-   fGenerateBinned = false;
-   fGenerateBinnedTag = "";
-   fGenerateAutoBinned = true;
-   fExpectedNuisancePar = false;
-
-   fToysInTails = 0.0;
-   fMaxToys = RooNumber::infinity();
-   fAdaptiveLowLimit = -RooNumber::infinity();
-   fAdaptiveHighLimit = RooNumber::infinity();
-
-   fProtoData = nullptr;
-
-   fProofConfig = nullptr;
-   fNuisanceParametersSampler = nullptr;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
-
-   fUseMultiGen = false ;
 
    AddTestStatistic(&ts);
 }

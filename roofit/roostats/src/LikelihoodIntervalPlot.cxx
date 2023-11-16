@@ -57,52 +57,15 @@ using namespace RooStats;
 /// LikelihoodIntervalPlot default constructor
 /// with default parameters
 
-LikelihoodIntervalPlot::LikelihoodIntervalPlot()
-{
-  fInterval = nullptr;
-  fNdimPlot = 0;
-  fParamsPlot = nullptr;
-  fColor = 0;
-  fFillStyle = 4050; // half transparent
-  fLineColor = 0;
-  fMaximum = -1;
-  fNPoints = 0;  // default depends if 1D or 2D
-  // default is variable range
-  fXmin = 0;
-  fXmax = -1;
-  fYmin = 0;
-  fYmax = -1;
-  fPrecision = -1; // use default
-  fPlotObject = nullptr;
-}
+LikelihoodIntervalPlot::LikelihoodIntervalPlot() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// LikelihoodIntervalPlot copy constructor
 
-LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
+LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval *theInterval)
+   : fInterval(theInterval), fParamsPlot(fInterval->GetParameters())
 {
-  fInterval = theInterval;
-  fParamsPlot = fInterval->GetParameters();
-  fNdimPlot = fParamsPlot->getSize();
-  fColor = 0;
-  fLineColor = 0;
-  fFillStyle = 4050; // half transparent
-  fMaximum = -1;
-  fNPoints = 0;  // default depends if 1D or 2D
-  // default is variable range
-  fXmin = 0;
-  fXmax = -1;
-  fYmin = 0;
-  fYmax = -1;
-  fPrecision = -1; // use default
-  fPlotObject = nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// LikelihoodIntervalPlot destructor
-
-LikelihoodIntervalPlot::~LikelihoodIntervalPlot()
-{
+   fNdimPlot = fParamsPlot->getSize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

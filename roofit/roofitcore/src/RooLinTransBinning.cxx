@@ -48,12 +48,9 @@ RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, double slope,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const char* name) :
-  RooAbsBinning(name)
+RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning &other, const char *name)
+   : RooAbsBinning(name), _slope(other._slope), _offset(other._offset), _input(other._input)
 {
-  _input = other._input ;
-  _slope = other._slope ;
-  _offset = other._offset ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

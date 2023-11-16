@@ -43,19 +43,16 @@ RooMomentMorph::RooMomentMorph()
 ////////////////////////////////////////////////////////////////////////////////
 /// CTOR
 
-RooMomentMorph::RooMomentMorph(const char *name, const char *title,
-                           RooAbsReal& _m,
-                           const RooArgList& varList,
-                           const RooArgList& pdfList,
-                           const TVectorD& mrefpoints,
-                           Setting setting) :
-  RooAbsPdf(name,title),
-  _cacheMgr(this,10,true,true),
-  m("m","m",this,_m),
-  _varList("varList","List of variables",this),
-  _pdfList("pdfList","List of pdfs",this),
-  _setting(setting),
-  _useHorizMorph(true)
+RooMomentMorph::RooMomentMorph(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
+                               const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting)
+   : RooAbsPdf(name, title),
+     _cacheMgr(this, 10, true, true),
+     m("m", "m", this, _m),
+     _varList("varList", "List of variables", this),
+     _pdfList("pdfList", "List of pdfs", this),
+     _mref(new TVectorD(mrefpoints)),
+     _setting(setting),
+     _useHorizMorph(true)
 {
   // observables
   for (auto *var : varList) {
@@ -76,8 +73,6 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
     _pdfList.add(*pdf) ;
   }
 
-  _mref      = new TVectorD(mrefpoints);
-
   // initialization
   initialize();
 }
@@ -85,19 +80,16 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// CTOR
 
-RooMomentMorph::RooMomentMorph(const char *name, const char *title,
-                           RooAbsReal& _m,
-                           const RooArgList& varList,
-                           const RooArgList& pdfList,
-                           const RooArgList& mrefList,
-                           Setting setting) :
-  RooAbsPdf(name,title),
-  _cacheMgr(this,10,true,true),
-  m("m","m",this,_m),
-  _varList("varList","List of variables",this),
-  _pdfList("pdfList","List of pdfs",this),
-  _setting(setting),
-  _useHorizMorph(true)
+RooMomentMorph::RooMomentMorph(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
+                               const RooArgList &pdfList, const RooArgList &mrefList, Setting setting)
+   : RooAbsPdf(name, title),
+     _cacheMgr(this, 10, true, true),
+     m("m", "m", this, _m),
+     _varList("varList", "List of variables", this),
+     _pdfList("pdfList", "List of pdfs", this),
+     _mref(new TVectorD(mrefList.size())),
+     _setting(setting),
+     _useHorizMorph(true)
 {
   // observables
   for (auto *var : varList) {
@@ -118,7 +110,7 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
   }
 
   // reference points in m
-  _mref      = new TVectorD(mrefList.size());
+
   Int_t i = 0;
   for (auto *mref : mrefList) {
     if (!dynamic_cast<RooAbsReal*>(mref)) {
@@ -138,17 +130,17 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMomentMorph::RooMomentMorph(const RooMomentMorph& other, const char* name) :
-  RooAbsPdf(other,name),
-  _cacheMgr(other._cacheMgr,this),
-  _curNormSet(nullptr),
-  m("m",this,other.m),
-  _varList("varList",this,other._varList),
-  _pdfList("pdfList",this,other._pdfList),
-  _setting(other._setting),
-  _useHorizMorph(other._useHorizMorph)
+RooMomentMorph::RooMomentMorph(const RooMomentMorph &other, const char *name)
+   : RooAbsPdf(other, name),
+     _cacheMgr(other._cacheMgr, this),
+     _curNormSet(nullptr),
+     m("m", this, other.m),
+     _varList("varList", this, other._varList),
+     _pdfList("pdfList", this, other._pdfList),
+     _mref(new TVectorD(*other._mref)),
+     _setting(other._setting),
+     _useHorizMorph(other._useHorizMorph)
 {
-  _mref = new TVectorD(*other._mref) ;
 
   // initialization
   initialize();

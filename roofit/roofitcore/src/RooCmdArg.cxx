@@ -59,9 +59,6 @@ const RooCmdArg& RooCmdArg::none()
 
 RooCmdArg::RooCmdArg() : TNamed("","")
 {
-  _procSubArgs = false ;
-  _prefixSubArgs = true ;
-  _c = nullptr ;
   _o[0] = nullptr ;
   _o[1] = nullptr ;
   _i[0] = 0 ;

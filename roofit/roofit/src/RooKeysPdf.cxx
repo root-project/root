@@ -62,47 +62,28 @@ RooKeysPdf::RooKeysPdf()
 ////////////////////////////////////////////////////////////////////////////////
 /// cache stuff about x
 
-RooKeysPdf::RooKeysPdf(const char *name, const char *title,
-                       RooAbsReal& x, RooDataSet& data,
-                       Mirror mirror, double rho) :
-  RooAbsPdf(name,title),
-  _x("x","observable",this,x),
-  _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
-  _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
-  _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
-  _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
-  _rho(rho)
+RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &x, RooDataSet &data, Mirror mirror, double rho)
+   : RooKeysPdf(name, title, x, static_cast<RooRealVar &>(x), data, mirror, rho)
 {
-  snprintf(_varName, 128,"%s", x.GetName());
-  RooAbsRealLValue& real= (RooRealVar&)(_x.arg());
-  _lo = real.getMin();
-  _hi = real.getMax();
-  _binWidth = (_hi-_lo)/(_nPoints-1);
-
-  // form the lookup table
-  LoadDataSet(data);
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// cache stuff about x
 
-RooKeysPdf::RooKeysPdf(const char *name, const char *title,
-                       RooAbsReal& xpdf, RooRealVar& xdata, RooDataSet& data,
-                       Mirror mirror, double rho) :
-  RooAbsPdf(name,title),
-  _x("x","Observable",this,xpdf),
-  _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
-  _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
-  _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
-  _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
-  _rho(rho)
+RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &xpdf, RooRealVar &xdata, RooDataSet &data,
+                       Mirror mirror, double rho)
+   : RooAbsPdf(name, title),
+     _x("x", "Observable", this, xpdf),
+     _mirrorLeft(mirror == MirrorLeft || mirror == MirrorBoth || mirror == MirrorLeftAsymRight),
+     _mirrorRight(mirror == MirrorRight || mirror == MirrorBoth || mirror == MirrorAsymLeftRight),
+     _asymLeft(mirror == MirrorAsymLeft || mirror == MirrorAsymLeftRight || mirror == MirrorAsymBoth),
+     _asymRight(mirror == MirrorAsymRight || mirror == MirrorLeftAsymRight || mirror == MirrorAsymBoth),
+     _lo(xdata.getMin()),
+     _hi(xdata.getMax()),
+     _binWidth((_hi - _lo) / (_nPoints - 1)),
+     _rho(rho)
 {
   snprintf(_varName, 128,"%s", xdata.GetName());
-  RooAbsRealLValue& real= (RooRealVar&)(xdata);
-  _lo = real.getMin();
-  _hi = real.getMax();
-  _binWidth = (_hi-_lo)/(_nPoints-1);
 
   // form the lookup table
   LoadDataSet(data);
@@ -111,16 +92,21 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
-  RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
-  _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ),
-  _asymLeft(other._asymLeft), _asymRight(other._asymRight),
-  _rho( other._rho ) {
+RooKeysPdf::RooKeysPdf(const RooKeysPdf &other, const char *name)
+   : RooAbsPdf(other, name),
+     _x("x", this, other._x),
+     _nEvents(other._nEvents),
+     _mirrorLeft(other._mirrorLeft),
+     _mirrorRight(other._mirrorRight),
+     _asymLeft(other._asymLeft),
+     _asymRight(other._asymRight),
+     _lo(other._lo),
+     _hi(other._hi),
+     _binWidth(other._binWidth),
+     _rho(other._rho)
+{
   // cache stuff about x
   snprintf(_varName, 128, "%s", other._varName );
-  _lo = other._lo;
-  _hi = other._hi;
-  _binWidth = other._binWidth;
 
   // copy over data and weights... not necessary, commented out for speed
 //    _dataPts = new double[_nEvents];

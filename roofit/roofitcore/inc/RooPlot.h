@@ -239,8 +239,8 @@ protected:
   RooArgSet *_normVars = nullptr; ///< Variables that PDF plots should be normalized over
 
   const RooPlotable* _normObj = nullptr; ///<! Pointer to normalization object ;
-  double _normNumEvts;     ///< Number of events in histogram (for normalization)
-  double _normBinWidth;    ///< Histogram bin width (for normalization)
+  double _normNumEvts = 0;     ///< Number of events in histogram (for normalization)
+  double _normBinWidth = 0;    ///< Histogram bin width (for normalization)
 
   double _defYmin = 1e-5; ///< Default minimum for Yaxis (as calculated from contents)
   double _defYmax = 1.0;  ///< Default maximum for Yaxis (as calculated from contents)

@@ -146,9 +146,8 @@ RooAbsData::StorageType RooAbsData::getDefaultStorageType( )
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsData::RooAbsData()
+RooAbsData::RooAbsData() : storageType(defaultStorageType)
 {
-  storageType = defaultStorageType;
 
   RooTrace::create(this) ;
 }

@@ -48,18 +48,13 @@ ClassImp(RooStudyManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStudyManager::RooStudyManager(RooWorkspace& w)
-{
-  _pkg = new RooStudyPackage(w) ;
-}
-
-
+RooStudyManager::RooStudyManager(RooWorkspace &w) : _pkg(new RooStudyPackage(w)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
+RooStudyManager::RooStudyManager(RooWorkspace &w, RooAbsStudy &study) : _pkg(new RooStudyPackage(w))
 {
-  _pkg = new RooStudyPackage(w) ;
+
   _pkg->addStudy(study) ;
 }
 

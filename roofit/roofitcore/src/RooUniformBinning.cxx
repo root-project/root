@@ -35,18 +35,6 @@ using namespace std;
 
 ClassImp(RooUniformBinning);
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default Constructor
-/// coverity[UNINIT_CTOR]
-
-RooUniformBinning::RooUniformBinning(const char* name) :
-  RooAbsBinning(name)
-{
-  _array = nullptr ;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct range [xlo,xhi] with 'nBins' bins
 
@@ -73,14 +61,9 @@ RooUniformBinning::~RooUniformBinning()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char* name) :
-  RooAbsBinning(name)
+RooUniformBinning::RooUniformBinning(const RooUniformBinning &other, const char *name)
+   : RooAbsBinning(name), _xlo(other._xlo), _xhi(other._xhi), _nbins(other._nbins), _binw(other._binw)
 {
-  _array = nullptr ;
-  _xlo   = other._xlo ;
-  _xhi   = other._xhi ;
-  _nbins = other._nbins ;
-  _binw  = other._binw ;
 }
 
 

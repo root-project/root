@@ -49,26 +49,25 @@ namespace RooStats {
       void DrawWeightHist(const Option_t* options = nullptr);
 
    private:
-
-      MCMCInterval *fInterval;
-      RooArgSet *fParameters;
-      TH1* fPosteriorHist;
-      RooNDKeysPdf* fPosteriorKeysPdf;
-      RooProduct* fPosteriorKeysProduct;
-      TH1* fNLLHist;
-      TH1* fWeightHist;
-      TH1* fPosteriorHistHistCopy;
-      TH1* fPosteriorHistTFCopy;
-      Int_t fDimension;
-      Color_t fLineColor;
-      Color_t fShadeColor;
-      Int_t fLineWidth;
-      bool fShowBurnIn;
-      TGraph* fWalk;
-      TGraph* fBurnIn;
-      TGraph* fFirst;
-      TGraph* fParamGraph;
-      TGraph* fNLLGraph;
+      MCMCInterval *fInterval = nullptr;
+      RooArgSet *fParameters = nullptr;
+      TH1 *fPosteriorHist = nullptr;
+      RooNDKeysPdf *fPosteriorKeysPdf = nullptr;
+      RooProduct *fPosteriorKeysProduct = nullptr;
+      TH1 *fNLLHist = nullptr;
+      TH1 *fWeightHist = nullptr;
+      TH1 *fPosteriorHistHistCopy = nullptr;
+      TH1 *fPosteriorHistTFCopy = nullptr;
+      Int_t fDimension = 0;
+      Color_t fLineColor = kBlack;
+      Color_t fShadeColor = kGray;
+      Int_t fLineWidth = 1;
+      bool fShowBurnIn = true;
+      TGraph *fWalk = nullptr;
+      TGraph *fBurnIn = nullptr;
+      TGraph *fFirst = nullptr;
+      TGraph *fParamGraph = nullptr;
+      TGraph *fNLLGraph = nullptr;
 
    protected:
       void DrawPosterior(const Option_t* options = nullptr);

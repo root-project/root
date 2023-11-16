@@ -175,12 +175,10 @@ void RooExpensiveObjectCache::clearAll()
 /// Construct ExpensiveObject object for inPayLoad and store reference values
 /// for all RooAbsReal and RooAbsCategory parameters in params.
 
-RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, RooArgSet const& params)
+RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char *inOwnerName, TObject &inPayload,
+                                                          RooArgSet const &params)
+   : _uid(uidIn), _payload(&inPayload), _ownerName(inOwnerName)
 {
-  _uid = uidIn ;
-  _ownerName = inOwnerName;
-
-  _payload = &inPayload ;
 
   for(RooAbsArg * arg : params) {
     RooAbsReal* real = dynamic_cast<RooAbsReal*>(arg) ;
@@ -202,13 +200,13 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const cha
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const ExpensiveObject& other) :
-  _uid(uidIn),
-  _realRefParams(other._realRefParams),
-  _catRefParams(other._catRefParams),
-  _ownerName(other._ownerName)
+RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const ExpensiveObject &other)
+   : _uid(uidIn),
+     _payload(other._payload->Clone()),
+     _realRefParams(other._realRefParams),
+     _catRefParams(other._catRefParams),
+     _ownerName(other._ownerName)
 {
-  _payload = other._payload->Clone() ;
 }
 
 

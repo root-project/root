@@ -38,11 +38,16 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model,
-                   RooAbsReal& xprime, RooAbsReal& x,
-                   const RooArgSet* nset, bool clipInvalid) :
+RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal &func, const RooAbsReal &model, RooAbsReal &xprime,
+                                                 RooAbsReal &x, const RooArgSet *nset, bool clipInvalid)
+   :
 
-  RooAbsFunc(2), _func(&func), _model(&model), _vars(nullptr), _nset(nset), _clipInvalid(clipInvalid)
+     RooAbsFunc(2),
+     _func(&func),
+     _model(&model),
+     _vars(new RooAbsRealLValue *[2]),
+     _nset(nset),
+     _clipInvalid(clipInvalid)
 {
   // Constructor where func and model
   //
@@ -63,7 +68,7 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
   //
 
   // allocate memory
-  _vars= new RooAbsRealLValue*[2];
+
   if(nullptr == _vars) {
     _valid= false;
     return;

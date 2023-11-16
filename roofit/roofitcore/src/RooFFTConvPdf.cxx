@@ -147,22 +147,21 @@ ClassImp(RooFFTConvPdf);
 /// The binning used for the FFT sampling is controlled by the binning named "cache" in the convolution observable `convVar`.
 /// If such a binning is not set, the same number of bins as for `convVar` will be used.
 
-RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder) :
-  RooAbsCachedPdf(name,title,ipOrder),
-  _x("!x","Convolution Variable",this,convVar),
-  _xprime("!xprime","External Convolution Variable",this,false),
-  _pdf1("!pdf1","pdf1",this,pdf1,false),
-  _pdf2("!pdf2","pdf2",this,pdf2,false),
-  _params("!params","effective parameters",this),
-  _bufFrac(0.1),
-  _bufStrat(Extend),
-  _shift1(0),
-  _shift2(0),
-  _cacheObs("!cacheObs","Cached observables",this,false,false)
+RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar &convVar, RooAbsPdf &pdf1, RooAbsPdf &pdf2,
+                             Int_t ipOrder)
+   : RooAbsCachedPdf(name, title, ipOrder),
+     _x("!x", "Convolution Variable", this, convVar),
+     _xprime("!xprime", "External Convolution Variable", this, false),
+     _pdf1("!pdf1", "pdf1", this, pdf1, false),
+     _pdf2("!pdf2", "pdf2", this, pdf2, false),
+     _params("!params", "effective parameters", this),
+     _bufFrac(0.1),
+     _bufStrat(Extend),
+     _shift1(0),
+     _shift2((convVar.getMax("cache") + convVar.getMin("cache")) / 2),
+     _cacheObs("!cacheObs", "Cached observables", this, false, false)
 {
   prepareFFTBinning(convVar);
-
-  _shift2 = (convVar.getMax("cache")+convVar.getMin("cache"))/2 ;
 
   calcParams() ;
 
@@ -173,22 +172,21 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& co
 /// \param[in] pdfConvVar If the variable used for convolution is a PDF, itself, pass the PDF here, and pass the convolution variable to
 /// `convVar`. See also rf210_angularconv.C in the <a href="https://root.cern.ch/root/html/tutorials/roofit/index.html.">roofit tutorials</a>
 
-RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pdfConvVar, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder) :
-  RooAbsCachedPdf(name,title,ipOrder),
-  _x("!x","Convolution Variable",this,convVar,false,false),
-  _xprime("!xprime","External Convolution Variable",this,pdfConvVar),
-  _pdf1("!pdf1","pdf1",this,pdf1,false),
-  _pdf2("!pdf2","pdf2",this,pdf2,false),
-  _params("!params","effective parameters",this),
-  _bufFrac(0.1),
-  _bufStrat(Extend),
-  _shift1(0),
-  _shift2(0),
-  _cacheObs("!cacheObs","Cached observables",this,false,false)
+RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal &pdfConvVar, RooRealVar &convVar,
+                             RooAbsPdf &pdf1, RooAbsPdf &pdf2, Int_t ipOrder)
+   : RooAbsCachedPdf(name, title, ipOrder),
+     _x("!x", "Convolution Variable", this, convVar, false, false),
+     _xprime("!xprime", "External Convolution Variable", this, pdfConvVar),
+     _pdf1("!pdf1", "pdf1", this, pdf1, false),
+     _pdf2("!pdf2", "pdf2", this, pdf2, false),
+     _params("!params", "effective parameters", this),
+     _bufFrac(0.1),
+     _bufStrat(Extend),
+     _shift1(0),
+     _shift2((convVar.getMax("cache") + convVar.getMin("cache")) / 2),
+     _cacheObs("!cacheObs", "Cached observables", this, false, false)
 {
   prepareFFTBinning(convVar);
-
-  _shift2 = (convVar.getMax("cache")+convVar.getMin("cache"))/2 ;
 
   calcParams() ;
 }

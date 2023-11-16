@@ -25,7 +25,7 @@ namespace HistFactory{
   class LinInterpVar : public RooAbsReal {
   public:
 
-    LinInterpVar() ;
+    LinInterpVar() = default;
     LinInterpVar(const char *name, const char *title,
                  const RooArgList& _paramList, double nominal, std::vector<double> low, std::vector<double> high);
 
@@ -38,7 +38,7 @@ namespace HistFactory{
   protected:
 
     RooListProxy _paramList ;
-    double _nominal;
+    double _nominal = 0;
     std::vector<double> _low;
     std::vector<double> _high;
 

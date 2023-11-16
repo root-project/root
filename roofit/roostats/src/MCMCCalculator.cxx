@@ -63,16 +63,6 @@ MCMCCalculator::MCMCCalculator() :
    fData(nullptr),
    fAxes(nullptr)
 {
-   fNumIters = 0;
-   fNumBurnInSteps = 0;
-   fNumBins = 0;
-   fUseKeys = false;
-   fUseSparseHist = false;
-   fSize = -1;
-   fIntervalType = MCMCInterval::kShortest;
-   fLeftSideTF = -1;
-   fEpsilon = -1;
-   fDelta = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

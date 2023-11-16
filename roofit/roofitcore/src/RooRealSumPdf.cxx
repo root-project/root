@@ -69,12 +69,7 @@ bool RooRealSumPdf::_doFloorGlobal = false ;
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooRealSumPdf::RooRealSumPdf() : _normIntMgr(this,10)
-{
-
-}
-
-
+RooRealSumPdf::RooRealSumPdf() : _normIntMgr(this, 10) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
@@ -84,13 +79,9 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   _normIntMgr(this,10),
   _funcList("!funcList","List of functions",this),
   _coefList("!coefList","List of coefficients",this),
-  _extended(false),
-  _doFloor(false)
+  _extended(false)
 {
-
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct p.d.f consisting of \f$ \mathrm{coef}_1 * \mathrm{func}_1 + (1-\mathrm{coef}_1) * \mathrm{func}_2 \f$.
@@ -135,11 +126,12 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 /// \param inCoefList List of coefficients
 /// \param extended   Interpret as extended PDF (requires equal number of functions and coefficients)
 
-RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
-    const RooArgList& inFuncList, const RooArgList& inCoefList, bool extended) :
-  RooRealSumPdf(name, title)
+RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList &inFuncList,
+                             const RooArgList &inCoefList, bool extended)
+   : RooRealSumPdf(name, title)
 {
   _extended = extended;
+
   RooRealSumPdf::initializeFuncsAndCoefs(*this, inFuncList, inCoefList, _funcList, _coefList);
 }
 

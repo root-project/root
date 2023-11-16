@@ -41,7 +41,6 @@
 using namespace std;
 
 ClassImp(PiecewiseInterpolation);
-;
 
 using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
@@ -49,11 +48,8 @@ using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
 PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 {
-  _positiveDefinite=false;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a new interpolation. The value of the function will be

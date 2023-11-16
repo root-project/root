@@ -133,50 +133,36 @@ SPlot::SPlot():
   RooArgList Args;
 
   fSWeightVars.assign(Args);
-
-  fSData = nullptr;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SPlot::SPlot(const char* name, const char* title):
-  TNamed(name, title)
+SPlot::SPlot(const char *name, const char *title) : TNamed(name, title)
 {
   RooArgList Args;
-
   fSWeightVars.assign(Args);
-
-  fSData = nullptr;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor from a RooDataSet
 ///No sWeighted variables are present
 
-SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
-  TNamed(name, title)
+SPlot::SPlot(const char *name, const char *title, const RooDataSet &data)
+   : TNamed(name, title), fSData((RooDataSet *)&data)
 {
   RooArgList Args;
 
   fSWeightVars.assign(Args);
-
-  fSData = (RooDataSet*) &data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor from another SPlot
 
-SPlot::SPlot(const SPlot &other):
-  TNamed(other)
+SPlot::SPlot(const SPlot &other) : TNamed(other), fSData((RooDataSet *)other.GetSDataSet())
 {
   RooArgList Args = (RooArgList) other.GetSWeightVars();
 
   fSWeightVars.addClone(Args);
-
-  fSData = (RooDataSet*) other.GetSDataSet();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

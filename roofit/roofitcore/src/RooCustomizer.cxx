@@ -222,19 +222,19 @@ Int_t init()
 /// as above.
 ///
 
-RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat,
-    RooArgSet& splitLeafs, RooArgSet* splitLeafsAll) :
-  _sterile(false),
-  _owning(true),
-  _masterPdf((RooAbsArg*)&pdf),
-  _masterCat((RooAbsCategoryLValue*)&masterCat),
-  _masterBranchList("masterBranchList"),
-  _masterLeafList("masterLeafList"),
-  _internalCloneBranchList("cloneBranchList"),
-  _cloneNodeListAll(splitLeafsAll),
-  _cloneNodeListOwned(&splitLeafs)
+RooCustomizer::RooCustomizer(const RooAbsArg &pdf, const RooAbsCategoryLValue &masterCat, RooArgSet &splitLeafs,
+                             RooArgSet *splitLeafsAll)
+   : _sterile(false),
+     _owning(true),
+     _masterPdf((RooAbsArg *)&pdf),
+     _masterCat((RooAbsCategoryLValue *)&masterCat),
+     _masterBranchList("masterBranchList"),
+     _masterLeafList("masterLeafList"),
+     _internalCloneBranchList("cloneBranchList"),
+     _cloneBranchList(&_internalCloneBranchList),
+     _cloneNodeListAll(splitLeafsAll),
+     _cloneNodeListOwned(&splitLeafs)
 {
-  _cloneBranchList = &_internalCloneBranchList ;
 
   initialize() ;
 }
@@ -246,16 +246,16 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 /// offer only the replace() method. The supplied 'name' is used as
 /// suffix for any cloned branch nodes
 
-RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
-  _sterile(true),
-  _owning(false),
-  _name(name),
-  _masterPdf((RooAbsArg*)&pdf),
-  _masterBranchList("masterBranchList"),
-  _masterLeafList("masterLeafList"),
-  _internalCloneBranchList("cloneBranchList")
+RooCustomizer::RooCustomizer(const RooAbsArg &pdf, const char *name)
+   : _sterile(true),
+     _owning(false),
+     _name(name),
+     _masterPdf((RooAbsArg *)&pdf),
+     _masterBranchList("masterBranchList"),
+     _masterLeafList("masterLeafList"),
+     _internalCloneBranchList("cloneBranchList"),
+     _cloneBranchList(&_internalCloneBranchList)
 {
-  _cloneBranchList = &_internalCloneBranchList ;
 
   initialize() ;
 }

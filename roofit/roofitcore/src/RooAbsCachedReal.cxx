@@ -166,11 +166,10 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 /// meta object that tracks changes in declared parameters of p.d.f
 /// through actualParameters()
 
-RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset)
+RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal &self, const RooArgSet *nset)
+   : _sourceClone(nullptr), _cacheSource(false)
 {
   // Disable source caching by default
-  _cacheSource = false ;
-  _sourceClone = nullptr ;
 
   std::unique_ptr<RooArgSet> nset2{self.actualObservables(nset?*nset:RooArgSet())};
 

@@ -91,8 +91,7 @@ RooPolynomial::RooPolynomial(const char *name, const char *title, RooAbsReal &x,
 RooPolynomial::RooPolynomial(const char *name, const char *title, RooAbsReal &x)
    : RooAbsPdf(name, title),
      _x("x", "Dependent", this, x),
-     _coefList("coefList", "List of coefficients", this),
-     _lowestOrder(1)
+     _coefList("coefList", "List of coefficients", this)
 {
 }
 

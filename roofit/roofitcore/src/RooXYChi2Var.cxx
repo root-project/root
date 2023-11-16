@@ -136,13 +136,14 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
-  RooAbsOptTestStatistic(other,name),
-  _extended(other._extended),
-  _integrate(other._integrate),
-  _intConfig(other._intConfig)
+RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var &other, const char *name)
+   : RooAbsOptTestStatistic(other, name),
+     _extended(other._extended),
+     _integrate(other._integrate),
+     _yvar(other._yvar ? (RooRealVar *)_dataClone->get()->find(other._yvar->GetName()) : nullptr),
+     _intConfig(other._intConfig)
 {
-  _yvar = other._yvar ? (RooRealVar*) _dataClone->get()->find(other._yvar->GetName()) : nullptr ;
+
   initialize() ;
 
 }

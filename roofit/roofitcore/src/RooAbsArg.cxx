@@ -111,10 +111,7 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsArg::RooAbsArg()
-{
-  _namePtr = RooNameReg::instance().constPtr(GetName()) ;
-}
+RooAbsArg::RooAbsArg() : _namePtr(RooNameReg::instance().constPtr(GetName())) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object with the specified name and descriptive title.
