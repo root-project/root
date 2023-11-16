@@ -304,16 +304,7 @@ TString RooAbsPdf::_normRangeOverride;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsPdf::RooAbsPdf() :_normMgr(this,10)
-{
-  _errorCount = 0 ;
-  _negCount = 0 ;
-  _rawValue = 0 ;
-  _selectComp = false ;
-  _traceCount = 0 ;
-}
-
-
+RooAbsPdf::RooAbsPdf() : _normMgr(this, 10) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title only

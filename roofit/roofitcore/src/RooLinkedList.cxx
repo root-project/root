@@ -141,8 +141,8 @@ namespace RooLinkedListImplDetails {
       AddrMap _addrmap;
       ChunkList _freelist;
       UInt_t _szmap[(maxsz - minsz) / szincr];
-      Int_t _cursz;
-      UInt_t _refCount;
+      Int_t _cursz = minsz;
+      UInt_t _refCount = 0;
 
       /// adjust _cursz to current largest block
       void updateCurSz(Int_t sz, Int_t incr);
@@ -150,7 +150,7 @@ namespace RooLinkedListImplDetails {
       Int_t nextChunkSz() const;
   };
 
-  Pool::Pool() : _cursz(minsz), _refCount(0)
+  Pool::Pool()
   {
     std::fill(_szmap, _szmap + ((maxsz - minsz) / szincr), 0);
   }

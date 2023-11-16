@@ -186,18 +186,15 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking a function binding and a configuration object
 
-RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function,
-                            const RooNumIntConfig& config) :
-  RooAbsIntegrator(function),
-  _epsAbs(config.epsRel()),
-  _epsRel(config.epsAbs())
+RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc &function,
+                                                                         const RooNumIntConfig &config)
+   : RooAbsIntegrator(function), _useIntegrandLimits(true), _epsAbs(config.epsRel()), _epsRel(config.epsAbs())
 {
   // Use this form of the constructor to integrate over the function's default range.
   const RooArgSet& confSet = config.getConfigSection(ClassName()) ;
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
 
-  _useIntegrandLimits= true;
   _valid= initialize();
 }
 
@@ -206,21 +203,20 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking a function binding, an integration range and a configuration object
 
-RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function,
-                            double xmin, double xmax,
-                            const RooNumIntConfig& config) :
-  RooAbsIntegrator(function),
-  _epsAbs(config.epsRel()),
-  _epsRel(config.epsAbs()),
-  _xmin(xmin),
-  _xmax(xmax)
+RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc &function, double xmin,
+                                                                         double xmax, const RooNumIntConfig &config)
+   : RooAbsIntegrator(function),
+     _useIntegrandLimits(false),
+     _epsAbs(config.epsRel()),
+     _epsRel(config.epsAbs()),
+     _xmin(xmin),
+     _xmax(xmax)
 {
   // Use this form of the constructor to integrate over the function's default range.
   const RooArgSet& confSet = config.getConfigSection(ClassName()) ;
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
 
-  _useIntegrandLimits= false;
   _valid= initialize();
 }
 

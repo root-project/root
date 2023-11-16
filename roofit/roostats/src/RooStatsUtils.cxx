@@ -237,12 +237,12 @@ namespace RooStats {
       public:
          std::map<TString, double> fVarVals;
          double fInval;
-         TTree *fTree;
+         TTree *fTree = nullptr;
 
-         BranchStore(const vector <TString> &params = vector <TString>(), double _inval = -999.) : fTree(nullptr) {
-            fInval = _inval;
-            for(unsigned int i = 0;i<params.size();i++)
-               fVarVals[params[i]] = _inval;
+         BranchStore(const vector<TString> &params = vector<TString>(), double _inval = -999.) : fInval(_inval)
+         {
+         for (unsigned int i = 0; i < params.size(); i++)
+            fVarVals[params[i]] = _inval;
          }
 
          ~BranchStore() {

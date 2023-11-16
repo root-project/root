@@ -61,52 +61,13 @@ using namespace RooStats;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMCIntervalPlot::MCMCIntervalPlot()
-{
-   fInterval = nullptr;
-   fParameters = nullptr;
-   fPosteriorHist = nullptr;
-   fPosteriorKeysPdf = nullptr;
-   fPosteriorKeysProduct = nullptr;
-   fDimension = 0;
-   fLineColor = kBlack;
-   fShadeColor = kGray;
-   fLineWidth = 1;
-   //fContourColor = kBlack;
-   fShowBurnIn = true;
-   fWalk = nullptr;
-   fBurnIn = nullptr;
-   fFirst = nullptr;
-   fParamGraph = nullptr;
-   fNLLGraph = nullptr;
-   fNLLHist = nullptr;
-   fWeightHist = nullptr;
-   fPosteriorHistHistCopy = nullptr;
-   fPosteriorHistTFCopy = nullptr;
-}
+MCMCIntervalPlot::MCMCIntervalPlot() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval& interval)
+MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval &interval)
 {
    SetMCMCInterval(interval);
-   fPosteriorHist = nullptr;
-   fPosteriorKeysPdf = nullptr;
-   fPosteriorKeysProduct = nullptr;
-   fLineColor = kBlack;
-   fShadeColor = kGray;
-   fLineWidth = 1;
-   //fContourColor = kBlack;
-   fShowBurnIn = true;
-   fWalk = nullptr;
-   fBurnIn = nullptr;
-   fFirst = nullptr;
-   fParamGraph = nullptr;
-   fNLLGraph = nullptr;
-   fNLLHist = nullptr;
-   fWeightHist = nullptr;
-   fPosteriorHistHistCopy = nullptr;
-   fPosteriorHistTFCopy = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

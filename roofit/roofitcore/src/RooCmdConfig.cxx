@@ -83,15 +83,18 @@ void cloneList(TList const& inList, TList & outList) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)
-  : TObject(other), _iList(other._iList), _dList(other._dList),
-    _sList(other._sList), _oList(other._oList), _cList(other._cList)
+RooCmdConfig::RooCmdConfig(const RooCmdConfig &other)
+   : TObject(other),
+     _name(other._name),
+     _verbose(other._verbose),
+     _error(other._error),
+     _allowUndefined(other._allowUndefined),
+     _iList(other._iList),
+     _dList(other._dList),
+     _sList(other._sList),
+     _oList(other._oList),
+     _cList(other._cList)
 {
-  _name   = other._name ;
-  _verbose = other._verbose ;
-  _error = other._error ;
-  _allowUndefined = other._allowUndefined ;
-
   cloneList(other._rList, _rList); // Required cmd list
   cloneList(other._fList, _fList); // Forbidden cmd list
   cloneList(other._mList, _mList); // Mutex cmd list

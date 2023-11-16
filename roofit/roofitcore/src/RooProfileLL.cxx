@@ -71,16 +71,13 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
-  RooAbsReal(other,name),
-  _nll("nll",this,other._nll),
-  _obs("obs",this,other._obs),
-  _par("par",this,other._par),
-  _startFromMin(other._startFromMin),
-  _absMinValid(false),
-  _absMin(0),
-  _paramFixed(other._paramFixed),
-  _neval(0)
+RooProfileLL::RooProfileLL(const RooProfileLL &other, const char *name)
+   : RooAbsReal(other, name),
+     _nll("nll", this, other._nll),
+     _obs("obs", this, other._obs),
+     _par("par", this, other._par),
+     _startFromMin(other._startFromMin),
+     _paramFixed(other._paramFixed)
 {
   _paramAbsMin.addClone(other._paramAbsMin) ;
   _obsAbsMin.addClone(other._obsAbsMin) ;

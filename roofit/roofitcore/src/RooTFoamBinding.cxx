@@ -42,10 +42,10 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTFoamBinding::RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observables)
+RooTFoamBinding::RooTFoamBinding(const RooAbsReal &pdf, const RooArgSet &observables)
+   : _binding(new RooRealBinding(pdf, observables, &_nset, false, nullptr))
 {
   _nset.add(observables) ;
-  _binding = new RooRealBinding(pdf,observables,&_nset,false,nullptr) ;
 }
 
 

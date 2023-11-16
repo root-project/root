@@ -733,23 +733,21 @@ bool RooRealIntegral::initNumIntegrator() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) :
-  RooAbsReal(other,name),
-  _valid(other._valid),
-  _respectCompSelect(other._respectCompSelect),
-  _sumList("!sumList",this,other._sumList),
-  _intList("!intList",this,other._intList),
-  _anaList("!anaList",this,other._anaList),
-  _jacList("!jacList",this,other._jacList),
-  _facList("!facList","Variables independent of function",this,false,true),
-  _function("!func",this,other._function),
-  _iconfig(other._iconfig),
-  _sumCat("!sumCat",this,other._sumCat),
-  _mode(other._mode),
-  _intOperMode(other._intOperMode),
-  _restartNumIntEngine(false),
-  _rangeName(other._rangeName),
-  _cacheNum(false)
+RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
+   : RooAbsReal(other, name),
+     _valid(other._valid),
+     _respectCompSelect(other._respectCompSelect),
+     _sumList("!sumList", this, other._sumList),
+     _intList("!intList", this, other._intList),
+     _anaList("!anaList", this, other._anaList),
+     _jacList("!jacList", this, other._jacList),
+     _facList("!facList", "Variables independent of function", this, false, true),
+     _function("!func", this, other._function),
+     _iconfig(other._iconfig),
+     _sumCat("!sumCat", this, other._sumCat),
+     _mode(other._mode),
+     _intOperMode(other._intOperMode),
+     _rangeName(other._rangeName)
 {
  if(other._funcNormSet) {
    _funcNormSet = std::make_unique<RooArgSet>();

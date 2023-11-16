@@ -55,8 +55,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   _depList("depList","List of dependents",this),
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(vars) ;
   _depList.add(vars) ;
@@ -95,8 +94,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   _depList("depList","List of dependents",this),
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(histObs) ;
   _depList.add(funcObs) ;
@@ -120,20 +118,18 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   TRACE_CREATE;
 }
 
-
-RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& vars,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistFunc{name, title, vars, *dhist, intOrder}
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet &vars, std::unique_ptr<RooDataHist> dhist,
+                         int intOrder)
+   : RooHistFunc{name, title, vars, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   _ownedDataHist = std::move(dhist);
 }
 
-
-RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistFunc{name, title, pdfObs, histObs, *dhist, intOrder}
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList &pdfObs, const RooArgList &histObs,
+                         std::unique_ptr<RooDataHist> dhist, int intOrder)
+   : RooHistFunc{name, title, pdfObs, histObs, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   _ownedDataHist = std::move(dhist);
 }
 
 

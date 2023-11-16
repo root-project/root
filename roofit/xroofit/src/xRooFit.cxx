@@ -531,10 +531,13 @@ public:
       }
    };
    ProgressMonitor(RooAbsReal &f, int interval = 30)
-      : RooAbsReal(Form("progress_%s", f.GetName()), ""), fFunc("func", "func", this, f), fInterval(interval)
+      : RooAbsReal(Form("progress_%s", f.GetName()), ""),
+        oldHandlerr(signal(SIGINT, interruptHandler)),
+        fFunc("func", "func", this, f),
+        fInterval(interval)
    {
       s.Start();
-      oldHandlerr = signal(SIGINT, interruptHandler);
+
       me = this;
       vars.reset(std::unique_ptr<RooAbsCollection>(f.getVariables())->selectByAttrib("Constant", false));
    }
@@ -635,10 +638,7 @@ xRooFit::StoredFitResult::StoredFitResult(RooFitResult *_fr) : TNamed(*_fr)
    fr.reset(_fr);
 }
 
-xRooFit::StoredFitResult::StoredFitResult(const std::shared_ptr<RooFitResult> &_fr) : TNamed(*_fr)
-{
-   fr = _fr;
-}
+xRooFit::StoredFitResult::StoredFitResult(const std::shared_ptr<RooFitResult> &_fr) : TNamed(*_fr), fr(_fr) {}
 
 std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                                                       const std::shared_ptr<ROOT::Fit::FitConfig> &_fitConfig,

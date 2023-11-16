@@ -78,11 +78,8 @@ ClassImp(RooResolutionModel);
 /// The convolution variable needs to be convertible to real values, and be able
 /// to give information about its range. This is supported by e.g. RooRealVar or RooLinearVar, which
 /// accepts offsetting and scaling an observable.
-RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& _x) :
-  RooAbsPdf(name,title),
-  x("x","Dependent or convolution variable",this,_x),
-  _basisCode(0), _basis(nullptr),
-  _ownBasis(false)
+RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsRealLValue &_x)
+   : RooAbsPdf(name, title), x("x", "Dependent or convolution variable", this, _x), _basisCode(0), _ownBasis(false)
 {
 
 }
@@ -92,11 +89,8 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooA
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) :
-  RooAbsPdf(other,name),
-  x("x",this,other.x),
-  _basisCode(other._basisCode), _basis(nullptr),
-  _ownBasis(false)
+RooResolutionModel::RooResolutionModel(const RooResolutionModel &other, const char *name)
+   : RooAbsPdf(other, name), x("x", this, other.x), _basisCode(other._basisCode), _ownBasis(false)
 {
   if (other._basis) {
     _basis = (RooFormulaVar*) other._basis->Clone() ;

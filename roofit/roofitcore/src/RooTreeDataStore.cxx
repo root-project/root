@@ -143,18 +143,17 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
-          const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-          Int_t nStart, Int_t nStop, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(false),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName))
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore &tds, const RooArgSet &vars,
+                                   const RooFormulaVar *cutVar, const char *cutRange, Int_t nStart, Int_t nStop,
+                                   const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)),
+     _varsww(vars),
+     _wgtVar(weightVar(vars, wgtVarName))
 {
   // WVE NEED TO ADJUST THIS FOR WEIGHTS
 
   // Protected constructor for internal use only
-  _tree = nullptr ;
-  _cacheTree = nullptr ;
+
   createTree(makeTreeName(), title);
 
   // Deep clone cutVar and attach clone to this dataset
