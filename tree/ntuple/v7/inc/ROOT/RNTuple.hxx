@@ -427,6 +427,13 @@ public:
 
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
+   /// Return the entry number that was last committed in a cluster.
+   NTupleSize_t GetLastCommitted() const { return fLastCommitted; }
+   /// Return the entry number that was last committed in a cluster group.
+   NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
+   /// Return the number of entries filled so far.
+   NTupleSize_t GetNEntries() const { return fNEntries; }
+
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
