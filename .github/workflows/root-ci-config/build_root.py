@@ -106,7 +106,11 @@ def main():
     git_pull("src", args.repository, args.base_ref)
 
     if pull_request:
-        rebase("src", "origin", args.base_ref, args.head_ref, args.head_sha)
+      base_head_sha = get_base_head_sha(args.repository, args.sha, args.head_sha)
+      head_ref_src, _, head_ref_dst = args.head_ref.partition(":")
+      head_ref_dst = head_ref_dst or "__tmp"
+
+      rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
 
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
@@ -126,7 +130,7 @@ def main():
       git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
 
       if pull_request:
-        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref + ":" + roottest_head_ref, args.head_sha)
+        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
 
     if not WINDOWS:
         show_node_state()
@@ -184,6 +188,7 @@ def parse_args():
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
     parser.add_argument("--coverage",        default="false",   help="Create Coverage report in XML")
+    parser.add_argument("--sha",             default=None,      help="sha that triggered the event")
     parser.add_argument("--base_ref",        default=None,      help="Ref to target branch")
     parser.add_argument("--pull_repository", default="",        help="Url to the pull request incoming repository")
     parser.add_argument("--head_ref",        default=None,      help="Ref to feature branch; it may contain a :<dst> part")
@@ -402,8 +407,6 @@ def create_binaries(buildtype):
 
 @github_log_group("Rebase")
 def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str) -> None:
-    head_ref_src, _, head_ref_dst = head_ref.partition(":")
-    head_ref_dst = head_ref_dst or "__tmp"
     # rebase fails unless user.email and user.name is set
     result = subprocess_with_log(f"""
         cd '{WORKDIR}/{directory}'
@@ -411,8 +414,8 @@ def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sh
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
 
-        git fetch {repository} {head_ref_src}:{head_ref_dst}
-        git checkout {head_ref_dst}
+        git fetch {repository} {head_sha}:{head_ref}
+        git checkout {head_ref}
         git rebase {base_ref}
     """)
 
@@ -444,6 +447,30 @@ def get_stdout_subprocess(command: str, error_message: str) -> str:
   string_result = string_result.strip()
   return string_result
 
+
+# get_base_head_sha
+#
+# Given a pull request merge commit and the incoming commit return
+# the commit corresponding to the head of the branch we are merging into.
+@github_log_group("Rebase")
+def get_base_head_sha(repository: str, merge_sha: str, head_sha: str) -> str:
+
+  command = f"""
+      git fetch {repository} {merge_sha}
+      """
+  result = subprocess_with_log(command)
+  if result != 0:
+      die("Failed to fetch {merge_sha} from {repository}")
+  command = f"""
+      git rev-list --parents -1 {merge_sha}
+      """
+  result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
+
+  for s in result.split(' '):
+    if (s != merge_sha and s != head_sha):
+      return s
+
+  return ""
 
 @github_log_group("Pull/clone roottest branch")
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
