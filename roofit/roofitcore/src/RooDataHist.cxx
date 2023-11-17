@@ -220,7 +220,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   _dstore = makeDefaultDataStore(name, title, _vars);
 
   // Check consistency in number of dimensions
-  if (vars.getSize() != hist->GetDimension()) {
+  if (int(vars.size()) != hist->GetDimension()) {
     std::stringstream errorMsgStream;
     errorMsgStream << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension of input histogram must match "
                    << "number of dimension variables";
@@ -518,7 +518,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   }
 
   // Check consistency in number of dimensions
-  if (histo && (vars.getSize() != histo->GetDimension())) {
+  if (histo && int(vars.size()) != histo->GetDimension()) {
     coutE(InputArguments) << "RooDataHist::importTH1Set(" << GetName() << "): dimension of input histogram must match "
            << "number of continuous variables" << endl ;
     throw std::invalid_argument("Inputs histograms for RooDataHist are not compatible with dimensions of variables.");

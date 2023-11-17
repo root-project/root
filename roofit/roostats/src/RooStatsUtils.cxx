@@ -93,7 +93,7 @@ namespace RooStats {
    // (from G. Petrucciani)
       if (auto prod = dynamic_cast<RooProdPdf *>(&pdf)) {
          RooArgList list(prod->pdfList());
-         for (int i = 0, n = list.getSize(); i < n; ++i) {
+         for (int i = 0, n = list.size(); i < n; ++i) {
             RooAbsPdf *pdfi = static_cast<RooAbsPdf *>(list.at(i));
             FactorizePdf(observables, *pdfi, obsTerms, constraints);
          }
@@ -158,7 +158,7 @@ namespace RooStats {
 
          RooArgList list(prod->pdfList()); RooArgList newList;
 
-         for (int i = 0, n = list.getSize(); i < n; ++i) {
+         for (int i = 0, n = list.size(); i < n; ++i) {
             RooAbsPdf *pdfi = static_cast<RooAbsPdf *>(list.at(i));
             RooAbsPdf *newPdfi = StripConstraints(*pdfi, observables);
             if(newPdfi != nullptr) newList.add(*newPdfi);
@@ -166,7 +166,7 @@ namespace RooStats {
 
          if(newList.empty()) return nullptr; // only constraints in product
          // return single component (no longer a product)
-         else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained",
+         else if(newList.size() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained",
                                                                                                                newList.at(0)->GetName())));
          else return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
             TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
@@ -324,7 +324,7 @@ namespace RooStats {
    void PrintListContent(const RooArgList & l, std::ostream & os ) {
       bool first = true;
       os << "( ";
-      for (int i = 0; i< l.getSize(); ++i) {
+      for (std::size_t i = 0; i< l.size(); ++i) {
          if (first) {
             first=false ;
          } else {

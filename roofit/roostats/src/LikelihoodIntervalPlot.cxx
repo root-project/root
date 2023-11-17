@@ -65,7 +65,7 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot() {}
 LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval *theInterval)
    : fInterval(theInterval), fParamsPlot(fInterval->GetParameters())
 {
-   fNdimPlot = fParamsPlot->getSize();
+   fNdimPlot = fParamsPlot->size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ void LikelihoodIntervalPlot::SetLikelihoodInterval(LikelihoodInterval* theInterv
 {
   fInterval = theInterval;
   fParamsPlot = fInterval->GetParameters();
-  fNdimPlot = fParamsPlot->getSize();
+  fNdimPlot = fParamsPlot->size();
 
   return;
 }
@@ -83,7 +83,7 @@ void LikelihoodIntervalPlot::SetLikelihoodInterval(LikelihoodInterval* theInterv
 
 void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
 {
-  fNdimPlot = params->getSize();
+  fNdimPlot = params->size();
   fParamsPlot = static_cast<RooArgSet*>(params->clone((std::string(params->GetName())+"_clone").c_str()));
 
   return;
@@ -140,7 +140,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          extraParams.add(*arg);
       }
    }
-   if (extraParams.getSize() > 0)
+   if (extraParams.size() > 0)
       fParamsPlot->remove(extraParams,true,true);
 
    if(fNdimPlot > 2){
@@ -155,7 +155,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
    RooAbsReal* newProfile = nullptr;
    std::unique_ptr<RooAbsReal> newProfileOwner;
    RooAbsReal* oldProfile = fInterval->GetLikelihoodRatio();
-   if (fNdimPlot != intervalParams->getSize() ) {
+   if (fNdimPlot != int(intervalParams->size()) ) {
       RooProfileLL * profilell = dynamic_cast<RooProfileLL*>(oldProfile);
       if (!profilell) return;
       RooAbsReal & nll =  profilell->nll();
@@ -343,7 +343,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       RooArgList params(*newProfile->getVariables());
       // set values and error for the POI to the best fit values
-      for (int i = 0; i < params.getSize(); ++i) {
+      for (std::size_t i = 0; i < params.size(); ++i) {
          RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
          RooRealVar * fitPar =  static_cast<RooRealVar *> (fInterval->GetBestFitParameters()->find(par.GetName() ) );
          if (fitPar) {

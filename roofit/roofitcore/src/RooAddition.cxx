@@ -103,7 +103,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     , _set("!set","set of components",this)
     , _cacheMgr(this,10)
 {
-  if (sumSet1.getSize() != sumSet2.getSize()) {
+  if (sumSet1.size() != sumSet2.size()) {
     coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << std::endl;
     RooErrorHandler::softAbort() ;
   }

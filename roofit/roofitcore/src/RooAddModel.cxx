@@ -331,7 +331,7 @@ AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* 
 
 void RooAddModel::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
 {
-  _coefCache.resize(_pdfList.getSize());
+  _coefCache.resize(_pdfList.size());
   for(std::size_t i = 0; i < _coefList.size(); ++i) {
     _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
   }
@@ -597,7 +597,7 @@ double RooAddModel::expectedEvents(const RooArgSet* nset) const
 
 void RooAddModel::selectNormalization(const RooArgSet* depSet, bool force)
 {
-  if (!force && _refCoefNorm.getSize()!=0) {
+  if (!force && _refCoefNorm.size()!=0) {
     return ;
   }
 

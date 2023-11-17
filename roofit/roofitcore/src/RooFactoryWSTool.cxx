@@ -550,7 +550,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     return nullptr;
   }
 
-  RooRealSumPdf pdf(objName,objName,amplList,coefList,(amplList.getSize()==coefList.getSize())) ;
+  RooRealSumPdf pdf(objName,objName,amplList,coefList,(amplList.size()==coefList.size())) ;
   pdf.setStringAttribute("factory_tag",Form("ASUM::%s(%s)",objName,specList)) ;
   if (_ws->import(pdf,Silence())) logError() ;
   return static_cast<RooRealSumPdf*>(_ws->pdf(objName));
@@ -704,7 +704,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     return nullptr ;
   }
 
-  if (sumlist2.getSize()>0 && (sumlist1.getSize()!=sumlist2.getSize())) {
+  if (sumlist2.size()>0 && (sumlist1.size()!=sumlist2.size())) {
     coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: syntax error: either all sum terms must be products or none" << endl ;
     logError() ;
     return nullptr ;

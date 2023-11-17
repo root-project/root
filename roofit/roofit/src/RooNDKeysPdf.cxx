@@ -131,11 +131,11 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
   }
 
   // copy rho widths
-  if( _varList.getSize() != rho.GetNrows() ) {
+  if(int( _varList.size()) != rho.GetNrows() ) {
      coutE(InputArguments)
         << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The vector-size of rho is different from that of varList."
         << "Unable to create the PDF." << endl;
-     R__ASSERT(_varList.getSize() == rho.GetNrows());
+     R__ASSERT(int(_varList.size()) == rho.GetNrows());
   }
 
   // negative width factor will serve as a switch in initialize()
@@ -169,7 +169,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
       _varName.push_back(var->GetName());
    }
 
-   _rho.resize(rhoList.getSize(), 1.0);
+   _rho.resize(rhoList.size(), 1.0);
 
    for (unsigned int i=0; i < rhoList.size(); ++i) {
       const auto rho = rhoList.at(i);
@@ -183,10 +183,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
    }
 
    // copy rho widths
-   if ((_varList.getSize() != _rhoList.getSize())) {
+   if ((_varList.size() != _rhoList.size())) {
       coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
                             << "Unable to create the PDF." << endl;
-      assert(_varList.getSize() == _rhoList.getSize());
+      assert(_varList.size() == _rhoList.size());
    }
 
    // keep track of changes in rho parameters
@@ -217,7 +217,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
    }
 
    // copy rho widths
-   _rho.resize(rhoList.getSize(), 1.0);
+   _rho.resize(rhoList.size(), 1.0);
 
    for (unsigned int i=0; i < rhoList.size(); ++i) {
       const auto rho = rhoList.at(i);
@@ -230,10 +230,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
       _rho[i] = (dynamic_cast<RooAbsReal *>(rho))->getVal();
    }
 
-   if ((_varList.getSize() != _rhoList.getSize())) {
+   if ((_varList.size() != _rhoList.size())) {
       coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
                             << "Unable to create the PDF." << endl;
-      assert(_varList.getSize() == _rhoList.getSize());
+      assert(_varList.size() == _rhoList.size());
    }
 
    // keep track of changes in rho parameters
@@ -450,7 +450,7 @@ void RooNDKeysPdf::setOptions()
 
 void RooNDKeysPdf::initialize(RooDataSet const& data)
 {
-  _nDim      = _varList.getSize();
+  _nDim      = _varList.size();
   _nEvents   = (Int_t)data.numEntries();
   _nEventsM  = _nEvents;
   _fixedShape= false;

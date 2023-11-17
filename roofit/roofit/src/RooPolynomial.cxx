@@ -110,7 +110,7 @@ RooPolynomial::RooPolynomial(const RooPolynomial &other, const char *name)
 
 double RooPolynomial::evaluate() const
 {
-   const unsigned sz = _coefList.getSize();
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? 1. : 0.;
 
@@ -154,7 +154,7 @@ double RooPolynomial::analyticalIntegral(Int_t code, const char *rangeName) cons
    R__ASSERT(code == 1);
 
    const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? xmax - xmin : 0.0;
 
@@ -167,7 +167,7 @@ std::string RooPolynomial::buildCallToAnalyticIntegral(Int_t /* code */, const c
                                                        RooFit::Detail::CodeSquashContext &ctx) const
 {
    const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const unsigned sz = _coefList.size();
    if (!sz)
       return std::to_string(_lowestOrder ? xmax - xmin : 0.0);
 

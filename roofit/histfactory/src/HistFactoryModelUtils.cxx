@@ -77,7 +77,7 @@ namespace HistFactory{
    if (id == typeid(RooProdPdf)) {
       RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
       RooArgList list(prod->pdfList());
-      for (int i = 0, n = list.getSize(); i < n; ++i) {
+      for (int i = 0, n = list.size(); i < n; ++i) {
          RooAbsPdf *pdfi = static_cast<RooAbsPdf *>(list.at(i));
             FactorizeHistFactoryPdf(observables, *pdfi, obsTerms, constraints);
          }

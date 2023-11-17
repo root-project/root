@@ -86,7 +86,7 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
      m("m", "m", this, _m),
      _varList("varList", "List of variables", this),
      _pdfList("pdfList", "List of pdfs", this),
-     _mref(new TVectorD(mrefList.getSize())),
+     _mref(new TVectorD(mrefList.size())),
      _setting(setting),
      _useHorizMorph(true)
 {
@@ -163,7 +163,7 @@ RooMomentMorphFunc::~RooMomentMorphFunc()
 void RooMomentMorphFunc::initialize()
 {
 
-   Int_t nPdf = _pdfList.getSize();
+   Int_t nPdf = _pdfList.size();
 
    // other quantities needed
    if (nPdf != _mref->GetNrows()) {
@@ -199,8 +199,8 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
    if (cache) {
       return cache;
    }
-   Int_t nVar = _varList.getSize();
-   Int_t nPdf = _pdfList.getSize();
+   Int_t nVar = _varList.size();
+   Int_t nPdf = _pdfList.size();
 
    RooAbsReal *null = nullptr;
    vector<RooAbsReal *> meanrv(nPdf * nVar, null);
@@ -403,7 +403,7 @@ const RooRealVar *RooMomentMorphFunc::CacheElem::frac(Int_t i) const
 //_____________________________________________________________________________
 void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc &self, bool verbose) const
 {
-   Int_t nPdf = self._pdfList.getSize();
+   Int_t nPdf = self._pdfList.size();
 
    double dm = self.m - (*self._mref)[0];
 
@@ -475,7 +475,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
 int RooMomentMorphFunc::idxmin(const double &mval) const
 {
    int imin(0);
-   Int_t nPdf = _pdfList.getSize();
+   Int_t nPdf = _pdfList.size();
    double mmin = -DBL_MAX;
    for (Int_t i = 0; i < nPdf; ++i)
       if ((*_mref)[i] > mmin && (*_mref)[i] <= mval) {
@@ -489,7 +489,7 @@ int RooMomentMorphFunc::idxmin(const double &mval) const
 int RooMomentMorphFunc::idxmax(const double &mval) const
 {
    int imax(0);
-   Int_t nPdf = _pdfList.getSize();
+   Int_t nPdf = _pdfList.size();
    double mmax = DBL_MAX;
    for (Int_t i = 0; i < nPdf; ++i)
       if ((*_mref)[i] < mmax && (*_mref)[i] >= mval) {

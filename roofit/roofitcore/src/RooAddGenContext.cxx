@@ -69,7 +69,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
       _pdf->fixAddCoefNormalization(coefNSet,false) ;
     }
 
-  _nComp = model._pdfList.getSize() ;
+  _nComp = model._pdfList.size() ;
   _coefThresh.resize(_nComp+1);
   _vars = std::make_unique<RooArgSet>();
   vars.snapshot(*_vars, false);
@@ -110,7 +110,7 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   RooArgSet(model).snapshot(*_pdfSet, true);
   _pdf = static_cast<RooAbsPdf*>(_pdfSet->find(model.GetName())) ;
 
-  _nComp = model._pdfList.getSize() ;
+  _nComp = model._pdfList.size() ;
   _coefThresh.resize(_nComp+1);
   _vars = std::make_unique<RooArgSet>();
   vars.snapshot(*_vars, false);

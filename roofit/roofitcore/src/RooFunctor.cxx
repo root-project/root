@@ -61,8 +61,8 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
 
   // Allocate transfer array
   _x.resize(allVars.size());
-  _nobs = observables.getSize() ;
-  _npar = parameters.getSize() ;
+  _nobs = observables.size() ;
+  _npar = parameters.size() ;
 }
 
 
@@ -83,8 +83,8 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
 
   // Allocate transfer array
   _x.resize(allVars.size());
-  _nobs = observables.getSize() ;
-  _npar = parameters.getSize() ;
+  _nobs = observables.size() ;
+  _npar = parameters.size() ;
 }
 
 

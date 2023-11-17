@@ -116,7 +116,7 @@ void ProposalHelper::CreatePdf()
 
 void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
 {
-   Int_t size = xVec.getSize();
+   Int_t size = xVec.size();
    fCovMatrix = new TMatrixDSym(size);
    RooRealVar* r;
    for (Int_t i = 0; i < size; i++) {

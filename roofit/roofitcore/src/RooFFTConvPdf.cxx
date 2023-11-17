@@ -431,7 +431,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   // Iterator over available slice positions and fill each
 
   // Determine number of bins for each slice position observable
-  Int_t n = otherObs.getSize() ;
+  Int_t n = otherObs.size() ;
   std::vector<int> binCur(n+1);
   std::vector<int> binMax(n+1);
   Int_t curObs = 0 ;
@@ -775,7 +775,7 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
 {
   RooArgSet vars2(vars) ;
   vars2.remove(_x.arg(),true,true) ;
-  Int_t numAddDep = vars2.getSize() ;
+  Int_t numAddDep = vars2.size() ;
 
   RooArgSet dummy ;
   bool pdfCanDir = ((static_cast<RooAbsPdf const &>(_pdf1.arg())).getGenerator(_x.arg(), dummy) != 0 &&

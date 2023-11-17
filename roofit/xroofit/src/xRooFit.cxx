@@ -777,7 +777,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       result->setCovQual(-1);
       result->setMinNLL(_nll->getVal());
       result->setEDM(0);
-      result->setStatus(floatPars->getSize() == 0 ? 0 : 1);
+      result->setStatus(floatPars->size() == 0 ? 0 : 1);
 
       std::vector<std::pair<std::string, int>> statusHistory;
       statusHistory.emplace_back(std::make_pair("EVAL", result->status()));

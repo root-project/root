@@ -379,7 +379,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &ob
   if (id == typeid(RooProdPdf)) {
     RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
     RooArgList list(prod->pdfList());
-    for (int i = 0, n = list.getSize(); i < n; ++i) {
+    for (int i = 0, n = list.size(); i < n; ++i) {
       RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
       FactorizePdf(observables, *pdfi, obsTerms, constraints);
     }
@@ -621,10 +621,10 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
     std::unique_ptr<RooArgSet> obsStart{(RooArgSet*) _obs.snapshot(false)};
 
     // Start from previous global minimum
-    if (_paramAbsMin.getSize()>0) {
+    if (_paramAbsMin.size()>0) {
       const_cast<RooSetProxy&>(_par).assignValueOnly(_paramAbsMin) ;
     }
-    if (_obsAbsMin.getSize()>0) {
+    if (_obsAbsMin.size()>0) {
       const_cast<RooSetProxy&>(_obs).assignValueOnly(_obsAbsMin) ;
     }
 
