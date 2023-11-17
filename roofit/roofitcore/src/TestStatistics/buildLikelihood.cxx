@@ -75,12 +75,12 @@ RooArgSet getConstraintsSet(RooAbsPdf *pdf, RooAbsData *data, RooArgSet constrai
       doStripDisconnected = true;
 #ifndef NDEBUG
       did_default_constraint_algo = true;
-      N_default_constraints = default_constraints->getSize();
+      N_default_constraints = default_constraints->size();
 #endif
    }
 #ifndef NDEBUG
    if (did_default_constraint_algo) {
-      assert(N_default_constraints == static_cast<std::size_t>(constrained_parameters.getSize()));
+      assert(N_default_constraints == static_cast<std::size_t>(constrained_parameters.size()));
    }
 #endif
 

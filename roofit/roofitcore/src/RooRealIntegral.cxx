@@ -851,7 +851,7 @@ double RooRealIntegral::evaluate() const
     {
       // Cache numeric integrals in >1d expensive object cache
       RooDouble const* cacheVal(nullptr) ;
-      if ((_cacheNum && !_intList.empty()) || _intList.getSize()>=_cacheAllNDim) {
+      if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
         cacheVal = static_cast<RooDouble const*>(expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters()))  ;
       }
 
@@ -889,7 +889,7 @@ double RooRealIntegral::evaluate() const
         _sumList.assign(_saveSum) ;
 
         // Cache numeric integrals in >1d expensive object cache
-        if ((_cacheNum && !_intList.empty()) || _intList.getSize()>=_cacheAllNDim) {
+        if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
           RooDouble* val = new RooDouble(retVal) ;
           expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
           //     cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;

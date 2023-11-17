@@ -163,7 +163,7 @@ protected:
    bool _useHorizMorph;
    bool _isPdfMode = false;
 
-   inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
+   inline int sij(const int &i, const int &j) const { return (i * _obsList.size() + j); }
 
    ClassDefOverride(RooMomentMorphFuncND, 4);
 };

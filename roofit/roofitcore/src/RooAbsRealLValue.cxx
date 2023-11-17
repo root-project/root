@@ -896,7 +896,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
                    double* xlo, double* xhi, Int_t* nBins)
 {
   const RooAbsBinning* bin[3] ;
-  Int_t ndim = vars.getSize() ;
+  Int_t ndim = vars.size() ;
   bin[0] = new RooUniformBinning(xlo[0],xhi[0],nBins[0]) ;
   bin[1] = (ndim>1) ? new RooUniformBinning(xlo[1],xhi[1],nBins[1]) : nullptr ;
   bin[2] = (ndim>2) ? new RooUniformBinning(xlo[2],xhi[2],nBins[2]) : nullptr ;
@@ -921,7 +921,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning** bins)
 {
   // Check that we have 1-3 vars
-  Int_t dim= vars.getSize();
+  Int_t dim= vars.size();
   if(dim < 1 || dim > 3) {
     oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
     return nullptr;

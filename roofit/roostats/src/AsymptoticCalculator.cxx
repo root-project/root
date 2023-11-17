@@ -856,7 +856,7 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
    if (debug) cout << "looping on observable " << v->GetName() << endl;
    for (int i = 0; i < v->getBins(); ++i) {
       v->setBin(i);
-      if (index < obs.getSize() -1) {
+      if (index < int(obs.size()) -1) {
          index++;  // increase index
          double prevBinVolume = binVolume;
          binVolume *= v->getBinWidth(i); // increase bin volume
@@ -890,7 +890,7 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 
          if (debug) {
             cout << "bin " << ibin << "\t";
-            for (int j=0; j < obs.getSize(); ++j) { cout << "  " <<  (static_cast<RooRealVar&>( obs[j])).getVal(); }
+            for (std::size_t j=0; j < obs.size(); ++j) { cout << "  " <<  (static_cast<RooRealVar&>( obs[j])).getVal(); }
             cout << " w = " << fval*expectedEvents;
             cout << endl;
          }
@@ -1086,7 +1086,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
     if (printLevel >= 2)
        cout << "filled from " << pdf.GetName() << "   " << nbins << " nbins " << " volume is " << binVolume << endl;
 
-    // for (int iobs = 0; iobs < obsList.getSize(); ++iobs) {
+    // for (int iobs = 0; iobs < obsList.size(); ++iobs) {
     //    RooRealVar * thisObs = dynamic_cast<RooRealVar*> &obsList[i];
     //    if (thisObs == 0) continue;
     //    // loop on the bin contents

@@ -117,7 +117,7 @@ RooArgSet* PointSetInterval::GetParameters() const
 
 bool PointSetInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
-   if (parameterPoint.getSize() != fParameterPointsInInterval->get()->getSize() ) {
+   if (parameterPoint.size() != fParameterPointsInInterval->get()->size() ) {
      std::cout << "PointSetInterval: argument size is wrong, parameters don't match: arg=" << parameterPoint
           << " interval=" << (*fParameterPointsInInterval->get()) << std::endl;
       return false;

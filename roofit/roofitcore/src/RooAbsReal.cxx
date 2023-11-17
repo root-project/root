@@ -993,7 +993,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
   // Check that the number of plotVars matches the input histogram's dimension
   Int_t hdim= hist->GetDimension();
-  if(hdim != plotVars.getSize()) {
+  if(hdim != int(plotVars.size())) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: plotVars has the wrong dimension" << std::endl;
     return nullptr;
   }
@@ -1002,7 +1002,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
   // Check that the plot variables are all actually RooRealVars and print a warning if we do not
   // explicitly depend on one of them. Fill a set (not list!) of cloned plot variables.
   RooArgSet plotClones;
-  for(Int_t index= 0; index < plotVars.getSize(); index++) {
+  for(std::size_t index= 0; index < plotVars.size(); index++) {
     const RooAbsArg *var= plotVars.at(index);
     const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(var);
     if(nullptr == realVar) {
@@ -2603,7 +2603,7 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
       fr.covarianceMatrix() :
       fr.reducedCovarianceMatrix(paramList)) ;
 
-  for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
+  for (std::size_t ivar=0 ; ivar<paramList.size() ; ivar++) {
 
     auto& rrv = static_cast<RooRealVar&>(paramList[ivar]);
 
@@ -2630,11 +2630,11 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
   // propagation.
   getVal(nset);
 
-  TMatrixDSym C(paramList.getSize()) ;
+  TMatrixDSym C(paramList.size()) ;
   std::vector<double> errVec(paramList.size()) ;
-  for (int i=0 ; i<paramList.getSize() ; i++) {
+  for (std::size_t i=0 ; i<paramList.size() ; i++) {
     errVec[i] = std::sqrt(V(i,i)) ;
-    for (int j=i ; j<paramList.getSize() ; j++) {
+    for (std::size_t j=i ; j<paramList.size() ; j++) {
       C(i,j) = V(i,j) / std::sqrt(V(i,i)*V(j,j));
       C(j,i) = C(i,j) ;
     }
@@ -2642,8 +2642,8 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
 
   // Make std::vector of variations
   TVectorD F(plusVar.size()) ;
-  for (unsigned int j=0 ; j<plusVar.size() ; j++) {
-    F[j] = (plusVar[j]-minusVar[j])/2 ;
+  for (std::size_t j=0 ; j<plusVar.size() ; j++) {
+    F[j] = (plusVar[j]-minusVar[j]) * 0.5;
   }
 
   // Calculate error in linear approximation from variations and correlation coefficient
@@ -2808,7 +2808,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     RooArgList paramList ;
     const RooArgList& fpf = fr.floatParsFinal() ;
     std::vector<int> fpf_idx ;
-    for (Int_t i=0 ; i<fpf.getSize() ; i++) {
+    for (std::size_t i=0 ; i<fpf.size() ; i++) {
       RooAbsArg* par = errorParams.find(fpf[i].GetName()) ;
       if (par) {
    paramList.add(*par) ;
@@ -2825,7 +2825,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
         fr.reducedCovarianceMatrix(paramList)) ;
 
 
-    for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
+    for (std::size_t ivar=0 ; ivar<paramList.size() ; ivar++) {
 
       RooRealVar& rrv = static_cast<RooRealVar&>(fpf[fpf_idx[ivar]]) ;
 
@@ -2850,11 +2850,11 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
       (static_cast<RooRealVar*>(paramList.at(ivar)))->setVal(cenVal) ;
     }
 
-    TMatrixDSym C(paramList.getSize()) ;
+    TMatrixDSym C(paramList.size()) ;
     std::vector<double> errVec(paramList.size()) ;
-    for (int i=0 ; i<paramList.getSize() ; i++) {
+    for (std::size_t i=0 ; i<paramList.size() ; i++) {
       errVec[i] = sqrt(V(i,i)) ;
-      for (int j=i ; j<paramList.getSize() ; j++) {
+      for (std::size_t j=i ; j<paramList.size() ; j++) {
    C(i,j) = V(i,j)/sqrt(V(i,i)*V(j,j)) ;
    C(j,i) = C(i,j) ;
       }
@@ -3341,7 +3341,7 @@ bool RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArg
 
   // nameList may not contain multiple entries with the same name
   // that are both matched
-  if (isMatched && (matched.getSize()!=nameList.GetSize())) {
+  if (isMatched && int(matched.size())!=nameList.GetSize()) {
     isMatched = false ;
   }
 
@@ -4004,13 +4004,13 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
   }
 
   // Check that all obs and par are of type RooRealVar
-  for (int i=0 ; i<obs.getSize() ; i++) {
+  for (std::size_t i=0 ; i<obs.size() ; i++) {
     if (dynamic_cast<RooRealVar*>(obs.at(i))==nullptr) {
       coutE(ObjectHandling) << "RooAbsReal::asTF(" << GetName() << ") ERROR: proposed observable " << obs.at(0)->GetName() << " is not of type RooRealVar" << std::endl ;
       return nullptr ;
     }
   }
-  for (int i=0 ; i<pars.getSize() ; i++) {
+  for (std::size_t i=0 ; i<pars.size() ; i++) {
     if (dynamic_cast<RooRealVar*>(pars.at(i))==nullptr) {
       coutE(ObjectHandling) << "RooAbsReal::asTF(" << GetName() << ") ERROR: proposed parameter " << pars.at(0)->GetName() << " is not of type RooRealVar" << std::endl ;
       return nullptr ;
@@ -4020,18 +4020,18 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
   // Create functor and TFx of matching dimension
   TF1* tf=nullptr ;
   RooFunctor* f ;
-  switch(obs.getSize()) {
+  switch(obs.size()) {
   case 1: {
     RooRealVar* x = static_cast<RooRealVar*>(obs.at(0)) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF1(GetName(),f,x->getMin(),x->getMax(),pars.getSize()) ;
+    tf = new TF1(GetName(),f,x->getMin(),x->getMax(),pars.size()) ;
     break ;
   }
   case 2: {
     RooRealVar* x = static_cast<RooRealVar*>(obs.at(0)) ;
     RooRealVar* y = static_cast<RooRealVar*>(obs.at(1)) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF2(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize()) ;
+    tf = new TF2(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.size()) ;
     break ;
   }
   case 3: {
@@ -4039,7 +4039,7 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
     RooRealVar* y = static_cast<RooRealVar*>(obs.at(1)) ;
     RooRealVar* z = static_cast<RooRealVar*>(obs.at(2)) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF3(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize()) ;
+    tf = new TF3(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.size()) ;
     break ;
   }
   default:
@@ -4049,7 +4049,7 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
   }
 
   // Set initial parameter values of TFx to those of RooRealVars
-  for (int i=0 ; i<pars.getSize() ; i++) {
+  for (std::size_t i=0 ; i<pars.size() ; i++) {
     RooRealVar* p = static_cast<RooRealVar*>(pars.at(i)) ;
     tf->SetParameter(i,p->getVal()) ;
     tf->SetParName(i,p->GetName()) ;

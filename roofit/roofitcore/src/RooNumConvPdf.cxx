@@ -174,7 +174,7 @@ RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooData
   RooArgSet modelDep;
   _conv->model().getObservables(&vars, modelDep);
   modelDep.remove(_conv->var(),true,true) ;
-  Int_t numAddDep = modelDep.getSize() ;
+  Int_t numAddDep = modelDep.size() ;
 
   RooArgSet dummy ;
   bool pdfCanDir = ((static_cast<RooAbsPdf&>(_conv->pdf())).getGenerator(_conv->var(),dummy) != 0 && \

@@ -243,7 +243,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
    // set POI to fit value (this will speed up profileLL calculation of global minimum)
    const RooArgList & fitParams = fFitResult->floatParsFinal();
-   for (int i = 0; i < fitParams.getSize(); ++i) {
+   for (std::size_t i = 0; i < fitParams.size(); ++i) {
       RooRealVar & fitPar =  static_cast<RooRealVar &>( fitParams[i]);
       RooRealVar * par = static_cast<RooRealVar*>(fPOI.find( fitPar.GetName() ));
       if (par) {
@@ -320,7 +320,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    double nlloffset = (RooStats::IsNLLOffset() ) ? nll->getVal() - nLLatMLE : 0;
 
    // set POI to given values, set constant, calculate conditional MLE
-   std::vector<double> oldValues(poiList.getSize() );
+   std::vector<double> oldValues(poiList.size() );
    for (unsigned int i = 0; i < oldValues.size(); ++i) {
       RooRealVar * mytarget = static_cast<RooRealVar*>(constrainedParams->find(poiList[i].GetName()));
       if (mytarget) {
@@ -377,7 +377,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
    // get number of free parameter of interest
    RemoveConstantParameters(poiList);
-   int ndf = poiList.getSize();
+   int ndf = poiList.size();
 
    double pvalue = ROOT::Math::chisquared_cdf_c( 2* deltaNLL, ndf);
 

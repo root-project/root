@@ -56,7 +56,7 @@ RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
   _catList.add(catList);
   _effFuncList.add(effFuncList);
 
-  if (_catList.getSize() != effFuncList.getSize()) {
+  if (_catList.size() != effFuncList.size()) {
     coutE(InputArguments) << "RooMultiBinomial::ctor(" << GetName() << ") ERROR: Wrong input, should have equal number of categories and efficiencies." << endl;
     throw string("RooMultiBinomial::ctor() ERROR: Wrong input, should have equal number of categories and efficiencies") ;
   }
@@ -80,7 +80,7 @@ RooMultiBinomial::RooMultiBinomial(const RooMultiBinomial& other, const char* na
 
 double RooMultiBinomial::evaluate() const
 {
-  Int_t effFuncListSize = _effFuncList.getSize();
+  Int_t effFuncListSize = _effFuncList.size();
 
   // Get efficiency function for category i
 

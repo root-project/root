@@ -59,8 +59,8 @@ RooFunctorBinding::RooFunctorBinding(const char *name, const char *title, const 
   vars("vars","vars",this)
 {
   // Check that function dimension and number of variables match
-  if (ftor.NDim()!=UInt_t(v.getSize())) {
-    coutE(InputArguments) << "RooFunctorBinding::ctor(" << GetName() << ") ERROR number of provided variables (" << v.getSize()
+  if (ftor.NDim()!=UInt_t(v.size())) {
+    coutE(InputArguments) << "RooFunctorBinding::ctor(" << GetName() << ") ERROR number of provided variables (" << v.size()
            << ") does not match dimensionality of function (" << ftor.NDim() << ")" << endl ;
     throw string("RooFunctor::ctor ERROR") ;
   }
@@ -92,7 +92,7 @@ void RooFunctorBinding::printArgs(ostream& os) const {
 ////////////////////////////////////////////////////////////////////////////////
 double RooFunctorBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
-    for (int i=0 ; i<vars.getSize() ; i++) {
+    for (std::size_t i=0 ; i<vars.size() ; i++) {
       x[i] = static_cast<RooAbsReal*>(vars.at(i))->getVal();
     }
     return (*func)(x) ;
@@ -111,8 +111,8 @@ RooFunctorPdfBinding::RooFunctorPdfBinding(const char *name, const char *title, 
   vars("vars","vars",this)
 {
   // Check that function dimension and number of variables match
-  if (ftor.NDim()!=UInt_t(v.getSize())) {
-    coutE(InputArguments) << "RooFunctorPdfBinding::ctor(" << GetName() << ") ERROR number of provided variables (" << v.getSize()
+  if (ftor.NDim()!=UInt_t(v.size())) {
+    coutE(InputArguments) << "RooFunctorPdfBinding::ctor(" << GetName() << ") ERROR number of provided variables (" << v.size()
            << ") does not match dimensionality of function (" << ftor.NDim() << ")" << endl ;
     throw string("RooFunctor::ctor ERROR") ;
   }
@@ -144,7 +144,7 @@ void RooFunctorPdfBinding::printArgs(ostream& os) const {
 ////////////////////////////////////////////////////////////////////////////////
 double RooFunctorPdfBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
-    for (int i=0 ; i<vars.getSize() ; i++) {
+    for (std::size_t i=0 ; i<vars.size() ; i++) {
       x[i] = static_cast<RooAbsReal*>(vars.at(i))->getVal();
     }
     return (*func)(x) ;

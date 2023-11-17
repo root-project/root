@@ -56,7 +56,7 @@ RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
    paramTracker_ = std::make_unique<RooChangeTracker>("chtracker","change tracker",params,true);
 
    std::unique_ptr<RooArgSet> obs(pdf->getObservables(data));
-   if (obs->getSize() != 1) {
+   if (obs->size() != 1) {
       throw std::logic_error(
          "RooBinnedL can only be created from combination of pdf and data which has exactly one observable!");
    } else {

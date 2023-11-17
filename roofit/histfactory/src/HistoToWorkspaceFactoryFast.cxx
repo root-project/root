@@ -597,7 +597,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
        //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
 
        assert(!params.empty());
-       assert(int(lowVec.size()) == params.getSize() );
+       assert(lowVec.size() == params.size());
 
        FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
        interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )

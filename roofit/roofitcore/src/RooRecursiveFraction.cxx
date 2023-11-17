@@ -44,7 +44,7 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
   RooAbsReal(name, title),
   _list("list","First set of components",this)
 {
-  for (Int_t ifrac=fracList.getSize()-1 ; ifrac>=0 ; ifrac--) {
+  for (Int_t ifrac=fracList.size()-1 ; ifrac>=0 ; ifrac--) {
     RooAbsArg* comp = fracList.at(ifrac) ;
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       std::stringstream errorMsg;

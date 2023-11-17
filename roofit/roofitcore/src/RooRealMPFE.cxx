@@ -177,8 +177,8 @@ void RooRealMPFE::initVars()
   // Save in lists
   _vars.add(varList) ;
   _saveVars.addClone(varList) ;
-  _valueChanged.resize(_vars.getSize()) ;
-  _constChanged.resize(_vars.getSize()) ;
+  _valueChanged.resize(_vars.size()) ;
+  _constChanged.resize(_vars.size()) ;
 
   // Force next calculation
   _forceCalc = true ;
@@ -443,7 +443,7 @@ void RooRealMPFE::calculate() const
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << endl ;
     Int_t i(0) ;
 
-    //for (i=0 ; i<_vars.getSize() ; i++) {
+    //for (i=0 ; i<_vars.size() ; i++) {
     RooAbsArg *var, *saveVar ;
     for (std::size_t j=0 ; j<_vars.size() ; j++) {
       var = _vars.at(j);

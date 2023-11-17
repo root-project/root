@@ -289,7 +289,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
   RooArgList paramSet;
 
-  Int_t numVars = vars.getSize();
+  Int_t numVars = vars.size();
   Int_t numBins = GetNumBins( vars );
 
   if( numVars == 0 ) {
@@ -546,7 +546,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // the right number of arguments:
 
   Int_t numVarBins  = GetNumBins(_dataVars);
-  Int_t numElements = params.getSize();
+  Int_t numElements = params.size();
 
   if( numVarBins != numElements ) {
     std::cout << "ParamHistFunc::addParamSet - ERROR - "
