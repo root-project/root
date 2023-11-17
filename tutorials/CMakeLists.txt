@@ -66,7 +66,12 @@ endfunction()
 #---Tutorials disabled depending on the build components-------------
 
 if(NOT clad)
-  set(clad_veto fit/minuit2GausFit.C)
+  set(clad_veto fit/minuit2GausFit.C
+                # TODO: the next veto should not be necessary!
+                # The tutorial should also work without clad.
+                # See https://github.com/root-project/root/issues/15091.
+                fit/exampleFit3D.C
+  )
 endif()
 
 # RBatchGenerator tutorials don't work on Windows at the moment.
