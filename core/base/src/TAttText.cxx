@@ -233,13 +233,13 @@ in the `.rootrc` file:
       14 :       "Wingdings"                 "ZapfDingbats"
 ~~~
 
-The ROOT PostScript and PDF backends use the original PostScript-defined 13 font styles which
-form four type families (Courier, Helvetica, Times, Symbol) as listed in the
+The PostScript and PDF backends use the original PostScript-defined 13 fonts' styles
+forming four type families (Courier, Helvetica, Times, Symbol) as listed in the
 "Core Font Set" section of [this page](https://en.wikipedia.org/wiki/PostScript_fonts).
-These fonts are always available and do not need to be loaded in the PS or PDF file which
-allows to keep the files' sizes small.
+These fonts are always available and do not need to be loaded in the PS or PDF files
+allowing to keep the files' sizes small.
 
-On screen text is rendered using free TTF fonts similar to the PDF ones. The corresponding
+On screen, text is rendered using free TTF fonts similar to the PDF ones. The corresponding
 font files are coming with the ROOT distribution in `$ROOTSYS/fonts/Free*`.
 
 Begin_Macro
