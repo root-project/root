@@ -513,7 +513,7 @@ std::unique_ptr<AObjType> loadFromFileResidentFolder(TDirectory *inFile, const s
                 << "'. contents are:";
          TIter next(folder->GetListOfFolders()->begin());
          TFolder *f;
-         while ((f = (TFolder *)next())) {
+         while ((f = static_cast<TFolder *>(next()))) {
             errstr << " " << f->GetName();
          }
          std::cerr << errstr.str() << std::endl;
@@ -780,7 +780,7 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
 
       auto it = list_hf.find(sample);
       if (it != list_hf.end()) {
-         RooHistFunc *hf = (RooHistFunc *)(physics.at(it->second));
+         RooHistFunc *hf = static_cast<RooHistFunc *>(physics.at(it->second));
          hf->setValueDirty();
          // commenting out To-be-resolved
          // RooDataHist* dh = &(hf->dataHist());
@@ -869,7 +869,7 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
       auto it = list_xs.find(sample);
       RooRealVar *xs;
       if (it != list_xs.end()) {
-         xs = (RooRealVar *)(physics.at(it->second));
+         xs = static_cast<RooRealVar *>(physics.at(it->second));
          xs->setVal(xsection->GetVal());
       } else {
          std::string objname = "phys_" + std::string(name) + "_" + sample;
@@ -1617,16 +1617,16 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
    RooRealVar *obs = nullptr;
    bool obsExists(false);
    if (_observables.at(0) != nullptr) {
-      obs = (RooRealVar *)_observables.at(0);
+      obs = static_cast<RooRealVar *>(_observables.at(0));
       obsExists = true;
    }
 
    if (mode && mode->InheritsFrom(RooHistFunc::Class())) {
-      obs = (RooRealVar *)(dynamic_cast<RooHistFunc *>(inputExample)->getHistObsList().first());
+      obs = static_cast<RooRealVar *>(dynamic_cast<RooHistFunc *>(inputExample)->getHistObsList().first());
       obsExists = true;
       _observables.add(*obs);
    } else if (mode && mode->InheritsFrom(RooParamHistFunc::Class())) {
-      obs = (RooRealVar *)(dynamic_cast<RooParamHistFunc *>(inputExample)->paramList().first());
+      obs = static_cast<RooRealVar *>(dynamic_cast<RooParamHistFunc *>(inputExample)->paramList().first());
       obsExists = true;
       _observables.add(*obs);
    }
@@ -1636,7 +1636,7 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
    // obtain the observable
    if (!obsExists) {
       if (mode && mode->InheritsFrom(TH1::Class())) {
-         TH1 *hist = (TH1 *)(inputExample);
+         TH1 *hist = static_cast<TH1 *>(inputExample);
          auto obsOwner =
             std::make_unique<RooRealVar>(obsname, obsname, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
          obs = obsOwner.get();

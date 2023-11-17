@@ -157,7 +157,7 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   double x0 = 0., x1 = 0., x2 = 0.;
   _sumWgt = 0.;
   // read the data set into tmp and accumulate some statistics
-  RooRealVar& real = (RooRealVar&)(data.get()->operator[](_varName));
+  RooRealVar& real = static_cast<RooRealVar&>(data.get()->operator[](_varName));
   for (Int_t i = 0; i < data.numEntries(); ++i) {
     data.get(i);
     const double x = real.getVal();

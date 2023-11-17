@@ -729,7 +729,7 @@ void xRooNLLVar::xRooHypoSpace::LoadFits(const char *apath)
                }
                continue;
             }
-            auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+            auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
             if (cl->InheritsFrom("RooFitResult")) {
                if (auto cachedFit = _dir->Get<RooFitResult>(k->GetName()); cachedFit) {
                   nFits++;

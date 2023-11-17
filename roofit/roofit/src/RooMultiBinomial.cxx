@@ -86,7 +86,7 @@ double RooMultiBinomial::evaluate() const
 
   vector<double> effFuncVal(effFuncListSize);
   for (int i=0; i<effFuncListSize; ++i) {
-    effFuncVal[i] = ((RooAbsReal&)_effFuncList[i]).getVal() ;
+    effFuncVal[i] = (static_cast<RooAbsReal&>(_effFuncList[i])).getVal() ;
   }
 
   // Truncate efficiency functions in range 0.0-1.0
@@ -109,15 +109,15 @@ double RooMultiBinomial::evaluate() const
   // Calculate efficiency per accept/reject decision
 
   for (int i=0; i<effFuncListSize; ++i) {
-    if ( ((RooAbsCategory&)_catList[i]).getCurrentIndex() == 1) {
+    if ( (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() == 1) {
       // Accept case
       effValue[i] = effFuncVal[i] ;
       notVisible = false;
-    } else if ( ((RooAbsCategory&)_catList[i]).getCurrentIndex() == 0){
+    } else if ( (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() == 0){
       // Reject case
       effValue[i] = 1 - effFuncVal[i] ;
     } else {
-      coutW(Eval) << "WARNING: WRONG CATEGORY NAMES GIVEN!, label = " << ((RooAbsCategory&)_catList[i]).getCurrentIndex() << endl;
+      coutW(Eval) << "WARNING: WRONG CATEGORY NAMES GIVEN!, label = " << (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() << endl;
       effValue[i] = 0;
     }
   }

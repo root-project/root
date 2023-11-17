@@ -792,9 +792,9 @@ bool RooWorkspace::import(RooAbsData const& inData,
   if (dsetName) {
     if (!silence)
       coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset from  " << inData.GetName() << " to " << dsetName << endl ;
-    clone = (RooAbsData*) inData.Clone(dsetName) ;
+    clone = static_cast<RooAbsData*>(inData.Clone(dsetName)) ;
   } else {
-    clone = (RooAbsData*) inData.Clone(inData.GetName()) ;
+    clone = static_cast<RooAbsData*>(inData.Clone(inData.GetName())) ;
   }
 
 
@@ -1181,7 +1181,7 @@ bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, boo
 
 bool RooWorkspace::loadSnapshot(const char* name)
 {
-  RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
+  RooArgSet* snap = static_cast<RooArgSet*>(_snapshots.find(name)) ;
   if (!snap) {
     coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
     return false ;
@@ -1308,7 +1308,7 @@ RooAbsArg* RooWorkspace::fundArg(RooStringView name) const
 
 RooAbsData* RooWorkspace::data(RooStringView name) const
 {
-  return (RooAbsData*)_dataList.FindObject(name.c_str()) ;
+  return static_cast<RooAbsData*>(_dataList.FindObject(name.c_str())) ;
 }
 
 
@@ -1317,7 +1317,7 @@ RooAbsData* RooWorkspace::data(RooStringView name) const
 
 RooAbsData* RooWorkspace::embeddedData(RooStringView name) const
 {
-  return (RooAbsData*)_embeddedDataList.FindObject(name.c_str()) ;
+  return static_cast<RooAbsData*>(_embeddedDataList.FindObject(name.c_str())) ;
 }
 
 
@@ -1410,7 +1410,7 @@ RooArgSet RooWorkspace::allResolutionModels() const
   // Split list of components in pdfs, functions and variables
   for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-      if (!((RooResolutionModel*)parg)->isConvolved()) {
+      if (!(static_cast<RooResolutionModel*>(parg))->isConvolved()) {
    ret.add(*parg) ;
       }
     }
@@ -1475,7 +1475,7 @@ std::list<TObject*> RooWorkspace::allGenericObjects() const
 
     // If found object is wrapper, return payload
     if (gobj->IsA()==RooTObjWrap::Class()) {
-      ret.push_back(((RooTObjWrap*)gobj)->obj()) ;
+      ret.push_back((static_cast<RooTObjWrap*>(gobj))->obj()) ;
     } else {
       ret.push_back(gobj) ;
     }
@@ -1982,7 +1982,7 @@ bool RooWorkspace::import(TObject const& object, const char* aliasName, bool rep
 
 bool RooWorkspace::addStudy(RooAbsStudy& study)
 {
-  RooAbsStudy* clone = (RooAbsStudy*) study.Clone() ;
+  RooAbsStudy* clone = static_cast<RooAbsStudy*>(study.Clone()) ;
   _studyMods.Add(clone) ;
   return false ;
 }
@@ -2032,7 +2032,7 @@ TObject* RooWorkspace::genobj(RooStringView name)  const
   if (!gobj) return nullptr;
 
   // If found object is wrapper, return payload
-  if (gobj->IsA()==RooTObjWrap::Class()) return ((RooTObjWrap*)gobj)->obj() ;
+  if (gobj->IsA()==RooTObjWrap::Class()) return (static_cast<RooTObjWrap*>(gobj))->obj() ;
 
   return gobj ;
 }
@@ -2148,7 +2148,7 @@ void RooWorkspace::Print(Option_t* opts) const
     } else {
 
       if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-   if (((RooResolutionModel*)parg)->isConvolved()) {
+   if ((static_cast<RooResolutionModel*>(parg))->isConvolved()) {
      convResoSet.add(*parg) ;
    } else {
      resoSet.add(*parg) ;
@@ -2305,7 +2305,7 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "---------------" << endl ;
     for(TObject* gobj : _genObjects) {
       if (gobj->IsA()==RooTObjWrap::Class()) {
-   cout << ((RooTObjWrap*)gobj)->obj()->ClassName() << "::" << gobj->GetName() << endl ;
+   cout << (static_cast<RooTObjWrap*>(gobj))->obj()->ClassName() << "::" << gobj->GetName() << endl ;
       } else {
    cout << gobj->ClassName() << "::" << gobj->GetName() << endl ;
       }
@@ -2473,7 +2473,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
    node->setWorkspace(*this);
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
    if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
-      RooAbsOptTestStatistic *tmp = (RooAbsOptTestStatistic *)node;
+      RooAbsOptTestStatistic *tmp = static_cast<RooAbsOptTestStatistic *>(node);
       if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
          cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
               << " : " << tmp->sealNotice() << endl;

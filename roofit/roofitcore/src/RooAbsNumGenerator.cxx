@@ -61,7 +61,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   }
 
   // Find the clone in the snapshot list
-  _funcClone = (RooAbsReal*)_cloneSet.find(func.GetName());
+  _funcClone = static_cast<RooAbsReal*>(_cloneSet.find(func.GetName()));
 
 
   // Check that each argument is fundamental, and separate them into
@@ -132,7 +132,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   _realVars.replace(*dataVars);
 
   // find the function value in the dataset
-  _funcValPtr= (RooRealVar*)dataVars->find(_funcValStore->GetName());
+  _funcValPtr= static_cast<RooRealVar*>(dataVars->find(_funcValStore->GetName()));
 
 }
 

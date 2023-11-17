@@ -50,8 +50,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLVal
   _asympInt(false),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma),
-  msf("msf","Mean Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
-  ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1))
+  msf("msf","Mean Scale Factor",this,RooRealConstant::value(1)),
+  ssf("ssf","Sigma Scale Factor",this,RooRealConstant::value(1))
 {
 }
 
@@ -335,9 +335,9 @@ double RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) cons
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
 
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
-  double tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
+  double tau = (_basisCode!=noBasis)?(static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal():0 ;
   if (basisType == coshBasis && _basisCode!=noBasis ) {
-     double dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+     double dGamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
      if (dGamma==0) basisType = expBasis;
   }
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
@@ -361,8 +361,8 @@ double RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) cons
   }
 
 
-  double omega = ((basisType==sinBasis)||(basisType==cosBasis)) ?  ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
-  double dgamma =((basisType==sinhBasis)||(basisType==coshBasis)) ?  ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
+  double omega = ((basisType==sinBasis)||(basisType==cosBasis)) ?  (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() : 0 ;
+  double dgamma =((basisType==sinhBasis)||(basisType==coshBasis)) ?  (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() : 0 ;
 
   // *** 2nd form: unity, used for sinBasis and linBasis with tau=0 (PDF is zero) ***
   if (tau==0) {

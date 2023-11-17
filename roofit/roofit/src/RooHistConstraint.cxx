@@ -152,7 +152,7 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
       _nominal.addOwned(std::move(var));
       //      _nominalErr.add(*vare) ;
 
-      ((RooRealVar*)_gamma.at(i))->setConstant(false) ;
+      (static_cast<RooRealVar*>(_gamma.at(i)))->setConstant(false) ;
 
     }
   }

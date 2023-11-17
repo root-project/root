@@ -168,7 +168,7 @@ bool RooGenFitStudy::initialize()
   _params->add(*_nllVar) ;
   _params->add(*_ngenVar) ;
 
-  _genSpec = _genPdf->prepareMultiGen(_genObs,(RooCmdArg&)*_genOpts.At(0),(RooCmdArg&)*_genOpts.At(1),(RooCmdArg&)*_genOpts.At(2)) ;
+  _genSpec = _genPdf->prepareMultiGen(_genObs,static_cast<RooCmdArg&>(*_genOpts.At(0)),static_cast<RooCmdArg&>(*_genOpts.At(1)),static_cast<RooCmdArg&>(*_genOpts.At(2))) ;
 
   registerSummaryOutput(*_params,modelParams) ;
   return false ;
@@ -183,7 +183,7 @@ bool RooGenFitStudy::execute()
 {
   _params->assign(*_initParams) ;
   std::unique_ptr<RooDataSet> data{_genPdf->generate(*_genSpec)};
-  std::unique_ptr<RooFitResult> fr{_fitPdf->fitTo(*data,RooFit::Save(true),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2))};
+  std::unique_ptr<RooFitResult> fr{_fitPdf->fitTo(*data,RooFit::Save(true),static_cast<RooCmdArg&>(*_fitOpts.At(0)),static_cast<RooCmdArg&>(*_fitOpts.At(1)),static_cast<RooCmdArg&>(*_fitOpts.At(2)))};
 
   if (fr->status()==0) {
     _ngenVar->setVal(data->sumEntries()) ;

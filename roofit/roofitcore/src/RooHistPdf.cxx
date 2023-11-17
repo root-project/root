@@ -55,7 +55,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
              const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
   _intOrder(intOrder)
 {
@@ -84,7 +84,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
-      ((RooRealVar*)hobs)->setRange(dhreal->getMin(),dhreal->getMax()) ;
+      (static_cast<RooRealVar*>(hobs))->setRange(dhreal->getMin(),dhreal->getMax()) ;
     }
   }
 
@@ -104,7 +104,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
              const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
   _intOrder(intOrder)
 {
@@ -139,7 +139,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
-      ((RooRealVar*)hobs)->setRange(dhreal->getMin(),dhreal->getMax()) ;
+      (static_cast<RooRealVar*>(hobs))->setRange(dhreal->getMin(),dhreal->getMax()) ;
     }
   }
 }
@@ -611,10 +611,10 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
 
       // Check if histograms are identical
-      if (areIdentical((RooDataHist&)*wsdata,*_dataHist)) {
+      if (areIdentical(static_cast<RooDataHist&>(*wsdata),*_dataHist)) {
 
    // Exists and is of correct type, and identical -- adjust internal pointer to WS copy
-   _dataHist = (RooDataHist*) wsdata ;
+   _dataHist = static_cast<RooDataHist*>(wsdata) ;
       } else {
 
    // not identical, clone rename and import
@@ -624,7 +624,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
      coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
      return true ;
    }
-   _dataHist = (RooDataHist*) ws.embeddedData(uniqueName) ;
+   _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName)) ;
       }
 
     } else {
@@ -646,7 +646,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
   ws.import(*_dataHist,RooFit::Embedded()) ;
 
   // Redirect our internal pointer to the copy in the workspace
-  _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
+  _dataHist = static_cast<RooDataHist*>(ws.embeddedData(_dataHist->GetName())) ;
   return false ;
 }
 

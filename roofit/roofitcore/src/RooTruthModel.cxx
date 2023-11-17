@@ -170,7 +170,7 @@ double RooTruthModel::evaluate() const
       (basisSign==Plus  && x<0)) return 0 ;
 
 
-  double tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  double tau = (static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal() ;
   // Return desired basis function
   switch(basisType) {
   case expBasis: {
@@ -178,11 +178,11 @@ double RooTruthModel::evaluate() const
     return exp(-std::abs((double)x)/tau) ;
   }
   case sinBasis: {
-    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dm = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*sin(x*dm) ;
   }
   case cosBasis: {
-    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dm = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*cos(x*dm) ;
   }
   case linBasis: {
@@ -194,11 +194,11 @@ double RooTruthModel::evaluate() const
     return exp(-tscaled)*tscaled*tscaled;
   }
   case sinhBasis: {
-    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dg = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*sinh(x*dg/2) ;
   }
   case coshBasis: {
-    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dg = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*cosh(x*dg/2) ;
   }
   default:
@@ -449,9 +449,9 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char *rangeName) cons
    const bool needsDm =
       basisType == sinBasis || basisType == cosBasis || basisType == sinhBasis || basisType == coshBasis;
 
-   const double tau = ((RooAbsReal *)basis().getParameter(1))->getVal();
+   const double tau = (static_cast<RooAbsReal *>(basis().getParameter(1)))->getVal();
    const double dm =
-      needsDm ? ((RooAbsReal *)basis().getParameter(2))->getVal() : std::numeric_limits<Double_t>::quiet_NaN();
+      needsDm ? (static_cast<RooAbsReal *>(basis().getParameter(2)))->getVal() : std::numeric_limits<Double_t>::quiet_NaN();
 
    const double xmin = x.min(rangeName);
    const double xmax = x.max(rangeName);

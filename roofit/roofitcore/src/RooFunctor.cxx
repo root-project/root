@@ -41,7 +41,7 @@ ClassImp(RooFunctor);
 RooFunctor::RooFunctor(const RooAbsFunc& func) : _x(func.getDimension())
 {
   _nobs = func.getDimension() ;
-  _binding = (RooAbsFunc*) &func ;
+  _binding = const_cast<RooAbsFunc*>(&func);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ RooFunctor::RooFunctor(const RooFunctor& other) :
   _nobs(other._nobs)
 {
   if (other._ownedBinding) {
-    _ownedBinding = std::make_unique<RooRealBinding>((RooRealBinding&)*other._binding,&_nset);
+    _ownedBinding = std::make_unique<RooRealBinding>(static_cast<RooRealBinding&>(*other._binding),&_nset);
     _binding = _ownedBinding.get();
   } else {
     _binding = other._binding;

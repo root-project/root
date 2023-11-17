@@ -226,8 +226,8 @@ RooCustomizer::RooCustomizer(const RooAbsArg &pdf, const RooAbsCategoryLValue &m
                              RooArgSet *splitLeafsAll)
    : _sterile(false),
      _owning(true),
-     _masterPdf((RooAbsArg *)&pdf),
-     _masterCat((RooAbsCategoryLValue *)&masterCat),
+     _masterPdf(const_cast<RooAbsArg *>(&pdf)),
+     _masterCat(const_cast<RooAbsCategoryLValue *>(&masterCat)),
      _masterBranchList("masterBranchList"),
      _masterLeafList("masterLeafList"),
      _internalCloneBranchList("cloneBranchList"),
@@ -250,7 +250,7 @@ RooCustomizer::RooCustomizer(const RooAbsArg &pdf, const char *name)
    : _sterile(true),
      _owning(false),
      _name(name),
-     _masterPdf((RooAbsArg *)&pdf),
+     _masterPdf(const_cast<RooAbsArg *>(&pdf)),
      _masterBranchList("masterBranchList"),
      _masterLeafList("masterLeafList"),
      _internalCloneBranchList("cloneBranchList"),
@@ -317,8 +317,8 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
     return ;
   }
 
-  _splitArgList.Add((RooAbsArg*)&arg) ;
-  _splitCatList.Add((RooAbsCategory*)&splitCat) ;
+  _splitArgList.Add(const_cast<RooAbsArg *>(&arg));
+  _splitCatList.Add(const_cast<RooAbsCategory *>(&splitCat));
 }
 
 
@@ -334,8 +334,8 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
     return ;
   }
 
-  _replaceArgList.Add((RooAbsArg*)&orig) ;
-  _replaceSubList.Add((RooAbsArg*)&subst) ;
+  _replaceArgList.Add(const_cast<RooAbsArg *>(&orig));
+  _replaceSubList.Add(const_cast<RooAbsArg *>(&subst));
 }
 
 
@@ -419,9 +419,9 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
 
   //   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
   for (auto node : nodeList) {
-    RooAbsArg* theSplitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):nullptr ;
+    RooAbsArg* theSplitArg = !_sterile?static_cast<RooAbsArg*>(_splitArgList.FindObject(node->GetName())):nullptr ;
     if (theSplitArg) {
-      RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(theSplitArg)) ;
+      RooAbsCategory* splitCat = static_cast<RooAbsCategory*>(_splitCatList.At(_splitArgList.IndexOf(theSplitArg))) ;
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
                << "): tree node " << node->GetName() << " is split by category " << splitCat->GetName() << endl ;
@@ -468,7 +468,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
    newTitle.Append(")") ;
 
    // Create a new clone
-   RooAbsArg* clone = (RooAbsArg*) node->Clone(newName.Data()) ;
+   RooAbsArg* clone = static_cast<RooAbsArg*>(node->Clone(newName.Data())) ;
    clone->removeStringAttribute("factory_tag") ;
    clone->SetTitle(newTitle) ;
 
@@ -495,9 +495,9 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
       masterNodesToBeSplit.add(*node) ;
     }
 
-    RooAbsArg* ReplaceArg = (RooAbsArg*) _replaceArgList.FindObject(node->GetName()) ;
+    RooAbsArg* ReplaceArg = static_cast<RooAbsArg*>(_replaceArgList.FindObject(node->GetName())) ;
     if (ReplaceArg) {
-      RooAbsArg* substArg = (RooAbsArg*) _replaceSubList.At(_replaceArgList.IndexOf(ReplaceArg)) ;
+      RooAbsArg* substArg = static_cast<RooAbsArg*>(_replaceSubList.At(_replaceArgList.IndexOf(ReplaceArg))) ;
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
                << "): tree node " << node->GetName() << " will be replaced by " << substArg->GetName() << endl ;
@@ -559,7 +559,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     }
 
     // Affix attribute with old name to clone to support name changing server redirect
-    RooAbsArg* clone = (RooAbsArg*) branch->Clone(newName.Data()) ;
+    RooAbsArg* clone = static_cast<RooAbsArg*>(branch->Clone(newName.Data())) ;
     clone->removeStringAttribute("factory_tag") ;
     TString nameAttrib("ORIGNAME:") ;
     nameAttrib.Append(branch->GetName()) ;

@@ -118,7 +118,7 @@ namespace HistFactory{
     // creating a ModelConfig
 
     // Make a ModelConfig and configure it
-    ModelConfig * proto_config = (ModelConfig *) ws_single->obj("ModelConfig");
+    ModelConfig * proto_config = static_cast<ModelConfig *>(ws_single->obj("ModelConfig"));
     if( proto_config == nullptr ) {
       std::cout << "Error: Did not find 'ModelConfig' object in file: " << ws_single->GetName()
       << std::endl;
@@ -963,7 +963,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           // Next, try to get the common ParamHistFunc (it may have been
           // created by another sample in this channel)
           // or create it if it doesn't yet exist:
-          RooAbsReal* paramHist = dynamic_cast<ParamHistFunc*>( proto.function(statFuncName) );
+          RooAbsReal* paramHist = dynamic_cast<ParamHistFunc*>(proto.function(statFuncName) );
           if( paramHist == nullptr ) {
 
             // Get a RooArgSet of the observables:
@@ -1495,7 +1495,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     auto combined = std::make_unique<RooWorkspace>("combined");
 
 
-    RooCategory* channelCat = dynamic_cast<RooCategory*>( combined->factory(channelString.str()) );
+    RooCategory* channelCat = dynamic_cast<RooCategory*>(combined->factory(channelString.str()) );
     if (!channelCat) throw std::runtime_error("Unable to construct a category from string " + channelString.str());
 
     auto simPdf= std::make_unique<RooSimultaneous>("simPdf","",pdfMap, *channelCat);
@@ -1727,7 +1727,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   binNumber = 0;
 
   // Creat the output histogram
-  TH1* ErrorHist = (TH1*) HistTemplate->Clone( Name.c_str() );
+  TH1* ErrorHist = static_cast<TH1*>(HistTemplate->Clone( Name.c_str() ));
   ErrorHist->Reset();
 
   // Fill the output histogram

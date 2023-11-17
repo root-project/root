@@ -82,7 +82,7 @@ RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy
   _isFund(other._isFund), _ownArg(other._ownArg)
 {
   if (_ownArg) {
-    _arg = _arg ? (RooAbsArg*) _arg->Clone() : nullptr ;
+    _arg = _arg ? static_cast<RooAbsArg*>(_arg->Clone()) : nullptr ;
   }
 
   _owner->registerProxy(*this) ;

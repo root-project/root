@@ -113,7 +113,7 @@ bool RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
     add(set1,set2);
     _name1 = getColonSeparatedNameString(set1d);
     _name2 = getColonSeparatedNameString(set2d);
-    _set2RangeName = (TNamed*) set2RangeName;
+    _set2RangeName = const_cast<TNamed*>(set2RangeName);
   }
 
   return true;

@@ -226,10 +226,10 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
 
       fracl.add(*frac); // to be set later
       if (i < nPdf)
-         coefList.add(*(RooRealVar *)(fracl.at(i)));
+         coefList.add(*static_cast<RooRealVar *>(fracl.at(i)));
       else
-         coefList2.add(*(RooRealVar *)(fracl.at(i)));
-      ownedComps.add(*(RooRealVar *)(fracl.at(i)));
+         coefList2.add(*static_cast<RooRealVar *>(fracl.at(i)));
+      ownedComps.add(*static_cast<RooRealVar *>(fracl.at(i)));
    }
 
    RooRealSumFunc *theSumFunc = nullptr;
@@ -244,8 +244,8 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
             std::string meanName = Form("%s_mean_%d_%d", GetName(), i, j);
             std::string sigmaName = Form("%s_sigma_%d_%d", GetName(), i, j);
 
-            RooAbsMoment *mom = nVar == 1 ? ((RooAbsPdf *)_pdfList.at(i))->sigma((RooRealVar &)*varList.at(j))
-                                          : ((RooAbsPdf *)_pdfList.at(i))->sigma((RooRealVar &)*varList.at(j), varList);
+            RooAbsMoment *mom = nVar == 1 ? (static_cast<RooAbsPdf *>(_pdfList.at(i)))->sigma(static_cast<RooRealVar &>(*varList.at(j)))
+                                          : (static_cast<RooAbsPdf *>(_pdfList.at(i)))->sigma(static_cast<RooRealVar &>(*varList.at(j)), varList);
 
             mom->setLocalNoDirtyInhibit(true);
             mom->mean()->setLocalNoDirtyInhibit(true);
@@ -304,7 +304,7 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
             ownedComps.add(*transVar[ij(i, j)]);
             cust.replaceArg(var, *transVar[ij(i, j)]);
          }
-         transPdf[i] = (RooAbsPdf *)cust.build();
+         transPdf[i] = static_cast<RooAbsPdf *>(cust.build());
          transPdfList.add(*transPdf[i]);
          ownedComps.add(*transPdf[i]);
       }
@@ -347,7 +347,7 @@ RooMomentMorphFunc::CacheElem::~CacheElem()
 double RooMomentMorphFunc::getVal(const RooArgSet *set) const
 {
    // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
-   _curNormSet = set ? (RooArgSet *)set : (RooArgSet *)&_varList;
+   _curNormSet = set ? const_cast<RooArgSet *>(set) : const_cast<RooArgSet *>(static_cast<RooArgSet const*>(&_varList));
    return RooAbsReal::getVal(set);
 }
 
@@ -391,13 +391,13 @@ double RooMomentMorphFunc::evaluate() const
 //_____________________________________________________________________________
 RooRealVar *RooMomentMorphFunc::CacheElem::frac(Int_t i)
 {
-   return (RooRealVar *)(_frac.at(i));
+   return static_cast<RooRealVar *>(_frac.at(i));
 }
 
 //_____________________________________________________________________________
 const RooRealVar *RooMomentMorphFunc::CacheElem::frac(Int_t i) const
 {
-   return (RooRealVar *)(_frac.at(i));
+   return static_cast<RooRealVar *>(_frac.at(i));
 }
 
 //_____________________________________________________________________________
@@ -417,9 +417,9 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
       if (ffrac >= 0)
          sumposfrac += ffrac;
       // fractions for pdf
-      ((RooRealVar *)frac(i))->setVal(ffrac);
+      const_cast<RooRealVar *>(frac(i))->setVal(ffrac);
       // fractions for rms and mean
-      ((RooRealVar *)frac(nPdf + i))->setVal(ffrac);
+      const_cast<RooRealVar *>(frac(nPdf + i))->setVal(ffrac);
       if (verbose) {
          cout << ffrac << endl;
       }
@@ -441,31 +441,31 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
    // now fall through to Linear case
 
    case Linear:
-      for (Int_t i = 0; i < 2 * nPdf; ++i) ((RooRealVar *)frac(i))->setVal(0.);
+      for (Int_t i = 0; i < 2 * nPdf; ++i) const_cast<RooRealVar *>(frac(i))->setVal(0.);
       if (imax > imin) { // m in between mmin and mmax
-         ((RooRealVar *)frac(imin))->setVal(1. - mfrac);
-         ((RooRealVar *)frac(nPdf + imin))->setVal(1. - mfrac);
-         ((RooRealVar *)frac(imax))->setVal(mfrac);
-         ((RooRealVar *)frac(nPdf + imax))->setVal(mfrac);
+         const_cast<RooRealVar *>(frac(imin))->setVal(1. - mfrac);
+         const_cast<RooRealVar *>(frac(nPdf + imin))->setVal(1. - mfrac);
+         const_cast<RooRealVar *>(frac(imax))->setVal(mfrac);
+         const_cast<RooRealVar *>(frac(nPdf + imax))->setVal(mfrac);
       } else if (imax == imin) { // m outside mmin and mmax
-         ((RooRealVar *)frac(imin))->setVal(1.);
-         ((RooRealVar *)frac(nPdf + imin))->setVal(1.);
+         const_cast<RooRealVar *>(frac(imin))->setVal(1.);
+         const_cast<RooRealVar *>(frac(nPdf + imin))->setVal(1.);
       }
       break;
    case NonLinearLinFractions:
-      for (Int_t i = 0; i < nPdf; ++i) ((RooRealVar *)frac(i))->setVal(0.);
+      for (Int_t i = 0; i < nPdf; ++i) const_cast<RooRealVar *>(frac(i))->setVal(0.);
       if (imax > imin) { // m in between mmin and mmax
-         ((RooRealVar *)frac(imin))->setVal(1. - mfrac);
-         ((RooRealVar *)frac(imax))->setVal(mfrac);
+         const_cast<RooRealVar *>(frac(imin))->setVal(1. - mfrac);
+         const_cast<RooRealVar *>(frac(imax))->setVal(mfrac);
       } else if (imax == imin) { // m outside mmin and mmax
-         ((RooRealVar *)frac(imin))->setVal(1.);
+         const_cast<RooRealVar *>(frac(imin))->setVal(1.);
       }
       break;
    case NonLinearPosFractions:
       for (Int_t i = 0; i < nPdf; ++i) {
-         if (((RooRealVar *)frac(i))->getVal() < 0)
-            ((RooRealVar *)frac(i))->setVal(0.);
-         ((RooRealVar *)frac(i))->setVal(((RooRealVar *)frac(i))->getVal() / sumposfrac);
+         if (frac(i)->getVal() < 0)
+            const_cast<RooRealVar *>(frac(i))->setVal(0.);
+         const_cast<RooRealVar *>(frac(i))->setVal(frac(i)->getVal() / sumposfrac);
       }
       break;
    }

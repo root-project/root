@@ -186,7 +186,7 @@ public:
 
       std::vector<double> par(bindParams.getSize());
       for (unsigned int i = 0; i < fXmin.size(); ++i) {
-         RooRealVar & var = (RooRealVar &) bindParams[i];
+         RooRealVar & var = static_cast<RooRealVar &>( bindParams[i]);
          fXmin[i] = var.getMin();
          fXmax[i] = var.getMax();
          par[i] = var.getVal();
@@ -366,7 +366,7 @@ public:
 
       ooccoutD(nullptr,NumIntegration) << "PosteriorFunction::Evaluate the posterior function by integrating the nuisances: " << std::endl;
       for (unsigned int i = 0; i < fXmin.size(); ++i) {
-         RooRealVar & var = (RooRealVar &) nuisParams[i];
+         RooRealVar & var = static_cast<RooRealVar &>( nuisParams[i]);
          fXmin[i] = var.getMin();
          fXmax[i] = var.getMax();
          ooccoutD(nullptr,NumIntegration) << "PosteriorFunction::Integrate " << var.GetName()
@@ -547,7 +547,7 @@ private:
             RooRealVar * var = dynamic_cast<RooRealVar*>(arg);
             assert(var != nullptr);
             p[i] = var->getVal();
-            ((RooRealVar &) fNuisParams[i]).setVal(p[i]);
+            (static_cast<RooRealVar &>( fNuisParams[i])).setVal(p[i]);
          }
 
          // evaluate now the likelihood function
@@ -833,7 +833,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    RooFunctor * nllFunc = fLogLike->functor(fPOI);
    assert(nllFunc);
    ROOT::Math::Functor1D wnllFunc(*nllFunc);
-   RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() );
+   RooRealVar* poi = dynamic_cast<RooRealVar*>(fPOI.first() );
    assert(poi);
 
    // try to reduce some error messages
@@ -1020,7 +1020,7 @@ RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) cons
 
    if (!fValidInterval) GetInterval();
 
-   RooAbsRealLValue* poi = dynamic_cast<RooAbsRealLValue*>( fPOI.first() );
+   RooAbsRealLValue* poi = dynamic_cast<RooAbsRealLValue*>(fPOI.first() );
    assert(poi);
 
 
@@ -1100,7 +1100,7 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    if (fValidInterval)
       coutW(Eval) << "BayesianCalculator::GetInterval - recomputing interval for the same CL and same model" << std::endl;
 
-   RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() );
+   RooRealVar* poi = dynamic_cast<RooRealVar*>(fPOI.first() );
    if (!poi) {
       coutE(Eval) << "BayesianCalculator::GetInterval - no parameter of interest is set " << std::endl;
       return nullptr;
@@ -1196,7 +1196,7 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
 
    coutI(Eval) <<  "BayesianCalculator: Compute interval using RooFit:  posteriorPdf + createCdf + RooBrentRootFinder " << std::endl;
 
-   RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() );
+   RooRealVar* poi = dynamic_cast<RooRealVar*>(fPOI.first() );
    assert(poi);
 
    fValidInterval = false;
@@ -1247,7 +1247,7 @@ void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upper
 
    coutI(InputArguments) <<  "BayesianCalculator:GetInterval Compute the interval from the posterior cdf " << std::endl;
 
-   RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() );
+   RooRealVar* poi = dynamic_cast<RooRealVar*>(fPOI.first() );
    assert(poi);
    if (GetPosteriorFunction() == nullptr) {
       coutE(InputArguments) <<  "BayesianCalculator::GetInterval() cannot make posterior Function " << std::endl;
@@ -1339,7 +1339,7 @@ void BayesianCalculator::ApproximatePosterior() const {
 
    coutI(Eval) << "BayesianCalculator - scan posterior function in nbins = " << tmp->GetNpx() << std::endl;
 
-   fApproxPosterior = (TF1*) tmp->Clone();
+   fApproxPosterior = static_cast<TF1*>(tmp->Clone());
    // save this function for future reuse
    // I can delete now original posterior and use this approximated copy
    delete tmp;

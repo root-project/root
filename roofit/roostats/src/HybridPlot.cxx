@@ -152,11 +152,11 @@ void HybridPlot::Draw(const char* )
    }
 
    // Shaded
-   fB_histo_shaded = (TH1F*)fB_histo->Clone("b_shaded");
+   fB_histo_shaded = static_cast<TH1F*>(fB_histo->Clone("b_shaded"));
    fB_histo_shaded->SetFillStyle(3005);
    fB_histo_shaded->SetFillColor(kRed);
 
-   fSb_histo_shaded = (TH1F*)fSb_histo->Clone("sb_shaded");
+   fSb_histo_shaded = static_cast<TH1F*>(fSb_histo->Clone("sb_shaded"));
    fSb_histo_shaded->SetFillStyle(3004);
    fSb_histo_shaded->SetFillColor(kBlue);
 
@@ -242,7 +242,7 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
    TString optfit = "Q0";
    if (display_result) optfit = "Q";
 
-   TH1F* histo = (TH1F*)histo_orig->Clone();
+   TH1F* histo = static_cast<TH1F*>(histo_orig->Clone());
 
    // get the histo x extremes
    double x_min = histo->GetXaxis()->GetXmin();

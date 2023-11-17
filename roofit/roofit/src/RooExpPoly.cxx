@@ -312,7 +312,7 @@ std::string RooExpPoly::getFormulaExpression(bool expand) const
       if (order != _lowestOrder)
          ss << "+";
       if (expand)
-         ss << ((RooAbsReal *)coef)->getVal();
+         ss << (static_cast<RooAbsReal *>(coef))->getVal();
       else
          ss << coef->GetName();
       ss << "*pow(" << _x.GetName() << "," << order << ")";

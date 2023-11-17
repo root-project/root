@@ -102,7 +102,7 @@ const char* RooNumRunningInt::inputBaseName() const
 RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt &self, const RooArgSet *nset)
    : FuncCacheElem(self, nset),
      _self(&const_cast<RooNumRunningInt &>(self)),
-     _xx((RooRealVar *)hist()->get()->find(self.x.arg().GetName()))
+     _xx(static_cast<RooRealVar *>(hist()->get()->find(self.x.arg().GetName())))
 {
   // Instantiate temp arrays
   _ax.resize(hist()->numEntries());

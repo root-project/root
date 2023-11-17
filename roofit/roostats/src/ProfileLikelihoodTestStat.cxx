@@ -68,7 +68,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        tsw.Start();
 
        double initial_mu_value  = 0;
-       RooRealVar* firstPOI = dynamic_cast<RooRealVar*>( paramsOfInterest.first());
+       RooRealVar* firstPOI = dynamic_cast<RooRealVar*>(paramsOfInterest.first());
        if (firstPOI) initial_mu_value = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
        if (fPrintLevel > 1) {

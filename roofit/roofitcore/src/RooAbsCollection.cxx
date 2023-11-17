@@ -745,7 +745,7 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, bool value)
 {
   TString selName(GetName()) ;
   selName.Append("_selection") ;
-  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
+  RooAbsCollection *sel = static_cast<RooAbsCollection*>(create(selName.Data())) ;
 
   // Scan set contents for matching attribute
   for (auto arg : _list) {
@@ -803,7 +803,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, bool verb
   // Create output set
   TString selName(GetName()) ;
   selName.Append("_selection") ;
-  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
+  RooAbsCollection *sel = static_cast<RooAbsCollection*>(create(selName.Data())) ;
 
   const size_t bufSize = strlen(nameList) + 1;
   std::vector<char> buf(bufSize);
@@ -1177,7 +1177,7 @@ void RooAbsCollection::printValue(std::ostream& os) const
       first2 = false ;
     }
     if (arg->IsA()->InheritsFrom(RooStringVar::Class())) {
-       os << '\'' << ((RooStringVar *)arg)->getVal() << '\'';
+       os << '\'' << (static_cast<RooStringVar *>(arg))->getVal() << '\'';
     } else {
        os << arg->GetName();
     }
@@ -1351,7 +1351,7 @@ void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* opt
 
   // Make list of lists ;
   RooLinkedList listList ;
-  listList.Add((RooAbsArg*)this) ;
+  listList.Add(const_cast<RooAbsCollection *>(this));
   for(auto * col : static_range_cast<RooAbsCollection*>(siblingList)) {
     listList.Add(col) ;
   }
@@ -1402,7 +1402,7 @@ void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* opt
   for (i=0 ; i<nrow ; i++) {
     for (j=0 ; j<ncol ; j++) {
       for (k=0 ; k<nlist ; k++) {
-   RooRealVar* par = (RooRealVar*) ((RooArgList*)listListRRV.At(k))->at(i+j*nrow) ;
+   RooRealVar* par = static_cast<RooRealVar*>((static_cast<RooArgList*>(listListRRV.At(k)))->at(i+j*nrow)) ;
    if (par) {
      if (option) {
        ofs << *std::unique_ptr<TString>{par->format(sigDigit,(k==0)?option:sibOption.Data())};
@@ -1476,7 +1476,7 @@ bool RooAbsCollection::allInRange(const char* rangeSpec) const
 
 void RooAbsCollection::RecursiveRemove(TObject *obj)
 {
-   if (obj && obj->InheritsFrom(RooAbsArg::Class())) remove(*(RooAbsArg*)obj,false,false);
+   if (obj && obj->InheritsFrom(RooAbsArg::Class())) remove(*static_cast<RooAbsArg*>(obj),false,false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

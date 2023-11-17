@@ -419,7 +419,7 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
     coutE(InputArguments) << "RooFitResult::correlation: variable " << parname << " not a floating parameter in fit" << endl ;
     return nullptr ;
   }
-  return (RooArgList*)_corrMatrix.At(_initPars->index(arg)) ;
+  return static_cast<RooArgList*>(_corrMatrix.At(_initPars->index(arg))) ;
 }
 
 
@@ -440,7 +440,7 @@ double RooFitResult::globalCorr(const char* parname)
   }
 
   if (_globalCorr) {
-    return ((RooAbsReal*)_globalCorr->at(_initPars->index(arg)))->getVal() ;
+    return (static_cast<RooAbsReal*>(_globalCorr->at(_initPars->index(arg))))->getVal() ;
   } else {
     return 1.0 ;
   }
@@ -528,7 +528,7 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
     // Has any parameter asymmetric errors?
     bool doAsymErr(false) ;
     for (i=0 ; i<_finalPars->getSize() ; i++) {
-      if (((RooRealVar*)_finalPars->at(i))->hasAsymError()) {
+      if ((static_cast<RooRealVar*>(_finalPars->at(i)))->hasAsymError()) {
    doAsymErr=true ;
    break ;
       }
@@ -544,19 +544,19 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
       os << indent << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName() ;
-      os << indent << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->at(i))->getVal())
-    << indent << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal()) ;
+      os << indent << "  "    << setw(12) << Form("%12.4e",(static_cast<RooRealVar*>(_initPars->at(i)))->getVal())
+    << indent << "  "    << setw(12) << Form("%12.4e",(static_cast<RooRealVar*>(_finalPars->at(i)))->getVal()) ;
 
-      if (((RooRealVar*)_finalPars->at(i))->hasAsymError()) {
-   os << setw(21) << Form(" (+%8.2e,-%8.2e)",((RooRealVar*)_finalPars->at(i))->getAsymErrorHi(),
-                          -1*((RooRealVar*)_finalPars->at(i))->getAsymErrorLo()) ;
+      if ((static_cast<RooRealVar*>(_finalPars->at(i)))->hasAsymError()) {
+   os << setw(21) << Form(" (+%8.2e,-%8.2e)",(static_cast<RooRealVar*>(_finalPars->at(i)))->getAsymErrorHi(),
+                          -1*(static_cast<RooRealVar*>(_finalPars->at(i)))->getAsymErrorLo()) ;
       } else {
-   double err = ((RooRealVar*)_finalPars->at(i))->getError() ;
+   double err = (static_cast<RooRealVar*>(_finalPars->at(i)))->getError() ;
    os << (doAsymErr?"        ":"") << " +/- " << setw(9)  << Form("%9.2e",err) ;
       }
 
       if (_globalCorr) {
-   os << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->at(i))->getVal()) ;
+   os << "  "    << setw(8)  << Form("%8.6f" ,(static_cast<RooRealVar*>(_globalCorr->at(i)))->getVal()) ;
       } else {
    os << "  <none>" ;
       }
@@ -569,9 +569,9 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
        << indent << "  --------------------  --------------------------" << endl ;
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
-      double err = ((RooRealVar*)_finalPars->at(i))->getError() ;
+      double err = (static_cast<RooRealVar*>(_finalPars->at(i)))->getError() ;
       os << indent << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName()
-    << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
+    << "  "    << setw(12) << Form("%12.4e",(static_cast<RooRealVar*>(_finalPars->at(i)))->getVal())
     << " +/- " << setw(9)  << Form("%9.2e",err)
     << endl ;
     }
@@ -736,7 +736,7 @@ void RooFitResult::fillCorrMatrix()
 
   for (int ii=0 ; ii<_finalPars->getSize() ; ii++) {
     for (int jj=0 ; jj<_finalPars->getSize() ; jj++) {
-      (*_VM)(ii,jj) = (*_CM)(ii,jj) * ((RooRealVar*)_finalPars->at(ii))->getError() * ((RooRealVar*)_finalPars->at(jj))->getError() ;
+      (*_VM)(ii,jj) = (*_CM)(ii,jj) * (static_cast<RooRealVar*>(_finalPars->at(ii)))->getError() * (static_cast<RooRealVar*>(_finalPars->at(jj)))->getError() ;
     }
   }
 }
@@ -761,7 +761,7 @@ void RooFitResult::fillPrefitCorrMatrix()
 
    for (int ii = 0; ii < _finalPars->getSize(); ii++) {
       (*_CM)(ii, ii) = 1;
-      (*_VM)(ii, ii) = ((RooRealVar *)_finalPars->at(ii))->getError() * ((RooRealVar *)_finalPars->at(ii))->getError();
+      (*_VM)(ii, ii) = (static_cast<RooRealVar *>(_finalPars->at(ii)))->getError() * (static_cast<RooRealVar *>(_finalPars->at(ii)))->getError();
       (*_GC)(ii) = 0;
    }
 }
@@ -883,8 +883,8 @@ bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tol
     }
 
     for (Int_t j=0 ; j<_corrMatrix.GetSize() ; j++) {
-      RooArgList* row = (RooArgList*) _corrMatrix.At(j) ;
-      RooArgList* orow = (RooArgList*) other._corrMatrix.At(j) ;
+      RooArgList* row = static_cast<RooArgList*>(_corrMatrix.At(j)) ;
+      RooArgList* orow = static_cast<RooArgList*>(other._corrMatrix.At(j)) ;
       for (Int_t i=0 ; i<row->getSize() ; i++) {
         auto tv = static_cast<const RooAbsReal*>(row->at(i));
         auto ov = static_cast<const RooAbsReal*>(orow->find(tv->GetName())) ;
@@ -1051,10 +1051,10 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
   }
 
   // Clone input covariance matrix ;
-  _VM = (TMatrixDSym*) V.Clone() ;
+  _VM = static_cast<TMatrixDSym*>(V.Clone()) ;
 
   // Now construct correlation matrix from it
-  _CM = (TMatrixDSym*) _VM->Clone() ;
+  _CM = static_cast<TMatrixDSym*>(_VM->Clone()) ;
   for (Int_t i=0 ; i<_CM->GetNrows() ; i++) {
     for (Int_t j=0 ; j<_CM->GetNcols() ; j++) {
       if (i!=j) {
@@ -1281,7 +1281,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
 
     RooArgList mu ;
     for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
-      RooRealVar* parclone = (RooRealVar*) _finalPars->at(i)->Clone(Form("%s_centralvalue",_finalPars->at(i)->GetName())) ;
+      RooRealVar* parclone = static_cast<RooRealVar*>(_finalPars->at(i)->Clone(Form("%s_centralvalue",_finalPars->at(i)->GetName()))) ;
       parclone->setConstant(true) ;
       mu.add(*parclone) ;
     }
@@ -1317,7 +1317,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
   // Calculate offset vectors mu1 and mu2
   RooArgList mu1 ;
   for (UInt_t i=0 ; i<map1.size() ; i++) {
-    RooRealVar* parclone = (RooRealVar*) _finalPars->at(map1[i])->Clone(Form("%s_centralvalue",_finalPars->at(map1[i])->GetName())) ;
+    RooRealVar* parclone = static_cast<RooRealVar*>(_finalPars->at(map1[i])->Clone(Form("%s_centralvalue",_finalPars->at(map1[i])->GetName()))) ;
     parclone->setConstant(true) ;
     mu1.add(*parclone) ;
   }
@@ -1485,7 +1485,7 @@ void RooFitResult::Streamer(TBuffer &R__b)
      double value = cVal.getVal() ;
      (*_CM)(it,i) = value ;
      (*_CM)(i,it) = value;
-     (*_VM)(it,i) = value*((RooRealVar*)_finalPars->at(i))->getError()*((RooRealVar*)_finalPars->at(it))->getError() ;
+     (*_VM)(it,i) = value*(static_cast<RooRealVar*>(_finalPars->at(i)))->getError()*(static_cast<RooRealVar*>(_finalPars->at(it)))->getError() ;
      (*_VM)(i,it) = (*_VM)(it,i) ;
    }
       }

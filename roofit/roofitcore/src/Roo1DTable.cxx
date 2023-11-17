@@ -52,7 +52,7 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
   Int_t nbin=0 ;
   TIterator* tIter = cat.typeIterator() ;
   RooCatType* type ;
-  while (((type = (RooCatType*)tIter->Next()))) {
+  while (((type = static_cast<RooCatType*>(tIter->Next())))) {
     _types.Add(new RooCatType(*type)) ;
     nbin++ ;
   }
@@ -75,7 +75,7 @@ Roo1DTable::Roo1DTable(const Roo1DTable& other) :
 
   int i;
   for (i=0 ; i<other._types.GetEntries() ; i++) {
-    _types.Add(new RooCatType(*(RooCatType*)other._types.At(i))) ;
+    _types.Add(new RooCatType(*static_cast<RooCatType*>(other._types.At(i)))) ;
   }
 
 }
@@ -107,7 +107,7 @@ void Roo1DTable::fill(RooAbsCategory& cat, double weight)
 
   //bool found(false) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
     if (cat.getCurrentIndex()==entry->getVal()) {
       _count[i] += weight ; ;
       //found=true ;
@@ -159,7 +159,7 @@ void Roo1DTable::printValue(ostream& os) const
 {
   os << "(" ;
   for (Int_t i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
     if (_count[i]>0) {
       if (i>0) {
    os << "," ;
@@ -197,7 +197,7 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, bool verbose, T
 
   int i;
   for (i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
 
     // Disable warning about a signed/unsigned mismatch by MSCV 6.0 by
     // using the lwidth temporary.
@@ -218,7 +218,7 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, bool verbose, T
 
   // Contents
   for (i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
     if (_count[i]>0 || verbose) {
       os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << _count[i] << " |" << endl ;
     }

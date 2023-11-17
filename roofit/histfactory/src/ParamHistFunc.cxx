@@ -327,8 +327,8 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
 
-    RooRealVar* varx = (RooRealVar*) vars.at(0);
-    RooRealVar* vary = (RooRealVar*) vars.at(1);
+    RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
+    RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));
 
     // For each bin, create a RooRealVar
     for( Int_t j = 0; j < vary->numBins(); ++j) {
@@ -362,9 +362,9 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
 
-    RooRealVar* varx = (RooRealVar*) vars.at(0);
-    RooRealVar* vary = (RooRealVar*) vars.at(1);
-    RooRealVar* varz = (RooRealVar*) vars.at(2);
+    RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
+    RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));
+    RooRealVar* varz = static_cast<RooRealVar*>(vars.at(2));
 
     // For each bin, create a RooRealVar
     for( Int_t k = 0; k < varz->numBins(); ++k) {
@@ -655,7 +655,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)nullptr) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)nullptr)) ;
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }
