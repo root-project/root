@@ -19,10 +19,10 @@ class AsRTensor(unittest.TestCase):
 
     # Helpers
     cpptypes = {
-        "int32": "int",
-        "int64": "long" if platform.system() != "Windows" else "long long",
-        "uint32": "unsigned int",
-        "uint64": "unsigned long" if platform.system() != "Windows" else "unsigned long long",
+        "int32": "int32_t",
+        "int64": "int64_t" if platform.system() != "Darwin" else "long",
+        "uint32": "uint32_t",
+        "uint64": "uint64_t" if platform.system() != "Darwin" else "unsigned long",
         "float32": "float",
         "float64": "double",
     }
