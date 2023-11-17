@@ -241,7 +241,7 @@ bool RooAdaptiveGaussKronrodIntegrator1D::initialize()
 RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 {
   if (_workspace) {
-    gsl_integration_workspace_free ((gsl_integration_workspace*) _workspace) ;
+    gsl_integration_workspace_free (reinterpret_cast<gsl_integration_workspace*>(_workspace));
   }
 }
 
@@ -303,7 +303,7 @@ bool RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
 
 double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data)
 {
-  RooAdaptiveGaussKronrodIntegrator1D* instance = (RooAdaptiveGaussKronrodIntegrator1D*) data ;
+  auto instance = reinterpret_cast<RooAdaptiveGaussKronrodIntegrator1D*>(data);
   return instance->integrand(instance->xvec(x)) ;
 }
 
@@ -335,19 +335,19 @@ double RooAdaptiveGaussKronrodIntegrator1D::integral(const double *yvec)
   switch(_domainType) {
   case Closed:
     if (_methodKey==0) {
-      gsl_integration_qags (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
+      gsl_integration_qags (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, reinterpret_cast<gsl_integration_workspace*>(_workspace),&result, &error);
     } else {
-      gsl_integration_qag (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, _methodKey, (gsl_integration_workspace*)_workspace,&result, &error);
+      gsl_integration_qag (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, _methodKey, reinterpret_cast<gsl_integration_workspace*>(_workspace),&result, &error);
     }
     break ;
   case OpenLo:
-    gsl_integration_qagil (&F, _xmax, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
+    gsl_integration_qagil (&F, _xmax, _epsAbs, _epsRel, _maxSeg, reinterpret_cast<gsl_integration_workspace*>(_workspace),&result, &error);
     break ;
   case OpenHi:
-    gsl_integration_qagiu (&F, _xmin, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
+    gsl_integration_qagiu (&F, _xmin, _epsAbs, _epsRel, _maxSeg, reinterpret_cast<gsl_integration_workspace*>(_workspace),&result, &error);
     break ;
   case Open:
-    gsl_integration_qagi (&F, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
+    gsl_integration_qagi (&F, _epsAbs, _epsRel, _maxSeg, reinterpret_cast<gsl_integration_workspace*>(_workspace),&result, &error);
     break ;
   }
 
@@ -1549,8 +1549,7 @@ gsl_integration_workspace_alloc (const size_t n)
                         GSL_EDOM, nullptr);
     }
 
-  w = (gsl_integration_workspace *)
-    malloc (sizeof (gsl_integration_workspace));
+  w = reinterpret_cast<gsl_integration_workspace *>(malloc (sizeof (gsl_integration_workspace)));
 
   if (w == nullptr)
     {
@@ -1558,7 +1557,7 @@ gsl_integration_workspace_alloc (const size_t n)
                         GSL_ENOMEM, nullptr);
     }
 
-  w->alist = (double *) malloc (n * sizeof (double));
+  w->alist = reinterpret_cast<double *>(malloc (n * sizeof (double)));
 
   if (w->alist == nullptr)
     {
@@ -1568,7 +1567,7 @@ gsl_integration_workspace_alloc (const size_t n)
                         GSL_ENOMEM, nullptr);
     }
 
-  w->blist = (double *) malloc (n * sizeof (double));
+  w->blist = reinterpret_cast<double *>(malloc (n * sizeof (double)));
 
   if (w->blist == nullptr)
     {
@@ -1579,7 +1578,7 @@ gsl_integration_workspace_alloc (const size_t n)
                         GSL_ENOMEM, nullptr);
     }
 
-  w->rlist = (double *) malloc (n * sizeof (double));
+  w->rlist = reinterpret_cast<double *>(malloc (n * sizeof (double)));
 
   if (w->rlist == nullptr)
     {
@@ -1592,7 +1591,7 @@ gsl_integration_workspace_alloc (const size_t n)
     }
 
 
-  w->elist = (double *) malloc (n * sizeof (double));
+  w->elist = reinterpret_cast<double *>(malloc (n * sizeof (double)));
 
   if (w->elist == nullptr)
     {
@@ -1605,7 +1604,7 @@ gsl_integration_workspace_alloc (const size_t n)
                         GSL_ENOMEM, nullptr);
     }
 
-  w->order = (size_t *) malloc (n * sizeof (size_t));
+  w->order = reinterpret_cast<size_t *>(malloc (n * sizeof (size_t)));
 
   if (w->order == nullptr)
     {
@@ -1619,7 +1618,7 @@ gsl_integration_workspace_alloc (const size_t n)
                         GSL_ENOMEM, nullptr);
     }
 
-  w->level = (size_t *) malloc (n * sizeof (size_t));
+  w->level = reinterpret_cast<size_t *>(malloc (n * sizeof (size_t)));
 
   if (w->level == nullptr)
     {
@@ -2016,7 +2015,7 @@ gsl_integration_qagi (gsl_function * f,
 static double
 i_transform (double t, void *params)
 {
-  gsl_function *f = (gsl_function *) params;
+  gsl_function *f = reinterpret_cast<gsl_function *>(params);
   double x = (1 - t) / t;
   double y = GSL_FN_EVAL (f, x) + GSL_FN_EVAL (f, -x);
   return (y / t) / t;
@@ -2064,7 +2063,7 @@ gsl_integration_qagil (gsl_function * f,
 static double
 il_transform (double t, void *params)
 {
-  struct il_params *p = (struct il_params *) params;
+  struct il_params *p = reinterpret_cast<struct il_params *>(params);
   double b = p->b;
   gsl_function * f = p->f;
   double x = b - (1 - t) / t;
@@ -2113,7 +2112,7 @@ gsl_integration_qagiu (gsl_function * f,
 static double
 iu_transform (double t, void *params)
 {
-  struct iu_params *p = (struct iu_params *) params;
+  struct iu_params *p = reinterpret_cast<struct iu_params *>(params);
   double a = p->a;
   gsl_function * f = p->f;
   double x = a + (1 - t) / t;

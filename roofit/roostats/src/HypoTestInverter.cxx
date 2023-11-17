@@ -152,7 +152,7 @@ void HypoTestInverter::CheckInputModels(const HypoTestCalculatorGeneric &hc,cons
    if (bParams->find(scanVariable.GetName() ) ) {
       const RooArgSet * poiB  = modelB->GetSnapshot();
       if (!poiB ||  !poiB->find(scanVariable.GetName()) ||
-          ( (RooRealVar*)  poiB->find(scanVariable.GetName()) )->getVal() != 0 )
+          ( static_cast<RooRealVar*>( poiB->find(scanVariable.GetName())) )->getVal() != 0 )
          oocoutW(nullptr,InputArguments) << "HypoTestInverter - using a B model  with POI "
                                              <<    scanVariable.GetName()  << " not equal to zero "
                                              << " user must check input model configurations " << endl;
@@ -491,7 +491,7 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
    // if having a result with at least  one point return it
    if (fResults && fResults->ArraySize() >= 1) {
       oocoutI(nullptr,Eval) << "HypoTestInverter::GetInterval - return an already existing interval " << std::endl;
-      return  (HypoTestInverterResult*)(fResults->Clone());
+      return  static_cast<HypoTestInverterResult*>(fResults->Clone());
    }
 
    if (fNBins > 0) {
@@ -510,7 +510,7 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
 
    if (fgCloseProof) ProofConfig::CloseProof();
 
-   return (HypoTestInverterResult*) (fResults->Clone());
+   return static_cast<HypoTestInverterResult*> (fResults->Clone());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -556,8 +556,8 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
 
    if (adaptive) {
 
-      if (fCalcType == kHybrid) HypoTestWrapper<HybridCalculator>::SetToys((HybridCalculator*)&hc, fUseCLs ? fgNToys : 1, 4*fgNToys);
-      if (fCalcType == kFrequentist) HypoTestWrapper<FrequentistCalculator>::SetToys((FrequentistCalculator*)&hc, fUseCLs ? fgNToys : 1, 4*fgNToys);
+      if (fCalcType == kHybrid) HypoTestWrapper<HybridCalculator>::SetToys(static_cast<HybridCalculator*>(&hc), fUseCLs ? fgNToys : 1, 4*fgNToys);
+      if (fCalcType == kFrequentist) HypoTestWrapper<FrequentistCalculator>::SetToys(static_cast<FrequentistCalculator*>(&hc), fUseCLs ? fgNToys : 1, 4*fgNToys);
 
    while (clsMidErr >= fgCLAccuracy && (clsTarget == -1 || std::abs(clsMid-clsTarget) < 3*clsMidErr) ) {
       std::unique_ptr<HypoTestResult> more(hc.GetHypoTest());

@@ -185,7 +185,7 @@ double RooParametricStepFunction::lastBinValue() const
   double sum(0.);
   double binSize(0.);
   for (Int_t j=1;j<_nBins;j++){
-    RooRealVar* tmp = (RooRealVar*) _coefList.at(j-1);
+    RooRealVar* tmp = static_cast<RooRealVar*>(_coefList.at(j-1));
     binSize = _limits[j] - _limits[j-1];
     sum = sum + tmp->getVal()*binSize;
   }

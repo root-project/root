@@ -93,7 +93,7 @@ RooResolutionModel::RooResolutionModel(const RooResolutionModel &other, const ch
    : RooAbsPdf(other, name), x("x", this, other.x), _basisCode(other._basisCode), _ownBasis(false)
 {
   if (other._basis) {
-    _basis = (RooFormulaVar*) other._basis->Clone() ;
+    _basis = static_cast<RooFormulaVar*>(other._basis->Clone()) ;
     _ownBasis = true ;
     //_basis = other._basis ;
   }
@@ -164,7 +164,7 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
   newName.Append(owner->GetName()) ;
   newName.Append("]") ;
 
-  RooResolutionModel* conv = (RooResolutionModel*) clone(newName) ;
+  RooResolutionModel* conv = static_cast<RooResolutionModel*>(clone(newName)) ;
 
   TString newTitle(conv->GetTitle()) ;
   newTitle.Append(" convoluted with basis function ") ;
@@ -256,7 +256,7 @@ bool RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerLi
     return false ;
   }
 
-  RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;
+  RooFormulaVar* newBasis = static_cast<RooFormulaVar*>(newServerList.find(_basis->GetName())) ;
   if (newBasis) {
 
     if (_ownBasis) {

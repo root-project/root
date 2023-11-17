@@ -169,7 +169,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       SetBins(*params, fNumBins);
       SetBins(fPOI, fNumBins);
       if (dynamic_cast<PdfProposal*>(fPropFunc)) {
-         std::unique_ptr<RooArgSet> proposalVars{((PdfProposal*)fPropFunc)->GetPdf()->
+         std::unique_ptr<RooArgSet> proposalVars{(static_cast<PdfProposal*>(fPropFunc))->GetPdf()->
                                                getParameters((RooAbsData*)nullptr)};
          SetBins(*proposalVars, fNumBins);
       }

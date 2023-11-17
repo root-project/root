@@ -276,7 +276,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
 
 RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
           const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) :
-  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,nullptr,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
+  RooAbsData(name,title,RooArgSet(vars,static_cast<RooAbsArg*>(RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,nullptr,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))))
 {
   // Initialize datastore
   _dstore = makeDefaultDataStore(name, title, _vars);
@@ -382,9 +382,9 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
   appendToDir(this,true) ;
 
   // Define x,y,z as 1st, 2nd and 3rd observable
-  RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
-  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
-  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
+  RooRealVar* xvar = static_cast<RooRealVar*>(_vars.find(vars.at(0)->GetName())) ;
+  RooRealVar* yvar = static_cast<RooRealVar*>(vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
+  RooRealVar* zvar = static_cast<RooRealVar*>(vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
@@ -492,7 +492,7 @@ bool hasConsistentLayoutAndBinning(RooDataHist const& h1, RooDataHist const& h2)
 
 void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<string,TH1*> hmap, double wgt, bool doDensityCorrection)
 {
-  RooCategory* icat = (RooCategory*) _vars.find(indexCat.GetName()) ;
+  RooCategory* icat = static_cast<RooCategory*>(_vars.find(indexCat.GetName())) ;
 
   TH1* histo(nullptr) ;
   bool init(false) ;
@@ -536,9 +536,9 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   }
 
   // Define x,y,z as 1st, 2nd and 3rd observable
-  RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
-  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
-  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
+  RooRealVar* xvar = static_cast<RooRealVar*>(_vars.find(vars.at(0)->GetName())) ;
+  RooRealVar* yvar = static_cast<RooRealVar*>(vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
+  RooRealVar* zvar = static_cast<RooRealVar*>(vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
@@ -725,7 +725,7 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
 
 void RooDataHist::adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset)
 {
-  auto xvar = static_cast<RooRealVar*>( _vars.find(*vars.at(0)) );
+  auto xvar = static_cast<RooRealVar*>(_vars.find(*vars.at(0)) );
   _adjustBinning(*static_cast<RooRealVar*>(vars.at(0)), *href.GetXaxis(), xvar, offset ? &offset[0] : nullptr);
 
   if (vars.at(1)) {
@@ -1812,7 +1812,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, doubl
       return ;
     }
 
-    cloneVar = (RooFormulaVar*) tmp->find(*cutVar) ;
+    cloneVar = static_cast<RooFormulaVar*>(tmp->find(*cutVar)) ;
     cloneVar->attachDataSet(dset) ;
   }
 

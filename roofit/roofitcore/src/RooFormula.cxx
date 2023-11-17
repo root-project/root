@@ -361,7 +361,7 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
   // We only consider the usedVariables() for replacement, because only these
   // are registered as servers.
   for (const auto arg : usedVariables()) {
-    RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
+    RooAbsReal* replace = static_cast<RooAbsReal*>(arg->findNewServer(newDeps,nameChange)) ;
     if (replace) {
       _origList.replace(*arg, *replace);
 

@@ -60,8 +60,8 @@ RooRangeBoolean::RooRangeBoolean(const RooRangeBoolean& other, const char* name)
 
 double RooRangeBoolean::evaluate() const
 {
-  double xmin = ((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data()) ;
-  double xmax = ((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data()) ;
+  double xmin = (static_cast<RooAbsRealLValue const&>(_x.arg())).getMin(_rangeName.Data()) ;
+  double xmax = (static_cast<RooAbsRealLValue const&>(_x.arg())).getMax(_rangeName.Data()) ;
 
   double ret = (_x >= xmin && _x < xmax) ? 1.0 : 0.0 ;
   return ret ;
@@ -78,10 +78,10 @@ std::list<double>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, doub
   }
 
   std::list<double>* hint = new std::list<double> ;
-  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data())-1e-6) ;
-  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data())+1e-6) ;
-  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data())-1e-6) ;
-  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data())+1e-6) ;
+  hint->push_back((static_cast<RooAbsRealLValue const&>(_x.arg())).getMin(_rangeName.Data())-1e-6) ;
+  hint->push_back((static_cast<RooAbsRealLValue const&>(_x.arg())).getMin(_rangeName.Data())+1e-6) ;
+  hint->push_back((static_cast<RooAbsRealLValue const&>(_x.arg())).getMax(_rangeName.Data())-1e-6) ;
+  hint->push_back((static_cast<RooAbsRealLValue const&>(_x.arg())).getMax(_rangeName.Data())+1e-6) ;
   return hint ;
 }
 

@@ -54,7 +54,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
 
   // Constructor. Build an array of generator contexts for each product component PDF
   RooArgSet(model).snapshot(_pdfSet, true);
-  _pdf = (RooAbsPdf*) _pdfSet.find(model.GetName()) ;
+  _pdf = static_cast<RooAbsPdf*>(_pdfSet.find(model.GetName())) ;
   _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Fix normalization set of this RooAddPdf

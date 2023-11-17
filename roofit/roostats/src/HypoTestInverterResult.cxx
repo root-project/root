@@ -258,7 +258,7 @@ int HypoTestInverterResult::ExclusionCleanup()
       q[3] = values[i3];
       q[4] = values[i4];
     } else {
-      double * z = const_cast<double *>( &values[0] ); // need to change TMath::Quantiles
+      double * z = const_cast<double *>(&values[0] ); // need to change TMath::Quantiles
       TMath::Quantiles(values.size(), 5, z, q, p, false);
     }
 
@@ -352,7 +352,7 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
    else {
       for (int i = 0; i < nOther; ++i) {
          double otherVal = otherResult.fXValues[i];
-         HypoTestResult * otherHTR = (HypoTestResult*) otherResult.fYObjects.At(i);
+         HypoTestResult * otherHTR = static_cast<HypoTestResult*>(otherResult.fYObjects.At(i));
          if (otherHTR == nullptr) continue;
          bool sameXFound = false;
          for (int j = 0; j < nThis; ++j) {
@@ -361,11 +361,11 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
             // if same value merge the result
             if ( (std::abs(otherVal) < 1  && TMath::AreEqualAbs(otherVal, thisVal,1.E-12) ) ||
                  (std::abs(otherVal) >= 1 && TMath::AreEqualRel(otherVal, thisVal,1.E-12) ) ) {
-               HypoTestResult * thisHTR = (HypoTestResult*) fYObjects.At(j);
+               HypoTestResult * thisHTR = static_cast<HypoTestResult*>(fYObjects.At(j));
                thisHTR->Append(otherHTR);
                sameXFound = true;
                if (mergeExpPValues) {
-                  ((SamplingDistribution*) fExpPValues.At(j))->Add( (SamplingDistribution*)otherResult.fExpPValues.At(i) );
+                  (static_cast<SamplingDistribution*>(fExpPValues.At(j)))->Add( static_cast<SamplingDistribution*>(otherResult.fExpPValues.At(i)) );
                   // check if same toys have been used for the test statistic distribution
                   int thisNToys = (thisHTR->GetNullDistribution() ) ? thisHTR->GetNullDistribution()->GetSize() : 0;
                   int otherNToys = (otherHTR->GetNullDistribution() ) ? otherHTR->GetNullDistribution()->GetSize() : 0;
@@ -393,7 +393,7 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
                          << std::endl;
    else
       coutI(Eval) << "HypoTestInverterResult::Add  - new toys/point is "
-                         <<  ((HypoTestResult*) fYObjects.At(0))->GetNullDistribution()->GetSize()
+                         <<  (static_cast<HypoTestResult*>(fYObjects.At(0)))->GetNullDistribution()->GetSize()
                          << std::endl;
 
    // reset cached limit values
@@ -554,7 +554,7 @@ HypoTestResult* HypoTestInverterResult::GetResult( int index ) const
       return nullptr;
    }
 
-   return ((HypoTestResult*) fYObjects.At(index));
+   return (static_cast<HypoTestResult*>(fYObjects.At(index)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -597,7 +597,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
    double varmin = - TMath::Infinity();
    double varmax = TMath::Infinity();
-   const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
+   const RooRealVar* var = dynamic_cast<RooRealVar*>(fParameters.first() );
    if (var) {
        varmin = var->getMin();
        varmax = var->getMax();
@@ -715,7 +715,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
    // variable minimum and maximum
    double varmin = - TMath::Infinity();
    double varmax = TMath::Infinity();
-   const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
+   const RooRealVar* var = dynamic_cast<RooRealVar*>(fParameters.first() );
    if (var) {
        varmin = var->getMin();
        varmax = var->getMax();
@@ -1107,7 +1107,7 @@ double HypoTestInverterResult::UpperLimitEstimatedError()
 
 SamplingDistribution *  HypoTestInverterResult::GetBackgroundTestStatDist(int index ) const {
 
-   HypoTestResult * firstResult = (HypoTestResult*) fYObjects.At(index);
+   HypoTestResult * firstResult = static_cast<HypoTestResult*>(fYObjects.At(index));
    if (!firstResult) return nullptr;
    return firstResult->GetBackGroundIsAlt() ? firstResult->GetAltDistribution() : firstResult->GetNullDistribution();
 }
@@ -1116,7 +1116,7 @@ SamplingDistribution *  HypoTestInverterResult::GetBackgroundTestStatDist(int in
 /// get the signal and background test statistic distribution
 
 SamplingDistribution *  HypoTestInverterResult::GetSignalAndBackgroundTestStatDist(int index) const {
-   HypoTestResult * result = (HypoTestResult*) fYObjects.At(index);
+   HypoTestResult * result = static_cast<HypoTestResult*>(fYObjects.At(index));
    if (!result) return nullptr;
    return !result->GetBackGroundIsAlt() ? result->GetAltDistribution() : result->GetNullDistribution();
 }
@@ -1129,7 +1129,7 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
    if (index < 0 || index >=  ArraySize() ) return nullptr;
 
    if (fExpPValues.GetSize() == ArraySize()  ) {
-      return (SamplingDistribution*)  fExpPValues.At(index)->Clone();
+      return static_cast<SamplingDistribution*>( fExpPValues.At(index)->Clone());
    }
 
    static bool useFirstB = false;
@@ -1139,7 +1139,7 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
    SamplingDistribution * bDistribution = GetBackgroundTestStatDist(bIndex);
    SamplingDistribution * sbDistribution = GetSignalAndBackgroundTestStatDist(index);
 
-   HypoTestResult * result = (HypoTestResult*) fYObjects.At(index);
+   HypoTestResult * result = static_cast<HypoTestResult*>(fYObjects.At(index));
 
    if (bDistribution && sbDistribution) {
 

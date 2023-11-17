@@ -42,13 +42,13 @@ using namespace std;
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context) : _context(context)
 {
    // Examine parameter list
-   _floatParamList.reset((RooArgList *)paramList.selectByAttrib("Constant", false));
+   _floatParamList.reset(static_cast<RooArgList *>(paramList.selectByAttrib("Constant", false)));
    if (_floatParamList->getSize() > 1) {
       _floatParamList->sort();
    }
    _floatParamList->setName("floatParamList");
 
-   _constParamList.reset((RooArgList *)paramList.selectByAttrib("Constant", true));
+   _constParamList.reset(static_cast<RooArgList *>(paramList.selectByAttrib("Constant", true)));
    if (_constParamList->getSize() > 1) {
       _constParamList->sort();
    }
@@ -510,7 +510,7 @@ std::vector<double> RooAbsMinimizerFcn::getParameterValues() const
    values.reserve(_nDim);
 
    for (std::size_t index = 0; index < _nDim; ++index) {
-      RooRealVar *par = (RooRealVar *)_floatParamList->at(index);
+      RooRealVar *par = static_cast<RooRealVar *>(_floatParamList->at(index));
       values.push_back(par->getVal());
    }
 

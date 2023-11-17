@@ -100,7 +100,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
              << " is not a RooAbsArg, ignored" << endl ;
       continue ;
     }
-    add(*(RooAbsArg*)obj) ;
+    add(*static_cast<RooAbsArg*>(obj)) ;
   }
   TRACE_CREATE;
 }

@@ -93,7 +93,7 @@ void RooFunctorBinding::printArgs(ostream& os) const {
 double RooFunctorBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
     for (int i=0 ; i<vars.getSize() ; i++) {
-      x[i] = ((RooAbsReal*)vars.at(i))->getVal() ;
+      x[i] = static_cast<RooAbsReal*>(vars.at(i))->getVal();
     }
     return (*func)(x) ;
 }
@@ -145,7 +145,7 @@ void RooFunctorPdfBinding::printArgs(ostream& os) const {
 double RooFunctorPdfBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
     for (int i=0 ; i<vars.getSize() ; i++) {
-      x[i] = ((RooAbsReal*)vars.at(i))->getVal() ;
+      x[i] = static_cast<RooAbsReal*>(vars.at(i))->getVal();
     }
     return (*func)(x) ;
   }

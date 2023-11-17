@@ -187,11 +187,11 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
   switch (_funcMode) {
   case Function: normFactor=1 ; break ;
   case Pdf: normFactor = _dataClone->sumEntries() ; break ;
-  case ExtendedPdf: normFactor = ((RooAbsPdf*)_funcClone)->expectedEvents(_dataClone->get()) ; break ;
+  case ExtendedPdf: normFactor = (static_cast<RooAbsPdf*>(_funcClone))->expectedEvents(_dataClone->get()) ; break ;
   }
 
   // Loop over bins of dataset
-  RooDataHist* hdata = (RooDataHist*) _dataClone ;
+  RooDataHist* hdata = static_cast<RooDataHist*>(_dataClone) ;
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 
     // get the data values for this event

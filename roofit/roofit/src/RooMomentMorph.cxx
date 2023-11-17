@@ -244,8 +244,8 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
    std::string sigmaName = Form("%s_sigma_%d_%d",GetName(),i,j);
 
         RooAbsMoment* mom = nVar==1 ?
-     ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j)) :
-     ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j),varList) ;
+     (static_cast<RooAbsPdf*>(_pdfList.at(i)))->sigma(static_cast<RooRealVar&>(*varList.at(j))) :
+     (static_cast<RooAbsPdf*>(_pdfList.at(i)))->sigma(static_cast<RooRealVar&>(*varList.at(j)),varList) ;
 
    mom->setLocalNoDirtyInhibit(true) ;
    mom->mean()->setLocalNoDirtyInhibit(true) ;
@@ -302,7 +302,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
    ownedComps.add(*transVar[ij(i,j)]) ;
    cust.replaceArg(*var,*transVar[ij(i,j)]);
       }
-      transPdf[i] = (RooAbsPdf*) cust.build() ;
+      transPdf[i] = static_cast<RooAbsPdf*>(cust.build()) ;
       transPdfList.add(*transPdf[i]);
       ownedComps.add(*transPdf[i]) ;
     }
@@ -346,7 +346,7 @@ RooMomentMorph::CacheElem::~CacheElem() {}
 
 double RooMomentMorph::getVal(const RooArgSet* set) const
 {
-  _curNormSet = set ? (RooArgSet*)set : (RooArgSet*)&_varList ;
+  _curNormSet = set ? const_cast<RooArgSet*>(set) : const_cast<RooArgSet*>(static_cast<RooArgSet const*>(&_varList));
   return RooAbsPdf::getVal(set) ;
 }
 
@@ -405,9 +405,9 @@ void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, b
     for (Int_t j=0; j<nPdf; ++j) { ffrac += (*self._M)(j,i) * (j==0?1.:TMath::Power(dm,(double)j)); }
     if (ffrac>=0) sumposfrac+=ffrac;
     // fractions for pdf
-    ((RooRealVar*)frac(i))->setVal(ffrac);
+    const_cast<RooRealVar*>(frac(i))->setVal(ffrac);
     // fractions for rms and mean
-    ((RooRealVar*)frac(nPdf+i))->setVal(ffrac);
+    const_cast<RooRealVar*>(frac(nPdf+i))->setVal(ffrac);
     if (verbose) { std::cout << ffrac << std::endl; }
   }
 
@@ -427,31 +427,32 @@ void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, b
 
     case Linear:
       for (Int_t i=0; i<2*nPdf; ++i)
-        ((RooRealVar*)frac(i))->setVal(0.);
+        const_cast<RooRealVar*>(frac(i))->setVal(0.);
       if (imax>imin) { // m in between mmin and mmax
-        ((RooRealVar*)frac(imin))->setVal(1.-mfrac);
-        ((RooRealVar*)frac(nPdf+imin))->setVal(1.-mfrac);
-        ((RooRealVar*)frac(imax))->setVal(mfrac);
-        ((RooRealVar*)frac(nPdf+imax))->setVal(mfrac);
+        const_cast<RooRealVar*>(frac(imin))->setVal(1.-mfrac);
+        const_cast<RooRealVar*>(frac(nPdf+imin))->setVal(1.-mfrac);
+        const_cast<RooRealVar*>(frac(imax))->setVal(mfrac);
+        const_cast<RooRealVar*>(frac(nPdf+imax))->setVal(mfrac);
       } else if (imax==imin) { // m outside mmin and mmax
-        ((RooRealVar*)frac(imin))->setVal(1.);
-        ((RooRealVar*)frac(nPdf+imin))->setVal(1.);
+        const_cast<RooRealVar*>(frac(imin))->setVal(1.);
+        const_cast<RooRealVar*>(frac(nPdf+imin))->setVal(1.);
       }
     break;
     case NonLinearLinFractions:
       for (Int_t i=0; i<nPdf; ++i)
-        ((RooRealVar*)frac(i))->setVal(0.);
+        const_cast<RooRealVar*>(frac(i))->setVal(0.);
       if (imax>imin) { // m in between mmin and mmax
-        ((RooRealVar*)frac(imin))->setVal(1.-mfrac);
-        ((RooRealVar*)frac(imax))->setVal(mfrac);
+        const_cast<RooRealVar*>(frac(imin))->setVal(1.-mfrac);
+        const_cast<RooRealVar*>(frac(imax))->setVal(mfrac);
       } else if (imax==imin) { // m outside mmin and mmax
-        ((RooRealVar*)frac(imin))->setVal(1.);
+        const_cast<RooRealVar*>(frac(imin))->setVal(1.);
       }
     break;
     case NonLinearPosFractions:
-      for (Int_t i=0; i<nPdf; ++i) {
-        if (((RooRealVar*)frac(i))->getVal()<0) ((RooRealVar*)frac(i))->setVal(0.);
-        ((RooRealVar*)frac(i))->setVal(((RooRealVar*)frac(i))->getVal()/sumposfrac);
+      for (Int_t i = 0; i < nPdf; ++i) {
+         if (frac(i)->getVal() < 0)
+            const_cast<RooRealVar *>(frac(i))->setVal(0.);
+         const_cast<RooRealVar *>(frac(i))->setVal(frac(i)->getVal() / sumposfrac);
       }
     break;
   }

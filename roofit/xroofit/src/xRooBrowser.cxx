@@ -72,7 +72,7 @@ Many more features are available in the xRooBrowser, and further documentation a
 #include "TGFileDialog.h"
 #include "TObjString.h"
 
-#define GETPOPUPMENU(b, m) ((TGPopupMenu *)(*(void **)(((unsigned char *)b) + b->Class()->GetDataMemberOffset(#m))))
+#define GETPOPUPMENU(b, m) reinterpret_cast<TGPopupMenu *>(*reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(b) + b->Class()->GetDataMemberOffset(#m)))
 
 BEGIN_XROOFIT_NAMESPACE;
 
@@ -88,7 +88,7 @@ xRooBrowser::xRooBrowser(xRooNode *o) : TBrowser("RooBrowser", o, "RooFit Browse
             auto keys = _file->GetListOfKeys();
             if (keys) {
                for (auto &&k : *keys) {
-                  auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+                  auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
                   if (cl == RooWorkspace::Class() || cl->InheritsFrom("RooWorkspace")) {
                      if (auto w = _file->Get<RooWorkspace>(k->GetName()); w) {
                         if (!in->contains(_file->GetName())) {
@@ -128,7 +128,7 @@ void xRooBrowser::HandleMenu(Int_t id)
       if (fi.fMultipleSelection && fi.fFileNamesList) {
          TObjString *el;
          TIter next(fi.fFileNamesList);
-         while ((el = (TObjString *)next())) {
+         while ((el = static_cast<TObjString *>(next()))) {
             filesToOpen.push_back(gSystem->UnixPathName(el->GetString()));
          }
       } else if (fi.fFilename) {

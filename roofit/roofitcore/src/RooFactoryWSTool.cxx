@@ -615,7 +615,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   if (pdf) {
     pdf->setStringAttribute("factory_tag",Form("PROD::%s(%s)",objName,pdfList)) ;
     if (_ws->import(*pdf,Silence())) logError() ;
-    return (RooProdPdf*) _ws->pdf(objName) ;
+    return static_cast<RooProdPdf*>(_ws->pdf(objName)) ;
   } else {
     return nullptr;
   }
@@ -667,7 +667,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   // Import pdf into workspace
   pdf->setStringAttribute("factory_tag",Form("SIMUL::%s(%s,%s)",objName,indexCat,pdfMap)) ;
   if (_ws->import(*pdf,Silence())) logError() ;
-  return (RooSimultaneous*) _ws->pdf(objName) ;
+  return static_cast<RooSimultaneous*>(_ws->pdf(objName)) ;
 }
 
 
@@ -716,7 +716,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
   sum->setStringAttribute("factory_tag",Form("sum::%s(%s)",objName,specList)) ;
   if (_ws->import(*sum,Silence())) logError() ;
-  return (RooAddition*) _ws->pdf(objName) ;
+  return static_cast<RooAddition*>(_ws->function(objName));
 
 }
 
@@ -727,7 +727,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
 RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 {
-  return (RooProduct*) createArg("RooProduct",objName,Form("{%s}",pdfList)) ;
+  return static_cast<RooProduct*>(createArg("RooProduct",objName,Form("{%s}",pdfList))) ;
 }
 
 

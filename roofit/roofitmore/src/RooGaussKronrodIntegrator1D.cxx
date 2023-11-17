@@ -184,7 +184,7 @@ bool RooGaussKronrodIntegrator1D::checkLimits() const
 
 double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data)
 {
-  RooGaussKronrodIntegrator1D* instance = (RooGaussKronrodIntegrator1D*) data ;
+  auto instance = reinterpret_cast<RooGaussKronrodIntegrator1D*>(data);
   return instance->integrand(instance->xvec(x)) ;
 }
 

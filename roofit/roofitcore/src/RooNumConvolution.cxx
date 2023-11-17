@@ -130,7 +130,7 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
   if (proto) {
     convIntConfig() = proto->convIntConfig() ;
     if (proto->_useWindow) {
-      setConvolutionWindow((RooAbsReal&)*proto->_windowParam.at(0),(RooAbsReal&)*proto->_windowParam.at(1),proto->_windowScale) ;
+      setConvolutionWindow(static_cast<RooAbsReal&>(*proto->_windowParam.at(0)),static_cast<RooAbsReal&>(*proto->_windowParam.at(1)),proto->_windowScale) ;
     }
   }
 }
@@ -185,12 +185,12 @@ void RooNumConvolution::initialize() const
   RooCustomizer mgr1(pdf(),"NumConv_PdfClone") ;
   mgr1.setCloneBranchSet(_ownedClonedPdfSet) ;
   mgr1.replaceArg(var(),*_cloneVar) ;
-  _clonePdf = (RooAbsReal*) mgr1.build() ;
+  _clonePdf = static_cast<RooAbsReal*>(mgr1.build()) ;
 
   RooCustomizer mgr2(model(),"NumConv_ModelClone") ;
   mgr2.setCloneBranchSet(_ownedClonedModelSet) ;
   mgr2.replaceArg(var(),*_cloneVar) ;
-  _cloneModel = (RooAbsReal*) mgr2.build() ;
+  _cloneModel = static_cast<RooAbsReal*>(mgr2.build()) ;
 
   // Change name back to original name
   _cloneVar->SetName(var().GetName()) ;
@@ -233,8 +233,8 @@ double RooNumConvolution::evaluate() const
 
   // Adjust convolution integration window
   if (_useWindow) {
-    double center = ((RooAbsReal*)_windowParam.at(0))->getVal() ;
-    double width = _windowScale * ((RooAbsReal*)_windowParam.at(1))->getVal() ;
+    double center = (static_cast<RooAbsReal*>(_windowParam.at(0)))->getVal() ;
+    double width = _windowScale * (static_cast<RooAbsReal*>(_windowParam.at(1)))->getVal() ;
     _integrator->setLimits(x-center-width,x-center+width) ;
   } else {
     _integrator->setLimits(-RooNumber::infinity(),RooNumber::infinity()) ;

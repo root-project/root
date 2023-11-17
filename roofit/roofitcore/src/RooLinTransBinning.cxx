@@ -92,7 +92,7 @@ double* RooLinTransBinning::array() const
 
 void RooLinTransBinning::updateInput(const RooAbsBinning& input, double slope, double offset)
 {
-  _input = (RooAbsBinning*) &input ;
+  _input = const_cast<RooAbsBinning*>(&input);
   _slope = slope ;
   _offset = offset ;
 }

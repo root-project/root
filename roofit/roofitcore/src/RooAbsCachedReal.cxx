@@ -114,7 +114,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 {
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
-  FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,nullptr,&sterileIdx) ;
+  FuncCacheElem* cache = static_cast<FuncCacheElem*>(_cacheMgr.getObj(nset,nullptr,&sterileIdx)) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(true)) {
       ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function "
@@ -133,7 +133,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   }
 
   // Check if we have contents registered already in global expensive object cache
-  RooDataHist* histTmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
+  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
 
   if (histTmp) {
 
@@ -256,7 +256,7 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
   _ipOrder = order ;
 
   for (Int_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
-    FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObjByIndex(i) ;
+    FuncCacheElem* cache = static_cast<FuncCacheElem*>(_cacheMgr.getObjByIndex(i)) ;
     if (cache) {
       cache->func()->setInterpolationOrder(order) ;
     }

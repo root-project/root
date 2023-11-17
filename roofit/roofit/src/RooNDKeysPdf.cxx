@@ -538,7 +538,7 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
   const RooArgSet* values= data.get();
   vector<RooRealVar*> dVars(_nDim);
   for  (Int_t j=0; j<_nDim; j++) {
-    dVars[j] = (RooRealVar*)values->find(_varName[j].c_str());
+    dVars[j] = static_cast<RooRealVar*>(values->find(_varName[j].c_str()));
     _x0[j]=_x1[j]=_x2[j]=0.;
   }
 

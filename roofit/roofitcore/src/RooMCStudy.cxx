@@ -425,7 +425,7 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
     } else {
 
       // Load sample from internal list
-      _genSample = (RooDataSet*) _genDataList.At(nSamples) ;
+      _genSample = static_cast<RooDataSet*>(_genDataList.At(nSamples)) ;
       existingData = true ;
       if (!_genSample) {
       oocoutW(_fitModel,Generation) << "RooMCStudy::run: WARNING: Sample #" << nSamples << " not loaded, skipping" << endl ;
@@ -847,7 +847,7 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
   }
 
   // Retrieve fit result object
-  const RooFitResult* fr = (RooFitResult*) _fitResList.At(sampleNum) ;
+  const RooFitResult* fr = static_cast<RooFitResult*>(_fitResList.At(sampleNum)) ;
   if (fr) {
     return fr ;
   } else {
@@ -877,7 +877,7 @@ RooAbsData* RooMCStudy::genData(Int_t sampleNum) const
     return nullptr ;
   }
 
-  return  (RooAbsData*) _genDataList.At(sampleNum) ;
+  return  static_cast<RooAbsData*>(_genDataList.At(sampleNum)) ;
 }
 
 

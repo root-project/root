@@ -106,7 +106,7 @@ RooAbsBinning& RooErrorVar::getBinning(const char* name, bool /*verbose*/, bool 
   }
 
   // Check if binning with this name has been created already
-  RooAbsBinning* binning = (RooAbsBinning*) _altBinning.FindObject(name) ;
+  RooAbsBinning* binning = static_cast<RooAbsBinning*>(_altBinning.FindObject(name)) ;
   if (binning) {
     return *binning ;
   }
@@ -171,7 +171,7 @@ void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
   } else {
 
     // Remove any old binning with this name
-    RooAbsBinning* oldBinning = (RooAbsBinning*) _altBinning.FindObject(name) ;
+    RooAbsBinning* oldBinning = static_cast<RooAbsBinning*>(_altBinning.FindObject(name)) ;
     if (oldBinning) {
       _altBinning.Remove(oldBinning) ;
       delete oldBinning ;

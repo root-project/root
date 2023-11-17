@@ -107,7 +107,7 @@ double RooStepFunction::evaluate() const
     // No interpolation -- Return values bin-by-bin
     for (Int_t i=0;i<nb-1;i++){
       if (_x>b[i]&&_x<=b[i+1]) {
-   return ((RooAbsReal*)_coefList.at(i))->getVal() ;
+   return (static_cast<RooAbsReal*>(_coefList.at(i)))->getVal() ;
       }
     }
     return 0 ;

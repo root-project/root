@@ -424,7 +424,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 
       // generate one set of global observables and assign it
       // has problem for sim pdfs
-      RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>( &pdf );
+      RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>(&pdf );
       if (!simPdf) {
          std::unique_ptr<RooDataSet> one{pdf.generate(*fGlobalObservables, 1)};
 
@@ -437,7 +437,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       } else {
 
          if (_pdfList.empty()) {
-            RooCategory& channelCat = (RooCategory&)simPdf->indexCat();
+            auto& channelCat = const_cast<RooCategory&>(static_cast<RooCategory const&>(simPdf->indexCat()));
             int nCat = channelCat.numTypes();
             for (int i=0; i < nCat; ++i){
                channelCat.setIndex(i);

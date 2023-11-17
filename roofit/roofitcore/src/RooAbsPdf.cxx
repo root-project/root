@@ -520,7 +520,7 @@ double RooAbsPdf::getNorm(const RooArgSet* nset) const
 const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* iset, const TNamed* rangeName) const
 {
   // Check normalization is already stored
-  CacheElem* cache = (CacheElem*) _normMgr.getObj(nset,iset,0,rangeName) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset,iset,0,rangeName)) ;
   if (cache) {
     return cache->_norm ;
   }
@@ -561,7 +561,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   setActiveNormSet(nset);
 
   // Check if data sets are identical
-  CacheElem* cache = (CacheElem*) _normMgr.getObj(nset) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset)) ;
   if (cache) {
 
     bool nintChanged = (_norm!=cache->_norm) ;
@@ -576,7 +576,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
     // `syncNormalization()` is called.
     if (adjustProxies) {
       // Update dataset pointers of proxies
-      ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
+      const_cast<RooAbsPdf*>(this)->setProxyNormSet(nset) ;
     }
 
     return nintChanged ;
@@ -584,7 +584,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
 
   // Update dataset pointers of proxies
   if (adjustProxies) {
-    ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
+    const_cast<RooAbsPdf*>(this)->setProxyNormSet(nset) ;
   }
 
   RooArgSet depList;
@@ -2417,7 +2417,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Decode command line arguments
   ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
   double scaleFactor = pc.getDouble("scaleFactor") ;
-  const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+  const RooAbsCategoryLValue* asymCat = static_cast<const RooAbsCategoryLValue*>(pc.getObject("asymCat")) ;
   const char* compSpec = pc.getString("compSpec") ;
   const RooArgSet* compSet = pc.getSet("compSet");
   bool haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
@@ -2984,7 +2984,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const 
 RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
 {
   string name = string(GetName()) + "_NUMCDF_" + integralNameSuffix(iset,&nset).Data() ;
-  RooRealVar* ivar = (RooRealVar*) iset.first() ;
+  RooRealVar* ivar = static_cast<RooRealVar*>(iset.first()) ;
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumCdf>(name.c_str(),name.c_str(),*this,*ivar,"numcdf");
   ret->setInterpolationOrder(intOrder) ;

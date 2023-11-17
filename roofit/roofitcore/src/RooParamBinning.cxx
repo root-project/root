@@ -81,8 +81,8 @@ RooParamBinning::RooParamBinning(const RooParamBinning &other, const char *name)
 
   if (other._lp) {
 //     cout << "RooParamBinning::cctor(this = " << this << ") taking addresses from orig  ListProxy" << endl ;
-    _xlo = (RooAbsReal*) other._lp->at(0) ;
-    _xhi = (RooAbsReal*) other._lp->at(1) ;
+    _xlo = static_cast<RooAbsReal*>(other._lp->at(0)) ;
+    _xhi = static_cast<RooAbsReal*>(other._lp->at(1)) ;
 
   } else {
 

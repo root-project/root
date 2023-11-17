@@ -175,13 +175,13 @@ RooAbsReal *makeClassInstance(std::string const &baseClassName, std::string cons
    // First pass the RooAbsReal arguments in the list order
    for (RooAbsArg *var : vars) {
       if (dynamic_cast<RooAbsReal *>(var)) {
-         argList += Form(",*reinterpret_cast<RooAbsReal*>(0x%zx)", (std::size_t)var);
+         argList += Form(",*reinterpret_cast<RooAbsReal*>(0x%zx)", reinterpret_cast<std::size_t>(var));
       }
    }
    // Next pass the RooAbsCategory arguments in the list order
    for (RooAbsArg *var : vars) {
       if (var->isCategory()) {
-         argList += Form(",*reinterpret_cast<RooAbsCategory*>(0x%zx)", (std::size_t)var);
+         argList += Form(",*reinterpret_cast<RooAbsCategory*>(0x%zx)", reinterpret_cast<std::size_t>(var));
       }
    }
 

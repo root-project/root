@@ -183,9 +183,9 @@ RooAbsPdf *getBinnedPdf(RooAbsPdf *pdf)
       binnedPdf = pdf;
    } else if (pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
       // Default case: top-level pdf is a product of RRSP and other pdfs
-      for (const auto component : ((RooProdPdf *)pdf)->pdfList()) {
+      for (const auto component : (static_cast<RooProdPdf *>(pdf))->pdfList()) {
          if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
-            binnedPdf = (RooAbsPdf *)component;
+            binnedPdf = static_cast<RooAbsPdf *>(component);
             break;
          }
       }
@@ -257,11 +257,11 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
          bool binnedL = (binnedPdf != nullptr);
          if (binnedPdf == nullptr && component_pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
             // Default case: top-level pdf is a product of RRSP and other pdfs
-            for (const auto component : ((RooProdPdf *)component_pdf)->pdfList()) {
+            for (const auto component : (static_cast<RooProdPdf *>(component_pdf))->pdfList()) {
                if (component->getAttribute("MAIN_MEASUREMENT")) {
                   // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to
                   // be passed to the slave calculator
-                  binnedPdf = (RooAbsPdf *)component;
+                  binnedPdf = static_cast<RooAbsPdf *>(component);
                   break;
                }
             }

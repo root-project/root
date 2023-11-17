@@ -482,7 +482,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
   }
 
 
-  TH1 * ptr = (TH1 *) hist->Clone();
+  TH1 * ptr = static_cast<TH1 *>(hist->Clone());
 
   if(!ptr){
     std::cerr << "Not all necessary info are set to access the input file. Check your config" << std::endl;

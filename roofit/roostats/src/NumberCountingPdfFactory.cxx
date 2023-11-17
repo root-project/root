@@ -254,7 +254,7 @@ void NumberCountingPdfFactory::AddData(double* mainMeas,
          " Also stored these values of tau into workspace with name . " << (string(tau->GetName())+string(dsName)).c_str() <<
          " if you test with a different dataset, you should adjust tau appropriately.\n"<< endl;
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      ws->import(*((RooRealVar*) tau->clone( (string(tau->GetName())+string(dsName)).c_str() ) ) );
+      ws->import(*(static_cast<RooRealVar*>(tau->clone( (string(tau->GetName())+string(dsName)).c_str() )) ) );
       RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       // need to be careful
@@ -336,7 +336,7 @@ void NumberCountingPdfFactory::AddDataWithSideband(double* mainMeas,
          " Also stored these values of tau into workspace with name . " << (string(tau->GetName())+string(dsName)).c_str() <<
          " if you test with a different dataset, you should adjust tau appropriately.\n"<< endl;
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      ws->import(*((RooRealVar*) tau->clone( (string(tau->GetName())+string(dsName)).c_str() ) ) );
+      ws->import(*(static_cast<RooRealVar*>(tau->clone( (string(tau->GetName())+string(dsName)).c_str() )) ) );
       RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       // need to be careful

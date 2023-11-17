@@ -354,7 +354,7 @@ void RooLinkedList::setHashTableSize(Int_t size)
     RooLinkedListElem* ptr = _first ;
     while(ptr) {
       _htableName->insert({ptr->_arg->GetName(), ptr->_arg}) ;
-      _htableLink->insert({ptr->_arg, (TObject*)ptr}) ;
+      _htableLink->insert({ptr->_arg, reinterpret_cast<TObject*>(ptr)}) ;
       ptr = ptr->_next ;
     }
   }
@@ -386,7 +386,7 @@ RooLinkedListElem* RooLinkedList::findLink(const TObject* arg) const
   if (_htableLink) {
     auto found = _htableLink->find(arg);
     if (found == _htableLink->end()) return nullptr;
-    return (RooLinkedListElem*)found->second;
+    return const_cast<RooLinkedListElem *>(reinterpret_cast<RooLinkedListElem const*>(found->second));
   }
 
   RooLinkedListElem* ptr = _first;
@@ -435,7 +435,7 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   if (_htableName){
     //cout << "storing link " << _last << " with hash arg " << arg << endl ;
     _htableName->insert({arg->GetName(), arg});
-    _htableLink->insert({arg, (TObject*)_last});
+    _htableLink->insert({arg, reinterpret_cast<TObject *>(_last)});
   }
 
   _size++ ;
@@ -521,10 +521,10 @@ bool RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg)
   if (_htableLink) {
     // Link is hashed by contents and may change slot in hash table
     _htableLink->erase(oldArg) ;
-    _htableLink->insert({newArg, (TObject*)elem}) ;
+    _htableLink->insert({newArg, reinterpret_cast<TObject*>(elem)}) ;
   }
 
-  elem->_arg = (TObject*)newArg ;
+  elem->_arg = const_cast<TObject*>(newArg);
   return true ;
 }
 
@@ -543,7 +543,7 @@ TObject* RooLinkedList::FindObject(const char* name) const
 
 TObject* RooLinkedList::FindObject(const TObject* obj) const
 {
-  RooLinkedListElem *elem = findLink((TObject*)obj) ;
+  RooLinkedListElem *elem = findLink(const_cast<TObject*>(obj));
   return elem ? elem->_arg : nullptr ;
 }
 
@@ -666,7 +666,7 @@ TObject* RooLinkedList::find(const char* name) const
 RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const
 {
   if (_htableName) {
-    RooAbsArg* a = (RooAbsArg*) (*_htableName)[arg->GetName()] ;
+    RooAbsArg* a = const_cast<RooAbsArg *>(static_cast<RooAbsArg const*>((*_htableName)[arg->GetName()]));
     if (a) return a;
     //cout << "RooLinkedList::findArg: possibly renamed '" << arg->GetName() << "', kRenamedArg=" << arg->namePtr()->TestBit(RooNameReg::kRenamedArg) << endl;
     // See if it might have been renamed
@@ -676,8 +676,8 @@ RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const
   RooLinkedListElem* ptr = _first ;
   const TNamed* nptr = arg->namePtr();
   while(ptr) {
-    if (((RooAbsArg*)(ptr->_arg))->namePtr() == nptr) {
-      return (RooAbsArg*) ptr->_arg ;
+    if ((static_cast<RooAbsArg*>(ptr->_arg))->namePtr() == nptr) {
+      return static_cast<RooAbsArg*>(ptr->_arg) ;
     }
     ptr = ptr->_next ;
   }

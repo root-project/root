@@ -156,7 +156,7 @@ void RooSimSplitGenContext::initGenerator(const RooArgSet &theEvent)
   if (_idxCat->isDerived()) {
     _idxCat->recursiveRedirectServers(theEvent) ;
   } else {
-    _idxCat = (RooAbsCategoryLValue*) theEvent.find(_idxCat->GetName()) ;
+    _idxCat = static_cast<RooAbsCategoryLValue*>(theEvent.find(_idxCat->GetName())) ;
   }
 
   // Forward initGenerator call to all components
@@ -198,7 +198,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
   if (extendedMode ) {
     Int_t i(0) ;
     for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
-      RooAbsPdf* pdf=(RooAbsPdf*)proxy->absArg() ;
+      RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
       //nGen[i] = Int_t(pdf->expectedEvents(&_allVarsPdf)+0.5) ;
       nGen[i] = pdf->expectedEvents(&_allVarsPdf) ;
       i++ ;
@@ -208,7 +208,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
     Int_t i(1) ;
     _fracThresh[0] = 0 ;
     for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
-      RooAbsPdf* pdf=(RooAbsPdf*)proxy->absArg() ;
+      RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
       _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&_allVarsPdf) ;
       i++ ;
     }
@@ -247,7 +247,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
   }
 
   // Put all datasets together in a composite-store RooDataSet that links and owns the component datasets
-  RooDataSet* hmaster = new RooDataSet("hmaster","hmaster",_allVarsPdf,RooFit::Index((RooCategory&)*_idxCat),RooFit::Link(dataMap),RooFit::OwnLinked()) ;
+  RooDataSet* hmaster = new RooDataSet("hmaster","hmaster",_allVarsPdf,RooFit::Index(static_cast<RooCategory&>(*_idxCat)),RooFit::Link(dataMap),RooFit::OwnLinked()) ;
   return hmaster ;
 }
 

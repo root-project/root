@@ -271,7 +271,7 @@ bool PiecewiseInterpolation::setBinIntegrator(RooArgSet& allVars)
   if(allVars.getSize()==1){
     RooAbsReal* temp = const_cast<PiecewiseInterpolation*>(this);
     temp->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator")  ;
-    int nbins = ((RooRealVar*) allVars.first())->numBins();
+    int nbins = (static_cast<RooRealVar*>(allVars.first()))->numBins();
     temp->specialIntegratorConfig(true)->getConfigSection("RooBinIntegrator").setRealValue("numBins",nbins);
     return true;
   }else{
@@ -323,7 +323,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObj(normSet,&analVars,&sterileIdx)) ;
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }
@@ -430,7 +430,7 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
   */
 
   // old integral, only works for linear and not positive definite
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObjByIndex(code-1)) ;
   if( cache==nullptr ) {
     std::cout << "Error: Cache Element is nullptr" << std::endl;
     throw std::exception();

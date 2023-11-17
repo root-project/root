@@ -182,9 +182,9 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
   if (!pllint) return false;
 
-  std::cout<<"poi value: "<<((RooRealVar*)( _poi->first()))->getVal()<<std::endl;
+  std::cout<<"poi value: "<<(static_cast<RooRealVar*>(_poi->first()))->getVal()<<std::endl;
   std::cout<<(static_cast<RooRealVar*>((fitParams()->find(_parName.c_str()))))->getVal()<<std::endl;
-  std::cout<<((RooStats::LikelihoodInterval*)pllint)->UpperLimit((RooRealVar&)*(_poi->first()))<<std::endl;
+  std::cout<<(static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(_poi->first())))<<std::endl;
 
 
   //Go to the fit Value for zour POI to make sure upper limit works correct.
@@ -192,7 +192,7 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
 
 
-  _ul->setVal(((RooStats::LikelihoodInterval*)pllint)->UpperLimit(static_cast<RooRealVar&>(*(fitParams()->find(_parName.c_str())))));
+  _ul->setVal((static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(fitParams()->find(_parName.c_str())))));
 
   _data->add(RooArgSet(*_ul));
   std::cout<<"UL:"<<_ul->getVal()<<std::endl;

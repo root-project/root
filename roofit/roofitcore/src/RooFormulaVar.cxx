@@ -286,10 +286,10 @@ double RooFormulaVar::defaultErrorLevel() const
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
   for (const auto arg : _actualVars) {
     if (dynamic_cast<RooNLLVar*>(arg)) {
-      nllArg = (RooAbsReal*)arg ;
+      nllArg = static_cast<RooAbsReal*>(arg) ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
-      chi2Arg = (RooAbsReal*)arg ;
+      chi2Arg = static_cast<RooAbsReal*>(arg) ;
     }
   }
 #endif

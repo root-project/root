@@ -61,11 +61,11 @@ RooTFnBinding::RooTFnBinding(const RooTFnBinding& other, const char* name) :
 
 double RooTFnBinding::evaluate() const
 {
-  double x = _olist.at(0) ? ((RooAbsReal*)_olist.at(0))->getVal() : 0 ;
-  double y = _olist.at(1) ? ((RooAbsReal*)_olist.at(1))->getVal() : 0 ;
-  double z = _olist.at(2) ? ((RooAbsReal*)_olist.at(2))->getVal() : 0 ;
+  double x = _olist.at(0) ? (static_cast<RooAbsReal*>(_olist.at(0)))->getVal() : 0 ;
+  double y = _olist.at(1) ? (static_cast<RooAbsReal*>(_olist.at(1)))->getVal() : 0 ;
+  double z = _olist.at(2) ? (static_cast<RooAbsReal*>(_olist.at(2)))->getVal() : 0 ;
   for (Int_t i=0 ; i<_func->GetNpar() ; i++) {
-    _func->SetParameter(i,_plist.at(i)?((RooAbsReal*)_plist.at(i))->getVal() : 0) ;
+    _func->SetParameter(i,_plist.at(i)?(static_cast<RooAbsReal*>(_plist.at(i)))->getVal() : 0) ;
   }
   return _func->Eval(x,y,z) ;
 }

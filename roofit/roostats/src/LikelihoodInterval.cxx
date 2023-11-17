@@ -236,8 +236,8 @@ bool LikelihoodInterval::CreateMinimizer() {
    // need to restore values and errors for POI
    if (fBestFitParams) {
       for (int i = 0; i < params.getSize(); ++i) {
-         RooRealVar & par =  (RooRealVar &) params[i];
-         RooRealVar * fitPar =  (RooRealVar *) (fBestFitParams->find(par.GetName() ) );
+         RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
+         RooRealVar * fitPar =  static_cast<RooRealVar *> (fBestFitParams->find(par.GetName() ) );
          if (fitPar) {
             par.setVal( fitPar->getVal() );
             par.setError( fitPar->getError() );
@@ -277,7 +277,7 @@ bool LikelihoodInterval::CreateMinimizer() {
    assert( params.getSize() == int(fMinFunc->NDim()) );
 
    for (unsigned int i = 0; i < fMinFunc->NDim(); ++i) {
-      RooRealVar & v = (RooRealVar &) params[i];
+      RooRealVar & v = static_cast<RooRealVar &>( params[i]);
       fMinimizer->SetLimitedVariable( i, v.GetName(), v.getVal(), v.getError(), v.getMin(), v.getMax() );
    }
    // for finding the contour need to find first global minimum

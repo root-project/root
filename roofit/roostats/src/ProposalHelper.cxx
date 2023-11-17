@@ -120,7 +120,7 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
    fCovMatrix = new TMatrixDSym(size);
    RooRealVar* r;
    for (Int_t i = 0; i < size; i++) {
-      r = (RooRealVar*)xVec.at(i);
+      r = static_cast<RooRealVar*>(xVec.at(i));
       double range = r->getMax() - r->getMin();
       (*fCovMatrix)(i,i) = range / fSigmaRangeDivisor;
    }

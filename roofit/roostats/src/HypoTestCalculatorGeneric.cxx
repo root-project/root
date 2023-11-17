@@ -135,7 +135,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    std::unique_ptr<RooArgSet> saveAll {(RooArgSet*) bothParams->snapshot()};
 
    // check whether we have a ToyMCSampler and if so, keep a pointer to it
-   ToyMCSampler* toymcs = dynamic_cast<ToyMCSampler*>( fTestStatSampler );
+   ToyMCSampler* toymcs = dynamic_cast<ToyMCSampler*>(fTestStatSampler );
 
 
    // evaluate test statistic on data
@@ -148,7 +148,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       if (!allTS) return nullptr;
       //oocoutP(nullptr,Generation) << "All Test Statistics on data: " << endl;
       //allTS->Print("v");
-      RooRealVar* firstTS = (RooRealVar*)allTS->at(0);
+      RooRealVar* firstTS = static_cast<RooRealVar*>(allTS->at(0));
       obsTestStat = firstTS->getVal();
       if (allTS->getSize()<=1) {
         allTS = nullptr; // don't save

@@ -166,7 +166,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   }
 
   // Resolution model must support declared basis
-  if (!((RooResolutionModel*)_model.absArg())->isBasisSupported(expression)) {
+  if (!(static_cast<RooResolutionModel*>(_model.absArg()))->isBasisSupported(expression)) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): resolution model "
            << _model.absArg()->GetName()
            << " doesn't support basis function " << expression << endl ;
@@ -575,7 +575,7 @@ double RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const
 {
   if (nset==nullptr) return coefficient(coefIdx) ;
 
-  CacheElem* cache = (CacheElem*) _coefNormMgr.getObj(nset,nullptr,nullptr,rangeName) ;
+  CacheElem* cache = static_cast<CacheElem*>(_coefNormMgr.getObj(nset,nullptr,nullptr,rangeName)) ;
   if (!cache) {
 
     cache = new CacheElem ;
@@ -591,7 +591,7 @@ double RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const
     _coefNormMgr.setObj(nset,nullptr,cache,rangeName) ;
   }
 
-  return ((RooAbsReal*)cache->_normList.at(coefIdx))->getVal() ;
+  return (static_cast<RooAbsReal*>(cache->_normList.at(coefIdx)))->getVal() ;
 }
 
 

@@ -89,7 +89,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname) :
   RooAbsDataStore(other,vars,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(true)
 {
-  RooCategory* newIdx = (RooCategory*) vars.find(other._indexCat->GetName()) ;
+  RooCategory* newIdx = static_cast<RooCategory*>(vars.find(other._indexCat->GetName())) ;
   if (newIdx) {
     _indexCat = newIdx ;
   }
@@ -395,7 +395,7 @@ void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarS
 void RooCompositeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
   for (auto const& item : _dataMap) {
-    RooArgSet* subset = (RooArgSet*) set.selectCommon(*item.second->get()) ;
+    RooArgSet* subset = static_cast<RooArgSet*>(set.selectCommon(*item.second->get())) ;
     item.second->setArgStatus(*subset,active) ;
     delete subset ;
   }

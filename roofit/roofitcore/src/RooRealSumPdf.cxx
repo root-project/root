@@ -485,7 +485,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     RooArgSet dummy;
     Int_t code2 = caller.getAnalyticalIntegralWN(iset,dummy,&nset,rangeName);
     R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
-    cache = (CacheElem*) normIntMgr.getObjByIndex(code-1) ;
+    cache = static_cast<CacheElem*>(normIntMgr.getObjByIndex(code-1)) ;
     R__ASSERT(cache!=0);
   }
 

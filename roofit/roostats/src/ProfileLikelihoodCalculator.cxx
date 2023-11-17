@@ -244,8 +244,8 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    // set POI to fit value (this will speed up profileLL calculation of global minimum)
    const RooArgList & fitParams = fFitResult->floatParsFinal();
    for (int i = 0; i < fitParams.getSize(); ++i) {
-      RooRealVar & fitPar =  (RooRealVar &) fitParams[i];
-      RooRealVar * par = (RooRealVar*) fPOI.find( fitPar.GetName() );
+      RooRealVar & fitPar =  static_cast<RooRealVar &>( fitParams[i]);
+      RooRealVar * par = static_cast<RooRealVar*>(fPOI.find( fitPar.GetName() ));
       if (par) {
          par->setVal( fitPar.getVal() );
          par->setError( fitPar.getError() );
@@ -322,10 +322,10 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    // set POI to given values, set constant, calculate conditional MLE
    std::vector<double> oldValues(poiList.getSize() );
    for (unsigned int i = 0; i < oldValues.size(); ++i) {
-      RooRealVar * mytarget = (RooRealVar*) constrainedParams->find(poiList[i].GetName());
+      RooRealVar * mytarget = static_cast<RooRealVar*>(constrainedParams->find(poiList[i].GetName()));
       if (mytarget) {
          oldValues[i] = mytarget->getVal();
-         mytarget->setVal( ( (RooRealVar&) poiList[i] ).getVal() );
+         mytarget->setVal( ( static_cast<RooRealVar&>( poiList[i]) ).getVal() );
          mytarget->setConstant(true);
       }
    }
@@ -389,7 +389,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
    // restore previous value of poi
    for (unsigned int i = 0; i < oldValues.size(); ++i) {
-      RooRealVar * mytarget = (RooRealVar*) constrainedParams->find(poiList[i].GetName());
+      RooRealVar * mytarget = static_cast<RooRealVar*>(constrainedParams->find(poiList[i].GetName()));
       if (mytarget) {
          mytarget->setVal(oldValues[i] );
          mytarget->setConstant(false);

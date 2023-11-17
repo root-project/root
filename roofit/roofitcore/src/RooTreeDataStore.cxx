@@ -166,10 +166,10 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
   // Constructor from existing data set with list of variables that preserves the cache
   initialize();
 
-  attachCache(nullptr,((RooTreeDataStore&)tds)._cachedVars) ;
+  attachCache(nullptr,(static_cast<RooTreeDataStore&>(tds))._cachedVars) ;
 
   // WVE copy values of cached variables here!!!
-  _cacheTree->CopyEntries(((RooTreeDataStore&)tds)._cacheTree) ;
+  _cacheTree->CopyEntries((static_cast<RooTreeDataStore&>(tds))._cacheTree) ;
   _cacheOwner = nullptr ;
 
   loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
@@ -523,7 +523,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
       continue ;
     }
 
-    _cachedVars.assign(((RooTreeDataStore*)ads)->_cachedVars) ;
+    _cachedVars.assign(static_cast<RooTreeDataStore const*>(ads)->_cachedVars) ;
     fill() ;
   }
 
@@ -554,7 +554,7 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 {
   checkInit() ;
 
-  Int_t ret = ((RooTreeDataStore*)this)->GetEntry(index, 1) ;
+  Int_t ret = const_cast<RooTreeDataStore*>(this)->GetEntry(index, 1);
 
   if(!ret) return nullptr;
 
