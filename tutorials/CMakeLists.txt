@@ -74,7 +74,8 @@ if(NOT ROOT_minuit2_FOUND)
 endif()
 
 if(NOT clad)
-  set(clad_veto fit/minuit2GausFit.C)
+  set(clad_veto fit/minuit2GausFit.C
+                fit/exampleFit3D.C)
 endif()
 
 # RBatchGenerator tutorials need Python 3.8+.
