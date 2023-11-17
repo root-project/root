@@ -271,7 +271,7 @@ void RooRealMPFE::serverLoop()
    *_pipe >> idx >> value >> isConst;
    if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName()
              << ") IPC fromClient> SendReal [" << idx << "]=" << value << endl ;
-   RooRealVar* rvar = (RooRealVar*)_vars.at(idx) ;
+   RooRealVar* rvar = static_cast<RooRealVar*>(_vars.at(idx)) ;
    rvar->setVal(value) ;
    if (rvar->isConstant() != isConst) {
      rvar->setConstant(isConst) ;
@@ -284,7 +284,7 @@ void RooRealMPFE::serverLoop()
    *_pipe >> idx >> index;
    if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName()
              << ") IPC fromClient> SendCat [" << idx << "]=" << index << endl ;
-   ((RooCategory*)_vars.at(idx))->setIndex(index) ;
+   (static_cast<RooCategory*>(_vars.at(idx)))->setIndex(index) ;
       }
       break ;
 
@@ -466,14 +466,14 @@ void RooRealMPFE::calculate() const
    if (_verboseClient) cout << "RooRealMPFE::calculate(" << GetName()
              << ") variable " << _vars.at(i)->GetName() << " changed" << endl ;
    if (constChanged) {
-     ((RooRealVar*)saveVar)->setConstant(var->isConstant()) ;
+     (static_cast<RooRealVar*>(saveVar))->setConstant(var->isConstant()) ;
    }
    saveVar->copyCache(var) ;
 
    // send message to server
    if (dynamic_cast<RooAbsReal*>(var)) {
      int msg = SendReal ;
-     double val = ((RooAbsReal*)var)->getVal() ;
+     double val = (static_cast<RooAbsReal*>(var))->getVal() ;
      bool isC = var->isConstant() ;
      *_pipe << msg << i << val << isC;
 
@@ -481,7 +481,7 @@ void RooRealMPFE::calculate() const
                << ") IPC toServer> SendReal [" << i << "]=" << val << (isC?" (Constant)":"") <<  endl ;
    } else if (dynamic_cast<RooAbsCategory*>(var)) {
      int msg = SendCat ;
-     UInt_t idx = ((RooAbsCategory*)var)->getCurrentIndex() ;
+     UInt_t idx = (static_cast<RooAbsCategory*>(var))->getCurrentIndex() ;
      *_pipe << msg << i << idx;
      if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName()
                << ") IPC toServer> SendCat [" << i << "]=" << idx << endl ;

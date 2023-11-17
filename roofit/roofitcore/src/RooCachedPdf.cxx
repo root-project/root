@@ -97,7 +97,7 @@ void RooCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   }
 
   // Update contents of histogram
-  ((RooAbsPdf&)pdf.arg()).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
+  (const_cast<RooAbsPdf &>(static_cast<RooAbsPdf const&>(pdf.arg()))).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
 
   if (cache.hist()->get()->getSize()>1) {
     ccoutP(Eval) << endl ;

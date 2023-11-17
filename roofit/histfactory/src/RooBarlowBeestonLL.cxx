@@ -104,7 +104,7 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBee
 
 void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() const {
   for (auto const *var : static_range_cast<RooRealVar *>(*bin_center)) {
-    RooRealVar* target = (RooRealVar*) observables->find(var->GetName()) ;
+    RooRealVar* target = static_cast<RooRealVar*>(observables->find(var->GetName())) ;
     target->setVal(var->getVal()) ;
   }
 }
@@ -146,8 +146,8 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
   }
 
   // Loop over the channels
-  RooSimultaneous* simPdf = (RooSimultaneous*) _pdf;
-  RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
+  auto simPdf = static_cast<RooSimultaneous*>(_pdf);
+  auto channelCat = static_cast<RooCategory const*>(&simPdf->indexCat());
   for (const auto& nameIdx : *channelCat) {
 
     // Warning: channel cat name is not necessarily the same name
@@ -437,7 +437,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       BarlowCache& bin_cache = channel_cache.at(i);
       if( !bin_cache.hasStatUncert ) continue;
 
-      RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      RooAbsPdf* sum_pdf = static_cast<RooAbsPdf*>(bin_cache.sumPdf);
       RooArgSet* obsSet = bin_cache.observables;
       double binVolume = bin_cache.binVolume;
 
@@ -459,7 +459,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       BarlowCache& bin_cache = channel_cache.at(i);
       if( !bin_cache.hasStatUncert ) continue;
 
-      RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      RooAbsPdf* sum_pdf = static_cast<RooAbsPdf*>(bin_cache.sumPdf);
       RooArgSet* obsSet = bin_cache.observables;
       double binVolume = bin_cache.binVolume;
 

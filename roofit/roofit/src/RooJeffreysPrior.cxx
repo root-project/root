@@ -91,7 +91,7 @@ double RooJeffreysPrior::evaluate() const
   RooHelpers::LocalChangeMsgLevel msgLvlRAII(RooFit::WARNING);
 
 
-  CacheElem* cacheElm = (CacheElem*) _cacheMgr.getObj(nullptr);
+  CacheElem* cacheElm = static_cast<CacheElem*>(_cacheMgr.getObj(nullptr));
   if (!cacheElm) {
     //Internally, we have to enlarge the range of fit parameters to make
     //fits converge even if we are close to the limit of a parameter. Therefore, we clone the pdf and its

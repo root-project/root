@@ -93,8 +93,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
   _meanSF("meanSF", "Scale factor for mean", this, RooRealConstant::value(1)),
-  ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
-  rsf("rsf","RLife Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
+  ssf("ssf","Sigma Scale Factor",this,RooRealConstant::value(1)),
+  rsf("rsf","RLife Scale Factor",this,RooRealConstant::value(1)),
   _flip(type==Flipped),_nlo(nlo), _flatSFInt(false), _asympInt(false)
 {
 }
@@ -271,10 +271,10 @@ double RooGExpModel::evaluate() const
   double sig = sigma*ssf ;
   double rtau = rlife*rsf ;
 
-  double tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0. ;
+  double tau = (_basisCode!=noBasis)?(static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal():0. ;
   // added, FMV 07/27/03
   if (basisType == coshBasis && _basisCode!=noBasis ) {
-     double dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+     double dGamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
      if (dGamma==0) basisType = expBasis;
   }
 
@@ -314,7 +314,7 @@ double RooGExpModel::evaluate() const
     return 0. ;
   }
 
-  double omega = (basisType!=expBasis)?((RooAbsReal*)basis().getParameter(2))->getVal():0. ;
+  double omega = (basisType!=expBasis)?(static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal():0. ;
 
   // *** 3nd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
@@ -353,7 +353,7 @@ double RooGExpModel::evaluate() const
 
   // *** 6th form: Convolution with exp(-t/tau)*sinh(dgamma*t/2), used for sinhBasis ***
   if (basisType==sinhBasis) {
-    double dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    double dgamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
 
     if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName()
               << ") 6th form = " << dgamma << ", tau = " << tau << endl;
@@ -373,7 +373,7 @@ double RooGExpModel::evaluate() const
 
   // *** 7th form: Convolution with exp(-t/tau)*cosh(dgamma*t/2), used for coshBasis ***
   if (basisType==coshBasis) {
-    double dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    double dgamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
 
     if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName()
                << ") 7th form = " << dgamma << ", tau = " << tau << endl;
@@ -653,11 +653,11 @@ double RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
 
-  double tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
+  double tau = (_basisCode!=noBasis)?(static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal():0 ;
 
   // added FMV, 07/24/03
   if (basisType == coshBasis && _basisCode!=noBasis ) {
-     double dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+     double dGamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
      if (dGamma==0) basisType = expBasis;
   }
   double fsign = _flip?-1:1 ;
@@ -687,7 +687,7 @@ double RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const
     return result*ssfInt ;
   }
 
-  double omega = (basisType!=expBasis) ?((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
+  double omega = (basisType!=expBasis) ?(static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() : 0 ;
 
   // *** 2nd form: unity, used for sinBasis and cosBasis with tau=0 (PDF is zero) ***
   //if (tau==0&&omega!=0) {
@@ -740,7 +740,7 @@ double RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const
     return result*ssfInt ;
   }
 
-  double dgamma = ((basisType==coshBasis)||(basisType==sinhBasis))?((RooAbsReal*)basis().getParameter(2))->getVal():0 ;
+  double dgamma = ((basisType==coshBasis)||(basisType==sinhBasis))?(static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal():0 ;
 
   // *** 6th form: Convolution with exp(-t/tau)*sinh(dgamma*t/2), used for sinhBasis ***
   if (basisType==sinhBasis) {

@@ -304,7 +304,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       if (drawAxis && !drawObs) {
          gexp->Draw("A");
          if (gexp->GetHistogram()) gexp->GetHistogram()->SetTitle( GetTitle() );
-         gplot = (TGraph*) gexp->GetListOfGraphs()->First();
+         gplot = static_cast<TGraph*>(gexp->GetListOfGraphs()->First());
       }
       else
          gexp->Draw();
@@ -394,7 +394,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
 SamplingDistPlot * HypoTestInverterPlot::MakeTestStatPlot(int index, int type, int nbins) {
    SamplingDistPlot * pl = nullptr;
    if (type == 0) {
-      HypoTestResult * result = (HypoTestResult*) fResults->fYObjects.At(index);
+      HypoTestResult * result = static_cast<HypoTestResult*>(fResults->fYObjects.At(index));
       if (result)
          pl = new HypoTestPlot(*result, nbins );
       return pl;

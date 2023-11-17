@@ -148,7 +148,7 @@ SPlot::SPlot(const char *name, const char *title) : TNamed(name, title)
 ///No sWeighted variables are present
 
 SPlot::SPlot(const char *name, const char *title, const RooDataSet &data)
-   : TNamed(name, title), fSData((RooDataSet *)&data)
+   : TNamed(name, title), fSData(const_cast<RooDataSet *>(&data))
 {
   RooArgList Args;
 
@@ -188,7 +188,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
   TNamed(name, title)
 {
   if(cloneData) {
-    fSData = (RooDataSet*) data.Clone(newName);
+    fSData = static_cast<RooDataSet*>(data.Clone(newName));
     SetBit(kOwnData);
   }
   else
@@ -426,7 +426,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   for(Int_t i = 0; i < constParameters->getSize(); i++)
   {
-    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>( (*constParameters)[i] );
+    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>((*constParameters)[i] );
     if(varTemp &&  varTemp->isConstant() == 0 )
     {
       varTemp->setConstant();
@@ -451,7 +451,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   }
 
   const Int_t nspec = yieldsTmp.getSize();
-  RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(false);
+  RooArgList yields = *static_cast<RooArgList*>(yieldsTmp.snapshot(false));
 
   if (RooMsgService::instance().isActive(this, RooFit::InputArguments, RooFit::DEBUG)) {
     coutI(InputArguments) << "Printing Yields" << endl;

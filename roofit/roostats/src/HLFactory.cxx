@@ -257,7 +257,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
         return nullptr;
 
     if (fDatasetsNames.GetSize()==1){
-        fComboDataset=(RooDataSet*)fWs->data(static_cast<TObjString*>(fDatasetsNames.First())->String().Data());
+        fComboDataset=static_cast<RooDataSet*>(fWs->data(static_cast<TObjString*>(fDatasetsNames.First())->String().Data()));
         return fComboDataset;
         }
 
@@ -269,7 +269,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
     TObjString* ostring;
     ostring = static_cast<TObjString*>(*it);
     ++it;
-    fComboDataset = (RooDataSet*) fWs->data(ostring->String().Data()) ;
+    fComboDataset = static_cast<RooDataSet*>(fWs->data(ostring->String().Data())) ;
     if (!fComboDataset) return nullptr;
     fComboDataset->Print();
     TString dataname(GetName());
@@ -280,7 +280,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
     for(; it != fDatasetsNames.end() ; ++it) {
         ostring = static_cast<TObjString*>(*it);
         catindex++;
-        RooDataSet * data = (RooDataSet*)fWs->data(ostring->String().Data());
+        RooDataSet * data = static_cast<RooDataSet*>(fWs->data(ostring->String().Data()));
         if (!data) return nullptr;
         RooDataSet* dummy = new RooDataSet(*data,"");
         fComboCat->setIndex(catindex);

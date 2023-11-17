@@ -53,7 +53,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
              const RooDataHist& dhist, Int_t intOrder) :
   RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
   _intOrder(intOrder)
 {
@@ -92,7 +92,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
              const RooDataHist& dhist, Int_t intOrder) :
   RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
   _intOrder(intOrder)
 {
@@ -449,10 +449,10 @@ bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
 
       // Check if histograms are identical
-      if (areIdentical((RooDataHist&)*wsdata,*_dataHist)) {
+      if (areIdentical(static_cast<RooDataHist&>(*wsdata),*_dataHist)) {
 
         // Exists and is of correct type, and identical -- adjust internal pointer to WS copy
-        _dataHist = (RooDataHist*) wsdata ;
+        _dataHist = static_cast<RooDataHist*>(wsdata) ;
       } else {
 
         // not identical, clone rename and import
@@ -462,7 +462,7 @@ bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
           coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
           return true ;
         }
-        _dataHist = (RooDataHist*) ws.embeddedData(uniqueName) ;
+        _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName)) ;
       }
 
     } else {
@@ -484,7 +484,7 @@ bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
   ws.import(*_dataHist,RooFit::Embedded()) ;
 
   // Redirect our internal pointer to the copy in the workspace
-  _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
+  _dataHist = static_cast<RooDataHist*>(ws.embeddedData(_dataHist->GetName())) ;
   return false ;
 }
 

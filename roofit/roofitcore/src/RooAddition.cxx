@@ -244,14 +244,14 @@ double RooAddition::defaultErrorLevel() const
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
     if (dynamic_cast<RooNLLVarNew*>(arg)) {
-      nllArg = (RooAbsReal*)arg ;
+      nllArg = static_cast<RooAbsReal*>(arg) ;
     }
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
     if (dynamic_cast<RooNLLVar*>(arg)) {
-      nllArg = (RooAbsReal*)arg ;
+      nllArg = static_cast<RooAbsReal*>(arg) ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
-      chi2Arg = (RooAbsReal*)arg ;
+      chi2Arg = static_cast<RooAbsReal*>(arg) ;
     }
 #endif
   }
@@ -307,7 +307,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
+  CacheElem* cache = static_cast<CacheElem*>(_cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName)));
   if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code+1;
@@ -329,7 +329,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
+  CacheElem *cache = static_cast<CacheElem*>(_cacheMgr.getObjByIndex(code-1));
   if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );

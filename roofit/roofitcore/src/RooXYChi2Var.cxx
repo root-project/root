@@ -140,7 +140,7 @@ RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var &other, const char *name)
    : RooAbsOptTestStatistic(other, name),
      _extended(other._extended),
      _integrate(other._integrate),
-     _yvar(other._yvar ? (RooRealVar *)_dataClone->get()->find(other._yvar->GetName()) : nullptr),
+     _yvar(other._yvar ? static_cast<RooRealVar *>(_dataClone->get()->find(other._yvar->GetName())) : nullptr),
      _intConfig(other._intConfig)
 {
 
@@ -307,7 +307,7 @@ double RooXYChi2Var::fy() const
     return ret / volume ;
   }
   if (_extended) {
-    RooAbsPdf* pdf = (RooAbsPdf*) _funcClone ;
+    RooAbsPdf* pdf = static_cast<RooAbsPdf*>(_funcClone) ;
     // Multiply with expected number of events
     yfunc *= pdf->expectedEvents(_dataClone->get()) ;
   }
@@ -324,7 +324,7 @@ double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
   double result(0), carry(0);
 
   // Loop over bins of dataset
-  RooDataSet* xydata = (RooDataSet*) _dataClone ;
+  RooDataSet* xydata = static_cast<RooDataSet*>(_dataClone) ;
 
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 

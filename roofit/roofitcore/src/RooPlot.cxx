@@ -313,9 +313,9 @@ void RooPlot::initialize()
 TString RooPlot::histName() const
 {
   if (_plotVar) {
-    return TString(Form("frame_%s_%zx",_plotVar->GetName(),(size_t)this)) ;
+    return TString(Form("frame_%s_%zx",_plotVar->GetName(),reinterpret_cast<size_t>(this))) ;
   } else {
-    return TString(Form("frame_%zx",(size_t)this)) ;
+    return TString(Form("frame_%zx",reinterpret_cast<size_t>(this))) ;
   }
 }
 
@@ -559,7 +559,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
 
 void RooPlot::updateFitRangeNorm(const TH1* hist)
 {
-  const TAxis* xa = ((TH1*)hist)->GetXaxis() ;
+  const TAxis* xa = const_cast<TH1 *>(hist)->GetXaxis() ;
   _normBinWidth = (xa->GetXmax()-xa->GetXmin())/hist->GetNbinsX() ;
   _normNumEvts = hist->GetEntries()/_normBinWidth ;
 }
@@ -1079,14 +1079,14 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
 {
 
   // Find curve object
-  RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
+  RooCurve* curve = static_cast<RooCurve*>(findObject(curvename,RooCurve::Class())) ;
   if (!curve) {
     coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << endl ;
     return -1. ;
   }
 
   // Find histogram object
-  RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
+  RooHist* hist = static_cast<RooHist*>(findObject(histname,RooHist::Class())) ;
   if (!hist) {
     coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << endl ;
     return -1. ;

@@ -209,7 +209,7 @@ void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 
 void RooAddModel::fixCoefRange(const char* rangeName)
 {
-  _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
+  _refCoefRangeName = const_cast<TNamed*>(RooNameReg::ptr(rangeName));
 }
 
 
@@ -477,7 +477,7 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
 {
   Int_t sterileIdx(-1) ;
 
-  IntCacheElem* cache = (IntCacheElem*) _intCacheMgr.getObj(nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName)) ;
+  IntCacheElem* cache = static_cast<IntCacheElem*>(_intCacheMgr.getObj(nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName))) ;
   if (cache) {
     code = _intCacheMgr.lastIndex() ;
     compIntList = &cache->_intList ;
@@ -515,7 +515,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
   }
 
   // Partial integration scenarios
-  IntCacheElem* cache = (IntCacheElem*) _intCacheMgr.getObjByIndex(code-1) ;
+  IntCacheElem* cache = static_cast<IntCacheElem*>(_intCacheMgr.getObjByIndex(code-1)) ;
 
   RooArgList* compIntList ;
 

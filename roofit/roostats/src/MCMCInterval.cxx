@@ -264,7 +264,7 @@ void MCMCInterval::SetAxes(RooArgList& axes)
       return;
    }
    for (Int_t i = 0; i < size; i++)
-      fAxes[i] = (RooRealVar*)axes.at(i);
+      fAxes[i] = static_cast<RooRealVar*>(axes.at(i));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,14 +359,14 @@ void MCMCInterval::CreateHist()
    for (Int_t i = fNumBurnInSteps; i < size; i++) {
       entry = fChain->Get(i);
       if (fDimension == 1)
-         ((TH1F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH1F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
                               fChain->Weight());
       else if (fDimension == 2)
-         ((TH2F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH2F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
                               entry->getRealValue(fAxes[1]->GetName()),
                               fChain->Weight());
       else
-         ((TH3F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH3F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
                               entry->getRealValue(fAxes[1]->GetName()),
                               entry->getRealValue(fAxes[2]->GetName()),
                               fChain->Weight());
@@ -1336,7 +1336,7 @@ TH1* MCMCInterval::GetPosteriorHist()
      // if fHist is still nullptr, then CreateHist failed
      return nullptr;
 
-  return (TH1*) fHist->Clone("MCMCposterior_hist");
+  return static_cast<TH1*>(fHist->Clone("MCMCposterior_hist"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1353,7 +1353,7 @@ RooNDKeysPdf* MCMCInterval::GetPosteriorKeysPdf()
       // if fKeysPdf is still nullptr, then it means CreateKeysPdf failed
       return nullptr;
 
-   return (RooNDKeysPdf*) fKeysPdf->Clone("MCMCPosterior_keys");
+   return static_cast<RooNDKeysPdf*>(fKeysPdf->Clone("MCMCPosterior_keys"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1372,7 +1372,7 @@ RooProduct* MCMCInterval::GetPosteriorKeysProduct()
       // if fProduct is still nullptr, then it means CreateKeysPdf failed
       return nullptr;
 
-   return (RooProduct*) fProduct->Clone("MCMCPosterior_keysproduct");
+   return static_cast<RooProduct*>(fProduct->Clone("MCMCPosterior_keysproduct"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

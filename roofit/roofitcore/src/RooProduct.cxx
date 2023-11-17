@@ -214,7 +214,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
 
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange));
+  CacheElem* cache = static_cast<CacheElem*>(_cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange)));
   if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code;
@@ -302,7 +302,7 @@ Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 double RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
+  CacheElem *cache = static_cast<CacheElem*>(_cacheMgr.getObjByIndex(code-1));
   if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );

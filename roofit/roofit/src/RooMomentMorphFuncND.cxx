@@ -95,7 +95,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    for (int i = 0; i < mrefpoints.GetNrows(); ++i) {
       for (int j = 0; j < grid.numBoundaries(); ++j) {
          if (mrefpoints[i] == grid.array()[j]) {
-            _referenceGrid.addPdf(*(Base_t *)pdfList.at(i), j);
+            _referenceGrid.addPdf(*static_cast<Base_t *>(pdfList.at(i)), j);
             break;
          }
       }
@@ -408,12 +408,12 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 
       fracl.add(*frac);
       if (i < nPdf)
-         coefList.add(*(RooRealVar *)(fracl.at(i)));
+         coefList.add(*static_cast<RooRealVar *>(fracl.at(i)));
       else if (i < 2 * nPdf)
-         coefList2.add(*(RooRealVar *)(fracl.at(i)));
+         coefList2.add(*static_cast<RooRealVar *>(fracl.at(i)));
       else
-         coefList3.add(*(RooRealVar *)(fracl.at(i)));
-      ownedComps.add(*(RooRealVar *)(fracl.at(i)));
+         coefList3.add(*static_cast<RooRealVar *>(fracl.at(i)));
+      ownedComps.add(*static_cast<RooRealVar *>(fracl.at(i)));
    }
 
    RooAbsReal *theSum = nullptr;
@@ -425,8 +425,8 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       RooArgList obsList(_obsList);
       for (int i = 0; i < nPdf; ++i) {
          for (int j = 0; j < nObs; ++j) {
-            RooAbsMoment *mom = nObs == 1 ? ((Base_t *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j))
-                                          : ((Base_t *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j), obsList);
+            RooAbsMoment *mom = nObs == 1 ? (static_cast<Base_t *>(_pdfList.at(i)))->sigma(static_cast<RooRealVar &>(*obsList.at(j)))
+                                          : (static_cast<Base_t *>(_pdfList.at(i)))->sigma(static_cast<RooRealVar &>(*obsList.at(j)), obsList);
 
             mom->setLocalNoDirtyInhibit(true);
             mom->mean()->setLocalNoDirtyInhibit(true);
@@ -534,7 +534,7 @@ RooMomentMorphFuncND::CacheElem::~CacheElem()
 double RooMomentMorphFuncND::getValV(const RooArgSet *set) const
 {
    // Special version of getValV() overrides Base_t::getValV() to save value of current normalization set
-   _curNormSet = set ? (RooArgSet *)set : (RooArgSet *)&_obsList;
+   _curNormSet = set ? const_cast<RooArgSet *>(set) : const_cast<RooArgSet *>(static_cast<RooArgSet const*>(&_obsList));
    return Base_t::getValV(set);
 }
 
@@ -566,13 +566,13 @@ double RooMomentMorphFuncND::evaluate() const
 //_____________________________________________________________________________
 RooRealVar *RooMomentMorphFuncND::CacheElem::frac(int i)
 {
-   return (RooRealVar *)(_frac.at(i));
+   return static_cast<RooRealVar *>(_frac.at(i));
 }
 
 //_____________________________________________________________________________
 const RooRealVar *RooMomentMorphFuncND::CacheElem::frac(int i) const
 {
-   return (RooRealVar *)(_frac.at(i));
+   return static_cast<RooRealVar *>(_frac.at(i));
 }
 
 //_____________________________________________________________________________
@@ -588,7 +588,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
       // Calculate the delta vector
       vector<double> dm2;
       for (int idim = 0; idim < nPar; idim++) {
-         double delta = ((RooRealVar *)self._parList.at(idim))->getVal() - self._referenceGrid._nref[0][idim];
+         double delta = (static_cast<RooRealVar *>(self._parList.at(idim)))->getVal() - self._referenceGrid._nref[0][idim];
          dm2.push_back(delta);
       }
 
@@ -633,12 +633,12 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
 
          // fractions for pdf
          if (self._setting != NonLinearLinFractions) {
-            ((RooRealVar *)frac(i))->setVal(ffrac);
+            const_cast<RooRealVar *>(frac(i))->setVal(ffrac);
          }
 
          // fractions for rms and mean
-         ((RooRealVar *)frac(nPdf + i))->setVal(ffrac);     // need to add up
-         ((RooRealVar *)frac(2 * nPdf + i))->setVal(ffrac); // need to add up
+         const_cast<RooRealVar *>(frac(nPdf + i))->setVal(ffrac);     // need to add up
+         const_cast<RooRealVar *>(frac(2 * nPdf + i))->setVal(ffrac); // need to add up
 
          if (verbose) {
             cout << "NonLinear fraction " << ffrac << endl;
@@ -650,9 +650,9 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
 
       if (self._setting == NonLinearPosFractions) {
          for (int i = 0; i < nPdf; ++i) {
-            if (((RooRealVar *)frac(i))->getVal() < 0)
-               ((RooRealVar *)frac(i))->setVal(0.);
-            ((RooRealVar *)frac(i))->setVal(((RooRealVar *)frac(i))->getVal() / sumposfrac);
+            if (frac(i)->getVal() < 0)
+               const_cast<RooRealVar *>(frac(i))->setVal(0.);
+            const_cast<RooRealVar *>(frac(i))->setVal(frac(i)->getVal() / sumposfrac);
          }
       }
    }
@@ -662,9 +662,9 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
       // for (int i = 0; i < 3*nPdf; ++i) {
       for (int i = 0; i < nPdf; ++i) {
          double initval = 0;
-         ((RooRealVar *)frac(i))->setVal(initval);
-         ((RooRealVar *)frac(nPdf + i))->setVal(initval);
-         ((RooRealVar *)frac(2 * nPdf + i))->setVal(initval);
+         const_cast<RooRealVar *>(frac(i))->setVal(initval);
+         const_cast<RooRealVar *>(frac(nPdf + i))->setVal(initval);
+         const_cast<RooRealVar *>(frac(2 * nPdf + i))->setVal(initval);
       }
 
       std::vector<double> mtmp;
@@ -706,15 +706,15 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          }
 
          // set fractions for pdf
-         origFrac1 = ((RooRealVar *)frac(self._squareIdx[i]))->getVal();      // already set in case of smoothlinear
-         ((RooRealVar *)frac(self._squareIdx[i]))->setVal(origFrac1 + ffrac); // need to add up
+         origFrac1 = frac(self._squareIdx[i])->getVal();      // already set in case of smoothlinear
+         const_cast<RooRealVar *>(frac(self._squareIdx[i]))->setVal(origFrac1 + ffrac); // need to add up
 
          // set fractions for rms and mean
          if (self._setting != NonLinearLinFractions) {
             origFrac2 =
-               ((RooRealVar *)frac(nPdf + self._squareIdx[i]))->getVal(); // already set in case of smoothlinear
-            ((RooRealVar *)frac(nPdf + self._squareIdx[i]))->setVal(origFrac2 + ffrac);     // need to add up
-            ((RooRealVar *)frac(2 * nPdf + self._squareIdx[i]))->setVal(origFrac2 + ffrac); // need to add up
+               frac(nPdf + self._squareIdx[i])->getVal(); // already set in case of smoothlinear
+            const_cast<RooRealVar *>(frac(nPdf + self._squareIdx[i]))->setVal(origFrac2 + ffrac);     // need to add up
+            const_cast<RooRealVar *>(frac(2 * nPdf + self._squareIdx[i]))->setVal(origFrac2 + ffrac); // need to add up
          }
 
          if (verbose) {
@@ -816,7 +816,7 @@ bool RooMomentMorphFuncND::setBinIntegrator(RooArgSet &allVars)
    if (allVars.getSize() == 1) {
       RooAbsReal *temp = const_cast<RooMomentMorphFuncND *>(this);
       temp->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
-      int nbins = ((RooRealVar *)allVars.first())->numBins();
+      int nbins = (static_cast<RooRealVar *>(allVars.first()))->numBins();
       temp->specialIntegratorConfig(true)->getConfigSection("RooBinIntegrator").setRealValue("numBins", nbins);
       return true;
    } else {

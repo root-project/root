@@ -280,7 +280,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
     } else {
       // Symmetric mode: range is centered at mean of distribution with enough width to include
       // both lowest and highest point with margin
-      double dmean = rangeData->moment((RooRealVar&)*this,1) ;
+      double dmean = rangeData->moment(const_cast<RooRealVar &>(static_cast<RooRealVar const&>(*this)),1) ;
       double ddelta = ((xmax-dmean)>(dmean-xmin)?(xmax-dmean):(dmean-xmin))*(1+pc.getDouble("rangeMargin")) ;
       xmin = dmean-ddelta ;
       xmax = dmean+ddelta ;
@@ -697,7 +697,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   Int_t nbins = getBins() ;
 
   // coverity[ARRAY_VS_SINGLETON]
-  return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins);
+  return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins));
 }
 
 
@@ -714,7 +714,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   RooArgList list(*this) ;
 
   // coverity[ARRAY_VS_SINGLETON]
-  return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins);
+  return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins));
 }
 
 
@@ -728,7 +728,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   const RooAbsBinning* pbins = &bins ;
 
   // coverity[ARRAY_VS_SINGLETON]
-  return (TH1F*)createHistogram(name, list, yAxisLabel, &pbins);
+  return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &pbins));
 }
 
 
@@ -789,7 +789,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
   RooArgList list(*this,yvar) ;
   // coverity[OVERRUN_STATIC]
-  return (TH2F*)createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2);
+  return static_cast<TH2F*>(createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2));
 }
 
 
@@ -802,7 +802,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
                const char *zAxisLabel, const RooAbsBinning** bins) const
 {
   RooArgList list(*this,yvar) ;
-  return (TH2F*)createHistogram(name, list, zAxisLabel, bins);
+  return static_cast<TH2F*>(createHistogram(name, list, zAxisLabel, bins));
 }
 
 
@@ -869,7 +869,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   }
 
   RooArgList list(*this,yvar,zvar) ;
-  return (TH3F*)createHistogram(name, list, tAxisLabel, xlo2, xhi2, nBins2);
+  return static_cast<TH3F*>(createHistogram(name, list, tAxisLabel, xlo2, xhi2, nBins2));
 }
 
 
@@ -880,7 +880,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   // and the specified y,z variables.
 
   RooArgList list(*this,yvar,zvar) ;
-  return (TH3F*)createHistogram(name, list, tAxisLabel, bins);
+  return static_cast<TH3F*>(createHistogram(name, list, tAxisLabel, bins));
 }
 
 

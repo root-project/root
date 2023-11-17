@@ -170,7 +170,7 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
   if (_idxCat->isDerived()) {
     _idxCat->recursiveRedirectServers(theEvent) ;
   } else {
-    _idxCat = (RooAbsCategoryLValue*) theEvent.find(_idxCat->GetName()) ;
+    _idxCat = static_cast<RooAbsCategoryLValue*>(theEvent.find(_idxCat->GetName())) ;
   }
 
   // Update fractions reflecting possible new parameter values
@@ -205,7 +205,7 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
       dmap[nameIdx.first] = new RooDataSet(sliceName,sliceTitle,*sliceObs);
     }
     using namespace RooFit;
-    _protoData = new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;
+    _protoData = new RooDataSet(name, title, obs, Index(static_cast<RooCategory&>(*_idxCat)), Link(dmap), OwnLinked()) ;
   }
 
   RooDataSet* emptyClone =  new RooDataSet(*_protoData,name) ;

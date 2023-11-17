@@ -701,7 +701,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       if (auto nllDir = cacheDir->GetDirectory(nll.GetName()); nllDir) {
          if (auto keys = nllDir->GetListOfKeys(); keys) {
             for (auto &&k : *keys) {
-               auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+               auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
                if (cl->InheritsFrom("RooFitResult")) {
                   StoredFitResult *storedFr =
                      nllDir->GetList() ? dynamic_cast<StoredFitResult *>(nllDir->GetList()->FindObject(k->GetName()))
@@ -1747,7 +1747,7 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
          band2->SetBit(kCanDelete);
          band2up->SetBit(kCanDelete);
          band2down->SetBit(kCanDelete);
-         auto ax = (TNamed *)band2->Clone(".axis");
+         auto ax = static_cast<TNamed *>(band2->Clone(".axis"));
          ax->SetTitle(TString::Format("Hypothesis Test;%s", mu->GetTitle()));
          ax->Draw("AF");
          band2->Draw("F");

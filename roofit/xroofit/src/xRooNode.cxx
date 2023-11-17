@@ -95,7 +95,7 @@ auto GETLISTTREE(TGFileBrowser *b)
 {
    return b->GetListTree();
 }
-#define GETDMP(o, m) (*(void **)(((unsigned char *)o) + o->Class()->GetDataMemberOffset(#m)))
+#define GETDMP(o, m) *reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(o) + o->Class()->GetDataMemberOffset(#m))
 
 #endif
 
@@ -204,7 +204,7 @@ const T &_or_func(const T &a, const T &b)
 xRooNode::xRooNode(const char *classname, const char *name, const char *title)
    : xRooNode(name,
               std::shared_ptr<TObject>(
-                 TClass::GetClass(classname) ? (TObject *)TClass::GetClass(classname)->New() : nullptr, [](TObject *o) {
+                 TClass::GetClass(classname) ? reinterpret_cast<TObject *>(TClass::GetClass(classname)->New()) : nullptr, [](TObject *o) {
                     if (auto w = dynamic_cast<RooWorkspace *>(o); w) {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
                        w->_embeddedDataList.Delete();
@@ -256,7 +256,7 @@ xRooNode::xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const
             auto keys = _file->GetListOfKeys();
             if (keys) {
                for (auto &&k : *keys) {
-                  auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+                  auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
                   if (cl == RooWorkspace::Class() || cl->InheritsFrom("RooWorkspace")) {
                      fComp.reset(_file->Get<RooWorkspace>(k->GetName()), [](TObject *ws) {
                         // memory leak in workspace, some RooLinkedLists aren't cleared, fixed in ROOT 6.28
@@ -5840,7 +5840,7 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
          for (auto o : *fromPad->GetListOfPrimitives()) {
             theHist = dynamic_cast<TH1 *>(o);
             if (theHist) {
-               theHist = (TH1 *)theHist->Clone();
+               theHist = static_cast<TH1 *>(theHist->Clone());
                theHist->Reset();
                break;
             } // clone because theHist gets deleted below
@@ -5878,11 +5878,11 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
       if (!theHist)
          return nullptr;
       // this hist will get filled with w*x to track weighted x position per bin
-      TH1 *xPos = (TH1 *)theHist->Clone("xPos");
+      TH1 *xPos = static_cast<TH1 *>(theHist->Clone("xPos"));
       xPos->Reset();
-      TH1 *xPos2 = (TH1 *)theHist->Clone("xPos2");
+      TH1 *xPos2 = static_cast<TH1 *>(theHist->Clone("xPos2"));
       xPos2->Reset();
-      auto nHist = std::unique_ptr<TH1>((TH1 *)theHist->Clone("nEntries"));
+      auto nHist = std::unique_ptr<TH1>(static_cast<TH1 *>(theHist->Clone("nEntries")));
       nHist->Reset();
 
       auto dataGraph = new TGraphAsymmErrors;
@@ -7192,7 +7192,7 @@ xRooNode xRooNode::histo(const xRooNode &vars, const xRooNode &fr, bool content,
 
          if (!cms_coefs.empty()) {
             RooRealVar zero("zero", "", 0);
-            std::shared_ptr<TH1> prevHist((TH1 *)h->Clone());
+            std::shared_ptr<TH1> prevHist(static_cast<TH1 *>(h->Clone()));
             for (auto c : cms_coefs) {
                // seems I have to remake the function each time, as haven't figured out what cache needs clearing?
                std::unique_ptr<RooAbsReal> f(dynamic_cast<RooAbsReal *>(components()[0]->get()->Clone("tmpCopy")));
@@ -7208,7 +7208,7 @@ xRooNode xRooNode::histo(const xRooNode &vars, const xRooNode &fr, bool content,
                   hh->SetTitle(c->GetName()); // ensure all hists has titles
                titleMatchName &= (TString(c->GetName()) == hh->GetTitle() ||
                                   TString(hh->GetTitle()).BeginsWith(TString(c->GetName()) + "_"));
-               std::shared_ptr<TH1> nextHist((TH1 *)hh->Clone());
+               std::shared_ptr<TH1> nextHist(static_cast<TH1 *>(hh->Clone()));
                hh->Add(prevHist.get(), -1.);
                hh->Scale(-1.);
                hhs.push_back(hh);
@@ -9830,7 +9830,7 @@ void xRooNode::Draw(Option_t *opt)
          }
          if (!cms_coefs.empty()) {
             RooRealVar zero("zero", "", 0);
-            std::shared_ptr<TH1> prevHist((TH1 *)h->Clone());
+            std::shared_ptr<TH1> prevHist(static_cast<TH1 *>(h->Clone()));
             for (auto c : cms_coefs) {
                // seems I have to remake the function each time, as haven't figured out what cache needs clearing?
                std::unique_ptr<RooAbsReal> f(
@@ -9847,7 +9847,7 @@ void xRooNode::Draw(Option_t *opt)
                   hh->SetTitle(c->GetName()); // ensure all hists has titles
                titleMatchName &= (TString(c->GetName()) == hh->GetTitle() ||
                                   TString(hh->GetTitle()).BeginsWith(TString(c->GetName()) + "_"));
-               std::shared_ptr<TH1> nextHist((TH1 *)hh->Clone());
+               std::shared_ptr<TH1> nextHist(static_cast<TH1 *>(hh->Clone()));
                hh->Add(prevHist.get(), -1.);
                hh->Scale(-1.);
                hhs.push_back(hh);

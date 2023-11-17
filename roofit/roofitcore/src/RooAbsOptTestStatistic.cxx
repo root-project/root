@@ -229,7 +229,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
     //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
   } else {
-    _dataClone = (RooAbsData*) indata.Clone() ;
+    _dataClone = static_cast<RooAbsData*>(indata.Clone()) ;
   }
   _ownData = true ;
 
@@ -570,7 +570,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
         arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
-      RooArgSet* constNodes = (RooArgSet*) trackNodes.selectByAttrib("Constant",true) ;
+      RooArgSet* constNodes = static_cast<RooArgSet*>(trackNodes.selectByAttrib("Constant",true)) ;
       trackNodes.remove(*constNodes) ;
       delete constNodes ;
 
@@ -591,7 +591,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
       cacheArg->setOperMode(RooAbsArg::AClean) ;
     }
 
-    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpressionCached",true) ;
+    RooArgSet* constNodes = static_cast<RooArgSet*>(_cachedNodes.selectByAttrib("ConstantExpressionCached",true)) ;
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
     if (constNodes->getSize()>0) {

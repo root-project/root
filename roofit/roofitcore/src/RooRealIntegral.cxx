@@ -260,9 +260,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _jacList("!jacList","Jacobian product term",this,false,false),
   _facList("!facList","Variables independent of function",this,false,true),
   _function("!func","Function to be integrated",this,false,false),
-  _iconfig((RooNumIntConfig*)config),
+  _iconfig(const_cast<RooNumIntConfig*>(config)),
   _sumCat("!sumCat","SuperCategory for summation",this,false,false),
-  _rangeName((TNamed*)RooNameReg::ptr(rangeName))
+  _rangeName(const_cast<TNamed*>(RooNameReg::ptr(rangeName)))
 {
   //   A) Check that all dependents are lvalues
   //
@@ -296,7 +296,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 //   cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
 
   // Use objects integrator configuration if none is specified
-  if (!_iconfig) _iconfig = (RooNumIntConfig*) function.getIntegratorConfig() ;
+  if (!_iconfig) _iconfig = const_cast<RooNumIntConfig*>(function.getIntegratorConfig());
 
   // Save private copy of funcNormSet, if supplied, excluding factorizing terms
   if (funcNormSet) {
@@ -850,9 +850,9 @@ double RooRealIntegral::evaluate() const
   case Hybrid:
     {
       // Cache numeric integrals in >1d expensive object cache
-      RooDouble* cacheVal(nullptr) ;
+      RooDouble const* cacheVal(nullptr) ;
       if ((_cacheNum && !_intList.empty()) || _intList.getSize()>=_cacheAllNDim) {
-        cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
+        cacheVal = static_cast<RooDouble const*>(expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters()))  ;
       }
 
       if (cacheVal) {
@@ -932,12 +932,12 @@ double RooRealIntegral::evaluate() const
     for (const auto arg : _facList) {
       // Multiply by fit range for 'real' dependents
       if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-        RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
+        RooAbsRealLValue* argLV = static_cast<RooAbsRealLValue*>(arg) ;
         retVal *= (argLV->getMax(intRange()) - argLV->getMin(intRange())) ;
       }
       // Multiply by number of states for category dependents
       if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
-        RooAbsCategoryLValue* argLV = (RooAbsCategoryLValue*)arg ;
+        RooAbsCategoryLValue* argLV = static_cast<RooAbsCategoryLValue*>(arg) ;
         retVal *= argLV->numTypes() ;
       }
     }
@@ -991,7 +991,7 @@ double RooRealIntegral::sum() const
     // Add integrals for all permutations of categories summed over
     double total(0) ;
 
-    RooSuperCategory* sumCat = (RooSuperCategory*) _sumCat.first() ;
+    RooSuperCategory* sumCat = static_cast<RooSuperCategory*>(_sumCat.first()) ;
     for (const auto& nameIdx : *sumCat) {
       sumCat->setIndex(nameIdx);
       if (!_rangeName || sumCat->inRange(RooNameReg::str(_rangeName))) {

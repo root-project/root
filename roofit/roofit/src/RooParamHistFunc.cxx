@@ -123,7 +123,7 @@ RooParamHistFunc::RooParamHistFunc(const RooParamHistFunc& other, const char* na
 double RooParamHistFunc::evaluate() const
 {
   Int_t idx = ((RooDataHist&)_dh).getIndex(_x,true) ;
-  double ret = ((RooAbsReal*)_p.at(idx))->getVal() ;
+  double ret = (static_cast<RooAbsReal*>(_p.at(idx)))->getVal() ;
   if (_relParam) {
     double nom = getNominal(idx) ;
     ret *= nom ;
@@ -150,14 +150,14 @@ void RooParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 double RooParamHistFunc::getActual(Int_t ibin)
 {
-  return ((RooAbsReal&)_p[ibin]).getVal() ;
+  return (static_cast<RooAbsReal&>(_p[ibin])).getVal() ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooParamHistFunc::setActual(Int_t ibin, double newVal)
 {
-  ((RooRealVar&)_p[ibin]).setVal(newVal) ;
+  (static_cast<RooRealVar&>(_p[ibin])).setVal(newVal) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
