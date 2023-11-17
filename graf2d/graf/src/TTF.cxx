@@ -470,23 +470,22 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 /// Set specified font.
 /// List of the currently supported fonts (screen and PostScript)
 ///
-/// | Font ID | X11                       | TTF                           |
-/// |---------|---------------------------|-------------------------------|
-/// |      1  | times-medium-i-normal     | FreeSerifItalic.otf           |
-/// |      2  | times-bold-r-normal       | FreeSerifBold.otf             |
-/// |      3  | times-bold-i-normal       | FreeSerifBoldItalic.otf       |
-/// |      4  | helvetica-medium-r-normal | FreeSans.otf                  |
-/// |      5  | helvetica-medium-o-normal | FreeSansOblique.otf           |
-/// |      6  | helvetica-bold-r-normal   | FreeSansBold.otf              |
-/// |      7  | helvetica-bold-o-normal   | FreeSansBoldOblique.otf       |
-/// |      8  | courier-medium-r-normal   | FreeMono.otf                  |
-/// |      9  | courier-medium-o-normal   | FreeMonoOblique.otf           |
-/// |     10  | courier-bold-r-normal     | FreeMonoBold.otf              |
-/// |     11  | courier-bold-o-normal     | FreeMonoBoldOblique.otf       |
-/// |     12  | symbol-medium-r-normal    | symbol.ttf                    |
-/// |     13  | times-medium-r-normal     | FreeSerif.otf                 |
-/// |     14  |                           | wingding.ttf                  |
-/// |     15  | symbol oblique is emulated from symbol.ttf |              |
+/// | Font number |     TTF Names             |     PostScript/PDF Names      |
+/// |-------------|---------------------------|-------------------------------|
+/// |      1      |   Free Serif Italic       |    Times-Italic               |
+/// |      2      |   Free Serif Bold         |    Times-Bold                 |
+/// |      3      |   Free Serif Bold Italic  |    Times-BoldItalic           |
+/// |      4      |   Free Sans               |    Helvetica                  |
+/// |      5      |   Free Sans Oblique       |    Helvetica-Oblique          |
+/// |      6      |   Free Sans Bold          |    Helvetica-Bold             |
+/// |      7      |   Free Sans Bold Oblique  |    Helvetica-BoldOblique      |
+/// |      8      |   Free Mono               |    Courier                    |
+/// |      9      |   Free Mono Oblique       |    Courier-Oblique            |
+/// |     10      |   Free Mono Bold          |    Courier-Bold               |
+/// |     11      |   Free Mono Bold Oblique  |    Courier-BoldOblique        |
+/// |     12      |   Symbol                  |    Symbol                     |
+/// |     13      |   Free Serif              |    Times-Roman                |
+/// |     14      |   Wingdings               |    ZapfDingbats               |
 
 void TTF::SetTextFont(Font_t fontnumber)
 {
