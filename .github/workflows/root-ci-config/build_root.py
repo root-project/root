@@ -106,7 +106,8 @@ def main():
     git_pull("src", args.repository, args.base_ref)
 
     if pull_request:
-      base_head_sha = get_base_head_sha(args.repository, args.sha, args.head_sha)
+      base_head_sha = get_base_head_sha("src", args.repository, args.sha, args.head_sha)
+
       head_ref_src, _, head_ref_dst = args.head_ref.partition(":")
       head_ref_dst = head_ref_dst or "__tmp"
 
@@ -453,15 +454,17 @@ def get_stdout_subprocess(command: str, error_message: str) -> str:
 # Given a pull request merge commit and the incoming commit return
 # the commit corresponding to the head of the branch we are merging into.
 @github_log_group("Rebase")
-def get_base_head_sha(repository: str, merge_sha: str, head_sha: str) -> str:
+def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha: str) -> str:
 
   command = f"""
+      cd '{WORKDIR}/{directory}'
       git fetch {repository} {merge_sha}
       """
   result = subprocess_with_log(command)
   if result != 0:
       die("Failed to fetch {merge_sha} from {repository}")
   command = f"""
+      cd '{WORKDIR}/{directory}'
       git rev-list --parents -1 {merge_sha}
       """
   result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
