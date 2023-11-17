@@ -91,7 +91,7 @@ double RooBernstein::evaluate() const
   double xmax,xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
   double x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
-  Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
+  Int_t degree = _coefList.size() - 1; // n+1 polys of degree n
 
   if(degree == 0) {
 
@@ -165,7 +165,7 @@ double RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
   const double xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
   const double xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
 
-  Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
+  Int_t degree= _coefList.size()-1; // n+1 polys of degree n
   double norm(0) ;
 
   double temp=0;

@@ -97,7 +97,7 @@ bool SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
    if( !this->CheckParameters(parameterPoint) )
       return false;
 
-   if(parameterPoint.getSize() != 1 )
+   if(parameterPoint.size() != 1 )
       return false;
 
    RooAbsReal* point = dynamic_cast<RooAbsReal*> (parameterPoint.first());
@@ -123,7 +123,7 @@ RooArgSet* SimpleInterval::GetParameters() const
 
 bool SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
-   if (parameterPoint.getSize() != fParameters.getSize() ) {
+   if (parameterPoint.size() != fParameters.size() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;
       return false;
    }

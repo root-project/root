@@ -373,7 +373,7 @@ Int_t SPlot::GetNumSWeightVars() const
 {
   RooArgList Args = fSWeightVars;
 
-  return Args.getSize();
+  return Args.size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -424,7 +424,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // be set to not constant
   std::vector<RooAbsRealLValue*> constVarHolder;
 
-  for(Int_t i = 0; i < constParameters->getSize(); i++)
+  for(std::size_t i = 0; i < constParameters->size(); i++)
   {
     RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>((*constParameters)[i] );
     if(varTemp &&  varTemp->isConstant() == 0 )
@@ -445,12 +445,12 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // Hold the value of the fitted yields
   std::vector<double> yieldsHolder;
 
-  yieldsHolder.reserve(yieldsTmp.getSize());
-  for(Int_t i = 0; i < yieldsTmp.getSize(); i++) {
+  yieldsHolder.reserve(yieldsTmp.size());
+  for(std::size_t i = 0; i < yieldsTmp.size(); i++) {
     yieldsHolder.push_back(static_cast<RooAbsReal*>(yieldsTmp.at(i))->getVal(&vars));
   }
 
-  const Int_t nspec = yieldsTmp.getSize();
+  const Int_t nspec = yieldsTmp.size();
   RooArgList yields = *static_cast<RooArgList*>(yieldsTmp.snapshot(false));
 
   if (RooMsgService::instance().isActive(this, RooFit::InputArguments, RooFit::DEBUG)) {
@@ -690,7 +690,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   //Restore yield values
 
-  for(Int_t i = 0; i < yieldsTmp.getSize(); i++)
+  for(std::size_t i = 0; i < yieldsTmp.size(); i++)
     static_cast<RooAbsRealLValue*>(yieldsTmp.at(i))->setVal(yieldsHolder.at(i));
 
   //Make any variables that were forced to constant no longer constant

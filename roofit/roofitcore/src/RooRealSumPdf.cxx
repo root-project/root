@@ -198,7 +198,7 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
 
 RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const
 {
-  return (_extended && (_funcList.getSize()==_coefList.getSize())) ? CanBeExtended : CanNotBeExtended ;
+  return (_extended && (_funcList.size()==_coefList.size())) ? CanBeExtended : CanNotBeExtended ;
 }
 
 
@@ -534,7 +534,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
   }
 
   double normVal(1) ;
-  if (normSet2 && normSet2->getSize()>0) {
+  if (normSet2 && normSet2->size()>0) {
     normVal = 0 ;
 
     // N funcs, N-1 coefficients

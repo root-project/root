@@ -84,7 +84,7 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
   _tfoam->SetkDim(_realVars.size()) ;
   _tfoam->SetRho(_binding.get()) ;
   _tfoam->SetPseRan(RooRandom::randomGenerator()) ;
-  switch(_realVars.getSize()) {
+  switch(_realVars.size()) {
   case 1:_tfoam->SetnCells((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("nCell1D")) ; break ;
   case 2:_tfoam->SetnCells((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("nCell2D")) ; break ;
   case 3:_tfoam->SetnCells((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("nCell3D")) ; break ;
@@ -116,7 +116,7 @@ RooFoamGenerator::~RooFoamGenerator() = default;
 const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, double& /*resampleRatio*/)
 {
   const RooArgSet *event= _cache->get();
-  if(event->getSize() == 1) return event;
+  if(event->size() == 1) return event;
 
   _tfoam->MakeEvent() ;
   _tfoam->GetMCvect(_vec.data()) ;

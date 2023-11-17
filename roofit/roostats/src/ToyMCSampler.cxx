@@ -379,7 +379,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       allVars->assign(*fParametersForTestStat);
 
       const RooArgList* allTS = EvaluateAllTestStatistics(*toydata, *fParametersForTestStat, detOutAgg);
-      if (allTS->getSize() > Int_t(fTestStatistics.size()))
+      if (allTS->size() > fTestStatistics.size())
         detOutAgg.AppendArgSet( fGlobalObservables, "globObs_" );
       if (RooRealVar* firstTS = dynamic_cast<RooRealVar*>(allTS->first()))
          valueFirst = firstTS->getVal();
@@ -498,7 +498,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 
    // generate global observables
    RooArgSet observables(*fObservables);
-   if(fGlobalObservables  &&  fGlobalObservables->getSize()) {
+   if(fGlobalObservables  &&  fGlobalObservables->size()) {
       observables.remove(*fGlobalObservables);
       GenerateGlobalObservables(pdf);
    }

@@ -53,8 +53,8 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
   RooAbsReal(name, title),
   _realSet("realSet","Set of real-valued components to be tracked",this),
   _catSet("catSet","Set of discrete-valued components to be tracked",this),
-  _realRef(trackSet.getSize()),
-  _catRef(trackSet.getSize()),
+  _realRef(trackSet.size()),
+  _catRef(trackSet.size()),
   _checkVal(checkValues)
 {
 for (const auto arg : trackSet) {

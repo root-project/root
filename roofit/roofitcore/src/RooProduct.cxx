@@ -149,7 +149,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   for (auto const* rcomp : static_range_cast<RooAbsReal*>(_compRSet)) {
     if( !rcomp->dependsOn(allVars) ) indep->add(*rcomp);
   }
-  if (indep->getSize()!=0) {
+  if (indep->size()!=0) {
     map->push_back( std::make_pair(new RooArgSet(),indep) );
   } else {
      delete indep;
@@ -191,13 +191,14 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
 #ifndef NDEBUG
   // check that we have all variables to be integrated over on the LHS
   // of the map, and all terms in the product do appear on the RHS
-  int nVar=0; int nFunc=0;
+  std::size_t nVar=0;
+  std::size_t nFunc=0;
   for (ProdMap::iterator i = map->begin();i!=map->end();++i) {
-    nVar+=i->first->getSize();
-    nFunc+=i->second->getSize();
+    nVar+=i->first->size();
+    nFunc+=i->second->size();
   }
-  assert(nVar==allVars.getSize());
-  assert(nFunc==_compRSet.getSize());
+  assert(nVar==allVars.size());
+  assert(nFunc==_compRSet.size());
 #endif
   return map;
 }
@@ -242,14 +243,14 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
 
   for (ProdMap::const_iterator i = map->begin();i!=map->end();++i) {
     RooAbsReal *term(nullptr);
-    if (i->second->getSize()>1) { // create a RooProd for this subexpression
+    if (i->second->size()>1) { // create a RooProd for this subexpression
       const char *name = makeFPName("SUBPROD_",*i->second);
       auto ownedTerm = std::make_unique<RooProduct>(name,name,*i->second);
       term = ownedTerm.get();
       cache->_ownedList.addOwned(std::move(ownedTerm));
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << endl;
     } else {
-      assert(i->second->getSize()==1);
+      assert(i->second->size()==1);
       term = static_cast<RooAbsReal*>(i->second->at(0));
     }
     assert(term!=nullptr);

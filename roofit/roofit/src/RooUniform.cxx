@@ -55,16 +55,16 @@ double RooUniform::evaluate() const
 
 Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
-  Int_t nx = x.getSize() ;
+  Int_t nx = x.size() ;
   if (nx>31) {
     // Warn that analytical integration is only provided for the first 31 observables
-    coutW(Integration) << "RooUniform::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << x.getSize()
+    coutW(Integration) << "RooUniform::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << x.size()
              << " observables, analytical integration is only implemented for the first 31 observables" << std::endl ;
     nx=31 ;
   }
 
   Int_t code(0) ;
-  for (int i=0 ; i<x.getSize() ; i++) {
+  for (std::size_t i=0 ; i<x.size() ; i++) {
     if (allVars.find(x.at(i)->GetName())) {
       code |= (1<<i) ;
       analVars.add(*allVars.find(x.at(i)->GetName())) ;
@@ -93,23 +93,22 @@ double RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
 
 Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
-  Int_t nx = x.getSize() ;
+  Int_t nx = x.size() ;
   if (nx>31) {
     // Warn that analytical integration is only provided for the first 31 observables
-    coutW(Integration) << "RooUniform::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << x.getSize()
+    coutW(Integration) << "RooUniform::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << x.size()
              << " observables, internal integrator is only implemented for the first 31 observables" << std::endl ;
     nx=31 ;
   }
 
   Int_t code(0) ;
-  for (int i=0 ; i<x.getSize() ; i++) {
+  for (std::size_t i=0 ; i<x.size() ; i++) {
     if (directVars.find(x.at(i)->GetName())) {
       code |= (1<<i) ;
       generateVars.add(*directVars.find(x.at(i)->GetName())) ;
     }
   }
   return code ;
-  return 0 ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

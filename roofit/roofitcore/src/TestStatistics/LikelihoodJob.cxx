@@ -141,7 +141,7 @@ void LikelihoodJob::updateWorkersParameters()
       bool valChanged = false;
       bool constChanged = false;
       std::vector<update_state_t> to_update;
-      for (std::size_t ix = 0u; ix < static_cast<std::size_t>(vars_.getSize()); ++ix) {
+      for (std::size_t ix = 0u; ix < static_cast<std::size_t>(vars_.size()); ++ix) {
          valChanged = !vars_[ix].isIdentical(save_vars_[ix], true);
          constChanged = (vars_[ix].isConstant() != save_vars_[ix].isConstant());
 

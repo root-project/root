@@ -652,7 +652,7 @@ namespace RooStats {
 
       RooArgList vars( *GetObservableSet(channel) );
 
-      int dim = vars.getSize();
+      int dim = vars.size();
 
       TH1* hist = nullptr;
 
@@ -1145,7 +1145,7 @@ namespace RooStats {
       // Cone and empty the template
       //      TH1* hist = (TH1*) histTemplate.Clone( name.c_str() );
 
-      int dim = vars.getSize();
+      int dim = vars.size();
 
       TH1* hist=nullptr;
 

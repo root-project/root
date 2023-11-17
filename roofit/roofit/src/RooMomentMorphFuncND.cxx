@@ -129,7 +129,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
      _useHorizMorph(true)
 {
    // make reference grid
-   TVectorD mrefpoints(mrefList.getSize());
+   TVectorD mrefpoints(mrefList.size());
    Int_t i = 0;
    for (auto *mref : mrefList) {
       if (!dynamic_cast<RooAbsReal *>(mref)) {
@@ -229,9 +229,9 @@ void RooMomentMorphFuncND::initialize()
       _referenceGrid._nnuis.push_back((*itr)->numBins() + 1);
    }
 
-   int nPar = _parList.getSize();
+   int nPar = _parList.size();
    int nDim = _referenceGrid._grid.size();
-   int nPdf = _referenceGrid._pdfList.getSize();
+   int nPdf = _referenceGrid._pdfList.size();
    int nRef = _referenceGrid._nref.size();
    int depth = TMath::Power(2, nPar);
 
@@ -324,7 +324,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf
    thisBoundaries.push_back(bin_x);
    thisBoundaryCoordinates.push_back(_grid[0]->array()[bin_x]);
    _pdfList.add(pdf);
-   _pdfMap[thisBoundaries] = _pdfList.getSize() - 1;
+   _pdfMap[thisBoundaries] = _pdfList.size() - 1;
    _nref.push_back(thisBoundaryCoordinates);
 }
 
@@ -338,7 +338,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf
    thisBoundaries.push_back(bin_y);
    thisBoundaryCoordinates.push_back(_grid[1]->array()[bin_y]);
    _pdfList.add(pdf);
-   _pdfMap[thisBoundaries] = _pdfList.getSize() - 1;
+   _pdfMap[thisBoundaries] = _pdfList.size() - 1;
    _nref.push_back(thisBoundaryCoordinates);
 }
 
@@ -354,7 +354,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf
    thisBoundaries.push_back(bin_z);
    thisBoundaryCoordinates.push_back(_grid[2]->array()[bin_z]);
    _pdfList.add(pdf);
-   _pdfMap[thisBoundaries] = _pdfList.getSize() - 1;
+   _pdfMap[thisBoundaries] = _pdfList.size() - 1;
    _nref.push_back(thisBoundaryCoordinates);
 }
 
@@ -368,7 +368,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf
       thisBoundaryCoordinates.push_back(_grid[i]->array()[bins[i]]);
    }
    _pdfList.add(pdf);
-   _pdfMap[bins] = _pdfList.getSize() - 1;
+   _pdfMap[bins] = _pdfList.size() - 1;
    _nref.push_back(thisBoundaryCoordinates);
 }
 
@@ -380,8 +380,8 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       return cache;
    }
 
-   int nObs = _obsList.getSize();
-   int nPdf = _referenceGrid._pdfList.getSize();
+   int nObs = _obsList.size();
+   int nPdf = _referenceGrid._pdfList.size();
 
    RooAbsReal *null = nullptr;
    vector<RooAbsReal *> meanrv(nPdf * nObs, null);
@@ -578,8 +578,8 @@ const RooRealVar *RooMomentMorphFuncND::CacheElem::frac(int i) const
 //_____________________________________________________________________________
 void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFuncND &self, bool verbose) const
 {
-   int nPdf = self._pdfList.getSize();
-   int nPar = self._parList.getSize();
+   int nPdf = self._pdfList.size();
+   int nPar = self._parList.size();
 
    double fracLinear(1.);
    double fracNonLinear(1.);
@@ -730,7 +730,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
 //_____________________________________________________________________________
 void RooMomentMorphFuncND::findShape(const vector<double> &x) const
 {
-   int nPar = _parList.getSize();
+   int nPar = _parList.size();
    int nRef = _referenceGrid._nref.size();
 
    // Find hypercube enclosing the location to morph to
@@ -813,7 +813,7 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
 //_____________________________________________________________________________
 bool RooMomentMorphFuncND::setBinIntegrator(RooArgSet &allVars)
 {
-   if (allVars.getSize() == 1) {
+   if (allVars.size() == 1) {
       RooAbsReal *temp = const_cast<RooMomentMorphFuncND *>(this);
       temp->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
       int nbins = (static_cast<RooRealVar *>(allVars.first()))->numBins();

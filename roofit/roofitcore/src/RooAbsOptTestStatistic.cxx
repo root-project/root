@@ -298,7 +298,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // *********************************************************************
 
   // Remove projected dependents from normalization set
-  if (projDeps.getSize()>0) {
+  if (projDeps.size()>0) {
 
     _projDeps = new RooArgSet;
     projDeps.snapshot(*_projDeps, false) ;
@@ -594,18 +594,18 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
     RooArgSet* constNodes = static_cast<RooArgSet*>(_cachedNodes.selectByAttrib("ConstantExpressionCached",true)) ;
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
-    if (constNodes->getSize()>0) {
-      if (constNodes->getSize()<20) {
+    if (constNodes->size()>0) {
+      if (constNodes->size()<20) {
         coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
       }
     }
-    if (actualTrackNodes.getSize()>0) {
-      if (actualTrackNodes.getSize()<20) {
+    if (actualTrackNodes.size()>0) {
+      if (actualTrackNodes.size()<20) {
         coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions will be evaluated in cache-and-track-mode." << endl ;
       }
     }
     delete constNodes ;

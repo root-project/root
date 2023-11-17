@@ -66,7 +66,7 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
   }
 
   // use a different integrator by default.
-  if(paramSet.getSize()==1)
+  if(paramSet.size()==1)
     this->specialIntegratorConfig(true)->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ;
 }
 

@@ -261,7 +261,7 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
 
   std::unique_ptr<RooArgSet> modelDep {_model->getObservables(&vars)};
   modelDep->remove(*convVar(),true,true) ;
-  Int_t numAddDep = modelDep->getSize() ;
+  Int_t numAddDep = modelDep->size() ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
   RooArgSet dummy ;
@@ -581,10 +581,9 @@ double RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const
     cache = new CacheElem ;
 
     // Make list of coefficient normalizations
-    Int_t i ;
     makeCoefVarList(cache->_coefVarList) ;
 
-    for (i=0 ; i<cache->_coefVarList.getSize() ; i++) {
+    for (std::size_t i=0 ; i<cache->_coefVarList.size() ; i++) {
       cache->_normList.addOwned(std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal&>(*cache->_coefVarList.at(i)).createIntegral(*nset,RooNameReg::str(rangeName))});
     }
 
@@ -602,9 +601,10 @@ double RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const
 void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 {
   // Instantiate a coefficient variables
-  for (Int_t i=0 ; i<_convSet.getSize() ; i++) {
+  for (std::size_t  i=0 ; i<_convSet.size() ; i++) {
     auto cvars = coefVars(i);
-    varList.addOwned(std::make_unique<RooConvCoefVar>(Form("%s_coefVar_%d",GetName(),i),"coefVar",*this,i,&*cvars));
+    std::string name = std::string{GetName()} + "_coefVar_" + std::to_string(i);
+    varList.addOwned(std::make_unique<RooConvCoefVar>(name.c_str(),"coefVar",*this,i,&*cvars));
   }
 
 }

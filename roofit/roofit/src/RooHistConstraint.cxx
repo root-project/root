@@ -93,11 +93,11 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
     if (phfComp) {
       phvec.push_back(phfComp) ;
       if (nbins==-1) {
-        nbins = phfComp->_p.getSize() ;
+        nbins = phfComp->_p.size() ;
         bin0_name = phfComp->_p.at(0)->GetName() ;
         gammaSet.add(phfComp->_p) ;
       } else {
-        if (phfComp->_p.getSize()!=nbins) {
+        if (int(phfComp->_p.size())!=nbins) {
           coutE(InputArguments) << "RooHistConstraint::ctor(" << GetName()
                 << ") ERROR: incongruent input arguments: all input RooParamHistFuncs should have same #bins" << std::endl ;
           throw std::string("RooHistConstraint::ctor ERROR incongruent input arguments") ;

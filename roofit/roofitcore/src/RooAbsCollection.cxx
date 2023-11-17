@@ -1328,7 +1328,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
 void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* option, Int_t sigDigit, const RooLinkedList& siblingList, const RooCmdArg* formatCmd) const
 {
   // Count number of rows to print
-  Int_t nrow = (Int_t) (getSize() / ncol + 0.99) ;
+  Int_t nrow = (Int_t) (size() / ncol + 0.99) ;
   Int_t i,j,k ;
 
   // Sibling list do not need to print their name as it is supposed to be the same
@@ -1370,7 +1370,7 @@ void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* opt
         coutW(InputArguments) << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
         << arg->GetName() << std::endl;
       }
-      if (prevList && TString(rrv->GetName()).CompareTo(prevList->at(list->getSize()-1)->GetName())) {
+      if (prevList && TString(rrv->GetName()).CompareTo(prevList->at(list->size()-1)->GetName())) {
         coutW(InputArguments) << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << std::endl;
       }
     }

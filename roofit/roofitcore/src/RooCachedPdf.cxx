@@ -92,14 +92,14 @@ RooCachedPdf::RooCachedPdf(const RooCachedPdf& other, const char* name) :
 void RooCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 {
 
-  if (cache.hist()->get()->getSize()>1) {
+  if (cache.hist()->get()->size()>1) {
     coutP(Eval) << "RooCachedPdf::fillCacheObject(" << GetName() << ") filling multi-dimensional cache" ;
   }
 
   // Update contents of histogram
   (const_cast<RooAbsPdf &>(static_cast<RooAbsPdf const&>(pdf.arg()))).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
 
-  if (cache.hist()->get()->getSize()>1) {
+  if (cache.hist()->get()->size()>1) {
     ccoutP(Eval) << endl ;
   }
 

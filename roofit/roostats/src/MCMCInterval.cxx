@@ -255,7 +255,7 @@ void MCMCInterval::SetConfidenceLevel(double cl)
 
 void MCMCInterval::SetAxes(RooArgList& axes)
 {
-   Int_t size = axes.getSize();
+   Int_t size = axes.size();
    if (size != fDimension) {
       coutE(InputArguments) << "* Error in MCMCInterval::SetAxes: " <<
                                "number of variables in axes (" << size <<
@@ -496,7 +496,7 @@ void MCMCInterval::SetParameters(const RooArgSet& parameters)
 {
    fParameters.removeAll();
    fParameters.add(parameters);
-   fDimension = fParameters.getSize();
+   fDimension = fParameters.size();
    if (fAxes != nullptr)
       delete[] fAxes;
    fAxes = new RooRealVar*[fDimension];
@@ -1471,7 +1471,7 @@ bool MCMCInterval::CheckParameters(const RooArgSet& parameterPoint) const
 {
    // check that the parameters are correct
 
-   if (parameterPoint.getSize() != fParameters.getSize() ) {
+   if (parameterPoint.size() != fParameters.size() ) {
      coutE(Eval) << "MCMCInterval: size is wrong, parameters don't match" << std::endl;
      return false;
    }

@@ -49,7 +49,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   cxcoutI(Generation) << "RooBinnedGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
-  if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
+  if (auxProto && auxProto->size()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
   ccxcoutI(Generation) << endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF

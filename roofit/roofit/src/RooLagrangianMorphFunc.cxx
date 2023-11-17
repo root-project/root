@@ -610,7 +610,7 @@ template <class T1, class T2, typename std::enable_if<!is_specialization<T1, std
 inline void extractOperators(const T1 &couplings, T2 &operators)
 {
    // coutD(InputArguments) << "extracting operators from
-   // "<<couplings.getSize()<<" couplings" << std::endl;
+   // "<<couplings.size()<<" couplings" << std::endl;
    for (auto itr : couplings) {
       extractServers(*itr, operators);
    }
@@ -808,7 +808,7 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          auto dh = std::make_unique<RooDataHist>(histname.Data(), histname.Data(), vars, hist.get());
          // add it to the list
          auto hf = std::make_unique<RooHistFunc>(funcname.Data(), funcname.Data(), var, std::move(dh));
-         int idx = physics.getSize();
+         int idx = physics.size();
          list_hf[sample] = idx;
          physics.addOwned(std::move(hf));
       }
@@ -831,7 +831,7 @@ void collectRooAbsReal(const char * /*name*/, TDirectory *file, std::map<std::st
          return;
       auto it = list_hf.find(sample);
       if (it == list_hf.end()) {
-         int idx = physics.getSize();
+         int idx = physics.size();
          list_hf[sample] = idx;
          physics.addOwned(std::move(obj));
       }
@@ -876,7 +876,7 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
          auto xsOwner = std::make_unique<RooRealVar>(objname.c_str(), objname.c_str(), xsection->GetVal());
          xs = xsOwner.get();
          xs->setConstant(true);
-         int idx = physics.getSize();
+         int idx = physics.size();
          list_xs[sample] = idx;
          physics.addOwned(std::move(xsOwner));
          assert(physics.at(idx) == xs);
@@ -970,7 +970,7 @@ void collectPolynomials(MorphFuncPattern &morphfunc, const FeynmanDiagram &diagr
 template <class List>
 inline void fillFeynmanDiagram(FeynmanDiagram &diagram, const std::vector<List *> &vertices, RooArgList &couplings)
 {
-   const int ncouplings = couplings.getSize();
+   const int ncouplings = couplings.size();
    // std::cout << "Number of couplings " << ncouplings << std::endl;
    for (auto const &vertex : vertices) {
       std::vector<bool> vertexCouplings(ncouplings, false);
@@ -1100,13 +1100,13 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
    // diagram.push_back(vertexProd);
    // diagram.push_back(vertexDecay);
 
-   const int ncouplings = couplings.getSize();
+   const int ncouplings = couplings.size();
    std::vector<bool> couplingsZero(ncouplings, true);
    std::map<TString, bool> flagsZero;
 
    RooArgList operators;
    extractOperators(couplings, operators);
-   size_t nOps = operators.getSize();
+   size_t nOps = operators.size();
 
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
@@ -1114,7 +1114,7 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
          std::cerr << "unable to set parameters for sample '" << sample << "'!" << std::endl;
       }
 
-      if ((int)nOps != (operators.getSize())) {
+      if (nOps != (operators.size())) {
          std::cerr << "internal error, number of operators inconsistent!" << std::endl;
       }
 
@@ -1499,10 +1499,10 @@ public:
       if (!binWidth)
          std::cerr << "unable to access bin width" << std::endl;
       _sumFunc.get()->addServer(*binWidth);
-      if (operators.getSize() < 1)
+      if (operators.size() < 1)
          std::cerr << "no operators listed" << std::endl;
       _sumFunc.get()->addServerList(operators);
-      if (_weights.getSize() < 1)
+      if (_weights.size() < 1)
          std::cerr << "unable to access weight objects" << std::endl;
       _sumFunc.get()->addOwnedComponents(std::move(sumElements));
       _sumFunc.get()->addServerList(sumElements);
@@ -2510,7 +2510,7 @@ void RooLagrangianMorphFunc::setParameters(const RooArgList *list)
 
 RooRealVar *RooLagrangianMorphFunc::getObservable() const
 {
-   if (_observables.getSize() < 1) {
+   if (_observables.size() < 1) {
       coutE(InputArguments) << "observable not available!" << std::endl;
       return nullptr;
    }
@@ -2522,7 +2522,7 @@ RooRealVar *RooLagrangianMorphFunc::getObservable() const
 
 RooRealVar *RooLagrangianMorphFunc::getBinWidth() const
 {
-   if (_binWidths.getSize() < 1) {
+   if (_binWidths.size() < 1) {
       coutE(InputArguments) << "bin width not available!" << std::endl;
       return nullptr;
    }
@@ -2651,7 +2651,7 @@ bool RooLagrangianMorphFunc::isCouplingUsed(const char *couplname)
 
 int RooLagrangianMorphFunc::nParameters() const
 {
-   return this->getParameterSet()->getSize();
+   return this->getParameterSet()->size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

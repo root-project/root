@@ -73,7 +73,7 @@ void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig &config,
                                  bool verbose, const RooAbsReal *maxFuncVal)
-   : RooAbsNumGenerator(func, genVars, verbose, maxFuncVal), _realSampleDim(_realVars.getSize()), _catSampleMult(1)
+   : RooAbsNumGenerator(func, genVars, verbose, maxFuncVal), _realSampleDim(_realVars.size()), _catSampleMult(1)
 {
   _minTrialsArray[0] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial0D")) ;
   _minTrialsArray[1] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial1D")) ;
@@ -128,10 +128,10 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       ooccoutI(nullptr, Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
       ooccoutI(nullptr, Generation) << "  Min sampling trials is " << _minTrials << endl;
     }
-    if (_catVars.getSize()>0) {
+    if (_catVars.size()>0) {
       ooccoutI(nullptr, Generation) << "  Will generate category vars "<< _catVars << endl ;
     }
-    if (_realVars.getSize()>0) {
+    if (_realVars.size()>0) {
       ooccoutI(nullptr, Generation) << "  Will generate real vars " << _realVars << endl ;
     }
   }
@@ -153,7 +153,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
 {
   // are we actually generating anything? (the cache always contains at least our function value)
   const RooArgSet *event= _cache->get();
-  if(event->getSize() == 1) return event;
+  if(event->size() == 1) return event;
 
   if (!_funcMaxVal) {
     // Generation with empirical maximum determination

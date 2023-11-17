@@ -365,7 +365,7 @@ RooAbsArg* RooCustomizer::build(bool verbose)
 
   // If list with owned objects is not empty, assign
   // head node as owner
-  if (allOwned.getSize()>0) {
+  if (allOwned.size()>0) {
     ret->addOwnedComponents(allOwned) ;
   }
 
@@ -417,7 +417,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
   RooArgSet nodeList(_masterLeafList) ;
   nodeList.add(_masterBranchList) ;
 
-  //   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
+  //   cout << "loop over " << nodeList.size() << " nodes" << endl ;
   for (auto node : nodeList) {
     RooAbsArg* theSplitArg = !_sterile?static_cast<RooAbsArg*>(_splitArgList.FindObject(node->GetName())):nullptr ;
     if (theSplitArg) {

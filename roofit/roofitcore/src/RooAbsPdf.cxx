@@ -629,7 +629,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
       RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
 
       if (!cacheParams.empty()) {
-   cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.getSize()
+   cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
           << "-dim value cache for integral over " << depList << " as a function of " << cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
    string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams.contentsString().c_str()) ;
    RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,cacheParams) ;
@@ -1562,7 +1562,7 @@ RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, const RooDataSet 
 RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooDataSet* prototype, const RooArgSet* auxProto,
                    bool verbose, bool autoBinned, const char* binnedTag) const
 {
-  if (prototype || (auxProto && auxProto->getSize()>0)) {
+  if (prototype || (auxProto && auxProto->size()>0)) {
     return genContext(vars,prototype,auxProto,verbose);
   }
 
@@ -2602,7 +2602,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     } else {
       dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectByName(compSpec)));
     }
-    if (dirSelNodes->getSize()>0) {
+    if (dirSelNodes->size()>0) {
       coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << endl ;
 
       // Do indirect selection and activate both
@@ -2874,7 +2874,7 @@ RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
   // Construct name for new object
   std::string name(GetName()) ;
   name.append("_Proj[") ;
-  if (iset.getSize()>0) {
+  if (iset.size()>0) {
     bool first = true;
     for(auto const& arg : iset) {
       if (first) {

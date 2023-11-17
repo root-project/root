@@ -306,8 +306,8 @@ private:
    bool CompareParameters(const RooArgSet &rPars1, const RooArgSet &rPars2, bool bAllowForError = false)
    {
       if (rPars1.size() != rPars2.size()) {
-         Warning("CompareParameters", "got different numbers of parameters: %d vs %d", rPars1.getSize(),
-                 rPars2.getSize());
+         Warning("CompareParameters", "got different numbers of parameters: %d vs %d", int(rPars1.size()),
+                 int(rPars2.size()));
          return false;
       }
 

@@ -2573,8 +2573,8 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
 #endif
             if (strcmp(_bin->GetName(), "1") == 0) {
                RooArgList all;
-               for (int i = 0; i < pSet.getSize(); i++) {
-                  if (i != fBinNumber - 1)
+               for (std::size_t i = 0; i < pSet.size(); i++) {
+                  if (int(i) != fBinNumber - 1)
                      all.add(*pSet.at(i));
                   else
                      all.add(*o);
@@ -2596,7 +2596,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
             //                    acquireNew<RooProduct>(TString::Format("%s_bin%d",binFactors->get()->GetName(),fBinNumber),TString::Format("binFactors
             //                    of bin %d",fBinNumber),RooArgList(*_bin->get<RooAbsArg>()));
             //                    new_p->setStringAttribute("alias","")
-            //                    for (int i = 0; i < phf->_paramSet.getSize(); i++) {
+            //                    for (int i = 0; i < phf->_paramSet.size(); i++) {
             //                        if (i != fBinNumber - 1) all.add(*phf->_paramSet.at(i));
             //                        else all.add(*new_p);
             //                    }
@@ -3958,8 +3958,8 @@ bool xRooNode::SetBinError(int bin, double value)
          // need to swap out var for newVar
          // replace ith element in list with new func, or inject into RooProduct
          RooArgList all;
-         for (int i = 0; i < pSet.getSize(); i++) {
-            if (i != bin - 1)
+         for (std::size_t i = 0; i < pSet.size(); i++) {
+            if (int(i) != bin - 1)
                all.add(*pSet.at(i));
             else {
                all.add(*newVar);
@@ -6267,7 +6267,7 @@ xRooNode xRooNode::fitResult(const char *opt) const
    fr->setFinalParList(*_pars);
    fr->setStatus(-1);
 
-   TMatrixDSym cov(fr->floatParsFinal().getSize());
+   TMatrixDSym cov(fr->floatParsFinal().size());
    TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(fr.get(), _VM));
    if (prevCov) {
       for (int i = 0; i < prevCov->GetNcols(); i++) {
@@ -6903,7 +6903,7 @@ public:
          TMatrixDSym V(paramList.size() == fr.floatParsFinal().size() ? fr.covarianceMatrix()
                                                                       : fr.reducedCovarianceMatrix(paramList));
 
-         for (Int_t ivar = 0; ivar < paramList.getSize(); ivar++) {
+         for (std::size_t ivar = 0; ivar < paramList.size(); ivar++) {
 
             auto &rrv = static_cast<RooRealVar &>(paramList[ivar]);
 
@@ -6949,11 +6949,11 @@ public:
          // propagation.
          getVal(nset_in);
 
-         TMatrixDSym C(paramList.getSize());
+         TMatrixDSym C(paramList.size());
          std::vector<double> errVec(paramList.size());
-         for (int i = 0; i < paramList.getSize(); i++) {
+         for (std::size_t i = 0; i < paramList.size(); i++) {
             errVec[i] = std::sqrt(V(i, i));
-            for (int j = i; j < paramList.getSize(); j++) {
+            for (std::size_t j = i; j < paramList.size(); j++) {
                C(i, j) = V(i, j) / std::sqrt(V(i, i) * V(j, j));
                C(j, i) = C(i, j);
             }
@@ -6987,13 +6987,13 @@ public:
       RooArgSet *errorParams = cloneFunc->getObservables(fpf_stripped);
 
       RooArgSet *nset =
-         nset_in.getSize() == 0 ? cloneFunc->getParameters(*errorParams) : cloneFunc->getObservables(nset_in);
+         nset_in.size() == 0 ? cloneFunc->getParameters(*errorParams) : cloneFunc->getObservables(nset_in);
 
       // Make list of parameter instances of cloneFunc in order of error matrix
       RooArgList paramList;
       const RooArgList &fpf = fpf_stripped;
       std::vector<int> fpf_idx;
-      for (Int_t i = 0; i < fpf.getSize(); i++) {
+      for (Int_t i = 0; i < fpf.size(); i++) {
          RooAbsArg *par = errorParams->find(fpf[i].GetName());
          if (par) {
             paramList.add(*par);
@@ -7004,10 +7004,10 @@ public:
       std::vector<double> plusVar, minusVar;
 
       // Create vector of plus,minus variations for each parameter
-      TMatrixDSym V(paramList.getSize() == fr.floatParsFinal().getSize() ? fr.covarianceMatrix()
+      TMatrixDSym V(paramList.size() == fr.floatParsFinal().size() ? fr.covarianceMatrix()
                                                                          : fr.reducedCovarianceMatrix(paramList));
 
-      for (Int_t ivar = 0; ivar < paramList.getSize(); ivar++) {
+      for (Int_t ivar = 0; ivar < paramList.size(); ivar++) {
 
          RooRealVar &rrv = (RooRealVar &)fpf[fpf_idx[ivar]];
 
@@ -7031,11 +7031,11 @@ public:
 
       getVal(nset); // reset state
 
-      TMatrixDSym C(paramList.getSize());
-      std::vector<double> errVec(paramList.getSize());
-      for (int i = 0; i < paramList.getSize(); i++) {
+      TMatrixDSym C(paramList.size());
+      std::vector<double> errVec(paramList.size());
+      for (int i = 0; i < paramList.size(); i++) {
          errVec[i] = sqrt(V(i, i));
-         for (int j = i; j < paramList.getSize(); j++) {
+         for (int j = i; j < paramList.size(); j++) {
             C(i, j) = V(i, j) / sqrt(V(i, i) * V(j, j));
             C(j, i) = C(i, j);
          }
@@ -7536,7 +7536,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
       TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(fr, _VM));
 
       if (!prevCov || size_t(fr->covarianceMatrix().GetNcols()) < fr->floatParsFinal().size()) {
-         TMatrixDSym cov(fr->floatParsFinal().getSize());
+         TMatrixDSym cov(fr->floatParsFinal().size());
          if (prevCov) {
             for (int i = 0; i < prevCov->GetNcols(); i++) {
                for (int j = 0; j < prevCov->GetNrows(); j++) {
@@ -10417,7 +10417,7 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
    TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(fr.get(), _VM));
 
    if (!prevCov || size_t(prevCov->GetNcols()) < fr->floatParsFinal().size()) {
-      TMatrixDSym cov(fr->floatParsFinal().getSize());
+      TMatrixDSym cov(fr->floatParsFinal().size());
       if (prevCov) {
          for (int i = 0; i < prevCov->GetNcols(); i++) {
             for (int j = 0; j < prevCov->GetNrows(); j++) {

@@ -116,7 +116,7 @@ RooAbsCachedReal::FuncCacheElem* RooCachedReal::createCache(const RooArgSet* nse
 
 void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
 {
-  unsigned nDim = cache.hist()->get()->getSize();
+  unsigned nDim = cache.hist()->get()->size();
   if (nDim>1) {
     unsigned nCat(0);
     for(RooAbsArg * arg : *cache.hist()->get()) {

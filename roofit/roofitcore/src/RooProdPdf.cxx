@@ -399,7 +399,7 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
       const auto& partInt = static_cast<const RooAbsReal&>(cache._partList[i]);
       const auto normSet = cache._normList[i].get();
 
-      const double piVal = partInt.getVal(normSet->getSize() > 0 ? normSet : nullptr);
+      const double piVal = partInt.getVal(normSet->size() > 0 ? normSet : nullptr);
       value *= piVal ;
       if (value <= _cutOff) break;
     }
@@ -719,7 +719,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       imps=static_cast<RooArgSet*>(imp.At(termIdx));
       RooArgSet termNSet(*norm), termImpSet(*imps);
 
-//       cout<<"FK: termImpSet.getSize()  = "<<termImpSet.getSize()<< " " << termImpSet << endl;
+//       cout<<"FK: termImpSet.size()  = "<<termImpSet.size()<< " " << termImpSet << endl;
 //       cout<<"FK: _refRangeName = "<<_refRangeName<<endl;
 
       if (!termImpSet.empty() && nullptr != _refRangeName) {
@@ -1368,7 +1368,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
   // CASE I: factorizing term: term is integrated over all normalizing observables
   // -----------------------------------------------------------------------------
   // Check if all observbales of this term are integrated. If so the term cancels
-  if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize() && isetRangeName==nullptr) {
+  if (termNSet.size()>0 && termNSet.size()==termISet.size() && isetRangeName==nullptr) {
 
 
     //cout << "processProductTerm(" << GetName() << ") case I " << endl ;
@@ -1387,8 +1387,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     return ret ;
   }
 
-  if (iset && termISet.getSize()>0) {
-    if (term->getSize()==1) {
+  if (iset && termISet.size()>0) {
+    if (term->size()==1) {
 
       // CASE IIIa: Normalized and partially integrated single PDF term
       //---------------------------------------------------------------
@@ -1442,7 +1442,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
   // CASE IVa: Normalized non-integrated composite PDF term
   // -------------------------------------------------------
-  if (nset && nset->getSize()>0 && term->getSize()>1) {
+  if (nset && nset->size()>0 && term->size()>1) {
     // Composite term needs normalized integration
 
     const std::string name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
@@ -1709,7 +1709,7 @@ Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
   }
 
 
-  if (generateVars.getSize()>0) {
+  if (generateVars.size()>0) {
     Int_t masterCode = _genCode.store(code) ;
     return masterCode+1 ;
   } else {
@@ -2193,11 +2193,11 @@ void RooProdPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 
 void RooProdPdf::printMetaArgs(ostream& os) const
 {
-  for (int i=0 ; i<_pdfList.getSize() ; i++) {
+  for (std::size_t i=0 ; i<_pdfList.size() ; i++) {
     if (i>0) os << " * " ;
     RooArgSet* ncset = _pdfNSetList[i].get() ;
     os << _pdfList.at(i)->GetName() ;
-    if (ncset->getSize()>0) {
+    if (!ncset->empty()) {
       if (string("nset")==ncset->GetName()) {
    os << *ncset  ;
       } else {

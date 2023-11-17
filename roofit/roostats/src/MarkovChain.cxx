@@ -182,7 +182,7 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    else
       axes.add(*whichVars);
 
-   Int_t dim = axes.getSize();
+   Int_t dim = axes.size();
    std::vector<double> min(dim);
    std::vector<double> max(dim);
    std::vector<Int_t> bins(dim);

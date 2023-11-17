@@ -125,7 +125,7 @@ bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
   std::unique_ptr<RooArgSet> floatPars{static_cast<RooArgSet*>(fitParams()->selectByAttrib("Constant",false))};
 
   _chi2->setVal(chi2Var->getVal()) ;
-  _ndof->setVal(binnedData->numEntries()-floatPars->getSize()-1) ;
+  _ndof->setVal(binnedData->numEntries()-floatPars->size()-1) ;
   _chi2red->setVal(_chi2->getVal()/_ndof->getVal()) ;
   _prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal()))) ;
 

@@ -239,7 +239,7 @@ void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
    }
    if (tsd) fAllTestStatisticsData = static_cast<const RooArgList*>(tsd->snapshot());
 
-   if( fAllTestStatisticsData  &&  fAllTestStatisticsData->getSize() > 0 ) {
+   if( fAllTestStatisticsData  &&  fAllTestStatisticsData->size() > 0 ) {
       RooRealVar* firstTS = static_cast<RooRealVar*>(fAllTestStatisticsData->at(0));
       if( firstTS ) SetTestStatisticData( firstTS->getVal() );
    }
