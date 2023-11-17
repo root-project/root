@@ -193,62 +193,54 @@ method `GetTextFont`.
 \anchor ATTTEXT51
 ### Font quality and speed
 
-When precision 0 is used, only the original non-scaled system fonts are
+When precision 0 is used, only the original non-scaled X11 system fonts are
 used. The fonts have a minimum (4) and maximum (37) size in pixels. These
 fonts are fast and are of good quality. Their size varies with large steps
 and they cannot be rotated.
 Precision 1 and 2 fonts have a different behaviour depending if the
 True Type Fonts (TTF) are used or not. If TTF are used, you always get very good
-quality scalable and rotatable fonts. However TTF are slow.
+quality scalable and rotatable fonts.
+These days TTF fonts are rendered fast enough and can be used in all cases.
 
 \anchor ATTTEXT52
 ### How to use True Type Fonts
 
-One can activate the TTF by adding (or activating) the following line
+TTF fonts are used by default. They can be deactivated via the following line
 in the `.rootrc` file:
 
 ~~~ {.cpp}
-   Unix.*.Root.UseTTFonts:     true
-~~~
-
-It is possible to check the TTF are in use in a Root session
-with the command:
-
-~~~ {.cpp}
-   gEnv->Print();
-~~~
-
-If the TTF are in use the following line will appear at the beginning of the
-printout given by this command:
-
-~~~ {.cpp}
-   Unix.*.Root.UseTTFonts:   true                           [Global]
+   Unix.*.Root.UseTTFonts:     false
 ~~~
 
 \anchor ATTTEXT53
 ### List of the currently supported fonts
 
 ~~~ {.cpp}
-   Font number         X11 Names             TTF Names                  PDF Names
-       1 :       times-medium-i-normal      "Free Serif Italic"         "Times-Italic"
-       2 :       times-bold-r-normal        "Free Serif Bold"           "Times-Bold"
-       3 :       times-bold-i-normal        "Free Serif Bold Italic"    "Times-BoldItalic"
-       4 :       helvetica-medium-r-normal  "Free Sans"                 "Helvetica"
-       5 :       helvetica-medium-o-normal  "Free Sans Oblique"         "Helvetica-Oblique"
-       6 :       helvetica-bold-r-normal    "Free Sans Bold"            "Helvetica-Bold"
-       7 :       helvetica-bold-o-normal    "Free Sans Bold Oblique"    "Helvetica-BoldOblique"
-       8 :       courier-medium-r-normal    "Free Mono"                 "Courier"
-       9 :       courier-medium-o-normal    "Free Mono Oblique"         "Courier-Oblique"
-      10 :       courier-bold-r-normal      "Free Mono Bold"            "Courier-Bold"
-      11 :       courier-bold-o-normal      "Free Mono Bold Oblique"    "Courier-BoldOblique"
-      12 :       symbol-medium-r-normal     "Symbol"                    "Symbol"
-      13 :       times-medium-r-normal      "Free Serif"                "Times-Roman"
-      14 :                                  "Wingdings"                 "ZapfDingbats"
-      15 :       Symbol italic (derived from Symbol)
+   Font number      TTF Names                   PostScript/PDF Names
+       1 :       "Free Serif Italic"         "Times-Italic"
+       2 :       "Free Serif Bold"           "Times-Bold"
+       3 :       "Free Serif Bold Italic"    "Times-BoldItalic"
+       4 :       "Free Sans"                 "Helvetica"
+       5 :       "Free Sans Oblique"         "Helvetica-Oblique"
+       6 :       "Free Sans Bold"            "Helvetica-Bold"
+       7 :       "Free Sans Bold Oblique"    "Helvetica-BoldOblique"
+       8 :       "Free Mono"                 "Courier"
+       9 :       "Free Mono Oblique"         "Courier-Oblique"
+      10 :       "Free Mono Bold"            "Courier-Bold"
+      11 :       "Free Mono Bold Oblique"    "Courier-BoldOblique"
+      12 :       "Symbol"                    "Symbol"
+      13 :       "Free Serif"                "Times-Roman"
+      14 :       "Wingdings"                 "ZapfDingbats"
 ~~~
 
-The following picture shows how each font looks. The number on the left
-is the "text font code". In this picture precision 2 was selected.
+The ROOT PostScript and PDF backends use the original PostScript-defined 13 font styles which
+form four type families (Courier, Helvetica, Times, Symbol) as listed in the
+"Core Font Set" section of [this page](https://en.wikipedia.org/wiki/PostScript_fonts).
+These fonts are always available and do not need to be loaded in the PS or PDF file which
+allows to keep the files' sizes small.
+
+On screen text is rendered using free TTF fonts similar to the PDF ones. The corresponding
+font files are coming with the ROOT distribution in `$ROOTSYS/fonts/Free*`.
 
 Begin_Macro
 fonts.C
