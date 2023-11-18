@@ -4793,13 +4793,13 @@ static void GetFreeBSDSysInfo(SysInfo_t *sysinfo)
    sysinfo->fPhysRam = Int_t(t / 1024 / 1024);
    s.Gets(p);
    t = s.Atoll();
-   sysinfo->fCpuSpeed = Int_t(t / 1000000);
+   sysinfo->fCpuSpeed = Int_t(t);
    gSystem->ClosePipe(p);
 }
 
 static void GetFreeBSDCpuInfo(CpuInfo_t*, Int_t)
 {
-  //not yet implemented
+   Error("ListSymbols", "not yet implemented");
 }
 #endif
 
