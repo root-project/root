@@ -161,7 +161,10 @@ endif()
 
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  xml/*.C
-                histfactory/*.C)   # histfactory requires xml
+                histfactory/*.C   # histfactory requires xml
+                histfactory/*.py
+                roostats/*.C      # most roostats tutorials require xml too,
+                roostats/*.py)    # because they create test data with histfactory
 endif()
 
 if(NOT ROOT_unfold_FOUND)
@@ -195,21 +198,6 @@ if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
 endif()
 
-# The following tests use hist2workspace, which requires xml
-if(NOT ROOT_xml_FOUND)
-  list(APPEND xml_veto roostats/OneSidedFrequentistUpperLimitWithBands.C
-                       roostats/StandardBayesianMCMCDemo.C
-                       roostats/StandardBayesianNumericalDemo.C
-                       roostats/StandardFeldmanCousinsDemo.C
-                       roostats/StandardFrequentistDiscovery.C
-                       roostats/StandardHistFactoryPlotsWithCategories.C
-                       roostats/StandardHypoTestDemo.C
-                       roostats/StandardHypoTestInvDemo.C
-                       roostats/StandardProfileInspectorDemo.C
-                       roostats/StandardProfileLikelihoodDemo.C
-                       roostats/StandardTestStatDistributionDemo.C
-                       roostats/TwoSidedFrequentistUpperLimitWithBands.C)
-endif()
 set(histfactory_veto histfactory/makeExample.C)
 
 if(NOT ROOT_fitsio_FOUND)
@@ -536,7 +524,6 @@ set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
 set(xml-xmlmodifyfile-depends tutorial-xml-xmlnewfile)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
-set(histfactory-example-depends tutorial-roostats-CreateExampleFile)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(fit-myfit-depends tutorial-fit-fitslicesy)
@@ -560,12 +547,24 @@ set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 set(multicore-mp105_processEntryList-depends tutorial-multicore-mp104_processH1)
 
-#--many roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
-foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
-               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
-               StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
-               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands StandardProfileLikelihoodDemo)
-  set(roostats-${tname}-depends tutorial-roostats-CreateExampleFile)
+#--many histfactory and roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
+foreach(tname histfactory-hf001_example
+              roostats-ModelInspector
+              roostats-OneSidedFrequentistUpperLimitWithBands
+              roostats-OneSidedFrequentistUpperLimitWithBands
+              roostats-StandardBayesianMCMCDemo
+              roostats-StandardBayesianNumericalDemo
+              roostats-StandardFeldmanCousinsDemo
+              roostats-StandardFrequentistDiscovery
+              roostats-StandardHistFactoryPlotsWithCategories
+              roostats-StandardHypoTestDemo
+              roostats-StandardHypoTestInvDemo
+              roostats-StandardProfileInspectorDemo
+              roostats-StandardProfileLikelihoodDemo
+              roostats-StandardTestStatDistributionDemo
+              roostats-TwoSidedFrequentistUpperLimitWithBands)
+  set(${tname}-depends tutorial-roostats-CreateExampleFile)
+  set(${tname}-py-depends tutorial-roostats-CreateExampleFile)
 endforeach()
 
 #--dependency for TMVA tutorials
