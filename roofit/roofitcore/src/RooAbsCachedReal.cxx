@@ -226,7 +226,7 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
 {
   TString name ;
   name.Append("_Obs[") ;
-  if (nset.size()>0) {
+  if (!nset.empty()) {
     bool first(true) ;
     for (RooAbsArg * arg : nset) {
       if (first) {

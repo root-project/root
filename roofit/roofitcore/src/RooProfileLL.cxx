@@ -216,10 +216,10 @@ void RooProfileLL::validateAbsMin() const
     _obs.snapshot(obsStart, false) ;
 
     // Start from previous global minimum
-    if (_paramAbsMin.size()>0) {
+    if (!_paramAbsMin.empty()) {
       const_cast<RooSetProxy&>(_par).assignValueOnly(_paramAbsMin) ;
     }
-    if (_obsAbsMin.size()>0) {
+    if (!_obsAbsMin.empty()) {
       const_cast<RooSetProxy&>(_obs).assignValueOnly(_obsAbsMin) ;
     }
 

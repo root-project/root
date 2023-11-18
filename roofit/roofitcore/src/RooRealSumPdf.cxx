@@ -476,7 +476,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
 
   // WVE needs adaptation for rangeName feature
   auto* cache = static_cast<CacheElem*>(normIntMgr.getObjByIndex(code-1));
-  if (cache==0) { // revive the (sterilized) cache
+  if (cache==nullptr) { // revive the (sterilized) cache
     //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
     RooArgSet vars;
     caller.getParameters(nullptr, vars);
@@ -486,7 +486,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     Int_t code2 = caller.getAnalyticalIntegralWN(iset,dummy,&nset,rangeName);
     R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
     cache = static_cast<CacheElem*>(normIntMgr.getObjByIndex(code-1)) ;
-    R__ASSERT(cache!=0);
+    R__ASSERT(cache!=nullptr);
   }
 
   double value(0) ;
@@ -504,7 +504,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     double coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
       assert(func);
-      if (normSet2 ==0 || func->isSelectedComp()) {
+      if (normSet2 ==nullptr || func->isSelectedComp()) {
         assert(funcInt);
         value += funcInt->getVal()*coefVal ;
       }
@@ -520,7 +520,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     const auto funcInt = static_cast<RooAbsReal*>(*funcIntIt);
     assert(func);
 
-    if (normSet2 ==0 || func->isSelectedComp()) {
+    if (normSet2 ==nullptr || func->isSelectedComp()) {
       assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
@@ -534,7 +534,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
   }
 
   double normVal(1) ;
-  if (normSet2 && normSet2->size()>0) {
+  if (normSet2 && !normSet2->empty()) {
     normVal = 0 ;
 
     // N funcs, N-1 coefficients

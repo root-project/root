@@ -1484,7 +1484,7 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
       if (front().fPllType == xRooFit::Asymptotics::OneSidedPositive) {
          sOpt += "pcls"; // default to showing cls p-value scan if drawing a limit
          for (auto &hp : *this) {
-            if (hp.nullToys.size() || hp.altToys.size()) {
+            if (!hp.nullToys.empty() || !hp.altToys.empty()) {
                sOpt += " toys";
                break; // default to toys if done toys
             }

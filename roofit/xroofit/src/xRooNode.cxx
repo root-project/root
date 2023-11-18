@@ -506,7 +506,7 @@ void xRooNode::Browse(TBrowser *b)
    static bool blockBrowse = false;
    if (blockBrowse)
       return;
-   if (b == 0) {
+   if (b == nullptr) {
       auto b2 = dynamic_cast<TBrowser *>(gROOT->GetListOfBrowsers()->Last());
       if (!b2 || !b2->GetBrowserImp()) { // no browser imp if browser was closed
          blockBrowse = true;
@@ -524,14 +524,14 @@ void xRooNode::Browse(TBrowser *b)
       } else {
          auto _b = dynamic_cast<TGFileBrowser *>(GETACTBROWSER(dynamic_cast<TRootBrowser *>(b2->GetBrowserImp())));
          if (_b)
-            _b->AddFSDirectory("Workspaces", 0, "SetRootDir");
+            _b->AddFSDirectory("Workspaces", nullptr, "SetRootDir");
          /*auto l = Node2::Class()->GetMenuList();
          auto o = new CustomClassMenuItem(TClassMenuItem::kPopupUserFunction,Node2::Class(),
                                           "blah blah blah","BlahBlah",0,"Option_t*",-1,true);
          //o->SetCall(o,"BlahBlah","Option_t*",-1);
          l->AddFirst(o);*/
          // b->BrowseObject(this);
-         _b->GotoDir(0);
+         _b->GotoDir(nullptr);
          _b->Add(this, GetName());
          // b->Add(this);
       }
@@ -611,7 +611,7 @@ void xRooNode::Browse(TBrowser *b)
       }
       // ensure entry in folders for every folder type ...
       for (auto &v : *this) {
-         if (v->fFolder != "" && !_folders->find(v->fFolder, false)) {
+         if (!v->fFolder.empty() && !_folders->find(v->fFolder, false)) {
             _folders->emplace_back(std::make_shared<xRooNode>(v->fFolder.c_str(), nullptr, *this));
          }
       }
@@ -947,7 +947,7 @@ TAxis *xRooNode::GetXaxis() const
       // parentX (if not a glob), robs, globs, vars, args
 
       if (_parentX && !dynamic_cast<RooAbsArg *>(_parentX->GetParent())->getAttribute("global") &&
-          (o->dependsOn(*dynamic_cast<RooAbsArg *>(_parentX->GetParent())) || vars().size() == 0)) {
+          (o->dependsOn(*dynamic_cast<RooAbsArg *>(_parentX->GetParent())) || vars().empty())) {
          x = dynamic_cast<RooAbsLValue *>(_parentX->GetParent());
       } else if (auto _obs = obs(); !_obs.empty()) {
          for (auto &v : _obs) {
@@ -3017,7 +3017,7 @@ xRooNode xRooNode::Vary(const xRooNode &child)
    if (auto s = get<RooSimultaneous>(); s && s->indexCat().IsA() == RooCategory::Class()) {
       // name is used as cat label
       std::string label = child.GetName();
-      if (auto pos = label.find("="); pos != std::string::npos)
+      if (auto pos = label.find('='); pos != std::string::npos)
          label = label.substr(pos + 1);
       if (!s->indexCat().hasLabel(label)) {
          static_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(s->indexCat())).defineType(label.c_str());
@@ -3360,7 +3360,7 @@ xRooNode &xRooNode::operator=(const TObject &o)
          auto _v = dynamic_cast<RooRealVar *>(ax->GetParent());
          if (_v) {
             _b.x = _v;
-            _b.b = dynamic_cast<RooAbsBinning *>(_v->getBinningPtr(0)->Clone());
+            _b.b = dynamic_cast<RooAbsBinning *>(_v->getBinningPtr(nullptr)->Clone());
             if (h->GetXaxis()->IsVariableBinSize()) {
                _v->setBinning(RooBinning(h->GetNbinsX(), h->GetXaxis()->GetXbins()->GetArray()));
             } else {
@@ -3612,7 +3612,7 @@ bool xRooNode::SetBinContent(int bin, double value, const char *par, double parV
             } else {
                h.reset(new TH1D(GetName(), GetTitle(), _b->numBins(), _b->array()));
             }
-            h->SetDirectory(0);
+            h->SetDirectory(nullptr);
             TH1::AddDirectory(t);
             h->GetXaxis()->SetName(TString::Format("%s;%s", ax->GetParent()->GetName(), ax->GetName()));
             fComp = h;
@@ -4274,7 +4274,7 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode &acquirer, con
          }
          // paramhistfunc requires the binnings to be loaded as default at construction time
          // so load binning temporarily
-         auto tmp = dynamic_cast<RooAbsBinning *>(x->getBinningPtr(0)->Clone());
+         auto tmp = dynamic_cast<RooAbsBinning *>(x->getBinningPtr(nullptr)->Clone());
          x->setBinning(x->getBinning(binningName.c_str()));
          _f = acquirer.acquireNew<ParamHistFunc>(newObjName, h->GetTitle(), *x, list);
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
@@ -6787,13 +6787,13 @@ public:
       return static_cast<RooAbsPdf *>(intpdf.absArg())->expectedEvents(nset);
    }
    ExtendMode extendMode() const override { return static_cast<RooAbsPdf *>(intpdf.absArg())->extendMode(); }
-   virtual TObject *clone(const char *newname) const override { return new xRooProjectedPdf(*this, newname); }
+   TObject *clone(const char *newname) const override { return new xRooProjectedPdf(*this, newname); }
 
 protected:
    double evaluate() const override
    {
       int code;
-      return getProjection(&intobs, _normSet, (_normRange.Length() > 0 ? _normRange.Data() : 0), code)->getVal();
+      return getProjection(&intobs, _normSet, (_normRange.Length() > 0 ? _normRange.Data() : nullptr), code)->getVal();
    }
 };
 
@@ -6819,8 +6819,8 @@ public:
       }
       fExpectedEventsMode = expEvMode;
    }
-   virtual ~PdfWrapper(){};
-   PdfWrapper(const PdfWrapper &other, const char *name = 0)
+   ~PdfWrapper() override{};
+   PdfWrapper(const PdfWrapper &other, const char *name = nullptr)
       : RooAbsPdf(other, name),
         fFunc("func", this, other.fFunc),
         fCoef("coef", this, other.fCoef),
@@ -6828,7 +6828,7 @@ public:
         fExpectedEventsMode(other.fExpectedEventsMode)
    {
    }
-   virtual TObject *clone(const char *newname) const override { return new PdfWrapper(*this, newname); }
+   TObject *clone(const char *newname) const override { return new PdfWrapper(*this, newname); }
    bool isBinnedDistribution(const RooArgSet &obs) const override { return fFunc->isBinnedDistribution(obs); }
    std::list<double> *binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const override
    {
@@ -7765,7 +7765,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
    }
    if (gOldHandlerr) {
       signal(SIGINT, gOldHandlerr);
-      gOldHandlerr = 0;
+      gOldHandlerr = nullptr;
    }
    normSet = *snap;
 
@@ -9016,7 +9016,7 @@ void xRooNode::Draw(Option_t *opt)
       hist->SetDirectory(nullptr);
       hist->SetBit(kCanDelete);
       auto histCopy = dynamic_cast<TH1 *>(hist->Clone(".axis"));
-      histCopy->SetDirectory(0);
+      histCopy->SetDirectory(nullptr);
       histCopy->SetBit(kCanDelete);
       auto _axis = (doHorizontal ? histCopy->GetYaxis() : histCopy->GetXaxis());
 
@@ -9056,7 +9056,7 @@ void xRooNode::Draw(Option_t *opt)
 
       auto pNamesHist = dynamic_cast<TH1F *>(graph->GetHistogram()->Clone("scales")); // used by interactive "pull" plot
       pNamesHist->Sumw2();
-      pNamesHist->SetDirectory(0);
+      pNamesHist->SetDirectory(nullptr);
 
       for (int ii = 1; ii <= graph->GetN(); ii++) { // use graph->GetN() to protect against the 0 pars case
          auto _p = fr->floatParsFinal().find(_axis->GetBinLabel(ii));
@@ -9185,7 +9185,7 @@ void xRooNode::Draw(Option_t *opt)
          for (int tt = 0; tt < 2; tt++) {
             auto impact = static_cast<TH1 *>(
                graph->GetHistogram()->Clone(TString::Format("%s_impact+", tt == 0 ? "prefit" : "postfit")));
-            impact->SetDirectory(0);
+            impact->SetDirectory(nullptr);
             impact->GetYaxis()->SetTitle(TString::Format("#Delta%s/#sigma", poiName.c_str()));
             impact->SetBarWidth(0.9);
             impact->SetBarOffset(0.05);
@@ -9194,7 +9194,7 @@ void xRooNode::Draw(Option_t *opt)
             impact->SetFillStyle(tt == 0 ? 3013 : 1001);
             auto impact2 =
                static_cast<TH1 *>(impact->Clone(TString::Format("%s_impact-", tt == 0 ? "prefit" : "postfit")));
-            impact2->SetDirectory(0);
+            impact2->SetDirectory(nullptr);
             impact2->SetFillColor(kCyan);
             for (int ii = 1; ii <= pNamesHist->GetNbinsX(); ii++) {
                for (auto &c : covariances) {
@@ -9325,7 +9325,7 @@ void xRooNode::Draw(Option_t *opt)
       //         graph->Draw(sOpt.Contains("impact") ? "az0py+" : "az0p");
       //      }
       auto hh = dynamic_cast<TH1 *>(histCopy->Clone(".axiscopy"));
-      hh->SetDirectory(0);
+      hh->SetDirectory(nullptr);
       hh->SetBit(kCanDelete);
       hh->Draw(
          (sOpt.Contains("impact") && !doHorizontal)
@@ -9693,7 +9693,7 @@ void xRooNode::Draw(Option_t *opt)
       h->SetMarkerStyle(0);
       errHist = dynamic_cast<TH1 *>(h->Clone(Form("%s_err", h->GetName())));
       errHist->SetBit(kCanDelete);
-      errHist->SetDirectory(0);
+      errHist->SetDirectory(nullptr);
       h->SetFillStyle(0);
       for (int i = 1; i <= h->GetNbinsX(); i++) {
          h->SetBinError(i, 0);
@@ -9711,7 +9711,7 @@ void xRooNode::Draw(Option_t *opt)
       auto _hist = (errHist) ? errHist : h;
       auto hCopy = (errHist) ? nullptr : dynamic_cast<TH1 *>(h->Clone());
       if (hCopy)
-         hCopy->SetDirectory(0);
+         hCopy->SetDirectory(nullptr);
       _hist->GetListOfFunctions()->Add(node);
       _hist->GetListOfFunctions()->Add(new TExec(
          ".update",
@@ -10042,7 +10042,7 @@ void xRooNode::Draw(Option_t *opt)
       ratioPad->SetRightMargin(gPad->GetRightMargin());
       ratioPad->cd();
       TH1 *ratioHist = dynamic_cast<TH1 *>((errHist) ? errHist->Clone("auxHist") : h->Clone("auxHist"));
-      ratioHist->SetDirectory(0);
+      ratioHist->SetDirectory(nullptr);
       ratioHist->SetTitle((errHist) ? errHist->GetName()
                                     : h->GetName()); // abuse the title string to hold the name of the main hist
 
@@ -10081,7 +10081,7 @@ void xRooNode::Draw(Option_t *opt)
       ratioHist->SetBit(kCanDelete);
       if (errHist) {
          auto _h = dynamic_cast<TH1 *>(ratioHist->Clone("auxHist_clone"));
-         _h->SetDirectory(0);
+         _h->SetDirectory(nullptr);
          _h->SetFillColor(0);
          ratioHist->GetListOfFunctions()->Add(_h, "histsame");
          //_h->Draw("histsame");
@@ -10109,7 +10109,7 @@ void xRooNode::Draw(Option_t *opt)
 
          if (auto hnom = dynamic_cast<TH1 *>(gPad->GetPrimitive(histName)); hnom) {
             h = dynamic_cast<TH1 *>(h->Clone(h->GetName()));
-            h->SetDirectory(0);
+            h->SetDirectory(nullptr);
             h->SetBit(kCanDelete);
             for (int i = 1; i <= hnom->GetNbinsX(); i++) {
                double val = h->GetBinContent(i);

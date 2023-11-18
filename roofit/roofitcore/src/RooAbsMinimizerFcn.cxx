@@ -310,7 +310,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       optimizeConstantTerms(constStatChange, constValChange);
    }
 
-   return 0;
+   return false;
 }
 
 bool RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
@@ -369,14 +369,14 @@ bool RooAbsMinimizerFcn::SetLogFile(const char *inLogfile)
       oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setLogFile: closing previous log file" << endl;
       _logfile->close();
       delete _logfile;
-      _logfile = 0;
+      _logfile = nullptr;
    }
    _logfile = new ofstream(inLogfile);
    if (!_logfile->good()) {
       oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setLogFile: cannot open file " << inLogfile << endl;
       _logfile->close();
       delete _logfile;
-      _logfile = 0;
+      _logfile = nullptr;
    }
 
    return false;

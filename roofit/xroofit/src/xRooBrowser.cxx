@@ -119,7 +119,7 @@ void xRooBrowser::HandleMenu(Int_t id)
    if (id == TRootBrowser::kOpenFile) {
       static TString dir(".");
       TGFileInfo fi;
-      static const char *openFileTypes[] = {"ROOT files", "*.root", "JSON files", "*.json", "All files", "*", 0, 0};
+      static const char *openFileTypes[] = {"ROOT files", "*.root", "JSON files", "*.json", "All files", "*", nullptr, nullptr};
       fi.fFileTypes = openFileTypes;
       fi.SetIniDir(dir);
       new TGFileDialog(gClient->GetDefaultRoot(), dynamic_cast<TRootBrowser *>(GetBrowserImp()), kFDOpen, &fi);

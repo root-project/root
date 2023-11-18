@@ -1147,7 +1147,7 @@ RooAbsData::RealSpans RooVectorDataStore::getBatches(std::size_t first, std::siz
     if (realVec->_real) {
       // If a buffer is attached, i.e. we are ready to load into a RooAbsReal outside of our dataset,
       // we can directly map our spans to this real.
-      evalData.emplace(realVec->_real, std::move(span));
+      evalData.emplace(realVec->_real, span);
     }
   };
 

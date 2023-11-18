@@ -507,7 +507,7 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
   os << endl << endl;
 
   if (verbose) {
-    if (_constPars->size()>0) {
+    if (!_constPars->empty()) {
       os << indent << "    Constant Parameter    Value     " << endl
     << indent << "  --------------------  ------------" << endl ;
 

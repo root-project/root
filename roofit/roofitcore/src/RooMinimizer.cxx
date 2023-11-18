@@ -113,7 +113,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
             // We intend to repurpose RooGradMinimizerFcn to build such a LikelihoodGradientSerial class.
             coutI(InputArguments) << "Modular likelihood detected and likelihood parallelization requested, "
                                   << "also setting parallel gradient calculation mode." << std::endl;
-            _cfg.enableParallelGradient = 1;
+            _cfg.enableParallelGradient = true;
          }
          // If _cfg.parallelize is larger than zero set the number of workers to that value. Otherwise do not do
          // anything and let RooFit::MultiProcess handle the number of workers

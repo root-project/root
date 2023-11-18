@@ -2454,7 +2454,7 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
    auto makeHist = [&](bool isAlt) {
       TString title;
       auto h = new TH1D((isAlt) ? "alt_toys" : "null_toys", "", 100, _min, _max + (_max - _min) * 0.01);
-      h->SetDirectory(0);
+      h->SetDirectory(nullptr);
       size_t nBadOrZero = 0;
       for (auto &p : (isAlt) ? altToys : nullToys) {
          double w = std::isnan(std::get<1>(p)) ? 0 : std::get<2>(p);
