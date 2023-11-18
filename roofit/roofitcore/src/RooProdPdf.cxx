@@ -399,7 +399,7 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
       const auto& partInt = static_cast<const RooAbsReal&>(cache._partList[i]);
       const auto normSet = cache._normList[i].get();
 
-      const double piVal = partInt.getVal(normSet->size() > 0 ? normSet : nullptr);
+      const double piVal = partInt.getVal(!normSet->empty() ? normSet : nullptr);
       value *= piVal ;
       if (value <= _cutOff) break;
     }
@@ -1368,7 +1368,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
   // CASE I: factorizing term: term is integrated over all normalizing observables
   // -----------------------------------------------------------------------------
   // Check if all observbales of this term are integrated. If so the term cancels
-  if (termNSet.size()>0 && termNSet.size()==termISet.size() && isetRangeName==nullptr) {
+  if (!termNSet.empty() && termNSet.size()==termISet.size() && isetRangeName==nullptr) {
 
 
     //cout << "processProductTerm(" << GetName() << ") case I " << endl ;
@@ -1387,7 +1387,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     return ret ;
   }
 
-  if (iset && termISet.size()>0) {
+  if (iset && !termISet.empty()) {
     if (term->size()==1) {
 
       // CASE IIIa: Normalized and partially integrated single PDF term
@@ -1442,7 +1442,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
   // CASE IVa: Normalized non-integrated composite PDF term
   // -------------------------------------------------------
-  if (nset && nset->size()>0 && term->size()>1) {
+  if (nset && !nset->empty() && term->size()>1) {
     // Composite term needs normalized integration
 
     const std::string name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
@@ -1709,7 +1709,7 @@ Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
   }
 
 
-  if (generateVars.size()>0) {
+  if (!generateVars.empty()) {
     Int_t masterCode = _genCode.store(code) ;
     return masterCode+1 ;
   } else {

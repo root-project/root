@@ -1131,7 +1131,7 @@ SimpleInterval* BayesianCalculator::GetInterval() const
 
       else {
          // use integration method if there are nuisance parameters
-         if (fNuisanceParameters.size() > 0) {
+         if (!fNuisanceParameters.empty()) {
             ComputeIntervalFromCdf(lowerCutOff, upperCutOff);
          }
          else {

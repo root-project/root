@@ -140,7 +140,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          extraParams.add(*arg);
       }
    }
-   if (extraParams.size() > 0)
+   if (!extraParams.empty())
       fParamsPlot->remove(extraParams,true,true);
 
    if(fNdimPlot > 2){

@@ -365,7 +365,7 @@ RooAbsArg* RooCustomizer::build(bool verbose)
 
   // If list with owned objects is not empty, assign
   // head node as owner
-  if (allOwned.size()>0) {
+  if (!allOwned.empty()) {
     ret->addOwnedComponents(allOwned) ;
   }
 

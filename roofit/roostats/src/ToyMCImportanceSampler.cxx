@@ -291,7 +291,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
    // generate global observables
    RooArgSet observables(*fObservables);
-   if(fGlobalObservables  &&  fGlobalObservables->size()) {
+   if(fGlobalObservables  &&  !fGlobalObservables->empty()) {
       observables.remove(*fGlobalObservables);
       // WHAT TODO FOR MANY nullptr DENSITIES?
       GenerateGlobalObservables(*fNullDensities[0]);

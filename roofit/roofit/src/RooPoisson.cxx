@@ -135,7 +135,7 @@ void RooPoisson::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;
   double xgen ;
-  while(1) {
+  while(true) {
     xgen = RooRandom::randomGenerator()->Poisson(mean);
     if (xgen<=x.max() && xgen>=x.min()) {
       x = xgen ;

@@ -597,7 +597,7 @@ double RooAddModel::expectedEvents(const RooArgSet* nset) const
 
 void RooAddModel::selectNormalization(const RooArgSet* depSet, bool force)
 {
-  if (!force && _refCoefNorm.size()!=0) {
+  if (!force && !_refCoefNorm.empty()) {
     return ;
   }
 

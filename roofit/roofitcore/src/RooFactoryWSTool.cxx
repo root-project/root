@@ -704,7 +704,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     return nullptr ;
   }
 
-  if (sumlist2.size()>0 && (sumlist1.size()!=sumlist2.size())) {
+  if (!sumlist2.empty() && (sumlist1.size()!=sumlist2.size())) {
     coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: syntax error: either all sum terms must be products or none" << endl ;
     logError() ;
     return nullptr ;

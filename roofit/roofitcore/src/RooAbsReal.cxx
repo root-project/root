@@ -4419,7 +4419,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const Roo
    // Decode command line arguments
    bool integrate = pc.getInt("integrate");
    RooRealVar *yvar = static_cast<RooRealVar *>(pc.getObject("yvar"));
-   const char *rangeName = pc.getString("rangeName", 0, true);
+   const char *rangeName = pc.getString("rangeName", nullptr, true);
    Int_t numcpu = pc.getInt("numcpu");
    Int_t numcpu_strategy = pc.getInt("interleave");
    // strategy 3 works only for RooSimultaneous.
