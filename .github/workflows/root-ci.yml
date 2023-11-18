@@ -202,13 +202,6 @@ jobs:
           name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
-      - name: Upload build artifacts
-        if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
-          path: /Users/sftnight/ROOT-CI/build/TestResults.xml
-
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v3
