@@ -101,7 +101,7 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
    std::unique_ptr<RooArgSet> constNodes {static_cast<RooArgSet *>(cached_nodes.selectByAttrib("ConstantExpressionCached", true))};
    RooArgSet actualTrackNodes(cached_nodes);
    actualTrackNodes.remove(*constNodes);
-   if (constNodes->size() > 0) {
+   if (!constNodes->empty()) {
       if (constNodes->size() < 20) {
          oocoutI(nullptr, Minimization)
             << " The following expressions have been identified as constant and will be precalculated and cached: "
@@ -112,7 +112,7 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
                              << std::endl;
       }
    }
-   if (actualTrackNodes.size() > 0) {
+   if (!actualTrackNodes.empty()) {
       if (actualTrackNodes.size() < 20) {
          oocoutI(nullptr, Minimization) << " The following expressions will be evaluated in cache-and-track mode: "
                              << actualTrackNodes << std::endl;

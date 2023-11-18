@@ -1499,10 +1499,10 @@ public:
       if (!binWidth)
          std::cerr << "unable to access bin width" << std::endl;
       _sumFunc.get()->addServer(*binWidth);
-      if (operators.size() < 1)
+      if (operators.empty())
          std::cerr << "no operators listed" << std::endl;
       _sumFunc.get()->addServerList(operators);
-      if (_weights.size() < 1)
+      if (_weights.empty())
          std::cerr << "unable to access weight objects" << std::endl;
       _sumFunc.get()->addOwnedComponents(std::move(sumElements));
       _sumFunc.get()->addServerList(sumElements);
@@ -2510,7 +2510,7 @@ void RooLagrangianMorphFunc::setParameters(const RooArgList *list)
 
 RooRealVar *RooLagrangianMorphFunc::getObservable() const
 {
-   if (_observables.size() < 1) {
+   if (_observables.empty()) {
       coutE(InputArguments) << "observable not available!" << std::endl;
       return nullptr;
    }
@@ -2522,7 +2522,7 @@ RooRealVar *RooLagrangianMorphFunc::getObservable() const
 
 RooRealVar *RooLagrangianMorphFunc::getBinWidth() const
 {
-   if (_binWidths.size() < 1) {
+   if (_binWidths.empty()) {
       coutE(InputArguments) << "bin width not available!" << std::endl;
       return nullptr;
    }

@@ -149,7 +149,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   for (auto const* rcomp : static_range_cast<RooAbsReal*>(_compRSet)) {
     if( !rcomp->dependsOn(allVars) ) indep->add(*rcomp);
   }
-  if (indep->size()!=0) {
+  if (!indep->empty()) {
     map->push_back( std::make_pair(new RooArgSet(),indep) );
   } else {
      delete indep;

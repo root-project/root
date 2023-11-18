@@ -95,7 +95,7 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
     XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
-  if (intNSet && _nset.size()>0 && func.isBinnedDistribution(_nset)) {
+  if (intNSet && !_nset.empty() && func.isBinnedDistribution(_nset)) {
     XF->specialIntegratorConfig(true)->method2D().setLabel("RooBinIntegrator");
     XF->specialIntegratorConfig(true)->methodND().setLabel("RooBinIntegrator");
   }

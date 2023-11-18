@@ -128,10 +128,10 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       ooccoutI(nullptr, Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
       ooccoutI(nullptr, Generation) << "  Min sampling trials is " << _minTrials << endl;
     }
-    if (_catVars.size()>0) {
+    if (!_catVars.empty()) {
       ooccoutI(nullptr, Generation) << "  Will generate category vars "<< _catVars << endl ;
     }
-    if (_realVars.size()>0) {
+    if (!_realVars.empty()) {
       ooccoutI(nullptr, Generation) << "  Will generate real vars " << _realVars << endl ;
     }
   }

@@ -159,7 +159,7 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
 {
   // Find method defined configuration
   Int_t ndim = genVars.size() ;
-  bool cond = (condVars.size() > 0) ? true : false ;
+  bool cond = (!condVars.empty()) ? true : false ;
 
   bool hasCat(false) ;
   for (const auto arg : genVars) {
