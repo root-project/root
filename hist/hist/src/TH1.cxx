@@ -1676,7 +1676,7 @@ bool TH1::CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin
 ////////////////////////////////////////////////////////////////////////////////
 /// Check histogram compatibility.
 
-int TH1::CheckConsistency(const TH1* h1, const TH1* h2)
+Int_t TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 {
    if (h1 == h2) return kFullyConsistent;
 

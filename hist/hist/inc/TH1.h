@@ -156,7 +156,6 @@ protected:
    static bool CheckBinLabels(const TAxis* a1, const TAxis* a2);
    static bool CheckEqualAxes(const TAxis* a1, const TAxis* a2);
    static bool CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin1, const TAxis *a2, Int_t firstBin2=0, Int_t lastBin2=0);
-   static int CheckConsistency(const TH1* h1, const TH1* h2);
    int LoggedInconsistency(const char* name, const TH1* h1, const TH1* h2, bool useMerge=false) const;
 
 public:
@@ -199,6 +198,7 @@ public:
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = nullptr) const;
    virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = nullptr) const;
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
+   static  Int_t    CheckConsistency(const TH1* h1, const TH1* h2);
    virtual void     ClearUnderflowAndOverflow();
    virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
            TObject* Clone(const char *newname = "") const override;
