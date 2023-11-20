@@ -13,11 +13,14 @@ The fist public release will get epoch 1.
 There is currently no further epoch foreseen.
 
 _Major_: an increment of the major version indicates forward-incompatible changes.
+A forward-incompatible change is known to break reading in previous software versions that do not support that feature.
 The use of new, forward-incompatible features must be indicated in the feature flag in the header (see below).
 For the RNTuple pre-release (epoch == 0), the major version is the release candidate number.
 
 _Minor_: an increment of the minor version indicates new, optional format features.
-That is, old readers will safely ignore these features.
+Such optional features, although unknown to previous software versions,
+won't prevent those software versions from properly reading the file.
+Old readers will safely ignore these features.
 
 _Patch_: an increment of the patch version indicates backported features from newer format versions.
 The backported features may correspond to a major or a minor release.
@@ -98,7 +101,7 @@ The meta-data envelope defines additional basic types (see below).
 ### Feature Flags
 
 Feature flags are 64bit integers where every bit represents a certain forward-incompatible feature that is used
-in the binary format of the RNTuple at hand.
+in the binary format of the RNTuple at hand (see Versioning Notes).
 The most significant bit is used to indicate that there are more than 63 features to specify.
 That means that readers need to continue reading feature flags as long as their signed integer value is negative.
 
