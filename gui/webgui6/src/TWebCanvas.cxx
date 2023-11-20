@@ -58,6 +58,8 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <vector>
+
 
 class TWebCanvasTimer : public TTimer {
    TWebCanvas &fCanv;
@@ -118,6 +120,18 @@ using namespace std::string_literals;
 
 static const std::string sid_pad_histogram = "__pad_histogram__";
 
+
+struct WebFont_t {
+   Int_t fIndx{0};
+   TString fName;
+   TString fFormat;
+   TString fData;
+   WebFont_t() = default;
+   WebFont_t(Int_t indx, const TString &name, const TString &fmt, const TString &data) : fIndx(indx), fName(name), fFormat(fmt), fData(data) {}
+};
+
+static std::vector<WebFont_t> gWebFonts;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
@@ -147,6 +161,68 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
 TWebCanvas::~TWebCanvas()
 {
    delete fTimer;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add font to static list of fonts upported by the canvas
+/// Name specifies name of the font, second is font file with .ttf or .woff2 extension 
+/// Only True Type Fonts (ttf) are supported by PDF
+/// Returns font index which can be used in 
+///   auto font_indx = TWebCanvas::AddFont("test", "test.ttf", 2);
+///   gStyle->SetStatFont(font_indx);
+
+Font_t TWebCanvas::AddFont(const char *name, const char *fontfile, Int_t precision)
+{
+   Font_t maxindx = 22;
+   for (auto &entry : gWebFonts) {
+      if (entry.fName == name)
+         return precision > 0 ? entry.fIndx*10 + precision : entry.fIndx;
+      if (entry.fIndx > maxindx)
+         maxindx = entry.fIndx;
+   }
+
+   TString fullname = fontfile, fmt = "ttf";
+   auto pos = fullname.Last('.');
+   if (pos != kNPOS) {
+      fmt = fullname(pos+1, fullname.Length() - pos);
+      fmt.ToLower();
+      if ((fmt != "ttf") && (fmt != "woff2")) {
+         ::Error("TWebCanvas::AddFont", "Unsupported font file extension %s", fmt.Data());
+         return (Font_t) -1;
+      }
+   }
+
+   gSystem->ExpandPathName(fullname);
+
+   if (gSystem->AccessPathName(fullname.Data(), kReadPermission)) {
+      ::Error("TWebCanvas::AddFont", "Not possible to read font file %s", fullname.Data());
+      return (Font_t) -1;
+   }
+
+   std::ifstream is(fullname.Data(), std::ios::in | std::ios::binary);
+   std::string res;
+   if (is) {
+      is.seekg(0, std::ios::end);
+      res.resize(is.tellg());
+      is.seekg(0, std::ios::beg);
+      is.read((char *)res.data(), res.length());
+      if (!is)
+         res.clear();
+   }
+
+   if (res.empty()) {
+      ::Error("TWebCanvas::AddFont", "Fail to read font file %s", fullname.Data());
+      return (Font_t) -1;
+   }
+
+   TString base64 = TBase64::Encode(res.c_str(), res.length());
+
+   maxindx++;
+   
+   gWebFonts.emplace_back(maxindx, name, fmt, base64);
+
+   return precision > 0 ? maxindx*10 + precision : maxindx;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,7 +426,7 @@ UInt_t TWebCanvas::CalculateColorsHash()
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Add special canvas objects like colors list at selected palette
+/// Add special canvas objects with list of colors and color palette
 
 void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 {
@@ -368,7 +444,7 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 
    TArrayI pal = TColor::GetPalette();
 
-   auto *listofcols = new TWebPainting;
+   auto listofcols = new TWebPainting;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
       listofcols->AddColor(n, (TColor *)colors->At(n));
 
@@ -379,6 +455,19 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
    listofcols->FixSize();
 
    master.NewSpecials().SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add special canvas objects with custom fonts
+
+void TWebCanvas::AddCustomFonts(TPadWebSnapshot &master)
+{
+   for (auto &entry : gWebFonts) {
+      TString code = TString::Format("%d:%s:%s:%s", entry.fIndx, entry.fName.Data(), entry.fFormat.Data(), entry.fData.Data());
+      auto custom_font = new TWebPainting;
+      custom_font->AddOper(code.Data());
+      master.NewSpecials().SetSnapshot(TWebSnapshot::kFont, custom_font, kTRUE);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -416,6 +505,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if (fStyleVersion > version)
          paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
    }
+
+   // for the first time add custom fonts to the canvas snapshot
+   if (resfunc && (version == 0))
+      AddCustomFonts(paddata);
 
    fAllPads.emplace_back(pad);
 
@@ -2478,4 +2571,3 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    return imp;
 }
-
