@@ -25,10 +25,6 @@ The backported features may correspond to a major or a minor release.
 Except for the epoch, the versioning is for reporting only.
 Readers should use the feature flag in the header to determine whether they support reading the file.
 
-### Changelog
-
-Version 1.0.0.0: first public release
-
 ## Introduction
 
 This document describes version 1 of the RNTuple binary format.
