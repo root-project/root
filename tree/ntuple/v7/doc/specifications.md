@@ -266,7 +266,7 @@ Envelopes have the following format
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |        Envelope Type ID       |                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+         Envelope Size         +
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+        Envelope Length        +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
                          ENVELOPE PAYLOAD
@@ -281,12 +281,12 @@ Envelopes have the following format
 _Envelope type ID_: As specified in the table above,
 encoded in the least significant 16 bits of the first 64bit integer
 
-_Envelope size_: Length (uncompressed size) of the envelope,
+_Envelope length: Uncompressed size of the envelope,
 encoded in the 48 most significant bits of the first 64bit integer
 
 _XxHash-3_: Checksum of the envelope and the payload bytes together
 
-Note that the compressed (and uncompressed) size of envelopes is given by the RNTuple anchor (header, footer)
+Note that the compressed size (and also the length) of envelopes is given by the RNTuple anchor (header, footer)
 or by a locator that references the envelope.
 
 
