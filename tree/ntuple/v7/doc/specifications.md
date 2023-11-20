@@ -27,8 +27,6 @@ Readers should use the feature flag in the header to determine whether they supp
 
 ## Introduction
 
-This document describes version 1 of the RNTuple binary format.
-
 The RNTuple binary format describes the serialized, on-disk representation of an RNTuple data set.
 The data on disk is organized in **pages** (typically 10-100kB in size)
 and several **envelopes** that contain information about the data such as header and footer.
