@@ -883,6 +883,7 @@ The valid types are `std::uint32_t` and `std::uint64_t`.
 ## Limits
 
 This section summarizes key design limits of RNTuple data sets.
+The limits refer to a single RNTuple and do not consider combinations/joins such as "friends" and "chains".
 
 | Limit                                          | Value                        | Reason / Comment                                     |
 |------------------------------------------------|------------------------------|------------------------------------------------------|
