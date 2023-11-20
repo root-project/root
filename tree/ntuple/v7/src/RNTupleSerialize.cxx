@@ -906,7 +906,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopeLink(
    const REnvelopeLink &envelopeLink, void *buffer)
 {
-   auto size = SerializeUInt64(envelopeLink.fUnzippedSize, buffer);
+   auto size = SerializeUInt64(envelopeLink.fUnzippedLength, buffer);
    size += SerializeLocator(envelopeLink.fLocator,
                             buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
    return size;
@@ -920,7 +920,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelopeLink(const v
       return R__FAIL("too short envelope link");
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   bytes += DeserializeUInt64(bytes, envelopeLink.fUnzippedSize);
+   bytes += DeserializeUInt64(bytes, envelopeLink.fUnzippedLength);
    bufSize -= sizeof(std::uint64_t);
    auto result = DeserializeLocator(bytes, bufSize, envelopeLink.fLocator);
    if (!result)
@@ -1374,7 +1374,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
       clusterGroup.fMinEntry = cgDesc.GetMinEntry();
       clusterGroup.fEntrySpan = cgDesc.GetEntrySpan();
       clusterGroup.fNClusters = cgDesc.GetNClusters();
-      clusterGroup.fPageListEnvelopeLink.fUnzippedSize = cgDesc.GetPageListLength();
+      clusterGroup.fPageListEnvelopeLink.fUnzippedLength = cgDesc.GetPageListLength();
       clusterGroup.fPageListEnvelopeLink.fLocator = cgDesc.GetPageListLocator();
       pos += SerializeClusterGroup(clusterGroup, *where);
    }
@@ -1520,7 +1520,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
       RClusterGroupDescriptorBuilder clusterGroupBuilder;
       clusterGroupBuilder.ClusterGroupId(groupId)
          .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
-         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize)
+         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedLength)
          .MinEntry(clusterGroup.fMinEntry)
          .EntrySpan(clusterGroup.fEntrySpan)
          .NClusters(clusterGroup.fNClusters);
