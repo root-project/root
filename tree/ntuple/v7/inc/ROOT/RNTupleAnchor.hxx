@@ -40,7 +40,7 @@ class RNTupleFileWriter;
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAnchor
+\class ROOT::Experimental::RNTuple
 \ingroup NTuple
 \brief Representation of an RNTuple data set in a ROOT file
 
