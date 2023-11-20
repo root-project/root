@@ -2682,6 +2682,9 @@ ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string
                                          std::unique_ptr<Detail::RFieldBase> itemField)
    : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
 {
+   if (!dynamic_cast<RPairField *>(itemField.get()))
+      throw RException(R__FAIL("RMapField inner field type must be of RPairField"));
+
    fItemClass = fProxy->GetValueClass();
    fItemSize = fItemClass->GetClassSize();
 

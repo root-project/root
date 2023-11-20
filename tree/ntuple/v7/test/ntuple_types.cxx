@@ -455,6 +455,11 @@ TEST(RNTuple, StdMap)
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char>").Unwrap(), RException);
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char, std::string, int>").Unwrap(), RException);
 
+   auto invalidInnerField = RFieldBase::Create("someIntField", "int").Unwrap();
+   EXPECT_THROW(std::make_unique<ROOT::Experimental::RMapField>("myInvalidMap", "std::map<char, int>",
+                                                                std::move(invalidInnerField)),
+                RException);
+
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
    {
       auto model = RNTupleModel::Create();
