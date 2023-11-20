@@ -246,7 +246,7 @@ In particular, it might contain a partial address that can be qualified using so
 
 ## Envelopes
 
-An Envelope is a data block containing information that describe the RNTuple data.
+An Envelope is a data block containing information that describes the RNTuple data.
 The following envelope types exist
 
 | Type              |  ID  | Contents                                                          |
