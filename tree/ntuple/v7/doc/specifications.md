@@ -574,7 +574,8 @@ A cluster group record frame starts with
 ```
 Followed by the page list envelope link.
 
-The minimum entry number is the minimum first entry of the clusters in the cluster group.
+To compute the minimum entry number, take first entry number from all clusters in the cluster group,
+and take the minimum among these numbers.
 The entry span is the number of entries that are (partially for sharded clusters) covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
 The number of clusters information allows for using consistent cluster IDs even if cluster groups are accessed non-sequentially.
