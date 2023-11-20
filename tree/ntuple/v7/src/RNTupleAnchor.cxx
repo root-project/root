@@ -72,7 +72,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
 ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options)
 {
    if (!fFile)
-      throw RException(R__FAIL("This RNTuple object was not streamed from a file"));
+      throw RException(R__FAIL("This RNTuple object was not streamed from a ROOT file (TFile or descendant)"));
 
    // TODO(jblomer): Add RRawFile factory that create a raw file from a TFile. This may then duplicate the file
    // descriptor (to avoid re-open).  There could also be a raw file that uses a TFile as a "backend" for TFile cases
