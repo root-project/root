@@ -258,7 +258,6 @@ The following envelope types exist
 | Footer            | 0x02 | Description of clusters, location of user meta-data               |
 | Page list         | 0x03 | Location of data pages                                            |
 | User meta-data    | 0x04 | Key-value pairs of additional information about the data          |
-| Checkpoint (?)    | 0x05 | Minimal footer at X MB boundaries for recovery of crashed writes  |
 
 Envelopes have the following format
 
@@ -713,10 +712,6 @@ Old readers need to ignore these key-value pairs.
 Key versioning starts with zero.
 The version is given by the order of serialization within a meta-data envelope
 and by the order of meta-data envelope links in the footer.
-
-### Checkpoint Envelope
-
-TODO(jblomer)
 
 ## Mapping of C++ Types to Fields and Columns
 
