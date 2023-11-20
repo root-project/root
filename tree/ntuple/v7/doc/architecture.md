@@ -26,3 +26,12 @@ As the size of a collection changes from event to event, this has the following 
 
 So unless the collection buffer needs to be reallocated, RNTuple tries to avoid unnecessary destruction/construction but instead overwrites existing objects.
 Note that RNTuple currently does not copy or move existing objects when the collection buffer is reallocated.
+
+
+# Naming Conventions
+====================
+
+For byte arrays and collections of things, the RNTuple code uses the following variable name suffixes:
+  - `XyzSize` denotes the size of Xyz in bytes on disk, i.e. after compression. Example: `fPageListSize`.
+  - `XyzLength` denotes the size of Xyz in bytes in memory, i.e. uncompressed. Example: `fPageListLength`.
+  - `NXyz` denotes the number of Xyz items in a collection. Example: `fNPageLists`.
