@@ -83,6 +83,17 @@ public:
          kNeutral = 2,  ///< Adapt to the global flag
    };
 
+   /// Enumeration specifying inconsistencies between two histograms,
+   /// in increasing severity.
+   enum  EInconsistencyBits {
+         kFullyConsistent = 0,
+         kDifferentLabels = BIT(0),
+         kDifferentBinLimits = BIT(1),
+         kDifferentAxisLimits = BIT(2),
+         kDifferentNumberOfBins = BIT(3),
+         kDifferentDimensions = BIT(4)
+   };
+
    friend class TH1Merger;
 
 protected:
