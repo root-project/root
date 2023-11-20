@@ -594,21 +594,6 @@ extern void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a);
 extern void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-namespace {
-
-/// Enumeration specifying inconsistencies between two histograms,
-/// in increasing severity.
-enum EInconsistencyBits {
-   kFullyConsistent = 0,
-   kDifferentLabels = BIT(0),
-   kDifferentBinLimits = BIT(1),
-   kDifferentAxisLimits = BIT(2),
-   kDifferentNumberOfBins = BIT(3),
-   kDifferentDimensions = BIT(4)
-};
-
-} // namespace
-
 ClassImp(TH1);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1675,6 +1660,8 @@ bool TH1::CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check histogram compatibility.
+/// The returned integer is part of EInconsistencyBits
+/// The value 0 means that the histograms are compatible
 
 Int_t TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 {
