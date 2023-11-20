@@ -1023,7 +1023,7 @@ public:
       fClusterGroup.fNClusters = nClusters;
       return *this;
    }
-   void AddClusters(std::vector<DescriptorId_t> &clusterIds)
+   void AddClusters(const std::vector<DescriptorId_t> &clusterIds)
    {
       if (clusterIds.size() != fClusterGroup.GetNClusters())
          throw RException(R__FAIL("mismatch of number of clusters"));
