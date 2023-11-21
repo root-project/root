@@ -19,7 +19,7 @@
 \class RooAddGenContext
 \ingroup Roofitcore
 
-RooAddGenContext is an efficient implementation of the
+Efficient implementation of the
 generator context specific for RooAddPdf PDFs. The strategy
 of RooAddGenContext is to defer generation of each component
 to a dedicated generator context for that component and to

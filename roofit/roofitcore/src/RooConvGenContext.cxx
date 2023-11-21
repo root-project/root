@@ -19,7 +19,7 @@
 \class RooConvGenContext
 \ingroup Roofitcore
 
-RooConvGenContext is an efficient implementation of the generator context
+Efficient implementation of the generator context
 specific for RooAbsAnaConvPdf objects. The physics model is generated
 with a truth resolution model and the requested resolution model is generated
 separately as a PDF. The convolution variable of the physics model is
@@ -42,8 +42,6 @@ subsequently explicitly smeared with the resolution model distribution.
 using namespace std;
 
 ClassImp(RooConvGenContext);
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for specialized generator context for analytical convolutions.

@@ -20,7 +20,7 @@
  * \class RooBinWidthFunction
  *  \ingroup Roofitcore
  *
- * RooBinWidthFunction is a class that returns the bin width (or volume) given a RooHistFunc.
+ * Returns the bin width (or volume) given a RooHistFunc.
  * It can be used to normalise by bin width or to compute event densities. Using the extra
  * argument of the constructor, it can also return the inverse of the bin width (or volume).
  */
