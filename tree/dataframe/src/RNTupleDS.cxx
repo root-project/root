@@ -319,7 +319,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
    const unsigned int nRangesByCluster = rangesByCluster.size();
    const auto chunkSize = nRangesByCluster / fNSlots;
-   const auto remainder = (1U == fNSlots) ? 0 : nRangesByCluster % fNSlots;
+   const auto remainder = nRangesByCluster % fNSlots;
    std::size_t iRange = 0;
    const unsigned int N = std::min(fNSlots, nRangesByCluster);
    for (unsigned int i = 0; i < N; ++i) {
