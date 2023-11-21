@@ -903,6 +903,34 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 | Maximum number of entries per cluster          | 2^60                         | Cluster summary encoding                             |
 | Maximum string length (meta-data)              | 4GB                          | String encoding                                      |
 
+## Glossary
+
+TODO: This glossary is not yet complete
+
+### Column
+
+A column is a storage backed vector of a number of **elements** of a simple type.
+Column elements have a fixed bit-length depending on the column type.
+
+### Page
+
+A page is segment of a column.
+Columns are partitioned in pages.
+A page is a unit of compression.
+Typical page sizes are of the order of 10-100kB.
+
+### Cluster
+
+A cluster is a set of pages from a fixed set of columns that contain all the data that belongs to a certain entry range.
+The data set is partitioned in clusters.
+Typically, a cluster comprises pages from all the available columns.
+If only a subset of the available columns are covered, it is called a **sharded cluster**.
+
+### Indications of size
+
+In this document, the `length` of something (e.g., a page) refers to its size in bytes in memory, uncompressed.
+The `size` of something refers to the size in bytes on disk, possibly compressed.
+
 ## Notes on Backward and Forward Compatibility
 
 TODO(jblomer)
