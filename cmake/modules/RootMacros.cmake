@@ -915,8 +915,6 @@ function(ROOT_LINKER_LIBRARY library)
     target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
   endif()
 
-  set_target_properties(${library} PROPERTIES CXX_STANDARD ${CMAKE_CXX_STANDARD})
-
   if(PROJECT_NAME STREQUAL "ROOT")
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
@@ -1090,7 +1088,7 @@ function(ROOT_OBJECT_LIBRARY library)
   # target. Doing so is actively harmful for the modules build because it
   # creates extra module variants, and not useful because we don't use these
   # macros.
-  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "" CXX_STANDARD ${CMAKE_CXX_STANDARD})
+  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
   if(WIN32)
     set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   endif()
@@ -1139,7 +1137,7 @@ function(ROOT_MODULE_LIBRARY library)
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   add_library(${library} SHARED ${lib_srcs})
   add_dependencies(${library} move_headers)
-  set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES} CXX_STANDARD ${CMAKE_CXX_STANDARD})
+  set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   # Do not add -Dname_EXPORTS to the command-line when building files in this
   # target. Doing so is actively harmful for the modules build because it
   # creates extra module variants, and not useful because we don't use these
@@ -1436,7 +1434,7 @@ function(ROOT_EXECUTABLE executable)
     set_target_properties(${executable} PROPERTIES SUFFIX "")
   endif()
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${executable})
-  set_target_properties(${executable} PROPERTIES OUTPUT_NAME ${executable_name} CXX_STANDARD ${CMAKE_CXX_STANDARD})
+  set_target_properties(${executable} PROPERTIES OUTPUT_NAME ${executable_name})
   if (ARG_ADDITIONAL_COMPILE_FLAGS)
     set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_ADDITIONAL_COMPILE_FLAGS})
   endif()
@@ -1842,8 +1840,6 @@ function(ROOT_ADD_GTEST test_suite)
   if (ARG_INCLUDE_DIRS)
     target_include_directories(${test_suite} PRIVATE ${ARG_INCLUDE_DIRS})
   endif(ARG_INCLUDE_DIRS)
-
-  set_property(TARGET ${test_suite} PROPERTY CXX_STANDARD ${CMAKE_CXX_STANDARD})
 
   if(MSVC)
     set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch

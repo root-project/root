@@ -574,7 +574,7 @@ while test $# -gt 0; do
       out="$out @python3vers@"
       ;;
     --cxxstandard)
-      out="$out @cxxstandard@"
+      out="$out @CMAKE_CXX_STANDARD@"
       ;;
     --cflags)
       ### Output the compiler flags

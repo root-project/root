@@ -547,14 +547,12 @@ get_filename_component(altcc ${CMAKE_C_COMPILER} NAME)
 get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
 get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
-# Used for root-config --python-version, --python2-version and --python3-version
+
 set(pythonvers ${PYTHON_VERSION_STRING_Development_Main})
 set(python${PYTHON_VERSION_MAJOR_Development_Main}vers ${PYTHON_VERSION_STRING_Development_Main})
 if(PYTHON_VERSION_STRING_Development_Other)
    set(python${PYTHON_VERSION_MAJOR_Development_Other}vers ${PYTHON_VERSION_STRING_Development_Other})
 endif()
-# Used for root-config --cxxstandard
-set(cxxstandard ${CMAKE_CXX_STANDARD})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
