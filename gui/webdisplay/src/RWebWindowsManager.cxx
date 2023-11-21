@@ -591,8 +591,12 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
 
    // catch window showing, used by the RBrowser to embed some of ROOT widgets
    if (fShowCallback)
-      if (fShowCallback(win, user_args))
+      if (fShowCallback(win, user_args)) {
+         // add dummy handle to pending connections, widget (like TWebCanvas) may wait until connection established
+         auto handle = std::make_unique<RWebDisplayHandle>("");
+         win.AddDisplayHandle(false, "", handle);
          return 0;
+      }
 
    // place here while involves conn mutex
    auto token = win.GetConnToken();
