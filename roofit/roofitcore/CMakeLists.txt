@@ -248,7 +248,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooTreeDataStore.h
     RooTruthModel.h
     RooUniformBinning.h
-    RooUnitTest.h
     RooVectorDataStore.h
     RooWorkspace.h
     RooWorkspaceHandle.h
