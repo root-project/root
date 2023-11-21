@@ -468,6 +468,7 @@ long TClingDataMemberInfo::Property() const
          break;
       default:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
          break;
    }
    if (llvm::isa<clang::UsingShadowDecl>(thisDecl))
