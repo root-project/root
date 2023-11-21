@@ -270,13 +270,12 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindOrCreateConnection(unsigned
             keyvalue = url.GetValueFromOptions("key");
       }
 
-      if (!keyvalue.empty())
-         for (size_t n = 0; n < fPendingConn.size(); ++n)
-            if (fPendingConn[n]->fKey == keyvalue) {
-               key = std::move(fPendingConn[n]);
-               fPendingConn.erase(fPendingConn.begin() + n);
-               break;
-            }
+      for (size_t n = 0; n < fPendingConn.size(); ++n)
+         if (fPendingConn[n]->fKey == keyvalue) {
+            key = std::move(fPendingConn[n]);
+            fPendingConn.erase(fPendingConn.begin() + n);
+            break;
+         }
 
       if (key) {
          key->fWSId = wsid;
