@@ -38,16 +38,16 @@ ClassImp(RooFunctor);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooFunctor::RooFunctor(const RooAbsFunc& func) : _x(func.getDimension())
+RooFunctor::RooFunctor(const RooAbsFunc &func)
+   : _binding(const_cast<RooAbsFunc *>(&func)), _x(func.getDimension()), _nobs(func.getDimension())
 {
-  _nobs = func.getDimension() ;
-  _binding = const_cast<RooAbsFunc*>(&func);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store list of observables
 
-RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters)
+RooFunctor::RooFunctor(const RooAbsReal &func, const RooArgList &observables, const RooArgList &parameters)
+   : _npar(parameters.size()), _nobs(observables.size())
 {
   _nset.add(observables) ;
 
@@ -61,15 +61,15 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
 
   // Allocate transfer array
   _x.resize(allVars.size());
-  _nobs = observables.size() ;
-  _npar = parameters.size() ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store normalization set
 
-RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters, const RooArgSet& nset)
+RooFunctor::RooFunctor(const RooAbsReal &func, const RooArgList &observables, const RooArgList &parameters,
+                       const RooArgSet &nset)
+   : _npar(parameters.size()), _nobs(observables.size())
 {
   _nset.add(nset) ;
 
@@ -83,8 +83,6 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
 
   // Allocate transfer array
   _x.resize(allVars.size());
-  _nobs = observables.size() ;
-  _npar = parameters.size() ;
 }
 
 

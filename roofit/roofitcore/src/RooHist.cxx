@@ -49,8 +49,8 @@ ClassImp(RooHist);
 /// default used by addBin(), and is used to set the relative
 /// normalization of bins with different widths.
 
-  RooHist::RooHist(double nominalBinWidth, double nSigma, double /*xErrorFrac*/, double /*scaleFactor*/) :
-    TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
+RooHist::RooHist(double nominalBinWidth, double nSigma, double /*xErrorFrac*/, double /*scaleFactor*/)
+   : _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   initialize();
 }
@@ -68,8 +68,8 @@ ClassImp(RooHist);
 /// nominal bin width is calculated as range/nbins.
 
 RooHist::RooHist(const TH1 &data, double nominalBinWidth, double nSigma, RooAbsData::ErrorType etype, double xErrorFrac,
-       bool correctForBinWidth, double scaleFactor) :
-  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
+                 bool correctForBinWidth, double scaleFactor)
+   : _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   if(etype == RooAbsData::Poisson && correctForBinWidth == false) {
     throw std::invalid_argument(
@@ -119,9 +119,9 @@ RooHist::RooHist(const TH1 &data, double nominalBinWidth, double nSigma, RooAbsD
 /// normalization of bins with different widths. If not set, the
 /// nominal bin width is calculated as range/nbins.
 
-RooHist::RooHist(const TH1 &data1, const TH1 &data2, double nominalBinWidth, double nSigma,
-       RooAbsData::ErrorType etype, double xErrorFrac, bool efficiency, double scaleFactor) :
-  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
+RooHist::RooHist(const TH1 &data1, const TH1 &data2, double nominalBinWidth, double nSigma, RooAbsData::ErrorType etype,
+                 double xErrorFrac, bool efficiency, double scaleFactor)
+   : _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   initialize();
   // copy the first input histogram's name and title
@@ -264,8 +264,9 @@ RooHist::RooHist(const RooHist &hist1, const RooHist &hist2, double wgt1, double
 /// \param[in] scaleFactor arbitrary scaling of the y-values
 /// \param[in] normVars variables over which to normalize
 /// \param[in] fr fit result
-RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac, double scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
-  TGraphAsymmErrors(), _nSigma(1), _rawEntries(-1)
+RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac, double scaleFactor,
+                 const RooArgSet *normVars, const RooFitResult *fr)
+   : _nSigma(1), _rawEntries(-1)
 {
   // grab the function's name and title
   SetName(f.GetName());

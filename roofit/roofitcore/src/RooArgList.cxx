@@ -56,8 +56,7 @@ ClassImp(RooArgList);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooArgList::RooArgList() :
-  RooAbsCollection()
+RooArgList::RooArgList()
 {
   TRACE_CREATE;
 }

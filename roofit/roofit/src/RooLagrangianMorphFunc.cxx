@@ -775,7 +775,7 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          return;
 
       if (normalize) {
-         hist.get()->Scale(1. / hist.get()->Integral());
+         hist->Scale(1. / hist->Integral());
       }
 
       auto it = list_hf.find(sample);
@@ -1495,18 +1495,18 @@ public:
 
       if (!observable)
          std::cerr << "unable to access observable" << std::endl;
-      _sumFunc.get()->addServer(*observable);
+      _sumFunc->addServer(*observable);
       if (!binWidth)
          std::cerr << "unable to access bin width" << std::endl;
-      _sumFunc.get()->addServer(*binWidth);
+      _sumFunc->addServer(*binWidth);
       if (operators.empty())
          std::cerr << "no operators listed" << std::endl;
-      _sumFunc.get()->addServerList(operators);
+      _sumFunc->addServerList(operators);
       if (_weights.empty())
          std::cerr << "unable to access weight objects" << std::endl;
-      _sumFunc.get()->addOwnedComponents(std::move(sumElements));
-      _sumFunc.get()->addServerList(sumElements);
-      _sumFunc.get()->addServerList(scaleElements);
+      _sumFunc->addOwnedComponents(std::move(sumElements));
+      _sumFunc->addServerList(sumElements);
+      _sumFunc->addServerList(scaleElements);
 
 #ifdef USE_UBLAS
       std::cout.precision(std::numeric_limits<double>::digits);

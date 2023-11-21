@@ -172,7 +172,6 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   _unitNorm(other._unitNorm)
 {
   _histObsList.addClone(other._histObsList) ;
-
 }
 
 RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {

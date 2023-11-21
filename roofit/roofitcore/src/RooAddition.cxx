@@ -198,7 +198,7 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
       std::string className = GetName();
       std::string varName = "elements" + className;
       std::string sumName = "sum" + className;
-      std::string code = "";
+      std::string code;
       std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
       int idx = 0;
       for (RooAbsArg *it : _set) {

@@ -46,14 +46,9 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 
 ////////////////////////////////////////////////////////////////////////////////
 
- RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() :
-   RooAbsReal("RooBarlowBeestonLL","RooBarlowBeestonLL"),
-   _nll()
-//   _obs("paramOfInterest","Parameters of interest",this),
-//  _par("nuisanceParam","Nuisance parameters",this,false,false),
+/// Default constructor. Should only be used by proof.
+RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() : RooAbsReal("RooBarlowBeestonLL", "RooBarlowBeestonLL")
 {
-  // Default constructor
-  // Should only be used by proof.
 }
 
 
