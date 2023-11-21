@@ -2719,8 +2719,9 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
    if (TClassEdit::IsUniquePtr(cl->GetName())) {
       // Ignore error caused by the inside of std::unique_ptr
       // This is needed solely because of rootclingIO's IsUnsupportedUniquePointer
-      // which check the numbers of data members.
-      // If this usage is remove, this can be replace with a return statement.
+      // which checks the number of elements in the GetListOfRealData.
+      // If this usage is removed, this can be replaced with a return statement.
+      // See https://github.com/root-project/root/issues/13574
       isTransient = true;
    }
 
