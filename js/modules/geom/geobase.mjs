@@ -358,7 +358,7 @@ class GeometryCreator {
       let indx = this.indx - ((reduce > 0) ? 9 : 18);
       const norm = this.norm;
 
-      if (reduce!==1) {
+      if (reduce !== 1) {
          norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
@@ -368,10 +368,10 @@ class GeometryCreator {
          norm[indx+6] = nx34;
          norm[indx+7] = ny34;
          norm[indx+8] = nz34;
-         indx+=9;
+         indx += 9;
       }
 
-      if (reduce!==2) {
+      if (reduce !== 2) {
          norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
@@ -381,7 +381,6 @@ class GeometryCreator {
          norm[indx+6] = nx34;
          norm[indx+7] = ny34;
          norm[indx+8] = nz34;
-         indx+=9;
       }
    }
 
@@ -2038,7 +2037,7 @@ function makeEveGeometry(rd) {
       rd.prefixBuf = new Uint32Array(rd.raw.buffer, off, 2);
       off += 2*4;
       rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]-2);
-      off += (rd.sz[2]-2)*4;
+      // off += (rd.sz[2]-2)*4;
    }
 
    const GL_TRIANGLES = 4; // same as in EVE7
@@ -2528,7 +2527,8 @@ class ClonedNodes {
                   issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
                if (issimple) delete clone.matrix;
             }
-            if (clone.matrix && (kind === kindEve)) clone.abs_matrix = true;
+            if (clone.matrix && (kind === kindEve))  // deepscan-disable-line INSUFFICIENT_NULL_CHECK
+               clone.abs_matrix = true;
          }
          if (shape) {
             clone.fDX = shape.fDX;
@@ -3090,9 +3090,8 @@ class ClonedNodes {
       }
 
       const volume = node.fVolume,
-
-       prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
-                   chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
+            prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
+                     chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
 
       if (visible) {
          // TODO: maybe correctly extract ROOT colors here?
@@ -3106,7 +3105,7 @@ class ClonedNodes {
          else if (volume.fLineColor >= 0)
             prop.fillcolor = root_colors[volume.fLineColor];
 
-         const mat = volume?.fMedium?.fMaterial;
+         const mat = volume.fMedium?.fMaterial;
 
          if (mat) {
             const fillstyle = mat.fFillStyle;

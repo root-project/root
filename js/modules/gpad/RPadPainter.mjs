@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, internals, addMethods,
-         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, btoa_func, clTPad, nsREX } from '../core.mjs';
+         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, clTPad, nsREX } from '../core.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
@@ -57,6 +57,11 @@ class RPadPainter extends RObjectPainter {
    /** @summary Indicates that is not Root6 pad painter
     * @private */
    isRoot6() { return false; }
+
+   /** @summary Returns true if pad is editable */
+   isEditable() {
+      return true;
+   }
 
   /** @summary Returns SVG element for the pad itself
     * @private */
@@ -174,8 +179,8 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Removes and cleanup specified primitive
      * @desc also secondary primitives will be removed
-     * @return new index of the object
-    * @private */
+     * @return new index to continue loop or -111 if main painter removed
+     * @private */
    removePrimitive(indx) {
       const prim = this.painters[indx], arr = [];
       let resindx = indx;
@@ -183,17 +188,20 @@ class RPadPainter extends RObjectPainter {
          if ((k === indx) || this.painters[k].isSecondary(prim)) {
             arr.push(this.painters[k]);
             this.painters.splice(k, 1);
-            if (k < indx) resindx--;
+            if (k <= indx) resindx--;
          }
       }
 
-      arr.forEach(painter => painter.cleanup());
-      if (this.main_painter_ref === prim)
-         delete this.main_painter_ref;
+      arr.forEach(painter => {
+         painter.cleanup();
+         if (this.main_painter_ref === painter) {
+            delete this.main_painter_ref;
+            resindx = -111;
+         }
+      });
 
       return resindx;
    }
-
 
    /** @summary try to find object by name in list of pad primitives
      * @desc used to find title drawing
@@ -729,8 +737,9 @@ class RPadPainter extends RObjectPainter {
          menu.addchk((this.enlargeMain('state') === 'on'), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
 
       const fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
-      menu.add(`Save as ${fname}.png`, fname+'.png', arg => this.saveAs('png', false, arg));
-      menu.add(`Save as ${fname}.svg`, fname+'.svg', arg => this.saveAs('svg', false, arg));
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -1220,11 +1229,7 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} with image data, coded with btoa() function
      * @private */
    async createImage(format) {
-      // use https://github.com/MrRio/jsPDF in the future here
-      if (format === 'pdf')
-         return btoa_func('dummy PDF file');
-
-      if ((format === 'png') || (format === 'jpeg') || (format === 'svg')) {
+      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
             if (!res || (format === 'svg')) return res;
             const separ = res.indexOf('base64,');
@@ -1370,10 +1375,11 @@ class RPadPainter extends RObjectPainter {
          height = fp.getFrameHeight();
       }
 
-      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`;
-      svg = compressSVG(svg);
+      const arg = (file_format === 'pdf')
+         ? { node: elem.node(), width, height, reset_tranform: use_frame }
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
 
-      return svgToImage(svg, file_format).then(res => {
+      return svgToImage(arg, file_format).then(res => {
          for (let k = 0; k < items.length; ++k) {
             const item = items[k];
 

@@ -957,7 +957,7 @@ class HierarchyPainter extends BasePainter {
              return process_child(child);
          }
 
-         return (arg.last_exists && top) ? { last: top, rest: fullname } : null;
+         return arg.last_exists ? { last: top, rest: fullname } : null;
       }
 
       let top = this.h, itemname = '';
@@ -2443,7 +2443,7 @@ class HierarchyPainter extends BasePainter {
             hitem = d.last;
          }
 
-         if (hitem) {
+         if (hitem) { // deepscan-disable-line
             // check that item is visible (opened), otherwise should enable parent
 
             let prnt = hitem._parent;
@@ -2502,7 +2502,8 @@ class HierarchyPainter extends BasePainter {
          if (!isFunc(_item._expand)) {
             let handle = getDrawHandle(_item._kind, '::expand');
 
-            if (handle?.expand_item) {
+            // in inspector show all memebers
+            if (handle?.expand_item && !hpainter._inspector) {
                _obj = _obj[handle.expand_item];
                _item.expand_item = handle.expand_item; // remember that was exapnd item
                handle = _obj?._typename ? getDrawHandle(prROOT + _obj._typename, '::expand') : null;
@@ -2524,7 +2525,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          // try to use expand function
-         if (_obj && isFunc(_item?._expand)) {
+         if (_obj && isFunc(_item._expand)) {
             if (_item._expand(_item, _obj)) {
                _item._isopen = true;
                if (_item._parent && !_item._parent._isopen) {
@@ -3426,7 +3427,7 @@ class HierarchyPainter extends BasePainter {
             promise = this.loadScripts(load, prereq); load = ''; prereq = '';
          } else if (inject) {
             promise = this.loadScripts(inject, '', true); inject = '';
-         } if (browser_kind) {
+         } else if (browser_kind) {
             promise = this.createBrowser(browser_kind); browser_kind = '';
          } else if (status !== null) {
             promise = this.createStatusLine(statush, status); status = null;
@@ -3636,7 +3637,7 @@ class HierarchyPainter extends BasePainter {
             menu.show();
          });
       }).on('dblclick', () => {
-         this.createBrowser(this?.brlayout?.browser_kind === 'float' ? 'fix' : 'float', true);
+         this.createBrowser(this.brlayout?.browser_kind === 'float' ? 'fix' : 'float', true);
       });
 
       if (!this.is_online && !this.no_select) {
@@ -3773,7 +3774,7 @@ ObjectPainter.prototype.showInspector = function(opt, obj) {
        .style('right', w);
 
    if (!obj?._typename)
-      obj = this.getObject();
+      obj = isFunc(this.getPrimaryObject) ? this.getPrimaryObject() : this.getObject();
 
    return drawInspector(id, obj, opt);
 };

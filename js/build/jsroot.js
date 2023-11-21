@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '10/11/2023',
+version_date = '21/11/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -7929,6 +7929,1585 @@ function selection_transition(name) {
 selection.prototype.interrupt = selection_interrupt;
 selection.prototype.transition = selection_transition;
 
+const kArial = 'Arial', kTimes = 'Times New Roman', kCourier = 'Courier New', kVerdana = 'Verdana', kSymbol = 'Symbol', kWingdings = 'Wingdings',
+// average width taken from symbols.html, counted only for letters and digits
+root_fonts = [null,  // index 0 not exists
+      { n: kTimes, s: 'italic', aw: 0.5314 },
+      { n: kTimes, w: 'bold', aw: 0.5809 },
+      { n: kTimes, s: 'italic', w: 'bold', aw: 0.5540 },
+      { n: kArial, aw: 0.5778 },
+      { n: kArial, s: 'oblique', aw: 0.5783 },
+      { n: kArial, w: 'bold', aw: 0.6034 },
+      { n: kArial, s: 'oblique', w: 'bold', aw: 0.6030 },
+      { n: kCourier, aw: 0.6003 },
+      { n: kCourier, s: 'oblique', aw: 0.6004 },
+      { n: kCourier, w: 'bold', aw: 0.6003 },
+      { n: kCourier, s: 'oblique', w: 'bold', aw: 0.6005 },
+      { n: kSymbol, aw: 0.5521 },
+      { n: kTimes, aw: 0.5521 },
+      { n: kWingdings, aw: 0.5664 },
+      { n: kSymbol, s: 'italic', aw: 0.5314 },
+      { n: kVerdana, aw: 0.5664 },
+      { n: kVerdana, s: 'italic', aw: 0.5495 },
+      { n: kVerdana, w: 'bold', aw: 0.5748 },
+      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }];
+
+/**
+ * @summary Helper class for font handling
+ * @private
+ */
+
+class FontHandler {
+
+   /** @summary constructor */
+   constructor(fontIndex, size, scale) {
+      if (scale && (size < 1)) {
+         size *= scale;
+         this.scaled = true;
+      }
+
+      this.size = Math.round(size || 11);
+      this.scale = scale;
+
+      this.func = this.setFont.bind(this);
+
+      const indx = (fontIndex && Number.isInteger(fontIndex)) ? Math.floor(fontIndex / 10) : 0,
+            cfg = root_fonts[indx];
+
+      if (cfg)
+         this.setNameStyleWeight(cfg.n, cfg.s, cfg.w, cfg.aw, cfg.format, cfg.base64);
+      else
+         this.setNameStyleWeight(kArial);
+   }
+
+   /** @summary Directly set name, style and weight for the font
+    * @private */
+   setNameStyleWeight(name, style, weight, aver_width, format, base64) {
+      this.name = name;
+      this.style = style || null;
+      this.weight = weight || null;
+      this.aver_width = aver_width || (weight ? 0.58 : 0.55);
+      this.format = format; // format of custom font, ttf by default
+      this.base64 = base64; // indication of custom font
+      if ((this.name === kSymbol) || (this.name === kWingdings)) {
+         this.isSymbol = this.name;
+         this.name = kTimes;
+      } else
+         this.isSymbol = '';
+   }
+
+   /** @summary Set painter for which font will be applied */
+   setPainter(painter) {
+      this.painter = painter;
+   }
+
+   /** @summary Assigns font-related attributes */
+   setFont(selection) {
+      if (this.base64 && this.painter) {
+         const svg = this.painter.getCanvSvg(),
+               clname = 'custom_font_' + this.name,
+               fmt = 'ttf';
+         let defs = svg.selectChild('.canvas_defs');
+         if (defs.empty())
+            defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+         const entry = defs.selectChild('.' + clname);
+         if (entry.empty()) {
+            defs.append('style')
+                .attr('type', 'text/css')
+                .attr('class', clname)
+                .property('$fonthandler', this)
+                .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url('data:application/font-${fmt};charset=utf-8;base64,${this.base64}') }`);
+         }
+      }
+
+      selection.attr('font-family', this.name)
+               .attr('font-size', this.size)
+               .attr('xml:space', 'preserve')
+               .attr('font-weight', this.weight || null)
+               .attr('font-style', this.style || null);
+   }
+
+   /** @summary Set font size (optional) */
+   setSize(size) { this.size = Math.round(size); }
+
+   /** @summary Set text color (optional) */
+   setColor(color) { this.color = color; }
+
+   /** @summary Set text align (optional) */
+   setAlign(align) { this.align = align; }
+
+   /** @summary Set text angle (optional) */
+   setAngle(angle) { this.angle = angle; }
+
+   /** @summary Allign angle to step raster, add optional offset */
+   roundAngle(step, offset) {
+      this.angle = parseInt(this.angle || 0);
+      if (!Number.isInteger(this.angle)) this.angle = 0;
+      this.angle = Math.round(this.angle/step) * step + (offset || 0);
+      if (this.angle < 0)
+         this.angle += 360;
+      else if (this.angle >= 360)
+         this.angle -= 360;
+   }
+
+   /** @summary Clears all font-related attributes */
+   clearFont(selection) {
+      selection.attr('font-family', null)
+               .attr('font-size', null)
+               .attr('xml:space', null)
+               .attr('font-weight', null)
+               .attr('font-style', null);
+   }
+
+   /** @summary Returns true in case of monospace font
+     * @private */
+   isMonospace() {
+      const n = this.name.toLowerCase();
+      return (n.indexOf('courier') === 0) || (n === 'monospace') || (n === 'monaco');
+   }
+
+   /** @summary Return full font declaration which can be set as font property like '12pt Arial bold'
+     * @private */
+   getFontHtml() {
+      let res = Math.round(this.size) + 'pt ' + this.name;
+      if (this.weight) res += ' ' + this.weight;
+      if (this.style) res += ' ' + this.style;
+      return res;
+   }
+
+   /** @summary Returns font name */
+   getFontName() {
+      return this.isSymbol || this.name || 'none';
+   }
+
+} // class FontHandler
+
+/** @summary Register custom font
+  * @private */
+function addCustomFont(index, name, format, base64) {
+   if (!Number.isInteger(index))
+      console.error(`Wrong index ${index} for custom font`);
+   else
+      root_fonts[index] = { n: name, format, base64 };
+}
+
+/** @summary Try to detect and create font handler for SVG text node
+  * @private */
+function detectFont(node) {
+   const sz = node.getAttribute('font-size'),
+         family = node.getAttribute('font-family'),
+         p = sz.indexOf('px'),
+         sz_pixels = p > 0 ? Number.parseInt(sz.slice(0, p)) : 12;
+   let style = node.getAttribute('font-style'),
+       weight = node.getAttribute('font-weight'),
+      fontIndx = null, name = '';
+   if (weight === 'normal')
+      weight = '';
+   else if (weight === 'bold')
+      name += 'b';
+   if (style === 'normal')
+      style = '';
+   else if (style === 'italic')
+      name += 'i';
+   else if (style === 'oblique')
+      name += 'o';
+
+   if (family === 'arial')
+      name += 'Arial';
+   else if (family === 'times')
+      name += 'Times New Roman';
+   else if (family === 'verdana')
+      name += 'Verdana';
+
+   for (let n = 1; n < root_fonts.length; ++n) {
+      if (name === root_fonts[n]) {
+         fontIndx = n*10 + 2;
+         break;
+      }
+   }
+
+   const handler = new FontHandler(fontIndx, sz_pixels);
+   if (!fontIndx)
+      handler.setNameStyleWeight(family, style, weight);
+   return handler;
+}
+
+const symbols_map = {
+   // greek letters
+   '#alpha': '\u03B1',
+   '#beta': '\u03B2',
+   '#chi': '\u03C7',
+   '#delta': '\u03B4',
+   '#digamma': '\u03DD',
+   '#varepsilon': '\u03B5',
+   '#phi': '\u03C6',
+   '#gamma': '\u03B3',
+   '#eta': '\u03B7',
+   '#iota': '\u03B9',
+   '#varphi': '\u03C6',
+   '#kappa': '\u03BA',
+   '#koppa': '\u03DF',
+   '#sampi': '\u03E1',
+   '#lambda': '\u03BB',
+   '#mu': '\u03BC',
+   '#nu': '\u03BD',
+   '#omicron': '\u03BF',
+   '#pi': '\u03C0',
+   '#theta': '\u03B8',
+   '#rho': '\u03C1',
+   '#sigma': '\u03C3',
+   '#stigma': '\u03DB',
+   '#san': '\u03FB',
+   '#sho': '\u03F8',
+   '#tau': '\u03C4',
+   '#upsilon': '\u03C5',
+   '#varomega': '\u03D6',
+   '#varcoppa': '\u03D9',
+   '#omega': '\u03C9',
+   '#xi': '\u03BE',
+   '#psi': '\u03C8',
+   '#zeta': '\u03B6',
+   '#Alpha': '\u0391',
+   '#Beta': '\u0392',
+   '#Chi': '\u03A7',
+   '#Delta': '\u0394',
+   '#Digamma': '\u03DC',
+   '#Epsilon': '\u0395',
+   '#Phi': '\u03A6',
+   '#Gamma': '\u0393',
+   '#Eta': '\u0397',
+   '#Iota': '\u0399',
+   '#vartheta': '\u03D1',
+   '#Kappa': '\u039A',
+   '#Koppa': '\u03DE',
+   '#varKoppa': '\u03D8',
+   '#Sampi': '\u03E0',
+   '#Lambda': '\u039B',
+   '#Mu': '\u039C',
+   '#Nu': '\u039D',
+   '#Omicron': '\u039F',
+   '#Pi': '\u03A0',
+   '#Theta': '\u0398',
+   '#Rho': '\u03A1',
+   '#Sigma': '\u03A3',
+   '#Stigma': '\u03DA',
+   '#San': '\u03FA',
+   '#Sho': '\u03F7',
+   '#Tau': '\u03A4',
+   '#Upsilon': '\u03A5',
+   '#varsigma': '\u03C2',
+   '#Omega': '\u03A9',
+   '#Xi': '\u039E',
+   '#Psi': '\u03A8',
+   '#Zeta': '\u0396',
+   '#varUpsilon': '\u03D2',
+   '#epsilon': '\u03B5',
+   '#P': '\u00B6',
+
+   // only required for MathJax to provide correct replacement
+   '#sqrt': '\u221A',
+   '#bar': '',
+   '#overline': '',
+   '#underline': '',
+   '#strike': '',
+
+   // from TLatex tables #2 & #3
+   '#leq': '\u2264',
+   '#/': '\u2044',
+   '#infty': '\u221E',
+   '#voidb': '\u0192',
+   '#club': '\u2663',
+   '#diamond': '\u2666',
+   '#heart': '\u2665',
+   '#spade': '\u2660',
+   '#leftrightarrow': '\u2194',
+   '#leftarrow': '\u2190',
+   '#uparrow': '\u2191',
+   '#rightarrow': '\u2192',
+   '#downarrow': '\u2193',
+   '#circ': '\u02C6', // ^
+   '#pm': '\xB1',
+   '#mp': '\u2213',
+   '#doublequote': '\u2033',
+   '#geq': '\u2265',
+   '#times': '\xD7',
+   '#propto': '\u221D',
+   '#partial': '\u2202',
+   '#bullet': '\u2022',
+   '#divide': '\xF7',
+   '#neq': '\u2260',
+   '#equiv': '\u2261',
+   '#approx': '\u2248', // should be \u2245 ?
+   '#3dots': '\u2026',
+   '#cbar': '\x7C',
+   '#topbar': '\xAF',
+   '#downleftarrow': '\u21B5',
+   '#aleph': '\u2135',
+   '#Jgothic': '\u2111',
+   '#Rgothic': '\u211C',
+   '#voidn': '\u2118',
+   '#otimes': '\u2297',
+   '#oplus': '\u2295',
+   '#oslash': '\u2205',
+   '#cap': '\u2229',
+   '#cup': '\u222A',
+   '#supseteq': '\u2287',
+   '#supset': '\u2283',
+   '#notsubset': '\u2284',
+   '#subseteq': '\u2286',
+   '#subset': '\u2282',
+   '#int': '\u222B',
+   '#in': '\u2208',
+   '#notin': '\u2209',
+   '#angle': '\u2220',
+   '#nabla': '\u2207',
+   '#oright': '\xAE',
+   '#ocopyright': '\xA9',
+   '#trademark': '\u2122',
+   '#prod': '\u220F',
+   '#surd': '\u221A',
+   '#upoint': '\u02D9',
+   '#corner': '\xAC',
+   '#wedge': '\u2227',
+   '#vee': '\u2228',
+   '#Leftrightarrow': '\u21D4',
+   '#Leftarrow': '\u21D0',
+   '#Uparrow': '\u21D1',
+   '#Rightarrow': '\u21D2',
+   '#Downarrow': '\u21D3',
+   '#LT': '\x3C',
+   '#void1': '\xAE',
+   '#copyright': '\xA9',
+   '#void3': '\u2122',
+   '#sum': '\u2211',
+   '#arctop': '\u239B',
+   '#lbar': '\u23B8',
+   '#arcbottom': '\u239D',
+   '#void8': '',
+   '#bottombar': '\u230A',
+   '#arcbar': '\u23A7',
+   '#ltbar': '\u23A8',
+   '#AA': '\u212B',
+   '#aa': '\u00E5',
+   '#void06': '',
+   '#GT': '\x3E',
+   '#forall': '\u2200',
+   '#exists': '\u2203',
+   '#vec': '',
+   '#dot': '\u22C5',
+   '#hat': '\xB7',
+   '#ddot': '',
+   '#acute': '',
+   '#grave': '',
+   '#check': '\u2713',
+   '#tilde': '\u02DC',
+   '#slash': '\u2044',
+   '#hbar': '\u0127',
+   '#box': '\u25FD',
+   '#Box': '\u2610',
+   '#parallel': '\u2225',
+   '#perp': '\u22A5',
+   '#odot': '\u2299',
+   '#left': '',
+   '#right': '',
+   '{}': ''
+},
+
+/** @summary Create a single regex to detect any symbol to replace
+  * @private */
+symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\\\{/g, '{').replace(/\\\}/g, '}') + ')', 'g'),
+
+/** @summary Simple replacement of latex letters
+  * @private */
+translateLaTeX = str => {
+   while ((str.length > 2) && (str[0] === '{') && (str[str.length - 1] === '}'))
+      str = str.slice(1, str.length - 1);
+
+   return str.replace(symbolsRegexCache, ch => symbols_map[ch]).replace(/\{\}/g, '');
+},
+
+// array with relative width of base symbols from range 32..126
+// eslint-disable-next-line
+base_symbols_width = [453,535,661,973,955,1448,1242,324,593,596,778,1011,431,570,468,492,947,885,947,947,947,947,947,947,947,947,511,495,980,1010,987,893,1624,1185,1147,1193,1216,1080,1028,1270,1274,531,910,1177,1004,1521,1252,1276,1111,1276,1164,1056,1073,1215,1159,1596,1150,1124,1065,540,591,540,837,874,572,929,972,879,973,901,569,967,973,453,458,903,453,1477,973,970,972,976,638,846,548,973,870,1285,884,864,835,656,430,656,1069],
+
+// eslint-disable-next-line
+extra_symbols_width = {945:1002,946:996,967:917,948:953,949:834,966:1149,947:847,951:989,953:516,954:951,955:913,956:1003,957:862,959:967,960:1070,952:954,961:973,963:1017,964:797,965:944,982:1354,969:1359,958:803,968:1232,950:825,913:1194,914:1153,935:1162,916:1178,917:1086,934:1358,915:1016,919:1275,921:539,977:995,922:1189,923:1170,924:1523,925:1253,927:1281,928:1281,920:1285,929:1102,931:1041,932:1069,933:1135,962:848,937:1279,926:1092,936:1334,918:1067,978:1154,8730:986,8804:940,8260:476,8734:1453,402:811,9827:1170,9830:931,9829:1067,9824:965,8596:1768,8592:1761,8593:895,8594:1761,8595:895,710:695,177:955,8243:680,8805:947,215:995,8733:1124,8706:916,8226:626,247:977,8800:969,8801:1031,8776:976,8230:1552,175:883,8629:1454,8501:1095,8465:1002,8476:1490,8472:1493,8855:1417,8853:1417,8709:1205,8745:1276,8746:1404,8839:1426,8835:1426,8836:1426,8838:1426,8834:1426,8747:480,8712:1426,8713:1426,8736:1608,8711:1551,174:1339,169:1339,8482:1469,8719:1364,729:522,172:1033,8743:1383,8744:1383,8660:1768,8656:1496,8657:1447,8658:1496,8659:1447,8721:1182,9115:882,9144:1000,9117:882,8970:749,9127:1322,9128:1322,8491:1150,229:929,8704:1397,8707:1170,8901:524,183:519,10003:1477,732:692,295:984,9725:1780,9744:1581,8741:737,8869:1390,8857:1421};
+
+/** @ummary Calculate approximate labels width
+  * @private */
+function approximateLabelWidth(label, font, fsize) {
+   const len = label.length,
+         symbol_width = (fsize || font.size) * font.aver_width;
+   if (font.isMonospace())
+      return len * symbol_width;
+
+   let sum = 0;
+   for (let i = 0; i < len; ++i) {
+      const code = label.charCodeAt(i);
+      if ((code >= 32) && (code < 127))
+         sum += base_symbols_width[code - 32];
+      else
+         sum += extra_symbols_width[code] || 1000;
+   }
+
+   return sum/1000*symbol_width;
+}
+
+/** @summary array defines features supported by latex parser, used by both old and new parsers
+  * @private */
+const latex_features = [
+   { name: '#it{' }, // italic
+   { name: '#bf{' }, // bold
+   { name: '#underline{', deco: 'underline' }, // underline
+   { name: '#overline{', deco: 'overline' }, // overline
+   { name: '#strike{', deco: 'line-through' }, // line through
+   { name: '#kern[', arg: 'float' }, // horizontal shift
+   { name: '#lower[', arg: 'float' },  // vertical shift
+   { name: '#scale[', arg: 'float' },  // font scale
+   { name: '#color[', arg: 'int' },   // font color
+   { name: '#font[', arg: 'int' },    // font face
+   { name: '_{', low_up: 'low' },  // subscript
+   { name: '^{', low_up: 'up' },   // superscript
+   { name: '#bar{', deco: 'overline' /* accent: '\u02C9' */ }, // '\u0305'
+   { name: '#hat{', accent: '\u02C6', hasw: true }, // '\u0302'
+   { name: '#check{', accent: '\u02C7', hasw: true }, // '\u030C'
+   { name: '#acute{', accent: '\u02CA' }, // '\u0301'
+   { name: '#grave{', accent: '\u02CB' }, // '\u0300'
+   { name: '#dot{', accent: '\u02D9' }, // '\u0307'
+   { name: '#ddot{', accent: '\u02BA', hasw: true }, // '\u0308'
+   { name: '#tilde{', accent: '\u02DC', hasw: true }, // '\u0303'
+   { name: '#slash{', accent: '\u2215' }, // '\u0337'
+   { name: '#vec{', accent: '\u02ED', hasw: true }, // '\u0350' arrowhead
+   { name: '#frac{', twolines: 'line' },
+   { name: '#splitline{', twolines: true },
+   { name: '#sqrt[', arg: 'int', sqrt: true }, // root with arbitrary power
+   { name: '#sqrt{', sqrt: true },             // square root
+   { name: '#sum', special: '\u2211', w: 0.8, h: 0.9 },
+   { name: '#int', special: '\u222B', w: 0.3, h: 1.0 },
+   { name: '#left[', right: '#right]', braces: '[]' },
+   { name: '#left(', right: '#right)', braces: '()' },
+   { name: '#left{', right: '#right}', braces: '{}' },
+   { name: '#left|', right: '#right|', braces: '||' },
+   { name: '#[]{', braces: '[]' },
+   { name: '#(){', braces: '()' },
+   { name: '#{}{', braces: '{}' },
+   { name: '#||{', braces: '||' }
+];
+
+// taken from: https://sites.math.washington.edu/~marshall/cxseminar/symbol.htm, starts from 33
+// eslint-disable-next-line
+const symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993];
+
+// taken from http://www.alanwood.net/demos/wingdings.html, starts from 33
+// eslint-disable-next-line
+const wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505];
+
+function replaceSymbols(s, kind) {
+   const m = (kind === 'Wingdings') ? wingdingsMap : symbolsMap;
+   let res = '';
+   for (let k = 0; k < s.length; ++k) {
+      const code = s.charCodeAt(k),
+            new_code = (code > 32) ? m[code-33] : 0;
+      res += String.fromCodePoint(new_code || code);
+   }
+   return res;
+}
+
+/** @summary Just add plain text to the SVG text elements
+  * @private */
+function producePlainText(painter, txt_node, arg) {
+   arg.plain = true;
+   if (arg.simple_latex)
+      arg.text = translateLaTeX(arg.text); // replace latex symbols
+   if (arg.font && arg.font.isSymbol)
+      txt_node.text(replaceSymbols(arg.text, arg.font.isSymbol));
+   else
+      txt_node.text(arg.text);
+}
+
+/** @summary Check if plain text
+  * @private */
+function isPlainText(txt) {
+   return !txt || ((txt.indexOf('#') < 0) && (txt.indexOf('{') < 0));
+}
+
+/** @ummary translate TLatex and draw inside provided g element
+  * @desc use <text> together with normal <path> elements
+  * @private */
+function parseLatex(node, arg, label, curr) {
+   let nelements = 0;
+
+   const currG = () => { if (!curr.g) curr.g = node.append('svg:g'); return curr.g; },
+
+   shiftX = dx => { curr.x += Math.round(dx); },
+
+   extendPosition = (x1, y1, x2, y2) => {
+      if (!curr.rect)
+         curr.rect = { x1, y1, x2, y2 };
+      else {
+         curr.rect.x1 = Math.min(curr.rect.x1, x1);
+         curr.rect.y1 = Math.min(curr.rect.y1, y1);
+         curr.rect.x2 = Math.max(curr.rect.x2, x2);
+         curr.rect.y2 = Math.max(curr.rect.y2, y2);
+      }
+
+      curr.rect.last_y1 = y1; // upper position of last symbols
+
+      curr.rect.width = curr.rect.x2 - curr.rect.x1;
+      curr.rect.height = curr.rect.y2 - curr.rect.y1;
+
+      if (!curr.parent)
+         arg.text_rect = curr.rect;
+   },
+
+   addSpaces = nspaces => {
+      extendPosition(curr.x, curr.y, curr.x + nspaces * curr.fsize * 0.4, curr.y);
+      shiftX(nspaces * curr.fsize * 0.4);
+   },
+
+   /** Position pos.g node which directly attached to curr.g and uses curr.g coordinates */
+   positionGNode = (pos, x, y, inside_gg) => {
+      x = Math.round(x);
+      y = Math.round(y);
+
+      makeTranslate(pos.g, x, y);
+      pos.rect.x1 += x;
+      pos.rect.x2 += x;
+      pos.rect.y1 += y;
+      pos.rect.y2 += y;
+
+      if (inside_gg)
+         extendPosition(curr.x + pos.rect.x1, curr.y + pos.rect.y1, curr.x + pos.rect.x2, curr.y + pos.rect.y2);
+      else
+         extendPosition(pos.rect.x1, pos.rect.y1, pos.rect.x2, pos.rect.y2);
+   },
+
+   /** Create special sub-container for elements like sqrt or braces  */
+   createGG = () => {
+      const gg = currG();
+
+      // this is indicator that gg element will be the only one, one can use directly main container
+      if ((nelements === 1) && !label && !curr.x && !curr.y)
+         return gg;
+
+      return makeTranslate(gg.append('svg:g'), curr.x, curr.y);
+   },
+
+   extractSubLabel = (check_first, lbrace, rbrace) => {
+      let pos = 0, n = 1, extra_braces = false;
+      if (!lbrace) lbrace = '{';
+      if (!rbrace) rbrace = '}';
+
+      const match = br => (pos + br.length <= label.length) && (label.slice(pos, pos+br.length) === br);
+
+      if (check_first) {
+         if (!match(lbrace)) {
+            console.log(`not starting with ${lbrace} in ${label}`);
+            return -1;
+         } else
+            label = label.slice(lbrace.length);
+      }
+
+      while ((n !== 0) && (pos < label.length)) {
+         if (match(lbrace)) {
+            n++;
+            pos += lbrace.length;
+         } else if (match(rbrace)) {
+            n--;
+            pos += rbrace.length;
+            if ((n === 0) && (typeof check_first === 'string') && match(check_first + lbrace)) {
+               // handle special case like a^{b}^{2} should mean a^{b^{2}}
+               n++;
+               pos += lbrace.length + check_first.length;
+               check_first = true;
+               extra_braces = true;
+            }
+         } else pos++;
+      }
+      if (n !== 0) {
+         console.log(`mismatch with open ${lbrace} and closing ${rbrace} in ${label}`);
+         return -1;
+      }
+
+      let sublabel = label.slice(0, pos - rbrace.length);
+
+      if (extra_braces) sublabel = lbrace + sublabel + rbrace;
+
+      label = label.slice(pos);
+
+      return sublabel;
+   },
+
+   createPath = (gg, d, dofill) => {
+      return gg.append('svg:path')
+               .style('stroke', dofill ? 'none' : (curr.color || arg.color))
+               .style('stroke-width', dofill ? null : Math.max(1, Math.round(curr.fsize*(curr.font.weight ? 0.1 : 0.07))))
+               .style('fill', dofill ? (curr.color || arg.color) : 'none')
+               .attr('d', d ?? null);
+   },
+
+   createSubPos = fscale => {
+      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter };
+   };
+
+   while (label) {
+      let best = label.length, found = null;
+
+      for (let n = 0; n < latex_features.length; ++n) {
+         const pos = label.indexOf(latex_features[n].name);
+         if ((pos >= 0) && (pos < best)) { best = pos; found = latex_features[n]; }
+      }
+
+      if (best > 0) {
+         const alone = (best === label.length) && (nelements === 0) && !found;
+
+         nelements++;
+
+         let s = translateLaTeX(label.slice(0, best)),
+             nbeginspaces = 0, nendspaces = 0;
+
+         while ((nbeginspaces < s.length) && (s[nbeginspaces] === ' '))
+            nbeginspaces++;
+
+         if (nbeginspaces > 0) {
+            addSpaces(nbeginspaces);
+            s = s.slice(nbeginspaces);
+         }
+
+         while ((nendspaces < s.length) && (s[s.length - 1 - nendspaces] === ' '))
+            nendspaces++;
+
+         if (nendspaces > 0)
+            s = s.slice(0, s.length - nendspaces);
+
+         if (s || alone) {
+            // if single text element created, place it directly in the node
+            const g = curr.g || (alone ? node : currG()),
+                  elem = g.append('svg:text');
+
+            if (alone && !curr.g) curr.g = elem;
+
+            // apply font attributes only once, inherited by all other elements
+            if (curr.ufont) {
+               curr.font.setPainter(arg.painter);
+               curr.font.setFont(curr.g);
+            }
+
+            if (curr.bold !== undefined)
+               curr.g.attr('font-weight', curr.bold ? 'bold' : 'normal');
+
+            if (curr.italic !== undefined)
+               curr.g.attr('font-style', curr.italic ? 'italic' : 'normal');
+
+            // set fill color directly to element
+            elem.attr('fill', curr.color || arg.color || null);
+
+            // set font size directly to element to avoid complex control
+            if (curr.fisze !== curr.font.size)
+               elem.attr('font-size', Math.round(curr.fsize));
+
+            if (curr.font && curr.font.isSymbol)
+               elem.text(replaceSymbols(s, curr.font.isSymbol));
+            else
+               elem.text(s);
+
+            const rect = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
+                          ? getElementRect(elem, 'nopadding')
+                          : { height: curr.fsize * 1.2, width: approximateLabelWidth(s, curr.font, curr.fsize) };
+
+            if (curr.x) elem.attr('x', curr.x);
+            if (curr.y) elem.attr('y', curr.y);
+
+            // for single symbols like f,l.i one gets wrong estimation of total width, use it in sup/sub-scripts
+            const xgap = (s.length === 1) && !curr.font.isMonospace() && ('lfij'.indexOf(s) >= 0) ? 0.1*curr.fsize : 0;
+
+            extendPosition(curr.x, curr.y - rect.height*0.8, curr.x + rect.width, curr.y + rect.height*0.2);
+
+            if (!alone) {
+               shiftX(rect.width + xgap);
+               addSpaces(nendspaces);
+               curr.xgap = 0;
+            } else if (curr.deco) {
+               elem.attr('text-decoration', curr.deco);
+               delete curr.deco; // inform that decoration was applied
+            } else
+               curr.xgap = xgap; // may be used in accent or somewere else
+         } else
+            addSpaces(nendspaces);
+      }
+
+      if (!found) return true;
+
+      // remove preceeding block and tag itself
+      label = label.slice(best + found.name.length);
+
+      nelements++;
+
+      if (found.accent) {
+         const sublabel = extractSubLabel();
+         if (sublabel === -1) return false;
+
+         const gg = createGG(),
+               subpos = createSubPos(),
+               reduce = (sublabel.length !== 1) ? 1 : (((sublabel >= 'a') && (sublabel <= 'z') && ('tdbfhkli'.indexOf(sublabel) < 0)) ? 0.75 : 0.9);
+
+         parseLatex(gg, arg, sublabel, subpos);
+
+         const minw = curr.fsize * 0.6,
+               y1 = Math.round(subpos.rect.y1*reduce),
+               dy2 = Math.round(curr.fsize*0.1), dy = dy2*2,
+               dot = `a${dy2},${dy2},0,0,1,${dy},0a${dy2},${dy2},0,0,1,${-dy},0z`;
+         let xpos = 0, w = subpos.rect.width;
+
+         // shift symbol when it is too small
+         if (found.hasw && (w < minw)) {
+            w = minw;
+            xpos = (minw - subpos.rect.width) / 2;
+         }
+
+         const w5 = Math.round(w*0.5), w3 = Math.round(w*0.3), w2 = w5-w3, w8 = w5+w3;
+         w = w5*2;
+
+         positionGNode(subpos, xpos, 0, true);
+
+         switch (found.name) {
+            case '#check{': createPath(gg, `M${w2},${y1-dy}L${w5},${y1}L${w8},${y1-dy}`); break;
+            case '#acute{': createPath(gg, `M${w5},${y1}l${dy},${-dy}`); break;
+            case '#grave{': createPath(gg, `M${w5},${y1}l${-dy},${-dy}`); break;
+            case '#dot{': createPath(gg, `M${w5-dy2},${y1}${dot}`, true); break;
+            case '#ddot{': createPath(gg, `M${w5-3*dy2},${y1}${dot} M${w5+dy2},${y1}${dot}`, true); break;
+            case '#tilde{': createPath(gg, `M${w2},${y1} a${w3},${dy},0,0,1,${w3},0 a${w3},${dy},0,0,0,${w3},0`); break;
+            case '#slash{': createPath(gg, `M${w},${y1}L0,${Math.round(subpos.rect.y2)}`); break;
+            case '#vec{': createPath(gg, `M${w2},${y1}H${w8}M${w8-dy},${y1-dy}l${dy},${dy}l${-dy},${dy}`); break;
+            default: createPath(gg, `M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
+         }
+
+         shiftX(subpos.rect.width + (subpos.xgap ?? 0));
+
+         continue;
+      }
+
+      if (found.twolines) {
+         curr.twolines = true;
+
+         const line1 = extractSubLabel(), line2 = extractSubLabel(true);
+         if ((line1 === -1) || (line2 === -1)) return false;
+
+         const gg = createGG(),
+               fscale = (curr.parent && curr.parent.twolines) ? 0.7 : 1,
+               subpos1 = createSubPos(fscale);
+
+         parseLatex(gg, arg, line1, subpos1);
+
+         const path = (found.twolines === 'line') ? createPath(gg) : null,
+               subpos2 = createSubPos(fscale);
+
+         parseLatex(gg, arg, line2, subpos2);
+
+         const w = Math.max(subpos1.rect.width, subpos2.rect.width),
+               dw = subpos1.rect.width - subpos2.rect.width,
+               dy = -curr.fsize*0.35; // approximate position of middle line
+
+         positionGNode(subpos1, (dw < 0 ? -dw/2 : 0), dy - subpos1.rect.y2, true);
+
+         positionGNode(subpos2, (dw > 0 ? dw/2 : 0), dy - subpos2.rect.y1, true);
+
+         if (path) path.attr('d', `M0,${Math.round(dy)}h${Math.round(w - curr.fsize*0.1)}`);
+
+         shiftX(w);
+
+         delete curr.twolines;
+
+         continue;
+      }
+
+      const extractLowUp = name => {
+         const res = {};
+         if (name) {
+            label = '{' + label;
+            res[name] = extractSubLabel(name === 'low' ? '_' : '^');
+            if (res[name] === -1) return false;
+         }
+
+         while (label) {
+            if (label[0] === '_') {
+               label = label.slice(1);
+               res.low = !res.low ? extractSubLabel('_') : -1;
+               if (res.low === -1) {
+                  console.log(`error with ${found.name} low limit`);
+                  return false;
+               }
+            } else if (label[0] === '^') {
+               label = label.slice(1);
+               res.up = !res.up ? extractSubLabel('^') : -1;
+               if (res.up === -1) {
+                  console.log(`error with ${found.name} upper limit ${label}`);
+                  return false;
+               }
+            } else break;
+         }
+         return res;
+      };
+
+      if (found.low_up) {
+         const subs = extractLowUp(found.low_up);
+         if (!subs) return false;
+
+         const x = curr.x, dx = 0.03*curr.fsize, ylow = 0.25*curr.fsize;
+
+         let pos_up, pos_low, w1 = 0, w2 = 0, yup = -curr.fsize;
+
+         if (subs.up) {
+            pos_up = createSubPos(0.6);
+            parseLatex(currG(), arg, subs.up, pos_up);
+         }
+
+         if (subs.low) {
+            pos_low = createSubPos(0.6);
+            parseLatex(currG(), arg, subs.low, pos_low);
+         }
+
+         if (pos_up) {
+            if (!pos_low) yup = Math.min(yup, curr.rect.last_y1);
+            positionGNode(pos_up, x+dx, yup - pos_up.rect.y1 - curr.fsize*0.1);
+            w1 = pos_up.rect.width;
+         }
+
+         if (pos_low) {
+            positionGNode(pos_low, x+dx, ylow - pos_low.rect.y2 + curr.fsize*0.1);
+            w2 = pos_low.rect.width;
+         }
+
+         shiftX(dx + Math.max(w1, w2));
+
+         continue;
+      }
+
+      if (found.special) {
+         // this is sum and integral, now make fix height, later can adjust to right-content size
+
+         const subs = extractLowUp() || {},
+               gg = createGG(), path = createPath(gg),
+               h = Math.round(curr.fsize*1.7), w = Math.round(curr.fsize), r = Math.round(h*0.1);
+          let x_up, x_low;
+
+         if (found.name === '#sum') {
+            x_up = x_low = w/2;
+            path.attr('d', `M${w},${Math.round(-0.75*h)}h${-w}l${Math.round(0.4*w)},${Math.round(0.3*h)}l${Math.round(-0.4*w)},${Math.round(0.7*h)}h${w}`);
+         } else {
+            x_up = 3*r; x_low = r;
+            path.attr('d', `M0,${Math.round(0.25*h-r)}a${r},${r},0,0,0,${2*r},0v${2*r-h}a${r},${r},0,1,1,${2*r},0`);
+            // path.attr('transform','skewX(-3)'); could use skewX for italic-like style
+         }
+
+         extendPosition(curr.x, curr.y - 0.6*h, curr.x + w, curr.y + 0.4*h);
+
+         if (subs.low) {
+            const subpos1 = createSubPos(0.6);
+            parseLatex(gg, arg, subs.low, subpos1);
+            positionGNode(subpos1, (x_low - subpos1.rect.width/2), 0.25*h - subpos1.rect.y1, true);
+         }
+
+         if (subs.up) {
+            const subpos2 = createSubPos(0.6);
+            parseLatex(gg, arg, subs.up, subpos2);
+            positionGNode(subpos2, (x_up - subpos2.rect.width/2), -0.75*h - subpos2.rect.y2, true);
+         }
+
+         shiftX(w);
+
+         continue;
+      }
+
+      if (found.braces) {
+         const rbrace = found.right,
+               lbrace = rbrace ? found.name : '{',
+               sublabel = extractSubLabel(false, lbrace, rbrace),
+               gg = createGG(),
+               subpos = createSubPos(),
+               path1 = createPath(gg);
+
+         parseLatex(gg, arg, sublabel, subpos);
+
+         const path2 = createPath(gg),
+               w = Math.max(2, Math.round(curr.fsize*0.2)),
+               r = subpos.rect, dy = Math.round(r.y2 - r.y1),
+               r_y1 = Math.round(r.y1), r_width = Math.round(r.width);
+
+         switch (found.braces) {
+            case '||':
+               path1.attr('d', `M${w},${r_y1}v${dy}`);
+               path2.attr('d', `M${3*w+r_width},${r_y1}v${dy}`);
+               break;
+            case '[]':
+               path1.attr('d', `M${2*w},${r_y1}h${-w}v${dy}h${w}`);
+               path2.attr('d', `M${2*w+r_width},${r_y1}h${w}v${dy}h${-w}`);
+               break;
+            case '{}':
+               path1.attr('d', `M${2*w},${r_y1}a${w},${w},0,0,0,${-w},${w}v${dy/2-2*w}a${w},${w},0,0,1,${-w},${w}a${w},${w},0,0,1,${w},${w}v${dy/2-2*w}a${w},${w},0,0,0,${w},${w}`);
+               path2.attr('d', `M${2*w+r_width},${r_y1}a${w},${w},0,0,1,${w},${w}v${dy/2-2*w}a${w},${w},0,0,0,${w},${w}a${w},${w},0,0,0,${-w},${w}v${dy/2-2*w}a${w},${w},0,0,1,${-w},${w}`);
+               break;
+            default: // ()
+               path1.attr('d', `M${w},${r_y1}a${4*dy},${4*dy},0,0,0,0,${dy}`);
+               path2.attr('d', `M${3*w+r_width},${r_y1}a${4*dy},${4*dy},0,0,1,0,${dy}`);
+         }
+
+         positionGNode(subpos, 2*w, 0, true);
+
+         extendPosition(curr.x, curr.y + r.y1, curr.x + 4*w + r.width, curr.y + r.y2);
+
+         shiftX(4*w + r.width);
+
+         continue;
+      }
+
+      if (found.deco) {
+         const sublabel = extractSubLabel(),
+               gg = createGG(),
+               subpos = createSubPos();
+
+         subpos.deco = found.deco;
+
+         parseLatex(gg, arg, sublabel, subpos);
+
+         const r = subpos.rect;
+         if (subpos.deco) {
+            const path = createPath(gg), r_width = Math.round(r.width);
+            switch (subpos.deco) {
+               case 'underline': path.attr('d', `M0,${Math.round(r.y2)}h${r_width}`); break;
+               case 'overline': path.attr('d', `M0,${Math.round(r.y1)}h${r_width}`); break;
+               case 'line-through': path.attr('d', `M0,${Math.round(0.45*r.y1+0.55*r.y2)}h${r_width}`); break;
+            }
+         }
+
+         positionGNode(subpos, 0, 0, true);
+
+         shiftX(r.width);
+
+         continue;
+      }
+
+      if (found.name === '#bf{' || found.name === '#it{') {
+         const sublabel = extractSubLabel();
+         if (sublabel === -1) return false;
+
+         const subpos = createSubPos();
+
+         if (found.name === '#bf{')
+            subpos.bold = !subpos.bold;
+         else
+            subpos.italic = !subpos.italic;
+
+         parseLatex(currG(), arg, sublabel, subpos);
+
+         positionGNode(subpos, curr.x, curr.y);
+
+         shiftX(subpos.rect.width);
+
+         continue;
+      }
+
+      let foundarg = 0;
+
+      if (found.arg) {
+         const pos = label.indexOf(']{');
+         if (pos < 0) { console.log('missing argument for ', found.name); return false; }
+         foundarg = label.slice(0, pos);
+         if (found.arg === 'int') {
+            foundarg = parseInt(foundarg);
+            if (!Number.isInteger(foundarg)) { console.log('wrong int argument', label.slice(0, pos)); return false; }
+         } else if (found.arg === 'float') {
+            foundarg = parseFloat(foundarg);
+            if (!Number.isFinite(foundarg)) { console.log('wrong float argument', label.slice(0, pos)); return false; }
+         }
+         label = label.slice(pos + 2);
+      }
+
+      if ((found.name === '#kern[') || (found.name === '#lower[')) {
+         const sublabel = extractSubLabel();
+         if (sublabel === -1) return false;
+
+         const subpos = createSubPos();
+
+         parseLatex(currG(), arg, sublabel, subpos);
+
+         let shiftx = 0, shifty = 0;
+         if (found.name === 'kern[') shiftx = foundarg; else shifty = foundarg;
+
+         positionGNode(subpos, curr.x + shiftx * subpos.rect.width, curr.y + shifty * subpos.rect.height);
+
+         shiftX(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
+
+         continue;
+      }
+
+      if ((found.name === '#color[') || (found.name === '#scale[') || (found.name === '#font[')) {
+         const sublabel = extractSubLabel();
+         if (sublabel === -1) return false;
+
+         const subpos = createSubPos();
+
+         if (found.name === '#color[')
+            subpos.color = curr.painter.getColor(foundarg);
+         else if (found.name === '#font[') {
+            subpos.font = new FontHandler(foundarg);
+            subpos.ufont = true; // mark that custom font is applied
+         } else
+            subpos.fsize *= foundarg;
+
+         parseLatex(currG(), arg, sublabel, subpos);
+
+         positionGNode(subpos, curr.x, curr.y);
+
+         shiftX(subpos.rect.width);
+
+         continue;
+      }
+
+     if (found.sqrt) {
+         const sublabel = extractSubLabel();
+         if (sublabel === -1) return false;
+
+         const gg = createGG(), subpos = createSubPos();
+         let subpos0;
+
+         if (found.arg) {
+            subpos0 = createSubPos(0.7);
+            parseLatex(gg, arg, foundarg.toString(), subpos0);
+         }
+
+         // placeholder for the sqrt sign
+         const path = createPath(gg);
+
+         parseLatex(gg, arg, sublabel, subpos);
+
+         const r = subpos.rect,
+               h = Math.round(r.height),
+               h1 = Math.round(r.height*0.1),
+               w = Math.round(r.width), midy = Math.round((r.y1 + r.y2)/2),
+               f2 = Math.round(curr.fsize*0.2), r_y2 = Math.round(r.y2);
+
+         if (subpos0)
+            positionGNode(subpos0, 0, midy - subpos0.fsize*0.3, true);
+
+         path.attr('d', `M0,${midy}h${h1}l${h1},${r_y2-midy-f2}l${h1},${-h+f2}h${Math.round(h*0.2+w)}v${h1}`);
+
+         positionGNode(subpos, h*0.4, 0, true);
+
+         extendPosition(curr.x, curr.y + r.y1-curr.fsize*0.1, curr.x + w + h*0.6, curr.y + r.y2);
+
+         shiftX(w + h*0.6);
+
+         continue;
+     }
+   }
+
+   return true;
+}
+
+/** @ummary translate TLatex and draw inside provided g element
+  * @desc use <text> together with normal <path> elements
+  * @private */
+function produceLatex(painter, node, arg) {
+   const pos = { lvl: 0, g: node, x: 0, y: 0, dx: 0, dy: -0.1, fsize: arg.font_size, font: arg.font, parent: null, painter };
+   return parseLatex(node, arg, arg.text, pos);
+}
+
+let _mj_loading;
+
+/** @summary Load MathJax functionality,
+  * @desc one need not only to load script but wait for initialization
+  * @private */
+async function loadMathjax() {
+   const loading = _mj_loading !== undefined;
+
+   if (!loading && (typeof globalThis.MathJax !== 'undefined'))
+      return globalThis.MathJax;
+
+   if (!loading) _mj_loading = [];
+
+   const promise = new Promise(resolve => { _mj_loading ? _mj_loading.push(resolve) : resolve(globalThis.MathJax); });
+
+   if (loading) return promise;
+
+   const svg = {
+       scale: 1,                      // global scaling factor for all expressions
+       minScale: 0.5,                 // smallest scaling factor to use
+       mtextInheritFont: false,       // true to make mtext elements use surrounding font
+       merrorInheritFont: true,       // true to make merror text use surrounding font
+       mathmlSpacing: false,          // true for MathML spacing rules, false for TeX rules
+       skipAttributes: {},            // RFDa and other attributes NOT to copy to the output
+       exFactor: 0.5,                 // default size of ex in em units
+       displayAlign: 'center',        // default for indentalign when set to 'auto'
+       displayIndent: '0',            // default for indentshift when set to 'auto'
+       fontCache: 'local',            // or 'global' or 'none'
+       localID: null,                 // ID to use for local font cache (for single equation processing)
+       internalSpeechTitles: true,    // insert <title> tags with speech content
+       titleID: 0                     // initial id number to use for aria-labeledby titles
+   };
+
+   if (!isNodeJs()) {
+      window.MathJax = {
+         options: {
+            enableMenu: false
+         },
+         loader: {
+            load: ['[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
+         },
+         tex: {
+            packages: { '[+]': ['color', 'upgreek', 'mathtools', 'physics'] }
+         },
+         svg,
+         startup: {
+            ready() {
+               // eslint-disable-next-line no-undef
+               MathJax.startup.defaultReady();
+               const arr = _mj_loading;
+               _mj_loading = undefined;
+               arr.forEach(func => func(globalThis.MathJax));
+            }
+         }
+      };
+
+      let mj_dir = '../mathjax/3.2.0';
+      if (browser.webwindow && exports.source_dir.indexOf('https://root.cern/js') < 0 && exports.source_dir.indexOf('https://jsroot.gsi.de') < 0)
+         mj_dir = 'mathjax';
+
+      return loadScript(exports.source_dir + mj_dir + '/es5/tex-svg.js')
+               .catch(() => loadScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg.js'))
+               .then(() => promise);
+   }
+
+   let JSDOM;
+
+   return _loadJSDOM().then(handle => {
+      JSDOM = handle.JSDOM;
+      return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; });
+   }).then(mj => {
+      // return Promise with mathjax loading
+      mj.init({
+         loader: {
+            load: ['input/tex', 'output/svg', '[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
+          },
+          tex: {
+             packages: { '[+]': ['color', 'upgreek', 'mathtools', 'physics'] }
+          },
+          svg,
+          config: {
+             JSDOM
+          },
+          startup: {
+             typeset: false,
+             ready() {
+                // eslint-disable-next-line no-undef
+                const mj = MathJax;
+
+                mj.startup.registerConstructor('jsdomAdaptor', () => {
+                   return new mj._.adaptors.HTMLAdaptor.HTMLAdaptor(new mj.config.config.JSDOM().window);
+                });
+                mj.startup.useAdaptor('jsdomAdaptor', true);
+                mj.startup.defaultReady();
+                const arr = _mj_loading;
+                _mj_loading = undefined;
+                arr.forEach(func => func(mj));
+             }
+          }
+      });
+
+      return promise;
+   });
+}
+
+const math_symbols_map = {
+      '#LT': '\\langle',
+      '#GT': '\\rangle',
+      '#club': '\\clubsuit',
+      '#spade': '\\spadesuit',
+      '#heart': '\\heartsuit',
+      '#diamond': '\\diamondsuit',
+      '#voidn': '\\wp',
+      '#voidb': 'f',
+      '#copyright': '(c)',
+      '#ocopyright': '(c)',
+      '#trademark': 'TM',
+      '#void3': 'TM',
+      '#oright': 'R',
+      '#void1': 'R',
+      '#3dots': '\\ldots',
+      '#lbar': '\\mid',
+      '#void8': '\\mid',
+      '#divide': '\\div',
+      '#Jgothic': '\\Im',
+      '#Rgothic': '\\Re',
+      '#doublequote': '"',
+      '#plus': '+',
+      '#minus': '-',
+      '#/': '/',
+      '#upoint': '.',
+      '#aa': '\\mathring{a}',
+      '#AA': '\\mathring{A}',
+      '#omicron': 'o',
+      '#Alpha': 'A',
+      '#Beta': 'B',
+      '#Epsilon': 'E',
+      '#Zeta': 'Z',
+      '#Eta': 'H',
+      '#Iota': 'I',
+      '#Kappa': 'K',
+      '#Mu': 'M',
+      '#Nu': 'N',
+      '#Omicron': 'O',
+      '#Rho': 'P',
+      '#Tau': 'T',
+      '#Chi': 'X',
+      '#varomega': '\\varpi',
+      '#corner': '?',
+      '#ltbar': '?',
+      '#bottombar': '?',
+      '#notsubset': '?',
+      '#arcbottom': '?',
+      '#cbar': '?',
+      '#arctop': '?',
+      '#topbar': '?',
+      '#arcbar': '?',
+      '#downleftarrow': '?',
+      '#splitline': '\\genfrac{}{}{0pt}{}',
+      '#it': '\\textit',
+      '#bf': '\\textbf',
+      '#frac': '\\frac',
+      '#left{': '\\lbrace',
+      '#right}': '\\rbrace',
+      '#left\\[': '\\lbrack',
+      '#right\\]': '\\rbrack',
+      '#\\[\\]{': '\\lbrack',
+      ' } ': '\\rbrack',
+      '#\\[': '\\lbrack',
+      '#\\]': '\\rbrack',
+      '#{': '\\lbrace',
+      '#}': '\\rbrace',
+      ' ': '\\;'
+},
+
+mathjax_remap = {
+   upDelta: 'Updelta',
+   upGamma: 'Upgamma',
+   upLambda: 'Uplambda',
+   upOmega: 'Upomega',
+   upPhi: 'Upphi',
+   upPi: 'Uppi',
+   upPsi: 'Uppsi',
+   upSigma: 'Upsigma',
+   upTheta: 'Uptheta',
+   upUpsilon: 'Upupsilon',
+   upXi: 'Upxi',
+   notcong: 'ncong',
+   notgeq: 'ngeq',
+   notgr: 'ngtr',
+   notless: 'nless',
+   notleq: 'nleq',
+   notsucc: 'nsucc',
+   notprec: 'nprec',
+   notsubseteq: 'nsubseteq',
+   notsupseteq: 'nsupseteq',
+   openclubsuit: 'clubsuit',
+   openspadesuit: 'spadesuit',
+   dasharrow: 'dashrightarrow',
+   comp: 'circ',
+   iiintop: 'iiint',
+   iintop: 'iint',
+   ointop: 'oint'
+},
+
+mathjax_unicode = {
+   Digamma: 0x3DC,
+   upDigamma: 0x3DC,
+   digamma: 0x3DD,
+   updigamma: 0x3DD,
+   Koppa: 0x3DE,
+   koppa: 0x3DF,
+   upkoppa: 0x3DF,
+   upKoppa: 0x3DE,
+   VarKoppa: 0x3D8,
+   upVarKoppa: 0x3D8,
+   varkoppa: 0x3D9,
+   upvarkoppa: 0x3D9,
+   varkappa: 0x3BA, // not found archaic kappa - use normal
+   upvarkappa: 0x3BA,
+   varbeta: 0x3D0, // not found archaic beta - use normal
+   upvarbeta: 0x3D0,
+   Sampi: 0x3E0,
+   upSampi: 0x3E0,
+   sampi: 0x3E1,
+   upsampi: 0x3E1,
+   Stigma: 0x3DA,
+   upStigma: 0x3DA,
+   stigma: 0x3DB,
+   upstigma: 0x3DB,
+   San: 0x3FA,
+   upSan: 0x3FA,
+   san: 0x3FB,
+   upsan: 0x3FB,
+   Sho: 0x3F7,
+   upSho: 0x3F7,
+   sho: 0x3F8,
+   upsho: 0x3F8,
+   P: 0xB6,
+   aa: 0xB0,
+   bulletdashcirc: 0x22B7,
+   circdashbullet: 0x22B6,
+   downuparrows: 0x21F5,
+   updownarrows: 0x21C5,
+   dashdownarrow: 0x21E3,
+   dashuparrow: 0x21E1,
+   complement: 0x2201,
+   dbar: 0x18C,
+   ddddot: 0x22EF,
+   dddot: 0x22EF,
+   ddots: 0x22F1,
+   defineequal: 0x225D,
+   defineeq: 0x225D,
+   downdownharpoons: 0x2965,
+   downupharpoons: 0x296F,
+   updownharpoons: 0x296E,
+   upupharpoons: 0x2963,
+   hateq: 0x2259,
+   ldbrack: 0x27E6,
+   rdbrack: 0x27E7,
+   leadsfrom: 0x219C,
+   leftsquigarrow: 0x21DC,
+   lightning: 0x2607,
+   napprox: 0x2249,
+   nasymp: 0x226D,
+   nequiv: 0x2262,
+   nsimeq: 0x2244,
+   nsubseteq: 0x2288,
+   nsubset: 0x2284,
+   notapprox: 0x2249,
+   notasymp: 0x226D,
+   notequiv: 0x2262,
+   notni: 0x220C,
+   notsimeq: 0x2244,
+   notsubseteq: 0x2288,
+   notsubset: 0x2284,
+   notsupseteq: 0x2289,
+   notsupset: 0x2285,
+   nsupset: 0x2285,
+   setdif: 0x2216,
+   simarrow: 0x2972,
+   t: 0x2040,
+   u: 0x2C7,
+   v: 0x2C7,
+   undercurvearrowright: 0x293B,
+   updbar: 0x18C,
+   wwbar: 0x2015,
+   awointop: 0x2232,
+   awoint: 0x2233,
+   barintop: 0x2A1C,
+   barint: 0x2A1B,
+   cwintop: 0x2231, // no opposite direction, use same
+   cwint: 0x2231,
+   cwointop: 0x2233,
+   cwoint: 0x2232,
+   oiiintop: 0x2230,
+   oiiint: 0x2230,
+   oiintop: 0x222F,
+   oiint: 0x222F,
+   slashintop: 0x2A0F,
+   slashint: 0x2A0F
+},
+
+mathjax_asis = ['"', '\'', '`', '=', '~'];
+
+/** @summary Function translates ROOT TLatex into MathJax format
+  * @private */
+function translateMath(str, kind, color, painter) {
+   if (kind !== 2) {
+      for (const x in math_symbols_map)
+         str = str.replace(new RegExp(x, 'g'), math_symbols_map[x]);
+
+      for (const x in symbols_map) {
+         if (x.length > 2)
+            str = str.replace(new RegExp(x, 'g'), '\\' + x.slice(1));
+      }
+
+      // replace all #color[]{} occurances
+      let clean = '', first = true;
+      while (str) {
+         let p = str.indexOf('#color[');
+         if ((p < 0) && first) { clean = str; break; }
+         first = false;
+         if (p !== 0) {
+            const norm = (p < 0) ? str : str.slice(0, p);
+            clean += norm;
+            if (p < 0) break;
+         }
+
+         str = str.slice(p + 7);
+         p = str.indexOf(']{');
+         if (p <= 0) break;
+         const colindx = parseInt(str.slice(0, p));
+         if (!Number.isInteger(colindx)) break;
+         const col = painter.getColor(colindx);
+         let cnt = 1;
+         str = str.slice(p + 2);
+         p = -1;
+         while (cnt && (++p < str.length)) {
+            if (str[p] === '{')
+               cnt++;
+            else if (str[p] === '}')
+               cnt--;
+         }
+         if (cnt !== 0) break;
+
+         const part = str.slice(0, p);
+         str = str.slice(p + 1);
+         if (part)
+            clean += `\\color{${col}}{${part}}`;
+      }
+
+      str = clean;
+   } else {
+      if (str === '\\^') str = '\\unicode{0x5E}';
+      if (str === '\\vec') str = '\\unicode{0x2192}';
+      str = str.replace(/\\\./g, '\\unicode{0x2E}').replace(/\\\^/g, '\\hat');
+      for (const x in mathjax_unicode)
+         str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\unicode{0x${mathjax_unicode[x].toString(16)}}`);
+      mathjax_asis.forEach(symbol => {
+         str = str.replace(new RegExp(`(\\\\${symbol})`, 'g'), `\\unicode{0x${symbol.charCodeAt(0).toString(16)}}`);
+      });
+      for (const x in mathjax_remap)
+         str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\${mathjax_remap[x]}`);
+   }
+
+   if (!isStr(color)) return str;
+
+   // MathJax SVG converter use colors in normal form
+   // if (color.indexOf('rgb(') >= 0)
+   //    color = color.replace(/rgb/g, '[RGB]')
+   //                 .replace(/\(/g, '{')
+   //                 .replace(/\)/g, '}');
+   return `\\color{${color}}{${str}}`;
+}
+
+/** @summary Workaround to fix size attributes in MathJax SVG
+  * @private */
+function repairMathJaxSvgSize(painter, mj_node, svg, arg) {
+   const transform = value => {
+      if (!value || !isStr(value) || (value.length < 3)) return null;
+      const p = value.indexOf('ex');
+      if ((p < 0) || (p !== value.length - 2)) return null;
+      value = parseFloat(value.slice(0, p));
+      return Number.isFinite(value) ? value * arg.font.size * 0.5 : null;
+   };
+
+   let width = transform(svg.getAttribute('width')),
+       height = transform(svg.getAttribute('height')),
+       valign = svg.getAttribute('style');
+
+   if (valign && (valign.length > 18) && valign.indexOf('vertical-align:') === 0) {
+      const p = valign.indexOf('ex;');
+      valign = ((p > 0) && (p === valign.length - 3)) ? transform(valign.slice(16, valign.length - 1)) : null;
+   } else
+      valign = null;
+
+   width = (!width || (width <= 0.5)) ? 1 : Math.round(width);
+   height = (!height || (height <= 0.5)) ? 1 : Math.round(height);
+
+   svg.setAttribute('width', width);
+   svg.setAttribute('height', height);
+   svg.removeAttribute('style');
+
+   if (!isNodeJs()) {
+      const box = getElementRect(mj_node, 'bbox');
+      width = 1.05 * box.width; height = 1.05 * box.height;
+   }
+
+   arg.valign = valign;
+
+   if (arg.scale)
+      painter.scaleTextDrawing(Math.max(width / arg.width, height / arg.height), arg.draw_g);
+}
+
+/** @summary Apply attributes to mathjax drawing
+  * @private */
+function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_factor) {
+   let mw = parseInt(svg.attr('width')),
+       mh = parseInt(svg.attr('height'));
+
+   if (Number.isInteger(mh) && Number.isInteger(mw)) {
+      if (svg_factor > 0) {
+         mw = mw / svg_factor;
+         mh = mh / svg_factor;
+         svg.attr('width', Math.round(mw)).attr('height', Math.round(mh));
+      }
+   } else {
+      const box = getElementRect(mj_node, 'bbox'); // sizes before rotation
+      mw = box.width || mw || 100;
+      mh = box.height || mh || 10;
+   }
+
+   if ((svg_factor > 0) && arg.valign) arg.valign = arg.valign / svg_factor;
+
+   if (arg.valign === null) arg.valign = (font_size - mh) / 2;
+
+   const sign = { x: 1, y: 1 };
+   let nx = 'x', ny = 'y';
+   if (arg.rotate === 180)
+      sign.x = sign.y = -1;
+   else if ((arg.rotate === 270) || (arg.rotate === 90)) {
+      sign.x = (arg.rotate === 270) ? -1 : 1;
+      sign.y = -sign.x;
+      nx = 'y'; ny = 'x'; // replace names to which align applied
+   }
+
+   if (arg.align[0] === 'middle')
+      arg[nx] += sign.x * (arg.width - mw) / 2;
+   else if (arg.align[0] === 'end')
+      arg[nx] += sign.x * (arg.width - mw);
+
+   if (arg.align[1] === 'middle')
+      arg[ny] += sign.y * (arg.height - mh) / 2;
+   else if (arg.align[1] === 'bottom')
+      arg[ny] += sign.y * (arg.height - mh);
+   else if (arg.align[1] === 'bottom-base')
+      arg[ny] += sign.y * (arg.height - mh - arg.valign);
+
+   let trans = makeTranslate(arg.x, arg.y) || '';
+   if (arg.rotate) {
+      if (trans) trans += ' ';
+      trans += `rotate(${arg.rotate})`;
+   }
+
+   mj_node.attr('transform', trans || null).attr('visibility', null);
+}
+
+/** @summary Produce text with MathJax
+  * @private */
+async function produceMathjax(painter, mj_node, arg) {
+   const mtext = translateMath(arg.text, arg.latex, arg.color, painter),
+         options = { em: arg.font.size, ex: arg.font.size/2, family: arg.font.name, scale: 1, containerWidth: -1, lineWidth: 100000 };
+
+   return loadMathjax()
+          .then(mj => mj.tex2svgPromise(mtext, options))
+          .then(elem => {
+              // when adding element to new node, it will be removed from original parent
+              const svg = elem.querySelector('svg');
+
+              mj_node.append(() => svg);
+
+              repairMathJaxSvgSize(painter, mj_node, svg, arg);
+
+              arg.applyAttributesToMathJax = applyAttributesToMathJax;
+              return true;
+           });
+}
+
+/** @summary Just typeset HTML node with MathJax
+  * @private */
+async function typesetMathjax(node) {
+   return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
+}
+
 /** @summary Returns visible rect of element
   * @param {object} elem - d3.select object with element
   * @param {string} [kind] - which size method is used
@@ -8038,7 +9617,7 @@ function floatToString(value, fmt, ret_fmt) {
 
    if (significance) {
       // when using fixed representation, one could get 0
-      if (value && (Number(sg) === 0) && (prec > 0)) {
+      if ((value !== 0) && (Number(sg) === 0) && (prec > 0)) {
          prec = 20; sg = value.toFixed(prec);
       }
 
@@ -8639,15 +10218,112 @@ function addHighlightStyle(elem, drag) {
    }
 }
 
+/** @summary Create pdf for existing SVG element
+  * @return {Promise} with produced PDF file as url string
+  * @private */
+async function svgToPDF(args, as_buffer) {
+   const nodejs = isNodeJs();
+   let _jspdf, _svg2pdf;
+
+   const pr = nodejs
+      ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(h => { _jspdf = h; return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }); }).then(h => { _svg2pdf = h.default; })
+      : loadScript(exports.source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(exports.source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
+        restore_fonts = [], restore_dominant = [], node_transform = args.node.getAttribute('transform'), custom_fonts = {};
+
+   if (args.reset_tranform)
+      args.node.removeAttribute('transform');
+
+   return pr.then(() => {
+      select(args.node).selectAll('g').each(function() {
+         if (this.hasAttribute('font-family')) {
+            const name = this.getAttribute('font-family');
+            if (name === 'Courier New') {
+               this.setAttribute('font-family', 'courier');
+               if (!args.can_modify) restore_fonts.push(this); // keep to restore it
+            }
+         }
+      });
+
+      select(args.node).selectAll('text').each(function() {
+         if (this.hasAttribute('dominant-baseline')) {
+            this.setAttribute('dy', '.2em'); // slightly different as in plain text
+            this.removeAttribute('dominant-baseline');
+            if (!args.can_modify) restore_dominant.push(this); // keep to restore it
+         } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
+            this.setAttribute('dy', '.2em'); // better allignment in PDF
+      });
+
+      if (nodejs) {
+         const doc = internals.nodejs_document;
+         doc.oldFunc = doc.createElementNS;
+         globalThis.document = doc;
+         doc.createElementNS = function(ns, kind) {
+            const res = doc.oldFunc(ns, kind);
+            res.getBBox = function() {
+               let width = 50, height = 10;
+               if (this.tagName === 'text') {
+                  const font = detectFont(this);
+                  width = approximateLabelWidth(this.textContent, font);
+                  height = font.size;
+               }
+
+               return { x: 0, y: 0, width, height };
+            };
+            return res;
+         };
+      }
+
+      // eslint-disable-next-line new-cap
+      const doc = new _jspdf.jsPDF({
+         orientation: 'landscape',
+         unit: 'px',
+         format: [args.width + 10, args.height + 10]
+      });
+
+      // add custom fonts to PDF document, only TTF format supported
+      select(args.node).selectAll('style').each(function() {
+         const fh = this.$fonthandler;
+         if (!fh || custom_fonts[fh.name] || (fh.format !== 'ttf')) return;
+         const filename = fh.name.toLowerCase().replace(/\s/g, '') + '.ttf';
+         doc.addFileToVFS(filename, fh.base64);
+         doc.addFont(filename, fh.name, 'normal');
+         custom_fonts[fh.name] = true;
+      });
+
+      return _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height })
+         .then(() => {
+            if (args.reset_tranform && !args.can_modify && node_transform)
+               args.node.setAttribute('transform', node_transform);
+
+            restore_fonts.forEach(node => node.setAttribute('font-family', 'Courier New'));
+            restore_dominant.forEach(node => {
+               node.setAttribute('dominant-baseline', 'middle');
+               node.removeAttribute('dy');
+            });
+            const res = as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
+            if (nodejs) {
+               globalThis.document = undefined;
+               internals.nodejs_document.createElementNS = internals.nodejs_document.oldFunc;
+               if (as_buffer) return Buffer.from(res);
+            }
+            return res;
+         });
+   });
+}
+
+
 /** @summary Create image based on SVG
   * @param {string} svg - svg code of the image
-  * @param {string} [image_format] - image format like 'png' or 'jpeg'
+  * @param {string} [image_format] - image format like 'png', 'jpeg' or 'webp'
   * @param {boolean} [as_buffer] - return Buffer object for image
   * @return {Promise} with produced image in base64 form or as Buffer (or canvas when no image_format specified)
   * @private */
 async function svgToImage(svg, image_format, as_buffer) {
    if (image_format === 'svg')
       return svg;
+
+   if (image_format === 'pdf')
+      return svgToPDF(svg, as_buffer);
 
    if (!isNodeJs()) {
       // required with df104.py/df105.py example with RCanvas
@@ -8700,1504 +10376,8 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
-const root_fonts = ['Arial', 'iTimes New Roman',
-      'bTimes New Roman', 'biTimes New Roman', 'Arial',
-      'oArial', 'bArial', 'boArial', 'Courier New',
-      'oCourier New', 'bCourier New', 'boCourier New',
-      'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol',
-      'Verdana', 'iVerdana', 'bVerdana', 'biVerdana'],
-// taken from symbols.html, counted only for letters and digits
-root_fonts_aver_width = [0.5778, 0.5314,
-      0.5809, 0.5540, 0.5778,
-      0.5783, 0.6034, 0.6030, 0.6003,
-      0.6004, 0.6003, 0.6005,
-      0.5521, 0.5521, 0.5664, 0.5314,
-      0.5664, 0.5495, 0.5748, 0.5578];
-
-/**
- * @summary Helper class for font handling
- * @private
- */
-
-class FontHandler {
-
-   /** @summary constructor */
-   constructor(fontIndex, size, scale, name, style, weight) {
-      this.name = 'Arial';
-      this.style = null;
-      this.weight = null;
-
-      if (scale && (size < 1)) {
-         size *= scale;
-         this.scaled = true;
-      }
-
-      this.size = Math.round(size || 11);
-      this.scale = scale;
-
-      if (fontIndex !== null) {
-         const indx = Math.floor(fontIndex / 10);
-         let fontName = root_fonts[indx] || 'Arial';
-
-         while (fontName) {
-            if (fontName[0] === 'b')
-               this.weight = 'bold';
-            else if (fontName[0] === 'i')
-               this.style = 'italic';
-            else if (fontName[0] === 'o')
-               this.style = 'oblique';
-            else
-               break;
-            fontName = fontName.slice(1);
-         }
-
-         this.name = fontName;
-         this.aver_width = root_fonts_aver_width[indx] || 0.55;
-      } else {
-         this.name = name;
-         this.style = style || null;
-         this.weight = weight || null;
-         this.aver_width = this.weight ? 0.58 : 0.55;
-      }
-
-      if ((this.name === 'Symbol') || (this.name === 'Wingdings')) {
-         this.isSymbol = this.name;
-         this.name = 'Times New Roman';
-      } else
-         this.isSymbol = '';
-
-      this.func = this.setFont.bind(this);
-   }
-
-   /** @summary Assigns font-related attributes */
-   setFont(selection, arg) {
-      selection.attr('font-family', this.name);
-      if (arg !== 'without-size') {
-         selection.attr('font-size', this.size)
-                  .attr('xml:space', 'preserve');
-      }
-      selection.attr('font-weight', this.weight || null);
-      selection.attr('font-style', this.style || null);
-   }
-
-   /** @summary Set font size (optional) */
-   setSize(size) { this.size = Math.round(size); }
-
-   /** @summary Set text color (optional) */
-   setColor(color) { this.color = color; }
-
-   /** @summary Set text align (optional) */
-   setAlign(align) { this.align = align; }
-
-   /** @summary Set text angle (optional) */
-   setAngle(angle) { this.angle = angle; }
-
-   /** @summary Allign angle to step raster, add optional offset */
-   roundAngle(step, offset) {
-      this.angle = parseInt(this.angle || 0);
-      if (!Number.isInteger(this.angle)) this.angle = 0;
-      this.angle = Math.round(this.angle/step) * step + (offset || 0);
-      if (this.angle < 0)
-         this.angle += 360;
-      else if (this.angle >= 360)
-         this.angle -= 360;
-   }
-
-   /** @summary Clears all font-related attributes */
-   clearFont(selection) {
-      selection.attr('font-family', null)
-               .attr('font-size', null)
-               .attr('xml:space', null)
-               .attr('font-weight', null)
-               .attr('font-style', null);
-   }
-
-   /** @summary Returns true in case of monospace font
-     * @private */
-   isMonospace() {
-      const n = this.name.toLowerCase();
-      return (n.indexOf('courier') === 0) || (n === 'monospace') || (n === 'monaco');
-   }
-
-   /** @summary Return full font declaration which can be set as font property like '12pt Arial bold'
-     * @private */
-   getFontHtml() {
-      let res = Math.round(this.size) + 'pt ' + this.name;
-      if (this.weight) res += ' ' + this.weight;
-      if (this.style) res += ' ' + this.style;
-      return res;
-   }
-
-   /** @summary Returns font name */
-   getFontName() {
-      return this.isSymbol || this.name || 'none';
-   }
-
-} // class FontHandler
-
-const symbols_map = {
-   // greek letters
-   '#alpha': '\u03B1',
-   '#beta': '\u03B2',
-   '#chi': '\u03C7',
-   '#delta': '\u03B4',
-   '#digamma': '\u03DD',
-   '#varepsilon': '\u03B5',
-   '#phi': '\u03C6',
-   '#gamma': '\u03B3',
-   '#eta': '\u03B7',
-   '#iota': '\u03B9',
-   '#varphi': '\u03C6',
-   '#kappa': '\u03BA',
-   '#koppa': '\u03DF',
-   '#sampi': '\u03E1',
-   '#lambda': '\u03BB',
-   '#mu': '\u03BC',
-   '#nu': '\u03BD',
-   '#omicron': '\u03BF',
-   '#pi': '\u03C0',
-   '#theta': '\u03B8',
-   '#rho': '\u03C1',
-   '#sigma': '\u03C3',
-   '#stigma': '\u03DB',
-   '#san': '\u03FB',
-   '#sho': '\u03F8',
-   '#tau': '\u03C4',
-   '#upsilon': '\u03C5',
-   '#varomega': '\u03D6',
-   '#varcoppa': '\u03D9',
-   '#omega': '\u03C9',
-   '#xi': '\u03BE',
-   '#psi': '\u03C8',
-   '#zeta': '\u03B6',
-   '#Alpha': '\u0391',
-   '#Beta': '\u0392',
-   '#Chi': '\u03A7',
-   '#Delta': '\u0394',
-   '#Digamma': '\u03DC',
-   '#Epsilon': '\u0395',
-   '#Phi': '\u03A6',
-   '#Gamma': '\u0393',
-   '#Eta': '\u0397',
-   '#Iota': '\u0399',
-   '#vartheta': '\u03D1',
-   '#Kappa': '\u039A',
-   '#Koppa': '\u03DE',
-   '#varKoppa': '\u03D8',
-   '#Sampi': '\u03E0',
-   '#Lambda': '\u039B',
-   '#Mu': '\u039C',
-   '#Nu': '\u039D',
-   '#Omicron': '\u039F',
-   '#Pi': '\u03A0',
-   '#Theta': '\u0398',
-   '#Rho': '\u03A1',
-   '#Sigma': '\u03A3',
-   '#Stigma': '\u03DA',
-   '#San': '\u03FA',
-   '#Sho': '\u03F7',
-   '#Tau': '\u03A4',
-   '#Upsilon': '\u03A5',
-   '#varsigma': '\u03C2',
-   '#Omega': '\u03A9',
-   '#Xi': '\u039E',
-   '#Psi': '\u03A8',
-   '#Zeta': '\u0396',
-   '#varUpsilon': '\u03D2',
-   '#epsilon': '\u03B5',
-   '#P': '\u00B6',
-
-   // only required for MathJax to provide correct replacement
-   '#sqrt': '\u221A',
-   '#bar': '',
-   '#overline': '',
-   '#underline': '',
-   '#strike': '',
-
-   // from TLatex tables #2 & #3
-   '#leq': '\u2264',
-   '#/': '\u2044',
-   '#infty': '\u221E',
-   '#voidb': '\u0192',
-   '#club': '\u2663',
-   '#diamond': '\u2666',
-   '#heart': '\u2665',
-   '#spade': '\u2660',
-   '#leftrightarrow': '\u2194',
-   '#leftarrow': '\u2190',
-   '#uparrow': '\u2191',
-   '#rightarrow': '\u2192',
-   '#downarrow': '\u2193',
-   '#circ': '\u02C6', // ^
-   '#pm': '\xB1',
-   '#mp': '\u2213',
-   '#doublequote': '\u2033',
-   '#geq': '\u2265',
-   '#times': '\xD7',
-   '#propto': '\u221D',
-   '#partial': '\u2202',
-   '#bullet': '\u2022',
-   '#divide': '\xF7',
-   '#neq': '\u2260',
-   '#equiv': '\u2261',
-   '#approx': '\u2248', // should be \u2245 ?
-   '#3dots': '\u2026',
-   '#cbar': '\x7C',
-   '#topbar': '\xAF',
-   '#downleftarrow': '\u21B5',
-   '#aleph': '\u2135',
-   '#Jgothic': '\u2111',
-   '#Rgothic': '\u211C',
-   '#voidn': '\u2118',
-   '#otimes': '\u2297',
-   '#oplus': '\u2295',
-   '#oslash': '\u2205',
-   '#cap': '\u2229',
-   '#cup': '\u222A',
-   '#supseteq': '\u2287',
-   '#supset': '\u2283',
-   '#notsubset': '\u2284',
-   '#subseteq': '\u2286',
-   '#subset': '\u2282',
-   '#int': '\u222B',
-   '#in': '\u2208',
-   '#notin': '\u2209',
-   '#angle': '\u2220',
-   '#nabla': '\u2207',
-   '#oright': '\xAE',
-   '#ocopyright': '\xA9',
-   '#trademark': '\u2122',
-   '#prod': '\u220F',
-   '#surd': '\u221A',
-   '#upoint': '\u02D9',
-   '#corner': '\xAC',
-   '#wedge': '\u2227',
-   '#vee': '\u2228',
-   '#Leftrightarrow': '\u21D4',
-   '#Leftarrow': '\u21D0',
-   '#Uparrow': '\u21D1',
-   '#Rightarrow': '\u21D2',
-   '#Downarrow': '\u21D3',
-   '#LT': '\x3C',
-   '#void1': '\xAE',
-   '#copyright': '\xA9',
-   '#void3': '\u2122',
-   '#sum': '\u2211',
-   '#arctop': '\u239B',
-   '#lbar': '\u23B8',
-   '#arcbottom': '\u239D',
-   '#void8': '',
-   '#bottombar': '\u230A',
-   '#arcbar': '\u23A7',
-   '#ltbar': '\u23A8',
-   '#AA': '\u212B',
-   '#aa': '\u00E5',
-   '#void06': '',
-   '#GT': '\x3E',
-   '#forall': '\u2200',
-   '#exists': '\u2203',
-   '#vec': '',
-   '#dot': '\u22C5',
-   '#hat': '\xB7',
-   '#ddot': '',
-   '#acute': '',
-   '#grave': '',
-   '#check': '\u2713',
-   '#tilde': '\u02DC',
-   '#slash': '\u2044',
-   '#hbar': '\u0127',
-   '#box': '\u25FD',
-   '#Box': '\u2610',
-   '#parallel': '\u2225',
-   '#perp': '\u22A5',
-   '#odot': '\u2299',
-   '#left': '',
-   '#right': '',
-   '{}': ''
-},
-
-/** @summary Create a single regex to detect any symbol to replace
-  * @private */
-symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\\\{/g, '{').replace(/\\\}/g, '}') + ')', 'g'),
-
-/** @summary Simple replacement of latex letters
-  * @private */
-translateLaTeX = str => {
-   while ((str.length > 2) && (str[0] === '{') && (str[str.length - 1] === '}'))
-      str = str.slice(1, str.length - 1);
-
-   return str.replace(symbolsRegexCache, ch => symbols_map[ch]).replace(/\{\}/g, '');
-},
-
-// array with relative width of base symbols from range 32..126
-// eslint-disable-next-line
-base_symbols_width = [453,535,661,973,955,1448,1242,324,593,596,778,1011,431,570,468,492,947,885,947,947,947,947,947,947,947,947,511,495,980,1010,987,893,1624,1185,1147,1193,1216,1080,1028,1270,1274,531,910,1177,1004,1521,1252,1276,1111,1276,1164,1056,1073,1215,1159,1596,1150,1124,1065,540,591,540,837,874,572,929,972,879,973,901,569,967,973,453,458,903,453,1477,973,970,972,976,638,846,548,973,870,1285,884,864,835,656,430,656,1069],
-
-// eslint-disable-next-line
-extra_symbols_width = {945:1002,946:996,967:917,948:953,949:834,966:1149,947:847,951:989,953:516,954:951,955:913,956:1003,957:862,959:967,960:1070,952:954,961:973,963:1017,964:797,965:944,982:1354,969:1359,958:803,968:1232,950:825,913:1194,914:1153,935:1162,916:1178,917:1086,934:1358,915:1016,919:1275,921:539,977:995,922:1189,923:1170,924:1523,925:1253,927:1281,928:1281,920:1285,929:1102,931:1041,932:1069,933:1135,962:848,937:1279,926:1092,936:1334,918:1067,978:1154,8730:986,8804:940,8260:476,8734:1453,402:811,9827:1170,9830:931,9829:1067,9824:965,8596:1768,8592:1761,8593:895,8594:1761,8595:895,710:695,177:955,8243:680,8805:947,215:995,8733:1124,8706:916,8226:626,247:977,8800:969,8801:1031,8776:976,8230:1552,175:883,8629:1454,8501:1095,8465:1002,8476:1490,8472:1493,8855:1417,8853:1417,8709:1205,8745:1276,8746:1404,8839:1426,8835:1426,8836:1426,8838:1426,8834:1426,8747:480,8712:1426,8713:1426,8736:1608,8711:1551,174:1339,169:1339,8482:1469,8719:1364,729:522,172:1033,8743:1383,8744:1383,8660:1768,8656:1496,8657:1447,8658:1496,8659:1447,8721:1182,9115:882,9144:1000,9117:882,8970:749,9127:1322,9128:1322,8491:1150,229:929,8704:1397,8707:1170,8901:524,183:519,10003:1477,732:692,295:984,9725:1780,9744:1581,8741:737,8869:1390,8857:1421};
-
-/** @ummary Calculate approximate labels width
-  * @private */
-function approximateLabelWidth(label, font, fsize) {
-   const len = label.length,
-         symbol_width = (fsize || font.size) * font.aver_width;
-   if (font.isMonospace())
-      return len * symbol_width;
-
-   let sum = 0;
-   for (let i = 0; i < len; ++i) {
-      const code = label.charCodeAt(i);
-      if ((code >= 32) && (code < 127))
-         sum += base_symbols_width[code - 32];
-      else
-         sum += extra_symbols_width[code] || 1000;
-   }
-
-   return sum/1000*symbol_width;
-}
-
-/** @summary array defines features supported by latex parser, used by both old and new parsers
-  * @private */
-const latex_features = [
-   { name: '#it{' }, // italic
-   { name: '#bf{' }, // bold
-   { name: '#underline{', deco: 'underline' }, // underline
-   { name: '#overline{', deco: 'overline' }, // overline
-   { name: '#strike{', deco: 'line-through' }, // line through
-   { name: '#kern[', arg: 'float' }, // horizontal shift
-   { name: '#lower[', arg: 'float' },  // vertical shift
-   { name: '#scale[', arg: 'float' },  // font scale
-   { name: '#color[', arg: 'int' },   // font color
-   { name: '#font[', arg: 'int' },    // font face
-   { name: '_{', low_up: 'low' },  // subscript
-   { name: '^{', low_up: 'up' },   // superscript
-   { name: '#bar{', deco: 'overline' /* accent: '\u02C9' */ }, // '\u0305'
-   { name: '#hat{', accent: '\u02C6', hasw: true }, // '\u0302'
-   { name: '#check{', accent: '\u02C7', hasw: true }, // '\u030C'
-   { name: '#acute{', accent: '\u02CA' }, // '\u0301'
-   { name: '#grave{', accent: '\u02CB' }, // '\u0300'
-   { name: '#dot{', accent: '\u02D9' }, // '\u0307'
-   { name: '#ddot{', accent: '\u02BA', hasw: true }, // '\u0308'
-   { name: '#tilde{', accent: '\u02DC', hasw: true }, // '\u0303'
-   { name: '#slash{', accent: '\u2215' }, // '\u0337'
-   { name: '#vec{', accent: '\u02ED', hasw: true }, // '\u0350' arrowhead
-   { name: '#frac{', twolines: 'line' },
-   { name: '#splitline{', twolines: true },
-   { name: '#sqrt[', arg: 'int', sqrt: true }, // root with arbitrary power
-   { name: '#sqrt{', sqrt: true },             // square root
-   { name: '#sum', special: '\u2211', w: 0.8, h: 0.9 },
-   { name: '#int', special: '\u222B', w: 0.3, h: 1.0 },
-   { name: '#left[', right: '#right]', braces: '[]' },
-   { name: '#left(', right: '#right)', braces: '()' },
-   { name: '#left{', right: '#right}', braces: '{}' },
-   { name: '#left|', right: '#right|', braces: '||' },
-   { name: '#[]{', braces: '[]' },
-   { name: '#(){', braces: '()' },
-   { name: '#{}{', braces: '{}' },
-   { name: '#||{', braces: '||' }
-];
-
-// taken from: https://sites.math.washington.edu/~marshall/cxseminar/symbol.htm, starts from 33
-// eslint-disable-next-line
-const symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993];
-
-// taken from http://www.alanwood.net/demos/wingdings.html, starts from 33
-// eslint-disable-next-line
-const wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505];
-
-function replaceSymbols(s, kind) {
-   const m = (kind === 'Wingdings') ? wingdingsMap : symbolsMap;
-   let res = '';
-   for (let k = 0; k < s.length; ++k) {
-      const code = s.charCodeAt(k),
-            new_code = (code > 32) ? m[code-33] : 0;
-      res += String.fromCodePoint(new_code || code);
-   }
-   return res;
-}
-
-/** @summary Just add plain text to the SVG text elements
-  * @private */
-function producePlainText(painter, txt_node, arg) {
-   arg.plain = true;
-   if (arg.simple_latex)
-      arg.text = translateLaTeX(arg.text); // replace latex symbols
-   if (arg.font && arg.font.isSymbol)
-      txt_node.text(replaceSymbols(arg.text, arg.font.isSymbol));
-   else
-      txt_node.text(arg.text);
-}
-
-/** @summary Check if plain text
-  * @private */
-function isPlainText(txt) {
-   return !txt || ((txt.indexOf('#') < 0) && (txt.indexOf('{') < 0));
-}
-
-/** @ummary translate TLatex and draw inside provided g element
-  * @desc use <text> together with normal <path> elements
-  * @private */
-function parseLatex(node, arg, label, curr) {
-   let nelements = 0;
-
-   const currG = () => { if (!curr.g) curr.g = node.append('svg:g'); return curr.g; },
-
-   shiftX = dx => { curr.x += Math.round(dx); },
-
-   extendPosition = (x1, y1, x2, y2) => {
-      if (!curr.rect)
-         curr.rect = { x1, y1, x2, y2 };
-      else {
-         curr.rect.x1 = Math.min(curr.rect.x1, x1);
-         curr.rect.y1 = Math.min(curr.rect.y1, y1);
-         curr.rect.x2 = Math.max(curr.rect.x2, x2);
-         curr.rect.y2 = Math.max(curr.rect.y2, y2);
-      }
-
-      curr.rect.width = curr.rect.x2 - curr.rect.x1;
-      curr.rect.height = curr.rect.y2 - curr.rect.y1;
-
-      if (!curr.parent)
-         arg.text_rect = curr.rect;
-   },
-
-   addSpaces = nspaces => {
-      extendPosition(curr.x, curr.y, curr.x + nspaces * curr.fsize * 0.4, curr.y);
-      shiftX(nspaces * curr.fsize * 0.4);
-   },
-
-   /** Position pos.g node which directly attached to curr.g and uses curr.g coordinates */
-   positionGNode = (pos, x, y, inside_gg) => {
-      x = Math.round(x);
-      y = Math.round(y);
-
-      makeTranslate(pos.g, x, y);
-      pos.rect.x1 += x;
-      pos.rect.x2 += x;
-      pos.rect.y1 += y;
-      pos.rect.y2 += y;
-
-      if (inside_gg)
-         extendPosition(curr.x + pos.rect.x1, curr.y + pos.rect.y1, curr.x + pos.rect.x2, curr.y + pos.rect.y2);
-      else
-         extendPosition(pos.rect.x1, pos.rect.y1, pos.rect.x2, pos.rect.y2);
-   },
-
-   /** Create special sub-container for elements like sqrt or braces  */
-   createGG = () => {
-      const gg = currG();
-
-      // this is indicator that gg element will be the only one, one can use directly main container
-      if ((nelements === 1) && !label && !curr.x && !curr.y)
-         return gg;
-
-      return makeTranslate(gg.append('svg:g'), curr.x, curr.y);
-   },
-
-   extractSubLabel = (check_first, lbrace, rbrace) => {
-      let pos = 0, n = 1, extra_braces = false;
-      if (!lbrace) lbrace = '{';
-      if (!rbrace) rbrace = '}';
-
-      const match = br => (pos + br.length <= label.length) && (label.slice(pos, pos+br.length) === br);
-
-      if (check_first) {
-         if (!match(lbrace)) {
-            console.log(`not starting with ${lbrace} in ${label}`);
-            return -1;
-         } else
-            label = label.slice(lbrace.length);
-      }
-
-      while ((n !== 0) && (pos < label.length)) {
-         if (match(lbrace)) {
-            n++;
-            pos += lbrace.length;
-         } else if (match(rbrace)) {
-            n--;
-            pos += rbrace.length;
-            if ((n === 0) && (typeof check_first === 'string') && match(check_first + lbrace)) {
-               // handle special case like a^{b}^{2} should mean a^{b^{2}}
-               n++;
-               pos += lbrace.length + check_first.length;
-               check_first = true;
-               extra_braces = true;
-            }
-         } else pos++;
-      }
-      if (n !== 0) {
-         console.log(`mismatch with open ${lbrace} and closing ${rbrace} in ${label}`);
-         return -1;
-      }
-
-      let sublabel = label.slice(0, pos - rbrace.length);
-
-      if (extra_braces) sublabel = lbrace + sublabel + rbrace;
-
-      label = label.slice(pos);
-
-      return sublabel;
-   },
-
-   createPath = (gg, d, dofill) => {
-      return gg.append('svg:path')
-               .style('stroke', dofill ? 'none' : (curr.color || arg.color))
-               .style('stroke-width', dofill ? null : Math.max(1, Math.round(curr.fsize*(curr.font.weight ? 0.1 : 0.07))))
-               .style('fill', dofill ? (curr.color || arg.color) : 'none')
-               .attr('d', d ?? null);
-   },
-
-   createSubPos = fscale => {
-      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter };
-   };
-
-   while (label) {
-      let best = label.length, found = null;
-
-      for (let n = 0; n < latex_features.length; ++n) {
-         const pos = label.indexOf(latex_features[n].name);
-         if ((pos >= 0) && (pos < best)) { best = pos; found = latex_features[n]; }
-      }
-
-      if (best > 0) {
-         const alone = (best === label.length) && (nelements === 0) && !found;
-
-         nelements++;
-
-         let s = translateLaTeX(label.slice(0, best)),
-             nbeginspaces = 0, nendspaces = 0;
-
-         while ((nbeginspaces < s.length) && (s[nbeginspaces] === ' '))
-            nbeginspaces++;
-
-         if (nbeginspaces > 0) {
-            addSpaces(nbeginspaces);
-            s = s.slice(nbeginspaces);
-         }
-
-         while ((nendspaces < s.length) && (s[s.length - 1 - nendspaces] === ' '))
-            nendspaces++;
-
-         if (nendspaces > 0)
-            s = s.slice(0, s.length - nendspaces);
-
-         if (s || alone) {
-            // if single text element created, place it directly in the node
-            const g = curr.g || (alone ? node : currG()),
-                  elem = g.append('svg:text');
-
-            if (alone && !curr.g) curr.g = elem;
-
-            // apply font attributes only once, inherited by all other elements
-            if (curr.ufont)
-               curr.font.setFont(curr.g /*, 'without-size' */);
-
-            if (curr.bold !== undefined)
-               curr.g.attr('font-weight', curr.bold ? 'bold' : 'normal');
-
-            if (curr.italic !== undefined)
-               curr.g.attr('font-style', curr.italic ? 'italic' : 'normal');
-
-            // set fill color directly to element
-            elem.attr('fill', curr.color || arg.color || null);
-
-            // set font size directly to element to avoid complex control
-            if (curr.fisze !== curr.font.size)
-               elem.attr('font-size', Math.round(curr.fsize));
-
-            if (curr.font && curr.font.isSymbol)
-               elem.text(replaceSymbols(s, curr.font.isSymbol));
-            else
-               elem.text(s);
-
-            const rect = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
-                          ? getElementRect(elem, 'nopadding')
-                          : { height: curr.fsize * 1.2, width: approximateLabelWidth(s, curr.font, curr.fsize) };
-
-            if (curr.x) elem.attr('x', curr.x);
-            if (curr.y) elem.attr('y', curr.y);
-
-            extendPosition(curr.x, curr.y - rect.height*0.8, curr.x + rect.width, curr.y + rect.height*0.2);
-
-            if (!alone) {
-               shiftX(rect.width);
-               addSpaces(nendspaces);
-            } else if (curr.deco) {
-               elem.attr('text-decoration', curr.deco);
-               delete curr.deco; // inform that decoration was applied
-            }
-         } else
-            addSpaces(nendspaces);
-      }
-
-      if (!found) return true;
-
-      // remove preceeding block and tag itself
-      label = label.slice(best + found.name.length);
-
-      nelements++;
-
-      if (found.accent) {
-         const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
-
-         const gg = createGG(),
-               subpos = createSubPos();
-
-         parseLatex(gg, arg, sublabel, subpos);
-
-         const minw = curr.fsize * 0.6,
-               y1 = Math.round(subpos.rect.y1),
-               dy2 = Math.round(curr.fsize*0.1), dy = dy2*2,
-               dot = `a${dy2},${dy2},0,0,1,${dy},0a${dy2},${dy2},0,0,1,${-dy},0z`;
-         let xpos = 0, w = subpos.rect.width;
-
-         // shift symbol when it is too small
-         if (found.hasw && (w < minw)) {
-            w = minw;
-            xpos = (minw - subpos.rect.width) / 2;
-         }
-
-         const w5 = Math.round(w*0.5), w3 = Math.round(w*0.3), w2 = w5-w3, w8 = w5+w3;
-         w = w5*2;
-
-         positionGNode(subpos, xpos, 0, true);
-
-         switch (found.name) {
-            case '#check{': createPath(gg, `M${w2},${y1-dy}L${w5},${y1}L${w8},${y1-dy}`); break;
-            case '#acute{': createPath(gg, `M${w5},${y1}l${dy},${-dy}`); break;
-            case '#grave{': createPath(gg, `M${w5},${y1}l${-dy},${-dy}`); break;
-            case '#dot{': createPath(gg, `M${w5-dy2},${y1}${dot}`, true); break;
-            case '#ddot{': createPath(gg, `M${w5-3*dy2},${y1}${dot} M${w5+dy2},${y1}${dot}`, true); break;
-            case '#tilde{': createPath(gg, `M${w2},${y1} a${w3},${dy},0,0,1,${w3},0 a${w3},${dy},0,0,0,${w3},0`); break;
-            case '#slash{': createPath(gg, `M${w},${y1}L0,${Math.round(subpos.rect.y2)}`); break;
-            case '#vec{': createPath(gg, `M${w2},${y1}H${w8}M${w8-dy},${y1-dy}l${dy},${dy}l${-dy},${dy}`); break;
-            default: createPath(gg, `M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
-         }
-
-         shiftX(subpos.rect.width);
-
-         continue;
-      }
-
-      if (found.twolines) {
-         curr.twolines = true;
-
-         const line1 = extractSubLabel(), line2 = extractSubLabel(true);
-         if ((line1 === -1) || (line2 === -1)) return false;
-
-         const gg = createGG(),
-               fscale = (curr.parent && curr.parent.twolines) ? 0.7 : 1,
-               subpos1 = createSubPos(fscale);
-
-         parseLatex(gg, arg, line1, subpos1);
-
-         const path = (found.twolines === 'line') ? createPath(gg) : null,
-               subpos2 = createSubPos(fscale);
-
-         parseLatex(gg, arg, line2, subpos2);
-
-         const w = Math.max(subpos1.rect.width, subpos2.rect.width),
-               dw = subpos1.rect.width - subpos2.rect.width,
-               dy = -curr.fsize*0.35; // approximate position of middle line
-
-         positionGNode(subpos1, (dw < 0 ? -dw/2 : 0), dy - subpos1.rect.y2, true);
-
-         positionGNode(subpos2, (dw > 0 ? dw/2 : 0), dy - subpos2.rect.y1, true);
-
-         if (path) path.attr('d', `M0,${Math.round(dy)}h${Math.round(w - curr.fsize*0.1)}`);
-
-         shiftX(w);
-
-         delete curr.twolines;
-
-         continue;
-      }
-
-      const extractLowUp = name => {
-         const res = {};
-         if (name) {
-            res[name] = extractSubLabel();
-            if (res[name] === -1) return false;
-         }
-
-         while (label) {
-            if (label[0] === '_') {
-               label = label.slice(1);
-               res.low = !res.low ? extractSubLabel('_') : -1;
-               if (res.low === -1) {
-                  console.log(`error with ${found.name} low limit`);
-                  return false;
-               }
-            } else if (label[0] === '^') {
-               label = label.slice(1);
-               res.up = !res.up ? extractSubLabel('^') : -1;
-               if (res.up === -1) {
-                  console.log(`error with ${found.name} upper limit ${label}`);
-                  return false;
-               }
-            } else break;
-         }
-         return res;
-      };
-
-      if (found.low_up) {
-         const subs = extractLowUp(found.low_up);
-         if (!subs) return false;
-
-         const x = curr.x, y1 = -curr.fsize, y2 = 0.25*curr.fsize;
-         let pos_up, pos_low, w1 = 0, w2 = 0;
-
-         if (subs.up) {
-            pos_up = createSubPos(0.6);
-            parseLatex(currG(), arg, subs.up, pos_up);
-         }
-
-         if (subs.low) {
-            pos_low = createSubPos(0.6);
-            parseLatex(currG(), arg, subs.low, pos_low);
-         }
-
-         if (pos_up) {
-            positionGNode(pos_up, x, y1 - pos_up.rect.y1 - curr.fsize*0.1);
-            w1 = pos_up.rect.width;
-         }
-
-         if (pos_low) {
-            positionGNode(pos_low, x, y2 - pos_low.rect.y2 + curr.fsize*0.1);
-            w2 = pos_low.rect.width;
-         }
-
-         shiftX(Math.max(w1, w2));
-
-         continue;
-      }
-
-      if (found.special) {
-         // this is sum and integral, now make fix height, later can adjust to right-content size
-
-         const subs = extractLowUp() || {},
-               gg = createGG(), path = createPath(gg),
-               h = Math.round(curr.fsize*1.7), w = Math.round(curr.fsize), r = Math.round(h*0.1);
-          let x_up, x_low;
-
-         if (found.name === '#sum') {
-            x_up = x_low = w/2;
-            path.attr('d', `M${w},${Math.round(-0.75*h)}h${-w}l${Math.round(0.4*w)},${Math.round(0.3*h)}l${Math.round(-0.4*w)},${Math.round(0.7*h)}h${w}`);
-         } else {
-            x_up = 3*r; x_low = r;
-            path.attr('d', `M0,${Math.round(0.25*h-r)}a${r},${r},0,0,0,${2*r},0v${2*r-h}a${r},${r},0,1,1,${2*r},0`);
-            // path.attr('transform','skewX(-3)'); could use skewX for italic-like style
-         }
-
-         extendPosition(curr.x, curr.y - 0.6*h, curr.x + w, curr.y + 0.4*h);
-
-         if (subs.low) {
-            const subpos1 = createSubPos(0.6);
-            parseLatex(gg, arg, subs.low, subpos1);
-            positionGNode(subpos1, (x_low - subpos1.rect.width/2), 0.25*h - subpos1.rect.y1, true);
-         }
-
-         if (subs.up) {
-            const subpos2 = createSubPos(0.6);
-            parseLatex(gg, arg, subs.up, subpos2);
-            positionGNode(subpos2, (x_up - subpos2.rect.width/2), -0.75*h - subpos2.rect.y2, true);
-         }
-
-         shiftX(w);
-
-         continue;
-      }
-
-      if (found.braces) {
-         const rbrace = found.right,
-               lbrace = rbrace ? found.name : '{',
-               sublabel = extractSubLabel(false, lbrace, rbrace),
-               gg = createGG(),
-               subpos = createSubPos(),
-               path1 = createPath(gg);
-
-         parseLatex(gg, arg, sublabel, subpos);
-
-         const path2 = createPath(gg),
-               w = Math.max(2, Math.round(curr.fsize*0.2)),
-               r = subpos.rect, dy = Math.round(r.y2 - r.y1),
-               r_y1 = Math.round(r.y1), r_width = Math.round(r.width);
-
-         switch (found.braces) {
-            case '||':
-               path1.attr('d', `M${w},${r_y1}v${dy}`);
-               path2.attr('d', `M${3*w+r_width},${r_y1}v${dy}`);
-               break;
-            case '[]':
-               path1.attr('d', `M${2*w},${r_y1}h${-w}v${dy}h${w}`);
-               path2.attr('d', `M${2*w+r_width},${r_y1}h${w}v${dy}h${-w}`);
-               break;
-            case '{}':
-               path1.attr('d', `M${2*w},${r_y1}a${w},${w},0,0,0,${-w},${w}v${dy/2-2*w}a${w},${w},0,0,1,${-w},${w}a${w},${w},0,0,1,${w},${w}v${dy/2-2*w}a${w},${w},0,0,0,${w},${w}`);
-               path2.attr('d', `M${2*w+r_width},${r_y1}a${w},${w},0,0,1,${w},${w}v${dy/2-2*w}a${w},${w},0,0,0,${w},${w}a${w},${w},0,0,0,${-w},${w}v${dy/2-2*w}a${w},${w},0,0,1,${-w},${w}`);
-               break;
-            default: // ()
-               path1.attr('d', `M${w},${r_y1}a${4*dy},${4*dy},0,0,0,0,${dy}`);
-               path2.attr('d', `M${3*w+r_width},${r_y1}a${4*dy},${4*dy},0,0,1,0,${dy}`);
-         }
-
-         positionGNode(subpos, 2*w, 0, true);
-
-         extendPosition(curr.x, curr.y + r.y1, curr.x + 4*w + r.width, curr.y + r.y2);
-
-         shiftX(4*w + r.width);
-
-         continue;
-      }
-
-      if (found.deco) {
-         const sublabel = extractSubLabel(),
-               gg = createGG(),
-               subpos = createSubPos();
-
-         subpos.deco = found.deco;
-
-         parseLatex(gg, arg, sublabel, subpos);
-
-         const r = subpos.rect;
-         if (subpos.deco) {
-            const path = createPath(gg), r_width = Math.round(r.width);
-            switch (subpos.deco) {
-               case 'underline': path.attr('d', `M0,${Math.round(r.y2)}h${r_width}`); break;
-               case 'overline': path.attr('d', `M0,${Math.round(r.y1)}h${r_width}`); break;
-               case 'line-through': path.attr('d', `M0,${Math.round(0.45*r.y1+0.55*r.y2)}h${r_width}`); break;
-            }
-         }
-
-         positionGNode(subpos, 0, 0, true);
-
-         shiftX(r.width);
-
-         continue;
-      }
-
-      if (found.name === '#bf{' || found.name === '#it{') {
-         const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
-
-         const subpos = createSubPos();
-
-         if (found.name === '#bf{')
-            subpos.bold = !subpos.bold;
-         else
-            subpos.italic = !subpos.italic;
-
-         parseLatex(currG(), arg, sublabel, subpos);
-
-         positionGNode(subpos, curr.x, curr.y);
-
-         shiftX(subpos.rect.width);
-
-         continue;
-      }
-
-      let foundarg = 0;
-
-      if (found.arg) {
-         const pos = label.indexOf(']{');
-         if (pos < 0) { console.log('missing argument for ', found.name); return false; }
-         foundarg = label.slice(0, pos);
-         if (found.arg === 'int') {
-            foundarg = parseInt(foundarg);
-            if (!Number.isInteger(foundarg)) { console.log('wrong int argument', label.slice(0, pos)); return false; }
-         } else if (found.arg === 'float') {
-            foundarg = parseFloat(foundarg);
-            if (!Number.isFinite(foundarg)) { console.log('wrong float argument', label.slice(0, pos)); return false; }
-         }
-         label = label.slice(pos + 2);
-      }
-
-      if ((found.name === '#kern[') || (found.name === '#lower[')) {
-         const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
-
-         const subpos = createSubPos();
-
-         parseLatex(currG(), arg, sublabel, subpos);
-
-         let shiftx = 0, shifty = 0;
-         if (found.name === 'kern[') shiftx = foundarg; else shifty = foundarg;
-
-         positionGNode(subpos, curr.x + shiftx * subpos.rect.width, curr.y + shifty * subpos.rect.height);
-
-         shiftX(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
-
-         continue;
-      }
-
-      if ((found.name === '#color[') || (found.name === '#scale[') || (found.name === '#font[')) {
-         const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
-
-         const subpos = createSubPos();
-
-         if (found.name === '#color[')
-            subpos.color = curr.painter.getColor(foundarg);
-         else if (found.name === '#font[') {
-            subpos.font = new FontHandler(foundarg);
-            subpos.ufont = true; // mark that custom font is applied
-         } else
-            subpos.fsize *= foundarg;
-
-         parseLatex(currG(), arg, sublabel, subpos);
-
-         positionGNode(subpos, curr.x, curr.y);
-
-         shiftX(subpos.rect.width);
-
-         continue;
-      }
-
-     if (found.sqrt) {
-         const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
-
-         const gg = createGG(), subpos = createSubPos();
-         let subpos0;
-
-         if (found.arg) {
-            subpos0 = createSubPos(0.7);
-            parseLatex(gg, arg, foundarg.toString(), subpos0);
-         }
-
-         // placeholder for the sqrt sign
-         const path = createPath(gg);
-
-         parseLatex(gg, arg, sublabel, subpos);
-
-         const r = subpos.rect,
-               h = Math.round(r.height),
-               h1 = Math.round(r.height*0.1),
-               w = Math.round(r.width), midy = Math.round((r.y1 + r.y2)/2),
-               f2 = Math.round(curr.fsize*0.2), r_y2 = Math.round(r.y2);
-
-         if (subpos0)
-            positionGNode(subpos0, 0, midy - subpos0.fsize*0.3, true);
-
-         path.attr('d', `M0,${midy}h${h1}l${h1},${r_y2-midy-f2}l${h1},${-h+f2}h${Math.round(h*0.2+w)}v${h1}`);
-
-         positionGNode(subpos, h*0.4, 0, true);
-
-         extendPosition(curr.x, curr.y + r.y1-curr.fsize*0.1, curr.x + w + h*0.6, curr.y + r.y2);
-
-         shiftX(w + h*0.6);
-
-         continue;
-     }
-   }
-
-   return true;
-}
-
-/** @ummary translate TLatex and draw inside provided g element
-  * @desc use <text> together with normal <path> elements
-  * @private */
-function produceLatex(painter, node, arg) {
-   const pos = { lvl: 0, g: node, x: 0, y: 0, dx: 0, dy: -0.1, fsize: arg.font_size, font: arg.font, parent: null, painter };
-   return parseLatex(node, arg, arg.text, pos);
-}
-
-let _mj_loading;
-
-/** @summary Load MathJax functionality,
-  * @desc one need not only to load script but wait for initialization
-  * @private */
-async function loadMathjax() {
-   const loading = _mj_loading !== undefined;
-
-   if (!loading && (typeof globalThis.MathJax !== 'undefined'))
-      return globalThis.MathJax;
-
-   if (!loading) _mj_loading = [];
-
-   const promise = new Promise(resolve => { _mj_loading ? _mj_loading.push(resolve) : resolve(globalThis.MathJax); });
-
-   if (loading) return promise;
-
-   const svg = {
-       scale: 1,                      // global scaling factor for all expressions
-       minScale: 0.5,                 // smallest scaling factor to use
-       mtextInheritFont: false,       // true to make mtext elements use surrounding font
-       merrorInheritFont: true,       // true to make merror text use surrounding font
-       mathmlSpacing: false,          // true for MathML spacing rules, false for TeX rules
-       skipAttributes: {},            // RFDa and other attributes NOT to copy to the output
-       exFactor: 0.5,                 // default size of ex in em units
-       displayAlign: 'center',        // default for indentalign when set to 'auto'
-       displayIndent: '0',            // default for indentshift when set to 'auto'
-       fontCache: 'local',            // or 'global' or 'none'
-       localID: null,                 // ID to use for local font cache (for single equation processing)
-       internalSpeechTitles: true,    // insert <title> tags with speech content
-       titleID: 0                     // initial id number to use for aria-labeledby titles
-   };
-
-   if (!isNodeJs()) {
-      window.MathJax = {
-         options: {
-            enableMenu: false
-         },
-         loader: {
-            load: ['[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
-         },
-         tex: {
-            packages: { '[+]': ['color', 'upgreek', 'mathtools', 'physics'] }
-         },
-         svg,
-         startup: {
-            ready() {
-               // eslint-disable-next-line no-undef
-               MathJax.startup.defaultReady();
-               const arr = _mj_loading;
-               _mj_loading = undefined;
-               arr.forEach(func => func(globalThis.MathJax));
-            }
-         }
-      };
-
-      let mj_dir = '../mathjax/3.2.0';
-      if (browser.webwindow && exports.source_dir.indexOf('https://root.cern/js') < 0 && exports.source_dir.indexOf('https://jsroot.gsi.de') < 0)
-         mj_dir = 'mathjax';
-
-      return loadScript(exports.source_dir + mj_dir + '/es5/tex-svg.js')
-               .catch(() => loadScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg.js'))
-               .then(() => promise);
-   }
-
-   let JSDOM;
-
-   return _loadJSDOM().then(handle => {
-      JSDOM = handle.JSDOM;
-      return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; });
-   }).then(mj => {
-      // return Promise with mathjax loading
-      mj.init({
-         loader: {
-            load: ['input/tex', 'output/svg', '[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
-          },
-          tex: {
-             packages: { '[+]': ['color', 'upgreek', 'mathtools', 'physics'] }
-          },
-          svg,
-          config: {
-             JSDOM
-          },
-          startup: {
-             typeset: false,
-             ready() {
-                // eslint-disable-next-line no-undef
-                const mj = MathJax;
-
-                mj.startup.registerConstructor('jsdomAdaptor', () => {
-                   return new mj._.adaptors.HTMLAdaptor.HTMLAdaptor(new mj.config.config.JSDOM().window);
-                });
-                mj.startup.useAdaptor('jsdomAdaptor', true);
-                mj.startup.defaultReady();
-                const arr = _mj_loading;
-                _mj_loading = undefined;
-                arr.forEach(func => func(mj));
-             }
-          }
-      });
-
-      return promise;
-   });
-}
-
-const math_symbols_map = {
-      '#LT': '\\langle',
-      '#GT': '\\rangle',
-      '#club': '\\clubsuit',
-      '#spade': '\\spadesuit',
-      '#heart': '\\heartsuit',
-      '#diamond': '\\diamondsuit',
-      '#voidn': '\\wp',
-      '#voidb': 'f',
-      '#copyright': '(c)',
-      '#ocopyright': '(c)',
-      '#trademark': 'TM',
-      '#void3': 'TM',
-      '#oright': 'R',
-      '#void1': 'R',
-      '#3dots': '\\ldots',
-      '#lbar': '\\mid',
-      '#void8': '\\mid',
-      '#divide': '\\div',
-      '#Jgothic': '\\Im',
-      '#Rgothic': '\\Re',
-      '#doublequote': '"',
-      '#plus': '+',
-      '#minus': '-',
-      '#/': '/',
-      '#upoint': '.',
-      '#aa': '\\mathring{a}',
-      '#AA': '\\mathring{A}',
-      '#omicron': 'o',
-      '#Alpha': 'A',
-      '#Beta': 'B',
-      '#Epsilon': 'E',
-      '#Zeta': 'Z',
-      '#Eta': 'H',
-      '#Iota': 'I',
-      '#Kappa': 'K',
-      '#Mu': 'M',
-      '#Nu': 'N',
-      '#Omicron': 'O',
-      '#Rho': 'P',
-      '#Tau': 'T',
-      '#Chi': 'X',
-      '#varomega': '\\varpi',
-      '#corner': '?',
-      '#ltbar': '?',
-      '#bottombar': '?',
-      '#notsubset': '?',
-      '#arcbottom': '?',
-      '#cbar': '?',
-      '#arctop': '?',
-      '#topbar': '?',
-      '#arcbar': '?',
-      '#downleftarrow': '?',
-      '#splitline': '\\genfrac{}{}{0pt}{}',
-      '#it': '\\textit',
-      '#bf': '\\textbf',
-      '#frac': '\\frac',
-      '#left{': '\\lbrace',
-      '#right}': '\\rbrace',
-      '#left\\[': '\\lbrack',
-      '#right\\]': '\\rbrack',
-      '#\\[\\]{': '\\lbrack',
-      ' } ': '\\rbrack',
-      '#\\[': '\\lbrack',
-      '#\\]': '\\rbrack',
-      '#{': '\\lbrace',
-      '#}': '\\rbrace',
-      ' ': '\\;'
-},
-
-mathjax_remap = {
-   upDelta: 'Updelta',
-   upGamma: 'Upgamma',
-   upLambda: 'Uplambda',
-   upOmega: 'Upomega',
-   upPhi: 'Upphi',
-   upPi: 'Uppi',
-   upPsi: 'Uppsi',
-   upSigma: 'Upsigma',
-   upTheta: 'Uptheta',
-   upUpsilon: 'Upupsilon',
-   upXi: 'Upxi',
-   notcong: 'ncong',
-   notgeq: 'ngeq',
-   notgr: 'ngtr',
-   notless: 'nless',
-   notleq: 'nleq',
-   notsucc: 'nsucc',
-   notprec: 'nprec',
-   notsubseteq: 'nsubseteq',
-   notsupseteq: 'nsupseteq',
-   openclubsuit: 'clubsuit',
-   openspadesuit: 'spadesuit',
-   dasharrow: 'dashrightarrow',
-   comp: 'circ',
-   iiintop: 'iiint',
-   iintop: 'iint',
-   ointop: 'oint'
-},
-
-mathjax_unicode = {
-   Digamma: 0x3DC,
-   upDigamma: 0x3DC,
-   digamma: 0x3DD,
-   updigamma: 0x3DD,
-   Koppa: 0x3DE,
-   koppa: 0x3DF,
-   upkoppa: 0x3DF,
-   upKoppa: 0x3DE,
-   VarKoppa: 0x3D8,
-   upVarKoppa: 0x3D8,
-   varkoppa: 0x3D9,
-   upvarkoppa: 0x3D9,
-   varkappa: 0x3BA, // not found archaic kappa - use normal
-   upvarkappa: 0x3BA,
-   varbeta: 0x3D0, // not found archaic beta - use normal
-   upvarbeta: 0x3D0,
-   Sampi: 0x3E0,
-   upSampi: 0x3E0,
-   sampi: 0x3E1,
-   upsampi: 0x3E1,
-   Stigma: 0x3DA,
-   upStigma: 0x3DA,
-   stigma: 0x3DB,
-   upstigma: 0x3DB,
-   San: 0x3FA,
-   upSan: 0x3FA,
-   san: 0x3FB,
-   upsan: 0x3FB,
-   Sho: 0x3F7,
-   upSho: 0x3F7,
-   sho: 0x3F8,
-   upsho: 0x3F8,
-   P: 0xB6,
-   aa: 0xB0,
-   bulletdashcirc: 0x22B7,
-   circdashbullet: 0x22B6,
-   downuparrows: 0x21F5,
-   updownarrows: 0x21C5,
-   dashdownarrow: 0x21E3,
-   dashuparrow: 0x21E1,
-   complement: 0x2201,
-   dbar: 0x18C,
-   ddddot: 0x22EF,
-   dddot: 0x22EF,
-   ddots: 0x22F1,
-   defineequal: 0x225D,
-   defineeq: 0x225D,
-   downdownharpoons: 0x2965,
-   downupharpoons: 0x296F,
-   updownharpoons: 0x296E,
-   upupharpoons: 0x2963,
-   hateq: 0x2259,
-   ldbrack: 0x27E6,
-   rdbrack: 0x27E7,
-   leadsfrom: 0x219C,
-   leftsquigarrow: 0x21DC,
-   lightning: 0x2607,
-   napprox: 0x2249,
-   nasymp: 0x226D,
-   nequiv: 0x2262,
-   nsimeq: 0x2244,
-   nsubseteq: 0x2288,
-   nsubset: 0x2284,
-   notapprox: 0x2249,
-   notasymp: 0x226D,
-   notequiv: 0x2262,
-   notni: 0x220C,
-   notsimeq: 0x2244,
-   notsubseteq: 0x2288,
-   notsubset: 0x2284,
-   notsupseteq: 0x2289,
-   notsupset: 0x2285,
-   nsupset: 0x2285,
-   setdif: 0x2216,
-   simarrow: 0x2972,
-   t: 0x2040,
-   u: 0x2C7,
-   v: 0x2C7,
-   undercurvearrowright: 0x293B,
-   updbar: 0x18C,
-   wwbar: 0x2015,
-   awointop: 0x2232,
-   awoint: 0x2233,
-   barintop: 0x2A1C,
-   barint: 0x2A1B,
-   cwintop: 0x2231, // no opposite direction, use same
-   cwint: 0x2231,
-   cwointop: 0x2233,
-   cwoint: 0x2232,
-   oiiintop: 0x2230,
-   oiiint: 0x2230,
-   oiintop: 0x222F,
-   oiint: 0x222F,
-   slashintop: 0x2A0F,
-   slashint: 0x2A0F
-},
-
-mathjax_asis = ['"', '\'', '`', '=', '~'];
-
-/** @summary Function translates ROOT TLatex into MathJax format
-  * @private */
-function translateMath(str, kind, color, painter) {
-   if (kind !== 2) {
-      for (const x in math_symbols_map)
-         str = str.replace(new RegExp(x, 'g'), math_symbols_map[x]);
-
-      for (const x in symbols_map) {
-         if (x.length > 2)
-            str = str.replace(new RegExp(x, 'g'), '\\' + x.slice(1));
-      }
-
-      // replace all #color[]{} occurances
-      let clean = '', first = true;
-      while (str) {
-         let p = str.indexOf('#color[');
-         if ((p < 0) && first) { clean = str; break; }
-         first = false;
-         if (p !== 0) {
-            const norm = (p < 0) ? str : str.slice(0, p);
-            clean += norm;
-            if (p < 0) break;
-         }
-
-         str = str.slice(p + 7);
-         p = str.indexOf(']{');
-         if (p <= 0) break;
-         const colindx = parseInt(str.slice(0, p));
-         if (!Number.isInteger(colindx)) break;
-         const col = painter.getColor(colindx);
-         let cnt = 1;
-         str = str.slice(p + 2);
-         p = -1;
-         while (cnt && (++p < str.length)) {
-            if (str[p] === '{')
-               cnt++;
-            else if (str[p] === '}')
-               cnt--;
-         }
-         if (cnt !== 0) break;
-
-         const part = str.slice(0, p);
-         str = str.slice(p + 1);
-         if (part)
-            clean += `\\color{${col}}{${part}}`;
-      }
-
-      str = clean;
-   } else {
-      if (str === '\\^') str = '\\unicode{0x5E}';
-      if (str === '\\vec') str = '\\unicode{0x2192}';
-      str = str.replace(/\\\./g, '\\unicode{0x2E}').replace(/\\\^/g, '\\hat');
-      for (const x in mathjax_unicode)
-         str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\unicode{0x${mathjax_unicode[x].toString(16)}}`);
-      for (const x in mathjax_asis)
-         str = str.replace(new RegExp(`(\\\\${mathjax_asis[x]})`, 'g'), `\\unicode{0x${mathjax_asis[x].charCodeAt(0).toString(16)}}`);
-      for (const x in mathjax_remap)
-         str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\${mathjax_remap[x]}`);
-   }
-
-   if (!isStr(color)) return str;
-
-   // MathJax SVG converter use colors in normal form
-   // if (color.indexOf('rgb(') >= 0)
-   //    color = color.replace(/rgb/g, '[RGB]')
-   //                 .replace(/\(/g, '{')
-   //                 .replace(/\)/g, '}');
-   return `\\color{${color}}{${str}}`;
-}
-
-/** @summary Workaround to fix size attributes in MathJax SVG
-  * @private */
-function repairMathJaxSvgSize(painter, mj_node, svg, arg) {
-   const transform = value => {
-      if (!value || !isStr(value) || (value.length < 3)) return null;
-      const p = value.indexOf('ex');
-      if ((p < 0) || (p !== value.length - 2)) return null;
-      value = parseFloat(value.slice(0, p));
-      return Number.isFinite(value) ? value * arg.font.size * 0.5 : null;
-   };
-
-   let width = transform(svg.getAttribute('width')),
-       height = transform(svg.getAttribute('height')),
-       valign = svg.getAttribute('style');
-
-   if (valign && (valign.length > 18) && valign.indexOf('vertical-align:') === 0) {
-      const p = valign.indexOf('ex;');
-      valign = ((p > 0) && (p === valign.length - 3)) ? transform(valign.slice(16, valign.length - 1)) : null;
-   } else
-      valign = null;
-
-   width = (!width || (width <= 0.5)) ? 1 : Math.round(width);
-   height = (!height || (height <= 0.5)) ? 1 : Math.round(height);
-
-   svg.setAttribute('width', width);
-   svg.setAttribute('height', height);
-   svg.removeAttribute('style');
-
-   if (!isNodeJs()) {
-      const box = getElementRect(mj_node, 'bbox');
-      width = 1.05 * box.width; height = 1.05 * box.height;
-   }
-
-   arg.valign = valign;
-
-   if (arg.scale)
-      painter.scaleTextDrawing(Math.max(width / arg.width, height / arg.height), arg.draw_g);
-}
-
-/** @summary Apply attributes to mathjax drawing
-  * @private */
-function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_factor) {
-   let mw = parseInt(svg.attr('width')),
-       mh = parseInt(svg.attr('height'));
-
-   if (Number.isInteger(mh) && Number.isInteger(mw)) {
-      if (svg_factor > 0) {
-         mw = mw / svg_factor;
-         mh = mh / svg_factor;
-         svg.attr('width', Math.round(mw)).attr('height', Math.round(mh));
-      }
-   } else {
-      const box = getElementRect(mj_node, 'bbox'); // sizes before rotation
-      mw = box.width || mw || 100;
-      mh = box.height || mh || 10;
-   }
-
-   if ((svg_factor > 0) && arg.valign) arg.valign = arg.valign / svg_factor;
-
-   if (arg.valign === null) arg.valign = (font_size - mh) / 2;
-
-   const sign = { x: 1, y: 1 };
-   let nx = 'x', ny = 'y';
-   if (arg.rotate === 180)
-      sign.x = sign.y = -1;
-   else if ((arg.rotate === 270) || (arg.rotate === 90)) {
-      sign.x = (arg.rotate === 270) ? -1 : 1;
-      sign.y = -sign.x;
-      nx = 'y'; ny = 'x'; // replace names to which align applied
-   }
-
-   if (arg.align[0] === 'middle')
-      arg[nx] += sign.x * (arg.width - mw) / 2;
-   else if (arg.align[0] === 'end')
-      arg[nx] += sign.x * (arg.width - mw);
-
-   if (arg.align[1] === 'middle')
-      arg[ny] += sign.y * (arg.height - mh) / 2;
-   else if (arg.align[1] === 'bottom')
-      arg[ny] += sign.y * (arg.height - mh);
-   else if (arg.align[1] === 'bottom-base')
-      arg[ny] += sign.y * (arg.height - mh - arg.valign);
-
-   let trans = makeTranslate(arg.x, arg.y) || '';
-   if (arg.rotate) {
-      if (trans) trans += ' ';
-      trans += `rotate(${arg.rotate})`;
-   }
-
-   mj_node.attr('transform', trans || null).attr('visibility', null);
-}
-
-/** @summary Produce text with MathJax
-  * @private */
-async function produceMathjax(painter, mj_node, arg) {
-   const mtext = translateMath(arg.text, arg.latex, arg.color, painter),
-         options = { em: arg.font.size, ex: arg.font.size/2, family: arg.font.name, scale: 1, containerWidth: -1, lineWidth: 100000 };
-
-   return loadMathjax()
-          .then(mj => mj.tex2svgPromise(mtext, options))
-          .then(elem => {
-              // when adding element to new node, it will be removed from original parent
-              const svg = elem.querySelector('svg');
-
-              mj_node.append(() => svg);
-
-              repairMathJaxSvgSize(painter, mj_node, svg, arg);
-
-              arg.applyAttributesToMathJax = applyAttributesToMathJax;
-              return true;
-           });
-}
-
-/** @summary Just typeset HTML node with MathJax
-  * @private */
-async function typesetMathjax(node) {
-   return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
-}
-
-const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient';
+const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient',
+      kWhite = 0, kBlack = 1;
 
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
@@ -10941,7 +11121,7 @@ class TAttFillHandler {
       this.changed = false;
       this.func = this.apply.bind(this);
       this.setArgs(args);
-      this.changed = false; // unset change property that
+      this.changed = false; // unset change property
    }
 
    /** @summary Set fill style as arguments
@@ -11853,7 +12033,7 @@ class ObjectPainter extends BasePainter {
       document.body.style.cursor = 'wait';
       const res = this.redrawPad();
       doc.body.style.cursor = current;
-      return res || true;
+      return res;
    }
 
    /** @summary Generic method to update object content.
@@ -12335,7 +12515,7 @@ class ObjectPainter extends BasePainter {
    createAttText(args) {
       if (!isObject(args))
          args = { std: true };
-      else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextSize !== undefined)
+      else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextColor !== undefined)
          args = { attr: args, std: false };
 
       if (args.std === undefined) args.std = true;
@@ -12547,6 +12727,8 @@ class ObjectPainter extends BasePainter {
       if (!draw_g || draw_g.empty()) return;
 
       const font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size);
+
+      font.setPainter(this); // may be required when custom font is used
 
       draw_g.call(font.func);
 
@@ -55970,7 +56152,7 @@ class PointsCreator {
      * @param {boolean} [iswebgl] - if WebGL is used
      * @param {number} [scale] - scale factor */
    constructor(number, iswebgl = true, scale = 1) {
-      this.webgl = (iswebgl === undefined) ? true : iswebgl;
+      this.webgl = iswebgl;
       this.scale = scale || 1;
 
       this.pos = new Float32Array(number*3);
@@ -58307,7 +58489,7 @@ function showProgress(msg, tmout) {
   * therefore try several workarounds
   * @private */
 function closeCurrentWindow() {
-   if (!window) return;
+   if (typeof window === 'undefined') return;
    window.close();
    window.open('', '_self').close();
 }
@@ -58559,6 +58741,9 @@ function detectRightButton(event) {
   * @private */
 function addMoveHandler(painter, enabled = true) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
+
+   if (painter.getPadPainter()?.isEditable() === false)
+      enabled = false;
 
    if (!enabled) {
       if (painter.draw_g.property('assigned_move')) {
@@ -58922,7 +59107,7 @@ class JSRootMenu {
       for (let i = 1; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
              group = i+1;
-         if ((opts.length > 5) && name) {
+         if (opts.length > 5) {
             // check if there are similar options, which can be grouped once again
             while ((group < opts.length) && (opts[group].indexOf(name) === 0)) group++;
          }
@@ -61349,7 +61534,7 @@ class TAxisPainter extends ObjectPainter {
             pp = this.getPadPainter(),
             pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
             pad_h = pp?.getPadHeight() || scalingSize || h/0.8;
-      let tickSize = 0, tickScalingSize = 0, titleColor, offset;
+      let tickSize = 0, tickScalingSize = 0, titleColor, titleFontId, offset;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
 
@@ -61365,6 +61550,7 @@ class TAxisPainter extends ObjectPainter {
          tickScalingSize = scalingSize || (this.vertical ? 1.7*h : 0.6*w);
          tickSize = optionSize ? axis.fTickSize : 0.03;
          titleColor = this.getColor(axis.fTextColor);
+         titleFontId = axis.fTextFont;
          offset = axis.fLabelOffset;
          if ((this.vertical && axis.fY1 > axis.fY2 && !this.optionMinus) || (!this.vertical && axis.fX1 > axis.fX2))
             offset = -offset;
@@ -61379,6 +61565,7 @@ class TAxisPainter extends ObjectPainter {
          tickScalingSize = scalingSize || (this.vertical ? pad_w : pad_h);
          tickSize = axis.fTickLength;
          titleColor = this.getColor(axis.fTitleColor);
+         titleFontId = axis.fTitleFont;
          offset = axis.fLabelOffset;
       }
 
@@ -61409,7 +61596,7 @@ class TAxisPainter extends ObjectPainter {
       this.fTitle = axis.fTitle;
       if (this.fTitle) {
          this.titleSize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * this.scalingSize);
-         this.titleFont = new FontHandler(axis.fTitleFont, this.titleSize, scalingSize);
+         this.titleFont = new FontHandler(titleFontId, this.titleSize, scalingSize);
          this.titleFont.setColor(titleColor);
          this.offsetScaling = (axis.fTitleSize >= 1) ? 1 : (this.vertical ? pad_w : pad_h) / this.scalingSize;
          this.titleOffset = axis.fTitleOffset;
@@ -61548,7 +61735,7 @@ class TAxisPainter extends ObjectPainter {
             if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
                // special handling for color palette labels - draw them always on right side
                const rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.waddMoveHandleridth - this.ticksSize)
+               if (title_shift_x < rect.width - this.ticksSize)
                   title_shift_x = Math.round(rect.width - this.ticksSize);
             }
 
@@ -61685,6 +61872,9 @@ function addDragHandler(_painter, arg) {
 
    const painter = _painter, pp = painter.getPadPainter();
    if (pp?._fast_drawing || pp?.isBatchMode()) return;
+   // cleanup all drag elements when canvas is not ediatable
+   if (pp?.isEditable() === false)
+      arg.cleanup = true;
 
    if (!isFunc(arg.getDrawG))
       arg.getDrawG = () => painter?.draw_g;
@@ -61733,7 +61923,7 @@ function addDragHandler(_painter, arg) {
       if (arg.minheight && newheight < arg.minheight) newheight = arg.minheight;
 
       const change_size = (newwidth !== arg.width) || (newheight !== arg.height),
-          change_pos = (newx !== oldx) || (newy !== oldy);
+            change_pos = (newx !== oldx) || (newy !== oldy);
 
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
@@ -61769,9 +61959,8 @@ function addDragHandler(_painter, arg) {
 
       return change_size || change_pos;
    },
-
-    drag_move = drag().subject(Object),
-       drag_move_off = drag().subject(Object);
+   drag_move = drag().subject(Object),
+   drag_move_off = drag().subject(Object);
 
    drag_move_off.on('start', null).on('drag', null).on('end', null);
 
@@ -61968,7 +62157,7 @@ const TooltipHandler = {
       const hmargin = 3, wmargin = 3, hstep = 1.2,
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
-            pad_width = pp.getPadWidth(),
+            pad_width = pp?.getPadWidth(),
             font = new FontHandler(160, textheight),
             disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
@@ -62030,7 +62219,7 @@ const TooltipHandler = {
           hint = null, best_dist2 = 1e10, best_hint = null;
 
       // try to select hint with exact match of the position when several hints available
-      for (let k = 0; k < (hints?.length || 0); ++k) {
+      for (let k = 0; k < hints.length; ++k) {
          if (!hints[k]) continue;
          if (!hint) hint = hints[k];
 
@@ -62295,7 +62484,7 @@ const TooltipHandler = {
 
       if (main_svg.property('handlers_set') !== handlers_set) {
          const close_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, null) : null,
-             mouse_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: false }) : null;
+               mouse_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: false }) : null;
 
          main_svg.property('handlers_set', handlers_set)
                  .on('mouseenter', mouse_handler)
@@ -63250,7 +63439,7 @@ class TFramePainter extends ObjectPainter {
    recalculateRange(Proj, change_x, change_y) {
       this.projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90 || this.scale_ymax >= 90))) {
+      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >= 90))) {
          console.warn(`Mercator Projection: Latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
          this.projection = 0;
       }
@@ -64237,8 +64426,10 @@ class TFramePainter extends ObjectPainter {
       }, 'Store frame position and graphical attributes to gStyle');
 
       menu.add('separator');
-      menu.add('Save as frame.png', () => pp.saveAs('png', 'frame', 'frame.png'));
-      menu.add('Save as frame.svg', () => pp.saveAs('svg', 'frame', 'frame.svg'));
+
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => pp.saveAs(fmt, 'frame', `frame.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -66471,7 +66662,7 @@ const PadButtonsHandler = {
 }, // PadButtonsHandler
 
 // identifier used in TWebCanvas painter
-webSnapIds = { kNone: 0, kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5 };
+webSnapIds = { kNone: 0, kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5, kFont: 6 };
 
 
 /** @summary Fill TWebObjectOptions for painter
@@ -66535,6 +66726,11 @@ class TPadPainter extends ObjectPainter {
    /** @summary Indicates that is is Root6 pad painter
     * @private */
    isRoot6() { return true; }
+
+   /** @summary Returns true if pad is editable */
+   isEditable() {
+      return this.pad?.fEditable ?? true;
+   }
 
    /** @summary Returns SVG element for the pad itself
     * @private */
@@ -66663,8 +66859,8 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Removes and cleanup specified primitive
      * @desc also secondary primitives will be removed
-     * @return new index of the object
-    * @private */
+     * @return new index to continue loop or -111 if main painter removed
+     * @private */
    removePrimitive(indx) {
       const prim = this.painters[indx], arr = [];
       let resindx = indx;
@@ -66672,13 +66868,17 @@ class TPadPainter extends ObjectPainter {
          if ((k === indx) || this.painters[k].isSecondary(prim)) {
             arr.push(this.painters[k]);
             this.painters.splice(k, 1);
-            if (k < indx) resindx--;
+            if (k <= indx) resindx--;
          }
       }
 
-      arr.forEach(painter => painter.cleanup());
-      if (this.main_painter_ref === prim)
-         delete this.main_painter_ref;
+      arr.forEach(painter => {
+         painter.cleanup();
+         if (this.main_painter_ref === painter) {
+            delete this.main_painter_ref;
+            resindx = -111;
+         }
+      });
 
       return resindx;
    }
@@ -67452,6 +67652,7 @@ class TPadPainter extends ObjectPainter {
          menu.addchk(this.pad?.fTicky === 1, 'ticks on both sides', '1fTicky', SetPadField);
          menu.addchk(this.pad?.fTicky === 2, 'labels on both sides', '2fTicky', SetPadField);
          menu.add('endsub:');
+         menu.addchk(this.pad?.fEditable, 'Editable', flag => { this.pad.fEditable = flag; this.interactiveRedraw('pad'); });
          if (this.iscan)
             menu.addchk(this.pad?.TestBit(kIsGrayscale), 'Gray scale', flag => { this.setGrayscale(flag); this.interactiveRedraw('pad'); });
 
@@ -67492,8 +67693,9 @@ class TPadPainter extends ObjectPainter {
          menu.addchk(this.isPadEnlarged(), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
 
       const fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
-      menu.add(`Save as ${fname}.png`, fname+'.png', arg => this.saveAs('png', this.iscan, arg));
-      menu.add(`Save as ${fname}.svg`, fname+'.svg', arg => this.saveAs('svg', this.iscan, arg));
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -67655,8 +67857,10 @@ class TPadPainter extends ObjectPainter {
 
       this.pad.fPhi = obj.fPhi;
       this.pad.fTheta = obj.fTheta;
+      this.pad.fEditable = obj.fEditable;
 
-      if (this.iscan) this.checkSpecialsInPrimitives(obj);
+      if (this.iscan)
+         this.checkSpecialsInPrimitives(obj);
 
       const fp = this.getFramePainter();
       if (fp) fp.updateAttributes(!fp.modified_NDC);
@@ -67809,6 +68013,13 @@ class TPadPainter extends ObjectPainter {
       }
    }
 
+   /** @summary Process snap with custom font
+     * @private */
+   processSnapFont(snap) {
+      const arr = snap.fSnapshot.fOper.split(':');
+      addCustomFont(Number.parseInt(arr[0]), arr[1], arr[2], arr[3]);
+   }
+
    /** @summary Process special snaps like colors or style objects
      * @return {Promise} index where processing should start
      * @private */
@@ -67823,6 +68034,9 @@ class TPadPainter extends ObjectPainter {
          } else if (snap.fKind === webSnapIds.kColors) {
             lst.shift();
             this.processSnapColors(snap);
+         } else if (snap.fKind === webSnapIds.kFont) {
+            lst.shift();
+            this.processSnapFont(snap);
          } else
             break;
       }
@@ -68077,9 +68291,13 @@ class TPadPainter extends ObjectPainter {
                prim.$checked = true;
             } else {
                // remove painter which does not found in the list of snaps
-               console.log('remove painter with', sub.snapid);
-               k = this.removePrimitive(k) - 1; // index modified
+               k = this.removePrimitive(k); // index modified
                isanyremove = true;
+               if (k === -111) {
+                  // main painter is removed - do full cleanup and redraw
+                  isanyfound = false;
+                  break;
+               }
             }
          }
       }
@@ -68089,18 +68307,19 @@ class TPadPainter extends ObjectPainter {
 
       if (!isanyfound && !snap.fWithoutPrimitives) {
          // TODO: maybe just remove frame painter?
-         const fp = this.getFramePainter();
-         this.painters.forEach(objp => {
+         const fp = this.getFramePainter(),
+               old_painters = this.painters;
+         this.painters = [];
+         old_painters.forEach(objp => {
             if (fp !== objp) objp.cleanup();
          });
          delete this.main_painter_ref;
-         this.painters = [];
          if (fp) {
             this.painters.push(fp);
             fp.cleanFrameDrawings();
             fp.redraw();
          }
-         if (this.removePadButtons) this.removePadButtons();
+         if (isFunc(this.removePadButtons)) this.removePadButtons();
          this.addPadButtons(true);
       }
 
@@ -68136,11 +68355,7 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} with image data, coded with btoa() function
      * @private */
    async createImage(format) {
-      // use https://github.com/MrRio/jsPDF in the future here
-      if (format === 'pdf')
-         return btoa_func('dummy PDF file');
-
-      if ((format === 'png') || (format === 'jpeg') || (format === 'svg')) {
+      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
             if (!res || (format === 'svg')) return res;
             const separ = res.indexOf('base64,');
@@ -68426,11 +68641,11 @@ class TPadPainter extends ObjectPainter {
          height = fp.getFrameHeight();
       }
 
-      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`;
+      const arg = (file_format === 'pdf')
+         ? { node: elem.node(), width, height, reset_tranform: use_frame }
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
 
-      svg = compressSVG(svg);
-
-      return svgToImage(svg, file_format).then(res => {
+      return svgToImage(arg, file_format).then(res => {
          // reactivate border
          active_pp?.drawActiveBorder(null, true);
 
@@ -69070,9 +69285,9 @@ class TCanvasPainter extends TPadPainter {
          this.websocketTimeout(`proj${kind}`, 'reset');
          this.drawProjection(kind, hist);
       } else if (msg.slice(0, 5) === 'CTRL:') {
-         const ctrl = parse(msg.slice(5));
+         const ctrl = parse(msg.slice(5)) || {};
          let resized = false;
-         if ((ctrl?.title !== undefined) && (typeof document !== 'undefined'))
+         if ((ctrl.title !== undefined) && (typeof document !== 'undefined'))
             document.title = ctrl.title;
          if (ctrl.x && ctrl.y && typeof window !== 'undefined') {
             window.moveTo(ctrl.x, ctrl.y);
@@ -69749,7 +69964,7 @@ class TPavePainter extends ObjectPainter {
 
       return promise.then(() => {
          // fill stats before drawing to have coordinates early
-         if (this.isStats() && !this.NoFillStats && !pp?._fast_drawing) {
+         if (this.isStats() && !this.NoFillStats && !pp._fast_drawing) {
             const main = pt.$main_painter || this.getMainPainter();
 
             if (isFunc(main?.fillStatistic)) {
@@ -69961,7 +70176,7 @@ class TPavePainter extends ObjectPainter {
        else {
           for (let j = 0; j < nlines; ++j) {
             const y = j*stepy,
-                color = (colors[j] > 1) ? this.getColor(colors[j]) : this.textatt.color;
+                  color = (colors[j] > 1) ? this.getColor(colors[j]) : this.textatt.color;
 
             if (first_stat && (j >= first_stat)) {
                const parts = lines[j].split('|');
@@ -69984,7 +70199,7 @@ class TPavePainter extends ObjectPainter {
                for (let n = 0; n < 2; ++n) {
                   const arg = {
                      align: (n === 0) ? 'start' : 'end', x: margin_x, y,
-                     width: width-2*margin_x, height: stepy, text: parts[n], color,
+                     width: width - 2*margin_x, height: stepy, text: parts[n], color,
                      _expected_width: width-2*margin_x, _args: args,
                      post_process(painter) {
                        if (this._args[0].ready && this._args[1].ready)
@@ -70022,7 +70237,7 @@ class TPavePainter extends ObjectPainter {
    /** @summary draw TPaveText object */
    drawPaveText(width, height, _dummy_arg, text_g) {
       const pt = this.getObject(),
-            arr = pt?.fLines?.arr || [],
+            arr = pt.fLines?.arr || [],
             nlines = arr.length,
             pp = this.getPadPainter(),
             pad_height = pp.getPadHeight(),
@@ -70040,7 +70255,7 @@ class TPavePainter extends ObjectPainter {
 
       if (!text_g) text_g = this.draw_g;
 
-      const fast = (nlines === 1) && pp?._fast_drawing;
+      const fast = (nlines === 1) && pp._fast_drawing;
       let num_default = 0;
 
       for (let nline = 0; nline < nlines; ++nline) {
@@ -70086,7 +70301,7 @@ class TPavePainter extends ObjectPainter {
                      lx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
                      ly1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty + stepy*0.5),
                      ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5),
-                     lineatt = new TAttLineHandler(entry);
+                     lineatt = this.createAttLine(entry);
                text_g.append('svg:path')
                      .attr('d', `M${lx1},${ly1}L${lx2},${ly2}`)
                      .call(lineatt.func);
@@ -70192,11 +70407,10 @@ class TPavePainter extends ObjectPainter {
       if (ncols > 1) {
          const column_weight = new Array(ncols).fill(1);
 
-         for (let ii = 0, i = -1; ii < nlines; ++ii) {
+         for (let ii = 0; ii < nlines; ++ii) {
             const entry = legend.fPrimitives.arr[ii];
             if (isEmpty(entry)) continue; // let discard empty entry
-            if (ncols === 1) ++i; else i = ii;
-            const icol = i % ncols;
+            const icol = ii % ncols;
             column_weight[icol] = Math.max(column_weight[icol], entry.fLabel.length);
          }
 
@@ -70205,7 +70419,7 @@ class TPavePainter extends ObjectPainter {
             sum_weight += column_weight[icol];
          for (let icol = 0; icol < ncols-1; ++icol)
             column_pos[icol+1] = column_pos[icol] + legend.fMargin*w/ncols + column_weight[icol] * (1-legend.fMargin) * w / sum_weight;
-       }
+      }
       column_pos[ncols] = w;
 
       const padding_x = Math.round(0.03*w/ncols),
@@ -70257,12 +70471,13 @@ class TPavePainter extends ObjectPainter {
             painter = pp.findPainterFor(mo);
          }
 
+
          // Draw fill pattern (in a box)
          if (draw_fill) {
             const fillatt = painter?.fillatt?.used ? painter.fillatt : this.createAttFill(o_fill);
             let lineatt;
             if (!draw_line && !draw_error && !draw_marker) {
-               lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
+               lineatt = painter?.lineatt?.used ? painter.lineatt : this.createAttLine(o_line);
                if (lineatt.empty()) lineatt = null;
             }
 
@@ -70281,7 +70496,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw line and/or error (when specified)
          if (draw_line || draw_error) {
-            const lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
+            const lineatt = painter?.lineatt?.used ? painter.lineatt : this.createAttLine(o_line);
             if (!lineatt.empty()) {
                isany = true;
                if (draw_line) {
@@ -70321,7 +70536,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw Polymarker
          if (draw_marker) {
-            const marker = painter?.markeratt?.used ? painter.markeratt : new TAttMarkerHandler(o_marker);
+            const marker = painter?.markeratt?.used ? painter.markeratt : this.createAttMarker(o_marker);
             if (!marker.empty()) {
                isany = true;
                this.draw_g
@@ -70386,10 +70601,10 @@ class TPavePainter extends ObjectPainter {
             framep = this.getFramePainter(),
             contour = main.fContour,
             levels = contour?.getLevels(),
-            is_th3 = isFunc(main?.getDimension) && (main.getDimension() === 3),
+            is_th3 = isFunc(main.getDimension) && (main.getDimension() === 3),
             log = (is_th3 ? pad?.fLogv : pad?.fLogz) ?? 0,
             draw_palette = main._color_palette,
-            zaxis = main?.getObject()?.fZaxis,
+            zaxis = main.getObject()?.fZaxis,
             sizek = pad?.fTickz ? 0.35 : 0.7;
 
       let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '', axis_second = 0;
@@ -71195,8 +71410,10 @@ class THistDrawOptions {
          return false;
       };
 
-      if (d.check('FILL_', true) && d.getColor())
+      if (d.check('FILL_', true) && d.getColor()) {
          this.histoFillColor = d.color;
+         this.histoFillPattern = 1001;
+      }
 
       if (d.check('LINE_', true) && d.getColor())
          this.histoLineColor = getColor(d.color);
@@ -71426,7 +71643,7 @@ class THistDrawOptions {
           (((this.Surf > 0) || this.Error) && (hdim === 2))) this.Mode3D = true;
 
       // default draw options for TF1 is line and fill
-      if (painter.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve && !this.Mark) {
+      if (painter?.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve && !this.Mark) {
          this.Hist = false;
          this.Curve = settings.FuncAsCurve;
          this.Line = !this.Curve;
@@ -71942,7 +72159,7 @@ class THistPainter extends ObjectPainter {
          }
       }
 
-      this.createAttFill({ attr: histo, color: this.options.histoFillColor, kind: 1 });
+      this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
 
       this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
    }
@@ -72678,7 +72895,7 @@ class THistPainter extends ObjectPainter {
 
          menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
+         menu.addchk(fp?.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
             if (!fp.enable_highlight && fp.mode3d && isFunc(fp.highlightBin3D))
                fp.highlightBin3D(null);
@@ -73454,7 +73671,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          for (k = 0; k < 4; k++)
             ir[k] = LevelSearch(zc[k]);
 
-         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
+         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) { // deepscan-disable-line
             x[3] = x[0] = (arrx[i] + arrx[i+1])/2;
             x[2] = x[1] = (arrx[i+1] + arrx[i+2])/2;
 
@@ -73746,7 +73963,7 @@ class Triangles3DHandler {
 
                // check if any(contours for given level exists
                if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1))) // deepscan-disable-line
                       ++ngridsegments;
 
                continue;
@@ -74777,8 +74994,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
          switch (this.options.Contour) {
             case 1: break;
-            case 11: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: icol }); break;
-            case 12: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: 1, style: (ipoly%5 + 1), width: 1 }); break;
+            case 11: fillcolor = 'none'; lineatt = this.createAttLine({ color: icol, std: false }); break;
+            case 12: fillcolor = 'none'; lineatt = this.createAttLine({ color: 1, style: (ipoly%5 + 1), width: 1, std: false }); break;
             case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
          }
 
@@ -75390,7 +75607,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          markers += swapXY ? this.markeratt.create(y, x) : this.markeratt.create(x, y);
       }, make_cmarker = (x, y) => {
          if (!attrcmarkers) {
-            attrcmarkers = new TAttMarkerHandler({ attr: histo, style: 24 });
+            attrcmarkers = this.createAttMarker({ attr: histo, style: 24, std: false });
             attrcmarkers.resetPos();
          }
          cmarkers += swapXY ? attrcmarkers.create(y, x) : attrcmarkers.create(x, y);
@@ -75654,7 +75871,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       if (dashed_lines) {
-         const dashed = new TAttLineHandler({ attr: histo, style: 2 });
+         const dashed = this.createAttLine({ attr: histo, style: 2, std: false, color: kBlack });
          this.draw_g.append('svg:path')
              .attr('d', dashed_lines)
              .call(dashed.func)
@@ -76674,7 +76891,7 @@ function createTextGeometry(painter, lbl, size) {
 
    produceLatex(painter, node, arg);
 
-   if (!geoms)
+   if (!geoms.length)
       return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
 
    node.translate(); // apply translate attributes
@@ -78014,7 +78231,7 @@ function drawBinsLego(painter, is_v7 = false) {
          test_cutg = painter.options.cutg,
          i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2,
          histo = painter.getHisto(),
-         basehisto = histo ? histo.$baseh : null,
+         basehisto = histo.$baseh,
          split_faces = (painter.options.Lego === 11) || (painter.options.Lego === 13), // split each layer on two parts
          use16indx = (histo.getBin(i2, j2) < 0xFFFF); // if bin ID fit into 16 bit, use smaller arrays for intersect indexes
 
@@ -79154,7 +79371,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             grpnts = [];
       let res = '', lastbin = false,
           show_markers = this.options.Mark,
-          startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
+          startx, startmidx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           path_fill = null, path_err = null, path_marker = null, path_line = '',
           hints_err = null, hints_marker = null, hsz = 5,
           do_marker = false, do_err = false,
@@ -79232,6 +79449,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          mx1 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+1)));
          mx2 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+2)));
          midx = Math.round((mx1 + mx2) / 2);
+         if (startmidx === undefined) startmidx = midx;
          my = Math.round(funcs.gry(bincont));
          if (show_errors) {
             binerr = histo.getBinError(bin+1);
@@ -79435,7 +79653,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                        .call(this.fillatt.func);
          } else if (path_line && !this.fillatt.empty() && !draw_hist) {
             this.draw_g.append('svg:path')
-                .attr('d', path_line + close_path)
+                .attr('d', path_line + `L${midx},${h0}H${startmidx}Z`)
                 .call(this.fillatt.func);
          }
 
@@ -80276,7 +80494,7 @@ TH2Painter: TH2Painter
   * @private */
 
 function proivdeEvalPar(obj, check_save) {
-   obj._math = jsroot_math;
+   obj.$math = jsroot_math;
 
    let _func = obj.fTitle, isformula = false, pprefix = '[';
    if (_func === 'gaus') _func = 'gaus(0)';
@@ -80324,14 +80542,13 @@ function proivdeEvalPar(obj, check_save) {
                 .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
                 .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
-                .replace(/\bxygaus\(/g, 'this._math.gausxy(this, x, y, ')
-                .replace(/\bgaus\(/g, 'this._math.gaus(this, x, ')
-                .replace(/\bgausn\(/g, 'this._math.gausn(this, x, ')
-                .replace(/\bexpo\(/g, 'this._math.expo(this, x, ')
-                .replace(/\blandau\(/g, 'this._math.landau(this, x, ')
-                .replace(/\blandaun\(/g, 'this._math.landaun(this, x, ')
-                .replace(/\bTMath::/g, 'this._math.')
-                .replace(/\bROOT::Math::/g, 'this._math.');
+                .replace(/\bxygaus\(/g, 'this.$math.gausxy(this, x, y, ')
+                .replace(/\bgaus\(/g, 'this.$math.gaus(this, x, ')
+                .replace(/\bgausn\(/g, 'this.$math.gausn(this, x, ')
+                .replace(/\bexpo\(/g, 'this.$math.expo(this, x, ')
+                .replace(/\blandau\(/g, 'this.$math.landau(this, x, ')
+                .replace(/\blandaun\(/g, 'this.$math.landaun(this, x, ')
+                .replace(/\b(TMath::|ROOT::Math::)/g, 'this.$math.');
 
    if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
       _func = '[0]';
@@ -80340,7 +80557,7 @@ function proivdeEvalPar(obj, check_save) {
    }
 
    if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
-      _func = `this._math.ChebyshevN(${obj.fNpar-1}, x, `;
+      _func = `this.$math.ChebyshevN(${obj.fNpar-1}, x, `;
       for (let k = 0; k < obj.fNpar; ++k)
          _func += (k === 0 ? '[' : ', ') + `[${k}]`;
       _func += '])';
@@ -80439,7 +80656,7 @@ function produceTAxisLogScale(axis, num, min, max) {
       lmin = min > 0 ? Math.log(min) : lmax - 5;
    } else {
       lmax = -10;
-      lmax = -15;
+      lmin = -15;
    }
 
    axis.fNbins = num;
@@ -80466,6 +80683,9 @@ class TF1Painter extends TH1Painter$2 {
 
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
+
+   /** @summary Returns primary function which was then drawn as histogram */
+   getPrimaryObject() { return this.$func; }
 
    /** @summary Update function */
    updateObject(obj /*, opt */) {
@@ -80570,14 +80790,10 @@ class TF1Painter extends TH1Painter$2 {
          xmax = tf1.fSave[np + 2];
 
          if (xmin === xmax) {
-            xmin = tf1.fSave[np];
+            // xmin = tf1.fSave[np];
             const mp = this.getMainPainter();
             if (isFunc(mp?.getHisto))
                custom_xaxis = mp?.getHisto()?.fXaxis;
-            if (!custom_xaxis) {
-               xmin = tf1.fXmin;
-               xmax = tf1.fXmax;
-            }
          }
 
          if (custom_xaxis) {
@@ -82785,7 +83001,7 @@ class GeometryCreator {
       let indx = this.indx - ((reduce > 0) ? 9 : 18);
       const norm = this.norm;
 
-      if (reduce!==1) {
+      if (reduce !== 1) {
          norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
@@ -82795,10 +83011,10 @@ class GeometryCreator {
          norm[indx+6] = nx34;
          norm[indx+7] = ny34;
          norm[indx+8] = nz34;
-         indx+=9;
+         indx += 9;
       }
 
-      if (reduce!==2) {
+      if (reduce !== 2) {
          norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
@@ -82808,7 +83024,6 @@ class GeometryCreator {
          norm[indx+6] = nx34;
          norm[indx+7] = ny34;
          norm[indx+8] = nz34;
-         indx+=9;
       }
    }
 
@@ -84449,7 +84664,7 @@ function makeEveGeometry(rd) {
       rd.prefixBuf = new Uint32Array(rd.raw.buffer, off, 2);
       off += 2*4;
       rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]-2);
-      off += (rd.sz[2]-2)*4;
+      // off += (rd.sz[2]-2)*4;
    }
 
    const GL_TRIANGLES = 4; // same as in EVE7
@@ -84939,7 +85154,8 @@ class ClonedNodes {
                   issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
                if (issimple) delete clone.matrix;
             }
-            if (clone.matrix && (kind === kindEve)) clone.abs_matrix = true;
+            if (clone.matrix && (kind === kindEve))  // deepscan-disable-line INSUFFICIENT_NULL_CHECK
+               clone.abs_matrix = true;
          }
          if (shape) {
             clone.fDX = shape.fDX;
@@ -85501,9 +85717,8 @@ class ClonedNodes {
       }
 
       const volume = node.fVolume,
-
-       prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
-                   chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
+            prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
+                     chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
 
       {
          // TODO: maybe correctly extract ROOT colors here?
@@ -85517,7 +85732,7 @@ class ClonedNodes {
          else if (volume.fLineColor >= 0)
             prop.fillcolor = root_colors[volume.fLineColor];
 
-         const mat = volume?.fMedium?.fMaterial;
+         const mat = volume.fMedium?.fMaterial;
 
          if (mat) {
             const fillstyle = mat.fFillStyle;
@@ -89073,7 +89288,7 @@ function expandGeoObject(parent, obj) {
    }
 
    if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) {
+      if (!parent._childs) { // deepscan-disable-line
          createItem(parent, shape.fNode.fLeft, 'Left');
          createItem(parent, shape.fNode.fRight, 'Right');
       }
@@ -91741,7 +91956,7 @@ class TGeoPainter extends ObjectPainter {
          return res;
       }
 
-      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl)
+      if (!this._lookat || !this._camera0pos)
          return '';
 
       const pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
@@ -99034,7 +99249,7 @@ class TDrawVariable {
                if (code[pos2] === '(') { pos2 = prev - 1; break; }
 
                // this is selection of member, but probably we need to activate iterator for ROOT collection
-               if ((arriter.length === 0) && br) {
+               if (arriter.length === 0) {
                   // TODO: if selected member is simple data type - no need to make other checks - just break here
                   if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
                      arriter.push(undefined);
@@ -100119,7 +100334,12 @@ async function treeProcess(tree, selector, args) {
          case 'TLeafC': datakind = kTString; break;
          default: return null;
       }
-      return createStreamerElement(name || leaf.fName, datakind);
+      const elem = createStreamerElement(name || leaf.fName, datakind);
+      if (leaf.fLen > 1) {
+         elem.fType += kOffsetL;
+         elem.fArrayLength = leaf.fLen;
+      }
+      return elem;
    }, findInHandle = branch => {
       for (let k = 0; k < handle.arr.length; ++k) {
          if (handle.arr[k].branch === branch)
@@ -101395,7 +101615,7 @@ drawFuncs = { lst: [
    { name: 'TPadWebSnapshot', sameas: clTCanvasWebSnapshot },
    { name: 'kind:Text', icon: 'img_text', func: drawRawText },
    { name: clTObjString, icon: 'img_text', func: drawRawText },
-   { name: clTF1, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TF1Painter$1; }).then(h => h.TF1Painter) },
+   { name: clTF1, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TF1Painter$1; }).then(h => h.TF1Painter), opt: ';L;C;FC;FL' },
    { name: clTF2, icon: 'img_tf2', class: () => Promise.resolve().then(function () { return TF2Painter$1; }).then(h => h.TF2Painter), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
    { name: clTF3, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TF3Painter$1; }).then(h => h.TF3Painter), opt: ';SURF' },
    { name: clTSpline3, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TSplinePainter$1; }).then(h => h.TSplinePainter) },
@@ -101925,9 +102145,14 @@ async function makeImage(args) {
          main.selectAll('g.root_frame').each(clear_element);
          main.selectAll('svg').each(clear_element);
 
-         const svg = compressSVG(main.html());
-         if (args.format === 'svg')
-            return complete(svg);
+         let svg;
+         if (args.format === 'pdf')
+            svg = { node: main.select('svg').node(), width: args.width, height: args.height, can_modify: true };
+         else {
+            svg = compressSVG(main.html());
+            if (args.format === 'svg')
+               return complete(svg);
+         }
 
          return svgToImage(svg, args.format, args.as_buffer).then(complete);
       });
@@ -101965,7 +102190,7 @@ internals.addDrawFunc = addDrawFunc;
 
 function assignPadPainterDraw(PadPainterClass) {
    PadPainterClass.prototype.drawObject = (...args) =>
-      draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err.stack ?? 'uncknown place'}`); return null; });
+      draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err?.stack ?? 'uncknown place'}`); return null; });
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }
 
@@ -102947,7 +103172,7 @@ class HierarchyPainter extends BasePainter {
              return process_child(child);
          }
 
-         return (arg.last_exists && top) ? { last: top, rest: fullname } : null;
+         return arg.last_exists ? { last: top, rest: fullname } : null;
       }
 
       let top = this.h, itemname = '';
@@ -104431,7 +104656,7 @@ class HierarchyPainter extends BasePainter {
             hitem = d.last;
          }
 
-         if (hitem) {
+         if (hitem) { // deepscan-disable-line
             // check that item is visible (opened), otherwise should enable parent
 
             let prnt = hitem._parent;
@@ -104490,7 +104715,8 @@ class HierarchyPainter extends BasePainter {
          if (!isFunc(_item._expand)) {
             let handle = getDrawHandle(_item._kind, '::expand');
 
-            if (handle?.expand_item) {
+            // in inspector show all memebers
+            if (handle?.expand_item && !hpainter._inspector) {
                _obj = _obj[handle.expand_item];
                _item.expand_item = handle.expand_item; // remember that was exapnd item
                handle = _obj?._typename ? getDrawHandle(prROOT + _obj._typename, '::expand') : null;
@@ -104512,7 +104738,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          // try to use expand function
-         if (_obj && isFunc(_item?._expand)) {
+         if (_obj && isFunc(_item._expand)) {
             if (_item._expand(_item, _obj)) {
                _item._isopen = true;
                if (_item._parent && !_item._parent._isopen) {
@@ -105414,7 +105640,7 @@ class HierarchyPainter extends BasePainter {
             promise = this.loadScripts(load, prereq); load = ''; prereq = '';
          } else if (inject) {
             promise = this.loadScripts(inject, '', true); inject = '';
-         } if (browser_kind) {
+         } else if (browser_kind) {
             promise = this.createBrowser(browser_kind); browser_kind = '';
          } else if (status !== null) {
             promise = this.createStatusLine(statush, status); status = null;
@@ -105624,7 +105850,7 @@ class HierarchyPainter extends BasePainter {
             menu.show();
          });
       }).on('dblclick', () => {
-         this.createBrowser(this?.brlayout?.browser_kind === 'float' ? 'fix' : 'float', true);
+         this.createBrowser(this.brlayout?.browser_kind === 'float' ? 'fix' : 'float', true);
       });
 
       if (!this.is_online && !this.no_select) {
@@ -105761,7 +105987,7 @@ ObjectPainter.prototype.showInspector = function(opt, obj) {
        .style('right', w);
 
    if (!obj?._typename)
-      obj = this.getObject();
+      obj = isFunc(this.getPrimaryObject) ? this.getPrimaryObject() : this.getObject();
 
    return drawInspector(id, obj, opt);
 };
@@ -107274,7 +107500,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                   fpcol = !fp?.fillatt?.empty() ? fp.fillatt.getFillColor() : -1;
 
             if (fpcol === fillatt.getFillColor())
-               usefill = new TAttFillHandler({ color: fpcol === 'white' ? 1 : 0, pattern: 1001 });
+               usefill = this.createAttFill({ color: fpcol === 'white' ? kBlack : kWhite, pattern: 1001, std: false });
          }
 
          nodes.append('svg:path')
@@ -107442,8 +107668,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          path2 += makeLine(xqmax, yqmax, funcs.scale_xmax, yxmax);
 
 
-      const latt1 = new TAttLineHandler({ style: 1, width: 1, color: 'black' }),
-            latt2 = new TAttLineHandler({ style: 2, width: 1, color: 'black' });
+      const latt1 = this.createAttLine({ style: 1, width: 1, color: kBlack, std: false }),
+            latt2 = this.createAttLine({ style: 2, width: 1, color: kBlack, std: false });
 
       this.draw_g.append('path')
                  .attr('d', makeLine(xqmin, yqmin, xqmax, yqmax))
@@ -107506,8 +107732,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          for (let k = 0; k < graph.fNYErrors; ++k) {
             let lineatt = this.lineatt, fillatt = this.fillatt;
             if (this.options.individual_styles) {
-               lineatt = new TAttLineHandler({ attr: graph.fAttLine[k], std: false });
-               fillatt = new TAttFillHandler({ attr: graph.fAttFill[k], std: false, svg: this.getCanvSvg() });
+               lineatt = this.createAttLine({ attr: graph.fAttLine[k], std: false });
+               fillatt = this.createAttFill({ attr: graph.fAttFill[k], std: false });
             }
             const sub_g = this.draw_g.append('svg:g'),
                 options = (k < this.options.blocks.length) ? this.options.blocks[k] : this.options;
@@ -109470,7 +109696,7 @@ function getMin(arr) {
    return v;
 }
 
-function TMath_Sort(np, values, indicies, down) {
+function TMath_Sort(np, values, indicies /*, down */) {
    const arr = new Array(np);
    for (let i = 0; i < np; ++i)
       arr[i] = { v: values[i], i };
@@ -109978,7 +110204,7 @@ class TGraphDelaunay {
       }
 
       // sort array 'fDist' to find closest points
-      TMath_Sort(this.fNpoints, this.fDist, this.fOrder);
+      TMath_Sort(this.fNpoints, this.fDist, this.fOrder /*, false */);
       for (it=0; it<this.fNpoints; it++) this.fOrder[it]++;
 
       // loop over triplets of close points to try to find a triangle that
@@ -110091,7 +110317,7 @@ class TGraphDelaunay {
                      continue; // goto L50;
                   }
 
-                  if (skip_this_triangle) break;
+                  if (skip_this_triangle) break; // deepscan-disable-line
 
    ///            Error("Interpolate", "Should not get to here");
                   // may as well soldier on
@@ -110129,17 +110355,11 @@ class TGraphDelaunay {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f = m;
-                           o1 = p;
-                           o2 = n;
+                           f = m; o1 = p; o2 = n; // deepscan-disable-line
                         } else if (l === 2) {
-                           f = p;
-                           o1 = n;
-                           o2 = m;
+                           f = p; o1 = n; o2 = m;
                         } else {
-                           f = n;
-                           o1 = m;
-                           o2 = p;
+                           f = n; o1 = m; o2 = p;
                         }
                         break; // goto L2;
                      }
@@ -110254,7 +110474,7 @@ class TGraphDelaunay {
             }
          }
       }
-      if (shouldbein)
+      if (shouldbein) // deepscan-disable-line
          console.error(`Interpolate Point outside hull when expected inside: this point could be dodgy ${xx}  ${yy} ${ntris_tried}`);
       return thevalue;
    }
@@ -110606,7 +110826,7 @@ class TGraph2DPainter extends ObjectPainter {
          }
       }
 
-      const markeratt = new TAttMarkerHandler(graph),
+      const markeratt = this.createAttMarker({ attr: graph, std: false }),
             promises = [];
       let palette = null,
           levels = [fp.scale_zmin, fp.scale_zmax],
@@ -110954,7 +111174,7 @@ class TGraphPolargramPainter extends ObjectPainter {
       let nminor = Math.floor((polar.fNdivRad % 10000) / 100);
 
       this.createAttLine({ attr: polar });
-      if (!this.gridatt) this.gridatt = new TAttLineHandler({ color: polar.fLineColor, style: 2, width: 1 });
+      if (!this.gridatt) this.gridatt = this.createAttLine({ color: polar.fLineColor, style: 2, width: 1, std: false });
 
       const range = Math.abs(polar.fRwrmax - polar.fRwrmin);
       this.ndig = (range <= 0) ? -3 : Math.round(Math.log10(ticks.length / range));
@@ -111271,7 +111491,7 @@ class TGraphPolarPainter extends ObjectPainter {
    showTooltip(hint) {
       let ttcircle = this.draw_g?.selectChild('.tooltip_bin');
 
-      if (!hint || !!this.draw_g) {
+      if (!hint || !this.draw_g) {
          ttcircle?.remove();
          return;
       }
@@ -111649,7 +111869,7 @@ class TScatterPainter extends TGraphPainter$1 {
          }
 
          if (maxs <= mins)
-            maxs = mins > 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
+            maxs = mins < 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
 
          scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
          offset = mins;
@@ -112445,6 +112665,9 @@ class TF2Painter extends TH2Painter {
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
 
+   /** @summary Returns primary function which was then drawn as histogram */
+   getPrimaryObject() { return this.$func; }
+
    /** @summary Update histogram */
    updateObject(obj /*, opt */) {
       if (!obj || (this.getClassName() !== obj._typename)) return false;
@@ -112475,7 +112698,7 @@ class TF2Painter extends TH2Painter {
 
    /** @summary Create histogram for TF2 drawing
      * @private */
-   createTF2Histogram(func, hist = undefined) {
+   createTF2Histogram(func, hist) {
       let nsave = func.fSave.length - 6;
       if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
          nsave = 0;
@@ -112794,6 +113017,9 @@ class TF3Painter extends TH2Painter {
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
 
+   /** @summary Returns primary function which was then drawn as histogram */
+   getPrimaryObject() { return this.$func; }
+
    /** @summary Update histogram */
    updateObject(obj /*, opt */) {
       if (!obj || (this.getClassName() !== obj._typename)) return false;
@@ -112822,9 +113048,9 @@ class TF3Painter extends TH2Painter {
       return super.redraw(reason);
    }
 
-   /** @summary Create histogram for TF2 drawing
+   /** @summary Create histogram for TF3 drawing
      * @private */
-   createTF3Histogram(func, hist = undefined) {
+   createTF3Histogram(func, hist) {
       const nsave = func.fSave.length - 9;
 
       this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || this.force_saved);
@@ -113120,7 +113346,7 @@ class TSplinePainter extends ObjectPainter {
       const spline = this.getObject();
       let xmin = 0, xmax = 1, ymin = 0, ymax = 1;
 
-      if (spline?.fPoly) {
+      if (spline.fPoly) {
          xmin = xmax = spline.fPoly[0].fX;
          ymin = ymax = spline.fPoly[0].fY;
 
@@ -113798,7 +114024,7 @@ class TASImagePainter extends ObjectPainter {
 
       let offx = 0, offy = 0, sizex = width, sizey = height;
 
-      if (constRatio && fp) {
+      if (constRatio) {
          const image_ratio = height/width,
                frame_ratio = fp.getFrameHeight() / fp.getFrameWidth();
 
@@ -114289,7 +114515,8 @@ class RObjectPainter extends ObjectPainter {
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
        if (!fontScale) fontScale = pp?.getPadHeight() || 100;
 
-       const handler = new FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
+       const handler = new FontHandler(null, text_size, fontScale);
+       handler.setNameStyleWeight(font_family, font_style, font_weight);
 
        if (text_angle) handler.setAngle(360 - text_angle);
        if (text_align !== 'none') handler.setAlign(text_align);
@@ -115601,7 +115828,7 @@ class RFramePainter extends RObjectPainter {
    recalculateRange(Proj) {
       this.projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90 || this.scale_ymax >=90))) {
+      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >=90))) {
          console.warn(`Mercator Projection: latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
          this.projection = 0;
       }
@@ -116616,8 +116843,10 @@ class RFramePainter extends RObjectPainter {
 
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
       menu.add('separator');
-      menu.add('Save as frame.png', () => this.getPadPainter().saveAs('png', 'frame', 'frame.png'));
-      menu.add('Save as frame.svg', () => this.getPadPainter().saveAs('svg', 'frame', 'frame.svg'));
+
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => this.getPadPainter().saveAs(fmt, 'frame', `frame.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -116721,6 +116950,11 @@ class RPadPainter extends RObjectPainter {
    /** @summary Indicates that is not Root6 pad painter
     * @private */
    isRoot6() { return false; }
+
+   /** @summary Returns true if pad is editable */
+   isEditable() {
+      return true;
+   }
 
   /** @summary Returns SVG element for the pad itself
     * @private */
@@ -116838,8 +117072,8 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Removes and cleanup specified primitive
      * @desc also secondary primitives will be removed
-     * @return new index of the object
-    * @private */
+     * @return new index to continue loop or -111 if main painter removed
+     * @private */
    removePrimitive(indx) {
       const prim = this.painters[indx], arr = [];
       let resindx = indx;
@@ -116847,17 +117081,20 @@ class RPadPainter extends RObjectPainter {
          if ((k === indx) || this.painters[k].isSecondary(prim)) {
             arr.push(this.painters[k]);
             this.painters.splice(k, 1);
-            if (k < indx) resindx--;
+            if (k <= indx) resindx--;
          }
       }
 
-      arr.forEach(painter => painter.cleanup());
-      if (this.main_painter_ref === prim)
-         delete this.main_painter_ref;
+      arr.forEach(painter => {
+         painter.cleanup();
+         if (this.main_painter_ref === painter) {
+            delete this.main_painter_ref;
+            resindx = -111;
+         }
+      });
 
       return resindx;
    }
-
 
    /** @summary try to find object by name in list of pad primitives
      * @desc used to find title drawing
@@ -117393,8 +117630,9 @@ class RPadPainter extends RObjectPainter {
          menu.addchk((this.enlargeMain('state') === 'on'), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
 
       const fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
-      menu.add(`Save as ${fname}.png`, fname+'.png', arg => this.saveAs('png', false, arg));
-      menu.add(`Save as ${fname}.svg`, fname+'.svg', arg => this.saveAs('svg', false, arg));
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -117884,11 +118122,7 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} with image data, coded with btoa() function
      * @private */
    async createImage(format) {
-      // use https://github.com/MrRio/jsPDF in the future here
-      if (format === 'pdf')
-         return btoa_func('dummy PDF file');
-
-      if ((format === 'png') || (format === 'jpeg') || (format === 'svg')) {
+      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
             if (!res || (format === 'svg')) return res;
             const separ = res.indexOf('base64,');
@@ -118034,10 +118268,11 @@ class RPadPainter extends RObjectPainter {
          height = fp.getFrameHeight();
       }
 
-      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`;
-      svg = compressSVG(svg);
+      const arg = (file_format === 'pdf')
+         ? { node: elem.node(), width, height, reset_tranform: use_frame }
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
 
-      return svgToImage(svg, file_format).then(res => {
+      return svgToImage(arg, file_format).then(res => {
          for (let k = 0; k < items.length; ++k) {
             const item = items[k];
 
@@ -118321,7 +118556,6 @@ class LongPollSocket {
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
          if (!browser.qt5) console.error('No connection');
-         return;
       } else {
          url += '?connection=' + this.connid;
          if (kind === 'dummy') url += '&dummy';
@@ -118770,14 +119004,20 @@ class WebWindowHandle {
    /** @summary Assign href parameter
      * @param {string} [path] - absolute path, when not specified window.location.url will be used
      * @private */
-   setHRef(path) { this.href = path; }
+   setHRef(path) {
+      if (isStr(path) && (path.indexOf('?') > 0)) {
+         this.href = path.slice(0, path.indexOf('?'));
+         this.key = decodeUrl(path).get('key');
+      } else
+         this.href = path;
+   }
 
    /** @summary Return href part
      * @param {string} [relative_path] - relative path to the handle
      * @private */
    getHRef(relative_path) {
-      if (!relative_path || !this.kind || !this.href) return this.href;
-
+      if (!relative_path || !this.kind || !this.href)
+         return this.href;
       let addr = this.href;
       if (relative_path.indexOf('../') === 0) {
          const ddd = addr.lastIndexOf('/', addr.length-2);
@@ -119881,10 +120121,21 @@ function drawRFont() {
       defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
    let entry = defs.selectChild('.' + clname);
-   if (entry.empty())
-      entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
-
-   entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : 'normal'}; font-style: ${font.fStyle ? font.fStyle : 'normal'}; src: ${font.fSrc}; }`);
+   if (entry.empty()) {
+      entry = defs.append('style')
+                  .attr('type', 'text/css')
+                  .attr('class', clname)
+                  .text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : 'normal'}; font-style: ${font.fStyle ? font.fStyle : 'normal'}; src: ${font.fSrc}; }`);
+      const p1 = font.fSrc.indexOf('base64,'),
+            p2 = font.fSrc.lastIndexOf(' format(');
+      if (p1 > 0 && p2 > p1) {
+         const base64 = font.fSrc.slice(p1 + 7, p2 - 2),
+               is_ttf = font.fSrc.indexOf('data:application/font-ttf') > 0;
+         // TODO: for the moment only ttf format supported by jsPDF
+         if (is_ttf)
+            entry.property('$fonthandler', { name: font.fFamily, format: 'ttf', base64 });
+      }
+   }
 
    if (font.fDefault)
       this.getPadPainter()._dfltRFont = font;
@@ -121403,7 +121654,7 @@ class RHistPainter extends RObjectPainter {
 
          menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
+         menu.addchk(fp?.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
             if (!fp.enable_highlight && main.mode3d && isFunc(main.highlightBin3D))
                main.highlightBin3D(null);
@@ -121696,7 +121947,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
 
       this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
 
-      if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300 && Math.abs(hmax) < 1e-300)))
+      if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300) && (Math.abs(hmax) < 1e-300)))
          this.draw_content = false;
       else
          this.draw_content = true;
@@ -123163,8 +123414,8 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
 
             switch (this.options.Contour) {
                case 1: break;
-               case 11: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: icol }); break;
-               case 12: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: 1, style: (colindx%5 + 1), width: 1 }); break;
+               case 11: fillcolor = 'none'; lineatt = this.createAttLine({ color: icol, std: false }); break;
+               case 12: fillcolor = 'none'; lineatt = this.createAttLine({ color: 1, style: (colindx%5 + 1), width: 1, std: false }); break;
                case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
             }
 

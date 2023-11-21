@@ -74,7 +74,7 @@ class TSplinePainter extends ObjectPainter {
       const spline = this.getObject();
       let xmin = 0, xmax = 1, ymin = 0, ymax = 1;
 
-      if (spline?.fPoly) {
+      if (spline.fPoly) {
          xmin = xmax = spline.fPoly[0].fX;
          ymin = ymax = spline.fPoly[0].fY;
 

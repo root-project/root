@@ -2,7 +2,6 @@ import { settings, create } from '../core.mjs';
 import { scaleLinear, select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { TooltipHandler } from '../gpad/TFramePainter.mjs';
 
@@ -161,7 +160,7 @@ class TGraphPolargramPainter extends ObjectPainter {
       let nminor = Math.floor((polar.fNdivRad % 10000) / 100);
 
       this.createAttLine({ attr: polar });
-      if (!this.gridatt) this.gridatt = new TAttLineHandler({ color: polar.fLineColor, style: 2, width: 1 });
+      if (!this.gridatt) this.gridatt = this.createAttLine({ color: polar.fLineColor, style: 2, width: 1, std: false });
 
       const range = Math.abs(polar.fRwrmax - polar.fRwrmin);
       this.ndig = (range <= 0) ? -3 : Math.round(Math.log10(ticks.length / range));
@@ -478,7 +477,7 @@ class TGraphPolarPainter extends ObjectPainter {
    showTooltip(hint) {
       let ttcircle = this.draw_g?.selectChild('.tooltip_bin');
 
-      if (!hint || !!this.draw_g) {
+      if (!hint || !this.draw_g) {
          ttcircle?.remove();
          return;
       }

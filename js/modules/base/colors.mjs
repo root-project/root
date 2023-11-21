@@ -1,7 +1,8 @@
 import { clTColor, settings } from '../core.mjs';
 import { color as d3_color } from '../d3.mjs';
 
-const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient';
+const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient',
+      kWhite = 0, kBlack = 1, kRed = 2, kGreen = 3, kBlue = 4, kYellow = 5, kMagenta = 6, kCyan = 7;
 
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
@@ -437,4 +438,5 @@ createRootColors();
 export { getColor, findColor, addColor, adoptRootColors,
          getRootColors, getGrayColors,
          extendRootColors, getRGBfromTColor, createRootColors, toHex,
+         kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan,
          ColorPalette, getColorPalette, clTLinearGradient, clTRadialGradient, decodeWebCanvasColors };

@@ -496,7 +496,7 @@ class TDrawVariable {
                if (code[pos2] === '(') { pos2 = prev - 1; break; }
 
                // this is selection of member, but probably we need to activate iterator for ROOT collection
-               if ((arriter.length === 0) && br) {
+               if (arriter.length === 0) {
                   // TODO: if selected member is simple data type - no need to make other checks - just break here
                   if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
                      arriter.push(undefined);
@@ -1581,7 +1581,12 @@ async function treeProcess(tree, selector, args) {
          case 'TLeafC': datakind = kTString; break;
          default: return null;
       }
-      return createStreamerElement(name || leaf.fName, datakind);
+      const elem = createStreamerElement(name || leaf.fName, datakind);
+      if (leaf.fLen > 1) {
+         elem.fType += kOffsetL;
+         elem.fArrayLength = leaf.fLen;
+      }
+      return elem;
    }, findInHandle = branch => {
       for (let k = 0; k < handle.arr.length; ++k) {
          if (handle.arr[k].branch === branch)

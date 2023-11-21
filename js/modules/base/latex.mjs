@@ -322,6 +322,8 @@ function parseLatex(node, arg, label, curr) {
          curr.rect.y2 = Math.max(curr.rect.y2, y2);
       }
 
+      curr.rect.last_y1 = y1; // upper position of last symbols
+
       curr.rect.width = curr.rect.x2 - curr.rect.x1;
       curr.rect.height = curr.rect.y2 - curr.rect.y1;
 
@@ -457,8 +459,10 @@ function parseLatex(node, arg, label, curr) {
             if (alone && !curr.g) curr.g = elem;
 
             // apply font attributes only once, inherited by all other elements
-            if (curr.ufont)
-               curr.font.setFont(curr.g /*, 'without-size' */);
+            if (curr.ufont) {
+               curr.font.setPainter(arg.painter);
+               curr.font.setFont(curr.g);
+            }
 
             if (curr.bold !== undefined)
                curr.g.attr('font-weight', curr.bold ? 'bold' : 'normal');
@@ -485,15 +489,20 @@ function parseLatex(node, arg, label, curr) {
             if (curr.x) elem.attr('x', curr.x);
             if (curr.y) elem.attr('y', curr.y);
 
+            // for single symbols like f,l.i one gets wrong estimation of total width, use it in sup/sub-scripts
+            const xgap = (s.length === 1) && !curr.font.isMonospace() && ('lfij'.indexOf(s) >= 0) ? 0.1*curr.fsize : 0;
+
             extendPosition(curr.x, curr.y - rect.height*0.8, curr.x + rect.width, curr.y + rect.height*0.2);
 
             if (!alone) {
-               shiftX(rect.width);
+               shiftX(rect.width + xgap);
                addSpaces(nendspaces);
+               curr.xgap = 0;
             } else if (curr.deco) {
                elem.attr('text-decoration', curr.deco);
                delete curr.deco; // inform that decoration was applied
-            }
+            } else
+               curr.xgap = xgap; // may be used in accent or somewere else
          } else
             addSpaces(nendspaces);
       }
@@ -510,12 +519,13 @@ function parseLatex(node, arg, label, curr) {
          if (sublabel === -1) return false;
 
          const gg = createGG(),
-               subpos = createSubPos();
+               subpos = createSubPos(),
+               reduce = (sublabel.length !== 1) ? 1 : (((sublabel >= 'a') && (sublabel <= 'z') && ('tdbfhkli'.indexOf(sublabel) < 0)) ? 0.75 : 0.9);
 
          parseLatex(gg, arg, sublabel, subpos);
 
          const minw = curr.fsize * 0.6,
-               y1 = Math.round(subpos.rect.y1),
+               y1 = Math.round(subpos.rect.y1*reduce),
                dy2 = Math.round(curr.fsize*0.1), dy = dy2*2,
                dot = `a${dy2},${dy2},0,0,1,${dy},0a${dy2},${dy2},0,0,1,${-dy},0z`;
          let xpos = 0, w = subpos.rect.width;
@@ -543,7 +553,7 @@ function parseLatex(node, arg, label, curr) {
             default: createPath(gg, `M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
          }
 
-         shiftX(subpos.rect.width);
+         shiftX(subpos.rect.width + (subpos.xgap ?? 0));
 
          continue;
       }
@@ -585,7 +595,8 @@ function parseLatex(node, arg, label, curr) {
       const extractLowUp = name => {
          const res = {};
          if (name) {
-            res[name] = extractSubLabel();
+            label = '{' + label;
+            res[name] = extractSubLabel(name === 'low' ? '_' : '^');
             if (res[name] === -1) return false;
          }
 
@@ -613,8 +624,9 @@ function parseLatex(node, arg, label, curr) {
          const subs = extractLowUp(found.low_up);
          if (!subs) return false;
 
-         const x = curr.x, y1 = -curr.fsize, y2 = 0.25*curr.fsize;
-         let pos_up, pos_low, w1 = 0, w2 = 0;
+         const x = curr.x, dx = 0.03*curr.fsize, ylow = 0.25*curr.fsize;
+
+         let pos_up, pos_low, w1 = 0, w2 = 0, yup = -curr.fsize;
 
          if (subs.up) {
             pos_up = createSubPos(0.6);
@@ -627,16 +639,17 @@ function parseLatex(node, arg, label, curr) {
          }
 
          if (pos_up) {
-            positionGNode(pos_up, x, y1 - pos_up.rect.y1 - curr.fsize*0.1);
+            if (!pos_low) yup = Math.min(yup, curr.rect.last_y1);
+            positionGNode(pos_up, x+dx, yup - pos_up.rect.y1 - curr.fsize*0.1);
             w1 = pos_up.rect.width;
          }
 
          if (pos_low) {
-            positionGNode(pos_low, x, y2 - pos_low.rect.y2 + curr.fsize*0.1);
+            positionGNode(pos_low, x+dx, ylow - pos_low.rect.y2 + curr.fsize*0.1);
             w2 = pos_low.rect.width;
          }
 
-         shiftX(Math.max(w1, w2));
+         shiftX(dx + Math.max(w1, w2));
 
          continue;
       }
@@ -1230,8 +1243,9 @@ function translateMath(str, kind, color, painter) {
       str = str.replace(/\\\./g, '\\unicode{0x2E}').replace(/\\\^/g, '\\hat');
       for (const x in mathjax_unicode)
          str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\unicode{0x${mathjax_unicode[x].toString(16)}}`);
-      for (const x in mathjax_asis)
-         str = str.replace(new RegExp(`(\\\\${mathjax_asis[x]})`, 'g'), `\\unicode{0x${mathjax_asis[x].charCodeAt(0).toString(16)}}`);
+      mathjax_asis.forEach(symbol => {
+         str = str.replace(new RegExp(`(\\\\${symbol})`, 'g'), `\\unicode{0x${symbol.charCodeAt(0).toString(16)}}`);
+      });
       for (const x in mathjax_remap)
          str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\${mathjax_remap[x]}`);
    }
@@ -1365,4 +1379,4 @@ async function typesetMathjax(node) {
    return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
 }
 
-export { symbols_map, translateLaTeX, producePlainText, isPlainText, produceLatex, loadMathjax, produceMathjax, typesetMathjax };
+export { symbols_map, translateLaTeX, producePlainText, isPlainText, produceLatex, loadMathjax, produceMathjax, typesetMathjax, approximateLabelWidth };

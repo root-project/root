@@ -103,7 +103,7 @@ class TScatterPainter extends TGraphPainter {
          }
 
          if (maxs <= mins)
-            maxs = mins > 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
+            maxs = mins < 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
 
          scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
          offset = mins;
