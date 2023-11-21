@@ -18,10 +18,6 @@
 \file RooAbsMoment.cxx
 \class RooAbsMoment
 \ingroup Roofitcore
-
-RooAbsMoment represents the first, second, or third order derivative
-of any RooAbsReal as calculated (numerically) by the MathCore Richardson
-derivator class.
 **/
 
 #include <RooAbsMoment.h>
