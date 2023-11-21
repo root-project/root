@@ -8895,6 +8895,7 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
          break;
       default:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
          break;
    }
 

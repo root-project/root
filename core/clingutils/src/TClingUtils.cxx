@@ -4442,6 +4442,7 @@ bool ROOT::TMetaUtils::IsDeclReacheable(const clang::Decl &decl)
          return !ctxt || IsCtxtReacheable(*ctxt);
       default:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
          return false;
    }
 }
