@@ -23,6 +23,9 @@ class TF2Painter extends TH2Painter {
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
 
+   /** @summary Returns primary function which was then drawn as histogram */
+   getPrimaryObject() { return this.$func; }
+
    /** @summary Update histogram */
    updateObject(obj /*, opt */) {
       if (!obj || (this.getClassName() !== obj._typename)) return false;
@@ -53,7 +56,7 @@ class TF2Painter extends TH2Painter {
 
    /** @summary Create histogram for TF2 drawing
      * @private */
-   createTF2Histogram(func, hist = undefined) {
+   createTF2Histogram(func, hist) {
       let nsave = func.fSave.length - 6;
       if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
          nsave = 0;

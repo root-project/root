@@ -1,6 +1,5 @@
 import { gStyle, isStr, kNoZoom, kInspect } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { floatToString, TRandom, addHighlightStyle } from '../base/BasePainter.mjs';
 import { RHistPainter } from './RHistPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
@@ -494,8 +493,8 @@ class RH2Painter extends RHistPainter {
 
             switch (this.options.Contour) {
                case 1: break;
-               case 11: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: icol }); break;
-               case 12: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: 1, style: (colindx%5 + 1), width: 1 }); break;
+               case 11: fillcolor = 'none'; lineatt = this.createAttLine({ color: icol, std: false }); break;
+               case 12: fillcolor = 'none'; lineatt = this.createAttLine({ color: 1, style: (colindx%5 + 1), width: 1, std: false }); break;
                case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
                case 14: break;
             }

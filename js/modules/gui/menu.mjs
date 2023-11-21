@@ -107,7 +107,7 @@ class JSRootMenu {
       for (let i = 1; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
              group = i+1;
-         if ((opts.length > 5) && name) {
+         if (opts.length > 5) {
             // check if there are similar options, which can be grouped once again
             while ((group < opts.length) && (opts[group].indexOf(name) === 0)) group++;
          }

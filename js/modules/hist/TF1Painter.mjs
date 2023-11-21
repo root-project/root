@@ -10,7 +10,7 @@ import * as jsroot_math from '../base/math.mjs';
   * @private */
 
 function proivdeEvalPar(obj, check_save) {
-   obj._math = jsroot_math;
+   obj.$math = jsroot_math;
 
    let _func = obj.fTitle, isformula = false, pprefix = '[';
    if (_func === 'gaus') _func = 'gaus(0)';
@@ -58,14 +58,13 @@ function proivdeEvalPar(obj, check_save) {
                 .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
                 .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
-                .replace(/\bxygaus\(/g, 'this._math.gausxy(this, x, y, ')
-                .replace(/\bgaus\(/g, 'this._math.gaus(this, x, ')
-                .replace(/\bgausn\(/g, 'this._math.gausn(this, x, ')
-                .replace(/\bexpo\(/g, 'this._math.expo(this, x, ')
-                .replace(/\blandau\(/g, 'this._math.landau(this, x, ')
-                .replace(/\blandaun\(/g, 'this._math.landaun(this, x, ')
-                .replace(/\bTMath::/g, 'this._math.')
-                .replace(/\bROOT::Math::/g, 'this._math.');
+                .replace(/\bxygaus\(/g, 'this.$math.gausxy(this, x, y, ')
+                .replace(/\bgaus\(/g, 'this.$math.gaus(this, x, ')
+                .replace(/\bgausn\(/g, 'this.$math.gausn(this, x, ')
+                .replace(/\bexpo\(/g, 'this.$math.expo(this, x, ')
+                .replace(/\blandau\(/g, 'this.$math.landau(this, x, ')
+                .replace(/\blandaun\(/g, 'this.$math.landaun(this, x, ')
+                .replace(/\b(TMath::|ROOT::Math::)/g, 'this.$math.');
 
    if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
       _func = '[0]';
@@ -74,7 +73,7 @@ function proivdeEvalPar(obj, check_save) {
    }
 
    if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
-      _func = `this._math.ChebyshevN(${obj.fNpar-1}, x, `;
+      _func = `this.$math.ChebyshevN(${obj.fNpar-1}, x, `;
       for (let k = 0; k < obj.fNpar; ++k)
          _func += (k === 0 ? '[' : ', ') + `[${k}]`;
       _func += '])';
@@ -173,7 +172,7 @@ function produceTAxisLogScale(axis, num, min, max) {
       lmin = min > 0 ? Math.log(min) : lmax - 5;
    } else {
       lmax = -10;
-      lmax = -15;
+      lmin = -15;
    }
 
    axis.fNbins = num;
@@ -200,6 +199,9 @@ class TF1Painter extends TH1Painter {
 
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
+
+   /** @summary Returns primary function which was then drawn as histogram */
+   getPrimaryObject() { return this.$func; }
 
    /** @summary Update function */
    updateObject(obj /*, opt */) {
@@ -304,14 +306,10 @@ class TF1Painter extends TH1Painter {
          xmax = tf1.fSave[np + 2];
 
          if (xmin === xmax) {
-            xmin = tf1.fSave[np];
+            // xmin = tf1.fSave[np];
             const mp = this.getMainPainter();
             if (isFunc(mp?.getHisto))
                custom_xaxis = mp?.getHisto()?.fXaxis;
-            if (!custom_xaxis) {
-               xmin = tf1.fXmin;
-               xmax = tf1.fXmax;
-            }
          }
 
          if (custom_xaxis) {

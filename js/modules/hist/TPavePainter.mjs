@@ -5,8 +5,6 @@ import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3
 import { Prob } from '../base/math.mjs';
 import { floatToString, makeTranslate, compressSVG, svgToImage, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { showPainterMenu } from '../gui/menu.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
@@ -198,7 +196,7 @@ class TPavePainter extends ObjectPainter {
 
       return promise.then(() => {
          // fill stats before drawing to have coordinates early
-         if (this.isStats() && !this.NoFillStats && !pp?._fast_drawing) {
+         if (this.isStats() && !this.NoFillStats && !pp._fast_drawing) {
             const main = pt.$main_painter || this.getMainPainter();
 
             if (isFunc(main?.fillStatistic)) {
@@ -410,7 +408,7 @@ class TPavePainter extends ObjectPainter {
        else {
           for (let j = 0; j < nlines; ++j) {
             const y = j*stepy,
-                color = (colors[j] > 1) ? this.getColor(colors[j]) : this.textatt.color;
+                  color = (colors[j] > 1) ? this.getColor(colors[j]) : this.textatt.color;
 
             if (first_stat && (j >= first_stat)) {
                const parts = lines[j].split('|');
@@ -433,7 +431,7 @@ class TPavePainter extends ObjectPainter {
                for (let n = 0; n < 2; ++n) {
                   const arg = {
                      align: (n === 0) ? 'start' : 'end', x: margin_x, y,
-                     width: width-2*margin_x, height: stepy, text: parts[n], color,
+                     width: width - 2*margin_x, height: stepy, text: parts[n], color,
                      _expected_width: width-2*margin_x, _args: args,
                      post_process(painter) {
                        if (this._args[0].ready && this._args[1].ready)
@@ -471,7 +469,7 @@ class TPavePainter extends ObjectPainter {
    /** @summary draw TPaveText object */
    drawPaveText(width, height, _dummy_arg, text_g) {
       const pt = this.getObject(),
-            arr = pt?.fLines?.arr || [],
+            arr = pt.fLines?.arr || [],
             nlines = arr.length,
             pp = this.getPadPainter(),
             pad_height = pp.getPadHeight(),
@@ -489,7 +487,7 @@ class TPavePainter extends ObjectPainter {
 
       if (!text_g) text_g = this.draw_g;
 
-      const fast = (nlines === 1) && pp?._fast_drawing;
+      const fast = (nlines === 1) && pp._fast_drawing;
       let num_default = 0;
 
       for (let nline = 0; nline < nlines; ++nline) {
@@ -535,7 +533,7 @@ class TPavePainter extends ObjectPainter {
                      lx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
                      ly1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty + stepy*0.5),
                      ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5),
-                     lineatt = new TAttLineHandler(entry);
+                     lineatt = this.createAttLine(entry);
                text_g.append('svg:path')
                      .attr('d', `M${lx1},${ly1}L${lx2},${ly2}`)
                      .call(lineatt.func);
@@ -641,11 +639,10 @@ class TPavePainter extends ObjectPainter {
       if (ncols > 1) {
          const column_weight = new Array(ncols).fill(1);
 
-         for (let ii = 0, i = -1; ii < nlines; ++ii) {
+         for (let ii = 0; ii < nlines; ++ii) {
             const entry = legend.fPrimitives.arr[ii];
             if (isEmpty(entry)) continue; // let discard empty entry
-            if (ncols === 1) ++i; else i = ii;
-            const icol = i % ncols;
+            const icol = ii % ncols;
             column_weight[icol] = Math.max(column_weight[icol], entry.fLabel.length);
          }
 
@@ -654,7 +651,7 @@ class TPavePainter extends ObjectPainter {
             sum_weight += column_weight[icol];
          for (let icol = 0; icol < ncols-1; ++icol)
             column_pos[icol+1] = column_pos[icol] + legend.fMargin*w/ncols + column_weight[icol] * (1-legend.fMargin) * w / sum_weight;
-       }
+      }
       column_pos[ncols] = w;
 
       const padding_x = Math.round(0.03*w/ncols),
@@ -706,12 +703,13 @@ class TPavePainter extends ObjectPainter {
             painter = pp.findPainterFor(mo);
          }
 
+
          // Draw fill pattern (in a box)
          if (draw_fill) {
             const fillatt = painter?.fillatt?.used ? painter.fillatt : this.createAttFill(o_fill);
             let lineatt;
             if (!draw_line && !draw_error && !draw_marker) {
-               lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
+               lineatt = painter?.lineatt?.used ? painter.lineatt : this.createAttLine(o_line);
                if (lineatt.empty()) lineatt = null;
             }
 
@@ -730,7 +728,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw line and/or error (when specified)
          if (draw_line || draw_error) {
-            const lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
+            const lineatt = painter?.lineatt?.used ? painter.lineatt : this.createAttLine(o_line);
             if (!lineatt.empty()) {
                isany = true;
                if (draw_line) {
@@ -770,7 +768,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw Polymarker
          if (draw_marker) {
-            const marker = painter?.markeratt?.used ? painter.markeratt : new TAttMarkerHandler(o_marker);
+            const marker = painter?.markeratt?.used ? painter.markeratt : this.createAttMarker(o_marker);
             if (!marker.empty()) {
                isany = true;
                this.draw_g
@@ -835,10 +833,10 @@ class TPavePainter extends ObjectPainter {
             framep = this.getFramePainter(),
             contour = main.fContour,
             levels = contour?.getLevels(),
-            is_th3 = isFunc(main?.getDimension) && (main.getDimension() === 3),
+            is_th3 = isFunc(main.getDimension) && (main.getDimension() === 3),
             log = (is_th3 ? pad?.fLogv : pad?.fLogz) ?? 0,
             draw_palette = main._color_palette,
-            zaxis = main?.getObject()?.fZaxis,
+            zaxis = main.getObject()?.fZaxis,
             sizek = pad?.fTickz ? 0.35 : 0.7;
 
       let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '', axis_second = 0;

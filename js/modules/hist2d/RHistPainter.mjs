@@ -632,7 +632,7 @@ class RHistPainter extends RObjectPainter {
 
          menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
+         menu.addchk(fp?.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
             if (!fp.enable_highlight && main.mode3d && isFunc(main.highlightBin3D))
                main.highlightBin3D(null);

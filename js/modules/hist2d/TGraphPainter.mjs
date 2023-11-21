@@ -5,8 +5,7 @@ import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '..
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-import { TAttFillHandler } from '../base/TAttFillHandler.mjs';
+import { kBlack, kWhite } from '../base/colors.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
 
@@ -685,7 +684,7 @@ class TGraphPainter extends ObjectPainter {
                   fpcol = !fp?.fillatt?.empty() ? fp.fillatt.getFillColor() : -1;
 
             if (fpcol === fillatt.getFillColor())
-               usefill = new TAttFillHandler({ color: fpcol === 'white' ? 1 : 0, pattern: 1001 });
+               usefill = this.createAttFill({ color: fpcol === 'white' ? kBlack : kWhite, pattern: 1001, std: false });
          }
 
          nodes.append('svg:path')
@@ -853,8 +852,8 @@ class TGraphPainter extends ObjectPainter {
          path2 += makeLine(xqmax, yqmax, funcs.scale_xmax, yxmax);
 
 
-      const latt1 = new TAttLineHandler({ style: 1, width: 1, color: 'black' }),
-            latt2 = new TAttLineHandler({ style: 2, width: 1, color: 'black' });
+      const latt1 = this.createAttLine({ style: 1, width: 1, color: kBlack, std: false }),
+            latt2 = this.createAttLine({ style: 2, width: 1, color: kBlack, std: false });
 
       this.draw_g.append('path')
                  .attr('d', makeLine(xqmin, yqmin, xqmax, yqmax))
@@ -917,8 +916,8 @@ class TGraphPainter extends ObjectPainter {
          for (let k = 0; k < graph.fNYErrors; ++k) {
             let lineatt = this.lineatt, fillatt = this.fillatt;
             if (this.options.individual_styles) {
-               lineatt = new TAttLineHandler({ attr: graph.fAttLine[k], std: false });
-               fillatt = new TAttFillHandler({ attr: graph.fAttFill[k], std: false, svg: this.getCanvSvg() });
+               lineatt = this.createAttLine({ attr: graph.fAttLine[k], std: false });
+               fillatt = this.createAttFill({ attr: graph.fAttFill[k], std: false });
             }
             const sub_g = this.draw_g.append('svg:g'),
                 options = (k < this.options.blocks.length) ? this.options.blocks[k] : this.options;

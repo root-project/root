@@ -392,9 +392,9 @@ class TCanvasPainter extends TPadPainter {
          this.websocketTimeout(`proj${kind}`, 'reset');
          this.drawProjection(kind, hist);
       } else if (msg.slice(0, 5) === 'CTRL:') {
-         const ctrl = parse(msg.slice(5));
+         const ctrl = parse(msg.slice(5)) || {};
          let resized = false;
-         if ((ctrl?.title !== undefined) && (typeof document !== 'undefined'))
+         if ((ctrl.title !== undefined) && (typeof document !== 'undefined'))
             document.title = ctrl.title;
          if (ctrl.x && ctrl.y && typeof window !== 'undefined') {
             window.moveTo(ctrl.x, ctrl.y);

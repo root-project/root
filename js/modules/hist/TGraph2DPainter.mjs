@@ -3,7 +3,6 @@ import { settings, createHistogram, setHistogramTitle, kNoZoom,
 import { Color, DoubleSide, LineBasicMaterial, MeshBasicMaterial, Mesh } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { Triangles3DHandler } from '../hist2d/TH2Painter.mjs';
 import { createLineSegments, PointsCreator, getMaterialArgs } from '../base/base3d.mjs';
@@ -23,7 +22,7 @@ function getMin(arr) {
    return v;
 }
 
-function TMath_Sort(np, values, indicies, down) {
+function TMath_Sort(np, values, indicies /*, down */) {
    const arr = new Array(np);
    for (let i = 0; i < np; ++i)
       arr[i] = { v: values[i], i };
@@ -531,7 +530,7 @@ class TGraphDelaunay {
       }
 
       // sort array 'fDist' to find closest points
-      TMath_Sort(this.fNpoints, this.fDist, this.fOrder, false);
+      TMath_Sort(this.fNpoints, this.fDist, this.fOrder /*, false */);
       for (it=0; it<this.fNpoints; it++) this.fOrder[it]++;
 
       // loop over triplets of close points to try to find a triangle that
@@ -644,7 +643,7 @@ class TGraphDelaunay {
                      continue; // goto L50;
                   }
 
-                  if (skip_this_triangle) break;
+                  if (skip_this_triangle) break; // deepscan-disable-line
 
    ///            Error("Interpolate", "Should not get to here");
                   // may as well soldier on
@@ -682,17 +681,11 @@ class TGraphDelaunay {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f = m;
-                           o1 = p;
-                           o2 = n;
+                           f = m; o1 = p; o2 = n; // deepscan-disable-line
                         } else if (l === 2) {
-                           f = p;
-                           o1 = n;
-                           o2 = m;
+                           f = p; o1 = n; o2 = m;
                         } else {
-                           f = n;
-                           o1 = m;
-                           o2 = p;
+                           f = n; o1 = m; o2 = p;
                         }
                         break; // goto L2;
                      }
@@ -807,7 +800,7 @@ class TGraphDelaunay {
             }
          }
       }
-      if (shouldbein)
+      if (shouldbein) // deepscan-disable-line
          console.error(`Interpolate Point outside hull when expected inside: this point could be dodgy ${xx}  ${yy} ${ntris_tried}`);
       return thevalue;
    }
@@ -1159,7 +1152,7 @@ class TGraph2DPainter extends ObjectPainter {
          }
       }
 
-      const markeratt = new TAttMarkerHandler(graph),
+      const markeratt = this.createAttMarker({ attr: graph, std: false }),
             promises = [];
       let palette = null,
           levels = [fp.scale_zmin, fp.scale_zmax],

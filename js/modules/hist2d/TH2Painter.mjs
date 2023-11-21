@@ -1,8 +1,7 @@
 import { gStyle, createHistogram, createTPolyLine, isFunc, isStr,
          clTMultiGraph, clTH1D, clTF2, clTProfile2D, kInspect } from '../core.mjs';
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
+import { kBlack } from '../base/colors.mjs';
 import { TRandom, floatToString, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { EAxisBits } from '../base/ObjectPainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -97,7 +96,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          for (k = 0; k < 4; k++)
             ir[k] = LevelSearch(zc[k]);
 
-         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
+         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) { // deepscan-disable-line
             x[3] = x[0] = (arrx[i] + arrx[i+1])/2;
             x[2] = x[1] = (arrx[i+1] + arrx[i+2])/2;
 
@@ -391,7 +390,7 @@ class Triangles3DHandler {
 
                // check if any(contours for given level exists
                if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1))) // deepscan-disable-line
                       ++ngridsegments;
 
                continue;
@@ -1422,8 +1421,8 @@ class TH2Painter extends THistPainter {
 
          switch (this.options.Contour) {
             case 1: break;
-            case 11: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: icol }); break;
-            case 12: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: 1, style: (ipoly%5 + 1), width: 1 }); break;
+            case 11: fillcolor = 'none'; lineatt = this.createAttLine({ color: icol, std: false }); break;
+            case 12: fillcolor = 'none'; lineatt = this.createAttLine({ color: 1, style: (ipoly%5 + 1), width: 1, std: false }); break;
             case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
             case 14: break;
          }
@@ -2038,7 +2037,7 @@ class TH2Painter extends THistPainter {
          markers += swapXY ? this.markeratt.create(y, x) : this.markeratt.create(x, y);
       }, make_cmarker = (x, y) => {
          if (!attrcmarkers) {
-            attrcmarkers = new TAttMarkerHandler({ attr: histo, style: 24 });
+            attrcmarkers = this.createAttMarker({ attr: histo, style: 24, std: false });
             attrcmarkers.resetPos();
          }
          cmarkers += swapXY ? attrcmarkers.create(y, x) : attrcmarkers.create(x, y);
@@ -2302,7 +2301,7 @@ class TH2Painter extends THistPainter {
       }
 
       if (dashed_lines) {
-         const dashed = new TAttLineHandler({ attr: histo, style: 2 });
+         const dashed = this.createAttLine({ attr: histo, style: 2, std: false, color: kBlack });
          this.draw_g.append('svg:path')
              .attr('d', dashed_lines)
              .call(dashed.func)

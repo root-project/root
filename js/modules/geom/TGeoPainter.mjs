@@ -238,7 +238,7 @@ function expandGeoObject(parent, obj) {
    }
 
    if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) {
+      if (!parent._childs) { // deepscan-disable-line
          createItem(parent, shape.fNode.fLeft, 'Left');
          createItem(parent, shape.fNode.fRight, 'Right');
       }
@@ -2906,7 +2906,7 @@ class TGeoPainter extends ObjectPainter {
          return res;
       }
 
-      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl)
+      if (!this._lookat || !this._camera0pos)
          return '';
 
       const pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),

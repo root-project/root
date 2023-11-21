@@ -80,7 +80,7 @@ class RFramePainter extends RObjectPainter {
    recalculateRange(Proj) {
       this.projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90 || this.scale_ymax >=90))) {
+      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >=90))) {
          console.warn(`Mercator Projection: latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
          this.projection = 0;
       }
@@ -1095,8 +1095,10 @@ class RFramePainter extends RObjectPainter {
 
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
       menu.add('separator');
-      menu.add('Save as frame.png', () => this.getPadPainter().saveAs('png', 'frame', 'frame.png'));
-      menu.add('Save as frame.svg', () => this.getPadPainter().saveAs('svg', 'frame', 'frame.svg'));
+
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => this.getPadPainter().saveAs(fmt, 'frame', `frame.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }

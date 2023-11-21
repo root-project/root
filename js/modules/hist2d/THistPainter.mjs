@@ -206,8 +206,10 @@ class THistDrawOptions {
          return false;
       };
 
-      if (d.check('FILL_', true) && d.getColor())
+      if (d.check('FILL_', true) && d.getColor()) {
          this.histoFillColor = d.color;
+         this.histoFillPattern = 1001;
+      }
 
       if (d.check('LINE_', true) && d.getColor())
          this.histoLineColor = getColor(d.color);
@@ -437,7 +439,7 @@ class THistDrawOptions {
           (((this.Surf > 0) || this.Error) && (hdim === 2))) this.Mode3D = true;
 
       // default draw options for TF1 is line and fill
-      if (painter.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve && !this.Mark) {
+      if (painter?.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve && !this.Mark) {
          this.Hist = false;
          this.Curve = settings.FuncAsCurve;
          this.Line = !this.Curve;
@@ -953,7 +955,7 @@ class THistPainter extends ObjectPainter {
          }
       }
 
-      this.createAttFill({ attr: histo, color: this.options.histoFillColor, kind: 1 });
+      this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
 
       this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
    }
@@ -1689,7 +1691,7 @@ class THistPainter extends ObjectPainter {
 
          menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
+         menu.addchk(fp?.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
             if (!fp.enable_highlight && fp.mode3d && isFunc(fp.highlightBin3D))
                fp.highlightBin3D(null);

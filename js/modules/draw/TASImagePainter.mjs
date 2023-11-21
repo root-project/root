@@ -127,7 +127,7 @@ class TASImagePainter extends ObjectPainter {
 
       let offx = 0, offy = 0, sizex = width, sizey = height;
 
-      if (constRatio && fp) {
+      if (constRatio) {
          const image_ratio = height/width,
                frame_ratio = fp.getFrameHeight() / fp.getFrameWidth();
 

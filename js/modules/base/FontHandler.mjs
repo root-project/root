@@ -1,16 +1,25 @@
-const root_fonts = ['Arial', 'iTimes New Roman',
-      'bTimes New Roman', 'biTimes New Roman', 'Arial',
-      'oArial', 'bArial', 'boArial', 'Courier New',
-      'oCourier New', 'bCourier New', 'boCourier New',
-      'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol',
-      'Verdana', 'iVerdana', 'bVerdana', 'biVerdana'],
-// taken from symbols.html, counted only for letters and digits
-root_fonts_aver_width = [0.5778, 0.5314,
-      0.5809, 0.5540, 0.5778,
-      0.5783, 0.6034, 0.6030, 0.6003,
-      0.6004, 0.6003, 0.6005,
-      0.5521, 0.5521, 0.5664, 0.5314,
-      0.5664, 0.5495, 0.5748, 0.5578];
+const kArial = 'Arial', kTimes = 'Times New Roman', kCourier = 'Courier New', kVerdana = 'Verdana', kSymbol = 'Symbol', kWingdings = 'Wingdings',
+// average width taken from symbols.html, counted only for letters and digits
+root_fonts = [null,  // index 0 not exists
+      { n: kTimes, s: 'italic', aw: 0.5314 },
+      { n: kTimes, w: 'bold', aw: 0.5809 },
+      { n: kTimes, s: 'italic', w: 'bold', aw: 0.5540 },
+      { n: kArial, aw: 0.5778 },
+      { n: kArial, s: 'oblique', aw: 0.5783 },
+      { n: kArial, w: 'bold', aw: 0.6034 },
+      { n: kArial, s: 'oblique', w: 'bold', aw: 0.6030 },
+      { n: kCourier, aw: 0.6003 },
+      { n: kCourier, s: 'oblique', aw: 0.6004 },
+      { n: kCourier, w: 'bold', aw: 0.6003 },
+      { n: kCourier, s: 'oblique', w: 'bold', aw: 0.6005 },
+      { n: kSymbol, aw: 0.5521 },
+      { n: kTimes, aw: 0.5521 },
+      { n: kWingdings, aw: 0.5664 },
+      { n: kSymbol, s: 'italic', aw: 0.5314 },
+      { n: kVerdana, aw: 0.5664 },
+      { n: kVerdana, s: 'italic', aw: 0.5495 },
+      { n: kVerdana, w: 'bold', aw: 0.5748 },
+      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }];
 
 /**
  * @summary Helper class for font handling
@@ -20,11 +29,7 @@ root_fonts_aver_width = [0.5778, 0.5314,
 class FontHandler {
 
    /** @summary constructor */
-   constructor(fontIndex, size, scale, name, style, weight) {
-      this.name = 'Arial';
-      this.style = null;
-      this.weight = null;
-
+   constructor(fontIndex, size, scale) {
       if (scale && (size < 1)) {
          size *= scale;
          this.scaled = true;
@@ -33,49 +38,62 @@ class FontHandler {
       this.size = Math.round(size || 11);
       this.scale = scale;
 
-      if (fontIndex !== null) {
-         const indx = Math.floor(fontIndex / 10);
-         let fontName = root_fonts[indx] || 'Arial';
+      this.func = this.setFont.bind(this);
 
-         while (fontName) {
-            if (fontName[0] === 'b')
-               this.weight = 'bold';
-            else if (fontName[0] === 'i')
-               this.style = 'italic';
-            else if (fontName[0] === 'o')
-               this.style = 'oblique';
-            else
-               break;
-            fontName = fontName.slice(1);
-         }
+      const indx = (fontIndex && Number.isInteger(fontIndex)) ? Math.floor(fontIndex / 10) : 0,
+            cfg = root_fonts[indx];
 
-         this.name = fontName;
-         this.aver_width = root_fonts_aver_width[indx] || 0.55;
-      } else {
-         this.name = name;
-         this.style = style || null;
-         this.weight = weight || null;
-         this.aver_width = this.weight ? 0.58 : 0.55;
-      }
+      if (cfg)
+         this.setNameStyleWeight(cfg.n, cfg.s, cfg.w, cfg.aw, cfg.format, cfg.base64);
+      else
+         this.setNameStyleWeight(kArial);
+   }
 
-      if ((this.name === 'Symbol') || (this.name === 'Wingdings')) {
+   /** @summary Directly set name, style and weight for the font
+    * @private */
+   setNameStyleWeight(name, style, weight, aver_width, format, base64) {
+      this.name = name;
+      this.style = style || null;
+      this.weight = weight || null;
+      this.aver_width = aver_width || (weight ? 0.58 : 0.55);
+      this.format = format; // format of custom font, ttf by default
+      this.base64 = base64; // indication of custom font
+      if ((this.name === kSymbol) || (this.name === kWingdings)) {
          this.isSymbol = this.name;
-         this.name = 'Times New Roman';
+         this.name = kTimes;
       } else
          this.isSymbol = '';
+   }
 
-      this.func = this.setFont.bind(this);
+   /** @summary Set painter for which font will be applied */
+   setPainter(painter) {
+      this.painter = painter;
    }
 
    /** @summary Assigns font-related attributes */
-   setFont(selection, arg) {
-      selection.attr('font-family', this.name);
-      if (arg !== 'without-size') {
-         selection.attr('font-size', this.size)
-                  .attr('xml:space', 'preserve');
+   setFont(selection) {
+      if (this.base64 && this.painter) {
+         const svg = this.painter.getCanvSvg(),
+               clname = 'custom_font_' + this.name,
+               fmt = 'ttf';
+         let defs = svg.selectChild('.canvas_defs');
+         if (defs.empty())
+            defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+         const entry = defs.selectChild('.' + clname);
+         if (entry.empty()) {
+            defs.append('style')
+                .attr('type', 'text/css')
+                .attr('class', clname)
+                .property('$fonthandler', this)
+                .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url('data:application/font-${fmt};charset=utf-8;base64,${this.base64}') }`);
+         }
       }
-      selection.attr('font-weight', this.weight || null);
-      selection.attr('font-style', this.style || null);
+
+      selection.attr('font-family', this.name)
+               .attr('font-size', this.size)
+               .attr('xml:space', 'preserve')
+               .attr('font-weight', this.weight || null)
+               .attr('font-style', this.style || null);
    }
 
    /** @summary Set font size (optional) */
@@ -133,4 +151,54 @@ class FontHandler {
 
 } // class FontHandler
 
-export { FontHandler };
+/** @summary Register custom font
+  * @private */
+function addCustomFont(index, name, format, base64) {
+   if (!Number.isInteger(index))
+      console.error(`Wrong index ${index} for custom font`);
+   else
+      root_fonts[index] = { n: name, format, base64 };
+}
+
+/** @summary Try to detect and create font handler for SVG text node
+  * @private */
+function detectFont(node) {
+   const sz = node.getAttribute('font-size'),
+         family = node.getAttribute('font-family'),
+         p = sz.indexOf('px'),
+         sz_pixels = p > 0 ? Number.parseInt(sz.slice(0, p)) : 12;
+   let style = node.getAttribute('font-style'),
+       weight = node.getAttribute('font-weight'),
+      fontIndx = null, name = '';
+   if (weight === 'normal')
+      weight = '';
+   else if (weight === 'bold')
+      name += 'b';
+   if (style === 'normal')
+      style = '';
+   else if (style === 'italic')
+      name += 'i';
+   else if (style === 'oblique')
+      name += 'o';
+
+   if (family === 'arial')
+      name += 'Arial';
+   else if (family === 'times')
+      name += 'Times New Roman';
+   else if (family === 'verdana')
+      name += 'Verdana';
+
+   for (let n = 1; n < root_fonts.length; ++n) {
+      if (name === root_fonts[n]) {
+         fontIndx = n*10 + 2;
+         break;
+      }
+   }
+
+   const handler = new FontHandler(fontIndx, sz_pixels);
+   if (!fontIndx)
+      handler.setNameStyleWeight(family, style, weight);
+   return handler;
+}
+
+export { FontHandler, addCustomFont, detectFont };

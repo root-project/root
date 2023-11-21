@@ -1439,7 +1439,7 @@ class PointsCreator {
      * @param {boolean} [iswebgl] - if WebGL is used
      * @param {number} [scale] - scale factor */
    constructor(number, iswebgl = true, scale = 1) {
-      this.webgl = (iswebgl === undefined) ? true : iswebgl;
+      this.webgl = iswebgl;
       this.scale = scale || 1;
 
       this.pos = new Float32Array(number*3);
