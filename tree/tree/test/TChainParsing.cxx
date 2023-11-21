@@ -7,11 +7,12 @@
 #include "TTree.h"
 
 #include "ROOT/InternalTreeUtils.hxx"
+#include <ROOT/FoundationUtils.hxx>
 
 #include "gtest/gtest.h"
 
-template <typename T>
-void EXPECT_VEC_EQ(const std::vector<T> &v1, const std::vector<T> &v2)
+template <typename T1, typename T2>
+void EXPECT_VEC_EQ(const std::vector<T1> &v1, const std::vector<T2> &v2)
 {
    ASSERT_EQ(v1.size(), v2.size());
    for (std::size_t i = 0ul; i < v1.size(); ++i) {
@@ -184,6 +185,92 @@ TEST(TChainParsing, GlobbingWithNonExistingDir)
    }
 }
 
+std::vector<std::string> GetFileNamesVec(const TObjArray *chainFiles)
+{
+   std::vector<std::string> chainFileNames;
+   chainFileNames.reserve(chainFiles->GetEntries());
+   for (const auto *obj : *chainFiles) {
+      chainFileNames.push_back(obj->GetTitle());
+   }
+   return chainFileNames;
+}
+
+TEST(TChainParsing, RecursiveGlob)
+{
+   // Need to change working directory to ensure "*" only adds files we create here.
+   auto testDir = "testdir";
+   ASSERT_EQ(gSystem->mkdir(testDir), 0);
+   gSystem->ChangeDirectory(testDir);
+
+   const auto *cwd = gSystem->WorkingDirectory();
+
+   ASSERT_EQ(gSystem->mkdir("testglob"), 0);
+   ASSERT_EQ(gSystem->mkdir("testglob/subdir1"), 0);
+   ASSERT_EQ(gSystem->mkdir("testglob/subdir1/subdir11"), 0);
+   ASSERT_EQ(gSystem->mkdir("testglob/subdir2"), 0);
+   ASSERT_EQ(gSystem->mkdir("testglob/subdir2/subdir21"), 0);
+   ASSERT_EQ(gSystem->mkdir("testglob/subdir3"), 0);
+
+   // Unsorted to also test sorting the final list of globbed files.
+   std::vector<std::string> fileNames{"0a.root",
+                                      "testglob/subdir1/1a.root",
+                                      "testglob/subdir1/1b.root",
+                                      "testglob/subdir3/3a.root",
+                                      "testglob/subdir2/subdir21/21a.root",
+                                      "testglob/subdir2/subdir21/21b.root",
+                                      "testglob/subdir1/subdir11/11b.root",
+                                      "testglob/subdir1/subdir11/11a.root"};
+   for (const auto &fileName : fileNames) {
+      FillTree(fileName.c_str(), "events");
+   }
+
+   TChain nodir, none, nested, globDir;
+
+   nodir.Add("*");
+   const auto *nodirFiles = nodir.GetListOfFiles();
+   ASSERT_TRUE(nodirFiles);
+   EXPECT_EQ(nodirFiles->GetEntries(), 1);
+   auto expectedFileNameNodir = gSystem->ConcatFileName(cwd, "0a.root");
+   EXPECT_STREQ(nodirFiles->At(0)->GetTitle(), gSystem->UnixPathName(expectedFileNameNodir));
+   delete[] expectedFileNameNodir;
+
+   none.Add("testglob/*");
+   const auto *noneChainFiles = none.GetListOfFiles();
+   ASSERT_TRUE(noneChainFiles);
+   EXPECT_EQ(noneChainFiles->GetEntries(), 0);
+
+   nested.Add("testglob/*/*/*.root");
+   const auto *nestedChainFiles = nested.GetListOfFiles();
+   ASSERT_TRUE(nestedChainFiles);
+   EXPECT_EQ(nestedChainFiles->GetEntries(), 4);
+   std::vector<std::string> expectedFileNamesNested{
+      "testglob/subdir1/subdir11/11a.root", "testglob/subdir1/subdir11/11b.root", "testglob/subdir2/subdir21/21a.root",
+      "testglob/subdir2/subdir21/21b.root"};
+   auto nestedChainFileNames = GetFileNamesVec(nestedChainFiles);
+   EXPECT_VEC_EQ(nestedChainFileNames, expectedFileNamesNested);
+
+   globDir.Add("*/subdir[0-9]/*");
+   const auto *globDirChainFiles = globDir.GetListOfFiles();
+   ASSERT_TRUE(globDirChainFiles);
+   EXPECT_EQ(globDirChainFiles->GetEntries(), 3);
+   std::vector<char *> expectedFileNamesGlobDir{gSystem->ConcatFileName(cwd, "testglob/subdir1/1a.root"),
+                                                gSystem->ConcatFileName(cwd, "testglob/subdir1/1b.root"),
+                                                gSystem->ConcatFileName(cwd, "testglob/subdir3/3a.root")};
+   auto globDirChainFileNames = GetFileNamesVec(globDirChainFiles);
+   for (std::size_t i = 0; i < expectedFileNamesGlobDir.size(); i++) {
+      EXPECT_EQ(globDirChainFileNames[i], gSystem->UnixPathName(expectedFileNamesGlobDir[i]));
+      // The docs of `ConcatFileName` tell us we should delete the string
+      delete[] expectedFileNamesGlobDir[i];
+   }
+
+   gSystem->ChangeDirectory("../");
+#if defined(_WIN32) || defined(_WIN64)
+   gSystem->Exec(Form("rmdir /s /q %s", testDir));
+#else
+   gSystem->Exec(Form("rm -rf %s", testDir));
+#endif
+}
+
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 // No XRootD support on Windows
 TEST(TChainParsing, RemoteGlob)
@@ -201,12 +288,7 @@ TEST(TChainParsing, RemoteGlob)
       "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleElectron.root",
       "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root"};
 
-   std::vector<std::string> chainFileNames;
-   chainFileNames.reserve(chainFiles->GetEntries());
-   for (const auto *obj : *chainFiles) {
-      chainFileNames.push_back(obj->GetTitle());
-   }
-
+   auto chainFileNames = GetFileNamesVec(chainFiles);
    EXPECT_VEC_EQ(chainFileNames, expectedFileNames);
 }
 #endif
