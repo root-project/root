@@ -3,7 +3,9 @@
 
 #include "CustomStruct.hxx"
 
+#include <map>
 #include <set>
 #include <unordered_set>
+#include <utility>
 
 #endif // ROOT7_RNTuple_Test_ProxiedSTLContainer
