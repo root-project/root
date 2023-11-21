@@ -32,23 +32,6 @@
 
 using namespace std;
 
-RooStats::HistFactory::Channel::Channel() :
-  fName( "" )
-{
-  // standard constructor
-}
-
-RooStats::HistFactory::Channel::Channel(const Channel& other) :
-  fName( other.fName ),
-  fInputFile( other.fInputFile ),
-  fHistoPath( other.fHistoPath ),
-  fData( other.fData ),
-  fAdditionalData( other.fAdditionalData ),
-  fStatErrorConfig( other.fStatErrorConfig ),
-  fSamples( other.fSamples )
-{ ; }
-
-
 RooStats::HistFactory::Channel::Channel(std::string ChanName, std::string ChanInputFile) :
   fName( ChanName ), fInputFile( ChanInputFile )
 {

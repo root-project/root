@@ -44,9 +44,9 @@ using namespace std;
 
 ClassImp(RooSuperCategory);
 
-RooSuperCategory::RooSuperCategory() :
-  RooAbsCategoryLValue(),
-  _multiCat("MultiCatProxy", "Stores a RooMultiCategory", this, true, true, true) { }
+RooSuperCategory::RooSuperCategory() : _multiCat("MultiCatProxy", "Stores a RooMultiCategory", this, true, true, true)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a super category from other categories.

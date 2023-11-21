@@ -17,8 +17,7 @@
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
-RooStats::HistFactory::Sample::Sample() :
-  fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal() {}
+RooStats::HistFactory::Sample::Sample() : fNormalizeByTheory(false), fStatErrorActivate(false) {}
 
 // copy constructor (important for python)
 RooStats::HistFactory::Sample::Sample(const Sample& other) :
@@ -78,12 +77,14 @@ RooStats::HistFactory::Sample& RooStats::HistFactory::Sample::operator=(const Sa
 RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) :
   fName( SampName ),   fInputFile( SampInputFile),
   fHistoName( SampHistoName ), fHistoPath( SampHistoPath ),
-  fNormalizeByTheory(true), fStatErrorActivate(false), fhNominal() {}
+  fNormalizeByTheory(true), fStatErrorActivate(false)
+{
+}
 
-RooStats::HistFactory::Sample::Sample(std::string SampName) :
-  fName( SampName ),   fInputFile( "" ),
-  fHistoName( "" ), fHistoPath( "" ),
-  fNormalizeByTheory(true), fStatErrorActivate(false),fhNominal() {}
+RooStats::HistFactory::Sample::Sample(std::string SampName)
+   : fName(SampName), fNormalizeByTheory(true), fStatErrorActivate(false)
+{
+}
 
 const TH1* RooStats::HistFactory::Sample::GetHisto() const {
   TH1* histo = (TH1*) fhNominal.GetObject();

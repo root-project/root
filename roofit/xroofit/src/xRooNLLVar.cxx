@@ -354,7 +354,7 @@ void xRooNLLVar::reinitialize()
       // need to find all RooRealSumPdf nodes and mark them binned or unbinned as required
       RooArgSet s;
       fPdf->treeNodeServerList(&s, nullptr, true, false);
-      s.add(*fPdf.get()); // ensure include self in case fitting a RooRealSumPdf
+      s.add(*fPdf); // ensure include self in case fitting a RooRealSumPdf
       bool isBinned = false;
       bool hasBinned = false; // if no binned option then 'auto bin' ...
       if (auto a = dynamic_cast<RooCmdArg *>(fOpts->find("Binned")); a) {
@@ -1414,7 +1414,7 @@ std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> 
 }
 
 xRooNLLVar::xRooHypoPoint::xRooHypoPoint(std::shared_ptr<RooStats::HypoTestResult> htr, const RooAbsCollection *_coords)
-   : TNamed(), hypoTestResult(htr)
+   : hypoTestResult(htr)
 {
    if (hypoTestResult) {
       // load the pllType

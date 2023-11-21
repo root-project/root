@@ -30,11 +30,7 @@ namespace RooStats {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SequentialProposal::SequentialProposal(double divisor) :
-    ProposalFunction(),
-    fDivisor(1./divisor)
-{
-}
+SequentialProposal::SequentialProposal(double divisor) : fDivisor(1. / divisor) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Populate xPrime with a new proposed point

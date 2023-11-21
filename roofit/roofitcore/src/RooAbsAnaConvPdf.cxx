@@ -615,7 +615,7 @@ void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 
 RooFit::OwningPtr<RooArgSet> RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
 {
-  auto cVars = getParameters(static_cast<RooArgSet*>(nullptr));
+  std::unique_ptr<RooArgSet> cVars{getParameters(static_cast<RooArgSet*>(nullptr))};
   std::vector<RooAbsArg*> tmp;
   for (auto arg : *cVars) {
     for (auto convSetArg : _convSet) {
@@ -627,7 +627,7 @@ RooFit::OwningPtr<RooArgSet> RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
 
   cVars->remove(tmp.begin(), tmp.end(), true, true);
 
-  return RooFit::OwningPtr<RooArgSet>{std::move(cVars)};
+  return RooFit::Detail::owningPtr(std::move(cVars));
 }
 
 

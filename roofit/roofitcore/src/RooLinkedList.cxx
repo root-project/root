@@ -63,6 +63,10 @@ namespace RooLinkedListImplDetails {
    for (Int_t i = 0; i < _free; ++i)
      _chunk[i]._next = (i + 1 < _free) ? &_chunk[i + 1] : nullptr;
       }
+      /// forbid copying
+      Chunk(const Chunk&) = delete;
+      // forbid assignment
+      Chunk& operator=(const Chunk&) = delete;
       /// destructor
       ~Chunk() { delete[] _chunk; }
       /// chunk capacity
@@ -106,11 +110,6 @@ namespace RooLinkedListImplDetails {
       Int_t _free;         ///< length of free list
       RooLinkedListElem* _chunk;    ///< chunk from which elements come
       RooLinkedListElem* _freelist; ///< list of free elements
-
-      /// forbid copying
-      Chunk(const Chunk&) = delete;
-      // forbid assignment
-      Chunk& operator=(const Chunk&) = delete;
   };
 
   class Pool {

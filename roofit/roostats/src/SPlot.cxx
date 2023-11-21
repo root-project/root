@@ -127,8 +127,7 @@ SPlot::~SPlot()
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-SPlot::SPlot():
-  TNamed()
+SPlot::SPlot()
 {
   RooArgList Args;
 

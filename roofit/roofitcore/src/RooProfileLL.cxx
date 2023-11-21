@@ -39,11 +39,11 @@ ClassImp(RooProfileLL);
 /// Default constructor
 /// Should only be used by proof.
 
- RooProfileLL::RooProfileLL() :
-   RooAbsReal("RooProfileLL","RooProfileLL"),
-   _nll(),
-   _obs("paramOfInterest","Parameters of interest",this),
-   _par("nuisanceParam","Nuisance parameters",this,false,false)
+RooProfileLL::RooProfileLL()
+   : RooAbsReal("RooProfileLL", "RooProfileLL"),
+
+     _obs("paramOfInterest", "Parameters of interest", this),
+     _par("nuisanceParam", "Nuisance parameters", this, false, false)
 {
 }
 

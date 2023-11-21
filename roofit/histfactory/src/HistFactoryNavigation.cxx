@@ -962,7 +962,7 @@ namespace RooStats {
    // For alpha's, the sigma points to a global RooConstVar
    // with the name "1"
    // For gamma_stat_*, the sigma is named *_sigma
-   std::string sigmaName = "";
+   std::string sigmaName;
    if( parameter.find("alpha_")!=std::string::npos ) {
      sigmaName = "1";;
    }

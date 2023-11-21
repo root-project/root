@@ -48,7 +48,7 @@ xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const char *name, const char *title)
 }
 
 xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const RooStats::HypoTestInverterResult *result)
-   : TNamed(), fPars(std::make_shared<RooArgSet>())
+   : fPars(std::make_shared<RooArgSet>())
 {
    if (!result)
       return;

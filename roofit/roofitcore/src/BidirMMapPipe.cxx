@@ -115,10 +115,6 @@ namespace BidirMMapPipe_impl {
            short m_next = 0;          ///< next page in list (in pagesizes)
            unsigned short m_size = 0; ///< size of payload (in bytes)
            unsigned short m_pos = 0;  ///< index of next byte in payload area
-           /// copy construction forbidden
-           Page(const Page &) {}
-           /// assignment forbidden
-           Page &operator=(const Page &) = delete;
         public:
             /// constructor
             Page()
@@ -128,6 +124,10 @@ namespace BidirMMapPipe_impl {
                 assert(std::numeric_limits<unsigned short>::max() >=
                         PageChunk::pagesize());
             }
+            /// copy construction forbidden
+            Page(const Page &) = delete;
+            /// assignment forbidden
+            Page &operator=(const Page &) = delete;
             /// set pointer to next page
             void setNext(const Page* p);
             /// return pointer to next page

@@ -54,7 +54,7 @@ RooStats::HistFactory::Constraint::Type RooStats::HistFactory::Constraint::GetTy
 }
 
 // Norm Factor
-RooStats::HistFactory::NormFactor::NormFactor() : fName(""), fVal(1.0),
+RooStats::HistFactory::NormFactor::NormFactor() :  fVal(1.0),
                     fLow(1.0), fHigh(1.0) {}
 
 void RooStats::HistFactory::NormFactor::Print( std::ostream& stream ) const {

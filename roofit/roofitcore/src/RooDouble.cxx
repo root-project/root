@@ -33,7 +33,7 @@ ClassImp(RooDouble);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDouble::RooDouble(double value) : TNamed(), _value(value)
+RooDouble::RooDouble(double value) : _value(value)
 {
   SetName(Form("%f",value)) ;
 }

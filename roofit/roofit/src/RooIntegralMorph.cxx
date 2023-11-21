@@ -147,7 +147,7 @@ RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualObservables(const RooArgSet
 
 RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
 {
-  auto par1 = pdf1->getParameters(static_cast<RooArgSet*>(nullptr));
+  std::unique_ptr<RooArgSet> par1{pdf1->getParameters(static_cast<RooArgSet*>(nullptr))};
   RooArgSet par2;
   pdf2->getParameters(nullptr, par2);
   par1->add(par2,true) ;
@@ -155,7 +155,7 @@ RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet&
   if (!_cacheAlpha) {
     par1->add(alpha.arg()) ;
   }
-  return RooFit::OwningPtr<RooArgSet>{std::move(par1)};
+  return RooFit::Detail::owningPtr(std::move(par1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
