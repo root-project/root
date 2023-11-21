@@ -471,7 +471,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
          measurement.AddAsimovDataset(asimov);
       } else if (childNodeName == "ConstraintTerm") {
          std::vector<string> syst;
-         std::string type = "";
+         std::string type;
          double rel = 0;
 
          // Get the list of parameters in this tag:
@@ -1485,9 +1485,9 @@ RooStats::HistFactory::PreprocessFunction ConfigParser::ParseFunctionConfig( TXM
   TListIter attribIt = functionNode->GetAttributes();
   TXMLAttr* curAttr = nullptr;
 
-  std::string Name = "";
-  std::string Expression = "";
-  std::string Dependents = "";
+  std::string Name;
+  std::string Expression;
+  std::string Dependents;
 
   // Add protection to ensure that all parts are there
   while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {

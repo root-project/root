@@ -3181,8 +3181,8 @@ xRooNode xRooNode::Vary(const xRooNode &child)
          p2->_interpCode.push_back(4);
          p2->_paramSet.add(*v);
 #else
-         const_cast<RooArgList &>(p2->highList()).add(*ups.get());
-         const_cast<RooArgList &>(p2->lowList()).add(*downs.get());
+         const_cast<RooArgList &>(p2->highList()).add(*ups);
+         const_cast<RooArgList &>(p2->lowList()).add(*downs);
          const_cast<std::vector<int> &>(p2->interpolationCodes()).push_back(4);
          const_cast<RooArgList &>(p2->paramList()).add(*v);
 #endif
@@ -4065,7 +4065,7 @@ xRooNode xRooNode::constraints() const
          if (n.get<RooSimultaneous>()) {
             // check all channels for a constraint if is simultaneous
             for (auto &c : n.bins()) {
-               if (auto oo = getConstraint(*c.get(), par, ignore); oo) {
+               if (auto oo = getConstraint(*c, par, ignore); oo) {
                   return oo;
                }
             }
@@ -4085,7 +4085,7 @@ xRooNode xRooNode::constraints() const
          }
          if (!n.fParent)
             return (RooAbsPdf *)nullptr;
-         return getConstraint(*n.fParent.get(), par, ignore);
+         return getConstraint(*n.fParent, par, ignore);
       }
       for (auto p : o->pdfList()) {
          if (ignore.count(static_cast<RooAbsPdf *>(p)))
@@ -4466,7 +4466,7 @@ std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject> &arg, 
             if (aName != arg->GetName()) {
                Warning("acquire", "Renaming to %s", arg->GetName());
             }
-            if (_ws->import(*arg.get(), false /*replace existing*/)) {
+            if (_ws->import(*arg, false /*replace existing*/)) {
                RooMsgService::instance().setGlobalKillBelow(msglevel);
                return nullptr;
             }
@@ -8248,7 +8248,7 @@ void xRooNode::Draw(Option_t *opt)
    if (sOpt2.Contains("significance") && !sOpt2.Contains("auxsignif"))
       sOpt += "auxSignif";
 
-   std::string auxPlotTitle = "";
+   std::string auxPlotTitle;
    for (auto &[k, _] : auxFunctions) {
       if (sOpt.Contains(TString::Format("aux%s", k.c_str()))) {
          auxPlotTitle = k;

@@ -79,10 +79,7 @@ using namespace RooStats;
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() :
-   CombinedCalculator(), fGlobalFitDone(false)
-{
-}
+ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() : fGlobalFitDone(false) {}
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest,
                                                          double size, const RooArgSet* nullParams ) :
@@ -133,18 +130,18 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
    RemoveConstantParameters(&*constrainedParams);
 
    const auto& config = GetGlobalRooStatsConfig();
-   auto nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
-       RooFit::Offset(config.useLikelihoodOffset) );
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
+       RooFit::Offset(config.useLikelihoodOffset) )};
 
    // check if global fit has been already done
    if (fFitResult && fGlobalFitDone) {
-      return RooFit::OwningPtr<RooAbsReal>{std::move(nll)};
+      return RooFit::Detail::owningPtr(std::move(nll));
    }
 
       // calculate MLE
    oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoGLobalFit - find MLE " << std::endl;
 
-   fFitResult = std::unique_ptr<RooFitResult>{DoMinimizeNLL(&*nll)};
+   fFitResult = std::unique_ptr<RooFitResult>{DoMinimizeNLL(nll.get())};
 
    // print fit result
    if (fFitResult) {
@@ -156,7 +153,7 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
          fGlobalFitDone = true;
    }
 
-   return RooFit::OwningPtr<RooAbsReal>{std::move(nll)};
+   return RooFit::Detail::owningPtr(std::move(nll));
 }
 
 RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {

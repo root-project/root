@@ -150,8 +150,7 @@ void RooArgSet::operator delete (void* ptr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooArgSet::RooArgSet() :
-  RooAbsCollection()
+RooArgSet::RooArgSet()
 {
   TRACE_CREATE;
 }

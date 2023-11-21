@@ -92,7 +92,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
          auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(nset2, nset2, normRange.c_str()));
          if (snorm) {
             auto oldSnorm = std::move(snorm);
-            snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm.get());
+            snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm);
             snorm->addOwnedComponents(std::move(snormTerm), std::move(oldSnorm));
          } else {
             snorm = std::move(snormTerm);

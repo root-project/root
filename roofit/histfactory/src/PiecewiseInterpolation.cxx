@@ -210,7 +210,7 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
 
    std::string resName = "total_" + ctx.getTmpVarName();
    ctx.addToCodeBody(this, "double " + resName + " = " + ctx.getResult(_nominal) + ";\n");
-   std::string code = "";
+   std::string code;
    for (std::size_t i = 0; i < n; ++i) {
       if (_interpCode[i] < 0 || _interpCode[i] > 5) {
          coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << _paramSet[i].GetName()
