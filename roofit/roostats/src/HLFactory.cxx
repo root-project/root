@@ -47,71 +47,40 @@ using namespace RooFit;
 /// verbosity flag. The extension for the config files is assumed to
 /// be ".rs".
 
-HLFactory::HLFactory(const char *name,
-                     const char *fileName,
-                     bool isVerbose):
-    TNamed(name,name),
-    fComboCat(nullptr),
-    fComboBkgPdf(nullptr),
-    fComboSigBkgPdf(nullptr),
-    fComboDataset(nullptr),
-    fCombinationDone(false),
-    fVerbose(isVerbose),
-    fInclusionLevel(0),
-    fOwnWs(true){
-    TString wsName(name);
-    wsName+="_ws";
-    fWs = new RooWorkspace(wsName,true);
+HLFactory::HLFactory(const char *name, const char *fileName, bool isVerbose)
+   : TNamed(name, name), fVerbose(isVerbose), fOwnWs(true)
+{
+   TString wsName(name);
+   wsName += "_ws";
+   fWs = new RooWorkspace(wsName, true);
 
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
 
-    // Start the parsing
-    fReadFile(fileName);
+   // Start the parsing
+   fReadFile(fileName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor without a card but with an external workspace.
 
-HLFactory::HLFactory(const char* name,
-                     RooWorkspace* externalWs,
-                     bool isVerbose):
-    TNamed(name,name),
-    fComboCat(nullptr),
-    fComboBkgPdf(nullptr),
-    fComboSigBkgPdf(nullptr),
-    fComboDataset(nullptr),
-    fCombinationDone(false),
-    fVerbose(isVerbose),
-    fInclusionLevel(0),
-    fOwnWs(false){
-    fWs=externalWs;
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
-
+HLFactory::HLFactory(const char *name, RooWorkspace *externalWs, bool isVerbose)
+   : TNamed(name, name), fVerbose(isVerbose), fWs(externalWs)
+{
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-HLFactory::HLFactory():
-    TNamed("hlfactory","hlfactory"),
-    fComboCat(nullptr),
-    fComboBkgPdf(nullptr),
-    fComboSigBkgPdf(nullptr),
-    fComboDataset(nullptr),
-    fCombinationDone(false),
-    fVerbose(false),
-    fInclusionLevel(0),
-    fOwnWs(true){
-    fWs = new RooWorkspace("hlfactory_ws",true);
-
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
-
-    }
+HLFactory::HLFactory() : TNamed("hlfactory", "hlfactory"), fWs(new RooWorkspace("hlfactory_ws", true)), fOwnWs(true)
+{
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
@@ -288,7 +257,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
         return nullptr;
 
     if (fDatasetsNames.GetSize()==1){
-        fComboDataset=(RooDataSet*)fWs->data(static_cast<TObjString*>(fDatasetsNames.First())->String().Data());
+        fComboDataset=static_cast<RooDataSet*>(fWs->data(static_cast<TObjString*>(fDatasetsNames.First())->String().Data()));
         return fComboDataset;
         }
 
@@ -300,7 +269,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
     TObjString* ostring;
     ostring = static_cast<TObjString*>(*it);
     ++it;
-    fComboDataset = (RooDataSet*) fWs->data(ostring->String().Data()) ;
+    fComboDataset = static_cast<RooDataSet*>(fWs->data(ostring->String().Data())) ;
     if (!fComboDataset) return nullptr;
     fComboDataset->Print();
     TString dataname(GetName());
@@ -311,7 +280,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
     for(; it != fDatasetsNames.end() ; ++it) {
         ostring = static_cast<TObjString*>(*it);
         catindex++;
-        RooDataSet * data = (RooDataSet*)fWs->data(ostring->String().Data());
+        RooDataSet * data = static_cast<RooDataSet*>(fWs->data(ostring->String().Data()));
         if (!data) return nullptr;
         RooDataSet* dummy = new RooDataSet(*data,"");
         fComboCat->setIndex(catindex);

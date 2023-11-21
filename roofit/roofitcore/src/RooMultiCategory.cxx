@@ -77,16 +77,6 @@ RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *na
   setShapeDirty();
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMultiCategory::~RooMultiCategory()
-{
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compile a string with all the labels of the serving categories,
 /// such as `{1Jet;1Lepton;2Tag}`.

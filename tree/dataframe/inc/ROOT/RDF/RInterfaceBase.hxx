@@ -18,7 +18,7 @@
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RResultPtr.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <TError.h> // R__ASSERT
 
 #include <memory>
@@ -71,8 +71,8 @@ protected:
    void SanityChecksForVary(const std::vector<std::string> &colNames, const std::vector<std::string> &variationTags,
                             std::string_view variationName)
    {
-      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
-      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationTags.empty() && "Must have at least one variation.");
+      R__ASSERT(!colNames.empty() && "Must have at least one varied column.");
       R__ASSERT(!variationName.empty() && "Must provide a variation name.");
 
       for (auto &colName : colNames) {

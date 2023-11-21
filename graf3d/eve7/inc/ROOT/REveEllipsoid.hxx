@@ -42,7 +42,7 @@ protected:
 
 public:
    REveEllipsoid(const std::string &n = "REveJetConeProjected", const std::string& t = "");
-   virtual ~REveEllipsoid() {};
+   ~REveEllipsoid() override {};
 
    virtual void Outline();
    void SetBaseVectors(REveVector& v0, REveVector& v1, REveVector& v3);
@@ -74,14 +74,14 @@ private:
 
 public:
    REveEllipsoidProjected(const std::string &n = "REveEllipsoidProjected", const std::string& t = "");
-   virtual ~REveEllipsoidProjected();
+   ~REveEllipsoidProjected() override;
 
    void BuildRenderData() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
    virtual void OutlineProjected();
-   virtual void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
+   void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
    void UpdateProjection() override;
    REveElement *GetProjectedAsElement() override { return this; }
 };

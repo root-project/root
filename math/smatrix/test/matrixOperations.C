@@ -106,8 +106,8 @@ TGraphErrors * hd = h1;
     // ned to do after drawing
     mg->GetXaxis()->SetLimits(1.8,32);
     mg->GetXaxis()->SetTitle("Matrix size ");
-    mg->GetXaxis()->SetMoreLogLabels(1);
-    mg->GetXaxis()->SetNoExponent(1);
+    mg->GetXaxis()->SetMoreLogLabels(true);
+    mg->GetXaxis()->SetNoExponent(true);
     mg->GetYaxis()->SetTitle("CPU Time ");
     mg->GetYaxis()->SetTitleOffset(1.25);
 
@@ -140,7 +140,7 @@ TGraphErrors * hd = h1;
 
 void GetData(std::string s,double * x, double * y, double * ey) {
    std::string fileName;
-   if (systemName != "")
+   if (!systemName.empty())
       fileName="testOperations_" + systemName + ".root";
    else
       fileName="testOperations.root";

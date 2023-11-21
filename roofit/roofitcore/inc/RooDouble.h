@@ -27,9 +27,6 @@ public:
   } ;
   RooDouble(double value) ;
   RooDouble(const RooDouble& other) : TNamed(other), _value(other._value) {}
-  /// Destructor
-  ~RooDouble() override {
-  } ;
 
   // double cast operator
   /// Return value of contained double

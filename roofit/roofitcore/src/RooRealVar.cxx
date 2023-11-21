@@ -19,7 +19,7 @@
 \class RooRealVar
 \ingroup Roofitcore
 
-RooRealVar represents a variable that can be changed from the outside.
+Variable that can be changed from the outside.
 For example by the user or a fitter.
 
 It can be written into datasets, can hold a (possibly asymmetric) error, and
@@ -111,7 +111,7 @@ RooRealVarSharedProperties& RooRealVar::_nullProp()
 RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(new RooUniformBinning())
 {
   _fast = true ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -126,7 +126,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _fast = true ;
   removeRange();
   setConstant(true) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -161,7 +161,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
   //   setPlotRange(minValue,maxValue) ;
   setRange(minValue,maxValue) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -181,7 +181,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
     inRange(value,nullptr,&clipValue) ;
     _value = clipValue ;
 
-    TRACE_CREATE
+    TRACE_CREATE;
 }
 
 
@@ -207,7 +207,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
     _altNonSharedBinning[item.first] = std::move(abc);
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 
 }
 
@@ -222,7 +222,7 @@ RooRealVar::~RooRealVar()
   // _sharedPropList get erased.
   deleteSharedProperties();
 
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 

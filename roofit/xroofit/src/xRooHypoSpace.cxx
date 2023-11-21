@@ -183,6 +183,7 @@ int xRooNLLVar::xRooHypoSpace::AddPoints(const char *parName, size_t nPoints, do
    auto _par = dynamic_cast<RooAbsRealLValue *>(fPars->find(parName));
    if (!_par)
       throw std::runtime_error("Unknown parameter");
+   _par->setAttribute("axis");
 
    if (nPoints == 1) {
       _par->setVal((high + low) * 0.5);
@@ -249,7 +250,7 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
 
    auto p = dynamic_cast<RooRealVar *>(axes().first());
    if (!p) {
-      throw std::runtime_error(TString::Format("%s not scanable", axes().first()->GetName()));
+      throw std::runtime_error(TString::Format("%s not scannable", axes().first()->GetName()));
    }
 
    if (sType.Contains("cls")) {
@@ -546,7 +547,14 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
       }
    }
 
-   ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coords);
+   std::string coordString;
+   for(auto a : axes()) {
+      coordString += TString::Format("%s=%g",a->GetName(),out.coords->getRealValue(a->GetName()));
+      coordString += ",";
+   }
+   coordString.erase(coordString.end()-1);
+
+   ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
    return emplace_back(out);
 }
 
@@ -721,7 +729,7 @@ void xRooNLLVar::xRooHypoSpace::LoadFits(const char *apath)
                }
                continue;
             }
-            auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+            auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
             if (cl->InheritsFrom("RooFitResult")) {
                if (auto cachedFit = _dir->Get<RooFitResult>(k->GetName()); cachedFit) {
                   nFits++;
@@ -1476,7 +1484,7 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
       if (front().fPllType == xRooFit::Asymptotics::OneSidedPositive) {
          sOpt += "pcls"; // default to showing cls p-value scan if drawing a limit
          for (auto &hp : *this) {
-            if (hp.nullToys.size() || hp.altToys.size()) {
+            if (!hp.nullToys.empty() || !hp.altToys.empty()) {
                sOpt += " toys";
                break; // default to toys if done toys
             }

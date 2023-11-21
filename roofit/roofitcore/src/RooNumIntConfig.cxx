@@ -19,7 +19,7 @@
 \class RooNumIntConfig
 \ingroup Roofitcore
 
-RooNumIntConfig holds the configuration parameters of the various
+Holds the configuration parameters of the various
 numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 use this class in the (normalization) integral configuration interface
 **/
@@ -214,7 +214,7 @@ RooArgSet& RooNumIntConfig::getConfigSection(const char* name)
 const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 {
   static RooArgSet dummy ;
-  RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
+  RooArgSet* config = static_cast<RooArgSet*>(_configSets.FindObject(name)) ;
   if (!config) {
     oocoutE(nullptr,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
     return dummy ;

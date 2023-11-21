@@ -1116,7 +1116,7 @@ TGeoSphere::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t n
          ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
       }
       return vmulti;
-   default: Error("Divide", "In shape %s wrong axis type for division", GetName()); return 0;
+   default: Error("Divide", "In shape %s wrong axis type for division", GetName()); return nullptr;
    }
 }
 

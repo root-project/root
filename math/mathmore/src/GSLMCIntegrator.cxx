@@ -39,7 +39,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <ctype.h>   // need to use c version of tolower defined here
+#include <cctype>   // need to use c version of tolower defined here
 
 
 #include "gsl/gsl_monte_vegas.h"
@@ -422,7 +422,7 @@ double GSLMCIntegrator::Sigma()
    }
    else
    {
-      std::cerr << "Parameter not mathcing integration type";
+      std::cerr << "Parameter not matching integration type";
       return 0;
    }
 
@@ -442,7 +442,7 @@ double GSLMCIntegrator::ChiSqr()
    }
    else
    {
-      std::cerr << "Parameter not mathcing integration type";
+      std::cerr << "Parameter not matching integration type";
       return 0;
    }
 }

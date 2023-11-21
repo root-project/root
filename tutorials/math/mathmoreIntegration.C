@@ -52,7 +52,7 @@ double func( double x){
 }
 
 // TF1 requires the function to have the ( )( double *, double *) signature
-double func2(const double *x, const double * = 0){
+double func2(const double *x, const double * = nullptr){
    nc++;
    return TMath::BreitWigner(x[0]);
 }
@@ -144,7 +144,7 @@ void  DrawCumulative(double x1, double x2, int n = 100){
    }
 
    TH1D *cum10 = new TH1D("cum10", "", n, x1, x2); //difference between  1 and exact
-   TH1D *cum20 = new TH1D("cum23", "", n, x1, x2); //difference between 2 and excact
+   TH1D *cum20 = new TH1D("cum23", "", n, x1, x2); //difference between 2 and exact
    for (int i = 1; i <= n; ++i) {
       double delta  =  cum1->GetBinContent(i) - cum0->GetBinContent(i);
       double delta2 =  cum2->GetBinContent(i) - cum0->GetBinContent(i);
@@ -161,7 +161,7 @@ void  DrawCumulative(double x1, double x2, int n = 100){
 
    cum0->SetLineColor(kBlack);
    cum0->SetTitle("BreitWigner - the cumulative");
-   cum0->SetStats(0);
+   cum0->SetStats(false);
    cum1->SetLineStyle(2);
    cum2->SetLineStyle(3);
    cum1->SetLineColor(kBlue);
@@ -174,7 +174,7 @@ void  DrawCumulative(double x1, double x2, int n = 100){
 
    c1->cd(2);
    cum10->SetTitle("Difference");
-   cum10->SetStats(0);
+   cum10->SetStats(false);
    cum10->SetLineColor(kBlue);
    cum10->Draw("e0");
    cum20->SetLineColor(kRed);

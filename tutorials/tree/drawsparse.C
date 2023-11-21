@@ -80,7 +80,7 @@ void drawsparse_draw(THnSparse* h)
 
    TString whatToDraw;
    TIter iLeaf(tree->GetListOfLeaves());
-   const TLeaf* leaf = 0;
+   const TLeaf* leaf = nullptr;
    while ((leaf = (const TLeaf*)iLeaf())) {
       if (whatToDraw.Length())
          whatToDraw += ":";
@@ -90,7 +90,7 @@ void drawsparse_draw(THnSparse* h)
    TParallelCoord* parallelCoord = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
 
    TIter iVar(parallelCoord->GetVarList());
-   TParallelCoordVar* var = 0;
+   TParallelCoordVar* var = nullptr;
    for (Int_t d = 0;(var = (TParallelCoordVar*) iVar()) && d < h->GetNdimensions(); ++d) {
       TAxis* axis = h->GetAxis(d);
       var->SetHistogramBinning(axis->GetNbins());
@@ -139,7 +139,7 @@ void drawsparse()
    canv->cd(2);
    TH3D* h3proj = hs->Projection(2, 3, 6);
    h3proj->SetLineColor(kOrange);
-   h3proj->SetDirectory(0);
+   h3proj->SetDirectory(nullptr);
    h3proj->Draw("lego1");
 
    // save everything to a file

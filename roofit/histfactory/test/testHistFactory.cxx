@@ -9,7 +9,6 @@
 
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFitHS3/HistFactoryJSONTool.h>
 
 #include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooDataHist.h>
@@ -28,10 +27,9 @@
 #include <TCanvas.h>
 #include <gtest/gtest.h>
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "../src/JSONTool.h"
+
+#include "../../roofitcore/test/gtest_wrapper.h"
 
 #include <set>
 
@@ -150,7 +148,7 @@ enum class MakeModelMode { OverallSyst, HistoSyst, StatSyst, ShapeSyst };
 
 using HFTestParam = std::tuple<MakeModelMode, bool, RooFit::EvalBackend>;
 
-std::string getName(HFTestParam const &param)
+std::string getName(HFTestParam const &param, bool ignoreBackend = false)
 {
    const MakeModelMode mode = std::get<0>(param);
    const bool customBins = std::get<1>(param);
@@ -169,7 +167,9 @@ std::string getName(HFTestParam const &param)
    if (mode == MakeModelMode::ShapeSyst)
       ss << "_ShapeSyst";
 
-   ss << "_Backend_" << evalBackend.name();
+   if (!ignoreBackend) {
+      ss << "_Backend_" << evalBackend.name();
+   }
 
    return ss.str();
 }
@@ -204,7 +204,7 @@ public:
       return new TH1D{name, title, 2, 1, 2};
    }
 
-   void SetUp()
+   void SetUp() override
    {
       using namespace RooStats::HistFactory;
 
@@ -352,7 +352,7 @@ public:
       EXPECT_TRUE(hijackW.str().empty()) << "Warnings logged for HistFactory:\n" << hijackW.str();
    }
 
-   void TearDown() {}
+   void TearDown() override {}
 };
 
 class HFFixtureEval : public HFFixture {};
@@ -749,28 +749,29 @@ TEST_P(HFFixtureFit, Fit)
 
 std::string getNameFromInfo(testing::TestParamInfo<HFFixture::ParamType> const &paramInfo)
 {
-   return getName(paramInfo.param);
+   return getName(paramInfo.param, false);
 }
 
-INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixture,
-                         testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
-                                                          MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
-                                          testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values(RooFit::EvalBackend::Legacy())),
-                         getNameFromInfo);
+INSTANTIATE_TEST_SUITE_P(
+   HistFactory, HFFixture,
+   testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst, MakeModelMode::StatSyst,
+                                    MakeModelMode::ShapeSyst),
+                    testing::Values(false, true),                    // non-uniform bins or not
+                    testing::Values(RooFit::EvalBackend::Cpu())), // dummy because no NLL is created
+   [](testing::TestParamInfo<HFFixture::ParamType> const &paramInfo) { return getName(paramInfo.param, true); });
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureEval,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu())),
+                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
                          getNameFromInfo);
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu())),
+                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
                          getNameFromInfo);
 
 #ifdef TEST_CODEGEN_AD

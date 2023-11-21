@@ -22,7 +22,9 @@
 #endif // R__USE_IMT
 
 #include <algorithm>
+#include <iostream>
 #include <set>
+#include <cstdio>
 
 // TODO, this function should be part of core libraries
 #include <numeric>
@@ -30,17 +32,14 @@
 #include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <iostream>
-
 #if defined(_WIN32) || defined(_WIN64)
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <io.h>
 #include <Windows.h>
-#elif defined(__linux__)
+#else
 #include <sys/ioctl.h>
-#endif // Windows/Linux
+#endif
 
 // Get terminal size for progress bar
 int get_tty_size()
@@ -53,15 +52,13 @@ int get_tty_size()
    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
       width = (int)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
    return width;
-#elif defined(__linux__)
+#else
    int width = 0;
    struct winsize w;
    ioctl(fileno(stdout), TIOCGWINSZ, &w);
    width = (int)(w.ws_col);
    return width;
-#else
-   return 0;
-#endif // Windows/Linux
+#endif
 }
 
 using ROOT::RDF::RResultHandle;
@@ -142,6 +139,8 @@ ROOT::RDF::Experimental::SnapshotPtr_t ROOT::RDF::Experimental::VariationsFor(RO
 
 namespace ROOT {
 namespace RDF {
+
+namespace Experimental {
 
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,
                                unsigned int printInterval, bool useColors)
@@ -258,7 +257,7 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
       std::chrono::seconds remainingSeconds(
          static_cast<long long>((ComputeNEventsSoFar() - currentEventCount) / evtpersec));
       stream << " " << remainingSeconds << " "
-             << " remaining time (per file)";
+             << " remaining time (per file being processed)";
       if (fUseShellColours)
          stream << "\033[0m";
    }
@@ -266,8 +265,36 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
    stream << "]   ";
 }
 
+void ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds elapsedSeconds) const
+{
+   auto totalEvents = ComputeNEventsSoFar();
+   auto totalFiles = fTotalFiles;
+
+   if (fUseShellColours)
+      stream << "\033[35m";
+   stream << "["
+          << "Total elapsed time: " << elapsedSeconds << "  ";
+   if (fUseShellColours)
+      stream << "\033[0m";
+   stream << "processed files: " << totalFiles << " / " << totalFiles << "  ";
+
+   // Event counts:
+   if (fUseShellColours)
+      stream << "\033[32m";
+
+   stream << "processed evts: " << totalEvents;
+   if (totalEvents != 0) {
+      stream << " / " << std::scientific << std::setprecision(2) << totalEvents;
+   }
+
+   if (fUseShellColours)
+      stream << "\033[0m";
+
+   stream << "]   ";
+}
+
 /// Print a progress bar of width `ProgressHelper::fBarWidth` if `fGetNEventsOfCurrentFile` is known.
-void ProgressHelper::PrintProgressbar(std::ostream &stream, std::size_t currentEventCount) const
+void ProgressHelper::PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const
 {
    auto GetNEventsOfCurrentFile = ComputeNEventsSoFar();
    if (GetNEventsOfCurrentFile == 0)
@@ -288,7 +315,6 @@ void ProgressHelper::PrintProgressbar(std::ostream &stream, std::size_t currentE
       stream << "\033[0m";
 }
 //*/
-namespace Experimental {
 
 class ProgressBarAction final : public ROOT::Detail::RDF::RActionImpl<ProgressBarAction> {
 public:
@@ -308,13 +334,28 @@ public:
 
    void Exec(unsigned int) {}
 
-   void Finalize() { std::cout << '\n'; }
+   void Finalize()
+   {
+      std::mutex fPrintMutex;
+      if (!fPrintMutex.try_lock())
+         return;
+      std::lock_guard<std::mutex> lockGuard(fPrintMutex, std::adopt_lock);
+      const auto &[eventCount, elapsedSeconds] = fHelper->RecordEvtCountAndTime();
+
+      // The next line resets the current line output in the terminal.
+      // Brings the cursor at the beginning ('\r'), prints whitespace with the
+      // same length as the terminal size, then resets the cursor again so we
+      // can print the final stats on a clean line.
+      std::cout << '\r' << std::string(get_tty_size(), ' ') << '\r';
+      fHelper->PrintStatsFinal(std::cout, elapsedSeconds);
+      std::cout << '\n';
+   }
 
    std::string GetActionName() { return "ProgressBar"; }
    // dummy implementation of PartialUpdate
    int &PartialUpdate(unsigned int) { return *fDummyResult; }
 
-   ROOT::RDF::SampleCallback_t GetSampleCallback()
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
    {
       return [this](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
          this->fHelper->registerNewSample(slot, id);
@@ -323,7 +364,7 @@ public:
    }
 };
 
-void AddProgressbar(ROOT::RDF::RNode node)
+void AddProgressBar(ROOT::RDF::RNode node)
 {
    auto total_files = node.GetNFiles();
    auto progress = std::make_shared<ProgressHelper>(1000, total_files);
@@ -332,10 +373,10 @@ void AddProgressbar(ROOT::RDF::RNode node)
    r.OnPartialResultSlot(1000, [progress](unsigned int slot, auto &&arg) { (*progress)(slot, arg); });
 }
 
-void AddProgressbar(ROOT::RDataFrame dataframe)
+void AddProgressBar(ROOT::RDataFrame dataframe)
 {
    auto node = ROOT::RDF::AsRNode(dataframe);
-   ROOT::RDF::Experimental::AddProgressbar(node);
+   ROOT::RDF::Experimental::AddProgressBar(node);
 }
 } // namespace Experimental
 } // namespace RDF

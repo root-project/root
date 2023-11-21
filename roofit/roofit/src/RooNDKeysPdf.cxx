@@ -131,11 +131,11 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
   }
 
   // copy rho widths
-  if( _varList.getSize() != rho.GetNrows() ) {
+  if(int( _varList.size()) != rho.GetNrows() ) {
      coutE(InputArguments)
         << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The vector-size of rho is different from that of varList."
         << "Unable to create the PDF." << endl;
-     R__ASSERT(_varList.getSize() == rho.GetNrows());
+     R__ASSERT(int(_varList.size()) == rho.GetNrows());
   }
 
   // negative width factor will serve as a switch in initialize()
@@ -169,7 +169,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
       _varName.push_back(var->GetName());
    }
 
-   _rho.resize(rhoList.getSize(), 1.0);
+   _rho.resize(rhoList.size(), 1.0);
 
    for (unsigned int i=0; i < rhoList.size(); ++i) {
       const auto rho = rhoList.at(i);
@@ -183,10 +183,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
    }
 
    // copy rho widths
-   if ((_varList.getSize() != _rhoList.getSize())) {
+   if ((_varList.size() != _rhoList.size())) {
       coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
                             << "Unable to create the PDF." << endl;
-      assert(_varList.getSize() == _rhoList.getSize());
+      assert(_varList.size() == _rhoList.size());
    }
 
    // keep track of changes in rho parameters
@@ -217,7 +217,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
    }
 
    // copy rho widths
-   _rho.resize(rhoList.getSize(), 1.0);
+   _rho.resize(rhoList.size(), 1.0);
 
    for (unsigned int i=0; i < rhoList.size(); ++i) {
       const auto rho = rhoList.at(i);
@@ -230,10 +230,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
       _rho[i] = (dynamic_cast<RooAbsReal *>(rho))->getVal();
    }
 
-   if ((_varList.getSize() != _rhoList.getSize())) {
+   if ((_varList.size() != _rhoList.size())) {
       coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
                             << "Unable to create the PDF." << endl;
-      assert(_varList.getSize() == _rhoList.getSize());
+      assert(_varList.size() == _rhoList.size());
    }
 
    // keep track of changes in rho parameters
@@ -286,73 +286,71 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, R
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
-   : RooAbsPdf(other, name), _varList("varList", this, other._varList), _rhoList("rhoList", this, other._rhoList),
-     _options(other._options), _widthFactor(other._widthFactor),
-     _nSigma(other._nSigma), _rotate(other._rotate), _sortInput(other._sortInput),
-     _nAdpt(other._nAdpt)
+   : RooAbsPdf(other, name),
+     _varList("varList", this, other._varList),
+     _rhoList("rhoList", this, other._rhoList),
+     _options(other._options),
+     _widthFactor(other._widthFactor),
+     _nSigma(other._nSigma),
+     _fixedShape(other._fixedShape),
+     _mirror(other._mirror),
+     _debug(other._debug),
+     _verbose(other._verbose),
+     _nDim(other._nDim),
+     _nEvents(other._nEvents),
+     _nEventsM(other._nEventsM),
+     _nEventsW(other._nEventsW),
+     _d(other._d),
+     _n(other._n),
+     _dataPts(other._dataPts),
+     _dataPtsR(other._dataPtsR),
+     _weights0(other._weights0),
+     _weights1(other._weights1),
+     _weights(_options.Contains("a") ? &_weights1 : &_weights0),
+     _sortTVIdcs(other._sortTVIdcs),
+     _varName(other._varName),
+     _rho(other._rho),
+     _x(other._x),
+     _x0(other._x0),
+     _x1(other._x1),
+     _x2(other._x2),
+     _mean(other._mean),
+     _sigma(other._sigma),
+     _xDatLo(other._xDatLo),
+     _xDatHi(other._xDatHi),
+     _xDatLo3s(other._xDatLo3s),
+     _xDatHi3s(other._xDatHi3s),
+     _netFluxZ(other._netFluxZ),
+     _nEventsBW(other._nEventsBW),
+     _nEventsBMSW(other._nEventsBMSW),
+     _xVarLo(other._xVarLo),
+     _xVarHi(other._xVarHi),
+     _xVarLoM3s(other._xVarLoM3s),
+     _xVarLoP3s(other._xVarLoP3s),
+     _xVarHiM3s(other._xVarHiM3s),
+     _xVarHiP3s(other._xVarHiP3s),
+     _bpsIdcs(other._bpsIdcs),
+     _ibNoSort(other._ibNoSort),
+     _sIdcs(other._sIdcs),
+     _bIdcs(other._bIdcs),
+     _bmsIdcs(other._bmsIdcs),
+     _rangeBoxInfo(other._rangeBoxInfo),
+     _fullBoxInfo(other._fullBoxInfo),
+     _idx(other._idx),
+     _minWeight(other._minWeight),
+     _maxWeight(other._maxWeight),
+     _wMap(other._wMap),
+     _covMat(new TMatrixDSym(*other._covMat)),
+     _corrMat(new TMatrixDSym(*other._corrMat)),
+     _rotMat(new TMatrixD(*other._rotMat)),
+     _sigmaR(new TVectorD(*other._sigmaR)),
+     _dx(new TVectorD(*other._dx)),
+     _sigmaAvgR(other._sigmaAvgR),
+     _rotate(other._rotate),
+     _sortInput(other._sortInput),
+     _nAdpt(other._nAdpt),
+     _tracker(other._tracker != nullptr ? new RooChangeTracker(*other._tracker) : nullptr)
 {
-   _tracker = (other._tracker != nullptr ? new RooChangeTracker(*other._tracker) : nullptr);
-   // if (_tracker!=nullptr) { _tracker->hasChanged(true); }
-
-   _fixedShape = other._fixedShape;
-   _mirror = other._mirror;
-   _debug = other._debug;
-   _verbose = other._verbose;
-   _nDim = other._nDim;
-   _nEvents = other._nEvents;
-   _nEventsM = other._nEventsM;
-   _nEventsW = other._nEventsW;
-   _d = other._d;
-   _n = other._n;
-   _dataPts = other._dataPts;
-   _dataPtsR = other._dataPtsR;
-   _weights0 = other._weights0;
-   _weights1 = other._weights1;
-   _weights = _options.Contains("a") ? &_weights1 : &_weights0;
-   _sortTVIdcs = other._sortTVIdcs;
-   _varName = other._varName;
-   _rho = other._rho;
-   _x = other._x;
-   _x0 = other._x0;
-   _x1 = other._x1;
-   _x2 = other._x2;
-   _xDatLo = other._xDatLo;
-   _xDatHi = other._xDatHi;
-   _xDatLo3s = other._xDatLo3s;
-   _xDatHi3s = other._xDatHi3s;
-   _mean = other._mean;
-   _sigma = other._sigma;
-
-   // BoxInfo
-   _netFluxZ = other._netFluxZ;
-   _nEventsBW = other._nEventsBW;
-   _nEventsBMSW = other._nEventsBMSW;
-   _xVarLo = other._xVarLo;
-   _xVarHi = other._xVarHi;
-   _xVarLoM3s = other._xVarLoM3s;
-   _xVarLoP3s = other._xVarLoP3s;
-   _xVarHiM3s = other._xVarHiM3s;
-   _xVarHiP3s = other._xVarHiP3s;
-   _bpsIdcs = other._bpsIdcs;
-   _ibNoSort = other._ibNoSort;
-   _sIdcs = other._sIdcs;
-   _bIdcs = other._bIdcs;
-   _bmsIdcs = other._bmsIdcs;
-
-   _rangeBoxInfo = other._rangeBoxInfo;
-   _fullBoxInfo = other._fullBoxInfo;
-
-   _idx = other._idx;
-   _minWeight = other._minWeight;
-   _maxWeight = other._maxWeight;
-   _wMap = other._wMap;
-
-   _covMat = new TMatrixDSym(*other._covMat);
-   _corrMat = new TMatrixDSym(*other._corrMat);
-   _rotMat = new TMatrixD(*other._rotMat);
-   _sigmaR = new TVectorD(*other._sigmaR);
-   _dx = new TVectorD(*other._dx);
-   _sigmaAvgR = other._sigmaAvgR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -452,7 +450,7 @@ void RooNDKeysPdf::setOptions()
 
 void RooNDKeysPdf::initialize(RooDataSet const& data)
 {
-  _nDim      = _varList.getSize();
+  _nDim      = _varList.size();
   _nEvents   = (Int_t)data.numEntries();
   _nEventsM  = _nEvents;
   _fixedShape= false;
@@ -540,7 +538,7 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
   const RooArgSet* values= data.get();
   vector<RooRealVar*> dVars(_nDim);
   for  (Int_t j=0; j<_nDim; j++) {
-    dVars[j] = (RooRealVar*)values->find(_varName[j].c_str());
+    dVars[j] = static_cast<RooRealVar*>(values->find(_varName[j].c_str()));
     _x0[j]=_x1[j]=_x2[j]=0.;
   }
 

@@ -47,7 +47,7 @@ ClassImp(TStructViewerGUI);
 //
 //////////////////////////////////////////////////////////////////////////
 
-TGeoMedium* TStructViewerGUI::fgMedium = NULL;
+TGeoMedium* TStructViewerGUI::fgMedium = nullptr;
 UInt_t      TStructViewerGUI::fgCounter = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fMaxSlices = 10;
    fMouseX = 0;
    fMouseY = 0;
-   fSelectedObject = NULL;
+   fSelectedObject = nullptr;
    fMaxRatio = 0;
    fColors = colors;
 
@@ -665,12 +665,12 @@ void TStructViewerGUI::LevelDistValueSetSlot(Long_t /* dist */)
 void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
 {
    fToolTip->Hide();
-   fSelectedObject = NULL;
+   fSelectedObject = nullptr;
    if (shape && shape->GetLogical()) {
       fSelectedObject =  (TStructNode*)(shape->GetLogical()->ID());
       if (fSelectedObject) {
          if (fSelectedObject->IsA()->InheritsFrom(TPolyLine3D::Class())) {
-            fSelectedObject = NULL;
+            fSelectedObject = nullptr;
             return;
          }
          Longptr_t shapeID  = (Longptr_t)(shape->GetLogical()->ID());
@@ -813,18 +813,24 @@ void TStructViewerGUI::UnCheckMaxObjects()
 
 void TStructViewerGUI::Update(Bool_t resetCamera)
 {
-   if (!fNodePtr) {
+   if (!fNodePtr)
       return;
-   }
 
-   fCanvas->GetListOfPrimitives()->Clear();
-   fTopVolume->ClearNodes();
+   if (fCanvas && fCanvas->GetListOfPrimitives())
+      fCanvas->GetListOfPrimitives()->Clear();
+
+   if (fTopVolume)
+      fTopVolume->ClearNodes();
+
    Draw();
-   fCanvas->GetListOfPrimitives()->Add(fTopVolume);
-   fGLViewer->UpdateScene();
 
-   if(resetCamera) {
-      fGLViewer->ResetCurrentCamera();
+   if (fCanvas && fCanvas->GetListOfPrimitives())
+      fCanvas->GetListOfPrimitives()->Add(fTopVolume);
+
+   if (fGLViewer) {
+      fGLViewer->UpdateScene();
+      if(resetCamera)
+         fGLViewer->ResetCurrentCamera();
    }
 }
 

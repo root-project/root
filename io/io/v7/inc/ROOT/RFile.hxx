@@ -17,7 +17,7 @@
 #define ROOT7_RFile
 
 #include "ROOT/RDirectory.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #include "TClass.h"
 #include <memory>

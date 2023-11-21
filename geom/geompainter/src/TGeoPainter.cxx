@@ -129,7 +129,7 @@ void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
 
 TVirtualGeoTrack *TGeoPainter::AddTrack(Int_t id, Int_t pdgcode, TObject *particle)
 {
-   return (TVirtualGeoTrack *)(new TGeoTrack(id, pdgcode, 0, particle));
+   return (TVirtualGeoTrack *)(new TGeoTrack(id, pdgcode, nullptr, particle));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -788,9 +788,9 @@ void TGeoPainter::DrawPolygon(const TGeoPolygon *poly)
    g1->SetMarkerSize(0.8);
    delete[] x;
    delete[] y;
-   Double_t *xc = 0;
-   Double_t *yc = 0;
-   TGraph *g2 = 0;
+   Double_t *xc = nullptr;
+   Double_t *yc = nullptr;
+   TGraph *g2 = nullptr;
    if (nconv && !poly->IsConvex()) {
       xc = new Double_t[nconv + 1];
       yc = new Double_t[nconv + 1];
@@ -834,7 +834,7 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
       ClearVisibleVolumes();
       fVisLock = kFALSE;
    }
-   Bool_t has_pad = (gPad == 0) ? kFALSE : kTRUE;
+   Bool_t has_pad = (gPad == nullptr) ? kFALSE : kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
       gROOT->MakeDefCanvas();
@@ -847,7 +847,7 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = TView::CreateView(11, 0, 0);
+      view = TView::CreateView(11, nullptr, nullptr);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -880,7 +880,7 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
    fOverlap = nullptr;
    fIsPaintingShape = kTRUE;
 
-   Bool_t has_pad = (gPad == 0) ? kFALSE : kTRUE;
+   Bool_t has_pad = (gPad == nullptr) ? kFALSE : kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
       gROOT->MakeDefCanvas();
@@ -893,7 +893,7 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = TView::CreateView(11, 0, 0);
+      view = TView::CreateView(11, nullptr, nullptr);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -925,7 +925,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
       ClearVisibleVolumes();
       fVisLock = kFALSE;
    }
-   Bool_t has_pad = (gPad == 0) ? kFALSE : kTRUE;
+   Bool_t has_pad = (gPad == nullptr) ? kFALSE : kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
       gROOT->MakeDefCanvas();
@@ -940,7 +940,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    gPad->GetViewer3D(option);
    TView *view = gPad->GetView();
    if (!view) {
-      view = TView::CreateView(11, 0, 0);
+      view = TView::CreateView(11, nullptr, nullptr);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -969,7 +969,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
    }
    fPaintingOverlaps = kFALSE;
    fIsPaintingShape = kFALSE;
-   Bool_t has_pad = (gPad == 0) ? kFALSE : kTRUE;
+   Bool_t has_pad = (gPad == nullptr) ? kFALSE : kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
       gROOT->MakeDefCanvas();
@@ -983,7 +983,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = TView::CreateView(11, 0, 0);
+      view = TView::CreateView(11, nullptr, nullptr);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -1044,7 +1044,7 @@ void TGeoPainter::EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *sta
    TVirtualGeoTrack *track;
    TObject *obj;
    Int_t ntracks = 0;
-   Double_t *point = 0;
+   Double_t *point = nullptr;
    AddTrackPoint(point, start, kTRUE);
    while ((obj = next())) {
       if (strcmp(obj->ClassName(), "TGeoTrack"))
@@ -1539,7 +1539,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix *glo
       }
    }
    if (fPlugin)
-      fPlugin->SetIterator(0);
+      fPlugin->SetIterator(nullptr);
    fGeoManager->SetMatrixReflection(kFALSE);
    fVisLock = kTRUE;
 }
@@ -1599,7 +1599,7 @@ void TGeoPainter::PaintShape(TGeoShape *shape, Option_t *option)
 {
    TGeoShape::SetTransform(fGlobal);
    fGlobal->Clear();
-   fGeoManager->SetPaintVolume(0);
+   fGeoManager->SetPaintVolume(nullptr);
    PaintShape(*shape, option);
 }
 
@@ -1820,7 +1820,7 @@ void TGeoPainter::Raytrace(Option_t *)
          //         fGeoManager->InitTrack(cop,dir);
          // current ray pointing to pixel (px,py)
          done = kFALSE;
-         norm = 0;
+         norm = nullptr;
          // propagate to the clipping shape if any
          if (fClippingShape) {
             if (inclip) {
@@ -1967,7 +1967,7 @@ void TGeoPainter::SetExplodedView(Int_t ibomb)
    }
    if ((Int_t)ibomb == fExplodedView)
       return;
-   Bool_t change = (gPad == 0) ? kFALSE : kTRUE;
+   Bool_t change = (gPad == nullptr) ? kFALSE : kTRUE;
 
    if (ibomb == kGeoNoBomb) {
       change &= ((fExplodedView == kGeoNoBomb) ? kFALSE : kTRUE);

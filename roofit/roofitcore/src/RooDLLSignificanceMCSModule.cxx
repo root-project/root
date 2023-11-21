@@ -44,8 +44,6 @@ to test that assumption.
 using namespace std;
 
 ClassImp(RooDLLSignificanceMCSModule);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +53,7 @@ ClassImp(RooDLLSignificanceMCSModule);
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
   _parName(param.GetName()),
-  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(nullHypoValue)
+  _nullValue(nullHypoValue)
 {
 }
 
@@ -68,7 +66,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
   _parName(parName),
-  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(nullHypoValue)
+  _nullValue(nullHypoValue)
 {
 }
 
@@ -80,32 +78,11 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, do
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) :
   RooAbsMCStudyModule(other),
   _parName(other._parName),
-  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(other._nullValue)
+  _nullValue(other._nullValue)
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooDLLSignificanceMCSModule:: ~RooDLLSignificanceMCSModule()
-{
-  if (_nll0h) {
-    delete _nll0h ;
-  }
-  if (_dll0h) {
-    delete _dll0h ;
-  }
-  if (_sig0h) {
-    delete _sig0h ;
-  }
-  if (_data) {
-    delete _data ;
-  }
-}
-
-
+RooDLLSignificanceMCSModule::~RooDLLSignificanceMCSModule() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module after attachment to RooMCStudy object
@@ -119,22 +96,22 @@ bool RooDLLSignificanceMCSModule::initializeInstance()
   }
 
   // Construct variable that holds -log(L) fit with null hypothesis for given parameter
-  TString nll0hName = Form("nll_nullhypo_%s",_parName.c_str()) ;
-  TString nll0hTitle = Form("-log(L) with null hypothesis for param %s",_parName.c_str()) ;
-  _nll0h = new RooRealVar(nll0hName.Data(),nll0hTitle.Data(),0) ;
+  std::string nll0hName = "nll_nullhypo_" + _parName;
+  std::string nll0hTitle = "-log(L) with null hypothesis for param " + _parName;
+  _nll0h = std::make_unique<RooRealVar>(nll0hName.c_str(),nll0hTitle.c_str(),0) ;
 
   // Construct variable that holds -log(L) fit with null hypothesis for given parameter
-  TString dll0hName = Form("dll_nullhypo_%s",_parName.c_str()) ;
-  TString dll0hTitle = Form("-log(L) difference w.r.t null hypo for param %s",_parName.c_str()) ;
-  _dll0h = new RooRealVar(dll0hName.Data(),dll0hTitle.Data(),0) ;
+  std::string dll0hName = "dll_nullhypo_" + _parName;
+  std::string dll0hTitle = "-log(L) difference w.r.t null hypo for param " + _parName;
+  _dll0h = std::make_unique<RooRealVar>(dll0hName.c_str(),dll0hTitle.c_str(),0) ;
 
   // Construct variable that holds significance corresponding to delta(-log(L)) w.r.t to null hypothesis for given parameter
-  TString sig0hName = Form("significance_nullhypo_%s",_parName.c_str()) ;
-  TString sig0hTitle = Form("Gaussian signficiance of Delta(-log(L)) w.r.t null hypo for param %s",_parName.c_str()) ;
-  _sig0h = new RooRealVar(sig0hName.Data(),sig0hTitle.Data(),-10,100) ;
+  std::string sig0hName = "significance_nullhypo_" + _parName;
+  std::string sig0hTitle = "Gaussian signficiance of Delta(-log(L)) w.r.t null hypo for param " + _parName;
+  _sig0h = std::make_unique<RooRealVar>(sig0hName.c_str(),sig0hTitle.c_str(),-10,100) ;
 
   // Create new dataset to be merged with RooMCStudy::fitParDataSet
-  _data = new RooDataSet("DeltaLLSigData","Additional data for Delta(-log(L)) study",RooArgSet(*_nll0h,*_dll0h,*_sig0h)) ;
+  _data = std::make_unique<RooDataSet>("DeltaLLSigData","Additional data for Delta(-log(L)) study",RooArgSet(*_nll0h,*_dll0h,*_sig0h)) ;
 
   return true ;
 }
@@ -159,7 +136,7 @@ bool RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/)
 
 RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 {
-  return _data ;
+  return _data.get();
 }
 
 

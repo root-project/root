@@ -41,7 +41,7 @@ TBranchObject::TBranchObject()
 : TBranch()
 {
    fNleaves = 1;
-   fOldObject = 0;
+   fOldObject = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ TBranchObject::TBranchObject()
 TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
 : TBranch()
 {
-   Init(tree,0,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
+   Init(tree,nullptr,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classnam
 TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
 : TBranch()
 {
-   Init(0,parent,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
+   Init(nullptr,parent,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* clas
 
 void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t /*splitlevel*/, Int_t compress, Bool_t isptrptr)
 {
-   if (tree==0 && parent!=0) tree = parent->GetTree();
+   if (tree==nullptr && parent!=nullptr) tree = parent->GetTree();
    fTree   = tree;
    fMother = parent ? parent->GetMother() : this;
    fParent = parent;
@@ -83,7 +83,7 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
       fOldObject = (TObject*)addobj;
       addobj = &fOldObject;
    } else {
-      fOldObject = 0;
+      fOldObject = nullptr;
    }
 
    char** apointer = (char**) addobj;
@@ -212,7 +212,7 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
    Int_t nbranches = fBranches.GetEntriesFast();
 
    if (nbranches) {
-      if (fAddress == 0) {
+      if (fAddress == nullptr) {
          SetupAddresses();
       }
       nbytes = 0;
@@ -241,7 +241,7 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 
 Int_t TBranchObject::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
 {
-   expectedClass = 0;
+   expectedClass = nullptr;
    expectedType = kOther_t;
    TLeafObject* lobj = (TLeafObject*) GetListOfLeaves()->At(0);
    if (!lobj) {
@@ -345,7 +345,7 @@ void TBranchObject::SetAddress(void* add)
    fAddress = (char*) add;
    char** ppointer = (char**) add;
 
-   char* obj = 0;
+   char* obj = nullptr;
    if (ppointer) {
       obj = *ppointer;
    }
@@ -399,8 +399,8 @@ void TBranchObject::SetAddress(void* add)
       isDot = 1;
    }
 
-   char* pointer = 0;
-   TRealData* rd = 0;
+   char* pointer = nullptr;
+   TRealData* rd = nullptr;
    TIter next(cl->GetListOfRealData());
    while ((rd = (TRealData*) next())) {
       if (rd->TestBit(TRealData::kTransient)) continue;
@@ -419,9 +419,9 @@ void TBranchObject::SetAddress(void* add)
       if (ppointer) {
          pointer = obj + offset;
       }
-      TBranch* branch = 0;
+      TBranch* branch = nullptr;
       if (dm->IsaPointer()) {
-         TClass* clobj = 0;
+         TClass* clobj = nullptr;
          if (!dm->IsBasic()) {
             clobj = TClass::GetClass(dm->GetTypeName());
          }
@@ -551,7 +551,7 @@ void TBranchObject::Streamer(TBuffer& R__b)
       ResetBit(kOldWarn);
    } else {
       TDirectory* dirsav = fDirectory;
-      fDirectory = 0;  // to avoid recursive calls
+      fDirectory = nullptr;  // to avoid recursive calls
 
       R__b.WriteClassBuffer(TBranchObject::Class(), this);
 
@@ -593,7 +593,7 @@ void TBranchObject::Streamer(TBuffer& R__b)
 
 void TBranchObject::SetupAddresses()
 {
-   if (fAddress == 0) {
+   if (fAddress == nullptr) {
       // try to create object
       if (!TestBit(kWarn)) {
          TClass* cl = TClass::GetClass(fClassName);

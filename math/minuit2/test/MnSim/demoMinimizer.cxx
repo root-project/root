@@ -30,7 +30,7 @@ int demoMinimizer(const char *algoName, int printlevel)
    min->SetTolerance(0.001);
    min->SetPrintLevel(printlevel);
 
-   // create funciton wrapper for minmizer
+   // create function wrapper for minmizer
    // a IMultiGenFunction type
    ROOT::Math::Functor f(&Rosenbrock, 2);
 

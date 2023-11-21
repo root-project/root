@@ -896,7 +896,7 @@ void TGLSurfacePainter::DrawSectionXOZ()const
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[i + 1][binY], fMesh[i][binY + 1]), kFALSE).second);
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[i][binY], fMesh[i][binY + 1]), kFALSE).second);
          }
-         if (fProj.fVertices.size()) {
+         if (!fProj.fVertices.empty()) {
             fProj.fRGBA[0] = (UChar_t) (50 + fgRandom->Integer(206));
             fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
             fProj.fRGBA[2] = (UChar_t) fgRandom->Integer(150);
@@ -946,7 +946,7 @@ void TGLSurfacePainter::DrawSectionYOZ()const
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[binX][j + 1], fMesh[binX + 1][j]), kFALSE).second);
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[binX][j], fMesh[binX + 1][j]), kFALSE).second);
          }
-         if (fProj.fVertices.size()) {
+         if (!fProj.fVertices.empty()) {
             fProj.fRGBA[0] = (UChar_t) (50 + fgRandom->Integer(206));
             fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
             fProj.fRGBA[2] = (UChar_t) fgRandom->Integer(150);
@@ -1043,7 +1043,7 @@ void TGLSurfacePainter::DrawSectionXOY()const
       }
    }
 
-   if (fSectionPass && fProj.fVertices.size()) {
+   if (fSectionPass && !fProj.fVertices.empty()) {
       fProj.fRGBA[0] = (UChar_t) fgRandom->Integer(150);
       fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
       fProj.fRGBA[2] = (UChar_t) (50 + fgRandom->Integer(206));
@@ -1225,7 +1225,7 @@ Bool_t TGLSurfacePainter::HasSections()const
 
 Bool_t TGLSurfacePainter::HasProjections()const
 {
-   return fXOZProj.size() || fYOZProj.size() || fXOYProj.size();
+   return !fXOZProj.empty() || !fYOZProj.empty() || !fXOYProj.empty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

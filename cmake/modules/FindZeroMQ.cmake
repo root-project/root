@@ -38,17 +38,21 @@ set ( ZeroMQ_LIBRARIES ${ZeroMQ_LIBRARY} )
 set ( ZeroMQ_INCLUDE_DIRS ${ZeroMQ_INCLUDE_DIR} )
 
 # check for zmq_ppoll
-if(ZeroMQ_FOUND)
-    SET(SAVE_CMAKE_REQUIRED_DEFINITIONS "${CMAKE_REQUIRED_DEFINITIONS}")
-    SET(CMAKE_REQUIRED_DEFINITIONS "-DZMQ_BUILD_DRAFT_API")
+if(ZeroMQ_LIBRARIES)
+    include(CheckCXXSymbolExists)
+    set(CMAKE_REQUIRED_LIBRARIES ${ZeroMQ_LIBRARIES})
+    set(CMAKE_REQUIRED_INCLUDES ${ZeroMQ_INCLUDE_DIRS})
+    set(CMAKE_REQUIRED_DEFINITIONS "-DZMQ_BUILD_DRAFT_API")
     check_cxx_symbol_exists(zmq_ppoll zmq.h ZeroMQ_HAS_PPOLL)
-    SET(CMAKE_REQUIRED_DEFINITIONS "${SAVE_CMAKE_REQUIRED_DEFINITIONS}")
+    unset(CMAKE_REQUIRED_LIBRARIES)
+    unset(CMAKE_REQUIRED_INCLUDES)
+    unset(CMAKE_REQUIRED_DEFINITIONS)
 endif()
 
 include ( FindPackageHandleStandardArgs )
 # handle the QUIETLY and REQUIRED arguments and set ZeroMQ_FOUND to TRUE
 # if all listed variables are TRUE
-find_package_handle_standard_args ( ZeroMQ DEFAULT_MSG ZeroMQ_LIBRARIES ZeroMQ_INCLUDE_DIRS ZeroMQ_HAS_PPOLL)
+find_package_handle_standard_args ( ZeroMQ DEFAULT_MSG ZeroMQ_LIBRARIES ZeroMQ_INCLUDE_DIRS ZeroMQ_HAS_PPOLL )
 
 if(ZeroMQ_FOUND)
     if(NOT TARGET libzmq)

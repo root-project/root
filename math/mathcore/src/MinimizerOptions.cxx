@@ -12,8 +12,6 @@
 
 #include "Math/GenAlgoOptions.h"
 
-#include <RConfig.h>
-
 // case of using ROOT plug-in manager
 #ifndef MATH_NO_PLUGIN_MANAGER
 #include "TEnv.h"
@@ -46,7 +44,7 @@ void MinimizerOptions::SetDefaultMinimizer(const char * type, const char * algo)
    // set the default minimizer type and algorithm
    if (type) Minim::gDefaultMinimizer = std::string(type);
    if (algo) Minim::gDefaultMinimAlgo = std::string(algo);
-   if (Minim::gDefaultMinimAlgo == "" && ( Minim::gDefaultMinimizer == "Minuit" ||
+   if (Minim::gDefaultMinimAlgo.empty() && ( Minim::gDefaultMinimizer == "Minuit" ||
        Minim::gDefaultMinimizer == "Minuit2") )
       Minim::gDefaultMinimAlgo = "Migrad";
 }
@@ -106,11 +104,11 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 
 
    // The "default default" minimizer in case there is nothing set in .rootrc
-#ifdef R__HAS_MINUIT2
+#ifndef MATH_USE_LEGACY_MINUIT_AS_DEFAULT
    static constexpr auto defaultDefaultMinimizer = "Minuit2";
 #else
    static constexpr auto defaultDefaultMinimizer = "Minuit";
-#endif // R__HAS_MINUIT2
+#endif // MATH_USE_LEGACY_MINUIT_AS_DEFAULT
 
 
 #ifdef MATH_NO_PLUGIN_MANAGER
@@ -122,14 +120,14 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 #else
    R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
-   if (Minim::gDefaultMinimizer.size() != 0)
+   if (!Minim::gDefaultMinimizer.empty())
       return Minim::gDefaultMinimizer;
 
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    // Another thread also waiting for the write lock might have
    // done the assignment
-   if (Minim::gDefaultMinimizer.size() != 0)
+   if (!Minim::gDefaultMinimizer.empty())
       return Minim::gDefaultMinimizer;
 
    // use value defined in etc/system.rootrc  (if not found Minuit is used)

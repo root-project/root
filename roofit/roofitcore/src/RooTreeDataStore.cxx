@@ -19,7 +19,7 @@
 \class RooTreeDataStore
 \ingroup Roofitcore
 
-RooTreeDataStore is a TTree-backed data storage. When a file is opened before
+TTree-backed data storage. When a file is opened before
 creating the data storage, the storage will be file-backed. This reduces memory
 pressure because it allows storing the data in the file and reading it on demand.
 For a completely memory-backed storage, which is faster than the file-backed storage,
@@ -143,18 +143,17 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
-          const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-          Int_t nStart, Int_t nStop, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(false),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName))
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore &tds, const RooArgSet &vars,
+                                   const RooFormulaVar *cutVar, const char *cutRange, Int_t nStart, Int_t nStop,
+                                   const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)),
+     _varsww(vars),
+     _wgtVar(weightVar(vars, wgtVarName))
 {
   // WVE NEED TO ADJUST THIS FOR WEIGHTS
 
   // Protected constructor for internal use only
-  _tree = nullptr ;
-  _cacheTree = nullptr ;
+
   createTree(makeTreeName(), title);
 
   // Deep clone cutVar and attach clone to this dataset
@@ -167,10 +166,10 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
   // Constructor from existing data set with list of variables that preserves the cache
   initialize();
 
-  attachCache(nullptr,((RooTreeDataStore&)tds)._cachedVars) ;
+  attachCache(nullptr,(static_cast<RooTreeDataStore&>(tds))._cachedVars) ;
 
   // WVE copy values of cached variables here!!!
-  _cacheTree->CopyEntries(((RooTreeDataStore&)tds)._cacheTree) ;
+  _cacheTree->CopyEntries((static_cast<RooTreeDataStore&>(tds))._cacheTree) ;
   _cacheOwner = nullptr ;
 
   loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
@@ -524,7 +523,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
       continue ;
     }
 
-    _cachedVars.assign(((RooTreeDataStore*)ads)->_cachedVars) ;
+    _cachedVars.assign(static_cast<RooTreeDataStore const*>(ads)->_cachedVars) ;
     fill() ;
   }
 
@@ -555,7 +554,7 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 {
   checkInit() ;
 
-  Int_t ret = ((RooTreeDataStore*)this)->GetEntry(index, 1) ;
+  Int_t ret = const_cast<RooTreeDataStore*>(this)->GetEntry(index, 1);
 
   if(!ret) return nullptr;
 

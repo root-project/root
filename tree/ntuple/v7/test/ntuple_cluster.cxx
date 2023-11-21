@@ -12,7 +12,7 @@
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cstdint>
 #include <memory>

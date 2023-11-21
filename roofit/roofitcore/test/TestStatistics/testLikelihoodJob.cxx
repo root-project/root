@@ -12,17 +12,18 @@
 
 #include "RooFit/TestStatistics/LikelihoodWrapper.h"
 
-#include "RooRandom.h"
-#include "RooWorkspace.h"
-#include "RooMinimizer.h"
-#include "RooFitResult.h"
-#include "RooDataHist.h" // complete type in Binned test
-#include "RooCategory.h" // complete type in MultiBinnedConstraint test
-#include "RooFit/TestStatistics/RooUnbinnedL.h"
-#include "RooFit/TestStatistics/RooBinnedL.h"
-#include "RooFit/TestStatistics/buildLikelihood.h"
-#include "RooFit/TestStatistics/RooRealL.h"
-#include "RooFit/MultiProcess/Config.h"
+#include <RooRandom.h>
+#include <RooWorkspace.h>
+#include <RooMinimizer.h>
+#include <RooFitResult.h>
+#include <RooDataHist.h> // complete type in Binned test
+#include <RooCategory.h> // complete type in MultiBinnedConstraint test
+#include <RooFit/TestStatistics/RooUnbinnedL.h>
+#include <RooFit/TestStatistics/RooBinnedL.h>
+#include <RooFit/TestStatistics/buildLikelihood.h>
+#include <RooFit/TestStatistics/RooRealL.h>
+#include <RooFit/MultiProcess/Config.h>
+#include <RooHelpers.h>
 
 #include "Math/Util.h" // KahanSum
 

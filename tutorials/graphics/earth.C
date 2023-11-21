@@ -50,7 +50,7 @@ TCanvas *earth(){
    c1->cd(2); hm->Draw("mercator");
    c1->cd(3); hs->Draw("sinusoidal");
    c1->cd(4); hp->Draw("parabolic");
-   c1->cd(5); hp->Draw("mollweide");
+   c1->cd(5); hw->Draw("mollweide");
 
    return c1;
 }

@@ -745,7 +745,7 @@ TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndi
    switch (iaxis) {
    case 1: //---               R division
       Error("Divide", "Shape %s: cannot divide a pcon on radius", GetName());
-      return 0;
+      return nullptr;
    case 2: //---               Phi division
       finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start + ndiv * step);
       vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -778,7 +778,7 @@ TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndi
       }
       if (isect < 0) {
          Error("Divide", "Shape %s: cannot divide pcon on Z if divided region is not between 2 planes", GetName());
-         return 0;
+         return nullptr;
       }
       finder = new TGeoPatternZ(voldiv, ndiv, start, start + ndiv * step);
       vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -814,7 +814,7 @@ TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndi
          ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
       }
       return vmulti;
-   default: Error("Divide", "Shape %s: Wrong axis %d for division", GetName(), iaxis); return 0;
+   default: Error("Divide", "Shape %s: Wrong axis %d for division", GetName(), iaxis); return nullptr;
    }
 }
 

@@ -96,7 +96,7 @@ Long64_t TEvePointSelector::Select(const char* selection)
    }
 
    TString sel;
-   if (selection != 0)
+   if (selection != nullptr)
       sel = selection;
    else
       sel = fSelection;

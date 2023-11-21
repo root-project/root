@@ -95,10 +95,10 @@ public:
       if (fgCommunicators[0] != 0 && fgCommunicators[1] != 0) {
          delete fgCommunicators[0];
          fgCommunicators[0] = 0;
-         fgIndecesComm[0] = 0;
+         fgIndicesComm[0] = 0;
          delete fgCommunicators[1];
          fgCommunicators[1] = 0;
-         fgIndecesComm[1] = 0;
+         fgIndicesComm[1] = 0;
       }
 
       MPITerminate();
@@ -145,7 +145,7 @@ private:
    static MPI::Intracomm *fgCommunicator;
    static int fgIndexComm;                    // maximum 2 communicators, so index can be 0 and 1
    static MPI::Intracomm *fgCommunicators[2]; // maximum 2 communicators
-   static unsigned int fgIndecesComm[2];
+   static unsigned int fgIndicesComm[2];
 #endif
 };
 

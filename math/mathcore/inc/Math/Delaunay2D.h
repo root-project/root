@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id: Delaunay2D.h,v 1.00
-// Author: Daniel Funke, Lorenzo Moneta
+// Authors: Daniel Funke, Lorenzo Moneta, Olivier Couet
 
 /*************************************************************************
  * Copyright (C) 2015 ROOT Math Team                                     *
@@ -59,10 +59,8 @@ namespace ROOT {
 /**
 
    Class to generate a Delaunay triangulation of a 2D set of points.
-   Algorithm based on **Triangle**, a two-dimensional quality mesh generator and
-   Delaunay triangulator from Jonathan Richard Shewchuk.
-
-   See [http://www.cs.cmu.edu/~quake/triangle.html]
+   Algorithm based on [CDT](https://github.com/artem-ogre/CDT), a C++ library for
+   generating constraint or conforming Delaunay triangulations.
 
    After having found the triangles using the above library,  barycentric coordinates are used
    to test whether a point is inside a triangle (inTriangle test) and for interpolation.
@@ -101,7 +99,7 @@ namespace ROOT {
 
      P.z = la * A.z + lb * B.z + lc * C.z
 
-   To speed up localisation of points (to see to which triangle belong) a grid is layed over the internal coordinate space.
+   To speed up localisation of points (to see to which triangle belong) a grid is laid over the internal coordinate space.
    A reference to triangle ABC is added to _all_ grid cells that include ABC's bounding box.
    The size of the grid is defined to be 25x25
 

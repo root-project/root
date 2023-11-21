@@ -208,7 +208,7 @@ void TPDF::Close(Option_t *)
    Int_t streamLength = fNByte-fStartStream-10;
    EndObject();
    NewObject(4*(fNbPage-1)+kObjFirstPage+2);
-   WriteInteger(streamLength, 0);
+   WriteInteger(streamLength, false);
    PrintStr("@");
    EndObject();
    NewObject(4*(fNbPage-1)+kObjFirstPage+3);
@@ -305,7 +305,7 @@ void TPDF::Close(Option_t *)
    }
    PrintStr(">>@");
    EndObject();
-   if (fAlphas.size()) fAlphas.clear();
+   if (!fAlphas.empty()) fAlphas.clear();
 
    // Cross-Reference Table
    Int_t refInd = fNByte;
@@ -335,7 +335,7 @@ void TPDF::Close(Option_t *)
    PrintStr(" 0 R@");
    PrintStr(">>@");
    PrintStr("startxref@");
-   WriteInteger(refInd, 0);
+   WriteInteger(refInd, false);
    PrintStr("@");
    PrintStr("%%EOF@");
 
@@ -1399,7 +1399,7 @@ void TPDF::FontEncode()
       PrintStr("/Type /Font@");
       PrintStr("/Subtype /Type1@");
       PrintStr("/Name /F");
-      WriteInteger(i+1,0);
+      WriteInteger(i+1,false);
       PrintStr("@");
       PrintStr("/BaseFont ");
       PrintStr(sdtfonts[i]);
@@ -1454,7 +1454,7 @@ void TPDF::NewObject(Int_t n)
    }
    fObjPos[n-1] = fNByte;
    fNbObj       = TMath::Max(fNbObj,n);
-   WriteInteger(n, 0);
+   WriteInteger(n, false);
    PrintStr(" 0 obj");
    PrintStr("@");
 }
@@ -1484,7 +1484,7 @@ void TPDF::NewPage()
       Int_t streamLength = fNByte-fStartStream-10;
       EndObject();
       NewObject(4*(fNbPage-2)+kObjFirstPage+2);
-      WriteInteger(streamLength, 0);
+      WriteInteger(streamLength, false);
       PrintStr("@");
       EndObject();
       NewObject(4*(fNbPage-2)+kObjFirstPage+3);
@@ -1799,7 +1799,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("<<@");
    for (i=0; i<kNumberOfFonts; i++) {
       PrintStr(" /F");
-      WriteInteger(i+1,0);
+      WriteInteger(i+1,false);
       WriteInteger(kObjFont+i);
       PrintStr(" 0 R");
    }
@@ -1809,7 +1809,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("/ExtGState");
    WriteInteger(kObjTransList);
    PrintStr(" 0 R @");
-   if (fAlphas.size()) fAlphas.clear();
+   if (!fAlphas.empty()) fAlphas.clear();
 
    PrintStr("/ColorSpace << /Cs8");
    WriteInteger(kObjColorSpace);
@@ -2415,9 +2415,9 @@ void TPDF::WriteCompressedBuffer()
    stream.avail_in  = (uInt)fLenBuffer;
    stream.next_out  = (Bytef*)out;
    stream.avail_out = (uInt)2*fLenBuffer;
-   stream.zalloc    = (alloc_func)0;
-   stream.zfree     = (free_func)0;
-   stream.opaque    = (voidpf)0;
+   stream.zalloc    = (alloc_func)nullptr;
+   stream.zfree     = (free_func)nullptr;
+   stream.opaque    = (voidpf)nullptr;
 
    err = deflateInit(&stream, Z_DEFAULT_COMPRESSION);
    if (err != Z_OK) {

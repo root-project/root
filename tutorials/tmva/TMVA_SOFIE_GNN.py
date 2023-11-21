@@ -9,8 +9,8 @@ import time
 # defining graph properties
 num_nodes=5
 num_edges=20
-snd = np.array([1,2,3,4,2,3,4,3,4,4,0,0,0,0,1,1,1,2,2,3])
-rec = np.array([0,0,0,0,1,1,1,2,2,3,1,2,3,4,2,3,4,3,4,4])
+snd = np.array([1,2,3,4,2,3,4,3,4,4,0,0,0,0,1,1,1,2,2,3], dtype='int32')
+rec = np.array([0,0,0,0,1,1,1,2,2,3,1,2,3,4,2,3,4,3,4,4], dtype='int32')
 node_size=4
 edge_size=4
 global_size=1
@@ -24,7 +24,7 @@ def get_graph_data_dict(num_nodes, num_edges, NODE_FEATURE_SIZE=2, EDGE_FEATURE_
       "globals": 10*np.random.rand(GLOBAL_FEATURE_SIZE).astype(np.float32)-5.,
       "nodes": 10*np.random.rand(num_nodes, NODE_FEATURE_SIZE).astype(np.float32)-5.,
       "edges": 10*np.random.rand(num_edges, EDGE_FEATURE_SIZE).astype(np.float32)-5.,
-      "senders": snd, 
+      "senders": snd,
       "receivers": rec
     }
 
@@ -169,22 +169,22 @@ class  SofieGNN:
             self.output_transform_session.infer(core_input)
             output = CopyData(core_input)
             output_ops.append(output)
-            
+
         return output_ops
-    
+
 # Test both GNN on some simulated events
-def GenerateData(): 
+def GenerateData():
     data = get_graph_data_dict(num_nodes,num_edges, node_size, edge_size, global_size)
     return data
 
 numevts = 100
 dataSet = []
-for i in range(0,numevts): 
+for i in range(0,numevts):
     data = GenerateData()
     dataSet.append(data)
 
 # Run graph_nets model
-# First we convert input data to the required input format 
+# First we convert input data to the required input format
 gnetData = []
 for i in range(0,numevts):
     graphData = dataSet[i]
@@ -197,16 +197,14 @@ def RunGNet(inputGraphData) :
     return output_gn
 
 start = time.time()
-hG = ROOT.TH1D("hG","hG",100,1,0)
-for i in range(0,numevts): 
+hG = ROOT.TH1D("hG","Result from graphnet",100,1,0)
+for i in range(0,numevts):
     out = RunGNet(gnetData[i])
     g = out[1].globals.numpy()
     hG.Fill(np.mean(g))
-    
+
 end = time.time()
 print("elapsed time for ",numevts,"events = ",end-start)
-hG.Draw()
-ROOT.gPad.Draw()
 
 # running SOFIE-GNN
 sofieData = []
@@ -216,18 +214,75 @@ for i in range(0,numevts):
     input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(graphData['nodes'])
     input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(graphData['edges'])
     input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(graphData['globals'])
+    #make sure dtype of graphData['receivers'] and senders is int32
+    input_data.receivers = graphData['receivers']
+    input_data.senders = graphData['senders']
     sofieData.append(input_data)
 
-hS = ROOT.TH1D("hS","hS",100,1,0)
+print("SOFIE Data: first event")
+print("receivers",sofieData[0].receivers)
+print("senders",sofieData[0].senders)
+
+endSC = time.time()
+print("time to convert data to SOFIE format",endSC-end)
+
+hS = ROOT.TH1D("hS","Result from SOFIE",100,1,0)
+start0 = time.time()
 gnn = SofieGNN()
 start = time.time()
-for i in range(0,numevts): 
+print("time to create SOFIE GNN class", start-start0)
+for i in range(0,numevts):
     #print("inference event....",i)
     out = gnn.infer(sofieData[i])
     g = np.asarray(out[1].global_data)
     hS.Fill(np.mean(g))
-    
+
 end = time.time()
 print("elapsed time for ",numevts,"events = ",end-start)
+
+c0 = ROOT.TCanvas()
+c0.Divide(1,2)
+c1 = c0.cd(1)
+c1.Divide(2,1)
+c1.cd(1)
+hG.Draw()
+c1.cd(2)
 hS.Draw()
-ROOT.gPad.Draw()
+
+hDe = ROOT.TH1D("hDe","Difference for edge data",100,1,0)
+hDn = ROOT.TH1D("hDn","Difference for node data",100,1,0)
+hDg = ROOT.TH1D("hDg","Difference for global data",100,1,0)
+#compute differences between SOFIE and GNN
+for i in range(0,numevts):
+    outSofie = gnn.infer(sofieData[i])
+    outGnet = RunGNet(gnetData[i])
+    edgesG = outGnet[1].edges.numpy()
+    edgesS = np.asarray(outSofie[1].edge_data)
+    if (i == 0) : print(edgesG.shape)
+    for j in range(0,edgesG.shape[0]) :
+       for k in range(0,edgesG.shape[1]) :
+        hDe.Fill(edgesG[j,k]-edgesS[j,k])
+
+    nodesG = outGnet[1].nodes.numpy()
+    nodesS = np.asarray(outSofie[1].node_data)
+    for j in range(0,nodesG.shape[0]) :
+       for k in range(0,nodesG.shape[1]) :
+        hDn.Fill(nodesG[j,k]-nodesS[j,k])
+
+    globG = outGnet[1].globals.numpy()
+    globS = np.asarray(outSofie[1].global_data)
+    for j in range(0,globG.shape[1]) :
+       hDg.Fill(globG[0,j]-globS[j])
+
+
+c2 = c0.cd(2)
+c2.Divide(3,1)
+c2.cd(1)
+hDe.Draw()
+c2.cd(2)
+hDn.Draw()
+c2.cd(3)
+hDg.Draw()
+
+c0.Draw()
+

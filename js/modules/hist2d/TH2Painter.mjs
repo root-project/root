@@ -876,11 +876,13 @@ class TH2Painter extends THistPainter {
             const bin_content = histo.fBins.arr[n].fContent;
             if (n === 0) this.gminbin = this.gmaxbin = bin_content;
 
-            if (bin_content < this.gminbin) this.gminbin = bin_content; else
-               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+            if (bin_content < this.gminbin)
+               this.gminbin = bin_content;
+            else if (bin_content > this.gmaxbin)
+               this.gmaxbin = bin_content;
 
-            if (bin_content > 0)
-               if ((this.gminposbin === null) || (this.gminposbin > bin_content)) this.gminposbin = bin_content;
+            if ((bin_content > 0) && ((this.gminposbin === null) || (this.gminposbin > bin_content)))
+               this.gminposbin = bin_content;
          }
       } else {
          // global min/max, used at the moment in 3D drawing
@@ -902,14 +904,14 @@ class TH2Painter extends THistPainter {
       }
 
       // this value used for logz scale drawing
-      if (this.gminposbin === null)
+      if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
       if (this.options.Axis > 0) {
          // Paint histogram axis only
          this.draw_content = false;
       } else {
-         this.draw_content = this.gmaxbin > 0;
+         this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
          if (!this.draw_content && this.options.Zero && this.isTH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
@@ -919,18 +921,20 @@ class TH2Painter extends THistPainter {
 
    /** @summary Count TH2 histogram statistic
      * @desc Optionally one could provide condition function to select special range */
-   countStat(cond) {
-      if (!cond && this.options.cutg)
-         cond = (x, y) => this.options.cutg.IsInside(x, y);
+   countStat(cond, count_skew) {
+      if (!isFunc(cond))
+         cond = this.options.cutg ? (x, y) => this.options.cutg.IsInside(x, y) : null;
 
       const histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis,
             fp = this.getFramePainter(),
             funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
-            res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0], xmax: 0, ymax: 0, wmax: null },
+            res = { name: histo.fName, entries: 0, eff_entries: 0, integral: 0,
+                    meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    xmax: 0, ymax: 0, wmax: null, skewx: 0, skewy: 0, skewd: 0, kurtx: 0, kurty: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && (Math.abs(histo.fTsumw) > 1e-300) && !cond;
-      let stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
+      let stat_sum0 = 0, stat_sumw2 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0,
-          xside, yside, xx, yy, zz;
+          xside, yside, xx, yy, zz, xleft, xright, yleft, yright;
 
       if (this.isTH2Poly()) {
          const len = histo.fBins.arr.length;
@@ -977,6 +981,7 @@ class TH2Painter extends THistPainter {
 
             if (!has_counted_stat) {
                stat_sum0 += zz;
+               stat_sumw2 += zz * zz;
                stat_sumx1 += xx * zz;
                stat_sumy1 += yy * zz;
                stat_sumx2 += xx * xx * zz;
@@ -984,10 +989,10 @@ class TH2Painter extends THistPainter {
             }
          }
       } else {
-         const xleft = this.getSelectIndex('x', 'left'),
-               xright = this.getSelectIndex('x', 'right'),
-               yleft = this.getSelectIndex('y', 'left'),
-               yright = this.getSelectIndex('y', 'right');
+         xleft = this.getSelectIndex('x', 'left');
+         xright = this.getSelectIndex('x', 'right');
+         yleft = this.getSelectIndex('y', 'left');
+         yright = this.getSelectIndex('y', 'right');
 
          for (let xi = 0; xi <= this.nbinsx + 1; ++xi) {
             xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
@@ -1013,6 +1018,7 @@ class TH2Painter extends THistPainter {
 
                if (!has_counted_stat) {
                   stat_sum0 += zz;
+                  stat_sumw2 += zz * zz;
                   stat_sumx1 += xx * zz;
                   stat_sumy1 += yy * zz;
                   stat_sumx2 += xx**2 * zz;
@@ -1025,6 +1031,7 @@ class TH2Painter extends THistPainter {
 
       if (has_counted_stat) {
          stat_sum0 = histo.fTsumw;
+         stat_sumw2 = histo.fTsumw2;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
@@ -1046,6 +1053,40 @@ class TH2Painter extends THistPainter {
       if (histo.fEntries > 1)
          res.entries = histo.fEntries;
 
+      res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
+
+      if (count_skew && !this.isTH2Poly()) {
+         let sumx3 = 0, sumy3 = 0, sumx4 = 0, sumy4 = 0, np = 0, w = 0;
+         for (let xi = xleft; xi < xright; ++xi) {
+            xx = xaxis.GetBinCoord(xi + 0.5);
+            for (let yi = yleft; yi < yright; ++yi) {
+               yy = yaxis.GetBinCoord(yi + 0.5);
+               if (cond && !cond(xx, yy)) continue;
+               w = histo.getBinContent(xi + 1, yi + 1);
+               np += w;
+               sumx3 += w * Math.pow(xx - res.meanx, 3);
+               sumy3 += w * Math.pow(yy - res.meany, 3);
+               sumx4 += w * Math.pow(xx - res.meanx, 4);
+               sumy4 += w * Math.pow(yy - res.meany, 4);
+            }
+         }
+
+         const stddev3x = Math.pow(res.rmsx, 3),
+               stddev3y = Math.pow(res.rmsy, 3),
+               stddev4x = Math.pow(res.rmsx, 4),
+               stddev4y = Math.pow(res.rmsy, 4);
+         if (np * stddev3x !== 0)
+            res.skewx = sumx3 / (np * stddev3x);
+         if (np * stddev3y !== 0)
+            res.skewy = sumy3 / (np * stddev3y);
+         res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
+         if (np * stddev4x !== 0)
+            res.kurtx = sumx4 / (np * stddev4x) - 3;
+         if (np * stddev4y !== 0)
+            res.kurty = sumy4 / (np * stddev4y) - 3;
+         res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
+      }
+
       return res;
    }
 
@@ -1056,16 +1097,16 @@ class TH2Painter extends THistPainter {
 
       if (dostat === 1) dostat = 1111;
 
-      const data = this.countStat(),
-          print_name = Math.floor(dostat % 10),
-          print_entries = Math.floor(dostat / 10) % 10,
-          print_mean = Math.floor(dostat / 100) % 10,
-          print_rms = Math.floor(dostat / 1000) % 10,
-          print_under = Math.floor(dostat / 10000) % 10,
-          print_over = Math.floor(dostat / 100000) % 10,
-          print_integral = Math.floor(dostat / 1000000) % 10,
-          print_skew = Math.floor(dostat / 10000000) % 10,
-          print_kurt = Math.floor(dostat / 100000000) % 10;
+      const print_name = Math.floor(dostat % 10),
+            print_entries = Math.floor(dostat / 10) % 10,
+            print_mean = Math.floor(dostat / 100) % 10,
+            print_rms = Math.floor(dostat / 1000) % 10,
+            print_under = Math.floor(dostat / 10000) % 10,
+            print_over = Math.floor(dostat / 100000) % 10,
+            print_integral = Math.floor(dostat / 1000000) % 10,
+            print_skew = Math.floor(dostat / 10000000) % 10,
+            print_kurt = Math.floor(dostat / 100000000) % 10,
+            data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
 
       stat.clearPave();
 
@@ -1088,13 +1129,21 @@ class TH2Painter extends THistPainter {
       if (print_integral > 0)
          stat.addText('Integral = ' + stat.format(data.matrix[4], 'entries'));
 
-      if (print_skew > 0) {
-         stat.addText('Skewness x = <undef>');
-         stat.addText('Skewness y = <undef>');
+      if (print_skew === 2) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)} #pm ${stat.format(data.skewd)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)} #pm ${stat.format(data.skewd)}`);
+      } else if (print_skew > 0) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)}`);
       }
 
-      if (print_kurt > 0)
-         stat.addText('Kurt = <undef>');
+      if (print_kurt === 2) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)} #pm ${stat.format(data.kurtd)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)} #pm ${stat.format(data.kurtd)}`);
+      } else if (print_kurt > 0) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)}`);
+      }
 
       if ((print_under > 0) || (print_over > 0)) {
          const get = i => data.matrix[i].toFixed(0);
@@ -1104,7 +1153,7 @@ class TH2Painter extends THistPainter {
          stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit, 2);
 
       return true;
    }
@@ -1724,7 +1773,7 @@ class TH2Painter extends THistPainter {
           zdiff, dgrx, dgry, xx, yy, ww, hh, xyfactor,
           uselogz = false, logmin = 0;
 
-      if (pad?.fLogz && (absmax > 0)) {
+      if ((pad?.fLogv ?? pad?.fLogz) && (absmax > 0)) {
          uselogz = true;
          const logmax = Math.log(absmax);
          if (absmin > 0)
@@ -3097,7 +3146,7 @@ class TH2Painter extends THistPainter {
       const need_palette = this.options.Zscale && this.options.canHavePalette();
 
       // draw new palette, resize frame if required
-      return this.drawColorPalette(need_palette, true).then(pp => {
+      return this.drawColorPalette(need_palette, true).then(async pp => {
          let pr;
          if (this.options.Circular && this.isMainPainter())
             pr = this.drawBinsCircular();
@@ -3108,7 +3157,7 @@ class TH2Painter extends THistPainter {
 
          return pr.then(() => this.completePalette(pp));
       }).then(() => this.drawHistTitle())
-        .then(() => this.drawNextFunction(0, true))
+        .then(() => this.updateFunctions())
         .then(() => {
             this.updateStatWebCanvas();
             return this.addInteractivity();

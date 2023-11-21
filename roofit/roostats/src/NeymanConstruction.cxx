@@ -131,7 +131,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
   // loop over points to test
   for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
      // get a parameter point from the list of points to test.
-    point = (RooArgSet*) fPointsToTest->get(i);//->clone("temp");
+    point = const_cast<RooArgSet*>(fPointsToTest->get(i));//->clone("temp");
 
     // set parameters of interest to current point
     fPOI->assign(*point);

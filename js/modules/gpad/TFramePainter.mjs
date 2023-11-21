@@ -78,6 +78,21 @@ function getEarthProjectionFunc(id) {
    }
 }
 
+/** @summary Unzoom preselected range for main histogram painter
+  * @desc Used with TGraph where Y zooming selected with fMinimum/fMaximum but histogram
+  * axis range can be wider. Or for normal histogram drawing when preselected range smaller than histogram range
+  * @private */
+function unzoomHistogramYRange(main) {
+    if (!isFunc(main?.getDimension) || main.getDimension() !== 1) return;
+
+    const ymin = main.draw_content ? main.hmin : main.ymin,
+          ymax = main.draw_content ? main.hmax : main.ymax;
+
+    if ((main.zoom_ymin !== main.zoom_ymax) && (ymin !== ymax) &&
+        (ymin <= main.zoom_ymin) && (main.zoom_ymax <= ymax))
+       main.zoom_ymin = main.zoom_ymax = 0;
+}
+
 // global, allow single drag at once
 let drag_rect = null, drag_kind = '', drag_painter = null;
 
@@ -1849,8 +1864,9 @@ class TFramePainter extends ObjectPainter {
       this.logx = this.logy = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-            pp = this.getPadPainter(),
-            pad = pp.getRootPad();
+            pp = this.getPadPainter(), pad = pp.getRootPad(),
+            pad_logx = pad.fLogx,
+            pad_logy = (opts.ndim === 1 ? pad.fLogv : undefined) ?? pad.fLogy;
 
       this.scales_ndim = opts.ndim;
 
@@ -1861,7 +1877,7 @@ class TFramePainter extends ObjectPainter {
       this.scale_ymax = this.ymax;
 
       if (opts.extra_y_space) {
-         const log_scale = this.swap_xy ? pad.fLogx : pad.fLogy;
+         const log_scale = this.swap_xy ? pad_logx : pad_logy;
          if (log_scale && (this.scale_ymax > 0))
             this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
          else
@@ -1912,7 +1928,7 @@ class TFramePainter extends ObjectPainter {
 
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
-                                        log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                        log: this.swap_xy ? pad_logy : pad_logx,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
                                         logcheckmin: this.swap_xy,
@@ -1926,7 +1942,7 @@ class TFramePainter extends ObjectPainter {
 
       this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                       { reverse: this.reverse_y,
-                                        log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                        log: this.swap_xy ? pad_logx : pad_logy,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
@@ -2654,14 +2670,8 @@ class TFramePainter extends ObjectPainter {
    /** @summary Fill option object used in TWebCanvas
      * @private */
    fillWebObjectOptions(res) {
-      if (!res) {
-         if (!this.snapid) return null;
-         res = { _typename: 'TWebObjectOptions', snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: '', fopt: [] };
-       }
-
       res.fcust = 'frame';
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
-      return res;
    }
 
    /** @summary Returns frame X position */
@@ -2788,7 +2798,10 @@ class TFramePainter extends ObjectPainter {
             this.zoom_xmin = this.zoom_xmax = 0;
          }
          if (unzoom_y) {
-            if (this.zoom_ymin !== this.zoom_ymax) changed = true;
+            if (this.zoom_ymin !== this.zoom_ymax) {
+               changed = true;
+               unzoomHistogramYRange(this.getMainPainter());
+            }
             this.zoom_ymin = this.zoom_ymax = 0;
          }
          if (unzoom_z) {
@@ -2845,7 +2858,10 @@ class TFramePainter extends ObjectPainter {
 
       // and process unzoom, if any
       if (unzoom_v) {
-         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) changed = true;
+         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) {
+            changed = true;
+            if (name === 'y') unzoomHistogramYRange(this.getMainPainter());
+         }
          this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
       }
 

@@ -58,7 +58,7 @@ static inline uint64_t sub_carry(uint64_t a, uint64_t b, unsigned &carry)
 /// because the value can be -1). With an initial value of r = t0, this can
 /// be used for computing the remainder after division by m (see the function
 /// mod_m in mulmod.h). The function to_ranlux passes r = 0 and uses only the
-/// return value to obtain the decimal expansion after divison by m.
+/// return value to obtain the decimal expansion after division by m.
 static inline int64_t compute_r(const uint64_t *upper, uint64_t *r)
 {
    // Subtract t1 (24 * 24 = 576 bits)

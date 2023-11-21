@@ -414,35 +414,34 @@ void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF3::GetSave(const Double_t *xx)
 {
-   //if (fNsave <= 0) return 0;
-   if (fSave.empty()) return 0;
-   Int_t np = fSave.size() - 9;
-   Double_t xmin = Double_t(fSave[np+0]);
-   Double_t xmax = Double_t(fSave[np+1]);
-   Double_t ymin = Double_t(fSave[np+2]);
-   Double_t ymax = Double_t(fSave[np+3]);
-   Double_t zmin = Double_t(fSave[np+4]);
-   Double_t zmax = Double_t(fSave[np+5]);
-   Int_t npx     = Int_t(fSave[np+6]);
-   Int_t npy     = Int_t(fSave[np+7]);
-   Int_t npz     = Int_t(fSave[np+8]);
-   Double_t x    = Double_t(xx[0]);
+   if (fSave.size() < 9) return 0;
+   Int_t nsave = fSave.size() - 9;
+   Double_t xmin = fSave[nsave+0];
+   Double_t xmax = fSave[nsave+1];
+   Double_t ymin = fSave[nsave+2];
+   Double_t ymax = fSave[nsave+3];
+   Double_t zmin = fSave[nsave+4];
+   Double_t zmax = fSave[nsave+5];
+   Int_t npx     = Int_t(fSave[nsave+6]);
+   Int_t npy     = Int_t(fSave[nsave+7]);
+   Int_t npz     = Int_t(fSave[nsave+8]);
+   Double_t x    = xx[0];
    Double_t dx   = (xmax-xmin)/npx;
    if (x < xmin || x > xmax) return 0;
    if (dx <= 0) return 0;
-   Double_t y    = Double_t(xx[1]);
+   Double_t y    = xx[1];
    Double_t dy   = (ymax-ymin)/npy;
    if (y < ymin || y > ymax) return 0;
    if (dy <= 0) return 0;
-   Double_t z    = Double_t(xx[2]);
+   Double_t z    = xx[2];
    Double_t dz   = (zmax-zmin)/npz;
    if (z < zmin || z > zmax) return 0;
    if (dz <= 0) return 0;
 
    //we make a trilinear interpolation using the 8 points surrounding x,y,z
-   Int_t ibin    = Int_t((x-xmin)/dx);
-   Int_t jbin    = Int_t((y-ymin)/dy);
-   Int_t kbin    = Int_t((z-zmin)/dz);
+   Int_t ibin    = TMath::Min(npx-1, Int_t((x-xmin)/dx));
+   Int_t jbin    = TMath::Min(npy-1, Int_t((y-ymin)/dy));
+   Int_t kbin    = TMath::Min(npz-1, Int_t((z-zmin)/dz));
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t zlow = zmin + kbin*dz;
@@ -552,41 +551,43 @@ void TF3::SetClippingBoxOff()
 void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
 {
    if (!fSave.empty()) fSave.clear();
-   Int_t nsave = (fNpx+1)*(fNpy+1)*(fNpz+1);
-   Int_t fNsave = nsave+9;
-   assert(fNsave > 9);
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
-   Int_t i,j,k,l=0;
+   Int_t npx = fNpx, npy = fNpy, npz = fNpz;
+   if ((npx < 2) || (npy < 2) || (npz < 2))
+      return;
+
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
    Double_t dz = (zmax-zmin)/fNpz;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNpx;
-      xmin = fXmin +0.5*dx;
-      xmax = fXmax -0.5*dx;
+      npx--;
+      xmin = fXmin + 0.5*dx;
+      xmax = fXmax - 0.5*dx;
    }
    if (dy <= 0) {
       dy = (fYmax-fYmin)/fNpy;
-      ymin = fYmin +0.5*dy;
-      ymax = fYmax -0.5*dy;
+      npy--;
+      ymin = fYmin + 0.5*dy;
+      ymax = fYmax - 0.5*dy;
    }
    if (dz <= 0) {
       dz = (fZmax-fZmin)/fNpz;
-      zmin = fZmin +0.5*dz;
-      zmax = fZmax -0.5*dz;
+      npz--;
+      zmin = fZmin + 0.5*dz;
+      zmax = fZmax - 0.5*dz;
    }
+   Int_t nsave = (npx + 1)*(npy + 1)*(npz + 1);
+   fSave.resize(nsave + 9);
    Double_t xv[3];
    Double_t *pp = GetParameters();
    InitArgs(xv,pp);
-   for (k=0;k<=fNpz;k++) {
+   for (Int_t k = 0, l = 0; k <= npz; k++) {
       xv[2]    = zmin + dz*k;
-      for (j=0;j<=fNpy;j++) {
+      for (Int_t j = 0; j <= npy; j++) {
          xv[1]    = ymin + dy*j;
-         for (i=0;i<=fNpx;i++) {
+         for (Int_t i = 0; i <= npx; i++) {
             xv[0]    = xmin + dx*i;
-            fSave[l] = EvalPar(xv,pp);
-            l++;
+            fSave[l++] = EvalPar(xv, pp);
          }
       }
    }
@@ -596,9 +597,9 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
    fSave[nsave+3] = ymax;
    fSave[nsave+4] = zmin;
    fSave[nsave+5] = zmax;
-   fSave[nsave+6] = fNpx;
-   fSave[nsave+7] = fNpy;
-   fSave[nsave+8] = fNpz;
+   fSave[nsave+6] = npx;
+   fSave[nsave+7] = npy;
+   fSave[nsave+8] = npz;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -11,7 +11,7 @@
 
 /** \class TMLPAnalyzer
 
-This utility class contains a set of tests usefull when developing
+This utility class contains a set of tests useful when developing
 a neural network.
 It allows you to check for unneeded variables, and to control
 the network structure.
@@ -370,8 +370,8 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    sigh->SetLineColor(kRed);
    sigh->SetFillStyle(3003);
    sigh->SetFillColor(kRed);
-   bgh->SetStats(0);
-   sigh->SetStats(0);
+   bgh->SetStats(false);
+   sigh->SetStats(false);
    stack->Add(bgh);
    stack->Add(sigh);
    TLegend *legend = new TLegend(.75, .80, .95, .95);

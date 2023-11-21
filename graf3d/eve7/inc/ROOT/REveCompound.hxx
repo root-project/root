@@ -38,7 +38,7 @@ protected:
 public:
    REveCompound(const std::string& n = "REveCompound", const std::string& t = "",
                 Bool_t doColor = kTRUE, Bool_t doTransparency = kFALSE);
-   virtual ~REveCompound() {}
+   ~REveCompound() override {}
 
    void   OpenCompound()   { ++fCompoundOpen; }
    void   CloseCompound()  { --fCompoundOpen; }
@@ -70,12 +70,12 @@ private:
 
 public:
    REveCompoundProjected();
-   virtual ~REveCompoundProjected() {}
+   ~REveCompoundProjected() override {}
 
-   virtual void SetMainColor(Color_t color);
+   void SetMainColor(Color_t color) override;
 
-   virtual void UpdateProjection() {}
-   virtual REveElement *GetProjectedAsElement() { return this; }
+   void UpdateProjection() override {}
+   REveElement *GetProjectedAsElement() override { return this; }
 };
 
 } // namespace Experimental

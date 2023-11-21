@@ -111,7 +111,7 @@ Char_t* TEveChunkManager::NewChunk()
 
 Bool_t TEveChunkManager::iterator::next()
 {
-   if (fSelection == 0)
+   if (fSelection == nullptr)
    {
       if (fAtomsToGo <= 0)
       {

@@ -931,8 +931,8 @@ private:
    static Float_t fgSimpleAxisWidthScale;
    static Float_t fgSimpleAxisBBoxScale;
 
-   TGLUtil(const TGLUtil&);            // Not implemented.
-   TGLUtil& operator=(const TGLUtil&); // Not implemented.
+   TGLUtil(const TGLUtil&) = delete;
+   TGLUtil& operator=(const TGLUtil&) = delete;
 
 public:
    virtual ~TGLUtil() {}
@@ -1098,8 +1098,8 @@ public:
 
 class TGLFloatHolder
 {
-   TGLFloatHolder(const TGLFloatHolder&);            // Not implemented
-   TGLFloatHolder& operator=(const TGLFloatHolder&); // Not implemented
+   TGLFloatHolder(const TGLFloatHolder&) = delete;
+   TGLFloatHolder& operator=(const TGLFloatHolder&) = delete;
 
    Int_t    fWhat;
    Float_t  fState;
@@ -1269,7 +1269,7 @@ class TGuardBase {
 private:
    mutable Bool_t fActive;
 
-   TGuardBase &operator = (const TGuardBase &rhs);
+   TGuardBase &operator = (const TGuardBase &rhs) = delete;
 protected:
    TGuardBase()
       : fActive(kTRUE)
@@ -1352,8 +1352,8 @@ private:
    Int_t                        fMaxPaletteSize;
    Rgl::Range_t                 fZRange;
 
-   TGLLevelPalette(const TGLLevelPalette&);    // Not implemented
-   TGLLevelPalette& operator=(const TGLLevelPalette&);  // Not implemented
+   TGLLevelPalette(const TGLLevelPalette&) = delete;
+   TGLLevelPalette& operator=(const TGLLevelPalette&) = delete;
 
 public:
    TGLLevelPalette();

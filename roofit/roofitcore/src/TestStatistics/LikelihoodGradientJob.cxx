@@ -28,12 +28,14 @@ namespace TestStatistics {
 LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood,
                                              std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
                                              std::size_t N_dim, RooMinimizer *minimizer)
-   : LikelihoodGradientWrapper(std::move(likelihood), std::move(calculation_is_clean), N_dim, minimizer), grad_(N_dim)
+   : LikelihoodGradientWrapper(std::move(likelihood), std::move(calculation_is_clean), N_dim, minimizer),
+     grad_(N_dim),
+     N_tasks_(N_dim)
 {
    // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
    // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
    // should also somehow be updated in this class.
-   N_tasks_ = N_dim;
+
    minuit_internal_x_.reserve(N_dim);
 }
 

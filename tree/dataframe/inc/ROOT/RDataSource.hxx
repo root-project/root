@@ -12,7 +12,7 @@
 #define ROOT_RDATASOURCE
 
 #include "RDF/RColumnReaderBase.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "RtypesCore.h" // ULong64_t
 #include "TString.h"
 

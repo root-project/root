@@ -93,7 +93,7 @@ protected:
          ROOT::EnableImplicitMT(NSLOTS);
    }
 
-   ~RDatasetSpecTest()
+   ~RDatasetSpecTest() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();

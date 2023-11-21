@@ -236,8 +236,8 @@ int fit2dHist(int option=1) {
    }
    else {
       // fit independently
-      h1->Fit(func);
-      h2->Fit(func);
+      h1->Fit(func, "0");
+      h2->Fit(func, "0");
    }
 
    // Create a new canvas.
@@ -249,14 +249,14 @@ int fit2dHist(int option=1) {
    c1->cd(1);
    h1->Draw();
    func->SetRange(xlow1,ylow1,xup1,yup1);
-   func->DrawCopy("cont1 same");
+   func->DrawCopy("cont3 same");
    c1->cd(2);
    h1->Draw("lego");
    func->DrawCopy("surf1 same");
    c1->cd(3);
    func->SetRange(xlow2,ylow2,xup2,yup2);
    h2->Draw();
-   func->DrawCopy("cont1 same");
+   func->DrawCopy("cont3 same");
    c1->cd(4);
    h2->Draw("lego");
    gPad->SetLogz();

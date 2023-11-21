@@ -149,7 +149,7 @@ void RotationZYX::Invert()
 
 std::ostream & operator<< (std::ostream & os, const RotationZYX & e) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form may need formatiing improvements
+   //        and even the human readable form may need formatting improvements
    os << "\n{phi(Z angle): " << e.Phi() << "   theta(Y angle): " << e.Theta()
    << "   psi(X angle): " << e.Psi() << "}\n";
    return os;

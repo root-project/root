@@ -21,6 +21,7 @@ namespace PyStrings {
     extern PyObject* gFollow;
     extern PyObject* gGetItem;
     extern PyObject* gGetNoCheck;
+    extern PyObject* gSetItem;
     extern PyObject* gInit;
     extern PyObject* gIter;
     extern PyObject* gLen;

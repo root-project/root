@@ -430,12 +430,15 @@ TRootSniffer::~TRootSniffer()
 /// For instance, if user authorized with some user name,
 /// depending from restrictions some objects will be invisible
 /// or user get full access to the element
+/// Returns previous argument which was set before
 
-void TRootSniffer::SetCurrentCallArg(THttpCallArg *arg)
+THttpCallArg *TRootSniffer::SetCurrentCallArg(THttpCallArg *arg)
 {
+   auto res = fCurrentArg;
    fCurrentArg = arg;
    fCurrentRestrict = 0;
    fCurrentAllowedMethods = "";
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -741,7 +744,7 @@ void TRootSniffer::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObjec
 {
    if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
       if (rec.fLevel == 0) {
-         TDirectory *dir = dynamic_cast<TDirectory *>(key->ReadObj());
+         auto dir = key->ReadObject<TDirectory>();
          if (dir) {
             obj = dir;
             obj_class = dir->IsA();

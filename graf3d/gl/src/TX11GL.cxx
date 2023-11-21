@@ -11,8 +11,8 @@
 
 #include <deque>
 #include <map>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "TVirtualViewer3D.h"
 #include "TVirtualX.h"
@@ -30,8 +30,8 @@ The TX11GLManager is X11 implementation of TGLManager.
 struct TX11GLManager::TGLContext_t {
    //these are numbers returned by gVirtualX->AddWindow and gVirtualX->AddPixmap
    TGLContext_t() : fWindowIndex(-1), fPixmapIndex(-1), fX11Pixmap(0), fW(0),
-                  fH(0), fX(0), fY(0), fGLXContext(0), fDirect(kFALSE),
-                  fXImage(0), fNextFreeContext(0), fDirectGC(0), fPixmapGC(0)
+                  fH(0), fX(0), fY(0), fGLXContext(nullptr), fDirect(kFALSE),
+                  fXImage(nullptr), fNextFreeContext(nullptr), fDirectGC(nullptr), fPixmapGC(nullptr)
    {
    }//FIXME
    Int_t                fWindowIndex;
@@ -75,8 +75,8 @@ namespace {
       void Stop(){fPix = 0;}
 
    private:
-      TX11PixGuard(const TX11PixGuard &);
-      TX11PixGuard &operator = (const TX11PixGuard &);
+      TX11PixGuard(const TX11PixGuard &) = delete;
+      TX11PixGuard &operator = (const TX11PixGuard &) = delete;
    };
 
    //RAII class for GLXContext
@@ -88,11 +88,11 @@ namespace {
    public:
       TGLXCtxGuard(Display *dpy, GLXContext ctx) : fDpy(dpy), fCtx(ctx) {}
       ~TGLXCtxGuard(){if (fCtx) glXDestroyContext(fDpy, fCtx);}
-      void Stop(){fCtx = 0;}
+      void Stop(){fCtx = nullptr;}
 
    private:
-      TGLXCtxGuard(const TGLXCtxGuard &);
-      TGLXCtxGuard &operator = (const TGLXCtxGuard &);
+      TGLXCtxGuard(const TGLXCtxGuard &) = delete;
+      TGLXCtxGuard &operator = (const TGLXCtxGuard &) = delete;
    };
 
    // RAII class for XImage.
@@ -100,13 +100,13 @@ namespace {
    private:
       XImage *fImage;
 
-      TXImageGuard(const TXImageGuard &);
-      TXImageGuard &operator = (const TXImageGuard &);
+      TXImageGuard(const TXImageGuard &) = delete;
+      TXImageGuard &operator = (const TXImageGuard &) = delete;
 
    public:
       explicit TXImageGuard(XImage *im) : fImage(im) {}
       ~TXImageGuard(){if (fImage) XDestroyImage(fImage);}
-      void Stop(){fImage = 0;}
+      void Stop(){fImage = nullptr;}
    };
 
 }
@@ -138,8 +138,8 @@ public:
    TGLContext_t     *fNextFreeContext;
 
 private:
-   TX11GLImpl(const TX11GLImpl &);
-   TX11GLImpl &operator = (const TX11GLImpl &);
+   TX11GLImpl(const TX11GLImpl &) = delete;
+   TX11GLImpl &operator = (const TX11GLImpl &) = delete;
 };
 
 ClassImp(TX11GLManager);
@@ -147,7 +147,7 @@ ClassImp(TX11GLManager);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TX11GLManager::TX11GLImpl::TX11GLImpl() : fDpy(0), fNextFreeContext(0)
+TX11GLManager::TX11GLImpl::TX11GLImpl() : fDpy(nullptr), fNextFreeContext(nullptr)
 {
    fDpy = reinterpret_cast<Display *>(gVirtualX->GetDisplay());
 }
@@ -302,7 +302,7 @@ void TX11GLManager::Flush(Int_t ctxInd)
       glXSwapBuffers(fPimpl->fDpy, winID);
    else if (ctx.fXImage && ctx.fDirect) {
       if (!ctx.fDirectGC)
-         ctx.fDirectGC = XCreateGC(fPimpl->fDpy, winID, 0, 0);
+         ctx.fDirectGC = XCreateGC(fPimpl->fDpy, winID, 0, nullptr);
 
       if (!ctx.fDirectGC) {
          Error("Flush", "XCreateGC failed while copying pixmap\n");
@@ -334,7 +334,7 @@ Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
    // XImage part here.
    XVisualInfo *visInfo = fPimpl->fGLWindows[ctx.fWindowIndex];
    XImage *testIm = XCreateImage(fPimpl->fDpy, visInfo->visual, visInfo->depth, ZPixmap,
-                                 0, 0, ctx.fW, ctx.fH,
+                                 0, nullptr, ctx.fW, ctx.fH,
                                  visInfo->depth <= 8 ? 8 : (visInfo->depth <= 16 ? 16 : 32), 0);
 
    if (testIm) {
@@ -461,7 +461,7 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
       glReadPixels(0, 0, ctx.fW, ctx.fH, GL_BGRA, GL_UNSIGNED_BYTE, &ctx.fBUBuffer[0]);
 
       if (!ctx.fPixmapGC)
-         ctx.fPixmapGC = XCreateGC(fPimpl->fDpy, ctx.fX11Pixmap, 0, 0);
+         ctx.fPixmapGC = XCreateGC(fPimpl->fDpy, ctx.fX11Pixmap, 0, nullptr);
       if (ctx.fPixmapGC) {
          // GL buffer read operation gives bottom-up order of pixels, but XImage
          // require top-down. So, change RGB lines first.
@@ -488,7 +488,7 @@ void TX11GLManager::DeleteGLContext(Int_t ctxInd)
 
    // Free GL context.
    glXDestroyContext(fPimpl->fDpy, ctx.fGLXContext);
-   ctx.fGLXContext = 0;
+   ctx.fGLXContext = nullptr;
 
    // If the pixmap exists it is destroyed.
    if (ctx.fPixmapIndex != -1) {
@@ -497,12 +497,12 @@ void TX11GLManager::DeleteGLContext(Int_t ctxInd)
       ctx.fPixmapIndex = -1;
       if(ctx.fXImage) {
          XDestroyImage(ctx.fXImage);
-         ctx.fXImage = 0;
+         ctx.fXImage = nullptr;
       }
       if (ctx.fDirectGC)
-         XFreeGC(fPimpl->fDpy, ctx.fDirectGC), ctx.fDirectGC = 0;
+         XFreeGC(fPimpl->fDpy, ctx.fDirectGC), ctx.fDirectGC = nullptr;
       if (ctx.fPixmapGC)
-         XFreeGC(fPimpl->fDpy, ctx.fPixmapGC), ctx.fPixmapGC = 0;
+         XFreeGC(fPimpl->fDpy, ctx.fPixmapGC), ctx.fPixmapGC = nullptr;
    }
 
    ctx.fNextFreeContext = fPimpl->fNextFreeContext;

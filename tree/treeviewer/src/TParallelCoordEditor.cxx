@@ -721,7 +721,7 @@ void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
 
    Color_t col = TColor::GetColor(p);
    TIter next(fParallel->GetVarList());
-   TParallelCoordVar *var = NULL;
+   TParallelCoordVar *var = nullptr;
    while ((var = (TParallelCoordVar*)next())) var->SetFillColor(col);
    Update();
 }
@@ -747,7 +747,7 @@ void TParallelCoordEditor::DoHistPatternSelect(Style_t sty)
    if (fAvoidSignal) return;
 
    TIter next(fParallel->GetVarList());
-   TParallelCoordVar *var = NULL;
+   TParallelCoordVar *var = nullptr;
    while ((var = (TParallelCoordVar*)next())) var->SetFillStyle(sty);
    Update();
 }

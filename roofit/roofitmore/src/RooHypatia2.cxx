@@ -138,10 +138,6 @@ RooHypatia2::RooHypatia2(const char *name, const char *title, RooAbsReal& x, Roo
     RooHelpers::checkRangeOfParameters(this, {&lambda}, -std::numeric_limits<double>::max(), 0., false,
         std::string("Lambda needs to be negative when ") + _zeta.GetName() + " is zero.");
   }
-
-#ifndef R__HAS_MATHMORE
-  throw std::logic_error("RooHypatia2 needs ROOT with mathmore enabled to access gsl functions.");
-#endif
 }
 
 
@@ -162,9 +158,6 @@ RooHypatia2::RooHypatia2(const RooHypatia2& other, const char* name) :
                    _a2("a2", this, other._a2),
                    _n2("n2", this, other._n2)
 {
-#ifndef R__HAS_MATHMORE
-  throw std::logic_error("RooHypatia2 needs ROOT with mathmore enabled to access gsl functions.");
-#endif
 }
 
 namespace {
@@ -187,12 +180,7 @@ double besselK(double ni, double x) {
       (x < 0.1 && nu >= 55.) )
     return low_x_BK(nu, x);
 
-#ifdef R__HAS_MATHMORE
   return ROOT::Math::cyl_bessel_k(nu, x);
-#else
-  return std::numeric_limits<double>::signaling_NaN();
-#endif
-
 }
 
 double LnBesselK(double ni, double x) {
@@ -202,11 +190,7 @@ double LnBesselK(double ni, double x) {
       (x < 0.1 && nu >= 55.) )
     return low_x_LnBK(nu, x);
 
-#ifdef R__HAS_MATHMORE
   return std::log(ROOT::Math::cyl_bessel_k(nu, x));
-#else
-  return std::numeric_limits<double>::signaling_NaN();
-#endif
 }
 
 

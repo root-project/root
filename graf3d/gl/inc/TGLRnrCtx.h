@@ -85,8 +85,8 @@ public:
    };
 
 private:
-   TGLRnrCtx(const TGLRnrCtx&);            // Not implemented
-   TGLRnrCtx& operator=(const TGLRnrCtx&); // Not implemented
+   TGLRnrCtx(const TGLRnrCtx&) = delete;
+   TGLRnrCtx& operator=(const TGLRnrCtx&) = delete;
 
    typedef std::list<TGLColorSet*> lpTGLColorSet_t;
 

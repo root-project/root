@@ -4,6 +4,8 @@
 
 #include <RooBinning.h>
 #include <RooCategory.h>
+#include <RooCategory.h>
+#include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooExtendPdf.h>
@@ -11,19 +13,22 @@
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include <RooNLLVar.h>
+#endif
 #include <RooPlot.h>
 #include <RooPolyVar.h>
 #include <RooProdPdf.h>
 #include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
+#include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
 #include "gtest_wrapper.h"
 
-#include <memory>
 #include <cmath>
+#include <memory>
 
 namespace {
 
@@ -309,6 +314,7 @@ TEST(RooChi2Var, IntegrateBins)
       << "Expect chi2/ndf at least 10% better.";
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 /// Verifies that a ranged RooNLLVar has still the correct value when copied,
 /// as it happens when it is plotted Covers JIRA ticket ROOT-9752.
 TEST(RooNLLVar, CopyRangedNLL)
@@ -338,6 +344,7 @@ TEST(RooNLLVar, CopyRangedNLL)
    EXPECT_FLOAT_EQ(nll->getVal(), nllrange->getVal());
    EXPECT_FLOAT_EQ(nllrange->getVal(), nllrangeClone->getVal());
 }
+#endif
 
 /// When using the Integrate() command argument in chi2FitTo, the result should
 /// be identical to a fit without bin integration if the fit function is
@@ -398,7 +405,7 @@ TEST(RooXYChi2Var, IntegrateLinearFunction)
    EXPECT_NEAR(getVal("b", fit2->floatParsFinal()), bTrue, getErr("b", fit2->floatParsFinal()));
 }
 
-class OffsetBinTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend, bool, bool, bool>> {
+class OffsetBinTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend, bool, bool, bool, bool, bool>> {
 public:
    OffsetBinTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
 
@@ -410,6 +417,8 @@ private:
       _binned = std::get<1>(GetParam());
       _ext = std::get<2>(GetParam());
       _sumw2 = std::get<3>(GetParam());
+      _simPdf = std::get<4>(GetParam());
+      _binnedL = std::get<5>(GetParam());
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
@@ -419,6 +428,8 @@ protected:
    bool _binned = false;
    bool _ext = false;
    bool _sumw2 = false;
+   bool _simPdf = false;
+   bool _binnedL = false;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
@@ -444,6 +455,10 @@ TEST_P(OffsetBinTest, CrossCheck)
    RooRealVar &nEvents = *ws.var("nEvents");
    RooAbsPdf &extGauss = *ws.pdf("extGauss");
 
+   // To make sure that the bin width is unity and we don't have to worry about
+   // bin width corrections in the test model.
+   x.setBins(20);
+
    // We have to generate double the number of events because in the next step
    // we will weight down each event by a factor of two.
    std::unique_ptr<RooDataSet> data{extGauss.generate(x, 2. * nEvents.getVal())};
@@ -462,14 +477,34 @@ TEST_P(OffsetBinTest, CrossCheck)
 
    std::unique_ptr<RooDataHist> hist{data->binnedClone()};
 
-   // Create template PDF based on data
+   // Create template PDF based on data.
+   // For the extended case, we use a RooExtendPdf, and for the non-extended
+   // case a RooRealSumPdf so we can also test the binned likelihood code path.
    RooHistPdf histPdf{"histPdf", "histPdf", x, *hist};
+   RooHistFunc histFunc{"histFunc", "histFunc", x, *hist};
    RooExtendPdf extHistPdf("extHistPdf", "extHistPdf", histPdf, nEvents);
+   RooArgList coefs{RooFit::RooConst(1.0)};
+   RooRealSumPdf realSumPdf("realSumPdf", "realSumPdf", {histFunc}, coefs);
+   RooAbsPdf &channelPdf = _ext ? static_cast<RooAbsPdf &>(extHistPdf) : static_cast<RooAbsPdf &>(realSumPdf);
 
-   RooAbsData *fitData = _binned ? static_cast<RooAbsData *>(hist.get()) : static_cast<RooAbsData *>(data.get());
+   if (_binnedL)
+      channelPdf.setAttribute("BinnedLikelihood");
 
-   RealPtr nll0{extHistPdf.createNLL(*fitData, _evalBackend, Extended(_ext))};
-   RealPtr nll1{extHistPdf.createNLL(*fitData, Offset("bin"), _evalBackend, Extended(_ext))};
+   // Create a RooSimultaneous that wraps this pdf
+   RooCategory sample("sample", "sample");
+   sample.defineType("physics");
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"physics", &channelPdf}}, sample};
+
+   RooAbsData *absData = _binned ? static_cast<RooAbsData *>(hist.get()) : static_cast<RooAbsData *>(data.get());
+
+   // The dataset used for simultaneous fits
+   RooDataSet combData("combData", "combined data", *absData->get(), Index(sample), Import("physics", *absData));
+
+   RooAbsData *fitData = _simPdf ? &combData : absData;
+   RooAbsPdf *fitPdf = _simPdf ? static_cast<RooAbsPdf *>(&simPdf) : static_cast<RooAbsPdf *>(&channelPdf);
+
+   RealPtr nll0{fitPdf->createNLL(*fitData, _evalBackend, Extended(_ext))};
+   RealPtr nll1{fitPdf->createNLL(*fitData, Offset("bin"), _evalBackend, Extended(_ext))};
 
    if (_sumw2) {
       nll0->applyWeightSquared(true);
@@ -543,13 +578,7 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
    EXPECT_DOUBLE_EQ(prodNllVal, simNllVal);
 }
 
-#ifdef R__HAS_CUDA
-#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu(), RooFit::EvalBackend::Cuda()
-#else
-#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()
-#endif
-
-INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(EVAL_BACKENDS),
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
@@ -557,10 +586,12 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(EVAL_BACK
                          });
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
-                         testing::Combine(testing::Values(EVAL_BACKENDS), // EvalBackend
+                         testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
                                           testing::Values(false, true),   // unbinned or binned
                                           testing::Values(false, true),   // extended fit
-                                          testing::Values(false, true)    // use sumW2
+                                          testing::Values(false, true),   // use sumW2
+                                          testing::Values(false, true),   // wrap in a RooSimultaneous
+                                          testing::Values(false)          // binned likelihood code path
                                           ),
                          [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
@@ -568,5 +599,26 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
                             ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
                             ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
                             ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
+                            ss << (std::get<4>(paramInfo.param) ? "SimPdf" : "");
+                            ss << (std::get<5>(paramInfo.param) ? "BinnedL" : "");
+                            return ss.str();
+                         });
+
+INSTANTIATE_TEST_SUITE_P(RooNLLVarBinnedL, OffsetBinTest,
+                         testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
+                                          testing::Values(true),          // unbinned or binned
+                                          testing::Values(false),         // extended fit
+                                          testing::Values(false),         // use sumW2
+                                          testing::Values(false, true),   // wrap in a RooSimultaneous
+                                          testing::Values(true)           // binned likelihood code path
+                                          ),
+                         [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
+                            ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
+                            ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
+                            ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
+                            ss << (std::get<4>(paramInfo.param) ? "SimPdf" : "");
+                            ss << (std::get<5>(paramInfo.param) ? "BinnedL" : "");
                             return ss.str();
                          });

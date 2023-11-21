@@ -100,7 +100,7 @@ public:
    /**
        Template methods for generic functions
        Set the function f for evaluating the derivative.
-       The function type must implement the assigment operator,
+       The function type must implement the assignment operator,
        <em>  double  operator() (  double  x ) </em>
    */
    template <class UserFunc>

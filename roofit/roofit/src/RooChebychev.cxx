@@ -38,9 +38,7 @@ ClassImp(RooChebychev);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooChebychev::RooChebychev() : _refRangeName(nullptr)
-{
-}
+RooChebychev::RooChebychev() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -49,8 +47,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
                            RooAbsReal& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
-  _coefList("coefficients","List of coefficients",this),
-  _refRangeName(nullptr)
+  _coefList("coefficients","List of coefficients",this)
 {
   for (const auto coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
@@ -78,7 +75,7 @@ RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
 void RooChebychev::selectNormalizationRange(const char* rangeName, bool force)
 {
   if (rangeName && (force || !_refRangeName)) {
-    _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName) ;
+    _refRangeName = const_cast<TNamed*>(RooNameReg::instance().constPtr(rangeName));
   }
   if (!rangeName) {
     _refRangeName = nullptr ;

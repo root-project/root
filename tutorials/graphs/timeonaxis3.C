@@ -17,8 +17,8 @@
 #include "TString.h"
 #include "TLine.h"
 #include "TLatex.h"
-#include <time.h>
-#include <stdio.h>
+#include <ctime>
+#include <cstdio>
 
 TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
    struct tm* tt;

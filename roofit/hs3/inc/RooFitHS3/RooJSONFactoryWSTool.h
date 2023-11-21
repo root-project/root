@@ -53,7 +53,7 @@ public:
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
 
-   static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll);
+   static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
@@ -177,7 +177,7 @@ public:
 
    static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
-   static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
+   void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
 

@@ -18,6 +18,7 @@ add_custom_target(gitinfotxt
   COMMENT "Updating etc/gitinfo.txt."
   BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
 )
+install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)

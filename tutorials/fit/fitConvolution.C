@@ -35,7 +35,5 @@ void fitConvolution()
    f->SetParameters(1., -0.3, 0., 1.);
 
    // Fit.
-   new TCanvas("c", "c", 800, 1000);
    h_ExpGauss->Fit("f");
-   h_ExpGauss->Draw();
 }

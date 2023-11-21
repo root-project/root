@@ -103,7 +103,7 @@ bool binarySearchTime()
 
    if ( showGraphics )
    {
-      TCanvas* c1 = new TCanvas("c1", "Comparision of Searching Time", 600, 400);
+      TCanvas* c1 = new TCanvas("c1", "Comparison of Searching Time", 600, 400);
       c1->SetLogx(true);
 
       TGraph* gM = new TGraph(arraysize, &index[0], &tM[0]);
@@ -125,7 +125,7 @@ bool binarySearchTime()
       legend->AddEntry(gS, "std::binary_search()");
       legend->Draw();
 
-      gM->SetTitle("Comparision of Searching Time");
+      gM->SetTitle("Comparison of Searching Time");
       gM->GetXaxis()->SetTitle("Array Size");
       gM->GetYaxis()->SetTitle("Time");
 

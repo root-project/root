@@ -76,11 +76,12 @@ public:
    double Dcovar() const { return fPtr->fDCovar; }
    Status GetStatus() const { return fPtr->fStatus; }
 
-   bool IsValid() const { return IsAvailable() && (IsPosDef() || IsMadePosDef()); }
+   bool IsValid() const { return IsAvailable() && (IsPosDef() || IsMadePosDef() || IsNotPosDef()); }
    bool IsAccurate() const { return IsPosDef() && Dcovar() < 0.1; }
 
    bool IsPosDef() const { return GetStatus() == MnPosDef; }
    bool IsMadePosDef() const { return GetStatus() == MnMadePosDef; }
+   bool IsNotPosDef() const { return GetStatus() == MnNotPosDef; }
    bool HesseFailed() const { return GetStatus() == MnHesseFailed; }
    bool InvertFailed() const { return GetStatus() == MnInvertFailed; }
    bool HasReachedCallLimit() const { return GetStatus() == MnReachedCallLimit; }

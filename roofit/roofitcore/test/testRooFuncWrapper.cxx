@@ -11,26 +11,27 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooAbsPdf.h>
 #include <RooAbsData.h>
+#include <RooAbsPdf.h>
 #include <RooAddPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
-#include <RooDataSet.h>
+#include <RooClassFactory.h>
 #include <RooDataHist.h>
+#include <RooDataSet.h>
 #include <RooExponential.h>
 #include <RooFitResult.h>
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
+#include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
-#include <RooHelpers.h>
 #include <RooMinimizer.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooProduct.h>
-#include <RooRealVar.h>
 #include <RooRealSumPdf.h>
+#include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
@@ -86,54 +87,6 @@ void randomizeParameters(const RooArgSet &parameters)
 }
 
 } // namespace
-
-TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
-{
-   using namespace RooFit;
-   auto inf = std::numeric_limits<double>::infinity();
-
-   RooWorkspace ws;
-   ws.import(RooRealVar{"x", "x", 0, -inf, inf});
-   ws.factory("Gaussian::gauss(x, mu[0, -10, 10], sigma[2.0, 0.01, 10])");
-
-   RooAbsPdf &gauss = *ws.pdf("gauss");
-   RooRealVar &x = *ws.var("x");
-   RooRealVar &mu = *ws.var("mu");
-   RooRealVar &sigma = *ws.var("sigma");
-
-   RooArgSet normSet{x};
-   RooArgSet paramsGauss;
-   RooArgSet paramsMyGauss;
-
-   std::string func = "const double arg = params[0] - params[1];"
-                      "const double sig = params[2];"
-                      "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
-                      "return 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;";
-   RooFuncWrapper gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, nullptr, nullptr, true);
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   mu.setVal(1);
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   // Check if the parameter layout and size is the same.
-   gauss.getParameters(&normSet, paramsGauss);
-   gaussFunc.getParameters(&normSet, paramsMyGauss);
-
-   EXPECT_TRUE(paramsMyGauss.hasSameLayout(paramsGauss));
-   EXPECT_EQ(paramsMyGauss.size(), paramsGauss.size());
-
-   // Get AD based derivative
-   // Get number of actual parameters directly from the wrapper as not always will they be the same as paramsMyGauss.
-   std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
-   gaussFunc.gradient(dMyGauss.data());
-
-   // Check if derivatives are equal
-   EXPECT_NEAR(getNumDerivative(gauss, x, normSet), dMyGauss[0], 1e-8);
-   EXPECT_NEAR(getNumDerivative(gauss, mu, normSet), dMyGauss[1], 1e-8);
-   EXPECT_NEAR(getNumDerivative(gauss, sigma, normSet), dMyGauss[2], 1e-8);
-}
 
 TEST(RooFuncWrapper, GaussianNormalized)
 {
@@ -280,7 +233,9 @@ TEST_P(FactoryTest, NLLFit)
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Cpu());
    std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Codegen());
 
-   EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), 1e-8);
+   double tol = _params._fitResultTolerance;
+
+   EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), tol);
 
    // Check if the parameter layout and size is the same.
    RooArgSet paramsRefNll;
@@ -291,7 +246,7 @@ TEST_P(FactoryTest, NLLFit)
    if (_params._randomizeParameters) {
       randomizeParameters(paramsMyNLL);
       // Check if functions results are the same even after changing parameters.
-      EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), 1e-8);
+      EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), tol);
    }
 
    EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
@@ -303,7 +258,7 @@ TEST_P(FactoryTest, NLLFit)
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), observables), dMyNLL[i], 1e-4);
+      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), observables), dMyNLL[i], tol);
    }
 
    // Remember parameter state before minimization
@@ -323,7 +278,6 @@ TEST_P(FactoryTest, NLLFit)
    paramsRefNll.assign(parametersOrig);
 
    // Compare minimization results
-   double tol = _params._fitResultTolerance;
    // Same tolerance for parameter values and error, don't compare correlations
    // because for very small correlations it's usually not the same within the
    // relative tolerance because you would compare two small values that are
@@ -573,9 +527,30 @@ FactoryTestParams param10{"PoissonNoRounding",
                           1e-4,
                           /*randomizeParameters=*/true};
 
+FactoryTestParams param11{"ClassFactory1D",
+                          [](RooWorkspace &ws) {
+                             RooRealVar x{"x", "x", 4.0, 0, 10};
+                             RooRealVar mu{"mu", "mu", 5, 0, 10};
+                             RooRealVar sigma{"sigma", "sigma", 2.0, 0.1, 10};
+
+                             // TODO: When Clad issue #635 is solved, we can
+                             // actually use a complete Gaussian here, also
+                             // with sigma.
+                             std::unique_ptr<RooAbsPdf> pdf{RooClassFactory::makePdfInstance(
+                                //"model", "std::exp(-0.5 * (x - mu)*(x - mu) / (sigma * sigma))", {x, mu, sigma})};
+                                "model", "std::exp(-0.5 * (x - mu)*(x - mu))", {x, mu})};
+                             ws.import(*pdf);
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3, // increase tolerance because the numeric integration algos are still different
+                          /*randomizeParameters=*/true};
+
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
                          testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param8p1,
-                                         param9, param10),
+                                         param9, param10, param11),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });

@@ -187,7 +187,7 @@ TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
 
 TTVRecord *TTVSession::GetRecord(Int_t i)
 {
-   if (!fRecords) return 0;
+   if (!fRecords) return nullptr;
    fCurrent = i;
    if (i < 0)           fCurrent = 0;
    if (i > fRecords-1)  fCurrent = fRecords - 1;

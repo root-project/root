@@ -38,7 +38,7 @@ namespace Math
 // coordinates a weight can be assigned to each data point allowing the representation
 // of fields in high dimensions.
 // Basic functionality for accessing/modifying the coordinates/weight are provided
-// as well as a comparison method and the basic euclidian metric.
+// as well as a comparison method and the basic euclidean metric.
 // End_Html
 
 //______________________________________________________________________________
@@ -81,9 +81,9 @@ template<unsigned int K,typename _val_type>
 template<typename _val>
 _val_type TDataPoint<K,_val_type>::Distance(const TDataPoint<K,_val>& rPoint) const
 {
-   //euclidian distance
+   //euclidean distance
    //
-   //returns the euclidian distance to the given data point
+   //returns the euclidean distance to the given data point
    //
    //Input: rPoint - data point of same dimensionality
 

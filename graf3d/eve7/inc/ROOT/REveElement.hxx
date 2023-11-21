@@ -336,7 +336,7 @@ protected:
    };
 
    Short_t fImpliedSelected{0};   // How many times the element is implied selected -- needed during destruction.
-   Bool_t  fPickable{0};          // Can element be selected.
+   Bool_t  fPickable{false};          // Can element be selected.
    UChar_t fCSCBits{0};           // Compound Selection Color flags.
 
 public:
@@ -454,7 +454,7 @@ protected:
    REveElement::List_t fNieces;
 
 public:
-   virtual ~REveAuntAsList()
+   ~REveAuntAsList() override
    {
       for (auto &n : fNieces) n->RemoveAunt(this);
    }

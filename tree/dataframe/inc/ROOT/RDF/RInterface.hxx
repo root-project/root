@@ -29,7 +29,7 @@
 #include "ROOT/RDF/RVariationsDescription.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h" // for ULong64_t
@@ -724,10 +724,11 @@ public:
    /// Example usage:
    /// ~~~{.cpp}
    /// // produce variations "ptAndEta:down" and "ptAndEta:up"
-   /// df.Vary({"pt", "eta"},
+   /// df.Vary({"pt", "eta"}, // the columns that will vary simultaneously
    ///         [](double pt, double eta) { return RVec<RVecF>{{pt*0.9, pt*1.1}, {eta*0.9, eta*1.1}}; },
-   ///         {"down", "up"},
-   ///         "ptAndEta");
+   ///         {"pt", "eta"},  // inputs to the Vary expression, independent of what columns are varied
+   ///         {"down", "up"}, // variation tags
+   ///         "ptAndEta");    // variation name
    /// ~~~
    template <typename F>
    RInterface<Proxied, DS_t>
@@ -2542,7 +2543,7 @@ public:
    /// double initValue = 1.;
    ///
    /// // Multiplies all elements of the column "x"
-   /// auto result = d.Aggregate(aggregator, merger, columnName, initValue);
+   /// auto result = d.Aggregate(aggregator, merger, "x", initValue);
    /// ~~~
    // clang-format on
    template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
@@ -2924,8 +2925,8 @@ private:
                                             const std::vector<std::string> &variationTags,
                                             std::string_view variationName, bool isSingleColumn)
    {
-      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
-      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationTags.empty() && "Must have at least one variation.");
+      R__ASSERT(!colNames.empty() && "Must have at least one varied column.");
       R__ASSERT(!variationName.empty() && "Must provide a variation name.");
 
       for (auto &colName : colNames) {

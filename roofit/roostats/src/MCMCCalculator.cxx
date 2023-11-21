@@ -63,16 +63,6 @@ MCMCCalculator::MCMCCalculator() :
    fData(nullptr),
    fAxes(nullptr)
 {
-   fNumIters = 0;
-   fNumBurnInSteps = 0;
-   fNumBins = 0;
-   fUseKeys = false;
-   fUseSparseHist = false;
-   fSize = -1;
-   fIntervalType = MCMCInterval::kShortest;
-   fLeftSideTF = -1;
-   fEpsilon = -1;
-   fDelta = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +169,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       SetBins(*params, fNumBins);
       SetBins(fPOI, fNumBins);
       if (dynamic_cast<PdfProposal*>(fPropFunc)) {
-         std::unique_ptr<RooArgSet> proposalVars{((PdfProposal*)fPropFunc)->GetPdf()->
+         std::unique_ptr<RooArgSet> proposalVars{(static_cast<PdfProposal*>(fPropFunc))->GetPdf()->
                                                getParameters((RooAbsData*)nullptr)};
          SetBins(*proposalVars, fNumBins);
       }
@@ -190,7 +180,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    mh.SetType(MetropolisHastings::kLog);
    mh.SetSign(MetropolisHastings::kNegative);
    mh.SetParameters(*params);
-   if (fChainParams.getSize() > 0) mh.SetChainParameters(fChainParams);
+   if (!fChainParams.empty()) mh.SetChainParameters(fChainParams);
    mh.SetProposalFunction(*fPropFunc);
    mh.SetNumIters(fNumIters);
 

@@ -51,13 +51,6 @@
 #pragma link C++ class ConstructorTraits + ;
 #pragma link C++ class DestructorTraits + ;
 
-#pragma link C++ class std::set<std::int64_t> +;
-#pragma link C++ class std::set<std::string> +;
-#pragma link C++ class std::set<float> +;
-#pragma link C++ class std::set<std::set<CustomStruct>> +;
-#pragma link C++ class std::set<std::set<char>> +;
-#pragma link C++ class std::set<std::pair<int, CustomStruct>> +;
-
 #pragma link C++ options = version(3) class StructWithIORulesBase + ;
 #pragma link C++ options = version(3) class StructWithTransientString + ;
 #pragma link C++ options = version(3) class StructWithIORules + ;

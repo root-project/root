@@ -11,7 +11,7 @@ if(WIN32)
   # to keep the old way of selecting the runtime library with the -MD/-MDd compiler flag
   cmake_policy(SET CMP0091 OLD)
 else()
-  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 endif()
 
 SET(LIB_NAME libAfterImage)
@@ -55,4 +55,3 @@ SET(SRC_FILES
 ADD_LIBRARY(${LIB_NAME} STATIC ${H_FILES} ${SRC_FILES})
 
 install(TARGETS ${LIB_NAME} DESTINATION ${LIB_DESTINATION})
-

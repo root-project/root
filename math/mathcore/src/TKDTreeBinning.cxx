@@ -61,7 +61,7 @@ struct TKDTreeBinning::CompareDesc {
 };
 
 /// Class's constructor taking the size of the data points, dimension, a data array and the number
-/// of bins (default = 100). It is reccomended to have the number of bins as an exact divider of
+/// of bins (default = 100). It is recommended to have the number of bins as an exact divider of
 /// the data size.
 /// The data array must be organized with a stride=1 for the points and = N (the dataSize) for the dimension.
 ///
@@ -84,7 +84,7 @@ fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
    }
 }
 /// Class's constructor taking the size of the data points, dimension, a data vector and the number
-/// of bins (default = 100). It is reccomended to have the number of bins as an exact divider of
+/// of bins (default = 100). It is recommended to have the number of bins as an exact divider of
 /// the data size.
 /// The data array must be organized with a stride=1 for the points and = N (the dataSize) for the dimension.
 ///
@@ -327,7 +327,7 @@ void TKDTreeBinning::ReadjustMinBinEdges(Double_t* binEdges) {
 
 void TKDTreeBinning::ReadjustMaxBinEdges(Double_t* binEdges) {
    // Readjusts the bins' maximum edge
-   // and shift it sligtly higher
+   // and shift it slightly higher
    for (UInt_t i = 0; i < fDim; ++i) {
       for (UInt_t j = 0; j < fNBins; ++j) {
          if (!fCheckedBinEdges[i][j].second) {
@@ -511,7 +511,7 @@ const double * TKDTreeBinning::GetOneDimBinEdges() const  {
    return nullptr;
 }
 
-/// Sort the one-dimensional bin edges and retuns a pointer to them
+/// Sort the one-dimensional bin edges and returns a pointer to them
 const Double_t * TKDTreeBinning::SortOneDimBinEdges(Bool_t sortAsc) {
    if (fDim != 1) {
       this->Warning("SortOneDimBinEdges", "Data is multidimensional. Cannot sorted bin edges. Returning null pointer.");
@@ -640,7 +640,7 @@ UInt_t TKDTreeBinning::FindBin(const Double_t * point) const {
 std::vector<std::vector<Double_t> > TKDTreeBinning::GetPointsInBin(UInt_t bin) const {
    std::vector<Double_t> point(fDim);
    std::vector< std::vector<Double_t> > thePoints;
-   if (fData.size() == 0) {
+   if (fData.empty()) {
       Error("GetPointsInBin","Internal data set is not valid");
       return thePoints;
    }

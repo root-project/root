@@ -39,7 +39,7 @@ void show_extract(const char* file="csg.root")
       if (extract_class == key->GetClassName())
       {
          auto gse = (REX::REveGeoShapeExtract*) key->ReadObj();
-         eve_shape = REX::REveGeoShape::ImportShapeExtract(gse, 0);
+         eve_shape = REX::REveGeoShape::ImportShapeExtract(gse, nullptr);
          eveMng->AddGlobalElement(eve_shape);
       }
    }

@@ -39,11 +39,11 @@ See TTree.
 
 TBranchClones::TBranchClones()
 : TBranch()
-, fList(0)
+, fList(nullptr)
 , fRead(0)
 , fN(0)
 , fNdataMax(0)
-, fBranchCount(0)
+, fBranchCount(nullptr)
 {
 }
 
@@ -52,13 +52,13 @@ TBranchClones::TBranchClones()
 
 TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
-, fList(0)
+, fList(nullptr)
 , fRead(0)
 , fN(0)
 , fNdataMax(0)
-, fBranchCount(0)
+, fBranchCount(nullptr)
 {
-   Init(tree,0,name,pointer,basketsize,compress,splitlevel);
+   Init(tree,nullptr,name,pointer,basketsize,compress,splitlevel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,13 +66,13 @@ TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t
 
 TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
-, fList(0)
+, fList(nullptr)
 , fRead(0)
 , fN(0)
 , fNdataMax(0)
-, fBranchCount(0)
+, fBranchCount(nullptr)
 {
-   Init(0,parent,name,pointer,basketsize,compress,splitlevel);
+   Init(nullptr,parent,name,pointer,basketsize,compress,splitlevel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, I
 
 void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 {
-   if (tree==0 && parent!=0) tree = parent->GetTree();
+   if (tree==nullptr && parent!=nullptr) tree = parent->GetTree();
    fTree   = tree;
    fMother = parent ? parent->GetMother() : this;
    fParent = parent;
@@ -90,7 +90,7 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
    TString branchcount;
    SetName(name);
    if ((compress == -1) && tree->GetDirectory()) {
-      TFile* bfile = 0;
+      TFile* bfile = nullptr;
       if (tree->GetDirectory()) {
          bfile = tree->GetDirectory()->GetFile();
       }
@@ -123,8 +123,8 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
    fFileName = "";
 
    // Loop on all public data members of the class and its base classes.
-   const char* itype = 0;
-   TRealData* rd = 0;
+   const char* itype = nullptr;
+   TRealData* rd = nullptr;
    TIter next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
       if (rd->TestBit(TRealData::kTransient)) continue;
@@ -205,10 +205,10 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
 TBranchClones::~TBranchClones()
 {
    delete fBranchCount;
-   fBranchCount = 0;
+   fBranchCount = nullptr;
    fBranches.Delete();
    // FIXME: We might own this, possible memory leak.
-   fList = 0;
+   fList = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +275,7 @@ Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
       }
       return 0;
    }
-   TBranch* branch = 0;
+   TBranch* branch = nullptr;
    Int_t nbranches = fBranches.GetEntriesFast();
    // If fList exists, create clones array objects.
    if (fList) {
@@ -356,11 +356,11 @@ void TBranchClones::SetAddress(void* addr)
    fReadEntry = -1;
    fAddress = (char*) addr;
    char** pp= (char**) fAddress;
-   if (pp && (*pp == 0)) {
+   if (pp && (*pp == nullptr)) {
       // We've been asked to allocate an object for the user.
       *pp= (char*) new TClonesArray(fClassName);
    }
-   fList = 0;
+   fList = nullptr;
    if (pp) {
       fList = (TClonesArray*) *pp;
    }
@@ -403,9 +403,9 @@ void TBranchClones::Streamer(TBuffer& b)
       b >> fBranchCount;
       fClassName.Streamer(b);
       fBranches.Streamer(b);
-      fTree = 0;
-      TBranch* branch = 0;
-      TLeaf* leaf = 0;
+      fTree = nullptr;
+      TBranch* branch = nullptr;
+      TLeaf* leaf = nullptr;
       Int_t nbranches = fBranches.GetEntriesFast();
       for (Int_t i = 0; i < nbranches; i++) {
          branch = (TBranch*) fBranches[i];
@@ -424,7 +424,7 @@ void TBranchClones::Streamer(TBuffer& b)
          cl->BuildRealData();
       }
       TString branchname;
-      TRealData* rd = 0;
+      TRealData* rd = nullptr;
       TIter next(cl->GetListOfRealData());
       while ((rd = (TRealData*) next())) {
          if (rd->TestBit(TRealData::kTransient)) continue;

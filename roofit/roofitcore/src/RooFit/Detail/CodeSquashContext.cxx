@@ -13,30 +13,14 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
-#include <TString.h>
+#include "RooFitImplHelpers.h"
+
+#include <algorithm>
+#include <cctype>
 
 namespace RooFit {
 
 namespace Detail {
-
-/// Transform a string into a valid C++ variable name by replacing forbidden.
-/// \note The implementation was copy-pasted from `TSystem.cxx`.
-/// characters with underscores.
-/// @param in The input string.
-/// @return A new string valid variable name.
-std::string CodeSquashContext::makeValidVarName(TString in) const
-{
-
-   static const int nForbidden = 27;
-   static const char *forbiddenChars[nForbidden] = {"+", "-", "*", "/", "&", "%", "|", "^",  ">",
-                                                    "<", "=", "~", ".", "(", ")", "[", "]",  "!",
-                                                    ",", "$", " ", ":", "'", "#", "@", "\\", "\""};
-   for (int ic = 0; ic < nForbidden; ic++) {
-      in.ReplaceAll(forbiddenChars[ic], "_");
-   }
-
-   return in.Data();
-}
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
@@ -205,7 +189,7 @@ std::string CodeSquashContext::getTmpVarName()
 /// @param valueToSave The actual string value to save as a temporary.
 void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName = makeValidVarName(in->GetName());
+   std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
 
    // Only save values if they contain operations.
    bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;

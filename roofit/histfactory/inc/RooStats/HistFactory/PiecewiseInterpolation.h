@@ -79,7 +79,6 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    ~CacheElem() override {} ;
     RooArgList containedArgs(Action) override {
       RooArgList ret(_funcIntList) ;
       ret.add(_lowIntList);
@@ -99,7 +98,7 @@ protected:
   RooListProxy _highSet ;          ///< High-side variation
   RooListProxy _paramSet ;         ///< interpolation parameters
   RooListProxy _normSet ;          ///< interpolation parameters
-  bool _positiveDefinite;        ///< protect against negative and 0 bins.
+  bool _positiveDefinite = false;  ///< protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
 

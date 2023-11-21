@@ -59,7 +59,7 @@ ClassImp(RooArgList);
 RooArgList::RooArgList() :
   RooAbsCollection()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -71,7 +71,7 @@ RooArgList::RooArgList(const RooAbsCollection& coll) :
   RooAbsCollection(coll.GetName())
 {
   add(coll) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -82,7 +82,7 @@ RooArgList::RooArgList(const RooAbsCollection& coll) :
 RooArgList::RooArgList(const char *name) :
   RooAbsCollection(name)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -100,9 +100,9 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
              << " is not a RooAbsArg, ignored" << endl ;
       continue ;
     }
-    add(*(RooAbsArg*)obj) ;
+    add(*static_cast<RooAbsArg*>(obj)) ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -115,7 +115,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
 RooArgList::RooArgList(const RooArgList& other, const char *name)
   : RooAbsCollection(other,name)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -125,7 +125,7 @@ RooArgList::RooArgList(const RooArgList& other, const char *name)
 
 RooArgList::~RooArgList()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 

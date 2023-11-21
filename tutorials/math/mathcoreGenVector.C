@@ -748,7 +748,7 @@ int testRotation() {
    std::cout << "Test Plane3D :                  ";
    ok = 0;
 
-   // test transfrom a 3D plane
+   // test transform a 3D plane
 
    XYZPoint p1(1,2,3);
    XYZPoint p2(-2,-1,4);

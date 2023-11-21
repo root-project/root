@@ -89,7 +89,7 @@ public:
    virtual void MakeAlpha();                 // Provides random point inside hyper-rectangle
    virtual void Grow();                      // Adds new cells to FOAM object until buffer is full
    virtual Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
-   virtual Int_t  Divide(TFoamCell *);       // Divide iCell into two daughters; iCell retained, taged as inactive
+   virtual Int_t  Divide(TFoamCell *);       // Divide iCell into two daughters; iCell retained, tagged as inactive
    virtual void MakeActiveList();            // Creates table of active cells
    virtual void GenerCel2(TFoamCell *&);     // Chose an active cell the with probability ~ Primary integral
    // Generation

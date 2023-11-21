@@ -1387,9 +1387,9 @@ if(builtin_vc)
   set(vc ON CACHE BOOL "Enabled because builtin_vc requested (${vc_description})" FORCE)
 elseif(vc)
   if(fail-on-missing)
-    find_package(Vc 1.3.0 CONFIG QUIET REQUIRED)
+    find_package(Vc 1.4.4 CONFIG QUIET REQUIRED)
   else()
-    find_package(Vc 1.3.0 CONFIG QUIET)
+    find_package(Vc 1.4.4 CONFIG QUIET)
     if(NOT Vc_FOUND)
       message(STATUS "Vc library not found, support for it disabled.")
       message(STATUS "Please enable the option 'builtin_vc' to build Vc internally.")
@@ -1411,7 +1411,7 @@ if(vc AND NOT Vc_FOUND AND NO_CONNECTION)
 endif()
 
 if(vc AND NOT Vc_FOUND)
-  set(Vc_VERSION "1.4.3")
+  set(Vc_VERSION "1.4.4")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1421,7 +1421,7 @@ if(vc AND NOT Vc_FOUND)
 
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
-    URL_HASH SHA256=988ea0053f3fbf17544ca776a2749c097b3139089408b0286fa4e9e8513e037f
+    URL_HASH SHA256=5933108196be44c41613884cd56305df320263981fe6a49e648aebb3354d57f3
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1723,11 +1723,7 @@ if (cudnn)
   endif()
 endif(cudnn)
 
-#
 #---TMVA and its dependencies------------------------------------------------------------
-if (tmva AND NOT mlp)
-  message(FATAL_ERROR "The 'tmva' option requires 'mlp', please enable mlp with -Dmlp=ON")
-endif()
 if(tmva)
   if(tmva-cpu AND imt)
     message(STATUS "Looking for BLAS for optional parts of TMVA")
@@ -1742,8 +1738,14 @@ if(tmva)
   else()
     set(tmva-cpu OFF CACHE BOOL "Disabled because 'imt' is disabled (${tmva-cpu_description})" FORCE)
   endif()
-  if(tmva-gpu AND NOT CUDA_FOUND)
+  if(tmva-gpu AND NOT CMAKE_CUDA_COMPILER)
     set(tmva-gpu OFF CACHE BOOL "Disabled because cuda not found" FORCE)
+  endif()
+  if(tmva-gpu)
+    # So far, TMVA is the only package that uses the CUDA toolkit. RooFit is
+    # just compiling libraries with the NVidia compiler itself. If more ROOT
+    # components depend on the CUDA toolkit, this should be moved.
+    find_package(CUDAToolkit REQUIRED)
   endif()
   if(tmva-pymva)
     if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND)))
@@ -1766,7 +1768,7 @@ else()
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
   set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
   set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
-endif()
+endif(tmva)
 
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)

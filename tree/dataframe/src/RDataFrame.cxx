@@ -15,7 +15,7 @@
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "TChain.h"
 #include "TDirectory.h"
 #include "RtypesCore.h" // for ULong64_t
@@ -1504,16 +1504,16 @@ n seconds (by default m = 1000 and n = 1). The ProgressBar can be also added whe
 ProgressBar is added after creating the dataframe object (df):
 ~~~{.cpp}
 ROOT::RDataFrame df("tree", "file.root");
-ROOT::RDF::Experimental::AddProgressbar(df);
+ROOT::RDF::Experimental::AddProgressBar(df);
 ~~~
 
 Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility 
 For example, it can be called at any computational node, such as Filter or Define, not only the head node,
-with no change to the Progressbar function itself: 
+with no change to the ProgressBar function itself: 
 ~~~{.cpp}
 ROOT::RDataFrame df("tree", "file.root");
 auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
-ROOT::RDF::Experimental::AddProgressbar(df_1);
+ROOT::RDF::Experimental::AddProgressBar(df_1);
 ~~~
 Examples of implemented progress bars can be seen by running [Higgs to Four Lepton tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py_source.html) and [Dimuon tutorial](https://root.cern/doc/master/df102__NanoAODDimuonAnalysis_8C.html). 
 
@@ -1693,7 +1693,7 @@ namespace Experimental {
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
    const nlohmann::ordered_json fullData = nlohmann::ordered_json::parse(std::ifstream(jsonFile));
-   if (!fullData.contains("samples") || fullData["samples"].size() == 0) {
+   if (!fullData.contains("samples") || fullData["samples"].empty()) {
       throw std::runtime_error(
          R"(The input specification does not contain any samples. Please provide the samples in the specification like:
 {

@@ -182,22 +182,22 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 /// Create an 1-dimensional with all properties taken from 'var', but
 /// with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
-RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, double xmin, double xmax, Int_t nbins)
+RooPlot::RooPlot(const char *name, const char *title, const RooAbsRealLValue &var, double xmin, double xmax,
+                 Int_t nbins)
+   : _hist(new TH1D(name, title, nbins, xmin, xmax)),
+     _plotVar(const_cast<RooAbsRealLValue *>(&var)),
+     _normBinWidth((xmax - xmin) / nbins)
 {
-  _hist = new TH1D(name,title,nbins,xmin,xmax) ;
   _hist->Sumw2(false) ;
   _hist->GetSumw2()->Set(0) ;
   _hist->SetDirectory(nullptr);
 
   // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
-  _plotVar = const_cast<RooAbsRealLValue*>(&var);
 
   TString xtitle= var.getTitle(true);
   SetXTitle(xtitle.Data());
 
   initialize();
-
-  _normBinWidth = (xmax-xmin)/nbins ;
 }
 
 
@@ -206,6 +206,7 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
 /// with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
 RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nbins)
+   : _plotVar(const_cast<RooAbsRealLValue *>(&var)), _normBinWidth((xmax - xmin) / nbins)
 {
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
   _hist->Sumw2(false) ;
@@ -213,7 +214,6 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nb
   _hist->SetDirectory(nullptr);
 
   // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
-  _plotVar = const_cast<RooAbsRealLValue*>(&var);
 
   TString xtitle= var.getTitle(true);
   SetXTitle(xtitle.Data());
@@ -223,8 +223,6 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nb
   title.Append("\"");
   SetTitle(title.Data());
   initialize();
-
-  _normBinWidth = (xmax-xmin)/nbins ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,9 +304,6 @@ void RooPlot::initialize()
   _hist->SetDirectory(nullptr);
   // Default vertical padding of our enclosed objects
   setPadFactor(0.05);
-  // We don't know our normalization yet
-  _normNumEvts= 0;
-  _normBinWidth = 0;
 }
 
 
@@ -318,9 +313,9 @@ void RooPlot::initialize()
 TString RooPlot::histName() const
 {
   if (_plotVar) {
-    return TString(Form("frame_%s_%zx",_plotVar->GetName(),(size_t)this)) ;
+    return TString(Form("frame_%s_%zx",_plotVar->GetName(),reinterpret_cast<size_t>(this))) ;
   } else {
-    return TString(Form("frame_%zx",(size_t)this)) ;
+    return TString(Form("frame_%zx",reinterpret_cast<size_t>(this))) ;
   }
 }
 
@@ -564,7 +559,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
 
 void RooPlot::updateFitRangeNorm(const TH1* hist)
 {
-  const TAxis* xa = ((TH1*)hist)->GetXaxis() ;
+  const TAxis* xa = const_cast<TH1 *>(hist)->GetXaxis() ;
   _normBinWidth = (xa->GetXmax()-xa->GetXmin())/hist->GetNbinsX() ;
   _normNumEvts = hist->GetEntries()/_normBinWidth ;
 }
@@ -1084,14 +1079,14 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
 {
 
   // Find curve object
-  RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
+  RooCurve* curve = static_cast<RooCurve*>(findObject(curvename,RooCurve::Class())) ;
   if (!curve) {
     coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << endl ;
     return -1. ;
   }
 
   // Find histogram object
-  RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
+  RooHist* hist = static_cast<RooHist*>(findObject(histname,RooHist::Class())) ;
   if (!hist) {
     coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << endl ;
     return -1. ;

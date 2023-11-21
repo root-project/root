@@ -222,7 +222,7 @@ public:
 
    const char *GetItemField(const char *fullname, const char *name);
 
-   void SetCurrentCallArg(THttpCallArg *arg);
+   THttpCallArg *SetCurrentCallArg(THttpCallArg *arg);
 
    /** Method scans normal objects, registered in ROOT */
    void ScanHierarchy(const char *topname, const char *path, TRootSnifferStore *store, Bool_t only_fields = kFALSE);

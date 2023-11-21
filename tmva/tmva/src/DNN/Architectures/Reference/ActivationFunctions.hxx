@@ -73,16 +73,16 @@ inline void TReference<Real_t>::ReluDerivative(TMatrixT<Real_t> & B,
 
 //______________________________________________________________________________
 template<typename Real_t>
-void TReference<Real_t>::Sigmoid(TMatrixT<Real_t> & A)
+void TReference<Real_t>::Sigmoid(TMatrixT<Real_t> & B)
 {
    size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
+   m = B.GetNrows();
+   n = B.GetNcols();
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
-         Real_t sig = 1.0 / (1.0 + std::exp(-A(i,j)));
-         A(i,j) = sig;
+         Real_t sig = 1.0 / (1.0 + std::exp(-B(i,j)));
+         B(i,j) = sig;
       }
    }
 }

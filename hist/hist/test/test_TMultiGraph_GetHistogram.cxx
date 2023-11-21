@@ -10,7 +10,7 @@
 
 TEST(TMultiGraph, GetHistogram)
 {
-   gROOT->SetBatch(1);
+   gROOT->SetBatch(true);
    auto c = new TCanvas();
    c->SetLogy();
 

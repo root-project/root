@@ -37,7 +37,6 @@ A RooProduct represents the product of a given set of RooAbsReal objects.
 using namespace std ;
 
 ClassImp(RooProduct);
-;
 
 class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;
 
@@ -55,7 +54,7 @@ namespace {
 
 RooProduct::RooProduct() : _cacheMgr(this,10)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -65,7 +64,7 @@ RooProduct::RooProduct() : _cacheMgr(this,10)
 
 RooProduct::~RooProduct()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -82,7 +81,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
   for (auto comp : prodSet) {
     addTerm(comp);
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -99,7 +98,7 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
   _compCSet("!compCSet",this,other._compCSet),
   _cacheMgr(other._cacheMgr,this)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -150,7 +149,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   for (auto const* rcomp : static_range_cast<RooAbsReal*>(_compRSet)) {
     if( !rcomp->dependsOn(allVars) ) indep->add(*rcomp);
   }
-  if (indep->getSize()!=0) {
+  if (!indep->empty()) {
     map->push_back( std::make_pair(new RooArgSet(),indep) );
   } else {
      delete indep;
@@ -192,13 +191,14 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
 #ifndef NDEBUG
   // check that we have all variables to be integrated over on the LHS
   // of the map, and all terms in the product do appear on the RHS
-  int nVar=0; int nFunc=0;
+  std::size_t nVar=0;
+  std::size_t nFunc=0;
   for (ProdMap::iterator i = map->begin();i!=map->end();++i) {
-    nVar+=i->first->getSize();
-    nFunc+=i->second->getSize();
+    nVar+=i->first->size();
+    nFunc+=i->second->size();
   }
-  assert(nVar==allVars.getSize());
-  assert(nFunc==_compRSet.getSize());
+  assert(nVar==allVars.size());
+  assert(nFunc==_compRSet.size());
 #endif
   return map;
 }
@@ -215,7 +215,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
 
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange));
+  CacheElem* cache = static_cast<CacheElem*>(_cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange)));
   if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code;
@@ -243,14 +243,14 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
 
   for (ProdMap::const_iterator i = map->begin();i!=map->end();++i) {
     RooAbsReal *term(nullptr);
-    if (i->second->getSize()>1) { // create a RooProd for this subexpression
+    if (i->second->size()>1) { // create a RooProd for this subexpression
       const char *name = makeFPName("SUBPROD_",*i->second);
       auto ownedTerm = std::make_unique<RooProduct>(name,name,*i->second);
       term = ownedTerm.get();
       cache->_ownedList.addOwned(std::move(ownedTerm));
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << endl;
     } else {
-      assert(i->second->getSize()==1);
+      assert(i->second->size()==1);
       term = static_cast<RooAbsReal*>(i->second->at(0));
     }
     assert(term!=nullptr);
@@ -303,7 +303,7 @@ Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 double RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
+  CacheElem *cache = static_cast<CacheElem*>(_cacheMgr.getObjByIndex(code-1));
   if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );

@@ -48,15 +48,15 @@ struct IndexSortComparator {
 
 TTreeIndex::TTreeIndex(): TVirtualIndex()
 {
-   fTree               = 0;
+   fTree               = nullptr;
    fN                  = 0;
-   fIndexValues        = 0;
-   fIndexValuesMinor   = 0;
-   fIndex              = 0;
-   fMajorFormula       = 0;
-   fMinorFormula       = 0;
-   fMajorFormulaParent = 0;
-   fMinorFormulaParent = 0;
+   fIndexValues        = nullptr;
+   fIndexValuesMinor   = nullptr;
+   fIndex              = nullptr;
+   fMajorFormula       = nullptr;
+   fMinorFormula       = nullptr;
+   fMajorFormulaParent = nullptr;
+   fMinorFormulaParent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,13 +128,13 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 {
    fTree               = (TTree*)T;
    fN                  = 0;
-   fIndexValues        = 0;
-   fIndexValuesMinor   = 0;
-   fIndex              = 0;
-   fMajorFormula       = 0;
-   fMinorFormula       = 0;
-   fMajorFormulaParent = 0;
-   fMinorFormulaParent = 0;
+   fIndexValues        = nullptr;
+   fIndexValuesMinor   = nullptr;
+   fIndex              = nullptr;
+   fMajorFormula       = nullptr;
+   fMinorFormula       = nullptr;
+   fMajorFormulaParent = nullptr;
+   fMinorFormulaParent = nullptr;
    fMajorName          = majorname;
    fMinorName          = minorname;
    if (!T) return;
@@ -220,14 +220,14 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 
 TTreeIndex::~TTreeIndex()
 {
-   if (fTree && fTree->GetTreeIndex() == this) fTree->SetTreeIndex(0);
-   delete [] fIndexValues;      fIndexValues = 0;
-   delete [] fIndexValuesMinor;      fIndexValuesMinor = 0;
-   delete [] fIndex;            fIndex = 0;
-   delete fMajorFormula;        fMajorFormula  = 0;
-   delete fMinorFormula;        fMinorFormula  = 0;
-   delete fMajorFormulaParent;  fMajorFormulaParent = 0;
-   delete fMinorFormulaParent;  fMinorFormulaParent = 0;
+   if (fTree && fTree->GetTreeIndex() == this) fTree->SetTreeIndex(nullptr);
+   delete [] fIndexValues;      fIndexValues = nullptr;
+   delete [] fIndexValuesMinor;      fIndexValuesMinor = nullptr;
+   delete [] fIndex;            fIndex = nullptr;
+   delete fMajorFormula;        fMajorFormula  = nullptr;
+   delete fMinorFormula;        fMinorFormula  = nullptr;
+   delete fMajorFormulaParent;  fMajorFormulaParent = nullptr;
+   delete fMinorFormulaParent;  fMinorFormulaParent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
       // Create new buffer (if needed)
 
       const TTreeIndex *ti_add = dynamic_cast<const TTreeIndex*>(add);
-      if (ti_add == 0) {
+      if (ti_add == nullptr) {
          Error("Append","Can only Append a TTreeIndex to a TTreeIndex but got a %s",
                add->IsA()->GetName());
       }

@@ -54,8 +54,8 @@ ClassImp(TGLRnrCtx);
 
 TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fViewer    (viewer),
-   fCamera    (0),
-   fSceneInfo (0),
+   fCamera    (nullptr),
+   fSceneInfo (nullptr),
 
    fViewerLOD    (kLODUndef),
    fSceneLOD     (kLODUndef),
@@ -71,9 +71,9 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fViewerOLLineW (0),
    fSceneOLLineW  (0),
 
-   fViewerClip   (0),
-   fSceneClip    (0),
-   fClip         (0),
+   fViewerClip   (nullptr),
+   fSceneClip    (nullptr),
+   fClip         (nullptr),
    fDrawPass     (kPassUndef),
 
    fStopwatch    (),
@@ -85,29 +85,29 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fSelection    (kFALSE),  fSecSelection     (kFALSE),
    fSelectTransparents (kIfNoOpaques),
    fPickRadius   (0),
-   fPickRectangle(0),
-   fSelectBuffer (0),
+   fPickRectangle(nullptr),
+   fSelectBuffer (nullptr),
 
-   fColorSetStack(0),
+   fColorSetStack(nullptr),
    fRenderScale  (1),
 
    fEventKeySym  (0),
 
    fDLCaptureOpen (kFALSE),
-   fGLCtxIdentity (0),
-   fQuadric       (0),
+   fGLCtxIdentity (nullptr),
+   fQuadric       (nullptr),
 
    fGrabImage     (kFALSE),
    fGrabBuffer    (-1),
-   fGrabbedImage  (0)
+   fGrabbedImage  (nullptr)
 {
    // Constructor.
 
    fColorSetStack = new lpTGLColorSet_t;
-   fColorSetStack->push_back(0);
+   fColorSetStack->push_back(nullptr);
 
    fSelectBuffer = new TGLSelectBuffer;
-   if (fViewer == 0)
+   if (fViewer == nullptr)
    {
       // Assume external usage, initialize for highest quality.
       fViewerLOD = fSceneLOD = fCombiLOD = fShapeLOD = kLODHigh;
@@ -219,7 +219,7 @@ void TGLRnrCtx::EndSelection(Int_t glResult)
    fSelection    = kFALSE;
    fSecSelection = kFALSE;
    fPickRadius   = 0;
-   delete fPickRectangle; fPickRectangle = 0;
+   delete fPickRectangle; fPickRectangle = nullptr;
 
    if (glResult < 0)
    {

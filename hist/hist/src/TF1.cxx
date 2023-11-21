@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <iostream>
+#include <memory>
 #include "strlcpy.h"
 #include "snprintf.h"
 #include "TROOT.h"
@@ -90,7 +91,7 @@ public:
             fFormula->SetParameters(from.GetParameters());
       } else {
          // case of a function pointers
-         fParams.reset(new TF1Parameters(fNpar));
+         fParams = std::make_unique<TF1Parameters>(fNpar);
          fName = from.GetName();
          fTitle = from.GetTitle();
          // need to set parameter values
@@ -723,7 +724,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
       return;
    }
 
-   fMethodCall = std::unique_ptr<TMethodCall>(new TMethodCall());
+   fMethodCall = std::make_unique<TMethodCall>();
    fMethodCall->InitWithPrototype(fName, "Double_t*,Double_t*");
 
    if (! fMethodCall->IsValid()) {
@@ -2191,7 +2192,7 @@ Bool_t TF1::ComputeCdfTable(Option_t * option) {
 Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be built
-   if (fIntegral.size() == 0) {
+   if (fIntegral.empty()) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();
    }
@@ -2244,7 +2245,7 @@ Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 Double_t TF1::GetRandom(Double_t xmin, Double_t xmax, TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be built
-   if (fIntegral.size() == 0) {
+   if (fIntegral.empty()) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();
    }
@@ -2342,17 +2343,17 @@ void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF1::GetSave(const Double_t *xx)
 {
-   if (fSave.size() == 0) return 0;
+   if (fSave.empty()) return 0;
    //if (fSave == 0) return 0;
-   int fNsave = fSave.size();
+   int nsave = fSave.size();
    Double_t x    = Double_t(xx[0]);
    Double_t y, dx, xmin, xmax, xlow, xup, ylow, yup;
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
       //if parent is a histogram the function had been saved at the center of the bins
       //we make a linear interpolation between the saved values
-      xmin = fSave[fNsave - 3];
-      xmax = fSave[fNsave - 2];
-      if (fSave[fNsave - 1] == xmax) {
+      xmin = fSave[nsave - 3];
+      xmax = fSave[nsave - 2];
+      if (fSave[nsave - 1] == xmax) {
          TH1 *h = (TH1 *)fParent;
          TAxis *xaxis = h->GetXaxis();
          Int_t bin1  = xaxis->FindBin(xmin);
@@ -2374,16 +2375,16 @@ Double_t TF1::GetSave(const Double_t *xx)
          return y;
       }
    }
-   Int_t np = fNsave - 3;
-   xmin = Double_t(fSave[np + 1]);
-   xmax = Double_t(fSave[np + 2]);
+   Int_t np = nsave - 3;
+   xmin = fSave[np + 1];
+   xmax = fSave[np + 2];
    dx   = (xmax - xmin) / np;
    if (x < xmin || x > xmax) return 0;
    // return a Nan in case of x=nan, otherwise will crash later
    if (TMath::IsNaN(x)) return x;
    if (dx <= 0) return 0;
 
-   Int_t bin     = Int_t((x - xmin) / dx);
+   Int_t bin = TMath::Min(np - 1, Int_t((x - xmin) / dx));
    xlow = xmin + bin * dx;
    xup  = xlow + dx;
    ylow = fSave[bin];
@@ -2949,21 +2950,19 @@ void TF1::Print(Option_t *option) const
 /// histogram is painted.
 /// The painted histogram can be retrieved calling afterwards the method TF1::GetHistogram()
 
-void TF1::Paint(Option_t *choptin)
+void TF1::Paint(Option_t *option)
 {
    fgCurrent = this;
 
-   char option[32];
-   strlcpy(option,choptin,32);
-
-   TString opt = option;
+   TString opt0 = option, opt = option, optSAME;
    opt.ToLower();
 
-   Bool_t optSAME = kFALSE;
-   if (opt.Contains("same")) {
-      opt.ReplaceAll("same","");
-      optSAME = kTRUE;
-   }
+   if (opt.Contains("sames"))
+      optSAME = "sames";
+   else if (opt.Contains("same"))
+      optSAME = "same";
+   if (optSAME.Length())
+      opt.ReplaceAll(optSAME, "");
    opt.ReplaceAll(' ', "");
 
    Double_t xmin = fXmin, xmax = fXmax, pmin = fXmin, pmax = fXmax;
@@ -2971,7 +2970,7 @@ void TF1::Paint(Option_t *choptin)
       pmin = gPad->PadtoX(gPad->GetUxmin());
       pmax = gPad->PadtoX(gPad->GetUxmax());
    }
-   if (optSAME) {
+   if (optSAME.Length()) {
       // Completely outside
       if (xmax < pmin) return;
       if (xmin > pmax) return;
@@ -2980,14 +2979,14 @@ void TF1::Paint(Option_t *choptin)
    // create an histogram using the function content (re-use it if already existing)
    fHistogram = DoCreateHistogram(xmin, xmax, kFALSE);
 
-   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
-   char *l2 = strstr(option,"PLC"); // Automatic Line Color
-   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
-   if (l1 || l2 || l3) {
+   auto is_pfc = opt0.Index("PFC"); // Automatic Fill Color
+   auto is_plc = opt0.Index("PLC"); // Automatic Line Color
+   auto is_pmc = opt0.Index("PMC"); // Automatic Marker Color
+   if (is_pfc != kNPOS || is_plc != kNPOS || is_pmc != kNPOS) {
       Int_t i = gPad->NextPaletteColor();
-      if (l1) {memcpy(l1,"   ",3); fHistogram->SetFillColor(i);}
-      if (l2) {memcpy(l2,"   ",3); fHistogram->SetLineColor(i);}
-      if (l3) {memcpy(l3,"   ",3); fHistogram->SetMarkerColor(i);}
+      if (is_pfc != kNPOS) { opt0.Replace(is_pfc, 3, " "); fHistogram->SetFillColor(i); }
+      if (is_plc != kNPOS) { opt0.Replace(is_plc, 3, " "); fHistogram->SetLineColor(i); }
+      if (is_pmc != kNPOS) { opt0.Replace(is_pmc, 3, " "); fHistogram->SetMarkerColor(i); }
    }
 
    // set the optimal minimum and maximum
@@ -3005,12 +3004,12 @@ void TF1::Paint(Option_t *choptin)
          // function oscillate around a constant value
          if (minimum == -1111) {
             Double_t hmin;
-            if (optSAME && gPad) hmin = gPad->GetUymin();
+            if (optSAME.Length() && gPad) hmin = gPad->GetUymin();
             else         hmin = fHistogram->GetMinimum();
             if (hmin > 0) {
                Double_t hmax;
                Double_t hminpos = hmin;
-               if (optSAME && gPad) hmax = gPad->GetUymax();
+               if (optSAME.Length() && gPad) hmax = gPad->GetUymax();
                else         hmax = fHistogram->GetMaximum();
                hmin -= 0.05 * (hmax - hmin);
                if (hmin < 0) hmin = 0;
@@ -3030,14 +3029,13 @@ void TF1::Paint(Option_t *choptin)
       fHistogram->SetMaximum(maximum);
    }
 
-
    // Draw the histogram.
    if (!gPad) return;
    if (opt.Length() == 0) {
-      if (optSAME) fHistogram->Paint("lfsame");
-      else         fHistogram->Paint("lf");
+      optSAME.Prepend("lf");
+      fHistogram->Paint(optSAME.Data());
    } else {
-      fHistogram->Paint(option);
+      fHistogram->Paint(opt0.Data());
    }
 }
 
@@ -3162,6 +3160,9 @@ void TF1::ReleaseParameter(Int_t ipar)
 
 void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Double_t)
 {
+   if (!fSave.empty())
+      fSave.clear();
+
    Double_t *parameters = GetParameters();
    //if (fSave != 0) {delete [] fSave; fSave = 0;}
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
@@ -3170,9 +3171,8 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
          TH1 *h = (TH1 *)fParent;
          Int_t bin1 = h->GetXaxis()->FindBin(xmin);
          Int_t bin2 = h->GetXaxis()->FindBin(xmax);
-         int fNsave = bin2 - bin1 + 4;
-         //fSave  = new Double_t[fNsave];
-         fSave.resize(fNsave);
+         int nsave = bin2 - bin1 + 4;
+         fSave.resize(nsave);
          Double_t xv[1];
 
          InitArgs(xv, parameters);
@@ -3180,33 +3180,35 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
             xv[0]    = h->GetXaxis()->GetBinCenter(i);
             fSave[i - bin1] = EvalPar(xv, parameters);
          }
-         fSave[fNsave - 3] = xmin;
-         fSave[fNsave - 2] = xmax;
-         fSave[fNsave - 1] = xmax;
+         fSave[nsave - 3] = xmin;
+         fSave[nsave - 2] = xmax;
+         fSave[nsave - 1] = xmax;
          return;
       }
    }
-   int fNsave = fNpx + 3;
-   if (fNsave <= 3) {
+
+   Int_t npx = fNpx;
+   if (npx <= 0)
       return;
-   }
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
+
    Double_t dx = (xmax - xmin) / fNpx;
    if (dx <= 0) {
       dx = (fXmax - fXmin) / fNpx;
-      fNsave--;
+      npx--;
       xmin = fXmin + 0.5 * dx;
       xmax = fXmax - 0.5 * dx;
    }
+   if (npx <= 0)
+      return;
+   fSave.resize(npx + 3);
    Double_t xv[1];
    InitArgs(xv, parameters);
-   for (Int_t i = 0; i <= fNpx; i++) {
+   for (Int_t i = 0; i <= npx; i++) {
       xv[0]    = xmin + dx * i;
       fSave[i] = EvalPar(xv, parameters);
    }
-   fSave[fNpx + 1] = xmin;
-   fSave[fNpx + 2] = xmax;
+   fSave[npx + 1] = xmin;
+   fSave[npx + 2] = xmax;
 }
 
 
@@ -3455,11 +3457,17 @@ void TF1::SetParName(Int_t ipar, const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set up to 10 parameter names
+/// Set up to 10 parameter names.
+/// Empty strings will be skipped, meaning that the corresponding name will not be changed.
 
 void TF1::SetParNames(const char *name0, const char *name1, const char *name2, const char *name3, const char *name4,
                       const char *name5, const char *name6, const char *name7, const char *name8, const char *name9, const char *name10)
 {
+   // Note: this is not made a variadic template method because it would
+   // presumably break the context menu in the TBrowser. Also, probably this
+   // method should not be virtual, because if the user wants to change
+   // parameter name setting behavior, the SetParName() method can be
+   // overridden.
    if (fFormula)
       fFormula->SetParNames(name0, name1, name2, name3, name4, name5, name6, name7, name8, name9, name10);
    else
@@ -3533,7 +3541,7 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
 
 void TF1::SetSavedPoint(Int_t point, Double_t value)
 {
-   if (fSave.size() == 0) {
+   if (fSave.empty()) {
       fSave.resize(fNpx + 3);
    }
    if (point < 0 || point >= int(fSave.size())) return;
@@ -3812,46 +3820,4 @@ Int_t TF1Parameters::GetParNumber(const char *name) const
       if (fParNames[i] == std::string(name)) return i;
    }
    return -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set parameter values
-
-void  TF1Parameters::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3, Double_t p4,
-                                   Double_t p5, Double_t p6, Double_t p7, Double_t p8,
-                                   Double_t p9, Double_t p10)
-{
-   unsigned int npar = fParameters.size();
-   if (npar > 0) fParameters[0] = p0;
-   if (npar > 1) fParameters[1] = p1;
-   if (npar > 2) fParameters[2] = p2;
-   if (npar > 3) fParameters[3] = p3;
-   if (npar > 4) fParameters[4] = p4;
-   if (npar > 5) fParameters[5] = p5;
-   if (npar > 6) fParameters[6] = p6;
-   if (npar > 7) fParameters[7] = p7;
-   if (npar > 8) fParameters[8] = p8;
-   if (npar > 9) fParameters[9] = p9;
-   if (npar > 10) fParameters[10] = p10;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set parameter names
-
-void TF1Parameters::SetParNames(const char *name0, const char *name1, const char *name2, const char *name3,
-                                const char *name4, const char *name5, const char *name6, const char *name7,
-                                const char *name8, const char *name9, const char *name10)
-{
-   unsigned int npar = fParNames.size();
-   if (npar > 0) fParNames[0] = name0;
-   if (npar > 1) fParNames[1] = name1;
-   if (npar > 2) fParNames[2] = name2;
-   if (npar > 3) fParNames[3] = name3;
-   if (npar > 4) fParNames[4] = name4;
-   if (npar > 5) fParNames[5] = name5;
-   if (npar > 6) fParNames[6] = name6;
-   if (npar > 7) fParNames[7] = name7;
-   if (npar > 8) fParNames[8] = name8;
-   if (npar > 9) fParNames[9] = name9;
-   if (npar > 10) fParNames[10] = name10;
 }

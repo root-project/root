@@ -153,7 +153,7 @@ double RandomFunctionsImpl<TRandomEngine>::GausACR(Double_t mean, Double_t sigma
          }
       }
 
-      while (1) {
+      while (true) {
          x = Rndm();
          y = kYm * Rndm();
          z = kX0 - kS*x - y;
@@ -170,7 +170,7 @@ double RandomFunctionsImpl<TRandomEngine>::GausACR(Double_t mean, Double_t sigma
             if (rn*rn<4*(kB-log(x))) {
                result = rn; break; }
       }
-   } while(0);
+   } while(false);
 
    return mean + sigma * result;
 }
@@ -218,7 +218,7 @@ Int_t RandomFunctionsImpl<TRandomEngine>::Poisson(Double_t mean)
       Double_t expmean = TMath::Exp(-mean);
       Double_t pir = 1;
       n = -1;
-      while(1) {
+      while(true) {
          n++;
          pir *= Rndm();
          if (pir <= expmean) break;
@@ -270,7 +270,7 @@ Double_t RandomFunctionsImpl<TRandomEngine>::PoissonD(Double_t mean)
       Double_t expmean = TMath::Exp(-mean);
       Double_t pir = 1;
       n = -1;
-      while(1) {
+      while(true) {
          n++;
          pir *= Rndm();
          if (pir <= expmean) break;

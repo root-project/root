@@ -14,7 +14,7 @@
 \class RooAbsCachedReal
 \ingroup Roofitcore
 
-RooAbsCachedReal is the abstract base class for functions that need or
+Abstract base class for functions that need or
 want to cache their evaluate() output in a RooHistFunc defined in
 terms of the used observables. This base class manages the creation
 and storage of all RooHistFunc cache p.d.fs and the RooDataHists
@@ -68,17 +68,6 @@ RooAbsCachedReal::RooAbsCachedReal(const RooAbsCachedReal& other, const char* na
  {
  }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsCachedReal::~RooAbsCachedReal()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of getVal() overriding default implementation
 /// of RooAbsReal. Return value stored in cache p.d.f
@@ -125,7 +114,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 {
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
-  FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,nullptr,&sterileIdx) ;
+  FuncCacheElem* cache = static_cast<FuncCacheElem*>(_cacheMgr.getObj(nset,nullptr,&sterileIdx)) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(true)) {
       ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function "
@@ -144,7 +133,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   }
 
   // Check if we have contents registered already in global expensive object cache
-  RooDataHist* histTmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
+  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
 
   if (histTmp) {
 
@@ -177,11 +166,10 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 /// meta object that tracks changes in declared parameters of p.d.f
 /// through actualParameters()
 
-RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset)
+RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal &self, const RooArgSet *nset)
+   : _sourceClone(nullptr), _cacheSource(false)
 {
   // Disable source caching by default
-  _cacheSource = false ;
-  _sourceClone = nullptr ;
 
   std::unique_ptr<RooArgSet> nset2{self.actualObservables(nset?*nset:RooArgSet())};
 
@@ -238,7 +226,7 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
 {
   TString name ;
   name.Append("_Obs[") ;
-  if (nset.getSize()>0) {
+  if (!nset.empty()) {
     bool first(true) ;
     for (RooAbsArg * arg : nset) {
       if (first) {
@@ -268,7 +256,7 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
   _ipOrder = order ;
 
   for (Int_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
-    FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObjByIndex(i) ;
+    FuncCacheElem* cache = static_cast<FuncCacheElem*>(_cacheMgr.getObjByIndex(i)) ;
     if (cache) {
       cache->func()->setInterpolationOrder(order) ;
     }

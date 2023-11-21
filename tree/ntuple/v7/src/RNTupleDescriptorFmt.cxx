@@ -62,7 +62,7 @@ struct ColumnInfo {
    }
 };
 
-static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
+std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
@@ -71,7 +71,7 @@ static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
 }
 
-static std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
+std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);
@@ -98,6 +98,11 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::uint64_t nPages = 0;
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
+      // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
+      // but don't add the the page sizes to the overall volume.
+      if (column.second.IsAliasColumn())
+         continue;
+
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
       auto elementSize = Detail::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();

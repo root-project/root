@@ -75,7 +75,7 @@ FitResult::FitResult(const FitConfig & fconfig) :
    if ( (fMinimType.find("Fumili") == std::string::npos) &&
         (fMinimType.find("GSLMultiFit") == std::string::npos)
       ) {
-      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType();
+      if (!fconfig.MinimizerAlgoType().empty()) fMinimType += " / " + fconfig.MinimizerAlgoType();
    }
 
    // get parameter values and errors (step sizes)
@@ -207,7 +207,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
             for (unsigned int j = 0; j <= i; ++j)
                fCovMatrix.push_back(min->CovMatrix(i,j) );
       }
-      // minos errors are set separetly when calling Fitter::CalculateMinosErrors()
+      // minos errors are set separately when calling Fitter::CalculateMinosErrors()
 
       // globalCC
       fGlobalCC.reserve(npar);
@@ -427,7 +427,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       if (IsParameterFixed(i) )
          os << std::setw(9) << " "  << std::setw(nn) << " " << " \t (fixed)";
       else {
-         if (fErrors.size() != 0)
+         if (!fErrors.empty())
             os << "   +/-   " << std::left << std::setw(nn) << fErrors[i] << std::right;
          if (HasMinosError(i))
             os << "  " << std::left  << std::setw(nn) << LowerError(i) << " +" << std::setw(nn) << UpperError(i)
@@ -447,7 +447,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
 void FitResult::PrintCovMatrix(std::ostream &os) const {
    // print the covariance and correlation matrix
    if (!fValid) return;
-   if (fCovMatrix.size() == 0) return;
+   if (fCovMatrix.empty()) return;
 //   os << "****************************************\n";
    os << "\nCovariance Matrix:\n\n";
    unsigned int npar = fParams.size();
@@ -592,7 +592,7 @@ void FitResult::GetConfidenceIntervals(const BinData & data, double * ci, double
       std::vector<double>::iterator itr = xdata.begin()+ ndim * i;
       std::copy(x,x+ndim,itr);
    }
-   // points are arraned as x0,y0,z0, ....xN,yN,zN  (stride1=ndim, stride2=1)
+   // points are arranged as x0,y0,z0, ....xN,yN,zN  (stride1=ndim, stride2=1)
    GetConfidenceIntervals(np,ndim,1,&xdata.front(),ci,cl,norm);
 }
 
@@ -624,7 +624,7 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
 //    if (chi2gradfunc) return &(chi2gradfunc->Data());
 //    PoissonLLGradFunction * pllgradfunc = dynamic_cast<PoissonLLFunction*>(f);
 //    if (pllgradfunc) return &(pllgradfunc->Data());
-//    MATH_WARN_MSG("FitResult::GetFitBinData","Cannot retrun fit bin data set if objective function is not of a known type");
+//    MATH_WARN_MSG("FitResult::GetFitBinData","Cannot return fit bin data set if objective function is not of a known type");
 //    return nullptr;
 // }
 

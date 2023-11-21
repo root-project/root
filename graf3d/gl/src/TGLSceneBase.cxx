@@ -55,7 +55,7 @@ TGLSceneBase::TGLSceneBase() :
    fStyle            (TGLRnrCtx::kStyleUndef),
    fWFLineW          (0),
    fOLLineW          (0),
-   fClip             (0),
+   fClip             (nullptr),
    fSelectable       (kTRUE),
    fBoundingBox      (),
    fBoundingBoxValid (kFALSE),
@@ -155,8 +155,8 @@ void TGLSceneBase::RebuildSceneInfo(TGLRnrCtx& ctx)
 {
    TGLSceneInfo* sinfo = ctx.GetSceneInfo();
 
-   sinfo->SetLastClip(0);
-   sinfo->SetLastCamera(0);
+   sinfo->SetLastClip(nullptr);
+   sinfo->SetLastCamera(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +206,7 @@ void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)
    // All these are now done in TGLViewerBase::PreRender() via
    // TGLSceneInfo::SetupTransformsAndBBox().
 
-   sinfo->SetLastClip(0);
+   sinfo->SetLastClip(nullptr);
    sinfo->FrustumPlanes().clear();
    sinfo->ClipPlanes().clear();
 
@@ -336,9 +336,9 @@ void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
       needUpdate = kTRUE;
    }
 
-   TGLClip* clip = 0;
-   if (sInfo.Clip() != 0) clip = sInfo.Clip();
-   else if (fClip   != 0) clip = fClip;
+   TGLClip* clip = nullptr;
+   if (sInfo.Clip() != nullptr) clip = sInfo.Clip();
+   else if (fClip   != nullptr) clip = fClip;
    else                   clip = rnrCtx.ViewerClip();
    if (clip != sInfo.LastClip())
    {

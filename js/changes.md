@@ -1,6 +1,43 @@
 # JSROOT changelog
 
-## Changes in 7.5
+## Changes in dev
+1. Implement "tickz" draw option, used for color palette ticks
+2. Implement skewness and kurtosis calculations for histogram stats box
+3. Introduce "logv" draw option for `TH3`, configures logarithmic scale for box volume
+4. Implement color palette drawing for `TH3`
+5. Implement cutg draw option for `TH2`/`TF2` surface plots
+6. Implement `TMath::Sq()` function and several others like SinH, ASinH, ...
+7. Implement histogram drawing build from `TGraph2D` using Delaunay interpolation
+8. Provide preliminary `TF3` support
+9. Support `TLinearGradient` and `TRadialGradient` colors
+10. Support LZMA decompression of ROOT files #272
+11. Include ZSTD decompression to repository #274
+12. Support opacity transfer function for `TH3`, see tutorials/gl/glvox2.C
+13. Upgrade three.js r155 -> r158
+14. Fix - do not add `THStack` and `TMultiGraph` to legend
+15. Fix - correctly use margin in `TPaveText` class
+16. Fix - correctly draw endcaps in legend errors
+
+
+## Changes in 7.5.2
+1. Fix - proper fit pars display in stats, proper #chi^{2}
+2. Fix - several bugs in TFormula parsing
+3. Fix - correctly use saved buffer in TF1/TF2
+4. Fix - properly adjust size of stats box
+5. Fix - support pol0..pol9 functions
+6. Fix - TGraph bar width should be at least 1 pixel
+7. Fix - prevent drawing of empty TGraph
+
+
+## Changes in 7.5.1
+1. Fix - expand item in hierarchy painter
+2. Fix - correctly use saved TF1 values for non-equidistant bins #270
+3. Fix - in log scales replace 10^1 label by 10
+4. Fix - vertical align of log labels on X axis
+5. Fix - second click of the same item in hierarchy painter
+
+
+## Changes in 7.5.0
 1. Correctly implement `TH2` projections like MERCATOR or PARABOLIC, add MOLLWEIDE
 2. Support "pol", "cyl", "sph" and "psr" coordinates systems for lego and surf plots
 3. Support orthographic camera for lego and surface plots
@@ -24,7 +61,7 @@
 21. Use `eslint` for static code checking, add testing of interactive features
 22. Upgrade three.js r151 -> r155
 23. Use https://github.com/georgealways/lil-gui/ instead of dat.GUI in geom painter
-24. Put `gl` in "devDependencies" of package.json. One can skip it installation with `npm i --production`.
+24. Put `gl` in "devDependencies" of package.json; one can skip it installation with `npm i --production`
 25. Fix - correct scaling of axis labels when tilt them by 25 degree, make this angle configurable
 26. Fix - legend multi-columns drawing and labels scaling
 27. Fix - graph "B" bar widths as in native ROOT
@@ -34,6 +71,7 @@
 31. Fix - correct scaling of custom axis labels
 32. Fix - shrink axis labels like 0.20 -> 0.2 or 10^0 -> 1
 33. Fix - copy axis attributes from histogram z scale to palette
+34. Fix - let handle derived from TH1/TH2 classes as histograms #269
 
 
 ## Changes in 7.4.3

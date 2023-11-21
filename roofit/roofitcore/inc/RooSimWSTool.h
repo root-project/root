@@ -75,7 +75,6 @@ protected:
 class RooSimWSTool::SplitRule : public TNamed {
 public:
    SplitRule(const char* pdfName="") : TNamed(pdfName,pdfName) {} ;
-   ~SplitRule() override {} ;
    void splitParameter(const char* paramList, const char* categoryList) ;
    void splitParameterConstrained(const char* paramNameList, const char* categoryNameList, const char* remainderStateName) ;
 
@@ -125,7 +124,6 @@ class RooSimWSTool::MultiBuildConfig : public RooSimWSTool::BuildConfig
 {
  public:
   MultiBuildConfig(const char* masterIndexCat)  ;
-  ~MultiBuildConfig() override {} ;
   void addPdf(const char* miStateList, const char* pdfName, SplitRule& sr) ;
   void addPdf(const char* miStateList, const char* pdfName,
          const RooCmdArg& arg1={},const RooCmdArg& arg2={},

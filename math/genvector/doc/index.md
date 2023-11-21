@@ -177,7 +177,7 @@ The vector classes support methods for:
 The transformations are modeled using simple (non-template) classes, using `double` as
 the scalar type to avoid too large numerical errors. The transformations are grouped
 in Rotations (in 3 dimensions), Lorentz transformations. Each group has several members which may
-model physically equivalent trasformations but with different internal representations.
+model physically equivalent transformations but with different internal representations.
 Transformation classes can operate on all type of vectors using the `operator()`
 or the `operator *` and the transformations can also be combined via the `operator *`.
 In more detail the transformations available are:

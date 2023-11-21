@@ -60,12 +60,12 @@ ClassImp(RooAddModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAddModel::RooAddModel() :
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _projCacheMgr(this,10),
-  _intCacheMgr(this,10)
+RooAddModel::RooAddModel()
+   : _refCoefNorm("!refCoefNorm", "Reference coefficient normalization set", this, false, false),
+     _projCacheMgr(this, 10),
+     _intCacheMgr(this, 10),
+     _coefErrCount(_errorCount)
 {
-  _coefErrCount = _errorCount ;
 }
 
 
@@ -81,14 +81,11 @@ RooAddModel::RooAddModel() :
 RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, bool ownPdfList) :
   RooResolutionModel(name,title,(static_cast<RooResolutionModel*>(inPdfList.at(0)))->convVar()),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(nullptr),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
   _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
-  _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(false),
-  _allExtendable(false)
+  _coefList("!coefficients","List of coefficients",this)
 {
    const std::string ownName(GetName() ? GetName() : "");
    if (inPdfList.size() > inCoefList.size() + 1 || inPdfList.size() < inCoefList.size()) {
@@ -158,19 +155,19 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
-  RooResolutionModel(other,name),
-  _refCoefNorm("!refCoefNorm",this,other._refCoefNorm),
-  _refCoefRangeName((TNamed*)other._refCoefRangeName),
-  _projCacheMgr(other._projCacheMgr,this),
-  _intCacheMgr(other._intCacheMgr,this),
-  _codeReg(other._codeReg),
-  _pdfList("!pdfs",this,other._pdfList),
-  _coefList("!coefficients",this,other._coefList),
-  _haveLastCoef(other._haveLastCoef),
-  _allExtendable(other._allExtendable)
+RooAddModel::RooAddModel(const RooAddModel &other, const char *name)
+   : RooResolutionModel(other, name),
+     _refCoefNorm("!refCoefNorm", this, other._refCoefNorm),
+     _refCoefRangeName((TNamed *)other._refCoefRangeName),
+     _projCacheMgr(other._projCacheMgr, this),
+     _intCacheMgr(other._intCacheMgr, this),
+     _codeReg(other._codeReg),
+     _pdfList("!pdfs", this, other._pdfList),
+     _coefList("!coefficients", this, other._coefList),
+     _haveLastCoef(other._haveLastCoef),
+     _allExtendable(other._allExtendable),
+     _coefErrCount(_errorCount)
 {
-  _coefErrCount = _errorCount ;
 }
 
 
@@ -212,7 +209,7 @@ void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 
 void RooAddModel::fixCoefRange(const char* rangeName)
 {
-  _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
+  _refCoefRangeName = const_cast<TNamed*>(RooNameReg::ptr(rangeName));
 }
 
 
@@ -334,7 +331,7 @@ AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* 
 
 void RooAddModel::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
 {
-  _coefCache.resize(_pdfList.getSize());
+  _coefCache.resize(_pdfList.size());
   for(std::size_t i = 0; i < _coefList.size(); ++i) {
     _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
   }
@@ -480,7 +477,7 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
 {
   Int_t sterileIdx(-1) ;
 
-  IntCacheElem* cache = (IntCacheElem*) _intCacheMgr.getObj(nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName)) ;
+  IntCacheElem* cache = static_cast<IntCacheElem*>(_intCacheMgr.getObj(nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName))) ;
   if (cache) {
     code = _intCacheMgr.lastIndex() ;
     compIntList = &cache->_intList ;
@@ -518,7 +515,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
   }
 
   // Partial integration scenarios
-  IntCacheElem* cache = (IntCacheElem*) _intCacheMgr.getObjByIndex(code-1) ;
+  IntCacheElem* cache = static_cast<IntCacheElem*>(_intCacheMgr.getObjByIndex(code-1)) ;
 
   RooArgList* compIntList ;
 
@@ -600,7 +597,7 @@ double RooAddModel::expectedEvents(const RooArgSet* nset) const
 
 void RooAddModel::selectNormalization(const RooArgSet* depSet, bool force)
 {
-  if (!force && _refCoefNorm.getSize()!=0) {
+  if (!force && !_refCoefNorm.empty()) {
     return ;
   }
 

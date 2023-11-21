@@ -118,7 +118,7 @@ bool stdsort()
 
    if ( showGraphics )
    {
-      TCanvas* c1 = new TCanvas("c1", "Comparision of Sorting Time", 600, 400);
+      TCanvas* c1 = new TCanvas("c1", "Comparison of Sorting Time", 600, 400);
 
       TGraph* gM = new TGraph(ntest, &index[0], &tM[0]);
       gM->SetLineColor(2);

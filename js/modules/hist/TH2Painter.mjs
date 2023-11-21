@@ -170,7 +170,7 @@ function drawTH2PolyLego(painter) {
       const material = new MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false })),
             mesh = new Mesh(geometry, material);
 
-      pmain.toplevel.add(mesh);
+      pmain.add3DMesh(mesh);
 
       mesh.painter = painter;
       mesh.bins_index = i;
@@ -217,19 +217,20 @@ class TH2Painter extends TH2Painter2D {
       if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
       } else {
-         const pad = this.getPadPainter().getRootPad(true);
+         const pad = this.getPadPainter().getRootPad(true),
+               logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;
 
          if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
             this.zmin = this.options.minimum;
             this.zmax = this.options.maximum;
          } else if (this.draw_content || (this.gmaxbin !== 0)) {
-            this.zmin = pad?.fLogz ? this.gminposbin * 0.3 : this.gminbin;
+            this.zmin = logz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
             zmult = 1 + 2*gStyle.fHistTopMargin;
          }
 
-         if (pad?.fLogz && (this.zmin <= 0))
+         if (logz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
          this.deleteAttr();
@@ -272,10 +273,11 @@ class TH2Painter extends TH2Painter2D {
       //  (re)draw palette by resize while canvas may change dimension
       if (is_main) {
          pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14) ||
-                                                  (this.options.Surf === 11) || (this.options.Surf === 12)))).then(() => this.drawHistTitle());
+                                                  (this.options.Surf === 11) || (this.options.Surf === 12))))
+                .then(() => this.drawHistTitle());
       }
 
-      return pr.then(() => this);
+      return pr.then(() => this.updateFunctions()).then(() => this);
    }
 
    /** @summary draw TH2 object */

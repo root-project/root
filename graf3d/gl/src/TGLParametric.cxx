@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include <cctype>
+#include <memory>
 
 #ifdef WIN32
 #ifndef NOMINMAX
@@ -124,7 +125,7 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
                              const TString &zFun, Double_t uMin, Double_t uMax,
                              Double_t vMin, Double_t vMax)
                   : TNamed(name, name),
-                    fEquation(0),
+                    fEquation(nullptr),
                     fURange(uMin, uMax),
                     fVRange(vMin, vMax),
                     fConstrained(kFALSE),
@@ -139,7 +140,7 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
    TString equation(xFun);
    equation.ToLower();
    ReplaceUVNames(equation);
-   fXEquation.reset(new TF2(name + "xEquation", equation.Data(), uMin, uMax, vMin, vMax));
+   fXEquation = std::make_unique<TF2>(name + "xEquation", equation.Data(), uMin, uMax, vMin, vMax);
    //Formula was incorrect.
    if (fXEquation->IsZombie()) {
       MakeZombie();
@@ -149,7 +150,7 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
    equation = yFun;
    equation.ToLower();
    ReplaceUVNames(equation);
-   fYEquation.reset(new TF2(name + "yEquation", equation.Data(), uMin, uMax, vMin, vMax));
+   fYEquation = std::make_unique<TF2>(name + "yEquation", equation.Data(), uMin, uMax, vMin, vMax);
    //Formula was incorrect.
    if (fYEquation->IsZombie()) {
       MakeZombie();
@@ -159,7 +160,7 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
    equation = zFun;
    equation.ToLower();
    ReplaceUVNames(equation);
-   fZEquation.reset(new TF2(name + "zEquation", equation.Data(), uMin, uMax, vMin, vMax));
+   fZEquation = std::make_unique<TF2>(name + "zEquation", equation.Data(), uMin, uMax, vMin, vMax);
    //Formula was incorrect.
    if (fZEquation->IsZombie())
       MakeZombie();
@@ -281,7 +282,7 @@ char *TGLParametricEquation::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 void TGLParametricEquation::Paint(Option_t * /*option*/)
 {
    if (!fPainter.get())
-      fPainter.reset(new TGLHistPainter(this));
+      fPainter = std::make_unique<TGLHistPainter>(this);
    fPainter->Paint("dummyoption");
 }
 
@@ -363,7 +364,7 @@ Bool_t TGLParametricPlot::InitGeometry()
       }
 
       TH3F hist("tmp", "tmp", 2, -1., 1., 2, -1., 1., 2, -1., 1.);
-      hist.SetDirectory(0);
+      hist.SetDirectory(nullptr);
       //TAxis has a lot of attributes, defaults, set by ctor,
       //are not enough to be correctly painted by TGaxis object.
       //To simplify their initialization - I use temporary histogram.

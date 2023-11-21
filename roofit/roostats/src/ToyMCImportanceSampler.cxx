@@ -96,7 +96,7 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
 
       RooDataSet* result = ToyMCSampler::GetSamplingDistributionsSingleWorker( paramPoint );
 
-      if (result->get()->getSize() > Int_t(fTestStatistics.size())) {
+      if (result->get()->size() > fTestStatistics.size()) {
          // add label
          densityLabel.setIndex( i );
          result->addColumn( densityLabel );
@@ -291,7 +291,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
    // generate global observables
    RooArgSet observables(*fObservables);
-   if(fGlobalObservables  &&  fGlobalObservables->getSize()) {
+   if(fGlobalObservables  &&  !fGlobalObservables->empty()) {
       observables.remove(*fGlobalObservables);
       // WHAT TODO FOR MANY nullptr DENSITIES?
       GenerateGlobalObservables(*fNullDensities[0]);

@@ -18,6 +18,7 @@ import datetime
 import os
 import shutil
 import subprocess
+import sys
 import tarfile
 from hashlib import sha1
 
@@ -37,7 +38,8 @@ S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
 
 try:
     CONNECTION = openstack.connect(cloud='envvars')
-except:
+except Exception as exc:
+    print("Failed to open the S3 connection:", exc, file=sys.stderr)
     CONNECTION = None
 
 WINDOWS = (os.name == 'nt')
@@ -368,7 +370,8 @@ def build(options, buildtype):
 def create_binaries(buildtype):
     os.makedirs(f"{WORKDIR}/packages/", exist_ok=True)
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build' && cpack -B {WORKDIR}/packages/ --verbose -C {buildtype}
+        cd '{WORKDIR}/build'
+        cpack -B {WORKDIR}/packages/ --verbose -C {buildtype}
     """)
 
     if result != 0:

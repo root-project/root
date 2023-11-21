@@ -29,7 +29,7 @@ protected:
 
 public:
    REveScalableStraightLineSet(const std::string &n = "ScalableStraightLineSet", const std::string &t = "");
-   virtual ~REveScalableStraightLineSet() {}
+   ~REveScalableStraightLineSet() override {}
 
    void SetScaleCenter(Float_t x, Float_t y, Float_t z);
    void SetScale(Double_t scale);

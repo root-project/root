@@ -1,4 +1,3 @@
-CMAKE_CXX_STANDARD=20
 builtin_afterimage=ON
 builtin_cfitsio=ON
 builtin_cppzmq=ON
@@ -9,8 +8,12 @@ builtin_ftgl=ON
 builtin_gl2ps=ON
 builtin_glew=ON
 builtin_gsl=ON
+builtin_gtest=ON
 builtin_lz4=ON
+builtin_lzma=ON
 builtin_nlohmannjson=ON
+builtin_pcre=ON
+builtin_openssl=ON
 builtin_tbb=ON
 builtin_unuran=ON
 builtin_vc=ON

@@ -32,8 +32,8 @@ class TGLSelectRecord;
 class TGLSceneBase : public TGLLockable // : public TObject / TNamed
 {
 private:
-   TGLSceneBase(const TGLSceneBase&);            // Not implemented
-   TGLSceneBase& operator=(const TGLSceneBase&); // Not implemented
+   TGLSceneBase(const TGLSceneBase&) = delete;
+   TGLSceneBase& operator=(const TGLSceneBase&) = delete;
 
    static UInt_t fgSceneIDSrc;
 

@@ -88,81 +88,21 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-static const double DEFAULT_EPSILON = 0.01;
-static const double DEFAULT_DELTA   = 10e-6;
-
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMCInterval::MCMCInterval(const char* name)
-   : ConfInterval(name)
+MCMCInterval::MCMCInterval(const char *name)
+   : ConfInterval(name), fTFLower(-RooNumber::infinity()), fTFUpper(RooNumber::infinity())
 {
-   fConfidenceLevel = 0.0;
-   fHistConfLevel = 0.0;
-   fKeysConfLevel = 0.0;
-   fTFConfLevel = 0.0;
-   fFull = 0.0;
-   fChain = nullptr;
-   fAxes = nullptr;
-   fDataHist = nullptr;
-   fSparseHist = nullptr;
    fVector.clear();
-   fKeysPdf = nullptr;
-   fProduct = nullptr;
-   fHeaviside = nullptr;
-   fKeysDataHist = nullptr;
-   fCutoffVar = nullptr;
-   fHist = nullptr;
-   fNumBurnInSteps = 0;
-   fHistCutoff = -1;
-   fKeysCutoff = -1;
-   fDimension = 1;
-   fUseKeys = false;
-   fUseSparseHist = false;
-   fIsHistStrict = true;
-   fEpsilon = DEFAULT_EPSILON;
-   fDelta = DEFAULT_DELTA;
-   fIntervalType = kShortest;
-   fTFLower = -1.0 * RooNumber::infinity();
-   fTFUpper = RooNumber::infinity();
-   fVecWeight = 0;
-   fLeftSideTF = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMCInterval::MCMCInterval(const char* name,
-        const RooArgSet& parameters, MarkovChain& chain) : ConfInterval(name)
+MCMCInterval::MCMCInterval(const char *name, const RooArgSet &parameters, MarkovChain &chain)
+   : ConfInterval(name), fChain(&chain), fTFLower(-RooNumber::infinity()), fTFUpper(RooNumber::infinity())
 {
-   fNumBurnInSteps = 0;
-   fConfidenceLevel = 0.0;
-   fHistConfLevel = 0.0;
-   fKeysConfLevel = 0.0;
-   fTFConfLevel = 0.0;
-   fFull = 0.0;
-   fAxes = nullptr;
-   fChain = &chain;
-   fDataHist = nullptr;
-   fSparseHist = nullptr;
    fVector.clear();
-   fKeysPdf = nullptr;
-   fProduct = nullptr;
-   fHeaviside = nullptr;
-   fKeysDataHist = nullptr;
-   fCutoffVar = nullptr;
-   fHist = nullptr;
-   fHistCutoff = -1;
-   fKeysCutoff = -1;
-   fUseKeys = false;
-   fUseSparseHist = false;
-   fIsHistStrict = true;
-   fEpsilon = DEFAULT_EPSILON;
    SetParameters(parameters);
-   fDelta = DEFAULT_DELTA;
-   fIntervalType = kShortest;
-   fTFLower = -1.0 * RooNumber::infinity();
-   fTFUpper = RooNumber::infinity();
-   fVecWeight = 0;
-   fLeftSideTF = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +255,7 @@ void MCMCInterval::SetConfidenceLevel(double cl)
 
 void MCMCInterval::SetAxes(RooArgList& axes)
 {
-   Int_t size = axes.getSize();
+   Int_t size = axes.size();
    if (size != fDimension) {
       coutE(InputArguments) << "* Error in MCMCInterval::SetAxes: " <<
                                "number of variables in axes (" << size <<
@@ -324,7 +264,7 @@ void MCMCInterval::SetAxes(RooArgList& axes)
       return;
    }
    for (Int_t i = 0; i < size; i++)
-      fAxes[i] = (RooRealVar*)axes.at(i);
+      fAxes[i] = static_cast<RooRealVar*>(axes.at(i));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -419,14 +359,14 @@ void MCMCInterval::CreateHist()
    for (Int_t i = fNumBurnInSteps; i < size; i++) {
       entry = fChain->Get(i);
       if (fDimension == 1)
-         ((TH1F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH1F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
                               fChain->Weight());
       else if (fDimension == 2)
-         ((TH2F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH2F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
                               entry->getRealValue(fAxes[1]->GetName()),
                               fChain->Weight());
       else
-         ((TH3F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH3F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
                               entry->getRealValue(fAxes[1]->GetName()),
                               entry->getRealValue(fAxes[2]->GetName()),
                               fChain->Weight());
@@ -556,7 +496,7 @@ void MCMCInterval::SetParameters(const RooArgSet& parameters)
 {
    fParameters.removeAll();
    fParameters.add(parameters);
-   fDimension = fParameters.getSize();
+   fDimension = fParameters.size();
    if (fAxes != nullptr)
       delete[] fAxes;
    fAxes = new RooRealVar*[fDimension];
@@ -1396,7 +1336,7 @@ TH1* MCMCInterval::GetPosteriorHist()
      // if fHist is still nullptr, then CreateHist failed
      return nullptr;
 
-  return (TH1*) fHist->Clone("MCMCposterior_hist");
+  return static_cast<TH1*>(fHist->Clone("MCMCposterior_hist"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1413,7 +1353,7 @@ RooNDKeysPdf* MCMCInterval::GetPosteriorKeysPdf()
       // if fKeysPdf is still nullptr, then it means CreateKeysPdf failed
       return nullptr;
 
-   return (RooNDKeysPdf*) fKeysPdf->Clone("MCMCPosterior_keys");
+   return static_cast<RooNDKeysPdf*>(fKeysPdf->Clone("MCMCPosterior_keys"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1432,7 +1372,7 @@ RooProduct* MCMCInterval::GetPosteriorKeysProduct()
       // if fProduct is still nullptr, then it means CreateKeysPdf failed
       return nullptr;
 
-   return (RooProduct*) fProduct->Clone("MCMCPosterior_keysproduct");
+   return static_cast<RooProduct*>(fProduct->Clone("MCMCPosterior_keysproduct"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1531,7 +1471,7 @@ bool MCMCInterval::CheckParameters(const RooArgSet& parameterPoint) const
 {
    // check that the parameters are correct
 
-   if (parameterPoint.getSize() != fParameters.getSize() ) {
+   if (parameterPoint.size() != fParameters.size() ) {
      coutE(Eval) << "MCMCInterval: size is wrong, parameters don't match" << std::endl;
      return false;
    }

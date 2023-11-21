@@ -751,6 +751,16 @@ This means that they have the same on-disk representation as `std::vector<T>`, u
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
+#### std::map\<K, V\>
+
+A map is stored using a collection mother field, whose principal column is of type `(Split)Index[64|32]` and a child field of type `std::pair<K, V>` named `_0`.
+
+### std::atomic\<T\>
+
+Atomic types are stored as a leaf field with a single subfield named `_0`.
+The mother field has no attached columns.
+The subfield corresponds to the the inner type `T`.
+
 ### User-defined enums
 
 User-defined enums are stored as a leaf field with a single subfield named `_0`.

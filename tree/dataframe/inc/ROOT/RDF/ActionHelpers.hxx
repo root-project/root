@@ -20,7 +20,7 @@
 #define ROOT_RDFOPERATIONS
 
 #include "Compression.h"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/RVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/RDF/RCutFlowReport.hxx"
@@ -1770,6 +1770,7 @@ public:
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
                         0};
       (void)expander; // avoid unused parameter warnings (gcc 12.1)
+      (void)slot; // Also "slot" might be unused, in case "values" is empty
    }
 
    template <std::size_t... S>

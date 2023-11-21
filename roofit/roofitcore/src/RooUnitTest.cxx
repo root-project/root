@@ -270,12 +270,12 @@ bool RooUnitTest::runCompTests()
                                  <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << std::endl;
 
        if (compPlot) {
-         compPlot->addPlotable((RooHist*)testHist->Clone(),"P") ;
+         compPlot->addPlotable(static_cast<RooHist*>(testHist->Clone()),"P") ;
          compPlot->getAttLine()->SetLineColor(kRed) ;
          compPlot->getAttMarker()->SetMarkerColor(kRed) ;
          compPlot->getAttLine()->SetLineWidth(1) ;
 
-         compPlot->addPlotable((RooHist*)refHist->Clone(),"P") ;
+         compPlot->addPlotable(static_cast<RooHist*>(refHist->Clone()),"P") ;
          compPlot->getAttLine()->SetLineColor(kBlue) ;
          compPlot->getAttMarker()->SetMarkerColor(kBlue) ;
          compPlot->getAttLine()->SetLineWidth(1) ;
@@ -292,12 +292,12 @@ bool RooUnitTest::runCompTests()
                                  <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << std::endl;
 
        if (compPlot) {
-         compPlot->addPlotable((RooCurve*)testCurve->Clone()) ;
+         compPlot->addPlotable(static_cast<RooCurve*>(testCurve->Clone())) ;
          compPlot->getAttLine()->SetLineColor(kRed) ;
          compPlot->getAttLine()->SetLineWidth(1) ;
          compPlot->getAttLine()->SetLineStyle(kSolid) ;
 
-         compPlot->addPlotable((RooCurve*)refCurve->Clone()) ;
+         compPlot->addPlotable(static_cast<RooCurve*>(refCurve->Clone())) ;
          compPlot->getAttLine()->SetLineColor(kBlue) ;
          compPlot->getAttLine()->SetLineWidth(1) ;
          compPlot->getAttLine()->SetLineStyle(kDashed) ;

@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 #include <cassert>
 
 //ROOT headers
@@ -1917,7 +1917,7 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
    TAttLine::Copy(*hist);
    TAttFill::Copy(*hist);
    TAttMarker::Copy(*hist);
-   hist->SetStats(0);
+   hist->SetStats(false);
 
    return;
 

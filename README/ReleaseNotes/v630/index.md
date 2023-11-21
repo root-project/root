@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.30/00 is scheduled for release in May, 2023.
+ROOT version 6.30/00 is scheduled for release in October, 2023.
 
 For more information, see:
 
@@ -12,28 +12,62 @@ For more information, see:
 
 The following people have contributed to this new version:
 
- Bertrand Bellenot, CERN/SFT,\
- Jakob Blomer, CERN/SFT,\
- Rene Brun, CERN/SFT,\
+ Daniel Álvarez Conde, CERN/EP-SFT,\
+ Guilherme Amadio, CERN/IT,\
+ Bertrand Bellenot, CERN/EP-SFT,\
+ Jakob Blomer, CERN/EP-SFT,\
+ Patrick Bos, Netherlands eScience Center,\
+ Rene Brun,\
+ Carsten Burgard, TU Dortmund,\
+ Will Buttinger, Rutherford Appleton Lab,\
  Philippe Canal, FNAL,\
- Olivier Couet, CERN/SFT,\
- Gerri Ganis, CERN/SFT,\
- Andrei Gheata, CERN/SFT,\
- Enrico Guiraud, CERN/SFT,\
+ Olivier Couet, CERN/EP-SFT,\
+ Marta Czurylo, CERN/EP-SFT,\
+ Mattias Ellert, Uppsala Uni,\
+ Edward Finkelstein, JGU Mainz,\
+ Gerri Ganis, CERN/EP-SFT,\
+ Paul Gessinger, CERN/EP-SFT,\
+ Florine de Geus, CERN/ATLAS,\
+ Andrei Gheata, CERN/EP-SFT,\
+ Enrico Guiraud, CERN/EP-SFT and Princeton,\
+ Ahmat Hamdan, CERN/EP-SFT,\
+ Stephan Hageboeck, CERN/IT,\
+ Jonas Hahnfeld, CERN/EP-SFT,\
+ Fernando Hueso González, CSIC/UV,\
+ Attila Krasznahorkay, CERN/ATLAS,\
+ Baidyanath Kundu, CERN/EP-SFT and Princeton,\
+ Giovanna Lazzari Miotto, CERN/EP-SFT,\
  Sergey Linev, GSI,\
- Javier Lopez-Gomez, CERN/SFT,\
- Pere Mato, CERN/SFT,\
- Lorenzo Moneta, CERN/SFT,\
- Axel Naumann, CERN/SFT,\
- Danilo Piparo, CERN/SFT,\
- Fons Rademakers, CERN/SFT,\
- Jonas Rembser, CERN/SFT,\
- Enric Tejedor Saavedra, CERN/SFT,\
+ Jerry Ling, Harvard Uni,\
+ Javier Lopez-Gomez, CERN/EP-SFT,\
+ Pere Mato, CERN/EP-SFT,\
+ Lorenzo Moneta, CERN/EP-SFT,\
+ Ole Morud, CERN/EP-SFT,\
+ Alja Mrak Tadel, UCSD/CMS,\
+ Axel Naumann, CERN/EP-SFT,\
+ Dante Niewenhuis, CERN/EP-SFT,\
+ Vincenzo Eduardo Padulano, CERN/EP-SFT,\
+ Ioanna Maria Panagou, CERN/EP-SFT,\
+ Danilo Piparo, CERN/EP-SFT,\
+ Fons Rademakers, CERN/IT,\
+ Jonas Rembser, CERN/EP-SFT,\
+ Jakob Schneekloth, CERN/EP-SFT,\
+ Sanjiban Sengupta, CERN/EP-SFT,\
+ Neel Shah, GSoC,\
+ Garima Singh, CERN/EP-SFT and Princeton,\
+ Yash Solanki, GSoC,\
+ Uri Stern, CERN/EP-SFT,\
+ Enric Tejedor Saavedra, CERN/IT,\
  Matevz Tadel, UCSD/CMS,\
+ [QuillPusher](https://github.com/QuillPusher), [Compiler Research Group](https://compiler-research.org/team/),\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
+ Wouter Verkerke, NIKHEF/ATLAS,\
+ Daniel Werner, CERN/EP-SFT,\
+ Zef Wolffs, NIKHEF/ATLAS
 
 ## Deprecation and Removal
+- The minimum C++ standard supported by ROOT is now C++17.
+- Support for Python 2 is now deprecated and it will be removed in next release 6.32.
 - `ROOT::RDF::RResultHandle::GetResultPtr` has been deprecated. Please use `RResultPtr` directly instead and only cast to `RResultHandle` in order to call `ROOT::RDF::RunGraphs`.
 - The RDataFrame factory functions `MakeCsvDataFrame`, `MakeArrowDataFrame`, `MakeNTupleDataFrame` and `MakeSqliteDataFrame` that were deprecated in v6.28 have been removed. Use `FromCSV`, `FromArrow`, `FromRNTuple` or `FromSqlite` instead.
 - The TStorage reallocation routine without a size (`TStorage::ReAlloc(void *ovp, size_t size`) and heap related routines (`TStorage::AddToHeap`, `TStorage::IsOnHeap`, `TStorage::GetHeapBegin`, `TStorage::GetHeapEnd`) that were deprecated in v6.02/00 have been removed.
@@ -49,9 +83,28 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+- Increase thread-safety in parts of core libraries (TCling, TClingMethodInfo, TClingTypeInfo, TFunction) to allow for parallel workflows using RDataFrame in multiple C++ `std::thread`s.
 
 ## I/O Libraries
 
+- Improve parsing of input argument to `TChain::Add`. Now it supports the case of globbing files while also using the `?#` token to specify the tree name.
+
+## RDataFrame
+- instead of returning nothing, `ROOT::RDF::RunGraphs` now returns the number of separate computation graphs that have been run.
+
+- Introduce [`ProgressBar`](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#progressbar) feature that can be added to any RDataFrame program.
+
+- The `RDatasetSpec` class and its users now employ the concept of 'sample' rather than the original naming 'group' for groups of files with associated metadata.
+
+- `df106_HiggsToFourLeptons` tutorials (both python and C++) now showcase the `ProgressBar`. They now use `FromSpec` to define multiple samples and `Vary` for systematic variations.
+
+### Distributed RDataFrame
+
+- Vastly improve runtime performance when using an RDataFrame with simulated dataset, i.e. `RDataFrame(nentries)`, by removing usage of `Range` operation to define the per-task entry range.
+
+- Explicitly error out when trying to process a TTree with a TTreeIndex in distributed mode. The feature is currently not supported.
+
+- JITting the RDataFrame computation graph now only happens once per worker process, not once per task. This greatly reduces memory usage and runtime overhead at of each task.
 
 ## TTree Libraries
 
@@ -272,6 +325,65 @@ method now does an extended fit by default if the pdf is extendible. This makes
 the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
 `RooAbsPdf::createChi2()`.
 
+## TMVA
+### SOFIE : Code generation for fast inference of Deep Learning models
+TMVA SOFIE now supports parsing and further inference of Graph Neural Networks based on DeepMind's [graph_nets](https://github.com/google-deepmind/graph_nets). The list of all operators supported in the `RModel` class is the one provided below for the ONNX parser.
+
+#### SOFIE-GNN
+1. The SOFIE-GNN implementation brought a major change in SOFIE's architecture. Instead of having only the RModel class to store model information, now SOFIE has RModel, RModel_GNN and RModel_GraphIndependent classes which are inherited from RModel_Base.
+2. **RModel_GNN** is used to store a GNN model having nodes, edges, and globals with functions for their update and aggregate(for inter-relationships).
+3. **RModel_GraphIndependent** is used to store an independent Graph model with nodes, edges and globals with their individual update functions.
+4. **RFunctions** are used to declare update/aggregate operations over graph components. Currently supported RFunctions include:
+    - **Update Functions**
+        - RFunction_MLP
+    - **Aggregate Functions**
+        - RFunction_Mean
+        - RFunction_Sum
+5. Pythonized functions for parsing a Graphnets' model can be used to generate inference code
+```
+   import graph_nets as gn
+   from graph_nets import utils_tf
+
+   GraphModule = gn.modules.GraphNetwork(
+      edge_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
+      node_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
+      global_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True))
+
+   GraphData = get_graph_data_dict(2,1,2,2,2)
+
+   model = ROOT.TMVA.Experimental.SOFIE.RModel_GNN.ParseFromMemory(GraphModule, GraphData)
+   model.Generate()
+   model.OutputGenerated()
+
+```
+A complete tutorial for the SOFIE-GNN implementation can be found [here](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_GNN.py)
+
+#### SOFIE ONNX Parser
+
+The ONNX parser supports now several new ONNX operators. The list of the current supported ONNX operator is the following:
+- Gemm
+- Conv (in 1D,2D and 3D)
+- RNN, GRU, LSTM
+- Relu, Selu, Sigmoid, Softmax, Tanh, LeakyRelu
+- BatchNormalization
+- MaxPool, AveragePool, GlobalAverage
+- ConvTranspose
+- Gather
+- Expand, Reduce
+- Neg, Exp, Sqrt, Reciprocal
+- Add, Sum, Mul, Div
+- Reshape, Flatten, Transpose
+- Squeeze, Unsqueeze, Slice
+- Concat, Reduce
+- Identity
+- Shape
+- Custom
+- Error
+- Log
+
+#### SOFIE Keras Parser
+- The Swish Activation function is now supported in the SOFIE Keras parser.
+
 ## 2D Graphics Libraries
 
 - Introduce `TAxis::ChangeLabelByValue` to set custom label defined by axis value. It works also
@@ -287,6 +399,23 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
   Have to be used if called from other web-based widget to avoid logical dead-locks.
   In case of normal canvas just canvas->Update() is performed.
 
+- The Delaunay triangles (used by TGraph2D) were computed by the external package `triangle.c`
+  included in the ROOT distribution. This package had several issues:
+     - It was not maintained anymore.
+     - Its license was not compatible with LGPL
+  This code is now replaced by the [CDT package](https://github.com/artem-ogre/CDT) which is
+  properly maintained and has a license (MLP) compatible with LGPL. It will appear in 6.03.02.
+
+
+## Machine Learning integration
+
+- ROOT now offers functionality to extract batches of events out of a dataset for use in common ML training workflows. For example, one can generate PyTorch tensors from a TTree. The functionality is available through the `RBatchGenerator` class and can be seamlessly integrated in user code, for example:
+   ```python
+   # Returns two generators that return training and validation batches as PyTorch tensors.
+   gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+      tree_name, file_name, batch_size, chunk_size, target=target, validation_split=0.3)
+   ```
+   The functionality is also available for TensorFlow datasets and Python generators of numpy arrays. See more in the `RBatchGenerator*` tutorials under the TMVA folder.
 
 ## 3D Graphics Libraries
 
@@ -328,4 +457,3 @@ This logic has been improved and is now as follows:
 _(i)_ If the current head is a well-known branch, e.g. `master` or `v6-28-00-patches`, use the matching branch upstream;
 _(ii)_ otherwise, try a branch that matches the name of the current head in the forked repository, if it exists; else try using the closest upstream head/tag below `HEAD`'s parent commit;
 _(iii)_ as a last resort, if there is no preferred candidate, checkout the remote's default head.
-

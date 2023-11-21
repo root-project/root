@@ -48,11 +48,7 @@ ClassImp(RooDerivative);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(nullptr), _rd(nullptr)
-{
-}
-
-
+RooDerivative::RooDerivative() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,9 +58,7 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   _eps(epsIn),
   _nset("nset","nset",this,false,false),
   _func("function","function",this,func),
-  _x("x","x",this,x),
-  _ftor(nullptr),
-  _rd(nullptr)
+  _x("x","x",this,x)
 {
   if (_order<0 || _order>3 ) {
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
@@ -79,9 +73,7 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   _eps(epsIn),
   _nset("nset","nset",this,false,false),
   _func("function","function",this,func),
-  _x("x","x",this,x),
-  _ftor(nullptr),
-  _rd(nullptr)
+  _x("x","x",this,x)
 {
   if (_order<0 || _order>3) {
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
@@ -99,24 +91,11 @@ RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
   _eps(other._eps),
   _nset("nset",this,other._nset),
   _func("function",this,other._func),
-  _x("x",this,other._x),
-  _ftor(nullptr),
-  _rd(nullptr)
+  _x("x",this,other._x)
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooDerivative::~RooDerivative()
-{
-  if (_rd) delete _rd ;
-  if (_ftor) delete _ftor ;
-}
-
-
+RooDerivative::~RooDerivative() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
@@ -124,9 +103,9 @@ RooDerivative::~RooDerivative()
 double RooDerivative::evaluate() const
 {
   if (!_ftor) {
-    _ftor = _func.arg().functor(_x.arg(),RooArgSet(),_nset)  ;
+    _ftor = std::unique_ptr<RooFunctor>{_func.arg().functor(_x.arg(),RooArgSet(),_nset)};
     ROOT::Math::WrappedFunction<RooFunctor&> wf(*_ftor);
-    _rd = new ROOT::Math::RichardsonDerivator(wf,_eps*(_x.max()-_x.min()),true) ;
+    _rd = std::make_unique<ROOT::Math::RichardsonDerivator>(wf,_eps*(_x.max()-_x.min()),true);
   }
 
   switch (_order) {
@@ -144,8 +123,6 @@ double RooDerivative::evaluate() const
 
 bool RooDerivative::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
-  delete _ftor ;
-  delete _rd ;
   _ftor = nullptr ;
   _rd = nullptr ;
   return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);

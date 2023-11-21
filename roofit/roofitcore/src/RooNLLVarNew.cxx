@@ -32,6 +32,8 @@ computation times.
 #include <RooSetProxy.h>
 #include "RooFit/Detail/Buffers.h"
 
+#include "RooFitImplHelpers.h"
+
 #include <ROOT/StringUtils.hxx>
 
 #include <TClass.h>
@@ -47,13 +49,6 @@ constexpr const char *RooNLLVarNew::weightVarName;
 constexpr const char *RooNLLVarNew::weightVarNameSumW2;
 
 namespace {
-
-RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
-{
-   RooArgSet out;
-   arg.getObservables(&observables, out);
-   return out;
-}
 
 // Use RooConstVar for dummies such that they don't get included in getParameters().
 RooConstVar *dummyVar(const char *name)
@@ -132,7 +127,8 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
      _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
      _binnedL{pdf.getAttribute("BinnedLikelihoodActive")}
 {
-   RooArgSet obs{getObs(pdf, observables)};
+   RooArgSet obs;
+   pdf.getObservables(&observables, obs);
 
    // In the "BinnedLikelihoodActiveYields" mode, the pdf values can directly
    // be interpreted as yields and don't need to be multiplied by the bin
@@ -154,8 +150,10 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
    enableOffsetting(offsetMode == RooFit::OffsetMode::Initial);
    enableBinOffsetting(offsetMode == RooFit::OffsetMode::Bin);
 
-   if (_doBinOffset) {
-      auto offsetPdf = std::make_unique<RooOffsetPdf>("_offset_pdf", "_offset_pdf", observables, *_weightVar);
+   // In the binned likelihood code path, we directly use that data weights for
+   // the offsetting.
+   if (!_binnedL && _doBinOffset) {
+      auto offsetPdf = std::make_unique<RooOffsetPdf>("_offset_pdf", "_offset_pdf", obs, *_weightVar);
       _offsetPdf = std::make_unique<RooTemplateProxy<RooAbsPdf>>("offsetPdf", "offsetPdf", this, *offsetPdf);
       addOwnedComponents(std::move(offsetPdf));
    }
@@ -234,7 +232,13 @@ double RooNLLVarNew::computeBatchBinnedL(std::span<const double> preds, std::spa
 
       } else {
 
-         result += -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
+         double term = 0.0;
+         if (_doBinOffset) {
+            term -= -mu + N + N * (std::log(mu) - std::log(N));
+         } else {
+            term -= -mu + N * std::log(mu) - TMath::LnGamma(N + 1);
+         }
+         result += term;
          sumWeightKahanSum += eventWeight;
       }
    }
@@ -289,7 +293,7 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
       nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected[0], _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
    }
 
-   output[0] = finalizeResult(nllOut.nllSum, _sumWeight);
+   output[0] = finalizeResult({nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
 }
 
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
@@ -314,7 +318,7 @@ void RooNLLVarNew::resetWeightVarNames()
    _weightVar->SetName((_prefix + weightVarName).c_str());
    _weightSquaredVar->SetName((_prefix + weightVarNameSumW2).c_str());
    if (_offsetPdf) {
-      _offsetPdf->SetName((_prefix + "_offset_pdf").c_str());
+      (*_offsetPdf)->SetName((_prefix + "_offset_pdf").c_str());
    }
 }
 
@@ -335,7 +339,8 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
 {
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
-   if (_simCount > 1) {
+   // If we do bin-by bin offsetting, we don't do this because it cancels out
+   if (!_doBinOffset && _simCount > 1) {
       result += weightSum * std::log(static_cast<double>(_simCount));
    }
 
@@ -357,8 +362,8 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   std::string weightSumName = ctx.makeValidVarName(GetName()) + "WeightSum";
-   std::string resName = ctx.makeValidVarName(GetName()) + "Result";
+   std::string weightSumName = RooFit::Detail::makeValidVarName(GetName()) + "WeightSum";
+   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
    ctx.addResult(this, resName);
    ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");

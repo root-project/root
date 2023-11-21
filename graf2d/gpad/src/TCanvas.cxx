@@ -292,10 +292,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    }
 
    Init();
-   SetBit(kMenuBar,1);
+   SetBit(kMenuBar,true);
    if (form < 0) {
       form     = -form;
-      SetBit(kMenuBar,0);
+      SetBit(kMenuBar,false);
    }
 
    fCanvas = this;
@@ -392,10 +392,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    }
 
    Init();
-   SetBit(kMenuBar,1);
+   SetBit(kMenuBar,true);
    if (ww < 0) {
       ww       = -ww;
-      SetBit(kMenuBar,0);
+      SetBit(kMenuBar,false);
    }
    if (wh <= 0) {
       Error("Constructor", "Invalid canvas height: %d",wh);
@@ -483,10 +483,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    }
 
    Init();
-   SetBit(kMenuBar,1);
+   SetBit(kMenuBar,true);
    if (wtopx < 0) {
       wtopx    = -wtopx;
-      SetBit(kMenuBar,0);
+      SetBit(kMenuBar,false);
    }
    fCw       = ww;
    fCh       = wh;
@@ -993,14 +993,14 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    fCanvasImp->SetStatusText(atext,2);
 
    // Show date/time if TimeDisplay is selected
-   TAxis *xaxis = NULL;
+   TAxis *xaxis = nullptr;
    if ( selected->InheritsFrom("TH1") )
       xaxis = ((TH1*)selected)->GetXaxis();
    else if ( selected->InheritsFrom("TGraph") )
       xaxis = ((TGraph*)selected)->GetXaxis();
    else if ( selected->InheritsFrom("TAxis") )
       xaxis = (TAxis*)selected;
-   if ( xaxis != NULL && xaxis->GetTimeDisplay()) {
+   if ( xaxis != nullptr && xaxis->GetTimeDisplay()) {
       TString objinfo = selected->GetObjectInfo(px,py);
       // check if user has overwritten GetObjectInfo and altered
       // the default text from TObject::GetObjectInfo "x=.. y=.."
@@ -2239,38 +2239,39 @@ void TCanvas::Streamer(TBuffer &b)
       TPad::Streamer(b);
       gPad    = this;
       //restore the colors
-      TObjArray *colors = (TObjArray*)fPrimitives->FindObject("ListOfColors");
+      auto colors = dynamic_cast<TObjArray *>(fPrimitives->FindObject("ListOfColors"));
       if (colors) {
+         auto root_colors = dynamic_cast<TObjArray *>(gROOT->GetListOfColors());
+
          TIter next(colors);
-         TColor *colold;
-         while ((colold = (TColor*)next())) {
-            if (colold) {
-               Int_t cn = 0;
-               if (colold) cn = colold->GetNumber();
-               TColor *colcur = gROOT->GetColor(cn);
+         while (auto colold = static_cast<TColor *>(next())) {
+            Int_t cn = colold->GetNumber();
+            TColor *colcur = gROOT->GetColor(cn);
+            if (colcur && (colcur->IsA() == TColor::Class()) && (colold->IsA() == TColor::Class())) {
+               colcur->SetName(colold->GetName());
+               colcur->SetRGB(colold->GetRed(), colold->GetGreen(), colold->GetBlue());
+               colcur->SetAlpha(colold->GetAlpha());
+            } else {
                if (colcur) {
-                  colcur->SetRGB(colold->GetRed(),colold->GetGreen(),colold->GetBlue());
-               } else {
-                  colcur = new TColor(cn,colold->GetRed(),
-                                        colold->GetGreen(),
-                                        colold->GetBlue(),
-                                        colold->GetName());
-                  if (!colcur) return;
+                  if (root_colors) root_colors->Remove(colcur);
+                  delete colcur;
                }
+               colors->Remove(colold);
+               if (root_colors) root_colors->AddAtAndExpand(colold, cn);
             }
          }
          //restore the palette if needed
-         TObjArray *currentpalette = (TObjArray*)fPrimitives->FindObject("CurrentColorPalette");
-         if (currentpalette) {
-           TIter nextpal(currentpalette);
-           Int_t n = currentpalette->GetEntries();
-           TArrayI palcolors(n);
-           TColor *col = nullptr;
-           Int_t i = 0;
-           while ((col = (TColor*)nextpal())) palcolors[i++] = col->GetNumber();
-           gStyle->SetPalette(n,palcolors.GetArray());
-           fPrimitives->Remove(currentpalette);
-           delete currentpalette;
+         auto palette = dynamic_cast<TObjArray *>(fPrimitives->FindObject("CurrentColorPalette"));
+         if (palette) {
+            TIter nextcol(palette);
+            Int_t number = palette->GetEntries();
+            TArrayI palcolors(number);
+            Int_t i = 0;
+            while (auto col = static_cast<TColor *>(nextcol()))
+               palcolors[i++] = col->GetNumber();
+            gStyle->SetPalette(number, palcolors.GetArray());
+            fPrimitives->Remove(palette);
+            delete palette;
          }
          fPrimitives->Remove(colors);
          colors->Delete();
@@ -2649,13 +2650,13 @@ void TCanvas::DeleteCanvasPainter()
 
 Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, Option_t *option)
 {
-   if (pads.size() == 0) {
+   if (pads.empty()) {
       std::vector<TPad *> canvases;
       TIter iter(gROOT->GetListOfCanvases());
       while (auto c = dynamic_cast<TCanvas *>(iter()))
          canvases.emplace_back(c);
 
-      if (canvases.size() == 0) {
+      if (canvases.empty()) {
          ::Warning("TCanvas::SaveAll", "No pads are provided");
          return kFALSE;
       }

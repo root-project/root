@@ -16,7 +16,7 @@
 #include "TObjArray.h"
 #include "TVirtualMutex.h"
 
-#include <math.h>
+#include <cmath>
 
 #ifdef WIN32
 #pragma optimize("",off)
