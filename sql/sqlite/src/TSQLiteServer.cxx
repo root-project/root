@@ -149,7 +149,7 @@ TSQLResult *TSQLiteServer::Query(const char *sql)
    }
 
    sqlite3_stmt *preparedStmt = nullptr;
-   const char *tail;
+   const char *tail = nullptr;
 
    // -1 as we read until we encounter a \0.
 #if SQLITE_VERSION_NUMBER >= 3005000
@@ -383,7 +383,7 @@ TSQLStatement* TSQLiteServer::Statement(const char *sql, Int_t)
    }
 
    sqlite3_stmt *preparedStmt = nullptr;
-   const char *tail;
+   const char *tail = nullptr;
 
    // -1 as we read until we encounter a \0.
 #if SQLITE_VERSION_NUMBER >= 3005000
