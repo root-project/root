@@ -469,7 +469,7 @@ class TH1Painter extends THistPainter {
             grpnts = [];
       let res = '', lastbin = false,
           show_markers = this.options.Mark,
-          startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
+          startx, startmidx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           path_fill = null, path_err = null, path_marker = null, path_line = '',
           hints_err = null, hints_marker = null, hsz = 5,
           do_marker = false, do_err = false,
@@ -547,6 +547,7 @@ class TH1Painter extends THistPainter {
          mx1 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+1)));
          mx2 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+2)));
          midx = Math.round((mx1 + mx2) / 2);
+         if (startmidx === undefined) startmidx = midx;
          my = Math.round(funcs.gry(bincont));
          if (show_errors) {
             binerr = histo.getBinError(bin+1);
@@ -750,7 +751,7 @@ class TH1Painter extends THistPainter {
                        .call(this.fillatt.func);
          } else if (path_line && !this.fillatt.empty() && !draw_hist) {
             this.draw_g.append('svg:path')
-                .attr('d', path_line + close_path)
+                .attr('d', path_line + `L${midx},${h0}H${startmidx}Z`)
                 .call(this.fillatt.func);
          }
 

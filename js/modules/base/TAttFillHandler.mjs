@@ -22,7 +22,7 @@ class TAttFillHandler {
       this.changed = false;
       this.func = this.apply.bind(this);
       this.setArgs(args);
-      this.changed = false; // unset change property that
+      this.changed = false; // unset change property
    }
 
    /** @summary Set fill style as arguments
