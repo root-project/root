@@ -9,10 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-set (EXTRA_DICT_OPTS)
-if (runtime_cxxmodules AND WIN32)
-  set (EXTRA_DICT_OPTS NO_CXXMODULE)
-endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
@@ -26,6 +22,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooBlindTools.h
     RooBMixDecay.h
     RooBreitWigner.h
+    RooBSpline.h
+    RooBSplineBases.h
     RooBukinPdf.h
     RooCBShape.h
     RooCrystalBall.h
@@ -40,7 +38,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooDstD0BG.h
     RooExponential.h
     RooExpPoly.h
-    RooPower.h
+    RooPower.h    
     RooFunctor1DBinding.h
     RooFunctorBinding.h
     RooGamma.h
@@ -58,6 +56,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooMomentMorphFunc.h
     RooMomentMorphFuncND.h
     RooMomentMorph.h
+    RooMomentMorphND.h
     RooMultiBinomial.h
     RooNDKeysPdf.h
     RooNonCPEigenDecay.h
@@ -66,7 +65,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooParamHistFunc.h
     RooPoisson.h
     RooPolynomial.h
-    RooSpline.h
     RooStepFunction.h
     RooTFnBinding.h
     RooTFnPdfBinding.h
@@ -89,6 +87,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooBlindTools.cxx
     src/RooBMixDecay.cxx
     src/RooBreitWigner.cxx
+    src/RooBSpline.cxx
+    src/RooBSplineBases.cxx
     src/RooBukinPdf.cxx
     src/RooCBShape.cxx
     src/RooCrystalBall.cxx
@@ -121,6 +121,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooMomentMorph.cxx
     src/RooMomentMorphFunc.cxx
     src/RooMomentMorphFuncND.cxx
+    src/RooMomentMorphND.cxx
     src/RooMultiBinomial.cxx
     src/RooNDKeysPdf.cxx
     src/RooNonCPEigenDecay.cxx
@@ -129,7 +130,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooParamHistFunc.cxx
     src/RooPoisson.cxx
     src/RooPolynomial.cxx
-    src/RooSpline.cxx
     src/RooStepFunction.cxx
     src/RooTFnBinding.cxx
     src/RooTFnPdfBinding.cxx
@@ -154,7 +154,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RIO
     Matrix
     MathCore
-  ${EXTRA_DICT_OPTS}
 )
 
 # For recent clang, this can facilitate auto-vectorisation.

@@ -11,6 +11,8 @@
 #pragma link C++ class RooBifurGauss+ ;
 #pragma link C++ class RooBMixDecay+ ;
 #pragma link C++ class RooBreitWigner+ ;
+#pragma link C++ class RooBSpline+ ;
+#pragma link C++ class RooBSplineBases+ ;
 #pragma link C++ class RooBukinPdf+ ;
 #pragma link C++ class RooCrystalBall+ ;
 #pragma link C++ class RooCBShape+ ;
@@ -50,9 +52,9 @@
 #pragma link C++ class RooIntegralMorph::MorphCacheElem+ ;
 #pragma link C++ class RooMomentMorph+ ;
 #pragma link C++ class RooMomentMorphFunc + ;
+#pragma link C++ class RooMomentMorphND + ;
 #pragma link C++ class RooMomentMorphFuncND + ;
 #pragma link C++ class RooMomentMorphFuncND::Grid2 + ;
-#pragma link C++ class RooSpline+ ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
 /* #pragma link C++ class std::vector< TVector2 >; */
