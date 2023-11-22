@@ -103,7 +103,7 @@ class VirtualIntegratorOneDim : public VirtualIntegrator {
 public:
 
    /// destructor: no operation
-   ~VirtualIntegratorOneDim() override {}
+   virtual ~VirtualIntegratorOneDim() override {}
 
    /// evaluate integral
    virtual double Integral(double a, double b) = 0;
@@ -162,7 +162,7 @@ class VirtualIntegratorMultiDim : public VirtualIntegrator {
 public:
 
    /// destructor: no operation
-   ~VirtualIntegratorMultiDim() override {}
+   virtual ~VirtualIntegratorMultiDim() override {}
 
    /// evaluate multi-dim integral
    virtual double Integral(const double*, const double*)  = 0;

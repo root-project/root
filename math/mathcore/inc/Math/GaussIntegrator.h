@@ -43,7 +43,7 @@ class GaussIntegrator: public VirtualIntegratorOneDim {
 public:
 
    /** Destructor */
-   ~GaussIntegrator() override;
+   virtual ~GaussIntegrator() override;
 
    /** Default Constructor.
        If the tolerance are not given, use default values specified in  ROOT::Math::IntegratorOneDimOptions
