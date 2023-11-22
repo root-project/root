@@ -1156,7 +1156,7 @@ public:
    size_t GetAlignment() const override { return std::alignment_of<std::set<std::max_align_t>>(); }
 };
 
-/// The generic field for a std::map<KeyType, ValueType>
+/// The generic field for a std::map<KeyType, ValueType> and std::unordered_map<KeyType, ValueType>
 class RMapField : public RProxiedCollectionField {
 private:
    TClass *fItemClass;
@@ -2302,6 +2302,37 @@ public:
    static std::string TypeName()
    {
       return "std::map<" + RField<KeyT>::TypeName() + "," + RField<ValueT>::TypeName() + ">";
+   }
+
+   explicit RField(std::string_view name)
+      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+   {
+   }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+};
+
+template <typename KeyT, typename ValueT>
+class RField<std::unordered_map<KeyT, ValueT>> : public RMapField {
+   using ContainerT = typename std::unordered_map<KeyT, ValueT>;
+
+protected:
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   }
+
+public:
+   static std::string TypeName()
+   {
+      return "std::unordered_map<" + RField<KeyT>::TypeName() + "," + RField<ValueT>::TypeName() + ">";
    }
 
    explicit RField(std::string_view name)
