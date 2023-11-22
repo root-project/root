@@ -149,18 +149,20 @@ TSQLResult *TSQLiteServer::Query(const char *sql)
    }
 
    sqlite3_stmt *preparedStmt = nullptr;
+   const char *tail = nullptr;
 
    // -1 as we read until we encounter a \0.
-   // NULL because we do not check which char was read last.
 #if SQLITE_VERSION_NUMBER >= 3005000
-   int retVal = sqlite3_prepare_v2(fSQLite, sql, -1, &preparedStmt, nullptr);
+   int retVal = sqlite3_prepare_v2(fSQLite, sql, -1, &preparedStmt, &tail);
 #else
-   int retVal = sqlite3_prepare(fSQLite, sql, -1, &preparedStmt, nullptr);
+   int retVal = sqlite3_prepare(fSQLite, sql, -1, &preparedStmt, &tail);
 #endif
    if (retVal != SQLITE_OK) {
       Error("Query", "SQL Error: %d %s", retVal, sqlite3_errmsg(fSQLite));
       return nullptr;
    }
+   if (tail && tail[0] != '\0')
+      Warning("Query", "Don't use multiple queries, '%s' query was ignored", tail);
 
    return new TSQLiteResult(preparedStmt);
 }
@@ -381,18 +383,20 @@ TSQLStatement* TSQLiteServer::Statement(const char *sql, Int_t)
    }
 
    sqlite3_stmt *preparedStmt = nullptr;
+   const char *tail = nullptr;
 
    // -1 as we read until we encounter a \0.
-   // NULL because we do not check which char was read last.
 #if SQLITE_VERSION_NUMBER >= 3005000
-   int retVal = sqlite3_prepare_v2(fSQLite, sql, -1, &preparedStmt, NULL);
+   int retVal = sqlite3_prepare_v2(fSQLite, sql, -1, &preparedStmt, &tail);
 #else
-   int retVal = sqlite3_prepare(fSQLite, sql, -1, &preparedStmt, NULL);
+   int retVal = sqlite3_prepare(fSQLite, sql, -1, &preparedStmt, &tail);
 #endif
    if (retVal != SQLITE_OK) {
       Error("Statement", "SQL Error: %d %s", retVal, sqlite3_errmsg(fSQLite));
       return nullptr;
    }
+   if (tail && tail[0] != '\0')
+      Warning("Statement", "Don't use multiple statements, '%s' statement was ignored", tail);
 
    SQLite3_Stmt_t *stmt = new SQLite3_Stmt_t;
    stmt->fConn = fSQLite;
