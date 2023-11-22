@@ -703,7 +703,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeRecordFramePreamble(void *buffer)
 {
    // Marker: multiply the final size with 1
-   return SerializeInt32(1, buffer);
+   return SerializeInt64(1, buffer);
 }
 
 
@@ -715,50 +715,36 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeListFram
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    // Marker: multiply the final size with -1
-   pos += SerializeInt32(-1, *where);
+   pos += SerializeInt64(-1, *where);
    pos += SerializeUInt32(nitems, *where);
    return pos - base;
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFramePostscript(void *frame, std::uint64_t size)
 {
-   auto encodedSize = 2 * size + (size >= (1 << 30) ? 9 : 0);
-   auto preambleSize = sizeof(std::int32_t) + (encodedSize % 2) * sizeof(std::uint32_t);
+   auto preambleSize = sizeof(std::int64_t);
    if (size < preambleSize)
       throw RException(R__FAIL("frame too short: " + std::to_string(size)));
    if (frame) {
-      std::int32_t marker;
-      DeserializeInt32(frame, marker);
-      if ((marker < 0) && (size < (sizeof(std::int32_t) + preambleSize)))
+      std::int64_t marker;
+      DeserializeInt64(frame, marker);
+      if ((marker < 0) && (size < (sizeof(std::uint32_t) + preambleSize)))
          throw RException(R__FAIL("frame too short: " + std::to_string(size)));
-      if (encodedSize % 2 == 0) {
-         SerializeInt32(marker * static_cast<int32_t>(encodedSize), frame);
-      } else {
-         auto payload = reinterpret_cast<unsigned char *>(frame) + sizeof(std::int32_t);
-         memmove(payload + sizeof(std::uint32_t), payload, size - sizeof(std::uint32_t));
-         SerializeInt64(static_cast<int64_t>(marker) * static_cast<int64_t>(encodedSize), frame);
-      }
+      SerializeInt64(marker * static_cast<int64_t>(size), frame);
    }
-   return (encodedSize % 2) * sizeof(std::uint32_t);
+   return 0;
 }
 
 ROOT::Experimental::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFrameHeader(const void *buffer, std::uint64_t bufSize,
                                                                         std::uint64_t &frameSize, std::uint32_t &nitems)
 {
-   std::uint64_t minSize = sizeof(std::int32_t);
+   std::uint64_t minSize = sizeof(std::int64_t);
    if (bufSize < minSize)
       return R__FAIL("frame too short");
 
    std::int64_t *ssize = reinterpret_cast<std::int64_t *>(&frameSize);
-   std::int32_t shortSize;
-   DeserializeInt32(buffer, shortSize);
-   if ((shortSize % 2) == 0) {
-      *ssize = shortSize;
-   } else {
-      minSize += sizeof(std::uint32_t);
-      DeserializeInt64(buffer, *ssize);
-   }
+   DeserializeInt64(buffer, *ssize);
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
    bytes += minSize;
@@ -774,7 +760,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFrameHeader(const vo
       bytes += DeserializeUInt32(bytes, nitems);
       *ssize = -(*ssize);
    }
-   frameSize /= 2;
 
    if (frameSize < minSize)
       return R__FAIL("corrupt frame size");
