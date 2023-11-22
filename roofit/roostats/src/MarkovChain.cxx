@@ -42,32 +42,15 @@ static const char* DATASET_NAME = "dataset_MarkovChain_local_";
 static const char* DEFAULT_NAME = "_markov_chain";
 static const char* DEFAULT_TITLE = "Markov Chain";
 
-MarkovChain::MarkovChain() :
-   TNamed(DEFAULT_NAME, DEFAULT_TITLE)
-{
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
-}
+MarkovChain::MarkovChain() : TNamed(DEFAULT_NAME, DEFAULT_TITLE) {}
 
-MarkovChain::MarkovChain(RooArgSet& parameters) :
-   TNamed(DEFAULT_NAME, DEFAULT_TITLE)
+MarkovChain::MarkovChain(RooArgSet &parameters) : TNamed(DEFAULT_NAME, DEFAULT_TITLE)
 {
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
    SetParameters(parameters);
 }
 
-MarkovChain::MarkovChain(const char* name, const char* title,
-      RooArgSet& parameters) : TNamed(name, title)
+MarkovChain::MarkovChain(const char *name, const char *title, RooArgSet &parameters) : TNamed(name, title)
 {
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
    SetParameters(parameters);
 }
 
@@ -88,7 +71,7 @@ void MarkovChain::SetParameters(RooArgSet& parameters)
    fDataEntry = new RooArgSet();
    fDataEntry->addClone(parameters);
    fDataEntry->addClone(nll);
-   fNLL = (RooRealVar*)fDataEntry->find(NLL_NAME);
+   fNLL = static_cast<RooRealVar*>(fDataEntry->find(NLL_NAME));
 
    fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry, RooFit::WeightVar(WEIGHT_NAME));
 }
@@ -108,10 +91,10 @@ void MarkovChain::AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn)
 {
    // Discards the first n accepted points.
 
-   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*const_cast<RooArgSet*>(otherChain.Get()));
    int counter = 0;
    for( int i=0; i < otherChain.Size(); i++ ) {
-      RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
+      RooArgSet* entry = const_cast<RooArgSet*>(otherChain.Get(i));
       counter += 1;
       if( counter > burnIn ) {
          AddFast( *entry, otherChain.NLL(), otherChain.Weight() );
@@ -124,10 +107,10 @@ void MarkovChain::Add(MarkovChain& otherChain, double discardEntries)
    // burn-in used in the Bayesian calculator where the first n accepted
    // terms from the proposal function are discarded.
 
-   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*const_cast<RooArgSet*>(otherChain.Get()));
    double counter = 0.0;
    for( int i=0; i < otherChain.Size(); i++ ) {
-      RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
+      RooArgSet* entry = const_cast<RooArgSet*>(otherChain.Get(i));
       counter += otherChain.Weight();
       if( counter > discardEntries ) {
          AddFast( *entry, otherChain.NLL(), otherChain.Weight() );
@@ -199,7 +182,7 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    else
       axes.add(*whichVars);
 
-   Int_t dim = axes.getSize();
+   Int_t dim = axes.size();
    std::vector<double> min(dim);
    std::vector<double> max(dim);
    std::vector<Int_t> bins(dim);

@@ -277,7 +277,7 @@ ClassImp(TGLScene);
 
 TGLScene::TGLScene() :
    TGLSceneBase(),
-   fGLCtxIdentity(0),
+   fGLCtxIdentity(nullptr),
    fInSmartRefresh(kFALSE),
    fLastPointSizeScale (0),
    fLastLineWidthScale (0)
@@ -310,7 +310,7 @@ TGLScene::~TGLScene()
 
 void TGLScene::ReleaseGLCtxIdentity()
 {
-   if (fGLCtxIdentity == 0) return;
+   if (fGLCtxIdentity == nullptr) return;
 
    if (fGLCtxIdentity->IsValid())
    {
@@ -331,7 +331,7 @@ void TGLScene::ReleaseGLCtxIdentity()
       }
    }
    fGLCtxIdentity->ReleaseClient();
-   fGLCtxIdentity = 0;
+   fGLCtxIdentity = nullptr;
 }
 
 /**************************************************************************/
@@ -382,7 +382,7 @@ inline Bool_t TGLScene::ComparePhysicalDiagonals(const TGLPhysicalShape* shape1,
 void TGLScene::RebuildSceneInfo(TGLRnrCtx& rnrCtx)
 {
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   if (sinfo == 0 || sinfo->GetScene() != this) {
+   if (sinfo == nullptr || sinfo->GetScene() != this) {
       Error("TGLScene::RebuildSceneInfo", "Scene mismatch.");
       return;
    }
@@ -426,7 +426,7 @@ void TGLScene::RebuildSceneInfo(TGLRnrCtx& rnrCtx)
 void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
 {
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   if (sinfo == 0 || sinfo->GetScene() != this) {
+   if (sinfo == nullptr || sinfo->GetScene() != this) {
       Error("TGLScene::UpdateSceneInfo", "Scene mismatch.");
       return;
    }
@@ -544,7 +544,7 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
 void TGLScene::LodifySceneInfo(TGLRnrCtx& rnrCtx)
 {
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   if (sinfo == 0 || sinfo->GetScene() != this) {
+   if (sinfo == nullptr || sinfo->GetScene() != this) {
       Error("TGLScene::LodifySceneInfo", "Scene mismatch.");
       return;
    }
@@ -568,7 +568,7 @@ void TGLScene::LodifySceneInfo(TGLRnrCtx& rnrCtx)
 void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
 {
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   if (sinfo == 0 || sinfo->GetScene() != this) {
+   if (sinfo == nullptr || sinfo->GetScene() != this) {
       TGLSceneInfo* si = rnrCtx.GetSceneInfo();
       Error("TGLScene::PreDraw", "%s", Form("SceneInfo mismatch (0x%zx, '%s').",
                                       (size_t)si, si ? si->IsA()->GetName() : "<>"));
@@ -727,7 +727,7 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
                                Bool_t               check_timeout)
 {
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   assert(sinfo != 0);
+   assert(sinfo != nullptr);
 
    Short_t sceneStyle = rnrCtx.SceneStyle();
 
@@ -896,7 +896,7 @@ void TGLScene::RenderElements(TGLRnrCtx&           rnrCtx,
                               const TGLPlaneSet_t* clipPlanes)
 {
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   assert(sinfo != 0);
+   assert(sinfo != nullptr);
 
    Int_t drawCount = 0;
 
@@ -959,7 +959,7 @@ Bool_t TGLScene::ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx)
       rec.SetPhysShape(pshp);
       rec.SetLogShape(const_cast<TGLLogicalShape*>(pshp->GetLogical()));
       rec.SetObject(pshp->GetLogical()->GetExternal());
-      rec.SetSpecific(0);
+      rec.SetSpecific(nullptr);
       return kTRUE;
    }
    return kFALSE;
@@ -1113,7 +1113,7 @@ TGLLogicalShape * TGLScene::FindLogical(TObject* logid) const
       if (fInSmartRefresh)
          return FindLogicalSmartRefresh(logid);
       else
-         return 0;
+         return nullptr;
    }
 }
 
@@ -1289,7 +1289,7 @@ void TGLScene::UpdateLogical(TObject* logid)
 
    TGLLogicalShape* log = FindLogical(logid);
 
-   if (log == 0) {
+   if (log == nullptr) {
       Error("TGLScene::UpdateLogical", "logical not found");
       return;
    }
@@ -1310,7 +1310,7 @@ void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, UChar_t* col)
 
    TGLPhysicalShape* phys = FindPhysical(phid);
 
-   if (phys == 0) {
+   if (phys == nullptr) {
       Error("TGLScene::UpdatePhysical", "physical not found");
       return;
    }
@@ -1331,7 +1331,7 @@ void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, Color_t cidx, UChar_
 
    TGLPhysicalShape* phys = FindPhysical(phid);
 
-   if (phys == 0) {
+   if (phys == nullptr) {
       Error("TGLScene::UpdatePhysical", "physical not found");
       return;
    }
@@ -1358,7 +1358,7 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col
 
    TGLLogicalShape* log = FindLogical(logid);
 
-   if (log == 0) {
+   if (log == nullptr) {
       Error("TGLScene::UpdatePhysioLogical", "logical not found");
       return;
    }
@@ -1385,7 +1385,7 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx
 
    TGLLogicalShape* log = FindLogical(logid);
 
-   if (log == 0) {
+   if (log == nullptr) {
       Error("TGLScene::UpdatePhysioLogical", "logical not found");
       return;
    }
@@ -1463,7 +1463,7 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
       {
          Warning("TGLScene::FindLogicalSmartRefresh", "Wrong renderer-type found in cache.");
          delete l_shape;
-         return 0;
+         return nullptr;
       }
       // printf("TGLScene::SmartRefresh found cached: %p '%s' [%s] for %p\n",
       //    l_shape, l_shape->GetExternal()->GetName(),
@@ -1474,7 +1474,7 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
       l_shape->UpdateBoundingBox();
       return l_shape;
    } else {
-      return 0;
+      return nullptr;
    }
 }
 

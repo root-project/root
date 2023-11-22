@@ -6,9 +6,18 @@
 #include "ProxyWrappers.h"
 #include "PyStrings.h"
 
+// As of Python 3.12, we can't use the PyMethod_GET_FUNCTION and
+// PyMethod_GET_SELF macros anymore, as the contain asserts that check if the
+// Python type is actually PyMethod_Type. If the Python type is
+// CustomInstanceMethod_Type, we need our own macros. Technically they do they
+// same, because the actual C++ type of the PyObject is PyMethodObject anyway.
+#define CustomInstanceMethod_GET_SELF(meth) reinterpret_cast<PyMethodObject *>(meth)->im_self
+#define CustomInstanceMethod_GET_FUNCTION(meth) reinterpret_cast<PyMethodObject *>(meth)->im_func
 #if PY_VERSION_HEX >= 0x03000000
 // TODO: this will break functionality
-#define PyMethod_GET_CLASS(meth) Py_None
+#define CustomInstanceMethod_GET_CLASS(meth) Py_None
+#else
+#define CustomInstanceMethod_GET_CLASS(meth) PyMethod_GET_CLASS(meth)
 #endif
 
 
@@ -170,13 +179,13 @@ static PyObject* im_call(PyObject* meth, PyObject* args, PyObject* kw)
 // into the list of arguments. However, the pythonized methods will then have
 // to undo that shuffling, which is inefficient. This method is the same as
 // the one for the instancemethod object, except for the shuffling.
-    PyObject* self = PyMethod_GET_SELF(meth);
+    PyObject* self = CustomInstanceMethod_GET_SELF(meth);
 
     if (!self) {
     // unbound methods must be called with an instance of the class (or a
     // derived class) as first argument
         Py_ssize_t argc = PyTuple_GET_SIZE(args);
-        PyObject* pyclass = PyMethod_GET_CLASS(meth);
+        PyObject* pyclass = CustomInstanceMethod_GET_CLASS(meth);
         if (1 <= argc && PyObject_IsInstance(PyTuple_GET_ITEM(args, 0), pyclass) == 1) {
             self = PyTuple_GET_ITEM(args, 0);
 
@@ -195,7 +204,7 @@ static PyObject* im_call(PyObject* meth, PyObject* args, PyObject* kw)
     } else
         Py_INCREF(args);
 
-    PyCFunctionObject* func = (PyCFunctionObject*)PyMethod_GET_FUNCTION(meth);
+    PyCFunctionObject* func = (PyCFunctionObject*)CustomInstanceMethod_GET_FUNCTION(meth);
 
 // the function is globally shared, so set and reset its "self" (ok, b/c of GIL)
     Py_INCREF(self);
@@ -210,12 +219,13 @@ static PyObject* im_call(PyObject* meth, PyObject* args, PyObject* kw)
 //-----------------------------------------------------------------------------
 static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
 {
+
 // from instancemethod: don't rebind an already bound method, or an unbound method
 // of a class that's not a base class of pyclass
-    if (PyMethod_GET_SELF(meth)
+    if (CustomInstanceMethod_GET_SELF(meth)
 #if PY_VERSION_HEX < 0x03000000
-         || (PyMethod_GET_CLASS(meth) &&
-             !PyObject_IsSubclass(pyclass, PyMethod_GET_CLASS(meth)))
+         || (CustomInstanceMethod_GET_CLASS(meth) &&
+             !PyObject_IsSubclass(pyclass, CustomInstanceMethod_GET_CLASS(meth)))
 #endif
             ) {
         Py_INCREF(meth);
@@ -225,7 +235,7 @@ static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
     if (obj == Py_None)
         obj = nullptr;
 
-    return CustomInstanceMethod_New(PyMethod_GET_FUNCTION(meth), obj, pyclass);
+    return CustomInstanceMethod_New(CustomInstanceMethod_GET_FUNCTION(meth), obj, pyclass);
 }
 
 //= CPyCppyy custom instance method type =====================================

@@ -114,7 +114,7 @@ public:
    bool ProvidesError() const override { return true; }
 
    /// return errors at the minimum
-   const double * Errors() const override { return (fErrors.size() > 0) ? &fErrors.front() : nullptr; }
+   const double * Errors() const override { return (!fErrors.empty()) ? &fErrors.front() : nullptr; }
 //  {
 //       static std::vector<double> err;
 //       err.resize(fDim);

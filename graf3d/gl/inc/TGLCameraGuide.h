@@ -17,8 +17,8 @@
 class TGLCameraGuide : public TGLOverlayElement
 {
 private:
-   TGLCameraGuide(const TGLCameraGuide&);            // Not implemented
-   TGLCameraGuide& operator=(const TGLCameraGuide&); // Not implemented
+   TGLCameraGuide(const TGLCameraGuide&) = delete;
+   TGLCameraGuide& operator=(const TGLCameraGuide&) = delete;
 
 protected:
    Float_t fXPos;

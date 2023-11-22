@@ -55,8 +55,15 @@ public:
    {
       if (AtLowerLimit())
          return LowerState().Parameter(Parameter()).LowerLimit() - fMinParValue;
-      if (LowerValid())
-         return -1. * LowerState().Error(Parameter()) * (1. + fLower.Value());
+      if (LowerValid()) {
+         // Minos error is   value - error - aopt * error  where aopt is MnCross.Value()
+         // If value - error is below the limit, error must be truncated at limit
+         double err = LowerState().Error(Parameter());
+         // error is truncated if over the limit
+         if (LowerState().Parameter(Parameter()).HasLowerLimit())
+            err = std::min(err, fMinParValue - LowerState().Parameter(Parameter()).LowerLimit());
+         return -1. * err * (1. + fLower.Value());
+      }
       // return Hessian Error in case is invalid
       return -LowerState().Error(Parameter());
    }
@@ -64,8 +71,14 @@ public:
    {
       if (AtUpperLimit())
          return UpperState().Parameter(Parameter()).UpperLimit() - fMinParValue;
-      if (UpperValid())
-         return UpperState().Error(Parameter()) * (1. + fUpper.Value());
+      if (UpperValid()) {
+         // Minos error is   value + error + aopt * error  where aopt is MnCross.Value()
+         // If value + error is over the limit,  err must be truncated at limit
+         double err = UpperState().Error(Parameter());
+         if (UpperState().Parameter(Parameter()).HasUpperLimit())
+            err = std::min(err, UpperState().Parameter(Parameter()).UpperLimit() - fMinParValue);
+         return err * (1. + fUpper.Value());
+      }
       // return Hessian Error in case is invalid
       return UpperState().Error(Parameter());
    }

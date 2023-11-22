@@ -160,7 +160,7 @@ void RGeomHierarchy::ProcessSignal(const std::string &kind)
    if (kind == "HighlightItem") {
       auto stack = fDesc.GetHighlightedItem();
       auto path = fDesc.MakePathByStack(stack);
-      if (stack.size() == 0)
+      if (stack.empty())
          path = {"__OFF__"}; // just clear highlight
       if (fWebWindow)
          fWebWindow->Send(0, "HIGHL:"s + TBufferJSON::ToJSON(&path).Data());

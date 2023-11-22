@@ -25,7 +25,6 @@ public:
   RooRangeBinning(double xmin, double xmax, const char* name=nullptr) ;
   RooRangeBinning(const RooRangeBinning&, const char* name=nullptr) ;
   RooAbsBinning* clone(const char* name=nullptr) const override { return new RooRangeBinning(*this,name?name:GetName()) ; }
-  ~RooRangeBinning() override ;
 
   Int_t numBoundaries() const override { return 2 ; }
   void binNumbers(double const * /*x*/, int * /*bins*/, std::size_t /*n*/, int /*coef*/) const override {}

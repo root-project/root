@@ -148,7 +148,7 @@ public:
       return tot;
    }
 
-   // mantain loop in gen otherwise is proportional to N**@
+   // maintain loop in gen otherwise is proportional to N**@
    template <class V>
    double TestDelta(const std::vector<V> &dataV)
    {
@@ -199,7 +199,7 @@ public:
       V *v1 = new V();
 
       // need to add namespace to full type name
-      if (typeName == "") {
+      if (typeName.empty()) {
          typeName = "ROOT::Math::" + VecType<V>::name();
       }
 

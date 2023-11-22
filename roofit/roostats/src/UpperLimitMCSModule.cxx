@@ -19,7 +19,6 @@ upper limit for each toy-MC sample generated
 #include "Riostream.h"
 
 #include "RooDataSet.h"
-#include "TString.h"
 #include "RooFitResult.h"
 #include "RooStats/UpperLimitMCSModule.h"
 #include "RooMsgService.h"
@@ -28,14 +27,9 @@ upper limit for each toy-MC sample generated
 #include "RooStats/LikelihoodInterval.h"
 #include "RooStats/LikelihoodIntervalPlot.h"
 #include "RooStats/ProfileLikelihoodCalculator.h"
-#include "TCanvas.h"
-#include "RooCmdArg.h"
 #include "RooRealVar.h"
 
-using namespace std;
-
 ClassImp(RooStats::UpperLimitMCSModule);
-
 
 using namespace RooStats ;
 
@@ -94,7 +88,7 @@ bool UpperLimitMCSModule::initializeInstance()
 {
   // Check that parameter is also present in fit parameter list of RooMCStudy object
   if (!fitParams()->find(_parName.c_str())) {
-    coutE(InputArguments) << "UpperLimitMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << endl ;
+    coutE(InputArguments) << "UpperLimitMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << std::endl ;
     return false ;
   }
 
@@ -106,9 +100,9 @@ bool UpperLimitMCSModule::initializeInstance()
 
 
 
-  TString ulName = Form("ul_%s",_parName.c_str()) ;
-  TString ulTitle = Form("UL for parameter %s",_parName.c_str()) ;
-  _ul = new RooRealVar(ulName.Data(),ulTitle.Data(),0) ;
+  std::string ulName = "ul_" + _parName;
+  std::string ulTitle = "UL for parameter " + _parName;
+  _ul = new RooRealVar(ulName.c_str(),ulTitle.c_str(),0) ;
 
 
   // Create new dataset to be merged with RooMCStudy::fitParDataSet
@@ -188,9 +182,9 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
   if (!pllint) return false;
 
-  std::cout<<"poi value: "<<((RooRealVar*)( _poi->first()))->getVal()<<std::endl;
+  std::cout<<"poi value: "<<(static_cast<RooRealVar*>(_poi->first()))->getVal()<<std::endl;
   std::cout<<(static_cast<RooRealVar*>((fitParams()->find(_parName.c_str()))))->getVal()<<std::endl;
-  std::cout<<((RooStats::LikelihoodInterval*)pllint)->UpperLimit((RooRealVar&)*(_poi->first()))<<std::endl;
+  std::cout<<(static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(_poi->first())))<<std::endl;
 
 
   //Go to the fit Value for zour POI to make sure upper limit works correct.
@@ -198,7 +192,7 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
 
 
-  _ul->setVal(((RooStats::LikelihoodInterval*)pllint)->UpperLimit(static_cast<RooRealVar&>(*(fitParams()->find(_parName.c_str())))));
+  _ul->setVal((static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(fitParams()->find(_parName.c_str())))));
 
   _data->add(RooArgSet(*_ul));
   std::cout<<"UL:"<<_ul->getVal()<<std::endl;

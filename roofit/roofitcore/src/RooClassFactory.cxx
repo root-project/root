@@ -19,7 +19,7 @@
 \class RooClassFactory
 \ingroup Roofitcore
 
-RooClassFactory is a clase like TTree::MakeClass() that generates
+Similar to TTree::MakeClass(), generates
 skeleton code for RooAbsPdf and RooAbsReal functions given
 a list of input parameter names. The factory can also compile
 the generated code on the fly, and on request also immediate
@@ -43,6 +43,7 @@ instantiate objects.
 #include <ROOT/StringUtils.hxx>
 
 #include <strlcpy.h>
+#include <cctype>
 #include <fstream>
 #include <mutex>
 
@@ -60,7 +61,7 @@ static int init();
 
 int dummy = init();
 
-static int init()
+int init()
 {
    RooFactoryWSTool::IFace *iface = new ClassFacIFace;
    RooFactoryWSTool::registerSpecial("CEXPR", iface);
@@ -141,7 +142,7 @@ bool makeAndCompileClass(std::string const &baseClassName, std::string const &na
       }
    }
 
-   bool ret = RooClassFactory::makeClass(baseClassName, name, realArgNames.c_str(), catArgNames.c_str(), expression,
+   bool ret = RooClassFactory::makeClass(baseClassName, name, realArgNames, catArgNames, expression,
                                          !intExpression.empty(), false, intExpression);
    if (ret) {
       return ret;
@@ -174,13 +175,13 @@ RooAbsReal *makeClassInstance(std::string const &baseClassName, std::string cons
    // First pass the RooAbsReal arguments in the list order
    for (RooAbsArg *var : vars) {
       if (dynamic_cast<RooAbsReal *>(var)) {
-         argList += Form(",*reinterpret_cast<RooAbsReal*>(0x%zx)", (std::size_t)var);
+         argList += Form(",*reinterpret_cast<RooAbsReal*>(0x%zx)", reinterpret_cast<std::size_t>(var));
       }
    }
    // Next pass the RooAbsCategory arguments in the list order
    for (RooAbsArg *var : vars) {
       if (var->isCategory()) {
-         argList += Form(",*reinterpret_cast<RooAbsCategory*>(0x%zx)", (std::size_t)var);
+         argList += Form(",*reinterpret_cast<RooAbsCategory*>(0x%zx)", reinterpret_cast<std::size_t>(var));
       }
    }
 
@@ -247,7 +248,7 @@ RooAbsReal *RooClassFactory::makeFunctionInstance(std::string const &name, std::
    tmpName[0] = toupper(tmpName[0]);
    string className = "Roo" + tmpName + "Func";
 
-   return makeFunctionInstance(className.c_str(), name, expression, vars, intExpression);
+   return makeFunctionInstance(className, name, expression, vars, intExpression);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +293,7 @@ RooAbsPdf *RooClassFactory::makePdfInstance(std::string const &name, std::string
    tmpName[0] = toupper(tmpName[0]);
    string className = "Roo" + tmpName + "Pdf";
 
-   return makePdfInstance(className.c_str(), name, expression, vars, intExpression);
+   return makePdfInstance(className, name, expression, vars, intExpression);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,19 +409,9 @@ void replaceAll(std::string &inOut, std::string_view what, std::string_view with
    }
 }
 
-bool isSpecial(char c)
+inline bool isSpecial(char c)
 {
-   static const int nSpecialChars = 27;
-   static const char *specialChars[nSpecialChars] = {"+", "-", "*", "/", "&", "%", "|", "^",  ">",
-                                                     "<", "=", "~", ".", "(", ")", "[", "]",  "!",
-                                                     ",", "$", " ", ":", "'", "#", "@", "\\", "\""};
-
-   for (int i = 0; i < nSpecialChars; ++i) {
-      if (c == specialChars[i][0]) {
-         return true;
-      }
-   }
-   return false;
+   return c != '_' && !std::isalnum(c);
 }
 
 bool isComplex(std::string const &expression)
@@ -844,9 +835,9 @@ std::string ClassFacIFace::create(RooFactoryWSTool &ft, const char *typeName, co
    }
 
    if (tn == "CEXPR") {
-      ret = RooClassFactory::makePdfInstance(className.c_str(), instanceName, expr, varList);
+      ret = RooClassFactory::makePdfInstance(className, instanceName, expr, varList);
    } else {
-      ret = RooClassFactory::makeFunctionInstance(className.c_str(), instanceName, expr, varList);
+      ret = RooClassFactory::makeFunctionInstance(className, instanceName, expr, varList);
    }
    if (!ret) {
       throw std::runtime_error(

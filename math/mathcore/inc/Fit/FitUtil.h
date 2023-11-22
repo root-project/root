@@ -234,8 +234,8 @@ namespace FitUtil {
         double xBuffer[vecSize];
         ROOT::Double_v xx[fDim];
         for (unsigned int i = 0; i < fDim; ++i) {
-           // The Load() function reads multiple values from tbe pointed-to
-           // memory into xx. This is why we hav to copy the input values from
+           // The Load() function reads multiple values from the pointed-to
+           // memory into xx. This is why we have to copy the input values from
            // the x array into a zero-padded buffer to read from. Otherwise,
            // Load() would access the x array out of bounds.
            *xBuffer = x[i];
@@ -250,8 +250,8 @@ namespace FitUtil {
 #endif
 
      // objects of this class are not meant to be copied / assigned
-     IntegralEvaluator(const IntegralEvaluator &rhs);
-     IntegralEvaluator &operator=(const IntegralEvaluator &rhs);
+     IntegralEvaluator(const IntegralEvaluator &rhs) = delete;
+     IntegralEvaluator &operator=(const IntegralEvaluator &rhs) = delete;
 
      unsigned int fDim;
      const double *fParams;

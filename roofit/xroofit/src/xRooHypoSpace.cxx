@@ -48,7 +48,7 @@ xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const char *name, const char *title)
 }
 
 xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const RooStats::HypoTestInverterResult *result)
-   : TNamed(), fPars(std::make_shared<RooArgSet>())
+   : fPars(std::make_shared<RooArgSet>())
 {
    if (!result)
       return;
@@ -729,7 +729,7 @@ void xRooNLLVar::xRooHypoSpace::LoadFits(const char *apath)
                }
                continue;
             }
-            auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+            auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
             if (cl->InheritsFrom("RooFitResult")) {
                if (auto cachedFit = _dir->Get<RooFitResult>(k->GetName()); cachedFit) {
                   nFits++;
@@ -1484,7 +1484,7 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
       if (front().fPllType == xRooFit::Asymptotics::OneSidedPositive) {
          sOpt += "pcls"; // default to showing cls p-value scan if drawing a limit
          for (auto &hp : *this) {
-            if (hp.nullToys.size() || hp.altToys.size()) {
+            if (!hp.nullToys.empty() || !hp.altToys.empty()) {
                sOpt += " toys";
                break; // default to toys if done toys
             }

@@ -144,7 +144,7 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
       MATH_ERROR_MSG("Fitter::SetFCN","FCN function has zero parameters ");
       return false;
    }
-   if (params != nullptr )
+   if (params != nullptr || fConfig.ParamsSettings().size() == 0)
       fConfig.SetParamsSettings(npar, params);
    else {
       if ( fConfig.ParamsSettings().size() != npar) {
@@ -244,7 +244,7 @@ bool Fitter::FitFCN(const ROOT::Math::FitMethodGradFunction &fcn, const double *
 bool Fitter::SetFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned int dataSize, bool chi2fit)
 {
    // set TMinuit style FCN type (global function pointer)
-   // create corresponfing objective function from that function
+   // create corresponding objective function from that function
 
    if (npar == 0) {
       npar = fConfig.ParamsSettings().size();
@@ -626,7 +626,7 @@ bool Fitter::CalculateMinosErrors() {
 
 
    const std::vector<unsigned int> & ipars = fConfig.MinosParams();
-   unsigned int n = (ipars.size() > 0) ? ipars.size() : fResult->Parameters().size();
+   unsigned int n = (!ipars.empty()) ? ipars.size() : fResult->Parameters().size();
    bool ok = false;
 
    int iparNewMin = 0;
@@ -639,7 +639,7 @@ bool Fitter::CalculateMinosErrors() {
       iparNewMin = 0;
       for (int i = 0; i < iparMax; ++i) {
          double elow, eup;
-         unsigned int index = (ipars.size() > 0) ? ipars[i] : i;
+         unsigned int index = (!ipars.empty()) ? ipars[i] : i;
          bool ret = fMinimizer->GetMinosError(index, elow, eup);
          // flags case when a new minimum has been found
          if ((fMinimizer->MinosStatus() & 8) != 0) {
@@ -869,7 +869,7 @@ void Fitter::DoUpdateFitConfig() {
 
 int Fitter::GetNCallsFromFCN() {
    // retrieve ncalls from the fit method functions
-   // this function is called when minimizer does not provide a way of returning the nnumber of function calls
+   // this function is called when minimizer does not provide a way of returning the number of function calls
    int ncalls = 0;
    if (!fUseGradient) {
       const ROOT::Math::FitMethodFunction * fcn = dynamic_cast<const ROOT::Math::FitMethodFunction *>(fObjFunction.get());

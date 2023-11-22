@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Reader                                                                *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Reader class to be used in the user application to interpret the trained  *
@@ -28,7 +28,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Reader
@@ -82,10 +82,6 @@ namespace TMVA {
       IMethod* BookMVA( const TString& methodTag, const TString& weightfile );
       IMethod* BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr );
       IMethod* FindMVA( const TString& methodTag );
-      // special function for Cuts to avoid dynamic_casts in ROOT macros,
-      // which are not properly handled by CINT
-      MethodCuts* FindCutsMVA( const TString& methodTag );
-
 
       // returns the MVA response for given event
       Double_t EvaluateMVA( const std::vector<Float_t> &, const TString& methodTag, Double_t aux = 0 );

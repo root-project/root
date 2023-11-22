@@ -118,7 +118,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fWhiskerUp     = 0;
    fWhiskerDown   = 0;
    fNDatapoints   = n;
-   fIsCalculated  = 0;
+   fIsCalculated  = false;
    fIsRaw         = true;
    fPosCandleAxis = candlePos;
    fCandleWidth   = candleWidth;

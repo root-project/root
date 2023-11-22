@@ -19,8 +19,7 @@
 \class RooBinIntegrator
 \ingroup Roofitcore
 
-RooBinIntegrator computes the integral over a binned distribution by summing the bin
-contents of all bins.
+Computes the integral over a binned distribution by summing the bin contents of all bins.
 **/
 
 #include "RooBinIntegrator.h"
@@ -37,6 +36,7 @@ contents of all bins.
 #include "Math/Util.h"
 
 #include <cassert>
+#include <memory>
 
 
 
@@ -73,10 +73,9 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integrator on given function binding binding
 
-RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
-  RooAbsIntegrator(function)
+RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
+   : RooAbsIntegrator(function), _useIntegrandLimits(true)
 {
-  _useIntegrandLimits= true;
   assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
@@ -95,7 +94,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
     if (!tmp) {
       oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
-      tmp.reset( new list<double> );
+      tmp = std::make_unique<list<double>>( );
       for (Int_t j=0 ; j<=_numBins ; j++) {
         tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
       }
@@ -113,14 +112,6 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
 
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooBinIntegrator(function, static_cast<int>(config.getConfigSection("RooBinIntegrator").getRealValue("numBins")))
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBinIntegrator::~RooBinIntegrator()
 {
 }
 

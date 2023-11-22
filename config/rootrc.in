@@ -247,8 +247,8 @@ WebGui.HttpPortMin:         8800
 WebGui.HttpPortMax:         9800
 # Exact IP iddress to bind bind http server (default - empty)
 WebGui.HttpBind:
-# Use only loopback address to bind http server (default - no)
-WebGui.HttpLoopback:        no
+# Use only loopback address to bind http server (default - yes)
+WebGui.HttpLoopback:        yes
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem

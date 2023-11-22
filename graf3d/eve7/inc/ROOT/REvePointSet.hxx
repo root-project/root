@@ -52,7 +52,7 @@ protected:
 public:
    REvePointSet(const std::string& name="", const std::string& title="", Int_t n_points = 0);
    REvePointSet(const REvePointSet &e);
-   virtual ~REvePointSet();
+   ~REvePointSet() override;
 
    REvePointSet *CloneElement() const override { return new REvePointSet(*this); }
 
@@ -112,7 +112,7 @@ protected:
 
 public:
    REvePointSetArray(const std::string &name = "REvePointSetArray", const std::string &title = "");
-   virtual ~REvePointSetArray();
+   ~REvePointSetArray() override;
 
    void RemoveElementLocal(REveElement *el) override;
    void RemoveElementsLocal() override;
@@ -158,7 +158,7 @@ protected:
 
 public:
    REvePointSetProjected();
-   virtual ~REvePointSetProjected() {}
+   ~REvePointSetProjected() override {}
 
    void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
    void UpdateProjection() override;

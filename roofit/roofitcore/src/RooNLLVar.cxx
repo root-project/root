@@ -43,10 +43,6 @@ In extended mode, a
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 
-#ifdef ROOFIT_CHECK_CACHED_VALUES
-#include <iomanip>
-#endif
-
 #include "TMath.h"
 #include "Math/Util.h"
 
@@ -126,15 +122,14 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 /// Construct likelihood from given p.d.f and (binned or unbinned dataset)
 /// For internal use.
 
-RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
-                     const RooArgSet& projDeps,
-                     bool extended, RooAbsTestStatistic::Configuration const& cfg) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps, cfg),
-  _extended(extended)
+RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf &pdf, RooAbsData &indata, const RooArgSet &projDeps,
+                     bool extended, RooAbsTestStatistic::Configuration const &cfg)
+   : RooAbsOptTestStatistic(name, title, pdf, indata, projDeps, cfg),
+     _extended(extended),
+     _binnedPdf(cfg.binnedL ? static_cast<RooRealSumPdf *>(_funcClone) : nullptr)
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = cfg.binnedL ? static_cast<RooRealSumPdf*>(_funcClone) : nullptr ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
@@ -265,7 +260,13 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
       } else {
 
-        result += -1*(-mu + N * std::log(mu) - TMath::LnGamma(N+1));
+        double term = 0.0;
+        if(_doBinOffset) {
+          term -= -mu + N + N * (std::log(mu) - std::log(N));
+        } else {
+          term -= -mu + N * std::log(mu) - TMath::LnGamma(N+1);
+        }
+        result += term;
         sumWeightKahanSum += eventWeight;
 
       }
@@ -286,7 +287,8 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
   // If part of simultaneous PDF normalize probability over
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
-  if (_simCount>1) {
+  // If we do bin-by bin offsetting, we don't do this because it cancels out
+  if (!_doBinOffset && _simCount>1) {
     result += sumWeight * std::log(static_cast<double>(_simCount));
   }
 
@@ -320,7 +322,6 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalar(std::size_t stepSize, std::siz
   return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent, _offsetPdf.get());
 }
 
-// static function, also used from TestStatistics::RooUnbinnedL
 RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
                                                       RooArgSet *normSet, bool weightSq, std::size_t stepSize,
                                                       std::size_t firstEvent, std::size_t lastEvent, RooAbsPdf const* offsetPdf)
@@ -358,18 +359,49 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone,
   return {kahanProb, kahanWeight.Sum()};
 }
 
-bool RooNLLVar::setData(RooAbsData &data, bool cloneData)
+bool RooNLLVar::setDataSlave(RooAbsData &indata, bool cloneData, bool ownNewData)
 {
-   bool ret = RooAbsOptTestStatistic::setData(data, cloneData);
+   bool ret = RooAbsOptTestStatistic::setDataSlave(indata, cloneData, ownNewData);
    // To re-create the data template pdf if necessary
    _offsetPdf.reset();
    enableBinOffsetting(_doBinOffset);
    return ret;
 }
 
-void RooNLLVar::enableBinOffsetting(bool on)
+void RooNLLVar::enableBinOffsetting(bool flag)
 {
-   if (on && !_offsetPdf) {
+   if (!_init) {
+      initialize();
+   }
+
+   _doBinOffset = flag;
+
+   // If this is a "master" that delegates the actual work to "slaves", the
+   // _offsetPdf will not be reset.
+   bool needsResetting = true;
+
+   switch (operMode()) {
+   case Slave: break;
+   case SimMaster: {
+      for (auto &gof : _gofArray) {
+         static_cast<RooNLLVar &>(*gof).enableBinOffsetting(flag);
+      }
+      needsResetting = false;
+      break;
+   }
+   case MPMaster: {
+      for (int i = 0; i < _nCPU; ++i) {
+         static_cast<RooNLLVar &>(_mpfeArray[i]->arg()).enableBinOffsetting(flag);
+      }
+      needsResetting = false;
+      break;
+   }
+   }
+
+   if (!needsResetting)
+      return;
+
+   if (flag && !_offsetPdf) {
       std::string name = std::string{GetName()} + "_offsetPdf";
       std::unique_ptr<RooDataHist> dataTemplate;
       if (auto dh = dynamic_cast<RooDataHist *>(_dataClone)) {
@@ -380,5 +412,5 @@ void RooNLLVar::enableBinOffsetting(bool on)
       _offsetPdf = std::make_unique<RooHistPdf>(name.c_str(), name.c_str(), *_funcObsSet, std::move(dataTemplate));
       _offsetPdf->setOperMode(ADirty);
    }
-   _doBinOffset = on;
+   setValueDirty();
 }

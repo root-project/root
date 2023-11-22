@@ -41,7 +41,6 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
-#include "RooRealIntegral.h"
 #include "RooRealBinding.h"
 #include "RooMsgService.h"
 #include "RooProduct.h"
@@ -79,15 +78,11 @@ RooCurve::RooCurve()
 /// factor to rescale the expression after normalization.
 /// If shiftToZero is set, the entire curve is shifted down to make the lowest
 /// point of the curve go through zero.
-RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double xhi, Int_t xbins,
-    double scaleFactor, const RooArgSet *normVars, double prec, double resolution,
-    bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, double eeVal,
-    bool showProg) :
-        TGraph(),
-        RooPlotable(),
-        _showProgress(showProg)
+RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double xhi, Int_t xbins, double scaleFactor,
+                   const RooArgSet *normVars, double prec, double resolution, bool shiftToZero, WingMode wmode,
+                   Int_t nEvalError, Int_t doEEVal, double eeVal, bool showProg)
+   : _showProgress(showProg)
 {
-
   // grab the function's name and title
   TString name(f.GetName());
   SetName(name.Data());

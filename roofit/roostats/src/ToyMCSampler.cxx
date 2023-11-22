@@ -146,69 +146,29 @@ void ToyMCSampler::SetAlwaysUseMultiGen(bool flag) { fgAlwaysUseMultiGen = flag 
 ////////////////////////////////////////////////////////////////////////////////
 /// Proof constructor. Do not use.
 
-ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
+ToyMCSampler::ToyMCSampler()
+   : fSamplingDistName("SD"),
+     fNToys(1),
+     fMaxToys(RooNumber::infinity()),
+     fAdaptiveLowLimit(-RooNumber::infinity()),
+     fAdaptiveHighLimit(RooNumber::infinity())
 {
-
-   fPdf = nullptr;
-   fPriorNuisance = nullptr;
-   fNuisancePars = nullptr;
-   fObservables = nullptr;
-   fGlobalObservables = nullptr;
-
-   fSize = 0.05;
-   fNEvents = 0;
-   fGenerateBinned = false;
-   fGenerateBinnedTag = "";
-   fGenerateAutoBinned = true;
-   fExpectedNuisancePar = false;
-
-   fToysInTails = 0.0;
-   fMaxToys = RooNumber::infinity();
-   fAdaptiveLowLimit = -RooNumber::infinity();
-   fAdaptiveHighLimit = RooNumber::infinity();
-
-   fProtoData = nullptr;
-
-   fProofConfig = nullptr;
-   fNuisanceParametersSampler = nullptr;
-
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
-
-   fUseMultiGen = false ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(ts.GetVarName().Data()), fNToys(ntoys)
+ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys)
+   : fSamplingDistName(ts.GetVarName().Data()),
+     fNToys(ntoys),
+     fMaxToys(RooNumber::infinity()),
+     fAdaptiveLowLimit(-RooNumber::infinity()),
+     fAdaptiveHighLimit(RooNumber::infinity())
 {
-   fPdf = nullptr;
-   fPriorNuisance = nullptr;
-   fNuisancePars = nullptr;
-   fObservables = nullptr;
-   fGlobalObservables = nullptr;
-
-   fSize = 0.05;
-   fNEvents = 0;
-   fGenerateBinned = false;
-   fGenerateBinnedTag = "";
-   fGenerateAutoBinned = true;
-   fExpectedNuisancePar = false;
-
-   fToysInTails = 0.0;
-   fMaxToys = RooNumber::infinity();
-   fAdaptiveLowLimit = -RooNumber::infinity();
-   fAdaptiveHighLimit = RooNumber::infinity();
-
-   fProtoData = nullptr;
-
-   fProofConfig = nullptr;
-   fNuisanceParametersSampler = nullptr;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
-
-   fUseMultiGen = false ;
 
    AddTestStatistic(&ts);
 }
@@ -419,7 +379,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       allVars->assign(*fParametersForTestStat);
 
       const RooArgList* allTS = EvaluateAllTestStatistics(*toydata, *fParametersForTestStat, detOutAgg);
-      if (allTS->getSize() > Int_t(fTestStatistics.size()))
+      if (allTS->size() > fTestStatistics.size())
         detOutAgg.AppendArgSet( fGlobalObservables, "globObs_" );
       if (RooRealVar* firstTS = dynamic_cast<RooRealVar*>(allTS->first()))
          valueFirst = firstTS->getVal();
@@ -464,7 +424,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 
       // generate one set of global observables and assign it
       // has problem for sim pdfs
-      RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>( &pdf );
+      RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>(&pdf );
       if (!simPdf) {
          std::unique_ptr<RooDataSet> one{pdf.generate(*fGlobalObservables, 1)};
 
@@ -477,7 +437,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       } else {
 
          if (_pdfList.empty()) {
-            RooCategory& channelCat = (RooCategory&)simPdf->indexCat();
+            auto& channelCat = const_cast<RooCategory&>(static_cast<RooCategory const&>(simPdf->indexCat()));
             int nCat = channelCat.numTypes();
             for (int i=0; i < nCat; ++i){
                channelCat.setIndex(i);
@@ -538,7 +498,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 
    // generate global observables
    RooArgSet observables(*fObservables);
-   if(fGlobalObservables  &&  fGlobalObservables->getSize()) {
+   if(fGlobalObservables  &&  !fGlobalObservables->empty()) {
       observables.remove(*fGlobalObservables);
       GenerateGlobalObservables(pdf);
    }

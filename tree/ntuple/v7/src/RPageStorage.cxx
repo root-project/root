@@ -23,7 +23,8 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <memory>
+#include <string_view>
 #ifdef R__ENABLE_DAOS
 # include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -76,6 +77,22 @@ ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::ToColumnSet() c
    return result;
 }
 
+bool ROOT::Experimental::Detail::RPageSource::REntryRange::IntersectsWith(const RClusterDescriptor &clusterDesc) const
+{
+   if (fFirstEntry == kInvalidNTupleIndex) {
+      /// Entry range unset, we assume that the entry range covers the complete source
+      return true;
+   }
+
+   if (clusterDesc.GetNEntries() == 0)
+      return true;
+   if ((clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()) <= fFirstEntry)
+      return false;
+   if (clusterDesc.GetFirstEntryIndex() >= (fFirstEntry + fNEntries))
+      return false;
+   return true;
+}
+
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
    : RPageStorage(name), fMetrics(""), fOptions(options)
 {
@@ -117,6 +134,14 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
 void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHandle)
 {
    fActivePhysicalColumns.Erase(columnHandle.fPhysicalId);
+}
+
+void ROOT::Experimental::Detail::RPageSource::SetEntryRange(const REntryRange &range)
+{
+   if ((range.fFirstEntry + range.fNEntries) > GetNEntries()) {
+      throw RException(R__FAIL("invalid entry range"));
+   }
+   fEntryRange = range;
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()
@@ -202,7 +227,7 @@ void ROOT::Experimental::Detail::RPageSource::PrepareLoadCluster(
 void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nReadV", "", "number of vector read requests"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nRead", "", "number of byte ranges read"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadPayload", "B", "volume read from storage (required)"),
@@ -572,7 +597,7 @@ ROOT::Experimental::Detail::RPageSink::SealPage(
 void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),

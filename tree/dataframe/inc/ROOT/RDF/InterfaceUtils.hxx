@@ -24,7 +24,7 @@
 #include <ROOT/RDF/RJittedFilter.hxx>
 #include <ROOT/RDF/RJittedVariation.hxx>
 #include <ROOT/RDF/RLoopManager.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/RDF/RVariation.hxx>
 #include <ROOT/TypeTraits.hxx>
 #include <TError.h> // gErrorIgnoreLevel
@@ -571,7 +571,7 @@ void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const
    // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
    std::unique_ptr<RVariationBase> newVariation{new RVariation<std::decay_t<F>, IsSingleColumn>(
       std::move(variedColNames), variationName, std::forward<F>(f), std::move(tags), jittedVariation->GetTypeName(),
-      *colRegister, *lm, std::move(inputColNames))};
+      *colRegister, *lm, inputColNames)};
    jittedVariation->SetVariation(std::move(newVariation));
 
    doDeletes();

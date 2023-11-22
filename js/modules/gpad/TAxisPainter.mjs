@@ -139,12 +139,8 @@ const AxisPainterMethods = {
       const base = this.logbase;
       if (base !== 10) vlog = vlog / Math.log10(base);
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
-         if (!this.noexp && (asticks !== 2)) {
-            const pow = Math.floor(vlog+0.01);
-            if ((pow === 0) && settings.StripAxisLabels)
-               return '1';
-            return this.formatExp(base, pow, val);
-         }
+         if (!this.noexp && (asticks !== 2))
+            return this.formatExp(base, Math.floor(vlog+0.01), val);
          if (Math.abs(base - Math.E) < 0.001)
             return floatToString(val, fmt || gStyle.fStatFormat);
          return (vlog < 0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
@@ -187,6 +183,12 @@ const AxisPainterMethods = {
          res += 'e';
       else
          res += base.toString();
+      if (settings.StripAxisLabels) {
+         if (order === 0)
+            return '1';
+         else if (order === 1)
+            return res;
+      }
       if (settings.Latex > constants.Latex.Symbols)
          return res + `^{${order}}`;
       const superscript_symbols = {
@@ -1035,7 +1037,11 @@ class TAxisPainter extends ObjectPainter {
                arg.x = pos;
                arg.y = fix_coord;
                arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
-               if (arg.align % 10 === 3) arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
+               if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
+                  arg.align = 21;
+                  arg.y += labelsFont.size;
+               } else if (arg.align % 10 === 3)
+                  arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
             }
 
             if (rotate_lbls)
@@ -1106,7 +1112,7 @@ class TAxisPainter extends ObjectPainter {
             pp = this.getPadPainter(),
             pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
             pad_h = pp?.getPadHeight() || scalingSize || h/0.8;
-      let tickSize = 0, tickScalingSize = 0, titleColor, offset;
+      let tickSize = 0, tickScalingSize = 0, titleColor, titleFontId, offset;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
 
@@ -1122,6 +1128,7 @@ class TAxisPainter extends ObjectPainter {
          tickScalingSize = scalingSize || (this.vertical ? 1.7*h : 0.6*w);
          tickSize = optionSize ? axis.fTickSize : 0.03;
          titleColor = this.getColor(axis.fTextColor);
+         titleFontId = axis.fTextFont;
          offset = axis.fLabelOffset;
          if ((this.vertical && axis.fY1 > axis.fY2 && !this.optionMinus) || (!this.vertical && axis.fX1 > axis.fX2))
             offset = -offset;
@@ -1136,6 +1143,7 @@ class TAxisPainter extends ObjectPainter {
          tickScalingSize = scalingSize || (this.vertical ? pad_w : pad_h);
          tickSize = axis.fTickLength;
          titleColor = this.getColor(axis.fTitleColor);
+         titleFontId = axis.fTitleFont;
          offset = axis.fLabelOffset;
       }
 
@@ -1166,7 +1174,7 @@ class TAxisPainter extends ObjectPainter {
       this.fTitle = axis.fTitle;
       if (this.fTitle) {
          this.titleSize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * this.scalingSize);
-         this.titleFont = new FontHandler(axis.fTitleFont, this.titleSize, scalingSize);
+         this.titleFont = new FontHandler(titleFontId, this.titleSize, scalingSize);
          this.titleFont.setColor(titleColor);
          this.offsetScaling = (axis.fTitleSize >= 1) ? 1 : (this.vertical ? pad_w : pad_h) / this.scalingSize;
          this.titleOffset = axis.fTitleOffset;
@@ -1305,7 +1313,7 @@ class TAxisPainter extends ObjectPainter {
             if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
                // special handling for color palette labels - draw them always on right side
                const rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.waddMoveHandleridth - this.ticksSize)
+               if (title_shift_x < rect.width - this.ticksSize)
                   title_shift_x = Math.round(rect.width - this.ticksSize);
             }
 

@@ -19,7 +19,7 @@
 \class RooConvGenContext
 \ingroup Roofitcore
 
-RooConvGenContext is an efficient implementation of the generator context
+Efficient implementation of the generator context
 specific for RooAbsAnaConvPdf objects. The physics model is generated
 with a truth resolution model and the requested resolution model is generated
 separately as a PDF. The convolution variable of the physics model is
@@ -42,8 +42,6 @@ subsequently explicitly smeared with the resolution model distribution.
 using namespace std;
 
 ClassImp(RooConvGenContext);
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for specialized generator context for analytical convolutions.
@@ -71,7 +69,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
     RooErrorHandler::softAbort() ;
   }
 
-  RooAbsAnaConvPdf* pdfClone = (RooAbsAnaConvPdf*) _pdfCloneSet->find(model.GetName()) ;
+  RooAbsAnaConvPdf* pdfClone = static_cast<RooAbsAnaConvPdf*>(_pdfCloneSet->find(model.GetName())) ;
   RooTruthModel truthModel("truthModel","Truth resolution model",*pdfClone->convVar()) ;
   pdfClone->changeModel(truthModel) ;
   auto convV = dynamic_cast<RooRealVar*>(pdfClone->convVar());
@@ -194,8 +192,8 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
   // Create generator for physics model
   _pdfCloneSet = std::make_unique<RooArgSet>();
   RooArgSet(model._pdf1.arg()).snapshot(*_pdfCloneSet, true);
-  RooAbsPdf* pdfClone = (RooAbsPdf*) _pdfCloneSet->find(model._pdf1.arg().GetName()) ;
-  RooRealVar* cvPdf = (RooRealVar*) _pdfCloneSet->find(model._x.arg().GetName()) ;
+  RooAbsPdf* pdfClone = static_cast<RooAbsPdf*>(_pdfCloneSet->find(model._pdf1.arg().GetName())) ;
+  RooRealVar* cvPdf = static_cast<RooRealVar*>(_pdfCloneSet->find(model._x.arg().GetName())) ;
   cvPdf->removeRange() ;
   RooArgSet tmp1;
   pdfClone->getObservables(&vars, tmp1) ;
@@ -207,8 +205,8 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
   // Create generator for resolution model
   _modelCloneSet = std::make_unique<RooArgSet>();
   RooArgSet(model._pdf2.arg()).snapshot(*_modelCloneSet, true);
-  RooAbsPdf* modelClone = (RooAbsPdf*) _modelCloneSet->find(model._pdf2.arg().GetName()) ;
-  RooRealVar* cvModel = (RooRealVar*) _modelCloneSet->find(model._x.arg().GetName()) ;
+  RooAbsPdf* modelClone = static_cast<RooAbsPdf*>(_modelCloneSet->find(model._pdf2.arg().GetName())) ;
+  RooRealVar* cvModel = static_cast<RooRealVar*>(_modelCloneSet->find(model._x.arg().GetName())) ;
   cvModel->removeRange() ;
   RooArgSet tmp2;
   modelClone->getObservables(&vars, tmp2) ;
@@ -253,9 +251,9 @@ void RooConvGenContext::attach(const RooArgSet& args)
 void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 {
   // Find convolution variable in input and output sets
-  _cvModel = (RooRealVar*) _modelVars->find(_convVarName) ;
-  _cvPdf   = (RooRealVar*) _pdfVars->find(_convVarName) ;
-  _cvOut   = (RooRealVar*) theEvent.find(_convVarName) ;
+  _cvModel = static_cast<RooRealVar*>(_modelVars->find(_convVarName)) ;
+  _cvPdf   = static_cast<RooRealVar*>(_pdfVars->find(_convVarName)) ;
+  _cvOut   = static_cast<RooRealVar*>(theEvent.find(_convVarName)) ;
 
   // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable
   std::unique_ptr<RooArgSet> pdfCommon{static_cast<RooArgSet*>(theEvent.selectCommon(*_pdfVars))};

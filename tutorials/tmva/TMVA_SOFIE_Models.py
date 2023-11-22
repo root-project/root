@@ -19,7 +19,7 @@ from os.path import exists
 ROOT.TMVA.PyMethodBase.PyInitialize()
 
 
-## generate and train Keras models with different architetures
+## generate and train Keras models with different architectures
 
 import numpy as np
 from tensorflow.keras.models import Sequential

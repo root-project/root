@@ -20,15 +20,11 @@
 #include "RooListProxy.h"
 #include <vector>
 
-class RooRealVar;
-class RooArgList ;
-
 class RooChangeTracker : public RooAbsReal {
 public:
 
-  RooChangeTracker() ;
+  RooChangeTracker() = default;
   RooChangeTracker(const char *name, const char *title, const RooArgSet& trackSet, bool checkValues=false) ;
-  ~RooChangeTracker() override ;
 
   RooChangeTracker(const RooChangeTracker& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooChangeTracker(*this, newname); }
@@ -44,9 +40,9 @@ protected:
   RooListProxy     _catSet ;         ///< List of categories to check
   std::vector<double> _realRef ;   ///< Reference values for reals
   std::vector<Int_t>    _catRef ;    ///< Reference values for categories
-  bool       _checkVal ;           ///< Check contents as well if true
+  bool       _checkVal = false;           ///< Check contents as well if true
 
-  bool        _init ; //!
+  bool        _init = false; //!
 
   double evaluate() const override { return 1 ; }
 

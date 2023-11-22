@@ -16,7 +16,7 @@
 //                                                                      //
 // TMatrixFBase                                                         //
 //                                                                      //
-//  Instantation of TMatrixTBase<Float_t>                               //
+//  Instantiation of TMatrixTBase<Float_t>                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

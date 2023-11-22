@@ -38,7 +38,6 @@ public:
   RooBukinPdf(const RooBukinPdf& other,const char* name=nullptr) ;
 
   TObject* clone(const char* newname) const override { return new RooBukinPdf(*this,newname);   }
-  inline ~RooBukinPdf() override { }
 
 protected:
   RooRealProxy x;

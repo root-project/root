@@ -16,7 +16,7 @@
 \class Evaluator
 \ingroup Roofitcore
 
-This class can evaluate a RooAbsReal object in other ways than recursive graph
+Evaluates a RooAbsReal object in other ways than recursive graph
 traversal. Currently, it is being used for evaluating a RooAbsReal object and
 supplying the value to the minimizer, during a fit. The class scans the
 dependencies and schedules the computations in a secure and efficient way. The
@@ -33,7 +33,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsReal.h>
 #include <RooRealVar.h>
 #include <RooBatchCompute.h>
-#include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
 #include <RooSimultaneous.h>
@@ -41,13 +40,14 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include "BatchModeDataHelpers.h"
 #include "BatchModeHelpers.h"
 #include "Detail/Buffers.h"
+#include "RooFitImplHelpers.h"
 
 #include <chrono>
 #include <iomanip>
 #include <numeric>
 #include <thread>
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 
 #include <RooFit/Detail/CudaInterface.h>
 
@@ -64,7 +64,7 @@ void logArchitectureInfo(bool useGPU)
    // We have to exit early if the message stream is not active. Otherwise it's
    // possible that this function skips logging because it thinks it has
    // already logged, but actually it didn't.
-   if (!RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::Fitting, RooFit::INFO)) {
+   if (!RooMsgService::instance().isActive(nullptr, RooFit::Fitting, RooFit::INFO)) {
       return;
    }
 
@@ -103,7 +103,7 @@ struct NodeInfo {
 
    bool isScalar() const { return outputSize == 1; }
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    bool computeInGPU() const { return (absArg->isReducerNode() || !isScalar()) && absArg->canComputeBatchWithCuda(); }
 #endif
 
@@ -114,7 +114,7 @@ struct NodeInfo {
    std::size_t iNode = 0;
    int remClients = 0;
    int remServers = 0;
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    bool copyAfterEvaluation = false;
 #endif
    bool fromArrayInput = false;
@@ -128,7 +128,7 @@ struct NodeInfo {
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    std::unique_ptr<RooFit::Detail::CudaInterface::CudaEvent> event;
    std::unique_ptr<RooFit::Detail::CudaInterface::CudaStream> stream;
 
@@ -140,7 +140,7 @@ struct NodeInfo {
          buffer.reset();
       }
    }
-#endif // R__HAS_CUDA
+#endif // ROOFIT_CUDA
 };
 
 /// Construct a new Evaluator. The constructor analyzes and saves metadata about the graph,
@@ -155,7 +155,7 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
      _topNode{const_cast<RooAbsReal &>(absReal)},
      _useGPU{useGPU}
 {
-#ifndef R__HAS_CUDA
+#ifndef ROOFIT_CUDA
    if (useGPU) {
       throw std::runtime_error("Can't create Evaluator in CUDA mode because ROOT was compiled without CUDA support!");
    }
@@ -164,10 +164,10 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    logArchitectureInfo(_useGPU);
 
    RooArgSet serverSet;
-   RooHelpers::getSortedComputationGraph(_topNode, serverSet);
+   ::RooHelpers::getSortedComputationGraph(_topNode, serverSet);
 
    _dataMapCPU.resize(serverSet.size());
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    _dataMapCUDA.resize(serverSet.size());
 #endif
 
@@ -210,7 +210,7 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
 
    syncDataTokens();
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    if (_useGPU) {
       // create events and streams for every node
       for (auto &info : _nodes) {
@@ -262,7 +262,7 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
          info.absArg->setDataToken(iNode);
          info.outputSize = inputArray.size();
          if (_useGPU) {
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
             if (info.outputSize == 1) {
                // Scalar observables from the data don't need to be copied to the GPU
                _dataMapCPU.set(info.absArg, inputArray);
@@ -333,7 +333,7 @@ void Evaluator::updateOutputSizes()
       }
    }
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    if (_useGPU) {
       markGPUNodes();
    }
@@ -360,13 +360,13 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    double *buffer = nullptr;
    if (nOut == 1) {
       buffer = &info.scalarBuffer;
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
       if (_useGPU) {
          _dataMapCUDA.set(node, {buffer, nOut});
       }
 #endif
    } else {
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
       if (!info.hasLogged && _useGPU) {
          RooAbsArg const &arg = *info.absArg;
          oocoutI(&arg, FastEvaluations) << "The argument " << arg.ClassName() << "::" << arg.GetName()
@@ -377,7 +377,7 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       }
 #endif
       if (!info.buffer) {
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
          info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream.get())
                                                 : _bufferManager->makeCpuBuffer(nOut);
 #else
@@ -388,7 +388,7 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    }
    _dataMapCPU.set(node, {buffer, nOut});
    nodeAbsReal->computeBatch(buffer, nOut, _dataMapCPU);
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    if (info.copyAfterEvaluation) {
       _dataMapCUDA.set(node, {info.buffer->gpuReadPtr(), nOut});
       if (info.event) {
@@ -431,7 +431,7 @@ std::span<const double> Evaluator::run()
 
    ++_nEvaluations;
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    if (_useGPU) {
       return getValHeterogeneous();
    }
@@ -455,11 +455,10 @@ std::span<const double> Evaluator::run()
    return _dataMapCPU.at(&_topNode);
 }
 
-#ifdef R__HAS_CUDA
-
 /// Returns the value of the top node in the computation graph
 std::span<const double> Evaluator::getValHeterogeneous()
 {
+#ifdef ROOFIT_CUDA
    for (auto &info : _nodes) {
       info.remClients = info.clientInfos.size();
       info.remServers = info.serverInfos.size();
@@ -529,6 +528,11 @@ std::span<const double> Evaluator::getValHeterogeneous()
 
    // return the final value
    return _dataMapCUDA.at(&_topNode);
+#else
+   // Doesn't matter what we do here, because it's a private function that's
+   // not called when RooFit is not built with CUDA support.
+   return {};
+#endif // ROOFIT_CUDA
 }
 
 /// Assign a node to be computed in the GPU. Scan it's clients and also assign them
@@ -537,9 +541,11 @@ void Evaluator::assignToGPU(NodeInfo &info)
 {
    using namespace Detail;
 
+   info.remServers = -1;
+
+#ifdef ROOFIT_CUDA
    auto node = static_cast<RooAbsReal const *>(info.absArg);
 
-   info.remServers = -1;
    // wait for every server to finish
    for (auto *infoServer : info.serverInfos) {
       if (infoServer->event)
@@ -563,11 +569,13 @@ void Evaluator::assignToGPU(NodeInfo &info)
    if (info.copyAfterEvaluation) {
       _dataMapCPU.set(node, {info.buffer->cpuReadPtr(), nOut});
    }
+#endif // ROOFIT_CUDA
 }
 
 /// Decides which nodes are assigned to the GPU in a CUDA fit.
 void Evaluator::markGPUNodes()
 {
+#ifdef ROOFIT_CUDA
    for (auto &info : _nodes) {
       info.copyAfterEvaluation = false;
       // scalar nodes don't need copying
@@ -580,16 +588,15 @@ void Evaluator::markGPUNodes()
          }
       }
    }
+#endif // ROOFIT_CUDA
 }
-
-#endif // R__HAS_CUDA
 
 /// Temporarily change the operation mode of a RooAbsArg until the
 /// Evaluator gets deleted.
 void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 {
    if (opMode != arg->operMode()) {
-      _changeOperModeRAIIs.emplace(arg, opMode);
+      _changeOperModeRAIIs.emplace(std::make_unique<ChangeOperModeRAII>(arg, opMode));
    }
 }
 

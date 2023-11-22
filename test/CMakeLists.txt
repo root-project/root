@@ -9,7 +9,7 @@
 # using the ROOT libraries on all supported platforms.
 #
 # Author: Pere Mato, 25/10/2010
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(test)
 
@@ -199,22 +199,6 @@ ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in"
 ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
 
-#--stressTMVA--------------------------------------------------------------------------------------
-if(CUDA_FOUND)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
-endif()
-
-if(BLAS_FOUND AND imt)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
-endif()
-
-if(ROOT_tmva_FOUND)
-  ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
-  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
-  ROOT_ADD_TEST(test-stresstmva-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressTMVA.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stresstmva TIMEOUT 1800)
-endif()
-
 #--stressMathMore----------------------------------------------------------------------------------
 if(ROOT_mathmore_FOUND)
   ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore Smatrix)
@@ -241,59 +225,7 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
               FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
 
 if(ROOT_roofit_FOUND)
-  #--stressRooFit----------------------------------------------------------------------------------
-  if(ROOT_mathmore_FOUND)
-    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
-  else()
-    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
-  endif()
-  configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit -b legacy FAILREGEX "FAILED|Error in")
-  ROOT_ADD_TEST(test-stressroofit-batchmode-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in")
-  if(CUDA_FOUND)
-    ROOT_ADD_TEST(test-stressroofit-batchmode-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
-  endif()
-  ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit LABELS longtest)
-
-  # Test that the user can still include RooMath.h themselves from the
-  # interpreter. We test this case explicitely, because RooMath.h was moved
-  # from roofit/roofitcore to roofit/batchcompute, which can cause redefinition
-  # problems.
-  ROOT_ADD_TEST(test-roofit-includingRooMath COMMAND ${ROOT_root_CMD} -b -q -l -e "#include\ <RooMath.h>")
-
   add_subdirectory(fit)
-
-  #--stressRooStats----------------------------------------------------------------------------------
-  ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
-  configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats -b legacy FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressroostats-batchmode-cpu COMMAND stressRooStats -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
-  if(CUDA_FOUND)
-    ROOT_ADD_TEST(test-stressroostats-batchmode-cuda COMMAND stressRooStats -b cuda FAILREGEX "FAILED|Error in" LABELS longtest)
-  endif()
-  if(NOT MSVC OR llvm13_broken_tests)
-    ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
-                  FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
-  endif()
-  if (ROOT_minuit2_FOUND)
-    ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2 -b legacy  FAILREGEX "FAILED|Error in" LABELS longtest)
-  endif()
-
-  #--stressHistFactory--------------------------------------------------------------------------------
-  if(GSL_FOUND AND ROOT_xml_FOUND)
-    ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
-    if(NOT MSVC)
-      configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
-      configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
-      ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory FAILREGEX "FAILED|Error in" LABELS longtest)
-      if (ROOT_minuit2_FOUND)
-        ROOT_ADD_TEST(test-stressHistFactory-minuit2 ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory -minim Minui2 FAILREGEX "FAILED|Error in" LABELS longtest)
-      endif()
-      ROOT_ADD_TEST(test-stressHistFactory-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistFactory.cxx FAILREGEX "FAILED|Error in" DEPENDS test-stressHistFactory)
-    endif()
-  endif()
-
 endif()
 
 #--stressFit---------------------------------------------------------------------------------

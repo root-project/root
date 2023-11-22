@@ -18,12 +18,11 @@ ClassImp(TGraphDelaunay2D);
 /** \class TGraphDelaunay2D
     \ingroup Graphs
 TGraphDelaunay2D generates a Delaunay triangulation of a TGraph2D.
-The algorithm used for finding the triangles is based on on
-**Triangle**, a two-dimensional quality mesh generator and
-Delaunay triangulator from Jonathan Richard Shewchuk.
-See [http://www.cs.cmu.edu/~quake/triangle.html]
+The algorithm used for finding the triangles is based on [CDT](https://github.com/artem-ogre/CDT),
+a C++ library for generating constraint or conforming Delaunay triangulations.
+
 The ROOT::Math::Delaunay2D class provides a wrapper for using
-the **Triangle** library.
+the **CDT** library.
 
 This implementation provides large improvements in terms of computational performances
 compared to the legacy one available in TGraphDelaunay, and it is by default

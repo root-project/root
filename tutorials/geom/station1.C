@@ -33,7 +33,7 @@ void station1()
 
  TGeoVolume *top=geom->MakeBox("top",Air,1000,1000,1000);
  geom->SetTopVolume(top);
- geom->SetTopVisible(0);
+ geom->SetTopVisible(false);
  // If you want to see the boundary, please input the number, 1 instead of 0.
  // Like this, geom->SetTopVisible(1);
 
@@ -528,7 +528,7 @@ for(int i=1;i<=8;i++){
 }
 
  Cone31->SetFillColor(38);
- top->SetVisibility(0);
+ top->SetVisibility(false);
  geom->CloseGeometry();
 
  top->Draw("ogl");

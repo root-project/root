@@ -19,7 +19,6 @@ public:
 
   RooJeffreysPrior() : _cacheMgr(this, 1, true, false) {}
   RooJeffreysPrior(const char *name, const char *title, RooAbsPdf& nominal, const RooArgList& paramSet, const RooArgList& obsSet) ;
-  ~RooJeffreysPrior() override ;
 
   RooJeffreysPrior(const RooJeffreysPrior& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooJeffreysPrior(*this, newname); }

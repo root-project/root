@@ -98,9 +98,11 @@ class THistDrawOptions {
 
       this.ndim = hdim || 1; // keep dimensions, used for now in GED
 
-      this.PadStats = d.check('USE_PAD_STATS');
-      this.PadPalette = d.check('USE_PAD_PALETTE');
-      this.PadTitle = d.check('USE_PAD_TITLE');
+      // for old web canvas json
+      // TODO: remove in version 8
+      d.check('USE_PAD_TITLE');
+      d.check('USE_PAD_PALETTE');
+      d.check('USE_PAD_STATS');
 
       if (d.check('PAL', true)) this.Palette = d.partAsInt();
       // this is zooming of histo content
@@ -139,6 +141,8 @@ class THistDrawOptions {
       if (d.check('YTITLE:', true)) histo.fYaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
       if (d.check('ZTITLE:', true)) histo.fZaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
 
+      if (d.check('FORCE_TITLE')) this.ForceTitle = true;
+
       if (d.check('_ADJUST_FRAME_')) this.adjustFrame = true;
 
       if (d.check('NOOPTIMIZE')) this.Optimize = 0;
@@ -149,6 +153,9 @@ class THistDrawOptions {
 
       if (d.check('OPTSTAT', true)) this.optstat = d.partAsInt();
       if (d.check('OPTFIT', true)) this.optfit = d.partAsInt();
+
+      if ((this.optstat || this.optstat) && histo?.TestBit(kNoStats))
+         histo?.InvertBit(kNoStats);
 
       if (d.check('NOSTAT')) this.NoStat = true;
       if (d.check('STAT')) this.ForceStat = true;
@@ -176,12 +183,14 @@ class THistDrawOptions {
       if (ly && pad) { pad.fLogy = ly; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
       if (d.check('LOG2Z') && pad) pad.fLogz = 2;
       if (d.check('LOGZ') && pad) pad.fLogz = 1;
+      if (d.check('LOGV') && pad) pad.fLogv = 1; // ficitional member, can be introduced in ROOT
       if (d.check('GRIDXY') && pad) pad.fGridx = pad.fGridy = 1;
       if (d.check('GRIDX') && pad) pad.fGridx = 1;
       if (d.check('GRIDY') && pad) pad.fGridy = 1;
       if (d.check('TICKXY') && pad) pad.fTickx = pad.fTicky = 1;
       if (d.check('TICKX') && pad) pad.fTickx = 1;
       if (d.check('TICKY') && pad) pad.fTicky = 1;
+      if (d.check('TICKZ') && pad) pad.fTickz = 1;
       if (d.check('GRAYSCALE'))
          pp?.setGrayscale(true);
 
@@ -197,8 +206,10 @@ class THistDrawOptions {
          return false;
       };
 
-      if (d.check('FILL_', true) && d.getColor())
+      if (d.check('FILL_', true) && d.getColor()) {
          this.histoFillColor = d.color;
+         this.histoFillPattern = 1001;
+      }
 
       if (d.check('LINE_', true) && d.getColor())
          this.histoLineColor = getColor(d.color);
@@ -261,6 +272,11 @@ class THistDrawOptions {
       if (d.check('R3D_', true))
          this.Render3D = constants.Render3D.fromString(d.part.toLowerCase());
 
+      if (d.check('POL')) this.System = kPOLAR;
+      if (d.check('CYL')) this.System = kCYLINDRICAL;
+      if (d.check('SPH')) this.System = kSPHERICAL;
+      if (d.check('PSR')) this.System = kRAPIDITY;
+
       if (d.check('SURF', true)) {
          this.Surf = d.partAsInt(10, 1);
          check3dbox = d.part;
@@ -298,8 +314,14 @@ class THistDrawOptions {
       if (d.check('ARR'))
          this.Arrow = true;
 
-      if (d.check('BOX', true))
-         this.BoxStyle = 10 + d.partAsInt();
+      if (d.check('BOX', true)) {
+         this.BoxStyle = 10;
+         if (d.part.indexOf('1') >= 0) this.BoxStyle = 11; else
+         if (d.part.indexOf('2') >= 0) this.BoxStyle = 12; else
+         if (d.part.indexOf('3') >= 0) this.BoxStyle = 13;
+         if (d.part.indexOf('Z') >= 0) this.Zscale = true;
+         if (d.part.indexOf('H') >= 0) this.Zvert = false;
+      }
 
       this.Box = this.BoxStyle > 0;
 
@@ -327,10 +349,6 @@ class THistDrawOptions {
       }
 
       if (d.check('SCAT')) this.Scat = true;
-      if (d.check('POL')) this.System = kPOLAR;
-      if (d.check('CYL')) this.System = kCYLINDRICAL;
-      if (d.check('SPH')) this.System = kSPHERICAL;
-      if (d.check('PSR')) this.System = kRAPIDITY;
 
       if (d.check('TRI', true)) {
          this.Color = false;
@@ -421,9 +439,11 @@ class THistDrawOptions {
           (((this.Surf > 0) || this.Error) && (hdim === 2))) this.Mode3D = true;
 
       // default draw options for TF1 is line and fill
-      if (painter.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve) {
+      if (painter?.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve && !this.Mark) {
          this.Hist = false;
-         this.Curve = this.Fill = true;
+         this.Curve = settings.FuncAsCurve;
+         this.Line = !this.Curve;
+         this.Fill = true;
       }
 
       if ((this.Surf === 15) && (this.System === kPOLAR || this.System === kCARTESIAN))
@@ -511,6 +531,7 @@ class THistDrawOptions {
          if (pad.fGridy) res += '_GRIDY';
          if (pad.fTickx) res += '_TICKX';
          if (pad.fTicky) res += '_TICKY';
+         if (pad.fTickz) res += '_TICKZ';
       }
 
       if (this.cutg_name)
@@ -626,6 +647,120 @@ class HistContour {
    }
 
 } // class HistContour
+
+/**
+ * @summary Handle for updateing of secondary functions
+ *
+ * @private
+ */
+
+class FunctionsHandler {
+
+   constructor(painter, pp, funcs, statpainter) {
+      this.painter = painter;
+      this.pp = pp;
+
+      const painters = [], update_painters = [],
+            only_draw = (statpainter === true);
+
+      this.newfuncs = [];
+      this.newopts = [];
+
+      // find painters associated with histogram/graph/...
+      if (!only_draw) {
+         pp?.forEachPainterInPad(objp => {
+            if (objp.isSecondary(painter) && objp._secondary_id?.match(/^func_|^indx_/))
+               painters.push(objp);
+         }, 'objects');
+      }
+
+      for (let n = 0; n < funcs?.arr.length; ++n) {
+         const func = funcs.arr[n], fopt = funcs.opt[n];
+         if (!func?._typename) continue;
+         if (isFunc(painter.needDrawFunc) && !painter.needDrawFunc(painter.getObject(), func)) continue;
+
+         let funcpainter = null, func_indx = -1;
+
+         if (!only_draw) {
+            // try to find matching object in associated list of painters
+            for (let i = 0; i < painters.length; ++i) {
+               if (painters[i].matchObjectType(func._typename) && (painters[i].getObjectName() === func.fName)) {
+                  funcpainter = painters[i];
+                  func_indx = i;
+                  break;
+               }
+            }
+            // or just in generic list of painted objects
+            if (!funcpainter && func.fName)
+               funcpainter = pp?.findPainterFor(null, func.fName, func._typename);
+         }
+
+         if (funcpainter) {
+            funcpainter.updateObject(func, fopt);
+            if (func_indx >= 0) {
+               painters.splice(func_indx, 1);
+               update_painters.push(funcpainter);
+             }
+         } else {
+            // use arrays index while index is important
+            this.newfuncs[n] = func;
+            this.newopts[n] = fopt;
+         }
+      }
+
+      // stat painter has to be kept even when no object exists in the list
+      if (isObject(statpainter)) {
+         const indx = painters.indexOf(statpainter);
+         if (indx >= 0) painters.splice(indx, 1);
+      }
+
+      // remove all function which are not found in new list of functions
+      if (painters.length > 0)
+         pp?.cleanPrimitives(p => painters.indexOf(p) >= 0);
+
+      if (update_painters.length > 0)
+         this._extraPainters = update_painters;
+   }
+
+   /** @summary Draw/update functions selected before */
+   drawNext(indx) {
+      if (this._extraPainters) {
+         const p = this._extraPainters.shift();
+         if (this._extraPainters.length === 0)
+            delete this._extraPainters;
+         return getPromise(p.redraw()).then(() => this.drawNext(0));
+      }
+
+      if (!this.newfuncs || (indx >= this.newfuncs.length)) {
+         delete this.newfuncs;
+         delete this.newopts;
+         return Promise.resolve(this.painter); // simplify drawing
+      }
+
+      const func = this.newfuncs[indx], fopt = this.newopts[indx];
+
+      if (!func || this.pp?.findPainterFor(func))
+         return this.drawNext(indx+1);
+
+      const func_secondary_id = func?.fName ? `func_${func.fName}` : `indx_${indx}`;
+
+      // Required to correctly draw multiple stats boxes
+      // TODO: set reference via weak pointer
+      func.$main_painter = this.painter;
+
+      const promise = TPavePainter.canDraw(func)
+            ? TPavePainter.draw(this.painter.getDom(), func, fopt)
+            : this.pp.drawObject(this.painter.getDom(), func, fopt);
+
+      return promise.then(fpainter => {
+         fpainter.setSecondaryId(this.painter, func_secondary_id);
+
+         return this.drawNext(indx+1);
+      });
+   }
+
+} // class FunctionsHandler
+
 
 // TH1 bits
 //    kNoStats = BIT(9), don't draw stats box
@@ -820,25 +955,9 @@ class THistPainter extends ObjectPainter {
          }
       }
 
-      this.createAttFill({ attr: histo, color: this.options.histoFillColor, kind: 1 });
+      this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
 
       this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
-   }
-
-   /** @summary Assign snapid for histo painter
-     * @desc Used to assign snapid also for functions painters */
-   setSnapId(snapid) {
-      this.snapid = snapid;
-
-      this.getPadPainter().forEachPainterInPad(objp => {
-         if (objp.isSecondaryPainter(this)) {
-            const obj = objp.getObject();
-            if (obj?.fName)
-               objp.snapid = `${snapid}#func_${obj.fName}`;
-            else if (objp.child_painter_indx !== undefined)
-               objp.snapid = `${snapid}#indx_${objp.child_painter_indx}`;
-         }
-       }, 'objects');
    }
 
    /** @summary Update axes attributes in target histogram
@@ -877,9 +996,8 @@ class THistPainter extends ObjectPainter {
    /** @summary Update histogram object
      * @param obj - new histogram instance
      * @param opt - new drawing option (optional)
-     * @param is_online - if update from online canvas, need to redraw functions
      * @return {Boolean} - true if histogram was successfully updated */
-   updateObject(obj, opt, is_online) {
+   updateObject(obj, opt) {
       const histo = this.getHisto(),
             fp = this.getFramePainter(),
             pp = this.getPadPainter();
@@ -948,66 +1066,8 @@ class THistPainter extends ObjectPainter {
          } else if (this.isTH2Poly())
             histo.fBins = obj.fBins;
 
-
-         if (this.options.Func) {
-            const painters = [], newfuncs = [], update_painters = [];
-
-            // find painters associated with histogram
-            if (pp) {
-               pp.forEachPainterInPad(objp => {
-                  if (objp.isSecondaryPainter(this))
-                     painters.push(objp);
-               }, 'objects');
-            }
-
-            if (obj.fFunctions) {
-               for (let n = 0; n < obj.fFunctions.arr.length; ++n) {
-                  const func = obj.fFunctions.arr[n],
-                        fopt = obj.fFunctions.opt[n];
-                  if (!func?._typename || !this.needDrawFunc(histo, func)) continue;
-
-                  let funcpainter = null, func_indx = -1;
-
-                  // try to find matching object in associated list of painters
-                  for (let i = 0; i < painters.length; ++i) {
-                     if (painters[i].matchObjectType(func._typename) && (painters[i].getObject().fName === func.fName)) {
-                        funcpainter = painters[i];
-                        func_indx = i;
-                        break;
-                     }
-                  }
-                  // or just in generic list of painted objects
-                  if (!funcpainter && func.fName)
-                     funcpainter = pp?.findPainterFor(null, func.fName, func._typename);
-
-                  if (funcpainter) {
-                     funcpainter.updateObject(func, fopt);
-                     if (func_indx >= 0) {
-                        painters.splice(func_indx, 1);
-                        update_painters.push(funcpainter);
-                      }
-                  } else
-                     newfuncs.push(func);
-               }
-            }
-
-            // stat painter has to be kept even when no object exists in the list
-            if (statpainter) {
-               const indx = painters.indexOf(statpainter);
-               if (indx >= 0) painters.splice(indx, 1);
-            }
-
-            // remove all function which are not found in new list of primitives
-            if (pp && (painters.length > 0))
-               pp.cleanPrimitives(p => painters.indexOf(p) >= 0);
-
-            // plot new objects on the same pad with next redraw
-            if (newfuncs.length > 0)
-               this._extraFunctions = newfuncs;
-
-            if (is_online && (update_painters.length > 0))
-               this._extraPainters = update_painters;
-         }
+         // remove old functions, update existing, prepare to draw new one
+         this._funcHandler = new FunctionsHandler(this, pp, obj.fFunctions, statpainter);
 
          const changed_opt = (histo.fOption !== obj.fOption);
          histo.fOption = obj.fOption;
@@ -1186,17 +1246,10 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Fill option object used in TWebCanvas */
    fillWebObjectOptions(res) {
-      if (!res) {
-         if (!this.snapid || !this._auto_exec) return null;
-         res = { _typename: 'TWebObjectOptions', snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: '', fopt: [] };
-      }
-
       if (this._auto_exec) {
          res.fcust = 'auto_exec:' + this._auto_exec;
          delete this._auto_exec;
       }
-
-      return res;
    }
 
    /** @summary Toggle histogram title drawing */
@@ -1214,7 +1267,7 @@ class THistPainter extends ObjectPainter {
      * @return {Promise} with painter */
    async drawHistTitle() {
       // case when histogram drawn over other histogram (same option)
-      if (!this.isMainPainter() || this.options.Same || this.options.Axis > 0)
+      if (!this.isMainPainter() || this.options.Same || (this.options.Axis > 0 && !this.options.ForceTitle))
          return this;
 
       const histo = this.getHisto(), st = gStyle,
@@ -1230,13 +1283,13 @@ class THistPainter extends ObjectPainter {
          pt.Clear();
          if (draw_title) pt.AddText(histo.fTitle);
          if (tpainter) return tpainter.redraw().then(() => this);
-      } else if (draw_title && !tpainter && histo.fTitle && !this.options.PadTitle) {
+      } else if (draw_title && !tpainter && histo.fTitle) {
          pt = create(clTPaveText);
          Object.assign(pt, { fName: 'title', fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
                              fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: st.fTitleAlign });
          pt.AddText(histo.fTitle);
          return TPavePainter.draw(this.getDom(), pt, 'postitle').then(tp => {
-            if (tp) tp.$secondary = true;
+            tp?.setSecondaryId(this);
             return this;
          });
       }
@@ -1273,12 +1326,8 @@ class THistPainter extends ObjectPainter {
       if (statpainter && !statpainter.snapid) statpainter.redraw();
    }
 
-   /** @summary Find stats box
-     * @desc either in list of functions or as object of correspondent painter */
-   findStat(check_in_pad) {
-      if (this.options.PadStats || check_in_pad)
-         return this.getPadPainter()?.findPainterFor(null, 'stats', clTPaveStats)?.getObject();
-
+   /** @summary Find stats box in list of functions */
+   findStat() {
       return this.findFunction(clTPaveStats, 'stats');
    }
 
@@ -1338,8 +1387,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Create stat box for histogram if required */
    createStat(force) {
       const histo = this.getHisto();
-
-      if (this.options.PadStats || !histo) return null;
+      if (!histo) return null;
 
       if (!force && !this.options.ForceStat) {
          if (this.options.NoStat || histo.TestBit(kNoStats) || !settings.AutoStat) return null;
@@ -1376,9 +1424,6 @@ class THistPainter extends ObjectPainter {
          fX1NDC: st.fStatX - st.fStatW, fY1NDC: st.fStatY - st.fStatH, fX2NDC: st.fStatX, fY2NDC: st.fStatY,
          fTextAlign: 12
       });
-
-      if (histo._typename.match(/^TProfile/) || histo._typename.match(/^TH2/))
-         stats.fY1NDC = 0.67;
 
       stats.AddText(histo.fName);
 
@@ -1429,56 +1474,19 @@ class THistPainter extends ObjectPainter {
        return func._typename !== clTPaletteAxis;
    }
 
-   /** @summary Method draws next function from the functions list
+   /** @summary Method draws functions from the histogram list of functions
      * @return {Promise} fulfilled when drawing is ready */
-   async drawNextFunction(indx, only_extra) {
-      const histo = this.getHisto();
-      let func = null, opt = '';
+   async drawFunctions() {
+      const handler = new FunctionsHandler(this, this.getPadPainter(), this.getHisto().fFunctions, true);
+      return handler.drawNext(0); // returns this painter
+   }
 
-      if (only_extra) {
-         if (this._extraPainters) {
-             const p = this._extraPainters.shift();
-             if (this._extraPainters.length === 0)
-                delete this._extraPainters;
-             return getPromise(p.redraw()).then(() => this.drawNextFunction(indx, only_extra));
-         }
-         if (this._extraFunctions && (indx < this._extraFunctions.length))
-            func = this._extraFunctions[indx];
-         else
-            delete this._extraFunctions;
-      } else {
-         if (this.options.Func && histo.fFunctions && (indx < histo.fFunctions.arr.length)) {
-            func = histo.fFunctions.arr[indx];
-            opt = histo.fFunctions.opt[indx];
-         }
-      }
-
-      if (!func) return true;
-
-      const pp = this.getPadPainter(),
-            func_painter = pp?.findPainterFor(func);
-      let do_draw = false;
-
-      // no need to do something if painter for object was already done
-      // object will be redraw automatically
-      if (!func_painter)
-         do_draw = this.needDrawFunc(histo, func);
-
-      if (!do_draw)
-         return this.drawNextFunction(indx+1, only_extra);
-
-      const promise = TPavePainter.canDraw(func)
-            ? TPavePainter.draw(this.getDom(), func, opt)
-            : pp.drawObject(this.getDom(), func, opt);
-
-      return promise.then(painter => {
-         if (isFunc(painter?.setSecondaryId)) {
-            painter.setSecondaryId(this);
-            if (!only_extra) painter.child_painter_indx = indx;
-         }
-
-         return this.drawNextFunction(indx+1, only_extra);
-      });
+   /** @summary Method used to update functions which are prepared before
+     * @return {Promise} fulfilled when drawing is ready */
+   async updateFunctions() {
+      const res = this._funcHandler?.drawNext(0) ?? this;
+      delete this._funcHandler;
+      return res;
    }
 
    /** @summary Returns selected index for specified axis
@@ -1683,7 +1691,7 @@ class THistPainter extends ObjectPainter {
 
          menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
+         menu.addchk(fp?.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
             if (!fp.enable_highlight && fp.mode3d && isFunc(fp.highlightBin3D))
                fp.highlightBin3D(null);
@@ -1811,20 +1819,23 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Create contour object for histogram */
    createContour(nlevels, zmin, zmax, zminpositive, custom_levels) {
-      const cntr = new HistContour(zmin, zmax);
+      const cntr = new HistContour(zmin, zmax),
+            ndim = this.getDimension();
 
       if (custom_levels)
          cntr.createCustom(custom_levels);
       else {
          if (nlevels < 2) nlevels = gStyle.fNumberContours;
-         const pad = this.getPadPainter().getRootPad(true);
-         cntr.createNormal(nlevels, pad?.fLogz ?? 0, zminpositive);
+         const pad = this.getPadPainter().getRootPad(true),
+               logv = pad?.fLogv ?? ((ndim === 2) && pad?.fLogz);
+
+         cntr.createNormal(nlevels, logv ?? 0, zminpositive);
       }
 
       cntr.configIndicies(this.options.Zero ? -1 : 0, (cntr.colzmin !== 0) || !this.options.Zero || this.isTH2Poly() ? 0 : -1);
 
       const fp = this.getFramePainter();
-      if (fp && (this.getDimension() < 3) && !fp.mode3d) {
+      if (fp && (ndim < 3) && !fp.mode3d) {
          fp.zmin = cntr.colzmin;
          fp.zmax = cntr.colzmax;
       }
@@ -1951,6 +1962,7 @@ class THistPainter extends ObjectPainter {
 
       let pal = this.findFunction(clTPaletteAxis),
           pal_painter = pp?.findPainterFor(pal);
+
       const found_in_func = !!pal;
 
       if (this._can_move_colz) {
@@ -1978,28 +1990,27 @@ class THistPainter extends ObjectPainter {
       }
 
       if (!pal) {
-         if (this.options.PadPalette)
-            return null;
-
          pal = create(clTPaletteAxis);
 
          pal.fInit = 1;
          pal.$can_move = true;
+         pal.$generated = true;
 
          if (!this.options.Zvert)
             Object.assign(pal, { fX1NDC: gStyle.fPadLeftMargin, fX2NDC: 1 - gStyle.fPadRightMargin, fY1NDC: 1.005 - gStyle.fPadTopMargin, fY2NDC: 1.045 - gStyle.fPadTopMargin });
          else
             Object.assign(pal, { fX1NDC: 1.005 - gStyle.fPadRightMargin, fX2NDC: 1.045 - gStyle.fPadRightMargin, fY1NDC: gStyle.fPadBottomMargin, fY2NDC: 1 - gStyle.fPadTopMargin });
 
-         const zaxis = this.getHisto().fZaxis;
+         Object.assign(pal.fAxis, { fChopt: '+', fLineSyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11 });
 
-         Object.assign(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize,
-                                    fTitleOffset: zaxis.fTitleOffset, fTitleColor: zaxis.fTitleColor,
-                                    fChopt: '+',
-                                    fLineColor: zaxis.fAxisColor, fLineSyle: 1, fLineWidth: 1,
-                                    fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11,
-                                    fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont,
-                                    fLabelOffset: zaxis.fLabelOffset });
+         if (this.getDimension() === 2) {
+            const zaxis = this.getHisto().fZaxis;
+            Object.assign(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize,
+                                       fTitleOffset: zaxis.fTitleOffset, fTitleColor: zaxis.fTitleColor,
+                                       fLineColor: zaxis.fAxisColor, fTextSize: zaxis.fLabelSize,
+                                       fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont,
+                                       fLabelOffset: zaxis.fLabelOffset });
+         }
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.addFunction(pal, true);
@@ -2061,10 +2072,7 @@ class THistPainter extends ObjectPainter {
          pr = TPavePainter.draw(this.getDom(), pal, arg).then(_palp => {
             pal_painter = _palp;
             this.selectCurrentPad(prev);
-            if (found_in_func) {
-               pal_painter._hist_painter = this;
-               pal_painter.setSecondaryId(this);
-            }
+            pal_painter.setSecondaryId(this, found_in_func && !pal.$generated ? `func_${pal.fName}` : undefined);
          });
       } else {
          pal_painter.Enabled = true;
@@ -2075,7 +2083,6 @@ class THistPainter extends ObjectPainter {
 
       return pr.then(() => {
          // mark painter as secondary - not in list of TCanvas primitives
-         pal_painter.$secondary = true;
          this.options.Zvert = pal_painter._palette_vertical;
 
          // make dummy redraw, palette will be updated only from histogram painter
@@ -2180,6 +2187,24 @@ class THistPainter extends ObjectPainter {
                j2: (hdim === 1) ? 1 : (args.nozoom ? this.nbinsy : this.getSelectIndex('y', 'right', 1 + args.extra)),
                min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
             };
+
+      if (args.cutg) {
+         // if using cutg - define rectengular region
+         let i1 = res.i2, i2 = res.i1, j1 = res.j2, j2 = res.j1;
+         for (let ii = res.i1; ii < res.i2; ++ii) {
+            for (let jj = res.j1; jj < res.j2; ++jj) {
+               if (args.cutg.IsInside(xaxis.GetBinCoord(ii + args.middle), yaxis.GetBinCoord(jj + args.middle))) {
+                  i1 = Math.min(i1, ii);
+                  i2 = Math.max(i2, ii+1);
+                  j1 = Math.min(j1, jj);
+                  j2 = Math.max(j2, jj+1);
+               }
+            }
+         }
+
+         res.i1 = i1; res.i2 = i2; res.j1 = j1; res.j2 = j2;
+      }
+
       let i, j, x, y, binz, binarea;
 
       res.grx = new Float32Array(res.i2+1);
@@ -2337,7 +2362,9 @@ class THistPainter extends ObjectPainter {
          painter.createStat(); // only when required
 
          return painter.callDrawFunc();
-      }).then(() => painter.drawNextFunction(0)).then(() => {
+      }).then(() => {
+         return painter.drawFunctions();
+      }).then(() => {
          if (!painter.Mode3D && painter.options.AutoZoom)
             return painter.autoZoom();
       }).then(() => {
@@ -2351,4 +2378,4 @@ class THistPainter extends ObjectPainter {
 
 } // class THistPainter
 
-export { THistPainter, kNoZoom, HistContour, kCARTESIAN, kPOLAR, kCYLINDRICAL, kSPHERICAL, kRAPIDITY };
+export { THistPainter, FunctionsHandler, kNoZoom, HistContour, kCARTESIAN, kPOLAR, kCYLINDRICAL, kSPHERICAL, kRAPIDITY };

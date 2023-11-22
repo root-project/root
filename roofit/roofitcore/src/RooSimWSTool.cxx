@@ -121,7 +121,6 @@ namespace {
 
 class SimWSIFace : public RooFactoryWSTool::IFace {
 public:
-  ~SimWSIFace() override {} ;
   std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
 } ;
 
@@ -129,7 +128,7 @@ static Int_t init();
 
 Int_t dummy = init() ;
 
-static Int_t init()
+Int_t init()
 {
   static SimWSIFace iface{};
   RooFactoryWSTool::registerSpecial("SIMCLONE",&iface);
@@ -424,7 +423,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     masterSplitCat = masterSplitCatOwner.get();
     cleanupList.addOwned(std::move(masterSplitCatOwner));
   } else {
-    masterSplitCat = (RooAbsCategoryLValue*) splitCatSetFund.first() ;
+    masterSplitCat = static_cast<RooAbsCategoryLValue*>(splitCatSetFund.first()) ;
   }
   if (verbose) {
     oocoutI(nullptr, ObjectHandling) << "RooSimWSTool::executeBuild: list of splitting categories " << splitCatSet << endl ;
@@ -487,7 +486,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
      RooAbsArg* splitLeaf = _ws->fundArg(splitLeafName) ;
      if (!splitLeaf) {
        // If not create it now
-       splitLeaf = (RooAbsArg*) splitIter->first->clone(splitLeafName.c_str());
+       splitLeaf = static_cast<RooAbsArg*>(splitIter->first->clone(splitLeafName.c_str()));
        _ws->import(*splitLeaf,RooFit::Silence(!verbose)) ;
      }
      fracLeafList.add(*splitLeaf) ;
@@ -536,7 +535,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     fitCat = fitCatOwner.get();
     cleanupList.addOwned(std::move(fitCatOwner));
   } else {
-    fitCat = (RooAbsCategoryLValue*) fitCatList.first() ;
+    fitCat = static_cast<RooAbsCategoryLValue*>(fitCatList.first()) ;
   }
 
   // Create master PDF
@@ -595,14 +594,14 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     }
 
     // Customizer PDF for current state and add to master simPdf
-    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat->getCurrentLabel(),false) ;
+    RooAbsPdf* fcPdf = static_cast<RooAbsPdf*>(physCustomizer->build(masterSplitCat->getCurrentLabel(),false)) ;
     simPdf->addPdf(*fcPdf,fcStateName.c_str()) ;
   }
 
   _ws->import(*simPdf,obc._conflProtocol,RooFit::Silence(!verbose)) ;
 
   // Delete customizers
-  return (RooSimultaneous*) _ws->pdf(simPdf->GetName()) ;
+  return static_cast<RooSimultaneous*>(_ws->pdf(simPdf->GetName())) ;
 }
 
 

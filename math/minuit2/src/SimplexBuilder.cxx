@@ -25,7 +25,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
                                         const MnStrategy &, unsigned int maxfcn, double minedm) const
 {
    // find the minimum using the Simplex method of Nelder and Mead (does not use function gradient)
-   // method to find initial simplex is slightly different than in the orginal Fortran
+   // method to find initial simplex is slightly different than in the original Fortran
    // Minuit since has not been proofed that one to be better
 
    // synchronize print levels
@@ -108,7 +108,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
       //       std::cout << " i = " << i << " x = " << simplex(i).second << " fval(x) = " << simplex(i).first <<
       //       std::endl;
 
-      // trace the iterations (need to create a MinimunState although errors and gradient are not existing)
+      // trace the iterations (need to create a MinimumState although errors and gradient are not existing)
       if (TraceIter())
          TraceIteration(niterations, MinimumState(MinimumParameters(simplex(jl).second, simplex(jl).first),
                                                   simplex.Edm(), mfcn.NumOfCalls()));

@@ -30,11 +30,7 @@ namespace RooStats {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SequentialProposal::SequentialProposal(double divisor) :
-    ProposalFunction(),
-    fDivisor(1./divisor)
-{
-}
+SequentialProposal::SequentialProposal(double divisor) : fDivisor(1. / divisor) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Populate xPrime with a new proposed point
@@ -42,7 +38,7 @@ SequentialProposal::SequentialProposal(double divisor) :
 void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
 {
    RooStats::SetParameters(&x, &xPrime);
-   int n = xPrime.getSize();
+   int n = xPrime.size();
    int j = int( floor(RooRandom::uniform()*n) );
    int i = 0;
    for (auto *var : static_range_cast<RooRealVar *>(xPrime)) {

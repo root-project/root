@@ -22,7 +22,7 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <algorithm>
 #include <chrono>

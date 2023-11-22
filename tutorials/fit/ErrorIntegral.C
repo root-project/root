@@ -45,7 +45,7 @@
 #include "TH1D.h"
 #include "TFitResult.h"
 #include "TMath.h"
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <cmath>
 

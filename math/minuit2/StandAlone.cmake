@@ -1,12 +1,6 @@
-cmake_minimum_required(VERSION 3.1)
-
-# Tested with and supporting policies up to the following CMake version. 
-# Not using ... syntax due to parser bug in MSVC's built-in CMake server mode.
-if(${CMAKE_VERSION} VERSION_LESS 3.12)
-    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
-else()
-    cmake_policy(VERSION 3.12)
-endif()
+# Use the minimum C++ standard of ROOT by default
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "")
+set(CMAKE_CXX_EXTENSIONS OFF FALSE CACHE BOOL "")
 
 include(FeatureSummary)
 include(CMakeDependentOption)
@@ -25,13 +19,29 @@ if(minuit2_standalone)
     message(STATUS "Copying in files from ROOT sources to make a redistributable source package. You should clean out the new files with make purge or the appropriate git clean command when you are done.")
 endif()
 
+# Similar to cmake/modules/SetROOTVersion.cmake
+function(SET_ROOT_VERSION_FROM_FILE)
+  file(READ ${VERSION_FILE} versionstr)
+  string(REGEX MATCH "#define ROOT_VERSION_MAJOR ([0-9]*)" _ ${versionstr})
+  set(ROOT_MAJOR_VERSION ${CMAKE_MATCH_1})
+  string(REGEX MATCH "#define ROOT_VERSION_MINOR ([0-9]*)" _ ${versionstr})
+  set(ROOT_MINOR_VERSION ${CMAKE_MATCH_1})
+  string(REGEX MATCH "#define ROOT_VERSION_PATCH ([0-9]*)" _ ${versionstr})
+  set(ROOT_PATCH_VERSION ${CMAKE_MATCH_1})
+
+  set(ROOT_MAJOR_VERSION "${ROOT_MAJOR_VERSION}" PARENT_SCOPE)
+  set(ROOT_MINOR_VERSION "${ROOT_MINOR_VERSION}" PARENT_SCOPE)
+  set(ROOT_PATCH_VERSION "${ROOT_PATCH_VERSION}" PARENT_SCOPE)
+
+  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}" PARENT_SCOPE)
+endfunction()
 
 # This file adds copy_standalone
 include(copy_standalone.cmake)
 
 # Copy these files in if needed
 copy_standalone(SOURCE ../.. DESTINATION . OUTPUT VERSION_FILE
-                FILES ROOTConfig-version.cmake)
+                FILES core/foundation/inc/ROOT/RVersion.hxx)
 
 copy_standalone(SOURCE ../.. DESTINATION .
                 FILES LGPL2_1.txt)
@@ -39,13 +49,14 @@ copy_standalone(SOURCE ../.. DESTINATION .
 copy_standalone(SOURCE ../.. DESTINATION . OUTPUT LICENSE_FILE
                 FILES LICENSE)
 
-include(${VERSION_FILE})
-string(REGEX REPLACE "([0-9]+[.][0-9]+)[/]([0-9]+)" "\\1.\\2" versionstr ${PACKAGE_VERSION})
+SET_ROOT_VERSION_FROM_FILE()
+
+# Take the version number over from ROOT
+set(MINUIT2_VERSION ${ROOT_VERSION})
 
 project(Minuit2
-    VERSION ${versionstr}
+    VERSION ${MINUIT2_VERSION}
     LANGUAGES CXX)
-
 
 # Inherit default from parent project if not main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -126,7 +137,7 @@ export(PACKAGE Minuit2)
 # Only add tests and docs if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
-    
+
     # Make adding tests cleaner using this macro
     macro(add_minuit2_test TESTNAME)
         add_executable(${TESTNAME} ${ARGN})
@@ -207,4 +218,3 @@ set(CPACK_SOURCE_IGNORE_FILES
     /Pipfile.*$
 )
 include(CPack)
-

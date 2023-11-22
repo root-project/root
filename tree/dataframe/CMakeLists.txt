@@ -164,7 +164,7 @@ endif()
 if(builtin_nlohmannjson)
   target_include_directories(ROOTDataFrame PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
 else()
-  target_link_libraries(ROOTDataFrame PUBLIC nlohmann_json::nlohmann_json)
+  target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

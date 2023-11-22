@@ -40,7 +40,6 @@ public:
     RooAbsPdf(name, title),
     _func("inputFunction", "Function to be converted into a PDF", this, inputFunction),
     _selfNormalized{selfNormalized} { }
-  ~RooWrapperPdf() override {};
 
   RooWrapperPdf(const RooWrapperPdf& other, const char *name = nullptr) :
     RooAbsPdf(other, name),

@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Riostream.h"
 #include "TH1K.h"

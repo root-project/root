@@ -36,12 +36,13 @@ public:
      kSVG = 2,         ///< list of SVG primitives
      kSubPad = 3,      ///< subpad
      kColors = 4,      ///< list of ROOT colors + palette
-     kStyle = 5        ///< gStyle object
+     kStyle = 5,       ///< gStyle object
+     kFont = 6         ///< custom web font
    };
 
    ~TWebSnapshot() override;
 
-   void SetObjectIDAsPtr(void *ptr);
+   void SetObjectIDAsPtr(void *ptr, const std::string &suffix = "");
    void SetObjectID(const std::string &id) { fObjectID = id; }
    const char* GetObjectID() const { return fObjectID.c_str(); }
 
@@ -87,7 +88,7 @@ public:
 
    bool IsBatchMode() const { return fBatchMode; }
 
-   TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
+   TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "", const std::string &suffix = "");
 
    TPadWebSnapshot &NewSubPad();
 

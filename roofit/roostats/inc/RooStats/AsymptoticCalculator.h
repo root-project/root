@@ -34,9 +34,6 @@ namespace RooStats {
          bool nominalAsimov = false
          );
 
-      ~AsymptoticCalculator() override {
-      }
-
       /// initialize the calculator by performing a global fit and make the Asimov data set
       bool Initialize() const;
 

@@ -19,7 +19,7 @@
 \class RooVectorDataStore
 \ingroup Roofitcore
 
-RooVectorDataStore uses std::vectors to store data columns. Each of these vectors
+Uses `std::vector` to store data columns. Each of these vectors
 is associated to an instance of a RooAbsReal, whose values it represents. Those
 RooAbsReal are the observables of the dataset.
 In addition to the observables, a data column can be bound to a different instance
@@ -40,7 +40,7 @@ which returns spans pointing directly to the data.
 #include "RooCategory.h"
 #include "RooHistError.h"
 #include "RooTrace.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include "Math/Util.h"
 #include "ROOT/StringUtils.hxx"
@@ -58,7 +58,7 @@ ClassImp(RooVectorDataStore::RealFullVector);
 
 RooVectorDataStore::RooVectorDataStore()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -75,7 +75,7 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
   }
 
   setAllBuffersNative() ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -150,20 +150,20 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
   _currentWeightIndex(other._currentWeightIndex)
 {
   for (const auto realVec : other._realStoreList) {
-    _realStoreList.push_back(new RealVector(*realVec, (RooAbsReal*)_varsww.find(realVec->_nativeReal->GetName()))) ;
+    _realStoreList.push_back(new RealVector(*realVec, static_cast<RooAbsReal*>(_varsww.find(realVec->_nativeReal->GetName())))) ;
   }
 
   for (const auto realFullVec : other._realfStoreList) {
-    _realfStoreList.push_back(new RealFullVector(*realFullVec, (RooAbsReal*)_varsww.find(realFullVec->_nativeReal->GetName()))) ;
+    _realfStoreList.push_back(new RealFullVector(*realFullVec, static_cast<RooAbsReal*>(_varsww.find(realFullVec->_nativeReal->GetName())))) ;
   }
 
   for (const auto catVec : other._catStoreList) {
-    _catStoreList.push_back(new CatVector(*catVec, (RooAbsCategory*)_varsww.find(catVec->_cat->GetName()))) ;
+    _catStoreList.push_back(new CatVector(*catVec, static_cast<RooAbsCategory*>(_varsww.find(catVec->_cat->GetName())))) ;
  }
 
   setAllBuffersNative() ;
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -187,7 +187,7 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
     _varsww.assign(other._varsww) ;
     fill() ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 
 }
 
@@ -219,7 +219,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
 
   auto forwardIter = other._realfStoreList.begin() ;
   for (; forwardIter!=other._realfStoreList.end() ; ++forwardIter) {
-    RooAbsReal* real = (RooAbsReal*) vars.find((*forwardIter)->bufArg()->GetName()) ;
+    RooAbsReal* real = static_cast<RooAbsReal*>(vars.find((*forwardIter)->bufArg()->GetName())) ;
     if (real) {
       // Clone vector
       _realfStoreList.push_back(new RealFullVector(**forwardIter,real)) ;
@@ -230,7 +230,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
 
   vector<CatVector*>::const_iterator citer = other._catStoreList.begin() ;
   for (; citer!=other._catStoreList.end() ; ++citer) {
-    RooAbsCategory* cat = (RooAbsCategory*) vars.find((*citer)->bufArg()->GetName()) ;
+    RooAbsCategory* cat = static_cast<RooAbsCategory*>(vars.find((*citer)->bufArg()->GetName())) ;
     if (cat) {
       // Clone vector
       _catStoreList.push_back(new CatVector(**citer,cat)) ;
@@ -241,7 +241,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
 
   setAllBuffersNative() ;
 
-  TRACE_CREATE
+  TRACE_CREATE;
 
 }
 
@@ -289,7 +289,7 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
 
   loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -315,7 +315,7 @@ RooVectorDataStore::~RooVectorDataStore()
   }
 
   delete _cache ;
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -646,10 +646,10 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, bool /*adjustRange*/
   CatVector* cv(nullptr) ;
   assert(numEvt != 0);
   if (dynamic_cast<RooAbsReal*>(valHolder)) {
-    rv = addReal((RooAbsReal*)valHolder);
+    rv = addReal(static_cast<RooAbsReal*>(valHolder));
     rv->resize(numEvt) ;
-  } else if (dynamic_cast<RooAbsCategory*>((RooAbsCategory*)valHolder)) {
-    cv = addCategory((RooAbsCategory*)valHolder) ;
+  } else if (dynamic_cast<RooAbsCategory*>(static_cast<RooAbsCategory*>(valHolder))) {
+    cv = addCategory(static_cast<RooAbsCategory*>(valHolder)) ;
     cv->resize(numEvt) ;
   }
 
@@ -822,7 +822,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     cloneSet.add(*newVarClone) ;
   }
 
-  _cacheOwner = (RooAbsArg*) owner ;
+  _cacheOwner = const_cast<RooAbsArg *>(owner);
   RooVectorDataStore* newCache = new RooVectorDataStore("cache","cache",orderedArgs) ;
 
 
@@ -845,7 +845,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 //       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << endl ;
 
       RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
-      normSet = (RooArgSet*) anset.selectCommon(*argObs) ;
+      normSet = static_cast<RooArgSet*>(anset.selectCommon(*argObs)) ;
 
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;
@@ -890,7 +890,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
     // Activate change tracking mode, if requested
     if (!arg->getAttribute("ConstantExpression") && dynamic_cast<RooAbsReal*>(arg)) {
-      RealVector* rv = newCache->addReal((RooAbsReal*)arg) ;
+      RealVector* rv = newCache->addReal(static_cast<RooAbsReal*>(arg)) ;
       RooArgSet deps;
       arg->getParameters(&_vars, deps);
       rv->setDependents(deps) ;
@@ -1002,7 +1002,7 @@ void RooVectorDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet&
     }
   }
 
-  _cacheOwner = (RooAbsArg*) newOwner ;
+  _cacheOwner = const_cast<RooAbsArg*>(newOwner);
 }
 
 
@@ -1147,7 +1147,7 @@ RooAbsData::RealSpans RooVectorDataStore::getBatches(std::size_t first, std::siz
     if (realVec->_real) {
       // If a buffer is attached, i.e. we are ready to load into a RooAbsReal outside of our dataset,
       // we can directly map our spans to this real.
-      evalData.emplace(realVec->_real, std::move(span));
+      evalData.emplace(realVec->_real, span);
     }
   };
 

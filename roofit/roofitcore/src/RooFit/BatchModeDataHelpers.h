@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -16,7 +18,7 @@
 #include <RooFit/Detail/DataMap.h>
 
 #include <ROOT/RSpan.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <functional>
 #include <map>
@@ -45,3 +47,5 @@ determineOutputSizes(RooAbsArg const &topNode,
 } // namespace RooFit
 
 #endif
+
+/// \endcond

@@ -9,7 +9,7 @@
 #include <string>
 
 // ROOT
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "TString.h"
 
 

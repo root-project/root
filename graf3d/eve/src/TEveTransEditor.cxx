@@ -30,16 +30,16 @@ ClassImp(TEveTransSubEditor);
 
 TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    TGVerticalFrame (p),
-   fTrans          (0),
-   fTopHorFrame    (0),
-   fUseTrans       (0),
-   fEditTrans      (0),
-   fEditTransFrame (0),
-   fPos            (0),
-   fRot            (0),
-   fScale          (0),
-   fAutoUpdate     (0),
-   fUpdate         (0)
+   fTrans          (nullptr),
+   fTopHorFrame    (nullptr),
+   fUseTrans       (nullptr),
+   fEditTrans      (nullptr),
+   fEditTransFrame (nullptr),
+   fPos            (nullptr),
+   fRot            (nullptr),
+   fScale          (nullptr),
+   fAutoUpdate     (nullptr),
+   fUpdate         (nullptr)
 {
    // --- Top controls
 
@@ -229,8 +229,8 @@ ClassImp(TEveTransEditor);
 TEveTransEditor::TEveTransEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM (0),
-   fSE(0)
+   fM (nullptr),
+   fSE(nullptr)
 {
    MakeTitle("TEveTrans");
 

@@ -30,8 +30,8 @@ private:
    void Init(const TGWindow *parent);
    void CreateFrames();
 
-   TGLEmbeddedViewer(const TGLEmbeddedViewer&); // Not implemented
-   TGLEmbeddedViewer& operator=(const TGLEmbeddedViewer&); // Not implemented
+   TGLEmbeddedViewer(const TGLEmbeddedViewer&) = delete;
+   TGLEmbeddedViewer& operator=(const TGLEmbeddedViewer&) = delete;
 
 public:
    TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad = nullptr, Int_t border=2);

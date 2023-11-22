@@ -17,7 +17,7 @@
 \class RooEffGenContext
 \ingroup Roofitcore
 
-RooEffGenContext is a specialized generator context for p.d.fs represented
+Specialized generator context for p.d.fs represented
 by class RooEffProd, which are p.d.fs multiplied with an efficiency function.
 This generator context generates events from such products by first
 generating events from a dedicated generator context of the input p.d.f.
@@ -45,16 +45,8 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf,
    RooArgSet x(eff, eff.GetName());
    x.snapshot(_cloneSet, true);
    _eff = dynamic_cast<RooAbsReal *>(_cloneSet.find(eff.GetName()));
-   _generator = pdf.genContext(vars, prototype, auxProto, verbose);
+   _generator = std::unique_ptr<RooAbsGenContext>{pdf.genContext(vars, prototype, auxProto, verbose)};
    vars.snapshot(_vars, true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooEffGenContext::~RooEffGenContext()
-{
-   delete _generator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

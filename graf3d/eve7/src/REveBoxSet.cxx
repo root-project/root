@@ -221,7 +221,7 @@ void REveBoxSet::ComputeBBox()
 {
    static const REveException eH("REveBoxSet::ComputeBBox ");
 
-   if (fFrame != 0)
+   if (fFrame != nullptr)
    {
       BBoxInit();
       Int_t    n    = fFrame->GetFrameSize() / 3;

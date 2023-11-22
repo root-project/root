@@ -92,6 +92,7 @@ set(py2_py3_sources
   ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_pyz_utils.py
   ROOT/_pythonization/_rvec.py
+  ROOT/_pythonization/_runtime_error.py
   ROOT/_pythonization/_stl_vector.py
   ROOT/_pythonization/_tarray.py
   ROOT/_pythonization/_tclass.py

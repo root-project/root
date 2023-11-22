@@ -126,11 +126,11 @@ class THStackPainter extends ObjectPainter {
       }
 
       const adjustRange = () => {
-         if (pad && (this.options.ndim === 1 ? pad.fLogy : pad.fLogz)) {
+         if (pad && (pad.fLogv ?? (this.options.ndim === 1 ? pad.fLogy : pad.fLogz))) {
             if (max <= 0) max = 1;
             if (min <= 0) min = 1e-4*max;
             const kmin = 1/(1 + 0.5*Math.log10(max / min)),
-                kmax = 1 + 0.2*Math.log10(max / min);
+                  kmax = 1 + 0.2*Math.log10(max / min);
             min *= kmin;
             max *= kmax;
          } else if ((min > 0) && (min < 0.05*max))
@@ -163,6 +163,16 @@ class THStackPainter extends ObjectPainter {
       return { min, max, min0, max0, zoomed, hopt: `hmin:${min0};hmax:${max0};minimum:${min};maximum:${max}` };
    }
 
+   /** @summary Provide draw options for the histogram */
+   getHistDrawOption(hist, opt) {
+      let hopt = opt || hist.fOption || this.options.hopt;
+      if (hopt.toUpperCase().indexOf(this.options.hopt) < 0)
+         hopt += ' ' + this.options.hopt;
+      if (this.options.draw_errors && !hopt)
+         hopt = 'E';
+      return hopt;
+   }
+
    /** @summary Draw next stack histogram */
    async drawNextHisto(indx, pad_painter) {
       const stack = this.getObject(),
@@ -173,14 +183,10 @@ class THStackPainter extends ObjectPainter {
          return this;
 
       const rindx = this.options.horder ? indx : nhists-indx-1,
-            hist = hlst.arr[rindx];
-      let hopt = hlst.opt[rindx] || hist.fOption || this.options.hopt,
-          exec = '';
-
-      if (hopt.toUpperCase().indexOf(this.options.hopt) < 0)
-         hopt += ' ' + this.options.hopt;
-      if (this.options.draw_errors && !hopt)
-         hopt = 'E';
+            subid = this.options.nostack ? `hists_${rindx}` : `stack_${rindx}`,
+            hist = hlst.arr[rindx],
+            hopt = this.getHistDrawOption(hist, hlst.opt[rindx]);
+      let exec = '';
 
       if (this.options._pfc || this.options._plc || this.options._pmc) {
          const mp = this.getMainPainter();
@@ -202,6 +208,7 @@ class THStackPainter extends ObjectPainter {
 
          return this.hdraw_func(subpad_painter.getDom(), hist, hopt).then(subp => {
             if (subp) {
+               subp.setSecondaryId(this, subid);
                subp._auto_exec = exec;
                this.painters.push(subp);
             }
@@ -216,6 +223,7 @@ class THStackPainter extends ObjectPainter {
          hist.$baseh = hlst.arr[rindx - 1];
 
       return this.hdraw_func(this.getDom(), hist, hopt + ' same nostat').then(subp => {
+          subp.setSecondaryId(this, subid);
           this.painters.push(subp);
           return this.drawNextHisto(indx+1, pad_painter);
       });
@@ -248,7 +256,7 @@ class THStackPainter extends ObjectPainter {
             this.options.has_errors = this.options.has_errors || hasErrors(stack.fHists.arr[k]);
       }
 
-      this.options.nhist = stack.fHists ? stack.fHists.arr.length : 1;
+      this.options.nhist = stack.fHists?.arr?.length ?? 1;
 
       const d = new DrawOptions(opt);
 
@@ -357,7 +365,7 @@ class THStackPainter extends ObjectPainter {
 
       // and now update histograms
       const hlst = this.options.nostack ? stack.fHists : stack.fStack,
-          nhists = hlst?.arr?.length ?? 0;
+            nhists = hlst?.arr?.length ?? 0;
 
       if (nhists !== this.painters.length) {
          this.getPadPainter()?.cleanPrimitives(objp => this.painters.indexOf(objp) >= 0);
@@ -366,9 +374,8 @@ class THStackPainter extends ObjectPainter {
       } else {
          for (let indx = 0; indx < nhists; ++indx) {
             const rindx = this.options.horder ? indx : nhists - indx - 1,
-                  hist = hlst.arr[rindx],
-                  hopt = hlst.opt[rindx];
-            this.painters[indx].updateObject(hist, hopt || hist.fOption || this.options.hopt);
+                  hist = hlst.arr[rindx];
+            this.painters[indx].updateObject(hist, this.getHistDrawOption(hist, hlst.opt[rindx]));
          }
       }
 
@@ -382,6 +389,22 @@ class THStackPainter extends ObjectPainter {
          delete this.did_update;
          return this.drawNextHisto(0, this.options.pads ? this.getPadPainter() : null);
       }
+   }
+
+   /** @summary Fill hstack context menu */
+   fillContextMenuItems(menu) {
+      menu.addchk(this.options.draw_errors, 'Draw errors', flag => {
+         this.options.draw_errors = flag;
+         const stack = this.getObject(),
+               hlst = this.options.nostack ? stack.fHists : stack.fStack,
+               nhists = hlst?.arr?.length ?? 0;
+         for (let indx = 0; indx < nhists; ++indx) {
+            const rindx = this.options.horder ? indx : nhists - indx - 1,
+                  hist = hlst.arr[rindx];
+            this.painters[indx].decodeOptions(this.getHistDrawOption(hist, hlst.opt[rindx]));
+         }
+         this.redrawPad();
+      }, 'Change draw erros in the stack');
    }
 
    /** @summary draw THStack object */
@@ -400,7 +423,7 @@ class THStackPainter extends ObjectPainter {
          if (painter.options.pads) {
             pad_painter = painter.getPadPainter();
             if (pad_painter.doingDraw() && pad_painter.pad?.fPrimitives &&
-                pad_painter.pad.fPrimitives.arr.length > 1 && (pad_painter.pad.fPrimitives.arr.indexOf(stack) === 0)) {
+                (pad_painter.pad.fPrimitives.arr.length > 1) && (pad_painter.pad.fPrimitives.arr.indexOf(stack) === 0)) {
                skip_drawing = true;
                console.log('special case with THStack with is already rendered - do nothing');
                return;
@@ -426,8 +449,7 @@ class THStackPainter extends ObjectPainter {
          return painter.hdraw_func(dom, stack.fHistogram, hopt).then(subp => {
             painter.addToPadPrimitives();
             painter.firstpainter = subp;
-            subp.$secondary = 'hist'; // mark histogram painter as secondary
-            if (!no_histogram) painter.$primary = true; // mark stack as provider for histogram
+            subp.setSecondaryId(painter, 'hist'); // mark hist painter as created by hstack
          });
       }).then(() => skip_drawing ? painter : painter.drawNextHisto(0, pad_painter));
    }

@@ -4,7 +4,7 @@
 #include <TFile.h>
 
 #include <TMVA/RTensor.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cmath>
 #include <vector>

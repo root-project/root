@@ -39,11 +39,11 @@ ClassImp(RooProfileLL);
 /// Default constructor
 /// Should only be used by proof.
 
- RooProfileLL::RooProfileLL() :
-   RooAbsReal("RooProfileLL","RooProfileLL"),
-   _nll(),
-   _obs("paramOfInterest","Parameters of interest",this),
-   _par("nuisanceParam","Nuisance parameters",this,false,false)
+RooProfileLL::RooProfileLL()
+   : RooAbsReal("RooProfileLL", "RooProfileLL"),
+
+     _obs("paramOfInterest", "Parameters of interest", this),
+     _par("nuisanceParam", "Nuisance parameters", this, false, false)
 {
 }
 
@@ -71,16 +71,13 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
-  RooAbsReal(other,name),
-  _nll("nll",this,other._nll),
-  _obs("obs",this,other._obs),
-  _par("par",this,other._par),
-  _startFromMin(other._startFromMin),
-  _absMinValid(false),
-  _absMin(0),
-  _paramFixed(other._paramFixed),
-  _neval(0)
+RooProfileLL::RooProfileLL(const RooProfileLL &other, const char *name)
+   : RooAbsReal(other, name),
+     _nll("nll", this, other._nll),
+     _obs("obs", this, other._obs),
+     _par("par", this, other._par),
+     _startFromMin(other._startFromMin),
+     _paramFixed(other._paramFixed)
 {
   _paramAbsMin.addClone(other._paramAbsMin) ;
   _obsAbsMin.addClone(other._obsAbsMin) ;
@@ -219,10 +216,10 @@ void RooProfileLL::validateAbsMin() const
     _obs.snapshot(obsStart, false) ;
 
     // Start from previous global minimum
-    if (_paramAbsMin.getSize()>0) {
+    if (!_paramAbsMin.empty()) {
       const_cast<RooSetProxy&>(_par).assignValueOnly(_paramAbsMin) ;
     }
-    if (_obsAbsMin.getSize()>0) {
+    if (!_obsAbsMin.empty()) {
       const_cast<RooSetProxy&>(_obs).assignValueOnly(_obsAbsMin) ;
     }
 
@@ -273,7 +270,7 @@ void RooProfileLL::validateAbsMin() const
 bool RooProfileLL::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll,
                                        bool nameChange, bool isRecursive)
 {
-  _minimizer.reset(nullptr);
+  _minimizer.reset();
   return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 

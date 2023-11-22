@@ -42,14 +42,14 @@ using namespace std;
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context) : _context(context)
 {
    // Examine parameter list
-   _floatParamList.reset((RooArgList *)paramList.selectByAttrib("Constant", false));
-   if (_floatParamList->getSize() > 1) {
+   _floatParamList.reset(static_cast<RooArgList *>(paramList.selectByAttrib("Constant", false)));
+   if (_floatParamList->size() > 1) {
       _floatParamList->sort();
    }
    _floatParamList->setName("floatParamList");
 
-   _constParamList.reset((RooArgList *)paramList.selectByAttrib("Constant", true));
-   if (_constParamList->getSize() > 1) {
+   _constParamList.reset(static_cast<RooArgList *>(paramList.selectByAttrib("Constant", true)));
+   if (_constParamList->size() > 1) {
       _constParamList->sort();
    }
    _constParamList->setName("constParamList");
@@ -66,7 +66,7 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
       }
    }
 
-   _nDim = _floatParamList->getSize();
+   _nDim = _floatParamList->size();
 
    // Save snapshot of initial lists
    _initFloatParamList = std::make_unique<RooArgList>();
@@ -94,10 +94,8 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
    bool constValChange(false);
    bool constStatChange(false);
 
-   int index(0);
-
    // Handle eventual migrations from constParamList -> floatParamList
-   for (index = 0; index < _constParamList->getSize(); index++) {
+   for (std::size_t index = 0; index < _constParamList->size(); index++) {
 
       RooRealVar *par = dynamic_cast<RooRealVar *>(_constParamList->at(index));
       if (!par)
@@ -140,7 +138,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
 
    // Synchronize MINUIT with function state
    // Handle floatParamList
-   for (index = 0; index < _floatParamList->getSize(); index++) {
+   for (std::size_t index = 0; index < _floatParamList->size(); index++) {
       RooRealVar *par = dynamic_cast<RooRealVar *>(_floatParamList->at(index));
 
       if (!par)
@@ -206,7 +204,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       }
 
       // new parameter
-      if (index >= int(parameters.size())) {
+      if (index >= parameters.size()) {
 
          if (par->hasMin() && par->hasMax()) {
             parameters.emplace_back(par->GetName(), par->getVal(), pstep, pmin, pmax);
@@ -312,7 +310,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       optimizeConstantTerms(constStatChange, constValChange);
    }
 
-   return 0;
+   return false;
 }
 
 bool RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
@@ -371,14 +369,14 @@ bool RooAbsMinimizerFcn::SetLogFile(const char *inLogfile)
       oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setLogFile: closing previous log file" << endl;
       _logfile->close();
       delete _logfile;
-      _logfile = 0;
+      _logfile = nullptr;
    }
    _logfile = new ofstream(inLogfile);
    if (!_logfile->good()) {
       oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setLogFile: cannot open file " << inLogfile << endl;
       _logfile->close();
       delete _logfile;
-      _logfile = 0;
+      _logfile = nullptr;
    }
 
    return false;
@@ -510,7 +508,7 @@ std::vector<double> RooAbsMinimizerFcn::getParameterValues() const
    values.reserve(_nDim);
 
    for (std::size_t index = 0; index < _nDim; ++index) {
-      RooRealVar *par = (RooRealVar *)_floatParamList->at(index);
+      RooRealVar *par = static_cast<RooRealVar *>(_floatParamList->at(index));
       values.push_back(par->getVal());
    }
 

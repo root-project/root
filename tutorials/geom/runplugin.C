@@ -21,7 +21,7 @@
 
 #include "iterplugin.cxx"
 
-iterplugin *plugin = 0;
+iterplugin *plugin = nullptr;
 
 void runplugin()
 {

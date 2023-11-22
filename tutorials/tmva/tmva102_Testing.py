@@ -33,12 +33,12 @@ y_pred = bdt.Compute(x)
 
 # Compute ROC using sklearn
 from sklearn.metrics import roc_curve, auc
-fpr, tpr, _ = roc_curve(y_true, y_pred, sample_weight=w)
-score = auc(fpr, tpr)
+false_positive_rate, true_positive_rate, _ = roc_curve(y_true, y_pred, sample_weight=w)
+score = auc(false_positive_rate, true_positive_rate)
 
 # Plot ROC
 c = ROOT.TCanvas("roc", "", 600, 600)
-g = ROOT.TGraph(len(fpr), fpr, tpr)
+g = ROOT.TGraph(len(false_positive_rate), false_positive_rate, true_positive_rate)
 g.SetTitle("AUC = {:.2f}".format(score))
 g.SetLineWidth(3)
 g.SetLineColor(ROOT.kRed)

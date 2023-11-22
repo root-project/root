@@ -263,7 +263,7 @@ TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
    fPTBAtt.SetMarkerStyle(4);
    fPTBAtt.SetMarkerSize(0.8);
 
-   if (fMagFieldObj == 0) {
+   if (fMagFieldObj == nullptr) {
       fMagFieldObj = new TEveMagFieldConst(0., 0., fgDefMagField);
       fOwnMagFiledObj = kTRUE;
    }
@@ -1449,7 +1449,7 @@ void TEveTrackPropagator::StepRungeKutta(Double_t step,
        return;
     }
 
-  } while(1);
+  } while(true);
 
   // angle too big, use helix
 

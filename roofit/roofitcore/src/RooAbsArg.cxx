@@ -18,7 +18,7 @@
 /**  \class RooAbsArg
      \ingroup Roofitcore
 
-RooAbsArg is the common abstract base class for objects that
+Common abstract base class for objects that
 represent a value and a "shape" in RooFit. Values or shapes usually depend on values
 or shapes of other RooAbsArg instances. Connecting several RooAbsArg in
 a computation graph models an expression tree that can be evaluated.
@@ -76,6 +76,7 @@ for single nodes.
 #include <RooConstVar.h>
 #include <RooExpensiveObjectCache.h>
 #include <RooHelpers.h>
+#include "RooFitImplHelpers.h"
 #include <RooListProxy.h>
 #include <RooMsgService.h>
 #include <RooRealIntegral.h>
@@ -110,10 +111,7 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsArg::RooAbsArg()
-{
-  _namePtr = RooNameReg::instance().constPtr(GetName()) ;
-}
+RooAbsArg::RooAbsArg() : _namePtr(RooNameReg::instance().constPtr(GetName())) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object with the specified name and descriptive title.
@@ -2311,9 +2309,9 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 void RooAbsArg::attachToStore(RooAbsDataStore& store)
 {
   if (dynamic_cast<RooTreeDataStore*>(&store)) {
-    attachToTree(((RooTreeDataStore&)store).tree()) ;
+    attachToTree((static_cast<RooTreeDataStore&>(store)).tree()) ;
   } else if (dynamic_cast<RooVectorDataStore*>(&store)) {
-    attachToVStore((RooVectorDataStore&)store) ;
+    attachToVStore(static_cast<RooVectorDataStore&>(store)) ;
   }
 }
 

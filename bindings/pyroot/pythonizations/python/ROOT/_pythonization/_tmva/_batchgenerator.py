@@ -205,13 +205,15 @@ class BaseGenerator:
         # cling via cppyy) and the I/O thread.
         EnableThreadSafety()
 
+        expanded_filter = " && ".join(["(" + fltr + ")" for fltr in filters])
+
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
             tree_name,
             file_name,
             chunk_size,
             batch_size,
             self.given_columns,
-            filters,
+            expanded_filter,
             max_vec_sizes_list,
             vec_padding,
             validation_split,

@@ -41,7 +41,7 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const char* n, const char* t) :
    TNamed(n, t),
    TEveProjectable(),
 
-   fData(0),
+   fData(nullptr),
    fCellIdCacheOK(kFALSE),
 
    fEtaMin(-10),
@@ -63,7 +63,7 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const char* n, const char* t) :
    fMaxValAbs(100),
 
    fValueIsColor(kFALSE),
-   fPalette(0)
+   fPalette(nullptr)
 {
    // Constructor.
 
@@ -377,7 +377,7 @@ Float_t TEveCaloViz::GetValToHeight() const
 
 TEveRGBAPalette* TEveCaloViz::AssertPalette()
 {
-   if (fPalette == 0) {
+   if (fPalette == nullptr) {
       fPalette = new TEveRGBAPalette;
       fPalette->SetDefaultColor((Color_t)4);
 
@@ -493,7 +493,7 @@ ClassImp(TEveCalo2D);
 /// Constructor.
 
 TEveCalo2D::TEveCalo2D(const char* n, const char* t):
-   TEveCaloViz(0, n, t),
+   TEveCaloViz(nullptr, n, t),
    TEveProjected(),
    fOldProjectionType(TEveProjection::kPT_Unknown),
    fMaxESumBin( 0),
@@ -568,7 +568,7 @@ void TEveCalo2D::BuildCellIdCache()
       }
    }
    fCellLists.clear();
-   fCellLists.push_back(0);
+   fCellLists.push_back(nullptr);
 
    TEveProjection::EPType_e pt = fManager->GetProjection()->GetType();
    TEveCaloData::vCellId_t* clv; // ids per phi bin in r-phi projection else ids per eta bins in rho-z projection
@@ -584,14 +584,14 @@ void TEveCalo2D::BuildCellIdCache()
       min = GetPhiMin() - fData->GetEps();
       max = GetPhiMax() + fData->GetEps();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
-         clv = 0;
+         clv = nullptr;
          if ( TEveUtil::IsU1IntervalOverlappingByMinMax
               (min, max, axis->GetBinLowEdge(ibin), axis->GetBinUpEdge(ibin)))
          {
             clv = new TEveCaloData::vCellId_t();
             fData->GetCellList(GetEta(), GetEtaRng(), axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), *clv);
-            if (!clv->size()) {
-               delete clv; clv = 0;
+            if (clv->empty()) {
+               delete clv; clv = nullptr;
             }
          }
          fCellLists.push_back(clv);
@@ -602,15 +602,15 @@ void TEveCalo2D::BuildCellIdCache()
       min = GetEtaMin() - fData->GetEps();
       max = GetEtaMax() + fData->GetEps();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
-         clv = 0;
+         clv = nullptr;
          Float_t low = axis->GetBinLowEdge(ibin);
          Float_t up = axis->GetBinUpEdge(ibin) ;
          if (low >= min && up <= max)
          {
             clv = new TEveCaloData::vCellId_t();
             fData->GetCellList(axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), fPhi, GetPhiRng(), *clv);
-            if (!clv->size()) {
-               delete clv; clv = 0;
+            if (clv->empty()) {
+               delete clv; clv = nullptr;
             }
          }
          fCellLists.push_back(clv);
@@ -676,7 +676,7 @@ void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& inputCell
    UInt_t nBins = axis->GetNbins();
    outputCellLists.resize(nBins+1);
    for (UInt_t b = 0; b <= nBins; ++b)
-      outputCellLists[b] = 0;
+      outputCellLists[b] = nullptr;
 
    for(UInt_t bin = 1; bin <= nBins; ++bin)
    {

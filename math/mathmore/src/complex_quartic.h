@@ -27,7 +27,7 @@
  *  x^4 + a x^3 + b x^2 + c x + d = 0
  */
 
-#include <math.h>
+#include <cmath>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_complex.h>
 #include <gsl/gsl_complex_math.h>

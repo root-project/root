@@ -489,9 +489,9 @@ void TLatex::Copy(TObject &obj) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Analyse function.
 
-TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t length)
+TLatex::TLatexFormSize TLatex::Anal1(const TextSpec_t &spec, const Char_t *t, Int_t length)
 {
-   return Analyse(0,0,spec,t,length);
+   return Analyse(0, 0, spec, t, length);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +521,7 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 ///  - `t` : chain to be analyzed
 ///  - `length` : number of chars in t.
 
-TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t, Int_t length)
+TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t, Int_t length)
 {
    const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
                 "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varomega","omega","xi","psi","zeta",
@@ -1373,108 +1373,123 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          fs1 = Readfs();
          Analyse(x,y,spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
          Double_t sub = GetHeight()*spec.fSize/14;
-         Double_t x1 , y1 , x2, y2, x3, x4;
          switch(opAbove) {
-         case 0: // bar
-            Double_t ypos  ;
-            ypos = y-fs1.Over()-sub ;//-GetHeight()*spec.fSize/4. ;
-            DrawLine(x,ypos,x+fs1.Width(),ypos,spec);
+         case 0: { // bar
+            Double_t xx[2], yy[2];
+            xx[0] = x; xx[1] = x + fs1.Width();
+            yy[0] = yy[1] = y - sub - fs1.Over();
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
-         case 1: // vec
-            Double_t y0 ;
-            y0 = y-sub-fs1.Over() ;
-            y1 = y0-GetHeight()*spec.fSize/8 ;
-            x1 = x+fs1.Width() ;
-            DrawLine(x,y1,x1,y1,spec);
-            DrawLine(x1,y1,x1-GetHeight()*spec.fSize/4,y0-GetHeight()*spec.fSize/4,spec);
-            DrawLine(x1,y1,x1-GetHeight()*spec.fSize/4,y0,spec);
+         }
+         case 1: { // vec
+            Double_t xx[3], yy[3],
+                     dd = GetHeight()*spec.fSize/8, // arrow size
+                     midy = y - sub - fs1.Over() - dd; // middle arrow line
+            xx[0] = x; xx[1] = x + fs1.Width();
+            yy[0] = yy[1] = midy;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
+            xx[1] = x + fs1.Width(); xx[0] = xx[2] = xx[1] - 2*dd;
+            yy[0] = midy - dd; yy[1] = midy; yy[2] = midy + dd;
+            DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
-         case 2: // dot
-            x1 = x+fs1.Width()/2-3*sub/4 ;
-            x2 = x+fs1.Width()/2+3*sub/4 ;
-            y1 = y-sub-fs1.Over() ;
-            DrawLine(x1,y1,x2,y1,spec);
+         }
+         case 2: { // dot
+            Double_t dd = TMath::Max(0.5*GetLineWidth(), 0.5*sub), // dot size
+                     midx = x + fs1.Width()/2,
+                     midy = y - sub - fs1.Over() - dd;
+            Double_t xx[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
+                     yy[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
+            DrawPolyLine(5, xx, yy, spec, 10.);
             break;
-         case 3: // hat
-            x2 = x+fs1.Width()/2 ;
-            y1 = y -9*sub;
-            y2 = y1-2*sub;
-            x1 = x2-fs1.Width()/3 ;
-            x3 = x2+fs1.Width()/3 ;
-            DrawLine(x1,y1,x2,y2,spec);
-            DrawLine(x2,y2,x3,y1,spec);
+         }
+         case 3: { // hat
+            Double_t xx[3], yy[3];
+            xx[1] = x + fs1.Width()/2;
+            xx[0] = xx[1] - fs1.Width()/3;
+            xx[2] = xx[1] + fs1.Width()/3;
+            yy[0] = y - sub - fs1.Over();
+            yy[1] = yy[0] - 2*sub;
+            yy[2] = yy[0];
+            DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
-         case 4: // ddot
-            x1 = x+fs1.Width()/2-9*sub/4 ;
-            x2 = x+fs1.Width()/2-3*sub/4 ;
-            x3 = x+fs1.Width()/2+9*sub/4 ;
-            x4 = x+fs1.Width()/2+3*sub/4 ;
-            y1 = y-sub-fs1.Over() ;
-            DrawLine(x1,y1,x2,y1,spec);
-            DrawLine(x3,y1,x4,y1,spec);
+         }
+         case 4: { // ddot
+            Double_t dd = TMath::Max(0.5*GetLineWidth(), 0.5*sub), // dot size
+                     midx = x + fs1.Width()/2 - 1.5*sub,
+                     midy = y - sub - fs1.Over() - dd;
+            Double_t xx1[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
+                     yy1[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
+            DrawPolyLine(5, xx1, yy1, spec, 10.);
+            midx = x + fs1.Width()/2 + 1.5*sub;
+            Double_t xx2[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
+                     yy2[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
+            DrawPolyLine(5, xx2, yy2, spec, 10.);
             break;
-         case 5: // acute
-            x1 = x+fs1.Width()/2;
-            y1 = y +sub -fs1.Over() ;
-            x2 = x1 +3*sub;
-            y2 = y1 -2.5*sub;
-            DrawLine(x1,y1,x2,y2,spec);
+         }
+         case 5: { // acute
+            Double_t xx[2], yy[2];
+            xx[0] = x + fs1.Width()/2; xx[1] = xx[0] + 3*sub;
+            yy[0] = y - sub - fs1.Over();
+            yy[1] = yy[0] - 2.5*sub;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
-         case 6: // grave
-            x1 = x+fs1.Width()/2-sub;
-            y1 = y-sub-fs1.Over() ;
-            x2 = x1 +2*sub;
-            y2 = y1 +2*sub;
-            DrawLine(x1,y1,x2,y2,spec);
+         }
+         case 6: { // grave
+            Double_t xx[2], yy[2];
+            xx[0] = x + fs1.Width()/2 + sub; xx[1] = xx[0] - 2*sub;
+            yy[0] = y - sub - fs1.Over();
+            yy[1] = yy[0] - 2*sub;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
-         case 7: // check
-            x1 = x+fs1.Width()/2 ;
-            x2 = x1 -2*sub ;
-            x3 = x1 +2*sub ;
-            y1 = y-sub-fs1.Over() ;
-            DrawLine(x2,y-3*sub-fs1.Over(),x1,y1,spec);
-            DrawLine(x3,y-3*sub-fs1.Over(),x1,y1,spec);
+         }
+         case 7: { // check
+            Double_t xx[3], yy[3];
+            xx[1] = x+fs1.Width()/2; xx[0] = xx[1] - 2*sub; xx[2] = xx[1] + 2*sub;
+            yy[1] = y - sub - fs1.Over();
+            yy[0] = yy[2] = yy[1] - 2*sub;
+            DrawPolyLine(3, xx, yy, spec, 0.03);
             break;
-         case 8: // tilde
-            x2 = x+fs1.Width()/2 ;
-            y2 = y -fs1.Over() ;
-            {
-               // tilde must be drawn separately on screen and on PostScript
-               // because an adjustment is required along Y for PostScript.
-               TVirtualPS *saveps = gVirtualPS;
-               if (gVirtualPS) gVirtualPS = nullptr;
-               Double_t y22 = y2;
-               if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
-               Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
-               Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-               Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-               Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-               Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
-               Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
-               TText tilde;
-               tilde.SetTextFont(fTextFont);
-               tilde.SetTextColor(spec.fColor);
-               tilde.SetTextSize(0.9*spec.fSize);
-               tilde.SetTextAlign(22);
-               tilde.SetTextAngle(fTextAngle);
-               tilde.PaintText(xx,yy,"~");
-               if (saveps) {
-                  gVirtualPS = saveps;
-                  if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;
-                  xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y22-yOrigin)*sinang+xOrigin));
-                  yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y22-yOrigin)*cosang+yOrigin));
-                  gVirtualPS->SetTextAlign(22);
-                  gVirtualPS->Text(xx, yy, "~");
-               }
+         }
+         case 8: { // tilde
+            Double_t x2 = x+fs1.Width()/2, y2 = y -fs1.Over();
+            // tilde must be drawn separately on screen and on PostScript
+            // because an adjustment is required along Y for PostScript.
+            TVirtualPS *saveps = gVirtualPS;
+            if (gVirtualPS) gVirtualPS = nullptr;
+            Double_t y22 = y2;
+            if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
+            Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
+            Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
+            Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+            Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+            Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
+            Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
+            TText tilde;
+            tilde.SetTextFont(fTextFont);
+            tilde.SetTextColor(spec.fColor);
+            tilde.SetTextSize(0.9*spec.fSize);
+            tilde.SetTextAlign(22);
+            tilde.SetTextAngle(fTextAngle);
+            tilde.PaintText(xx,yy,"~");
+            if (saveps) {
+               gVirtualPS = saveps;
+               if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;
+               xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y22-yOrigin)*sinang+xOrigin));
+               yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y22-yOrigin)*cosang+yOrigin));
+               gVirtualPS->SetTextAlign(22);
+               gVirtualPS->Text(xx, yy, "~");
             }
             break;
-         case 9: // slash
-            x1 = x + 0.8*fs1.Width();
-            y1 = y -fs1.Over() ;
-            x2 = x + 0.3*fs1.Width();
-            y2 = y1 + 1.2*fs1.Height();
-            DrawLine(x1,y1,x2,y2,spec);
+         }
+         case 9: { // slash
+            Double_t xx[2], yy[2];
+            xx[0] = x + 0.8*fs1.Width();
+            yy[0] = y - fs1.Over() - sub;
+            xx[1] = x + 0.3*fs1.Width();
+            yy[1] = yy[0] + fs1.Height() + 2*sub;
+            DrawPolyLine(2, xx, yy, spec, 0.03);
             break;
+         }
          }
       }
       Double_t div = 3;
@@ -1948,10 +1963,52 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
    return newtext;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a poly line in a Latex formula
+/// Is scale_width parameter >=1, fill area will be drawn
+/// Otherwise line width will be scaled proportional to current font size
+/// If not specified - default line width will be used
+void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width)
+{
+   if (!gPad) return ;
+   Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
+   Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
+   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   for (Int_t n = 0; n < npoints; ++n) {
+      Double_t mx  = gPad->AbsPixeltoX(Int_t((xx[n]-xOrigin)*cosang+(yy[n]-yOrigin)*sinang+xOrigin));
+      Double_t my  = gPad->AbsPixeltoY(Int_t((xx[n]-xOrigin)*-sinang+(yy[n]-yOrigin)*cosang+yOrigin));
+      xx[n] = mx;
+      yy[n] = my;
+   }
+
+   if (scale_width >= 1.) {
+      TAttFill fill(spec.fColor, 1001);
+      fill.Modify();
+      gPad->PaintFillArea(npoints, xx, yy, "f");
+      return;
+   }
+
+   auto prevWidth = GetLineWidth();
+   if (scale_width) {
+      Int_t lineWidth = TMath::Nint(GetHeight() * spec.fSize * scale_width);
+      SetLineWidth(lineWidth > prevWidth ? lineWidth : prevWidth);
+   }
+
+   SetLineColor(spec.fColor);
+   TAttLine::Modify();
+
+   gPad->PaintPolyLine(npoints, xx, yy);
+   if (scale_width)
+      SetLineWidth(prevWidth);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line in a Latex formula
 
-void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec)
+void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec)
 {
    if (!gPad) return ;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -1972,7 +2029,7 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSp
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
 
-void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
+void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec)
 {
    if (!gPad) return ;
    if (r < 1) r = 1;
@@ -2003,7 +2060,7 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
 
 void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
-                     Double_t  phimin, Double_t  phimax, TextSpec_t spec )
+                             Double_t  phimin, Double_t  phimax, const TextSpec_t &spec)
 {
    if (!gPad) return ;
    if (r1 < 1) r1 = 1;

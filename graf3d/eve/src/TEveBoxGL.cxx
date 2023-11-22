@@ -28,7 +28,7 @@ ClassImp(TEveBoxGL);
 /// Constructor.
 
 TEveBoxGL::TEveBoxGL() :
-   TGLObject(), fM(0)
+   TGLObject(), fM(nullptr)
 {
    // fDLCache = kFALSE; // Disable display list.
 }
@@ -235,7 +235,7 @@ ClassImp(TEveBoxProjectedGL);
 /// Constructor.
 
 TEveBoxProjectedGL::TEveBoxProjectedGL() :
-   TGLObject(), fM(0)
+   TGLObject(), fM(nullptr)
 {
    // fDLCache = kFALSE; // Disable display list.
 }

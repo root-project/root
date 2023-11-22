@@ -12,7 +12,7 @@
 #define ROOT_RDFUTILS
 
 #include "ROOT/RSpan.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "Rtypes.h"

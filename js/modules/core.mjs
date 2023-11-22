@@ -1,10 +1,10 @@
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.5.0',
+const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/10/2023',
+version_date = '21/11/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -250,6 +250,10 @@ settings = {
    IgnoreUrlOptions: false,
    /** @summary how many items shown on one level of hierarchy */
    HierarchyLimit: 250,
+   /** @summary default display kind for the hierarchy painter */
+   DislpayKind: 'simple',
+   /** @summary default left area width in browser layout */
+   BrowserWidth: 250,
    /** @summary custom format for all X values, when not specified {@link gStyle.fStatFormat} is used */
    XValuesFormat: undefined,
    /** @summary custom format for all Y values, when not specified {@link gStyle.fStatFormat} is used */
@@ -284,7 +288,9 @@ settings = {
    /** @summary Angle in degree for axis labels tilt when available space is not enough */
    AxisTiltAngle: 25,
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
-   StripAxisLabels: true
+   StripAxisLabels: true,
+   /** @summary Draw TF1 by default as curve or line */
+   FuncAsCurve: false
 },
 
 /** @namespace
@@ -1030,7 +1036,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
-      clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
+      clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
       kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
@@ -1615,6 +1621,54 @@ function getMethods(typename, obj) {
       };
    }
 
+   if (typename === clTPad || typename === clTCanvas) {
+      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01) {
+         if (!ny) {
+            const ndiv = nx;
+            if (ndiv < 2) return this;
+            nx = ny = Math.round(Math.sqrt(ndiv));
+            if (nx * ny < ndiv) nx += 1;
+         }
+         if (nx*ny < 2)
+            return 0;
+         this.fPrimitives.Clear();
+         const dy = 1/ny, dx = 1/nx;
+         let n = 0;
+         for (let iy = 0; iy < ny; iy++) {
+            const y2 = 1 - iy*dy - ymargin;
+            let y1 = y2 - dy + 2*ymargin;
+            if (y1 < 0) y1 = 0;
+            if (y1 > y2) continue;
+            for (let ix = 0; ix < nx; ix++) {
+               const x1 = ix*dx + xmargin,
+                     x2 = x1 + dx -2*xmargin;
+               if (x1 > x2) continue;
+               n++;
+               const pad = create(clTPad);
+               pad.fName = pad.fTitle = `${this.fName}_${n}`;
+               pad.fNumber = n;
+               if (this._typename !== clTCanvas) {
+                  pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
+                  pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
+                  pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+               } else {
+                  pad.fAbsWNDC = x2 - x1;
+                  pad.fAbsHNDC = y2 - y1;
+                  pad.fAbsXlowNDC = x1;
+                  pad.fAbsYlowNDC = y1;
+               }
+
+               this.fPrimitives.Add(pad);
+            }
+         }
+         return nx * ny;
+      };
+      m.GetPad = function(number) {
+         return this.fPrimitives.arr.find(elem => { return elem._typename === clTPad && elem.fNumber === number; });
+      };
+   }
+
    if (typename.indexOf(clTProfile) === 0) {
       if (typename === clTProfile3D) {
          m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); };
@@ -1810,7 +1864,7 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
          clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
-         clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2,
+         clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTF3,
          clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,

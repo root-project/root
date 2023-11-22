@@ -885,7 +885,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 /// The Voigt function is known to be the real part of Faddeeva function also
 /// called complex error function [2].
 ///
-/// The algoritm was developed by J. Humlicek [1].
+/// The algorithm was developed by J. Humlicek [1].
 /// This code is based on fortran code presented by R. J. Wells [2].
 /// Translated and adapted by Miha D. Puc
 ///
@@ -2773,7 +2773,7 @@ Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 
    Int_t itype;
    Int_t npt;
-   TMath::VavilovSet(kappa, beta2, 0, nullptr, ac, hc, itype, npt);
+   TMath::VavilovSet(kappa, beta2, false, nullptr, ac, hc, itype, npt);
    Double_t v =  TMath::VavilovDenEval(x, ac, hc, itype);
    delete [] ac;
    delete [] hc;
@@ -2808,7 +2808,7 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
    Int_t npt;
    Int_t k;
    Double_t xx, v;
-   TMath::VavilovSet(kappa, beta2, 1, wcm, ac, hc, itype, npt);
+   TMath::VavilovSet(kappa, beta2, true, wcm, ac, hc, itype, npt);
    if (x < ac[0]) v = 0;
    else if (x >=ac[8]) v = 1;
    else {

@@ -11,6 +11,8 @@
 #include "TWebPainting.h"
 
 #include "TColor.h"
+#include "TColorGradient.h"
+#include "TBufferJSON.h"
 
 /** \class TWebPainting
 \ingroup webgui6
@@ -178,8 +180,46 @@ void TWebPainting::AddColor(Int_t indx, TColor *col)
    if (!col) return;
 
    TString code;
+   if ((col->IsA() == TLinearGradient::Class()) || (col->IsA() == TRadialGradient::Class())) {
 
-   if (col->GetAlpha() == 1)
+      auto grad = dynamic_cast<TColorGradient *>(col);
+      auto linear = dynamic_cast<TLinearGradient *> (col);
+      auto radial = dynamic_cast<TRadialGradient *> (col);
+
+      std::vector<double> arr;
+
+      if (radial)
+         arr.emplace_back((int) radial->GetGradientType());
+      else if (linear)
+         arr.emplace_back(10);
+      else
+         arr.emplace_back(-1);
+      arr.emplace_back((int) grad->GetCoordinateMode());
+      arr.emplace_back((int) grad->GetNumberOfSteps());
+      for (unsigned n = 0; n < grad->GetNumberOfSteps(); ++n)
+         arr.emplace_back(grad->GetColorPositions()[n]);
+      for (unsigned n = 0; n < grad->GetNumberOfSteps()*4; ++n)
+         arr.emplace_back(grad->GetColors()[n]);
+
+      if (linear) {
+         arr.emplace_back(linear->GetStart().fX);
+         arr.emplace_back(linear->GetStart().fY);
+         arr.emplace_back(linear->GetEnd().fX);
+         arr.emplace_back(linear->GetEnd().fY);
+      } else if (radial) {
+         arr.emplace_back(radial->GetStart().fX);
+         arr.emplace_back(radial->GetStart().fY);
+         arr.emplace_back(radial->GetEnd().fX);
+         arr.emplace_back(radial->GetEnd().fY);
+         arr.emplace_back(radial->GetR1());
+         arr.emplace_back(radial->GetR2());
+      }
+
+      auto json = TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces);
+
+      code.Form("%d#%s", indx, json.Data());
+
+   } else if (col->GetAlpha() == 1)
       code.Form("%d:%d,%d,%d", indx, (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()));
    else
       code.Form("%d=%d,%d,%d,%5.3f", indx, (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()), col->GetAlpha());

@@ -29,7 +29,7 @@ TEST(Delaunay2D,interpolation_at_edges)
 
    // interpolate on horizontal edge between tr2 and tr3 (line P2-P4)
    //This was giving an error
-   // result should be linear interp betwen P4(x=750,z=250) and P2(x=1000,z=500)
+   // result should be linear interp between P4(x=750,z=250) and P2(x=1000,z=500)
    EXPECT_DOUBLE_EQ( d.Interpolate(760,500),  260.);
    EXPECT_DOUBLE_EQ( d.Interpolate(780,500),  280.);
    EXPECT_DOUBLE_EQ( d.Interpolate(800,500),  300.);
@@ -42,9 +42,9 @@ TEST(Delaunay2D,interpolation_at_edges)
    EXPECT_DOUBLE_EQ( d.Interpolate(750,490),  235);
 
    // interpolate now on diagonal edge (P1,P4)
-   EXPECT_DOUBLE_EQ( d.Interpolate(800,480),  220.);
-   EXPECT_DOUBLE_EQ( d.Interpolate(900,440),  160.);
-   EXPECT_DOUBLE_EQ( d.Interpolate(950,420),  130.);
+   EXPECT_DOUBLE_EQ( d.Interpolate(800,420),  180.);
+   EXPECT_DOUBLE_EQ( d.Interpolate(850,440),  260.);
+   EXPECT_DOUBLE_EQ( d.Interpolate(950,480),  420.);
 
    // interpolate on vertices
    EXPECT_DOUBLE_EQ( d.Interpolate(750,400),  z[0]);

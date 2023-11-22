@@ -35,31 +35,32 @@ Support for calculation in partitions is needed to allow multi-core
 parallelized calculation of test statistics.
 **/
 
+#include "RooAbsOptTestStatistic.h"
+
 #include "Riostream.h"
 #include "TClass.h"
 #include <cstring>
 
-
-#include "RooAbsOptTestStatistic.h"
-#include "RooMsgService.h"
-#include "RooAbsPdf.h"
 #include "RooAbsData.h"
-#include "RooDataHist.h"
-#include "RooArgSet.h"
-#include "RooRealVar.h"
-#include "RooErrorHandler.h"
-#include "RooGlobalFunc.h"
-#include "RooBinning.h"
 #include "RooAbsDataStore.h"
-#include "RooCategory.h"
-#include "RooDataSet.h"
-#include "RooProdPdf.h"
+#include "RooAbsPdf.h"
 #include "RooAddPdf.h"
+#include "RooArgSet.h"
+#include "RooBinSamplingPdf.h"
+#include "RooBinning.h"
+#include "RooCategory.h"
+#include "RooDataHist.h"
+#include "RooDataSet.h"
+#include "RooErrorHandler.h"
+#include "RooFitImplHelpers.h"
+#include "RooGlobalFunc.h"
+#include "RooMsgService.h"
+#include "RooProdPdf.h"
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
+#include "RooRealVar.h"
 #include "RooTrace.h"
 #include "RooVectorDataStore.h"
-#include "RooBinSamplingPdf.h"
 
 #include "ROOT/StringUtils.hxx"
 
@@ -228,7 +229,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
     //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
   } else {
-    _dataClone = (RooAbsData*) indata.Clone() ;
+    _dataClone = static_cast<RooAbsData*>(indata.Clone()) ;
   }
   _ownData = true ;
 
@@ -297,7 +298,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // *********************************************************************
 
   // Remove projected dependents from normalization set
-  if (projDeps.getSize()>0) {
+  if (!projDeps.empty()) {
 
     _projDeps = new RooArgSet;
     projDeps.snapshot(*_projDeps, false) ;
@@ -569,7 +570,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
         arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
-      RooArgSet* constNodes = (RooArgSet*) trackNodes.selectByAttrib("Constant",true) ;
+      RooArgSet* constNodes = static_cast<RooArgSet*>(trackNodes.selectByAttrib("Constant",true)) ;
       trackNodes.remove(*constNodes) ;
       delete constNodes ;
 
@@ -590,21 +591,21 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
       cacheArg->setOperMode(RooAbsArg::AClean) ;
     }
 
-    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpressionCached",true) ;
+    RooArgSet* constNodes = static_cast<RooArgSet*>(_cachedNodes.selectByAttrib("ConstantExpressionCached",true)) ;
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
-    if (constNodes->getSize()>0) {
-      if (constNodes->getSize()<20) {
+    if (!constNodes->empty()) {
+      if (constNodes->size()<20) {
         coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
       }
     }
-    if (actualTrackNodes.getSize()>0) {
-      if (actualTrackNodes.getSize()<20) {
+    if (!actualTrackNodes.empty()) {
+      if (actualTrackNodes.size()<20) {
         coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions will be evaluated in cache-and-track-mode." << endl ;
       }
     }
     delete constNodes ;

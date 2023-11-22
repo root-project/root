@@ -50,7 +50,7 @@ int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, 
          "method useful please consider citing https://arxiv.org/abs/1911.01303.\n";
 
    // Initialise matrix containing first derivatives
-   auto nFloatPars = rw->floatParsFinal().getSize();
+   int nFloatPars = rw->floatParsFinal().size();
    TMatrixDSym num(nFloatPars);
    for (int k = 0; k < nFloatPars; k++) {
       for (int l = 0; l < nFloatPars; l++) {
@@ -75,8 +75,8 @@ int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, 
       // Sets obs to current data point, this is where the pdf will be evaluated
       obs.assign(*data.get(j));
       // Determine first derivatives
-      std::vector<double> diffs(floated.getSize(), 0.0);
-      for (int k = 0; k < floated.getSize(); k++) {
+      std::vector<double> diffs(floated.size(), 0.0);
+      for (std::size_t k = 0; k < floated.size(); k++) {
          const auto paramresult = static_cast<RooRealVar *>(floated.at(k));
          auto paraminternal = static_cast<RooRealVar *>(floatingparams->find(*paramresult));
          // first derivative to parameter k at best estimate point for this measurement
@@ -87,8 +87,8 @@ int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, 
       }
       // Fill numerator matrix
       double prob = pdf.getVal(&obs);
-      for (int k = 0; k < floated.getSize(); k++) {
-         for (int l = 0; l < floated.getSize(); l++) {
+      for (std::size_t k = 0; k < floated.size(); k++) {
+         for (std::size_t l = 0; l < floated.size(); l++) {
             num(k, l) += data.weightSquared() * diffs[k] * diffs[l] / (prob * prob);
          }
       }
@@ -306,7 +306,7 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    minimizerConfig.offsetting = cfg.doOffset;
    RooMinimizer m(nll, minimizerConfig);
 
-   m.setMinimizerType(cfg.minType.c_str());
+   m.setMinimizerType(cfg.minType);
    m.setEvalErrorWall(cfg.doEEWall);
    m.setRecoverFromNaNStrength(cfg.recoverFromNaN);
    m.setPrintEvalErrors(cfg.numee);
@@ -317,9 +317,9 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    if (cfg.optConst)
       m.optimizeConst(cfg.optConst); // Activate constant term optimization
    if (cfg.verbose)
-      m.setVerbose(1); // Activate verbose options
+      m.setVerbose(true); // Activate verbose options
    if (cfg.doTimer)
-      m.setProfile(1); // Activate timer options
+      m.setProfile(true); // Activate timer options
    if (cfg.strategy != 1)
       m.setStrategy(cfg.strategy); // Modify fit strategy
    if (cfg.initHesse)

@@ -17,11 +17,12 @@
 //////////////////////////////////////////////////////////////////////////////
 /** \class RooAbsPdf
     \ingroup Roofitcore
+    \brief Abstract interface for all probability density functions.
 
 ## RooAbsPdf, the base class of all PDFs
 
-RooAbsPdf is the abstract interface for all probability density
-functions. The class provides hybrid analytical/numerical
+RooAbsPdf is the base class for all probability density
+functions (PDFs). The class provides hybrid analytical/numerical
 normalization for its implementations, error tracing, and a Monte Carlo
 generator interface.
 
@@ -147,7 +148,9 @@ called for each data event.
 #include "RooBinnedGenContext.h"
 #include "RooPlot.h"
 #include "RooCurve.h"
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
+#endif
 #include "RooCategory.h"
 #include "RooNameReg.h"
 #include "RooCmdConfig.h"
@@ -164,6 +167,7 @@ called for each data event.
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
 #include "RooNaNPacker.h"
+#include "RooFitImplHelpers.h"
 #include "RooHelpers.h"
 #include "RooFormulaVar.h"
 #include "RooDerivative.h"
@@ -300,16 +304,7 @@ TString RooAbsPdf::_normRangeOverride;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsPdf::RooAbsPdf() :_normMgr(this,10)
-{
-  _errorCount = 0 ;
-  _negCount = 0 ;
-  _rawValue = 0 ;
-  _selectComp = false ;
-  _traceCount = 0 ;
-}
-
-
+RooAbsPdf::RooAbsPdf() : _normMgr(this, 10) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title only
@@ -414,7 +409,7 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
 
   // Process change in last data set used
   bool nintChanged(false) ;
-  if (!isActiveNormSet(nset) || _norm==0) {
+  if (!isActiveNormSet(nset) || _norm==nullptr) {
     nintChanged = syncNormalization(nset) ;
   }
 
@@ -525,7 +520,7 @@ double RooAbsPdf::getNorm(const RooArgSet* nset) const
 const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* iset, const TNamed* rangeName) const
 {
   // Check normalization is already stored
-  CacheElem* cache = (CacheElem*) _normMgr.getObj(nset,iset,0,rangeName) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset,iset,nullptr,rangeName)) ;
   if (cache) {
     return cache->_norm ;
   }
@@ -566,7 +561,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   setActiveNormSet(nset);
 
   // Check if data sets are identical
-  CacheElem* cache = (CacheElem*) _normMgr.getObj(nset) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset)) ;
   if (cache) {
 
     bool nintChanged = (_norm!=cache->_norm) ;
@@ -581,7 +576,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
     // `syncNormalization()` is called.
     if (adjustProxies) {
       // Update dataset pointers of proxies
-      ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
+      const_cast<RooAbsPdf*>(this)->setProxyNormSet(nset) ;
     }
 
     return nintChanged ;
@@ -589,7 +584,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
 
   // Update dataset pointers of proxies
   if (adjustProxies) {
-    ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
+    const_cast<RooAbsPdf*>(this)->setProxyNormSet(nset) ;
   }
 
   RooArgSet depList;
@@ -611,7 +606,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
     auto nname = std::string(GetName()) + "_UnitNorm";
     _norm = new RooRealVar(nname.c_str(),ntitle.c_str(),1) ;
   } else {
-    const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
+    const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : nullptr)) ;
 
 //     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
     RooAbsReal* normInt;
@@ -634,7 +629,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
       RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
 
       if (!cacheParams.empty()) {
-   cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.getSize()
+   cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
           << "-dim value cache for integral over " << depList << " as a function of " << cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
    string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams.contentsString().c_str()) ;
    RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,cacheParams) ;
@@ -1039,11 +1034,11 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("optConst","Optimize",0,0) ;
   pc.defineInt("cloneData","CloneData", 0, 2);
-  pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
-  pc.defineSet("cPars","Constrain",0,0) ;
-  pc.defineSet("glObs","GlobalObservables",0,0) ;
+  pc.defineSet("projDepSet","ProjectedObservables",0,nullptr) ;
+  pc.defineSet("cPars","Constrain",0,nullptr) ;
+  pc.defineSet("glObs","GlobalObservables",0,nullptr) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
-  pc.defineSet("extCons","ExternalConstraints",0,0) ;
+  pc.defineSet("extCons","ExternalConstraints",0,nullptr) ;
   pc.defineInt("EvalBackend", "EvalBackend", 0, static_cast<int>(RooFit::EvalBackend::defaultValue()));
   pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
@@ -1059,7 +1054,7 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
   // Process and check varargs
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr ;
   }
 
   if (pc.getInt("ModularL")) {
@@ -1093,21 +1088,11 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
   }
 
   // Decode command line arguments
-  const char* rangeName = pc.getString("rangeName",0,true) ;
-  const char* addCoefRangeName = pc.getString("addCoefRange",0,true) ;
+  const char* rangeName = pc.getString("rangeName",nullptr,true) ;
+  const char* addCoefRangeName = pc.getString("addCoefRange",nullptr,true) ;
   const bool ext = this->interpretExtendedCmdArg(pc.getInt("ext")) ;
-  Int_t numcpu   = pc.getInt("numcpu") ;
-  Int_t numcpu_strategy = pc.getInt("interleave");
-  // strategy 3 works only for RooSimultaneous.
-  if (numcpu_strategy==3 && !this->InheritsFrom("RooSimultaneous") ) {
-     coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
-                            "falling back to default strategy = 0"  << endl;
-     numcpu_strategy = 0;
-  }
-  RooFit::MPSplit interl = (RooFit::MPSplit) numcpu_strategy;
 
   Int_t splitRange   = pc.getInt("splitRange") ;
-  bool verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t cloneData = pc.getInt("cloneData") ;
   auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
@@ -1161,7 +1146,7 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
             pc.getSet("cPars"), // Constrain RooCmdArg
             pc.getSet("extCons"), // ExternalConstraints RooCmdArg
             pc.getSet("glObs"), // GlobalObservables RooCmdArg
-            pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
+            pc.getString("globstag",nullptr,true), // GlobalObservablesTag RooCmdArg
             takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
             removeConstraintsFromPdf
     );
@@ -1238,12 +1223,26 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
     return nllWrapper;
   }
 
+  std::unique_ptr<RooAbsReal> nll ;
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+  bool verbose = pc.getInt("verbose") ;
+
+  Int_t numcpu   = pc.getInt("numcpu") ;
+  Int_t numcpu_strategy = pc.getInt("interleave");
+  // strategy 3 works only for RooSimultaneous.
+  if (numcpu_strategy==3 && !this->InheritsFrom("RooSimultaneous") ) {
+     coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
+                            "falling back to default strategy = 0"  << endl;
+     numcpu_strategy = 0;
+  }
+  RooFit::MPSplit interl = (RooFit::MPSplit) numcpu_strategy;
+
   auto binnedLInfo = RooHelpers::getBinnedL(*this);
   RooAbsPdf &actualPdf = binnedLInfo.binnedPdf ? *binnedLInfo.binnedPdf : *this;
 
   // Construct NLL
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  std::unique_ptr<RooAbsReal> nll ;
   RooAbsTestStatistic::Configuration cfg;
   cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
   cfg.nCPU = numcpu;
@@ -1291,6 +1290,9 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
   if (offset == RooFit::OffsetMode::Initial) {
     nll->enableOffsetting(true) ;
   }
+#else
+  throw std::runtime_error("RooFit was not built with the legacy evaluation backend");
+#endif
 
   return nll;
 }
@@ -1540,7 +1542,7 @@ void RooAbsPdf::printMultiline(ostream& os, Int_t contents, bool verbose, TStrin
 
 RooAbsGenContext* RooAbsPdf::binnedGenContext(const RooArgSet &vars, bool verbose) const
 {
-  return new RooBinnedGenContext(*this,vars,0,0,verbose) ;
+  return new RooBinnedGenContext(*this,vars,nullptr,nullptr,verbose) ;
 }
 
 
@@ -1560,15 +1562,15 @@ RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, const RooDataSet 
 RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooDataSet* prototype, const RooArgSet* auxProto,
                    bool verbose, bool autoBinned, const char* binnedTag) const
 {
-  if (prototype || (auxProto && auxProto->getSize()>0)) {
+  if (prototype || (auxProto && !auxProto->empty())) {
     return genContext(vars,prototype,auxProto,verbose);
   }
 
-  RooAbsGenContext *context(0) ;
+  RooAbsGenContext *context(nullptr) ;
   if ( (autoBinned && isBinnedDistribution(vars)) || ( binnedTag && strlen(binnedTag) && (getAttribute(binnedTag)||string(binnedTag)=="*"))) {
     context = binnedGenContext(vars,verbose) ;
   } else {
-    context= genContext(vars,0,0,verbose);
+    context= genContext(vars,nullptr,nullptr,verbose);
   }
   return context ;
 }
@@ -1636,7 +1638,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet& whatVars, con
 {
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::generate(" + std::string(GetName()) + ")");
-  pc.defineObject("proto","PrototypeData",0,0) ;
+  pc.defineObject("proto","PrototypeData",0,nullptr) ;
   pc.defineString("dsetName","Name",0,"") ;
   pc.defineInt("randProto","PrototypeData",0,0) ;
   pc.defineInt("resampleProto","PrototypeData",1,0) ;
@@ -1657,7 +1659,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet& whatVars, con
   }
 
   // Decode command line arguments
-  RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",0)) ;
+  RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",nullptr)) ;
   const char* dsetName = pc.getString("dsetName") ;
   bool verbose = pc.getInt("verbose") ;
   bool randProto = pc.getInt("randProto") ;
@@ -1728,7 +1730,7 @@ RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,
 
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::generate(" + std::string(GetName()) + ")");
-  pc.defineObject("proto","PrototypeData",0,0) ;
+  pc.defineObject("proto","PrototypeData",0,nullptr) ;
   pc.defineString("dsetName","Name",0,"") ;
   pc.defineInt("randProto","PrototypeData",0,0) ;
   pc.defineInt("resampleProto","PrototypeData",1,0) ;
@@ -1743,11 +1745,11 @@ RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,
   // Process and check varargs
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Decode command line arguments
-  RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",0)) ;
+  RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",nullptr)) ;
   const char* dsetName = pc.getString("dsetName") ;
   Int_t nEvents = pc.getInt("nEvents") ;
   bool verbose = pc.getInt("verbose") ;
@@ -1757,7 +1759,7 @@ RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,
   bool autoBinned = pc.getInt("autoBinned") ;
   const char* binnedTag = pc.getString("binnedTag") ;
 
-  RooAbsGenContext* cx = autoGenContext(whatVars,protoData,0,verbose,autoBinned,binnedTag) ;
+  RooAbsGenContext* cx = autoGenContext(whatVars,protoData,nullptr,verbose,autoBinned,binnedTag) ;
 
   return new GenSpec(cx,whatVars,protoData,nEvents,extended,randProto,resampleProto,dsetName) ;
 }
@@ -1813,13 +1815,13 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, dou
   }
 
   // Request for binned generation
-  std::unique_ptr<RooAbsGenContext> context{autoGenContext(whatVars,0,0,verbose,autoBinned,binnedTag)};
+  std::unique_ptr<RooAbsGenContext> context{autoGenContext(whatVars,nullptr,nullptr,verbose,autoBinned,binnedTag)};
   if (expectedData) {
     context->setExpectedData(true) ;
   }
 
   std::unique_ptr<RooDataSet> generated;
-  if(0 != context && context->isValid()) {
+  if(nullptr != context && context->isValid()) {
      generated = std::unique_ptr<RooDataSet>{context->generate(nEvents, false, extended)};
   }
   else {
@@ -1838,7 +1840,7 @@ std::unique_ptr<RooDataSet> RooAbsPdf::generate(RooAbsGenContext& context, const
             double nEvents, bool /*verbose*/, bool randProtoOrder, bool resampleProto,
             bool skipInit, bool extended) const
 {
-  if (nEvents==0 && (prototype==0 || prototype->numEntries()==0)) {
+  if (nEvents==0 && (prototype==nullptr || prototype->numEntries()==0)) {
     return std::make_unique<RooDataSet>("emptyData","emptyData",whatVars);
   }
 
@@ -1893,7 +1895,7 @@ std::unique_ptr<RooDataSet> RooAbsPdf::generate(RooAbsGenContext& context, const
 RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& prototype,
             Int_t nEvents, bool verbose, bool randProtoOrder, bool resampleProto) const
 {
-  std::unique_ptr<RooAbsGenContext> context{genContext(whatVars,&prototype,0,verbose)};
+  std::unique_ptr<RooAbsGenContext> context{genContext(whatVars,&prototype,nullptr,verbose)};
   if (context) {
     return RooFit::Detail::owningPtr(generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto));
   }
@@ -2055,7 +2057,7 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet& whatVa
          << GetName() << "::expectedEvents() = " << nEvents << endl ;
     // If Poisson fluctuation results in zero events, stop here
     if (nEvents==0) {
-      return 0 ;
+      return nullptr ;
     }
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is "
@@ -2415,7 +2417,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Decode command line arguments
   ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
   double scaleFactor = pc.getDouble("scaleFactor") ;
-  const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+  const RooAbsCategoryLValue* asymCat = static_cast<const RooAbsCategoryLValue*>(pc.getObject("asymCat")) ;
   const char* compSpec = pc.getString("compSpec") ;
   const RooArgSet* compSet = pc.getSet("compSet");
   bool haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
@@ -2435,7 +2437,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
   // Adjust normalization, if so requested
   if (asymCat) {
-    RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),0,0,0) ;
+    RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),nullptr,nullptr,nullptr) ;
     cmdList.Add(&cnsuffix);
     return  RooAbsReal::plotOn(frame,cmdList) ;
   }
@@ -2600,7 +2602,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     } else {
       dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectByName(compSpec)));
     }
-    if (dirSelNodes->getSize()>0) {
+    if (!dirSelNodes->empty()) {
       coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << endl ;
 
       // Do indirect selection and activate both
@@ -2611,18 +2613,18 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
       } else {
    coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") ERROR: component selection expression '" << compSpec << "' does not select any components of p.d.f." << endl ;
       }
-      return 0 ;
+      return nullptr ;
     }
   }
 
 
-  RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),0,0,0) ;
+  RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),nullptr,nullptr,nullptr) ;
   cmdList.Add(&cnsuffix);
 
   RooPlot* ret =  RooAbsReal::plotOn(frame,cmdList) ;
 
   // Restore selection status ;
-  if (haveCompSel) plotOnCompSelect(0) ;
+  if (haveCompSel) plotOnCompSelect(nullptr) ;
 
   return ret ;
 }
@@ -2723,7 +2725,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   pc.defineDouble("xmax","Layout",1,0.9) ;
   pc.defineInt("ymaxi","Layout",0,Int_t(0.9*10000)) ;
   pc.defineInt("showc","ShowConstants",0,0) ;
-  pc.defineSet("params","Parameters",0,0) ;
+  pc.defineSet("params","Parameters",0,nullptr) ;
   pc.defineInt("dummy","FormatArgs",0,0) ;
 
   // Process and check varargs
@@ -2765,7 +2767,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showCo
 {
 
   // parse the options
-  bool showLabel= (label != 0 && strlen(label) > 0);
+  bool showLabel= (label != nullptr && strlen(label) > 0);
 
   // calculate the box's size, adjusting for constant parameters
 
@@ -2781,7 +2783,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showCo
 
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
-  if(!box) return 0;
+  if(!box) return nullptr;
   box->SetName((std::string(GetName()) + "_paramBox").c_str());
   box->SetFillColor(0);
   box->SetBorderSize(0);
@@ -2855,7 +2857,7 @@ RooAbsPdf::CacheElem::~CacheElem()
   if (_owner) {
     RooAbsPdf* pdfOwner = static_cast<RooAbsPdf*>(_owner) ;
     if (pdfOwner->_norm == _norm) {
-      pdfOwner->_norm = 0 ;
+      pdfOwner->_norm = nullptr ;
     }
   }
 
@@ -2872,7 +2874,7 @@ RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
   // Construct name for new object
   std::string name(GetName()) ;
   name.append("_Proj[") ;
-  if (iset.getSize()>0) {
+  if (!iset.empty()) {
     bool first = true;
     for(auto const& arg : iset) {
       if (first) {
@@ -2930,7 +2932,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const 
 {
   // Define configuration for this method
   RooCmdConfig pc("RooAbsReal::createCdf(" + std::string(GetName()) + ")");
-  pc.defineSet("supNormSet","SupNormSet",0,0) ;
+  pc.defineSet("supNormSet","SupNormSet",0,nullptr) ;
   pc.defineInt("numScanBins","ScanParameters",0,1000) ;
   pc.defineInt("intOrder","ScanParameters",1,2) ;
   pc.defineInt("doScanNum","ScanNumCdf",0,1) ;
@@ -2941,11 +2943,11 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const 
   // Process & check varargs
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Extract values from named arguments
-  const RooArgSet* snset = pc.getSet("supNormSet",0);
+  const RooArgSet* snset = pc.getSet("supNormSet",nullptr);
   RooArgSet nset ;
   if (snset) {
     nset.add(*snset) ;
@@ -2976,13 +2978,13 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const 
 
     return isNum ? createScanCdf(iset,nset,numScanBins,intOrder) : createIntRI(iset,nset) ;
   }
-  return 0 ;
+  return nullptr ;
 }
 
 RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
 {
   string name = string(GetName()) + "_NUMCDF_" + integralNameSuffix(iset,&nset).Data() ;
-  RooRealVar* ivar = (RooRealVar*) iset.first() ;
+  RooRealVar* ivar = static_cast<RooRealVar*>(iset.first()) ;
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumCdf>(name.c_str(),name.c_str(),*this,*ivar,"numcdf");
   ret->setInterpolationOrder(intOrder) ;
@@ -3153,7 +3155,7 @@ void RooAbsPdf::setNormRange(const char* rangeName)
 
   if (_norm) {
     _normMgr.sterilize() ;
-    _norm = 0 ;
+    _norm = nullptr ;
   }
 }
 
@@ -3173,7 +3175,7 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
 
   if (_norm) {
     _normMgr.sterilize() ;
-    _norm = 0 ;
+    _norm = nullptr ;
   }
 }
 

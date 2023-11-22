@@ -20,7 +20,7 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <RZip.h>
 #include <TError.h>

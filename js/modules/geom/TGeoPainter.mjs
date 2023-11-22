@@ -238,7 +238,7 @@ function expandGeoObject(parent, obj) {
    }
 
    if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) {
+      if (!parent._childs) { // deepscan-disable-line
          createItem(parent, shape.fNode.fLeft, 'Left');
          createItem(parent, shape.fNode.fRight, 'Right');
       }
@@ -280,7 +280,7 @@ function provideVisStyle(obj) {
    const vis = !testGeoBit(obj, geoBITS.kVisNone) && testGeoBit(obj, geoBITS.kVisThis);
    let chld = testGeoBit(obj, geoBITS.kVisDaughters);
 
-   if (chld && (!obj.fNodes || (obj.fNodes.arr.length === 0))) chld = false;
+   if (chld && !obj.fNodes?.arr?.length) chld = false;
 
    if (vis && chld) return ' geovis_all';
    if (vis) return ' geovis_this';
@@ -2906,7 +2906,7 @@ class TGeoPainter extends ObjectPainter {
          return res;
       }
 
-      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl)
+      if (!this._lookat || !this._camera0pos)
          return '';
 
       const pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
@@ -3719,15 +3719,9 @@ class TGeoPainter extends ObjectPainter {
             projv = this.ctrl.projectPos,
             projx = (this.ctrl.project === 'x'),
             projy = (this.ctrl.project === 'y'),
-            projz = (this.ctrl.project === 'z');
-      let hit_size = Math.max(hit.fMarkerSize * this.getOverallSize() * 0.005, 0.2),
-          style = hit.fMarkerStyle;
-
-      // FIXME: styles 2 and 4 does not work properly, see Misc/basic3d demo
-      // style 4 is very bad for hits representation
-      if ((style === 4) || (style === 2)) { style = 7; hit_size *= 1.5; }
-
-      const pnts = new PointsCreator(nhits, this._webgl, hit_size);
+            projz = (this.ctrl.project === 'z'),
+            hit_scale = Math.max(hit.fMarkerSize * this.getOverallSize() * (this._dummy ? 0.015 : 0.005), 0.2),
+            pnts = new PointsCreator(nhits, this._webgl, hit_scale);
 
       for (let i = 0; i < nhits; i++) {
          pnts.addPoint(projx ? projv : hit.fP[i*3],
@@ -3735,7 +3729,7 @@ class TGeoPainter extends ObjectPainter {
                        projz ? projv : hit.fP[i*3+2]);
       }
 
-      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style }).then(mesh => {
+      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style: hit.fMarkerStyle }).then(mesh => {
          mesh.defaultOrder = mesh.renderOrder = 1000000; // to bring points to the front
          mesh.highlightScale = 2;
          mesh.geo_name = itemname;
@@ -5609,7 +5603,7 @@ function provideMenu(menu, item, hpainter) {
   * @private */
 function browserIconClick(hitem, hpainter) {
    if (hitem._volume) {
-      if (hitem._more && hitem._volume.fNodes && (hitem._volume.fNodes.arr.length > 0))
+      if (hitem._more && hitem._volume.fNodes?.arr?.length)
          toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
       else
          toggleGeoBit(hitem._volume, geoBITS.kVisThis);

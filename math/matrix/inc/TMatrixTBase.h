@@ -92,7 +92,7 @@ protected:
    Int_t    fRowLwb;              // lower bound of the row index
    Int_t    fColLwb;              // lower bound of the col index
    Int_t    fNelems;              // number of elements in matrix
-   Int_t    fNrowIndex;           // length of row index array (= fNrows+1) wich is only used for sparse matrices
+   Int_t    fNrowIndex;           // length of row index array (= fNrows+1), which is only used for sparse matrices
 
    Element  fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                   //  fTol is used in matrix decomposition (like in inversion)

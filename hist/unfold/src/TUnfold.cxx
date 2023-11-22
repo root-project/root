@@ -2854,7 +2854,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
   //       lCurve logTauX logTauY
 
   Int_t bestChoice=-1;
-  if(curve.size()>0) {
+  if(!curve.empty()) {
     Double_t *x=new Double_t[curve.size()]();
     Double_t *y=new Double_t[curve.size()]();
     Double_t *logT=new Double_t[curve.size()]();

@@ -22,7 +22,7 @@ Abstract class for geometry converters
 #include "TPluginManager.h"
 #include "TGeoManager.h"
 
-TVirtualGeoConverter *TVirtualGeoConverter::fgGeoConverter = 0;
+TVirtualGeoConverter *TVirtualGeoConverter::fgGeoConverter = nullptr;
 
 ClassImp(TVirtualGeoConverter);
 
@@ -36,7 +36,7 @@ TVirtualGeoConverter::TVirtualGeoConverter(TGeoManager *geom) : TObject(), fGeom
 
 TVirtualGeoConverter::~TVirtualGeoConverter()
 {
-   fgGeoConverter = 0;
+   fgGeoConverter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ TVirtualGeoConverter *TVirtualGeoConverter::Instance(TGeoManager *geom)
                     "To enable it, configure ROOT with:\n"
                     "   -Dvecgeom -DCMAKE_PREFIX_PATH=<vecgeom_prefix_path>/lib/CMake/VecGeom"
                     "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-            return 0;
+            return nullptr;
          }
          fgGeoConverter = (TVirtualGeoConverter *)h->ExecPlugin(1, mgr);
       }

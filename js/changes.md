@@ -1,5 +1,47 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Implement "tickz" draw option, used for color palette ticks
+2. Implement skewness and kurtosis calculations for histogram stats box
+3. Introduce "logv" draw option for `TH3`, configures logarithmic scale for box volume
+4. Implement color palette drawing for `TH3`
+5. Implement cutg draw option for `TH2`/`TF2` surface plots
+6. Implement `TMath::Sq()` function and several others like SinH, ASinH, ...
+7. Implement histogram drawing build from `TGraph2D` using Delaunay interpolation
+8. Provide preliminary `TF3` support
+9. Support `TLinearGradient` and `TRadialGradient` colors
+10. Support LZMA decompression of ROOT files #272
+11. Include ZSTD decompression to repository #274
+12. Support opacity transfer function for `TH3`, see tutorials/gl/glvox2.C
+13. Upgrade three.js r155 -> r158
+14. Handle TCanvas IsEdiatable flag to disable some interactive features
+15. Support PDF creation using jsPDF and svg2pdf.js - in browser and node.js
+16. Implement custom fonts support in TWebCanvas
+17. Fix - do not add `THStack` and `TMultiGraph` to legend
+18. Fix - correctly use margin in `TPaveText` class
+19. Fix - correctly draw endcaps in legend errors
+20. Fix - correctly read leaf with fixed-size array
+21. Fix - vertical position of up elements like {M}^{2} in TLatex
+
+
+## Changes in 7.5.2
+1. Fix - proper fit pars display in stats, proper #chi^{2}
+2. Fix - several bugs in TFormula parsing
+3. Fix - correctly use saved buffer in TF1/TF2
+4. Fix - properly adjust size of stats box
+5. Fix - support pol0..pol9 functions
+6. Fix - TGraph bar width should be at least 1 pixel
+7. Fix - prevent drawing of empty TGraph
+
+
+## Changes in 7.5.1
+1. Fix - expand item in hierarchy painter
+2. Fix - correctly use saved TF1 values for non-equidistant bins #270
+3. Fix - in log scales replace 10^1 label by 10
+4. Fix - vertical align of log labels on X axis
+5. Fix - second click of the same item in hierarchy painter
+
+
 ## Changes in 7.5.0
 1. Correctly implement `TH2` projections like MERCATOR or PARABOLIC, add MOLLWEIDE
 2. Support "pol", "cyl", "sph" and "psr" coordinates systems for lego and surf plots

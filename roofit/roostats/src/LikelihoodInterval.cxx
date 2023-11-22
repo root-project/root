@@ -141,7 +141,7 @@ bool LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
 
 
   // here we use Wilks' theorem.
-  if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize()) < (1.-fConfidenceLevel) ){
+  if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.size()) < (1.-fConfidenceLevel) ){
     RooMsgService::instance().setGlobalKillBelow(msglevel);
     return false;
   }
@@ -166,7 +166,7 @@ RooArgSet* LikelihoodInterval::GetParameters() const
 
 bool LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
-  if (parameterPoint.getSize() != fParameters.getSize() ) {
+  if (parameterPoint.size() != fParameters.size() ) {
     std::cout << "size is wrong, parameters don't match" << std::endl;
     return false;
   }
@@ -235,9 +235,9 @@ bool LikelihoodInterval::CreateMinimizer() {
 
    // need to restore values and errors for POI
    if (fBestFitParams) {
-      for (int i = 0; i < params.getSize(); ++i) {
-         RooRealVar & par =  (RooRealVar &) params[i];
-         RooRealVar * fitPar =  (RooRealVar *) (fBestFitParams->find(par.GetName() ) );
+      for (std::size_t i = 0; i < params.size(); ++i) {
+         RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
+         RooRealVar * fitPar =  static_cast<RooRealVar *> (fBestFitParams->find(par.GetName() ) );
          if (fitPar) {
             par.setVal( fitPar->getVal() );
             par.setError( fitPar->getError() );
@@ -274,10 +274,10 @@ bool LikelihoodInterval::CreateMinimizer() {
    fMinimizer->SetFunction(*fMinFunc);
 
    // set minimizer parameters
-   assert( params.getSize() == int(fMinFunc->NDim()) );
+   assert(params.size() == fMinFunc->NDim());
 
    for (unsigned int i = 0; i < fMinFunc->NDim(); ++i) {
-      RooRealVar & v = (RooRealVar &) params[i];
+      RooRealVar & v = static_cast<RooRealVar &>( params[i]);
       fMinimizer->SetLimitedVariable( i, v.GetName(), v.getVal(), v.getError(), v.getMin(), v.getMax() );
    }
    // for finding the contour need to find first global minimum
@@ -338,10 +338,6 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    double elow = 0;
    double eup = 0;
    ret = fMinimizer->GetMinosError(ivarX, elow, eup );
-   if (!ret)  {
-      ccoutE(Minimization) << "Error  running Minos for parameter " << param.GetName() << std::endl;
-      return false;
-   }
 
    // WHEN error is zero normally is at limit
    if (elow == 0) {

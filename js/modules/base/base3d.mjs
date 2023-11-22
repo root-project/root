@@ -1053,7 +1053,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       if (this.control_active && evnt.buttons && (evnt.buttons & 2))
          this.block_ctxt = true; // if right button in control was active, block next context menu
 
-      if (this.control_active || this.block_mousemove || !this.processMouseMove) return;
+      if (this.control_active || this.block_mousemove || !isFunc(this.processMouseMove)) return;
 
       if (this.mouse_zoom_mesh) {
          // when working with zoom mesh, need special handling
@@ -1435,14 +1435,14 @@ class PointsControl extends InteractiveControl {
 class PointsCreator {
 
    /** @summary constructor
-     * @param {number} size - number of points
-     * @param {boolean} [iswebgl=true] - if WebGL is used
-     * @param {number} [scale=1] - scale factor */
-   constructor(size, iswebgl, scale) {
-      this.webgl = (iswebgl === undefined) ? true : iswebgl;
+     * @param {number} number - number of points
+     * @param {boolean} [iswebgl] - if WebGL is used
+     * @param {number} [scale] - scale factor */
+   constructor(number, iswebgl = true, scale = 1) {
+      this.webgl = iswebgl;
       this.scale = scale || 1;
 
-      this.pos = new Float32Array(size*3);
+      this.pos = new Float32Array(number*3);
       this.geom = new BufferGeometry();
       this.geom.setAttribute('position', new BufferAttribute(this.pos, 3));
       this.indx = 0;

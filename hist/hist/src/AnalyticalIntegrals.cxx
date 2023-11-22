@@ -23,7 +23,7 @@
 #include "TMath.h"
 #include "Math/DistFuncMathCore.h" //for cdf
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 

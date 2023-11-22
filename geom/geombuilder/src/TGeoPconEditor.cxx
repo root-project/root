@@ -43,15 +43,15 @@ enum ETGeoPconWid { kPCON_NAME, kPCON_NZ, kPCON_PHI1, kPCON_DPHI, kPCON_APPLY, k
 TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape = 0;
+   fShape = nullptr;
    fNsections = 0;
-   fSections = 0;
+   fSections = nullptr;
    fNsecti = 0;
    fPhi1i = 0;
    fDPhii = 0;
-   fZi = 0;
-   fRmini = 0;
-   fRmaxi = 0;
+   fZi = nullptr;
+   fRmini = nullptr;
+   fRmaxi = nullptr;
    fIsModified = kFALSE;
    fIsShapeEditable = kFALSE;
 
@@ -178,7 +178,7 @@ void TGeoPconEditor::ConnectSignals2Slots()
 
 void TGeoPconEditor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA() != TGeoPcon::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoPcon::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -401,7 +401,7 @@ void TGeoPconEditor::DoApply()
 
 void TGeoPconEditor::DoSectionChange(Int_t isect)
 {
-   TGeoPconSection *sect, *sectlo = 0, *secthi = 0;
+   TGeoPconSection *sect, *sectlo = nullptr, *secthi = nullptr;
    sect = (TGeoPconSection *)fSections->At(isect);
    if (isect)
       sectlo = (TGeoPconSection *)fSections->At(isect - 1);

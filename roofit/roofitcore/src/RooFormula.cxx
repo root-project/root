@@ -195,7 +195,7 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
 /// the formula expression.
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& varList,
     bool checkVariables) :
-  TNamed(name, formula), _tFormula{nullptr}
+  TNamed(name, formula)
 {
   _origList.add(varList);
   _isCategory = findCategoryServers(_origList);
@@ -361,7 +361,7 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
   // We only consider the usedVariables() for replacement, because only these
   // are registered as servers.
   for (const auto arg : usedVariables()) {
-    RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
+    RooAbsReal* replace = static_cast<RooAbsReal*>(arg->findNewServer(newDeps,nameChange)) ;
     if (replace) {
       _origList.replace(*arg, *replace);
 

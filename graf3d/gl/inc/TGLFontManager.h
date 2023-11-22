@@ -34,7 +34,7 @@ public:
    enum ETextAlignV_e   { kBottom, kTop, kCenterV };
 
 private:
-   TGLFont& operator=(const TGLFont& o); // Not implemented.
+   TGLFont& operator=(const TGLFont&) = delete;
 
    FTFont          *fFont;     // FTGL font.
    TGLFontManager  *fManager;  // Font manager.
@@ -52,8 +52,8 @@ protected:
    mutable Int_t    fTrashCount;
 public:
    TGLFont();
-   TGLFont(Int_t size, Int_t font, EMode mode, FTFont *f=nullptr, TGLFontManager *mng=nullptr);
-   TGLFont(const TGLFont& o);            // Not implemented.
+   TGLFont(Int_t size, Int_t font, EMode mode, FTFont *f = nullptr, TGLFontManager *mng = nullptr);
+   TGLFont(const TGLFont &o);
    virtual ~TGLFont();
 
    void CopyAttributes(const TGLFont &o);
@@ -122,8 +122,8 @@ public:
    typedef std::vector<Int_t> FontSizeVec_t;
 
 private:
-   TGLFontManager(const TGLFontManager&);            // Not implemented
-   TGLFontManager& operator=(const TGLFontManager&); // Not implemented
+   TGLFontManager(const TGLFontManager&) = delete;
+   TGLFontManager& operator=(const TGLFontManager&) = delete;
 
 protected:
    typedef std::map<TGLFont, Int_t>           FontMap_t;

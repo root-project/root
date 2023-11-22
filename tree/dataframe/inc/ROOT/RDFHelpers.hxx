@@ -269,10 +269,10 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
 SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 
-void AddProgressbar(ROOT::RDF::RNode df);
-void AddProgressbar(ROOT::RDataFrame df);
+void AddProgressBar(ROOT::RDF::RNode df);
+void AddProgressBar(ROOT::RDataFrame df);
 
-} // namespace Experimental
+class ProgressBarAction;
 
 /// RDF progress helper.
 /// This class provides callback functions to the RDataFrame. The event statistics
@@ -283,22 +283,23 @@ void AddProgressbar(ROOT::RDataFrame df);
 /// ProgressBar should be added after creating the dataframe object (df):
 /// ~~~{.cpp}
 /// ROOT::RDataFrame df("tree", "file.root");
-/// ROOT::RDF::Experimental::AddProgressbar(df);
+/// ROOT::RDF::Experimental::AddProgressBar(df);
 /// ~~~
 /// alternatively RDataFrame can be cast to an RNode first giving it more flexibility.
 /// For example, it can be called at any computational node, such as Filter or Define, not only the head node,
-/// with no change to the Progressbar function itself:
+/// with no change to the ProgressBar function itself:
 /// ~~~{.cpp}
 /// ROOT::RDataFrame df("tree", "file.root");
 /// auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
-/// ROOT::RDF::Experimental::AddProgressbar(df_1);
+/// ROOT::RDF::Experimental::AddProgressBar(df_1);
 /// ~~~
 class ProgressHelper {
 private:
    double EvtPerSec() const;
    std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
    void PrintStats(std::ostream &stream, std::size_t currentEventCount, std::chrono::seconds totalElapsedSeconds) const;
-   void PrintProgressbar(std::ostream &stream, std::size_t currentEventCount) const;
+   void PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
+   void PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const;
 
    std::chrono::time_point<std::chrono::system_clock> fBeginTime = std::chrono::system_clock::now();
    std::chrono::time_point<std::chrono::system_clock> fLastPrintTime = fBeginTime;
@@ -335,6 +336,8 @@ public:
                   unsigned int printInterval = 1, bool useColors = true);
 
    ~ProgressHelper() = default;
+
+   friend class ProgressBarAction;
 
    /// Register a new sample for completion statistics.
    /// \see ROOT::RDF::RInterface::DefinePerSample().
@@ -376,21 +379,9 @@ public:
       // ***************************************************
       fProcessedEvents += fIncrement;
 
-      unsigned int currentFileIdx = ComputeCurrentFileIdx();
-      unsigned int GetNEventsOfCurrentFile = ComputeNEventsSoFar();
-
       // We only print every n seconds.
       if (duration_cast<seconds>(system_clock::now() - fLastPrintTime) < fPrintInterval) {
-
-         // Unless we are at the end of file processing, then we want to print the progress bar again (the final status)
-         // Otherwise, if the last processed files are too small and they are processed in less than the time interval,
-         // the final progress bar status would be incomplete. We want to prevent this from happening.
-
-         if (fTotalFiles != currentFileIdx) {
-            if (currentFileIdx <= GetNEventsOfCurrentFile - fIncrement) {
-               return;
-            }
-         }
+         return;
       }
 
       // ***************************************************
@@ -407,7 +398,7 @@ public:
       if (fIsTTY)
          std::cout << "\r";
 
-      PrintProgressbar(std::cout, eventCount);
+      PrintProgressBar(std::cout, eventCount);
       PrintStats(std::cout, eventCount, elapsedSeconds);
 
       if (fIsTTY)
@@ -431,7 +422,7 @@ public:
       return fSampleNameToEventEntries.size();
    }
 };
-
+} // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
 #endif

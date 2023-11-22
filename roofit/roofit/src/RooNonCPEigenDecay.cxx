@@ -200,13 +200,6 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNonCPEigenDecay::~RooNonCPEigenDecay( void )
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 ///  - B0    : _tag  == -1
 ///  - B0bar : _tag  == +1
 ///  - rho+  : _rhoQ == +1

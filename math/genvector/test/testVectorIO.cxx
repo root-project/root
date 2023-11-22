@@ -129,12 +129,12 @@ double testDummy(int n) {
 
   timer.Stop();
 
-  double sav = std::sqrt(s/double(n));
+  double average = std::sqrt(s/double(n));
 
   std::cout << " Time for Random gen " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
-  int pr = std::cout.precision(18);  std::cout << "Average : " << sav << std::endl;   std::cout.precision(pr);
+  int pr = std::cout.precision(18);  std::cout << "Average : " << average << std::endl;   std::cout.precision(pr);
 
-  return sav;
+  return average;
 }
 
 //----------------------------------------------------------------
@@ -180,16 +180,16 @@ double write(int n, const std::string & file_name, const std::string & vector_ty
   f1.Write();
   timer.Stop();
 
-  double sav = std::sqrt(s/double(n));
+  double average = std::sqrt(s/double(n));
 
 
 #ifdef DEBUG
   t1.Print();
   std::cout << " Time for Writing " << file_name << "\t: " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
-  int pr = std::cout.precision(18);  std::cout << "Average : " << sav << std::endl;   std::cout.precision(pr);
+  int pr = std::cout.precision(18);  std::cout << "Average : " << average << std::endl;   std::cout.precision(pr);
 #endif
 
-  return sav;
+  return average;
 }
 
 
@@ -233,14 +233,14 @@ double read(const std::string & file_name) {
 
   timer.Stop();
 
-  double sav = std::sqrt(s/double(n));
+  double average = std::sqrt(s/double(n));
 
 #ifdef DEBUG
   std::cout << " Time for Reading " << file_name << "\t: " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
-  int pr = std::cout.precision(18);  std::cout << "Average : " << sav << std::endl;   std::cout.precision(pr);
+  int pr = std::cout.precision(18);  std::cout << "Average : " << average << std::endl;   std::cout.precision(pr);
 #endif
 
-  return sav;
+  return average;
 }
 
 template<class TrackType>
@@ -294,16 +294,16 @@ double writeTrack(int n, const std::string & file_name, int compress = 0) {
   f1.Write();
   timer.Stop();
 
-  double sav = std::sqrt(s/double(n));
+  double average = std::sqrt(s/double(n));
 
 
 #ifdef DEBUG
   t1.Print();
   std::cout << " Time for Writing " << file_name << "\t: " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
-  int pr = std::cout.precision(18);  std::cout << "Average : " << sav << std::endl;   std::cout.precision(pr);
+  int pr = std::cout.precision(18);  std::cout << "Average : " << average << std::endl;   std::cout.precision(pr);
 #endif
 
-  return sav;
+  return average;
 
 }
 

@@ -123,7 +123,7 @@ void combinedFit()
 
    // fit FCN function directly
    // (specify optionally data size and flag to indicate that is a chi2 fit)
-   fitter.FitFCN(6, globalChi2, 0, dataB.Size() + dataSB.Size(), true);
+   fitter.FitFCN(6, globalChi2, nullptr, dataB.Size() + dataSB.Size(), true);
    ROOT::Fit::FitResult result = fitter.Result();
    result.Print(std::cout);
 

@@ -53,7 +53,7 @@ function showProgress(msg, tmout) {
   * therefore try several workarounds
   * @private */
 function closeCurrentWindow() {
-   if (!window) return;
+   if (typeof window === 'undefined') return;
    window.close();
    window.open('', '_self').close();
 }
@@ -305,6 +305,9 @@ function detectRightButton(event) {
   * @private */
 function addMoveHandler(painter, enabled = true) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
+
+   if (painter.getPadPainter()?.isEditable() === false)
+      enabled = false;
 
    if (!enabled) {
       if (painter.draw_g.property('assigned_move')) {

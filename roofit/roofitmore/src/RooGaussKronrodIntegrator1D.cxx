@@ -110,12 +110,10 @@ void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
 /// Construct integral on 'function' using given configuration object. The integration
 /// range is taken from the definition in the function binding
 
-RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
-  RooAbsIntegrator(function),
-  _epsAbs(config.epsRel()),
-  _epsRel(config.epsAbs())
+RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config)
+   : RooAbsIntegrator(function), _useIntegrandLimits(true), _epsAbs(config.epsRel()), _epsRel(config.epsAbs())
 {
-  _useIntegrandLimits= true;
+
   _valid= initialize();
 }
 
@@ -124,15 +122,15 @@ RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& funct
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integral on 'function' using given configuration object in the given range
 
-RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& function,
-                      double xmin, double xmax, const RooNumIntConfig& config) :
-  RooAbsIntegrator(function),
-  _epsAbs(config.epsRel()),
-  _epsRel(config.epsAbs()),
-  _xmin(xmin),
-  _xmax(xmax)
+RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc &function, double xmin, double xmax,
+                                                         const RooNumIntConfig &config)
+   : RooAbsIntegrator(function),
+     _useIntegrandLimits(false),
+     _epsAbs(config.epsRel()),
+     _epsRel(config.epsAbs()),
+     _xmin(xmin),
+     _xmax(xmax)
 {
-  _useIntegrandLimits= false;
   _valid= initialize();
 }
 
@@ -186,7 +184,7 @@ bool RooGaussKronrodIntegrator1D::checkLimits() const
 
 double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data)
 {
-  RooGaussKronrodIntegrator1D* instance = (RooGaussKronrodIntegrator1D*) data ;
+  auto instance = reinterpret_cast<RooGaussKronrodIntegrator1D*>(data);
   return instance->integrand(instance->xvec(x)) ;
 }
 

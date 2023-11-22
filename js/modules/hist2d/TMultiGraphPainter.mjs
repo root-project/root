@@ -1,6 +1,7 @@
 import { create, createHistogram, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
 
@@ -56,16 +57,28 @@ class TMultiGraphPainter extends ObjectPainter {
             isany = true;
       }
 
-      const nfunc = obj.fFunctions?.arr?.length ?? 0;
-      for (let i = 0; i < nfunc; ++i) {
-         const func = obj.fFunctions.arr[i],
-               fopt = obj.fFunctions.opt[i];
-         if (func?._typename && func?.fName)
-            pp?.findPainterFor(null, func.fName, func._typename)?.updateObject(func, fopt);
-      }
+      this._funcHandler = new FunctionsHandler(this, pp, obj.fFunctions);
 
       return isany;
    }
+
+   /** @summary Redraw multigraph
+     * @desc may redraw histogram which was used to draw axes
+     * @return {Promise} for ready */
+    async redraw(reason) {
+       const promise = this.firstpainter?.redraw(reason) ?? Promise.resolve(true),
+             redrawNext = async indx => {
+                if (indx >= this.painters.length)
+                   return this;
+                return this.painters[indx].redraw(reason).then(() => redrawNext(indx + 1));
+             };
+
+       return promise.then(() => redrawNext(0)).then(() => {
+          const res = this._funcHandler?.drawNext(0) ?? this;
+          delete this._funcHandler;
+          return res;
+       });
+    }
 
    /** @summary Scan graphs range
      * @return {object} histogram for axes drawing */
@@ -77,7 +90,7 @@ class TMultiGraphPainter extends ObjectPainter {
 
       if (pad) {
          logx = pad.fLogx;
-         logy = pad.fLogy;
+         logy = pad.fLogv ?? pad.fLogy;
          rw.xmin = pad.fUxmin;
          rw.xmax = pad.fUxmax;
          rw.ymin = pad.fUymin;
@@ -210,17 +223,6 @@ class TMultiGraphPainter extends ObjectPainter {
       return TH1Painter.draw(this.getDom(), histo, hopt);
    }
 
-   /** @summary method draws next function from the functions list  */
-   async drawNextFunction(indx) {
-      const mgraph = this.getObject();
-
-      if (!mgraph.fFunctions || (indx >= mgraph.fFunctions.arr.length))
-         return this;
-
-      return this.getPadPainter().drawObject(this.getDom(), mgraph.fFunctions.arr[indx], mgraph.fFunctions.opt[indx])
-                                 .then(() => this.drawNextFunction(indx+1));
-   }
-
    /** @summary Draw graph  */
    async drawGraph(gr, opt /*, pos3d */) {
       return TGraphPainter.draw(this.getDom(), gr, opt);
@@ -234,7 +236,7 @@ class TMultiGraphPainter extends ObjectPainter {
       // at the end of graphs drawing draw functions (if any)
       if (indx >= graphs.arr.length) {
          this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
-         return this.drawNextFunction(0);
+         return this;
       }
 
       const gr = graphs.arr[indx], o = graphs.opt[indx] || opt || '';
@@ -252,6 +254,7 @@ class TMultiGraphPainter extends ObjectPainter {
 
       return this.drawGraph(gr, o, graphs.arr.length - indx).then(subp => {
          if (subp) {
+            subp.setSecondaryId(this, `graphs_${indx}`);
             this.painters.push(subp);
             subp._auto_exec = exec;
          }
@@ -280,15 +283,17 @@ class TMultiGraphPainter extends ObjectPainter {
                 histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, painter.getPadPainter()?.getRootPad(true));
 
          promise = painter.drawAxisHist(histo, hopt).then(ap => {
+            ap.setSecondaryId(painter, 'hist'); // mark that axis painter generated from mg
             painter.firstpainter = ap;
-            ap.$secondary = 'hist'; // mark histogram painter as secondary
-            if (mgraph.fHistogram) painter.$primary = true; // mark mg painter as primary
          });
       }
 
       return promise.then(() => {
          painter.addToPadPrimitives();
          return painter.drawNextGraph(0, d.remain());
+      }).then(() => {
+         const handler = new FunctionsHandler(painter, painter.getPadPainter(), painter.getObject().fFunctions, true);
+         return handler.drawNext(0); // returns painter
       });
    }
 

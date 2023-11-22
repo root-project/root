@@ -199,6 +199,7 @@ set(BASE_SOURCES
 if(root7)
   set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
+      ROOT/RFloat16.hxx
       ROOT/RDirectoryEntry.hxx
       ROOT/RIndexIter.hxx)
   target_sources(Core PRIVATE v7/src/RDirectory.cxx)

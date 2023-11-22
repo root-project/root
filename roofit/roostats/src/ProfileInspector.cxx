@@ -76,11 +76,11 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
     return nullptr;
   }
 
-  if(poi_set->getSize()!=1){
+  if(poi_set->size()!=1){
     cout << "only one parameter of interest is supported currently" << endl;
     return nullptr;
   }
-  RooRealVar* poi = (RooRealVar*) poi_set->first();
+  RooRealVar* poi = static_cast<RooRealVar*>(poi_set->first());
 
 
   if(!nuis_params){

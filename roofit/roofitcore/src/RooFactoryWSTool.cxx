@@ -55,13 +55,16 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooResolutionModel.h"
 #include "RooProduct.h"
 #include "RooAddition.h"
-#include "RooChi2Var.h"
-#include "RooNLLVar.h"
 #include "RooRealSumPdf.h"
 #include "RooConstVar.h"
 #include "RooDerivative.h"
 #include "RooStringVar.h"
 #include "TROOT.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooChi2Var.h"
+#include "RooNLLVar.h"
+#endif
 
 using namespace RooFit ;
 using namespace std ;
@@ -69,7 +72,6 @@ using namespace std ;
 #define BUFFER_SIZE 64000
 
 ClassImp(RooFactoryWSTool);
-;
 
 RooFactoryWSTool* RooFactoryWSTool::_of = nullptr ;
 map<string,RooFactoryWSTool::IFace*>* RooFactoryWSTool::_hooks=nullptr ;
@@ -80,7 +82,7 @@ static Int_t init();
 
 Int_t dummy = init() ;
 
-static Int_t init()
+Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new RooFactoryWSTool::SpecialsIFace ;
 
@@ -121,32 +123,6 @@ static Int_t init()
 }
 
 }
-
-#ifndef _WIN32
-#include <strings.h>
-#endif
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0), _autoClassPostFix("")
-
-{
-  // Default constructor
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFactoryWSTool::~RooFactoryWSTool()
-{
-}
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Low-level factory interface for creating a RooRealVar with a given range and initial value
@@ -210,7 +186,7 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
 }
 
 namespace {
-  static bool isEnum(const char* classname) {
+  bool isEnum(const char* classname) {
     // Returns true if given type is an enum
     ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
     long property = gInterpreter->ClassInfo_Property(cls);
@@ -219,7 +195,7 @@ namespace {
   }
 
 
-  static bool isValidEnumValue(const char* enumName, const char* enumConstantName) {
+  bool isValidEnumValue(const char* enumName, const char* enumConstantName) {
     // Returns true if given type is an enum
 
     if (!enumName) return false;
@@ -239,7 +215,7 @@ namespace {
     return false;
   }
 
-  static pair<list<string>,unsigned int> ctorArgs(const char* classname, std::size_t nPassedArgs) {
+  pair<list<string>,unsigned int> ctorArgs(const char* classname, std::size_t nPassedArgs) {
     // Utility function for RooFactoryWSTool. Return arguments of 'first' non-default, non-copy constructor of any RooAbsArg
     // derived class. Only constructors that start with two `const char*` arguments (for name and title) are considered
     // The returned object contains
@@ -574,7 +550,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     return nullptr;
   }
 
-  RooRealSumPdf pdf(objName,objName,amplList,coefList,(amplList.getSize()==coefList.getSize())) ;
+  RooRealSumPdf pdf(objName,objName,amplList,coefList,(amplList.size()==coefList.size())) ;
   pdf.setStringAttribute("factory_tag",Form("ASUM::%s(%s)",objName,specList)) ;
   if (_ws->import(pdf,Silence())) logError() ;
   return static_cast<RooRealSumPdf*>(_ws->pdf(objName));
@@ -639,7 +615,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   if (pdf) {
     pdf->setStringAttribute("factory_tag",Form("PROD::%s(%s)",objName,pdfList)) ;
     if (_ws->import(*pdf,Silence())) logError() ;
-    return (RooProdPdf*) _ws->pdf(objName) ;
+    return static_cast<RooProdPdf*>(_ws->pdf(objName)) ;
   } else {
     return nullptr;
   }
@@ -691,7 +667,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   // Import pdf into workspace
   pdf->setStringAttribute("factory_tag",Form("SIMUL::%s(%s,%s)",objName,indexCat,pdfMap)) ;
   if (_ws->import(*pdf,Silence())) logError() ;
-  return (RooSimultaneous*) _ws->pdf(objName) ;
+  return static_cast<RooSimultaneous*>(_ws->pdf(objName)) ;
 }
 
 
@@ -728,7 +704,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     return nullptr ;
   }
 
-  if (sumlist2.getSize()>0 && (sumlist1.getSize()!=sumlist2.getSize())) {
+  if (!sumlist2.empty() && (sumlist1.size()!=sumlist2.size())) {
     coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: syntax error: either all sum terms must be products or none" << endl ;
     logError() ;
     return nullptr ;
@@ -740,7 +716,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
   sum->setStringAttribute("factory_tag",Form("sum::%s(%s)",objName,specList)) ;
   if (_ws->import(*sum,Silence())) logError() ;
-  return (RooAddition*) _ws->pdf(objName) ;
+  return static_cast<RooAddition*>(_ws->function(objName));
 
 }
 
@@ -751,7 +727,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
 RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 {
-  return (RooProduct*) createArg("RooProduct",objName,Form("{%s}",pdfList)) ;
+  return static_cast<RooProduct*>(createArg("RooProduct",objName,Form("{%s}",pdfList))) ;
 }
 
 
@@ -2070,6 +2046,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     // nconv::name[var,pdf1,pdf2]
     ft.createArg("RooNumConvolution",instName,pargs) ;
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
   } else if (cl=="nll") {
 
     // nll::name[pdf,data]
@@ -2082,6 +2059,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str())) ;
     if (ft.ws().import(nll,Silence())) ft.logError() ;
 
+#endif
   } else if (cl=="profile") {
 
     // profile::name[func,vars]

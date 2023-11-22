@@ -101,7 +101,7 @@ void h1analysisTreeReader::Begin(TTree* /*myTree*/) {
          // We send a clone to avoid double deletes when importing the result
          fInput->Add(elist);
          // This is needed to avoid warnings from output-to-members mapping
-         elist = 0;
+         elist = nullptr;
       }
       Info("Begin", "creating an entry-list");
    }
@@ -114,7 +114,7 @@ void h1analysisTreeReader::Begin(TTree* /*myTree*/) {
       } else {
          TFile f("elist.root");
          elist = (TEntryList*)f.Get("elist");
-         if (elist) elist->SetDirectory(0); //otherwise the file destructor will delete elist
+         if (elist) elist->SetDirectory(nullptr); //otherwise the file destructor will delete elist
       }
    }
 }
@@ -164,7 +164,7 @@ void h1analysisTreeReader::Terminate() {
    hdmd = dynamic_cast<TH1F*>(fOutput->FindObject("hdmd"));
    h2 = dynamic_cast<TH2F*>(fOutput->FindObject("h2"));
 
-   if (hdmd == 0 || h2 == 0) {
+   if (hdmd == nullptr || h2 == nullptr) {
       Error("Terminate", "hdmd = %p , h2 = %p", hdmd, h2);
       return;
    }

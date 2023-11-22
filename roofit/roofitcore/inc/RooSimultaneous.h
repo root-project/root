@@ -53,7 +53,7 @@ public:
   };
 
   // Constructors, assignment etc
-  inline RooSimultaneous() : _plotCoefNormRange(nullptr), _partIntMgr(this,10) {}
+  inline RooSimultaneous() : _partIntMgr(this,10) {}
   RooSimultaneous(const char *name, const char *title, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const char *name, const char *title, std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
@@ -117,7 +117,6 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    ~CacheElem() override {} ;
     RooArgList containedArgs(Action) override { return RooArgList(_partIntList) ; }
     RooArgList _partIntList ;
   } ;

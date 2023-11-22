@@ -18,10 +18,6 @@
 \file RooMoment.cxx
 \class RooMoment
 \ingroup Roofitcore
-
-RooMoment represents the first, second, or third order derivative
-of any RooAbsReal as calculated (numerically) by the MathCore Richardson
-derivator class.
 **/
 
 
@@ -42,21 +38,8 @@ derivator class.
 #include "RooRealIntegral.h"
 #include "RooNumIntConfig.h"
 #include <string>
-using namespace std;
-
 
 ClassImp(RooMoment);
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooMoment::RooMoment()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,19 +51,19 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 {
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
-  string pname=Form("%s_product",name) ;
+  std::string pname=Form("%s_product",name) ;
 
   std::unique_ptr<RooFormulaVar> XF;
   if (centr) {
-    string formula=Form("pow((@0-@1),%d)*@2",_order) ;
-    string m1name=Form("%s_moment1",GetName()) ;
+    std::string formula=Form("pow((@0-@1),%d)*@2",_order) ;
+    std::string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x) ;
     XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
     addOwnedComponents(*mom1) ;
     _mean.setArg(*mom1) ;
   } else {
-    string formula=Form("pow(@0,%d)*@1",_order) ;
+    std::string formula=Form("pow(@0,%d)*@1",_order) ;
     XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
   }
@@ -115,18 +98,18 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 
   _nset.add(nset) ;
 
-  string pname=Form("%s_product",name) ;
+  std::string pname=Form("%s_product",name) ;
   std::unique_ptr<RooFormulaVar> XF;
   if (centr) {
-    string formula=Form("pow((@0-@1),%d)*@2",_order) ;
-    string m1name=Form("%s_moment1",GetName()) ;
+    std::string formula=Form("pow((@0-@1),%d)*@2",_order) ;
+    std::string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x,nset) ;
     XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
     addOwnedComponents(*mom1) ;
     _mean.setArg(*mom1) ;
   } else {
-    string formula=Form("pow(@0,%d)*@1",_order) ;
+    std::string formula=Form("pow(@0,%d)*@1",_order) ;
     XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
   }
@@ -163,17 +146,6 @@ RooMoment::RooMoment(const RooMoment& other, const char* name) :
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMoment::~RooMoment()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
@@ -183,5 +155,3 @@ double RooMoment::evaluate() const
   double ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;
   return ret ;
 }
-
-

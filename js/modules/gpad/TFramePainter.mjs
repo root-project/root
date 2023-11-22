@@ -78,6 +78,21 @@ function getEarthProjectionFunc(id) {
    }
 }
 
+/** @summary Unzoom preselected range for main histogram painter
+  * @desc Used with TGraph where Y zooming selected with fMinimum/fMaximum but histogram
+  * axis range can be wider. Or for normal histogram drawing when preselected range smaller than histogram range
+  * @private */
+function unzoomHistogramYRange(main) {
+    if (!isFunc(main?.getDimension) || main.getDimension() !== 1) return;
+
+    const ymin = main.draw_content ? main.hmin : main.ymin,
+          ymax = main.draw_content ? main.hmax : main.ymax;
+
+    if ((main.zoom_ymin !== main.zoom_ymax) && (ymin !== ymax) &&
+        (ymin <= main.zoom_ymin) && (main.zoom_ymax <= ymax))
+       main.zoom_ymin = main.zoom_ymax = 0;
+}
+
 // global, allow single drag at once
 let drag_rect = null, drag_kind = '', drag_painter = null;
 
@@ -94,6 +109,9 @@ function addDragHandler(_painter, arg) {
 
    const painter = _painter, pp = painter.getPadPainter();
    if (pp?._fast_drawing || pp?.isBatchMode()) return;
+   // cleanup all drag elements when canvas is not ediatable
+   if (pp?.isEditable() === false)
+      arg.cleanup = true;
 
    if (!isFunc(arg.getDrawG))
       arg.getDrawG = () => painter?.draw_g;
@@ -142,7 +160,7 @@ function addDragHandler(_painter, arg) {
       if (arg.minheight && newheight < arg.minheight) newheight = arg.minheight;
 
       const change_size = (newwidth !== arg.width) || (newheight !== arg.height),
-          change_pos = (newx !== oldx) || (newy !== oldy);
+            change_pos = (newx !== oldx) || (newy !== oldy);
 
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
@@ -178,9 +196,8 @@ function addDragHandler(_painter, arg) {
 
       return change_size || change_pos;
    },
-
-    drag_move = d3_drag().subject(Object),
-       drag_move_off = d3_drag().subject(Object);
+   drag_move = d3_drag().subject(Object),
+   drag_move_off = d3_drag().subject(Object);
 
    drag_move_off.on('start', null).on('drag', null).on('end', null);
 
@@ -377,7 +394,7 @@ const TooltipHandler = {
       const hmargin = 3, wmargin = 3, hstep = 1.2,
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
-            pad_width = pp.getPadWidth(),
+            pad_width = pp?.getPadWidth(),
             font = new FontHandler(160, textheight),
             disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
@@ -439,7 +456,7 @@ const TooltipHandler = {
           hint = null, best_dist2 = 1e10, best_hint = null;
 
       // try to select hint with exact match of the position when several hints available
-      for (let k = 0; k < (hints?.length || 0); ++k) {
+      for (let k = 0; k < hints.length; ++k) {
          if (!hints[k]) continue;
          if (!hint) hint = hints[k];
 
@@ -704,7 +721,7 @@ const TooltipHandler = {
 
       if (main_svg.property('handlers_set') !== handlers_set) {
          const close_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, null) : null,
-             mouse_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: false }) : null;
+               mouse_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: false }) : null;
 
          main_svg.property('handlers_set', handlers_set)
                  .on('mouseenter', mouse_handler)
@@ -1659,7 +1676,7 @@ class TFramePainter extends ObjectPainter {
    recalculateRange(Proj, change_x, change_y) {
       this.projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90 || this.scale_ymax >= 90))) {
+      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >= 90))) {
          console.warn(`Mercator Projection: Latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
          this.projection = 0;
       }
@@ -1849,8 +1866,9 @@ class TFramePainter extends ObjectPainter {
       this.logx = this.logy = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-            pp = this.getPadPainter(),
-            pad = pp.getRootPad();
+            pp = this.getPadPainter(), pad = pp.getRootPad(),
+            pad_logx = pad.fLogx,
+            pad_logy = (opts.ndim === 1 ? pad.fLogv : undefined) ?? pad.fLogy;
 
       this.scales_ndim = opts.ndim;
 
@@ -1861,7 +1879,7 @@ class TFramePainter extends ObjectPainter {
       this.scale_ymax = this.ymax;
 
       if (opts.extra_y_space) {
-         const log_scale = this.swap_xy ? pad.fLogx : pad.fLogy;
+         const log_scale = this.swap_xy ? pad_logx : pad_logy;
          if (log_scale && (this.scale_ymax > 0))
             this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
          else
@@ -1912,7 +1930,7 @@ class TFramePainter extends ObjectPainter {
 
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
-                                        log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                        log: this.swap_xy ? pad_logy : pad_logx,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
                                         logcheckmin: this.swap_xy,
@@ -1926,7 +1944,7 @@ class TFramePainter extends ObjectPainter {
 
       this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                       { reverse: this.reverse_y,
-                                        log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                        log: this.swap_xy ? pad_logx : pad_logy,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
@@ -2645,8 +2663,10 @@ class TFramePainter extends ObjectPainter {
       }, 'Store frame position and graphical attributes to gStyle');
 
       menu.add('separator');
-      menu.add('Save as frame.png', () => pp.saveAs('png', 'frame', 'frame.png'));
-      menu.add('Save as frame.svg', () => pp.saveAs('svg', 'frame', 'frame.svg'));
+
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => pp.saveAs(fmt, 'frame', `frame.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -2654,14 +2674,8 @@ class TFramePainter extends ObjectPainter {
    /** @summary Fill option object used in TWebCanvas
      * @private */
    fillWebObjectOptions(res) {
-      if (!res) {
-         if (!this.snapid) return null;
-         res = { _typename: 'TWebObjectOptions', snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: '', fopt: [] };
-       }
-
       res.fcust = 'frame';
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
-      return res;
    }
 
    /** @summary Returns frame X position */
@@ -2788,7 +2802,10 @@ class TFramePainter extends ObjectPainter {
             this.zoom_xmin = this.zoom_xmax = 0;
          }
          if (unzoom_y) {
-            if (this.zoom_ymin !== this.zoom_ymax) changed = true;
+            if (this.zoom_ymin !== this.zoom_ymax) {
+               changed = true;
+               unzoomHistogramYRange(this.getMainPainter());
+            }
             this.zoom_ymin = this.zoom_ymax = 0;
          }
          if (unzoom_z) {
@@ -2845,7 +2862,10 @@ class TFramePainter extends ObjectPainter {
 
       // and process unzoom, if any
       if (unzoom_v) {
-         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) changed = true;
+         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) {
+            changed = true;
+            if (name === 'y') unzoomHistogramYRange(this.getMainPainter());
+         }
          this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
       }
 

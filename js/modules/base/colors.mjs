@@ -1,10 +1,13 @@
 import { clTColor, settings } from '../core.mjs';
 import { color as d3_color } from '../d3.mjs';
 
+const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient',
+      kWhite = 0, kBlack = 1, kRed = 2, kGreen = 3, kBlue = 4, kYellow = 5, kMagenta = 6, kCyan = 7;
+
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
-function toHex(num, scale) {
-   const s = Math.round(num*(scale || 255)).toString(16);
+function toHex(num, scale = 255) {
+   const s = Math.round(num * scale).toString(16);
    return s.length === 1 ? '0'+s : s;
 }
 
@@ -103,7 +106,14 @@ function extendRootColors(jsarr, objarr, grayscale) {
       rgb_array = [];
       for (let n = 0; n < objarr.arr.length; ++n) {
          const col = objarr.arr[n];
-         if (col?._typename !== clTColor) continue;
+         if ((col?._typename === clTLinearGradient) || (col?._typename === clTRadialGradient)) {
+            rgb_array[col.fNumber] = col;
+            col.toString = () => 'white';
+            continue;
+         }
+
+         if (col?._typename !== clTColor)
+            continue;
 
          if ((col.fNumber >= 0) && (col.fNumber <= 10000))
             rgb_array[col.fNumber] = getRGBfromTColor(col);
@@ -379,9 +389,54 @@ function getColorPalette(id, grayscale) {
     return new ColorPalette(palette, grayscale);
 }
 
+
+/** @summary Decode list of ROOT colors coded by TWebCanvas
+  * @private */
+function decodeWebCanvasColors(oper) {
+   const colors = [], arr = oper.split(';');
+   for (let n = 0; n < arr.length; ++n) {
+      const name = arr[n];
+      let p = name.indexOf(':');
+      if (p > 0) {
+         colors[parseInt(name.slice(0, p))] = d3_color(`rgb(${name.slice(p+1)})`).formatHex();
+         continue;
+      }
+      p = name.indexOf('=');
+      if (p > 0) {
+         colors[parseInt(name.slice(0, p))] = d3_color(`rgba(${name.slice(p+1)})`).formatHex8();
+         continue;
+      }
+      p = name.indexOf('#');
+      if (p < 0) continue;
+
+      const colindx = parseInt(name.slice(0, p)),
+            data = JSON.parse(name.slice(p+1)),
+            grad = { _typename: data[0] === 10 ? clTLinearGradient : clTRadialGradient, fNumber: colindx, fType: data[0] };
+
+      let cnt = 1;
+
+      grad.fCoordinateMode = Math.round(data[cnt++]);
+      const nsteps = Math.round(data[cnt++]);
+      grad.fColorPositions = data.slice(cnt, cnt + nsteps); cnt += nsteps;
+      grad.fColors = data.slice(cnt, cnt + 4*nsteps); cnt += 4*nsteps;
+      grad.fStart = { fX: data[cnt++], fY: data[cnt++] };
+      grad.fEnd = { fX: data[cnt++], fY: data[cnt++] };
+      if (grad._typename === clTRadialGradient && cnt < data.length) {
+         grad.fR1 = data[cnt++];
+         grad.fR2 = data[cnt++];
+      }
+
+      colors[colindx] = grad;
+   }
+
+   return colors;
+}
+
+
 createRootColors();
 
 export { getColor, findColor, addColor, adoptRootColors,
          getRootColors, getGrayColors,
          extendRootColors, getRGBfromTColor, createRootColors, toHex,
-         ColorPalette, getColorPalette };
+         kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan,
+         ColorPalette, getColorPalette, clTLinearGradient, clTRadialGradient, decodeWebCanvasColors };

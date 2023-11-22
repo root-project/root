@@ -40,7 +40,7 @@
 // for toupper
 #include <algorithm>
 #include <functional>
-#include <ctype.h>   // need to use c version of tolower defined here
+#include <cctype>   // need to use c version of tolower defined here
 
 
 #include <iostream>
@@ -124,7 +124,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    //std::cout << type << std::endl;
 
    fType =  Integration::kADAPTIVESINGULAR;  // default
-   if (type != nullptr) {  // use this dafault
+   if (type != nullptr) {  // use this default
       std::string typeName(type);
       std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper );
       if (typeName == "NONADAPTIVE")

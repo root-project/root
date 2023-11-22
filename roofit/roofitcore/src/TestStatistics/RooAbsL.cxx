@@ -53,9 +53,12 @@ bool RooAbsL::isExtendedHelper(RooAbsPdf *pdf, Extended extended)
 /// handle common tasks.
 RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data, std::size_t N_events,
                  std::size_t N_components, Extended extended)
-   : pdf_(std::move(pdf)), data_(std::move(data)), N_events_(N_events), N_components_(N_components)
+   : pdf_(std::move(pdf)),
+     data_(std::move(data)),
+     N_events_(N_events),
+     N_components_(N_components),
+     extended_(isExtendedHelper(pdf_.get(), extended))
 {
-   extended_ = isExtendedHelper(pdf_.get(), extended);
    if (extended == Extended::Auto) {
       if (extended_) {
          oocoutI(nullptr, Minimization)

@@ -69,14 +69,7 @@ void StandardProfileInspectorDemo(const char *infile = "", const char *workspace
    } else
       filename = infile;
 
-   // Try to open the file
    TFile *file = TFile::Open(filename);
-
-   // if input file was specified byt not found, quit
-   if (!file) {
-      cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
-      return;
-   }
 
    // -------------------------------------------------------
    // Tutorial starts here
@@ -84,23 +77,12 @@ void StandardProfileInspectorDemo(const char *infile = "", const char *workspace
 
    // get the workspace out of the file
    RooWorkspace *w = (RooWorkspace *)file->Get(workspaceName);
-   if (!w) {
-      cout << "workspace not found" << endl;
-      return;
-   }
 
    // get the modelConfig out of the file
    ModelConfig *mc = (ModelConfig *)w->obj(modelConfigName);
 
    // get the modelConfig out of the file
    RooAbsData *data = w->data(dataName);
-
-   // make sure ingredients are found
-   if (!data || !mc) {
-      w->Print();
-      cout << "data or ModelConfig was not found" << endl;
-      return;
-   }
 
    // -----------------------------
    // now use the profile inspector

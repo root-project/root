@@ -40,8 +40,8 @@ It has 6 parameters:
 
 TTUBE::TTUBE()
 {
-   fCoTab       = 0;
-   fSiTab       = 0;
+   fCoTab       = nullptr;
+   fSiTab       = nullptr;
    fAspectRatio = 1;
    fDz          = 0.;
    fNdiv        = 0;
@@ -61,8 +61,8 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
    fDz   = dz;
    fNdiv = 0;
 
-   fCoTab = 0;
-   fSiTab = 0;
+   fCoTab = nullptr;
+   fSiTab = nullptr;
 
    fAspectRatio = aspect;
 
@@ -81,8 +81,8 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
    fDz   = dz;
    fNdiv = 0;
 
-   fCoTab = 0;
-   fSiTab = 0;
+   fCoTab = nullptr;
+   fSiTab = nullptr;
 
    fAspectRatio = 1;
 

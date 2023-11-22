@@ -57,7 +57,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
                  std::vector<int> const& code) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code), _interpBoundary(1.)
+  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code)
 {
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
@@ -224,7 +224,7 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
    std::string resName = "total_" + ctx.getTmpVarName();
    ctx.addToCodeBody(this, "double " + resName + " = " + std::to_string(_nominal) + ";\n");
-   std::string code = "";
+   std::string code;
    for (std::size_t i = 0; i < n; ++i) {
 
       int interpCode = _interpCode[i];

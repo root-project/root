@@ -41,7 +41,6 @@
 using namespace std;
 
 ClassImp(PiecewiseInterpolation);
-;
 
 using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
@@ -49,11 +48,8 @@ using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
 PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 {
-  _positiveDefinite=false;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a new interpolation. The value of the function will be
@@ -85,7 +81,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
 
 {
   // KC: check both sizes
-  if (lowSet.getSize() != highSet.getSize()) {
+  if (lowSet.size() != highSet.size()) {
     coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << endl ;
     RooErrorHandler::softAbort() ;
   }
@@ -214,7 +210,7 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
 
    std::string resName = "total_" + ctx.getTmpVarName();
    ctx.addToCodeBody(this, "double " + resName + " = " + ctx.getResult(_nominal) + ";\n");
-   std::string code = "";
+   std::string code;
    for (std::size_t i = 0; i < n; ++i) {
       if (_interpCode[i] < 0 || _interpCode[i] > 5) {
          coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << _paramSet[i].GetName()
@@ -272,10 +268,10 @@ void PiecewiseInterpolation::computeBatch(double* sum, size_t /*size*/, RooFit::
 
 bool PiecewiseInterpolation::setBinIntegrator(RooArgSet& allVars)
 {
-  if(allVars.getSize()==1){
+  if(allVars.size()==1){
     RooAbsReal* temp = const_cast<PiecewiseInterpolation*>(this);
     temp->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator")  ;
-    int nbins = ((RooRealVar*) allVars.first())->numBins();
+    int nbins = (static_cast<RooRealVar*>(allVars.first()))->numBins();
     temp->specialIntegratorConfig(true)->getConfigSection("RooBinIntegrator").setRealValue("numBins",nbins);
     return true;
   }else{
@@ -327,7 +323,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObj(normSet,&analVars,&sterileIdx)) ;
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }
@@ -401,7 +397,7 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
   vars->remove(_paramSet);
   _paramSet.Print("v");
   vars->Print("v");
-  if(vars->getSize()==1){
+  if(vars->size()==1){
     RooRealVar* obs = (RooRealVar*) vars->first();
     for(int i=0; i<obs->numBins(); ++i){
       obs->setVal( obs->getMin() + (.5+i)*(obs->getMax()-obs->getMin())/obs->numBins());
@@ -434,7 +430,7 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
   */
 
   // old integral, only works for linear and not positive definite
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObjByIndex(code-1)) ;
   if( cache==nullptr ) {
     std::cout << "Error: Cache Element is nullptr" << std::endl;
     throw std::exception();
@@ -609,7 +605,7 @@ void PiecewiseInterpolation::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(PiecewiseInterpolation::Class(),this);
       specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator") ;
-      if (_interpCode.empty()) _interpCode.resize(_paramSet.getSize());
+      if (_interpCode.empty()) _interpCode.resize(_paramSet.size());
    } else {
       R__b.WriteClassBuffer(PiecewiseInterpolation::Class(),this);
    }
@@ -631,7 +627,7 @@ void PiecewiseInterpolation::printMetaArgs(ostream& os) const
   bool first(true) ;
 
   RooAbsArg* arg1, *arg2 ;
-  if (_highSet.getSize()!=0) {
+  if (_highSet.size()!=0) {
 
     while((arg1=(RooAbsArg*)_lowIter->Next())) {
       if (!first) {

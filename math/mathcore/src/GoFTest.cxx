@@ -13,8 +13,9 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <numeric>
-#include <string.h>
+#include <cstring>
 #include <cassert>
 
 #include "Math/Error.h"
@@ -37,7 +38,7 @@ namespace ROOT {
 namespace Math {
 
    struct CDFWrapper : public IGenFunction {
-      // wrapper around a cdf funciton to re-scale for the range
+      // wrapper around a cdf function to re-scale for the range
       Double_t fXmin; // lower range for x
       Double_t fXmax; // lower range for x
       Double_t fNorm; // normalization
@@ -270,9 +271,9 @@ namespace Math {
       fDist = kUserDefined;
       // function will be cloned inside the wrapper PDFIntegral of CDFWrapper classes
       if (isPDF)
-         fCDF.reset(new PDFIntegral(f, xmin, xmax) );
+         fCDF = std::make_unique<PDFIntegral>(f, xmin, xmax );
       else
-         fCDF.reset(new CDFWrapper(f, xmin, xmax) );
+         fCDF = std::make_unique<CDFWrapper>(f, xmin, xmax );
    }
 
    void GoFTest::Instantiate(const Double_t* sample, size_t sampleSize) {
@@ -448,7 +449,7 @@ namespace Math {
       //auto it = std::lower_bound(ts2.begin(), ts2.end(), tx ); 
       int i1 = std::distance(ts2.begin(),  std::lower_bound(ts2.begin(), ts2.end(), tx ) ) - 1; 
       int i2 = i1+1;
-      // if tx is before min of tabluated data
+      // if tx is before min of tabulated data
       if (i1 < 0) { 
          i1 = 0;
          i2 = 1;
@@ -570,7 +571,7 @@ void adkTestStat(double *adk, const std::vector<std::vector<double> > & samples,
 
    /* samples is a two-dimensional double array with length k;
       it stores an array of k pointers to double arrays which are
-      the k samples beeing compared */
+      the k samples being compared */
 // double **samples;
 
    /* dynamically allocate memory */
@@ -693,7 +694,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
             sum_result += h[j] *  TMath::Power(N * F[i][j]- fSamples[i].size() * H[j], 2) / (H[j] * (N - H[j]) - N * h[j] / 4.0);
             ++j;
          }
-         std::cout << "time for sum_resut"; 
+         std::cout << "time for sum_result"; 
          w.Print(); 
          std::cout << "sum_result " << sum_result << std::endl;
          A2 += 1.0 / fSamples[i].size() * sum_result;
@@ -731,7 +732,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       for (unsigned int k = 0; k < ns.size(); ++k) ns[k] = fSamples[k].size();
       Double_t sigmaN = GetSigmaN(ns, N);
       A2 -= fSamples.size() - 1;
-      A2 /= sigmaN; // standartized test statistic
+      A2 /= sigmaN; // standardized test statistic
 
       pvalue = PValueADKSamples(2,A2); 
       testStat = A2;
@@ -744,7 +745,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
    A binned data set can be seen as many identical observation happening at the center of the bin
    In this way it is trivial to apply the formula (6) in the paper of W. Scholz, M. Stephens, "K-Sample Anderson-Darling Tests"
    to the case of histograms. See also http://arxiv.org/pdf/0804.0380v1.pdf paragraph  3.3.5
-   It is importat that empty bins are not present 
+   It is important that empty bins are not present 
 */
    void GoFTest::AndersonDarling2SamplesTest(const ROOT::Fit::BinData &data1, const ROOT::Fit::BinData & data2, Double_t& pvalue, Double_t& testStat)  {
       pvalue = -1;
@@ -839,7 +840,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
 
       Double_t sigmaN = GetSigmaN(ns,nall);
       A2 -= 1;
-      A2 /= sigmaN; // standartized test statistic
+      A2 /= sigmaN; // standardized test statistic
 
       //std::cout << " sigmaN " << sigmaN << " new A2 " << A2;
 

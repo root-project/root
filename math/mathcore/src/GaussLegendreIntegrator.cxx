@@ -14,7 +14,7 @@
 #include "Math/IFunctionfwd.h"
 #include "Math/IntegratorOptions.h"
 #include <cmath>
-#include <string.h>
+#include <cstring>
 #include <algorithm>
 
 namespace ROOT {
@@ -23,7 +23,7 @@ namespace Math {
    GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) :
       GaussIntegrator(eps, eps)
 {
-   // Basic contructor
+   // Basic constructor
    fNum = num;
    fX = nullptr;
    fW = nullptr;
@@ -33,7 +33,7 @@ namespace Math {
 
 GaussLegendreIntegrator::~GaussLegendreIntegrator()
 {
-   // Default Destructor
+   // Default destructor
 
 
    delete [] fX;

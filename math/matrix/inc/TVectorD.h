@@ -13,7 +13,7 @@
 //                                                                      //
 // TVectorD                                                             //
 //                                                                      //
-//  Instantation of TVectorT<Double_t>                                  //
+//  Instantiation of TVectorT<Double_t>                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

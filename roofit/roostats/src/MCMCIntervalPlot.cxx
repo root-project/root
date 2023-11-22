@@ -61,52 +61,13 @@ using namespace RooStats;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMCIntervalPlot::MCMCIntervalPlot()
-{
-   fInterval = nullptr;
-   fParameters = nullptr;
-   fPosteriorHist = nullptr;
-   fPosteriorKeysPdf = nullptr;
-   fPosteriorKeysProduct = nullptr;
-   fDimension = 0;
-   fLineColor = kBlack;
-   fShadeColor = kGray;
-   fLineWidth = 1;
-   //fContourColor = kBlack;
-   fShowBurnIn = true;
-   fWalk = nullptr;
-   fBurnIn = nullptr;
-   fFirst = nullptr;
-   fParamGraph = nullptr;
-   fNLLGraph = nullptr;
-   fNLLHist = nullptr;
-   fWeightHist = nullptr;
-   fPosteriorHistHistCopy = nullptr;
-   fPosteriorHistTFCopy = nullptr;
-}
+MCMCIntervalPlot::MCMCIntervalPlot() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval& interval)
+MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval &interval)
 {
    SetMCMCInterval(interval);
-   fPosteriorHist = nullptr;
-   fPosteriorKeysPdf = nullptr;
-   fPosteriorKeysProduct = nullptr;
-   fLineColor = kBlack;
-   fShadeColor = kGray;
-   fLineWidth = 1;
-   //fContourColor = kBlack;
-   fShowBurnIn = true;
-   fWalk = nullptr;
-   fBurnIn = nullptr;
-   fFirst = nullptr;
-   fParamGraph = nullptr;
-   fNLLGraph = nullptr;
-   fNLLHist = nullptr;
-   fWeightHist = nullptr;
-   fPosteriorHistHistCopy = nullptr;
-   fPosteriorHistTFCopy = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +175,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
    bool isEmpty = (title.CompareTo("") == 0);
 
    if (fDimension == 1) {
-      RooRealVar* v = (RooRealVar*)fParameters->first();
+      RooRealVar* v = static_cast<RooRealVar*>(fParameters->first());
       RooPlot* frame = v->frame();
       if (frame == nullptr) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysPdf: "
@@ -232,10 +193,10 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
       return (void*)frame;
    } else if (fDimension == 2) {
       RooArgList* axes = fInterval->GetAxes();
-      RooRealVar* xVar = (RooRealVar*)axes->at(0);
-      RooRealVar* yVar = (RooRealVar*)axes->at(1);
-      TH2F* keysHist = (TH2F*)fPosteriorKeysPdf->createHistogram(
-            "keysPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false));
+      RooRealVar* xVar = static_cast<RooRealVar*>(axes->at(0));
+      RooRealVar* yVar = static_cast<RooRealVar*>(axes->at(1));
+      TH2F* keysHist = static_cast<TH2F*>(fPosteriorKeysPdf->createHistogram(
+            "keysPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false)));
       if (isEmpty)
          keysHist->SetTitle(
                Form("MCMC histogram of posterior Keys PDF for %s, %s",
@@ -289,13 +250,13 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       // Draw the posterior keys PDF as well so the user can see where the
       // limit bars line up
       // fDimension == 1, so we know we will receive a RooPlot
-      RooPlot* frame = (RooPlot*)DrawPosteriorKeysPdf(options);
+      RooPlot* frame = reinterpret_cast<RooPlot*>(DrawPosteriorKeysPdf(options));
 
       //double height = 1;
       //double height = 2.0 * fInterval->GetKeysPdfCutoff();
       double height = fInterval->GetKeysMax();
 
-      RooRealVar* p = (RooRealVar*)fParameters->first();
+      RooRealVar* p = static_cast<RooRealVar*>(fParameters->first());
       double ul = fInterval->UpperLimitByKeys(*p);
       double ll = fInterval->LowerLimitByKeys(*p);
 
@@ -343,10 +304,10 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       }
 
       RooArgList* axes = fInterval->GetAxes();
-      RooRealVar* xVar = (RooRealVar*)axes->at(0);
-      RooRealVar* yVar = (RooRealVar*)axes->at(1);
-      TH2F* contHist = (TH2F*)fPosteriorKeysPdf->createHistogram(
-          "keysContour2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false));
+      RooRealVar* xVar = static_cast<RooRealVar*>(axes->at(0));
+      RooRealVar* yVar = static_cast<RooRealVar*>(axes->at(1));
+      TH2F* contHist = static_cast<TH2F*>(fPosteriorKeysPdf->createHistogram(
+          "keysContour2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false)));
       //if (isEmpty)
       //   contHist->SetTitle(Form("MCMC Keys conf. interval for %s, %s",
       //            axes->at(0)->GetName(), axes->at(1)->GetName()));
@@ -383,14 +344,14 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
 
    if (fDimension == 1) {
       // draw lower and upper limits
-      RooRealVar* p = (RooRealVar*)fParameters->first();
+      RooRealVar* p = static_cast<RooRealVar*>(fParameters->first());
       double ul = fInterval->UpperLimitByHist(*p);
       double ll = fInterval->LowerLimitByHist(*p);
 
       // Draw the posterior histogram as well so the user can see where the
       // limit bars line up
       // fDimension == 1, so we know will get a TH1F*
-      TH1F* hist = (TH1F*)DrawPosteriorHist(options, nullptr, false);
+      TH1F* hist = reinterpret_cast<TH1F*>(DrawPosteriorHist(options, nullptr, false));
       if (hist == nullptr) return;
       if (isEmpty)
          hist->SetTitle(nullptr);
@@ -482,11 +443,11 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
    if (fDimension == 1) {
       // Draw the posterior histogram as well so the user can see where the
       // limit bars line up
-      RooRealVar* p = (RooRealVar*)fParameters->first();
+      RooRealVar* p = static_cast<RooRealVar*>(fParameters->first());
       double ul = fInterval->UpperLimitTailFraction(*p);
       double ll = fInterval->LowerLimitTailFraction(*p);
 
-      TH1F* hist = (TH1F*)DrawPosteriorHist(options, nullptr, false);
+      TH1F* hist = reinterpret_cast<TH1F*>(DrawPosteriorHist(options, nullptr, false));
       if (hist == nullptr) return;
       if (isEmpty)
          hist->SetTitle(nullptr);
@@ -495,7 +456,7 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
       hist->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
                p->GetName()));
       hist->SetStats(false);
-      TH1F* copy = (TH1F*)hist->Clone(Form("%s_copy", hist->GetTitle()));
+      TH1F* copy = static_cast<TH1F*>(hist->Clone(Form("%s_copy", hist->GetTitle())));
 
       Int_t i;
       Int_t nBins = copy->GetNbinsX();
@@ -552,7 +513,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
    bool isEmpty = (title.CompareTo("") == 0);
 
    if (fDimension == 1) {
-      RooPlot* frame = ((RooRealVar*)fParameters->first())->frame();
+      RooPlot* frame = (static_cast<RooRealVar*>(fParameters->first()))->frame();
       if (!frame) return nullptr;
       if (isEmpty)
          frame->SetTitle(Form("Posterior Keys PDF * Heaviside product for %s",
@@ -565,10 +526,10 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
       frame->Draw(options);
       return (void*)frame;
    } else if (fDimension == 2) {
-      RooRealVar* xVar = (RooRealVar*)axes->at(0);
-      RooRealVar* yVar = (RooRealVar*)axes->at(1);
-      TH2F* productHist = (TH2F*)fPosteriorKeysProduct->createHistogram(
-            "prodPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false));
+      RooRealVar* xVar = static_cast<RooRealVar*>(axes->at(0));
+      RooRealVar* yVar = static_cast<RooRealVar*>(axes->at(1));
+      TH2F* productHist = static_cast<TH2F*>(fPosteriorKeysProduct->createHistogram(
+            "prodPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false)));
       if (isEmpty)
          productHist->SetTitle(
                Form("MCMC Posterior Keys Product Hist. for %s, %s",

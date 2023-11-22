@@ -6,7 +6,7 @@
 
 # CMakeLists.txt for the ROOT tutorials programs.
 # Author: Pere Mato, 25/10/2010
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(tutorials)
 
@@ -137,10 +137,6 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
     list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
 endif()
 
-if(NOT ROOT_mlp_FOUND)
-   set(mlp_veto legacy/mlp/*.C)
-endif()
-
 if(NOT ROOT_spectrum_FOUND)
    set(spectrum_veto spectrum/*.C)
 endif()
@@ -165,7 +161,10 @@ endif()
 
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  xml/*.C
-                histfactory/*.C)   # histfactory requires xml
+                histfactory/*.C   # histfactory requires xml
+                histfactory/*.py
+                roostats/*.C      # most roostats tutorials require xml too,
+                roostats/*.py)    # because they create test data with histfactory
 endif()
 
 if(NOT ROOT_unfold_FOUND)
@@ -180,6 +179,7 @@ if(NOT xrootd)
   set(xrootd_veto dataframe/df101_h1Analysis.C
                   dataframe/df102_NanoAODDimuonAnalysis.C
                   dataframe/df103_NanoAODHiggsAnalysis.C
+                  dataframe/df106_HiggsToFourLeptons.C
                   tmva/tmva103_Application.C
                   dataframe/df033_Describe.py
                   dataframe/df102_NanoAODDimuonAnalysis.py
@@ -198,21 +198,6 @@ if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
 endif()
 
-# The following tests use hist2workspace, which requires xml
-if(NOT ROOT_xml_FOUND)
-  list(APPEND xml_veto roostats/OneSidedFrequentistUpperLimitWithBands.C
-                       roostats/StandardBayesianMCMCDemo.C
-                       roostats/StandardBayesianNumericalDemo.C
-                       roostats/StandardFeldmanCousinsDemo.C
-                       roostats/StandardFrequentistDiscovery.C
-                       roostats/StandardHistFactoryPlotsWithCategories.C
-                       roostats/StandardHypoTestDemo.C
-                       roostats/StandardHypoTestInvDemo.C
-                       roostats/StandardProfileInspectorDemo.C
-                       roostats/StandardProfileLikelihoodDemo.C
-                       roostats/StandardTestStatDistributionDemo.C
-                       roostats/TwoSidedFrequentistUpperLimitWithBands.C)
-endif()
 set(histfactory_veto histfactory/makeExample.C)
 
 if(NOT ROOT_fitsio_FOUND)
@@ -478,7 +463,6 @@ set(all_veto hsimple.C
              ${vecgeom_veto}
              ${root7_veto}
              ${xrootd_veto}
-             ${mlp_veto}
              ${spectrum_veto}
              ${dataframe_veto}
              ${macm1_veto}
@@ -540,7 +524,6 @@ set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
 set(xml-xmlmodifyfile-depends tutorial-xml-xmlnewfile)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
-set(histfactory-example-depends tutorial-roostats-CreateExampleFile)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(fit-myfit-depends tutorial-fit-fitslicesy)
@@ -564,12 +547,24 @@ set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 set(multicore-mp105_processEntryList-depends tutorial-multicore-mp104_processH1)
 
-#--many roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
-foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
-               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
-               StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
-               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands StandardProfileLikelihoodDemo)
-  set(roostats-${tname}-depends tutorial-roostats-CreateExampleFile)
+#--many histfactory and roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
+foreach(tname histfactory-hf001_example
+              roostats-ModelInspector
+              roostats-OneSidedFrequentistUpperLimitWithBands
+              roostats-OneSidedFrequentistUpperLimitWithBands
+              roostats-StandardBayesianMCMCDemo
+              roostats-StandardBayesianNumericalDemo
+              roostats-StandardFeldmanCousinsDemo
+              roostats-StandardFrequentistDiscovery
+              roostats-StandardHistFactoryPlotsWithCategories
+              roostats-StandardHypoTestDemo
+              roostats-StandardHypoTestInvDemo
+              roostats-StandardProfileInspectorDemo
+              roostats-StandardProfileLikelihoodDemo
+              roostats-StandardTestStatDistributionDemo
+              roostats-TwoSidedFrequentistUpperLimitWithBands)
+  set(${tname}-depends tutorial-roostats-CreateExampleFile)
+  set(${tname}-py-depends tutorial-roostats-CreateExampleFile)
 endforeach()
 
 #--dependency for TMVA tutorials
@@ -652,7 +647,7 @@ foreach(t ${tutorials})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 2400) # 40m
+     set(thisTestTimeout 3000) # 50m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()
@@ -686,7 +681,7 @@ foreach(t ${mpi_tutorials})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 2400) # 40m
+     set(thisTestTimeout 3000) # 50m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()

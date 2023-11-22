@@ -124,9 +124,9 @@ THnBase &THnBase::operator=(const THnBase &other)
 }
 
 THnBase::THnBase(THnBase &&other)
-   : TNamed(std::move(other)), fNdimensions(other.fNdimensions), fAxes(other.fAxes), fBrowsables(fNdimensions),
-     fEntries(other.fEntries), fTsumw(other.fTsumw), fTsumw2(other.fTsumw2), fTsumwx(std::move(other.fTsumwx)),
-     fTsumwx2(std::move(other.fTsumwx2)), fIntegral(std::move(other.fIntegral)), fIntegralStatus(other.fIntegralStatus)
+   : TNamed(other), fNdimensions(other.fNdimensions), fAxes(other.fAxes), fBrowsables(fNdimensions),
+     fEntries(other.fEntries), fTsumw(other.fTsumw), fTsumw2(other.fTsumw2), fTsumwx(other.fTsumwx),
+     fTsumwx2(other.fTsumwx2), fIntegral(std::move(other.fIntegral)), fIntegralStatus(other.fIntegralStatus)
 {
 
    other.fAxes.SetOwner(false);
@@ -140,15 +140,15 @@ THnBase &THnBase::operator=(THnBase &&other)
    if (this == &other)
       return *this;
 
-   TNamed::operator=(std::move(other));
+   TNamed::operator=(other);
    fNdimensions = other.fNdimensions;
    fAxes = other.fAxes;
    fBrowsables = TObjArray(fNdimensions);
    fEntries = other.fEntries;
    fTsumw = other.fTsumw;
    fTsumw2 = other.fTsumw2;
-   fTsumwx = std::move(other.fTsumwx);
-   fTsumwx2 = std::move(other.fTsumwx2);
+   fTsumwx = other.fTsumwx;
+   fTsumwx2 = other.fTsumwx2;
    fIntegral = std::move(other.fIntegral);
    fIntegralStatus = other.fIntegralStatus;
 

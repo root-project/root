@@ -22,8 +22,8 @@ namespace DNN
 {
 
 template<typename AFloat>
-void TCpu<AFloat>::Sigmoid(TCpuMatrix<AFloat> & B,
-                           const TCpuMatrix<AFloat> & A)
+void TCpu<AFloat>::Sigmoid(TCpu<AFloat>::Matrix_t & B,
+                           const TCpu<AFloat>::Matrix_t & A)
 {
    auto f = [](AFloat x) {return 1.0 / (1.0 + exp(-x));};
    B.MapFrom(f, A);

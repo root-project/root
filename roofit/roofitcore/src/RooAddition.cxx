@@ -19,7 +19,7 @@
 \class RooAddition
 \ingroup Roofitcore
 
-RooAddition calculates the sum of a set of RooAbsReal terms, or
+Calculates the sum of a set of RooAbsReal terms, or
 when constructed with two sets, it sums the product of the terms
 in the two sets.
 **/
@@ -33,11 +33,14 @@ in the two sets.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"
-#include "RooNLLVar.h"
 #include "RooNLLVarNew.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooNLLVar.h"
+#include "RooChi2Var.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -100,7 +103,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     , _set("!set","set of components",this)
     , _cacheMgr(this,10)
 {
-  if (sumSet1.getSize() != sumSet2.getSize()) {
+  if (sumSet1.size() != sumSet2.size()) {
     coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << std::endl;
     RooErrorHandler::softAbort() ;
   }
@@ -195,7 +198,7 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
       std::string className = GetName();
       std::string varName = "elements" + className;
       std::string sumName = "sum" + className;
-      std::string code = "";
+      std::string code;
       std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
       int idx = 0;
       for (RooAbsArg *it : _set) {
@@ -240,12 +243,17 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<RooNLLVarNew*>(arg)) {
-      nllArg = (RooAbsReal*)arg ;
+    if (dynamic_cast<RooNLLVarNew*>(arg)) {
+      nllArg = static_cast<RooAbsReal*>(arg) ;
+    }
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+    if (dynamic_cast<RooNLLVar*>(arg)) {
+      nllArg = static_cast<RooAbsReal*>(arg) ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
-      chi2Arg = (RooAbsReal*)arg ;
+      chi2Arg = static_cast<RooAbsReal*>(arg) ;
     }
+#endif
   }
 
   if (nllArg && !chi2Arg) {
@@ -299,7 +307,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
+  CacheElem* cache = static_cast<CacheElem*>(_cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName)));
   if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code+1;
@@ -321,7 +329,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
+  CacheElem *cache = static_cast<CacheElem*>(_cacheMgr.getObjByIndex(code-1));
   if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );

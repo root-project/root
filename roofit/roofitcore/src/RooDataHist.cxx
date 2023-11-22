@@ -64,6 +64,8 @@ See RooAbsData::plotOn().
 #include "RooFormula.h"
 #include "RooUniformBinning.h"
 
+#include "RooFitImplHelpers.h"
+
 #include <ROOT/RSpan.hxx>
 #include <ROOT/StringUtils.hxx>
 
@@ -84,7 +86,7 @@ ClassImp(RooDataHist);
 
 RooDataHist::RooDataHist()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -124,7 +126,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgSe
   registerWeightArraysToDataStore();
 
   appendToDir(this,true) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -176,7 +178,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importTH1Set(vars, indexCat, histMap, wgt, false) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -200,7 +202,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importDHistSet(vars, indexCat, dhistMap, wgt) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -218,7 +220,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   _dstore = makeDefaultDataStore(name, title, _vars);
 
   // Check consistency in number of dimensions
-  if (vars.getSize() != hist->GetDimension()) {
+  if (int(vars.size()) != hist->GetDimension()) {
     std::stringstream errorMsgStream;
     errorMsgStream << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension of input histogram must match "
                    << "number of dimension variables";
@@ -230,7 +232,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importTH1(vars,*hist,wgt, false) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -274,7 +276,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
 
 RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
           const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) :
-  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,nullptr,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
+  RooAbsData(name,title,RooArgSet(vars,static_cast<RooAbsArg*>(RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,nullptr,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))))
 {
   // Initialize datastore
   _dstore = makeDefaultDataStore(name, title, _vars);
@@ -359,7 +361,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   }
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE
+  TRACE_CREATE;
 
 }
 
@@ -380,9 +382,9 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
   appendToDir(this,true) ;
 
   // Define x,y,z as 1st, 2nd and 3rd observable
-  RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
-  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
-  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
+  RooRealVar* xvar = static_cast<RooRealVar*>(_vars.find(vars.at(0)->GetName())) ;
+  RooRealVar* yvar = static_cast<RooRealVar*>(vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
+  RooRealVar* zvar = static_cast<RooRealVar*>(vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
@@ -490,7 +492,7 @@ bool hasConsistentLayoutAndBinning(RooDataHist const& h1, RooDataHist const& h2)
 
 void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<string,TH1*> hmap, double wgt, bool doDensityCorrection)
 {
-  RooCategory* icat = (RooCategory*) _vars.find(indexCat.GetName()) ;
+  RooCategory* icat = static_cast<RooCategory*>(_vars.find(indexCat.GetName())) ;
 
   TH1* histo(nullptr) ;
   bool init(false) ;
@@ -516,7 +518,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   }
 
   // Check consistency in number of dimensions
-  if (histo && (vars.getSize() != histo->GetDimension())) {
+  if (histo && int(vars.size()) != histo->GetDimension()) {
     coutE(InputArguments) << "RooDataHist::importTH1Set(" << GetName() << "): dimension of input histogram must match "
            << "number of continuous variables" << endl ;
     throw std::invalid_argument("Inputs histograms for RooDataHist are not compatible with dimensions of variables.");
@@ -534,9 +536,9 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   }
 
   // Define x,y,z as 1st, 2nd and 3rd observable
-  RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
-  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
-  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
+  RooRealVar* xvar = static_cast<RooRealVar*>(_vars.find(vars.at(0)->GetName())) ;
+  RooRealVar* yvar = static_cast<RooRealVar*>(vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
+  RooRealVar* zvar = static_cast<RooRealVar*>(vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
@@ -670,56 +672,46 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
   const double xlo = theirVar.getMin();
   const double xhi = theirVar.getMax();
 
-  if (axis.GetXbins()->GetArray()) {
-    RooBinning xbins(axis.GetNbins(), axis.GetXbins()->GetArray());
+   const bool isUniform = !axis.GetXbins()->GetArray();
+   std::unique_ptr<RooAbsBinning> xbins;
 
-    const double tolerance = 1e-6 * xbins.averageBinWidth();
+   if (!isUniform) {
+      xbins = std::make_unique<RooBinning>(axis.GetNbins(), axis.GetXbins()->GetArray());
+   } else {
+      xbins = std::make_unique<RooUniformBinning>(axis.GetXmin(), axis.GetXmax(), axis.GetNbins());
+   }
 
-    // Adjust xlo/xhi to nearest boundary
-    const double xloAdj = xbins.binLow(xbins.binNumber(xlo + tolerance));
-    const double xhiAdj = xbins.binHigh(xbins.binNumber(xhi - tolerance));
-    xbins.setRange(xloAdj, xhiAdj);
+   const double tolerance = 1e-6 * xbins->averageBinWidth();
 
-    theirVar.setBinning(xbins);
+   // Adjust xlo/xhi to nearest boundary
+   const int iBinLo = xbins->binNumber(xlo + tolerance);
+   const int iBinHi = xbins->binNumber(xhi - tolerance);
+   const int nBinsAdj = iBinHi - iBinLo + 1;
+   const double xloAdj = xbins->binLow(iBinLo);
+   const double xhiAdj = xbins->binHigh(iBinHi);
 
-    if (true || std::abs(xloAdj - xlo) > tolerance || std::abs(xhiAdj - xhi) > tolerance) {
-       coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
-                           << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj
-                           << "," << xhiAdj << "]"
-                           << "\n";
-    }
+   if (isUniform) {
+      xbins = std::make_unique<RooUniformBinning>(xloAdj, xhiAdj, nBinsAdj);
+      theirVar.setRange(xloAdj, xhiAdj);
+   } else {
+      xbins->setRange(xloAdj, xhiAdj);
+      theirVar.setBinning(*xbins);
+   }
 
-    ourVar->setBinning(xbins);
+   if (std::abs(xloAdj - xlo) > tolerance || std::abs(xhiAdj - xhi) > tolerance) {
+      coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
+                          << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj << ","
+                          << xhiAdj << "]"
+                          << "\n";
+   }
 
-    if (offset) {
-      *offset = xbins.rawBinNumber(xloAdj + tolerance);
-    }
-  } else {
-    RooBinning xbins(axis.GetXmin(), axis.GetXmax());
-    xbins.addUniform(axis.GetNbins(), axis.GetXmin(), axis.GetXmax());
+   ourVar->setBinning(*xbins);
 
-    const double tolerance = 1e-6 * xbins.averageBinWidth();
-
-    // Adjust xlo/xhi to nearest boundary
-    const double xloAdj = xbins.binLow(xbins.binNumber(xlo + tolerance));
-    const double xhiAdj = xbins.binHigh(xbins.binNumber(xhi - tolerance));
-    xbins.setRange(xloAdj, xhiAdj);
-    theirVar.setRange(xloAdj, xhiAdj);
-
-    if (std::abs(xloAdj - xlo) > tolerance || std::abs(xhiAdj - xhi) > tolerance) {
-       coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
-                           << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj
-                           << "," << xhiAdj << "]"
-                           << "\n";
-    }
-
-    RooUniformBinning xbins2(xloAdj, xhiAdj, xbins.numBins());
-    ourVar->setBinning(xbins2);
-
-    if (offset) {
-      *offset = xbins.rawBinNumber(xloAdj + tolerance);
-    }
-  }
+   // The offset is the bin number of the adjusted lower limit of the RooFit
+   // variable in the original TH1 histogram, starting from zero.
+   if (offset) {
+      *offset = axis.FindFixBin(xloAdj + tolerance) - 1;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -733,7 +725,7 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
 
 void RooDataHist::adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset)
 {
-  auto xvar = static_cast<RooRealVar*>( _vars.find(*vars.at(0)) );
+  auto xvar = static_cast<RooRealVar*>(_vars.find(*vars.at(0)) );
   _adjustBinning(*static_cast<RooRealVar*>(vars.at(0)), *href.GetXaxis(), xvar, offset ? &offset[0] : nullptr);
 
   if (vars.at(1)) {
@@ -968,7 +960,7 @@ RooDataHist::~RooDataHist()
    delete[] _binv;
 
    removeFromDir(this) ;
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -989,7 +981,7 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, bool fast) const {
 std::string RooDataHist::declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
                                                       bool correctForBinSize) const
 {
-   std::string weightName = ctx.makeValidVarName(klass->GetName()) + "_HistWeights";
+   std::string weightName = RooFit::Detail::makeValidVarName(klass->GetName()) + "_HistWeights";
 
    std::string arrayDecl = "double " + weightName + "[" + std::to_string(_arrSize) + "] = {";
    for (Int_t i = 0; i < _arrSize; i++) {
@@ -1820,7 +1812,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, doubl
       return ;
     }
 
-    cloneVar = (RooFormulaVar*) tmp->find(*cutVar) ;
+    cloneVar = static_cast<RooFormulaVar*>(tmp->find(*cutVar)) ;
     cloneVar->attachDataSet(dset) ;
   }
 

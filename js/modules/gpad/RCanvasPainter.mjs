@@ -26,6 +26,11 @@ class RCanvasPainter extends RPadPainter {
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
       this.v7canvas = true;
+      if ((dom === null) && (canvas === null)) {
+         // for web canvas details are important
+         settings.SmallPad.width = 20;
+         settings.SmallPad.height = 10;
+      }
    }
 
    /** @summary Cleanup canvas painter */
@@ -931,10 +936,21 @@ function drawRFont() {
       defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
    let entry = defs.selectChild('.' + clname);
-   if (entry.empty())
-      entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
-
-   entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : 'normal'}; font-style: ${font.fStyle ? font.fStyle : 'normal'}; src: ${font.fSrc}; }`);
+   if (entry.empty()) {
+      entry = defs.append('style')
+                  .attr('type', 'text/css')
+                  .attr('class', clname)
+                  .text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : 'normal'}; font-style: ${font.fStyle ? font.fStyle : 'normal'}; src: ${font.fSrc}; }`);
+      const p1 = font.fSrc.indexOf('base64,'),
+            p2 = font.fSrc.lastIndexOf(' format(');
+      if (p1 > 0 && p2 > p1) {
+         const base64 = font.fSrc.slice(p1 + 7, p2 - 2),
+               is_ttf = font.fSrc.indexOf('data:application/font-ttf') > 0;
+         // TODO: for the moment only ttf format supported by jsPDF
+         if (is_ttf)
+            entry.property('$fonthandler', { name: font.fFamily, format: 'ttf', base64 });
+      }
+   }
 
    if (font.fDefault)
       this.getPadPainter()._dfltRFont = font;

@@ -172,7 +172,7 @@ TGeoVolume *TGeoHalfSpace::Divide(TGeoVolume * /*voldiv*/, const char * /*divnam
                                   Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Half-spaces cannot be divided");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

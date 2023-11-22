@@ -56,7 +56,7 @@ automatic PDF optimization.
 #include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
@@ -107,13 +107,13 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
    if (nll_real != nullptr) {
       if (_cfg.parallelize != 0) { // new test statistic with multiprocessing library with
                                    // parallel likelihood or parallel gradient
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
          if (!_cfg.enableParallelGradient) {
             // Note that this is necessary because there is currently no serial-mode LikelihoodGradientWrapper.
             // We intend to repurpose RooGradMinimizerFcn to build such a LikelihoodGradientSerial class.
             coutI(InputArguments) << "Modular likelihood detected and likelihood parallelization requested, "
                                   << "also setting parallel gradient calculation mode." << std::endl;
-            _cfg.enableParallelGradient = 1;
+            _cfg.enableParallelGradient = true;
          }
          // If _cfg.parallelize is larger than zero set the number of workers to that value. Otherwise do not do
          // anything and let RooFit::MultiProcess handle the number of workers
@@ -312,7 +312,7 @@ bool RooMinimizer::fitFcn() const
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
    if (_cfg.timingAnalysis) {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else
       throw std::logic_error("ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
@@ -373,7 +373,7 @@ int RooMinimizer::migrad()
 
 int RooMinimizer::hesse()
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!" << endl;
       _status = -1;
    } else {
@@ -404,7 +404,7 @@ int RooMinimizer::hesse()
 
 int RooMinimizer::minos()
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
       _status = -1;
    } else {
@@ -436,7 +436,7 @@ int RooMinimizer::minos()
 
 int RooMinimizer::minos(const RooArgSet &minosParamList)
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
       _status = -1;
    } else if (!minosParamList.empty()) {
@@ -456,7 +456,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
             }
          }
 
-         if (paramInd.size()) {
+         if (!paramInd.empty()) {
             // set the parameter indices
             _theFitter->Config().SetMinosErrors(paramInd);
 
@@ -586,7 +586,7 @@ void RooMinimizer::optimizeConst(int flag)
 
 RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const char *userTitle)
 {
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << endl;
       return nullptr;
    }
@@ -690,7 +690,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
    // check first if a inimizer is available. If not means
    // the minimization is not done , so do it
-   if (_theFitter->GetMinimizer() == 0) {
+   if (_theFitter->GetMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!" << endl;
       return frame;
    }
@@ -748,7 +748,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
 void RooMinimizer::addParamsToProcessTimer()
 {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
    // parameter indices for use in timing heat matrix
    std::vector<std::string> parameter_names;
    for (auto &&parameter : *_fcn->GetFloatParamList()) {
@@ -818,7 +818,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    // Import the results of the last fit performed, interpreting
    // the fit parameters as the given varList of parameters.
 
-   if (_theFitter == 0 || _theFitter->GetMinimizer() == 0) {
+   if (_theFitter == nullptr || _theFitter->GetMinimizer() == nullptr) {
       oocoutE(nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << endl;
       return nullptr;
    }
@@ -958,7 +958,7 @@ double &RooMinimizer::maxFCN()
 
 int RooMinimizer::Config::getDefaultWorkers()
 {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
    return RooFit::MultiProcess::Config::getDefaultNWorkers();
 #else
    return 0;

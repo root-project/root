@@ -90,6 +90,31 @@ TEST(Packing, Bitfield)
    }
 }
 
+TEST(Packing, HalfPrecisionFloat)
+{
+   ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element;
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   float in = 3.14;
+   std::uint16_t b = 0;
+   element.Pack(&b, &in, 1);
+   EXPECT_EQ(0x4248, b); // Expected bit representation: 0b01000010 01001000
+   float out = 0.;
+   element.Unpack(&out, &b, 1);
+   EXPECT_FLOAT_EQ(3.140625, out);
+
+   float in4[] = {0.1, 0.2, 0.3, 0.4};
+   std::uint64_t b4;
+   element.Pack(&b4, &in4, 4);
+   float out4[] = {0., 0., 0., 0.};
+   element.Unpack(&out4, &b4, 4);
+   EXPECT_FLOAT_EQ(0.099975586, out4[0]);
+   EXPECT_FLOAT_EQ(0.199951171, out4[1]);
+   EXPECT_FLOAT_EQ(0.300048828, out4[2]);
+   EXPECT_FLOAT_EQ(0.399902343, out4[3]);
+}
+
 TEST(Packing, RColumnSwitch)
 {
    ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch,
@@ -201,6 +226,7 @@ TEST(Packing, OnDiskEncoding)
    AddField<std::uint32_t, ROOT::Experimental::EColumnType::kSplitUInt32>(*model, "uint32");
    AddField<std::uint64_t, ROOT::Experimental::EColumnType::kSplitUInt64>(*model, "uint64");
    AddField<float, ROOT::Experimental::EColumnType::kSplitReal32>(*model, "float");
+   AddField<float, ROOT::Experimental::EColumnType::kReal16>(*model, "float16");
    AddField<double, ROOT::Experimental::EColumnType::kSplitReal64>(*model, "double");
    AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex32>(*model, "index32");
    AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex64>(*model, "index64");
@@ -218,9 +244,10 @@ TEST(Packing, OnDiskEncoding)
       *e->Get<std::uint16_t>("uint16") = 1;
       *e->Get<std::uint32_t>("uint32") = 0x00010203;
       *e->Get<std::uint64_t>("uint64") = 0x0001020304050607L;
-      *e->Get<float>("float") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
-      *e->Get<double>("double") = std::nextafter(1., 2.);  // 0x3ff0 0000 0000 0001
-      *e->Get<ClusterSize_t>("index32") = 39916801;        // 0x0261 1501
+      *e->Get<float>("float") = std::nextafterf(1.f, 2.f);   // 0 01111111 00000000000000000000001 == 0x3f800001
+      *e->Get<float>("float16") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
+      *e->Get<double>("double") = std::nextafter(1., 2.);    // 0x3ff0 0000 0000 0001
+      *e->Get<ClusterSize_t>("index32") = 39916801;          // 0x0261 1501
       *e->Get<ClusterSize_t>("index64") = 0x0706050403020100L;
       e->Get<std::string>("str")->assign("abc");
 
@@ -233,6 +260,7 @@ TEST(Packing, OnDiskEncoding)
       *e->Get<std::uint32_t>("uint32") = 0x04050607;
       *e->Get<std::uint64_t>("uint64") = 0x08090a0b0c0d0e0fL;
       *e->Get<float>("float") = std::nextafterf(1.f, 0.f);            // 0 01111110 11111111111111111111111 = 0x3f7fffff
+      *e->Get<float>("float16") = std::nextafterf(0.1f, 0.2f);        // 0 01111011 10011001100110011001110 = 0x3dccccce
       *e->Get<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
       *e->Get<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
       *e->Get<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
@@ -281,6 +309,10 @@ TEST(Packing, OnDiskEncoding)
    source->LoadSealedPage(fnGetColumnId("float"), RClusterIndex(0, 0), sealedPage);
    unsigned char expFloat[] = {0x01, 0xff, 0x00, 0xff, 0x80, 0x7f, 0x3f, 0x3f};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat, sizeof(expFloat)), 0);
+
+   source->LoadSealedPage(fnGetColumnId("float16"), RClusterIndex(0, 0), sealedPage);
+   unsigned char expFloat16[] = {0x00, 0x3c, 0x66, 0x2e};
+   EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat16, sizeof(expFloat16)), 0);
 
    source->LoadSealedPage(fnGetColumnId("double"), RClusterIndex(0, 0), sealedPage);
    unsigned char expDouble[] = {0x01, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff,

@@ -90,7 +90,7 @@ protected:
    Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
-   TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
+   std::vector<TPad *> fAllPads;   ///<! list of all pads recognized during streaming
    Int_t fStyleDelivery{0};        ///<! gStyle delivery to clients: 0:never, 1:once, 2:always
    Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
@@ -125,6 +125,7 @@ protected:
 
    UInt_t CalculateColorsHash();
    void AddColorsPalette(TPadWebSnapshot &master);
+   void AddCustomFonts(TPadWebSnapshot &master);
 
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
@@ -241,6 +242,8 @@ public:
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
    Bool_t IsFixedSize() const { return fFixedSize; }
+
+   static Font_t AddFont(const char *name, const char *ttffile, Int_t precision = 2);
 
    static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0, Bool_t batchmode = kFALSE);
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0, Bool_t batchmode = kFALSE);

@@ -25,7 +25,7 @@ namespace Minuit2 {
 
 /**
    Build (find) function minimum using the Variable Metric method (MIGRAD)
-   Two possible error updators can be choosen
+   Two possible error updators can be chosen
     - Davidon : this is the standard formula used in Migrad
     - BFGS this is the new formula based on BFGS algorithm
       (see Broyden–Fletcher–Goldfarb–Shanno algorithm

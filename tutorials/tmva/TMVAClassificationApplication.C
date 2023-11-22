@@ -382,8 +382,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["CutsGA"]) {
 
       // test: retrieve cuts for particular signal efficiency
-      // CINT ignores dynamic_casts so we have to use a cuts-specific Reader function to access the pointer
-      TMVA::MethodCuts* mcuts = reader->FindCutsMVA( "CutsGA method" ) ;
+      TMVA::MethodCuts* mcuts = dynamic_cast<TMVA::MethodCuts*>(reader->FindMVA( "CutsGA method" ));
 
       if (mcuts) {
          std::vector<Double_t> cutsMin;

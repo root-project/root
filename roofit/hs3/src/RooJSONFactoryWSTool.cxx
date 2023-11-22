@@ -30,6 +30,8 @@
 #include "JSONIOUtils.h"
 #include "Domains.h"
 
+#include "RooFitImplHelpers.h"
+
 #include <TROOT.h>
 
 #include <algorithm>
@@ -51,18 +53,18 @@ exporting to and importing from JSON and YML.
 
 In order to import a workspace from a JSON file, you can do
 
-~~ {.py}
+~~~ {.py}
 ws = ROOT.RooWorkspace("ws")
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.importJSON("myjson.json")
-~~
+~~~
 
 Similarly, in order to export a workspace to a JSON file, you can do
 
-~~ {.py}
+~~~ {.py}
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.exportJSON("myjson.json")
-~~
+~~~
 
 For more details, consult the tutorial <a
 href="https://root.cern/doc/v626/rf515__hfJSON_8py.html">rf515_hfJSON</a>.
@@ -70,8 +72,7 @@ href="https://root.cern/doc/v626/rf515__hfJSON_8py.html">rf515_hfJSON</a>.
 In order to import and export YML files, `ROOT` needs to be compiled
 with the external dependency <a
 href="https://github.com/biojppm/rapidyaml">RapidYAML</a>, which needs
-to be installed on your system and enabled via the CMake option
-`roofit_hs3_ryml`.
+to be installed on your system when building `ROOT`.
 
 The RooJSONFactoryWSTool only knows about a limited set of classes for
 import and export. If import or export of a class you're interested in
@@ -81,18 +82,18 @@ href="https://github.com/root-project/root/blob/master/roofit/hs3/README.md">REA
 to learn how to do that.
 
 You can always get a list of all the available importers and exporters by calling the following functions:
-~~ {.py}
+~~~ {.py}
 ROOT.RooFit.JSONIO.printImporters()
 ROOT.RooFit.JSONIO.printExporters()
 ROOT.RooFit.JSONIO.printFactoryExpressions()
 ROOT.RooFit.JSONIO.printExportKeys()
-~~
+~~~
 
 Alternatively, you can generate a LaTeX version of the available importers and exporters by calling
-~~ {.py}
+~~~ {.py}
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.writedoc("hs3.tex")
-~~
+~~~
 
 */
 
@@ -742,6 +743,9 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
       for (auto &n : info["labels"].children()) {
          labels.push_back(n.val());
       }
+      if (indices.size() != labels.size()) {
+         RooJSONFactoryWSTool::error("mismatch in number of indices and labels!");
+      }
 
       // Create the combined dataset for RooFit
       std::map<std::string, std::unique_ptr<RooAbsData>> dsMap;
@@ -753,6 +757,8 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
          // the data components don't get imported anymore.
          std::unique_ptr<RooAbsData> &component = *std::find_if(
             datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == componentName; });
+         if (!component)
+            RooJSONFactoryWSTool::error("unable to obtain component matching component name '" + componentName + "'");
          allVars.add(*component->get());
          dsMap.insert({labels[iChannel], std::move(component)});
          indexCat.defineType(labels[iChannel], indices[iChannel]);
@@ -776,14 +782,22 @@ RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
 
-void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll)
+void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll, size_t nMax)
 {
+   const size_t old_children = node.num_children();
    node.set_seq();
+   size_t n = 0;
    for (RooAbsArg const *arg : coll) {
+      if (n >= nMax)
+         break;
       if (isLiteralConstVar(*arg))
          node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
       else
          node.append_child() << arg->GetName();
+      ++n;
+   }
+   if (node.num_children() != old_children + coll.size()) {
+      error("unable to stream collection " + std::string(coll.GetName()) + " to " + node.key());
    }
 }
 
@@ -1121,11 +1135,11 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       if (auto l = dynamic_cast<RooListProxy *>(p)) {
          fillSeq(elem[k->second], *l);
       }
-      if (auto r = dynamic_cast<RooRealProxy *>(p)) {
-         if (isLiteralConstVar(r->arg()))
-            elem[k->second] << r->arg().getVal();
+      if (auto r = dynamic_cast<RooArgProxy *>(p)) {
+         if (isLiteralConstVar(*r->absArg()))
+            elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
          else
-            elem[k->second] << r->arg().GetName();
+            elem[k->second] << r->absArg()->GetName();
       }
    }
 
@@ -1332,7 +1346,19 @@ void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &n
    auto &indices = node["indices"].set_seq();
 
    for (auto const &item : cat) {
-      labels.append_child() << item.first;
+      std::string label;
+      if (std::isalpha(item.first[0])) {
+         label = RooFit::Detail::makeValidVarName(item.first);
+         if (label != item.first) {
+            oocoutW(nullptr, IO) << "RooFitHS3: changed '" << item.first << "' to '" << label
+                                 << "' to become a valid name";
+         }
+      } else {
+         RooJSONFactoryWSTool::error("refusing to change first character of string '" + item.first +
+                                     "' to make a valid name!");
+         label = item.first;
+      }
+      labels.append_child() << label;
       indices.append_child() << item.second;
    }
 }
@@ -1394,7 +1420,19 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 
    for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
       std::string catName(absData->GetName());
-      absData->SetName((std::string(data.GetName()) + "_" + catName).c_str());
+      std::string dataName;
+      if (std::isalpha(catName[0])) {
+         dataName = RooFit::Detail::makeValidVarName(catName);
+         if (dataName != catName) {
+            oocoutW(nullptr, IO) << "RooFitHS3: changed '" << catName << "' to '" << dataName
+                                 << "' to become a valid name";
+         }
+      } else {
+         RooJSONFactoryWSTool::error("refusing to change first character of string '" + catName +
+                                     "' to make a valid name!");
+         dataName = catName;
+      }
+      absData->SetName((std::string(data.GetName()) + "_" + dataName).c_str());
       datamap.components[catName] = absData->GetName();
       this->exportData(*absData);
    }
@@ -1790,8 +1828,21 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       // the ones that the pdfs encoded implicitly (like in the case of
       // HistFactory).
       for (RooAbsArg *arg : *snsh) {
-         if (exportedObjectNames.find(arg->GetName()) != exportedObjectNames.end())
-            snapshotSorted.add(*arg);
+         if (exportedObjectNames.find(arg->GetName()) != exportedObjectNames.end()) {
+            bool do_export = false;
+            for (const auto &pdf : allpdfs) {
+               if (pdf->dependsOn(*arg)) {
+                  do_export = true;
+               }
+            }
+            if (do_export && !::isValidName(arg->GetName())) {
+               std::stringstream ss;
+               ss << "RooJSONFactoryWSTool() variable '" << arg->GetName() << "' has an invalid name!" << std::endl;
+               RooJSONFactoryWSTool::error(ss.str());
+            }
+            if (do_export)
+               snapshotSorted.add(*arg);
+         }
       }
       snapshotSorted.sort();
       std::string name(snsh->GetName());

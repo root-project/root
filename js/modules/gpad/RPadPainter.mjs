@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, internals, addMethods,
-         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, btoa_func, clTPad, nsREX } from '../core.mjs';
+         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, clTPad, nsREX } from '../core.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
@@ -57,6 +57,11 @@ class RPadPainter extends RObjectPainter {
    /** @summary Indicates that is not Root6 pad painter
     * @private */
    isRoot6() { return false; }
+
+   /** @summary Returns true if pad is editable */
+   isEditable() {
+      return true;
+   }
 
   /** @summary Returns SVG element for the pad itself
     * @private */
@@ -170,6 +175,32 @@ class RPadPainter extends RObjectPainter {
             this.painters.splice(k, 1);
          }
       }
+   }
+
+   /** @summary Removes and cleanup specified primitive
+     * @desc also secondary primitives will be removed
+     * @return new index to continue loop or -111 if main painter removed
+     * @private */
+   removePrimitive(indx) {
+      const prim = this.painters[indx], arr = [];
+      let resindx = indx;
+      for (let k = this.painters.length-1; k >= 0; --k) {
+         if ((k === indx) || this.painters[k].isSecondary(prim)) {
+            arr.push(this.painters[k]);
+            this.painters.splice(k, 1);
+            if (k <= indx) resindx--;
+         }
+      }
+
+      arr.forEach(painter => {
+         painter.cleanup();
+         if (this.main_painter_ref === painter) {
+            delete this.main_painter_ref;
+            resindx = -111;
+         }
+      });
+
+      return resindx;
    }
 
    /** @summary try to find object by name in list of pad primitives
@@ -637,10 +668,10 @@ class RPadPainter extends RObjectPainter {
       }
 
       // handle used to invoke callback only when necessary
-      return this.drawObject(this.getDom(), this.pad.fPrimitives[indx], '').then(ppainter => {
+      return this.drawObject(this.getDom(), this.pad.fPrimitives[indx], '').then(op => {
          // mark painter as belonging to primitives
-         if (isObject(ppainter))
-            ppainter._primitive = true;
+         if (isObject(op))
+            op._primitive = true;
 
          return this.drawPrimitives(indx+1);
       });
@@ -706,8 +737,9 @@ class RPadPainter extends RObjectPainter {
          menu.addchk((this.enlargeMain('state') === 'on'), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
 
       const fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
-      menu.add(`Save as ${fname}.png`, fname+'.png', arg => this.saveAs('png', false, arg));
-      menu.add(`Save as ${fname}.svg`, fname+'.svg', arg => this.saveAs('svg', false, arg));
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -1197,11 +1229,7 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} with image data, coded with btoa() function
      * @private */
    async createImage(format) {
-      // use https://github.com/MrRio/jsPDF in the future here
-      if (format === 'pdf')
-         return btoa_func('dummy PDF file');
-
-      if ((format === 'png') || (format === 'jpeg') || (format === 'svg')) {
+      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
             if (!res || (format === 'svg')) return res;
             const separ = res.indexOf('base64,');
@@ -1243,7 +1271,8 @@ class RPadPainter extends RObjectPainter {
        if (!isFunc(selp?.fillContextMenu)) return;
 
        return createMenu(evnt, selp).then(menu => {
-          if (selp.fillContextMenu(menu, selkind))
+          const offline_menu = selp.fillContextMenu(menu, selkind);
+          if (offline_menu || selp.snapid)
              selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
        });
    }
@@ -1346,10 +1375,11 @@ class RPadPainter extends RObjectPainter {
          height = fp.getFrameHeight();
       }
 
-      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`;
-      svg = compressSVG(svg);
+      const arg = (file_format === 'pdf')
+         ? { node: elem.node(), width, height, reset_tranform: use_frame }
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
 
-      return svgToImage(svg, file_format).then(res => {
+      return svgToImage(arg, file_format).then(res => {
          for (let k = 0; k < items.length; ++k) {
             const item = items[k];
 
@@ -1412,15 +1442,15 @@ class RPadPainter extends RObjectPainter {
             if (this.painters?.length) {
                menu.add('separator');
                const shown = [];
-               for (let n = 0; n < this.painters.length; ++n) {
-                  const obj = this.painters[n]?.getObject();
-                  if (!obj || (shown.indexOf(obj) >= 0)) continue;
-
-                  let name = obj._typename ? obj._typename + '::' : '';
-                  if (obj.fName) name += obj.fName;
-                  if (!name) name = 'item' + n;
-                  menu.add(name, n, this.itemContextMenu);
-               }
+               this.painters.forEach((pp, indx) => {
+                  const obj = pp?.getObject();
+                  if (!obj || (shown.indexOf(obj) >= 0) || pp.isSecondary()) return;
+                  let name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
+                  if (name) name += '::';
+                  name += isFunc(pp.getObjectName) ? pp.getObjectName() : (obj.fName || `item${indx}`);
+                  menu.add(name, indx, this.itemContextMenu);
+                  shown.push(obj);
+               });
             }
 
             menu.show();

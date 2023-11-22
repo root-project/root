@@ -14,7 +14,7 @@ struct TStopwatch {
 #endif
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 // solve Roots of rosenbrock function
 // f1(x,y) = a(1-x)

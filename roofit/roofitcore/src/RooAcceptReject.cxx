@@ -71,16 +71,15 @@ void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
 /// variables to be generated, genVars. The function and its dependents are
 /// cloned and so will not be disturbed during the generation process.
 
-RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose, const RooAbsReal* maxFuncVal) :
-  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
+RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig &config,
+                                 bool verbose, const RooAbsReal *maxFuncVal)
+   : RooAbsNumGenerator(func, genVars, verbose, maxFuncVal), _realSampleDim(_realVars.size()), _catSampleMult(1)
 {
   _minTrialsArray[0] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial0D")) ;
   _minTrialsArray[1] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial1D")) ;
   _minTrialsArray[2] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial2D")) ;
   _minTrialsArray[3] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial3D")) ;
 
-  _realSampleDim = _realVars.getSize() ;
-  _catSampleMult = 1 ;
   for (auto * cat : static_range_cast<RooAbsCategory*>(_catVars)) {
     _catSampleMult *=  cat->numTypes() ;
   }
@@ -129,10 +128,10 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       ooccoutI(nullptr, Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
       ooccoutI(nullptr, Generation) << "  Min sampling trials is " << _minTrials << endl;
     }
-    if (_catVars.getSize()>0) {
+    if (!_catVars.empty()) {
       ooccoutI(nullptr, Generation) << "  Will generate category vars "<< _catVars << endl ;
     }
-    if (_realVars.getSize()>0) {
+    if (!_realVars.empty()) {
       ooccoutI(nullptr, Generation) << "  Will generate real vars " << _realVars << endl ;
     }
   }
@@ -154,7 +153,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
 {
   // are we actually generating anything? (the cache always contains at least our function value)
   const RooArgSet *event= _cache->get();
-  if(event->getSize() == 1) return event;
+  if(event->size() == 1) return event;
 
   if (!_funcMaxVal) {
     // Generation with empirical maximum determination
@@ -178,7 +177,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
     while(nullptr == event) {
       // Use any cached events first
       if (_maxFuncVal>oldMax2) {
-   oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor"
+   oocxcoutD(nullptr, Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor"
              << oldMax2 << "/" << _maxFuncVal << "=" << oldMax2/_maxFuncVal << endl ;
    resampleRatio=oldMax2/_maxFuncVal ;
       }
@@ -197,12 +196,12 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
 
       double eff= _funcSum/(_totalEvents*_maxFuncVal);
       Long64_t extra= 1 + (Long64_t)(1.05*remaining/eff);
-      oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
+      oocxcoutD(nullptr, Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
       double oldMax(_maxFuncVal);
       while(extra--) {
    addEventToCache();
    if((_maxFuncVal > oldMax)) {
-     oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
+     oocxcoutD(nullptr, Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
                << oldMax << " to " << _maxFuncVal << endl;
      oldMax = _maxFuncVal ;
      // Trim cache here

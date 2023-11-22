@@ -1,4 +1,4 @@
-//Test program for random number generators (spped and quality)
+//Test program for random number generators (speed and quality)
 //The program get n random number pairs x and y i [0,1]
 //It counts the ratio of pairs in the circle of diameter 1
 //compared to the total number of pairs.
@@ -143,7 +143,7 @@ void pirndm(Long64_t n1=1, unsigned int seed = 0) {
    frame->GetYaxis()->SetTitle("Difference with #pi");
    frame->GetYaxis()->SetTitleOffset(1.3);
    frame->GetYaxis()->SetDecimals();
-   frame->SetStats(0);
+   frame->SetStats(false);
    frame->Draw();
    legend = new TLegend(0.6,0.7,0.88,0.88);
    legend->Draw();

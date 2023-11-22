@@ -1676,6 +1676,8 @@ The following styles are supported:
 
 -   `kNESMinSec` - time in minutes:seconds format
 
+-   `kNESMinSecCent` - time in minutes:seconds.centiseconds format
+
 -   `kNESHourMin` - time in hour:minutes format
 
 -   `kNESHourMinSec` - time in hour:minutes:seconds format

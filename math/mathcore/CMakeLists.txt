@@ -119,8 +119,6 @@ ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler f
 ROOT_ADD_C_FLAG(_flags -Wno-maybe-uninitialized)  # Avoid what it seems a compiler false positive warning
 ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)
 
-set_source_files_properties(src/triangle.c COMPILE_FLAGS "${_flags}")
-
 if(imt)
   set(MATHCORE_DEPENDENCIES Imt)
 endif()
@@ -191,7 +189,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/TRandomGen.cxx
     src/TStatistic.cxx
     src/UnBinData.cxx
-    src/triangle.c
     src/VectorizedTMath.cxx
   LIBRARIES
     ${MATHCORE_LIBRARIES}
@@ -214,6 +211,10 @@ list(APPEND math_incl ${VecCore_INCLUDE_DIRS})
 foreach(incl ${math_incl})
    target_include_directories(MathCore PUBLIC $<BUILD_INTERFACE:${incl}>)
 endforeach()
+
+if(NOT minuit2)
+    target_compile_definitions(MathCore PRIVATE MATH_USE_LEGACY_MINUIT_AS_DEFAULT)
+endif()
 
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})

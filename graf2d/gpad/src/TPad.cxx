@@ -190,8 +190,8 @@ TPad::TPad()
    fLogx  = 0;
    fLogy  = 0;
    fLogz  = 0;
-   fGridx = 0;
-   fGridy = 0;
+   fGridx = false;
+   fGridy = false;
    fTickx = 0;
    fTicky = 0;
    fFrame = nullptr;
@@ -2228,7 +2228,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       ExecuteEvent(kButton1Down, px, py);
 
-      while (1) {
+      while (true) {
          px = py = 0;
          event = gVirtualX->RequestLocator(1, 1, px, py);
 
@@ -7026,26 +7026,22 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 {
    Bool_t validType = kFALSE;
 
-   if ( (!type || !type[0] || (strstr(type, "gl") && !strstr(type, "ogl"))) && !fCanvas->UseGL())
+   if ((!type || !*type || (strstr(type, "gl") && !strstr(type, "ogl"))) && (!fCanvas || !fCanvas->UseGL()))
       type = "pad";
 
-   if (type && type[0]) {
-
+   if (type && *type) {
       if (gPluginMgr->FindHandler("TVirtualViewer3D", type))
          validType = kTRUE;
-
    }
 
    // Invalid/null type requested?
    if (!validType) {
       // Return current viewer if there is one
-      if (fViewer3D) {
+      if (fViewer3D)
          return fViewer3D;
-      }
       // otherwise default to the pad
-      else {
+      else
          type = "pad";
-      }
    }
 
    // Ensure we can create the new viewer before removing any existing one
@@ -7055,22 +7051,25 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    // External viewers need to be created via plugin manager via interface...
    if (!strstr(type,"pad")) {
-      newViewer = TVirtualViewer3D::Viewer3D(this,type);
+      newViewer = TVirtualViewer3D::Viewer3D(this, type);
 
       if (!newViewer) {
-         Warning("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
-
+         Warning("GetViewer3D", "Cannot create 3D viewer of type: %s", type);
          // Return the existing viewer
          return fViewer3D;
       }
 
-      if (strstr(type, "gl") && !strstr(type, "ogl"))
-         fEmbeddedGL = kTRUE, fCopyGLDevice = kTRUE, Modified();
-      else
+      if (strstr(type, "gl") && !strstr(type, "ogl")) {
+         fEmbeddedGL = kTRUE;
+         fCopyGLDevice = kTRUE;
+         Modified();
+      } else {
          createdExternal = kTRUE;
+      }
 
-   } else
+   } else {
       newViewer = new TViewer3DPad(*this);
+   }
 
    // If we had a previous viewer destroy it now
    // In this case we do take responsibility for destroying viewer

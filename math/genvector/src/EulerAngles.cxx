@@ -126,7 +126,7 @@ operator * ( RotationZ const & r, EulerAngles const & e )  {
 
 std::ostream & operator<< (std::ostream & os, const EulerAngles & e) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form may need formatiing improvements
+   //        and even the human readable form may need formatting improvements
    os << "\n{phi: " << e.Phi() << "   theta: " << e.Theta()
    << "   psi: " << e.Psi() << "}\n";
    return os;

@@ -19,8 +19,7 @@
 \class RooAdaptiveIntegratorND
 \ingroup Roofitcore
 
-RooAdaptiveIntegratorND implements an adaptive one-dimensional
-numerical integration algorithm.
+Adaptive one-dimensional numerical integration algorithm.
 **/
 
 
@@ -76,13 +75,14 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
 /// integration limits are taken from the definition in the function binding
 ///_func = function.
 
-RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, const RooNumIntConfig& config) :
-  RooAbsIntegrator(function)
+RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc &function, const RooNumIntConfig &config)
+   : RooAbsIntegrator(function),
+     _nWarn(static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")))
 {
 
   _rooFunctor = std::make_unique<RooFunctor>(function);
   _func = std::make_unique<ROOT::Math::Functor>(*_rooFunctor, static_cast<unsigned int>(_rooFunctor->nObs()));
-  _nWarn = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")) ;
+
   switch (_func->NDim()) {
   case 1: throw string(Form("RooAdaptiveIntegratorND::ctor ERROR dimension of function must be at least 2")) ;
   case 2: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEval2D")) ; break ;

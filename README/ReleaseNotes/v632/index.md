@@ -23,6 +23,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/EP-SFT,\
  Enrico Guiraud, CERN/EP-SFT and Princeton,\
  Jonas Hahnfeld, CERN/EP-SFT,\
+ Akeem Hart, Queen Mary University of London/DUNE and MINERvA,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/EP-SFT,\
  Lorenzo Moneta, CERN/EP-SFT,\
@@ -37,7 +38,7 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas,
 
 ## Deprecation and Removal
-
+- The RooFit legacy iterators are deprecated and will be removed in ROOT 6.34 (see section "RooFit libraries")
 
 ## Core Libraries
 
@@ -56,6 +57,24 @@ The following people have contributed to this new version:
 
 ## RooFit Libraries
 
+### Deprecation of legacy iterators
+
+The following methods related to the RooFit legacy iterators are deprecated and will be removed in ROOT 6.34.
+They should be replaced with the suitable STL-compatible interfaces, or you can just use range-based loops:
+
+- `RooAbsArg::clientIterator()`: use `clients()` and `begin()`, `end()` or range-based loops instead
+- `RooAbsArg::valueClientIterator()`: use `valueClients()`
+- `RooAbsArg::shapeClientIterator()`: use `shapeClients()`
+- `RooAbsArg::serverIterator()`: use `servers()`
+- `RooAbsArg::valueClientMIterator()`: use `valueClients()`
+- `RooAbsArg::shapeClientMIterator()`: use `shapeClients()`
+- `RooAbsArg::serverMIterator()`: use `servers()`
+
+- `RooAbsCollection::createIterator()`: use `begin()`, `end()` and range-based for loops
+- `RooAbsCollection::iterator()`: same
+- `RooAbsCollection::fwdIterator()`: same
+
+- `RooWorkspace::componentIterator()`: use `RooWorkspace::components()` with range-based loop
 
 ## 2D Graphics Libraries
 

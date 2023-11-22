@@ -123,7 +123,7 @@ Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nback
 
    //==================================================================
    // For quicker evaluation, assume that you get the same results when
-   // you expect the uppper limit to be > Nobserved-Nbackground.
+   // you expect the upper limit to be > Nobserved-Nbackground.
    // This is certainly true for all of the published tables in the PRD
    // and is a reasonable assumption in any case.
    //==================================================================

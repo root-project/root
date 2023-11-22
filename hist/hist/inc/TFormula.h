@@ -15,13 +15,15 @@
 #include "TNamed.h"
 #include "TBits.h"
 #include "TInterpreter.h"
+#include "TMath.h"
+#include <Math/Types.h>
+
+#include <atomic>
 #include <cassert>
-#include <vector>
 #include <list>
 #include <map>
 #include <string>
-#include <atomic>
-#include <Math/Types.h>
+#include <vector>
 
 class TMethodCall;
 
@@ -197,10 +199,8 @@ public:
    Int_t          Compile(const char *expression="");
    void   Copy(TObject &f1) const override;
    void   Clear(Option_t * option="") override;
-   Double_t       Eval(Double_t x) const;
-   Double_t       Eval(Double_t x, Double_t y) const;
-   Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
-   Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
+   template <typename... Args>
+   Double_t       Eval(Args... args) const;
    Double_t       EvalPar(const Double_t *x, const Double_t *params = nullptr) const;
 
    /// Generate gradient computation routine with respect to the parameters.
@@ -274,18 +274,57 @@ public:
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params);
    //void           SetParameters(const pair<TString,Double_t> *params, const Int_t size);
-   void           SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,
-                                     Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,
-                                     Double_t p9=0,Double_t p10=0); // *MENU*
+   template <typename... Args>
+   void           SetParameters(Double_t arg1, Args &&... args);
    void           SetParName(Int_t ipar, const char *name);
-   void           SetParNames(const char *name0="p0",const char *name1="p1",const char
-                             *name2="p2",const char *name3="p3",const char
-                             *name4="p4", const char *name5="p5",const char *name6="p6",const char *name7="p7",const char
-                             *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
+   template <typename... Args>
+   void           SetParNames(Args &&... args);
    void           SetVariable(const TString &name, Double_t value);
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
    void SetVectorized(Bool_t vectorized);
 
    ClassDefOverride(TFormula,13)
 };
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set a list of parameters.
+/// The order is by default the alphabetic order given to the parameters,
+/// apart if the users has defined explicitly the parameter names.
+/// NaN values will be skipped, meaning that the corresponding parameters will not be changed.
+
+template <typename... Args>
+void TFormula::SetParameters(Double_t arg1, Args &&...args)
+{
+   int i = 0;
+   for (double val : {arg1, static_cast<Double_t>(args)...}) {
+      if(!TMath::IsNaN(val)) SetParameter(i++, val);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter names.
+/// Empty strings will be skipped, meaning that the corresponding name will not be changed.
+template <typename... Args>
+void TFormula::SetParNames(Args &&...args)
+{
+   int i = 0;
+   for (auto name : {static_cast<std::string const&>(args)...}) {
+      if(!name.empty()) SetParName(i++, name.c_str());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set first 1, 2, 3 or 4 variables (e.g. x, y, z and t)
+/// and evaluate formula.
+
+template <typename... Args>
+Double_t TFormula::Eval(Args... args) const 
+{
+   if (sizeof...(args) > 4) {
+      Error("Eval", "Eval() only support setting up to 4 variables");
+   }
+   double xxx[] = {static_cast<Double_t>(args)...};
+   return EvalPar(xxx, nullptr);
+}
+
 #endif

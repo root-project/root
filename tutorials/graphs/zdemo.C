@@ -168,7 +168,7 @@ void zdemo()
    gr3->SetMarkerSize(1.1);
    gr3->Draw("LP");
 
-   Float_t *dum = 0;
+   Float_t *dum = nullptr;
    TGraph *graph = new TGraph(1,dum,dum);
    graph->SetMarkerColor(kBlue);
    graph->SetMarkerStyle(21);

@@ -34,7 +34,7 @@ ClassImp(TEveCalo2DGL);
 
 TEveCalo2DGL::TEveCalo2DGL() :
    TGLObject(),
-   fM(0)
+   fM(nullptr)
 {
    // fDLCache = kFALSE; // Disable display list.
    fMultiColor = kTRUE;

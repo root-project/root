@@ -51,7 +51,7 @@ class RH3Painter extends RHistPainter {
          }
       }
 
-      this.draw_content = this.gmaxbin > 0;
+      this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
    }
 
   /** @summary Count histogram statistic */
@@ -242,7 +242,7 @@ class RH3Painter extends RHistPainter {
       }
 
       return pnts.createPoints({ color: this.v7EvalColor('fill_color', 'red') }).then(mesh => {
-         main.toplevel.add(mesh);
+         main.add3DMesh(mesh);
 
          mesh.bins = bins;
          mesh.painter = this;
@@ -544,7 +544,7 @@ class RH3Painter extends RHistPainter {
             return tip;
          };
 
-         main.toplevel.add(combined_bins);
+         main.add3DMesh(combined_bins);
 
          if (helper_kind[nseq] > 0) {
             const lcolor = this.v7EvalColor('line_color', 'lightblue'),
@@ -554,7 +554,7 @@ class RH3Painter extends RHistPainter {
                           ? createLineSegments(bin_verts[nseq], helper_material, helper_indexes[nseq])
                           : createLineSegments(helper_positions[nseq], helper_material);
 
-            main.toplevel.add(lines);
+            main.add3DMesh(lines);
          }
       }
 

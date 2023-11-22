@@ -1505,7 +1505,7 @@ namespace RootCsg {
    public:
       NodePtr_t fLeftSon;
       NodePtr_t fRightSon;
-      TBBoxInternal() : fLeftSon(0) ,fRightSon(0) {}
+      TBBoxInternal() : fLeftSon(nullptr) ,fRightSon(nullptr) {}
       TBBoxInternal(Int_t n, LeafPtr_t leafIt);
    };
 
@@ -1519,7 +1519,7 @@ namespace RootCsg {
       Int_t         fNumLeaves;
 
    public :
-      TBBoxTree() : fBranch(0), fLeaves(0), fInternals(0), fNumLeaves(0) {}
+      TBBoxTree() : fBranch(0), fLeaves(nullptr), fInternals(nullptr), fNumLeaves(0) {}
       NodePtr_t RootNode()const{return fInternals;}
       ~TBBoxTree()
       {
@@ -1536,7 +1536,7 @@ namespace RootCsg {
    ///
 
    TBBoxInternal::TBBoxInternal(Int_t n, LeafPtr_t leafIt) :
-      fLeftSon(0) ,fRightSon(0)
+      fLeftSon(nullptr) ,fRightSon(nullptr)
    {
       fTag = kInternal;
       fBBox.SetEmpty();
@@ -1641,8 +1641,8 @@ namespace RootCsg {
       }
 
    private:
-      TPolygonGeometry(const TPolygonGeometry &);
-      TPolygonGeometry& operator = (TPolygonGeometry &);
+      TPolygonGeometry(const TPolygonGeometry &) = delete;
+      TPolygonGeometry& operator = (TPolygonGeometry &) = delete;
    };
 
    template <class TPolygon, class TVertex>
@@ -2397,7 +2397,7 @@ namespace RootCsg {
       UInt_t i;
       Double_t onEpsilon(1e-4);
       for (i = 0; i < table.size(); i++) {
-         if (table[i].size()) {
+         if (!table[i].empty()) {
             PIndexList_t fragments;
             fragments.push_back(i);
             UInt_t j;

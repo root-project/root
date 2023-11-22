@@ -11,7 +11,7 @@
 #ifndef ROOT_RCUTFLOWREPORT
 #define ROOT_RCUTFLOWREPORT
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "RtypesCore.h"
 
 #include <string>

@@ -113,7 +113,7 @@ void testPoisson( R & r,double mu,TH1D & h) {
 
 
 
-// Knuth Algorith for Poisson (used also in GSL)
+// Knuth Algorithm for Poisson (used also in GSL)
 template <class R>
 unsigned int genPoisson( R & r, double mu) {
 
@@ -147,7 +147,7 @@ unsigned int genPoisson( R & r, double mu) {
       return k + r.Binomial( m-1, mu/x);
 
     else {
-    // continue the loop decresing mu
+    // continue the loop decreasing mu
       mu -= x;
       k += m;
     }

@@ -185,7 +185,6 @@ namespace HistFactory {
  */
 class HistoSys final : public HistogramUncertaintyBase {
 public:
-  ~HistoSys() override {}
   void PrintXML(std::ostream&) const override;
 };
 
@@ -195,7 +194,6 @@ public:
  */
   class HistoFactor final : public HistogramUncertaintyBase {
   public:
-    ~HistoFactor() override {}
     void PrintXML(std::ostream&) const override;
   };
 

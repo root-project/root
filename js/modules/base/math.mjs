@@ -1826,7 +1826,7 @@ function ChebyshevN(n, x, c) {
 
 /** @summary Chebyshev0 function
   * @memberof Math */
-function Chebyshev0(x, c0) {
+function Chebyshev0(_x, c0) {
    return c0;
 }
 
@@ -2031,6 +2031,47 @@ function getTEfficiencyBoundaryFunc(option, isbayessian) {
    return eff_ClopperPearson;
 }
 
+/** @summary Square function
+  * @memberof Math */
+function Sq(x) {
+   return x * x;
+}
+
+/** @summary Pi function
+  * @memberof Math */
+function Pi() {
+   return Math.PI;
+}
+
+/** @summary TwoPi function
+  * @memberof Math */
+function TwoPi() {
+   return 2 * Math.PI;
+}
+
+/** @summary PiOver2 function
+  * @memberof Math */
+function PiOver2()
+{
+   return Math.PI / 2;
+}
+
+/** @summary PiOver4 function
+  * @memberof Math */
+function PiOver4()
+{
+   return Math.PI / 4;
+}
+
+/** @summary InvPi function
+  * @memberof Math */
+function InvPi()
+{
+   return 1 / Math.PI;
+}
+
+
+
 export { gamma, gamma as tgamma, gamma as Gamma,
    Polynomialeval, Polynomial1eval, stirf,
    gamma_pdf, ndtri, normal_quantile, normal_quantile_c, lognormal_cdf_c, lognormal_cdf,
@@ -2055,4 +2096,6 @@ export { gamma, gamma as tgamma, gamma as Gamma,
    ChebyshevN, Chebyshev0, Chebyshev1, Chebyshev2, Chebyshev3, Chebyshev4,
    Chebyshev5, Chebyshev6, Chebyshev7, Chebyshev8, Chebyshev9, Chebyshev10,
 
-   getTEfficiencyBoundaryFunc };
+   getTEfficiencyBoundaryFunc,
+
+   Sq, Pi, TwoPi, PiOver2, PiOver4, InvPi };
