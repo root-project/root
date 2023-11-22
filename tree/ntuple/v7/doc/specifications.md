@@ -751,9 +751,9 @@ This means that they have the same on-disk representation as `std::vector<T>`, u
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-#### std::map\<K, V\>
+#### std::map\<K, V\> and std::unordered_map\<K, V\>
 
-A map is stored using a collection mother field, whose principal column is of type `(Split)Index[64|32]` and a child field of type `std::pair<K, V>` named `_0`.
+An (unordered) map is stored using a collection mother field, whose principal column is of type `(Split)Index[64|32]` and a child field of type `std::pair<K, V>` named `_0`.
 
 ### std::atomic\<T\>
 
