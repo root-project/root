@@ -530,6 +530,88 @@ TEST(RNTuple, StdMap)
    EXPECT_EQ(vecMap, *myMap2);
 }
 
+TEST(RNTuple, StdUnorderedMap)
+{
+   auto field = RField<std::unordered_map<char, int64_t>>("mapField");
+   EXPECT_STREQ("std::unordered_map<char,std::int64_t>", field.GetType().c_str());
+   auto otherField = RFieldBase::Create("test", "std::unordered_map<char, int64_t>").Unwrap();
+   EXPECT_STREQ(field.GetType().c_str(), otherField->GetType().c_str());
+   EXPECT_EQ((sizeof(std::unordered_map<char, int64_t>)), field.GetValueSize());
+   EXPECT_EQ((sizeof(std::unordered_map<char, int64_t>)), otherField->GetValueSize());
+   EXPECT_EQ((alignof(std::unordered_map<char, int64_t>)), field.GetAlignment());
+   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
+   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_map<char, int64_t>)), otherField->GetAlignment());
+   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
+   // test should fail.
+   EXPECT_EQ((alignof(std::unordered_map<char, char>)), otherField->GetAlignment());
+
+   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char>").Unwrap(), RException);
+   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char, std::string, int>").Unwrap(), RException);
+
+   FileRaii fileGuard("test_ntuple_rfield_stdunorderedmap.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto map_field =
+         model->MakeField<std::unordered_map<std::string, float>>({"myMap", "unordered string to float map"});
+      auto map_field2 = model->MakeField<std::unordered_map<int, CustomStruct>>({"myMap2"});
+
+      auto myMap3 = RFieldBase::Create("myMap3", "std::unordered_map<char, std::string>").Unwrap();
+      auto myMap4 = RFieldBase::Create("myMap4", "std::unordered_map<float, std::vector<bool>>").Unwrap();
+
+      model->AddField(std::move(myMap3));
+      model->AddField(std::move(myMap4));
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "map_ntuple", fileGuard.GetPath());
+      auto map_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_map<char, std::string>>("myMap3");
+      auto map_field4 =
+         ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_map<float, std::vector<bool>>>("myMap4");
+      for (int i = 0; i < 2; i++) {
+         *map_field = {{"foo", static_cast<float>(i + 0.1)},
+                       {"bar", static_cast<float>(i * 0.2)},
+                       {"baz", static_cast<float>(i * 0.3)}};
+         *map_field2 = {{i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}},
+                        {i + 1, CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}};
+         *map_field3 = {{static_cast<char>(i), "Hello"}, {static_cast<char>(i), "world!"}};
+         *map_field4 = {{static_cast<float>(i * 3.14), {true, (i % 2 == 0), false}},
+                        {static_cast<float>(i / 10), {(i % 2 == 1), true}}};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("map_ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+
+   auto viewMap = ntuple->GetView<std::unordered_map<std::string, float>>("myMap");
+   auto viewMap2 = ntuple->GetView<std::unordered_map<int, CustomStruct>>("myMap2");
+   auto viewMap3 = ntuple->GetView<std::unordered_map<char, std::string>>("myMap3");
+   auto viewMap4 = ntuple->GetView<std::unordered_map<float, std::vector<bool>>>("myMap4");
+   for (auto i : ntuple->GetEntryRange()) {
+      std::unordered_map<std::string, float> map1{{"foo", static_cast<float>(i + 0.1)},
+                                                  {"bar", static_cast<float>(i * 0.2)},
+                                                  {"baz", static_cast<float>(i * 0.3)}};
+      EXPECT_EQ(map1, viewMap(i));
+
+      std::unordered_map<int, CustomStruct> map2{{i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}},
+                                                 {i + 1, CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}};
+      EXPECT_EQ(map2, viewMap2(i));
+
+      std::unordered_map<char, std::string> map3{{static_cast<char>(i), "Hello"}, {static_cast<char>(i), "world!"}};
+      EXPECT_EQ(map3, viewMap3(i));
+
+      std::unordered_map<float, std::vector<bool>> map4{{static_cast<float>(i * 3.14), {true, (i % 2 == 0), false}},
+                                                        {static_cast<float>(i / 10), {(i % 2 == 1), true}}};
+      EXPECT_EQ(map4, viewMap4(i));
+   }
+
+   ntuple->LoadEntry(0);
+   auto myMap2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_map<int, CustomStruct>>("myMap2");
+   auto customStructMap =
+      std::unordered_map<int, CustomStruct>({{0, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}},
+                                             {1, CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}});
+   EXPECT_EQ(customStructMap, *myMap2);
+}
+
 TEST(RNTuple, Int64)
 {
    auto field = RFieldBase::Create("test", "std::int64_t").Unwrap();

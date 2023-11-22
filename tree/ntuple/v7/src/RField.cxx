@@ -190,6 +190,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 4) == "map<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 14) == "unordered_map<")
+      normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "atomic<")
       normalizedType = "std::" + normalizedType;
    if (normalizedType == "byte")
@@ -478,6 +480,19 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
          Create("_0", "std::pair<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">").Unwrap();
       result = std::make_unique<RMapField>(
          fieldName, "std::map<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">", std::move(itemField));
+   } else if (canonicalType.substr(0, 19) == "std::unordered_map<") {
+      auto innerTypes = TokenizeTypeList(canonicalType.substr(19, canonicalType.length() - 20));
+      if (innerTypes.size() != 2)
+         return R__FAIL("the type list for std::unordered_map must have exactly two elements");
+
+      auto normalizedKeyTypeName = GetNormalizedTypeName(innerTypes[0]);
+      auto normalizedValueTypeName = GetNormalizedTypeName(innerTypes[1]);
+
+      auto itemField =
+         Create("_0", "std::pair<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">").Unwrap();
+      result = std::make_unique<RMapField>(
+         fieldName, "std::unordered_map<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">",
+         std::move(itemField));
    } else if (canonicalType.substr(0, 12) == "std::atomic<") {
       std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
       auto itemField = Create("_0", itemTypeName).Unwrap();
