@@ -442,6 +442,51 @@ TEST(RNTupleInspector, ColumnTypeInfoHist)
    EXPECT_EQ(inspector->GetUncompressedSize(), uncompressedSizeHist->Integral());
 }
 
+TEST(RNTupleInspector, PageSizeDistribution)
+{
+   FileRaii fileGuard("test_ntuple_inspector_page_size_distribution.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt = model->MakeField<std::int64_t>("int");
+      auto nFldFloat = model->MakeField<float>("float");
+      auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+
+      auto writeOptions = RNTupleWriteOptions();
+      // Test without compression and an extremely low page size for consistency's sake
+      writeOptions.SetCompression(505);
+      writeOptions.SetApproxUnzippedPageSize(64);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+
+      for (unsigned i = 0; i < 100; ++i) {
+         *nFldInt = static_cast<std::int64_t>(i);
+         *nFldFloat = static_cast<float>(i) * .1f;
+         *nFldFloatVec = {static_cast<float>(i), 3.14f, static_cast<float>(i) * *nFldFloat};
+         ntuple->Fill();
+      }
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   int intColId = inspector->GetColumnsByType(EColumnType::kSplitInt64)[0];
+   auto intPageSizeHisto = inspector->GetPageSizeDistribution(intColId);
+   EXPECT_STREQ(Form("pageSizeHistCol%d", intColId), intPageSizeHisto->GetName());
+   EXPECT_STREQ(Form("Page size distribution for column with ID %d", intColId), intPageSizeHisto->GetTitle());
+
+   // Make sure that all page sizes are included in the histogram
+   EXPECT_EQ(inspector->GetColumnInspector(intColId).GetNPages(), intPageSizeHisto->Integral());
+
+   auto floatPageSizeHisto =
+      inspector->GetPageSizeDistribution(EColumnType::kSplitReal32, "floatPageSize", "Float page size distribution");
+   EXPECT_STREQ("floatPageSize", floatPageSizeHisto->GetName());
+   EXPECT_STREQ("Float page size distribution", floatPageSizeHisto->GetTitle());
+
+   // Make sure that all page sizes are included in the histogram
+   int nFloatPages = 0;
+   for (const auto colId : inspector->GetColumnsByType(EColumnType::kSplitReal32)) {
+      nFloatPages += inspector->GetColumnInspector(colId).GetNPages();
+   }
+   EXPECT_EQ(nFloatPages, floatPageSizeHisto->Integral());
+}
+
 TEST(RNTupleInspector, FieldInfoCompressed)
 {
    FileRaii fileGuard("test_ntuple_inspector_field_info_compressed.root");
