@@ -64,14 +64,6 @@ function(ROOT_ADD_TUTORIAL macrofile rc)
 endfunction()
 
 #---Tutorials disabled depending on the build components-------------
-if(NOT ROOT_minuit2_FOUND)
-  set(minuit2_veto fit/fit2dHist.C fit/fitCircle.C
-                   fit/minuit2FitBench2D.C fit/minuit2FitBench.C
-                   fit/minuit2GausFit.C fit/NumericalMinimization.C
-                   fit/combinedFit.C fit/TestBinomial.C
-                   fit/fitNormSum.C fit/vectorizedFit.C
-                   tutorials/roostats/rs_bernsteinCorrection.C)
-endif()
 
 if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
@@ -442,7 +434,6 @@ set(all_veto hsimple.C
              ${extra_veto}
              ${gdml_veto}
              ${gui_veto}
-             ${minuit2_veto}
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}

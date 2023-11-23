@@ -141,7 +141,7 @@ ROOT_BUILD_OPTION(libcxx OFF "Build using libc++")
 ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
 ROOT_BUILD_OPTION(mathmore OFF "Build libMathMore extended math library (requires GSL) [GPL]")
 ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before process termination (experimental, used for leak checking)")
-ROOT_BUILD_OPTION(minuit2 ON "Build Minuit2 minimization library")
+ROOT_BUILD_OPTION(minuit2 IGNORE "Build Minuit2 minimization library (deprecated, Minuit2 is always built)")
 ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
 ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
@@ -239,7 +239,6 @@ if(all)
  set(fcgi_defvalue ON)
  set(imt_defvalue ON)
  set(mathmore_defvalue ON)
- set(minuit2_defvalue ON)
  set(monalisa_defvalue ON)
  set(mysql_defvalue ON)
  set(odbc_defvalue ON)
@@ -372,12 +371,6 @@ endif()
 #---Define at moment the options with the selected default values------------------------------
 ROOT_APPLY_OPTIONS()
 
-# RooFit multiprocess only works with Minuit2. In fact, it depends on it at build time.
-if(roofit_multiprocess AND NOT minuit2)
-    message(WARNING "Option 'roofit_multiprocess' requires option `minuit2`. We're setting `minuit2=ON` for you. Consider setting `minuit2=ON` yourself to silence this warning.")
-    set(minuit2 ON CACHE BOOL "" FORCE)
-endif()
-
 #---roottest option implies testing
 if(roottest OR rootbench)
   set(testing ON CACHE BOOL "" FORCE)
@@ -419,7 +412,7 @@ foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad gfa
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink pyroot-python2)
+foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink pyroot-python2 minuit2)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()

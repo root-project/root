@@ -212,10 +212,6 @@ foreach(incl ${math_incl})
    target_include_directories(MathCore PUBLIC $<BUILD_INTERFACE:${incl}>)
 endforeach()
 
-if(NOT minuit2)
-    target_compile_definitions(MathCore PRIVATE MATH_USE_LEGACY_MINUIT_AS_DEFAULT)
-endif()
-
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 

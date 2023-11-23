@@ -104,12 +104,7 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 
 
    // The "default default" minimizer in case there is nothing set in .rootrc
-#ifndef MATH_USE_LEGACY_MINUIT_AS_DEFAULT
    static constexpr auto defaultDefaultMinimizer = "Minuit2";
-#else
-   static constexpr auto defaultDefaultMinimizer = "Minuit";
-#endif // MATH_USE_LEGACY_MINUIT_AS_DEFAULT
-
 
 #ifdef MATH_NO_PLUGIN_MANAGER
    if (Minim::gDefaultMinimizer.size() != 0)
