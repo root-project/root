@@ -75,18 +75,26 @@ public:
    class RColumnInspector {
    private:
       const RColumnDescriptor &fColumnDescriptor;
-      std::uint64_t fCompressedSize = 0;
+      const std::vector<std::uint64_t> fCompressedPageSizes = {};
       std::uint32_t fElementSize = 0;
       std::uint64_t fNElements = 0;
 
    public:
-      RColumnInspector(const RColumnDescriptor &colDesc, std::uint64_t onDiskSize, std::uint32_t elemSize,
-                       std::uint64_t nElems)
-         : fColumnDescriptor(colDesc), fCompressedSize(onDiskSize), fElementSize(elemSize), fNElements(nElems){};
+      RColumnInspector(const RColumnDescriptor &colDesc, const std::vector<std::uint64_t> &compressedPageSizes,
+                       std::uint32_t elemSize, std::uint64_t nElems)
+         : fColumnDescriptor(colDesc),
+           fCompressedPageSizes(compressedPageSizes),
+           fElementSize(elemSize),
+           fNElements(nElems){};
       ~RColumnInspector() = default;
 
       const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
-      std::uint64_t GetCompressedSize() const { return fCompressedSize; }
+      const std::vector<std::uint64_t> &GetCompressedPageSizes() const { return fCompressedPageSizes; }
+      std::uint64_t GetNPages() const { return fCompressedPageSizes.size(); }
+      std::uint64_t GetCompressedSize() const
+      {
+         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), 0);
+      }
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
@@ -323,7 +331,36 @@ public:
                                                  std::string_view histTitle = "");
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get a storage information inspector for a given (sub)field by ID, including its subfields.
+   /// \brief Get a histogram containing the size distribution of the compressed pages for an individual column.
+   ///
+   /// \param[in] physicalColumnId The physical ID of the column for which to get the page size distribution.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `TH1D` containing the page size distribution.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   std::unique_ptr<TH1D> GetPageSizeDistribution(DescriptorId_t physicalColumnId, std::string histName = "",
+                                                 std::string histTitle = "", size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram containing the size distribution of the compressed pages for all columns of a given type.
+   ///
+   /// \param[in] colType The column type for which to get the size distribution, as defined by
+   /// ROOT::Experimental::EColumnType.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `TH1D` containing the page size distribution.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   std::unique_ptr<TH1D> GetPageSizeDistribution(EColumnType colType, std::string histName = "",
+                                                 std::string histTitle = "", size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get storage information for a given (sub)field by ID.
    ///
    /// \param[in] fieldId The ID of the (sub)field for which to get the information.
    ///
