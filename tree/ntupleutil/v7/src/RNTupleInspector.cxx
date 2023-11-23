@@ -50,7 +50,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
       auto colType = colDesc.GetModel().GetType();
       std::uint32_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(colType)->GetSize();
       std::uint64_t nElems = 0;
-      std::uint64_t compressedSize = 0;
+      std::vector<std::uint64_t> compressedPageSizes{};
 
       for (const auto &clusterDescriptor : fDescriptor->GetClusterIterable()) {
          if (!clusterDescriptor.ContainsColumn(colId)) {
@@ -74,13 +74,14 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
 
          for (const auto &page : pageRange.fPageInfos) {
-            compressedSize += page.fLocator.fBytesOnStorage;
-            fCompressedSize += page.fLocator.fBytesOnStorage;
+            compressedPageSizes.emplace_back(page.fLocator.fBytesOnStorage);
             fUncompressedSize += page.fNElements * elemSize;
          }
+
+         fCompressedSize += std::accumulate(compressedPageSizes.begin(), compressedPageSizes.end(), 0);
       }
 
-      fColumnInfo.emplace(colId, RColumnInspector(colDesc, compressedSize, elemSize, nElems));
+      fColumnInfo.emplace(colId, RColumnInspector(colDesc, compressedPageSizes, elemSize, nElems));
    }
 }
 
@@ -309,6 +310,61 @@ ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental
 
       hist->AddBinContent(hist->GetXaxis()->FindBin(Detail::RColumnElementBase::GetTypeName(colInfo.GetType()).c_str()),
                           data);
+   }
+
+   return hist;
+}
+
+std::unique_ptr<TH1D> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(DescriptorId_t physicalColumnId,
+                                                                                    std::string histName,
+                                                                                    std::string histTitle, size_t nBins)
+{
+   if (histName.empty())
+      histName = "pageSizeHistCol" + std::to_string(physicalColumnId);
+
+   if (histTitle.empty())
+      histTitle = "Page size distribution for column with ID " + std::to_string(physicalColumnId);
+
+   auto colInfo = GetColumnInspector(physicalColumnId);
+   auto histMinMax =
+      std::minmax_element(colInfo.GetCompressedPageSizes().begin(), colInfo.GetCompressedPageSizes().end());
+   auto hist = std::make_unique<TH1D>(
+      std::string(histName).c_str(), std::string(histTitle).c_str(), nBins, *histMinMax.first,
+      *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
+
+   for (const auto pageSize : colInfo.GetCompressedPageSizes()) {
+      hist->Fill(pageSize);
+   }
+
+   return hist;
+}
+
+std::unique_ptr<TH1D>
+ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental::EColumnType colType,
+                                                              std::string histName, std::string histTitle, size_t nBins)
+{
+   if (histName.empty())
+      histName = "pageSizeHistCol" + Detail::RColumnElementBase::GetTypeName(colType);
+
+   if (histTitle.empty())
+      histTitle = "Page size distribution for columns with type " + Detail::RColumnElementBase::GetTypeName(colType);
+
+   auto colIds = GetColumnsByType(colType);
+
+   std::vector<std::uint64_t> pageSizes;
+   std::for_each(colIds.begin(), colIds.end(), [this, &pageSizes](const auto colId) {
+      auto colInfo = GetColumnInspector(colId);
+      pageSizes.insert(pageSizes.end(), colInfo.GetCompressedPageSizes().begin(),
+                       colInfo.GetCompressedPageSizes().end());
+   });
+
+   auto histMinMax = std::minmax_element(pageSizes.begin(), pageSizes.end());
+   auto hist = std::make_unique<TH1D>(
+      std::string(histName).c_str(), std::string(histTitle).c_str(), nBins, *histMinMax.first,
+      *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
+
+   for (const auto pageSize : pageSizes) {
+      hist->Fill(pageSize);
    }
 
    return hist;
