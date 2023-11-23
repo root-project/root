@@ -1583,8 +1583,12 @@ async function treeProcess(tree, selector, args) {
          case 'TLeafC': datakind = kTString; break;
          default: return null;
       }
-      return createStreamerElement(name || leaf.fName, datakind);
-
+      const elem = createStreamerElement(name || leaf.fName, datakind);
+      if (leaf.fLen > 1) {
+         elem.fType += kOffsetL;
+         elem.fArrayLength = leaf.fLen;
+      }
+      return elem;
    }, findInHandle = branch => {
       for (let k = 0; k < handle.arr.length; ++k)
          if (handle.arr[k].branch === branch)

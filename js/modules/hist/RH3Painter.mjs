@@ -50,7 +50,7 @@ class RH3Painter extends RHistPainter {
                }
       }
 
-      this.draw_content = this.gmaxbin > 0;
+      this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
    }
 
   /** @summary Count histogram statistic */
