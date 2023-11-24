@@ -114,49 +114,52 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
+   RNTupleDS *fDataSource;                     ///< The data source that owns this column reader
    RFieldBase *fProtoField;                    ///< The prototype field from which fField is cloned
    std::unique_ptr<RFieldBase> fField;         ///< The field backing the RDF column
    std::unique_ptr<RFieldBase::RValue> fValue; ///< The memory location used to read from fField
-   unsigned int fSlot;       ///< Allows SwitchFile() to find the correct page source for reconnecting the reader
-   Long64_t fLastEntry = -1; ///< Last entry number that was read
-   /// For chains, the logical entry and the physical entry in a particular file are different.
-   /// The entry offset stores the logical entry number (sum of all previous entries) when the current file was opened.
+   Long64_t fLastEntry = -1;                   ///< Last entry number that was read
+   /// For chains, the logical entry and the physical entry in any particular file can be different.
+   /// The entry offset stores the logical entry number (sum of all previous entries) when file of the corresponding
+   /// data source was opened.
    ULong64_t fEntryOffset = 0;
 
 public:
-   RNTupleColumnReader(RFieldBase *protoField, unsigned int slot)
-      : fProtoField(protoField),
-        fField(protoField->Clone(protoField->GetName())),
-        fValue(std::make_unique<RFieldBase::RValue>(fField->GenerateValue())),
-        fSlot(slot)
-   {
-   }
+   RNTupleColumnReader(RNTupleDS *ds, RFieldBase *protoField) : fDataSource(ds), fProtoField(protoField) {}
    ~RNTupleColumnReader() = default;
 
    /// Connect the field and its subfields to the page source
-   void Connect(RPageSource &source)
+   void Connect(RPageSource &source, ULong64_t entryOffset)
    {
+      R__ASSERT(fLastEntry == -1);
+      fEntryOffset = entryOffset;
+
+      // Create a new, real field from the prototype and set its field ID in the context of the given page source
+      fField = fProtoField->Clone(fProtoField->GetName());
+      {
+         auto descGuard = source.GetSharedDescriptorGuard();
+         fField->SetOnDiskId(
+            descGuard->FindFieldId(fDataSource->fFieldId2QualifiedName.at(fProtoField->GetOnDiskId())));
+         auto iProto = fProtoField->cbegin();
+         auto iReal = fField->begin();
+         for (; iReal != fField->end(); ++iProto, ++iReal) {
+            iReal->SetOnDiskId(descGuard->FindFieldId(fDataSource->fFieldId2QualifiedName.at(iProto->GetOnDiskId())));
+         }
+      }
+
       fField->ConnectPageSource(source);
       for (auto &f : *fField)
          f.ConnectPageSource(source);
+
+      fValue = std::make_unique<RFieldBase::RValue>(fField->GenerateValue());
    }
 
    void Disconnect()
    {
       fValue = nullptr;
       fField = nullptr;
+      fLastEntry = -1;
    }
-
-   void Reconnect(RPageSource &source, ULong64_t entryOffset)
-   {
-      fEntryOffset = entryOffset;
-      fField = fProtoField->Clone(fProtoField->GetName());
-      fValue = std::make_unique<RFieldBase::RValue>(fField->GenerateValue());
-      Connect(source);
-   }
-
-   unsigned int GetSlot() const { return fSlot; }
-   ROOT::Experimental::Detail::RFieldBase *GetProtoField() const { return fProtoField; }
 
    void *GetImpl(Long64_t entry) final
    {
@@ -221,7 +224,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          cardinalityField->SetOnDiskId(fieldId);
          fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
          fColumnTypes.emplace_back(cardinalityField->GetType());
-         fFieldPrototypes.emplace_back(std::move(cardinalityField));
+         fProtoFields.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
             AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), skeinIDs);
@@ -272,20 +275,19 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    if (cardinalityField) {
       fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
-      fFieldPrototypes.emplace_back(std::move(cardinalityField));
+      fProtoFields.emplace_back(std::move(cardinalityField));
    }
 
    skeinIDs.emplace_back(fieldId);
    fColumnNames.emplace_back(colName);
    fColumnTypes.emplace_back(valueField->GetType());
-   fFieldPrototypes.emplace_back(std::move(valueField));
+   fProtoFields.emplace_back(std::move(valueField));
 }
 
-RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
+RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource) : fPrincipalSource(std::move(pageSource))
 {
-   pageSource->Attach();
-   auto descriptorGuard = pageSource->GetSharedDescriptorGuard();
-   fSources.emplace_back(std::move(pageSource));
+   fPrincipalSource->Attach();
+   auto descriptorGuard = fPrincipalSource->GetSharedDescriptorGuard();
 
    AddField(descriptorGuard.GetRef(), "", descriptorGuard->GetFieldZeroId(), std::vector<DescriptorId_t>());
 }
@@ -299,129 +301,213 @@ RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string>
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
 {
-   // This datasource uses the GetColumnReaders2 API instead (better name in the works)
+   // This datasource uses the GetColumnReaders2 API
    return {};
 }
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info & /*tid*/)
 {
-   // at this point we can assume that `name` will be found in fColumnNames, RDF is in charge validation
+   // At this point we can assume that `name` will be found in fColumnNames
    // TODO(jblomer): check incoming type
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   auto field = fFieldPrototypes[index].get();
-   auto reader = std::make_unique<Internal::RNTupleColumnReader>(field, slot);
-   reader->Connect(*fSources[slot]);
-   fActiveColumnReaders.emplace_back(reader.get());
+   auto field = fProtoFields[index].get();
 
-   if (fFieldId2QualifiedName.count(field->GetOnDiskId()) == 0) {
-      auto descGuard = fSources[slot]->GetSharedDescriptorGuard();
+   // Map the field's and subfields' IDs to qualified names so that we can later connect the fields to
+   // other page sources from the chain
+   {
+      auto descGuard = fPrincipalSource->GetSharedDescriptorGuard();
       fFieldId2QualifiedName[field->GetOnDiskId()] = descGuard->GetQualifiedFieldName(field->GetOnDiskId());
       for (const auto &s : *field) {
-         if (fFieldId2QualifiedName.count(s.GetOnDiskId()) == 0) {
-            fFieldId2QualifiedName[s.GetOnDiskId()] = descGuard->GetQualifiedFieldName(s.GetOnDiskId());
-         }
+         fFieldId2QualifiedName[s.GetOnDiskId()] = descGuard->GetQualifiedFieldName(s.GetOnDiskId());
       }
    }
+
+   auto reader = std::make_unique<Internal::RNTupleColumnReader>(this, field);
+   fActiveColumnReaders[slot].emplace_back(reader.get());
 
    return reader;
 }
 
 bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
 {
+   // Old API, unsused
    return true;
 }
 
-void RNTupleDS::SwitchFile()
+void RNTupleDS::PrepareNextRanges()
 {
-   if (fFileNames.size() <= 1)
+   R__ASSERT(fNextRanges.empty());
+   auto nFiles = fFileNames.empty() ? 1 : fFileNames.size();
+   auto nRemainingFiles = nFiles - fNextFileIndex;
+   if (nRemainingFiles == 0)
       return;
 
-   for (auto r : fActiveColumnReaders) {
-      r->Disconnect();
-   }
+   // Easy work scheduling: one file per slot. We skip empty files (files without entries).
+   if (nRemainingFiles >= fNSlots) {
+      while ((fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles)) {
+         REntryRange range;
 
-   fSources[0] = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
-   fSources[0]->Attach();
-   for (unsigned int i = 1; i < fNSlots; ++i) {
-      fSources[i] = fSources[0]->Clone();
-      fSources[i]->Attach();
-   }
+         if (fPrincipalSource) {
+            // Avoid reopening the first file, which has been opened already to read the schema
+            std::swap(fPrincipalSource, range.fSource);
+            R__ASSERT(fNextFileIndex == 0);
+         } else {
+            range.fSource = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+            range.fSource->Attach();
+         }
+         fNextFileIndex++;
 
-   // Reset field IDs of active field prototypes
-   std::unordered_map<ROOT::Experimental::DescriptorId_t, ROOT::Experimental::DescriptorId_t> fFieldIdMap;
-   {
-      auto descGuard = fSources[0]->GetSharedDescriptorGuard();
-      for (const auto &[oldId, qualifiedName] : fFieldId2QualifiedName) {
-         fFieldIdMap[oldId] = descGuard->FindFieldId(qualifiedName);
+         auto nEntries = range.fSource->GetNEntries();
+         if (nEntries == 0)
+            continue;
+
+         range.fLastEntry = nEntries; // whole file per slot, i.e. entry range [0..nEntries - 1]
+         fNextRanges.emplace_back(std::move(range));
       }
+      return;
    }
-   for (auto &p : fFieldPrototypes) {
-      if (fFieldId2QualifiedName.count(p->GetOnDiskId()) == 0)
+
+   // Work scheduling of the tail: multiple slots work on the same file.
+   // Every slot still has its own page source but these page sources may open the same file.
+   // Again, we need to skip empty files.
+   unsigned int nSlotsPerFile = fNSlots / nRemainingFiles;
+   for (std::size_t i = 0; (fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles); ++i) {
+      std::unique_ptr<Detail::RPageSource> source;
+      if (fPrincipalSource) {
+         // Avoid reopening the first file, which has been opened already to read the schema
+         R__ASSERT(fNextFileIndex == 0);
+         std::swap(source, fPrincipalSource);
+      } else {
+         source = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+         source->Attach();
+      }
+      fNextFileIndex++;
+
+      auto nEntries = source->GetNEntries();
+      if (nEntries == 0)
          continue;
-      p->SetOnDiskId(fFieldIdMap[p->GetOnDiskId()]);
-      for (auto &s : *p) {
-         s.SetOnDiskId(fFieldIdMap[s.GetOnDiskId()]);
-      }
-   }
-   // Update fFieldId2QualifiedName with new field IDs
-   std::unordered_map<ROOT::Experimental::DescriptorId_t, std::string> newFieldId2QualifiedName;
-   for (auto [oldId, newId] : fFieldIdMap) {
-      newFieldId2QualifiedName[newId] = fFieldId2QualifiedName[oldId];
-   }
-   std::swap(newFieldId2QualifiedName, fFieldId2QualifiedName);
 
-   for (auto r : fActiveColumnReaders) {
-      r->Reconnect(*fSources[r->GetSlot()], fSeenEntries);
-   }
+      // If last file: use all remaining slots
+      if (i == (nRemainingFiles - 1))
+         nSlotsPerFile = fNSlots - fNextRanges.size();
+
+      std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
+      {
+         auto descriptorGuard = source->GetSharedDescriptorGuard();
+         auto clusterId = descriptorGuard->FindClusterId(0, 0);
+         while (clusterId != kInvalidDescriptorId) {
+            const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
+            rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
+               clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
+            clusterId = descriptorGuard->FindNextClusterId(clusterId);
+         }
+      }
+      const unsigned int nRangesByCluster = rangesByCluster.size();
+
+      // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
+      const auto nClustersPerSlot = nRangesByCluster / nSlotsPerFile;
+      const auto remainder = nRangesByCluster % nSlotsPerFile;
+      std::size_t iRange = 0;
+      unsigned int iSlot = 0;
+      const unsigned int N = std::min(nSlotsPerFile, nRangesByCluster);
+      for (; iSlot < N; ++iSlot) {
+         auto start = rangesByCluster[iRange].first;
+         iRange += nClustersPerSlot + static_cast<int>(iSlot < remainder);
+         R__ASSERT(iRange > 0);
+         auto end = rangesByCluster[iRange - 1].second;
+
+         REntryRange range;
+         // The last range for this file just takes the already opened page source. All previous ranges clone.
+         if (iSlot == N - 1) {
+            range.fSource = std::move(source);
+         } else {
+            range.fSource = source->Clone();
+            range.fSource->Attach();
+         }
+         range.fSource->SetEntryRange({start, end - start});
+         range.fFirstEntry = start;
+         range.fLastEntry = end;
+         fNextRanges.emplace_back(std::move(range));
+      }
+   } // loop over tail of remaining files
 }
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
-   std::vector<std::pair<ULong64_t, ULong64_t>> rangesBySlot;
-   if (fHasSeenAllRanges)
-      return rangesBySlot;
+   std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
+   if (fNextRanges.empty())
+      return ranges;
+   R__ASSERT(fNextRanges.size() <= fNSlots);
 
-   // The first file is opened in the constructor or in Initialize()
-   if (fNextFileIndex != 0)
-      SwitchFile();
+   // We need to distinguish between single threaded and multi-threaded runs.
+   // In single threaded mode, InitSlot is only called once and column readers have to be rewired
+   // to new page sources of the chain in GetEntryRanges. In multi-threaded mode, on the other hand,
+   // InitSlot is called for every returned range, thus rewiring the column readers takes place in
+   // InitSlot and FinalizeSlot.
 
-   std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
-   {
-      auto descriptorGuard = fSources[0]->GetSharedDescriptorGuard();
-      auto clusterId = descriptorGuard->FindClusterId(0, 0);
-      while (clusterId != kInvalidDescriptorId) {
-         const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
-         rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
-            clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
-         clusterId = descriptorGuard->FindNextClusterId(clusterId);
+   if (fNSlots == 1) {
+      for (auto r : fActiveColumnReaders[0]) {
+         r->Disconnect();
       }
    }
 
-   // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
-   const unsigned int nRangesByCluster = rangesByCluster.size();
-   const auto chunkSize = nRangesByCluster / fNSlots;
-   const auto remainder = nRangesByCluster % fNSlots;
-   std::size_t iRange = 0;
-   const unsigned int N = std::min(fNSlots, nRangesByCluster);
-   for (unsigned int i = 0; i < N; ++i) {
-      auto start = rangesByCluster[iRange].first;
-      iRange += chunkSize + static_cast<int>(i < remainder);
-      R__ASSERT(iRange > 0);
-      auto end = rangesByCluster[iRange - 1].second;
-      rangesBySlot.emplace_back(start + fSeenEntries, end + fSeenEntries);
+   fCurrentRanges.clear();
+   std::swap(fCurrentRanges, fNextRanges);
+   PrepareNextRanges();
 
-      fSources[i]->SetEntryRange({start, end - start});
+   // Create ranges for the RDF loop manager from the list of REntryRange records.
+   // The entry ranges that are relative to the page source in REntryRange are translated into absolute
+   // entry ranges, given the current state of the entry cursor.
+   // We remember the connection from first absolute entry index of a range to its REntryRange record
+   // so that we can properly rewire the column reader in InitSlot
+   fFirstEntry2RangeIdx.clear();
+   ULong64_t nEntriesPerSource = 0;
+   for (std::size_t i = 0; i < fCurrentRanges.size(); ++i) {
+      // Several consecutive ranges may operate on the same file (each with their own page source clone).
+      // We can detect a change of file when the first entry number jumps back to 0.
+      if (fCurrentRanges[i].fFirstEntry == 0) {
+         // New source
+         fSeenEntries += nEntriesPerSource;
+         nEntriesPerSource = 0;
+      }
+      auto start = fCurrentRanges[i].fFirstEntry + fSeenEntries;
+      auto end = fCurrentRanges[i].fLastEntry + fSeenEntries;
+      nEntriesPerSource += end - start;
+
+      fFirstEntry2RangeIdx[start] = i;
+      ranges.emplace_back(start, end);
    }
-   auto nEntries = fSources[0]->GetNEntries();
-   if (nEntries == 0) {
-      rangesBySlot.emplace_back(fSeenEntries, fSeenEntries);
+   fSeenEntries += nEntriesPerSource;
+
+   if ((fNSlots == 1) && (fCurrentRanges[0].fSource)) {
+      for (auto r : fActiveColumnReaders[0]) {
+         r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
+      }
    }
 
-   fNextFileIndex++;
-   fHasSeenAllRanges = (fNextFileIndex >= fFileNames.size());
-   fSeenEntries += fSources[0]->GetNEntries();
-   return rangesBySlot;
+   return ranges;
+}
+
+void RNTupleDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
+{
+   if (fNSlots == 1)
+      return;
+
+   auto idxRange = fFirstEntry2RangeIdx.at(firstEntry);
+   for (auto r : fActiveColumnReaders[slot]) {
+      r->Connect(*fCurrentRanges[idxRange].fSource, firstEntry - fCurrentRanges[idxRange].fFirstEntry);
+   }
+}
+
+void RNTupleDS::FinalizeSlot(unsigned int slot)
+{
+   if (fNSlots == 1)
+      return;
+
+   for (auto r : fActiveColumnReaders[slot]) {
+      r->Disconnect();
+   }
 }
 
 std::string RNTupleDS::GetTypeName(std::string_view colName) const
@@ -437,10 +523,15 @@ bool RNTupleDS::HasColumn(std::string_view colName) const
 
 void RNTupleDS::Initialize()
 {
-   fHasSeenAllRanges = false;
    fSeenEntries = 0;
    fNextFileIndex = 0;
-   SwitchFile();
+   if (!fCurrentRanges.empty() && (fFileNames.size() <= fNSlots)) {
+      R__ASSERT(fNextRanges.empty());
+      std::swap(fCurrentRanges, fNextRanges);
+      fNextFileIndex = std::max(fFileNames.size(), std::size_t(1));
+   } else {
+      PrepareNextRanges();
+   }
 }
 
 void RNTupleDS::Finalize() {}
@@ -450,12 +541,7 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
    R__ASSERT(fNSlots == 0);
    R__ASSERT(nSlots > 0);
    fNSlots = nSlots;
-
-   for (unsigned int i = 1; i < fNSlots; ++i) {
-      fSources.emplace_back(fSources[0]->Clone());
-      assert(i == (fSources.size() - 1));
-      fSources[i]->Attach();
-   }
+   fActiveColumnReaders.resize(fNSlots);
 }
 } // namespace Experimental
 } // namespace ROOT

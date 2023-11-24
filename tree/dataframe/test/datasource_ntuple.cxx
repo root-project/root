@@ -151,6 +151,10 @@ static void ChainTest(const std::string &name, const std::string &fname)
    auto df2 = ROOT::RDataFrame(std::make_unique<RNTupleDS>(name, std::vector<std::string>{fname, fname}));
    EXPECT_DOUBLE_EQ(84.0, df2.Sum<float>("pt").GetValue());
 
+   std::vector<std::string> fileNames(1000, fname);
+   auto df1000 = ROOT::RDataFrame(std::make_unique<RNTupleDS>(name, fileNames));
+   EXPECT_DOUBLE_EQ(42000.0, df1000.Sum<float>("pt").GetValue());
+
    class FileRAII {
    private:
       std::string fPath;
