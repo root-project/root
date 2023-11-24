@@ -45,29 +45,49 @@ class RNTupleColumnReader;
 }
 
 class RNTupleDS final : public ROOT::RDF::RDataSource {
-   /// Clones of the first source, one for each slot
-   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RPageSource>> fSources;
+   friend class Internal::RNTupleColumnReader;
+
+   /// The PrepareNextRanges() method populates the fNextRanges list with REntryRange records.
+   /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of
+   /// REntryRange records to return the list of ranges ready to use by the RDF loop manager.
+   struct REntryRange {
+      std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fSource;
+      ULong64_t fFirstEntry = 0; ///< First entry index in fSource
+      /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
+      ULong64_t fLastEntry = 0;
+   };
+
+   /// The first source is used to extract the schema and build the prototype fields
+   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fPrincipalSource;
 
    /// The data source may be constructed with an ntuple name and a list of files
    std::string fNTupleName;
    std::vector<std::string> fFileNames;
-   std::size_t fNextFileIndex = 0;
+   std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
 
    /// We prepare a prototype field for every column. If a column reader is actually requested
    /// in GetColumnReaders(), we move a clone of the field into a new column reader for RDataFrame.
    /// Only the clone connects to the backing page store and acquires I/O resources.
-   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>> fFieldPrototypes;
+   /// The field IDs are set in the context of the first source and used as keys in fFieldId2QualifiedName.
+   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>> fProtoFields;
+   /// Connects the IDs of active proto fields and their subfields to their fully qualified name (a.b.c.d).
+   /// This enables the column reader to rewire the field IDs when the file changes (chain),
+   /// using the fully qualified name as a search key in the descriptor of the other page sources.
+   std::unordered_map<ROOT::Experimental::DescriptorId_t, std::string> fFieldId2QualifiedName;
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
-   /// List of column readers returned by GetColumnReaders()
-   std::vector<ROOT::Experimental::Internal::RNTupleColumnReader *> fActiveColumnReaders;
-   /// Connects the IDs of active fields and their subfields to their fully qualified name (a.b.c.d).
-   /// This enables us to reset the field IDs when the file changes (chain).
-   std::unordered_map<ROOT::Experimental::DescriptorId_t, std::string> fFieldId2QualifiedName;
+   /// List of column readers returned by GetColumnReaders() organized by slot. Used to reconnect readers
+   /// to new page sources when the files in the chain change.
+   std::vector<std::vector<Internal::RNTupleColumnReader *>> fActiveColumnReaders;
 
-   unsigned fNSlots = 0;
-   bool fHasSeenAllRanges = false;
-   ULong64_t fSeenEntries = 0; ///< The number of entries so far returned by GetEntryRanges()
+   unsigned int fNSlots = 0;
+   ULong64_t fSeenEntries = 0;              ///< The number of entries so far returned by GetEntryRanges()
+   std::vector<REntryRange> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
+   std::vector<REntryRange> fNextRanges;    ///< Basis for the ranges returned by the next GetEntryRanges() call
+   /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
+   /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
+   /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
+   std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
 
    /// Provides the RDF column "colName" given the field identified by fieldID. For records and collections,
    /// AddField recurses into the sub fields. The skeinIDs is the list of field IDs of the outer collections
@@ -82,8 +102,11 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
                  DescriptorId_t fieldId,
                  std::vector<DescriptorId_t> skeinIDs);
 
-   /// Re-attach all active column readers to fFileNames[fNextFileIndex]
-   void SwitchFile();
+   /// Populates fNextRanges with the next set of entry ranges. Opens files from the chain as necessary
+   /// and aligns ranges with cluster boundaries for scheduling the tail of files.
+   /// Upon return, the fNextRanges list is ordered.  It has usually fNSlots elements; fewer if there
+   /// is not enough work to give at least one cluster to every slot.
+   void PrepareNextRanges();
 
 public:
    explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
@@ -100,6 +123,8 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
    void Initialize() final;
+   void InitSlot(unsigned int slot, ULong64_t firstEntry) final;
+   void FinalizeSlot(unsigned int slot) final;
    void Finalize() final;
 
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
