@@ -297,9 +297,9 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource) : fPrincipalSource(std::move(pageSource))
 {
    fPrincipalSource->Attach();
-   auto descriptorGuard = fPrincipalSource->GetSharedDescriptorGuard();
+   fPrincipalDescriptor = fPrincipalSource->GetSharedDescriptorGuard()->Clone();
 
-   AddField(descriptorGuard.GetRef(), "", descriptorGuard->GetFieldZeroId(), std::vector<DescriptorId_t>());
+   AddField(*fPrincipalDescriptor, "", fPrincipalDescriptor->GetFieldZeroId(), std::vector<DescriptorId_t>());
 }
 
 RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames)
@@ -325,12 +325,9 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
 
    // Map the field's and subfields' IDs to qualified names so that we can later connect the fields to
    // other page sources from the chain
-   {
-      auto descGuard = fPrincipalSource->GetSharedDescriptorGuard();
-      fFieldId2QualifiedName[field->GetOnDiskId()] = descGuard->GetQualifiedFieldName(field->GetOnDiskId());
-      for (const auto &s : *field) {
-         fFieldId2QualifiedName[s.GetOnDiskId()] = descGuard->GetQualifiedFieldName(s.GetOnDiskId());
-      }
+   fFieldId2QualifiedName[field->GetOnDiskId()] = fPrincipalDescriptor->GetQualifiedFieldName(field->GetOnDiskId());
+   for (const auto &s : *field) {
+      fFieldId2QualifiedName[s.GetOnDiskId()] = fPrincipalDescriptor->GetQualifiedFieldName(s.GetOnDiskId());
    }
 
    auto reader = std::make_unique<Internal::RNTupleColumnReader>(this, field);
@@ -360,8 +357,8 @@ void RNTupleDS::PrepareNextRanges()
 
          if (fPrincipalSource) {
             // Avoid reopening the first file, which has been opened already to read the schema
-            std::swap(fPrincipalSource, range.fSource);
             R__ASSERT(fNextFileIndex == 0);
+            std::swap(fPrincipalSource, range.fSource);
          } else {
             range.fSource = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
             range.fSource->Attach();
