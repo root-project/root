@@ -85,9 +85,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Specify imageplatform + arch + (optional) build option overrides
+        # Specify platform + arch + (optional) build option overrides
         #
-        # Available images: https://github.com/root-project/root-ci-images
+        # Available platforms: mac14
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
@@ -111,7 +111,7 @@ jobs:
         if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
+          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
         shell: bash
         run: |
           set -x
