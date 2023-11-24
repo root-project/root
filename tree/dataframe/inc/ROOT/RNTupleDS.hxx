@@ -57,8 +57,12 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
       ULong64_t fLastEntry = 0;
    };
 
-   /// The first source is used to extract the schema and build the prototype fields
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fPrincipalSource;
+   /// The first source is used to extract the schema and build the prototype fields. The page source
+   /// is used to extract a clone of the descriptor to fPrincipalDescriptor. Afterwards it is moved
+   /// into the first REntryRange.
+   std::unique_ptr<Detail::RPageSource> fPrincipalSource;
+   /// A clone of the first pages source's descriptor.
+   std::unique_ptr<RNTupleDescriptor> fPrincipalDescriptor;
 
    /// The data source may be constructed with an ntuple name and a list of files
    std::string fNTupleName;
