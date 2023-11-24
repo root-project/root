@@ -118,6 +118,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    RFieldBase *fProtoField;                    ///< The prototype field from which fField is cloned
    std::unique_ptr<RFieldBase> fField;         ///< The field backing the RDF column
    std::unique_ptr<RFieldBase::RValue> fValue; ///< The memory location used to read from fField
+   void *fValuePtr = nullptr;                  ///< Used to reuse the object created by fValue when reconnecting sources
    Long64_t fLastEntry = -1;                   ///< Last entry number that was read
    /// For chains, the logical entry and the physical entry in any particular file can be different.
    /// The entry offset stores the logical entry number (sum of all previous entries) when file of the corresponding
@@ -151,11 +152,20 @@ public:
       for (auto &f : *fField)
          f.ConnectPageSource(source);
 
-      fValue = std::make_unique<RFieldBase::RValue>(fField->GenerateValue());
+      if (fValuePtr) {
+         fValue = std::make_unique<RFieldBase::RValue>(fField->BindValue(fValuePtr));
+         fValue->TakeOwnership();
+         fValuePtr = nullptr;
+      } else {
+         fValue = std::make_unique<RFieldBase::RValue>(fField->GenerateValue());
+      }
    }
 
-   void Disconnect()
+   void Disconnect(bool keepValue)
    {
+      if (fValue && keepValue) {
+         fValuePtr = fValue->Release<void>();
+      }
       fValue = nullptr;
       fField = nullptr;
       fLastEntry = -1;
@@ -448,7 +458,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 
    if (fNSlots == 1) {
       for (auto r : fActiveColumnReaders[0]) {
-         r->Disconnect();
+         r->Disconnect(true /* keepValue */);
       }
    }
 
@@ -506,7 +516,7 @@ void RNTupleDS::FinalizeSlot(unsigned int slot)
       return;
 
    for (auto r : fActiveColumnReaders[slot]) {
-      r->Disconnect();
+      r->Disconnect(true /* keepValue */);
    }
 }
 
@@ -534,7 +544,14 @@ void RNTupleDS::Initialize()
    }
 }
 
-void RNTupleDS::Finalize() {}
+void RNTupleDS::Finalize()
+{
+   for (unsigned int i = 0; i < fNSlots; ++i) {
+      for (auto r : fActiveColumnReaders[i]) {
+         r->Disconnect(false /* keepValue */);
+      }
+   }
+}
 
 void RNTupleDS::SetNSlots(unsigned int nSlots)
 {
