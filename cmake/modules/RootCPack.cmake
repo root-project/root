@@ -126,7 +126,7 @@ else()
     string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
     set(OS_NAME_VERSION Linux-centos${osvers}-${arch})
   else()
-    set(OS_NAME_VERSION Linux-${osid}${osvers}${arch})
+    set(OS_NAME_VERSION Linux-${osid}${osvers}-${arch})
   endif()
 endif()
 
