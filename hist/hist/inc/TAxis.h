@@ -53,6 +53,7 @@ private:
    };
 
    Bool_t       HasBinWithoutLabel() const;
+   Int_t        DoFindFixBin(Double_t x) const;
 
 
    TAxisModLab *FindModLab(Int_t num, Double_t v = 0., Double_t eps = 0.) const;
