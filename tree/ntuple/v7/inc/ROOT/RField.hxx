@@ -181,6 +181,7 @@ public:
          std::swap(result, fObjPtr);
          return static_cast<T *>(result);
       }
+      void TakeOwnership() { fIsOwning = true; }
 
       std::size_t Append() { return fField->Append(fObjPtr); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
