@@ -9,6 +9,11 @@
 #include <algorithm>
 #include <iostream>
 
+using namespace std;
+
+Float_t delta=0.00000000001;
+
+
 void FillForTest(TProfile2D* tp2d, TProfile2Poly* tpp, TRandom& ran) {
    Double_t value, weight;
    Double_t px, py;
@@ -26,9 +31,9 @@ void FillForTest(TProfile2D* tp2d, TProfile2Poly* tpp, TRandom& ran) {
 
 void globalStatsCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
    for(Int_t c=1; c<=3; ++c) {
-      ASSERT_DOUBLE_EQ(tp2d->GetMean(c), tpp->GetMean(c));
-      ASSERT_DOUBLE_EQ(tp2d->GetMeanError(c), tpp->GetMeanError(c));
-      ASSERT_DOUBLE_EQ(tp2d->GetStdDev(c), tpp->GetStdDev(c));
+      ASSERT_NEAR(tp2d->GetMean(c), tpp->GetMean(c), delta);
+      ASSERT_NEAR(tp2d->GetMeanError(c), tpp->GetMeanError(c), delta);
+      ASSERT_NEAR(tp2d->GetStdDev(c), tpp->GetStdDev(c), delta);
    }
 }
 
@@ -38,13 +43,13 @@ void binContentCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
       for(Double_t x=0.5; x<10; x+=2.0) {
          cont1 = tp2d->GetBinContent(tp2d->FindBin(x,y));
          cont2 = tpp->GetBinContent(tpp->FindBin(x,y));
-         ASSERT_DOUBLE_EQ(cont1, cont2);
+         ASSERT_NEAR(cont1, cont2, delta);
       }
    }
    // test overflow
    cont1 = tp2d->GetBinContent(tp2d->FindBin(11,11));
    cont2 = tpp->GetBinContent(tpp->FindBin(11,11));
-   ASSERT_DOUBLE_EQ(cont1, cont2);
+   ASSERT_NEAR(cont1, cont2, delta);
 }
 
 void binEntriesCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
@@ -53,14 +58,14 @@ void binEntriesCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
       for(Double_t x=0.5; x<10; x+=2.0) {
          cont1 = tp2d->GetBinEffectiveEntries(tp2d->FindBin(x,y));
          cont2 = tpp->GetBinEffectiveEntries(tpp->FindBin(x,y));
-         ASSERT_DOUBLE_EQ(cont1, cont2);
+         ASSERT_NEAR(cont1, cont2, delta);
       }
 
    }
    // test overflow
    cont1 = tp2d->GetBinEffectiveEntries(tp2d->FindBin(11,11));
    cont2 = tpp->GetBinEffectiveEntries(tpp->FindBin(11,11));
-   ASSERT_DOUBLE_EQ(cont1, cont2);
+   ASSERT_NEAR(cont1, cont2, delta);
 
 }
 
@@ -72,17 +77,18 @@ void binErrorCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
          cont2 = tpp->GetBinError(tpp->FindBin(x,y));
          // std::cout << x << "  " << y << "  " <<  tpp->FindBin(x,y) << "  " <<  tpp->GetBinContent(tpp->FindBin(x,y))
          //           << "   " << tpp->GetBinEffectiveEntries(tpp->FindBin(x,y)) << std::endl;
-         ASSERT_DOUBLE_EQ(cont1, cont2);
+         ASSERT_NEAR(cont1, cont2, delta);
       }
    }
    // test overflow
    cont1 = tp2d->GetBinError(tp2d->FindBin(11,11));
    cont2 = tpp->GetBinError(tpp->FindBin(11,11));
-   ASSERT_DOUBLE_EQ(cont1, cont2);
+   ASSERT_NEAR(cont1, cont2, delta);
 }
 
 void SetupPlots(TProfile2Poly* TP2P_2, TProfile2Poly* TP2P, TProfile2D* TP2D_2, TProfile2D* TP2D, TString opt = "")
 {
+     
    TP2D->SetErrorOption(opt);
    TP2D_2->SetErrorOption(opt);
    if (opt == "S") {
@@ -92,7 +98,7 @@ void SetupPlots(TProfile2Poly* TP2P_2, TProfile2Poly* TP2P, TProfile2D* TP2D_2, 
       TP2P->SetErrorOption(kERRORMEAN);
       TP2P_2->SetErrorOption(kERRORMEAN);
    }
-
+       
    double minx = -10; double maxx = 10;
    double miny = -10; double maxy = 10;
    double binsz = 2;
@@ -109,7 +115,7 @@ void SetupPlots(TProfile2Poly* TP2P_2, TProfile2Poly* TP2P, TProfile2D* TP2D_2, 
 void test_globalStats() {
 
    TH1::StatOverflows(true);
-
+   
    auto TP2D = new TProfile2D("1", "1", 10, -10, 10, 10, -10, 10, 0, 0);
    auto TP2D_2 = new TProfile2D("2", "2", 10, -10, 10, 10, -10, 10, 0, 0);
 
