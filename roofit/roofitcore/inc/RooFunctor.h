@@ -48,7 +48,8 @@ public:
   double eval(const double* /*x*/) const ;
   double eval(double  /*x*/) const ;
 
-  RooAbsFunc& binding() { return *_binding ; }
+  inline RooAbsFunc& binding() { return _ownedBinding ? *_ownedBinding : *_binding; }
+  inline RooAbsFunc const& binding() const { return _ownedBinding ? *_ownedBinding : *_binding; }
 
 protected:
 
@@ -63,4 +64,3 @@ protected:
 };
 
 #endif
-

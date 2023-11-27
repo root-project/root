@@ -136,7 +136,6 @@ private:
   class CacheElem final : public RooAbsCacheElement {
   public:
     CacheElem() : _isRearranged(false) { }
-    ~CacheElem() override = default;
     // Payload
     RooArgList _partList ;
     RooArgList _numList ;

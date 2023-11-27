@@ -148,13 +148,13 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet &var
                        int intOrder)
    : RooHistPdf{name, title, vars, *dhist, intOrder}
 {
-   _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
 RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList &pdfObs, const RooArgList &histObs,
                        std::unique_ptr<RooDataHist> dhist, int intOrder)
    : RooHistPdf{name, title, pdfObs, histObs, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
 
 

@@ -37,7 +37,6 @@ protected:
 private:
   struct CacheElem : public RooAbsCacheElement {
   public:
-      ~CacheElem() override = default;
       // Payload
       std::unique_ptr<RooAbsPdf> _pdf;
       std::unique_ptr<RooArgSet> _pdfVariables;

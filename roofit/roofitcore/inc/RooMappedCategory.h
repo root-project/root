@@ -85,6 +85,9 @@ protected:
 
   friend class RooMappedCategoryCache;
 
+private:
+  inline void setDefCat(value_type defCat) { _defCat = defCat; }
+
   ClassDefOverride(RooMappedCategory, 2) // Index variable, derived from another index using pattern-matching based mapping
 };
 

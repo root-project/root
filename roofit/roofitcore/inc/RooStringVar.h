@@ -27,7 +27,6 @@ public:
   RooStringVar(const char *name, const char *title, const char* value, Int_t size=1024) ;
   RooStringVar(const RooStringVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooStringVar(*this,newname); }
-  ~RooStringVar() override = default;
 
   // Parameter value and error accessors
   virtual operator TString() {return TString(_string.c_str()); }

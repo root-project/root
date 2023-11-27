@@ -122,14 +122,14 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet &v
                          int intOrder)
    : RooHistFunc{name, title, vars, *dhist, intOrder}
 {
-   _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
 
 RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList &pdfObs, const RooArgList &histObs,
                          std::unique_ptr<RooDataHist> dhist, int intOrder)
    : RooHistFunc{name, title, pdfObs, histObs, *dhist, intOrder}
 {
-   _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
 
 

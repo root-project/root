@@ -47,22 +47,9 @@ RooFunctor::RooFunctor(const RooAbsFunc &func)
 /// Store list of observables
 
 RooFunctor::RooFunctor(const RooAbsReal &func, const RooArgList &observables, const RooArgList &parameters)
-   : _npar(parameters.size()), _nobs(observables.size())
+   : RooFunctor{func, observables, parameters, observables}
 {
-  _nset.add(observables) ;
-
-  // Make list of all variables to be bound
-  RooArgList allVars(observables) ;
-  allVars.add(parameters) ;
-
-  // Create RooFit function binding
-  _ownedBinding = std::make_unique<RooRealBinding>(func,allVars,&_nset,false,nullptr) ;
-  _binding = _ownedBinding.get();
-
-  // Allocate transfer array
-  _x.resize(allVars.size());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store normalization set
@@ -79,27 +66,21 @@ RooFunctor::RooFunctor(const RooAbsReal &func, const RooArgList &observables, co
 
   // Create RooFit function binding
   _ownedBinding = std::make_unique<RooRealBinding>(func,allVars,&_nset,false,nullptr) ;
-  _binding = _ownedBinding.get();
 
   // Allocate transfer array
   _x.resize(allVars.size());
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooFunctor::RooFunctor(const RooFunctor& other) :
   _nset(other._nset),
-  _binding(nullptr),
+  _binding{other._binding},
   _npar(other._npar),
   _nobs(other._nobs)
 {
   if (other._ownedBinding) {
-    _ownedBinding = std::make_unique<RooRealBinding>(static_cast<RooRealBinding&>(*other._binding),&_nset);
-    _binding = _ownedBinding.get();
-  } else {
-    _binding = other._binding;
+    _ownedBinding = std::make_unique<RooRealBinding>(static_cast<RooRealBinding&>(*other._ownedBinding),&_nset);
   }
   _x.resize(_nobs + _npar);
 }
@@ -110,14 +91,14 @@ RooFunctor::~RooFunctor() = default;
 
 double RooFunctor::eval(const double *x) const
 {
-  return (*_binding)(x) ;
+  return binding()(x) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 double RooFunctor::eval(double x) const
 {
-  return (*_binding)(&x) ;
+  return binding()(&x) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,5 +111,5 @@ double RooFunctor::eval(const double *x, const double *p) const
   for (int i=0 ; i<_npar ; i++) {
     _x[i+_nobs] = p[i] ;
   }
-  return (*_binding)(_x.data());
+  return binding()(_x.data());
 }

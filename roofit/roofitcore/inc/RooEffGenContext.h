@@ -33,6 +33,11 @@ protected:
    void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
 private:
+   inline void initializeEff(RooAbsReal const &eff)
+   {
+      _eff = dynamic_cast<RooAbsReal *>(_cloneSet.find(eff.GetName()));
+   }
+
    RooArgSet _cloneSet;          ///< Internal clone of p.d.f.
    RooAbsReal *_eff;             ///< Pointer to efficiency function
    std::unique_ptr<RooAbsGenContext> _generator; ///< Generator context for p.d.f

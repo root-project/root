@@ -31,7 +31,6 @@ public:
   }
   RooAbsCategoryLValue(const char *name, const char *title);
   RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name=nullptr) ;
-  ~RooAbsCategoryLValue() override = default;
 
   // Value modifiers
   ////////////////////////////////////////////////////////////////////////////////
