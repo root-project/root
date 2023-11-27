@@ -181,10 +181,6 @@ inheriting from RPagePersistentSink.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
-protected: // temporary until the next commit
-   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
-   Internal::RNTupleSerializer::RContext fSerializationContext;
-
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -204,16 +200,6 @@ protected:
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
    std::unique_ptr<RNTupleCompressor> fCompressor;
-
-   /// Remembers the starting cluster id for the next cluster group
-   std::uint64_t fNextClusterInGroup = 0;
-   /// Used to calculate the number of entries in the current cluster
-   NTupleSize_t fPrevClusterNEntries = 0;
-   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
-   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
-   RNTupleDescriptorBuilder fDescriptorBuilder;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
@@ -289,7 +275,22 @@ public:
 */
 // clang-format on
 class RPagePersistentSink : public RPageSink {
+private:
+   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
+   Internal::RNTupleSerializer::RContext fSerializationContext;
+
+   /// Remembers the starting cluster id for the next cluster group
+   std::uint64_t fNextClusterInGroup = 0;
+   /// Used to calculate the number of entries in the current cluster
+   NTupleSize_t fPrevClusterNEntries = 0;
+   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
+   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+
 protected:
+   RNTupleDescriptorBuilder fDescriptorBuilder;
+
    virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
 
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
