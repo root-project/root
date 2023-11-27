@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.30/00 was release on November 6, 2023.
+ROOT version 6.30/00 was released on November 6, 2023.
 
 For more information, see:
 
@@ -574,9 +574,22 @@ This logic has been improved and is now as follows:
 * [[ROOT-4188](href='https://sft.its.cern.ch/jira/browse/ROOT-4188)] - `RooGamma` random number sampling
 * [[ROOT-7922](href='https://sft.its.cern.ch/jira/browse/ROOT-7922)] - `RooStats::ModelConfig::Set*(const char*)`
 
+## Release 6.30/02
+
+Published on November 27, 2023
+
+### Bugs and Issues fixed in this release
+
+This release addresses a security issue.
+More details will follow.
+
+* [[ROOT-10864](https://sft.its.cern.ch/jira/browse/ROOT-10864)] - With Minuit2 disabled, some tests (that used to test minuit2) start to fail
+* [[#11746](https://github.com/root-project/root/issues/11746)] - `TH2::Fill(const char *namex, const char *namey, Double_t w)` doesn't update `fTsumwxy`
+* [[#13864](https://github.com/root-project/root/issues/13864)] - [PyROOT] Python 3.12: warnings during compilation and crash
+* [[#11287](https://github.com/root-project/root/issues/11287)] - `gitinfo.txt` not updated in incremental build
+
 ## HEAD of the v6-30-00-patches branch
 
-These changes will be part of a future 6.30/02.
+These changes will be part of a future 6.30/04.
 
 - None so far.
-
