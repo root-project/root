@@ -9,7 +9,8 @@
 namespace ROOT {
 namespace ROOTX {
 
-const char *gROOTCoreTeam[] = {\n   "Rene Brun",
+const char *gROOTCoreTeam[] = {
+   "Rene Brun",
    "Fons Rademakers",
    "Philippe Canal",
    "Axel Naumann",
@@ -28,7 +29,8 @@ const char *gROOTCoreTeam[] = {\n   "Rene Brun",
    "Timur Pocheptsov",
    "Stephan Hageboeck",
    "Matevz Tadel",
-   "Enric Tejedor Saavedra",\n   0\n };
+   "Enric Tejedor Saavedra",
+   0 };
 
 } // namespace ROOTX
 } // namespace ROOT
