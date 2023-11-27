@@ -215,8 +215,6 @@ protected:
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
-
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
    /// point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
@@ -252,17 +250,16 @@ public:
    /// Returns the sink's write options.
    const RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// To do so, Create() calls CreateImpl() after updating the descriptor.
    /// Create() associates column handles to the columns referenced by the model
-   void Create(RNTupleModel &model);
+   virtual void Create(RNTupleModel &model) = 0;
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Create(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
-   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry);
+   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) = 0;
 
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
@@ -293,6 +290,8 @@ public:
 // clang-format on
 class RPagePersistentSink : public RPageSink {
 protected:
+   virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
+
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
@@ -318,6 +317,11 @@ public:
    RPagePersistentSink(RPagePersistentSink &&) = default;
    RPagePersistentSink &operator=(RPagePersistentSink &&) = default;
    ~RPagePersistentSink() override;
+
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
+   void Create(RNTupleModel &model) final;
+   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;

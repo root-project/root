@@ -130,11 +130,9 @@ private:
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
    DescriptorId_t fNFields = 0;
+   DescriptorId_t fNColumns = 0;
 
    void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry);
-
-protected:
-   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -144,6 +142,9 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    ~RPageSinkBuf() override;
 
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
+   void Create(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;

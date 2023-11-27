@@ -53,6 +53,12 @@ ROOT::Experimental::Detail::RPageSinkBuf::~RPageSinkBuf()
    WaitForAllTasks();
 }
 
+ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Detail::RPageSinkBuf::AddColumn(DescriptorId_t /*fieldId*/, const RColumn &column)
+{
+   return ColumnHandle_t{fNColumns++, &column};
+}
+
 void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<RFieldBase *> &fields,
                                                              NTupleSize_t firstEntry)
 {
@@ -68,12 +74,14 @@ void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<R
          connectField(descendant);
       }
    }
+   fBufferedColumns.resize(fNColumns);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model,
-                                                          unsigned char * /* serializedHeader */,
-                                                          std::uint32_t /* length */)
+void ROOT::Experimental::Detail::RPageSinkBuf::Create(RNTupleModel &model)
 {
+   auto &fieldZero = *model.GetFieldZero();
+   ConnectFields(fieldZero.GetSubFields(), 0U);
+
    fInnerModel = model.Clone();
    fInnerSink->Create(*fInnerModel);
 }
@@ -82,11 +90,6 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelCh
                                                             NTupleSize_t firstEntry)
 {
    ConnectFields(changeset.fAddedFields, firstEntry);
-
-   bool isIncremental = !fBufferedColumns.empty();
-   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
-   if (!isIncremental)
-      return;
 
    // The buffered page sink maintains a copy of the RNTupleModel for the inner sink; replicate the changes there
    // TODO(jalopezg): we should be able, in general, to simplify the buffered sink.
