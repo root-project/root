@@ -19,7 +19,7 @@
 \class RooHist
 \ingroup Roofitcore
 
-A RooHist is a graphical representation of binned data based on the
+Graphical representation of binned data based on the
 TGraphAsymmErrors class. Error bars are calculated using either Poisson
 or Binomial statistics. A RooHist is used to represent histograms in
 a RooPlot.

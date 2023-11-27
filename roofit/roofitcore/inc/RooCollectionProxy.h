@@ -17,7 +17,7 @@
 /**
 \class RooCollectionProxy
 \ingroup Roofitcore
-RooCollectionProxy is the concrete proxy for RooArgSet or RooArgList objects.
+Concrete proxy for RooArgSet or RooArgList objects.
 A RooCollectionProxy is the general mechanism to store a RooArgSet or RooArgList
 with RooAbsArgs in a RooAbsArg.
 Creating a RooCollectionProxy adds all members of the proxied RooArgSet to the proxy owners

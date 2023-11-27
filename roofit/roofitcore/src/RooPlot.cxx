@@ -19,7 +19,7 @@
 \class RooPlot
 \ingroup Roofitcore
 
-A RooPlot is a plot frame and a container for graphics objects
+Plot frame and a container for graphics objects
 within that frame. As a frame, it provides the TH1-style public interface
 for setting plot ranges, configuring axes, etc. As a container, it
 holds an arbitrary set of objects that might be histograms of data,

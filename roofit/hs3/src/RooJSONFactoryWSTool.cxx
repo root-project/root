@@ -43,8 +43,8 @@
 /** \class RooJSONFactoryWSTool
 \ingroup roofit
 
-When using `RooFit`, statistical models can be conveniently handled and
-stored as a `RooWorkspace`. However, for the sake of interoperability
+When using \ref Roofitmain, statistical models can be conveniently handled and
+stored as a RooWorkspace. However, for the sake of interoperability
 with other statistical frameworks, and also ease of manipulation, it
 may be useful to store statistical models in text form.
 
@@ -66,8 +66,7 @@ tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.exportJSON("myjson.json")
 ~~~
 
-For more details, consult the tutorial <a
-href="https://root.cern/doc/v626/rf515__hfJSON_8py.html">rf515_hfJSON</a>.
+For more details, consult the tutorial <a href="rf515__hfJSON_8py.html">rf515_hfJSON</a>.
 
 In order to import and export YML files, `ROOT` needs to be compiled
 with the external dependency <a
@@ -77,9 +76,7 @@ to be installed on your system when building `ROOT`.
 The RooJSONFactoryWSTool only knows about a limited set of classes for
 import and export. If import or export of a class you're interested in
 fails, you might need to add your own importer or exporter. Please
-consult the <a
-href="https://github.com/root-project/root/blob/master/roofit/hs3/README.md">README</a>
-to learn how to do that.
+consult the relevant section in the \ref roofit_dev_docs to learn how to do that (\ref roofit_dev_docs_hs3).
 
 You can always get a list of all the available importers and exporters by calling the following functions:
 ~~~ {.py}
@@ -94,7 +91,6 @@ Alternatively, you can generate a LaTeX version of the available importers and e
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.writedoc("hs3.tex")
 ~~~
-
 */
 
 constexpr auto hs3VersionTag = "0.1.90";

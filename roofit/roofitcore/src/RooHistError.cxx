@@ -19,7 +19,7 @@
 \class RooHistError
 \ingroup Roofitcore
 
-RooHistError is a singleton class used to calculate the error bars
+Singleton class used to calculate the error bars
 for each bin of a RooHist object. Errors are calculated by integrating
 a specified area of a Poisson or Binomail error distribution.
 **/

@@ -19,14 +19,11 @@
 \class RooDouble
 \ingroup Roofitcore
 
-RooDouble is a minimal implementation of a TObject holding a double
-value.
+Minimal implementation of a TObject holding a double value.
 **/
 
 #include "RooDouble.h"
 #include <string>
-
-using namespace std;
 
 ClassImp(RooDouble);
 

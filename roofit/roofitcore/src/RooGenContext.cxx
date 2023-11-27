@@ -19,7 +19,7 @@
 \class RooGenContext
 \ingroup Roofitcore
 
-Class RooGenContext implement a universal generator context for all
+Implements a universal generator context for all
 RooAbsPdf classes that do not have or need a specialized generator
 context. This generator context queries the input p.d.f which observables
 it can generate internally and delegates generation of those observables

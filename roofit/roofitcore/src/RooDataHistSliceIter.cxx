@@ -19,9 +19,8 @@
 \class RooDataHistSliceIter
 \ingroup Roofitcore
 
-RooDataHistSliceIter iterates over all bins in a RooDataHist that
-occur in a slice defined by the bin coordinates of the input
-sliceSet.
+Iterates over all bins in a RooDataHist that occur in a slice defined by the
+bin coordinates of the input sliceSet.
 **/
 
 #include "RooDataHist.h"
@@ -29,12 +28,7 @@ sliceSet.
 #include "RooAbsLValue.h"
 #include "RooDataHistSliceIter.h"
 
-using namespace std;
-
 ClassImp(RooDataHistSliceIter);
-;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an iterator over all bins of RooDataHist 'hist' in the slice defined

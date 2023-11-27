@@ -19,7 +19,7 @@
 \class RooAbsOptTestStatistic
 \ingroup Roofitcore
 
-RooAbsOptTestStatistic is the abstract base class for test
+Abstract base class for test
 statistics objects that evaluate a function or PDF at each point of a given
 dataset.  This class provides generic optimizations, such as
 caching and precalculation of constant terms that can be made for

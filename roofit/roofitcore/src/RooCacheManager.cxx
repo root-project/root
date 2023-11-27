@@ -19,7 +19,7 @@
 \class RooCacheManager
 \ingroup Roofitcore
 
-Template class RooCacheManager manages the storage of any type of data indexed on
+Manages the storage of any type of data indexed on
 the choice of normalization and optionally the set of integrated observables.
 The purpose of this class is to facilitate storage of intermediate results
 in operator p.d.f.s whose value and inner working are often highly dependent
@@ -33,7 +33,6 @@ recognized and will all point to the same normalization list. Lists
 for up to 'maxSize' different normalization/ projection
 configurations can be cached.
 **/
-//
 
 #include "RooCacheManager.h"
 

@@ -19,7 +19,7 @@
 \class RooMCIntegrator
 \ingroup Roofitcore
 
-RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
+Implements an adaptive multi-dimensional Monte Carlo
 numerical integration, following the VEGAS algorithm originally described
 in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
 based on a C version from the 0.9 beta release of the GNU scientific library.
@@ -37,7 +37,6 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 #include "RooMsgService.h"
 
 #include <cmath>
-
 
 
 using namespace std;

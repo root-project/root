@@ -19,7 +19,7 @@
 \class RooLinkedList
 \ingroup Roofitcore
 
-RooLinkedList is an collection class for internal use, storing
+Collection class for internal use, storing
 a collection of RooAbsArg pointers in a doubly linked list.
 It can optionally add a hash table to speed up random access
 in large collections

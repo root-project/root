@@ -19,8 +19,7 @@
 \class RooFormula
 \ingroup Roofitcore
 
-RooFormula internally uses ROOT's TFormula to compute user-defined expressions
-of RooAbsArgs.
+Internally uses ROOT's TFormula to compute user-defined expressions of RooAbsArgs.
 
 The string expression can be any valid TFormula expression referring to the
 listed servers either by name or by their ordinal list position. These three are

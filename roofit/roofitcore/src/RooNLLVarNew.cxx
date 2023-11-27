@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -409,3 +411,5 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
       ctx.addToCodeBody(resName + " += " + expected + " - " + weightSumName + " * std::log(" + expected + ");\n");
    }
 }
+
+/// \endcond

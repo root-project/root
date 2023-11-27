@@ -19,7 +19,7 @@
 \class RooExpensiveObjectCache
 \ingroup Roofitcore
 
-RooExpensiveObjectCache is a singleton class that serves as repository
+Singleton class that serves as repository
 for objects that are expensive to calculate. Owners of such objects
 can registers these here with associated parameter values for which
 the object is valid, so that other instances can, at a later moment
@@ -44,8 +44,8 @@ ClassImp(RooExpensiveObjectCache::ExpensiveObject);
 
 RooExpensiveObjectCache::~RooExpensiveObjectCache()
 {
-  for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter!=_map.end() ; ++iter) {
-    delete iter->second ;
+  for (auto& item : _map) {
+    delete item.second;
   }
 }
 

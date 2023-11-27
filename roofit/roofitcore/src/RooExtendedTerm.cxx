@@ -19,7 +19,7 @@
 \class RooExtendedTerm
 \ingroup Roofitcore
 
-RooExtendedTerm is a p.d.f with no observables that only introduces
+A p.d.f with no observables that only introduces
 an extended ML term for a given number of expected events term when an extended ML
 is constructed.
 **/
