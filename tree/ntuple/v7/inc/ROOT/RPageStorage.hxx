@@ -175,6 +175,9 @@ public:
 The page sink takes the list of columns and afterwards a series of page commits and cluster commits.
 The user is responsible to commit clusters at a consistent point, i.e. when all pages corresponding to data
 up to the given entry number are committed.
+
+An object of this class may either be a wrapper (for example a RPageSinkBuf) or a "persistent" sink,
+inheriting from RPagePersistentSink.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
@@ -295,6 +298,24 @@ public:
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RPagePersistentSink
+\ingroup NTuple
+\brief Base class for a sink with a physical storage backend
+*/
+// clang-format on
+class RPagePersistentSink : public RPageSink {
+public:
+   RPagePersistentSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
+
+   RPagePersistentSink(const RPagePersistentSink &) = delete;
+   RPagePersistentSink &operator=(const RPagePersistentSink &) = delete;
+   RPagePersistentSink(RPagePersistentSink &&) = default;
+   RPagePersistentSink &operator=(RPagePersistentSink &&) = default;
+   ~RPagePersistentSink() override;
 };
 
 // clang-format off

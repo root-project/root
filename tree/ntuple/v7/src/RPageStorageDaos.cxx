@@ -227,7 +227,7 @@ ROOT::Experimental::Detail::RDaosContainerNTupleLocator::LocateNTuple(RDaosConta
 
 ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
                                                          const RNTupleWriteOptions &options)
-   : RPageSink(ntupleName, options), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fURI(uri)
+   : RPagePersistentSink(ntupleName, options), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fURI(uri)
 {
    R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
                                << "Do not store real data with this version of RNTuple!";

@@ -45,9 +45,8 @@
 #include <queue>
 
 ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
-   const RNTupleWriteOptions &options)
-   : RPageSink(ntupleName, options)
-   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
+                                                         const RNTupleWriteOptions &options)
+   : RPagePersistentSink(ntupleName, options), fPageAllocator(std::make_unique<RPageAllocatorHeap>())
 {
    R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";

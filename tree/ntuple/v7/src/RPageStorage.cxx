@@ -604,3 +604,13 @@ void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::stri
                                                                         "CPU time spent compressing")
    });
 }
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::Detail::RPagePersistentSink::RPagePersistentSink(std::string_view name,
+                                                                     const RNTupleWriteOptions &options)
+   : RPageSink(name, options)
+{
+}
+
+ROOT::Experimental::Detail::RPagePersistentSink::~RPagePersistentSink() {}
