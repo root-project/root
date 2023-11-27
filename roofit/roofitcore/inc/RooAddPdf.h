@@ -147,6 +147,8 @@ private:
 
   void finalizeConstruction();
   void materializeRefCoefNormFromAttribute() const;
+  inline void setRecursiveFraction(bool recursiveFraction) { _recursive = recursiveFraction; }
+  inline void setAllExtendable(bool allExtendable) { _allExtendable = allExtendable; }
 
   ClassDefOverride(RooAddPdf,5) // PDF representing a sum of PDFs
 };

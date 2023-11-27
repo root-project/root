@@ -133,6 +133,8 @@ private:
 
   static void setCacheAndTrackHints(RooArgList const& funcList, RooArgSet& trackNodes);
 
+  inline void setExtended(bool extended) { _extended = extended; }
+
   ClassDefOverride(RooRealSumPdf, 5) // PDF constructed from a sum of (non-pdf) functions
 };
 
