@@ -64,7 +64,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
             fCompressionSettings = columnRange.fCompressionSettings;
          } else if (fCompressionSettings != columnRange.fCompressionSettings) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
-            // possible to do otherwise. This measn that currently, this exception should never be thrown, but this
+            // possible to do otherwise. This means that currently, this exception should never be thrown, but this
             // could change in the future.
             throw RException(R__FAIL("compression setting mismatch between column ranges (" +
                                      std::to_string(fCompressionSettings) + " vs " +
@@ -80,7 +80,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
       }
 
-      fColumnInfo.emplace(colId, RColumnInfo(colDesc, compressedSize, elemSize, nElems));
+      fColumnInfo.emplace(colId, RColumnInspector(colDesc, compressedSize, elemSize, nElems));
    }
 }
 
@@ -91,7 +91,7 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldI
    std::uint64_t uncompressedSize = 0;
 
    for (const auto &colDescriptor : fDescriptor->GetColumnIterable(fieldId)) {
-      auto colInfo = GetColumnInfo(colDescriptor.GetPhysicalId());
+      auto colInfo = GetColumnInspector(colDescriptor.GetPhysicalId());
       compressedSize += colInfo.GetCompressedSize();
       uncompressedSize += colInfo.GetUncompressedSize();
    }
@@ -193,8 +193,8 @@ std::string ROOT::Experimental::RNTupleInspector::GetCompressionSettingsAsString
 
 //------------------------------------------------------------------------------
 
-const ROOT::Experimental::RNTupleInspector::RColumnInfo &
-ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColumnId) const
+const ROOT::Experimental::RNTupleInspector::RColumnInspector &
+ROOT::Experimental::RNTupleInspector::GetColumnInspector(DescriptorId_t physicalColumnId) const
 {
    if (physicalColumnId > fDescriptor->GetNPhysicalColumns()) {
       throw RException(R__FAIL("No column with physical ID " + std::to_string(physicalColumnId) + " present"));
@@ -235,7 +235,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       std::uint32_t count;
       std::uint64_t nElems, compressedSize, uncompressedSize;
 
-      void operator+=(const RColumnInfo &colInfo)
+      void operator+=(const RColumnInspector &colInfo)
       {
          this->count++;
          this->nElems += colInfo.GetNElements();
