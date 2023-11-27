@@ -120,8 +120,12 @@ TEST(RNTupleShow, BasicTypes)
    // clang-format on
    EXPECT_EQ(fString1, os1.str());
 
-   // TODO(jblomer): this should fail to an exception instead
-   EXPECT_DEATH(ntuple2->Show(2), ".*");
+   try {
+      ntuple2->LoadEntry(2);
+      FAIL() << "loading a non-existing entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 2 out of bounds"));
+   }
 }
 
 TEST(RNTupleShow, Vectors)

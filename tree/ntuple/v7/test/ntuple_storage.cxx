@@ -79,6 +79,13 @@ TEST(RNTuple, Basics)
    EXPECT_EQ(24.0, *rdPt);
    ntuple->LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
+
+   try {
+      ntuple->LoadEntry(3);
+      FAIL() << "loading a non-existing entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 3 out of bounds"));
+   }
 }
 
 TEST(RNTuple, Extended)
