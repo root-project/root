@@ -135,12 +135,10 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
-                                                               const RSealedPage &sealedPage)
+ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(DescriptorId_t /*physicalColumnId*/,
+                                                               const RSealedPage & /*sealedPage*/)
 {
-   fInnerSink->CommitSealedPage(physicalColumnId, sealedPage);
-   // we're feeding bad locators to fOpenPageRanges but it should not matter
-   // because they never get written out
+   throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
    return RNTupleLocator{};
 }
 
