@@ -255,7 +255,8 @@ double deltaerfi(double x1, double x2)
 
 double RooExpPoly::analyticalIntegral(int /*code*/, const char *rangeName) const
 {
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
    const unsigned sz = _coefList.size();
    if (!sz)
       return xmax - xmin;

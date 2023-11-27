@@ -360,7 +360,8 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       // TODO: change this treatment to keep track of all values so that the threshold
       // for adaptive sampling is counted for all distributions and not just the
       // first one.
-      double valueFirst = -999.0, weight = 1.0;
+      double valueFirst = -999.0;
+      double weight = 1.0;
 
       // set variables to requested parameter point
       allVars->assign(*saveAll); // important for example for SimpleLikelihoodRatioTestStat

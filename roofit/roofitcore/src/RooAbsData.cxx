@@ -707,7 +707,8 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   RooLinkedList ownedCmds ;
   RooCmdArg* autoRD = static_cast<RooCmdArg*>(argList.find("AutoRangeData")) ;
   if (autoRD) {
-    double xmin,xmax ;
+    double xmin;
+    double xmax;
     if (!getRange(static_cast<RooRealVar const&>(xvar),xmin,xmax,autoRD->getDouble(0),autoRD->getInt(0))) {
        RooCmdArg* bincmd = static_cast<RooCmdArg*>(RooFit::Binning(autoRD->getInt(1),xmin,xmax).Clone()) ;
        ownedCmds.Add(bincmd) ;
@@ -718,11 +719,12 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   if (yvar) {
     RooCmdArg* autoRDY = static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("YVar")))->subArgs().find("AutoRangeData")) ;
     if (autoRDY) {
-      double ymin,ymax ;
-      if (!getRange(static_cast<RooRealVar&>(*yvar),ymin,ymax,autoRDY->getDouble(0),autoRDY->getInt(0))) {
-         RooCmdArg* bincmd = static_cast<RooCmdArg*>(RooFit::Binning(autoRDY->getInt(1),ymin,ymax).Clone()) ;
-         //ownedCmds.Add(bincmd) ;
-         (static_cast<RooCmdArg*>(argList.find("YVar")))->subArgs().Replace(autoRDY,bincmd) ;
+       double ymin;
+       double ymax;
+       if (!getRange(static_cast<RooRealVar &>(*yvar), ymin, ymax, autoRDY->getDouble(0), autoRDY->getInt(0))) {
+        RooCmdArg *bincmd = static_cast<RooCmdArg *>(RooFit::Binning(autoRDY->getInt(1), ymin, ymax).Clone());
+        // ownedCmds.Add(bincmd) ;
+        (static_cast<RooCmdArg *>(argList.find("YVar")))->subArgs().Replace(autoRDY, bincmd);
       }
       delete autoRDY ;
     }
@@ -731,7 +733,8 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   if (zvar) {
     RooCmdArg* autoRDZ = static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().find("AutoRangeData")) ;
     if (autoRDZ) {
-      double zmin,zmax ;
+      double zmin;
+      double zmax;
       if (!getRange(static_cast<RooRealVar&>(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0))) {
          RooCmdArg* bincmd = static_cast<RooCmdArg*>(RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone()) ;
          //ownedCmds.Add(bincmd) ;
@@ -938,7 +941,11 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
   if (cutSpec) select = std::make_unique<RooFormula>("select",cutSpec,*get());
 
   // Calculate requested moment
-  double xysum(0),xsum(0),ysum(0),x2sum(0),y2sum(0);
+  double xysum(0);
+  double xsum(0);
+  double ysum(0);
+  double x2sum(0);
+  double y2sum(0);
   const RooArgSet* vars ;
   for(int index= 0; index < numEntries(); index++) {
     vars = get(index) ;
@@ -1092,7 +1099,8 @@ RooRealVar* RooAbsData::rmsVar(const RooRealVar &var, const char* cutSpec, const
   // RMS/(2*Sqrt(N)) which is only valid if the variable has a Gaussian distribution.
 
   // Create RMS value holder
-  std::string name(var.GetName()),title("RMS of ") ;
+  std::string name(var.GetName());
+  std::string title("RMS         of ");
   name += "RMS";
   title += var.GetTitle();
   auto *rms= new RooRealVar(name.c_str(), title.c_str(), 0) ;
@@ -1213,7 +1221,8 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   if (showM) nPar++ ;
 
   // calculate the box's size
-  double dy(0.06), ymin(ymax-nPar*dy);
+  double dy(0.06);
+  double ymin(ymax - nPar * dy);
   if(showLabel) ymin-= dy;
 
   // create the box and set its options
@@ -1233,7 +1242,9 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   meanv->setPlotLabel("Mean") ;
   std::unique_ptr<RooRealVar> rms{rmsVar(*static_cast<RooRealVar*>(frame->getPlotVar()),cutSpec,cutRange)};
   rms->setPlotLabel("RMS") ;
-  std::unique_ptr<TString> rmsText, meanText, NText;
+  std::unique_ptr<TString> rmsText;
+  std::unique_ptr<TString> meanText;
+  std::unique_ptr<TString> NText;
   if (options) {
     rmsText.reset(rms->format(sigDigits,options));
     meanText.reset(meanv->format(sigDigits,options));
@@ -1278,7 +1289,8 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   // Check that the plot variables are all actually RooAbsReal's and print a warning if we do not
   // explicitly depend on one of them. Clone any variables that we do not contain directly and
   // redirect them to use our event data.
-  RooArgSet plotClones,localVars;
+  RooArgSet plotClones;
+  RooArgSet localVars;
   for(std::size_t index= 0; index < plotVars.size(); index++) {
     const RooAbsArg *var= plotVars.at(index);
     const RooAbsReal *realVar= dynamic_cast<const RooAbsReal*>(var);
@@ -1964,9 +1976,11 @@ RooPlot* RooAbsData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asym
   }
 
   // create and fill temporary histograms of this variable for each state
-  std::string hist1Name(GetName()),hist2Name(GetName());
+  std::string hist1Name(GetName());
+  std::string hist2Name(GetName());
   hist1Name += "_plot1";
-  std::unique_ptr<TH1> hist1, hist2;
+  std::unique_ptr<TH1> hist1;
+  std::unique_ptr<TH1> hist2;
   hist2Name += "_plot2";
 
   if (o.bins) {
@@ -1983,7 +1997,8 @@ RooPlot* RooAbsData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asym
 
   assert(hist1 && hist2);
 
-  std::string cuts1,cuts2 ;
+  std::string cuts1;
+  std::string cuts2;
   if (o.cuts && strlen(o.cuts)) {
     cuts1 = Form("(%s)&&(%s>0)",o.cuts,asymCat.GetName());
     cuts2 = Form("(%s)&&(%s<0)",o.cuts,asymCat.GetName());
@@ -2054,9 +2069,11 @@ RooPlot* RooAbsData::plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCa
   }
 
   // create and fill temporary histograms of this variable for each state
-  std::string hist1Name(GetName()),hist2Name(GetName());
+  std::string hist1Name(GetName());
+  std::string hist2Name(GetName());
   hist1Name += "_plot1";
-  std::unique_ptr<TH1> hist1, hist2;
+  std::unique_ptr<TH1> hist1;
+  std::unique_ptr<TH1> hist2;
   hist2Name += "_plot2";
 
   if (o.bins) {
@@ -2073,7 +2090,8 @@ RooPlot* RooAbsData::plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCa
 
   assert(hist1 && hist2);
 
-  std::string cuts1,cuts2 ;
+  std::string cuts1;
+  std::string cuts2;
   if (o.cuts && strlen(o.cuts)) {
     cuts1 = Form("(%s)&&(%s==1)",o.cuts,effCat.GetName());
     cuts2 = Form("(%s)&&(%s==0)",o.cuts,effCat.GetName());
@@ -2302,7 +2320,8 @@ void RooAbsData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cac
 
 bool RooAbsData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 {
-  bool ret(true), anyClient(false) ;
+  bool ret(true);
+  bool anyClient(false);
 
   for (const auto client : var->valueClients()) {
     anyClient = true ;

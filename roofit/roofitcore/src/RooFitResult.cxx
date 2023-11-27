@@ -713,8 +713,14 @@ void RooFitResult::fillCorrMatrix()
 
   // WVE: This code directly manipulates minuit internal workspace,
   //      if TMinuit code changes this may need updating
-  Int_t ndex, i, j, m, n, it /* nparm,id,ix */ ;
-  Int_t ndi, ndj /*, iso, isw2, isw5*/;
+  Int_t ndex;
+  Int_t i;
+  Int_t j;
+  Int_t m;
+  Int_t n;
+  Int_t it /* nparm,id,ix */;
+  Int_t ndi;
+  Int_t ndj /*, iso, isw2, isw5*/;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ndi = i*(i + 1) / 2;
     for (j = 1; j <= gMinuit->fNpar; ++j) {
@@ -976,8 +982,12 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
     }
   }
 
-  Int_t icode,npari,nparx ;
-  double fmin,edm,errdef ;
+  Int_t icode;
+  Int_t npari;
+  Int_t nparx;
+  double fmin;
+  double edm;
+  double errdef;
   gMinuit->mnstat(fmin,edm,errdef,npari,nparx,icode) ;
 
   r->setConstParList(constPars) ;
@@ -1194,7 +1204,8 @@ TMatrixDSym RooFitResult::conditionalCovarianceMatrix(const RooArgList& params) 
   }
 
   // Find (subset) of parameters that are stored in the covariance matrix
-  vector<int> map1, map2 ;
+  vector<int> map1;
+  vector<int> map2;
   for (std::size_t i=0 ; i<_finalPars->size() ; i++) {
     if (params3.find(_finalPars->at(i)->GetName())) {
       map1.push_back(i) ;
@@ -1205,8 +1216,10 @@ TMatrixDSym RooFitResult::conditionalCovarianceMatrix(const RooArgList& params) 
 
   // Rearrange matrix in block form with 'params' first and 'others' last
   // (preserving relative order)
-  TMatrixDSym S11, S22 ;
-  TMatrixD S12, S21 ;
+  TMatrixDSym S11;
+  TMatrixDSym S22;
+  TMatrixD S12;
+  TMatrixD S21;
   RooMultiVarGaussian::blockDecompose(V,map1,map2,S11,S12,S21,S22) ;
 
   // Constructed conditional matrix form         -1
@@ -1298,7 +1311,8 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
   // Handle case of conditional p.d.f. MVG(p1|p2) here
 
   // Find (subset) of parameters that are stored in the covariance matrix
-  vector<int> map1, map2 ;
+  vector<int> map1;
+  vector<int> map2;
   for (std::size_t i=0 ; i<_finalPars->size() ; i++) {
     if (params3.find(_finalPars->at(i)->GetName())) {
       map1.push_back(i) ;
@@ -1309,8 +1323,10 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
 
   // Rearrange matrix in block form with 'params' first and 'others' last
   // (preserving relative order)
-  TMatrixDSym S11, S22 ;
-  TMatrixD S12, S21 ;
+  TMatrixDSym S11;
+  TMatrixDSym S22;
+  TMatrixD S12;
+  TMatrixD S21;
   RooMultiVarGaussian::blockDecompose(V,map1,map2,S11,S12,S21,S22) ;
 
   // Calculate offset vectors mu1 and mu2
@@ -1442,7 +1458,8 @@ RooPrintable::StyleOption RooFitResult::defaultPrintStyle(Option_t* opt) const
 void RooFitResult::Streamer(TBuffer &R__b)
 {
   if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
+    UInt_t R__s;
+    UInt_t R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v>3) {
       R__b.ReadClassBuffer(RooFitResult::Class(),this,R__v,R__s,R__c);

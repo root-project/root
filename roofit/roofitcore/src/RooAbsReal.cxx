@@ -1037,7 +1037,9 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
   cxcoutD(Plotting) << "RooAbsReal::fillHistogram(" << GetName() << ") plot projection object is " << projected->GetName() << std::endl ;
 
   // Prepare to loop over the histogram bins
-  Int_t xbins(0),ybins(1),zbins(1);
+  Int_t xbins(0);
+  Int_t ybins(1);
+  Int_t zbins(1);
   RooRealVar *xvar = nullptr;
   RooRealVar *yvar = nullptr;
   RooRealVar *zvar = nullptr;
@@ -1081,7 +1083,9 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
   // Loop over the input histogram's bins and fill each one with our projection's
   // value, calculated at the center.
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  Int_t xbin(0),ybin(0),zbin(0);
+  Int_t xbin(0);
+  Int_t ybin(0);
+  Int_t zbin(0);
   Int_t bins= xbins*ybins*zbins;
   for(Int_t bin= 0; bin < bins; bin++) {
     switch(hdim) {
@@ -2399,7 +2403,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   std::unique_ptr<RooAbsReal> funcNeg{static_cast<RooAbsReal*>(custNeg.build())};
 
   // Create projection integral
-  RooArgSet *posProjCompList, *negProjCompList ;
+  RooArgSet *posProjCompList;
+  RooArgSet *negProjCompList;
 
   // Add projDataVars to normalized dependents of projection
   // This is needed only for asymmetries (why?)
@@ -2814,7 +2819,8 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
       }
     }
 
-    std::vector<RooCurve*> plusVar, minusVar ;
+    std::vector<RooCurve *> plusVar;
+    std::vector<RooCurve *> minusVar;
 
     // Create std::vector of plus,minus variations for each parameter
 

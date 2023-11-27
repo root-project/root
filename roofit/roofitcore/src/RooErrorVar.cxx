@@ -290,7 +290,8 @@ void RooErrorVar::setRange( const char* name, double min, double max)
 
 bool RooErrorVar::readFromStream(istream& is, bool /*compact*/, bool verbose)
 {
-  TString token,errorPrefix("RooErrorVar::readFromStream(") ;
+  TString token;
+  TString errorPrefix("RooErrorVar::readFromStream(");
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;
   RooStreamParser parser(is,errorPrefix) ;

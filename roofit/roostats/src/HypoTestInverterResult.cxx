@@ -1001,7 +1001,8 @@ double HypoTestInverterResult::CalculateEstimatedError(double target, bool lower
   TMath::SortItr(fXValues.begin(), fXValues.end(), indx.begin(), false);
   // make a graph with the sorted point
   TGraphErrors graph;
-  int ip = 0, np = 0;
+  int ip = 0;
+  int np = 0;
   for (int i = 0; i < ArraySize(); ++i) {
      if ( (xmin < xmax) && ( GetXValue(indx[i]) >= xmin && GetXValue(indx[i]) <= xmax) ) {
         np++;

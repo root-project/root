@@ -183,7 +183,8 @@ double RooPolyVar::analyticalIntegral(Int_t code, const char *rangeName) const
 {
    R__ASSERT(code == 1);
 
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
    const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? xmax - xmin : 0.0;
@@ -196,7 +197,8 @@ double RooPolyVar::analyticalIntegral(Int_t code, const char *rangeName) const
 std::string RooPolyVar::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
                                                     RooFit::Detail::CodeSquashContext &ctx) const
 {
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
    const unsigned sz = _coefList.size();
    if (!sz)
       return std::to_string(_lowestOrder ? xmax - xmin : 0.0);

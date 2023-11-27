@@ -63,7 +63,11 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   }
 
   // Factorize product in irreducible terms
-  RooLinkedList termList,depsList,impDepList,crossDepList,intList ;
+  RooLinkedList termList;
+  RooLinkedList depsList;
+  RooLinkedList impDepList;
+  RooLinkedList crossDepList;
+  RooLinkedList intList;
   model.factorizeProduct(deps,RooArgSet(),termList,depsList,impDepList,crossDepList,intList) ;
 
   if (dologD(Generation)) {

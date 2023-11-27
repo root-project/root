@@ -190,7 +190,8 @@ void RooBinning::binNumbers(double const * x, int * bins, std::size_t n, int coe
 
 double RooBinning::nearestBoundary(double x) const
 {
-  double xl, xh;
+  double xl;
+  double xh;
   if (binEdges(binNumber(x), xl, xh)) return 0;
   return (std::abs(xl - x) < std::abs(xh - x)) ? xl : xh;
 }
@@ -265,7 +266,8 @@ bool RooBinning::binEdges(Int_t bin, double& xlo, double& xhi) const
 
 double RooBinning::binCenter(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return 0;
   return 0.5 * (xlo + xhi);
 }
@@ -275,7 +277,8 @@ double RooBinning::binCenter(Int_t bin) const
 
 double RooBinning::binWidth(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return 0;
   return (xhi - xlo);
 }
@@ -285,7 +288,8 @@ double RooBinning::binWidth(Int_t bin) const
 
 double RooBinning::binLow(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return 0;
   return xlo;
 }
@@ -295,7 +299,8 @@ double RooBinning::binLow(Int_t bin) const
 
 double RooBinning::binHigh(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return  0;
   return xhi;
 }
@@ -307,8 +312,10 @@ void RooBinning::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
-     Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+    UInt_t R__s;
+    UInt_t R__c;
+    Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+    if (R__v) { }
      switch (R__v) {
        case 3:
     // current version - fallthrough intended

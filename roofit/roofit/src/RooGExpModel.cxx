@@ -203,7 +203,9 @@ namespace {
 /// Approximation of the log of the complex error function
 double logErfC(double xx)
 {
-  double t,z,ans;
+  double t;
+  double z;
+  double ans;
   z=std::abs(xx);
   t=1.0/(1.0+0.5*z);
 
@@ -498,7 +500,8 @@ double RooGExpModel::calcDecayConv(double sign, double tau, double sig, double r
     double expArg1 = sig*sig/(2*tau*tau)-sign*xp/tau ;
     double expArg2 = sig*sig/(2*rtau*rtau)+xp/rtau ;
 
-    double term1, term2 ;
+    double term1;
+    double term2;
     if (expArg1<300) {
       term1 = exp(expArg1) *RooMath::erfc(sig/(root2*tau)-sign*xp/(root2*sig)) ;
     } else {

@@ -324,14 +324,17 @@ RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) con
   // Calculate cache contents
 
   // Decode integration code
-  vector<int> map1,map2 ;
+  vector<int> map1;
+  vector<int> map2;
   decodeCode(code,map1,map2) ;
 
   // Rearrage observables so that all non-integrated observables
   // go first (preserving relative order) and all integrated observables
   // go last (preserving relative order)
-  TMatrixDSym S11, S22 ;
-  TMatrixD S12, S21 ;
+  TMatrixDSym S11;
+  TMatrixDSym S22;
+  TMatrixD S12;
+  TMatrixD S21;
   blockDecompose(_covI,map1,map2,S11,S12,S21,S22) ;
 
   // Begin calculation of partial integrals
@@ -528,12 +531,15 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
   } else {
 
     // Construct observables: map1 = generated, map2 = given
-    vector<int> map1, map2 ;
+    vector<int> map1;
+    vector<int> map2;
     decodeCode(code,map2,map1) ;
 
     // Do block decomposition of covariance matrix
-    TMatrixDSym S11, S22 ;
-    TMatrixD S12, S21 ;
+    TMatrixDSym S11;
+    TMatrixDSym S22;
+    TMatrixD S12;
+    TMatrixD S21;
     blockDecompose(_cov,map1,map2,S11,S12,S21,S22) ;
 
     // Constructed conditional matrix form
@@ -553,7 +559,8 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
     TMatrixD TU(TMatrixD::kTransposed,U) ;
 
     // Split mu vector into mu1 and mu2
-    TVectorD mu1(map1.size()),mu2(map2.size()) ;
+    TVectorD mu1(map1.size());
+    TVectorD mu2(map2.size());
     syncMuVec() ;
     for (UInt_t i=0 ; i<map1.size() ; i++) {
       mu1(i) = _muVec(map1[i]) ;

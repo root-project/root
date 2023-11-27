@@ -433,8 +433,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     std::vector<string> prodNames;
 
     vector<NormFactor> normList = sample.GetNormFactorList();
-    vector<string> normFactorNames, rangeNames;
-
+    vector<string> normFactorNames;
+    vector<string> rangeNames;
 
     string overallNorm_times_sigmaEpsilon = sample.GetName() + "_" + channel + "_scaleFactors";
     auto sigEps = proto.arg(sigmaEpsilon);
@@ -499,7 +499,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     totSystTermNames.push_back(prefix);
 
     RooArgSet params(prefix.c_str());
-    vector<double> lowVec, highVec;
+    vector<double> lowVec;
+    vector<double> highVec;
 
     std::map<std::string, double>::iterator itconstr;
     for(unsigned int i = 0; i < systList.size(); ++i) {
@@ -793,8 +794,11 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       proto.Print();
     }
 
-    RooArgSet likelihoodTerms("likelihoodTerms"), constraintTerms("constraintTerms");
-    vector<string> likelihoodTermNames, constraintTermNames, totSystTermNames;
+    RooArgSet likelihoodTerms("likelihoodTerms");
+    RooArgSet constraintTerms("constraintTerms");
+    vector<string> likelihoodTermNames;
+    vector<string> constraintTermNames;
+    vector<string> totSystTermNames;
     // All histogram functions to be multiplied in each sample
     std::vector<std::vector<RooAbsArg*>> allSampleHistFuncs;
     std::vector<RooProduct*> sampleScaleFactors;
@@ -803,7 +807,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     std::vector< pair<const TH1*, std::unique_ptr<TH1>> > statHistPairs; // <nominal, error>
     const std::string statFuncName = "mc_stat_" + channel_name;
 
-    string prefix, range;
+    string prefix;
+    string range;
 
     /////////////////////////////
     // shared parameters

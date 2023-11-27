@@ -285,7 +285,8 @@ double RooIntegralMorph::MorphCacheElem::calcX(double y, bool& ok)
   if (y<0 || y>1) {
     oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << endl ;
   }
-  double x1,x2 ;
+  double x1;
+  double x2;
 
   double xmax = _x->getMax("cache") ;
   double xmin = _x->getMin("cache") ;
@@ -561,10 +562,13 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   double xmax = _x->getMax("cache") ;
   Int_t nbins = _x->numBins("cache") ;
 
-  double x1,x2 ;
+  double x1;
+  double x2;
   bool ok = true ;
-  double ymin=0.1,yminSave(-1) ;
-  double Xsave(-1),Xlast=xmax ;
+  double ymin = 0.1;
+  double yminSave(-1);
+  double Xsave(-1);
+  double Xlast = xmax;
 
   // Find lowest Y value that can be measured
   // Start at 0.1 and iteratively lower limit by sqrt(10)
@@ -602,7 +606,8 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   // Find highest Y value that can be measured
   // Start at 1 - 0.1 and iteratively lower delta by sqrt(10)
   ok = true ;
-  double deltaymax=0.1, deltaymaxSave(-1) ;
+  double deltaymax = 0.1;
+  double deltaymaxSave(-1);
   Xlast=xmin ;
   while(true) {
     ok &= _rf1->findRoot(x1,xmin,xmax,1-deltaymax) ;

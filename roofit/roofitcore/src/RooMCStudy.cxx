@@ -741,7 +741,8 @@ void RooMCStudy::calcPulls()
     const auto par = static_cast<RooRealVar*>(*it);
     _fitParData->addColumn(*std::unique_ptr<RooErrorVar>{par->errorVar()});
 
-    TString name(par->GetName()), title(par->GetTitle()) ;
+    TString name(par->GetName());
+    TString title(par->GetTitle());
     name.Append("pull") ;
     title.Append(" Pull") ;
 
@@ -1106,7 +1107,8 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
   cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
   cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
-  TString name(param.GetName()), title(param.GetTitle()) ;
+  TString name(param.GetName());
+  TString title(param.GetTitle());
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,-100,100) ;
   pvar.setBins(100) ;
@@ -1255,8 +1257,8 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, double lo, double hi, Int
     _canAddFitResults=false ;
   }
 
-
-  TString name(param.GetName()), title(param.GetTitle()) ;
+  TString name(param.GetName());
+  TString title(param.GetTitle());
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,lo,hi) ;
   pvar.setBins(nbins) ;

@@ -1413,7 +1413,9 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
     double x = xvar->getVal() ;
     double exlo = xvar->getErrorLo() ;
     double exhi = xvar->getErrorHi() ;
-    double y,eylo,eyhi ;
+    double y;
+    double eylo;
+    double eyhi;
     if (!dataY) {
       y = weight() ;
       weightError(eylo,eyhi) ;
@@ -1802,48 +1804,53 @@ void RooDataSet::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
-     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s;
+      UInt_t R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
-     if (R__v>1) {
+      if (R__v > 1) {
 
-       // Use new-style streaming for version >1
-       R__b.ReadClassBuffer(RooDataSet::Class(),this,R__v,R__s,R__c);
+         // Use new-style streaming for version >1
+         R__b.ReadClassBuffer(RooDataSet::Class(), this, R__v, R__s, R__c);
 
-     } else {
+      } else {
 
-       // Legacy dataset conversion happens here. Legacy RooDataSet inherits from RooTreeData
-       // which in turn inherits from RooAbsData. Manually stream RooTreeData contents on
-       // file here and convert it into a RooTreeDataStore which is installed in the
-       // new-style RooAbsData base class
+         // Legacy dataset conversion happens here. Legacy RooDataSet inherits from RooTreeData
+         // which in turn inherits from RooAbsData. Manually stream RooTreeData contents on
+         // file here and convert it into a RooTreeDataStore which is installed in the
+         // new-style RooAbsData base class
 
-       // --- This is the contents of the streamer code of RooTreeData version 1 ---
-       UInt_t R__s1, R__c1;
-       Version_t R__v1 = R__b.ReadVersion(&R__s1, &R__c1); if (R__v1) { }
+         // --- This is the contents of the streamer code of RooTreeData version 1 ---
+         UInt_t R__s1;
+         UInt_t R__c1;
+         Version_t R__v1 = R__b.ReadVersion(&R__s1, &R__c1);
+         if (R__v1) {
+         }
 
-       RooAbsData::Streamer(R__b);
-       TTree* X_tree(nullptr) ; R__b >> X_tree;
-       RooArgSet X_truth ; X_truth.Streamer(R__b);
-       TString X_blindString ; X_blindString.Streamer(R__b);
-       R__b.CheckByteCount(R__s1, R__c1, TClass::GetClass("RooTreeData"));
-       // --- End of RooTreeData-v1 streamer
+         RooAbsData::Streamer(R__b);
+         TTree *X_tree(nullptr);
+         R__b >> X_tree;
+         RooArgSet X_truth;
+         X_truth.Streamer(R__b);
+         TString X_blindString;
+         X_blindString.Streamer(R__b);
+         R__b.CheckByteCount(R__s1, R__c1, TClass::GetClass("RooTreeData"));
+         // --- End of RooTreeData-v1 streamer
 
-       // Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
-       _dstore = std::make_unique<RooTreeDataStore>(X_tree,_vars) ;
-       _dstore->SetName(GetName()) ;
-       _dstore->SetTitle(GetTitle()) ;
-       _dstore->checkInit() ;
+         // Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
+         _dstore = std::make_unique<RooTreeDataStore>(X_tree, _vars);
+         _dstore->SetName(GetName());
+         _dstore->SetTitle(GetTitle());
+         _dstore->checkInit();
 
-       // This is the contents of the streamer code of RooDataSet version 1
-       RooDirItem::Streamer(R__b);
-       _varsNoWgt.Streamer(R__b);
-       R__b >> _wgtVar;
-       R__b.CheckByteCount(R__s, R__c, RooDataSet::IsA());
-
-
-     }
+         // This is the contents of the streamer code of RooDataSet version 1
+         RooDirItem::Streamer(R__b);
+         _varsNoWgt.Streamer(R__b);
+         R__b >> _wgtVar;
+         R__b.CheckByteCount(R__s, R__c, RooDataSet::IsA());
+      }
    } else {
-      R__b.WriteClassBuffer(RooDataSet::Class(),this);
+      R__b.WriteClassBuffer(RooDataSet::Class(), this);
    }
 }
 

@@ -88,7 +88,8 @@ void RooBernstein::selectNormalizationRange(const char* rangeName, bool force)
 
 double RooBernstein::evaluate() const
 {
-  double xmax,xmin;
+  double xmax;
+  double xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
   double x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.size() - 1; // n+1 polys of degree n
@@ -159,7 +160,8 @@ double RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
-  double xmax,xmin;
+  double xmax;
+  double xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
 
   const double xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);

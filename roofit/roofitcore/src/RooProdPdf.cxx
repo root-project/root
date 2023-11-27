@@ -60,7 +60,6 @@ have to appear in any specific place in the list.
 #include "RooRealIntegral.h"
 #include "RooTrace.h"
 #include "RooFitImplHelpers.h"
-#include "RooBatchCompute.h"
 #include "strtok.h"
 
 #include <cstring>
@@ -686,8 +685,12 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
   auto cache = std::make_unique<CacheElem>();
 
   // Factorize the product in irreducible terms for this nset
-  RooLinkedList terms, norms, imp, ints, cross;
-//   cout << "RooProdPdf::getPIL -- now calling factorizeProduct()" << endl ;
+  RooLinkedList terms;
+  RooLinkedList norms;
+  RooLinkedList imp;
+  RooLinkedList ints;
+  RooLinkedList cross;
+  //   cout << "RooProdPdf::getPIL -- now calling factorizeProduct()" << endl ;
 
 
   // Normalization set used for factorization
@@ -696,7 +699,10 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 
   factorizeProduct(factNset, iset ? (*iset) : RooArgSet(), terms, norms, imp, cross, ints);
 
-  RooArgSet *norm, *integ, *xdeps, *imps;
+  RooArgSet *norm;
+  RooArgSet *integ;
+  RooArgSet *xdeps;
+  RooArgSet *imps;
 
   // Group irriducible terms that need to be (partially) integrated together
   std::list<std::vector<RooArgSet*>> groupedList;
@@ -717,10 +723,11 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       Int_t termIdx = terms.IndexOf(term);
       norm=static_cast<RooArgSet*>(norms.At(termIdx));
       imps=static_cast<RooArgSet*>(imp.At(termIdx));
-      RooArgSet termNSet(*norm), termImpSet(*imps);
+      RooArgSet termNSet(*norm);
+      RooArgSet termImpSet(*imps);
 
-//       cout<<"FK: termImpSet.size()  = "<<termImpSet.size()<< " " << termImpSet << endl;
-//       cout<<"FK: _refRangeName = "<<_refRangeName<<endl;
+      //       cout<<"FK: termImpSet.size()  = "<<termImpSet.size()<< " " << termImpSet << endl;
+      //       cout<<"FK: _refRangeName = "<<_refRangeName<<endl;
 
       if (!termImpSet.empty() && nullptr != _refRangeName) {
 
@@ -760,7 +767,8 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
    Int_t termIdx = terms.IndexOf(term);
    norm=static_cast<RooArgSet*>(norms.At(termIdx));
    imps=static_cast<RooArgSet*>(imp.At(termIdx));
-   RooArgSet termNSet(*norm), termImpSet(*imps);
+   RooArgSet termNSet(*norm);
+   RooArgSet termImpSet(*imps);
 
    if (!termImpSet.empty() && nullptr != _refRangeName) {
 
@@ -798,7 +806,8 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
    Int_t termIdx = terms.IndexOf(term);
    norm = static_cast<RooArgSet*>(norms.At(termIdx));
    imps = static_cast<RooArgSet*>(imp.At(termIdx));
-   RooArgSet termNSet(*norm), termImpSet(*imps);
+   RooArgSet termNSet(*norm);
+   RooArgSet termImpSet(*imps);
 
    // If termNset matches index of ratioTerms, insert ratio here
    ostringstream str; termNSet.printValue(str);
@@ -824,7 +833,10 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         xdeps = static_cast<RooArgSet*>(cross.At(termIdx));
         imps = static_cast<RooArgSet*>(imp.At(termIdx));
 
-        RooArgSet termNSet, termISet, termXSet, termImpSet;
+        RooArgSet termNSet;
+        RooArgSet termISet;
+        RooArgSet termXSet;
+        RooArgSet termImpSet;
 
         // Take list of normalization, integrated dependents from factorization algorithm
         termISet.add(*integ);
@@ -849,28 +861,35 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         }
       } else {
 //        cout << "processing composite item" << endl;
-      RooArgSet compTermSet, compTermNorm, compTermNum, compTermDen;
-      for (auto const& term : group) {
-//    cout << GetName() << ": processing term " << (*term) << " of composite item" << endl ;
-   Int_t termIdx = terms.IndexOf(term);
-   norm = static_cast<RooArgSet*>(norms.At(termIdx));
-   integ = static_cast<RooArgSet*>(ints.At(termIdx));
-   xdeps = static_cast<RooArgSet*>(cross.At(termIdx));
-   imps = static_cast<RooArgSet*>(imp.At(termIdx));
+        RooArgSet compTermSet;
+        RooArgSet compTermNorm;
+        RooArgSet compTermNum;
+        RooArgSet compTermDen;
+        for (auto const &term : group) {
+          //    cout << GetName() << ": processing term " << (*term) << " of composite item" << endl ;
+          Int_t termIdx = terms.IndexOf(term);
+          norm = static_cast<RooArgSet *>(norms.At(termIdx));
+          integ = static_cast<RooArgSet *>(ints.At(termIdx));
+          xdeps = static_cast<RooArgSet *>(cross.At(termIdx));
+          imps = static_cast<RooArgSet *>(imp.At(termIdx));
 
-   RooArgSet termNSet, termISet, termXSet, termImpSet;
-   termISet.add(*integ);
-   termNSet.add(*norm);
-   termXSet.add(*xdeps);
-   termImpSet.add(*imps);
+          RooArgSet termNSet;
+          RooArgSet termISet;
+          RooArgSet termXSet;
+          RooArgSet termImpSet;
+          termISet.add(*integ);
+          termNSet.add(*norm);
+          termXSet.add(*xdeps);
+          termImpSet.add(*imps);
 
-   // Remove outer integration dependents from termISet
-   termISet.remove(outerIntDeps, true, true);
+          // Remove outer integration dependents from termISet
+          termISet.remove(outerIntDeps, true, true);
 
-   bool isOwned = false;
-   vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned, true);
-//       cout << GetName() << ": created composite term component " << func[0]->GetName() << endl;
-   if (func[0]) {
+          bool isOwned = false;
+          vector<RooAbsReal *> func =
+             processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned, true);
+          //       cout << GetName() << ": created composite term component " << func[0]->GetName() << endl;
+          if (func[0]) {
      compTermSet.add(*func[0]);
      if (isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func[0]});
      compTermNorm.add(*norm, false);
@@ -970,7 +989,9 @@ std::unique_ptr<RooAbsReal> RooProdPdf::makeCondPdfRatioCorr(RooAbsReal& pdf, co
 
 void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 {
-  RooAbsReal *part, *num, *den ;
+  RooAbsReal *part;
+  RooAbsReal *num;
+  RooAbsReal *den;
   RooArgSet nomList ;
 
   list<string> rangeComps ;
@@ -1943,7 +1964,8 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
                                       bool stripDisconnected, bool removeConstraintsFromPdf) const
 {
   RooArgSet constraints ;
-  RooArgSet pdfParams, conParams ;
+  RooArgSet pdfParams;
+  RooArgSet conParams;
 
   // For the optimized implementation of checking if two collections overlap by name.
   auto observablesNamePtrs = sortedNamePtrs(observables);

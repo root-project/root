@@ -387,7 +387,9 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
   RooRealVar* zvar = static_cast<RooRealVar*>(vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
-  Int_t xmin(0),ymin(0),zmin(0) ;
+  Int_t xmin(0);
+  Int_t ymin(0);
+  Int_t zmin(0);
   RooArgSet vset(*xvar) ;
   xmin = offset[0] ;
   if (yvar) {
@@ -399,7 +401,9 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
     zmin = offset[2] ;
   }
 
-  Int_t ix(0),iy(0),iz(0) ;
+  Int_t ix(0);
+  Int_t iy(0);
+  Int_t iz(0);
   for (ix=0 ; ix < xvar->getBins() ; ix++) {
     xvar->setBin(ix) ;
     if (yvar) {
@@ -541,7 +545,9 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   RooRealVar* zvar = static_cast<RooRealVar*>(vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
-  Int_t xmin(0),ymin(0),zmin(0) ;
+  Int_t xmin(0);
+  Int_t ymin(0);
+  Int_t zmin(0);
   RooArgSet vset(*xvar) ;
   double volume = xvar->getMax()-xvar->getMin() ;
   xmin = offset[0] ;
@@ -557,7 +563,10 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   }
   double avgBV = volume / numEntries() ;
 
-  Int_t ic(0),ix(0),iy(0),iz(0) ;
+  Int_t ic(0);
+  Int_t ix(0);
+  Int_t iy(0);
+  Int_t iz(0);
   for (ic=0 ; ic < icat->numBins(nullptr) ; ic++) {
     icat->setBin(ic) ;
     histo = hmap[icat->getCurrentLabel()] ;
@@ -593,62 +602,63 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
 /// in the constructed RooDataHist. The stl map provides the mapping between the indexCat state labels
 /// and the import source
 
-void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, double initWgt)
+void RooDataHist::importDHistSet(const RooArgList & /*vars*/, RooCategory &indexCat,
+                                 std::map<std::string, RooDataHist *> dmap, double initWgt)
 {
-  auto* icat = static_cast<RooCategory*>(_vars.find(indexCat.GetName()));
+   auto *icat = static_cast<RooCategory *>(_vars.find(indexCat.GetName()));
 
-  RooDataHist* dhistForBinning = nullptr;
+   RooDataHist *dhistForBinning = nullptr;
 
-  for (const auto& diter : dmap) {
+   for (const auto &diter : dmap) {
 
-    std::string const& label = diter.first;
-    RooDataHist* dhist = diter.second ;
+      std::string const &label = diter.first;
+      RooDataHist *dhist = diter.second;
 
-    if(!dhistForBinning) {
-      dhistForBinning = dhist;
-    }
-    else {
-      if(!hasConsistentLayoutAndBinning(*dhistForBinning, *dhist)) {
-        coutE(InputArguments) << "Layout or binning of histogram " << dhist->GetName() << " is not consistent with first processed "
-            << "histogram " << dhistForBinning->GetName() << std::endl;
-        throw std::invalid_argument("Layout or binning of inputs for RooDataHist is inconsistent");
+      if (!dhistForBinning) {
+         dhistForBinning = dhist;
+      } else {
+         if (!hasConsistentLayoutAndBinning(*dhistForBinning, *dhist)) {
+            coutE(InputArguments) << "Layout or binning of histogram " << dhist->GetName()
+                                  << " is not consistent with first processed "
+                                  << "histogram " << dhistForBinning->GetName() << std::endl;
+            throw std::invalid_argument("Layout or binning of inputs for RooDataHist is inconsistent");
+         }
       }
-    }
 
-    // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-    if (!indexCat.hasLabel(label)) {
-      indexCat.defineType(label) ;
-      coutI(InputArguments) << "RooDataHist::importDHistSet(" << GetName() << ") defining state \"" << label << "\" in index category " << indexCat.GetName() << endl ;
-    }
-    if (!icat->hasLabel(label)) {
-      icat->defineType(label) ;
-    }
-  }
+      // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
+      if (!indexCat.hasLabel(label)) {
+         indexCat.defineType(label);
+         coutI(InputArguments) << "RooDataHist::importDHistSet(" << GetName() << ") defining state \"" << label
+                               << "\" in index category " << indexCat.GetName() << endl;
+      }
+      if (!icat->hasLabel(label)) {
+         icat->defineType(label);
+      }
+   }
 
-  // adjust the binning of the created histogram
-  for(auto * theirVar : dynamic_range_cast<RooRealVar*>(dhistForBinning->_vars)) {
-    auto * ourVar = dynamic_cast<RooRealVar*>(_vars.find(theirVar->GetName()));
-    if(!theirVar || !ourVar) continue;
-    ourVar->setBinning(theirVar->getBinning());
-  }
+   // adjust the binning of the created histogram
+   for (auto *theirVar : dynamic_range_cast<RooRealVar *>(dhistForBinning->_vars)) {
+      auto *ourVar = dynamic_cast<RooRealVar *>(_vars.find(theirVar->GetName()));
+      if (!theirVar || !ourVar)
+         continue;
+      ourVar->setBinning(theirVar->getBinning());
+   }
 
-  initialize() ;
-  appendToDir(this,true) ;
+   initialize();
+   appendToDir(this, true);
 
+   for (const auto &diter : dmap) {
+      std::string const &label = diter.first;
+      RooDataHist *dhist = diter.second;
 
-  for (const auto& diter : dmap) {
-    std::string const& label = diter.first;
-    RooDataHist* dhist = diter.second ;
+      icat->setLabel(label.c_str());
 
-    icat->setLabel(label.c_str()) ;
-
-    // Transfer contents
-    for (Int_t i=0 ; i<dhist->numEntries() ; i++) {
-      _vars.assign(*dhist->get(i)) ;
-      add(_vars,dhist->weight()*initWgt, pow(dhist->weightError(SumW2),2) ) ;
-    }
-
-  }
+      // Transfer contents
+      for (Int_t i = 0; i < dhist->numEntries(); i++) {
+         _vars.assign(*dhist->get(i));
+         add(_vars, dhist->weight() * initWgt, pow(dhist->weightError(SumW2), 2));
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -657,16 +667,17 @@ void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexC
 void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
     RooRealVar *ourVar, Int_t *offset)
 {
-   const std::string ourVarName(ourVar->GetName() ? ourVar->GetName() : ""), ownName(GetName() ? GetName() : "");
-   // RooRealVar is derived from RooAbsRealLValue which is itself
-   // derived from RooAbsReal and a virtual class RooAbsLValue
-   // supplying setter functions, check if ourVar is indeed derived
-   // as real
-   if (!dynamic_cast<RooAbsReal *>(ourVar)) {
-      coutE(InputArguments) << "RooDataHist::adjustBinning(" << ownName << ") ERROR: dimension " << ourVarName
-                            << " must be real\n";
-      throw std::logic_error("Incorrect type object (" + ourVarName +
-                             ") passed as argument to RooDataHist::_adjustBinning. Please report this issue.");
+  const std::string ourVarName(ourVar->GetName() ? ourVar->GetName() : "");
+  const std::string ownName(GetName() ? GetName() : "");
+  // RooRealVar is derived from RooAbsRealLValue which is itself
+  // derived from RooAbsReal and a virtual class RooAbsLValue
+  // supplying setter functions, check if ourVar is indeed derived
+  // as real
+  if (!dynamic_cast<RooAbsReal *>(ourVar)) {
+    coutE(InputArguments) << "RooDataHist::adjustBinning(" << ownName << ") ERROR: dimension " << ourVarName
+                          << " must be real\n";
+    throw std::logic_error("Incorrect type object (" + ourVarName +
+                           ") passed as argument to RooDataHist::_adjustBinning. Please report this issue.");
    }
 
   const double xlo = theirVar.getMin();
@@ -832,7 +843,9 @@ void RooDataHist::initialize(const char* binningName, bool fillTree)
   // Calculate plot bins of components from master index
 
   for (Int_t ibin=0 ; ibin < _arrSize ; ibin++) {
-    Int_t j(0), idx(0), tmp(ibin) ;
+    Int_t j(0);
+    Int_t idx(0);
+    Int_t tmp(ibin);
     double theBinVolume(1) ;
     for (auto arg2 : _lvvars) {
       idx  = tmp / _idxMult[j] ;
@@ -921,7 +934,8 @@ std::unique_ptr<RooAbsData> RooDataHist::reduceEng(const RooArgSet& varSubset, c
     cloneVar->attachDataSet(*this) ;
   }
 
-  double lo,hi ;
+  double lo;
+  double hi;
   const std::size_t nevt = nStop < static_cast<std::size_t>(numEntries()) ? nStop : static_cast<std::size_t>(numEntries());
   for (auto i=nStart; i<nevt ; i++) {
     const RooArgSet* row = get(i) ;
@@ -1581,7 +1595,8 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
     initializeAsymErrArrays();
 
     // Calculate poisson errors
-    double ym,yp ;
+    double ym;
+    double yp;
     RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
     _errLo[_curIndex] = weight()-ym;
     _errHi[_curIndex] = yp-weight();
@@ -2076,7 +2091,8 @@ const std::vector<double>& RooDataHist::calculatePartialBinVolume(const RooArgSe
 
   // Recalculate partial bin volume cache
   for (Int_t ibin=0; ibin < _arrSize ;ibin++) {
-    Int_t idx(0), tmp(ibin) ;
+    Int_t idx(0);
+    Int_t tmp(ibin);
     double theBinVolume(1) ;
     for (unsigned int j=0; j < _lvvars.size(); ++j) {
       const RooAbsLValue* arg = _lvvars[j];
@@ -2318,7 +2334,8 @@ void RooDataHist::printDataHistogram(ostream& os, RooRealVar* obs) const
 void RooDataHist::Streamer(TBuffer &R__b) {
   if (R__b.IsReading()) {
 
-    UInt_t R__s, R__c;
+    UInt_t R__s;
+    UInt_t R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
     if (R__v > 2) {
@@ -2333,7 +2350,8 @@ void RooDataHist::Streamer(TBuffer &R__b) {
       // new-style RooAbsData base class
 
       // --- This is the contents of the streamer code of RooTreeData version 2 ---
-      UInt_t R__s1, R__c1;
+      UInt_t R__s1;
+      UInt_t R__c1;
       Version_t R__v1 = R__b.ReadVersion(&R__s1, &R__c1); if (R__v1) { }
 
       RooAbsData::Streamer(R__b);

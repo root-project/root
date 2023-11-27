@@ -502,7 +502,8 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
    }
    else {
       oocoutI(nullptr,Eval) << "HypoTestInverter::GetInterval - run an automatic scan" << std::endl;
-      double limit(0),err(0);
+      double limit(0);
+      double err(0);
       bool ret = RunLimit(limit,err);
       if (!ret)
          oocoutE(nullptr,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;
@@ -786,8 +787,11 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 
   typedef std::pair<double,double> CLs_t;
   double clsTarget = fSize;
-  CLs_t clsMin(1,0), clsMax(0,0), clsMid(0,0);
-  double rMin = r->getMin(), rMax = r->getMax();
+  CLs_t clsMin(1, 0);
+  CLs_t clsMax(0, 0);
+  CLs_t clsMid(0, 0);
+  double rMin = r->getMin();
+  double rMax = r->getMax();
   limit    = 0.5*(rMax + rMin);
   limitErr = 0.5*(rMax - rMin);
   bool done = false;
@@ -866,7 +870,9 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
      // determine point by bisection or interpolation
      limit = 0.5*(rMin+rMax); limitErr = 0.5*(rMax-rMin);
      if (fgAlgo == "logSecant" && clsMax.first != 0) {
-        double logMin = log(clsMin.first), logMax = log(clsMax.first), logTarget = log(clsTarget);
+        double logMin = log(clsMin.first);
+        double logMax = log(clsMax.first);
+        double logTarget = log(clsTarget);
         limit = rMin + (rMax-rMin) * (logTarget - logMin)/(logMax - logMin);
         if (clsMax.second != 0 && clsMin.second != 0) {
            limitErr = hypot((logTarget-logMax) * (clsMin.second/clsMin.first), (logTarget-logMin) * (clsMax.second/clsMax.first));
@@ -904,7 +910,8 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
        }
      } else {
        if (fVerbose > 0) std::cout << "Trying to move the interval edges closer" << std::endl;
-       double rMinBound = rMin, rMaxBound = rMax;
+       double rMinBound = rMin;
+       double rMaxBound = rMax;
        // try to reduce the size of the interval
        while (clsMin.second == 0 || std::abs(rMin-limit) > std::max(absAccuracy, relAccuracy * limit)) {
          rMin = 0.5*(rMin+limit);
@@ -940,7 +947,9 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
       expoFit.FixParameter(0,clsTarget);
       expoFit.SetParameter(1,log(clsMax.first/clsMin.first)/(rMax-rMin));
       expoFit.SetParameter(2,limit);
-      double rMinBound, rMaxBound; expoFit.GetRange(rMinBound, rMaxBound);
+      double rMinBound;
+      double rMaxBound;
+      expoFit.GetRange(rMinBound, rMaxBound);
       limitErr = std::max(std::abs(rMinBound-limit), std::abs(rMaxBound-limit));
       int npoints = 0;
 
@@ -978,7 +987,8 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
        //new TCanvas("c1","c1");
       fLimitPlot->Sort();
       fLimitPlot->SetLineWidth(2);
-      double xmin = r->getMin(), xmax = r->getMax();
+      double xmin = r->getMin();
+      double xmax = r->getMax();
       for (int j = 0; j < fLimitPlot->GetN(); ++j) {
         if (fLimitPlot->GetY()[j] > 1.4*clsTarget || fLimitPlot->GetY()[j] < 0.6*clsTarget) continue;
         xmin = std::min(fLimitPlot->GetX()[j], xmin);

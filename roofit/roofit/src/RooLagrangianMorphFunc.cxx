@@ -1380,7 +1380,8 @@ public:
       Matrix inverse(diagMatrix(size(matrix)));
 
       double condition = (double)(invertMatrix(matrix, inverse));
-      double unityDeviation, largestWeight;
+      double unityDeviation;
+      double largestWeight;
       inverseSanity(matrix, inverse, unityDeviation, largestWeight);
       bool weightwarning(largestWeight > morphLargestWeight ? true : false);
       bool unitywarning(unityDeviation > morphUnityDeviation ? true : false);
@@ -2030,7 +2031,8 @@ int RooLagrangianMorphFunc::countSamples(int nprod, int ndec, int nboth)
 
 int RooLagrangianMorphFunc::countSamples(std::vector<RooArgList *> &vertices)
 {
-   RooArgList operators, couplings;
+   RooArgList operators;
+   RooArgList couplings;
    for (auto vertex : vertices) {
       extractOperators(*vertex, operators);
       extractCouplings(*vertex, couplings);
@@ -3013,7 +3015,8 @@ double RooLagrangianMorphFunc::getCondition() const
 std::unique_ptr<RooRatio>
 RooLagrangianMorphFunc::makeRatio(const char *name, const char *title, RooArgList &nr, RooArgList &dr)
 {
-   RooArgList num, denom;
+   RooArgList num;
+   RooArgList denom;
    for (auto it : nr) {
       num.add(*it);
    }

@@ -92,7 +92,8 @@ bool RooQuasiRandomGenerator::generate(UInt_t dimension, double vector[])
    * This is the bit that changes in the Gray-code representation as
    * the count is advanced.
    */
-  Int_t r(0),c(_sequenceCount);
+  Int_t r(0);
+  Int_t c(_sequenceCount);
   while(true) {
     if((c % 2) == 1) {
       ++r;
@@ -128,7 +129,8 @@ void RooQuasiRandomGenerator::calculateCoefs(UInt_t dimension)
   for(i_dim=0; i_dim<dimension; i_dim++) {
 
     const int poly_index = i_dim + 1;
-    int j, k;
+    int j;
+    int k;
 
     /* Niederreiter (page 56, after equation (7), defines two
      * variables Q and U.  We do not need Q explicitly, but we
@@ -210,7 +212,9 @@ void RooQuasiRandomGenerator::calculateV(const int px[], int px_degree,
   /* int ph_degree = *pb_degree; */
   int bigm = *pb_degree;      /* m from section 3.3 */
   int m;                      /* m from section 2.3 */
-  int r, k, kj;
+  int r;
+  int k;
+  int kj;
 
   for(k=0; k<=MaxDegree; k++) {
     ph[k] = pb[k];
@@ -291,7 +295,8 @@ void RooQuasiRandomGenerator::calculateV(const int px[], int px_degree,
 void RooQuasiRandomGenerator::polyMultiply(const int pa[], int pa_degree, const int pb[],
                   int pb_degree, int pc[], int  * pc_degree)
 {
-  int j, k;
+  int j;
+  int k;
   int pt[MaxDegree+1];
   int pt_degree = pa_degree + pb_degree;
 

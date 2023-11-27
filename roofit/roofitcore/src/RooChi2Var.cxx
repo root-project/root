@@ -180,7 +180,8 @@ RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) :
 
 double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-  double result(0), carry(0);
+  double result(0);
+  double carry(0);
 
   // Determine normalization factor depending on type of input function
   double normFactor(1) ;
@@ -206,9 +207,10 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
 
     double eInt ;
     if (_etype != RooAbsData::Expected) {
-      double eIntLo,eIntHi ;
-      hdata->weightError(eIntLo,eIntHi,_etype) ;
-      eInt = (eExt>0) ? eIntHi : eIntLo ;
+       double eIntLo;
+       double eIntHi;
+       hdata->weightError(eIntLo, eIntHi, _etype);
+       eInt = (eExt > 0) ? eIntHi : eIntLo;
     } else {
       eInt = sqrt(nPdf) ;
     }

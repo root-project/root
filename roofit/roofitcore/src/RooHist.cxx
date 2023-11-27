@@ -220,9 +220,14 @@ RooHist::RooHist(const RooHist &hist1, const RooHist &hist2, double wgt1, double
     }
 
     // Add histograms, calculate Poisson confidence interval on sum value
-    Int_t i,n=hist1.GetN() ;
+    Int_t i;
+    Int_t n = hist1.GetN();
     for(i=0 ; i<n ; i++) {
-      double x1,y1,x2,y2,dx1 ;
+      double x1;
+      double y1;
+      double x2;
+      double y2;
+      double dx1;
       hist1.GetPoint(i,x1,y1) ;
       dx1 = hist1.GetErrorX(i) ;
       hist2.GetPoint(i,x2,y2) ;
@@ -233,9 +238,16 @@ RooHist::RooHist(const RooHist &hist1, const RooHist &hist2, double wgt1, double
     // Add histograms with SumW2 errors
 
     // Add histograms, calculate combined sum-of-weights error
-    Int_t i,n=hist1.GetN() ;
+    Int_t i;
+    Int_t n = hist1.GetN();
     for(i=0 ; i<n ; i++) {
-      double x1,y1,x2,y2,dx1,dy1,dy2 ;
+      double x1;
+      double y1;
+      double x2;
+      double y2;
+      double dx1;
+      double dy1;
+      double dy2;
       hist1.GetPoint(i,x1,y1) ;
       dx1 = hist1.GetErrorX(i) ;
       dy1 = hist1.GetErrorY(i) ;
@@ -336,7 +348,8 @@ double RooHist::getFitRangeNEvt(double xlo, double xhi) const
 {
   double sum(0) ;
   for (int i=0 ; i<GetN() ; i++) {
-    double x,y ;
+    double x;
+    double y;
 
     GetPoint(i,x,y) ;
 
@@ -423,11 +436,16 @@ void RooHist::addBin(Axis_t binCenter, double n, double binWidth, double xErrorF
   _entries+= n;
 
   // calculate Poisson errors for this bin
-  double ym,yp,dx(0.5*binWidth);
+  double ym;
+  double yp;
+  double dx(0.5 * binWidth);
 
   if (std::abs((double)((n-Int_t(n))>1e-5))) {
     // need interpolation
-    double ym1(0),yp1(0),ym2(0),yp2(0) ;
+    double ym1(0);
+    double yp1(0);
+    double ym2(0);
+    double yp2(0);
     Int_t n1 = Int_t(n) ;
     Int_t n2 = n1+1 ;
     if(!RooHistError::instance().getPoissonInterval(n1,ym1,yp1,_nSigma) ||
@@ -496,7 +514,9 @@ void RooHist::addBinWithXYError(Axis_t binCenter, double n, double exlow, double
 void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWidth, double xErrorFrac, double scaleFactor)
 {
   // calculate Binomial errors for this bin
-  double ym,yp,dx(0.5*binWidth);
+  double ym;
+  double yp;
+  double dx(0.5 * binWidth);
   if(!RooHistError::instance().getBinomialIntervalAsym(n1,n2,ym,yp,_nSigma)) {
     coutE(Plotting) << "RooHist::addAsymmetryBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << std::endl;
     return;
@@ -515,7 +535,9 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWi
 void RooHist::addAsymmetryBinWithError(Axis_t binCenter, double n1, double n2, double en1, double en2, double binWidth, double xErrorFrac, double scaleFactor)
 {
   // calculate Binomial errors for this bin
-  double ym,yp,dx(0.5*binWidth);
+  double ym;
+  double yp;
+  double dx(0.5 * binWidth);
   double a= (double)(n1-n2)/(n1+n2);
 
   double error = 2*sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
@@ -536,7 +558,9 @@ void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, double binW
   double a= (double)(n1)/(n1+n2);
 
   // calculate Binomial errors for this bin
-  double ym,yp,dx(0.5*binWidth);
+  double ym;
+  double yp;
+  double dx(0.5 * binWidth);
   if(!RooHistError::instance().getBinomialIntervalEff(n1,n2,ym,yp,_nSigma)) {
     coutE(Plotting) << "RooHist::addEfficiencyBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << std::endl;
     return;
@@ -558,7 +582,9 @@ void RooHist::addEfficiencyBinWithError(Axis_t binCenter, double n1, double n2, 
   double error = sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
 
   // calculate Binomial errors for this bin
-  double ym,yp,dx(0.5*binWidth);
+  double ym;
+  double yp;
+  double dx(0.5 * binWidth);
   ym=a-error ;
   yp=a+error ;
 
@@ -580,7 +606,10 @@ bool RooHist::hasIdenticalBinning(const RooHist& other) const
   // Next require that all bin centers are the same
   Int_t i ;
   for (i=0 ; i<GetN() ; i++) {
-    double x1,x2,y1,y2 ;
+    double x1;
+    double x2;
+    double y1;
+    double y2;
 
     GetPoint(i,x1,y1) ;
     other.GetPoint(i,x2,y2) ;
@@ -698,13 +727,16 @@ std::unique_ptr<RooHist> RooHist::createEmptyResidHist(const RooCurve& curve, bo
 void RooHist::fillResidHist(RooHist & residHist, const RooCurve& curve,bool normalize, bool useAverage) const
 {
   // Determine range of curve
-  double xstart,xstop,y ;
+  double xstart;
+  double xstop;
+  double y;
   curve.GetPoint(0,xstart,y) ;
   curve.GetPoint(curve.GetN()-1,xstop,y) ;
 
   // Add histograms, calculate Poisson confidence interval on sum value
   for(Int_t i=0 ; i<GetN() ; i++) {
-    double x,point;
+    double x;
+    double point;
     GetPoint(i,x,point) ;
 
     // Only calculate pull for bins inside curve range

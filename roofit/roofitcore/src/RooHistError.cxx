@@ -266,7 +266,8 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
 
   // Does the central interval contain the point estimate?
   bool ok(true);
-  double loProb(1),hiProb(0);
+  double loProb(1);
+  double hiProb(0);
   if(nullptr != Ql) loProb= (*Ql)(&pointEstimate);
   if(nullptr != Qu) hiProb= (*Qu)(&pointEstimate);
 
@@ -290,7 +291,8 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
     // use a central interval
     lo= seek(*Ql,pointEstimate,-stepSize,alpha+beta);
     hi= seek(*Qu,pointEstimate,+stepSize,alpha);
-    RooBrentRootFinder lFinder(*Ql),uFinder(*Qu);
+    RooBrentRootFinder lFinder(*Ql);
+    RooBrentRootFinder uFinder(*Qu);
     ok= lFinder.findRoot(lo,lo,lo+stepSize,alpha+beta);
     ok|= uFinder.findRoot(hi,hi-stepSize,hi,alpha);
   }
@@ -307,8 +309,10 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
 double RooHistError::seek(const RooAbsFunc &f, double startAt, double step, double value) const
 {
   Int_t steps(1000);
-  double min(f.getMinLimit(1)),max(f.getMaxLimit(1));
-  double x(startAt), f0= f(&startAt) - value;
+  double min(f.getMinLimit(1));
+  double max(f.getMaxLimit(1));
+  double x(startAt);
+  double f0 = f(&startAt) - value;
   do {
     x+= step;
   }

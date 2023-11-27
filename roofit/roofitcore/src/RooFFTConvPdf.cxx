@@ -499,7 +499,10 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
   //
   //
 
-  Int_t N,N2,binShift1,binShift2 ;
+  Int_t N;
+  Int_t N2;
+  Int_t binShift1;
+  Int_t binShift2;
 
   RooRealVar* histX = static_cast<RooRealVar*>(cacheHist.get()->find(_x.arg().GetName())) ;
   if (_bufStrat==Extend) histX->setBinning(*aux.scanBinning) ;
@@ -533,7 +536,10 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
   // Loop over first half +1 of complex output results, multiply
   // and set as input of reverse transform
   for (Int_t i=0 ; i<N2/2+1 ; i++) {
-    double re1,re2,im1,im2 ;
+    double re1;
+    double re2;
+    double im1;
+    double im2;
     aux.fftr2c1->GetPointComplex(i,re1,im1) ;
     aux.fftr2c2->GetPointComplex(i,re2,im2) ;
     double re = re1*re2 - im1*im2 ;

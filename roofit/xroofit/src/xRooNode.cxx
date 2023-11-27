@@ -6127,7 +6127,8 @@ xRooNode xRooNode::fitResult(const char *opt) const
          if (pConstr) {
             // there will be 3 deps, one will be this par, the other two are the mean and error (or error^2 in case of
             // poisson use the one that's a ConstVar as the error to break a tie ...
-            double prefitVal = 0, prefitError = 0;
+            double prefitVal = 0;
+            double prefitError = 0;
             for (auto &_d : pConstr->vars()) {
                if (strcmp(p->GetName(), _d->get()->GetName()) == 0)
                   continue;
@@ -7964,8 +7965,10 @@ TPaveText *getPave(const char *name = "labels", bool create = true, bool doPaint
 TLegend *getLegend(bool create = true, bool doPaint = false)
 {
    if (auto p = dynamic_cast<TLegend *>(gPad->GetPrimitive("legend")); p) {
-      double x, y;
-      double w = p->GetX2NDC() - p->GetX1NDC(), h = p->GetY2NDC() - p->GetY1NDC();
+      double x;
+      double y;
+      double w = p->GetX2NDC() - p->GetX1NDC();
+      double h = p->GetY2NDC() - p->GetY1NDC();
       if (doPaint)
          gPad->PaintModified(); //-- slows down x11 so trying to avoid
       if (TopRightPlaceBox(dynamic_cast<TPad *>(gPad), p, w, h, x, y)) {
@@ -8178,7 +8181,8 @@ void xRooNode::Draw(Option_t *opt)
       if (auto _idx2 = varPart.Index("("); _idx2 > 0) {
          varName = varPart(0, _idx2);
          TStringToken pattern(TString(varPart(_idx2 + 1, varPart.Length() - _idx2 - 2)), ",");
-         double min(0), max(0);
+         double min(0);
+         double max(0);
          int nBins = 0;
          int ii = 0;
          while (pattern.NextToken()) {

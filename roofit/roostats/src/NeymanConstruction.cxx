@@ -154,8 +154,12 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
 
     SamplingDistribution* samplingDist=nullptr;
     double sigma;
-    double upperEdgeOfAcceptance, upperEdgeMinusSigma, upperEdgePlusSigma;
-    double lowerEdgeOfAcceptance, lowerEdgeMinusSigma, lowerEdgePlusSigma;
+    double upperEdgeOfAcceptance;
+    double upperEdgeMinusSigma;
+    double upperEdgePlusSigma;
+    double lowerEdgeOfAcceptance;
+    double lowerEdgeMinusSigma;
+    double lowerEdgePlusSigma;
     Int_t additionalMC=0;
 
     // the adaptive sampling algorithm wants at least one toy event to be outside

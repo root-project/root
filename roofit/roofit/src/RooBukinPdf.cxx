@@ -87,8 +87,14 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
 double RooBukinPdf::evaluate() const
 {
   const double consts = 2*sqrt(2*log(2.0));
-  double r1=0,r2=0,r3=0,r4=0,r5=0,hp=0;
-  double x1 = 0,x2 = 0;
+  double r1 = 0;
+  double r2 = 0;
+  double r3 = 0;
+  double r4 = 0;
+  double r5 = 0;
+  double hp = 0;
+  double x1 = 0;
+  double x2 = 0;
   double fit_result = 0;
 
   hp=sigp*consts;

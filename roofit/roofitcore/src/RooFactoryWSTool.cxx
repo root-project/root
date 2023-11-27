@@ -298,7 +298,9 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   _args.clear();
   string tmp(varList);
-  size_t blevel = 0, end_tok, start_tok = 0;
+  size_t blevel = 0;
+  size_t end_tok;
+  size_t start_tok = 0;
   bool litmode = false;
   for (end_tok = 0; end_tok < tmp.length(); end_tok++) {
     // Keep track of opening and closing brackets
@@ -985,7 +987,8 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   strlcpy(buf.data(),arg,bufSize) ;
   char* bufptr = buf.data();
 
-  string func,prefix ;
+  string func;
+  string prefix;
   vector<string> args ;
 
   // Process token into arguments
@@ -1478,7 +1481,9 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 bool RooFactoryWSTool::checkSyntax(const char* arg)
 {
   // Count parentheses
-  Int_t nParentheses(0), nBracket(0), nAccolade(0) ;
+  Int_t nParentheses(0);
+  Int_t nBracket(0);
+  Int_t nAccolade(0);
   const char* ptr = arg ;
   while(*ptr) {
     if (*ptr=='(') nParentheses++ ;
@@ -2007,7 +2012,9 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     // taylorexpand::name[func,{var,var,..},val,order]
     int order(1);
-    double eps1(1e-6), eps2(1e-3), observablesValue(0.0);
+    double eps1(1e-6);
+    double eps2(1e-3);
+    double observablesValue(0.0);
 
     if (pargv.size() < 2)
       throw string(Form("taylorexpand::%s, requires atleast 2 arguments (function, observables) atleast, has %d arguments", instName, (Int_t)pargv.size()));

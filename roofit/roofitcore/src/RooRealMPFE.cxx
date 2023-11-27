@@ -249,7 +249,9 @@ void RooRealMPFE::serverLoop()
 #ifndef _WIN32
   int msg ;
 
-  Int_t idx, index, numErrors ;
+  Int_t idx;
+  Int_t index;
+  Int_t numErrors;
   double value ;
   bool isConst ;
 
@@ -444,13 +446,15 @@ void RooRealMPFE::calculate() const
     Int_t i(0) ;
 
     //for (i=0 ; i<_vars.size() ; i++) {
-    RooAbsArg *var, *saveVar ;
+    RooAbsArg *var;
+    RooAbsArg *saveVar;
     for (std::size_t j=0 ; j<_vars.size() ; j++) {
       var = _vars.at(j);
       saveVar = _saveVars.at(j);
 
       //bool valChanged = !(*var==*saveVar) ;
-      bool valChanged,constChanged  ;
+      bool valChanged;
+      bool constChanged;
       if (!_updateMaster) {
    valChanged = !var->isIdentical(*saveVar,true) ;
    constChanged = (var->isConstant() != saveVar->isConstant()) ;
@@ -601,7 +605,9 @@ double RooRealMPFE::evaluate() const
               << ") IPC fromServer> NumErrors " << numError << endl ;
     if (numError) {
       // Retrieve remote errors and feed into local error queue
-      char *msgbuf1 = nullptr, *msgbuf2 = nullptr, *msgbuf3 = nullptr;
+      char *msgbuf1 = nullptr;
+      char *msgbuf2 = nullptr;
+      char *msgbuf3 = nullptr;
       RooAbsArg *ptr = nullptr;
       while (true) {
    *_pipe >> ptr;

@@ -103,7 +103,9 @@ MarkovChain* MetropolisHastings::ConstructChain()
    chain->SetParameters(fChainParams);
 
    Int_t weight = 0;
-   double xL = 0.0, xPrimeL = 0.0, a = 0.0;
+   double xL = 0.0;
+   double xPrimeL = 0.0;
+   double a = 0.0;
 
    // ibucur: i think the user should have the possibility to display all the message
    //    levels should they want to; maybe a setPrintLevel would be appropriate

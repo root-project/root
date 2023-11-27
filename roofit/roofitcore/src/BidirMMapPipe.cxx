@@ -1070,7 +1070,8 @@ unsigned BidirMMapPipe::recvpages()
 {
     unsigned char pg;
     unsigned retVal = 0;
-    Page *plisthead = nullptr, *plisttail = nullptr;
+    Page *plisthead = nullptr;
+    Page *plisttail = nullptr;
     if (1 == xferraw(m_inpipe, &pg, 1, ::read)) {
         plisthead = plisttail = m_pages[pg];
         // ok, have number of pages
@@ -1140,7 +1141,8 @@ void BidirMMapPipe::feedPageLists(Page* plist)
     // ok, might have to send free pages to other end, and (if we do have to
     // send something to the other end) while we're at it, send any dirty
     // pages which are completely full, too
-    Page *sendlisthead = nullptr, *sendlisttail = nullptr;
+    Page *sendlisthead = nullptr;
+    Page *sendlisttail = nullptr;
     // loop over plist
     while (plist) {
         Page* p = plist;
@@ -1274,7 +1276,8 @@ void BidirMMapPipe::doFlush(bool forcePartialPages)
 {
     assert(!(m_flags & failbit));
     // build a list of pages to flush
-    Page *flushlisthead = nullptr, *flushlisttail = nullptr;
+    Page *flushlisthead = nullptr;
+    Page *flushlisttail = nullptr;
     while (m_dirtylist) {
         Page* p = m_dirtylist;
         if (!forcePartialPages && !p->full()) break;

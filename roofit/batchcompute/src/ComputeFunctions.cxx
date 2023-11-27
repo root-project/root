@@ -55,7 +55,10 @@ __rooglobal__ void computeAddPdf(BatchesHandle batches)
 
 __rooglobal__ void computeArgusBG(BatchesHandle batches)
 {
-   Batch m = batches[0], m0 = batches[1], c = batches[2], p = batches[3];
+   Batch m = batches[0];
+   Batch m0 = batches[1];
+   Batch c = batches[2];
+   Batch p = batches[3];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double t = m[i] / m0[i];
       const double u = 1 - t * t;
@@ -100,7 +103,10 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
    }
 
    if (STEP == 1) {
-      double X[bufferSize], _1_X[bufferSize], powX[bufferSize], pow_1_X[bufferSize];
+      double X[bufferSize];
+      double _1_X[bufferSize];
+      double powX[bufferSize];
+      double pow_1_X[bufferSize];
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
          powX[i] = pow_1_X[i] = 1.0;
          X[i] = (xData[i] - xmin) / (xmax - xmin);
@@ -133,7 +139,8 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
          batches._output[i] = 0.0;
          const double X = (xData[i] - xmin) / (xmax - xmin);
-         double powX = 1.0, pow_1_X = 1.0;
+         double powX = 1.0;
+         double pow_1_X = 1.0;
          for (int k = 1; k <= degree; k++)
             pow_1_X *= 1 - X;
          const double _1_X = 1 / (1 - X);
@@ -154,7 +161,10 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
 
 __rooglobal__ void computeBifurGauss(BatchesHandle batches)
 {
-   Batch X = batches[0], M = batches[1], SL = batches[2], SR = batches[3];
+   Batch X = batches[0];
+   Batch M = batches[1];
+   Batch SL = batches[2];
+   Batch SR = batches[3];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       double arg = X[i] - M[i];
       if (arg < 0)
@@ -167,7 +177,9 @@ __rooglobal__ void computeBifurGauss(BatchesHandle batches)
 
 __rooglobal__ void computeBreitWigner(BatchesHandle batches)
 {
-   Batch X = batches[0], M = batches[1], W = batches[2];
+   Batch X = batches[0];
+   Batch M = batches[1];
+   Batch W = batches[2];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double arg = X[i] - M[i];
       batches._output[i] = 1 / (arg * arg + 0.25 * W[i] * W[i]);
@@ -176,7 +188,12 @@ __rooglobal__ void computeBreitWigner(BatchesHandle batches)
 
 __rooglobal__ void computeBukin(BatchesHandle batches)
 {
-   Batch X = batches[0], XP = batches[1], SP = batches[2], XI = batches[3], R1 = batches[4], R2 = batches[5];
+   Batch X = batches[0];
+   Batch XP = batches[1];
+   Batch SP = batches[2];
+   Batch XI = batches[3];
+   Batch R1 = batches[4];
+   Batch R2 = batches[5];
    const double r3 = log(2.0);
    const double r6 = exp(-6.0);
    const double r7 = 2 * sqrt(2 * log(2.0));
@@ -192,7 +209,11 @@ __rooglobal__ void computeBukin(BatchesHandle batches)
       if (XI[i] > r6 || XI[i] < -r6)
          r5 = XI[i] / fast_log(r4 + XI[i]);
 
-      double factor = 1, y = X[i] - x1, Yp = XP[i] - x1, yi = r4 - XI[i], rho = R1[i];
+      double factor = 1;
+      double y = X[i] - x1;
+      double Yp = XP[i] - x1;
+      double yi = r4 - XI[i];
+      double rho = R1[i];
       if (X[i] >= x2) {
          factor = -1;
          y = X[i] - x2;
@@ -216,7 +237,11 @@ __rooglobal__ void computeBukin(BatchesHandle batches)
 
 __rooglobal__ void computeCBShape(BatchesHandle batches)
 {
-   Batch M = batches[0], M0 = batches[1], S = batches[2], A = batches[3], N = batches[4];
+   Batch M = batches[0];
+   Batch M0 = batches[1];
+   Batch S = batches[2];
+   Batch A = batches[3];
+   Batch N = batches[4];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double t = (M[i] - M0[i]) / S[i];
       if ((A[i] > 0 && t >= -A[i]) || (A[i] < 0 && -t >= A[i]))
@@ -240,7 +265,8 @@ __rooglobal__ void computeChebychev(BatchesHandle batches)
    const double xmax = batches.extraArg(nCoef + 1);
 
    if (STEP == 1) {
-      double prev[bufferSize][2], X[bufferSize];
+      double prev[bufferSize][2];
+      double X[bufferSize];
 
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
          // set a0-->prev[i][0] and a1-->prev[i][1]
@@ -259,7 +285,9 @@ __rooglobal__ void computeChebychev(BatchesHandle batches)
          }
    } else
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-         double prev0 = 1.0, prev1 = 2 * (xData[i] - 0.5 * (xmax + xmin)) / (xmax - xmin), X = prev1;
+         double prev0 = 1.0;
+         double prev1 = 2 * (xData[i] - 0.5 * (xmax + xmin)) / (xmax - xmin);
+         double X = prev1;
          batches._output[i] = 1.0;
          for (int k = 0; k < nCoef; k++) {
             batches._output[i] += prev1 * batches.extraArg(k);
@@ -296,7 +324,11 @@ __rooglobal__ void computeDeltaFunction(BatchesHandle batches)
 
 __rooglobal__ void computeDstD0BG(BatchesHandle batches)
 {
-   Batch DM = batches[0], DM0 = batches[1], C = batches[2], A = batches[3], B = batches[4];
+   Batch DM = batches[0];
+   Batch DM0 = batches[1];
+   Batch C = batches[2];
+   Batch A = batches[3];
+   Batch B = batches[4];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double ratio = DM[i] / DM0[i];
       const double arg1 = (DM0[i] - DM[i]) / C[i];
@@ -346,7 +378,10 @@ __rooglobal__ void computeExponentialNeg(BatchesHandle batches)
 
 __rooglobal__ void computeGamma(BatchesHandle batches)
 {
-   Batch X = batches[0], G = batches[1], B = batches[2], M = batches[3];
+   Batch X = batches[0];
+   Batch G = batches[1];
+   Batch B = batches[2];
+   Batch M = batches[3];
    double gamma = -std::lgamma(G[0]);
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       if (X[i] == M[i])
@@ -437,7 +472,11 @@ __rooglobal__ void computeNegativeLogarithms(BatchesHandle batches)
 
 __rooglobal__ void computeJohnson(BatchesHandle batches)
 {
-   Batch mass = batches[0], mu = batches[1], lambda = batches[2], gamma = batches[3], delta = batches[4];
+   Batch mass = batches[0];
+   Batch mu = batches[1];
+   Batch lambda = batches[2];
+   Batch gamma = batches[3];
+   Batch delta = batches[4];
    const double sqrtTwoPi = std::sqrt(TMath::TwoPi());
    const double massThreshold = batches.extraArg(0);
 
@@ -514,7 +553,9 @@ __rooglobal__ void computeLandau(BatchesHandle batches)
       return u * u * (1 + (a2[0] + a2[1] * u) * u);
    };
 
-   Batch X = batches[0], M = batches[1], S = batches[2];
+   Batch X = batches[0];
+   Batch M = batches[1];
+   Batch S = batches[2];
 
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = (X[i] - M[i]) / S[i];
@@ -542,7 +583,9 @@ __rooglobal__ void computeLandau(BatchesHandle batches)
 
 __rooglobal__ void computeLognormal(BatchesHandle batches)
 {
-   Batch X = batches[0], M0 = batches[1], K = batches[2];
+   Batch X = batches[0];
+   Batch M0 = batches[1];
+   Batch K = batches[2];
    constexpr double rootOf2pi = 2.506628274631000502415765284811;
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       double lnxOverM0 = fast_log(X[i] / M0[i]);
@@ -557,7 +600,9 @@ __rooglobal__ void computeLognormal(BatchesHandle batches)
 
 __rooglobal__ void computeLognormalStandard(BatchesHandle batches)
 {
-   Batch X = batches[0], M0 = batches[1], K = batches[2];
+   Batch X = batches[0];
+   Batch M0 = batches[1];
+   Batch K = batches[2];
    constexpr double rootOf2pi = 2.506628274631000502415765284811;
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       double lnxOverM0 = fast_log(X[i]) - M0[i];
@@ -618,7 +663,10 @@ __rooglobal__ void computeNormalizedPdf(BatchesHandle batches)
  */
 __rooglobal__ void computeNovosibirsk(BatchesHandle batches)
 {
-   Batch X = batches[0], P = batches[1], W = batches[2], T = batches[3];
+   Batch X = batches[0];
+   Batch P = batches[1];
+   Batch W = batches[2];
+   Batch T = batches[3];
    constexpr double xi = 2.3548200450309494; // 2 Sqrt( Ln(4) )
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       double argasinh = 0.5 * xi * T[i];
@@ -639,7 +687,8 @@ __rooglobal__ void computeNovosibirsk(BatchesHandle batches)
 
 __rooglobal__ void computePoisson(BatchesHandle batches)
 {
-   Batch x = batches[0], mean = batches[1];
+   Batch x = batches[0];
+   Batch mean = batches[1];
    bool protectNegative = batches.extraArg(0);
    bool noRounding = batches.extraArg(1);
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -813,7 +862,10 @@ __rooglobal__ void computeTruthModelCoshBasis(BatchesHandle batches)
 
 __rooglobal__ void computeVoigtian(BatchesHandle batches)
 {
-   Batch X = batches[0], M = batches[1], W = batches[2], S = batches[3];
+   Batch X = batches[0];
+   Batch M = batches[1];
+   Batch W = batches[2];
+   Batch S = batches[3];
    const double invSqrt2 = 0.707106781186547524400844362105;
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double arg = (X[i] - M[i]) * (X[i] - M[i]);

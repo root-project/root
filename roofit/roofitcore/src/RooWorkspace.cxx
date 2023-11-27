@@ -2351,97 +2351,97 @@ void RooWorkspace::Print(Option_t* opts) const
 
 void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
 {
-  typedef ::RooWorkspace::CodeRepo thisClass;
+   typedef ::RooWorkspace::CodeRepo thisClass;
 
    // Stream an object of class RooWorkspace::CodeRepo.
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
-     Version_t R__v =  R__b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s;
+      UInt_t R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
-     // Stream contents of ClassFiles map
-     Int_t count(0) ;
-     R__b >> count ;
-     while(count--) {
-       TString name ;
-       name.Streamer(R__b) ;
-       _fmap[name]._hext.Streamer(R__b) ;
-       _fmap[name]._hfile.Streamer(R__b) ;
-       _fmap[name]._cxxfile.Streamer(R__b) ;
-     }
+      // Stream contents of ClassFiles map
+      Int_t count(0);
+      R__b >> count;
+      while (count--) {
+         TString name;
+         name.Streamer(R__b);
+         _fmap[name]._hext.Streamer(R__b);
+         _fmap[name]._hfile.Streamer(R__b);
+         _fmap[name]._cxxfile.Streamer(R__b);
+      }
 
-     // Stream contents of ClassRelInfo map
-     count=0 ;
-     R__b >> count ;
-     while(count--) {
-       TString name ;
-       name.Streamer(R__b) ;
-       _c2fmap[name]._baseName.Streamer(R__b) ;
-       _c2fmap[name]._fileBase.Streamer(R__b) ;
-     }
+      // Stream contents of ClassRelInfo map
+      count = 0;
+      R__b >> count;
+      while (count--) {
+         TString name;
+         name.Streamer(R__b);
+         _c2fmap[name]._baseName.Streamer(R__b);
+         _c2fmap[name]._fileBase.Streamer(R__b);
+      }
 
-     if (R__v==2) {
+      if (R__v == 2) {
 
-       count=0 ;
-       R__b >> count ;
-       while(count--) {
-    TString name ;
-    name.Streamer(R__b) ;
-    _ehmap[name]._hname.Streamer(R__b) ;
-    _ehmap[name]._hfile.Streamer(R__b) ;
-       }
-     }
+         count = 0;
+         R__b >> count;
+         while (count--) {
+            TString name;
+            name.Streamer(R__b);
+            _ehmap[name]._hname.Streamer(R__b);
+            _ehmap[name]._hfile.Streamer(R__b);
+         }
+      }
 
-     R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
-     // Instantiate any classes that are not defined in current session
-     _compiledOK = !compileClasses() ;
+      // Instantiate any classes that are not defined in current session
+      _compiledOK = !compileClasses();
 
    } else {
 
-     UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), true);
+      UInt_t R__c;
+      R__c = R__b.WriteVersion(thisClass::IsA(), true);
 
-     // Stream contents of ClassFiles map
-     UInt_t count = _fmap.size() ;
-     R__b << count ;
-     map<TString,ClassFiles>::iterator iter = _fmap.begin() ;
-     while(iter!=_fmap.end()) {
-       TString key_copy(iter->first) ;
-       key_copy.Streamer(R__b) ;
-       iter->second._hext.Streamer(R__b) ;
-       iter->second._hfile.Streamer(R__b);
-       iter->second._cxxfile.Streamer(R__b);
+      // Stream contents of ClassFiles map
+      UInt_t count = _fmap.size();
+      R__b << count;
+      map<TString, ClassFiles>::iterator iter = _fmap.begin();
+      while (iter != _fmap.end()) {
+         TString key_copy(iter->first);
+         key_copy.Streamer(R__b);
+         iter->second._hext.Streamer(R__b);
+         iter->second._hfile.Streamer(R__b);
+         iter->second._cxxfile.Streamer(R__b);
 
-       ++iter ;
-     }
+         ++iter;
+      }
 
-     // Stream contents of ClassRelInfo map
-     count = _c2fmap.size() ;
-     R__b << count ;
-     map<TString,ClassRelInfo>::iterator iter2 = _c2fmap.begin() ;
-     while(iter2!=_c2fmap.end()) {
-       TString key_copy(iter2->first) ;
-       key_copy.Streamer(R__b) ;
-       iter2->second._baseName.Streamer(R__b) ;
-       iter2->second._fileBase.Streamer(R__b);
-       ++iter2 ;
-     }
+      // Stream contents of ClassRelInfo map
+      count = _c2fmap.size();
+      R__b << count;
+      map<TString, ClassRelInfo>::iterator iter2 = _c2fmap.begin();
+      while (iter2 != _c2fmap.end()) {
+         TString key_copy(iter2->first);
+         key_copy.Streamer(R__b);
+         iter2->second._baseName.Streamer(R__b);
+         iter2->second._fileBase.Streamer(R__b);
+         ++iter2;
+      }
 
-     // Stream contents of ExtraHeader map
-     count = _ehmap.size() ;
-     R__b << count ;
-     map<TString,ExtraHeader>::iterator iter3 = _ehmap.begin() ;
-     while(iter3!=_ehmap.end()) {
-       TString key_copy(iter3->first) ;
-       key_copy.Streamer(R__b) ;
-       iter3->second._hname.Streamer(R__b) ;
-       iter3->second._hfile.Streamer(R__b);
-       ++iter3 ;
-     }
+      // Stream contents of ExtraHeader map
+      count = _ehmap.size();
+      R__b << count;
+      map<TString, ExtraHeader>::iterator iter3 = _ehmap.begin();
+      while (iter3 != _ehmap.end()) {
+         TString key_copy(iter3->first);
+         key_copy.Streamer(R__b);
+         iter3->second._hname.Streamer(R__b);
+         iter3->second._hfile.Streamer(R__b);
+         ++iter3;
+      }
 
-     R__b.SetByteCount(R__c, true);
-
+      R__b.SetByteCount(R__c, true);
    }
 }
 
@@ -2458,106 +2458,107 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
 
-      R__b.ReadClassBuffer(RooWorkspace::Class(),this);
+      R__b.ReadClassBuffer(RooWorkspace::Class(), this);
 
       // Perform any pass-2 schema evolution here
-      for(RooAbsArg* node : _allOwnedNodes) {
-   node->ioStreamerPass2() ;
+      for (RooAbsArg *node : _allOwnedNodes) {
+         node->ioStreamerPass2();
       }
-      RooAbsArg::ioStreamerPass2Finalize() ;
+      RooAbsArg::ioStreamerPass2Finalize();
 
       // Make expensive object cache of all objects point to intermal copy.
       // Somehow this doesn't work OK automatically
-      for(RooAbsArg* node : _allOwnedNodes) {
-   node->setExpensiveObjectCache(_eocache) ;
-   node->setWorkspace(*this);
+      for (RooAbsArg *node : _allOwnedNodes) {
+         node->setExpensiveObjectCache(_eocache);
+         node->setWorkspace(*this);
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
-      RooAbsOptTestStatistic *tmp = static_cast<RooAbsOptTestStatistic *>(node);
-      if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
-         cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
-              << " : " << tmp->sealNotice() << endl;
-      }
-   }
+         if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
+            RooAbsOptTestStatistic *tmp = static_cast<RooAbsOptTestStatistic *>(node);
+            if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
+               cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
+                    << " : " << tmp->sealNotice() << endl;
+            }
+         }
 #endif
       }
 
    } else {
 
-     // Make lists of external clients of WS objects, and remove those links temporarily
+      // Make lists of external clients of WS objects, and remove those links temporarily
 
-     map<RooAbsArg*,vector<RooAbsArg *> > extClients, extValueClients, extShapeClients ;
+      map<RooAbsArg *, vector<RooAbsArg *>> extClients;
+      map<RooAbsArg *, vector<RooAbsArg *>> extValueClients;
+      map<RooAbsArg *, vector<RooAbsArg *>> extShapeClients;
 
-     for(RooAbsArg* tmparg : _allOwnedNodes) {
+      for (RooAbsArg *tmparg : _allOwnedNodes) {
 
-       // Loop over client list of this arg
-       std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
-       for (auto client : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*client)) {
+         // Loop over client list of this arg
+         std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
+         for (auto client : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*client)) {
 
-           const auto refCount = tmparg->_clientList.refCount(client);
-           auto& bufferVec = extClients[tmparg];
+               const auto refCount = tmparg->_clientList.refCount(client);
+               auto &bufferVec = extClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, client);
-           tmparg->_clientList.Remove(client, true);
+               bufferVec.insert(bufferVec.end(), refCount, client);
+               tmparg->_clientList.Remove(client, true);
+            }
          }
-       }
 
-       // Loop over value client list of this arg
-       clientsTmp.assign(tmparg->_clientListValue.begin(), tmparg->_clientListValue.end());
-       for (auto vclient : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*vclient)) {
-           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
-                   << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
+         // Loop over value client list of this arg
+         clientsTmp.assign(tmparg->_clientListValue.begin(), tmparg->_clientListValue.end());
+         for (auto vclient : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*vclient)) {
+               cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+                                       << " has external value client link to " << vclient << " (" << vclient->GetName()
+                                       << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl;
 
-           const auto refCount = tmparg->_clientListValue.refCount(vclient);
-           auto& bufferVec = extValueClients[tmparg];
+               const auto refCount = tmparg->_clientListValue.refCount(vclient);
+               auto &bufferVec = extValueClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, vclient);
-           tmparg->_clientListValue.Remove(vclient, true);
+               bufferVec.insert(bufferVec.end(), refCount, vclient);
+               tmparg->_clientListValue.Remove(vclient, true);
+            }
          }
-       }
 
-       // Loop over shape client list of this arg
-       clientsTmp.assign(tmparg->_clientListShape.begin(), tmparg->_clientListShape.end());
-       for (auto sclient : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*sclient)) {
-           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
-                     << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl ;
+         // Loop over shape client list of this arg
+         clientsTmp.assign(tmparg->_clientListShape.begin(), tmparg->_clientListShape.end());
+         for (auto sclient : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*sclient)) {
+               cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+                                       << " has external shape client link to " << sclient << " (" << sclient->GetName()
+                                       << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl;
 
-           const auto refCount = tmparg->_clientListShape.refCount(sclient);
-           auto& bufferVec = extShapeClients[tmparg];
+               const auto refCount = tmparg->_clientListShape.refCount(sclient);
+               auto &bufferVec = extShapeClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, sclient);
-           tmparg->_clientListShape.Remove(sclient, true);
+               bufferVec.insert(bufferVec.end(), refCount, sclient);
+               tmparg->_clientListShape.Remove(sclient, true);
+            }
          }
-       }
+      }
 
-     }
+      R__b.WriteClassBuffer(RooWorkspace::Class(), this);
 
-     R__b.WriteClassBuffer(RooWorkspace::Class(),this);
+      // Reinstate clients here
 
-     // Reinstate clients here
+      for (auto &iterx : extClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientList.Add(client);
+         }
+      }
 
+      for (auto &iterx : extValueClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientListValue.Add(client);
+         }
+      }
 
-     for (auto &iterx : extClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientList.Add(client);
-       }
-     }
-
-     for (auto &iterx : extValueClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientListValue.Add(client);
-       }
-     }
-
-     for (auto &iterx : extShapeClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientListShape.Add(client);
-       }
-     }
-
+      for (auto &iterx : extShapeClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientListShape.Add(client);
+         }
+      }
    }
 }
 

@@ -379,7 +379,10 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
     return getVal(normSet) ;
   }
 
-  RooArgSet *allVars(nullptr),*anaVars(nullptr),*normSet2(nullptr),*dummy(nullptr) ;
+  RooArgSet *allVars(nullptr);
+  RooArgSet *anaVars(nullptr);
+  RooArgSet *normSet2(nullptr);
+  RooArgSet *dummy(nullptr);
   const std::vector<int> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
 
   PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,false) ;

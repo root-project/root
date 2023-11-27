@@ -321,7 +321,8 @@ double RooXYChi2Var::fy() const
 
 double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-  double result(0), carry(0);
+  double result(0);
+  double carry(0);
 
   // Loop over bins of dataset
   RooDataSet* xydata = static_cast<RooDataSet*>(_dataClone) ;
@@ -336,7 +337,8 @@ double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
 
     // Get data value and error
     double ydata ;
-    double eylo,eyhi ;
+    double eylo;
+    double eyhi;
     if (_yvar) {
       ydata = _yvar->getVal() ;
       eylo = -1*_yvar->getErrorLo() ;

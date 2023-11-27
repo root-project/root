@@ -345,7 +345,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Initial fill of list of LValue branches
   RooArgSet exclLVBranches("exclLVBranches") ;
-  RooArgSet branchList,branchListVD ;
+  RooArgSet branchList;
+  RooArgSet branchListVD;
   function.branchNodeServerList(&branchList) ;
 
   for (auto branch: branchList) {

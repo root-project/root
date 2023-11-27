@@ -154,7 +154,9 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
   std::vector<Data> tmp;
   tmp.reserve((1 + _mirrorLeft + _mirrorRight) * data.numEntries());
-  double x0 = 0., x1 = 0., x2 = 0.;
+  double x0 = 0.;
+  double x1 = 0.;
+  double x2 = 0.;
   _sumWgt = 0.;
   // read the data set into tmp and accumulate some statistics
   RooRealVar& real = static_cast<RooRealVar&>(data.get()->operator[](_varName));

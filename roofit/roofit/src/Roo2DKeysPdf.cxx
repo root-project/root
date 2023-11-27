@@ -361,7 +361,10 @@ double Roo2DKeysPdf::evaluateFull(double thisX, double thisY) const
 
   double f=0.0;
 
-  double rx2, ry2, zx, zy;
+  double rx2;
+  double ry2;
+  double zx;
+  double zy;
   if( _MirrorAtBoundary )
   {
     for (Int_t j = 0; j < _nEvents; ++j)
@@ -567,7 +570,9 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   RooAbsReal & xArg = (RooAbsReal&)x.arg();
   RooAbsReal & yArg = (RooAbsReal&)y.arg();
 
-  double theX, theY, hx/*, hy*/;
+  double theX;
+  double theY;
+  double hx;
   TString label = name;
   label += " the source data for 2D Keys PDF";
   TTree * _theTree =  new TTree(name, label);

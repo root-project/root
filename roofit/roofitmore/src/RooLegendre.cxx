@@ -116,7 +116,8 @@ void compute(  size_t batchSize, const int l1, const int m1, const int l2, const
               double * __restrict output,
               double const * __restrict TH)
 {
-  double legendre1=1.0, legendreMinus1=1.0;
+  double legendre1 = 1.0;
+  double legendreMinus1 = 1.0;
   if (l1+m1 > 0) {
     legendre1      = ROOT::Math::internal::legendre(l1,m1,1.0);
     legendreMinus1 = ROOT::Math::internal::legendre(l1,m1,-1.0);
