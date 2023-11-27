@@ -122,7 +122,6 @@ private:
       RNTuplePlainCounter &fParallelZip;
    };
    std::unique_ptr<RCounters> fCounters;
-   RNTupleMetrics fMetrics;
    /// The inner sink, responsible for actually performing I/O.
    std::unique_ptr<RPageSink> fInnerSink;
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
@@ -150,8 +149,6 @@ public:
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 } // namespace Detail

@@ -111,6 +111,8 @@ public:
    };
 
 protected:
+   RNTupleMetrics fMetrics;
+
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
    void WaitForAllTasks()
@@ -154,9 +156,10 @@ public:
    /// of allocating pages.
    virtual void ReleasePage(RPage &page) = 0;
 
-   /// Page storage implementations have their own metrics. The RPageSink and RPageSource classes provide
-   /// a default set of metrics.
-   virtual RNTupleMetrics &GetMetrics() = 0;
+   /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
+   /// overriding this.
+   virtual RNTupleMetrics &GetMetrics() { return fMetrics; }
+
    /// Returns the NTuple name.
    const std::string &GetNTupleName() const { return fNTupleName; }
 
@@ -191,7 +194,6 @@ protected:
       RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
    };
    std::unique_ptr<RCounters> fCounters;
-   RNTupleMetrics fMetrics;
 
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
@@ -245,9 +247,6 @@ protected:
    ///
    /// A subclass using the default set of metrics is always responsible for updating the counters
    /// appropriately, e.g. `fCounters->fNPageCommited.Inc()`
-   ///
-   /// Alternatively, a subclass might provide its own RNTupleMetrics object by overriding the
-   /// GetMetrics() member function.
    void EnableDefaultMetrics(const std::string &prefix);
 
 public:
@@ -296,9 +295,6 @@ public:
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
-
-   /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by overriding this.
-   RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
 // clang-format off
@@ -406,8 +402,6 @@ protected:
    };
 
    std::unique_ptr<RCounters> fCounters;
-   /// Wraps the I/O counters and is observed by the RNTupleReader metrics
-   RNTupleMetrics fMetrics;
 
    RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
@@ -518,9 +512,6 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
-
-   /// Returns the default metrics object.  Subclasses might alternatively override the method and provide their own metrics object.
-   RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
 } // namespace Detail
