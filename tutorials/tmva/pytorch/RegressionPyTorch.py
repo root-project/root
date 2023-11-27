@@ -23,8 +23,8 @@ from torch import nn
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
-factory = TMVA.Factory('TMVARegression', output,
+# create factory without output file since it is not needed
+factory = TMVA.Factory('TMVARegression',
         '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
 
