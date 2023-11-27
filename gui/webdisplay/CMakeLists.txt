@@ -8,6 +8,10 @@
 # CMakeLists.txt file for building ROOT gui/webdisplay package
 ############################################################################
 
+if(NOT http)
+  message(SEND_ERROR "webgui needs the option 'http' enabled.")
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTWebDisplay
     HEADERS
        ROOT/RWebDisplayArgs.hxx
