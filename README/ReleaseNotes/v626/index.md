@@ -1051,10 +1051,17 @@ Published on November 16, 2022
 * [[#11713](https://github.com/root-project/root/issues/11713)] - Add support for Python 3.11
 * [[#11714](https://github.com/root-project/root/issues/11714)] - ACLiC broken on macOS 13 Ventura
 
+## Release 6.26/12
 
+Published on November 27, 2023
+
+### Bugs and Issues fixed in this release
+
+This release also addresses a security issue.
+More details will follow.
 
 ## HEAD of the v6-26-00-patches branch
 
-These changes will be part of a future 6.26/12.
+These changes will be part of a future 6.26/14.
 
 - None so far.
