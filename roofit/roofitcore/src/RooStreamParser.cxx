@@ -116,8 +116,13 @@ bool RooStreamParser::isPunctChar(char c) const
 TString RooStreamParser::readToken()
 {
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
-  bool first(true), quotedString(false), lineCont(false) ;
-  char buffer[64000], c(0), cnext = '\0', cprev = ' ';
+  bool first(true);
+  bool quotedString(false);
+  bool lineCont(false);
+  char buffer[64000];
+  char c(0);
+  char cnext = '\0';
+  char cprev = ' ';
   bool haveINF(false) ;
   Int_t bufptr(0) ;
 
@@ -170,12 +175,13 @@ TString RooStreamParser::readToken()
 
 
       if (cnext=='I' || cnext=='i') {
-        char tmp1,tmp2 ;
-        _is->get(tmp1) ;
-        _is->get(tmp2) ;
-        _is->putback(tmp2) ;
-        _is->putback(tmp1) ;
-        haveINF = ((cnext=='I' && tmp1 == 'N' && tmp2 == 'F') || (cnext=='i' && tmp1 == 'n' && tmp2 == 'f')) ;
+          char tmp1;
+          char tmp2;
+          _is->get(tmp1);
+          _is->get(tmp2);
+          _is->putback(tmp2);
+          _is->putback(tmp1);
+          haveINF = ((cnext == 'I' && tmp1 == 'N' && tmp2 == 'F') || (cnext == 'i' && tmp1 == 'n' && tmp2 == 'f'));
       } else {
         haveINF = false ;
       }
@@ -295,7 +301,8 @@ TString RooStreamParser::readToken()
 
 TString RooStreamParser::readLine()
 {
-   char c, buffer[64000];
+   char c;
+   char buffer[64000];
    Int_t nfree(63999);
 
    if (_is->peek() == '\n')
@@ -315,27 +322,30 @@ TString RooStreamParser::readLine()
       if (nextpcontseq)
          nfree -= (nextpcontseq - pcontseq);
       pcontseq = nextpcontseq;
-  }
+   }
 
-  // Chop eventual comments
-  char *pcomment = strstr(buffer,"//") ;
-  if (pcomment) *pcomment=0 ;
+   // Chop eventual comments
+   char *pcomment = strstr(buffer, "//");
+   if (pcomment)
+      *pcomment = 0;
 
-  // Chop leading and trailing space
-  char *pstart=buffer ;
-  while (isspace(*pstart)) {
-    pstart++ ;
-  }
-  char *pend=buffer+strlen(buffer)-1 ;
-  if (pend>pstart)
-    while (isspace(*pend)) { *pend--=0 ; }
+   // Chop leading and trailing space
+   char *pstart = buffer;
+   while (isspace(*pstart)) {
+      pstart++;
+   }
+   char *pend = buffer + strlen(buffer) - 1;
+   if (pend > pstart)
+      while (isspace(*pend)) {
+         *pend-- = 0;
+      }
 
-  if (_is->eof() || _is->fail()) {
-    _atEOF = true ;
-  }
+   if (_is->eof() || _is->fail()) {
+      _atEOF = true;
+   }
 
-  // Convert to TString
-  return TString(pstart) ;
+   // Convert to TString
+   return TString(pstart);
 }
 
 
@@ -413,25 +423,25 @@ bool RooStreamParser::readDouble(double& value, bool /*zapOnError*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert given string to a double. Return true if the conversion fails.
 
-bool RooStreamParser::convertToDouble(const TString& token, double& value)
+bool RooStreamParser::convertToDouble(const TString &token, double &value)
 {
-  char* endptr = nullptr;
-  const char* data=token.Data() ;
+   char *endptr = nullptr;
+   const char *data = token.Data();
 
-  // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
-  if (!strcasecmp(data,"inf") || !strcasecmp(data+1,"inf")) {
-    value = (data[0]=='-') ? -RooNumber::infinity() : RooNumber::infinity() ;
-    return false ;
-  }
+   // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
+   if (!strcasecmp(data, "inf") || !strcasecmp(data + 1, "inf")) {
+      value = (data[0] == '-') ? -RooNumber::infinity() : RooNumber::infinity();
+      return false;
+   }
 
-  value = strtod(data,&endptr) ;
-  bool error = (endptr-data!=token.Length()) ;
+   value = strtod(data, &endptr);
+   bool error = (endptr - data != token.Length());
 
-  if (error && !_prefix.IsNull()) {
-    oocoutE(nullptr,InputArguments) << _prefix << ": parse error, cannot convert '"
-               << token << "'" << " to double precision" <<  endl ;
-  }
-  return error ;
+   if (error && !_prefix.IsNull()) {
+      oocoutE(nullptr, InputArguments) << _prefix << ": parse error, cannot convert '" << token << "'"
+                                       << " to double precision" << endl;
+   }
+   return error;
 }
 
 
@@ -489,12 +499,13 @@ bool RooStreamParser::readString(TString& value, bool /*zapOnError*/)
 bool RooStreamParser::convertToString(const TString& token, TString& string)
 {
    // Transport to buffer
-   char buffer[64000], *ptr;
-   strncpy(buffer, token.Data(), 63999);
-   if (token.Length() >= 63999) {
-      oocoutW(nullptr, InputArguments) << "RooStreamParser::convertToString: token length exceeds 63999, truncated"
-                                            << endl;
-      buffer[63999] = 0;
+  char buffer[64000];
+  char *ptr;
+  strncpy(buffer, token.Data(), 63999);
+  if (token.Length() >= 63999) {
+    oocoutW(nullptr, InputArguments) << "RooStreamParser::convertToString: token length exceeds 63999, truncated"
+                                     << endl;
+    buffer[63999] = 0;
   }
   int len = strlen(buffer) ;
 

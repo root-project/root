@@ -210,7 +210,8 @@ double RooGaussKronrodIntegrator1D::integral(const double *yvec)
   F.params = this ;
 
   // Return values
-  double result, error;
+  double result;
+  double error;
   size_t neval = 0 ;
 
   // Call GSL implementation of integeator

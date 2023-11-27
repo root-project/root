@@ -251,7 +251,8 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   }
 
   // Extract values from named arguments
-  double xmin(getMin()),xmax(getMax()) ;
+  double xmin(getMin());
+  double xmax(getMax());
   if (pc.hasProcessed("Range")) {
     xmin = pc.getDouble("min") ;
     xmax = pc.getDouble("max") ;

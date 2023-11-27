@@ -613,7 +613,8 @@ void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, bool /*verbos
 {
   os << indent << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
 
-  Int_t i, nsplit = _splitArgList.GetSize() ;
+  Int_t i;
+  Int_t nsplit = _splitArgList.GetSize();
   if (nsplit>0) {
     os << indent << "  Splitting rules:" << endl ;
     for (i=0 ; i<nsplit ; i++) {

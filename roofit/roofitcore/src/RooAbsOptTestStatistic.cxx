@@ -367,7 +367,8 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
 double RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) const
 {
   // Default implementation returns sum of components
-  double sum(0), carry(0);
+  double sum(0);
+  double carry(0);
   for (Int_t i = 0; i < n; ++i) {
     double y = array[i]->getValV();
     carry += reinterpret_cast<RooAbsOptTestStatistic*>(array[i])->getCarry();

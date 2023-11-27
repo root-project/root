@@ -77,7 +77,8 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
    TString options(drawOptions);
    options.ToUpper();
 
-   double xmin(TMath::Infinity()), xmax(-TMath::Infinity());
+   double xmin(TMath::Infinity());
+   double xmax(-TMath::Infinity());
    // remove cases where xmin and xmax are +/- inf
    for( unsigned int i=0; i < fSamplingDistr.size(); i++ ) {
       if( fSamplingDistr[i] < xmin  &&  fSamplingDistr[i] != -TMath::Infinity() ) {
@@ -262,7 +263,10 @@ void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 void SamplingDistPlot::Draw(Option_t * /*options */) {
    ApplyDefaultStyle();
 
-   double theMin(0.), theMax(0.), theYMin(std::numeric_limits<float>::quiet_NaN()), theYMax(0.);
+   double theMin(0.);
+   double theMax(0.);
+   double theYMin(std::numeric_limits<float>::quiet_NaN());
+   double theYMax(0.);
    GetAbsoluteInterval(theMin, theMax, theYMax);
    if( !TMath::IsNaN(fXMin) ) theMin = fXMin;
    if( !TMath::IsNaN(fXMax) ) theMax = fXMax;

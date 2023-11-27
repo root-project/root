@@ -438,7 +438,8 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
 
   // old integral, only works for linear and not positive definite
 
-  RooAbsReal *low, *high;
+  RooAbsReal *low;
+  RooAbsReal *high;
   double value(0);
   double nominal(0);
 

@@ -117,7 +117,9 @@ void RooGrid::resize(UInt_t bins)
 
   // loop over grid dimensions
   for (UInt_t j = 0; j < _dim; j++) {
-    double xold,xnew(0),dw(0);
+    double xold;
+    double xnew(0);
+    double dw(0);
     Int_t i = 1;
     // loop over bins in this dimension and load _xin[] with new bin edges
 
@@ -186,7 +188,8 @@ void RooGrid::generatePoint(const UInt_t box[], double x[], UInt_t bin[], double
     // in normalized bin coordinates.
     Int_t k= static_cast<Int_t>(z);
     bin[j] = k;
-    double y, bin_width;
+    double y;
+    double bin_width;
     if(k == 0) {
       bin_width= coord(1,j);
       y= z * bin_width;

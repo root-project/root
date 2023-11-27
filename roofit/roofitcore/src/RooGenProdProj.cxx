@@ -131,7 +131,8 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj &other, const char *name)
 RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet,
                 RooArgSet& saveSet, const char* isetRangeName, bool doFactorize)
 {
-  RooArgSet anaIntSet, numIntSet ;
+  RooArgSet anaIntSet;
+  RooArgSet numIntSet;
 
   // First determine subset of observables in intSet that are factorizable
   for (const auto arg : intSet) {

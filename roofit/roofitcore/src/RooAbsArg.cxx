@@ -144,7 +144,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
 {
 
   // Copy server list by hand
-  bool valueProp, shapeProp ;
+  bool valueProp;
+  bool shapeProp;
   for (const auto server : other._serverList) {
     valueProp = server->_clientListValue.containsByNamePtr(&other);
     shapeProp = server->_clientListShape.containsByNamePtr(&other);
@@ -2468,14 +2469,17 @@ RooAbsArg::makeLegacyIterator(const RooAbsArg::RefCountList_t& list) const {
 
 void RooRefArray::Streamer(TBuffer &R__b)
 {
-   UInt_t R__s, R__c;
+   UInt_t R__s;
+   UInt_t R__c;
    if (R__b.IsReading()) {
 
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v) {
+      }
 
       // Make temporary refArray and read that from the streamer
       auto refArray = std::make_unique<TRefArray>();
-      refArray->Streamer(R__b) ;
+      refArray->Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, refArray->IsA());
 
       // Schedule deferred processing of TRefArray into proxy list
@@ -2483,17 +2487,16 @@ void RooRefArray::Streamer(TBuffer &R__b)
 
    } else {
 
-     R__c = R__b.WriteVersion(RooRefArray::IsA(), true);
+      R__c = R__b.WriteVersion(RooRefArray::IsA(), true);
 
-     // Make a temporary refArray and write that to the streamer
-     TRefArray refArray;
-     for(TObject * tmpObj : *this) {
-       refArray.Add(tmpObj) ;
-     }
+      // Make a temporary refArray and write that to the streamer
+      TRefArray refArray;
+      for (TObject *tmpObj : *this) {
+         refArray.Add(tmpObj);
+      }
 
-     refArray.Streamer(R__b) ;
-     R__b.SetByteCount(R__c, true) ;
-
+      refArray.Streamer(R__b);
+      R__b.SetByteCount(R__c, true);
    }
 }
 

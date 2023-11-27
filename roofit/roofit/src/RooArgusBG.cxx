@@ -104,7 +104,8 @@ double RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
   double max = (m.max(rangeName) < m0) ? m.max(rangeName) : m0;
   double f1 = (1.-TMath::Power(min/m0,2));
   double f2 = (1.-TMath::Power(max/m0,2));
-  double aLow, aHigh ;
+  double aLow;
+  double aHigh;
   if ( c < 0. ) {
     aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
     aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));

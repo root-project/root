@@ -698,7 +698,8 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          } while (RooFit::Detail::nextCombination(xtmp.begin(), xtmp.begin() + iperm, xtmp.end()));
       }
 
-      double origFrac1(0.), origFrac2(0.);
+      double origFrac1(0.);
+      double origFrac2(0.);
       for (int i = 0; i < depth; ++i) {
          double ffrac = 0.;
          for (int j = 0; j < depth; ++j) {

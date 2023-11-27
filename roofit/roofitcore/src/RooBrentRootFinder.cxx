@@ -61,7 +61,8 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
 {
   _function->saveXVec() ;
 
-  double a(xlo),b(xhi);
+  double a(xlo);
+  double b(xhi);
   double fa= (*_function)(&a) - value;
   double fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
@@ -72,7 +73,9 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
 
   bool ac_equal(false);
   double fc= fb;
-  double c(0),d(0),e(0);
+  double c(0);
+  double d(0);
+  double e(0);
   for(Int_t iter= 0; iter <= MaxIterations; iter++) {
 
     if ((fb < 0 && fc < 0) || (fb > 0 && fc > 0)) {
@@ -112,7 +115,9 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
     }
     else {
       // Attempt inverse cubic interpolation
-      double p, q, r;
+      double p;
+      double q;
+      double r;
       double s = fb / fa;
 
       if (ac_equal) {

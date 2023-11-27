@@ -176,7 +176,8 @@ double RooAbsTestStatistic::evaluate() const
     if (_mpinterl == RooFit::BulkPartition || _mpinterl == RooFit::Interleave ) {
       ret = combinedValue(reinterpret_cast<RooAbsReal**>(const_cast<std::unique_ptr<RooAbsTestStatistic>*>(_gofArray.data())),_gofArray.size());
     } else {
-      double sum = 0., carry = 0.;
+      double sum = 0.;
+      double carry = 0.;
       int i = 0;
       for (auto& gof : _gofArray) {
         if (i % _numSets == _setNum || (_mpinterl==RooFit::Hybrid && gof->_mpinterl != RooFit::SimComponents )) {
@@ -207,8 +208,8 @@ double RooAbsTestStatistic::evaluate() const
     // Start calculations in parallel
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
 
-
-    double sum(0), carry = 0.;
+    double sum(0);
+    double carry = 0.;
     for (Int_t i = 0; i < _nCPU; ++i) {
       double y = _mpfeArray[i]->getValV();
       carry += _mpfeArray[i]->getCarry();
@@ -230,7 +231,9 @@ double RooAbsTestStatistic::evaluate() const
   } else {
 
     // Evaluate as straight FUNC
-    Int_t nFirst(0), nLast(_nEvents), nStep(1) ;
+    Int_t nFirst(0);
+    Int_t nLast(_nEvents);
+    Int_t nStep(1);
 
     switch (_mpinterl) {
     case RooFit::BulkPartition:
