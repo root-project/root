@@ -812,7 +812,7 @@ __global__ void CrossEntropy(AFloat * result,
 
    if ((i < m) && (j < n)) {
       AFloat norm = 1 / ((AFloat) (m * n));
-      AFloat x = output[index]);
+      AFloat x = output[index];
       AFloat lr = std::log(1. + exp(-x));
       if (x < -75.) lr = -x;
       else if (x > 75.) lr = exp(-x);
