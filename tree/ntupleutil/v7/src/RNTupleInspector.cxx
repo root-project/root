@@ -84,7 +84,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
    }
 }
 
-ROOT::Experimental::RNTupleInspector::RFieldTreeInfo
+ROOT::Experimental::RNTupleInspector::RFieldTreeInspector
 ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldId)
 {
    std::uint64_t compressedSize = 0;
@@ -105,7 +105,7 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldI
       uncompressedSize += subFieldInfo.GetUncompressedSize();
    }
 
-   auto fieldInfo = RFieldTreeInfo(fDescriptor->GetFieldDescriptor(fieldId), compressedSize, uncompressedSize);
+   auto fieldInfo = RFieldTreeInspector(fDescriptor->GetFieldDescriptor(fieldId), compressedSize, uncompressedSize);
    fFieldTreeInfo.emplace(fieldId, fieldInfo);
    return fieldInfo;
 }
@@ -316,8 +316,8 @@ ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental
 
 //------------------------------------------------------------------------------
 
-const ROOT::Experimental::RNTupleInspector::RFieldTreeInfo &
-ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(DescriptorId_t fieldId) const
+const ROOT::Experimental::RNTupleInspector::RFieldTreeInspector &
+ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(DescriptorId_t fieldId) const
 {
    if (fieldId >= fDescriptor->GetNFields()) {
       throw RException(R__FAIL("No field with ID " + std::to_string(fieldId) + " present"));
@@ -326,8 +326,8 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(DescriptorId_t fieldId) c
    return fFieldTreeInfo.at(fieldId);
 }
 
-const ROOT::Experimental::RNTupleInspector::RFieldTreeInfo &
-ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(std::string_view fieldName) const
+const ROOT::Experimental::RNTupleInspector::RFieldTreeInspector &
+ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(std::string_view fieldName) const
 {
    DescriptorId_t fieldId = fDescriptor->FindFieldId(fieldName);
 
@@ -335,7 +335,7 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(std::string_view fieldNam
       throw RException(R__FAIL("Could not find field `" + std::string(fieldName) + "`"));
    }
 
-   return GetFieldTreeInfo(fieldId);
+   return GetFieldTreeInspector(fieldId);
 }
 
 size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::regex &typeNamePattern,

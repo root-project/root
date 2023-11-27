@@ -94,21 +94,21 @@ public:
    };
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Holds field-level storage information.
+   /// \brief Provides field-level storage information.
    ///
-   /// The RFieldTreeInfo class provides storage information for a field **and** its subfields. This information is
-   /// either collected during the construction of the RNTupleInpector object, or can be accessed using
+   /// The RFieldTreeInspector class provides storage information for a field **and** its subfields. This information is
+   /// partly collected during the construction of the RNTupleInspector object, and can partly be accessed using
    /// the RFieldDescriptor that belongs to this field.
-   class RFieldTreeInfo {
+   class RFieldTreeInspector {
    private:
       const RFieldDescriptor &fRootFieldDescriptor;
       std::uint64_t fCompressedSize = 0;
       std::uint64_t fUncompressedSize = 0;
 
    public:
-      RFieldTreeInfo(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
+      RFieldTreeInspector(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
          : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
-      ~RFieldTreeInfo() = default;
+      ~RFieldTreeInspector() = default;
 
       const RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
       std::uint64_t GetCompressedSize() const { return fCompressedSize; }
@@ -124,7 +124,7 @@ private:
    std::uint64_t fUncompressedSize = 0;
 
    std::map<int, RColumnInspector> fColumnInfo;
-   std::map<int, RFieldTreeInfo> fFieldTreeInfo;
+   std::map<int, RFieldTreeInspector> fFieldTreeInfo;
 
    RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
 
@@ -142,10 +142,10 @@ private:
    /// \param[in] fieldId The ID of the field from which to start the recursive traversal. Typically this is the "zero
    /// ID", i.e. the logical parent of all top-level fields.
    ///
-   /// \return The RFieldTreeInfo for the provided field ID.
+   /// \return The RFieldTreeInspector for the provided field ID.
    ///
-   // / This method iscalled when the RNTupleInpector is initially created.
-   RFieldTreeInfo CollectFieldTreeInfo(DescriptorId_t fieldId);
+   /// This method is called when the RNTupleInspector is initially created.
+   RFieldTreeInspector CollectFieldTreeInfo(DescriptorId_t fieldId);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the columns that make up the given field, including its subfields.
@@ -323,20 +323,20 @@ public:
                                                  std::string_view histTitle = "");
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get storage information for a given (sub)field by ID.
+   /// \brief Get a storage information inspector for a given (sub)field by ID, including its subfields.
    ///
    /// \param[in] fieldId The ID of the (sub)field for which to get the information.
    ///
-   /// \return The storage information for the provided (sub)field.
-   const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
+   /// \return The storage information inspector for the provided (sub)field tree.
+   const RFieldTreeInspector &GetFieldTreeInspector(DescriptorId_t fieldId) const;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get storage information for a given (sub)field by name.
+   /// \brief Get a storage information inspector for a given (sub)field by name, including its subfields.
    ///
    /// \param[in] fieldName The name of the (sub)field for which to get the information.
    ///
-   /// \return The storage information for the provided (sub)field.
-   const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
+   /// \return The storage information inspector for the provided (sub)field tree.
+   const RFieldTreeInspector &GetFieldTreeInspector(std::string_view fieldName) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of fields of a given type or class present in the RNTuple.
