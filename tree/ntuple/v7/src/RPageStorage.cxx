@@ -386,21 +386,6 @@ ROOT::Experimental::Detail::RPageSink::SealPage(
    return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
 }
 
-void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::string &prefix)
-{
-   fMetrics = RNTupleMetrics(prefix);
-   fCounters = std::make_unique<RCounters>(RCounters{
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallWrite", "ns", "wall clock time spent writing"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallZip", "ns", "wall clock time spent compressing"),
-      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuWrite", "ns", "CPU time spent writing"),
-      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuZip", "ns",
-                                                                        "CPU time spent compressing")
-   });
-}
-
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::Detail::RPagePersistentSink::RPagePersistentSink(std::string_view name,
@@ -614,4 +599,19 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitDataset()
    Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
 
    CommitDatasetImpl(bufFooter.get(), szFooter);
+}
+
+void ROOT::Experimental::Detail::RPagePersistentSink::EnableDefaultMetrics(const std::string &prefix)
+{
+   fMetrics = RNTupleMetrics(prefix);
+   fCounters = std::make_unique<RCounters>(RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallWrite", "ns", "wall clock time spent writing"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallZip", "ns", "wall clock time spent compressing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuWrite", "ns", "CPU time spent writing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuZip", "ns",
+                                                                        "CPU time spent compressing")
+   });
 }

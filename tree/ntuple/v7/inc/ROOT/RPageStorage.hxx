@@ -182,18 +182,6 @@ inheriting from RPagePersistentSink.
 // clang-format on
 class RPageSink : public RPageStorage {
 protected:
-   /// Default I/O performance counters that get registered in fMetrics
-   struct RCounters {
-      RNTupleAtomicCounter &fNPageCommitted;
-      RNTupleAtomicCounter &fSzWritePayload;
-      RNTupleAtomicCounter &fSzZip;
-      RNTupleAtomicCounter &fTimeWallWrite;
-      RNTupleAtomicCounter &fTimeWallZip;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
-   };
-   std::unique_ptr<RCounters> fCounters;
-
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
@@ -211,14 +199,6 @@ protected:
    /// Seal a page using the provided buffer.
    static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element,
       int compressionSetting, void *buf);
-
-   /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
-   /// the counters registered in the internal RNTupleMetrics object.
-   /// This set of counters can be extended by a subclass by calling `fMetrics.MakeCounter<...>()`.
-   ///
-   /// A subclass using the default set of metrics is always responsible for updating the counters
-   /// appropriately, e.g. `fCounters->fNPageCommited.Inc()`
-   void EnableDefaultMetrics(const std::string &prefix);
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
@@ -291,6 +271,18 @@ private:
 protected:
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
+   /// Default I/O performance counters that get registered in fMetrics
+   struct RCounters {
+      RNTupleAtomicCounter &fNPageCommitted;
+      RNTupleAtomicCounter &fSzWritePayload;
+      RNTupleAtomicCounter &fSzZip;
+      RNTupleAtomicCounter &fTimeWallWrite;
+      RNTupleAtomicCounter &fTimeWallZip;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
+   };
+   std::unique_ptr<RCounters> fCounters;
+
    virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
 
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
@@ -309,6 +301,14 @@ protected:
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
    virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
+
+   /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
+   /// the counters registered in the internal RNTupleMetrics object.
+   /// This set of counters can be extended by a subclass by calling `fMetrics.MakeCounter<...>()`.
+   ///
+   /// A subclass using the default set of metrics is always responsible for updating the counters
+   /// appropriately, e.g. `fCounters->fNPageCommited.Inc()`
+   void EnableDefaultMetrics(const std::string &prefix);
 
 public:
    RPagePersistentSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
