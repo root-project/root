@@ -53,6 +53,23 @@ ROOT::Experimental::Detail::RPageSinkBuf::~RPageSinkBuf()
    WaitForAllTasks();
 }
 
+void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<RFieldBase *> &fields,
+                                                             NTupleSize_t firstEntry)
+{
+   auto connectField = [&](RFieldBase &f) {
+      // Field Zero would have id 0.
+      ++fNFields;
+      f.SetOnDiskId(fNFields);
+      f.ConnectPageSink(*this, firstEntry); // issues in turn one or several calls to `AddColumn()`
+   };
+   for (auto *f : fields) {
+      connectField(*f);
+      for (auto &descendant : *f) {
+         connectField(descendant);
+      }
+   }
+}
+
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model,
                                                           unsigned char * /* serializedHeader */,
                                                           std::uint32_t /* length */)
@@ -64,7 +81,8 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
 void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
                                                             NTupleSize_t firstEntry)
 {
-   RPageSink::UpdateSchema(changeset, firstEntry);
+   ConnectFields(changeset.fAddedFields, firstEntry);
+
    bool isIncremental = !fBufferedColumns.empty();
    fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
    if (!isIncremental)
