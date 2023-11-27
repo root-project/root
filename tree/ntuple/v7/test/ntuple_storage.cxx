@@ -14,7 +14,13 @@ public:
 protected:
    RPageAllocatorHeap fPageAllocator{};
 
-   void CreateImpl(const RNTupleModel &, unsigned char *, std::uint32_t) final {}
+   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Detail::RColumn &) final
+   {
+      return {};
+   }
+
+   void Create(RNTupleModel &) final {}
+   void UpdateSchema(const ROOT::Experimental::Detail::RNTupleModelChangeset &, NTupleSize_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
    {
