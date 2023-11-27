@@ -67,12 +67,12 @@ std::cout << "The compression factor is " << inspector->GetCompressionFactor()
 class RNTupleInspector {
 public:
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Holds column-level storage information.
+   /// \brief Provides column-level storage information.
    ///
-   /// The RColumnInfo class provides storage information for an individual column. This information is either
-   /// collected during the construction of the RNTupleInpector object, or can be accessed using
-   /// the RColumnDescriptor that belongs to this column.
-   class RColumnInfo {
+   /// The RColumnInspector class provides storage information for an individual column. This information is partly
+   /// collected during the construction of the RNTupleInspector object, and can partly be accessed using the
+   /// RColumnInspector that belongs to this field.
+   class RColumnInspector {
    private:
       const RColumnDescriptor &fColumnDescriptor;
       std::uint64_t fCompressedSize = 0;
@@ -80,10 +80,10 @@ public:
       std::uint64_t fNElements = 0;
 
    public:
-      RColumnInfo(const RColumnDescriptor &colDesc, std::uint64_t onDiskSize, std::uint32_t elemSize,
-                  std::uint64_t nElems)
+      RColumnInspector(const RColumnDescriptor &colDesc, std::uint64_t onDiskSize, std::uint32_t elemSize,
+                       std::uint64_t nElems)
          : fColumnDescriptor(colDesc), fCompressedSize(onDiskSize), fElementSize(elemSize), fNElements(nElems){};
-      ~RColumnInfo() = default;
+      ~RColumnInspector() = default;
 
       const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
       std::uint64_t GetCompressedSize() const { return fCompressedSize; }
@@ -123,7 +123,7 @@ private:
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
-   std::map<int, RColumnInfo> fColumnInfo;
+   std::map<int, RColumnInspector> fColumnInfo;
    std::map<int, RFieldTreeInfo> fFieldTreeInfo;
 
    RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
@@ -244,7 +244,7 @@ public:
    /// \param[in] physicalColumnId The physical ID of the column for which to get the information.
    ///
    /// \return The storage information for the provided column.
-   const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
+   const RColumnInspector &GetColumnInspector(DescriptorId_t physicalColumnId) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of columns of a given type present in the RNTuple.
@@ -280,7 +280,7 @@ public:
    /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
    /// inspector->PrintColumnTypeInfo();
    /// ~~~
-   /// Ouput:
+   /// Output:
    /// ~~~
    ///  column type    | count   | # elements      | compressed bytes  | uncompressed bytes
    /// ----------------|---------|-----------------|-------------------|--------------------
@@ -298,7 +298,7 @@ public:
    /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
    /// inspector->PrintColumnTypeInfo();
    /// ~~~
-   /// Ouput:
+   /// Output:
    /// ~~~
    /// columnType,count,nElements,compressedSize,uncompressedSize
    /// SplitIndex64,2,150,72,1200
