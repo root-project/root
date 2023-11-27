@@ -30,17 +30,3 @@ endif()
 if(CTEST_BUILD_NAME MATCHES fst)
   list(APPEND CTEST_CUSTOM_TESTS_IGNORE roottest-python-JsMVA-NewMethods)
 endif()
-
-if(CTEST_BUILD_NAME MATCHES clang39)  # ABI mismatch between our clang and external clang
-  list(APPEND CTEST_CUSTOM_TESTS_IGNORE
-              tutorial-tmva-TMVAClassification
-              tutorial-tmva-TMVAMulticlass
-              tutorial-tmva-TMVAClassificationApplication
-              tutorial-tmva-TMVAClassificationCategoryApplication
-              tutorial-tmva-TMVARegressionApplication
-              tutorial-tmva-TMVAMulticlassApplication
-              tutorial-tmva-TMVARegression
-              roottest-cling-stl-map-stringMap
-              roottest-root-meta-genreflex-TClass-execbasic
-              roottest-cling-stl-map-badstringMap)
-endif()
