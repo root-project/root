@@ -129,6 +129,9 @@ private:
    std::unique_ptr<RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
+   DescriptorId_t fNFields = 0;
+
+   void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry);
 
 protected:
    void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
