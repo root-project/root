@@ -969,8 +969,20 @@ Published on October 13, 2023
 * [[#13410](https://github.com/root-project/root/issues/13410)] - cppyy crash involving template overload of operator()
 
 
+## Release 6.28/10
+
+Published on November 27, 2023
+
+### Bugs and Issues fixed in this release
+* [[#13834](https://github.com/root-project/root/issues/13834)] - Can't open TBrowser locally after upgrading macos
+* [[#13851](https://github.com/root-project/root/issues/13851)] - Test crash with GCC 13 and C++20
+* [[#13864](https://github.com/root-project/root/issues/13864)] - [PyROOT] Python 3.12: warnings during compilation and crash
+
+This release also addresses a security issue.
+More details will follow.
+
 ## HEAD of the v6-28-00-patches branch
 
-These changes will be part of a future 6.28/10.
+These changes will be part of a future 6.28/12.
 
 - None so far.
