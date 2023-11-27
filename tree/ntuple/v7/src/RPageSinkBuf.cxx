@@ -100,8 +100,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelCh
    fInnerSink->UpdateSchema(innerChangeset, firstEntry);
 }
 
-ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
    RPage bufPage = ReservePage(columnHandle, page.GetNElements());
@@ -114,7 +113,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // CommitCluster().
    auto &zipItem = fBufferedColumns.at(columnHandle.fPhysicalId).BufferPage(columnHandle, bufPage);
    if (!fTaskScheduler) {
-      return RNTupleLocator{};
+      return;
    }
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
@@ -127,22 +126,20 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
                             GetWriteOptions().GetCompression(), zipItem.fBuf.get());
       zipItem.fSealedPage = &sealedPage;
    });
-
-   // we're feeding bad locators to fOpenPageRanges but it should not matter
-   // because they never get written out
-   return RNTupleLocator{};
 }
 
-ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(DescriptorId_t /*physicalColumnId*/,
-                                                               const RSealedPage & /*sealedPage*/)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPage(DescriptorId_t /*physicalColumnId*/,
+                                                                const RSealedPage & /*sealedPage*/)
 {
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
-   return RNTupleLocator{};
 }
 
-std::uint64_t
-ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> /*ranges*/)
+{
+   throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
+}
+
+std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
    WaitForAllTasks();
 
@@ -186,17 +183,12 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
    return fInnerSink->CommitCluster(nEntries);
 }
 
-ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroupImpl(unsigned char * /* serializedPageList */,
-                                                                 std::uint32_t /* length */)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroup()
 {
    fInnerSink->CommitClusterGroup();
-   // We're not using that locator any further, so it is safe to return a dummy one
-   return RNTupleLocator{};
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl(unsigned char * /* serializedFooter */,
-                                                                 std::uint32_t /* length */)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitDataset()
 {
    fInnerSink->CommitDataset();
 }

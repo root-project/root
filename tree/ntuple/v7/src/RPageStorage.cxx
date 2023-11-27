@@ -441,118 +441,6 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fDescriptorBuilder.BeginHeaderExtension();
 }
 
-void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
-{
-   fOpenColumnRanges.at(columnHandle.fPhysicalId).fNElements += page.GetNElements();
-
-   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   pageInfo.fNElements = page.GetNElements();
-   pageInfo.fLocator = CommitPageImpl(columnHandle, page);
-   fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
-}
-
-void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
-   ROOT::Experimental::DescriptorId_t physicalColumnId,
-   const ROOT::Experimental::Detail::RPageStorage::RSealedPage &sealedPage)
-{
-   fOpenColumnRanges.at(physicalColumnId).fNElements += sealedPage.fNElements;
-
-   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   pageInfo.fNElements = sealedPage.fNElements;
-   pageInfo.fLocator = CommitSealedPageImpl(physicalColumnId, sealedPage);
-   fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
-}
-
-std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Detail::RPageSink::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
-{
-   std::vector<ROOT::Experimental::RNTupleLocator> locators;
-   for (auto &range : ranges) {
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt)
-         locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
-   }
-   return locators;
-}
-
-void ROOT::Experimental::Detail::RPageSink::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges)
-{
-   auto locators = CommitSealedPageVImpl(ranges);
-   unsigned i = 0;
-
-   for (auto &range : ranges) {
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         fOpenColumnRanges.at(range.fPhysicalColumnId).fNElements += sealedPageIt->fNElements;
-
-         RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-         pageInfo.fNElements = sealedPageIt->fNElements;
-         pageInfo.fLocator = locators[i++];
-         fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
-      }
-   }
-}
-
-std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
-{
-   auto nbytes = CommitClusterImpl(nEntries);
-
-   R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
-   RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
-                                            nEntriesInCluster);
-   for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
-      RClusterDescriptor::RPageRange fullRange;
-      fullRange.fPhysicalColumnId = i;
-      std::swap(fullRange, fOpenPageRanges[i]);
-      clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
-                                       fOpenColumnRanges[i].fCompressionSettings, fullRange);
-      fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
-      fOpenColumnRanges[i].fNElements = 0;
-   }
-   fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
-   fPrevClusterNEntries = nEntries;
-   return nbytes;
-}
-
-void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
-{
-   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-
-   const auto nClusters = descriptor.GetNClusters();
-   std::vector<DescriptorId_t> physClusterIDs;
-   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
-      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
-   }
-
-   auto szPageList =
-      Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
-   auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
-   Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
-                                                    fSerializationContext);
-
-   const auto clusterGroupId = descriptor.GetNClusterGroups();
-   const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
-   RClusterGroupDescriptorBuilder cgBuilder;
-   cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
-   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
-      cgBuilder.AddCluster(i);
-   }
-   fDescriptorBuilder.AddClusterGroup(std::move(cgBuilder));
-   fSerializationContext.MapClusterGroupId(clusterGroupId);
-
-   fNextClusterInGroup = nClusters;
-}
-
-void ROOT::Experimental::Detail::RPageSink::CommitDataset()
-{
-   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-
-   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
-   auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
-   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
-
-   CommitDatasetImpl(bufFooter.get(), szFooter);
-}
-
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
 ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
    const RColumnElementBase &element, int compressionSetting, void *buf)
@@ -614,3 +502,116 @@ ROOT::Experimental::Detail::RPagePersistentSink::RPagePersistentSink(std::string
 }
 
 ROOT::Experimental::Detail::RPagePersistentSink::~RPagePersistentSink() {}
+
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+{
+   fOpenColumnRanges.at(columnHandle.fPhysicalId).fNElements += page.GetNElements();
+
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   pageInfo.fNElements = page.GetNElements();
+   pageInfo.fLocator = CommitPageImpl(columnHandle, page);
+   fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
+}
+
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitSealedPage(
+   ROOT::Experimental::DescriptorId_t physicalColumnId,
+   const ROOT::Experimental::Detail::RPageStorage::RSealedPage &sealedPage)
+{
+   fOpenColumnRanges.at(physicalColumnId).fNElements += sealedPage.fNElements;
+
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   pageInfo.fNElements = sealedPage.fNElements;
+   pageInfo.fLocator = CommitSealedPageImpl(physicalColumnId, sealedPage);
+   fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
+}
+
+std::vector<ROOT::Experimental::RNTupleLocator>
+ROOT::Experimental::Detail::RPagePersistentSink::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+{
+   std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   for (auto &range : ranges) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt)
+         locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
+   }
+   return locators;
+}
+
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitSealedPageV(
+   std::span<RPageStorage::RSealedPageGroup> ranges)
+{
+   auto locators = CommitSealedPageVImpl(ranges);
+   unsigned i = 0;
+
+   for (auto &range : ranges) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         fOpenColumnRanges.at(range.fPhysicalColumnId).fNElements += sealedPageIt->fNElements;
+
+         RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+         pageInfo.fNElements = sealedPageIt->fNElements;
+         pageInfo.fLocator = locators[i++];
+         fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
+      }
+   }
+}
+
+std::uint64_t ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+{
+   auto nbytes = CommitClusterImpl(nEntries);
+
+   R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
+   auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
+   RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
+                                            nEntriesInCluster);
+   for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+      RClusterDescriptor::RPageRange fullRange;
+      fullRange.fPhysicalColumnId = i;
+      std::swap(fullRange, fOpenPageRanges[i]);
+      clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                       fOpenColumnRanges[i].fCompressionSettings, fullRange);
+      fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
+      fOpenColumnRanges[i].fNElements = 0;
+   }
+   fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+   fPrevClusterNEntries = nEntries;
+   return nbytes;
+}
+
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitClusterGroup()
+{
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   const auto nClusters = descriptor.GetNClusters();
+   std::vector<DescriptorId_t> physClusterIDs;
+   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
+   }
+
+   auto szPageList =
+      Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
+   auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
+   Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
+                                                    fSerializationContext);
+
+   const auto clusterGroupId = descriptor.GetNClusterGroups();
+   const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
+   RClusterGroupDescriptorBuilder cgBuilder;
+   cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
+   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+      cgBuilder.AddCluster(i);
+   }
+   fDescriptorBuilder.AddClusterGroup(std::move(cgBuilder));
+   fSerializationContext.MapClusterGroupId(clusterGroupId);
+
+   fNextClusterInGroup = nClusters;
+}
+
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitDataset()
+{
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
+   auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
+   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
+
+   CommitDatasetImpl(bufFooter.get(), szFooter);
+}
