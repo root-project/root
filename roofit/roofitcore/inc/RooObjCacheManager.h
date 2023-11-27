@@ -55,7 +55,7 @@ protected:
   bool _allowOptimize ;
   bool _optCacheModeSeen  ;              ///<!
 
-  RooArgSet* _optCacheObservables ;        ///<! current optCacheObservables
+  RooArgSet* _optCacheObservables = nullptr; ///<! current optCacheObservables
 
   static bool _clearObsList ; ///< Clear obslist on sterilize?
 

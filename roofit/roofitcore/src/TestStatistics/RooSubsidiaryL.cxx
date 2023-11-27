@@ -15,7 +15,7 @@
 \class RooSubsidiaryL
 \ingroup Roofitcore
 
-\brief RooSubsidiaryL calculates the sum of the -(log) likelihoods of a set of RooAbsPdf objects that represent
+\brief Calculates the sum of the -(log) likelihoods of a set of RooAbsPdf objects that represent
 subsidiary or constraint functions.
 
 This class is used to gather all subsidiary PDF terms from the component PDFs of RooSumL likelihoods and calculate the

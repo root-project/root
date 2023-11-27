@@ -18,7 +18,7 @@
 \class RooMinimizer
 \ingroup Roofitcore
 
-RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
+Wrapper class around ROOT::Fit:Fitter that
 provides a seamless interface between the minimizer functionality
 and the native RooFit interface.
 By default the Minimizer is MINUIT for classic mode and MINUIT2

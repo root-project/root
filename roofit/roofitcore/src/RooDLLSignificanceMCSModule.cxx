@@ -19,7 +19,7 @@
 \class RooDLLSignificanceMCSModule
 \ingroup Roofitcore
 
-RooDLLSignificanceMCSModule is an add-on modules to RooMCStudy that
+Add-on module to RooMCStudy that
 calculates the significance of a signal by comparing the likelihood of
 a fit fit with a given parameter floating with a fit with that given
 parameter fixed to a nominal value (usually zero). The difference in

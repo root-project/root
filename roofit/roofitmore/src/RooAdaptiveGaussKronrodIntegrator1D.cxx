@@ -19,7 +19,7 @@
 \class RooAdaptiveGaussKronrodIntegrator1D
 \ingroup Roofitcore
 
-RooAdaptiveGaussKronrodIntegrator1D implements the Gauss-Kronrod integration algorithm.
+Implements the Gauss-Kronrod integration algorithm.
 
 An adaptive Gaussian quadrature method for numerical integration in
 which error is estimated based on evaluation at special points
@@ -59,7 +59,6 @@ using namespace std ;
 
 
 ClassImp(RooAdaptiveGaussKronrodIntegrator1D);
-;
 
 // --- From GSL_MATH.h -------------------------------------------
 struct gsl_function_struct

@@ -19,7 +19,7 @@
 \class RooGaussKronrodIntegrator1D
 \ingroup Roofitcore
 
-RooGaussKronrodIntegrator1D implements the Gauss-Kronrod integration algorithm.
+Implements the Gauss-Kronrod integration algorithm.
 
 An Gaussian quadrature method for numerical integration in which
 error is estimation based on evaluation at special points known as

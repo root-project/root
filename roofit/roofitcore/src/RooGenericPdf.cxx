@@ -19,8 +19,8 @@
 \class RooGenericPdf
 \ingroup Roofitcore
 
-RooGenericPdf is a concrete implementation of a probability density function,
-which takes a RooArgList of servers and a C++ expression string defining how
+Implementation of a probability density function
+that takes a RooArgList of servers and a C++ expression string defining how
 its value should be calculated from the given list of servers.
 A fully numerical integration is automatically performed to normalize the given
 expression. RooGenericPdf uses a RooFormula object to perform the expression evaluation.

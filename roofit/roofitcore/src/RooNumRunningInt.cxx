@@ -14,7 +14,7 @@
 \class RooNumRunningInt
 \ingroup Roofitcore
 
-Class RooNumRunningInt is an implementation of RooAbsCachedReal that represents a running integral
+Implementation of RooAbsCachedReal that represents a running integral
 \f[ RI(f(x)) = \int_{xlow}^{x} f(x') dx'                 \f]
 that is calculated internally with a numeric technique: The input function
 is first sampled into a histogram, which is then numerically integrated.

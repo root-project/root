@@ -14,8 +14,8 @@
 \class RooNumCdf
 \ingroup Roofitcore
 
-Class RooNumCdf is an implementation of RooNumRunningInt specialized
-to calculate cumulative distribution functions from p.d.f.s. The main
+Implementation of RooNumRunningInt
+that calculates cumulative distribution functions from p.d.f.s. The main
 difference between RooNumCdf and RooNumRunningInt is that this class
 imposes special end-point conditions on the interpolated histogram
 that represents the output so that the value at the lower bound is

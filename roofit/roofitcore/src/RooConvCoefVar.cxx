@@ -19,7 +19,7 @@
 \class RooConvCoefVar
 \ingroup Roofitcore
 
-RooConvCoefVar is an auxiliary class that represents the coefficient
+Auxiliary class that represents the coefficient
 of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object
 to be able to interface these coefficient terms with the generic
 RooRealIntegral integration mechanism.
