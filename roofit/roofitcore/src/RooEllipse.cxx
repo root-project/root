@@ -71,7 +71,14 @@ RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double
     setYAxisLimits(x2-s2,x2+s2);
   }
   else {
-    double r,psi,phi,u1,u2,xx1,xx2,dphi(2*TMath::Pi()/points);
+    double r;
+    double psi;
+    double phi;
+    double u1;
+    double u2;
+    double xx1;
+    double xx2;
+    double dphi(2 * TMath::Pi() / points);
     for(Int_t index= 0; index < points; index++) {
       phi= index*dphi;
       // adjust the angular spacing of the points for the aspect ratio

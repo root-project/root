@@ -709,7 +709,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    //          t(mu), t_tilde(mu) for the 2-sided
    //          q(mu) and q_tilde(mu) for the one -sided test statistics
 
-   double pnull = -1, palt = -1;
+   double pnull = -1;
+   double palt = -1;
 
    // asymptotic formula for pnull (for only one POI)
    // From fact that qmu is a chi2 with ndf=1

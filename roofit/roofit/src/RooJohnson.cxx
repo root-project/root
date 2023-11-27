@@ -147,7 +147,8 @@ double RooJohnson::analyticalIntegral(Int_t code, const char* rangeName) const
   double min = -1.E300;
   double max = 1.E300;
   if (kMass <= code && code <= kLambda) {
-    double argMin, argMax;
+    double argMin;
+    double argMax;
 
     if (code == kMass) {
       argMin = (_mass.min(rangeName)-_mu)/_lambda;

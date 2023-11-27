@@ -1357,7 +1357,8 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
       double val_pre =
          val_guess -
          10 * precision * sigma_guess; // this is just to set value st. guarantees will do at least one iteration
-      bool lastOverflow = false, lastUnderflow = false;
+      bool lastOverflow = false;
+      bool lastUnderflow = false;
       while (std::abs(val_pre - val_guess) > precision * sigma_guess) {
          val_pre = val_guess;
          if (val_guess > 0 && par->getMax() < val_guess)
@@ -1623,7 +1624,8 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
       std::vector<int> expSig = {-2, -1, 0, 1, 2};
       if (std::isnan(altVal))
          expSig.clear();
-      std::map<int, TGraphErrors> exp_pcls, exp_cls;
+      std::map<int, TGraphErrors> exp_pcls;
+      std::map<int, TGraphErrors> exp_cls;
       for (auto &s : expSig) {
          exp_pcls[s].SetNameTitle(TString::Format("exp%d_p%s", s, sCL),
                                   TString::Format("Expected (%d#sigma) p_{%s};%s", s, sCL, mu->GetTitle()));

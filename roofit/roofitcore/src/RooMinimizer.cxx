@@ -591,7 +591,8 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
       return nullptr;
    }
 
-   TString name, title;
+   TString name;
+   TString title;
    name = userName ? userName : Form("%s", _fcn->getFunctionName().c_str());
    title = userTitle ? userTitle : Form("%s", _fcn->getFunctionTitle().c_str());
    auto fitRes = std::make_unique<RooFitResult>(name, title);

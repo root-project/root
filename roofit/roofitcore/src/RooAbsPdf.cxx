@@ -2458,7 +2458,8 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
     if (frame->getFitRangeNEvt() && stype==Relative) {
 
-      bool hasCustomRange(false), adjustNorm(false) ;
+      bool hasCustomRange(false);
+      bool adjustNorm(false);
 
       std::vector<pair<double,double> > rangeLim;
 
@@ -2771,7 +2772,8 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showCo
 
   // calculate the box's size, adjusting for constant parameters
 
-  double ymin(ymax), dy(0.06);
+  double ymin(ymax);
+  double dy(0.06);
   for (const auto param : params) {
     auto var = static_cast<RooRealVar*>(param);
     if(showConstants || !var->isConstant()) ymin-= dy;

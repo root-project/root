@@ -324,8 +324,10 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
    // Now select the couple of extremes which have the lower bin content diff
    std::map<int,int>::iterator it;
-   int a,b;
-   double left_bin_center(0.),right_bin_center(0.);
+   int a;
+   int b;
+   double left_bin_center(0.);
+   double right_bin_center(0.);
    double diff=10e40;
    double current_diff;
    for (it = extremes_map.begin();it != extremes_map.end();++it){

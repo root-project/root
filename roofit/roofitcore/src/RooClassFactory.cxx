@@ -126,7 +126,8 @@ bool makeAndCompileClass(std::string const &baseClassName, std::string const &na
 
    infosVec.emplace_back(info);
 
-   std::string realArgNames, catArgNames;
+   std::string realArgNames;
+   std::string catArgNames;
    for (RooAbsArg *arg : vars) {
       if (dynamic_cast<RooAbsReal *>(arg)) {
          if (!realArgNames.empty())

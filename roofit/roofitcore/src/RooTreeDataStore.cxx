@@ -619,7 +619,8 @@ double RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
     // We have a weight array, use that info
 
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    double lo = 0, hi =0;
+    double lo = 0;
+    double hi = 0;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
 
@@ -668,7 +669,8 @@ void RooTreeDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorType
       }
 
       // Otherwise Calculate poisson errors
-      double ym,yp ;
+      double ym;
+      double yp;
       RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
       lo = weight()-ym ;
       hi = yp-weight() ;
@@ -887,7 +889,8 @@ double RooTreeDataStore::sumEntries() const
 {
   if (_wgtVar) {
 
-    double sum(0), carry(0);
+    double sum(0);
+    double carry(0);
     Int_t nevt = numEntries() ;
     for (int i=0 ; i<nevt ; i++) {
       get(i) ;
@@ -901,7 +904,8 @@ double RooTreeDataStore::sumEntries() const
 
   } else if (_extWgtArray) {
 
-    double sum(0) , carry(0);
+    double sum(0);
+    double carry(0);
     Int_t nevt = numEntries() ;
     for (int i=0 ; i<nevt ; i++) {
       // Kahan's algorithm for summing to avoid loss of precision
@@ -1142,7 +1146,8 @@ void RooTreeDataStore::Draw(Option_t* option)
 void RooTreeDataStore::Streamer(TBuffer &R__b)
 {
   if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
+    UInt_t R__s;
+    UInt_t R__c;
     const Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
     R__b.ReadClassBuffer(RooTreeDataStore::Class(), this, R__v, R__s, R__c);

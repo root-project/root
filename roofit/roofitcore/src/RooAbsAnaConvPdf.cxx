@@ -476,7 +476,10 @@ double RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       return getVal(normSet);
 
    // Unpack master code
-   RooArgSet *intCoefSet, *intConvSet, *normCoefSet, *normConvSet;
+   RooArgSet *intCoefSet;
+   RooArgSet *intConvSet;
+   RooArgSet *normCoefSet;
+   RooArgSet *normConvSet;
    _codeReg.retrieve(code - 1, intCoefSet, intConvSet, normCoefSet, normConvSet);
 
    Int_t index(0);

@@ -162,7 +162,8 @@ void ProcessTimer::write_file()
 void ProcessTimer::add_metadata(json data)
 {
    if (write_interval) {
-      json j, meta;
+      json j;
+      json meta;
       meta.push_back(std::move(data));
       j["metadata"] = meta;
       std::ofstream file("p_" + to_string((long)ProcessTimer::get_process()) + ".json", ios::app);
@@ -176,7 +177,8 @@ void ProcessTimer::set_write_interval(int write_int)
 {
    write_interval = write_int;
    if (write_interval) {
-      json j, meta;
+      json j;
+      json meta;
       meta["write_interval"] = true;
       j["metadata"] = meta;
       std::ofstream file("p_" + to_string((long)ProcessTimer::get_process()) + ".json", ios::app);

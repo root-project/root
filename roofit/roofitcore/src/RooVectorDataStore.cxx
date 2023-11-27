@@ -394,7 +394,8 @@ double RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
     // We have a weight array, use that info
 
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    double lo = 0, hi = 0 ;
+    double lo = 0;
+    double hi = 0;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
 
@@ -447,7 +448,8 @@ void RooVectorDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorTy
 
       // Otherwise Calculate poisson errors
       wgt = weight();
-      double ym,yp ;
+      double ym;
+      double yp;
       RooHistError::instance().getPoissonInterval(Int_t(wgt+0.5),ym,yp,1);
       lo = wgt-ym;
       hi = yp-wgt;

@@ -101,7 +101,8 @@ TGraphErrors* HypoTestInverterPlot::MakePlot(Option_t * opt)
    std::vector<double> yErrArray;
 
    for (int i=0; i<nEntries; i++) {
-      double CLVal = 0., CLErr = 0.;
+      double CLVal = 0.;
+      double CLErr = 0.;
       if (type == Default) {
          CLVal = fResults->GetYValue(index[i]);
          CLErr = fResults->GetYError(index[i]);

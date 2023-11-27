@@ -134,7 +134,8 @@ namespace RooStats {
 
    RooAbsPdf * MakeNuisancePdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name) {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
-      RooArgList obsTerms, constraints;
+      RooArgList obsTerms;
+      RooArgList constraints;
       FactorizePdf(observables, pdf, obsTerms, constraints);
       if(constraints.empty()) {
          oocoutW(nullptr, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;

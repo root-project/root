@@ -236,11 +236,15 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
 
 
   // loop over iterations for this step
-  double cum_int(0),cum_sig(0);
+  double cum_int(0);
+  double cum_sig(0);
   _it_start = _it_num;
   _chisq = 0.0;
   for (UInt_t it = 0; it < iterations; it++) {
-    double intgrl(0),intgrl_sq(0),sig(0),jacbin(_jac);
+    double intgrl(0);
+    double intgrl_sq(0);
+    double sig(0);
+    double jacbin(_jac);
 
     _it_num = _it_start + it;
 
@@ -250,7 +254,8 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     // loop over grid boxes
     _grid.firstBox(box.data());
     do {
-      double m(0),q(0);
+      double m(0);
+      double q(0);
       // loop over integrand evaluations within this grid box
       for(UInt_t k = 0; k < _calls_per_box; k++) {
         // generate a random point in this box

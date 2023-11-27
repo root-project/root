@@ -204,13 +204,15 @@ bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*ve
      clearTypes() ;
      _defCat = defineState(defCatName.Data()).second;
 
-     TString token,errorPrefix("RooMappedCategory::readFromStream(") ;
+     TString token;
+     TString errorPrefix("RooMappedCategory::readFromStream(");
      errorPrefix.Append(GetName()) ;
      errorPrefix.Append(")") ;
      RooStreamParser parser(is,errorPrefix) ;
      parser.setPunctuation(":,") ;
 
-     TString destKey,srcKey ;
+     TString destKey;
+     TString srcKey;
      bool readToken(true) ;
 
     // Loop over definition sequences

@@ -43,12 +43,17 @@ void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
    int i = 0;
    for (auto *var : static_range_cast<RooRealVar *>(xPrime)) {
       if (i == j) {
-        double val = var->getVal(), max = var->getMax(), min = var->getMin(), len = max - min;
-        val += RooRandom::gaussian() * len * fDivisor;
-        while (val > max) val -= len;
-        while (val < min) val += len;
-        var->setVal(val);
-        //std::cout << "Proposing a step along " << var->GetName() << std::endl;
+         double val = var->getVal();
+         double max = var->getMax();
+         double min = var->getMin();
+         double len = max - min;
+         val += RooRandom::gaussian() * len * fDivisor;
+         while (val > max)
+            val -= len;
+         while (val < min)
+            val += len;
+         var->setVal(val);
+         // std::cout << "Proposing a step along " << var->GetName() << std::endl;
       }
       ++i;
    }

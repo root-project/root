@@ -302,8 +302,8 @@ void RooTrace::dump3(ostream& os, bool sinceMarked)
 {
   os << "List of RooFit objects allocated while trace active:" << endl ;
 
-
-  Int_t i, nMarked(0) ;
+  Int_t i;
+  Int_t nMarked(0);
   for(i=0 ; i<_list.GetSize() ; i++) {
     if (!sinceMarked || _markList.IndexOf(_list.At(i)) == -1) {
       os << hex << setw(10) << _list.At(i) << dec << " : " << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << endl ;

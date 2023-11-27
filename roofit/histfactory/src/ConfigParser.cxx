@@ -37,7 +37,8 @@ namespace {
 
     void AddSubStrings( vector<std::string> & vs, std::string s){
       const std::string delims("\\ ");
-      std::string::size_type begIdx, endIdx;
+      std::string::size_type begIdx;
+      std::string::size_type endIdx;
       begIdx=s.find_first_not_of(delims);
       while(begIdx!=string::npos){
    endIdx=s.find_first_of(delims, begIdx);
@@ -54,7 +55,8 @@ namespace {
       std::vector<std::string> child_vec;
 
       const std::string delims("\\ ");
-      std::string::size_type begIdx, endIdx;
+      std::string::size_type begIdx;
+      std::string::size_type endIdx;
       begIdx=str.find_first_not_of(delims);
       while(begIdx!=string::npos){
    endIdx=str.find_first_of(delims, begIdx);
@@ -360,8 +362,8 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
    TXMLAttr *curAttr = nullptr;
    while ((/**/ curAttr = dynamic_cast<TXMLAttr *>(attribIt()) /**/) != nullptr) {
       // curAttr is guaranteed non-null above
-      const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : ""),
-         curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
+      const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : "");
+      const std::string curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
       if (curAttrName.empty()) {
          cxcoutEHF << "Found XML attribute in Measurement with no name.\n";
          // ADD Output Here
@@ -389,9 +391,9 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
    // Then, get the properties of the children nodes
    TXMLNode *child = node->GetChildren();
    while (child != nullptr) {
-      const std::string childName(child->GetName() ? child->GetName() : ""),
-         childNodeName(child->GetNodeName() ? child->GetNodeName() : ""),
-         childText(child->GetText() ? child->GetText() : "");
+      const std::string childName(child->GetName() ? child->GetName() : "");
+      const std::string childNodeName(child->GetNodeName() ? child->GetNodeName() : "");
+      const std::string childText(child->GetText() ? child->GetText() : "");
       if (childNodeName.empty()) {
          cxcoutEHF << "Found XML child node of Measurement with no name\n";
          throw hf_exc();
@@ -445,8 +447,8 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
          attribIt = child->GetAttributes();
          curAttr = nullptr;
          while ((/**/ curAttr = dynamic_cast<TXMLAttr *>(attribIt()) /**/) != nullptr) {
-            const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : ""),
-               curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
+            const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : "");
+            const std::string curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
             if (curAttrName.empty()) {
                cxcoutEHF << "Error: Found tag attribute with no name in ConstraintTerm\n";
                throw hf_exc();
@@ -485,8 +487,8 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
          attribIt = child->GetAttributes();
          curAttr = nullptr;
          while ((/**/ curAttr = dynamic_cast<TXMLAttr *>(attribIt()) /**/) != nullptr) {
-            const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : ""),
-               curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
+            const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : "");
+            const std::string curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
             if (curAttrName.empty()) {
                cxcoutEHF << "Error: Found tag attribute with no name in ConstraintTerm\n";
                throw hf_exc();

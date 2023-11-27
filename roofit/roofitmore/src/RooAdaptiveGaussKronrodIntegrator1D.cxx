@@ -328,7 +328,8 @@ double RooAdaptiveGaussKronrodIntegrator1D::integral(const double *yvec)
   F.params = this ;
 
   // Return values
-  double result, error;
+  double result;
+  double error;
 
   // Call GSL implementation of integeator
   switch(_domainType) {
@@ -535,7 +536,9 @@ void qpsrt (gsl_integration_workspace * workspace)
 
   double errmax ;
   double errmin ;
-  int i, k, top;
+  int i;
+  int k;
+  int top;
 
   size_t i_nrmax = workspace->nrmax;
   size_t i_maxerr = order[i_nrmax] ;
@@ -804,11 +807,17 @@ qag (const gsl_function * f,
      double *result, double *abserr,
      gsl_integration_rule * q)
 {
-  double area, errsum;
-  double result0, abserr0, resabs0, resasc0;
+  double area;
+  double errsum;
+  double result0;
+  double abserr0;
+  double resabs0;
+  double resasc0;
   double tolerance;
   size_t iteration = 0;
-  int roundoff_type1 = 0, roundoff_type2 = 0, error_type = 0;
+  int roundoff_type1 = 0;
+  int roundoff_type2 = 0;
+  int error_type = 0;
 
   double round_off;
 
@@ -874,12 +883,24 @@ qag (const gsl_function * f,
 
   do
     {
-      double a1, b1, a2, b2;
-      double a_i, b_i, r_i, e_i;
-      double area1 = 0, area2 = 0, area12 = 0;
-      double error1 = 0, error2 = 0, error12 = 0;
-      double resasc1, resasc2;
-      double resabs1, resabs2;
+      double a1;
+      double b1;
+      double a2;
+      double b2;
+      double a_i;
+      double b_i;
+      double r_i;
+      double e_i;
+      double area1 = 0;
+      double area2 = 0;
+      double area12 = 0;
+      double error1 = 0;
+      double error2 = 0;
+      double error12 = 0;
+      double resasc1;
+      double resasc2;
+      double resabs1;
+      double resabs2;
 
       /* Bisect the subinterval with the largest error estimate */
 
@@ -1020,7 +1041,8 @@ gsl_integration_qk (const int n,
 
   double result_abs = std::abs(result_kronrod);
   double result_asc = 0;
-  double mean = 0, err = 0;
+  double mean = 0;
+  double err = 0;
 
   int j;
 
@@ -1123,7 +1145,8 @@ gsl_integration_qk15 (const gsl_function * f, double a, double b,
       double *result, double *abserr,
       double *resabs, double *resasc)
 {
-  double fv1[8], fv2[8];
+  double fv1[8];
+  double fv2[8];
   // coverity[UNINIT_CTOR]
   gsl_integration_qk (8, xgkA, wgA, wgkA, fv1, fv2, f, a, b, result, abserr, resabs, resasc);
 }
@@ -1180,7 +1203,8 @@ gsl_integration_qk21 (const gsl_function * f, double a, double b,
                       double *result, double *abserr,
                       double *resabs, double *resasc)
 {
-  double fv1[11], fv2[11];
+  double fv1[11];
+  double fv2[11];
   // coverity[UNINIT_CTOR]
   gsl_integration_qk (11, xgkB, wgB, wgkB, fv1, fv2, f, a, b, result, abserr, resabs, resasc);
 }
@@ -1249,7 +1273,8 @@ gsl_integration_qk31 (const gsl_function * f, double a, double b,
       double *result, double *abserr,
       double *resabs, double *resasc)
 {
-  double fv1[16], fv2[16];
+  double fv1[16];
+  double fv2[16];
   // coverity[UNINIT_CTOR]
   gsl_integration_qk (16, xgkC, wgC, wgkC, fv1, fv2, f, a, b, result, abserr, resabs, resasc);
 }
@@ -1330,7 +1355,8 @@ gsl_integration_qk41 (const gsl_function * f, double a, double b,
                       double *result, double *abserr,
                       double *resabs, double *resasc)
 {
-  double fv1[21], fv2[21];
+  double fv1[21];
+  double fv2[21];
   // coverity[UNINIT]
   gsl_integration_qk (21, xgkD, wgD, wgkD, fv1, fv2, f, a, b, result, abserr, resabs, resasc);
 }
@@ -1426,7 +1452,8 @@ gsl_integration_qk51 (const gsl_function * f, double a, double b,
                       double *result, double *abserr,
                       double *resabs, double *resasc)
 {
-  double fv1[26], fv2[26];
+  double fv1[26];
+  double fv2[26];
   //coverity[UNINIT]
   gsl_integration_qk (26, xgkE, wgE, wgkE, fv1, fv2, f, a, b, result, abserr, resabs, resasc);
 }
@@ -1532,7 +1559,8 @@ gsl_integration_qk61 (const gsl_function * f, double a, double b,
                       double *result, double *abserr,
                       double *resabs, double *resasc)
 {
-  double fv1[31], fv2[31];
+  double fv1[31];
+  double fv2[31];
   //coverity[UNINIT]
   gsl_integration_qk (31, xgkF, wgF, wgkF, fv1, fv2, f, a, b, result, abserr, resabs, resasc);
 }
@@ -1823,7 +1851,11 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
       double err3 = std::abs(delta3);
       double tol3 = GSL_MAX_DBL (e1abs, std::abs(e0)) * GSL_DBL_EPSILON;
 
-      double e3, delta1, err1, tol1, ss;
+      double e3;
+      double delta1;
+      double err1;
+      double tol1;
+      double ss;
 
       if (err2 <= tol2 && err3 <= tol3)
         {
@@ -2130,17 +2162,27 @@ qags (const gsl_function * f,
       double *result, double *abserr,
       gsl_integration_rule * q)
 {
-  double area, errsum;
-  double res_ext, err_ext;
-  double result0, abserr0, resabs0, resasc0;
+  double area;
+  double errsum;
+  double res_ext;
+  double err_ext;
+  double result0;
+  double abserr0;
+  double resabs0;
+  double resasc0;
   double tolerance;
 
   double ertest = 0;
   double error_over_large_intervals = 0;
-  double reseps = 0, abseps = 0, correc = 0;
+  double reseps = 0;
+  double abseps = 0;
+  double correc = 0;
   size_t ktmin = 0;
-  int roundoff_type1 = 0, roundoff_type2 = 0, roundoff_type3 = 0;
-  int error_type = 0, error_type2 = 0;
+  int roundoff_type1 = 0;
+  int roundoff_type2 = 0;
+  int roundoff_type3 = 0;
+  int error_type = 0;
+  int error_type2 = 0;
 
   size_t iteration = 0;
 
@@ -2219,12 +2261,24 @@ qags (const gsl_function * f,
   do
     {
       size_t current_level;
-      double a1, b1, a2, b2;
-      double a_i, b_i, r_i, e_i;
-      double area1 = 0, area2 = 0, area12 = 0;
-      double error1 = 0, error2 = 0, error12 = 0;
-      double resasc1, resasc2;
-      double resabs1, resabs2;
+      double a1;
+      double b1;
+      double a2;
+      double b2;
+      double a_i;
+      double b_i;
+      double r_i;
+      double e_i;
+      double area1 = 0;
+      double area2 = 0;
+      double area12 = 0;
+      double error1 = 0;
+      double error2 = 0;
+      double error12 = 0;
+      double resasc1;
+      double resasc2;
+      double resabs1;
+      double resabs2;
       double last_e_i;
 
       /* Bisect the subinterval with the largest error estimate */

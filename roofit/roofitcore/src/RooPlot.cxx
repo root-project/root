@@ -455,7 +455,8 @@ namespace {
       std::map<int,double> minValues;
       std::map<int,double> maxValues;
       int n = graph->GetN();
-      double x, y;
+      double x;
+      double y;
       // for each bin, find the min and max points to form an envelope
       for(int i=0; i<n; ++i){
         graph->GetPoint(i,x,y);
@@ -499,7 +500,8 @@ namespace {
     int n = graph->GetN();
     double xmin = hist->GetXaxis()->GetXmin();
     double xmax = hist->GetXaxis()->GetXmax();
-    double x, y;
+    double x;
+    double y;
     // as this graph is histogram-like, we expect there to be one point per bin
     // we just move these points to the respective bin centers
     for(int i=0; i<n; ++i){
@@ -1378,7 +1380,8 @@ void RooPlot::Streamer(TBuffer &R__b)
     if (_dir)
       _dir->Remove(this);
 
-    UInt_t R__s, R__c;
+    UInt_t R__s;
+    UInt_t R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v > 1) {
       R__b.ReadClassBuffer(RooPlot::Class(),this,R__v,R__s,R__c);

@@ -1329,7 +1329,9 @@ void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* opt
 {
   // Count number of rows to print
   Int_t nrow = (Int_t) (size() / ncol + 0.99) ;
-  Int_t i,j,k ;
+  Int_t i;
+  Int_t j;
+  Int_t k;
 
   // Sibling list do not need to print their name as it is supposed to be the same
   TString sibOption ;
