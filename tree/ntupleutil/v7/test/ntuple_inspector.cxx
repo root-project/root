@@ -464,7 +464,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   auto topFieldInfo = inspector->GetFieldTreeInfo("object");
+   auto topFieldInfo = inspector->GetFieldTreeInspector("object");
 
    EXPECT_GT(topFieldInfo.GetCompressedSize(), 0);
    EXPECT_EQ(topFieldInfo.GetUncompressedSize(), inspector->GetUncompressedSize());
@@ -474,7 +474,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
-      auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
+      auto subFieldInfo = inspector->GetFieldTreeInspector(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
       subFieldInMemorySize += subFieldInfo.GetUncompressedSize();
    }
@@ -482,8 +482,9 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    EXPECT_EQ(topFieldInfo.GetCompressedSize(), subFieldOnDiskSize);
    EXPECT_EQ(topFieldInfo.GetUncompressedSize(), subFieldInMemorySize);
 
-   EXPECT_THROW(inspector->GetFieldTreeInfo("invalid_field"), ROOT::Experimental::RException);
-   EXPECT_THROW(inspector->GetFieldTreeInfo(inspector->GetDescriptor()->GetNFields()), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInspector("invalid_field"), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInspector(inspector->GetDescriptor()->GetNFields()),
+                ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, FieldInfoUncompressed)
@@ -509,7 +510,7 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   auto topFieldInfo = inspector->GetFieldTreeInfo("object");
+   auto topFieldInfo = inspector->GetFieldTreeInspector("object");
 
    EXPECT_EQ(topFieldInfo.GetCompressedSize(), topFieldInfo.GetUncompressedSize());
 
@@ -517,7 +518,7 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
-      auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
+      auto subFieldInfo = inspector->GetFieldTreeInspector(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
       subFieldInMemorySize += subFieldInfo.GetUncompressedSize();
    }
@@ -586,6 +587,6 @@ TEST(RNTupleInspector, FieldsByName)
 
    EXPECT_EQ(3, intFieldIds.size());
    for (const auto fieldId : intFieldIds) {
-      EXPECT_EQ("std::int32_t", inspector->GetFieldTreeInfo(fieldId).GetDescriptor().GetTypeName());
+      EXPECT_EQ("std::int32_t", inspector->GetFieldTreeInspector(fieldId).GetDescriptor().GetTypeName());
    }
 }
