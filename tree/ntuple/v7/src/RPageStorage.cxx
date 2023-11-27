@@ -34,10 +34,7 @@
 
 #include <utility>
 
-
-ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : fNTupleName(name)
-{
-}
+ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : fMetrics(""), fNTupleName(name) {}
 
 ROOT::Experimental::Detail::RPageStorage::~RPageStorage() {}
 
@@ -94,7 +91,7 @@ bool ROOT::Experimental::Detail::RPageSource::REntryRange::IntersectsWith(const 
 }
 
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
-   : RPageStorage(name), fMetrics(""), fOptions(options)
+   : RPageStorage(name), fOptions(options)
 {
 }
 
@@ -318,9 +315,8 @@ void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::st
 
 //------------------------------------------------------------------------------
 
-
 ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
-   : RPageStorage(name), fMetrics(""), fOptions(options.Clone())
+   : RPageStorage(name), fOptions(options.Clone())
 {
 }
 
