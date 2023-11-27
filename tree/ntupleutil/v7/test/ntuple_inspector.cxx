@@ -216,7 +216,7 @@ TEST(RNTupleInspector, ColumnInfoCompressed)
    std::uint64_t totalOnDiskSize = 0;
 
    for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
-      auto colInfo = inspector->GetColumnInfo(i);
+      auto colInfo = inspector->GetColumnInspector(i);
       totalOnDiskSize += colInfo.GetCompressedSize();
 
       EXPECT_GT(colInfo.GetCompressedSize(), 0);
@@ -226,7 +226,7 @@ TEST(RNTupleInspector, ColumnInfoCompressed)
 
    EXPECT_EQ(totalOnDiskSize, inspector->GetCompressedSize());
 
-   EXPECT_THROW(inspector->GetColumnInfo(42), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetColumnInspector(42), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, ColumnInfoUncompressed)
@@ -260,7 +260,7 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
    std::uint64_t colTypeSizes[] = {sizeof(std::int32_t), sizeof(double)};
 
    for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
-      auto colInfo = inspector->GetColumnInfo(i);
+      auto colInfo = inspector->GetColumnInspector(i);
       EXPECT_EQ(colInfo.GetCompressedSize(), colInfo.GetUncompressedSize());
       EXPECT_EQ(colInfo.GetCompressedSize(), colTypeSizes[i] * 5);
    }
@@ -304,18 +304,18 @@ TEST(RNTupleInspector, ColumnsByType)
 
    EXPECT_EQ(2U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitInt64).size());
    for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitInt64)) {
-      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64, inspector->GetColumnInfo(colId).GetType());
+      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64, inspector->GetColumnInspector(colId).GetType());
    }
 
    EXPECT_EQ(2U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal32).size());
    for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal32)) {
-      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32, inspector->GetColumnInfo(colId).GetType());
+      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32, inspector->GetColumnInspector(colId).GetType());
    }
 
    EXPECT_EQ(1U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64).size());
    EXPECT_EQ(1U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64).size());
    for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64)) {
-      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitIndex64, inspector->GetColumnInfo(colId).GetType());
+      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitIndex64, inspector->GetColumnInspector(colId).GetType());
    }
 
    EXPECT_EQ(0U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal64).size());
