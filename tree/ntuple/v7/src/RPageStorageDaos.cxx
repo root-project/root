@@ -633,7 +633,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
-      R__ASSERT(clusterInfo.fClusterId != kInvalidDescriptorId);
+
+      if (clusterInfo.fClusterId == kInvalidDescriptorId)
+         throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
 
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
       clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
@@ -655,7 +657,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
    if (!cachedPage.IsNull())
       return cachedPage;
 
-   R__ASSERT(clusterId != kInvalidDescriptorId);
+   if (clusterId == kInvalidDescriptorId)
+      throw RException(R__FAIL("entry out of bounds"));
+
    RClusterInfo clusterInfo;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
