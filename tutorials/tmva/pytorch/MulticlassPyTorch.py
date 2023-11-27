@@ -22,8 +22,8 @@ from torch import nn
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
-factory = TMVA.Factory('TMVAClassification', output,
+# create factory without output file since it is not needed
+factory = TMVA.Factory('TMVAClassification',
     '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=multiclass')
 
 
