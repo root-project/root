@@ -66,13 +66,10 @@ void TRootGuiFactory::ShowWebCanvasWarning()
    show_warn = false;
 
    std::cout << "\n"
-                "   !!! ATTENTION !!! \n"
-                "\n"
                 "ROOT comes with a web-based canvas, which is now being started. \n"
                 "Revert to the legacy canvas by setting \"Canvas.Name: TRootCanvas\" in rootrc file or\n"
                 "by starting \"root --web=off\".\n"
-                "Find more info on https://root.cern/for_developers/root7/#twebcanvas\n"
-                "\n";
+                "Find more info on https://root.cern/for_developers/root7/#twebcanvas\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
