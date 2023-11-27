@@ -98,7 +98,7 @@ RooMappedCategory::RooMappedCategory(const RooMappedCategory &other, const char 
      _inputCat("input", this, other._inputCat),
      _mapArray(other._mapArray)
 {
-   _defCat = lookupIndex(other.lookupName(other._defCat));
+   setDefCat(lookupIndex(other.lookupName(other._defCat)));
 }
 
 RooMappedCategory::~RooMappedCategory() = default;

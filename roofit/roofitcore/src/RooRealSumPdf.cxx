@@ -130,7 +130,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
                              const RooArgList &inCoefList, bool extended)
    : RooRealSumPdf(name, title)
 {
-  _extended = extended;
+  setExtended(extended);
 
   RooRealSumPdf::initializeFuncsAndCoefs(*this, inFuncList, inCoefList, _funcList, _coefList);
 }

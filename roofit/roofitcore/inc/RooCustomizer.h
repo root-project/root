@@ -39,7 +39,6 @@ public:
   // Constructors, assignment etc
   RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=nullptr) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
-  ~RooCustomizer() = default;
 
   /// If flag is true, make customizer own all created components
   void setOwning(bool flag) {

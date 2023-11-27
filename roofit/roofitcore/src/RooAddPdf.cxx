@@ -160,7 +160,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList &inPd
                      bool recursiveFractions)
    : RooAddPdf(name, title)
 {
-  _recursive = recursiveFractions;
+  setRecursiveFraction(recursiveFractions);
 
   if (inPdfList.size()>inCoefList.size()+1 || inPdfList.size()<inCoefList.size()) {
     std::stringstream errorMsg;
@@ -257,7 +257,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList &inPd
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList &inPdfList)
    : RooAddPdf(name, title)
 {
-  _allExtendable = true;
+  setAllExtendable(true);
 
   // Constructor with N PDFs
   for (const auto pdfArg : inPdfList) {
