@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -19,7 +21,7 @@
 \class RooGrid
 \ingroup Roofitcore
 
-RooGrid is a utility class for RooMCIntegrator which
+Utility class for RooMCIntegrator which
 implements an adaptive multi-dimensional Monte Carlo numerical
 integration, following the VEGAS algorithm.
 **/
@@ -332,3 +334,5 @@ void RooGrid::refine(double alpha)
     coord(_bins, j) = 1;
   }
 }
+
+/// \endcond

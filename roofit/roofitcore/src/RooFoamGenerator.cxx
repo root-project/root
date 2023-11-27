@@ -19,7 +19,7 @@
 \class RooFoamGenerator
 \ingroup Roofitcore
 
-Class RooFoamGenerator is a generic toy monte carlo generator that implement
+Generic Monte Carlo toy generator that implement
 the TFOAM sampling technique on any positively valued function.
 The RooFoamGenerator generator is used by the various generator context
 classes to take care of generation of observables for which p.d.fs

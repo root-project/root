@@ -19,7 +19,7 @@
 \class RooMultiCategory
 \ingroup Roofitcore
 
-RooMultiCategory connects several RooAbsCategory objects into
+Connects several RooAbsCategory objects into
 a single category. The states of the multi-category consist of all the permutations
 of the input categories.
 RooMultiCategory states are automatically defined and updated whenever an input

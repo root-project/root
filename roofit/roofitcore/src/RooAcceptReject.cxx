@@ -19,7 +19,7 @@
 \class RooAcceptReject
 \ingroup Roofitcore
 
-Class RooAcceptReject is a generic toy monte carlo generator implement
+Generic Monte Carlo toy generator implement
 the accept/reject sampling technique on any positively valued function.
 The RooAcceptReject generator is used by the various generator context
 classes to take care of generation of observables for which p.d.fs

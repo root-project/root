@@ -506,7 +506,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createProfile(const RooArgSet& paramsO
 ///
 /// \note The integral over a PDF is usually not normalised (*i.e.*, it is usually not
 /// 1 when integrating the PDF over the full range). In fact, this integral is used *to compute*
-/// the normalisation of each PDF. See the rf110 tutorial at https://root.cern.ch/doc/master/group__tutorial__roofit.html
+/// the normalisation of each PDF. See the [rf110 tutorial](group__tutorial__roofit.html)
 /// for details on PDF normalisation.
 ///
 /// The following named arguments are accepted
@@ -520,8 +520,6 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
                    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
                    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
-
-
   // Define configuration for this method
   RooCmdConfig pc("RooAbsReal::createIntegral(" + std::string(GetName()) + ")");
   pc.defineString("rangeName","RangeWithName",0,"",true) ;

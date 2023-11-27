@@ -19,7 +19,7 @@
 \class RooNumIntFactory
 \ingroup Roofitcore
 
-Factory to instantiate numeric integrators
+%Factory to instantiate numeric integrators
 from a given function binding and a given configuration. The factory
 searches for a numeric integrator registered with the factory that
 has the ability to perform the numeric integration. The choice of

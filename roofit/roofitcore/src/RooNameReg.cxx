@@ -19,7 +19,7 @@
 \class RooNameReg
 \ingroup Roofitcore
 
-RooNameReg is a registry for `const char*` names. For each unique
+Registry for `const char*` names. For each unique
 name (which is not necessarily a unique pointer in the C++ standard),
 a unique pointer to a TNamed object is returned that can be used for
 fast searches and comparisons.
@@ -35,14 +35,6 @@ using namespace std ;
 RooNameReg::RooNameReg() :
     TNamed("RooNameReg","RooFit Name Registry")
 {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNameReg::~RooNameReg()
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to singleton instance

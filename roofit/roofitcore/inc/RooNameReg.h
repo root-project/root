@@ -26,7 +26,6 @@ class RooNameReg : public TNamed {
 public:
 
   static RooNameReg& instance() ;
-  ~RooNameReg() override;
   const TNamed* constPtr(const char* stringPtr) ;
   /// Return C++ string corresponding to given TNamed pointer.
   inline static const char* constStr(const TNamed* ptr) {

@@ -15,7 +15,7 @@
 \class RooUnbinnedL
 \ingroup Roofitcore
 
-Class RooUnbinnedL implements a -log(likelihood) calculation from a dataset
+A -log(likelihood) calculation from a dataset
 (assumed to be unbinned) and a PDF. The NLL is calculated as
 \f[
  \sum_\mathrm{data} -\log( \mathrm{pdf}(x_\mathrm{data}))

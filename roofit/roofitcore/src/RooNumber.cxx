@@ -19,7 +19,7 @@
 \class RooNumber
 \ingroup Roofitcore
 
-Class RooNumber implements numeric constants used by RooFit
+Provides numeric constants used in \ref Roofitmain.
 **/
 
 #include <RooNumber.h>

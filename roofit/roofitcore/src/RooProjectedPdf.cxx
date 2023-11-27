@@ -14,7 +14,7 @@
 \class RooProjectedPdf
 \ingroup Roofitcore
 
-Class RooProjectedPdf is a RooAbsPdf implementation that represent a projection
+A RooAbsPdf implementation that represent a projection
 of a given input p.d.f and the object returned by RooAbsPdf::createProjection.
 The actual projection integral for it value and normalization are
 calculated on the fly in getVal() once the normalization observables are known.

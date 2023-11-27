@@ -19,7 +19,7 @@
 \class RooMCStudy
 \ingroup Roofitcore
 
-RooMCStudy is a helper class to facilitate Monte Carlo studies
+Helper class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF
 to multiple toy Monte Carlo sets. These may be generated from either same PDF
 or from a different PDF with similar parameters.

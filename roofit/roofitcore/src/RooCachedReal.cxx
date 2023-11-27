@@ -14,7 +14,7 @@
 \class RooCachedReal
 \ingroup Roofitcore
 
-RooCachedReal is an implementation of RooAbsCachedReal that can cache
+Implementation of RooAbsCachedReal that can cache
 any external RooAbsReal input function provided in the constructor.
 **/
 

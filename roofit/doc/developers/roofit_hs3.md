@@ -29,8 +29,7 @@ can be selected at compile time with the `cmake` flag
 ### Usage
 
 The main class providing import from and export to JSON and YML is the
-`RooJSONFactoryWSTool`. For basic usage, please refer to the
-[class documentation](https://root.cern.ch/doc/master/RooJSONFactoryWSTool_8h.html).
+RooJSONFactoryWSTool.
 
 ### Open-world philosophy
 

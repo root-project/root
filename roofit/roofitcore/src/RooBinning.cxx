@@ -19,7 +19,7 @@
 \class RooBinning
 \ingroup Roofitcore
 
-Class RooBinning is an implements RooAbsBinning in terms
+Implements a RooAbsBinning in terms
 of an array of boundary values, posing no constraints on the choice
 of binning, thus allowing variable bin sizes. Various methods allow
 the user to add single bin boundaries, mirrored pairs, or sets of
@@ -42,7 +42,6 @@ uniformly spaced boundaries.
 using namespace std;
 
 ClassImp(RooBinning);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////

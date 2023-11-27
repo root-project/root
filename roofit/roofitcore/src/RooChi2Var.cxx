@@ -17,7 +17,7 @@
 //////////////////////////////////////////////////////////////////////////////
 /** \class RooChi2Var
     \ingroup Roofitcore
-    \brief RooChi2Var implements a simple \f$ \chi^2 \f$ calculation from a binned dataset and a PDF.
+    \brief Simple \f$ \chi^2 \f$ calculation from a binned dataset and a PDF.
  *
  * It calculates:
  *

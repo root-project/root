@@ -19,8 +19,7 @@
 \class RooEllipse
 \ingroup Roofitcore
 
-A RooEllipse is a two-dimensional ellipse that can be used to represent
-an error contour.
+Two-dimensional ellipse that can be used to represent an error contour.
 **/
 
 #include "RooEllipse.h"

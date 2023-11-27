@@ -19,16 +19,14 @@
 \class RooDirItem
 \ingroup Roofitcore
 
-RooDirItem is a utility base class for RooFit objects that are to be attached
+Utility base class for \ref Roofitmain objects that are to be attached
 to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
-methods that can be used to safely attach and detach one self from a TDirectory
+methods that can be used to safely attach and detach one self from a TDirectory.
 **/
 
 #include <iostream>
 #include "TDirectoryFile.h"
 #include "RooDirItem.h"
-
-using namespace std;
 
 ClassImp(RooDirItem);
 

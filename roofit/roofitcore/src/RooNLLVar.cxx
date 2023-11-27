@@ -19,7 +19,7 @@
 \class RooNLLVar
 \ingroup Roofitcore
 
-Class RooNLLVar implements a -log(likelihood) calculation from a dataset
+Implements a -log(likelihood) calculation from a dataset
 and a PDF. The NLL is calculated as
 \f[
  \sum_\mathrm{data} -\log( \mathrm{pdf}(x_\mathrm{data}))

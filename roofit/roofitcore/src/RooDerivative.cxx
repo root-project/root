@@ -19,7 +19,7 @@
 \class RooDerivative
 \ingroup Roofitcore
 
-RooDerivative represents the first, second, or third order derivative
+Represents the first, second, or third order derivative
 of any RooAbsReal as calculated (numerically) by the MathCore Richardson
 derivator class.
 **/

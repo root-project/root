@@ -19,7 +19,7 @@
 \class RooDataHist
 \ingroup Roofitcore
 
-The RooDataHist is a container class to hold N-dimensional binned data. Each bin's central
+Container class to hold N-dimensional binned data. Each bin's central
 coordinates in N-dimensional space are represented by a RooArgSet containing RooRealVar, RooCategory
 or RooStringVar objects, thus data can be binned in real and/or discrete dimensions.
 

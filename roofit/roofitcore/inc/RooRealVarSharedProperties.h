@@ -19,7 +19,7 @@
 \class RooRealVarSharedProperties
 \ingroup Roofitcore
 
-Class RooRealVarSharedProperties is an implementation of RooSharedProperties
+Implementation of RooSharedProperties
 that stores the properties of a RooRealVar that are shared among clones.
 For RooRealVars these are the definitions of the named ranges.
 **/

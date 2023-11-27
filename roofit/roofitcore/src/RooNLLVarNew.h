@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -80,3 +82,5 @@ private:
 }; // end class RooNLLVar
 
 #endif
+
+/// \endcond

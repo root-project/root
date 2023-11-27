@@ -19,8 +19,7 @@
 \class RooProduct
 \ingroup Roofitcore
 
-A RooProduct represents the product of a given set of RooAbsReal objects.
-
+Represents the product of a given set of RooAbsReal objects.
 **/
 
 #include "RooProduct.h"
@@ -34,8 +33,6 @@ A RooProduct represents the product of a given set of RooAbsReal objects.
 #include <cmath>
 #include <memory>
 
-using namespace std ;
-
 ClassImp(RooProduct);
 
 class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;
@@ -44,9 +41,8 @@ class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*
 namespace {
   typedef RooProduct::ProdMap::iterator RPPMIter ;
   std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end)  ;
-  void dump_map(ostream& os, RPPMIter i, RPPMIter end) ;
+  void dump_map(std::ostream& os, RPPMIter i, RPPMIter end) ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +52,6 @@ RooProduct::RooProduct() : _cacheMgr(this,10)
 {
   TRACE_CREATE;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +106,7 @@ void RooProduct::addTerm(RooAbsArg* term) {
     _compCSet.add(*term) ;
   } else {
     coutE(InputArguments) << "RooProduct::addTerm(" << GetName() << ") ERROR: component " << term->GetName()
-        << " is not of type RooAbsReal or RooAbsCategory" << endl ;
+        << " is not of type RooAbsReal or RooAbsCategory" << std::endl ;
     throw std::invalid_argument("RooProduct can only handle terms deriving from RooAbsReal or RooAbsCategory.");
   }
 }
@@ -226,7 +221,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") groupProductTerms returned map" ;
   if (dologD(Integration)) {
     dump_map(ccoutD(Integration),map->begin(),map->end());
-    ccoutD(Integration) << endl;
+    ccoutD(Integration) << std::endl;
   }
 
   // did we find any factorizable terms?
@@ -248,7 +243,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       auto ownedTerm = std::make_unique<RooProduct>(name,name,*i->second);
       term = ownedTerm.get();
       cache->_ownedList.addOwned(std::move(ownedTerm));
-      cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << endl;
+      cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << std::endl;
     } else {
       assert(i->second->size()==1);
       term = static_cast<RooAbsReal*>(i->second->at(0));
@@ -256,19 +251,19 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
     assert(term!=nullptr);
     if (i->first->empty()) { // check whether we need to integrate over this term or not...
       cache->_prodList.add(*term);
-      cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding simple factor " << term->GetName() << endl;
+      cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding simple factor " << term->GetName() << std::endl;
     } else {
       std::unique_ptr<RooAbsReal> integral{term->createIntegral(*i->first,isetRange)};
       cache->_prodList.add(*integral);
-      cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding integral for " << term->GetName() << " : " << integral->GetName() << endl;
+      cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding integral for " << term->GetName() << " : " << integral->GetName() << std::endl;
       cache->_ownedList.addOwned(std::move(integral));
     }
   }
   // add current set-up to cache, and return index..
   Int_t code = _cacheMgr.setObj(iset,iset,(RooAbsCacheElement*)cache,RooNameReg::ptr(isetRange));
 
-  cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created list " << cache->_prodList << " with code " << code+1 << endl
-             << " for iset=" << *iset << " @" << iset << " range: " << (isetRange?isetRange:"<none>") << endl ;
+  cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created list " << cache->_prodList << " with code " << code+1 << std::endl
+             << " for iset=" << *iset << " @" << iset << " range: " << (isetRange?isetRange:"<none>") << std::endl ;
 
   for (ProdMap::iterator iter = map->begin() ; iter != map->end() ; ++iter) {
     delete iter->first ;
@@ -409,8 +404,7 @@ std::list<double>* RooProduct::binBoundaries(RooAbsRealLValue& obs, double xlo, 
   for (const auto item : _compRSet) {
     auto func = static_cast<const RooAbsReal*>(item);
 
-    list<double>* binb = func->binBoundaries(obs,xlo,xhi) ;
-    if (binb) {
+    if (std::list<double>* binb = func->binBoundaries(obs,xlo,xhi)) {
       return binb ;
     }
   }
@@ -445,8 +439,7 @@ std::list<double>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, double xl
   for (const auto item : _compRSet) {
     auto func = static_cast<const RooAbsReal*>(item);
 
-    list<double>* hint = func->plotSamplingHint(obs,xlo,xhi) ;
-    if (hint) {
+    if (std::list<double>* hint = func->plotSamplingHint(obs,xlo,xhi)) {
       return hint ;
     }
   }
@@ -486,7 +479,6 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
     if (parg->isDerived()) {
       if (parg->canNodeBeCached()==Always) {
         trackNodes.add(*parg) ;
-   //cout << "tracking node RooProduct component " << parg->ClassName() << "::" << parg->GetName() << endl ;
       }
     }
   }
@@ -510,7 +502,7 @@ void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
 /// product operator construction
 
-void RooProduct::printMetaArgs(ostream& os) const
+void RooProduct::printMetaArgs(std::ostream& os) const
 {
   bool first(true) ;
 
@@ -595,7 +587,7 @@ std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end)
 }
 
 
-void dump_map(ostream& os, RPPMIter i, RPPMIter end)
+void dump_map(std::ostream& os, RPPMIter i, RPPMIter end)
 {
   // Utility dump function for debugging
   bool first(true);

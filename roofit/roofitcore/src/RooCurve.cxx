@@ -19,7 +19,7 @@
 \class RooCurve
 \ingroup Roofitcore
 
-A RooCurve is a one-dimensional graphical representation of a real-valued function.
+One-dimensional graphical representation of a real-valued function.
 A curve is approximated by straight line segments with end points chosen to give
 a "good" approximation to the true curve. The goodness of the approximation is
 controlled by a precision and a resolution parameter.

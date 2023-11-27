@@ -14,7 +14,7 @@
 \class RooProfileLL
 \ingroup Roofitcore
 
-Class RooProfileLL implements the profile likelihood estimator for
+Implements the profile likelihood estimator for
 a given likelihood and set of parameters of interest. The value return by
 RooProfileLL is the input likelihood nll minimized w.r.t all nuisance parameters
 (which are all parameters except for those listed in the constructor) minus
@@ -41,7 +41,6 @@ ClassImp(RooProfileLL);
 
 RooProfileLL::RooProfileLL()
    : RooAbsReal("RooProfileLL", "RooProfileLL"),
-
      _obs("paramOfInterest", "Parameters of interest", this),
      _par("nuisanceParam", "Nuisance parameters", this, false, false)
 {
@@ -273,5 +272,3 @@ bool RooProfileLL::redirectServersHook(const RooAbsCollection& newServerList, bo
   _minimizer.reset();
   return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
-
-

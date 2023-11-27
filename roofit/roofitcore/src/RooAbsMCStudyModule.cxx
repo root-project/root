@@ -19,7 +19,7 @@
 \class RooAbsMCStudyModule
 \ingroup Roofitcore
 
-RooAbsMCStudyModule is a base class for add-on modules to RooMCStudy that
+Base class for add-on modules to RooMCStudy that
 can perform additional calculations on each generate+fit cycle managed
 by RooMCStudy.
 

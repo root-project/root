@@ -19,7 +19,7 @@
 \class RooRecursiveFraction
 \ingroup Roofitcore
 
-Class RooRecursiveFraction is a RooAbsReal implementation that
+A RooAbsReal implementation that
 calculates the plain fraction of sum of RooAddPdf components
 from a set of recursive fractions: for a given set of input fractions
 \f$ {a_i} \f$, it returns \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.

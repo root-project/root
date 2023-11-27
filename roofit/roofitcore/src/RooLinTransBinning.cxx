@@ -19,7 +19,7 @@
 \class RooLinTransBinning
 \ingroup Roofitcore
 
-RooLinTransBinning is a special binning implementation for RooLinearVar
+Special binning implementation for RooLinearVar
 that transforms the binning of the RooLinearVar input variable in the same
 way that RooLinearVar does
 **/
@@ -27,8 +27,6 @@ way that RooLinearVar does
 #include "RooLinTransBinning.h"
 
 #include <stdexcept>
-
-using namespace std;
 
 ClassImp(RooLinTransBinning);
 

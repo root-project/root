@@ -19,7 +19,7 @@
 \class RooCompositeDataStore
 \ingroup Roofitcore
 
-RooCompositeDataStore combines several disjunct datasets into one. This is useful for simultaneous PDFs
+Combines several disjunct datasets into one. This is useful for simultaneous PDFs
 that do not depend on the same observable such as a PDF depending on `x` combined with another one depending
 on `y`.
 The composite storage will store two different datasets, `{x}` and `{y}`, but they can be passed as a single
