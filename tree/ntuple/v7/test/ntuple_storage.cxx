@@ -15,28 +15,18 @@ protected:
    RPageAllocatorHeap fPageAllocator{};
 
    void CreateImpl(const RNTupleModel &, unsigned char *, std::uint32_t) final {}
-   RNTupleLocator CommitPageImpl(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final
-   {
-      fCounters.fNCommitPage++;
-      return {};
-   }
-   RNTupleLocator CommitSealedPageImpl(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
+   void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
+   void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
    {
       fCounters.fNCommitSealedPage++;
-      return {};
    }
-   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) override
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) override
    {
       fCounters.fNCommitSealedPageV++;
-      auto nLocators =
-         std::accumulate(ranges.begin(), ranges.end(), 0, [](size_t c, const RPageStorage::RSealedPageGroup &r) {
-            return c + std::distance(r.fFirst, r.fLast);
-         });
-      return std::vector<RNTupleLocator>(nLocators);
    }
-   std::uint64_t CommitClusterImpl(NTupleSize_t) final { return 0; }
-   RNTupleLocator CommitClusterGroupImpl(unsigned char *, std::uint32_t) final { return {}; }
-   void CommitDatasetImpl(unsigned char *, std::uint32_t) final {}
+   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   void CommitClusterGroup() final {}
+   void CommitDataset() final {}
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
    {

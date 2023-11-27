@@ -181,7 +181,7 @@ inheriting from RPagePersistentSink.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
-private:
+protected: // temporary until the next commit
    /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
    Internal::RNTupleSerializer::RContext fSerializationContext;
 
@@ -216,22 +216,6 @@ protected:
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
    virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
-   virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
-   virtual RNTupleLocator
-   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
-   /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
-   /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
-   /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
-   /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
-   /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
-   /// optimized implementation though.
-   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
-   /// Returns the number of bytes written to storage (excluding metadata)
-   virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
-   /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
-   /// Typically, the implementation takes care of compressing and writing the provided buffer.
-   virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
-   virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
@@ -281,19 +265,19 @@ public:
    virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry);
 
    /// Write a page to the storage. The column must have been added before.
-   void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
+   virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
-   void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage);
+   virtual void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
-   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges);
+   virtual void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) = 0;
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
-   std::uint64_t CommitCluster(NTupleSize_t nEntries);
+   virtual std::uint64_t CommitCluster(NTupleSize_t nEntries) = 0;
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
-   void CommitClusterGroup();
+   virtual void CommitClusterGroup() = 0;
    /// Finalize the current cluster and the entrire data set.
-   void CommitDataset();
+   virtual void CommitDataset() = 0;
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
@@ -308,6 +292,24 @@ public:
 */
 // clang-format on
 class RPagePersistentSink : public RPageSink {
+protected:
+   virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   virtual RNTupleLocator
+   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
+   /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
+   /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
+   /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
+   /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
+   /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
+   /// optimized implementation though.
+   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
+   /// Returns the number of bytes written to storage (excluding metadata)
+   virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
+   /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
+   /// Typically, the implementation takes care of compressing and writing the provided buffer.
+   virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
+   virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
+
 public:
    RPagePersistentSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
@@ -316,6 +318,13 @@ public:
    RPagePersistentSink(RPagePersistentSink &&) = default;
    RPagePersistentSink &operator=(RPagePersistentSink &&) = default;
    ~RPagePersistentSink() override;
+
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
+   void CommitClusterGroup() final;
+   void CommitDataset() final;
 };
 
 // clang-format off

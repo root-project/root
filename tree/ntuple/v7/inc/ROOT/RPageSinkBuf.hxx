@@ -132,11 +132,6 @@ private:
 
 protected:
    void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RNTupleLocator CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
-   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
-   RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
-   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -147,6 +142,14 @@ public:
    ~RPageSinkBuf() override;
 
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
+   void CommitClusterGroup() final;
+   void CommitDataset() final;
+
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
 };
