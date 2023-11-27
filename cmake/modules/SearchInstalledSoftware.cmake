@@ -693,7 +693,7 @@ if(ssl AND NOT builtin_openssl)
   if(fail-on-missing)
     find_package(OpenSSL REQUIRED)
   else()
-    find_package(OpenSSL)
+    find_package(OpenSSL COMPONENTS SSL)
     if(NOT OPENSSL_FOUND)
       if(WIN32) # builtin OpenSSL does not work on Windows
         message(STATUS "Switching OFF 'ssl' option.")
