@@ -117,6 +117,8 @@ else()
     execute_process(COMMAND lsb_release -rs OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
   string(TOLOWER "${osid}" osid)
+  # "fedora linux" => "fedora"
+  string(REGEX REPLACE " linux$" "" osid "${osid}")
   if(osid MATCHES ubuntu)
     string(REGEX REPLACE "([0-9]+[.][0-9]+)[.].*" "\\1" osvers "${osvers}")
   endif()
