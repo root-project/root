@@ -213,7 +213,7 @@ namespace SOFIE{
             //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
             // the previous result
             if (fAttrBeta != 0) {
-               throw std::runtime_error("TMVA SOFIE Gemm Op : Bias tensor is not present but beta value in Gemm is not zero");
+               throw std::runtime_error("TMVA SOFIE Gemm Op " + OpName + " Bias tensor is not present but beta value in Gemm is not zero");
             }
          }
          if (fType == "float"){

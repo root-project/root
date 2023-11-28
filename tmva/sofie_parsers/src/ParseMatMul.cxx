@@ -20,8 +20,9 @@ ParserFuncSignature ParseMatMul = [](RModelParser_ONNX &parser, const onnx::Node
 
    std::unique_ptr<ROperator> op;
 
+   // for MatMul there is no alpha and beta : use alpha=1 and beta=0
    float attr_alpha = 1.0;
-   float attr_beta = 1.0;
+   float attr_beta = 0.0;
    int_t attr_transA = 0;
    int_t attr_transB = 0;
 
