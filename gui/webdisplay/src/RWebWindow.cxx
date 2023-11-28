@@ -553,15 +553,16 @@ std::string RWebWindow::GenerateKey() const
    int ntry = 100000;
    TRandom3 rnd;
    rnd.SetSeed();
-   std::string key;
+   TString key;
 
    do {
-      key = std::to_string(rnd.Integer(0x100000));
-   } while ((--ntry > 0) && HasKey(key));
+      for(int n = 0; n < 10; n++)
+         key += TString::Itoa(rnd.Integer(0xFFFFFFF), 16);
+   } while ((--ntry > 0) && HasKey(key.Data()));
 
-   if (ntry <= 0) key.clear();
+   if (ntry <= 0) key.Clear();
 
-   return key;
+   return key.Data();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
