@@ -138,6 +138,7 @@ private:
    bool fUseProcessEvents{false};                   ///<! all window functionality will run through process events
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
+   int fRequireAuthKey{-1};                         ///<! defines if authentication key always required when connect to the widget, -1 - dflt, 0 - off, 1 - on
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
    ConnectionsList_t fPendingConn;                  ///<! list of pending connection with pre-assigned keys
@@ -198,6 +199,8 @@ private:
    void CheckDataToSend(bool only_once = false);
 
    bool HasKey(const std::string &key) const;
+
+   void RemoveKey(const std::string &key);
 
    std::string GenerateKey() const;
 
@@ -301,6 +304,14 @@ public:
    /////////////////////////////////////////////////////////////////////////
    /// returns true if only native (own-created) connections are allowed
    bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Configure if authentication key in connection string is required
+   void SetRequireAuthKey(bool on) { fRequireAuthKey = on ? 1 : 0; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns true if authentication string is required
+   bool IsRequireAuthKey() const { return fRequireAuthKey == 1; }
 
    void SetClientVersion(const std::string &vers);
 
