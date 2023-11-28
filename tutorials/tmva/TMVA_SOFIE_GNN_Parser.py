@@ -1,5 +1,5 @@
 ## Tutorial showing how to parse a GNN from GraphNet and make a SOFIE model
-## The tutorial also generate the data
+## The tutorial also generate some  data which can serve as input for the tutorial TMVA_SOFIE_GNN_Application.C
 import ROOT
 
 import numpy as np
@@ -31,13 +31,14 @@ def get_dynamic_graph_data_dict(NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2, GLOBAL
       "receivers": np.random.randint(num_nodes, size=num_edges, dtype=np.int32)
    }
 
-def get_fix_graph_data_dict(NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2, GLOBAL_FEATURE_SIZE=1):
+# generate graph data with a fixed number of nodes/edges
+def get_fix_graph_data_dict(num_nodes, num_edges, NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2, GLOBAL_FEATURE_SIZE=1):
    return {
       "globals": np.ones((GLOBAL_FEATURE_SIZE),dtype=np.float32),
-      "nodes": np.ones((num_max_nodes, NODE_FEATURE_SIZE), dtype = np.float32),
-      "edges": np.ones((num_max_edges, EDGE_FEATURE_SIZE), dtype = np.float32),
-      "senders":  np.random.randint(num_max_nodes, size=num_max_edges, dtype=np.int32),
-      "receivers": np.random.randint(num_max_nodes, size=num_max_edges, dtype=np.int32)
+      "nodes": np.ones((num_nodes, NODE_FEATURE_SIZE), dtype = np.float32),
+      "edges": np.ones((num_edges, EDGE_FEATURE_SIZE), dtype = np.float32),
+      "senders":  np.random.randint(num_nodes, size=num_edges, dtype=np.int32),
+      "receivers": np.random.randint(num_nodes, size=num_edges, dtype=np.int32)
     }
 
 
@@ -97,30 +98,33 @@ class EncodeProcessDecode(snt.Module):
     return output_ops
 
 
+########################################################################################################
+
 # Instantiating EncodeProcessDecode Model
 ep_model = EncodeProcessDecode()
 
-# Initializing randomized input data
-GraphData = get_fix_graph_data_dict(node_size, edge_size, global_size)
+# Initializing randomized input data with maximum number of nodes/edges
+GraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, node_size, edge_size, global_size)
 
 #input_graphs  is a tuple representing the initial data
 input_graph_data = utils_tf.data_dicts_to_graphs_tuple([GraphData])
 
 # Initializing randomized input data for core
 # note that the core network has as input a double number of features
-CoreGraphData = get_fix_graph_data_dict(2*LATENT_SIZE, 2*LATENT_SIZE, 2*LATENT_SIZE)
+CoreGraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, 2*LATENT_SIZE, 2*LATENT_SIZE, 2*LATENT_SIZE)
 input_core_graph_data = utils_tf.data_dicts_to_graphs_tuple([CoreGraphData])
 
 #initialize graph data for decoder (input is LATENT_SIZE)
-DecodeGraphData = get_fix_graph_data_dict( LATENT_SIZE, LATENT_SIZE, LATENT_SIZE)
+DecodeGraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, LATENT_SIZE, LATENT_SIZE, LATENT_SIZE)
 
-# Make prediction of GNN
+# Make prediction of GNN. This will initialize the GNN with weights
 output_gn = ep_model(input_graph_data, processing_steps)
-print("---> Input:\n",input_graph_data)
-print("\n\n------> Input core data:\n",input_core_graph_data)
-print("\n\n---> Output:\n",output_gn)
+#print("---> Input:\n",input_graph_data)
+#print("\n\n------> Input core data:\n",input_core_graph_data)
+#print("\n\n---> Output:\n",output_gn)
 
-# Make SOFIE Model
+# Make SOFIE Model, the model will be made using a maximum number of nodes/edges which are inside GraphData
+
 encoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._encoder._network, GraphData, filename = "encoder")
 encoder.Generate()
 encoder.OutputGenerated()
@@ -137,12 +141,11 @@ output_transform = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFro
 output_transform.Generate()
 output_transform.OutputGenerated()
 
-#generate data and save them in a ROOT file
-#def GenerateData():
-#    data = get_graph_data_dict(num_nodes,num_edges, node_size, edge_size, global_size)
-#    return data
+####################################################################################################################################
 
 #generate data and save in a ROOT TTree
+#
+
 fileOut = ROOT.TFile.Open("graph_data.root","RECREATE")
 tree = ROOT.TTree("gdata","GNN data")
 #need to store each element since annot store RTensor
@@ -160,26 +163,14 @@ tree.Branch("edge_data", "std::vector<float>" ,  ROOT.std.addressof(edge_data))
 tree.Branch("global_data", "std::vector<float>" ,  ROOT.std.addressof(global_data))
 tree.Branch("receivers", "std::vector<int>" ,  ROOT.std.addressof(receivers))
 tree.Branch("senders", "std::vector<int>" ,  ROOT.std.addressof(senders))
-tree.Branch("gnn_output","std::vector<float>", ROOT.std.addressof(outgnn))
+#tree.Branch("gnn_output","std::vector<float>", ROOT.std.addressof(outgnn))
 
 
-
-# s_nodes = 10
-# s_edges = 10
-# num_edges = 10
-# tree.Branch("node_size", ROOT.addressof(s_nodes), "node_size/I")
-# tree.Branch("edge_size", ROOT.addressof(s_edges), "edge_size/I")
-# tree.Branch("num_edges", ROOT.addressof(num_edges), "num_edges/I")
-# tree.Branch("node_data", node_data.data(), "node_data[node_size]/F")
-# tree.Branch("edge_data", edge_data.data(), "edge_data[edge_size]/F")
-# tree.Branch("global_data", global_data.data(), "global_data[1]/F")
-# tree.Branch("receivers", receivers.data() , "receivers[num_edges]/I")
-# tree.Branch("senders", senders.data() , "senders[num_edges]/I")
-numevts = 100
 print("\n\nSaving data in a ROOT File:")
 h1 = ROOT.TH1D("h1","nodes output",40,1,0)
 h2 = ROOT.TH1D("h2","edges output",40,1,0)
 h3 = ROOT.TH1D("h3","global output",40,1,0)
+dataset = []
 for i in range(0,numevts):
     graphData = get_dynamic_graph_data_dict(node_size, edge_size, global_size)
     s_nodes = graphData['nodes'].size
@@ -196,16 +187,24 @@ for i in range(0,numevts):
     receivers.assign(tmp.begin(),tmp.end())
     tmp = ROOT.std.vector['int'](graphData['senders'])
     senders.assign(tmp.begin(),tmp.end())
-    print("numer of nodes, edges", int(s_nodes/4), int(s_edges/4), num_edges )
-    print(node_data)
-    print(edge_data)
-    print(global_data)
-    print(receivers)
-    print(senders)
+    if (i < 1) :
+      print("Nodes - shape:",int(node_data.size()/node_size),node_size,"data: ",node_data)
+      print("Edges - shape:",num_edges, edge_size,"data: ", edge_data)
+      print("Globals : ",global_data)
+      print("Receivers : ",receivers)
+      print("Senders   : ",senders)
 #
 #evaluate graph net on these events
 #
+    tree.Fill()
     tf_graph_data = utils_tf.data_dicts_to_graphs_tuple([graphData])
+    dataset.append(tf_graph_data)
+
+tree.Print()
+
+start = time.time()
+firstEvent = True
+for tf_graph_data in dataset:
     output_gnn = ep_model(tf_graph_data, processing_steps)
     output_nodes = output_gnn[-1].nodes.numpy()
     output_edges = output_gnn[-1].edges.numpy()
@@ -216,13 +215,17 @@ for i in range(0,numevts):
     h1.Fill(outgnn[0])
     h2.Fill(outgnn[1])
     h3.Fill(outgnn[2])
+    if (firstEvent) :
+      print("Output of first event")
+      print("nodes data", output_gnn[-1].nodes.numpy())
+      print("edge data", output_gnn[-1].edges.numpy())
+      print("global data", output_gnn[-1].globals.numpy())
+      firstEvent = False
 
 
-    tree.Fill()
+end = time.time()
 
-
-tree.Print()
-
+print("time to evaluate events",end-start)
 
 c1 = ROOT.TCanvas()
 c1.Divide(1,3)
