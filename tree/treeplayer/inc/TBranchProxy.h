@@ -194,44 +194,36 @@ private:
          kReadNoParentBranchCountNoCollection
       };
 
-      EReadType GetReadType() {
+      EReadType GetReadType()
+      {
          if (fParent) {
             if (!fCollection) {
                return EReadType::kReadParentNoCollection;
-            } else {
-               if (IsaPointer()) {
-                  return EReadType::kReadParentCollectionPointer;
-               } else {
-                  return EReadType::kReadParentCollectionNoPointer;
-               }
             }
-         } if (fHasLeafCount) {
-            return EReadType::kDefault;
-         } else {
-            if (fBranchCount) {
-               if (fCollection) {
-                  if (IsaPointer()) {
-                     return EReadType::kReadNoParentBranchCountCollectionPointer;
-                  } else {
-                     return EReadType::kReadNoParentBranchCountCollectionNoPointer;
-                  }
-               } else {
-                  return EReadType::kReadNoParentBranchCountNoCollection;
-               }
-
-            } else {
-               if (fCollection) {
-                  if (IsaPointer()) {
-                     return EReadType::kReadNoParentNoBranchCountCollectionPointer;
-                  } else {
-                     return EReadType::kReadNoParentNoBranchCountCollectionNoPointer;
-                  }
-               } else {
-                  return EReadType::kReadNoParentNoBranchCountNoCollection;
-               }
+            if (IsaPointer()) {
+               return EReadType::kReadParentCollectionPointer;
             }
+            return EReadType::kReadParentCollectionNoPointer;
          }
-         return EReadType::kDefault;
+         if (fHasLeafCount) {
+            return EReadType::kDefault;
+         }
+         if (fBranchCount) {
+            if (fCollection) {
+               if (IsaPointer()) {
+                  return EReadType::kReadNoParentBranchCountCollectionPointer;
+               }
+               return EReadType::kReadNoParentBranchCountCollectionNoPointer;
+            }
+            return EReadType::kReadNoParentBranchCountNoCollection;
+         }
+         if (fCollection) {
+            if (IsaPointer()) {
+               return EReadType::kReadNoParentNoBranchCountCollectionPointer;
+            }
+            return EReadType::kReadNoParentNoBranchCountCollectionNoPointer;
+         }
+         return EReadType::kReadNoParentNoBranchCountNoCollection;
       }
 
       Bool_t ReadNoDirector() {
