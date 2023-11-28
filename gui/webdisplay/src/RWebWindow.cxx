@@ -69,7 +69,10 @@ using RWebWindow::Send() method and call-back function assigned via RWebWindow::
 /// RWebWindow constructor
 /// Should be defined here because of std::unique_ptr<RWebWindowWSHandler>
 
-RWebWindow::RWebWindow() = default;
+RWebWindow::RWebWindow()
+{
+   fRequireAuthKey = RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey"); // does authentication key really required
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// RWebWindow destructor
@@ -153,7 +156,10 @@ RWebWindow::CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Return URL string to access web window
+/// Return URL string to connect web window
+/// URL may include extra parameters required for connection
+/// WARNING - do not invoke this method without real need, while each such URL
+/// registered in the web window and expected for connection from outside
 /// \param remote if true, real HTTP server will be started automatically
 
 std::string RWebWindow::GetUrl(bool remote)
@@ -493,12 +499,20 @@ void RWebWindow::InvokeCallbacks(bool force)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Add display handle and associated key
-/// Key is random number generated when starting new window
+/// Key is large random string generated when starting new window
 /// When client is connected, key should be supplied to correctly identify it
 
 unsigned RWebWindow::AddDisplayHandle(bool headless_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (auto &entry : fPendingConn) {
+      if (entry->fKey == key) {
+         entry->fHeadlessMode = headless_mode;
+         std::swap(entry->fDisplayHandle, handle);
+         return entry->fConnId;
+      }
+   }
 
    auto conn = std::make_shared<WebConn>(++fConnCnt, headless_mode, key);
 
@@ -541,9 +555,35 @@ bool RWebWindow::HasKey(const std::string &key) const
    auto conn = _FindConnWithKey(key);
 
    return conn ? true : false;
-
-   return false;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Removes all connections with the key
+
+void RWebWindow::RemoveKey(const std::string &key)
+{
+   ConnectionsList_t lst;
+
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      auto pred = [&](std::shared_ptr<WebConn> &e) {
+         if (e->fKey == key) {
+            lst.emplace_back(e);
+            return true;
+         }
+         return false;
+      };
+
+      fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
+      fConn.erase(std::remove_if(fConn.begin(), fConn.end(), pred), fConn.end());
+   }
+
+   for (auto &conn : lst)
+      if (conn->fActive)
+         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Generate new unique key for the window
@@ -691,7 +731,6 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
       TUrl url;
       url.SetOptions(arg.GetQuery());
-      bool check_key = RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") == 1;
 
       std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -707,7 +746,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          }
       }
 
-      if (check_key) {
+      if (IsRequireAuthKey()) {
          if(!url.HasOption("key")) {
             R__LOG_DEBUG(0, WebGUILog()) << "key parameter not provided in url";
             return false;

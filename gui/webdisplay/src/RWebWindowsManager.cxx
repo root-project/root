@@ -517,7 +517,7 @@ void RWebWindowsManager::Unregister(RWebWindow &win)
 //////////////////////////////////////////////////////////////////////////
 /// Provide URL address to access specified window from inside or from remote
 
-std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
+std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string *produced_key)
 {
    if (!fServer) {
       R__LOG_ERROR(WebGUILog()) << "Server instance not exists when requesting window URL";
@@ -525,19 +525,42 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
    }
 
    std::string addr = "/";
-
    addr.append(win.fWSHandler->GetName());
-
    addr.append("/");
 
+   bool qmark = false;
+
+   std::string key;
+
+   if (win.IsRequireAuthKey() || produced_key) {
+      key = win.GenerateKey();
+      addr.append("?key=");
+      addr.append(key);
+      qmark = true;
+      std::unique_ptr<ROOT::RWebDisplayHandle> dummy;
+      win.AddDisplayHandle(false, key, dummy);
+   }
+
+   auto token = win.GetConnToken();
+   if (!token.empty()) {
+      if (!qmark) addr.append("?");
+      addr.append("token=");
+      addr.append(token);
+   }
+
    if (remote) {
-      if (!CreateServer(true)) {
+      if (!CreateServer(true) || fAddr.empty()) {
          R__LOG_ERROR(WebGUILog()) << "Fail to start real HTTP server when requesting URL";
+         if (!key.empty())
+            win.RemoveKey(key);
          return "";
       }
 
       addr = fAddr + addr;
    }
+
+   if (produced_key)
+      *produced_key = key;
 
    return addr;
 }
@@ -602,20 +625,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
          return 0;
       }
 
-   // place here while involves conn mutex
-   auto token = win.GetConnToken();
-
-   // we book manager mutex for a longer operation,
-   std::lock_guard<std::recursive_mutex> grd(fMutex);
-
    if (!fServer) {
       R__LOG_ERROR(WebGUILog()) << "Server instance not exists to show window";
-      return 0;
-   }
-
-   std::string key = win.GenerateKey();
-   if (key.empty()) {
-      R__LOG_ERROR(WebGUILog()) << "Fail to create unique key for the window";
       return 0;
    }
 
@@ -626,6 +637,22 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
    }
 
+   bool normal_http = !args.IsLocalDisplay();
+   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
+      normal_http = true;
+
+   std::string key;
+
+   std::string url = GetUrl(win, normal_http, &key);
+   // empty url indicates failure, which already pinted by GetUrl method
+   if (url.empty())
+      return 0;
+
+   // we book manager mutex for a longer operation,
+   std::lock_guard<std::recursive_mutex> grd(fMutex);
+
+   args.SetUrl(url);
+
    if (args.GetWidth() <= 0)
       args.SetWidth(win.GetWidth());
    if (args.GetHeight() <= 0)
@@ -635,27 +662,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (args.GetY() < 0)
       args.SetY(win.GetY());
 
-   bool normal_http = !args.IsLocalDisplay();
-   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
-      normal_http = true;
-
-   std::string url = GetUrl(win, normal_http);
-   if (url.empty()) {
-      R__LOG_ERROR(WebGUILog()) << "Cannot create URL for the window";
-      return 0;
-   }
-   if (normal_http && fAddr.empty()) {
-      R__LOG_WARNING(WebGUILog()) << "Full URL cannot be produced for window " << url << " to start web browser";
-      return 0;
-   }
-
-   args.SetUrl(url);
-
-   args.AppendUrlOpt(std::string("key=") + key);
    if (args.IsHeadless())
       args.AppendUrlOpt("headless"); // used to create holder request
-   if (!token.empty())
-      args.AppendUrlOpt(std::string("token=") + token);
 
    if (!args.IsHeadless() && normal_http) {
       auto winurl = args.GetUrl();
@@ -697,6 +705,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
 
    if (!handle) {
       R__LOG_ERROR(WebGUILog()) << "Cannot display window in " << args.GetBrowserName();
+      if (!key.empty())
+         win.RemoveKey(key);
       return 0;
    }
 

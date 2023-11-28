@@ -65,7 +65,7 @@ private:
 
    int WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
-   std::string GetUrl(const RWebWindow &win, bool remote = false);
+   std::string GetUrl(RWebWindow &win, bool remote = false, std::string *produced_key = nullptr);
 
    bool CreateServer(bool with_http = false);
 
