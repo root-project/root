@@ -295,9 +295,11 @@ private:
          fError = true;
       }
 
-      if (cdf != 0 && error/cdf > 0.2 )
-         oocoutW(nullptr,NumIntegration) << "PosteriorCdfFunction: integration error  is larger than 20 %   x0 = " << fXmin[0]
-                                              << " x = " << x << " cdf(x) = " << cdf << " +/- " << error << std::endl;
+      if (cdf != 0 && error / cdf > 0.2) {
+         oocoutW(nullptr, NumIntegration)
+            << "PosteriorCdfFunction: integration error  is larger than 20 %   x0 = " << fXmin[0] << " x = " << x
+            << " cdf(x) = " << cdf << " +/- " << error << std::endl;
+      }
 
       if (!fHasNorm) {
          oocoutI(nullptr,NumIntegration) << "PosteriorCdfFunction - integral of posterior = "
@@ -431,13 +433,11 @@ private:
                                            << "  norm-f(x) = " << f/fNorm
                                            << " ncalls = " << fFunctor.binding().numCall() << std::endl;
 
-
-
-
-      if (f != 0 && error/f > 0.2 )
-         ooccoutW(nullptr,NumIntegration) << "PosteriorFunction::DoEval - Error from integration in "
-                                              << fXmin.size() <<  " Dim is larger than 20 % "
-                                              << "x = " << x << " p(x) = " << f << " +/- " << error << std::endl;
+      if (f != 0 && error / f > 0.2) {
+         ooccoutW(nullptr, NumIntegration)
+            << "PosteriorFunction::DoEval - Error from integration in " << fXmin.size() << " Dim is larger than 20 % "
+            << "x = " << x << " p(x) = " << f << " +/- " << error << std::endl;
+      }
 
       fError = error / fNorm;
       return f / fNorm;
@@ -902,11 +902,11 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       if (fNuisanceParameters.empty()) {
          fIntegratedLikelihood = fLikelihood;
          fLikelihood = nullptr;
-      }
-      else
+      } else {
          // case of using RooFit for the integration
-         fIntegratedLikelihood = std::unique_ptr<RooAbsReal>{fLikelihood->createIntegral(fNuisanceParameters)}.release();
-
+         fIntegratedLikelihood =
+            std::unique_ptr<RooAbsReal>{fLikelihood->createIntegral(fNuisanceParameters)}.release();
+      }
 
    }
 
@@ -950,10 +950,10 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
    }
 
-
-   if (RooAbsReal::numEvalErrors() > 0)
-      coutW(Eval) << "BayesianCalculator::GetPosteriorFunction : " << RooAbsReal::numEvalErrors() << " errors reported in evaluating log-likelihood function "
-                   << std::endl;
+   if (RooAbsReal::numEvalErrors() > 0) {
+      coutW(Eval) << "BayesianCalculator::GetPosteriorFunction : " << RooAbsReal::numEvalErrors()
+                  << " errors reported in evaluating log-likelihood function " << std::endl;
+   }
    RooAbsReal::clearEvalErrorLog();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
 
@@ -1150,9 +1150,10 @@ SimpleInterval* BayesianCalculator::GetInterval() const
 
 
    // reset the counts and default mode
-   if (RooAbsReal::numEvalErrors() > 0)
-      coutW(Eval) << "BayesianCalculator::GetInterval : " << RooAbsReal::numEvalErrors() << " errors reported in evaluating log-likelihood function "
-                   << std::endl;
+   if (RooAbsReal::numEvalErrors() > 0) {
+      coutW(Eval) << "BayesianCalculator::GetInterval : " << RooAbsReal::numEvalErrors()
+                  << " errors reported in evaluating log-likelihood function " << std::endl;
+   }
 
    RooAbsReal::clearEvalErrorLog();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
@@ -1228,12 +1229,12 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
    }
    else
       fUpper = poi->getMax();
-   if (!ret)  coutE(Eval) << "BayesianCalculator::GetInterval "
-                           << "Error returned from Root finder, estimated interval is not fully correct"
-                           << std::endl;
-   else
+   if (!ret) {
+      coutE(Eval) << "BayesianCalculator::GetInterval "
+                  << "Error returned from Root finder, estimated interval is not fully correct" << std::endl;
+   } else {
       fValidInterval = true;
-
+   }
 
    poi->setVal(tmpVal); // patch: restore the original value of poi
 }
@@ -1432,12 +1433,11 @@ void BayesianCalculator::ComputeShortestInterval( ) const {
       fLower = lower;
       fUpper = upper;
 
-
-
-      if ( std::abs(actualCL-(1.-fSize)) > 0.1*(1.-fSize) )
-         coutW(Eval) << "BayesianCalculator::ComputeShortestInterval - actual interval CL = "
-                     << actualCL << " differs more than 10% from desired CL value - must increase nbins "
-                     << n << " to an higher value " << std::endl;
+      if (std::abs(actualCL - (1. - fSize)) > 0.1 * (1. - fSize)) {
+         coutW(Eval) << "BayesianCalculator::ComputeShortestInterval - actual interval CL = " << actualCL
+                     << " differs more than 10% from desired CL value - must increase nbins " << n
+                     << " to an higher value " << std::endl;
+      }
    }
    else
       coutE(Eval) << "BayesianCalculator::ComputeShortestInterval " << n << " bins are not sufficient " << std::endl;

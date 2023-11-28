@@ -316,10 +316,12 @@ inline double invertMatrix(const Matrix &matrix, Matrix &inverse)
    double condition = lu.GetCondition();
    const size_t n = size(inverse);
    // sanitize numeric problems
-   for (size_t i = 0; i < n; ++i)
-      for (size_t j = 0; j < n; ++j)
+   for (size_t i = 0; i < n; ++i) {
+      for (size_t j = 0; j < n; ++j) {
          if (std::abs(inverse(i, j)) < 1e-9)
             inverse(i, j) = 0;
+      }
+   }
    return condition;
 }
 #endif
@@ -1137,16 +1139,18 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
       for (auto sampleit : inputFlags) {
          const auto &flag = sampleit.second.find(obj1->GetName());
          if (flag != sampleit.second.end()) {
-            if (flag->second == 0.)
+            if (flag->second == 0.) {
                nZero++;
-            else
+            } else {
                nNonZero++;
+            }
          }
       }
-      if (nZero > 0 && nNonZero == 0)
+      if (nZero > 0 && nNonZero == 0) {
          flagsZero[obj1->GetName()] = true;
-      else
+      } else {
          flagsZero[obj1->GetName()] = false;
+      }
    }
 
    FormulaList formulas;
@@ -2327,10 +2331,11 @@ typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache() c
       cxcoutP(Caching) << "creating cache from getCache function for " << this << std::endl;
       cxcoutP(Caching) << "current storage has size " << _sampleMap.size() << std::endl;
       cache = RooLagrangianMorphFunc::CacheElem::createCache(this);
-      if (cache)
+      if (cache) {
          _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
-      else
+      } else {
          coutE(Caching) << "unable to create cache!" << std::endl;
+      }
    }
    return cache;
 }
@@ -2902,10 +2907,11 @@ double RooLagrangianMorphFunc::evaluate() const
    for (auto &obs : _observables) {
       nSet.add(*obs);
    }
-   if (pdf)
+   if (pdf) {
       return _scale * pdf->getVal(&nSet);
-   else
+   } else {
       std::cerr << "unable to acquire in-built function!" << std::endl;
+   }
    return 0.;
 }
 
@@ -3074,9 +3080,10 @@ std::string LMIFace::create(RooFactoryWSTool &ft, const char * /*typeName*/, con
             std::vector<std::string> parts = ROOT::Split(subarg, "=");
             if (parts.size() == 2) {
                ft.ws().arg(parts[0])->setAttribute("NewPhysics", atoi(parts[1].c_str()));
-            } else
+            } else {
                throw std::string(Form("%s::create() ERROR: unknown token %s encountered, check input provided for %s",
                                       instanceName, subarg.c_str(), args[i].c_str()));
+            }
          }
       } else {
          std::vector<string> subargs = ft.splitFunctionArgs(args[i].c_str());
@@ -3086,9 +3093,10 @@ std::string LMIFace::create(RooFactoryWSTool &ft, const char * /*typeName*/, con
                if (args[i].find(param) != string::npos)
                   mappedInputs[param] = subargs[0];
             }
-         } else
+         } else {
             throw std::string(
                Form("Incorrect number of arguments in %s, have %d, expect 1", args[i].c_str(), (Int_t)subargs.size()));
+         }
       }
    }
 

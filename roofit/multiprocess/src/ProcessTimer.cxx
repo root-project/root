@@ -40,10 +40,11 @@ list<chrono::time_point<chrono::steady_clock>> ProcessTimer::get_durations(strin
    ProcessTimer::duration_map_t::mapped_type duration_list;
    for (auto const &durations_element : ProcessTimer::durations) {
       std::tie(sec_name, duration_list) = durations_element;
-      if (sec_name != to_return)
+      if (sec_name != to_return) {
          continue;
-      else
+      } else {
          return duration_list;
+      }
    }
    throw ::invalid_argument("section name " + to_return +
                             " not found in timer map, so it cannot"

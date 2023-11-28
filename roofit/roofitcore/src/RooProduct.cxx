@@ -578,9 +578,11 @@ namespace {
 std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end)
 {
   // Utility function finding pairs of overlapping input functions
-  for (; i!=end; ++i) for ( RPPMIter j(i+1); j!=end; ++j) {
-    if (i->second->overlaps(*j->second)) {
-      return std::make_pair(i,j);
+  for (; i != end; ++i) {
+    for (RPPMIter j(i + 1); j != end; ++j) {
+      if (i->second->overlaps(*j->second)) {
+        return std::make_pair(i, j);
+      }
     }
   }
   return std::make_pair(end,end);

@@ -217,38 +217,41 @@ double RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
   double a_cos_m = _avgC - _delC;
 
   if (basisIndex == _basisExp) {
-    if (rhoQc == -1 || rhoQc == +1)
-      return (1 + rhoQc*_acp*(1 - 2*_wQ))*(1 + 0.5*_tag*(2*_delW));
-    else
-      return 1;
+    if (rhoQc == -1 || rhoQc == +1) {
+       return (1 + rhoQc * _acp * (1 - 2 * _wQ)) * (1 + 0.5 * _tag * (2 * _delW));
+    } else {
+       return 1;
+    }
   }
 
   if (basisIndex == _basisSin) {
 
-    if (rhoQc == -1)
+    if (rhoQc == -1) {
 
-      return - ((1 - _acp)*a_sin_m*(1 - _wQ) + (1 + _acp)*a_sin_p*_wQ)*(1 - 2*_avgW)*_tag;
+       return -((1 - _acp) * a_sin_m * (1 - _wQ) + (1 + _acp) * a_sin_p * _wQ) * (1 - 2 * _avgW) * _tag;
 
-    else if (rhoQc == +1)
+    } else if (rhoQc == +1) {
 
-      return - ((1 + _acp)*a_sin_p*(1 - _wQ) + (1 - _acp)*a_sin_m*_wQ)*(1 - 2*_avgW)*_tag;
+       return -((1 + _acp) * a_sin_p * (1 - _wQ) + (1 - _acp) * a_sin_m * _wQ) * (1 - 2 * _avgW) * _tag;
 
-    else
-       return - _tag*((a_sin_p + a_sin_m)/2)*(1 - 2*_avgW);
+    } else {
+       return -_tag * ((a_sin_p + a_sin_m) / 2) * (1 - 2 * _avgW);
+    }
   }
 
   if (basisIndex == _basisCos) {
 
-    if ( rhoQc == -1)
+    if (rhoQc == -1) {
 
-      return + ((1 - _acp)*a_cos_m*(1 - _wQ) + (1 + _acp)*a_cos_p*_wQ)*(1 - 2*_avgW)*_tag;
+       return +((1 - _acp) * a_cos_m * (1 - _wQ) + (1 + _acp) * a_cos_p * _wQ) * (1 - 2 * _avgW) * _tag;
 
-    else if (rhoQc == +1)
+    } else if (rhoQc == +1) {
 
-      return + ((1 + _acp)*a_cos_p*(1 - _wQ) + (1 - _acp)*a_cos_m*_wQ)*(1 - 2*_avgW)*_tag;
+       return +((1 + _acp) * a_cos_p * (1 - _wQ) + (1 - _acp) * a_cos_m * _wQ) * (1 - 2 * _avgW) * _tag;
 
-    else
-      return _tag*((a_cos_p + a_cos_m)/2)*(1 - 2*_avgW);
+    } else {
+       return _tag * ((a_cos_p + a_cos_m) / 2) * (1 - 2 * _avgW);
+    }
   }
 
   return 0;
@@ -298,13 +301,15 @@ double RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
   case 2:
     if (basisIndex == _basisExp) return 2*(1 + 0.5*_tag*(2.*_delW));
 
-    if (basisIndex == _basisSin)
+    if (basisIndex == _basisSin) {
 
-      return - ( (1 - _acp)*a_sin_m + (1 + _acp)*a_sin_p )*(1 - 2*_avgW)*_tag;
+       return -((1 - _acp) * a_sin_m + (1 + _acp) * a_sin_p) * (1 - 2 * _avgW) * _tag;
+    }
 
-    if (basisIndex == _basisCos)
+    if (basisIndex == _basisCos) {
 
-      return + ( (1 - _acp)*a_cos_m + (1 + _acp)*a_cos_p )*(1 - 2*_avgW)*_tag;
+       return +((1 - _acp) * a_cos_m + (1 + _acp) * a_cos_p) * (1 - 2 * _avgW) * _tag;
+    }
 
     assert( false );
 
@@ -350,11 +355,10 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
                  ).getVal();
     _genB0Frac = b0Int1/sumInt1;
 
-    if (Debug_RooNonCPEigenDecay == 1)
-      cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : "
-      << _genB0Frac
-      << ", tag dilution: " << (1 - 2*_avgW)
-      << endl;
+    if (Debug_RooNonCPEigenDecay == 1) {
+       cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : " << _genB0Frac
+            << ", tag dilution: " << (1 - 2 * _avgW) << endl;
+    }
   }
 
   if (code == 3 || code == 4) {
@@ -368,9 +372,9 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
                  ).getVal();
     _genRhoPlusFrac = b0Int2/sumInt2;
 
-    if (Debug_RooNonCPEigenDecay == 1)
-      cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: "
-      << _genRhoPlusFrac << endl;
+    if (Debug_RooNonCPEigenDecay == 1) {
+       cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: " << _genRhoPlusFrac << endl;
+    }
   }
 }
 

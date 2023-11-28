@@ -356,9 +356,10 @@ double HybridPlot::GetMedian(TH1* histo){
    //int xbin_median;
    double* integral = histo->GetIntegral();
    int median_i = 0;
-   for (int j=0;j<histo->GetNbinsX(); j++)
+   for (int j = 0; j < histo->GetNbinsX(); j++) {
       if (integral[j]<0.5)
          median_i = j;
+   }
 
    double median_x =
       histo->GetBinCenter(median_i)+

@@ -309,10 +309,11 @@ void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
       TObjString *obj;
       while ((obj = static_cast<TObjString*>(next()))) {
          file = obj->GetName();
-         if (behind_dot_root.Length() != 0)
+         if (behind_dot_root.Length() != 0) {
             result.push_back(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data())) ;
-         else
-            result.push_back(Form("%s/%s",directory.Data(),file)) ;
+         } else {
+            result.push_back(Form("%s/%s", directory.Data(), file));
+         }
       }
       l.Delete();
    }

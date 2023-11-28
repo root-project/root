@@ -369,12 +369,14 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       RooAbsData* toydata = GenerateToyData(*paramPoint, weight);
       if (i == 0 && !fPdf->canBeExtended() && dynamic_cast<RooSimultaneous*>(fPdf)) {
         const RooArgSet* toySet = toydata->get();
-        if (std::none_of(toySet->begin(), toySet->end(), [](const RooAbsArg* arg){
-          return dynamic_cast<const RooAbsCategory*>(arg) != nullptr;
-        }))
-          oocoutE(nullptr, Generation) << "ToyMCSampler: Generated toy data didn't contain a category variable, although"
-            " a simultaneous PDF is in use. To generate events for a simultaneous PDF, all components need to be"
-            " extended. Otherwise, the number of events to generate per component cannot be determined." << std::endl;
+        if (std::none_of(toySet->begin(), toySet->end(),
+                         [](const RooAbsArg *arg) { return dynamic_cast<const RooAbsCategory *>(arg) != nullptr; })) {
+           oocoutE(nullptr, Generation)
+              << "ToyMCSampler: Generated toy data didn't contain a category variable, although"
+                 " a simultaneous PDF is in use. To generate events for a simultaneous PDF, all components need to be"
+                 " extended. Otherwise, the number of events to generate per component cannot be determined."
+              << std::endl;
+        }
       }
 
       allVars->assign(*fParametersForTestStat);

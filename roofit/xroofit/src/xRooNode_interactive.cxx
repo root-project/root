@@ -77,9 +77,10 @@ void xRooNode::Interactive_Pull()
                      gPad->GetPrimitive(TString::Format("%s;variation %d", select->GetName(), vNum)));
                }
                _varyName = TString::Format("variation %d", vNum);
-               if (!newPoint)
+               if (!newPoint) {
                   newPoint = static_cast<TGraphAsymmErrors *>(
                      select->Clone(TString::Format("%s;%s", select->GetName(), _varyName.Data())));
+               }
                newPoint->SetPointX(0, _gr->GetPointX(i - 1));
                newPoint->SetMarkerColor(860 + (vNum - 1) * 20);
                newPoint->SetLineColor(newPoint->GetMarkerColor());
@@ -173,9 +174,9 @@ void xRooNode::Interactive_PLLPlot()
    TObject *foundGraph = nullptr;
    for (auto g : *_hidden_pad->GetListOfPrimitives()) {
       double midpoint = TString(g->GetName()).Atof();
-      if (!foundGraph)
+      if (!foundGraph) {
          foundGraph = g;
-      else {
+      } else {
          midpoint = (midpoint + TString(foundGraph->GetName()).Atof()) / 2.;
       }
       if (midpoint >= x)
@@ -222,10 +223,11 @@ void xRooNode::InteractiveObject::Interactive_PLLPlot(TVirtualPad *pad, TObject 
    if (auto g = dynamic_cast<TGraph *>(obj); g && pad && pad->GetMother() && pad->GetNumber() == 1) {
       auto frPad = pad->GetMother()->GetPad(2);
       if (frPad) {
-         if (!g->IsHighlight())
+         if (!g->IsHighlight()) {
             x = -1;
-         else if (x >= 0)
+         } else if (x >= 0) {
             x += 1;
+         }
          // x is the point index
          TVirtualPad *_pad = frPad->GetPad(x);
          auto selPad = dynamic_cast<TVirtualPad *>(frPad->GetPrimitive("selected"));

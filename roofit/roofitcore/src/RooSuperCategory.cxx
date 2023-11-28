@@ -99,9 +99,10 @@ bool RooSuperCategory::setIndex(Int_t index, bool printError)
   for (auto arg : _multiCat->_catSet) {
     auto cat = static_cast<RooAbsCategoryLValue*>(arg);
     if (cat->empty()) {
-      if (printError)
-        coutE(InputArguments) << __func__ << ": Found a category with zero states. Cannot set state for '"
-            << cat->GetName() << "'." << std::endl;
+      if (printError) {
+         coutE(InputArguments) << __func__ << ": Found a category with zero states. Cannot set state for '"
+                               << cat->GetName() << "'." << std::endl;
+      }
       continue;
     }
     const value_type thisIndex = index % cat->size();

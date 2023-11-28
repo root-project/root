@@ -1819,10 +1819,11 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
   // this node has not been processed (FindObject returns a null pointer)
   auto obj = processedNodes.findArg(this);
   assert(obj != this); // obj == this cannot happen
-  if (obj)
+  if (obj) {
      // here for nodes with duplicate names
-     cxcoutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName()
-                           << " node " << this << " exists already as " << obj << " but with the SAME name !" << endl;
+     cxcoutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName() << " node " << this << " exists already as "
+                           << obj << " but with the SAME name !" << endl;
+  }
 
   processedNodes.Add(this);
 

@@ -18,6 +18,7 @@ Checks: -*,
   ,performance-inefficient-vector-operation,
   ,performance-move-const-arg,
   ,performance-trivially-destructible,
+  ,readability-braces-around-statements,
   ,readability-container-size-empty,
   ,readability-duplicate-include,
   ,readability-isolate-declaration,
@@ -54,6 +55,8 @@ CheckOptions:
     value:           llvm
   - key:             modernize-use-nullptr.NullMacros
     value:           'NULL'
+  - key:             readability-braces-around-statements.ShortStatementLines
+    value:           '2'
   - key:             readability-redundant-member-init.IgnoreBaseInCopyConstructors
     value:           true
 ...

@@ -116,10 +116,11 @@ void CodeSquashContext::addToCodeBody(std::string const &in, bool isScopeIndep /
 {
    // If we are in a loop and the value is scope independent, save it at the top of the loop.
    // else, just save it in the current scope.
-   if (_scopePtr != -1 && isScopeIndep)
+   if (_scopePtr != -1 && isScopeIndep) {
       _tempScope += in;
-   else
+   } else {
       _code += in;
+   }
 }
 
 /// @brief Create a RAII scope for iterating over vector observables. You can't use the result of vector observables

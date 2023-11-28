@@ -216,10 +216,11 @@ void configureVariable(RooFit::JSONIO::Detail::Domains &domains, const JSONNode 
       v.setError(v.getVal() * n->val_double());
    if (auto n = p.find("err"))
       v.setError(n->val_double());
-   if (auto n = p.find("const"))
+   if (auto n = p.find("const")) {
       v.setConstant(n->val_bool());
-   else
+   } else {
       v.setConstant(false);
+   }
 }
 
 JSONNode const *getVariablesNode(JSONNode const &rootNode)
@@ -243,18 +244,21 @@ Var::Var(const JSONNode &val)
       this->min = this->edges[0];
       this->max = this->edges[this->nbins - 1];
    } else {
-      if (!val.find("nbins"))
+      if (!val.find("nbins")) {
          this->nbins = 1;
-      else
+      } else {
          this->nbins = val["nbins"].val_int();
-      if (!val.find("min"))
+      }
+      if (!val.find("min")) {
          this->min = 0;
-      else
+      } else {
          this->min = val["min"].val_double();
-      if (!val.find("max"))
+      }
+      if (!val.find("max")) {
          this->max = 1;
-      else
+      } else {
          this->max = val["max"].val_double();
+      }
    }
 }
 
@@ -662,10 +666,11 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    for (const auto &p : pars) {
       if (mc->GetParametersOfInterest()->find(*p))
          continue;
-      if (p->isConstant() && !mainPars.find(*p))
+      if (p->isConstant() && !mainPars.find(*p)) {
          globs.add(*p);
-      else
+      } else {
          nps.add(*p);
+      }
    }
    mc->SetGlobalObservables(globs);
    mc->SetNuisanceParameters(nps);
@@ -786,10 +791,11 @@ void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll,
    for (RooAbsArg const *arg : coll) {
       if (n >= nMax)
          break;
-      if (isLiteralConstVar(*arg))
+      if (isLiteralConstVar(*arg)) {
          node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
-      else
+      } else {
          node.append_child() << arg->GetName();
+      }
       ++n;
    }
    if (node.num_children() != old_children + coll.size()) {
@@ -1132,10 +1138,11 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          fillSeq(elem[k->second], *l);
       }
       if (auto r = dynamic_cast<RooArgProxy *>(p)) {
-         if (isLiteralConstVar(*r->absArg()))
+         if (isLiteralConstVar(*r->absArg())) {
             elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
-         else
+         } else {
             elem[k->second] << r->absArg()->GetName();
+         }
       }
    }
 

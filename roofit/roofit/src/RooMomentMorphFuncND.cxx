@@ -407,12 +407,13 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       RooRealVar *frac = new RooRealVar(fracName.c_str(), fracName.c_str(), initval); // to be set later
 
       fracl.add(*frac);
-      if (i < nPdf)
+      if (i < nPdf) {
          coefList.add(*static_cast<RooRealVar *>(fracl.at(i)));
-      else if (i < 2 * nPdf)
+      } else if (i < 2 * nPdf) {
          coefList2.add(*static_cast<RooRealVar *>(fracl.at(i)));
-      else
+      } else {
          coefList3.add(*static_cast<RooRealVar *>(fracl.at(i)));
+      }
       ownedComps.add(*static_cast<RooRealVar *>(fracl.at(i)));
    }
 

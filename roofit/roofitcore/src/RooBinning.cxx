@@ -156,9 +156,9 @@ bool RooBinning::removeBoundary(double boundary)
 void RooBinning::addUniform(Int_t nbins, double xlo, double xhi)
 {
   _boundaries.reserve(_boundaries.size() + nbins + 1);
-  for (Int_t i = 0; i <= nbins; ++i)
-    addBoundary((double(nbins - i) / double(nbins)) * xlo +
-   (double(i) / double(nbins)) * xhi);
+  for (Int_t i = 0; i <= nbins; ++i) {
+    addBoundary((double(nbins - i) / double(nbins)) * xlo + (double(i) / double(nbins)) * xhi);
+  }
 }
 
 namespace {
