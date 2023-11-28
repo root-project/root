@@ -229,9 +229,10 @@ void RooRealMPFE::initialize()
     _exit(0) ;
   } else {
     // Client process - fork successful
-    if (_verboseClient) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
-   GetName() << ") successfully forked server process " <<
-       _pipe->pidOtherEnd() << endl ;
+    if (_verboseClient) {
+       ccoutD(Minimization) << "RooRealMPFE::initialize(" << GetName() << ") successfully forked server process "
+                            << _pipe->pidOtherEnd() << endl;
+    }
     _state = Client ;
     _calcInProgress = false ;
   }

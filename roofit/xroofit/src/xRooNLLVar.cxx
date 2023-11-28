@@ -232,9 +232,9 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf,
          std::string noneCatRanges;
          while (pattern.NextToken()) {
             chanPatterns.emplace_back(pattern);
-            if (_cat.hasRange(chanPatterns.back()))
+            if (_cat.hasRange(chanPatterns.back())) {
                hasRange = true;
-            else {
+            } else {
                if (!noneCatRanges.empty())
                   noneCatRanges += ",";
                noneCatRanges += chanPatterns.back();
@@ -311,27 +311,30 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf, const std::shared_
 void xRooNLLVar::Print(Option_t *)
 {
    std::cout << "PDF: ";
-   if (fPdf)
+   if (fPdf) {
       fPdf->Print();
-   else
+   } else {
       std::cout << "<null>" << std::endl;
+   }
    std::cout << "Data: ";
-   if (fData)
+   if (fData) {
       fData->Print();
-   else
+   } else {
       std::cout << "<null>" << std::endl;
+   }
    std::cout << "NLL Options: " << std::endl;
    for (int i = 0; i < fOpts->GetSize(); i++) {
       auto c = dynamic_cast<RooCmdArg *>(fOpts->At(i));
       if (!c)
          continue;
       std::cout << " " << c->GetName() << " : ";
-      if (c->getString(0))
+      if (c->getString(0)) {
          std::cout << c->getString(0);
-      else if (c->getSet(0) && !c->getSet(0)->empty())
+      } else if (c->getSet(0) && !c->getSet(0)->empty()) {
          std::cout << (c->getSet(0)->contentsString());
-      else
+      } else {
          std::cout << c->getInt(0);
+      }
       std::cout << std::endl;
    }
    if (fFitConfig) {
@@ -375,9 +378,10 @@ void xRooNLLVar::reinitialize()
                      std::unique_ptr<std::list<double>> boundaries{dynamic_cast<RooAbsReal *>(a)->binBoundaries(
                         *var, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity())};
                      if (boundaries) {
-                        if (!std::shared_ptr<RooAbsReal>::get())
+                        if (!std::shared_ptr<RooAbsReal>::get()) {
                            Info("xRooNLLVar", "%s will be evaluated as a Binned PDF (%d bins)", a->GetName(),
                                 int(boundaries->size() - 1));
+                        }
                         setBinned = true;
                      }
                   }
@@ -807,10 +811,11 @@ double xRooNLLVar::saturatedNllTerm() const
       _data->get(i);
       double w = _data->weight();
       out -= w * std::log(w);
-      if (isBinned)
+      if (isBinned) {
          out += TMath::LnGamma(w + 1);
-      else
+      } else {
          out += w * std::log(getEntryBinWidth(i));
+      }
    }
 
    out += simTerm();
@@ -1112,10 +1117,11 @@ std::shared_ptr<RooAbsReal> xRooNLLVar::func() const
 void xRooNLLVar::AddOption(const RooCmdArg &opt)
 {
    fOpts->Add(opt.Clone(nullptr));
-   if (std::shared_ptr<RooAbsReal>::get())
+   if (std::shared_ptr<RooAbsReal>::get()) {
       reinitialize(); // do this way to keep name of nll if user set
-   else
+   } else {
       reset(); // will trigger reinitialize
+   }
 }
 
 RooAbsData *xRooNLLVar::data() const
@@ -1354,17 +1360,19 @@ void xRooNLLVar::xRooHypoPoint::Print(Option_t *) const
       if (fAsimov) {
          std::cout << std::endl;
          std::cout << "   - asimov ufit: ";
-         if (fAsimov->fUfit)
+         if (fAsimov->fUfit) {
             std::cout << fAsimov->fUfit->GetName() << " " << fAsimov->fUfit->minNll()
                       << " (status=" << fAsimov->fUfit->status() << ")";
-         else
+         } else {
             std::cout << "Not calculated";
+         }
          std::cout << std::endl << "   - asimov null cfit: ";
-         if (fAsimov->fNull_cfit)
+         if (fAsimov->fNull_cfit) {
             std::cout << fAsimov->fNull_cfit->GetName() << " " << fAsimov->fNull_cfit->minNll()
                       << " (status=" << fAsimov->fNull_cfit->status() << ")";
-         else
+         } else {
             std::cout << "Not calculated";
+         }
       }
       std::cout << std::endl;
    } else {
@@ -1394,10 +1402,11 @@ RooRealVar &xRooNLLVar::xRooHypoPoint::mu_hat()
 {
    if (ufit()) {
       auto var = dynamic_cast<RooRealVar *>(ufit()->floatParsFinal().find(fPOIName()));
-      if (var)
+      if (var) {
          return *var;
-      else
-         throw std::runtime_error(TString::Format("Cannot find POI: %s",fPOIName()));
+      } else {
+         throw std::runtime_error(TString::Format("Cannot find POI: %s", fPOIName()));
+      }
    }
    throw std::runtime_error("Unconditional fit unavailable");
 }
@@ -1742,12 +1751,13 @@ std::string collectionContents(const RooAbsCollection &coll)
       if (!out.empty())
          out += ",";
       out += c->GetName();
-      if (auto v = dynamic_cast<RooAbsReal *>(c); v)
+      if (auto v = dynamic_cast<RooAbsReal *>(c); v) {
          out += TString::Format("=%g", v->getVal());
-      else if (auto cc = dynamic_cast<RooAbsCategory *>(c); cc)
+      } else if (auto cc = dynamic_cast<RooAbsCategory *>(c); cc) {
          out += TString::Format("=%s", cc->getLabel());
-      else if (auto s = dynamic_cast<RooStringVar *>(c); v)
+      } else if (auto s = dynamic_cast<RooStringVar *>(c); v) {
          out += TString::Format("=%s", s->getVal());
+      }
    }
    return out;
 }
@@ -1789,9 +1799,10 @@ std::shared_ptr<const RooFitResult> xRooNLLVar::xRooHypoPoint::cfit_null(bool re
    *nllVar->fFuncVars = *coords; // will reconst the coords
    if (nllVar->fFuncGlobs)
       nllVar->fFuncGlobs->setAttribAll("Constant", true);
-   if (fPOIName())
+   if (fPOIName()) {
       nllVar->fFuncVars->find(fPOIName())
          ->setStringAttribute("altVal", (!std::isnan(fAltVal())) ? TString::Format("%g", fAltVal()) : nullptr);
+   }
    if (fGenFit) {
       nllVar->get()->SetName(
          TString::Format("%s/%s_%s", nllVar->get()->GetName(), fGenFit->GetName(), (isExpected) ? "asimov" : "toys"));
@@ -1845,9 +1856,10 @@ std::shared_ptr<const RooFitResult> xRooNLLVar::xRooHypoPoint::cfit_lbound(bool 
    nllVar->fFuncVars->setRealValue(_first_poi->GetName(), _first_poi->getMin("physical"));
    if (nllVar->fFuncGlobs)
       nllVar->fFuncGlobs->setAttribAll("Constant", true);
-   if (fPOIName())
+   if (fPOIName()) {
       nllVar->fFuncVars->find(fPOIName())
          ->setStringAttribute("altVal", (!std::isnan(fAltVal())) ? TString::Format("%g", fAltVal()) : nullptr);
+   }
    if (fGenFit) {
       nllVar->get()->SetName(
          TString::Format("%s/%s_%s", nllVar->get()->GetName(), fGenFit->GetName(), (isExpected) ? "asimov" : "toys"));
@@ -1947,14 +1959,15 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::pX_toys(bool alt, double nS
    double result_err_up = 0;
    double result_err_down = 0;
    for (auto &toy : _theToys) {
-      if (std::isnan(std::get<1>(toy)))
+      if (std::isnan(std::get<1>(toy))) {
          nans++;
-      else {
+      } else {
          bool res = std::get<1>(toy) >= _ts.first;
-         if (std::get<2>(toy) != 1)
+         if (std::get<2>(toy) != 1) {
             eff.FillWeighted(res, 0.5, std::get<2>(toy));
-         else
+         } else {
             eff.Fill(res, 0.5);
+         }
          if (res)
             result += std::get<2>(toy);
          if (std::get<1>(toy) >= _ts.first - _ts.second)
@@ -2331,12 +2344,13 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
    auto _type = pllType;
    if (_type == xRooFit::Asymptotics::Unknown) {
       // decide based on values
-      if (std::isnan(alt_value))
+      if (std::isnan(alt_value)) {
          _type = xRooFit::Asymptotics::TwoSided;
-      else if (dynamic_cast<RooRealVar *>(_poi->first())->getVal() >= alt_value)
+      } else if (dynamic_cast<RooRealVar *>(_poi->first())->getVal() >= alt_value) {
          _type = xRooFit::Asymptotics::OneSidedPositive;
-      else
+      } else {
          _type = xRooFit::Asymptotics::Uncapped;
+      }
    }
 
    out.fPllType = _type;
@@ -2525,15 +2539,17 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
       }
    }
 
-   if (h->GetEntries() > 0)
+   if (h->GetEntries() > 0) {
       h->Draw("esame");
-   else
+   } else {
       h->Draw("axissame"); // for unknown reason if second histogram empty it still draws with two weird bars???
+   }
    h = altHist;
-   if (h->GetEntries() > 0)
+   if (h->GetEntries() > 0) {
       h->Draw("esame");
-   else
+   } else {
       h->Draw("axissame"); // for unknown reason if second histogram empty it still draws with two weird bars???
+   }
 
    if (l) {
       l->AddEntry(nullHist);
@@ -2609,41 +2625,44 @@ TString xRooNLLVar::xRooHypoPoint::tsTitle(bool inWords) const
 {
    auto v = dynamic_cast<RooRealVar *>(poi().empty() ? nullptr : poi().first());
    if (fPllType == xRooFit::Asymptotics::OneSidedPositive) {
-      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity())
+      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity()) {
          return (inWords) ? TString::Format("Lower-Bound One-Sided Limit PLR")
                           : TString::Format("#tilde{q}_{%s=%g}", v->GetTitle(), v->getVal());
-      else if (v)
+      } else if (v) {
          return (inWords) ? TString::Format("One-Sided Limit PLR")
                           : TString::Format("q_{%s=%g}", v->GetTitle(), v->getVal());
-      else
+      } else {
          return "q";
+      }
    } else if (fPllType == xRooFit::Asymptotics::TwoSided) {
-      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity())
+      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity()) {
          return (inWords) ? TString::Format("Lower-Bound PLR")
                           : TString::Format("#tilde{t}_{%s=%g}", v->GetTitle(), v->getVal());
-      else if (v) {
+      } else if (v) {
          return (inWords) ? TString::Format("-2log[L(%s,#hat{#hat{#theta}})/L(#hat{%s},#hat{#theta})]", v->GetTitle(),
                                             v->GetTitle())
                           : TString::Format("t_{%s=%g}", v->GetTitle(), v->getVal());
       } else
          return "t";
    } else if (fPllType == xRooFit::Asymptotics::OneSidedNegative) {
-      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity())
+      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity()) {
          return (inWords) ? TString::Format("Lower-Bound One-Sided Discovery PLR")
                           : TString::Format("#tilde{r}_{%s=%g}", v->GetTitle(), v->getVal());
-      else if (v)
+      } else if (v) {
          return (inWords) ? TString::Format("One-Sided Discovery PLR")
                           : TString::Format("r_{%s=%g}", v->GetTitle(), v->getVal());
-      else
+      } else {
          return "r";
+      }
    } else if (fPllType == xRooFit::Asymptotics::Uncapped) {
-      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity())
+      if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity()) {
          return (inWords) ? TString::Format("Lower-Bound Uncapped PLR")
                           : TString::Format("#tilde{s}_{%s=%g}", v->GetTitle(), v->getVal());
-      else if (v)
+      } else if (v) {
          return (inWords) ? TString::Format("Uncapped PLR") : TString::Format("s_{%s=%g}", v->GetTitle(), v->getVal());
-      else
+      } else {
          return "s";
+      }
    } else {
       return "Test Statistic";
    }

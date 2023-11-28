@@ -71,10 +71,11 @@ double xRooFit::Asymptotics::k(const IncompatFunc &compatRegions, double pValue,
    double _prev_pll = _pll;
    do {
       currVal = wf(_pll);
-      if (currVal > 1e-4)
+      if (currVal > 1e-4) {
          _pll = 2. * (_pll + 1.); // goto bigger pll scale
-      else if (currVal < -1e-4)
+      } else if (currVal < -1e-4) {
          _pll /= 2.; // goto smaller pll scale
+      }
       // std::cout << "pll = " << _pll << " currVal = " << currVal << std::endl;
       brf.SetFunction(wf, 0, _pll);
       if (brf.Solve()) {
@@ -200,9 +201,9 @@ xRooFit::Asymptotics::Phi_m(double /*mu*/, double mu_prime, double a, double sig
    for (auto &transition : compatRegions) {
       if (transition.first >= (a * sigma + mu_prime))
          break;
-      if (transition.second == 0 && std::isnan(lowEdge))
+      if (transition.second == 0 && std::isnan(lowEdge)) {
          lowEdge = transition.first;
-      else if (!std::isnan(lowEdge)) {
+      } else if (!std::isnan(lowEdge)) {
          out += ROOT::Math::gaussian_cdf((transition.first - mu_prime) / sigma) -
                 ROOT::Math::gaussian_cdf((lowEdge - mu_prime) / sigma);
          lowEdge = std::numeric_limits<double>::quiet_NaN();

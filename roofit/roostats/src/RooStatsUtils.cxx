@@ -165,12 +165,16 @@ namespace RooStats {
             if(newPdfi != nullptr) newList.add(*newPdfi);
          }
 
-         if(newList.empty()) return nullptr; // only constraints in product
-         // return single component (no longer a product)
-         else if(newList.size() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained",
-                                                                                                               newList.at(0)->GetName())));
-         else return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
-            TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
+         if (newList.empty()) {
+            return nullptr; // only constraints in product
+            // return single component (no longer a product)
+         } else if (newList.size() == 1) {
+            return dynamic_cast<RooAbsPdf *>(
+               newList.at(0)->clone(TString::Format("%s_unconstrained", newList.at(0)->GetName())));
+         } else {
+            return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
+                                  TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
+         }
 
       } else if (dynamic_cast<RooExtendPdf*>(&pdf)) {
 

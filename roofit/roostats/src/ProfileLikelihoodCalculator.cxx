@@ -147,10 +147,11 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
    if (fFitResult) {
       fFitResult->printStream( oocoutI(nullptr,Minimization), fFitResult->defaultPrintContents(nullptr), fFitResult->defaultPrintStyle(nullptr) );
 
-      if (fFitResult->status() != 0)
+      if (fFitResult->status() != 0) {
          oocoutW(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed - status = " << fFitResult->status() << std::endl;
-      else
+      } else {
          fGlobalFitDone = true;
+      }
    }
 
    return RooFit::Detail::owningPtr(std::move(nll));

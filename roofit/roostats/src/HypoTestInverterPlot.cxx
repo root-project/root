@@ -170,17 +170,19 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
    TGraphAsymmErrors * g2 = nullptr;
    if (doFirstBand) {
       g1 = new TGraphAsymmErrors;
-      if (nsig1 - int(nsig1) < 0.01)
+      if (nsig1 - int(nsig1) < 0.01) {
          g1->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig1)) );
-      else
-         g1->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig1) );
+      } else {
+         g1->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma", pValueName.Data(), nsig1));
+      }
    }
    if (doSecondBand) {
       g2 = new TGraphAsymmErrors;
-      if (nsig2 - int(nsig2) < 0.01)
+      if (nsig2 - int(nsig2) < 0.01) {
          g2->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig2)) );
-      else
-         g2->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig2) );
+      } else {
+         g2->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma", pValueName.Data(), nsig2));
+      }
    }
    double p[7];
    double q[7];

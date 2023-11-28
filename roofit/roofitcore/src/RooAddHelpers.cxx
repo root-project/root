@@ -172,10 +172,11 @@ void AddCacheElem::print() const
       std::cout << "+++ " << name << ":" << std::endl;
       for (auto const &arg : vec) {
          std::cout << "    ";
-         if (arg)
+         if (arg) {
             arg->Print();
-         else
+         } else {
             std::cout << "nullptr" << std::endl;
+         }
       }
    };
 

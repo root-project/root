@@ -85,10 +85,11 @@ double LinInterpVar::evaluate() const
   
   int i=0;
   for(auto const* param: static_range_cast<RooAbsReal *>(_paramList)) {
-    if(param->getVal()>0)
+    if (param->getVal() > 0) {
       sum +=  param->getVal()*(_high.at(i) - _nominal );
-    else
-      sum += param->getVal()*(_nominal - _low.at(i));
+    } else {
+      sum += param->getVal() * (_nominal - _low.at(i));
+    }
 
     ++i;
   }

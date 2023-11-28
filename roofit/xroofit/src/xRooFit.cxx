@@ -266,10 +266,11 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                               foundServer = false;
                               break;
                            }
-                           if (thetaGamma && thetaGamma->getVal() > 0)
+                           if (thetaGamma && thetaGamma->getVal() > 0) {
                               rrv.setVal(rrv2->getVal() / thetaGamma->getVal());
-                           else
+                           } else {
                               rrv.setVal(rrv2->getVal());
+                           }
                            foundServer = true;
                         }
                      }
@@ -662,10 +663,11 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       while (st.NextToken()) {
          TString parName = st;
          TString parVal = nll.getStringAttribute(parName);
-         if (parVal.IsFloat())
+         if (parVal.IsFloat()) {
             fUserPars.addClone(RooRealVar(parName, parName, parVal.Atof()));
-         else
+         } else {
             fUserPars.addClone(RooStringVar(parName, parName, parVal));
+         }
       }
    }
 
@@ -920,10 +922,11 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       TString minim = _minimizer.fitter()->Config().MinimizerType();
       TString algo = _minimizer.fitter()->Config().MinimizerAlgoType();
       if (minim == "Minuit2") {
-         if (strategy == -1)
+         if (strategy == -1) {
             sIdx = 0;
-         else
+         } else {
             sIdx = m_strategy.Index('0' + strategy);
+         }
          if (sIdx == -1) {
             Warning("minimize", "Strategy %d not specified in StrategySequence %s ... defaulting to start of sequence",
                     strategy, m_strategy.Data());
@@ -978,9 +981,10 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             break; // fit was good
 
          if (status == 4 && minim != "Minuit") {
-            if (printLevel >= -1)
+            if (printLevel >= -1) {
                Warning("fitTo", "%s Hit max function calls of %d", fitName.Data(),
                        _minimizer.fitter()->Config().MinimizerOptions().MaxFunctionCalls());
+            }
             if (autoMaxCalls) {
                if (printLevel >= -1)
                   Warning("fitTo", "will try doubling this");
@@ -995,12 +999,13 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          // NOTE: minuit2 seems to distort the tolerance in a weird way, so that tol becomes 100 times smaller than
          // specified Also note that if fits are failing because of edm over max, it can be a good idea to activate the
          // Offset option when building nll
-         if (printLevel >= -1)
+         if (printLevel >= -1) {
             Warning("fitTo", "%s %s%s Status=%d (edm=%f, tol=%f, strat=%d), tries=#%d...", fitName.Data(),
                     _minimizer.fitter()->Config().MinimizerType().c_str(),
                     _minimizer.fitter()->Config().MinimizerAlgoType().c_str(), status,
                     _minimizer.fitter()->Result().Edm(), _minimizer.fitter()->Config().MinimizerOptions().Tolerance(),
                     _minimizer.fitter()->Config().MinimizerOptions().Strategy(), tries);
+         }
 
          // decide what to do next based on strategy sequence
          if (sIdx == m_strategy.Length() - 1) {
@@ -1191,9 +1196,10 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             }
          }
          if (limit_status == 900) {
-            if (printLevel >= 0)
+            if (printLevel >= 0) {
                Warning("minimize", "BOUNDCHK: Parameters within %g%% limit in fit result: %s", boundaryCheck * 100,
                        listpars.c_str());
+            }
          } else if (limit_status > 0) {
             if (printLevel >= 0)
                Warning("minimize", "BOUNDCHK: Parameters near limit in fit result");
@@ -1503,10 +1509,11 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
       if (p->hasClients())
          continue;
       flagCount += p->getAttribute("hypoTest");
-      if (p->getAttribute("hypoTest"))
+      if (p->getAttribute("hypoTest")) {
          topPdfs.push_front(p);
-      else
+      } else {
          topPdfs.push_back(p);
+      }
    }
    if (topPdfs.empty()) {
       Error("hypoTest", "Cannot find top-level pdf in workspace");
@@ -1601,11 +1608,12 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
          altVal = mu->getMin("physical");
          Info("hypoTest", "No altVal specified - using min of given physical range = %g", altVal);
       } else {
-         if (!std::isnan(altVal))
+         if (!std::isnan(altVal)) {
             Info("hypoTest", "alt hypo: %g - CLs activated", altVal);
-         else
+         } else {
             Info("hypoTest", "No altVal found - to specify setStringAttribute(\"altVal\",\"<value>\") on POI or set "
                              "the physical range");
+         }
       }
       bool doCLs = !std::isnan(altVal) && std::abs(mu->getMin("hypoPoints")) > altVal &&
                    std::abs(mu->getMax("hypoPoints")) > altVal;
@@ -1664,13 +1672,14 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
             exp_pcls[s].SetPoint(exp_pcls[s].GetN(), testVal,
                                  (doCLs) ? hp.pCLs_asymp(s).first : hp.pNull_asymp(s).first);
          }
-         if (doCLs)
+         if (doCLs) {
             Info("hypoTest", "%s=%g: %s=%g sigma_mu=%g %s=%g", mu->GetName(), testVal, obs_ts->GetName(),
                  obs_ts->GetPointY(obs_ts->GetN() - 1), hp.sigma_mu().first, obs_pcls->GetName(),
                  obs_pcls->GetPointY(obs_pcls->GetN() - 1));
-         else
+         } else {
             Info("hypoTest", "%s=%g: %s=%g %s=%g", mu->GetName(), testVal, obs_ts->GetName(),
                  obs_ts->GetPointY(obs_ts->GetN() - 1), obs_pcls->GetName(), obs_pcls->GetPointY(obs_pcls->GetN() - 1));
+         }
       };
 
       if (mu->getBins("hypoPoints") <= 0) {

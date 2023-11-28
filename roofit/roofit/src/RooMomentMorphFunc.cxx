@@ -225,10 +225,11 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
       RooRealVar *frac = new RooRealVar(fracName.c_str(), fracName.c_str(), 1.);
 
       fracl.add(*frac); // to be set later
-      if (i < nPdf)
+      if (i < nPdf) {
          coefList.add(*static_cast<RooRealVar *>(fracl.at(i)));
-      else
+      } else {
          coefList2.add(*static_cast<RooRealVar *>(fracl.at(i)));
+      }
       ownedComps.add(*static_cast<RooRealVar *>(fracl.at(i)));
    }
 
@@ -477,11 +478,12 @@ int RooMomentMorphFunc::idxmin(const double &mval) const
    int imin(0);
    Int_t nPdf = _pdfList.size();
    double mmin = -DBL_MAX;
-   for (Int_t i = 0; i < nPdf; ++i)
+   for (Int_t i = 0; i < nPdf; ++i) {
       if ((*_mref)[i] > mmin && (*_mref)[i] <= mval) {
          mmin = (*_mref)[i];
          imin = i;
       }
+   }
    return imin;
 }
 
@@ -491,11 +493,12 @@ int RooMomentMorphFunc::idxmax(const double &mval) const
    int imax(0);
    Int_t nPdf = _pdfList.size();
    double mmax = DBL_MAX;
-   for (Int_t i = 0; i < nPdf; ++i)
+   for (Int_t i = 0; i < nPdf; ++i) {
       if ((*_mref)[i] < mmax && (*_mref)[i] >= mval) {
          mmax = (*_mref)[i];
          imax = i;
       }
+   }
    return imax;
 }
 

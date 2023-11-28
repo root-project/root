@@ -215,10 +215,11 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
    std::cout << "Failed to find pois mean or tau parameter for " << gamma_stat->GetName() << std::endl;
       }
       else {
-   if(verbose) std::cout << "Found pois mean and tau for parameter: " << gamma_stat->GetName()
-               << " tau: " << tau->GetName() << " " << tau->getVal()
-               << " pois_mean: " << pois_mean->GetName() << " " << pois_mean->getVal()
-               << std::endl;
+   if (verbose) {
+      std::cout << "Found pois mean and tau for parameter: " << gamma_stat->GetName() << " tau: " << tau->GetName()
+                << " " << tau->getVal() << " pois_mean: " << pois_mean->GetName() << " " << pois_mean->getVal()
+                << std::endl;
+   }
       }
 
       cache.tau = tau;
