@@ -21,8 +21,6 @@ RModel_GNN::RModel_GNN(RModel_GNN&& other) {
 
     num_nodes = std::move(other.num_nodes);
     num_edges = std::move(other.num_edges);
-    senders = std::move(other.senders);
-    receivers = std::move(other.receivers);
 
     fName = std::move(other.fName);
     fFileName = std::move(other.fFileName);
@@ -40,8 +38,6 @@ RModel_GNN& RModel_GNN::operator=(RModel_GNN&& other) {
 
     num_nodes = std::move(other.num_nodes);
     num_edges = std::move(other.num_edges);
-    senders = std::move(other.senders);
-    receivers = std::move(other.receivers);
 
     fName = std::move(other.fName);
     fFileName = std::move(other.fFileName);
@@ -64,10 +60,7 @@ RModel_GNN::RModel_GNN(GNN_Init& graph_input_struct) {
     num_node_features = graph_input_struct.num_node_features;
     num_edge_features = graph_input_struct.num_edge_features;
     num_global_features = graph_input_struct.num_global_features;
-    for(auto& it:graph_input_struct.edges) {
-        receivers.emplace_back(it.first);
-        senders.emplace_back(it.second);
-    }
+
     fFileName = graph_input_struct.filename;
     fName = fFileName.substr(0, fFileName.rfind("."));
 
@@ -180,16 +173,20 @@ void RModel_GNN::Generate() {
     // computing updated edge attributes
     fGC += "\n// --- Edge Update ---\n";
     fGC +=  "size_t n_edges = input_graph.edge_data.GetShape()[0];\n";
+    fGC +=  "if (n_edges > " + e_num + ")\n";
+    fGC +=  "   throw std::runtime_error(\"Number of input edges larger than " + e_num + "\" );\n\n";
+    fGC += "auto receivers = input_graph.edge_index.GetData();\n";
+    fGC += "auto senders = input_graph.edge_index.GetData() + n_edges;\n";
 
     fGC += "for (size_t k = 0; k < n_edges; k++) { \n";
     fGC += "   std::copy(input_graph.edge_data.GetData() + k * " + e_size_input +
            ", input_graph.edge_data.GetData() + (k + 1) * " + e_size_input +
            ", fEdgeInputs.begin() + k * " + e_size_input + ");\n";
-    fGC += "   std::copy(input_graph.node_data.GetData() + input_graph.receivers[k] * " + n_size_input +
-           ", input_graph.node_data.GetData() + (input_graph.receivers[k] + 1) * " + n_size_input +
+    fGC += "   std::copy(input_graph.node_data.GetData() + receivers[k] * " + n_size_input +
+           ", input_graph.node_data.GetData() + (receivers[k] + 1) * " + n_size_input +
            ", fRecNodeInputs.begin() + k * " + n_size_input + ");\n";
-    fGC += "   std::copy(input_graph.node_data.GetData() + input_graph.senders[k] * " + n_size_input +
-           ", input_graph.node_data.GetData() + (input_graph.senders[k] + 1) * " + n_size_input +
+    fGC += "   std::copy(input_graph.node_data.GetData() + senders[k] * " + n_size_input +
+           ", input_graph.node_data.GetData() + (senders[k] + 1) * " + n_size_input +
            ", fSndNodeInputs.begin() + k * " + n_size_input + ");\n";
     fGC += "   std::copy(input_graph.global_data.GetData()";
     fGC += ", input_graph.global_data.GetData() + " + g_size_input +
@@ -237,7 +234,7 @@ void RModel_GNN::Generate() {
     fGC += "   std::vector<float *> edgesData; edgesData.reserve( int(n_edges/n_nodes) +1);\n";
     // loop on edges
     fGC += "   for (size_t k = 0; k < n_edges; k++) {\n";
-    fGC += "      if (input_graph.receivers[k] == j) \n";
+    fGC += "      if (receivers[k] == j) \n";
     fGC += "         edgesData.emplace_back(input_graph.edge_data.GetData() + k * " + e_size + ");\n";
     fGC += "   }\n";
     fGC += "   fNodeAggregateTemp = " + edge_node_agg_block->Generate(num_edge_features, "edgesData") + ";\n";
