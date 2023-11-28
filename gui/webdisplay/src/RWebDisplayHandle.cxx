@@ -241,6 +241,49 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
    std::string rmdir = MakeProfile(exec, args.IsBatchMode() || args.IsHeadless());
 
+   // these are secret parameters, hide them in temp file
+   if ((url.find("token=") || url.find("key=")) && !args.IsBatchMode() && !args.IsHeadless()) {
+      gRandom->SetSeed(0);
+
+      std::string tmpfile = gSystem->TempDirectory();
+
+#ifdef _MSC_VER
+      char slash = '\\';
+#else
+      char slash = '/';
+#endif
+      if (!tmpfile.empty() && (tmpfile[tmpfile.length()-1] != slash))
+         tmpfile += slash;
+      tmpfile += "root_start_"s + std::to_string(gRandom->Integer(0x100000)) + ".html";
+
+      std::ofstream os(tmpfile);
+      if (os) {
+         os << std::regex_replace(
+            "<!DOCTYPE html>\n"
+            "<html lang=\"en\">\n"
+            "<head>\n"
+            "   <meta charset=\"utf-8\">\n"
+            "   <meta http-equiv=\"refresh\" content=\"0;url=$url\"/>\n"
+            "   <title>Opening ROOT widget</title>\n"
+            "</head>\n"
+            "<body>\n"
+            "<p>\n"
+            "  This page should redirect you to a ROOT widget. If it doesn't,\n"
+            "  <a href=\"$url\">click here to go to ROOT</a>.\n"
+            "</p>\n"
+            "</body>\n"
+            "</html>\n", std::regex("\\$url"), url);
+         url = "file://"s + tmpfile;
+      } else {
+         R__LOG_ERROR(WebGUILog()) << "Fail to create temporary HTML file to startup widget";
+         return nullptr;
+      }
+
+      // this should delete temporary file at the end of
+      if (rmdir.empty())
+         rmdir = tmpfile;
+   }
+
    exec = std::regex_replace(exec, std::regex("\\$rootetcdir"), TROOT::GetEtcDir().Data());
    exec = std::regex_replace(exec, std::regex("\\$url"), url);
    exec = std::regex_replace(exec, std::regex("\\$width"), swidth);
