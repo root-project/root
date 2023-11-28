@@ -74,10 +74,11 @@ bool PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
   }
 
   if( hist ) {
-    if ( hist->weight( parameterPoint , 0 ) > 0 ) // positive value indicates point is in interval
-      return true;
-    else
-      return false;
+    if (hist->weight(parameterPoint, 0) > 0) { // positive value indicates point is in interval
+       return true;
+    } else {
+       return false;
+    }
   }
   else if( tree ){
     const RooArgSet* thisPoint = nullptr;

@@ -928,10 +928,11 @@ void RooMinimizer::setRecoverFromNaNStrength(double strength)
 bool RooMinimizer::setLogFile(const char *logf)
 {
    _cfg.logf = logf;
-   if (_cfg.logf)
+   if (_cfg.logf) {
       return _fcn->SetLogFile(_cfg.logf);
-   else
+   } else {
       return false;
+   }
 }
 
 int RooMinimizer::evalCounter() const

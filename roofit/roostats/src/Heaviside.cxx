@@ -54,8 +54,9 @@ Heaviside::Heaviside(const Heaviside& other, const char* name) :
 double Heaviside::evaluate() const
 {
   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE
-  if (((double)x) >= ((double)c))
+  if (((double)x) >= ((double)c)) {
      return 1.0;
-  else
+  } else {
      return 0.0;
+  }
 }

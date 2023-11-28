@@ -210,10 +210,11 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
             parameters.emplace_back(par->GetName(), par->getVal(), pstep, pmin, pmax);
          } else {
             parameters.emplace_back(par->GetName(), par->getVal(), pstep);
-            if (par->hasMin())
+            if (par->hasMin()) {
                parameters.back().SetLowerLimit(pmin);
-            else if (par->hasMax())
+            } else if (par->hasMax()) {
                parameters.back().SetUpperLimit(pmax);
+            }
          }
 
          continue;
@@ -273,12 +274,13 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
          if (oldVar != par->getVal() || oldVlo != pmin || oldVhi != pmax || oldVerr != pstep) {
             parameters[index].SetValue(par->getVal());
             parameters[index].SetStepSize(pstep);
-            if (par->hasMin() && par->hasMax())
+            if (par->hasMin() && par->hasMax()) {
                parameters[index].SetLimits(pmin, pmax);
-            else if (par->hasMin())
+            } else if (par->hasMin()) {
                parameters[index].SetLowerLimit(pmin);
-            else if (par->hasMax())
+            } else if (par->hasMax()) {
                parameters[index].SetUpperLimit(pmax);
+            }
          }
 
          // Inform user about changes in verbose mode
@@ -461,25 +463,29 @@ void RooAbsMinimizerFcn::setOptimizeConst(int flag)
    auto ctx = _context->makeEvalErrorContext();
 
    if (_optConst && !flag) {
-      if (_context->getPrintLevel() > -1)
+      if (_context->getPrintLevel() > -1) {
          oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: deactivating const optimization"
                                          << endl;
+      }
       setOptimizeConstOnFunction(RooAbsArg::DeActivate, true);
       _optConst = flag;
    } else if (!_optConst && flag) {
-      if (_context->getPrintLevel() > -1)
+      if (_context->getPrintLevel() > -1) {
          oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: activating const optimization"
                                          << endl;
+      }
       setOptimizeConstOnFunction(RooAbsArg::Activate, flag > 1);
       _optConst = flag;
    } else if (_optConst && flag) {
-      if (_context->getPrintLevel() > -1)
+      if (_context->getPrintLevel() > -1) {
          oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: const optimization already active"
                                          << endl;
+      }
    } else {
-      if (_context->getPrintLevel() > -1)
+      if (_context->getPrintLevel() > -1) {
          oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: const optimization wasn't active"
                                          << endl;
+      }
    }
 }
 

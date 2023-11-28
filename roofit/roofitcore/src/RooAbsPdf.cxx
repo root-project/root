@@ -2549,9 +2549,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
           }
 
           auto rangeArg = static_cast<RooCmdArg*>(cmdList.FindObject("RangeWithName"));
-          if (rangeArg)
+          if (rangeArg) {
             rangeArg->setString(0, rangesNoOverlap.c_str());
-          else {
+          } else {
             plotRange = std::make_unique<RooCmdArg>(RooFit::Range(rangesNoOverlap.c_str()));
             cmdList.Add(plotRange.get());
           }

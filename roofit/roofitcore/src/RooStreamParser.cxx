@@ -96,10 +96,11 @@ void RooStreamParser::setPunctuation(const TString& punct)
 bool RooStreamParser::isPunctChar(char c) const
 {
   const char* punct = _punct.Data() ;
-  for (int i=0 ; i<_punct.Length() ; i++)
-    if (punct[i] == c) {
-      return true ;
-    }
+  for (int i = 0; i < _punct.Length(); i++) {
+     if (punct[i] == c) {
+        return true;
+     }
+  }
   return false ;
 }
 
@@ -161,12 +162,11 @@ TString RooStreamParser::readToken()
 
     // Terminate as SPACE, unless we haven't seen any non-SPACE yet
     if (isspace(c)) {
-      if (first)
-        continue ;
-      else
-        if (!quotedString) {
-          break ;
-        }
+      if (first) {
+         continue;
+      } else if (!quotedString) {
+         break;
+      }
     }
 
     // If '-' or '/' see what the next character is
@@ -335,10 +335,11 @@ TString RooStreamParser::readLine()
       pstart++;
    }
    char *pend = buffer + strlen(buffer) - 1;
-   if (pend > pstart)
+   if (pend > pstart) {
       while (isspace(*pend)) {
          *pend-- = 0;
       }
+   }
 
    if (_is->eof() || _is->fail()) {
       _atEOF = true;

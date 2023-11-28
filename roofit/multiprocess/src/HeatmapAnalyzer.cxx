@@ -55,22 +55,23 @@ HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
 
       std::ifstream f(logs_dir + "/" + std::string(file->GetName()));
 
-      if (std::string(file->GetName()).find("999") != std::string::npos)
+      if (std::string(file->GetName()).find("999") != std::string::npos) {
          gradients_ = json::parse(f);
-      else
+      } else {
          durations_.push_back(json::parse(f));
+      }
    }
 
    for (json &durations_json : durations_) {
       for (auto &&el : durations_json.items()) {
          if (el.key().find("eval_task") != std::string::npos &&
-             std::find(tasks_names_.begin(), tasks_names_.end(), el.key()) == tasks_names_.end())
+             std::find(tasks_names_.begin(), tasks_names_.end(), el.key()) == tasks_names_.end()) {
             tasks_names_.push_back(el.key());
-         else if (el.key().find("eval_partition") != std::string::npos &&
-                  std::find(eval_partitions_names_.begin(), eval_partitions_names_.end(), el.key()) ==
-                     eval_partitions_names_.end())
+         } else if (el.key().find("eval_partition") != std::string::npos &&
+                    std::find(eval_partitions_names_.begin(), eval_partitions_names_.end(), el.key()) ==
+                       eval_partitions_names_.end()) {
             eval_partitions_names_.push_back(el.key());
-         else if (el.key().find("metadata") != std::string::npos) {
+         } else if (el.key().find("metadata") != std::string::npos) {
             metadata_ = durations_json[el.key()];
          }
       }

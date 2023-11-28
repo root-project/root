@@ -209,12 +209,27 @@ double logErfC(double xx)
   z=std::abs(xx);
   t=1.0/(1.0+0.5*z);
 
-  if(xx >= 0.0)
-    ans=log(t)+(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
-   t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
-  else
-    ans=log(2.0-t*exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
-        t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277))))))))));
+  if (xx >= 0.0) {
+     ans = log(t) +
+           (-z * z - 1.26551223 +
+            t * (1.00002368 +
+                 t * (0.37409196 +
+                      t * (0.09678418 +
+                           t * (-0.18628806 +
+                                t * (0.27886807 +
+                                     t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+  } else {
+     ans = log(
+        2.0 -
+        t *
+           exp(-z * z - 1.26551223 +
+               t * (1.00002368 +
+                    t * (0.37409196 +
+                         t * (0.09678418 +
+                              t * (-0.18628806 +
+                                   t * (0.27886807 + t * (-1.13520398 +
+                                                          t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))))));
+  }
 
   return ans;
 }
@@ -902,10 +917,11 @@ void RooGExpModel::generateEvent(Int_t code)
   while (true) {
     double xgau = RooRandom::randomGenerator()->Gaus(0,(sigma*ssf));
     double xexp = RooRandom::uniform();
-    if (!_flip)
+    if (!_flip) {
       xgen = xgau + (rlife*rsf)*log(xexp);  // modified, FMV 08/13/03
-    else
-      xgen = xgau - (rlife*rsf)*log(xexp);
+    } else {
+      xgen = xgau - (rlife * rsf) * log(xexp);
+    }
 
     if (xgen < (x.max() - _mean*_meanSF) && xgen > (x.min() - _mean*_meanSF)) {
       x = xgen + _mean*_meanSF;

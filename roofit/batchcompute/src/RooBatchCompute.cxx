@@ -60,9 +60,9 @@ void fillArrays(std::vector<Batch> &arrays, const VarVector &vars, double *buffe
          std::stringstream ss;
          ss << "The span number " << i << " passed to Batches::Batches() is empty!";
          throw std::runtime_error(ss.str());
-      } else if (span.size() > 1)
+      } else if (span.size() > 1) {
          arrays[i].set(span.data(), true);
-      else {
+      } else {
          std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
          arrays[i].set(&buffer[i * bufferSize], false);
       }

@@ -1207,10 +1207,11 @@ void RooRealIntegral::printMultiline(ostream& os, Int_t contents, bool verbose, 
   os << indent << "  Arguments included in Jacobian are " << _jacList << std::endl ;
   os << indent << "  Factorized arguments are " << _facList << std::endl ;
   os << indent << "  Function normalization set " ;
-  if (_funcNormSet)
+  if (_funcNormSet) {
     _funcNormSet->Print("1") ;
-  else
-    os << "<none>" ;
+  } else {
+    os << "<none>";
+  }
 
   os << std::endl ;
 }

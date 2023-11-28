@@ -194,15 +194,17 @@ std::string RooPower::getFormulaExpression(bool expand) const
    for (std::size_t i = 0; i < _coefList.size(); ++i) {
       if (i != 0)
          ss << "+";
-      if (expand)
+      if (expand) {
          ss << static_cast<RooAbsReal *>(_coefList.at(i))->getVal();
-      else
+      } else {
          ss << _coefList.at(i)->GetName();
+      }
       ss << "*pow(" << _x.GetName() << ",";
-      if (expand)
+      if (expand) {
          ss << static_cast<RooAbsReal *>(_expList.at(i))->getVal();
-      else
+      } else {
          ss << _expList.at(i)->GetName();
+      }
       ss << ")";
    }
    return ss.str();

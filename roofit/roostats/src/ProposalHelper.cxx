@@ -131,11 +131,11 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
 void ProposalHelper::CreateCluesPdf()
 {
    if (fClues != nullptr) {
-      if (fCluesOptions == nullptr)
+      if (fCluesOptions == nullptr) {
          fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues);
-      else
-         fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues,
-               fCluesOptions);
+      } else {
+         fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues, fCluesOptions);
+      }
    }
 }
 

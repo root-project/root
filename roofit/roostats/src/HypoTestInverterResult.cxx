@@ -388,13 +388,13 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       }
    }
 
-   if (ArraySize() > nThis)
+   if (ArraySize() > nThis) {
       coutI(Eval) << "HypoTestInverterResult::Add  - new number of points is " << fXValues.size()
                          << std::endl;
-   else
+   } else {
       coutI(Eval) << "HypoTestInverterResult::Add  - new toys/point is "
-                         <<  (static_cast<HypoTestResult*>(fYObjects.At(0)))->GetNullDistribution()->GetSize()
-                         << std::endl;
+                  << (static_cast<HypoTestResult *>(fYObjects.At(0)))->GetNullDistribution()->GetSize() << std::endl;
+   }
 
    // reset cached limit values
    fLowerLimit = TMath::QuietNaN();
@@ -1070,10 +1070,11 @@ double HypoTestInverterResult::CalculateEstimatedError(double target, bool lower
      coutW(Eval) << "HypoTestInverterResult::CalculateEstimatedError - cannot estimate  the " << type << " limit error " << std::endl;
      theError = 0;
   }
-  if (lower)
+  if (lower) {
      fLowerLimitError = theError;
-  else
+  } else {
      fUpperLimitError = theError;
+  }
 
 #ifdef DO_DEBUG
   std::cout << "closes point to the limit is " << index << "  " << GetXValue(index) << " and has error " << GetYError(index) << std::endl;
@@ -1261,12 +1262,11 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
 
   }
 
-
-  if (lower)
+  if (lower) {
      return new SamplingDistribution("Expected lower Limit","Expected lower limits",limits);
-  else
-     return new SamplingDistribution("Expected upper Limit","Expected upper limits",limits);
-
+  } else {
+     return new SamplingDistribution("Expected upper Limit", "Expected upper limits", limits);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

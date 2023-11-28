@@ -256,9 +256,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
    _varName.push_back(x.GetName());
 
    if (mirror != NoMirror) {
-      if (mirror != MirrorBoth)
+      if (mirror != MirrorBoth) {
          coutW(InputArguments) << "RooNDKeysPdf::RooNDKeysPdf() : Warning : asymmetric mirror(s) no longer supported."
                                << endl;
+      }
       _options = "m";
    }
 
@@ -863,9 +864,10 @@ void RooNDKeysPdf::sortDataIndices(BoxInfo* bi)
   vector<TVectorD>::iterator dpRItr = _dataPtsR.begin();
   for (Int_t i = 0; dpRItr != _dataPtsR.end(); ++dpRItr, ++i) {
     if (bi) {
-      if (bi->bpsIdcs.find(i) != bi->bpsIdcs.end())
+      if (bi->bpsIdcs.find(i) != bi->bpsIdcs.end()) {
         // if (_wMap.find(i)!=_wMap.end())
         itrVecR.push_back(itPair(i, dpRItr));
+      }
     } else
       itrVecR.push_back(itPair(i, dpRItr));
   }
@@ -1137,10 +1139,11 @@ double RooNDKeysPdf::evaluate() const
   double val = gauss(_x,*_weights);
   //cout<<"returning "<<val<<endl;
 
-  if (val>=1E-20)
-    return val ;
-  else
-    return (1E-20) ;
+  if (val >= 1E-20) {
+     return val;
+  } else {
+     return (1E-20);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1233,15 +1236,17 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
       for (Int_t j=0; j<_nDim; j++) {
    if(!doInt[j]) continue;
 
-   if ((x[j]>bi->xVarLoM3s[j] && x[j]<bi->xVarLoP3s[j]) && x[j]<(bi->xVarLo[j]+bi->xVarHi[j])/2.)
-     chi[j] = (x[j]-bi->xVarLo[j])/weight[j];
-   else if ((x[j]>bi->xVarHiM3s[j] && x[j]<bi->xVarHiP3s[j]) && x[j]>(bi->xVarLo[j]+bi->xVarHi[j])/2.)
-     chi[j] = (bi->xVarHi[j]-x[j])/weight[j];
+   if ((x[j] > bi->xVarLoM3s[j] && x[j] < bi->xVarLoP3s[j]) && x[j] < (bi->xVarLo[j] + bi->xVarHi[j]) / 2.) {
+              chi[j] = (x[j] - bi->xVarLo[j]) / weight[j];
+   } else if ((x[j] > bi->xVarHiM3s[j] && x[j] < bi->xVarHiP3s[j]) && x[j] > (bi->xVarLo[j] + bi->xVarHi[j]) / 2.) {
+              chi[j] = (bi->xVarHi[j] - x[j]) / weight[j];
+   }
 
-   if (chi[j]>0) // inVarRange
-     prob *= (0.5 + TMath::Erf(std::abs(chi[j])/sqrt(2.))/2.);
-   else // outside Var range
-     prob *= (0.5 - TMath::Erf(std::abs(chi[j])/sqrt(2.))/2.);
+   if (chi[j] > 0) { // inVarRange
+              prob *= (0.5 + TMath::Erf(std::abs(chi[j]) / sqrt(2.)) / 2.);
+   } else { // outside Var range
+              prob *= (0.5 - TMath::Erf(std::abs(chi[j]) / sqrt(2.)) / 2.);
+   }
       }
 
       norm += prob * _wMap.at(_idx[bi->sIdcs[i]]);

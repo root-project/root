@@ -349,12 +349,13 @@ double SamplingDistribution::InverseCDF(double pvalue,
     int delta = (int)(sigmaVariation*sqrt(1.0*nominal)); // note sqrt(small fraction)
     int variation = nominal+delta;
 
-    if(variation>=(Int_t)fSamplingDist.size()-1)
-      inverseWithVariation = RooNumber::infinity();
-    else if(variation<=0)
-      inverseWithVariation = -1.*RooNumber::infinity();
-    else
-      inverseWithVariation =  fSamplingDist[ variation ];
+    if (variation >= (Int_t)fSamplingDist.size() - 1) {
+         inverseWithVariation = RooNumber::infinity();
+    } else if (variation <= 0) {
+         inverseWithVariation = -1. * RooNumber::infinity();
+    } else {
+         inverseWithVariation = fSamplingDist[variation];
+    }
 
     return fSamplingDist[nominal];
   }
@@ -362,15 +363,14 @@ double SamplingDistribution::InverseCDF(double pvalue,
     int delta = (int)(sigmaVariation*sqrt(1.0*fSamplingDist.size()- nominal)); // note sqrt(small fraction)
     int variation = nominal+delta;
 
+    if (variation >= (Int_t)fSamplingDist.size() - 1) {
+         inverseWithVariation = RooNumber::infinity();
 
-    if(variation>=(Int_t)fSamplingDist.size()-1)
-      inverseWithVariation = RooNumber::infinity();
-
-    else if(variation<=0)
-      inverseWithVariation = -1.*RooNumber::infinity();
-    else
-      inverseWithVariation =  fSamplingDist[ variation+1 ];
-
+    } else if (variation <= 0) {
+         inverseWithVariation = -1. * RooNumber::infinity();
+    } else {
+         inverseWithVariation = fSamplingDist[variation + 1];
+    }
 
     /*
       std::cout << "dgb SamplingDistribution::InverseCDF. variation = " << variation

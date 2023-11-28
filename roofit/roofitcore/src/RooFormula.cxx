@@ -166,10 +166,11 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
          std::size_t nOld = varName.length();
          std::size_t nNew = replacement.size();
          auto wbIter = isWordBoundary.begin() + pos;
-         if (nNew > nOld)
+         if (nNew > nOld) {
             isWordBoundary.insert(wbIter + nOld, nNew - nOld, false);
-         else if (nNew < nOld)
+         } else if (nNew < nOld) {
             isWordBoundary.erase(wbIter + nNew, wbIter + nOld);
+         }
 
          // Do the actual replacement
          formula.replace(pos, varName.length(), replacement);

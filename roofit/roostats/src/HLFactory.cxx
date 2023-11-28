@@ -348,10 +348,11 @@ int HLFactory::ProcessCard(const char* filename){
 
 int HLFactory::fReadFile(const char*fileName, bool is_included){
     // Check the deepness of the inclusion
-    if (is_included)
+    if (is_included) {
         fInclusionLevel+=1;
-    else
-        fInclusionLevel=0;
+    } else {
+        fInclusionLevel = 0;
+    }
 
     const int maxDeepness=50;
     if (fInclusionLevel>maxDeepness){
@@ -390,13 +391,14 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         TString line = (static_cast<TObjString*>(line_o))->GetString();
 
         // Are we in a multiline comment?
-        if (in_comment)
+        if (in_comment) {
             if (line.EndsWith("*/")){
                 in_comment=false;
                 if (fVerbose) Info("fReadFile","Out of multiline comment ...");
 
                 continue;
-                }
+            }
+        }
 
         // Was line a single line comment?
 
@@ -502,11 +504,11 @@ void HLFactory::fCreateCategory(){
 /// is not empty prompt an error.
 
 bool HLFactory::fNamesListsConsistent(){
-    if ((fSigBkgPdfNames.GetEntries()==fBkgPdfNames.GetEntries() || fBkgPdfNames.GetEntries()==0) &&
-        (fSigBkgPdfNames.GetEntries()==fDatasetsNames.GetEntries() || fDatasetsNames.GetEntries()==0) &&
-        (fSigBkgPdfNames.GetEntries()==fLabelsNames.GetEntries() || fLabelsNames.GetEntries()==0))
+        if ((fSigBkgPdfNames.GetEntries() == fBkgPdfNames.GetEntries() || fBkgPdfNames.GetEntries() == 0) &&
+            (fSigBkgPdfNames.GetEntries() == fDatasetsNames.GetEntries() || fDatasetsNames.GetEntries() == 0) &&
+            (fSigBkgPdfNames.GetEntries() == fLabelsNames.GetEntries() || fLabelsNames.GetEntries() == 0)) {
         return true;
-    else{
+        } else {
         std::cerr << "The number of datasets and models added as channels "
                   << " is not the same!\n";
         return false;
@@ -577,9 +579,10 @@ int HLFactory::fParseLine(TString& line){
           fWs->import(o_descr);
           }
         else if(n_descr_parts==2){ // in presence of an object in rootfile
-          if (fVerbose)
-            Info("fParseLine","Importing %s from %s under the name of %s",
-                 obj_name.Data(), rootfile_name.Data(), o_name.Data());
+          if (fVerbose) {
+             Info("fParseLine", "Importing %s from %s under the name of %s", obj_name.Data(), rootfile_name.Data(),
+                  o_name.Data());
+          }
           TObject* the_obj=ifile->Get(obj_name);
           fWs->import(*the_obj,o_name);
           }

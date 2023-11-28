@@ -181,10 +181,11 @@ std::string RooPolyFunc::asString() const
          auto exp = dynamic_cast<RooRealVar *>(term->at(i_var));
          if (exp->getVal() == 0)
             continue;
-         if (first)
+         if (first) {
             ss << " * (";
-         else
+         } else {
             ss << "*";
+         }
          ss << "pow(" << var->GetName() << "," << exp->getVal() << ")";
          first = false;
       }

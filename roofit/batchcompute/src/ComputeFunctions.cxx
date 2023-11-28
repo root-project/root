@@ -48,9 +48,10 @@ __rooglobal__ void computeAddPdf(BatchesHandle batches)
    const int nPdfs = batches.getNExtraArgs();
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = batches.extraArg(0) * batches[0][i];
-   for (int pdf = 1; pdf < nPdfs; pdf++)
+   for (int pdf = 1; pdf < nPdfs; pdf++) {
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
          batches._output[i] += batches.extraArg(pdf) * batches[pdf][i];
+   }
 }
 
 __rooglobal__ void computeArgusBG(BatchesHandle batches)
@@ -65,10 +66,11 @@ __rooglobal__ void computeArgusBG(BatchesHandle batches)
       batches._output[i] = c[i] * u + p[i] * fast_log(u);
    }
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      if (m[i] >= m0[i])
+      if (m[i] >= m0[i]) {
          batches._output[i] = 0.0;
-      else
+      } else {
          batches._output[i] = m[i] * fast_exp(batches._output[i]);
+      }
    }
 }
 
@@ -115,19 +117,21 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
       }
 
       // raising 1-x to the power of degree
-      for (int k = 2; k <= degree; k += 2)
+      for (int k = 2; k <= degree; k += 2) {
          for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
             pow_1_X[i] *= _1_X[i] * _1_X[i];
+      }
 
-      if (degree % 2 == 1)
+      if (degree % 2 == 1) {
          for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
             pow_1_X[i] *= _1_X[i];
+      }
 
       // inverting 1-x ---> 1/(1-x)
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
          _1_X[i] = 1 / _1_X[i];
 
-      for (int k = 0; k < nCoef; k++)
+      for (int k = 0; k < nCoef; k++) {
          for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
             batches._output[i] += batches.extraArg(k) * powX[i] * pow_1_X[i];
 
@@ -135,7 +139,8 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
             powX[i] *= X[i];
             pow_1_X[i] *= _1_X[i];
          }
-   } else
+      }
+   } else {
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
          batches._output[i] = 0.0;
          const double X = (xData[i] - xmin) / (xmax - xmin);
@@ -150,6 +155,7 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
             pow_1_X *= _1_X;
          }
       }
+   }
 
    // reset extraArgs values so we don't mutate the Batches object
    binomial = 1.0;
@@ -167,10 +173,11 @@ __rooglobal__ void computeBifurGauss(BatchesHandle batches)
    Batch SR = batches[3];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       double arg = X[i] - M[i];
-      if (arg < 0)
+      if (arg < 0) {
          arg /= SL[i];
-      else
+      } else {
          arg /= SR[i];
+      }
       batches._output[i] = fast_exp(-0.5 * arg * arg);
    }
 }
@@ -244,9 +251,9 @@ __rooglobal__ void computeCBShape(BatchesHandle batches)
    Batch N = batches[4];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double t = (M[i] - M0[i]) / S[i];
-      if ((A[i] > 0 && t >= -A[i]) || (A[i] < 0 && -t >= A[i]))
+      if ((A[i] > 0 && t >= -A[i]) || (A[i] < 0 && -t >= A[i])) {
          batches._output[i] = -0.5 * t * t;
-      else {
+      } else {
          batches._output[i] = N[i] / (N[i] - A[i] * A[i] - A[i] * t);
          batches._output[i] = fast_log(batches._output[i]);
          batches._output[i] *= N[i];
@@ -274,7 +281,7 @@ __rooglobal__ void computeChebychev(BatchesHandle batches)
          prev[i][0] = batches._output[i] = 1.0;
          prev[i][1] = X[i] = 2 * (xData[i] - 0.5 * (xmax + xmin)) / (xmax - xmin);
       }
-      for (int k = 0; k < nCoef; k++)
+      for (int k = 0; k < nCoef; k++) {
          for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
             batches._output[i] += prev[i][1] * batches.extraArg(k);
 
@@ -283,7 +290,8 @@ __rooglobal__ void computeChebychev(BatchesHandle batches)
             prev[i][0] = prev[i][1];
             prev[i][1] = next;
          }
-   } else
+      }
+   } else {
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
          double prev0 = 1.0;
          double prev1 = 2 * (xData[i] - 0.5 * (xmax + xmin)) / (xmax - xmin);
@@ -298,6 +306,7 @@ __rooglobal__ void computeChebychev(BatchesHandle batches)
             prev1 = next;
          }
       }
+   }
 }
 
 __rooglobal__ void computeChiSquare(BatchesHandle batches)
@@ -336,9 +345,10 @@ __rooglobal__ void computeDstD0BG(BatchesHandle batches)
       batches._output[i] = (1 - fast_exp(arg1)) * fast_exp(arg2) + B[i] * (ratio - 1);
    }
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       if (batches._output[i] < 0)
          batches._output[i] = 0;
+   }
 }
 
 __rooglobal__ void computeExpPoly(BatchesHandle batches)
@@ -383,15 +393,17 @@ __rooglobal__ void computeGamma(BatchesHandle batches)
    Batch B = batches[2];
    Batch M = batches[3];
    double gamma = -std::lgamma(G[0]);
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      if (X[i] == M[i])
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      if (X[i] == M[i]) {
          batches._output[i] = (G[i] == 1.0) / B[i];
-      else if (G.isItVector())
+      } else if (G.isItVector()) {
          batches._output[i] = -std::lgamma(G[i]);
-      else
+      } else {
          batches._output[i] = gamma;
+      }
+   }
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       if (X[i] != M[i]) {
          const double invBeta = 1 / B[i];
          double arg = (X[i] - M[i]) * invBeta;
@@ -401,6 +413,7 @@ __rooglobal__ void computeGamma(BatchesHandle batches)
          batches._output[i] = fast_exp(batches._output[i]);
          batches._output[i] *= invBeta;
       }
+   }
 }
 
 __rooglobal__ void computeGaussModelExpBasis(BatchesHandle batches)
@@ -465,9 +478,10 @@ __rooglobal__ void computeNegativeLogarithms(BatchesHandle batches)
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = -fast_log(batches[0][i]);
    // Multiply by weights if they exist
-   if (batches.extraArg(0))
+   if (batches.extraArg(0)) {
       for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
          batches._output[i] *= batches[1][i];
+   }
 }
 
 __rooglobal__ void computeJohnson(BatchesHandle batches)
@@ -560,25 +574,27 @@ __rooglobal__ void computeLandau(BatchesHandle batches)
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = (X[i] - M[i]) / S[i];
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      if (S[i] <= 0.0)
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      if (S[i] <= 0.0) {
          batches._output[i] = 0;
-      else if (batches._output[i] < -5.5)
+      } else if (batches._output[i] < -5.5) {
          batches._output[i] = case0(batches._output[i]);
-      else if (batches._output[i] < -1.0)
+      } else if (batches._output[i] < -1.0) {
          batches._output[i] = case1(batches._output[i]);
-      else if (batches._output[i] < 1.0)
+      } else if (batches._output[i] < 1.0) {
          batches._output[i] = case2(batches._output[i]);
-      else if (batches._output[i] < 5.0)
+      } else if (batches._output[i] < 5.0) {
          batches._output[i] = case3(batches._output[i]);
-      else if (batches._output[i] < 12.0)
+      } else if (batches._output[i] < 12.0) {
          batches._output[i] = case4(batches._output[i]);
-      else if (batches._output[i] < 50.0)
+      } else if (batches._output[i] < 50.0) {
          batches._output[i] = case5(batches._output[i]);
-      else if (batches._output[i] < 300.)
+      } else if (batches._output[i] < 300.) {
          batches._output[i] = case6(batches._output[i]);
-      else
+      } else {
          batches._output[i] = case7(batches._output[i]);
+      }
+   }
 }
 
 __rooglobal__ void computeLognormal(BatchesHandle batches)
@@ -703,10 +719,11 @@ __rooglobal__ void computePoisson(BatchesHandle batches)
       batches._output[i] = fast_exp(logPoisson);
 
       // Cosmetics
-      if (x_i < 0)
+      if (x_i < 0) {
          batches._output[i] = 0;
-      else if (x_i == 0)
+      } else if (x_i == 0) {
          batches._output[i] = 1 / fast_exp(mean[i]);
+      }
 
       if (protectNegative && mean[i] < 0)
          batches._output[i] = 1.E-3;
@@ -869,14 +886,15 @@ __rooglobal__ void computeVoigtian(BatchesHandle batches)
    const double invSqrt2 = 0.707106781186547524400844362105;
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double arg = (X[i] - M[i]) * (X[i] - M[i]);
-      if (S[i] == 0.0 && W[i] == 0.0)
+      if (S[i] == 0.0 && W[i] == 0.0) {
          batches._output[i] = 1.0;
-      else if (S[i] == 0.0)
+      } else if (S[i] == 0.0) {
          batches._output[i] = 1 / (arg + 0.25 * W[i] * W[i]);
-      else if (W[i] == 0.0)
+      } else if (W[i] == 0.0) {
          batches._output[i] = fast_exp(-0.5 * arg / (S[i] * S[i]));
-      else
+      } else {
          batches._output[i] = invSqrt2 / S[i];
+      }
    }
 
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {

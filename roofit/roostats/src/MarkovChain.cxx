@@ -177,10 +177,11 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(const RooCmdArg &arg1,
 THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
 {
    RooArgList axes;
-   if (whichVars == nullptr)
+   if (whichVars == nullptr) {
       axes.add(*fParameters);
-   else
+   } else {
       axes.add(*whichVars);
+   }
 
    Int_t dim = axes.size();
    std::vector<double> min(dim);

@@ -173,9 +173,9 @@ void xRooBrowser::ls(const char *path) const
 {
    if (!fNode)
       return;
-   if (!path)
+   if (!path) {
       fNode->Print();
-   else {
+   } else {
       // will throw exception if not found
       fNode->at(path)->Print();
    }

@@ -69,10 +69,11 @@ double RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbsDa
    int type = (fSubtractMLE) ? 0 : 2;
 
    // null
-   if ( &pdf == fNullProfile.GetPdf() )
+   if (&pdf == fNullProfile.GetPdf()) {
       return fNullProfile.EvaluateProfileLikelihood(type, data, poi);
-   else if (&pdf == fAltProfile.GetPdf() )
+   } else if (&pdf == fAltProfile.GetPdf()) {
       return fAltProfile.EvaluateProfileLikelihood(type, data, poi);
+   }
 
    oocoutE(nullptr,InputArguments) << "RatioOfProfiledLikelihoods::ProfileLikelihood - invalid pdf used for computing the profiled likelihood - return NaN"
                          << std::endl;

@@ -162,10 +162,11 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
          // In this case we don't take global observables from data
          takeGlobalObservablesFromData = false;
       } else {
-         if (!glObs)
+         if (!glObs) {
             oocoutI(&pdf, Minimization)
                << "The global observables are not defined , normalize constraints with respect to the parameters "
                << cPars << std::endl;
+         }
          takeGlobalObservablesFromData = false;
       }
 

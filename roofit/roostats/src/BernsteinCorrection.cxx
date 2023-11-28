@@ -306,9 +306,10 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
 
        samplingDist->Fill(q);
        samplingDistExtra->Fill(qExtra);
-       if (printLevel > 0)
+       if (printLevel > 0) {
       cout << "NLL Results: null " << resultNull->minNll() << " ref = " << result->minNll() << " extra"
            << resultExtra->minNll() << endl;
+       }
   }
 
   RooMsgService::instance().setGlobalKillBelow(msglevel);

@@ -232,10 +232,11 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
              pll = fNll->getVal();
           }
           else {
-             if (type == 1)
-                pll = uncondML;
-             else if (type == 2)
-                pll = condML;
+             if (type == 1) {
+               pll = uncondML;
+             } else if (type == 2) {
+               pll = condML;
+             }
           }
        }
        else {  // type == 0

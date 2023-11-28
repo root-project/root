@@ -150,9 +150,10 @@ void RooAbsRealLValue::inRange(std::span<const double> values, std::string const
 bool RooAbsRealLValue::isValidReal(double value, bool verbose) const
 {
   if (!inRange(value,nullptr)) {
-    if (verbose)
-      coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value
-             << " out of range (" << getMin() << " - " << getMax() << ")" << endl ;
+    if (verbose) {
+       coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range ("
+                             << getMin() << " - " << getMax() << ")" << endl;
+    }
     return false ;
   }
   return true ;

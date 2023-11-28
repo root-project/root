@@ -511,9 +511,10 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
       }
       condStack[condStackLevel] = status ;
 
-      if (verbose) cxcoutD(Eval) << "RooArgSet::readFromStream(" << GetName()
-                 << "): conditional expression " << expr << " = "
-                 << (condStack[condStackLevel]?"true":"false") << endl ;
+      if (verbose) {
+        cxcoutD(Eval) << "RooArgSet::readFromStream(" << GetName() << "): conditional expression " << expr << " = "
+                      << (condStack[condStackLevel] ? "true" : "false") << endl;
+      }
       continue ; // go to next line
     }
 

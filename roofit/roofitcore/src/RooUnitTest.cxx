@@ -344,9 +344,11 @@ bool RooUnitTest::runCompTests()
       }
 
       if (!iter2->first->isIdentical(*bmark,fptol(),fctol(),_verb >= 0)) {
-        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << iter2->first->ClassName() << "::" << iter2->first->GetName()
-             << " from result " << iter2->second
-             <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << std::endl;
+   if (_verb >= 0) {
+     std::cout << "RooUnitTest ERROR: comparison of object " << iter2->first->ClassName()
+               << "::" << iter2->first->GetName() << " from result " << iter2->second
+               << " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << std::endl;
+   }
         ret = false ;
       }
 

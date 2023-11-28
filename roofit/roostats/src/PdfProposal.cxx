@@ -85,10 +85,11 @@ PdfProposal::PdfProposal(RooAbsPdf &pdf) : fPdf(&pdf) {}
 bool PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 {
    if (x1.equals(x2)) {
-      for (auto const *r : static_range_cast<RooRealVar*>(x1))
+      for (auto const *r : static_range_cast<RooRealVar *>(x1)) {
          if (r->getVal() != x2.getRealValue(r->GetName())) {
             return false;
          }
+      }
       return true;
    }
    return false;

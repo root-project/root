@@ -576,14 +576,16 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       for(Int_t k = 0; k < nspec; ++k)
    dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
 
-      for(Int_t n=0; n<nspec; ++n)
+      for (Int_t n = 0; n < nspec; ++n) {
    for(Int_t j=0; j<nspec; ++j)
      {
-       if(includeWeights)
-         covInv(n,j) +=  fSData->weight()*pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
-       else
-         covInv(n,j) +=                   pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
-     }
+        if (includeWeights) {
+           covInv(n, j) += fSData->weight() * pdfvalues[ievt][n] * pdfvalues[ievt][j] / (dsum * dsum);
+        } else {
+           covInv(n, j) += pdfvalues[ievt][n] * pdfvalues[ievt][j] / (dsum * dsum);
+        }
+   }
+      }
 
       //ADDED WEIGHT ABOVE
 

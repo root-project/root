@@ -366,10 +366,11 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
                res =
                   findlimit(TString::Format("%s exp%s%d", sType.Data(), nSigma > 0 ? "+" : "", int(nSigma)), relUncert);
             }
-            if (std::isnan(res.first) || std::isnan(res.second))
+            if (std::isnan(res.first) || std::isnan(res.second)) {
                out = 1;
-            else if (std::isinf(res.second))
+            } else if (std::isinf(res.second)) {
                out = 2;
+            }
          }
       } else {
          throw std::runtime_error(TString::Format("Automatic scanning not yet supported for %s", type));
@@ -482,12 +483,13 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
    auto _type = fTestStatType;
    if (_type == xRooFit::Asymptotics::Unknown) {
       // decide based on values
-      if (std::isnan(alt_value))
+      if (std::isnan(alt_value)) {
          _type = xRooFit::Asymptotics::TwoSided;
-      else if (value >= alt_value)
+      } else if (value >= alt_value) {
          _type = xRooFit::Asymptotics::OneSidedPositive;
-      else
+      } else {
          _type = xRooFit::Asymptotics::Uncapped;
+      }
    }
 
    out.fPllType = _type;
@@ -865,12 +867,13 @@ void xRooNLLVar::xRooHypoSpace::LoadFits(const char *apath)
             //                else hp.fAltVal = std::numeric_limits<double>::quiet_NaN();
 
             // decide based on values
-            if (std::isnan(hp.fAltVal()))
+            if (std::isnan(hp.fAltVal())) {
                hp.fPllType = xRooFit::Asymptotics::TwoSided;
-            else if (hp.fNullVal() >= hp.fAltVal())
+            } else if (hp.fNullVal() >= hp.fAltVal()) {
                hp.fPllType = xRooFit::Asymptotics::OneSidedPositive;
-            else
+            } else {
                hp.fPllType = xRooFit::Asymptotics::Uncapped;
+            }
 
             emplace_back(hp);
          }
@@ -900,25 +903,25 @@ void xRooNLLVar::xRooHypoSpace::Print(Option_t * /*opt*/) const
       }
       std::cout << " status=[ufit:";
       auto ufit = const_cast<xRooHypoPoint &>(at(i)).ufit(true);
-      if (!ufit)
+      if (!ufit) {
          std::cout << "-";
-      else {
+      } else {
          std::cout << ufit->status();
          badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(ufit->status()) == 0);
       }
       std::cout << ",cfit_null:";
       auto cfit = const_cast<xRooHypoPoint &>(at(i)).cfit_null(true);
-      if (!cfit)
+      if (!cfit) {
          std::cout << "-";
-      else {
+      } else {
          std::cout << cfit->status();
          badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(cfit->status()) == 0);
       }
       std::cout << ",cfit_alt:";
       auto afit = const_cast<xRooHypoPoint &>(at(i)).cfit_alt(true);
-      if (!afit)
+      if (!afit) {
          std::cout << "-";
-      else {
+      } else {
          std::cout << afit->status();
          badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(afit->status()) == 0);
       }
@@ -978,9 +981,10 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
       out->SetNameTitle(TString::Format("obs_p%s", sCL), title);
       out->SetMarkerStyle(20);
       out->SetMarkerSize(0.5);
-      if (sOpt.Contains("ts"))
+      if (sOpt.Contains("ts")) {
          out->SetNameTitle("obs_ts", TString::Format("Observed;%s;%s", _axes.at(0)->GetTitle(),
                                                      (empty() ? "" : front().tsTitle(true).Data())));
+      }
    } else {
       out->SetNameTitle(TString::Format("exp%d_p%s", int(nSigma), sCL), title);
       out->SetMarkerStyle(0);
@@ -1002,9 +1006,10 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
          // dynamic_cast<TAttFill*>(x)->SetFillStyle(1001);
          out->GetListOfFunctions()->Add(x, "F");
       }
-      if (sOpt.Contains("ts"))
+      if (sOpt.Contains("ts")) {
          out->SetNameTitle(TString::Format("exp_ts%d", int(nSigma)),
                            TString::Format("Expected;%s;%s", _axes.at(0)->GetTitle(), front().tsTitle(true).Data()));
+      }
    }
 
    auto badPoints = [&]() {
@@ -1257,9 +1262,9 @@ std::pair<double, double> xRooNLLVar::xRooHypoSpace::GetLimit(const TGraph &pVal
    int i = 0;
    std::set<double> existingX;
    while (i < gr->GetN()) {
-      if (std::isnan(gr->GetPointY(i)))
+      if (std::isnan(gr->GetPointY(i))) {
          gr->RemovePoint(i);
-      else if (existingX.find(gr->GetPointX(i)) != existingX.end()) {
+      } else if (existingX.find(gr->GetPointX(i)) != existingX.end()) {
          gr->RemovePoint(i);
       } else {
          existingX.insert(gr->GetPointX(i));

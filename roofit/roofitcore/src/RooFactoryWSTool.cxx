@@ -2025,9 +2025,12 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     if (pargv.size() > 3)
       order = atoi(pargv[3].c_str());
     if (pargv.size() > 2) {
-      if (pargv[2].find(',') != string::npos)
-        throw string(Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
-      else observablesValue = atof(pargv[2].c_str());
+      if (pargv[2].find(',') != string::npos) {
+   throw string(
+      Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
+      } else {
+   observablesValue = atof(pargv[2].c_str());
+      }
     }
 
     if (pargv.size() > 3)
@@ -2037,9 +2040,10 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     if (pargv.size() > 5)
       eps2 = atof(pargv[5].c_str());
 
-    if (pargv.size() > 6)
+    if (pargv.size() > 6) {
       throw string(
-        Form("taylorexpand::%s, requires max. 6 arguments, has %d arguments", instName, (Int_t)pargv.size()));
+         Form("taylorexpand::%s, requires max. 6 arguments, has %d arguments", instName, (Int_t)pargv.size()));
+    }
 
     auto taylor = RooPolyFunc::taylorExpand(instName, instName, func, observables, order, {observablesValue}, eps1, eps2);
     if (ft.ws().import(*taylor, Silence())) ft.logError();

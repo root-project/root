@@ -114,9 +114,12 @@ RooDataSet* ToyMCStudy::merge() {
          continue;
       }
 
-      if( !samplingOutput ) samplingOutput = new RooDataSet(*oneWorker->GetSamplingDistributions());
+      if (!samplingOutput) {
+         samplingOutput = new RooDataSet(*oneWorker->GetSamplingDistributions());
 
-      else samplingOutput->append( *oneWorker->GetSamplingDistributions() );
+      } else {
+         samplingOutput->append(*oneWorker->GetSamplingDistributions());
+      }
 
       i++;
       //delete oneWorker;
