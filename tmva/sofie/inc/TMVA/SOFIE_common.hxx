@@ -424,15 +424,15 @@ extern "C" void sgemm_(const char * transa, const char * transb, const int * m, 
 
 
 struct GNN_Data {
-      RTensor<float> node_data;
-      RTensor<float> edge_data;
-      RTensor<float> global_data;
+      RTensor<float> node_data;      // the node feature data, tensor with shape (num_nodes, num_node_features)
+      RTensor<float> edge_data;      // the edge feature data, tensor with shape (num_edges, num_edge_features)
+      RTensor<float> global_data;    // the global features, tensor with shape (1, num_global_features)
+      RTensor<int> edge_index;       // the edge index (receivers and senders for each edge), tensor with shape (2, num_edges)
+                                     // edge_index[0,:] are the receivers and edge_index[1,:] are the senders
 
-      std::vector<int> receivers;
-      std::vector<int> senders;
 
       // need to have default constructor since RTensor has not one
-      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})) {}
+      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})), edge_index(RTensor<int>({})) {}
 
 };
 
@@ -480,10 +480,7 @@ inline GNN_Data Concatenate(GNN_Data & data1, GNN_Data & data2, int axis = 0) {
    out.edge_data = Concatenate(data1.edge_data,data2.edge_data, axis);
    out.global_data = Concatenate<float>(data1.global_data,data2.global_data, axis-1);
    // assume sender/receivers of data1 and data2 are the same
-   if (data1.receivers != data2.receivers || data1.senders != data2.senders)
-       throw std::runtime_error("GNN_Data Concatenate: data1 and data2 have different net structures");
-   out.receivers = data1.receivers;
-   out.senders = data1.senders;
+   out.edge_index = data1.edge_index.Copy();
    return out;
 }
 
@@ -492,11 +489,11 @@ inline GNN_Data Copy(const GNN_Data & data) {
    out.node_data = RTensor<float>(data.node_data.GetShape());
    out.edge_data = RTensor<float>(data.edge_data.GetShape());
    out.global_data = RTensor<float>(data.global_data.GetShape());
+   out.edge_index = RTensor<int>(data.edge_index.GetShape());
    std::copy(data.node_data.GetData(), data.node_data.GetData()+ data.node_data.GetSize(), out.node_data.GetData());
    std::copy(data.edge_data.GetData(), data.edge_data.GetData()+ data.edge_data.GetSize(), out.edge_data.GetData());
    std::copy(data.global_data.GetData(), data.global_data.GetData()+ data.global_data.GetSize(), out.global_data.GetData());
-   out.receivers = data.receivers;
-   out.senders = data.senders;
+   std::copy(data.edge_index.GetData(), data.edge_index.GetData()+ data.edge_index.GetSize(), out.edge_index.GetData());
    return out;
 }
 

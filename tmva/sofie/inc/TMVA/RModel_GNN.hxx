@@ -102,10 +102,8 @@ private:
     std::unique_ptr<RFunction_Aggregate> edge_global_agg_block;
     std::unique_ptr<RFunction_Aggregate> node_global_agg_block;
 
-    int num_nodes;
-    int num_edges;
-    std::vector<int> senders;              // contains node indices
-    std::vector<int> receivers;            // contains node indices
+    int num_nodes;   // maximum number of nodes
+    int num_edges;   // maximum number of edges
 
     std::size_t num_node_features;
     std::size_t num_edge_features;
