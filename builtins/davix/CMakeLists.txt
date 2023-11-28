@@ -20,6 +20,10 @@ list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}da
 list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/src/DAVIX-build/deps/curl-install/usr/lib/${CMAKE_STATIC_LIBRARY_PREFIX}curl${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 string(REPLACE "-Werror " "" DAVIX_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
+    # DAVIX uses the flag -fstack-protector-all, which nvc++ does not understand
+    set(DAVIX_CXX_FLAGS "${DAVIX_CXX_FLAGS} -noswitcherror")
+endif()
 
 ExternalProject_Add(DAVIX
   URL ${DAVIX_URL}/davix-${DAVIX_VERSION}.tar.gz
