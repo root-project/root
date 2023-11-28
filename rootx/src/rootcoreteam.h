@@ -30,7 +30,7 @@ const char *gROOTCoreTeam[] = {
    "Stephan Hageboeck",
    "Matevz Tadel",
    "Enric Tejedor Saavedra",
-   0 };
+   0};
 
 } // namespace ROOTX
 } // namespace ROOT
