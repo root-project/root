@@ -46,19 +46,6 @@ DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
-IncludeCategories:
-  - Regex:           '^("|<)T'
-    Priority:        4
-  - Regex:           '^("|<)ROOT/'
-    Priority:        5
-  - Regex:           '^<.*\.h>'
-    Priority:        1
-  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
-    Priority:        2
-  - Regex:           '^(<|"(gtest|isl|json)/)'
-    Priority:        3
-  - Regex:           '.*'
-    Priority:        6
 IndentCaseLabels: false
 IndentWidth:     3
 IndentWrappedFunctionNames: false
@@ -99,6 +86,8 @@ UseTab:          Never
 IncludeCategories:
   - Regex:           '^"[^/]+\"'
     Priority:        10
+  - Regex:           '^("|<)T'
+    Priority:        12
   - Regex:           '^"ROOT/'
     Priority:        15
   - Regex:           '^"cling/'
