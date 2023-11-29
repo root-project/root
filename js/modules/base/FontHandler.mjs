@@ -71,23 +71,27 @@ class FontHandler {
    }
 
    /** @summary Assigns font-related attributes */
-   setFont(selection) {
-      if (this.base64 && this.painter) {
-         const svg = this.painter.getCanvSvg(),
-               clname = 'custom_font_' + this.name,
-               fmt = 'ttf';
-         let defs = svg.selectChild('.canvas_defs');
-         if (defs.empty())
-            defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
-         const entry = defs.selectChild('.' + clname);
-         if (entry.empty()) {
-            defs.append('style')
-                .attr('type', 'text/css')
-                .attr('class', clname)
-                .property('$fonthandler', this)
-                .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url('data:application/font-${fmt};charset=utf-8;base64,${this.base64}') }`);
-         }
+   addCustomFontToSvg(svg) {
+      if (!this.base64 || !this.name)
+         return;
+      const clname = 'custom_font_' + this.name, fmt = 'ttf';
+      let defs = svg.selectChild('.canvas_defs');
+      if (defs.empty())
+         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+      const entry = defs.selectChild('.' + clname);
+      if (entry.empty()) {
+         console.log('Adding style entry for class', clname);
+         defs.append('style')
+               .attr('class', clname)
+               .property('$fonthandler', this)
+               .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url(data:application/font-${fmt};charset=utf-8;base64,${this.base64}); }`);
       }
+   }
+
+   /** @summary Assigns font-related attributes */
+   setFont(selection) {
+      if (this.base64 && this.painter)
+         this.addCustomFontToSvg(this.painter.getCanvSvg());
 
       selection.attr('font-family', this.name)
                .attr('font-size', this.size)
@@ -160,6 +164,12 @@ function addCustomFont(index, name, format, base64) {
       root_fonts[index] = { n: name, format, base64 };
 }
 
+/** @summary Return handle with custom font
+  * @private */
+function getCustomFont(name) {
+   return root_fonts.find(h => (h?.n === name) && h?.base64);
+}
+
 /** @summary Try to detect and create font handler for SVG text node
   * @private */
 function detectFont(node) {
@@ -201,4 +211,4 @@ function detectFont(node) {
    return handler;
 }
 
-export { FontHandler, addCustomFont, detectFont };
+export { FontHandler, addCustomFont, getCustomFont, detectFont };

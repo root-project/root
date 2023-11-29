@@ -40,7 +40,7 @@ class THistDrawOptions {
               Mode3D: false, x3dscale: 1, y3dscale: 1,
               Render3D: constants.Render3D.Default,
               FrontBox: true, BackBox: true,
-              _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
+              need_fillcol: false,
               minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
    }
 
@@ -377,9 +377,12 @@ class THistDrawOptions {
       if ((hdim === 3) && d.check('FB')) this.FrontBox = false;
       if ((hdim === 3) && d.check('BB')) this.BackBox = false;
 
-      this._pfc = d.check('PFC');
-      this._plc = d.check('PLC') || this.AutoColor;
-      this._pmc = d.check('PMC');
+      if (d.check('PFC') && !this._pfc)
+         this._pfc = 2;
+      if ((d.check('PLC') || this.AutoColor) && !this._plc)
+         this._plc = 2;
+      if (d.check('PMC') && !this._pmc)
+         this._pmc = 2;
 
       if (d.check('L')) { this.Line = true; this.Hist = false; this.Error = false; }
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
@@ -915,49 +918,27 @@ class THistPainter extends ObjectPainter {
          this.check_pad_range = use_pad ? 'pad_range' : true;
    }
 
-   /** @summary Generates automatic color for some objects painters */
-   createAutoColor(numprimitives) {
-      if (!numprimitives)
-         numprimitives = this.getPadPainter()?.getRootPad(true)?.fPrimitves?.arr?.length || 5;
-
-      let indx = this._auto_color || 0;
-      this._auto_color = indx + 1;
-
-      const pal = this.getHistPalette();
-
-      if (pal) {
-         if (numprimitives < 2) numprimitives = 2;
-         if (indx >= numprimitives) indx = numprimitives - 1;
-         const palindx = Math.round(indx * (pal.getLength()-3) / (numprimitives-1)),
-               colvalue = pal.getColor(palindx);
-
-         return this.addColor(colvalue);
-      }
-
-      this._auto_color = this._auto_color % 8;
-      return indx+2;
-   }
-
    /** @summary Create necessary histogram draw attributes */
-   createHistDrawAttributes() {
-      const histo = this.getHisto();
+   createHistDrawAttributes(only_check_auto) {
+      const histo = this.getHisto(), o = this.options;
 
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor();
-            let exec = '';
-            if (this.options._pfc) { histo.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
-            if (this.options._plc) { histo.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
-            if (this.options._pmc) { histo.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
-            this.options._pfc = this.options._plc = this.options._pmc = false;
-            this._auto_exec = exec; // can be reused when sending option back to server
+      if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
+         const pp = this.getPadPainter();
+         if (isFunc(pp?.getAutoColor)) {
+            const icolor = pp.getAutoColor(histo.$num_histos);
+            this._auto_exec = ''; // can be reused when sending option back to server
+            if (o._pfc > 1) { o._pfc = 1; histo.fFillColor = icolor; this._auto_exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
+            if (o._plc > 1) { o._plc = 1; histo.fLineColor = icolor; this._auto_exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
+            if (o._pmc > 1) { o._pmc = 1; histo.fMarkerColor = icolor; this._auto_exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
          }
       }
 
-      this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
-
-      this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+      if (only_check_auto)
+         this.deleteAttr();
+      else {
+         this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
+         this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+      }
    }
 
    /** @summary Update axes attributes in target histogram
@@ -1000,7 +981,8 @@ class THistPainter extends ObjectPainter {
    updateObject(obj, opt) {
       const histo = this.getHisto(),
             fp = this.getFramePainter(),
-            pp = this.getPadPainter();
+            pp = this.getPadPainter(),
+            o = this.options;
 
       if (obj !== histo) {
          if (!this.matchObjectType(obj)) return false;
@@ -1018,14 +1000,22 @@ class THistPainter extends ObjectPainter {
          }
 
          // special treatment for webcanvas - also name can be changed
-         if (this.snapid !== undefined)
+         if (this.snapid !== undefined) {
             histo.fName = obj.fName;
+            o._pfc = o._plc = o._pmc = 0; // auto colors should be processed in web canvas
+         }
 
-         histo.fFillColor = obj.fFillColor;
+         if (!o._pfc)
+            histo.fFillColor = obj.fFillColor;
          histo.fFillStyle = obj.fFillStyle;
-         histo.fLineColor = obj.fLineColor;
+         if (!o._plc)
+            histo.fLineColor = obj.fLineColor;
          histo.fLineStyle = obj.fLineStyle;
          histo.fLineWidth = obj.fLineWidth;
+         if (!o._pmc)
+            histo.fMarkerColor = obj.fMarkerColor;
+         histo.fMarkerSize = obj.fMarkerSize;
+         histo.fMarkerStyle = obj.fMarkerStyle;
 
          histo.fEntries = obj.fEntries;
          histo.fTsumw = obj.fTsumw;
@@ -1056,7 +1046,7 @@ class THistPainter extends ObjectPainter {
          histo.fSumw2 = obj.fSumw2;
 
          if (this.getDimension() === 1)
-            this.options.decodeSumw2(histo);
+            o.decodeSumw2(histo);
 
          if (this.isTProfile())
             histo.fBinEntries = obj.fBinEntries;
@@ -1072,14 +1062,14 @@ class THistPainter extends ObjectPainter {
          const changed_opt = (histo.fOption !== obj.fOption);
          histo.fOption = obj.fOption;
 
-         if (((opt !== undefined) && (this.options.original !== opt)) || changed_opt)
+         if (((opt !== undefined) && (o.original !== opt)) || changed_opt)
             this.decodeOptions(opt || histo.fOption);
       }
 
-      if (!this.options.ominimum)
-         this.options.minimum = histo.fMinimum;
-      if (!this.options.omaximum)
-         this.options.maximum = histo.fMaximum;
+      if (!o.ominimum)
+         o.minimum = histo.fMinimum;
+      if (!o.omaximum)
+         o.maximum = histo.fMaximum;
 
       if (this.snapid || !fp || !fp.zoomChangedInteractive())
          this.checkPadRange();
@@ -1246,7 +1236,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Fill option object used in TWebCanvas */
    fillWebObjectOptions(res) {
-      if (this._auto_exec) {
+      if (this._auto_exec && res) {
          res.fcust = 'auto_exec:' + this._auto_exec;
          delete this._auto_exec;
       }

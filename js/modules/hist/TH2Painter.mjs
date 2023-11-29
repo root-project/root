@@ -233,7 +233,7 @@ class TH2Painter extends TH2Painter2D {
          if (logz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
-         this.deleteAttr();
+         this.createHistDrawAttributes(true);
 
          if (is_main) {
             assignFrame3DMethods(main);

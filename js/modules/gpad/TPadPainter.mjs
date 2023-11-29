@@ -3,7 +3,7 @@ import { gStyle, settings, constants, browser, internals, BIT,
          isObject, isFunc, isStr,
          clTObjArray, clTPaveText, clTColor, clTPad, clTStyle, clTLegend, clTHStack, clTMultiGraph, clTLegendEntry } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
-import { ColorPalette, adoptRootColors, getGrayColors, extendRootColors, getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
+import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors, getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -288,6 +288,7 @@ class TPadPainter extends ObjectPainter {
       delete this._snap_primitives;
       delete this._last_grayscale;
       delete this._custom_colors;
+      delete this._custom_palette_indexes;
       delete this._custom_palette_colors;
       delete this.root_colors;
 
@@ -401,6 +402,33 @@ class TPadPainter extends ObjectPainter {
    /** @summary Returns number of painters
      * @private */
    getNumPainters() { return this.painters.length; }
+
+   /** @summary Provides automatic color
+    * @desc Uses ROOT colors palette if possible
+    * @private */
+   getAutoColor(numprimitives) {
+      if (!numprimitives)
+         numprimitives = this._num_primitives || 5;
+      if (numprimitives < 2) numprimitives = 2;
+
+      let indx = this._auto_color ?? 0;
+      this._auto_color = (indx + 1) % numprimitives;
+      if (indx >= numprimitives) indx = numprimitives - 1;
+
+      const indexes = this._custom_palette_indexes || this.getCanvPainter()?._custom_palette_indexes;
+
+      if (indexes?.length) {
+         const p = Math.round(indx * (indexes.length - 3) / (numprimitives - 1));
+         return indexes[p];
+      }
+
+      if (!this._auto_palette)
+         this._auto_palette = getColorPalette(settings.Palette, this.isGrayscale());
+      const palindx = Math.round(indx * (this._auto_palette.getLength()-3) / (numprimitives-1)),
+            colvalue = this._auto_palette.getColor(palindx);
+
+      return this.addColor(colvalue);
+   }
 
    /** @summary Call function for each painter in pad
      * @param {function} userfunc - function to call
@@ -906,7 +934,7 @@ class TPadPainter extends ObjectPainter {
       if ((obj._typename === clTObjArray) && (obj.name === 'ListOfColors')) {
          if (this.options?.CreatePalette) {
             let arr = [];
-            for (let n = obj.arr.length - this.options.CreatePalette; n<obj.arr.length; ++n) {
+            for (let n = obj.arr.length - this.options.CreatePalette; n < obj.arr.length; ++n) {
                const col = getRGBfromTColor(obj.arr[n]);
                if (!col) { console.log('Fail to create color for palette'); arr = null; break; }
                arr.push(col);
@@ -923,18 +951,22 @@ class TPadPainter extends ObjectPainter {
       }
 
       if ((obj._typename === clTObjArray) && (obj.name === 'CurrentColorPalette')) {
-         const arr = [];
+         const arr = [], indx = [];
          let missing = false;
          for (let n = 0; n < obj.arr.length; ++n) {
             const col = obj.arr[n];
-            if (col?._typename === clTColor)
+            if (col?._typename === clTColor) {
+               indx[n] = col.fNumber;
                arr[n] = getRGBfromTColor(col);
-             else {
-               console.log(`Missing color with index ${n}`); missing = true;
+            } else {
+               console.log(`Missing color with index ${n}`);
+               missing = true;
             }
          }
 
-         this._custom_palette_colors = (!this.options || (!missing && !this.options.IgnorePalette)) ? arr : null;
+         const apply = (!this.options || (!missing && !this.options.IgnorePalette));
+         this._custom_palette_indexes = apply ? indx : null;
+         this._custom_palette_colors = apply ? arr : null;
 
          return true;
       }
@@ -1406,7 +1438,7 @@ class TPadPainter extends ObjectPainter {
       for (let k = 0; k < this.painters.length; ++k) {
          const painter = this.painters[k],
                obj = painter.getObject();
-         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.isSecondary() ||
+         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.draw_content === false ||
               obj._typename === clTLegend || obj._typename === clTHStack || obj._typename === clTMultiGraph)
             continue;
 
@@ -1510,13 +1542,16 @@ class TPadPainter extends ObjectPainter {
 
       // set palette
       if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
-         const palette = [];
-         for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
-            palette[n] = colors[Math.round(snap.fSnapshot.fBuf[n])];
-
+         const indexes = [], palette = [];
+         for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n) {
+            indexes[n] = Math.round(snap.fSnapshot.fBuf[n]);
+            palette[n] = colors[indexes[n]];
+         }
+         this._custom_palette_indexes = indexes;
          this._custom_palette_colors = palette;
          this.custom_palette = new ColorPalette(palette, greyscale);
       } else {
+         delete this._custom_palette_indexes;
          delete this._custom_palette_colors;
          delete this.custom_palette;
       }
