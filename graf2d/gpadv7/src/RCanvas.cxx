@@ -152,6 +152,17 @@ std::string ROOT::Experimental::RCanvas::GetWindowAddr() const
    return "";
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Returns window URL which can be used for connection
+
+std::string ROOT::Experimental::RCanvas::GetWindowUrl(bool remote)
+{
+   if (fPainter)
+      return fPainter->GetWindowUrl(remote);
+
+   return "";
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 /// Hide all canvas displays
