@@ -165,6 +165,8 @@ public:
 
    std::string GetWindowAddr() const final;
 
+   std::string GetWindowUrl(bool remote) final;
+
    void Run(double tm = 0.) final;
 
    bool AddPanel(std::shared_ptr<ROOT::RWebWindow>) final;
@@ -685,6 +687,17 @@ std::string RCanvasPainter::GetWindowAddr() const
 
    return fWindow->GetAddr();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns connection URL for web window
+
+std::string RCanvasPainter::GetWindowUrl(bool remote)
+{
+   if (!fWindow) return "";
+
+   return fWindow->GetUrl(remote);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add window as panel inside canvas window
