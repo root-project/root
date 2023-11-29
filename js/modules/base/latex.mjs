@@ -4,12 +4,11 @@ import { FontHandler } from './FontHandler.mjs';
 
 
 const symbols_map = {
-   // greek letters
+   // greek letters from symbols.ttf
    '#alpha': '\u03B1',
    '#beta': '\u03B2',
    '#chi': '\u03C7',
    '#delta': '\u03B4',
-   '#digamma': '\u03DD',
    '#varepsilon': '\u03B5',
    '#phi': '\u03C6',
    '#gamma': '\u03B3',
@@ -17,8 +16,6 @@ const symbols_map = {
    '#iota': '\u03B9',
    '#varphi': '\u03C6',
    '#kappa': '\u03BA',
-   '#koppa': '\u03DF',
-   '#sampi': '\u03E1',
    '#lambda': '\u03BB',
    '#mu': '\u03BC',
    '#nu': '\u03BD',
@@ -27,13 +24,9 @@ const symbols_map = {
    '#theta': '\u03B8',
    '#rho': '\u03C1',
    '#sigma': '\u03C3',
-   '#stigma': '\u03DB',
-   '#san': '\u03FB',
-   '#sho': '\u03F8',
    '#tau': '\u03C4',
    '#upsilon': '\u03C5',
    '#varomega': '\u03D6',
-   '#varcoppa': '\u03D9',
    '#omega': '\u03C9',
    '#xi': '\u03BE',
    '#psi': '\u03C8',
@@ -42,7 +35,6 @@ const symbols_map = {
    '#Beta': '\u0392',
    '#Chi': '\u03A7',
    '#Delta': '\u0394',
-   '#Digamma': '\u03DC',
    '#Epsilon': '\u0395',
    '#Phi': '\u03A6',
    '#Gamma': '\u0393',
@@ -50,9 +42,6 @@ const symbols_map = {
    '#Iota': '\u0399',
    '#vartheta': '\u03D1',
    '#Kappa': '\u039A',
-   '#Koppa': '\u03DE',
-   '#varKoppa': '\u03D8',
-   '#Sampi': '\u03E0',
    '#Lambda': '\u039B',
    '#Mu': '\u039C',
    '#Nu': '\u039D',
@@ -61,9 +50,6 @@ const symbols_map = {
    '#Theta': '\u0398',
    '#Rho': '\u03A1',
    '#Sigma': '\u03A3',
-   '#Stigma': '\u03DA',
-   '#San': '\u03FA',
-   '#Sho': '\u03F7',
    '#Tau': '\u03A4',
    '#Upsilon': '\u03A5',
    '#varsigma': '\u03C2',
@@ -73,16 +59,8 @@ const symbols_map = {
    '#Zeta': '\u0396',
    '#varUpsilon': '\u03D2',
    '#epsilon': '\u03B5',
-   '#P': '\u00B6',
 
-   // only required for MathJax to provide correct replacement
-   '#sqrt': '\u221A',
-   '#bar': '',
-   '#overline': '',
-   '#underline': '',
-   '#strike': '',
-
-   // from TLatex tables #2 & #3
+    // second set from symbols.ttf
    '#leq': '\u2264',
    '#/': '\u2044',
    '#infty': '\u221E',
@@ -96,9 +74,8 @@ const symbols_map = {
    '#uparrow': '\u2191',
    '#rightarrow': '\u2192',
    '#downarrow': '\u2193',
-   '#circ': '\u02C6', // ^
+   '#circ': '\u2E30',
    '#pm': '\xB1',
-   '#mp': '\u2213',
    '#doublequote': '\u2033',
    '#geq': '\u2265',
    '#times': '\xD7',
@@ -122,12 +99,11 @@ const symbols_map = {
    '#oslash': '\u2205',
    '#cap': '\u2229',
    '#cup': '\u222A',
-   '#supseteq': '\u2287',
    '#supset': '\u2283',
+   '#supseteq': '\u2287',
    '#notsubset': '\u2284',
-   '#subseteq': '\u2286',
    '#subset': '\u2282',
-   '#int': '\u222B',
+   '#subseteq': '\u2286',
    '#in': '\u2208',
    '#notin': '\u2209',
    '#angle': '\u2220',
@@ -137,7 +113,7 @@ const symbols_map = {
    '#trademark': '\u2122',
    '#prod': '\u220F',
    '#surd': '\u221A',
-   '#upoint': '\u02D9',
+   '#upoint': '\u2027',
    '#corner': '\xAC',
    '#wedge': '\u2227',
    '#vee': '\u2228',
@@ -146,24 +122,45 @@ const symbols_map = {
    '#Uparrow': '\u21D1',
    '#Rightarrow': '\u21D2',
    '#Downarrow': '\u21D3',
+   '#void2': '', // dummy, placeholder
    '#LT': '\x3C',
    '#void1': '\xAE',
    '#copyright': '\xA9',
-   '#void3': '\u2122',
+   '#void3': '\u2122',  // it is dummy placeholder, TM
    '#sum': '\u2211',
    '#arctop': '\u239B',
-   '#lbar': '\u23B8',
+   '#lbar': '\u23A2',
    '#arcbottom': '\u239D',
-   '#void8': '',
+   '#void4': '', // dummy, placeholder
+   '#void8': '\u23A2', // same as lbar
    '#bottombar': '\u230A',
    '#arcbar': '\u23A7',
    '#ltbar': '\u23A8',
    '#AA': '\u212B',
-   '#aa': '\u00E5',
+   '#aa': '\xE5',
    '#void06': '',
    '#GT': '\x3E',
+   '#int': '\u222B',
    '#forall': '\u2200',
    '#exists': '\u2203',
+   // here ends second set from symbols.ttf
+
+   // more greek symbols
+   '#koppa': '\u03DF',
+   '#sampi': '\u03E1',
+   '#stigma': '\u03DB',
+   '#san': '\u03FB',
+   '#sho': '\u03F8',
+   '#varcoppa': '\u03D9',
+   '#digamma': '\u03DD',
+   '#Digamma': '\u03DC',
+   '#Koppa': '\u03DE',
+   '#varKoppa': '\u03D8',
+   '#Sampi': '\u03E0',
+   '#Stigma': '\u03DA',
+   '#San': '\u03FA',
+   '#Sho': '\u03F7',
+
    '#vec': '',
    '#dot': '\u22C5',
    '#hat': '\xB7',
@@ -181,12 +178,25 @@ const symbols_map = {
    '#odot': '\u2299',
    '#left': '',
    '#right': '',
-   '{}': ''
+   '{}': '',
+
+   '#mp': '\u2213',
+
+   '#P': '\u00B6', // paragraph
+
+    // only required for MathJax to provide correct replacement
+   '#sqrt': '\u221A',
+   '#bar': '',
+   '#overline': '',
+   '#underline': '',
+   '#strike': ''
 },
 
-/** @summary Create a single regex to detect any symbol to replace
+
+
+/** @summary Create a single regex to detect any symbol to replace, apply longer symbols first
   * @private */
-symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\\\{/g, '{').replace(/\\\}/g, '}') + ')', 'g'),
+symbolsRegexCache = new RegExp(Object.keys(symbols_map).sort((a, b) => (a.length < b.length ? 1 : (a.length > b.length ? -1 : 0))).join('|'), 'g'),
 
 /** @summary Simple replacement of latex letters
   * @private */
@@ -263,15 +273,86 @@ const latex_features = [
    { name: '#(){', braces: '()' },
    { name: '#{}{', braces: '{}' },
    { name: '#||{', braces: '||' }
-];
+],
 
 // taken from: https://sites.math.washington.edu/~marshall/cxseminar/symbol.htm, starts from 33
 // eslint-disable-next-line
-const symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993];
+symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993],
 
 // taken from http://www.alanwood.net/demos/wingdings.html, starts from 33
 // eslint-disable-next-line
-const wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505];
+wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505],
+
+symbolsPdfMap = {};
+
+/** @summary Return code for symbols from symbols.ttf
+ * @desc Used in PDF generation
+ * @private */
+function remapSymbolTtfCode(code) {
+   if (!symbolsPdfMap[0x3B1]) {
+      let cnt = 0;
+      for (const key in symbols_map) {
+         const symbol = symbols_map[key];
+         if (symbol.length === 1) {
+            let letter = 0;
+            if (cnt < 54) {
+               const opGreek = cnt;
+               // see code in TLatex.cxx, line 1302
+               letter = 97 + opGreek;
+               if (opGreek > 25) letter -= 58;
+               if (opGreek === 52) letter = 0o241; // varUpsilon
+               if (opGreek === 53) letter = 0o316; // epsilon
+            } else {
+               // see code in TLatex.cxx, line 1323
+               const opSpec = cnt - 54;
+               letter = 0o243 + opSpec;
+               switch (opSpec) {
+                  case 75: letter = 0o305; break; // AA Angstroem
+                  case 76: letter = 0o345; break; // aa Angstroem
+                  case 80: letter = 0o42; break; // #forall
+                  case 81: letter = 0o44; break; // #exists
+               }
+            }
+            const code = symbol.charCodeAt(0);
+            if (code > 0x80)
+               symbolsPdfMap[code] = letter;
+         }
+         if (++cnt > 54 + 82) break;
+      }
+   }
+   return symbolsPdfMap[code] ?? code;
+}
+
+
+/** @summary Reformat text node if it includes greek or special symbols
+ * @desc Used in PDF generation where greek symbols are not available
+ * @private */
+function replaceSymbolsInTextNode(node) {
+   if (node.childNodes.length !== 1)
+      return false;
+   const txt = node.textContent;
+   if (!txt)
+      return false;
+   let new_html = '', lasti = -1;
+   for (let i = 0; i < txt.length; i++) {
+      const code = txt.charCodeAt(i),
+            newcode = remapSymbolTtfCode(code);
+      if (code !== newcode) {
+         new_html += txt.slice(lasti+1, i) + '<tspan font-family="symbol" font-style="normal" font-weight="normal">'+String.fromCharCode(newcode)+'</tspan>';
+         lasti = i;
+      }
+   }
+
+   if (lasti < 0)
+      return false;
+
+   if (lasti < txt.length-1)
+      new_html += txt.slice(lasti+1, txt.length);
+
+   node.$originalHTML = node.innerHTML;
+   node.innerHTML = new_html;
+   return true;
+}
 
 function replaceSymbols(s, kind) {
    const m = (kind === 'Wingdings') ? wingdingsMap : symbolsMap;
@@ -1379,4 +1460,5 @@ async function typesetMathjax(node) {
    return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
 }
 
-export { symbols_map, translateLaTeX, producePlainText, isPlainText, produceLatex, loadMathjax, produceMathjax, typesetMathjax, approximateLabelWidth };
+export { symbols_map, translateLaTeX, producePlainText, isPlainText, produceLatex, loadMathjax,
+         produceMathjax, typesetMathjax, approximateLabelWidth, replaceSymbolsInTextNode };
