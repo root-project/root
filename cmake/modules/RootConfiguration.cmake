@@ -551,9 +551,13 @@ set(pythonvers ${Python3_VERSION})
 set(python${Python3_VERSION_MAJOR}vers ${Python3_VERSION})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
-try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
+if (CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
+   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dM -E /dev/null OUTPUT_VARIABLE __cplusplus_PPout)
+else()
+   try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
             OUTPUT_VARIABLE __cplusplus_PPout)
-string(REGEX MATCH "__cplusplus=([0-9]+)" __cplusplus "${__cplusplus_PPout}")
+endif()
+string(REGEX MATCH "__cplusplus[=| ]([0-9]+)" __cplusplus "${__cplusplus_PPout}")
 set(__cplusplus ${CMAKE_MATCH_1}L)
 
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
