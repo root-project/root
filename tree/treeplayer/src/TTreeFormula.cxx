@@ -4092,7 +4092,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                          else {tab[pos-1] = 0;} //{indetermination }
                          continue;
 
-            case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
+            case kpi   : pos++; tab[pos-1] = TMath::Pi(); continue;
 
             case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
             case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1;
