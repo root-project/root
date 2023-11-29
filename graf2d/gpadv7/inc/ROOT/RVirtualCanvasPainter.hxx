@@ -71,6 +71,8 @@ public:
 
    virtual std::string GetWindowAddr() const = 0;
 
+   virtual std::string GetWindowUrl(bool remote) = 0;
+
    /// run canvas functionality in caller thread, not needed when main thread is used
    virtual void Run(double tm = 0.) = 0;
 
