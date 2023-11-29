@@ -57,8 +57,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseFuseMatMulAdd.cxx
     src/ParseMatMul.cxx
     ${PROTO_SRCS}
-  LIBRARIES
-    ${Protobuf_LIBRARIES}
+  LIBRARIES PUBLIC
+    protobuf::libprotobuf
   DEPENDENCIES
     TMVA
     ROOTTMVASofie
@@ -66,7 +66,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
 
 target_include_directories(ROOTTMVASofieParser PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-target_include_directories(ROOTTMVASofieParser PUBLIC
-  ${Protobuf_INCLUDE_DIRS})
 set_target_properties(ROOTTMVASofieParser PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
