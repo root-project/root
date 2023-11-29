@@ -60,6 +60,8 @@ public:
 
    std::string GetWindowAddr() const;
 
+   std::string GetWindowUrl(bool remote);
+
    void SetTree(TTree *tree);
 
    bool SuggestLeaf(const TLeaf *leaf);
