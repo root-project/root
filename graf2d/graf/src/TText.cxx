@@ -315,7 +315,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             theta = TMath::ACos((px-px1)/norm);
             dtheta= TMath::ASin((py1-py)/norm);
             if (dtheta<0) theta = -theta;
-            theta = theta/TMath::ACos(-1)*180;
+            theta = theta/TMath::Pi()*180;
             if (theta<0) theta += 360;
             if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
          }
