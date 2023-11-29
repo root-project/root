@@ -128,11 +128,19 @@ void RGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browse
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Return URL address of web window used for geometry viewer
+/// Return web window address (name) used for geometry viewer
 
 std::string RGeomViewer::GetWindowAddr() const
 {
    return fWebWindow ? fWebWindow->GetAddr() : ""s;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Return web window URL which can be used for connection
+
+std::string RGeomViewer::GetWindowUrl(bool remote)
+{
+   return fWebWindow ? fWebWindow->GetUrl(remote) : ""s;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
