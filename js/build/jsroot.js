@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '21/11/2023',
+version_date = '29/11/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1105,7 +1105,7 @@ function create$1(typename, target) {
          create$1(clTBox, obj);
          extend$1(obj, { fX1NDC: 0, fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
                        fBorderSize: 0, fInit: 1, fShadowColor: 1,
-                       fCornerRadius: 0, fOption: 'brNDC', fName: 'title' });
+                       fCornerRadius: 0, fOption: 'brNDC', fName: '' });
          break;
       case clTAttText:
          extend$1(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42 });
@@ -1125,7 +1125,7 @@ function create$1(typename, target) {
       case clTLegend:
          create$1(clTPave, obj);
          create$1(clTAttText, obj);
-         extend$1(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create$1(clTList),
+         extend$1(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create$1(clTList), fName: clTPave,
                        fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
          break;
       case clTPaletteAxis:
@@ -8002,23 +8002,27 @@ class FontHandler {
    }
 
    /** @summary Assigns font-related attributes */
-   setFont(selection) {
-      if (this.base64 && this.painter) {
-         const svg = this.painter.getCanvSvg(),
-               clname = 'custom_font_' + this.name,
-               fmt = 'ttf';
-         let defs = svg.selectChild('.canvas_defs');
-         if (defs.empty())
-            defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
-         const entry = defs.selectChild('.' + clname);
-         if (entry.empty()) {
-            defs.append('style')
-                .attr('type', 'text/css')
-                .attr('class', clname)
-                .property('$fonthandler', this)
-                .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url('data:application/font-${fmt};charset=utf-8;base64,${this.base64}') }`);
-         }
+   addCustomFontToSvg(svg) {
+      if (!this.base64 || !this.name)
+         return;
+      const clname = 'custom_font_' + this.name, fmt = 'ttf';
+      let defs = svg.selectChild('.canvas_defs');
+      if (defs.empty())
+         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+      const entry = defs.selectChild('.' + clname);
+      if (entry.empty()) {
+         console.log('Adding style entry for class', clname);
+         defs.append('style')
+               .attr('class', clname)
+               .property('$fonthandler', this)
+               .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url(data:application/font-${fmt};charset=utf-8;base64,${this.base64}); }`);
       }
+   }
+
+   /** @summary Assigns font-related attributes */
+   setFont(selection) {
+      if (this.base64 && this.painter)
+         this.addCustomFontToSvg(this.painter.getCanvSvg());
 
       selection.attr('font-family', this.name)
                .attr('font-size', this.size)
@@ -8091,6 +8095,12 @@ function addCustomFont(index, name, format, base64) {
       root_fonts[index] = { n: name, format, base64 };
 }
 
+/** @summary Return handle with custom font
+  * @private */
+function getCustomFont(name) {
+   return root_fonts.find(h => (h?.n === name) && h?.base64);
+}
+
 /** @summary Try to detect and create font handler for SVG text node
   * @private */
 function detectFont(node) {
@@ -8133,12 +8143,11 @@ function detectFont(node) {
 }
 
 const symbols_map = {
-   // greek letters
+   // greek letters from symbols.ttf
    '#alpha': '\u03B1',
    '#beta': '\u03B2',
    '#chi': '\u03C7',
    '#delta': '\u03B4',
-   '#digamma': '\u03DD',
    '#varepsilon': '\u03B5',
    '#phi': '\u03C6',
    '#gamma': '\u03B3',
@@ -8146,8 +8155,6 @@ const symbols_map = {
    '#iota': '\u03B9',
    '#varphi': '\u03C6',
    '#kappa': '\u03BA',
-   '#koppa': '\u03DF',
-   '#sampi': '\u03E1',
    '#lambda': '\u03BB',
    '#mu': '\u03BC',
    '#nu': '\u03BD',
@@ -8156,13 +8163,9 @@ const symbols_map = {
    '#theta': '\u03B8',
    '#rho': '\u03C1',
    '#sigma': '\u03C3',
-   '#stigma': '\u03DB',
-   '#san': '\u03FB',
-   '#sho': '\u03F8',
    '#tau': '\u03C4',
    '#upsilon': '\u03C5',
    '#varomega': '\u03D6',
-   '#varcoppa': '\u03D9',
    '#omega': '\u03C9',
    '#xi': '\u03BE',
    '#psi': '\u03C8',
@@ -8171,7 +8174,6 @@ const symbols_map = {
    '#Beta': '\u0392',
    '#Chi': '\u03A7',
    '#Delta': '\u0394',
-   '#Digamma': '\u03DC',
    '#Epsilon': '\u0395',
    '#Phi': '\u03A6',
    '#Gamma': '\u0393',
@@ -8179,9 +8181,6 @@ const symbols_map = {
    '#Iota': '\u0399',
    '#vartheta': '\u03D1',
    '#Kappa': '\u039A',
-   '#Koppa': '\u03DE',
-   '#varKoppa': '\u03D8',
-   '#Sampi': '\u03E0',
    '#Lambda': '\u039B',
    '#Mu': '\u039C',
    '#Nu': '\u039D',
@@ -8190,9 +8189,6 @@ const symbols_map = {
    '#Theta': '\u0398',
    '#Rho': '\u03A1',
    '#Sigma': '\u03A3',
-   '#Stigma': '\u03DA',
-   '#San': '\u03FA',
-   '#Sho': '\u03F7',
    '#Tau': '\u03A4',
    '#Upsilon': '\u03A5',
    '#varsigma': '\u03C2',
@@ -8202,16 +8198,8 @@ const symbols_map = {
    '#Zeta': '\u0396',
    '#varUpsilon': '\u03D2',
    '#epsilon': '\u03B5',
-   '#P': '\u00B6',
 
-   // only required for MathJax to provide correct replacement
-   '#sqrt': '\u221A',
-   '#bar': '',
-   '#overline': '',
-   '#underline': '',
-   '#strike': '',
-
-   // from TLatex tables #2 & #3
+    // second set from symbols.ttf
    '#leq': '\u2264',
    '#/': '\u2044',
    '#infty': '\u221E',
@@ -8225,9 +8213,8 @@ const symbols_map = {
    '#uparrow': '\u2191',
    '#rightarrow': '\u2192',
    '#downarrow': '\u2193',
-   '#circ': '\u02C6', // ^
+   '#circ': '\u2E30',
    '#pm': '\xB1',
-   '#mp': '\u2213',
    '#doublequote': '\u2033',
    '#geq': '\u2265',
    '#times': '\xD7',
@@ -8251,12 +8238,11 @@ const symbols_map = {
    '#oslash': '\u2205',
    '#cap': '\u2229',
    '#cup': '\u222A',
-   '#supseteq': '\u2287',
    '#supset': '\u2283',
+   '#supseteq': '\u2287',
    '#notsubset': '\u2284',
-   '#subseteq': '\u2286',
    '#subset': '\u2282',
-   '#int': '\u222B',
+   '#subseteq': '\u2286',
    '#in': '\u2208',
    '#notin': '\u2209',
    '#angle': '\u2220',
@@ -8266,7 +8252,7 @@ const symbols_map = {
    '#trademark': '\u2122',
    '#prod': '\u220F',
    '#surd': '\u221A',
-   '#upoint': '\u02D9',
+   '#upoint': '\u2027',
    '#corner': '\xAC',
    '#wedge': '\u2227',
    '#vee': '\u2228',
@@ -8275,24 +8261,45 @@ const symbols_map = {
    '#Uparrow': '\u21D1',
    '#Rightarrow': '\u21D2',
    '#Downarrow': '\u21D3',
+   '#void2': '', // dummy, placeholder
    '#LT': '\x3C',
    '#void1': '\xAE',
    '#copyright': '\xA9',
-   '#void3': '\u2122',
+   '#void3': '\u2122',  // it is dummy placeholder, TM
    '#sum': '\u2211',
    '#arctop': '\u239B',
-   '#lbar': '\u23B8',
+   '#lbar': '\u23A2',
    '#arcbottom': '\u239D',
-   '#void8': '',
+   '#void4': '', // dummy, placeholder
+   '#void8': '\u23A2', // same as lbar
    '#bottombar': '\u230A',
    '#arcbar': '\u23A7',
    '#ltbar': '\u23A8',
    '#AA': '\u212B',
-   '#aa': '\u00E5',
+   '#aa': '\xE5',
    '#void06': '',
    '#GT': '\x3E',
+   '#int': '\u222B',
    '#forall': '\u2200',
    '#exists': '\u2203',
+   // here ends second set from symbols.ttf
+
+   // more greek symbols
+   '#koppa': '\u03DF',
+   '#sampi': '\u03E1',
+   '#stigma': '\u03DB',
+   '#san': '\u03FB',
+   '#sho': '\u03F8',
+   '#varcoppa': '\u03D9',
+   '#digamma': '\u03DD',
+   '#Digamma': '\u03DC',
+   '#Koppa': '\u03DE',
+   '#varKoppa': '\u03D8',
+   '#Sampi': '\u03E0',
+   '#Stigma': '\u03DA',
+   '#San': '\u03FA',
+   '#Sho': '\u03F7',
+
    '#vec': '',
    '#dot': '\u22C5',
    '#hat': '\xB7',
@@ -8310,12 +8317,25 @@ const symbols_map = {
    '#odot': '\u2299',
    '#left': '',
    '#right': '',
-   '{}': ''
+   '{}': '',
+
+   '#mp': '\u2213',
+
+   '#P': '\u00B6', // paragraph
+
+    // only required for MathJax to provide correct replacement
+   '#sqrt': '\u221A',
+   '#bar': '',
+   '#overline': '',
+   '#underline': '',
+   '#strike': ''
 },
 
-/** @summary Create a single regex to detect any symbol to replace
+
+
+/** @summary Create a single regex to detect any symbol to replace, apply longer symbols first
   * @private */
-symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\\\{/g, '{').replace(/\\\}/g, '}') + ')', 'g'),
+symbolsRegexCache = new RegExp(Object.keys(symbols_map).sort((a, b) => (a.length < b.length ? 1 : (a.length > b.length ? -1 : 0))).join('|'), 'g'),
 
 /** @summary Simple replacement of latex letters
   * @private */
@@ -8392,15 +8412,86 @@ const latex_features = [
    { name: '#(){', braces: '()' },
    { name: '#{}{', braces: '{}' },
    { name: '#||{', braces: '||' }
-];
+],
 
 // taken from: https://sites.math.washington.edu/~marshall/cxseminar/symbol.htm, starts from 33
 // eslint-disable-next-line
-const symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993];
+symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993],
 
 // taken from http://www.alanwood.net/demos/wingdings.html, starts from 33
 // eslint-disable-next-line
-const wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505];
+wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505],
+
+symbolsPdfMap = {};
+
+/** @summary Return code for symbols from symbols.ttf
+ * @desc Used in PDF generation
+ * @private */
+function remapSymbolTtfCode(code) {
+   if (!symbolsPdfMap[0x3B1]) {
+      let cnt = 0;
+      for (const key in symbols_map) {
+         const symbol = symbols_map[key];
+         if (symbol.length === 1) {
+            let letter = 0;
+            if (cnt < 54) {
+               const opGreek = cnt;
+               // see code in TLatex.cxx, line 1302
+               letter = 97 + opGreek;
+               if (opGreek > 25) letter -= 58;
+               if (opGreek === 52) letter = 0o241; // varUpsilon
+               if (opGreek === 53) letter = 0o316; // epsilon
+            } else {
+               // see code in TLatex.cxx, line 1323
+               const opSpec = cnt - 54;
+               letter = 0o243 + opSpec;
+               switch (opSpec) {
+                  case 75: letter = 0o305; break; // AA Angstroem
+                  case 76: letter = 0o345; break; // aa Angstroem
+                  case 80: letter = 0o42; break; // #forall
+                  case 81: letter = 0o44; break; // #exists
+               }
+            }
+            const code = symbol.charCodeAt(0);
+            if (code > 0x80)
+               symbolsPdfMap[code] = letter;
+         }
+         if (++cnt > 54 + 82) break;
+      }
+   }
+   return symbolsPdfMap[code] ?? code;
+}
+
+
+/** @summary Reformat text node if it includes greek or special symbols
+ * @desc Used in PDF generation where greek symbols are not available
+ * @private */
+function replaceSymbolsInTextNode(node) {
+   if (node.childNodes.length !== 1)
+      return false;
+   const txt = node.textContent;
+   if (!txt)
+      return false;
+   let new_html = '', lasti = -1;
+   for (let i = 0; i < txt.length; i++) {
+      const code = txt.charCodeAt(i),
+            newcode = remapSymbolTtfCode(code);
+      if (code !== newcode) {
+         new_html += txt.slice(lasti+1, i) + '<tspan font-family="symbol" font-style="normal" font-weight="normal">'+String.fromCharCode(newcode)+'</tspan>';
+         lasti = i;
+      }
+   }
+
+   if (lasti < 0)
+      return false;
+
+   if (lasti < txt.length-1)
+      new_html += txt.slice(lasti+1, txt.length);
+
+   node.$originalHTML = node.innerHTML;
+   node.innerHTML = new_html;
+   return true;
+}
 
 function replaceSymbols(s, kind) {
    const m = (kind === 'Wingdings') ? wingdingsMap : symbolsMap;
@@ -10223,12 +10314,13 @@ function addHighlightStyle(elem, drag) {
   * @private */
 async function svgToPDF(args, as_buffer) {
    const nodejs = isNodeJs();
-   let _jspdf, _svg2pdf;
+   let _jspdf, _svg2pdf, need_symbols = false;
 
    const pr = nodejs
       ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(h => { _jspdf = h; return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }); }).then(h => { _svg2pdf = h.default; })
       : loadScript(exports.source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(exports.source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
-        restore_fonts = [], restore_dominant = [], node_transform = args.node.getAttribute('transform'), custom_fonts = {};
+        restore_fonts = [], restore_dominant = [], restore_text = [],
+        node_transform = args.node.getAttribute('transform'), custom_fonts = {};
 
    if (args.reset_tranform)
       args.node.removeAttribute('transform');
@@ -10251,17 +10343,25 @@ async function svgToPDF(args, as_buffer) {
             if (!args.can_modify) restore_dominant.push(this); // keep to restore it
          } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
             this.setAttribute('dy', '.2em'); // better allignment in PDF
+
+         if (replaceSymbolsInTextNode(this)) {
+            need_symbols = true;
+            if (!args.can_modify) restore_text.push(this); // keep to restore it
+         }
       });
 
       if (nodejs) {
          const doc = internals.nodejs_document;
          doc.oldFunc = doc.createElementNS;
          globalThis.document = doc;
+         globalThis.CSSStyleSheet = internals.nodejs_window.CSSStyleSheet;
+         globalThis.CSSStyleRule = internals.nodejs_window.CSSStyleRule;
          doc.createElementNS = function(ns, kind) {
             const res = doc.oldFunc(ns, kind);
             res.getBBox = function() {
                let width = 50, height = 10;
                if (this.tagName === 'text') {
+                  // TODO: use jsDOC fonts for label width estimation
                   const font = detectFont(this);
                   width = approximateLabelWidth(this.textContent, font);
                   height = font.size;
@@ -10286,11 +10386,38 @@ async function svgToPDF(args, as_buffer) {
          if (!fh || custom_fonts[fh.name] || (fh.format !== 'ttf')) return;
          const filename = fh.name.toLowerCase().replace(/\s/g, '') + '.ttf';
          doc.addFileToVFS(filename, fh.base64);
-         doc.addFont(filename, fh.name, 'normal');
+         doc.addFont(filename, fh.name, 'normal', 'normal', (fh.name === 'symbol') ? 'StandardEncoding' : 'Identity-H');
          custom_fonts[fh.name] = true;
       });
 
-      return _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height })
+      let pr2 = Promise.resolve(true);
+
+      if (need_symbols && !custom_fonts.symbol) {
+         if (!getCustomFont('symbol')) {
+            pr2 = nodejs
+              ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(fs => {
+                 const base64 = fs.readFileSync('../../fonts/symbol.ttf').toString('base64');
+                 console.log('reading symbol.ttf', base64.length);
+                 addCustomFont(25, 'symbol', 'ttf', base64);
+              })
+              : httpRequest(exports.source_dir+'fonts/symbol.ttf', 'bin').then(buf => {
+               const base64 = btoa_func(buf);
+               addCustomFont(25, 'symbol', 'ttf', base64);
+            });
+         }
+
+         pr2 = pr2.then(() => {
+            const fh = getCustomFont('symbol'),
+                  handler = new FontHandler(1242, 10);
+            handler.name = 'symbol';
+            handler.base64 = fh.base64;
+            handler.addCustomFontToSvg(select(args.node));
+            doc.addFileToVFS('symbol.ttf', fh.base64);
+            doc.addFont('symbol.ttf', 'symbol', 'normal', 'normal', 'StandardEncoding' /* 'WinAnsiEncoding' */);
+         });
+      }
+
+      return pr2.then(() => _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height }))
          .then(() => {
             if (args.reset_tranform && !args.can_modify && node_transform)
                args.node.setAttribute('transform', node_transform);
@@ -10300,13 +10427,18 @@ async function svgToPDF(args, as_buffer) {
                node.setAttribute('dominant-baseline', 'middle');
                node.removeAttribute('dy');
             });
+
+            restore_text.forEach(node => { node.innerHTML = node.$originalHTML; });
+
             const res = as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
             if (nodejs) {
                globalThis.document = undefined;
+               globalThis.CSSStyleSheet = undefined;
+               globalThis.CSSStyleRule = undefined;
                internals.nodejs_document.createElementNS = internals.nodejs_document.oldFunc;
                if (as_buffer) return Buffer.from(res);
             }
-            return res;
+             return res;
          });
    });
 }
@@ -10325,16 +10457,14 @@ async function svgToImage(svg, image_format, as_buffer) {
    if (image_format === 'pdf')
       return svgToPDF(svg, as_buffer);
 
-   if (!isNodeJs()) {
-      // required with df104.py/df105.py example with RCanvas
-      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-      svg = encodeURIComponent(doctype + svg);
-      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
-          const c = String.fromCharCode('0x'+p1);
-          return c === '%' ? '%25' : c;
-      });
-      svg = decodeURIComponent(svg);
-   }
+   // required with df104.py/df105.py example with RCanvas or any special symbols in TLatex
+   const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+   svg = encodeURIComponent(doctype + svg);
+   svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+       const c = String.fromCharCode('0x'+p1);
+       return c === '%' ? '%25' : c;
+   });
+   svg = decodeURIComponent(svg);
 
    const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
 
@@ -66779,6 +66909,7 @@ class TPadPainter extends ObjectPainter {
       delete this._snap_primitives;
       delete this._last_grayscale;
       delete this._custom_colors;
+      delete this._custom_palette_indexes;
       delete this._custom_palette_colors;
       delete this.root_colors;
 
@@ -66892,6 +67023,33 @@ class TPadPainter extends ObjectPainter {
    /** @summary Returns number of painters
      * @private */
    getNumPainters() { return this.painters.length; }
+
+   /** @summary Provides automatic color
+    * @desc Uses ROOT colors palette if possible
+    * @private */
+   getAutoColor(numprimitives) {
+      if (!numprimitives)
+         numprimitives = this._num_primitives || 5;
+      if (numprimitives < 2) numprimitives = 2;
+
+      let indx = this._auto_color ?? 0;
+      this._auto_color = (indx + 1) % numprimitives;
+      if (indx >= numprimitives) indx = numprimitives - 1;
+
+      const indexes = this._custom_palette_indexes || this.getCanvPainter()?._custom_palette_indexes;
+
+      if (indexes?.length) {
+         const p = Math.round(indx * (indexes.length - 3) / (numprimitives - 1));
+         return indexes[p];
+      }
+
+      if (!this._auto_palette)
+         this._auto_palette = getColorPalette(settings.Palette, this.isGrayscale());
+      const palindx = Math.round(indx * (this._auto_palette.getLength()-3) / (numprimitives-1)),
+            colvalue = this._auto_palette.getColor(palindx);
+
+      return this.addColor(colvalue);
+   }
 
    /** @summary Call function for each painter in pad
      * @param {function} userfunc - function to call
@@ -67397,7 +67555,7 @@ class TPadPainter extends ObjectPainter {
       if ((obj._typename === clTObjArray) && (obj.name === 'ListOfColors')) {
          if (this.options?.CreatePalette) {
             let arr = [];
-            for (let n = obj.arr.length - this.options.CreatePalette; n<obj.arr.length; ++n) {
+            for (let n = obj.arr.length - this.options.CreatePalette; n < obj.arr.length; ++n) {
                const col = getRGBfromTColor(obj.arr[n]);
                if (!col) { console.log('Fail to create color for palette'); arr = null; break; }
                arr.push(col);
@@ -67414,18 +67572,22 @@ class TPadPainter extends ObjectPainter {
       }
 
       if ((obj._typename === clTObjArray) && (obj.name === 'CurrentColorPalette')) {
-         const arr = [];
+         const arr = [], indx = [];
          let missing = false;
          for (let n = 0; n < obj.arr.length; ++n) {
             const col = obj.arr[n];
-            if (col?._typename === clTColor)
+            if (col?._typename === clTColor) {
+               indx[n] = col.fNumber;
                arr[n] = getRGBfromTColor(col);
-             else {
-               console.log(`Missing color with index ${n}`); missing = true;
+            } else {
+               console.log(`Missing color with index ${n}`);
+               missing = true;
             }
          }
 
-         this._custom_palette_colors = (!this.options || (!missing && !this.options.IgnorePalette)) ? arr : null;
+         const apply = (!this.options || (!missing && !this.options.IgnorePalette));
+         this._custom_palette_indexes = apply ? indx : null;
+         this._custom_palette_colors = apply ? arr : null;
 
          return true;
       }
@@ -67897,7 +68059,7 @@ class TPadPainter extends ObjectPainter {
       for (let k = 0; k < this.painters.length; ++k) {
          const painter = this.painters[k],
                obj = painter.getObject();
-         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.isSecondary() ||
+         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.draw_content === false ||
               obj._typename === clTLegend || obj._typename === clTHStack || obj._typename === clTMultiGraph)
             continue;
 
@@ -68001,13 +68163,16 @@ class TPadPainter extends ObjectPainter {
 
       // set palette
       if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
-         const palette = [];
-         for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
-            palette[n] = colors[Math.round(snap.fSnapshot.fBuf[n])];
-
+         const indexes = [], palette = [];
+         for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n) {
+            indexes[n] = Math.round(snap.fSnapshot.fBuf[n]);
+            palette[n] = colors[indexes[n]];
+         }
+         this._custom_palette_indexes = indexes;
          this._custom_palette_colors = palette;
          this.custom_palette = new ColorPalette(palette, greyscale);
       } else {
+         delete this._custom_palette_indexes;
          delete this._custom_palette_colors;
          delete this.custom_palette;
       }
@@ -71244,7 +71409,7 @@ class THistDrawOptions {
               Mode3D: false, x3dscale: 1, y3dscale: 1,
               Render3D: constants$1.Render3D.Default,
               FrontBox: true, BackBox: true,
-              _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
+              need_fillcol: false,
               minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
    }
 
@@ -71581,9 +71746,12 @@ class THistDrawOptions {
       if ((hdim === 3) && d.check('FB')) this.FrontBox = false;
       if ((hdim === 3) && d.check('BB')) this.BackBox = false;
 
-      this._pfc = d.check('PFC');
-      this._plc = d.check('PLC') || this.AutoColor;
-      this._pmc = d.check('PMC');
+      if (d.check('PFC') && !this._pfc)
+         this._pfc = 2;
+      if ((d.check('PLC') || this.AutoColor) && !this._plc)
+         this._plc = 2;
+      if (d.check('PMC') && !this._pmc)
+         this._pmc = 2;
 
       if (d.check('L')) { this.Line = true; this.Hist = false; this.Error = false; }
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
@@ -72119,49 +72287,27 @@ class THistPainter extends ObjectPainter {
          this.check_pad_range = use_pad ? 'pad_range' : true;
    }
 
-   /** @summary Generates automatic color for some objects painters */
-   createAutoColor(numprimitives) {
-      if (!numprimitives)
-         numprimitives = this.getPadPainter()?.getRootPad(true)?.fPrimitves?.arr?.length || 5;
-
-      let indx = this._auto_color || 0;
-      this._auto_color = indx + 1;
-
-      const pal = this.getHistPalette();
-
-      if (pal) {
-         if (numprimitives < 2) numprimitives = 2;
-         if (indx >= numprimitives) indx = numprimitives - 1;
-         const palindx = Math.round(indx * (pal.getLength()-3) / (numprimitives-1)),
-               colvalue = pal.getColor(palindx);
-
-         return this.addColor(colvalue);
-      }
-
-      this._auto_color = this._auto_color % 8;
-      return indx+2;
-   }
-
    /** @summary Create necessary histogram draw attributes */
-   createHistDrawAttributes() {
-      const histo = this.getHisto();
+   createHistDrawAttributes(only_check_auto) {
+      const histo = this.getHisto(), o = this.options;
 
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor();
-            let exec = '';
-            if (this.options._pfc) { histo.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
-            if (this.options._plc) { histo.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
-            if (this.options._pmc) { histo.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
-            this.options._pfc = this.options._plc = this.options._pmc = false;
-            this._auto_exec = exec; // can be reused when sending option back to server
+      if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
+         const pp = this.getPadPainter();
+         if (isFunc(pp?.getAutoColor)) {
+            const icolor = pp.getAutoColor(histo.$num_histos);
+            this._auto_exec = ''; // can be reused when sending option back to server
+            if (o._pfc > 1) { o._pfc = 1; histo.fFillColor = icolor; this._auto_exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
+            if (o._plc > 1) { o._plc = 1; histo.fLineColor = icolor; this._auto_exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
+            if (o._pmc > 1) { o._pmc = 1; histo.fMarkerColor = icolor; this._auto_exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
          }
       }
 
-      this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
-
-      this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+      if (only_check_auto)
+         this.deleteAttr();
+      else {
+         this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
+         this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+      }
    }
 
    /** @summary Update axes attributes in target histogram
@@ -72204,7 +72350,8 @@ class THistPainter extends ObjectPainter {
    updateObject(obj, opt) {
       const histo = this.getHisto(),
             fp = this.getFramePainter(),
-            pp = this.getPadPainter();
+            pp = this.getPadPainter(),
+            o = this.options;
 
       if (obj !== histo) {
          if (!this.matchObjectType(obj)) return false;
@@ -72222,14 +72369,22 @@ class THistPainter extends ObjectPainter {
          }
 
          // special treatment for webcanvas - also name can be changed
-         if (this.snapid !== undefined)
+         if (this.snapid !== undefined) {
             histo.fName = obj.fName;
+            o._pfc = o._plc = o._pmc = 0; // auto colors should be processed in web canvas
+         }
 
-         histo.fFillColor = obj.fFillColor;
+         if (!o._pfc)
+            histo.fFillColor = obj.fFillColor;
          histo.fFillStyle = obj.fFillStyle;
-         histo.fLineColor = obj.fLineColor;
+         if (!o._plc)
+            histo.fLineColor = obj.fLineColor;
          histo.fLineStyle = obj.fLineStyle;
          histo.fLineWidth = obj.fLineWidth;
+         if (!o._pmc)
+            histo.fMarkerColor = obj.fMarkerColor;
+         histo.fMarkerSize = obj.fMarkerSize;
+         histo.fMarkerStyle = obj.fMarkerStyle;
 
          histo.fEntries = obj.fEntries;
          histo.fTsumw = obj.fTsumw;
@@ -72260,7 +72415,7 @@ class THistPainter extends ObjectPainter {
          histo.fSumw2 = obj.fSumw2;
 
          if (this.getDimension() === 1)
-            this.options.decodeSumw2(histo);
+            o.decodeSumw2(histo);
 
          if (this.isTProfile())
             histo.fBinEntries = obj.fBinEntries;
@@ -72276,14 +72431,14 @@ class THistPainter extends ObjectPainter {
          const changed_opt = (histo.fOption !== obj.fOption);
          histo.fOption = obj.fOption;
 
-         if (((opt !== undefined) && (this.options.original !== opt)) || changed_opt)
+         if (((opt !== undefined) && (o.original !== opt)) || changed_opt)
             this.decodeOptions(opt || histo.fOption);
       }
 
-      if (!this.options.ominimum)
-         this.options.minimum = histo.fMinimum;
-      if (!this.options.omaximum)
-         this.options.maximum = histo.fMaximum;
+      if (!o.ominimum)
+         o.minimum = histo.fMinimum;
+      if (!o.omaximum)
+         o.maximum = histo.fMaximum;
 
       if (this.snapid || !fp || !fp.zoomChangedInteractive())
          this.checkPadRange();
@@ -72450,7 +72605,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Fill option object used in TWebCanvas */
    fillWebObjectOptions(res) {
-      if (this._auto_exec) {
+      if (this._auto_exec && res) {
          res.fcust = 'auto_exec:' + this._auto_exec;
          delete this._auto_exec;
       }
@@ -80161,7 +80316,7 @@ class TH1Painter extends TH1Painter$2 {
       if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
       } else {
-         this.deleteAttr();
+         this.createHistDrawAttributes(true);
 
          this.scanContent(true); // may be required for axis drawings
 
@@ -80431,7 +80586,7 @@ class TH2Painter extends TH2Painter$2 {
          if (logz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
-         this.deleteAttr();
+         this.createHistDrawAttributes(true);
 
          if (is_main) {
             assignFrame3DMethods(main);
@@ -106967,9 +107122,12 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       if (d.check('POS3D_', true)) res.pos3d = d.partAsInt() - 0.5;
 
-      res._pfc = d.check('PFC');
-      res._plc = d.check('PLC');
-      res._pmc = d.check('PMC');
+      if (d.check('PFC') && !res._pfc)
+         res._pfc = 2;
+      if (d.check('PLC') && !res._plc)
+         res._plc = 2;
+      if (d.check('PMC') && !res._pmc)
+         res._pmc = 2;
 
       if (d.check('A')) res.Axis = d.check('I') ? 'A;' : _a; // I means invisible axis
       if (d.check('X+')) { res.Axis += 'X+'; res.second_x = has_main; }
@@ -107686,6 +107844,28 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       console.log('Load ./hist/TGraphPainter.mjs to draw graph in 3D');
    }
 
+   /** @summary Create necessary histogram draw attributes */
+   createGraphDrawAttributes(only_check_auto) {
+      const graph = this.getGraph(), o = this.options;
+      if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
+         const pp = this.getPadPainter();
+         if (isFunc(pp?.getAutoColor)) {
+            const icolor = pp.getAutoColor(graph.$num_graphs);
+            this._auto_exec = ''; // can be reused when sending option back to server
+            if (o._pfc > 1) { o._pfc = 1; graph.fFillColor = icolor; this._auto_exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
+            if (o._plc > 1) { o._plc = 1; graph.fLineColor = icolor; this._auto_exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
+            if (o._pmc > 1) { o._pmc = 1; graph.fMarkerColor = icolor; this._auto_exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
+         }
+      }
+
+      if (only_check_auto)
+         this.deleteAttr();
+      else {
+         this.createAttLine({ attr: graph, can_excl: true });
+         this.createAttFill({ attr: graph });
+      }
+   }
+
    /** @summary draw TGraph */
    drawGraph() {
       const pmain = this.get_main(),
@@ -107703,19 +107883,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       this.createG(!pmain.pad_layer);
 
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor();
-            if (this.options._pfc) { graph.fFillColor = icolor; delete this.fillatt; }
-            if (this.options._plc) { graph.fLineColor = icolor; delete this.lineatt; }
-            if (this.options._pmc) { graph.fMarkerColor = icolor; delete this.markeratt; }
-            this.options._pfc = this.options._plc = this.options._pmc = false;
-         }
-      }
-
-      this.createAttLine({ attr: graph, can_excl: true });
-      this.createAttFill({ attr: graph });
+      this.createGraphDrawAttributes();
 
       this.fillatt.used = false; // mark used only when really used
 
@@ -108151,6 +108319,14 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          this.submitCanvExec(exec);
    }
 
+   /** @summary Fill option object used in TWebCanvas */
+   fillWebObjectOptions(res) {
+      if (this._auto_exec && res) {
+         res.fcust = 'auto_exec:' + this._auto_exec;
+         delete this._auto_exec;
+      }
+   }
+
    /** @summary Fill context menu */
    fillContextMenuItems(menu) {
       if (!this.snapid)
@@ -108173,8 +108349,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          if (method.fName === 'InsertPoint') {
             if (pnt) {
                const funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-                   userx = funcs.revertAxis('x', pnt.x) ?? 0,
-                   usery = funcs.revertAxis('y', pnt.y) ?? 0;
+                     userx = funcs.revertAxis('x', pnt.x) ?? 0,
+                     usery = funcs.revertAxis('y', pnt.y) ?? 0;
                this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, method.$execid);
             }
          } else if (method.$execid && (hint?.binindx !== undefined))
@@ -108197,6 +108373,23 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       graph.fNpoints = obj.fNpoints;
       graph.fMinimum = obj.fMinimum;
       graph.fMaximum = obj.fMaximum;
+
+      const o = this.options;
+
+      if (this.snapid !== undefined)
+         o._pfc = o._plc = o._pmc = 0; // auto colors should be processed in web canvas
+
+      if (!o._pfc)
+         graph.fFillColor = obj.fFillColor;
+      graph.fFillStyle = obj.fFillStyle;
+      if (!o._plc)
+         graph.fLineColor = obj.fLineColor;
+      graph.fLineStyle = obj.fLineStyle;
+      graph.fLineWidth = obj.fLineWidth;
+      if (!o._pmc)
+         graph.fMarkerColor = obj.fMarkerColor;
+      graph.fMarkerSize = obj.fMarkerSize;
+      graph.fMarkerStyle = obj.fMarkerStyle;
    }
 
    /** @summary Update TGraph object */
@@ -108362,6 +108555,8 @@ class TGraphPainter extends TGraphPainter$1 {
 
       if (fp.zoom_xmin !== fp.zoom_xmax)
         if ((this.options.pos3d < fp.zoom_xmin) || (this.options.pos3d > fp.zoom_xmax)) return;
+
+      this.createGraphDrawAttributes(true);
 
       const drawbins = this.optimizeBins(1000);
       let first = 0, last = drawbins.length-1;
@@ -109131,6 +109326,8 @@ class THStackPainter extends ObjectPainter {
          hopt += ' ' + this.options.hopt;
       if (this.options.draw_errors && !hopt)
          hopt = 'E';
+      if (!this.options.pads)
+         hopt += ' same nostat' + this.options.auto;
       return hopt;
    }
 
@@ -109147,17 +109344,6 @@ class THStackPainter extends ObjectPainter {
             subid = this.options.nostack ? `hists_${rindx}` : `stack_${rindx}`,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, hlst.opt[rindx]);
-      let exec = '';
-
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor(nhists);
-            if (this.options._pfc) { hist.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
-            if (this.options._plc) { hist.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
-            if (this.options._pmc) { hist.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
-         }
-      }
 
       // handling of 'pads' draw option
       if (pad_painter) {
@@ -109170,7 +109356,6 @@ class THStackPainter extends ObjectPainter {
          return this.hdraw_func(subpad_painter.getDom(), hist, hopt).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
-               subp._auto_exec = exec;
                this.painters.push(subp);
             }
             subpad_painter.selectCurrentPad(prev_name);
@@ -109182,8 +109367,11 @@ class THStackPainter extends ObjectPainter {
       // also used to provide tooltips
       if ((rindx > 0) && !this.options.nostack)
          hist.$baseh = hlst.arr[rindx - 1];
+      // this number used for auto colors creation
+      if (this.options.auto)
+         hist.$num_histos = nhists;
 
-      return this.hdraw_func(this.getDom(), hist, hopt + ' same nostat').then(subp => {
+      return this.hdraw_func(this.getDom(), hist, hopt).then(subp => {
           subp.setSecondaryId(this, subid);
           this.painters.push(subp);
           return this.drawNextHisto(indx+1, pad_painter);
@@ -109193,7 +109381,7 @@ class THStackPainter extends ObjectPainter {
    /** @summary Decode draw options of THStack painter */
    decodeOptions(opt) {
       if (!this.options) this.options = {};
-      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '' });
+      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '', auto: '' });
 
       const stack = this.getObject(),
             hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null),
@@ -109227,9 +109415,7 @@ class THStackPainter extends ObjectPainter {
 
       d.check('NOCLEAR'); // ignore noclear option
 
-      this.options._pfc = d.check('PFC');
-      this.options._plc = d.check('PLC');
-      this.options._pmc = d.check('PMC');
+      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) this.options.auto += ' ' + f; });
 
       this.options.pads = d.check('PADS');
       if (this.options.pads) this.options.nostack = true;
@@ -109329,10 +109515,11 @@ class THStackPainter extends ObjectPainter {
             nhists = hlst?.arr?.length ?? 0;
 
       if (nhists !== this.painters.length) {
+         this.did_update = 1;
          this.getPadPainter()?.cleanPrimitives(objp => this.painters.indexOf(objp) >= 0);
          this.painters = [];
-         this.did_update = true;
       } else {
+         this.did_update = 2;
          for (let indx = 0; indx < nhists; ++indx) {
             const rindx = this.options.horder ? indx : nhists - indx - 1,
                   hist = hlst.arr[rindx];
@@ -109345,10 +109532,18 @@ class THStackPainter extends ObjectPainter {
 
    /** @summary Redraw THStack
      * @desc Do something if previous update had changed number of histograms */
-   redraw() {
-      if (this.did_update) {
+   redraw(reason) {
+      if (this.did_update === 1) {
          delete this.did_update;
          return this.drawNextHisto(0, this.options.pads ? this.getPadPainter() : null);
+      } else if (this.did_update === 2) {
+         delete this.did_update;
+         const redrawSub = indx => {
+            if (indx >= this.painters.length)
+               return Promise.resolve(this);
+            return this.painters[indx].redraw(reason).then(() => redrawSub(indx+1));
+         };
+         return redrawSub(0);
       }
    }
 
@@ -112200,7 +112395,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       const ngr = Math.min(graphs.arr.length, this.painters.length);
 
       for (let i = 0; i < ngr; ++i) {
-         if (this.painters[i].updateObject(graphs.arr[i], graphs.opt[i]))
+         if (this.painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this._restopt) + this._auto))
             isany = true;
       }
 
@@ -112376,37 +112571,27 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
    }
 
    /** @summary method draws next graph  */
-   async drawNextGraph(indx, opt) {
+   async drawNextGraph(indx) {
       const graphs = this.getObject().fGraphs;
-      let exec = '';
 
       // at the end of graphs drawing draw functions (if any)
-      if (indx >= graphs.arr.length) {
-         this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
+      if (indx >= graphs.arr.length)
          return this;
-      }
 
-      const gr = graphs.arr[indx], o = graphs.opt[indx] || opt || '';
+      const gr = graphs.arr[indx],
+            draw_opt = (graphs.opt[indx] || this._restopt) + this._auto;
 
-      // if there is auto colors assignment, try to provide it
-      if (this._pfc || this._plc || this._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor(graphs.arr.length);
-            if (this._pfc) { gr.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
-            if (this._plc) { gr.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
-            if (this._pmc) { gr.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
-         }
-      }
+      // used in automatic colors numbering
+      if (this._auto)
+         gr.$num_graphs = graphs.arr.length;
 
-      return this.drawGraph(gr, o, graphs.arr.length - indx).then(subp => {
+      return this.drawGraph(gr, draw_opt, graphs.arr.length - indx).then(subp => {
          if (subp) {
             subp.setSecondaryId(this, `graphs_${indx}`);
             this.painters.push(subp);
-            subp._auto_exec = exec;
          }
 
-         return this.drawNextGraph(indx+1, opt);
+         return this.drawNextGraph(indx+1);
       });
    }
 
@@ -112416,13 +112601,14 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       const d = new DrawOptions(opt);
 
       painter._3d = d.check('3D');
-      painter._pfc = d.check('PFC');
-      painter._plc = d.check('PLC');
-      painter._pmc = d.check('PMC');
+      painter._auto = ''; // extra options for auto colors
+      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) painter._auto += ' ' + f; });
 
       let hopt = '';
       if (d.check('FB') && painter._3d) hopt += 'FB'; // will be directly combined with LEGO
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+
+      painter._restopt = d.remain();
 
       let promise = Promise.resolve(true);
       if (d.check('A') || !painter.getMainPainter()) {
@@ -112437,7 +112623,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
 
       return promise.then(() => {
          painter.addToPadPrimitives();
-         return painter.drawNextGraph(0, d.remain());
+         return painter.drawNextGraph(0);
       }).then(() => {
          const handler = new FunctionsHandler(painter, painter.getPadPainter(), painter.getObject().fFunctions, true);
          return handler.drawNext(0); // returns painter
@@ -119007,9 +119193,14 @@ class WebWindowHandle {
    setHRef(path) {
       if (isStr(path) && (path.indexOf('?') > 0)) {
          this.href = path.slice(0, path.indexOf('?'));
-         this.key = decodeUrl(path).get('key');
-      } else
+         const d = decodeUrl(path);
+         this.key = d.get('key');
+         this.token = d.get('token');
+      } else {
          this.href = path;
+         delete this.key;
+         delete this.token;
+      }
    }
 
    /** @summary Return href part

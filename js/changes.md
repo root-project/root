@@ -20,8 +20,17 @@
 17. Fix - do not add `THStack` and `TMultiGraph` to legend
 18. Fix - correctly use margin in `TPaveText` class
 19. Fix - correctly draw endcaps in legend errors
-20. Fix - correctly read leaf with fixed-size array
-21. Fix - vertical position of up elements like {M}^{2} in TLatex
+20. Fix - vertical position of up elements like {M}^{2} in TLatex
+
+
+## Changes in 7.5.3
+1. Fix - draw histograms with negative bins #276
+2. Fix - correctly read TLeaf with fixed-size array
+3. Fix - bug in options handling in startGUI
+4. Fix - greyscale support in TLegend drawing
+5. Fix - correctly use text font for TGaxis title
+6. Fix - preserve auto colors in THStack #277
+7. Fix - correctly set pave name #278
 
 
 ## Changes in 7.5.2
