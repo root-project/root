@@ -227,11 +227,19 @@ void RTreeViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browse
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Return URL address of web window used for tree viewer
+/// Return address of web window used for tree viewer
 
 std::string RTreeViewer::GetWindowAddr() const
 {
    return fWebWindow ? fWebWindow->GetAddr() : ""s;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Return URL of web window used for tree viewer
+
+std::string RTreeViewer::GetWindowUrl(bool remote)
+{
+   return fWebWindow ? fWebWindow->GetUrl(remote) : ""s;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
