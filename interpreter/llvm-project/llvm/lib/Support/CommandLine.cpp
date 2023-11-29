@@ -729,6 +729,9 @@ static Option *getOptionPred(StringRef Name, size_t &Length,
   // string.
   while (OMI == OptionsMap.end() && Name.size() > 1) {
     Name = Name.substr(0, Name.size() - 1); // Chop off the last character.
+#ifdef __NVCOMPILER
+    nulls() << "asdf" << Name; // nvc++ workaround to prevent optimizer bug
+#endif
     OMI = OptionsMap.find(Name);
     if (OMI != OptionsMap.end() && !Pred(OMI->getValue()))
       OMI = OptionsMap.end();

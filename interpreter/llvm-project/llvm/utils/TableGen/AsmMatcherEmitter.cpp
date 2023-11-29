@@ -586,6 +586,9 @@ struct MatchableInfo {
   /// suboperand index.
   int findAsmOperand(StringRef N, int SubOpIdx) const {
     auto I = find_if(AsmOperands, [&](const AsmOperand &Op) {
+#ifdef __NVCOMPILER
+      nulls() << Op.SrcOpName << " " << N << "\n"; // nvc++ workaround to prevent optimizer bug
+#endif
       return Op.SrcOpName == N && Op.SubOpIdx == SubOpIdx;
     });
     return (I != AsmOperands.end()) ? I - AsmOperands.begin() : -1;
@@ -595,14 +598,24 @@ struct MatchableInfo {
   /// This does not check the suboperand index.
   int findAsmOperandNamed(StringRef N, int LastIdx = -1) const {
     auto I = std::find_if(AsmOperands.begin() + LastIdx + 1, AsmOperands.end(),
-                     [&](const AsmOperand &Op) { return Op.SrcOpName == N; });
+                     [&](const AsmOperand &Op) {
+#ifdef __NVCOMPILER
+                            nulls() << Op.SrcOpName << " " << N << "\n"; // nvc++ workaround to prevent optimizer bug
+#endif
+                            return Op.SrcOpName == N;
+                          });
     return (I != AsmOperands.end()) ? I - AsmOperands.begin() : -1;
   }
 
   int findAsmOperandOriginallyNamed(StringRef N) const {
     auto I =
         find_if(AsmOperands,
-                [&](const AsmOperand &Op) { return Op.OrigSrcOpName == N; });
+                [&](const AsmOperand &Op) {
+#ifdef __NVCOMPILER
+                  nulls()  << Op.OrigSrcOpName << " " << N << "\n"; // nvc++ workaround to prevent optimizer bug
+#endif
+                  return Op.OrigSrcOpName == N;
+                });
     return (I != AsmOperands.end()) ? I - AsmOperands.begin() : -1;
   }
 
