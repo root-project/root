@@ -84,9 +84,13 @@ class ROOTFacade(types.ModuleType):
         # Importing all will be customised later
         self.module.__all__ = []
 
-        self.__doc__ = module.__doc__
         self.__name__ = module.__name__
         self.__file__ = module.__file__
+        self.__cached__ = module.__cached__
+        self.__path__ = module.__path__
+        self.__doc__ = module.__doc__
+        self.__package__ = module.__package__
+        self.__loader__ = module.__loader__
 
         # Inject gROOT global
         self.gROOT = _gROOTWrapper(self)
@@ -124,9 +128,6 @@ class ROOTFacade(types.ModuleType):
         self.__class__.__getattr__ = self._getattr
         self.__class__.__setattr__ = self._setattr
 
-        # Setup import hook
-        self._set_import_hook()
-
     def AddressOf(self, obj):
         # Return an indexable buffer of length 1, whose only element
         # is the address of the object.
@@ -138,28 +139,6 @@ class ROOTFacade(types.ModuleType):
 
         # Create a buffer (LowLevelView) from address
         return CreateBufferFromAddress(addr)
-
-    def _set_import_hook(self):
-        # This hook allows to write e.g:
-        # from ROOT.A import a
-        # instead of the longer:
-        # from ROOT import A
-        # from A import a
-        try:
-            import __builtin__
-        except ImportError:
-            import builtins as __builtin__  # name change in p3
-        _orig_ihook = __builtin__.__import__
-
-        def _importhook(name, *args, **kwds):
-            if name[0:5] == "ROOT.":
-                try:
-                    sys.modules[name] = getattr(self, name[5:])
-                except Exception:
-                    pass
-            return _orig_ihook(name, *args, **kwds)
-
-        __builtin__.__import__ = _importhook
 
     def _handle_import_all(self):
         # Called if "from ROOT import *" is executed in the app.
