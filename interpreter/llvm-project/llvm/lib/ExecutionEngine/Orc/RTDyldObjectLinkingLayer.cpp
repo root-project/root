@@ -81,7 +81,7 @@ using BaseT = RTTIExtends<RTDyldObjectLinkingLayer, ObjectLayer>;
 
 RTDyldObjectLinkingLayer::RTDyldObjectLinkingLayer(
     ExecutionSession &ES, GetMemoryManagerFunction GetMemoryManager)
-    : BaseT(ES), GetMemoryManager(GetMemoryManager) {
+    : BaseT(ES), GetMemoryManager(std::move(GetMemoryManager)) {
   ES.registerResourceManager(*this);
 }
 
@@ -280,24 +280,22 @@ Error RTDyldObjectLinkingLayer::onObjLoad(
       if (!COFFSym.isWeakExternal())
         continue;
       auto *WeakExternal = COFFSym.getAux<object::coff_aux_weak_external>();
-      if (WeakExternal->Characteristics !=
-          COFF::IMAGE_WEAK_EXTERN_SEARCH_ALIAS)
+      if (WeakExternal->Characteristics != COFF::IMAGE_WEAK_EXTERN_SEARCH_ALIAS)
         continue;
 
       // We found an alias. Reuse the resolution of the alias target for the
       // alias itself.
       Expected<object::COFFSymbolRef> TargetSymbol =
-        COFFObj->getSymbol(WeakExternal->TagIndex);
+          COFFObj->getSymbol(WeakExternal->TagIndex);
       if (!TargetSymbol)
         return TargetSymbol.takeError();
-      Expected<StringRef> TargetName =
-        COFFObj->getSymbolName(*TargetSymbol);
+      Expected<StringRef> TargetName = COFFObj->getSymbolName(*TargetSymbol);
       if (!TargetName)
         return TargetName.takeError();
       auto J = Resolved.find(*TargetName);
       if (J == Resolved.end())
         return make_error<StringError>("Could alias target " + *TargetName +
-                                       " not resolved",
+                                           " not resolved",
                                        inconvertibleErrorCode());
       Resolved[*Name] = J->second;
     }
@@ -312,17 +310,21 @@ Error RTDyldObjectLinkingLayer::onObjLoad(
 
     auto InternedName = getExecutionSession().intern(KV.first);
     auto Flags = KV.second.getFlags();
-
-    // Override object flags and claim responsibility for symbols if
-    // requested.
-    if (OverrideObjectFlags || AutoClaimObjectSymbols) {
-      auto I = R.getSymbols().find(InternedName);
-
-      if (OverrideObjectFlags && I != R.getSymbols().end())
+    auto I = R.getSymbols().find(InternedName);
+    if (I != R.getSymbols().end()) {
+      // Override object flags and claim responsibility for symbols if
+      // requested.
+      if (OverrideObjectFlags)
         Flags = I->second;
-      else if (AutoClaimObjectSymbols && I == R.getSymbols().end())
-        ExtraSymbolsToClaim[InternedName] = Flags;
-    }
+      else {
+        // RuntimeDyld/MCJIT's weak tracking isn't compatible with ORC's. Even
+        // if we're not overriding flags in general we should set the weak flag
+        // according to the MaterializationResponsibility object symbol table.
+        if (I->second.isWeak())
+          Flags |= JITSymbolFlags::Weak;
+      }
+    } else if (AutoClaimObjectSymbols)
+      ExtraSymbolsToClaim[InternedName] = Flags;
 
     Symbols[InternedName] = JITEvaluatedSymbol(KV.second.getAddress(), Flags);
   }
@@ -388,7 +390,8 @@ void RTDyldObjectLinkingLayer::onObjEmit(
   }
 }
 
-Error RTDyldObjectLinkingLayer::handleRemoveResources(ResourceKey K) {
+Error RTDyldObjectLinkingLayer::handleRemoveResources(JITDylib &JD,
+                                                      ResourceKey K) {
 
   std::vector<MemoryManagerUP> MemMgrsToRemove;
 
@@ -412,7 +415,8 @@ Error RTDyldObjectLinkingLayer::handleRemoveResources(ResourceKey K) {
   return Error::success();
 }
 
-void RTDyldObjectLinkingLayer::handleTransferResources(ResourceKey DstKey,
+void RTDyldObjectLinkingLayer::handleTransferResources(JITDylib &JD,
+                                                       ResourceKey DstKey,
                                                        ResourceKey SrcKey) {
   auto I = MemMgrs.find(SrcKey);
   if (I != MemMgrs.end()) {
