@@ -405,6 +405,11 @@ if(root7)
   endif()
 endif()
 
+if(NOT http AND webgui)
+   message(STATUS "Cannot build WebGui components without HTTP: webgui is disabled.")
+   set(webgui OFF)
+endif()
+
 #---check if webgui can be built-------------------------------
 if(webgui)
   if(NOT CMAKE_CXX_STANDARD GREATER 11)
