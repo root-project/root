@@ -40,23 +40,10 @@ ClassImp(RooUniformBinning);
 
 RooUniformBinning::RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name) :
   RooAbsBinning(name),
-  _array(nullptr),
   _nbins(nBins)
 {
   setRange(xlo,xhi) ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooUniformBinning::~RooUniformBinning()
-{
-  if (_array) delete[] _array ;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -84,10 +71,7 @@ void RooUniformBinning::setRange(double xlo, double xhi)
   _binw = (xhi-xlo)/_nbins ;
 
   // Delete any out-of-date boundary arrays at this point
-  if (_array) {
-    delete[] _array ;
-    _array = nullptr ;
-  }
+  _array.clear();
 }
 
 
@@ -170,14 +154,13 @@ double RooUniformBinning::binHigh(Int_t i) const
 
 double* RooUniformBinning::array() const
 {
-  if (_array) delete[] _array ;
-  _array = new double[_nbins+1] ;
+  _array.resize(_nbins+1);
 
   Int_t i ;
   for (i=0 ; i<=_nbins ; i++) {
     _array[i] = _xlo + i*_binw ;
   }
-  return _array ;
+  return _array.data();
 }
 
 
