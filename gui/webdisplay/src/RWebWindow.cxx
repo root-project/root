@@ -286,6 +286,7 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindOrCreateConnection(unsigned
       if (key) {
          key->fWSId = wsid;
          key->fActive = true;
+         key->fKey.clear(); // connection accepted, one can remove key
          key->ResetStamps(); // TODO: probably, can be moved outside locked area
          fConn.emplace_back(key);
       } else {
