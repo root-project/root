@@ -26,7 +26,6 @@ public:
   RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name=nullptr) ;
   RooUniformBinning(const RooUniformBinning& other, const char* name=nullptr) ;
   RooAbsBinning* clone(const char* name=nullptr) const override { return new RooUniformBinning(*this,name?name:GetName()) ; }
-  ~RooUniformBinning() override ;
 
   void setRange(double xlo, double xhi) override ;
 
@@ -46,7 +45,7 @@ public:
   double* array() const override ;
 
 protected:
-   mutable double *_array = nullptr; ///<! do not persist
+   mutable std::vector<double> _array; ///<! do not persist
    double _xlo;
    double _xhi;
    Int_t _nbins;

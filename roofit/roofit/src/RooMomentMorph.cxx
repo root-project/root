@@ -339,7 +339,7 @@ RooArgList RooMomentMorph::CacheElem::containedArgs(Action)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMomentMorph::CacheElem::~CacheElem() {}
+RooMomentMorph::CacheElem::~CacheElem() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set

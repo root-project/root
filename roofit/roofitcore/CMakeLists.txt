@@ -433,7 +433,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooStudyManager.cxx
     src/RooStudyPackage.cxx
     src/RooSuperCategory.cxx
-    src/RooTFoamBinding.cxx
     src/RooTObjWrap.cxx
     src/RooThresholdCategory.cxx
     src/RooTrace.cxx

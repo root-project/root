@@ -417,7 +417,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       ownedComps.add(*static_cast<RooRealVar *>(fracl.at(i)));
    }
 
-   RooAbsReal *theSum = nullptr;
+   std::unique_ptr<RooAbsReal> theSum;
    string sumName = Form("%s_sum", GetName());
 
    RooArgList transPdfList;
@@ -497,9 +497,9 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
    // sum pdf
    RooArgList const &pdfList = _useHorizMorph ? transPdfList : static_cast<RooArgList const &>(_pdfList);
    if (_isPdfMode) {
-      theSum = new RooAddPdf(sumName.c_str(), sumName.c_str(), pdfList, coefList);
+      theSum = std::make_unique<RooAddPdf>(sumName.c_str(), sumName.c_str(), pdfList, coefList);
    } else {
-      theSum = new RooRealSumFunc(sumName.c_str(), sumName.c_str(), pdfList, coefList);
+      theSum = std::make_unique<RooRealSumFunc>(sumName.c_str(), sumName.c_str(), pdfList, coefList);
    }
 
    // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
@@ -508,14 +508,22 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
    theSum->addOwnedComponents(ownedComps);
 
    // change tracker for fraction parameters
-   string trackerName = Form("%s_frac_tracker", GetName());
-   RooChangeTracker *tracker = new RooChangeTracker(trackerName.c_str(), trackerName.c_str(), _parList, true);
+   std::string trackerName = std::string(GetName()) + "_frac_tracker";
 
    // Store it in the cache
-   cache = new CacheElem(*theSum, *tracker, fracl);
+   cache = new CacheElem(std::move(theSum),
+                         std::make_unique<RooChangeTracker>(trackerName.c_str(), trackerName.c_str(), _parList, true),
+                         fracl);
    _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
 
    return cache;
+}
+
+RooMomentMorphFuncND::CacheElem::CacheElem(std::unique_ptr<RooAbsReal> &&sumFunc,
+                                           std::unique_ptr<RooChangeTracker> &&tracker, const RooArgList &flist)
+   : _sum(std::move(sumFunc)), _tracker(std::move(tracker))
+{
+   _frac.add(flist);
 }
 
 //_____________________________________________________________________________
@@ -525,11 +533,7 @@ RooArgList RooMomentMorphFuncND::CacheElem::containedArgs(Action)
 }
 
 //_____________________________________________________________________________
-RooMomentMorphFuncND::CacheElem::~CacheElem()
-{
-   delete _sum;
-   delete _tracker;
-}
+RooMomentMorphFuncND::CacheElem::~CacheElem() = default;
 
 //_____________________________________________________________________________
 double RooMomentMorphFuncND::getValV(const RooArgSet *set) const
@@ -547,7 +551,7 @@ RooMomentMorphFuncND::Base_t *RooMomentMorphFuncND::sumFunc(const RooArgSet *nse
    if (cache->_tracker->hasChanged(true)) {
       cache->calculateFractions(*this, false); // verbose turned off
    }
-   return cache->_sum;
+   return cache->_sum.get();
 }
 
 //_____________________________________________________________________________

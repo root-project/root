@@ -35,23 +35,50 @@ Access those using:
 \see rf902_numgenconfig.C
 **/
 
-#include "Riostream.h"
-
 #include "RooFoamGenerator.h"
-#include "RooAbsReal.h"
-#include "RooCategory.h"
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooRandom.h"
-#include "RooErrorHandler.h"
 
-#include "RooMsgService.h"
-#include "TFoam.h"
-#include "RooTFoamBinding.h"
+#include <RooAbsReal.h>
+#include <RooArgSet.h>
+#include <RooCategory.h>
+#include <RooDataSet.h>
+#include <RooErrorHandler.h>
+#include <RooMsgService.h>
+#include <RooNumGenConfig.h>
+#include <RooRandom.h>
+#include <RooRealBinding.h>
+#include <RooRealVar.h>
+
 #include "RooNumGenFactory.h"
-#include "RooNumGenConfig.h"
 
-#include <cassert>
+namespace {
+
+// Lightweight interface adaptor that binds a RooAbsPdf to TFOAM.
+class RooTFoamBinding : public TFoamIntegrand {
+public:
+   RooTFoamBinding(const RooAbsReal &pdf, const RooArgSet &observables)
+      : _binding(std::make_unique<RooRealBinding>(pdf, observables, &_nset, false, nullptr))
+   {
+      _nset.add(observables);
+   }
+
+   double Density(Int_t ndim, double *xvec) override
+   {
+      double x[10];
+      for (int i = 0; i < ndim; i++) {
+         x[i] = xvec[i] * (_binding->getMaxLimit(i) - _binding->getMinLimit(i)) + _binding->getMinLimit(i);
+      }
+      double ret = (*_binding)(x);
+      return ret < 0 ? 0 : ret;
+   }
+
+   RooRealBinding &binding() { return *_binding; }
+
+private:
+   RooArgSet _nset;
+   std::unique_ptr<RooRealBinding> _binding;
+};
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
@@ -100,15 +127,12 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
   _range.resize(_realVars.size());
 
   Int_t i(0) ;
-  for (const auto arg : _realVars) {
-    auto var = static_cast<const RooRealVar*>(arg);
+  for (auto *var : static_range_cast<RooRealVar const*>(_realVars)) {
     _xmin[i] = var->getMin() ;
     _range[i] = var->getMax() - var->getMin() ;
     i++ ;
   }
 }
-
-RooFoamGenerator::~RooFoamGenerator() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// are we actually generating anything? (the cache always contains at least our function value)
