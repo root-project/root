@@ -619,7 +619,12 @@ class WebWindowHandle {
                } else if (msg.indexOf('NEW_KEY=') === 0) {
                   const newkey = msg.slice(8);
                   this.close(true);
-                  if (typeof sessionStorage !== 'undefined')
+                  let href = (typeof document !== 'undefined') ? document.URL : null;
+                  if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
+                     const p = href.indexOf('?key=');
+                     if (p > 0) href = href.slice(0, p);
+                     window.history.replaceState(window.history.state, undefined, `${href}?key=${newkey}`);
+                  } else if (typeof sessionStorage !== 'undefined')
                      sessionStorage.setItem('RWebWindow_Key', newkey);
                   location.reload(true);
                }
@@ -720,9 +725,9 @@ async function connectWebWindow(arg) {
 
       // hide key and any following parameters from URL, chrome do not allows to close browser with changed URL
       const href = (typeof document !== 'undefined') ? document.URL : null;
-      if (d_key && !d.has('headless') && isStr(href) && window?.history && browser.isFirefox) {
+      if (d_key && !d.has('headless') && isStr(href) && (typeof window !== 'undefined') && window?.history) {
          const p = href.indexOf('?key=');
-         if (p > 0) window.history.pushState({}, undefined, href.slice(0, p));
+         if (p > 0) window.history.replaceState(window.history.state, undefined, href.slice(0, p));
       }
 
       // special holder script, prevents headless chrome browser from too early exit
