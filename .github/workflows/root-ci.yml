@@ -354,7 +354,7 @@ jobs:
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
-      options: '--shm-size=1g -m 16g --security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -423,7 +423,7 @@ jobs:
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
                     --image          registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-                    --dockeropts     '--shm-size=1g -m 16g --security-opt label=disable --rm'
+                    --dockeropts     '--security-opt label=disable --rm'
                     --incremental    $INCREMENTAL
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
