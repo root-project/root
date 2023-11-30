@@ -41,7 +41,7 @@ generateHeader(Core
   ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
 )
 
-add_dependencies(Core CLING rconfigure)
+add_dependencies(Core CLING rconfigure gitinfotxt)
 
 target_link_libraries(Core
   PRIVATE
