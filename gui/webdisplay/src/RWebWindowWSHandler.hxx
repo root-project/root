@@ -50,6 +50,18 @@ protected:
          }
       }
 
+      if (fWindow.IsRequireAuthKey()) {
+         TUrl url;
+         url.SetOptions(arg->GetQuery());
+         TString key = url.GetValueFromOptions("key");
+         if (key.IsNull() || !fWindow.HasKey(key.Data())) {
+            // refuce loading of default web page without valid key
+            arg->SetContent("refused");
+            arg->Set404();
+            return;
+         }
+      }
+
       auto version = fWindow.GetClientVersion();
       if (!version.empty()) {
          // replace link to JSROOT modules in import statements emulating new version for browser
