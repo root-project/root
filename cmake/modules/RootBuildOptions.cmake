@@ -397,6 +397,11 @@ if (NOT builtin_cling)
   endif()
 endif(NOT builtin_cling)
 
+if(NOT http AND webgui)
+   message(STATUS "Cannot build WebGui components without HTTP: webgui is disabled.")
+   set(webgui OFF)
+endif()
+
 if(NOT webgui)
    set(qt5web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
    set(qt6web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
