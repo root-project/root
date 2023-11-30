@@ -52,7 +52,97 @@ _is_ipython = hasattr(builtins, "__IPYTHON__")
 import sys
 from ._facade import ROOTFacade
 
-sys.modules[__name__] = ROOTFacade(sys.modules[__name__], _is_ipython)
+_root_facade = ROOTFacade(sys.modules[__name__], _is_ipython)
+sys.modules[__name__] = _root_facade
+
+# Configure meta-path finder for ROOT namespaces, following the Python
+# documentation and an example:
+#
+#   * https://docs.python.org/3/library/importlib.html#module-importlib.abc
+#
+#   * https://python.plainenglish.io/metapathfinders-or-how-to-change-python-import-behavior-a1cf3b5a13ec
+from importlib.abc import Loader, MetaPathFinder
+from importlib.machinery import ModuleSpec
+from importlib.util import spec_from_loader
+
+
+def _can_be_module(obj) -> bool:
+    """
+    Determine if an object can be used as a Python module. This is the case for
+    objects that are actually of ModuleType, or C++ namespaces from cppyy.
+    """
+
+    # If the type is the module type, it can trivially be a module.
+    if isinstance(obj, types.ModuleType):
+        return True
+
+    # Check if the object represents a C++ namespace. Since cppyy has no
+    # dedicated Python type for C++ namespaces, we check for this using the
+    # representation of the object.
+    if repr(obj).startswith("<namespace "):
+        return True
+
+    return False
+
+
+from typing import Optional, Union
+import types
+
+
+def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy._backend.CPPScope]]:
+    """
+    Recursively looks up attributes of the ROOT facade, using a full module
+    name, and return it if it can be used as a ROOT submodule. This is the case
+    if the attribute is a C++ namespace or an actual Python module type. If no
+    matching attribute is found, return None.
+    """
+    keys = fullname.split(".")[1:]
+    ret = _root_facade
+    for part in keys:
+        ret = getattr(ret, part, None)
+        if ret is None or not _can_be_module(ret):
+            return None
+    return ret
+
+
+class _RootNamespaceLoader(Loader):
+    """
+    Custom loader for modules under the ROOT namespace.
+    """
+
+    def is_package(self, fullname: str) -> bool:
+        """
+        Indicates whether the given attribute of the ROOT facade can be
+        considered a package.
+
+        This is decided by the _lookup_root_module function.
+        """
+        return _lookup_root_module(fullname) is not None
+
+    def create_module(self, spec: ModuleSpec):
+        return _lookup_root_module(spec.name)
+
+    def exec_module(self, module):
+        pass
+
+
+class _RootNamespaceFinder(MetaPathFinder):
+    """
+    Finder for modules under the ROOT namespace.
+    """
+
+    def find_spec(self, fullname: str, path, target=None) -> ModuleSpec:
+        if not fullname.startswith("ROOT."):
+            # This finder only finds ROOT.*
+            return None
+        if _lookup_root_module(fullname) is None:
+            return None
+        return spec_from_loader(fullname, _RootNamespaceLoader())
+
+
+namespace_finder = _RootNamespaceFinder()
+if namespace_finder not in sys.meta_path:
+    sys.meta_path.append(namespace_finder)
 
 # Configuration for usage from Jupyter notebooks
 if _is_ipython:
