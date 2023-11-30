@@ -921,7 +921,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       }
 
       if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
-         arg->fContent = BuildWSEntryPage();
+         arg->SetContent("refused"); //  BuildWSEntryPage();
+         arg->Set404();
       }
 
       if (arg->fContent.empty() && !IsWSOnly()) {
