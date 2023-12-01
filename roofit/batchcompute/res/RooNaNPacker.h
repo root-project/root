@@ -131,10 +131,11 @@ struct RooNaNPacker {
    static void warn()
    {
       static bool haveWarned = false;
-      if (!haveWarned)
+      if (!haveWarned) {
          Warning("RooNaNPacker",
                  "Fast recovery from undefined function values only implemented for little-endian machines."
                  " If necessary, request an extension of functionality on https://root.cern");
+      }
       haveWarned = true;
    }
 };

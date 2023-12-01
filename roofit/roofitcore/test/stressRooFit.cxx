@@ -207,10 +207,11 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
       }
    } else {
       const Char_t *os = gSystem->Getenv("OS");
-      if (!os)
+      if (!os) {
          printf("*  SYS: Windows 95\n");
-      else
+      } else {
          printf("*  SYS: %s %s \n", os, gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+      }
    }
 
    printf("******************************************************************\n");
