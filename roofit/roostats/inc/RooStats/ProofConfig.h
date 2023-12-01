@@ -68,9 +68,10 @@ class ProofConfig {
                fNExperiments = nMaxWorkers;
             }
 
-            if (nExperiments > nMaxWorkers)
-               std::cout << "ProofConfig - Warning: using a number of workers = " << nExperiments << " which is larger than the number of cores in the machine "
-                         << nMaxWorkers << std::endl;
+            if (nExperiments > nMaxWorkers) {
+               std::cout << "ProofConfig - Warning: using a number of workers = " << nExperiments
+                         << " which is larger than the number of cores in the machine " << nMaxWorkers << std::endl;
+            }
 
             // set the number of workers in the Host string
             fHost = TString::Format("workers=%d",fNExperiments);

@@ -54,12 +54,8 @@ void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(bool flag) { fgAlway
 
 double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, RooAbsData& data, RooArgSet& paramsOfInterest) {
 
-       if( fDetailedOutputEnabled && fDetailedOutput ) {
-          delete fDetailedOutput;
-          fDetailedOutput = nullptr;
-       }
-       if( fDetailedOutputEnabled && !fDetailedOutput ) {
-          fDetailedOutput = new RooArgSet();
+       if (fDetailedOutputEnabled) {
+          fDetailedOutput = std::make_unique<RooArgSet>();
        }
 
        //data.Print("V");

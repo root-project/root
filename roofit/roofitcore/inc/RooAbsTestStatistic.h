@@ -41,8 +41,8 @@ public:
 
   struct Configuration {
     /// Stores the configuration parameters for RooAbsTestStatistic.
-    std::string rangeName = "";
-    std::string addCoefRangeName = "";
+    std::string rangeName;
+    std::string addCoefRangeName;
     int nCPU = 1;
     RooFit::MPSplit interleave = RooFit::BulkPartition;
     bool verbose = true;

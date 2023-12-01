@@ -2,7 +2,6 @@
 // Authors: Jonas Rembser, CERN  08/2022
 
 #include <RooArgSet.h>
-#include <RooArgSet.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooRandom.h>

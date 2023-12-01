@@ -173,7 +173,8 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
    // Stream an object of class RooCFunction4Ref
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
+     UInt_t R__s;
+     UInt_t R__c;
      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
      // Read name from file

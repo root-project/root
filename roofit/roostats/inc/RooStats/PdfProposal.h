@@ -78,11 +78,12 @@ namespace RooStats {
       /// Default (and minimum) is 1
       virtual void SetCacheSize(Int_t size)
       {
-         if (size > 0)
+         if (size > 0) {
             fCacheSize = size;
-         else
-            coutE(Eval) << "Warning: Requested non-positive cache size: " <<
-               size << ". Cache size unchanged." << std::endl;
+         } else {
+            coutE(Eval) << "Warning: Requested non-positive cache size: " << size << ". Cache size unchanged."
+                        << std::endl;
+         }
       }
 
       /// set whether we own the PDF that serves as the proposal density function

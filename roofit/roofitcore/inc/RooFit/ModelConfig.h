@@ -35,7 +35,7 @@ namespace RooStats {
 class ModelConfig final : public TNamed, public RooWorkspaceHandle {
 
 public:
-   ModelConfig(RooWorkspace *ws = nullptr) : TNamed()
+   ModelConfig(RooWorkspace *ws = nullptr)
    {
       if (ws)
          SetWS(*ws);
@@ -57,10 +57,11 @@ public:
    ModelConfig *Clone(const char *name = "") const override
    {
       ModelConfig *mc = new ModelConfig(*this);
-      if (strcmp(name, "") == 0)
+      if (strcmp(name, "") == 0) {
          mc->SetName(this->GetName());
-      else
+      } else {
          mc->SetName(name);
+      }
       return mc;
    }
 
@@ -219,9 +220,9 @@ public:
       if (!GetWS())
          return;
 
-      if (GetWS()->pdf(name))
+      if (GetWS()->pdf(name)) {
          fPdfName = name;
-      else {
+      } else {
          std::stringstream ss;
          ss << "pdf " << name << " does not exist in workspace";
          const std::string errorMsg = ss.str();
@@ -236,9 +237,9 @@ public:
       if (!GetWS())
          return;
 
-      if (GetWS()->pdf(name))
+      if (GetWS()->pdf(name)) {
          fPriorPdfName = name;
-      else {
+      } else {
          std::stringstream ss;
          ss << "pdf " << name << " does not exist in workspace";
          const std::string errorMsg = ss.str();
@@ -253,9 +254,9 @@ public:
       if (!GetWS())
          return;
 
-      if (GetWS()->data(name))
+      if (GetWS()->data(name)) {
          fProtoDataName = name;
-      else {
+      } else {
          std::stringstream ss;
          ss << "dataset " << name << " does not exist in workspace";
          const std::string errorMsg = ss.str();

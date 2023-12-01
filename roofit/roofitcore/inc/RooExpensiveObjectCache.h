@@ -45,33 +45,31 @@ public:
 
   void print() const ;
 
-  class ExpensiveObject {
-  public:
-    ExpensiveObject() { _uid = 0 ; _payload = nullptr ; } ;
-    ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, RooArgSet const& params) ;
-    ExpensiveObject(Int_t uid, const ExpensiveObject& other) ;
-    virtual ~ExpensiveObject() ;
-    bool matches(TClass* tc, const RooArgSet& params) ;
+   class ExpensiveObject {
+   public:
+      ExpensiveObject() = default;
+      ExpensiveObject(Int_t uid, const char *ownerName, TObject &payload, RooArgSet const &params);
+      ExpensiveObject(Int_t uid, const ExpensiveObject &other);
+      virtual ~ExpensiveObject();
+      bool matches(TClass *tc, const RooArgSet &params);
 
-    Int_t uid() const { return _uid ; }
-    const TObject* payload() const { return _payload ; }
-    TObject* payload() { return _payload ; }
-    void setPayload(TObject* obj) { _payload = obj ; }
-    const char* ownerName() const { return _ownerName.Data() ; }
+      Int_t uid() const { return _uid; }
+      const TObject *payload() const { return _payload; }
+      TObject *payload() { return _payload; }
+      void setPayload(TObject *obj) { _payload = obj; }
+      const char *ownerName() const { return _ownerName.Data(); }
 
-    void print() const;
+      void print() const;
 
-  protected:
+   protected:
+      Int_t _uid = 0;                           ///< Unique element ID ;
+      TObject *_payload = nullptr;              ///< Payload
+      std::map<TString, double> _realRefParams; ///< Names and values of real-valued reference parameters
+      std::map<TString, Int_t> _catRefParams;   ///< Names and values of discrete-valued reference parameters
+      TString _ownerName;                       ///< Name of RooAbsArg object that is associated to cache contents
 
-    Int_t _uid ; ///< Unique element ID ;
-    TObject* _payload ; ///< Payload
-    std::map<TString,double> _realRefParams ; ///< Names and values of real-valued reference parameters
-    std::map<TString,Int_t> _catRefParams ; ///< Names and values of discrete-valued reference parameters
-    TString _ownerName ; ///< Name of RooAbsArg object that is associated to cache contents
-
-    ClassDef(ExpensiveObject,2) ; // Cache element containing expensive object and parameter values for which object is valid
-} ;
-
+      ClassDef(ExpensiveObject, 2); // Cache element containing expensive object and parameter values for which object is valid
+   };
 
 protected:
 

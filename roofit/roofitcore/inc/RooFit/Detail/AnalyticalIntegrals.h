@@ -57,12 +57,13 @@ inline double gaussianIntegral(double xMin, double xMax, double mean, double sig
    // Don't put this "prd" inside the "if" because clad will not be able to differentiate the code correctly (as of
    // v1.1)!
    double prd = scaledMin * scaledMax;
-   if (prd < 0.0)
+   if (prd < 0.0) {
       cond = 2.0 - (ecmin + ecmax);
-   else if (scaledMax <= 0.0)
+   } else if (scaledMax <= 0.0) {
       cond = ecmax - ecmin;
-   else
+   } else {
       cond = ecmin - ecmax;
+   }
    return resultScale * 0.5 * cond;
 }
 

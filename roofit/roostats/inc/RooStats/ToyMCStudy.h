@@ -70,16 +70,12 @@ class ToyMCStudy: public RooAbsStudy {
 class ToyMCPayload : public TNamed {
 
    public:
-
-      ToyMCPayload() {
-         // proof constructor, do not use
-    fDataSet = nullptr;
-      }
-
-      ToyMCPayload(RooDataSet* sd)
+      ToyMCPayload() : fDataSet(nullptr)
       {
-         fDataSet = sd;
+         // proof constructor, do not use
       }
+
+      ToyMCPayload(RooDataSet *sd) : fDataSet(sd) {}
 
       RooDataSet* GetSamplingDistributions()
       {
