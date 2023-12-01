@@ -1,7 +1,11 @@
 import { httpRequest, createHttpRequest, loadScript, decodeUrl,
          browser, setBatchMode, isBatchMode, isObject, isFunc, isStr, btoa_func } from './core.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
+import { hexMD5 } from './base/md5.mjs';
 
+
+// secret session key used for hashing connections keys
+let sessionKey = '';
 
 /**
  * @summary Class emulating web socket with long-poll http requests
@@ -513,17 +517,29 @@ class WebWindowHandle {
       return addr;
    }
 
+   /** @summary provide connection args for the web socket
+    * @private */
+   getConnArgs(ntry) {
+      let args = '';
+      if (this.key && sessionKey) {
+         const k = hexMD5(`${sessionKey}:${ntry}:${this.key}`);
+         args += `key=${k}&ntry=${ntry}`;
+      } else if (this.key)
+         args += `key=${this.key}`;
+      if (this.token) {
+         if (args) args += '&';
+         args += `token=${this.token}`;
+      }
+      return args;
+   }
+
    /** @summary Create configured socket for current object.
      * @private */
    connect(href) {
       this.close();
       if (!href && this.href) href = this.href;
 
-      let ntry = 0, args = (this.key ? ('key=' + this.key) : '');
-      if (this.token) {
-         if (args) args += '&';
-         args += 'token=' + this.token;
-      }
+      let ntry = 0;
 
       const retry_open = first_time => {
          if (this.state !== 0) return;
@@ -555,13 +571,13 @@ class WebWindowHandle {
             console.log(`configure protocol log ${path}`);
          } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            if (args) path += '?' + args;
+            path += '?' + this.getConnArgs(ntry);
             console.log(`configure websocket ${path}`);
             this._websocket = new WebSocket(path);
          } else {
             path += 'root.longpoll';
             console.log(`configure longpoll ${path}`);
-            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), args);
+            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this.getConnArgs(ntry));
          }
 
          if (!this._websocket) return;
@@ -713,7 +729,14 @@ async function connectWebWindow(arg) {
    let d_key, d_token, new_key;
 
    if (!arg.href) {
-      const d = decodeUrl();
+      let href = (typeof document !== 'undefined') ? document.URL : '';
+      const p = href.indexOf('#');
+      if (p > 0) {
+         sessionKey = href.slice(p+1);
+         href = href.slice(0, p);
+      }
+
+      const d = decodeUrl(href);
       d_key = d.get('key');
       d_token = d.get('token');
 
@@ -721,10 +744,14 @@ async function connectWebWindow(arg) {
          new_key = sessionStorage.getItem('RWebWindow_Key');
          sessionStorage.removeItem('RWebWindow_Key');
          if (new_key) console.log(`Use key ${new_key} from session storage`);
+
+         if (sessionKey)
+            sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
+         else
+            sessionKey = sessionStorage.getItem('RWebWindow_SessionKey');
       }
 
       // hide key and any following parameters from URL, chrome do not allows to close browser with changed URL
-      const href = (typeof document !== 'undefined') ? document.URL : null;
       if (d_key && !d.has('headless') && isStr(href) && (typeof window !== 'undefined') && window?.history) {
          const p = href.indexOf('?key=');
          if (p > 0) window.history.replaceState(window.history.state, undefined, href.slice(0, p));
