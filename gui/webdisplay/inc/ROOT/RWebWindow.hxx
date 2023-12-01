@@ -177,14 +177,16 @@ private:
 
    ConnectionsList_t GetWindowConnections(unsigned connid = 0, bool only_active = false) const;
 
-   std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
+   std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query, bool remote);
 
    /// Find connection with specified websocket id
-   std::shared_ptr<WebConn> FindConnection(unsigned wsid) { return FindOrCreateConnection(wsid, false, nullptr); }
+   std::shared_ptr<WebConn> FindConnection(unsigned wsid) { return FindOrCreateConnection(wsid, false, nullptr, false); }
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
    std::shared_ptr<WebConn> _FindConnWithKey(const std::string &key) const;
+
+   bool _CanConnectWith(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool first);
 
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 

@@ -40,6 +40,7 @@ class RWebWindowsManager {
 private:
    std::unique_ptr<THttpServer> fServer;  ///<! central communication with the all used displays
    std::string fAddr;                     ///<! HTTP address of the server
+   std::string fSessionKey;               ///<! secret session key used on client to code connections keys
    std::recursive_mutex fMutex;           ///<! main mutex, used for window creations
    unsigned fIdCnt{0};                    ///<! counter for identifiers
    bool fUseHttpThrd{false};              ///<! use special thread for THttpServer

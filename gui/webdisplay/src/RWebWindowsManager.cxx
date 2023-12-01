@@ -122,6 +122,10 @@ void RWebWindowsManager::AssignMainThrd()
 
 RWebWindowsManager::RWebWindowsManager()
 {
+   gRandom->SetSeed(0);
+   for(int n = 0; n < 8; n++)
+      fSessionKey.append(TString::Itoa(gRandom->Integer(0xFFFFFFF), 16).Data());
+
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
    if (fExternalProcessEvents)
       RWebWindowsManager::AssignMainThrd();
@@ -413,7 +417,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             }
          }
 
-         engine.Append(TString::Format("webgui&thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
+         engine.Append(TString::Format("webgui&top=remote&thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
 
          if (http_maxage >= 0)
             engine.Append(TString::Format("&max_age=%d", http_maxage));
@@ -557,6 +561,9 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
       }
 
       addr = fAddr + addr;
+
+      if (!key.empty() && !fSessionKey.empty() && win.IsRequireAuthKey())
+         addr += "#"s + fSessionKey;
    }
 
    if (produced_key)
