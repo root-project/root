@@ -96,7 +96,6 @@ public:
   /// Move constructor. It transfers ownership of the internal RooAbsData object.
   RooAbsDataHelper(RooAbsDataHelper&& other) :
   _dataset{ std::move(other._dataset) },
-  _mutex_dataset(),
   _events{ std::move(other._events) },
   _eventSize{ other._eventSize }
   {

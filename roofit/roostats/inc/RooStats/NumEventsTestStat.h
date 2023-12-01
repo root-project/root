@@ -42,9 +42,7 @@ namespace RooStats {
 
    public:
      NumEventsTestStat() : fPdf(nullptr) { }
-     NumEventsTestStat(RooAbsPdf& pdf) {
-       fPdf = &pdf;
-     }
+     NumEventsTestStat(RooAbsPdf &pdf) : fPdf(&pdf) {}
 
      // Main interface to evaluate the test statistic on a dataset
      double Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/) override  {

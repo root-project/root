@@ -22,26 +22,10 @@ enum toysStrategies { EQUALTOYSPERDENSITY, EXPONENTIALTOYDISTRIBUTION };
 class ToyMCImportanceSampler: public ToyMCSampler {
 
    public:
-      ToyMCImportanceSampler() :
-         ToyMCSampler()
-      {
-         // Proof constructor. Do not use.
+      /// Proof constructor. Do not use.
+      ToyMCImportanceSampler() = default;
 
-         fIndexGenDensity = 0;
-         fGenerateFromNull = true;
-         fApplyVeto = true;
-         fReuseNLL = true;
-         fToysStrategy = EQUALTOYSPERDENSITY;
-      }
-      ToyMCImportanceSampler(TestStatistic &ts, Int_t ntoys) :
-         ToyMCSampler(ts, ntoys)
-      {
-         fIndexGenDensity = 0;
-         fGenerateFromNull = true;
-         fApplyVeto = true;
-         fReuseNLL = true;
-         fToysStrategy = EQUALTOYSPERDENSITY;
-      }
+      ToyMCImportanceSampler(TestStatistic &ts, Int_t ntoys) : ToyMCSampler(ts, ntoys) {}
 
       ~ToyMCImportanceSampler() override;
 
@@ -172,9 +156,9 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       /// helper method for clearing  the cache
       void ClearCache() override;
 
-      unsigned int fIndexGenDensity;
-      bool fGenerateFromNull;
-      bool fApplyVeto;
+      unsigned int fIndexGenDensity = 0;
+      bool fGenerateFromNull = true;
+      bool fApplyVeto = true;
 
       RooArgSet fConditionalObs;  ///< set of conditional observables
 
@@ -186,9 +170,9 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       std::vector<RooAbsPdf*> fImportanceDensities;
       std::vector<const RooArgSet*> fImportanceSnapshots;
 
-      bool fReuseNLL;
+      bool fReuseNLL = true;
 
-      toysStrategies fToysStrategy;
+      toysStrategies fToysStrategy = EQUALTOYSPERDENSITY;
 
       mutable std::vector<std::unique_ptr<RooAbsReal>> fNullNLLs;    ///<!
       mutable std::vector<std::unique_ptr<RooAbsReal>> fImpNLLs;     ///<!

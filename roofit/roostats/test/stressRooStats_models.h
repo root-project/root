@@ -12,7 +12,7 @@ using namespace RooStats;
 ////////////////////////////////////////////////////////////////////////////////
 /// Build model
 
-void buildSimultaneousModel(RooWorkspace *w)
+inline void buildSimultaneousModel(RooWorkspace *w)
 {
    w->factory("sig[8,0,50]");
    w->factory("Uniform::u1(x1[0,1])");
@@ -48,7 +48,7 @@ void buildSimultaneousModel(RooWorkspace *w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Build product model
 
-void buildPoissonProductModel(RooWorkspace *w)
+inline void buildPoissonProductModel(RooWorkspace *w)
 {
    w->factory("expr::comp_sig('2*sig*pow(1.2, beta)', sig[0,20], beta[-3,3])");
    w->factory("Poisson::poiss1(x[0,40], sum::splusb1(sig, bkg1[0,10]))");
@@ -85,7 +85,7 @@ void buildPoissonProductModel(RooWorkspace *w)
 //__________________________________________________________________________________
 // Insightful comments on model courtesy of Kyle Cranmer, Wouter Verkerke, Sven Kreiss
 //    from $ROOTSYS/tutorials/roostats/HybridInstructional.C
-void buildOnOffModel(RooWorkspace *w)
+inline void buildOnOffModel(RooWorkspace *w)
 {
    // Build model for prototype on/off problem
    // Poiss(x | s+b) * Poiss(y | tau b )
@@ -120,7 +120,7 @@ void buildOnOffModel(RooWorkspace *w)
    w->import(*data);
 }
 
-void buildPoissonEfficiencyModel(RooWorkspace *w)
+inline void buildPoissonEfficiencyModel(RooWorkspace *w)
 {
 
    // build models

@@ -21,8 +21,6 @@
 
 #if defined(__CUDACC__)
 #include <cuda/std/complex>
-#else
-#include <complex>
 #endif
 
 namespace RooHeterogeneousMath {
@@ -151,7 +149,8 @@ faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N
             // (note: there's no chance to vectorize this one, since
             // the value of the next iteration depend on the ones from
             // the previous iteration)
-            T sumre = coeffs[0], sumim = coeffs[1];
+            T sumre = coeffs[0];
+            T sumim = coeffs[1];
             for (unsigned i = 1; i < NTAYLOR; ++i) {
                const T re = sumre * zmnpire - sumim * zim;
                const T im = sumim * zmnpire + sumre * zim;
@@ -159,10 +158,11 @@ faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N
                sumim = im + coeffs[2 * i + 1];
             }
             // undo the flip in real part of z if needed
-            if (negrez)
+            if (negrez) {
                return STD::complex<T>(sumre, -sumim);
-            else
+            } else {
                return STD::complex<T>(sumre, sumim);
+            }
          }
       }
    }
@@ -179,14 +179,17 @@ faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N
       const T isqrtpi = 5.64189583547756287e-01;
       const T z2re = (zre + zim) * (zre - zim);
       const T z2im = T(2) * zre * zim;
-      T cfre = T(1), cfim = T(0), cfnorm = T(1);
+      T cfre = T(1);
+      T cfim = T(0);
+      T cfnorm = T(1);
       for (unsigned k = NCF; k; --k) {
          cfre = +(T(k) / T(2)) * cfre / cfnorm;
          cfim = -(T(k) / T(2)) * cfim / cfnorm;
-         if (k & 1)
+         if (k & 1) {
             cfre -= z2re, cfim -= z2im;
-         else
+         } else {
             cfre += T(1);
+         }
          cfnorm = cfre * cfre + cfim * cfim;
       }
       T sumre = (zim * cfre - zre * cfim) * isqrtpi / cfnorm;
@@ -194,7 +197,8 @@ faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N
       if (negimz) {
          // use erfc(-z) = 2 - erfc(z) to get good accuracy for
          // Im(z) < 0: 2 / exp(z^2) - w(z)
-         T ez2re = -z2re, ez2im = -z2im;
+         T ez2re = -z2re;
+         T ez2im = -z2im;
          RooHeterogeneousMath::cexp(ez2re, ez2im);
          return STD::complex<T>(T(2) * ez2re - sumre, T(2) * ez2im - sumim);
       } else {
@@ -202,9 +206,11 @@ faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N
       }
    }
    const T twosqrtpi = 3.54490770181103205e+00;
-   const T tmzre = tm * zre, tmzim = tm * zim;
+   const T tmzre = tm * zre;
+   const T tmzim = tm * zim;
    // calculate exp(i tm z)
-   T eitmzre = -tmzim, eitmzim = tmzre;
+   T eitmzre = -tmzim;
+   T eitmzim = tmzre;
    RooHeterogeneousMath::cexp(eitmzre, eitmzim);
    // form 1 +/- exp (i tm z)
    const T numerarr[4] = {T(1) - eitmzre, -eitmzim, T(1) + eitmzre, +eitmzim};
@@ -275,7 +281,8 @@ faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N
       // Im(z) < 0: 2 / exp(z^2) - w(z)
       const T z2im = -T(2) * zre * zim;
       const T z2re = -(zre + zim) * (zre - zim);
-      T ez2re = z2re, ez2im = z2im;
+      T ez2re = z2re;
+      T ez2im = z2im;
       RooHeterogeneousMath::cexp(ez2re, ez2im);
       return STD::complex<T>(T(2) * ez2re + sumim / twosqrtpi, T(2) * ez2im - sumre / twosqrtpi);
    } else {
@@ -556,7 +563,7 @@ __roodevice__ __roohost__ inline STD::complex<double> faddeeva_fast(STD::complex
 /// to explicitly cancel the divergent exp(y*y) behaviour of
 /// CWERF for z = x + i y with large negative y
 
-__roohost__ __roodevice__ STD::complex<double> evalCerfApprox(double _x, double u, double c)
+__roohost__ __roodevice__ inline STD::complex<double> evalCerfApprox(double _x, double u, double c)
 {
    const double rootpi = STD::sqrt(STD::atan2(0., -1.));
    const STD::complex<double> z(_x * c, u + c);

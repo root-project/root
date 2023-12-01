@@ -260,7 +260,9 @@ TEST_F(RooAbsLTest, SubEventSections)
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
 
    auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
-   ROOT::Math::KahanSum<double> nine_parts, eleven_parts, twenty_parts;
+   ROOT::Math::KahanSum<double> nine_parts;
+   ROOT::Math::KahanSum<double> eleven_parts;
+   ROOT::Math::KahanSum<double> twenty_parts;
 
    for (std::size_t ix = 0; ix < 9; ++ix) {
       nine_parts += likelihood->evaluatePartition({static_cast<double>(ix) / 9, static_cast<double>(ix + 1) / 9}, 0,

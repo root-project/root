@@ -228,11 +228,12 @@ namespace RooStats {
       /// set the acceptable level or error for Keys interval determination
       virtual void SetEpsilon(double epsilon)
       {
-         if (epsilon < 0)
+         if (epsilon < 0) {
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
                                   << "negative epsilon value" << std::endl;
-         else
+         } else {
             fEpsilon = epsilon;
+         }
       }
 
       /// Set the type of interval to find.  This will only have an effect for
@@ -262,11 +263,12 @@ namespace RooStats {
       /// when determining the confidence interval by Keys
       virtual void SetDelta(double delta)
       {
-         if (delta < 0.)
+         if (delta < 0.) {
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
                                   << "negative delta value" << std::endl;
-         else
+         } else {
             fDelta = delta;
+         }
       }
 
    private:

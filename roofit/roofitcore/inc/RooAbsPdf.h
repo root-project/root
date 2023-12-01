@@ -72,22 +72,23 @@ public:
   class GenSpec {
   public:
     virtual ~GenSpec() ;
-    GenSpec() { _genContext = nullptr ; _protoData = nullptr ; _init = false ; _extended=false, _nGen=0 ; _randProto = false ; _resampleProto=false ; }
+    GenSpec() = default;
+
   private:
     GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, bool extended,
        bool randProto, bool resampleProto, TString dsetName, bool init=false) ;
     GenSpec(const GenSpec& other) ;
 
     friend class RooAbsPdf ;
-    RooAbsGenContext* _genContext ;
+    RooAbsGenContext* _genContext = nullptr;
     RooArgSet _whatVars ;
-    RooDataSet* _protoData ;
-    Int_t _nGen ;
-    bool _extended ;
-    bool _randProto ;
-    bool _resampleProto ;
+    RooDataSet* _protoData = nullptr;
+    Int_t _nGen = 0;
+    bool _extended = false;
+    bool _randProto = false;
+    bool _resampleProto = false;
     TString _dsetName ;
-    bool _init ;
+    bool _init = false;
 
     ClassDef(GenSpec,0) // Generation specification
   } ;

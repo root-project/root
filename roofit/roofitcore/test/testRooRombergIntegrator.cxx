@@ -336,7 +336,8 @@ TEST(RooIntegrator1D, RunErf_NStep)
 
 TEST(RooIntegrator1D, RunErf_Midpoint)
 {
-   const double min = 0, max = 1;
+   const double min = 0;
+   const double max = 1;
    RooRealVar theX("theX", "x", min, max);
    RooFormulaVar gaus("gaus", "ROOT::Math::gaussian_pdf(theX, 1, 0)", theX);
    RooRealBinding binding(gaus, theX);

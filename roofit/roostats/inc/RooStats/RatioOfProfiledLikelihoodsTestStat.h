@@ -24,14 +24,13 @@ namespace RooStats {
    class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 
    public:
+      RatioOfProfiledLikelihoodsTestStat()
+         :
 
-      RatioOfProfiledLikelihoodsTestStat() :
-         fNullProfile(),
-         fAltProfile(),
-         fAltPOI(nullptr),
-         fSubtractMLE(true),
-         fDetailedOutputEnabled(false),
-         fDetailedOutput(nullptr)
+           fAltPOI(nullptr),
+           fSubtractMLE(true),
+           fDetailedOutputEnabled(false),
+           fDetailedOutput(nullptr)
       {
          // Proof constructor. Don't use.
       }
@@ -46,11 +45,11 @@ namespace RooStats {
       {
          //  Calculates the ratio of profiled likelihoods.
 
-         if(altPOI)
+         if (altPOI) {
             fAltPOI = (RooArgSet*) altPOI->snapshot();
-         else
+         } else {
             fAltPOI = new RooArgSet(); // empty set
-
+         }
       }
 
       //__________________________________________

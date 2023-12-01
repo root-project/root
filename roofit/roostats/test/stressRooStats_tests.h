@@ -123,7 +123,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
          Warning("isTestAvailable", "Confidence level must be in the range (0,1). Skipping test...");
@@ -132,7 +132,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       const Int_t N = 10; // number of observations
@@ -207,7 +207,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValue < 0 || fObsValue > 1000) {
          Warning("isTestAvailable", "Observed value must be in the range [0,1000]. Skipping test...");
@@ -216,7 +216,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // the compared values / objects must have the same name in write / compare modes
@@ -309,7 +309,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValueX < 0 || fObsValueX > 30) {
          Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
@@ -326,7 +326,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // Create workspace and model
@@ -390,9 +390,9 @@ public:
 
    // Override test value tolerance
    // A larger tolerance is needed since the values in the Cousins paper are given with 1e-2 precision
-   double vtol() { return 1e-2; }
+   double vtol() override { return 1e-2; }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // For testing purposes, we consider four special cases for which the values are known from
@@ -510,7 +510,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValue < 0 || fObsValue > 100) {
          Warning("isTestAvailable", "Observed value must be in the range [0,100]. Skipping test...");
@@ -523,7 +523,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // Set the confidence level for a 68.3% CL central interval
@@ -665,9 +665,9 @@ public:
 
    // the references values in the paper have a precision of only two decimal points
    // in such a situation, it is natural that we increase the value tolerance
-   double vtol() { return 1e-2; }
+   double vtol() override { return 1e-2; }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // Put the confidence level so that we obtain a 68% confidence interval
@@ -777,7 +777,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValueX < 0 || fObsValueX > 30) {
          Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
@@ -794,7 +794,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       const Int_t numberScans = 10; // sufficient number of scans
@@ -891,7 +891,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValueX < 0 || fObsValueX > 30) {
          Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
@@ -908,7 +908,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // Create workspace and model
@@ -999,9 +999,9 @@ public:
 
    // Override test value tolerance
    // A larger tolerance is needed since the values in the Cousins paper are given with 1e-2 precision
-   double vtol() { return 1e-2; }
+   double vtol() override { return 1e-2; }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // For testing purposes, we consider four special cases for which the values are known from
@@ -1075,7 +1075,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValueOn < 0 || fObsValueOn > 300) {
          Warning("isTestAvailable", "Observed value on_source=s+b must be in the range [0,300]. Skipping test...");
@@ -1092,7 +1092,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // names of tested variables must be the same in write / comparison modes
@@ -1183,7 +1183,7 @@ public:
         fCalculatorType(calculatorType),
         fTestStatType(testStatType){};
 
-   bool testCode()
+   bool testCode() override
    {
 
       // Build workspace and models
@@ -1229,7 +1229,8 @@ public:
             HypoTestResult htExp("Expected result");
             htExp.Append(htr);
             // find quantiles in alt (S+B) distribution
-            double p[5], q[5];
+            double p[5];
+            double q[5];
             for (Int_t i = 0; i < 5; ++i) {
                double sig = -2 + i;
                p[i] = ROOT::Math::normal_cdf(sig, 1);
@@ -1326,7 +1327,7 @@ public:
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValueX < 0 || fObsValueX > 30) {
          Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
@@ -1346,9 +1347,9 @@ public:
    // larger value test tolerance especially when using toys (difference of <~ 0.1 observed between using Minuit or
    // Minuit2)
    //  (inherited default value is 1e-3)
-   double vtol() { return (fCalculatorType == kAsymptotic) ? 0.01 : 0.1; }
+   double vtol() override { return (fCalculatorType == kAsymptotic) ? 0.01 : 0.1; }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // Create workspace and model
@@ -1375,7 +1376,7 @@ public:
       AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc =
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 1);
-      HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
+      HypoTestInverter *hti = new HypoTestInverter(*calc, nullptr, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetVerbose(_verb);
 
@@ -1422,7 +1423,7 @@ public:
                   if (n > 1)
                      c2->cd(i + 1);
                   SamplingDistPlot *pl = plot->MakeTestStatPlot(i);
-                  if (pl == NULL)
+                  if (pl == nullptr)
                      return true;
                   pl->SetLogYaxis(true);
                   pl->Draw();
@@ -1494,10 +1495,10 @@ public:
    // larger value test tolerance especially when using toys (difference of <~ 0.1 observed between using Minuit or
    // Minuit2)
    //  (inherited default value is 1e-3)
-   double vtol() { return (fCalculatorType == kAsymptotic) ? 0.02 : 0.1; }
+   double vtol() override { return (fCalculatorType == kAsymptotic) ? 0.02 : 0.1; }
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
-   bool isTestAvailable()
+   bool isTestAvailable() override
    {
       if (fObsValueX < 0 || fObsValueX > 50) {
          Warning("isTestAvailable", "Observed value X=s*e+b must be in the range [0,70]. Skipping test...");
@@ -1510,7 +1511,7 @@ public:
       return true;
    }
 
-   bool testCode()
+   bool testCode() override
    {
 
       // Create workspace and model
@@ -1535,7 +1536,7 @@ public:
       AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc =
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 100);
-      HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
+      HypoTestInverter *hti = new HypoTestInverter(*calc, nullptr, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetVerbose(_verb);
 
@@ -1595,7 +1596,7 @@ public:
                   if (n > 1)
                      c2->cd(i + 1);
                   SamplingDistPlot *pl = plot->MakeTestStatPlot(i);
-                  if (pl == NULL)
+                  if (pl == nullptr)
                      return true;
                   pl->SetLogYaxis(true);
                   pl->Draw();
@@ -1635,7 +1636,7 @@ public:
    TestHypoTestCalculator(TFile *refFile, bool writeRef, Int_t verbose)
       : RooUnitTest("HypoTestCalculator - On / Off Problem", refFile, writeRef, verbose){};
 
-   bool testCode()
+   bool testCode() override
    {
 
       const Int_t xValue = 150;
@@ -1763,7 +1764,7 @@ static HypoTestCalculatorGeneric *buildHypoTestCalculator(const ECalculatorType 
                                                           const ModelConfig &nullModel, const ModelConfig &altModel,
                                                           const UInt_t toysNull, const UInt_t toysAlt)
 {
-   HypoTestCalculatorGeneric *calc = NULL;
+   HypoTestCalculatorGeneric *calc = nullptr;
 
    if (calculatorType == kAsymptotic) {
       AsymptoticCalculator *ac = new AsymptoticCalculator(data, altModel, nullModel);
@@ -1821,12 +1822,13 @@ buildTestStatistic(const ETestStatType testStatType, const ModelConfig &nullMode
       testStat = nevtts;
    } else { // kProfileLR, kProfileLROneSided and kProfileLRSigned
       auto *plts = new ProfileLikelihoodTestStat(*nullModel.GetPdf());
-      if (testStatType == kProfileLROneSided)
+      if (testStatType == kProfileLROneSided) {
          plts->SetOneSided(true);
-      else if (testStatType == kProfileLROneSidedDiscovery)
+      } else if (testStatType == kProfileLROneSidedDiscovery) {
          plts->SetOneSidedDiscovery(true);
-      else if (testStatType == kProfileLRSigned)
+      } else if (testStatType == kProfileLRSigned) {
          plts->SetSigned(true);
+      }
       plts->SetAlwaysReuseNLL(true);
       testStat = plts;
    }

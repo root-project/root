@@ -15,15 +15,10 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TChain.h>
-#include <RooDataHist.h>
 #include <TRandom3.h>
 #include <TH1F.h>
 #include <TCut.h>
 #include <TSystem.h>
-
-#include <TRandom3.h>
-#include <TH1F.h>
-#include <TCut.h>
 
 #include <fstream>
 #include <memory>
@@ -103,7 +98,8 @@ TEST(RooDataSet, BinnedClone)
    for (unsigned int i = 0; i < 2; ++i) {
       TFile file(filename[i], "RECREATE");
       TTree tree("cand", "cand");
-      double Mes, weight;
+      double Mes;
+      double weight;
       tree.Branch("Mes", &Mes);
       tree.Branch("weight", &weight);
 
@@ -142,7 +138,9 @@ TEST(RooDataSet, ReducingData)
 {
    // Test Data hist and such.
    TTree mytree("tree", "tree");
-   double mass_x, track0_chi2_x, track1_chi2_x;
+   double mass_x;
+   double track0_chi2_x;
+   double track1_chi2_x;
 
    mytree.Branch("track0_chi2", &track0_chi2_x, "track0_chi2/D");
    mytree.Branch("track1_chi2", &track1_chi2_x, "track1_chi2/D");
@@ -189,10 +187,11 @@ TEST(RooDataSet, ReducingData)
       // possible, since information is lost if entries to the left and right of the cut end up in the same bin.
       // Therefore, can only test <=
       std::unique_ptr<RooAbsData> reduced_binned_data{data->reduce(RooFit::Cut(chi2_test_cut))};
-      if (floor(chi2cutval) == chi2cutval)
+      if (floor(chi2cutval) == chi2cutval) {
          EXPECT_FLOAT_EQ(reduced_binned_data->sumEntries(), test_hist.Integral());
-      else
+      } else {
          EXPECT_LE(reduced_binned_data->sumEntries(), test_hist.Integral());
+      }
    }
 }
 

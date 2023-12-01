@@ -77,8 +77,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 /// Set up a simple workspace for later tests.
 class TestRooWorkspaceWithGaussian : public ::testing::Test {
 protected:
-  TestRooWorkspaceWithGaussian() :
-  Test()
+  TestRooWorkspaceWithGaussian()
   {
     RooRealVar x("x", "x", 1, 0, 10);
     RooRealVar mu("mu", "mu", 1, 0, 10);

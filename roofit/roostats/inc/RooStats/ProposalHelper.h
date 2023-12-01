@@ -41,11 +41,12 @@ namespace RooStats {
 
       virtual void SetCacheSize(Int_t size)
       {
-         if (size > 0)
+         if (size > 0) {
             fCacheSize = size;
-         else
-            coutE(Eval) << "Warning: Requested non-positive cache size: " <<
-                           size << ". Cache size unchanged." << std::endl;
+         } else {
+            coutE(Eval) << "Warning: Requested non-positive cache size: " << size << ". Cache size unchanged."
+                        << std::endl;
+         }
       }
 
       virtual void SetUpdateProposalParameters(bool updateParams)

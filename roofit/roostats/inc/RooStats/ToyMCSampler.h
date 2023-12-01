@@ -182,10 +182,11 @@ class ToyMCSampler: public TestStatSampler {
             oocoutE(nullptr,InputArguments) << "Cannot set test statistic for this index." << std::endl;
             return;
          }
-         if( fTestStatistics.size() == i)
+         if (fTestStatistics.size() == i) {
             fTestStatistics.push_back(testStatistic);
-         else
+         } else {
             fTestStatistics[i] = testStatistic;
+         }
       }
       void SetTestStatistic(TestStatistic *t) override { return SetTestStatistic(t,0); }
 

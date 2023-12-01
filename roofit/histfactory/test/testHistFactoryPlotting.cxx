@@ -157,8 +157,12 @@ TEST(HistFactoryPlotting, ComponentSelection)
    auto *curgeBg = static_cast<RooCurve *>(frame->findObject("pdf_bg"));
 
    for (int i = 0; i < curveFull->GetN(); ++i) {
-      double x1, x2, x3;
-      double y1, y2, y3;
+      double x1;
+      double x2;
+      double x3;
+      double y1;
+      double y2;
+      double y3;
       curveFull->GetPoint(i, x1, y1);
       curgeSig->GetPoint(i, x2, y2);
       curgeBg->GetPoint(i, x3, y3);

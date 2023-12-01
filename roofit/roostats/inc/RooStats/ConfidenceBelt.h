@@ -96,14 +96,10 @@ namespace RooStats {
   public:
      AcceptanceRegion() : fLookupIndex(0), fLowerLimit(0), fUpperLimit(0) {}
 
-    AcceptanceRegion(Int_t lu, double ll, double ul){
-      fLookupIndex = lu;
-      fLowerLimit = ll;
-      fUpperLimit = ul;
-    }
-    Int_t GetLookupIndex(){return fLookupIndex;}
-    double GetLowerLimit(){return fLowerLimit;}
-    double GetUpperLimit(){return fUpperLimit;}
+     AcceptanceRegion(Int_t lu, double ll, double ul) : fLookupIndex(lu), fLowerLimit(ll), fUpperLimit(ul) {}
+     Int_t GetLookupIndex() { return fLookupIndex; }
+     double GetLowerLimit() { return fLowerLimit; }
+     double GetUpperLimit() { return fUpperLimit; }
 
   private:
     Int_t fLookupIndex; // want a small footprint reference to the RooArgSet for particular parameter point

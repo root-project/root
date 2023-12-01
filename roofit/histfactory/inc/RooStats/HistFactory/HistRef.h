@@ -30,8 +30,8 @@ public:
    /// constructor - use gives away ownerhip of the given pointer
    HistRef(TH1 * h = nullptr) : fHist(h) {}
 
-   HistRef( const HistRef& other ) :
-   fHist() {
+   HistRef( const HistRef& other )
+   {
       if (other.fHist) fHist.reset(CopyObject(other.fHist.get()));
    }
 

@@ -14,7 +14,6 @@
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooCategoryProxy.h"
-#include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 
 namespace RooStats {

@@ -104,15 +104,11 @@ double RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooAr
    // save this snapshot
    if( fDetailedOutputEnabled ) {
       if( !fDetailedOutput ) {
-         fDetailedOutput = new RooArgSet( *(new RooRealVar("nullNLL","null NLL",0)), "detailedOut_SLRTS" );
+         fDetailedOutput = std::make_unique<RooArgSet>( *(new RooRealVar("nullNLL","null NLL",0)), "detailedOut_SLRTS" );
          fDetailedOutput->add( *(new RooRealVar("altNLL","alternate NLL",0)) );
       }
       fDetailedOutput->setRealValue( "nullNLL", nullNLL );
       fDetailedOutput->setRealValue( "altNLL", altNLL );
-
-//             std::cout << std::endl << "STORING THIS AS DETAILED OUTPUT:" << std::endl;
-//             fDetailedOutput->Print("v");
-//             std::cout << std::endl;
    }
 
 

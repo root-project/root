@@ -120,9 +120,9 @@ private:
    int _verb = 0;
 
 public:
-   PdfComparison(Int_t verbose = 0) : _verb{verbose}
+   PdfComparison(Int_t verbose = 0) : fOldDirectory(gSystem->pwd()), _verb{verbose}
    {
-      fOldDirectory = gSystem->pwd();
+
       bool ret = gSystem->Exec("tar -xf HistFactoryTest.tar") == 0;
       if (!ret)
          Error("PdfComparison", "Error unpacking test file HistFactoryTest.tar");
@@ -392,7 +392,8 @@ private:
       std::unique_ptr<RooDataSet> pSamplingPoints{rPDF1.generate(rAllObservables, NumEvents(iSamplingPoints))};
       TH1F *h_diff = new TH1F("h_diff", "relative difference between both PDF;#Delta;Points / 1e-4", 200, -0.01, 0.01);
 
-      float fPDF1value, fPDF2value;
+      float fPDF1value;
+      float fPDF2value;
       for (Int_t i = 0; i < pSamplingPoints->numEntries(); ++i) {
          pVars1->assign(*pSamplingPoints->get(i));
          pVars2->assign(*pSamplingPoints->get(i));

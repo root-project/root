@@ -130,11 +130,12 @@ namespace RooStats {
       /// Keys PDF sometimes does not have extremely high accuracy.
       virtual void SetKeysConfidenceAccuracy(double epsilon)
       {
-         if (epsilon < 0)
+         if (epsilon < 0) {
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
                                   << "negative epsilon value" << std::endl;
-         else
+         } else {
             fEpsilon = epsilon;
+         }
       }
 
       /// When the shortest interval using Keys PDF could not be found to have
@@ -153,11 +154,12 @@ namespace RooStats {
       /// TMath::Abs(a - b) < TMath::Abs(delta * (a + b)/2)
       virtual void SetKeysTerminationThreshold(double delta)
       {
-         if (delta < 0.)
+         if (delta < 0.) {
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
                                   << "negative delta value" << std::endl;
-         else
+         } else {
             fDelta = delta;
+         }
       }
 
    protected:

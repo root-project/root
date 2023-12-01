@@ -22,20 +22,21 @@
 
 class RooCatType : public TObject, public RooPrintable {
 public:
-  inline RooCatType() : TObject(), RooPrintable() {
-    // Default constructor
-    _value = 0 ; _label[0] = 0 ;
+  inline RooCatType()
+  {
+     _label[0] = 0;
   }
 
-  inline RooCatType(const char* name, Int_t value) : TObject(), RooPrintable(), _value(value) {
-    // Constructor with state name and index value
-    SetName(name) ;
+  /// Constructor with state name and index value.
+  inline RooCatType(const char *name, Int_t value) : _value(value)
+  {
+     SetName(name);
   }
+  /// Copy constructor.
   inline RooCatType(const RooCatType& other) :
     TObject(other), RooPrintable(other), _value(other._value) {
-    // Copy constructor
     strlcpy(_label,other._label,256) ;
-  } ;
+  }
 
   TObject* Clone(const char*) const override { return new RooCatType(*this); }
 
@@ -97,7 +98,7 @@ protected:
 
   friend class RooAbsCategoryLValue ;
   friend class RooAbsCategory ;
-  Int_t _value ;     ///< Index value
+  Int_t _value = 0;  ///< Index value
   char _label[256] ; ///< State name
 
   ClassDefOverride(RooCatType,1) // Category state, (name,index) pair

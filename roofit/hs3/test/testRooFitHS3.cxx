@@ -19,7 +19,6 @@
 #include <RooPoisson.h>
 #include <RooProdPdf.h>
 #include <RooRealVar.h>
-#include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 

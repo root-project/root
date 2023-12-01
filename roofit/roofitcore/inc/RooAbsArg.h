@@ -61,11 +61,9 @@ class CodeSquashContext;
 
 class RooRefArray : public TObjArray {
  public:
-  RooRefArray() : TObjArray() {
-  } ;
-  RooRefArray(const RooRefArray& other) : TObjArray(other) {
-  }
-  RooRefArray& operator=(const RooRefArray& other) = default;
+    RooRefArray() = default;
+    RooRefArray(const RooRefArray &other) : TObjArray(other) {}
+    RooRefArray &operator=(const RooRefArray &other) = default;
  protected:
   ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;

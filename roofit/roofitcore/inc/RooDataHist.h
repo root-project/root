@@ -118,7 +118,8 @@ public:
   /// \copydoc RooAbsData::weightError(RooAbsData::ErrorType) const
   double weightError(ErrorType etype=Poisson) const override {
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    double lo,hi ;
+    double lo;
+    double hi;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
   }

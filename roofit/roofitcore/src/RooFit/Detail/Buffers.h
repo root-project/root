@@ -22,8 +22,6 @@
 #include <cstddef>
 #include <memory>
 
-#include <memory>
-
 namespace RooFit {
 namespace Detail {
 

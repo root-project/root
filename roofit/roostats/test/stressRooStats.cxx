@@ -246,10 +246,11 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
       }
    } else {
       const Char_t *os = gSystem->Getenv("OS");
-      if (!os)
+      if (!os) {
          cout << "*  SYS: Windows 95" << endl;
-      else
+      } else {
          cout << "*  SYS: " << os << " " << gSystem->Getenv("PROCESSOR_IDENTIFIER") << endl;
+      }
    }
 
    cout << setw(lineWidth) << setfill('*') << "" << endl;

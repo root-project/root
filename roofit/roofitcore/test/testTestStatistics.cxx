@@ -4,7 +4,6 @@
 
 #include <RooBinning.h>
 #include <RooCategory.h>
-#include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>

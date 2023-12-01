@@ -106,9 +106,10 @@ namespace RooStats {
       }
       else {
          // exclude constants variables
-         for (auto *var : static_range_cast<RooRealVar *>(set))
+         for (auto *var : static_range_cast<RooRealVar *>(set)) {
             if (!var->isConstant() )
                var->randomize();
+         }
       }
 
    }
