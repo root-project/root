@@ -40,8 +40,8 @@ endfunction()
 include(copy_standalone.cmake)
 
 # Copy these files in if needed
-copy_standalone(SOURCE ../.. DESTINATION . OUTPUT VERSION_FILE
-                FILES core/foundation/inc/ROOT/RVersion.hxx)
+copy_standalone(SOURCE ../../core/foundation/inc/ROOT DESTINATION . OUTPUT VERSION_FILE
+                FILES RVersion.hxx)
 
 copy_standalone(SOURCE ../.. DESTINATION .
                 FILES LGPL2_1.txt)
