@@ -66,6 +66,12 @@ public:
                                    .MoveDescriptor()
                                    .Unwrap());
       }
+      descBuilder.AddClusterGroup(ROOT::Experimental::RClusterGroupDescriptorBuilder()
+                                    .ClusterGroupId(0)
+                                    .MinEntry(0)
+                                    .EntrySpan(6)
+                                    .MoveDescriptor()
+                                    .Unwrap());
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
    }
