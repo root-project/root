@@ -21,6 +21,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TRandom3.h"
+#include "TMD5.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -253,7 +254,7 @@ unsigned RWebWindow::GetDisplayConnection() const
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Find connection with given websocket id
 
-std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindOrCreateConnection(unsigned wsid, bool make_new, const char *query)
+std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindOrCreateConnection(unsigned wsid, bool make_new, const char *query, bool remote)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -263,35 +264,37 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindOrCreateConnection(unsigned
    }
 
    // put code to create new connection here to stay under same locked mutex
-   if (make_new) {
-      // check if key was registered already
+   if (!make_new)
+      return nullptr;
 
-      std::shared_ptr<WebConn> key;
-      std::string keyvalue;
+   std::shared_ptr<WebConn> conn;
+   std::string key, ntry;
 
-      if (query) {
-         TUrl url;
-         url.SetOptions(query);
-         if (url.HasOption("key"))
-            keyvalue = url.GetValueFromOptions("key");
+   if (query) {
+      TUrl url;
+      url.SetOptions(query);
+      if (url.HasOption("key"))
+         key = url.GetValueFromOptions("key");
+      if (url.HasOption("ntry"))
+         ntry = url.GetValueFromOptions("ntry");
+   }
+
+   // check if in pending connection exactly this combination was checked
+   for (size_t n = 0; n < fPendingConn.size(); ++n)
+      if (_CanConnectWith(fPendingConn[n], key, ntry, remote, false)) {
+         conn = std::move(fPendingConn[n]);
+         fPendingConn.erase(fPendingConn.begin() + n);
+         break;
       }
 
-      for (size_t n = 0; n < fPendingConn.size(); ++n)
-         if (fPendingConn[n]->fKey == keyvalue) {
-            key = std::move(fPendingConn[n]);
-            fPendingConn.erase(fPendingConn.begin() + n);
-            break;
-         }
-
-      if (key) {
-         key->fWSId = wsid;
-         key->fActive = true;
-         key->fKey.clear(); // connection accepted, one can remove key
-         key->ResetStamps(); // TODO: probably, can be moved outside locked area
-         fConn.emplace_back(key);
-      } else {
-         fConn.emplace_back(std::make_shared<WebConn>(++fConnCnt, wsid));
-      }
+   if (conn) {
+      conn->fWSId = wsid;
+      conn->fActive = true;
+      conn->fKey.clear(); // connection accepted, one can remove key
+      conn->ResetStamps(); // TODO: probably, can be moved outside locked area
+      fConn.emplace_back(conn);
+   } else if (!IsRequireAuthKey() && (!fConnLimit || (fConn.size() < fConnLimit))) {
+      fConn.emplace_back(std::make_shared<WebConn>(++fConnCnt, wsid));
    }
 
    return nullptr;
@@ -547,6 +550,51 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::_FindConnWithKey(const std::str
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Check if provided key, ntry parameters could be accepted
+
+bool RWebWindow::_CanConnectWith(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool first)
+{
+   if (!conn)
+      return false;
+
+   int intry = ntry.empty() ? -1 : std::stoi(ntry);
+
+   auto code = TString::Format("%s:%s:%s", fMgr->fSessionKey.c_str(), ntry.c_str(), conn->fKey.c_str());
+   TMD5 m;
+   m.Update((const UChar_t *) code.Data(), code.Length());
+   m.Final();
+   std::string expected = m.AsString();
+
+   if (!IsRequireAuthKey())
+      return (conn->fKey.empty() && key.empty()) || (key == conn->fKey) || (key == expected);
+
+   // for local connection simple key can be used
+   if (!remote && (key == conn->fKey))
+      return true;
+
+   if (key == expected) {
+      if (first) {
+         if (conn->fKeyUsed >= intry) {
+            // this is indication of network sniffing, already checked hashed value was shown again!!!
+            // client sends id with increasing counter, if previous value is presented it is BAD
+            R__LOG_ERROR(WebGUILog()) << "Detect MD5 connection hash send before, possible sniffing attack!!!";
+            return false;
+         }
+         // remember counter, it should prevent trying previous hash values
+         conn->fKeyUsed = intry;
+      } else if (conn->fKeyUsed != intry) {
+         // this is rather error condition, should never happen
+         R__LOG_ERROR(WebGUILog()) << "Connection failure with MD5 check";
+         return false;
+      }
+      return true;
+   }
+
+   return false;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true if provided key value already exists (in processes map or in existing connections)
 
 bool RWebWindow::HasKey(const std::string &key) const
@@ -747,33 +795,32 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          }
       }
 
-      if (IsRequireAuthKey()) {
-         if(!url.HasOption("key")) {
-            R__LOG_DEBUG(0, WebGUILog()) << "key parameter not provided in url";
-            return false;
-         }
+      if (!IsRequireAuthKey())
+         return true;
 
-         auto key = url.GetValueFromOptions("key");
-
-         auto conn = _FindConnWithKey(key);
-         if (!conn) {
-            R__LOG_ERROR(WebGUILog()) << "connection with key " << key << " not found ";
-            return false;
-         }
-
-         if (conn->fKeyUsed > 0) {
-            R__LOG_ERROR(WebGUILog()) << "key " << key << " was used for establishing connection, call ShowWindow again";
-            return false;
-         }
-
-         conn->fKeyUsed = 1;
+      if(!url.HasOption("key")) {
+         R__LOG_DEBUG(0, WebGUILog()) << "key parameter not provided in url";
+         return false;
       }
 
-      return true;
+      std::string key, ntry;
+      key = url.GetValueFromOptions("key");
+      if(url.HasOption("ntry"))
+         ntry = url.GetValueFromOptions("ntry");
+
+      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
+
+      for (auto &conn : fPendingConn)
+         if (_CanConnectWith(conn, key, ntry, remote, true))
+             return true;
+
+      return false;
    }
 
    if (arg.IsMethod("WS_READY")) {
-      auto conn = FindOrCreateConnection(arg.GetWSId(), true, arg.GetQuery());
+      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
+
+      auto conn = FindOrCreateConnection(arg.GetWSId(), true, arg.GetQuery(), remote);
 
       if (conn) {
          R__LOG_ERROR(WebGUILog()) << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
