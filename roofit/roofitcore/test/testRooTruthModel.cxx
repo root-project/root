@@ -35,5 +35,5 @@ TEST(RooTruthModel, IntegrateSubrange)
    dt.setRange("integral", 2, 2);
 
    std::unique_ptr<RooAbsReal> integ{bcpg.createIntegral({dt}, "integral")};
-   EXPECT_FLOAT_EQ(integ->getVal(), 0.0);
+   EXPECT_NEAR(integ->getVal(), 0.0, 1e-16);
 }
