@@ -79,6 +79,24 @@ public:
       std::size_t fOutBytes = 0;
    };
 
+   /// Implementations may enforce limits on the use of vector reads. These limits can depend on the server or
+   /// the specific file opened and can be queried per RRawFile object through GetReadVLimits().
+   /// Note that due to such limits, a vector read with a single request can behave differently from a Read() call.
+   struct RIOVecLimits {
+      /// Maximum number of elements in a ReadV request vector
+      std::size_t fMaxReqs = static_cast<std::size_t>(-1);
+      /// Maximum size in bytes of any single request in the request vector
+      std::size_t fMaxSingleSize = static_cast<std::size_t>(-1);
+      /// Maximum size in bytes of the sum of requests in the vector
+      std::uint64_t fMaxTotalSize = static_cast<std::uint64_t>(-1);
+
+      bool HasReqsLimit() const { return fMaxReqs != static_cast<std::size_t>(-1); }
+      bool HasSizeLimit() const
+      {
+         return fMaxSingleSize != static_cast<std::size_t>(-1) || fMaxTotalSize != static_cast<std::uint64_t>(-1);
+      }
+   };
+
 private:
    /// Don't change without adapting ReadAt()
    static constexpr unsigned int kNumBlockBuffers = 2;
@@ -172,6 +190,8 @@ public:
 
    /// Opens the file if necessary and calls ReadVImpl
    void ReadV(RIOVec *ioVec, unsigned int nReq);
+   /// Returns the limits regarding the ioVec input to ReadV for this specific file; may open the file as a side-effect.
+   virtual RIOVecLimits GetReadVLimits() { return RIOVecLimits(); }
 
    /// Memory mapping according to POSIX standard; in particular, new mappings of the same range replace older ones.
    /// Mappings need to be aligned at page boundaries, therefore the real offset can be smaller than the desired value.
