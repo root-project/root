@@ -44,6 +44,7 @@ public:
    ~RRawFileNetXNG();
    std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final { return kFeatureHasSize | kFeatureHasAsyncIo; }
+   RIOVecLimits GetReadVLimits() final { return RIOVecLimits{1024, 2097136, static_cast<std::uint64_t>(-1)}; }
 };
 
 } // namespace Internal
