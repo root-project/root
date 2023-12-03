@@ -64,10 +64,10 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
      _useHorizMorph(true)
 {
    // morph parameters
-   initializeParameters(parList);
+   _parList.addTyped<RooAbsReal>(parList);
 
    // observables
-   initializeObservables(obsList);
+   _obsList.addTyped<RooAbsReal>(obsList);
 
    _pdfList.add(_referenceGrid._pdfList);
 
@@ -106,10 +106,10 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    // morph parameters
    RooArgList parList;
    parList.add(_m);
-   initializeParameters(parList);
+   _parList.addTyped<RooAbsReal>(parList);
 
    // observables
-   initializeObservables(varList);
+   _obsList.addTyped<RooAbsReal>(varList);
 
    // general initialization
    initialize();
@@ -161,10 +161,10 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    // morph parameters
    RooArgList parList;
    parList.add(_m);
-   initializeParameters(parList);
+   _parList.addTyped<RooAbsReal>(parList);
 
    // observables
-   initializeObservables(varList);
+   _obsList.addTyped<RooAbsReal>(varList);
 
    // general initialization
    initialize();
@@ -193,32 +193,6 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, co
 RooMomentMorphFuncND::~RooMomentMorphFuncND()
 {
    TRACE_DESTROY;
-}
-
-//_____________________________________________________________________________
-void RooMomentMorphFuncND::initializeParameters(const RooArgList &parList)
-{
-   for (auto *par : parList) {
-      if (!dynamic_cast<RooAbsReal *>(par)) {
-         coutE(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") ERROR: parameter " << par->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         throw string("RooMomentMorphFuncND::initializeParameters() ERROR parameter is not of type RooAbsReal");
-      }
-      _parList.add(*par);
-   }
-}
-
-//_____________________________________________________________________________
-void RooMomentMorphFuncND::initializeObservables(const RooArgList &obsList)
-{
-   for (auto *var : obsList) {
-      if (!dynamic_cast<RooAbsReal *>(var)) {
-         coutE(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         throw string("RooMomentMorphFuncND::initializeObservables() ERROR variable is not of type RooAbsReal");
-      }
-      _obsList.add(*var);
-   }
 }
 
 //_____________________________________________________________________________

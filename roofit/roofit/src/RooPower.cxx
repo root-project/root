@@ -64,22 +64,8 @@ RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const Roo
                             << ") ERROR: coefficient list and exponent list must be of same length" << std::endl;
       return;
    }
-   for (auto coef : coefList) {
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutE(InputArguments) << "RooPower::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _coefList.add(*coef);
-   }
-   for (auto exp : expList) {
-      if (!dynamic_cast<RooAbsReal *>(exp)) {
-         coutE(InputArguments) << "RooPower::ctor(" << GetName() << ") ERROR: coefficient " << exp->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _expList.add(*exp);
-   }
+   _coefList.addTyped<RooAbsReal>(coefList);
+   _expList.addTyped<RooAbsReal>(expList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

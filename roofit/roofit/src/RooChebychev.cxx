@@ -49,15 +49,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this)
 {
-  for (const auto coef : coefList) {
-    if (!dynamic_cast<RooAbsReal*>(coef)) {
-      coutE(InputArguments) << "RooChebychev::ctor(" << GetName() <<
-       ") ERROR: coefficient " << coef->GetName() <<
-       " is not of type RooAbsReal" << std::endl ;
-      throw std::invalid_argument("Wrong input arguments for RooChebychev");
-    }
-    _coefList.add(*coef) ;
-  }
+  _coefList.addTyped<RooAbsReal>(coefList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
