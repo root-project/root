@@ -158,7 +158,6 @@ protected:
 
   std::vector<itVec> _sortTVIdcs; //!
 
-  std::vector<std::string> _varName;
   mutable std::vector<double> _rho;
   RooArgSet _dataVars;
   mutable std::vector<double> _x; // Cache for x values
@@ -200,7 +199,7 @@ protected:
 
   RooChangeTracker *_tracker{nullptr}; //
 
-  ClassDefOverride(RooNDKeysPdf, 2) // General N-dimensional non-parametric kernel estimation p.d.f
+  ClassDefOverride(RooNDKeysPdf, 3) // General N-dimensional non-parametric kernel estimation p.d.f
 };
 
 #endif

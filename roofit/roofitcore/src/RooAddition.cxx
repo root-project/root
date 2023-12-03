@@ -64,18 +64,12 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
   , _set("!set","set of components",this)
   , _cacheMgr(this,10)
 {
-  for (RooAbsArg *comp : sumSet) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " is not of type RooAbsReal" << std::endl;
-      RooErrorHandler::softAbort() ;
-    }
-    _set.add(*comp) ;
+  _set.addTyped<RooAbsReal>(sumSet);
 #ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+  for (RooAbsArg *comp : sumSet) {
     if (takeOwnership) _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
-#endif
   }
-
+#endif
 }
 
 

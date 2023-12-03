@@ -73,17 +73,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
      _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
-  // Constructor
-
-  for (const auto var : varList) {
-    if (!dynamic_cast<const RooAbsReal*>(var)) {
-      coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-             << " is not of type RooAbsReal" << endl ;
-      R__ASSERT(0) ;
-    }
-    _varList.add(*var) ;
-    _varName.push_back(var->GetName());
-  }
+  _varList.addTyped<RooAbsReal>(varList);
 
   createPdf(true, data);
 }
@@ -98,15 +88,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
      _options(options), _widthFactor(rho), _nSigma(nSigma), _rotate(rotate),
      _sortInput(sortInput), _nAdpt(1)
 {
-   for (const auto var : varList) {
-      if (!dynamic_cast<const RooAbsReal *>(var)) {
-         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         assert(0);
-      }
-      _varList.add(*var);
-      _varName.push_back(var->GetName());
-   }
+   _varList.addTyped<RooAbsReal>(varList);
 
    createPdf(true, *std::unique_ptr<RooDataSet>{createDatasetFromHist(varList, hist)});
 }
@@ -120,15 +102,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
      _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
-  for (const auto var : varList) {
-    if (!dynamic_cast<const RooAbsReal*>(var)) {
-       coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-                             << " is not of type RooAbsReal" << endl;
-       R__ASSERT(0);
-    }
-    _varList.add(*var) ;
-    _varName.push_back(var->GetName());
-  }
+  _varList.addTyped<RooAbsReal>(varList);
 
   // copy rho widths
   if(int( _varList.size()) != rho.GetNrows() ) {
@@ -159,15 +133,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
      _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
-   for (const auto var : varList) {
-      if (!dynamic_cast<RooAbsReal *>(var)) {
-         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         assert(0);
-      }
-      _varList.add(*var);
-      _varName.push_back(var->GetName());
-   }
+   _varList.addTyped<RooAbsReal>(varList);
 
    _rho.resize(rhoList.size(), 1.0);
 
@@ -206,15 +172,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
      _options(options), _widthFactor(-1), _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput),
      _nAdpt(1)
 {
-   for (const auto var : varList) {
-      if (!dynamic_cast<RooAbsReal *>(var)) {
-         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         assert(0);
-      }
-      _varList.add(*var);
-      _varName.push_back(var->GetName());
-   }
+   _varList.addTyped<RooAbsReal>(varList);
 
    // copy rho widths
    _rho.resize(rhoList.size(), 1.0);
@@ -253,7 +211,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
    _varList.add(x);
-   _varName.push_back(x.GetName());
 
    if (mirror != NoMirror) {
       if (mirror != MirrorBoth) {
@@ -277,8 +234,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, R
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
    _varList.add(RooArgSet(x, y));
-   _varName.push_back(x.GetName());
-   _varName.push_back(y.GetName());
 
    createPdf(true, data);
 }
@@ -309,7 +264,6 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
      _weights1(other._weights1),
      _weights(_options.Contains("a") ? &_weights1 : &_weights0),
      _sortTVIdcs(other._sortTVIdcs),
-     _varName(other._varName),
      _rho(other._rho),
      _x(other._x),
      _x0(other._x0),
@@ -539,7 +493,7 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
   const RooArgSet* values= data.get();
   vector<RooRealVar*> dVars(_nDim);
   for  (Int_t j=0; j<_nDim; j++) {
-    dVars[j] = static_cast<RooRealVar*>(values->find(_varName[j].c_str()));
+    dVars[j] = static_cast<RooRealVar*>(values->find(_varList[j].GetName()));
     _x0[j]=_x1[j]=_x2[j]=0.;
   }
 

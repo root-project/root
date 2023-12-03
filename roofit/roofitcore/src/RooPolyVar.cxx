@@ -59,14 +59,7 @@ RooPolyVar::RooPolyVar(const char *name, const char *title, RooAbsReal &x, const
       _lowestOrder = 0;
    }
 
-   for (RooAbsArg *coef : coefList) {
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _coefList.add(*coef);
-   }
+   _coefList.addTyped<RooAbsReal>(coefList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

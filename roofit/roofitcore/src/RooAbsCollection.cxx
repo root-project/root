@@ -1578,3 +1578,13 @@ bool RooAbsCollection::hasSameLayout(const RooAbsCollection& other) const {
 
   return true;
 }
+
+void RooAbsCollection::throwAddTypedException(TClass *klass, RooAbsArg *arg)
+{
+   std::string typeName = klass->GetName();
+   std::stringstream msg;
+   msg << "RooAbsCollection::addTyped<" << typeName << ">() ERROR: component " << arg->GetName() << " is not of type "
+       << typeName;
+   oocoutE(nullptr, InputArguments) << msg.str() << std::endl;
+   throw std::invalid_argument(msg.str());
+}

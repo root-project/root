@@ -55,23 +55,10 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title, RooAbsReal &
      _useHorizMorph(true)
 {
   // observables
-  for (auto *var : varList) {
-    if (!dynamic_cast<RooAbsReal*>(var)) {
-      coutE(InputArguments) << "RooMomentMorph::ctor(" << GetName() << ") ERROR: variable " << var->GetName() << " is not of type RooAbsReal" << std::endl ;
-      throw std::string("RooPolyMorh::ctor() ERROR variable is not of type RooAbsReal") ;
-    }
-    _varList.add(*var) ;
-  }
+  _varList.addTyped<RooAbsReal>(varList);
 
   // reference p.d.f.s
-
-  for (auto const *pdf : pdfList) {
-    if (!dynamic_cast<RooAbsPdf const*>(pdf)) {
-      coutE(InputArguments) << "RooMomentMorph::ctor(" << GetName() << ") ERROR: pdf " << pdf->GetName() << " is not of type RooAbsPdf" << std::endl ;
-      throw std::string("RooPolyMorh::ctor() ERROR pdf is not of type RooAbsPdf") ;
-    }
-    _pdfList.add(*pdf) ;
-  }
+  _pdfList.addTyped<RooAbsPdf>(pdfList);
 
   // initialization
   initialize();
@@ -92,22 +79,10 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title, RooAbsReal &
      _useHorizMorph(true)
 {
   // observables
-  for (auto *var : varList) {
-    if (!dynamic_cast<RooAbsReal*>(var)) {
-      coutE(InputArguments) << "RooMomentMorph::ctor(" << GetName() << ") ERROR: variable " << var->GetName() << " is not of type RooAbsReal" << std::endl ;
-      throw std::string("RooPolyMorh::ctor() ERROR variable is not of type RooAbsReal") ;
-    }
-    _varList.add(*var) ;
-  }
+  _varList.addTyped<RooAbsReal>(varList);
 
   // reference p.d.f.s
-  for (auto const *pdf : pdfList) {
-    if (!dynamic_cast<RooAbsPdf const*>(pdf)) {
-      coutE(InputArguments) << "RooMomentMorph::ctor(" << GetName() << ") ERROR: pdf " << pdf->GetName() << " is not of type RooAbsPdf" << std::endl ;
-      throw std::string("RooPolyMorh::ctor() ERROR pdf is not of type RooAbsPdf") ;
-    }
-    _pdfList.add(*pdf) ;
-  }
+  _pdfList.addTyped<RooAbsPdf>(pdfList);
 
   // reference points in m
 

@@ -103,7 +103,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins = GetNumBins( vars );
 
   // Add the parameters (with checking)
-  addVarSet( vars );
+  _dataVars.addTyped<RooRealVar>(vars);
   addParamSet( paramSet );
 }
 
@@ -138,7 +138,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins = GetNumBins( vars );
 
   // Add the parameters (with checking)
-  addVarSet( vars );
+  _dataVars.addTyped<RooRealVar>(vars);
   addParamSet( paramSet );
 }
 
@@ -516,27 +516,6 @@ Int_t ParamHistFunc::getCurrentBin() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return 0 for success
-/// return 1 for failure
-/// Check that the elements
-/// are actually RooRealVar's
-/// If so, add them to the
-/// list of vars
-Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
-  for(auto const& comp : vars) {
-    if (!dynamic_cast<RooRealVar*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in variables list is not of type RooRealVar";
-      coutE(InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
-    }
-    _dataVars.add( *comp );
-  }
-  return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // return 0 for success
@@ -563,16 +542,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // If so, add them to the
   // list of params
 
-  for (const auto comp : params) {
-    if (!dynamic_cast<const RooAbsReal*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in parameter list is not of type RooAbsReal.";
-      coutE(InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
-    }
-
-    _paramSet.add( *comp );
-  }
+  _paramSet.addTyped<RooAbsReal>(params);
 
   return 0;
 }

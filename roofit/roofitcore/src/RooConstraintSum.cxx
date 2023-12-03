@@ -48,15 +48,7 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
   _set1("set1","First set of components",this),
   _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
 {
-  for (const auto comp : constraintSet) {
-    if (!dynamic_cast<RooAbsPdf*>(comp)) {
-      coutE(InputArguments) << "RooConstraintSum::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-                            << " is not of type RooAbsPdf" << std::endl ;
-      RooErrorHandler::softAbort() ;
-    }
-    _set1.add(*comp) ;
-  }
-
+  _set1.addTyped<RooAbsPdf>(constraintSet);
   _paramSet.add(normSet) ;
 }
 

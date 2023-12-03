@@ -131,8 +131,6 @@ public:
 
 protected:
    void initialize();
-   void initializeParameters(const RooArgList &parList);
-   void initializeObservables(const RooArgList &obsList);
 
    RooAbsReal *sumFunc(const RooArgSet *nset);
    CacheElem *getCache(const RooArgSet *nset) const;

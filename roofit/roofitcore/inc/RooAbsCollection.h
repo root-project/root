@@ -16,13 +16,11 @@
 #ifndef ROO_ABS_COLLECTION
 #define ROO_ABS_COLLECTION
 
-#include "TObject.h"
-#include "TString.h"
-#include "RooAbsArg.h"
-#include "RooPrintable.h"
-#include "RooCmdArg.h"
-#include "RooLinkedListIter.h"
-#include "RooFit/UniqueId.h"
+#include <RooAbsArg.h>
+#include <RooCmdArg.h>
+#include <RooFit/UniqueId.h>
+#include <RooLinkedListIter.h>
+#include <RooPrintable.h>
 
 // The range casts are not used in this file, but if you want to work with
 // RooFit collections you also want to have static_range_cast and
@@ -30,6 +28,10 @@
 #include <ROOT/RRangeCast.hxx>
 
 #include <ROOT/RSpan.hxx>
+
+#include <TClass.h>
+#include <TObject.h>
+#include <TString.h>
 
 #include <string>
 #include <unordered_map>
@@ -148,6 +150,32 @@ public:
   bool add(const RooAbsCollection& list, bool silent=false) {
     return add(list._list.begin(), list._list.end(), silent);
   }
+   /**
+    * \brief Adds elements of a given RooAbsCollection to the container if they match the specified type.
+    *
+    * This function iterates through the elements of the provided RooAbsCollection and checks if each element
+    * matches the specified type. If any element doesn't match the type, it throws an exception.
+    *
+    * \tparam Arg_t The type to match for elements in the collection. Must inherit from RooAbsArg.
+    * \param list The RooAbsCollection containing elements to be added.
+    * \param silent Forwarded to the non-typed add function. If true,
+    *               suppresses error messages when adding elements, e.g. when
+    *               the collection is a RooArgSet and the element is already in
+    *               the set.
+    * \return Returns true if all elements could be added, else false.
+    *
+    * \throws std::invalid_argument if an element in the collection doesn't match the specified type.
+    */
+   template <class Arg_t>
+   bool addTyped(const RooAbsCollection &list, bool silent = false)
+   {
+      for (RooAbsArg *arg : list) {
+         if (!dynamic_cast<Arg_t *>(arg)) {
+            throwAddTypedException(Arg_t::Class(), arg);
+         }
+      }
+      return add(list, silent);
+   }
   virtual bool addOwned(const RooAbsCollection& list, bool silent=false);
   bool addOwned(RooAbsCollection&& list, bool silent=false);
   virtual void   addClone(const RooAbsCollection& list, bool silent=false);
@@ -416,6 +444,8 @@ private:
   std::size_t _sizeThresholdForMapSearch = 100; ///<!
 
   void insert(RooAbsArg*);
+
+  static void throwAddTypedException(TClass *klass, RooAbsArg *arg);
 
   const RooFit::UniqueId<RooAbsCollection> _uniqueId; //!
 

@@ -47,23 +47,8 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
   _paramSet("!paramSet","Parameters",this),
   _cacheMgr(this, 1, true, false)
 {
-  for (const auto comp : obsSet) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " in observable list is not of type RooAbsReal" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
-    _obsSet.add(*comp) ;
-  }
-
-  for (const auto comp : paramSet) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " in parameter list is not of type RooAbsReal" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
-    _paramSet.add(*comp) ;
-  }
+  _obsSet.addTyped<RooAbsReal>(obsSet);
+  _paramSet.addTyped<RooAbsReal>(paramSet);
 
   // use a different integrator by default.
   if(paramSet.size()==1)

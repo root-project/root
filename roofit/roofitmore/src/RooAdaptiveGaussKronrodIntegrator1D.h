@@ -36,7 +36,7 @@ public:
    bool setLimits(double *xmin, double *xmax) override;
    bool setUseIntegrandLimits(bool flag) override
    {
-      // If flag is true, intergration limits are taken from definition in input function binding
+      // If flag is true, integration limits are taken from definition in input function binding
       _useIntegrandLimits = flag;
       return true;
    }

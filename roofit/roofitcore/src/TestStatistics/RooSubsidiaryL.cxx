@@ -44,14 +44,7 @@ RooSubsidiaryL::RooSubsidiaryL(const std::string &parent_pdf_name, const RooArgS
                                const RooArgSet &parameter_set)
    : RooAbsL(nullptr, nullptr, 0, 0, RooAbsL::Extended::No), parent_pdf_name_(parent_pdf_name)
 {
-   for (const auto comp : pdfs) {
-      if (!dynamic_cast<RooAbsPdf *>(comp)) {
-         oocoutE(nullptr, InputArguments) << "RooSubsidiaryL::ctor(" << GetName() << ") ERROR: component "
-                                               << comp->GetName() << " is not of type RooAbsPdf" << std::endl;
-         RooErrorHandler::softAbort();
-      }
-      subsidiary_pdfs_.add(*comp);
-   }
+   subsidiary_pdfs_.addTyped<RooAbsPdf>(pdfs);
    parameter_set_.add(parameter_set);
 }
 
