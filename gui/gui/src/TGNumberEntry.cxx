@@ -66,8 +66,10 @@ pressing the alt key at the same time.
 
 Changing the number in the widget will generate the event:
   - kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.
+
 Hitting the enter key will generate:
   - kC_TEXTENTRY, kTE_ENTER, widget id, 0.
+
 Hitting the tab key will generate:
   - kC_TEXTENTRY, kTE_TAB, widget id, 0.
 
