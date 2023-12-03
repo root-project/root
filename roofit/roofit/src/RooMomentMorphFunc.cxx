@@ -52,27 +52,11 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
      _setting(setting),
      _useHorizMorph(true)
 {
-   // CTOR
-
    // observables
-   for (auto *var : varList) {
-      if (!dynamic_cast<RooAbsReal *>(var)) {
-         coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         throw string("RooPolyMorh::ctor() ERROR variable is not of type RooAbsReal");
-      }
-      _varList.add(*var);
-   }
+  _varList.addTyped<RooAbsReal>(varList);
 
    // reference p.d.f.s
-   for (auto const *pdf : pdfList) {
-      if (!dynamic_cast<RooAbsReal const*>(pdf)) {
-         coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: func " << pdf->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         throw string("RooMomentMorhFunc::ctor() ERROR func is not of type RooAbsReal");
-      }
-      _pdfList.add(*pdf);
-   }
+  _pdfList.addTyped<RooAbsPdf>(pdfList);
 
    // initialization
    initialize();
@@ -90,27 +74,11 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
      _setting(setting),
      _useHorizMorph(true)
 {
-   // CTOR
-
    // observables
-   for (auto *var : varList) {
-      if (!dynamic_cast<RooAbsReal *>(var)) {
-         coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         throw string("RooMomentMorh::ctor() ERROR variable is not of type RooAbsReal");
-      }
-      _varList.add(*var);
-   }
+  _varList.addTyped<RooAbsReal>(varList);
 
    // reference p.d.f.s
-   for (auto const *pdf : pdfList){
-      if (!dynamic_cast<RooAbsPdf const*>(pdf)) {
-         coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: function " << pdf->GetName()
-                               << " is not of type RooAbsReal" << endl;
-         throw string("RooMomentMorh::ctor() ERROR function is not of type RooAbsReal");
-      }
-      _pdfList.add(*pdf);
-   }
+  _pdfList.addTyped<RooAbsPdf>(pdfList);
 
    // reference points in m
 
