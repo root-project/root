@@ -254,47 +254,13 @@ unsigned RWebWindow::GetDisplayConnection() const
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Find connection with given websocket id
 
-std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindOrCreateConnection(unsigned wsid, bool make_new, const char *query, bool remote)
+std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindConnection(unsigned wsid)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &conn : fConn) {
       if (conn->fWSId == wsid)
          return conn;
-   }
-
-   // put code to create new connection here to stay under same locked mutex
-   if (!make_new)
-      return nullptr;
-
-   std::shared_ptr<WebConn> conn;
-   std::string key, ntry;
-
-   if (query) {
-      TUrl url;
-      url.SetOptions(query);
-      if (url.HasOption("key"))
-         key = url.GetValueFromOptions("key");
-      if (url.HasOption("ntry"))
-         ntry = url.GetValueFromOptions("ntry");
-   }
-
-   // check if in pending connection exactly this combination was checked
-   for (size_t n = 0; n < fPendingConn.size(); ++n)
-      if (_CanConnectWith(fPendingConn[n], key, ntry, remote, false)) {
-         conn = std::move(fPendingConn[n]);
-         fPendingConn.erase(fPendingConn.begin() + n);
-         break;
-      }
-
-   if (conn) {
-      conn->fWSId = wsid;
-      conn->fActive = true;
-      conn->fKey.clear(); // connection accepted, one can remove key
-      conn->ResetStamps(); // TODO: probably, can be moved outside locked area
-      fConn.emplace_back(conn);
-   } else if (!IsRequireAuthKey() && (!fConnLimit || (fConn.size() < fConnLimit))) {
-      fConn.emplace_back(std::make_shared<WebConn>(++fConnCnt, wsid));
    }
 
    return nullptr;
@@ -552,7 +518,7 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::_FindConnWithKey(const std::str
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Check if provided key, ntry parameters could be accepted
 
-bool RWebWindow::_CanConnectWith(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool first)
+bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool test_first_time)
 {
    if (!conn)
       return false;
@@ -573,7 +539,7 @@ bool RWebWindow::_CanConnectWith(std::shared_ptr<WebConn> &conn, const std::stri
       return true;
 
    if (key == expected) {
-      if (first) {
+      if (test_first_time) {
          if (conn->fKeyUsed >= intry) {
             // this is indication of network sniffing, already checked hashed value was shown again!!!
             // client sends id with increasing counter, if previous value is presented it is BAD
@@ -582,10 +548,12 @@ bool RWebWindow::_CanConnectWith(std::shared_ptr<WebConn> &conn, const std::stri
          }
          // remember counter, it should prevent trying previous hash values
          conn->fKeyUsed = intry;
-      } else if (conn->fKeyUsed != intry) {
-         // this is rather error condition, should never happen
-         R__LOG_ERROR(WebGUILog()) << "Connection failure with MD5 check";
-         return false;
+      } else {
+         if (conn->fKeyUsed != intry) {
+            // this is rather error condition, should never happen
+            R__LOG_ERROR(WebGUILog()) << "Connection failure with MD5 check";
+            return false;
+         }
       }
       return true;
    }
@@ -776,6 +744,8 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.GetWSId() == 0)
       return true;
 
+   bool is_longpoll = "root.longpoll"s == arg.GetFileName();
+
    if (arg.IsMethod("WS_CONNECT")) {
 
       TUrl url;
@@ -807,27 +777,83 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       key = url.GetValueFromOptions("key");
       if(url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
-
       bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
 
       for (auto &conn : fPendingConn)
-         if (_CanConnectWith(conn, key, ntry, remote, true))
+         if (_CanTrustIn(conn, key, ntry, remote, true))
              return true;
 
       return false;
    }
 
    if (arg.IsMethod("WS_READY")) {
-      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
 
-      auto conn = FindOrCreateConnection(arg.GetWSId(), true, arg.GetQuery(), remote);
-
-      if (conn) {
+      if (FindConnection(arg.GetWSId())) {
          R__LOG_ERROR(WebGUILog()) << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
          return false;
       }
 
-      return true;
+      std::shared_ptr<WebConn> conn;
+      std::string key, ntry;
+
+      TUrl url;
+      url.SetOptions(arg.GetQuery());
+      if (url.HasOption("key"))
+         key = url.GetValueFromOptions("key");
+      if (url.HasOption("ntry"))
+         ntry = url.GetValueFromOptions("ntry");
+      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
+
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      // check if in pending connection exactly this combination was checked
+      for (size_t n = 0; n < fPendingConn.size(); ++n)
+         if (_CanTrustIn(fPendingConn[n], key, ntry, remote, false)) {
+            conn = std::move(fPendingConn[n]);
+         fPendingConn.erase(fPendingConn.begin() + n);
+         break;
+      }
+
+      if (conn) {
+         conn->fWSId = arg.GetWSId();
+         conn->fActive = true;
+         // only for longpoll connection keep key to be able check it again
+         if (!is_longpoll)
+             conn->fKey.clear();
+         conn->ResetStamps();
+         fConn.emplace_back(conn);
+         return true;
+      } else if (!IsRequireAuthKey() && (!fConnLimit || (fConn.size() < fConnLimit))) {
+         fConn.emplace_back(std::make_shared<WebConn>(++fConnCnt, arg.GetWSId()));
+         return true;
+      }
+
+      // reject connection, should not really happen
+      return false;
+   }
+
+   // special sequrity check for the lonhpoll requests
+   if(is_longpoll) {
+      auto conn = FindConnection(arg.GetWSId());
+      if (!conn)
+         return false;
+
+      TUrl url;
+      url.SetOptions(arg.GetQuery());
+
+      std::string key, ntry;
+      if(url.HasOption("key"))
+         key = url.GetValueFromOptions("key");
+      if(url.HasOption("ntry"))
+         ntry = url.GetValueFromOptions("ntry");
+
+      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
+
+      if (!_CanTrustIn(conn, key, ntry, remote, true)) {
+         printf("Not trust in the request\n");
+         return false;
+      }
+
    }
 
    if (arg.IsMethod("WS_CLOSE")) {
