@@ -131,10 +131,83 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifndef ROOFIT_MATH_FFTW3
+#include "TInterpreter.h"
+
+namespace {
+
+auto declareDoFFT()
+{
+   static void (*doFFT)(int, double *, double *, double *) = nullptr;
+
+   if (doFFT)
+      return doFFT;
+
+   bool success = gInterpreter->Declare("#include \"fftw3.h\"");
+
+   if (!success) {
+      std::stringstream ss;
+      ss << "RooFFTConvPdf evaluation Failed! The interpreter could not find the fftw3.h header.\n";
+      ss << "You have three options to fix this problem:\n";
+      ss << "    1) Install fftw3 on your system so that the interpreter can find it\n";
+      ss << "    2) In case fftw3.h is installed somewhere else,\n"
+         << "       tell ROOT with gInterpreter->AddIncludePath() where to find it\n";
+      ss << "    3) Compile ROOT with the -Dfftw3=ON in the CMake configuration,\n"
+         << "       such that ROOT comes with built-in fftw3 convolution routines\n";
+      oocoutE(nullptr, Eval) << ss.str() << std::endl;
+      throw std::runtime_error("RooFFTConvPdf evaluation Failed! The interpreter could not find the fftw3.h header");
+   }
+
+   gInterpreter->Declare(R"(
+void RooFFTConvPdf_doFFT(int n, double *input1, double *input2, double *output)
+{
+   auto fftr2c1_Out = reinterpret_cast<fftw_complex *>(fftw_malloc(sizeof(fftw_complex) * (n / 2 + 1)));
+   auto fftr2c2_Out = reinterpret_cast<fftw_complex *>(fftw_malloc(sizeof(fftw_complex) * (n / 2 + 1)));
+   auto fftc2r_In = reinterpret_cast<fftw_complex *>(fftw_malloc(sizeof(fftw_complex) * (n / 2 + 1)));
+
+   fftw_plan fftr2c1_plan = fftw_plan_dft_r2c(1, &n, input1, fftr2c1_Out, FFTW_ESTIMATE);
+   fftw_plan fftr2c2_plan = fftw_plan_dft_r2c(1, &n, input2, fftr2c2_Out, FFTW_ESTIMATE);
+   fftw_plan fftc2r_plan = fftw_plan_dft_c2r(1, &n, fftc2r_In, output, FFTW_ESTIMATE);
+
+   // Real->Complex FFT Transform on p.d.f. samplings
+   fftw_execute(fftr2c1_plan);
+   fftw_execute(fftr2c2_plan);
+
+   // Loop over first half +1 of complex output results, multiply
+   // and set as input of reverse transform
+   for (Int_t i = 0; i < n / 2 + 1; i++) {
+      double re1 = fftr2c1_Out[i][0];
+      double re2 = fftr2c2_Out[i][0];
+      double im1 = fftr2c1_Out[i][1];
+      double im2 = fftr2c2_Out[i][1];
+      fftc2r_In[i][0] = re1 * re2 - im1 * im2;
+      fftc2r_In[i][1] = re1 * im2 + re2 * im1;
+   }
+
+   // Reverse Complex->Real FFT transform product
+   fftw_execute(fftc2r_plan);
+
+   fftw_destroy_plan(fftr2c1_plan);
+   fftw_destroy_plan(fftr2c2_plan);
+   fftw_destroy_plan(fftc2r_plan);
+
+   fftw_free(fftr2c1_Out);
+   fftw_free(fftr2c2_Out);
+   fftw_free(fftc2r_In);
+}
+)");
+
+   doFFT = reinterpret_cast<void(*)(int, double*, double*, double*)>(gInterpreter->ProcessLine("RooFFTConvPdf_doFFT;"));
+   return doFFT;
+}
+
+} // namespace
+
+#endif
+
 using namespace std;
 
 ClassImp(RooFFTConvPdf);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for numerical (FFT) convolution of PDFs.
@@ -510,8 +583,17 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
   std::vector<double> input2 = scanPdf(const_cast<RooRealVar &>(static_cast<RooRealVar const&>(_x.arg())),*aux.pdf2Clone,cacheHist,slicePos,N,N2,binShift2,_shift2) ;
   if (_bufStrat==Extend) histX->setBinning(*aux.histBinning) ;
 
+#ifndef ROOFIT_MATH_FFTW3
+  // If ROOT was NOT built with the fftw3 interface, we try to include fftw3.h
+  // with the interpreter and run the concolution in the interpreter.
+  std::vector<double> output(N2);
 
-
+   auto doFFT = declareDoFFT();
+   doFFT(N2, input1.data(), input2.data(), output.data());
+#else
+  // If ROOT was built with the fftw3 interface, we can use it as a TVirtualFFT
+  // plugin. The advantage here is that nothing can go wrong if fftw3.h wahs
+  // not istalled by the user separately.
 
   // Retrieve previously defined FFT transformation plans
   if (!aux.fftr2c1) {
@@ -550,6 +632,7 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
 
   // Reverse Complex->Real FFT transform product
   aux.fftc2r->Transform() ;
+#endif
 
   Int_t totalShift = binShift1 + (N2-N)/2 ;
 
@@ -564,10 +647,12 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
     while (j>=N2) j-= N2 ;
 
     iter->Next() ;
-    cacheHist.set(aux.fftc2r->GetPointReal(j)) ;
+#ifndef ROOFIT_MATH_FFTW3
+    cacheHist.set(output[j]);
+#else
+    cacheHist.set(aux.fftc2r->GetPointReal(j));
+#endif
   }
-
-  // cacheHist.dump2() ;
 }
 
 
