@@ -43,8 +43,9 @@ public:
 
 TEST(RRawFile, Empty)
 {
-   FileRaii emptyGuard("testEmpty", "");
-   auto f = RRawFile::Create("testEmpty");
+   FileRaii emptyGuard("test_rrawfile_empty", "");
+   auto f = RRawFile::Create(emptyGuard.GetPath());
+   EXPECT_FALSE(f->IsOpen());
    EXPECT_TRUE(f->GetFeatures() & RRawFile::kFeatureHasSize);
    EXPECT_EQ(0u, f->GetSize());
    EXPECT_EQ(0u, f->GetFilePos());
@@ -52,13 +53,14 @@ TEST(RRawFile, Empty)
    EXPECT_EQ(0u, f->ReadAt(nullptr, 0, 1));
    std::string line;
    EXPECT_FALSE(f->Readln(line));
+   EXPECT_TRUE(f->IsOpen());
 }
 
 
 TEST(RRawFile, Basic)
 {
-   FileRaii basicGuard("testBasic", "foo\nbar");
-   auto f = RRawFile::Create("testBasic");
+   FileRaii basicGuard("test_rrawfile_basic", "foo\nbar");
+   auto f = RRawFile::Create(basicGuard.GetPath());
    EXPECT_EQ(7u, f->GetSize());
    std::string line;
    EXPECT_TRUE(f->Readln(line));
@@ -79,10 +81,10 @@ TEST(RRawFile, Basic)
    auto f2 = RRawFile::Create("NoSuchFile");
    EXPECT_THROW(f2->Readln(line), std::runtime_error);
 
-   auto f3 = RRawFile::Create("FiLE://testBasic");
+   auto f3 = RRawFile::Create(std::string("FiLE://") + basicGuard.GetPath());
    EXPECT_EQ(7u, f3->GetSize());
 
-   EXPECT_THROW(RRawFile::Create("://testBasic"), std::runtime_error);
+   EXPECT_THROW(RRawFile::Create(std::string("://") + basicGuard.GetPath()), std::runtime_error);
    EXPECT_THROW(RRawFile::Create("Communicator://Kirk"), std::runtime_error);
 }
 
@@ -102,8 +104,8 @@ TEST(RRawFile, Remote)
 
 TEST(RRawFile, Readln)
 {
-   FileRaii linebreakGuard("testLinebreak", "foo\r\none\nline\r\n\r\n");
-   auto f = RRawFile::Create("testLinebreak");
+   FileRaii linebreakGuard("test_rrawfile_linebreak", "foo\r\none\nline\r\n\r\n");
+   auto f = RRawFile::Create(linebreakGuard.GetPath());
    std::string line;
    EXPECT_TRUE(f->Readln(line));
    EXPECT_STREQ("foo", line.c_str());
@@ -118,7 +120,7 @@ TEST(RRawFile, Readln)
 TEST(RRawFile, ReadV)
 {
    FileRaii readvGuard("test_rawfile_readv", "Hello, World");
-   auto f = RRawFile::Create("test_rawfile_readv");
+   auto f = RRawFile::Create(readvGuard.GetPath());
 
    char buffer[2];
    buffer[0] = buffer[1] = 0;
@@ -152,11 +154,11 @@ TEST(RRawFile, SplitUrl)
 
 TEST(RRawFile, ReadDirect)
 {
-   FileRaii directGuard("testDirect", "abc");
+   FileRaii directGuard("test_rrawfile_direct", "abc");
    char buffer;
    RRawFile::ROptions options;
    options.fBlockSize = 0;
-   auto f = RRawFile::Create("testDirect");
+   auto f = RRawFile::Create(directGuard.GetPath());
    EXPECT_EQ(0u, f->Read(&buffer, 0));
    EXPECT_EQ(1u, f->Read(&buffer, 1));
    EXPECT_EQ('a', buffer);
@@ -217,8 +219,8 @@ TEST(RRawFile, Mmap)
    EXPECT_THROW(m->Unmap(this, 1), std::runtime_error);
 
    void *region;
-   FileRaii basicGuard("test_rawfile_mmap", "foo");
-   auto f = RRawFile::Create("test_rawfile_mmap");
+   FileRaii mmapGuard("test_rawfile_mmap", "foo");
+   auto f = RRawFile::Create(mmapGuard.GetPath());
    if (!(f->GetFeatures() & RRawFile::kFeatureHasMmap))
       return;
    region = f->Map(2, 1, mapdOffset);

@@ -34,6 +34,7 @@ public:
    ~FileRaii() {
       std::remove(fPath.c_str());
    }
+   std::string GetPath() const { return fPath; }
 };
 
 } // anonymous namespace
