@@ -15,12 +15,13 @@ let sessionKey = '';
 
 class LongPollSocket {
 
-   constructor(addr, _raw, _args) {
+   constructor(addr, _raw, _handle, _counter) {
       this.path = addr;
       this.connid = null;
       this.req = null;
       this.raw = _raw;
-      this.args = _args;
+      this.handle = _handle;
+      this.counter = _counter;
 
       this.nextRequest('', 'connect');
    }
@@ -30,18 +31,20 @@ class LongPollSocket {
       let url = this.path, reqmode = 'buf', post = null;
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
-         if (this.args) url += '&' + this.args;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          console.log(`longpoll connect ${url} raw = ${this.raw}`);
          this.connid = 'connect';
       } else if (kind === 'close') {
          if ((this.connid === null) || (this.connid === 'close')) return;
          url += `?connection=${this.connid}&close`;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
          if (!browser.qt5) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          if (kind === 'dummy') url += '&dummy';
       }
 
@@ -577,7 +580,7 @@ class WebWindowHandle {
          } else {
             path += 'root.longpoll';
             console.log(`configure longpoll ${path}`);
-            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this.getConnArgs(ntry));
+            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this, ntry);
          }
 
          if (!this._websocket) return;
