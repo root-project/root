@@ -48,6 +48,11 @@ TEST(RRawFileNetXNG, ReadV)
    options.fBlockSize = 0;
    auto f = std::make_unique<RRawFileNetXNG>("root://eospublic.cern.ch//eos/root-eos/testfiles/xrootd.test", options);
 
+   auto iovLimits = f->GetReadVLimits();
+   EXPECT_EQ(static_cast<std::uint64_t>(-1), iovLimits.fMaxTotalSize);
+   EXPECT_TRUE(iovLimits.HasReqsLimit());
+   EXPECT_TRUE(iovLimits.HasSizeLimit());
+
    char buffer[2];
    buffer[0] = buffer[1] = 0;
    RRawFile::RIOVec iovec[2];
