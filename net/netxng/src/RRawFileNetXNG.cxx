@@ -112,7 +112,7 @@ void ROOT::Internal::RRawFileNetXNG::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVLimits()
 {
    if (fIOVecLimits)
-     return *fIOVecLimits;
+      return *fIOVecLimits;
 
    EnsureOpen();
    // Start with xrootd default values
@@ -125,16 +125,16 @@ ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVL
    // local redirect will split vector reads into multiple local reads anyway,
    // so we are fine with the default values
    if (lastURL.GetProtocol().compare("file") == 0 && lastURL.GetHostId().compare("localhost") == 0) {
-     if (gDebug >= 1)
-        Info("GetReadVLimits", "Local redirect, using default values");
-     return *fIOVecLimits;
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "Local redirect, using default values");
+      return *fIOVecLimits;
    }
 
    std::string strDataServer;
    if (!pImpl->file.GetProperty("DataServer", strDataServer)) {
-     if (gDebug >= 1)
-        Info("GetReadVLimits", "Cannot get DataServer property, using default values");
-     return *fIOVecLimits;
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "Cannot get DataServer property, using default values");
+      return *fIOVecLimits;
    }
    XrdCl::URL dataServer(strDataServer);
 #else
@@ -148,10 +148,10 @@ ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVL
 
    XrdCl::XRootDStatus status = fs.Query(XrdCl::QueryCode::Config, arg, response);
    if (!status.IsOK()) {
-     delete response;
-     if (gDebug >= 1)
-        Info("GetReadVLimits", "Cannot query readv limits, using default values");
-     return *fIOVecLimits;
+      delete response;
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "Cannot query readv limits, using default values");
+      return *fIOVecLimits;
    }
    std::istringstream strmResponse;
    strmResponse.str(response->ToString());
@@ -160,22 +160,22 @@ ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVL
    std::string readvIorMax;
    std::string readvIovMax;
    if (!std::getline(strmResponse, readvIorMax) || !std::getline(strmResponse, readvIovMax)) {
-     if (gDebug >= 1)
-        Info("GetReadVLimits", "unexpected response from querying readv limits, using default values");
-     return *fIOVecLimits;
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "unexpected response from querying readv limits, using default values");
+      return *fIOVecLimits;
    }
 
    if (!readvIovMax.empty() && std::isdigit(readvIovMax[0])) {
-     std::size_t val = std::stoi(readvIovMax);
-     // Workaround a dCache bug reported here: https://sft.its.cern.ch/jira/browse/ROOT-6639
-     if (val == 0x7FFFFFFF)
-        return *fIOVecLimits;
+      std::size_t val = std::stoi(readvIovMax);
+      // Workaround a dCache bug reported here: https://sft.its.cern.ch/jira/browse/ROOT-6639
+      if (val == 0x7FFFFFFF)
+         return *fIOVecLimits;
 
-     fIOVecLimits->fMaxSingleSize = val;
+      fIOVecLimits->fMaxSingleSize = val;
    }
 
    if (!readvIorMax.empty() && std::isdigit(readvIorMax[0])) {
-     fIOVecLimits->fMaxReqs = std::stoi(readvIorMax);
+      fIOVecLimits->fMaxReqs = std::stoi(readvIorMax);
    }
 
    return *fIOVecLimits;
