@@ -156,6 +156,9 @@ protected:
    /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
+   /// Open the file if not already open. Otherwise noop.
+   void EnsureOpen();
+
 public:
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
@@ -206,6 +209,9 @@ public:
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
    bool Readln(std::string &line);
+
+   /// Once opened, the file stay open until destruction of the RRawFile object
+   bool IsOpen() const { return fIsOpen; }
 }; // class RRawFile
 
 } // namespace Internal
