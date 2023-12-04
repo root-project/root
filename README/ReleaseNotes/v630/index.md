@@ -394,6 +394,10 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
 
 ## Build, Configuration and Testing Infrastructure
 
+`root-config` (and many other versioning interfaces) now reports `6.30.00` instead of `6.30/00`.
+This allows many tools to understand ROOT's version number, better than before.
+
+
 If `-Droottest=ON` is specified, the ROOT build system used to clone a matching branch of the `roottest` repository.
 This logic has been improved and is now as follows:
 
