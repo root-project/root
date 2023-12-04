@@ -53,7 +53,7 @@ The following people have contributed to this new version:
 
 ## Platform support
 
-- GCC 12 is now supported.
+- GCC 13 is now supported.
 - macOS 14 is now supported.
 
 ## Deprecation and Removal
