@@ -12,21 +12,23 @@ There are two ways to generate and execute the tests:
 
 #### Option 1: roottest as part of a ROOT build
 
-Before building, enable the 'testing' and 'roottest' option:
+Before building, create a build directory, change into it, enable the 'testing' and 'roottest' option:
 
-       cmake -Dtesting=ON -Droottest=ON $PATH_TO_ROOT_SOURCES
-       cmake --build . -j8
+    mkdir build
+    cd build
+    cmake -Dtesting=ON -Droottest=ON $PATH_TO_ROOT_SOURCES
+    cmake --build . -j8
 
 #### Option 2: roottest as a stand-alone project
 
 Set the ROOT environment to an existing build / installation:
 
-       . ${ROOTSYS}/thisroot.[c]sh
+    . ${ROOTSYS}/thisroot.[c]sh
 
 Create a build directory, change into it and execute
 
-       cmake $PATH_TO_ROOTTEST
-       cmake --build . -j8
+    cmake $PATH_TO_ROOTTEST
+    cmake --build . -j8
 
 ### Running the test suite
 
@@ -40,8 +42,11 @@ Tests can then be executed using the ctest command in the build directory:
     ctest -L regex          (run all tests that contain the label regex)
     ctest --print-labels    (list all existing labels)
 
-You can combine most of the ctest options, e.g. ctest -V -j4 -R root-meta is a
-valid call.
+You can combine most of the ctest options, for example:
+
+    ctest -V -j4 -R root-meta 
+
+is a valid call.
 
 
 ## Adding tests
@@ -91,7 +96,7 @@ Options:
                         like resolving the full path of the macro is done).
 
     EXEC                Execute program in $PATH or current directory.
-    
+
     COMMAND             Execute a command (program or script) with its arguments
 
     MACROARG            Arguments that shall be passed to the specified
@@ -102,8 +107,8 @@ Options:
     OUTREF              File that references the stdout output of the test. If
                         the systems architecture influences the test output, a
                         *.ref32 / *.ref64 file can be created. They will be
-                        preferred to a *.ref file.  
-                        
+                        preferred to a *.ref file.
+
     ERRREF              File that references the stderr output of the test.
                         For system architecture specific output, see option
                         OUTREF.
@@ -113,20 +118,20 @@ Options:
 
     COPY_TO_BUILDDIR    Copy files into the current build directory, so tests
                         find them without the need for full paths.
-    
+
     PRECMD              Command to be executed before the macro or the executable.
                         Only the return code is checked. If error code is returned
                         the overall test fails.
-                        
+
     POSTCMD             Command to be executed after the macro or the executable.
                         Only the return code is checked.
-                        
+
     OUTCNVCMD           Possibility to process the output before is given to the
                         diff utility to check it against the reference file.
-                        
+
     PASSREGEX           Property to verify that the output of the test contains
                         certain strings (regular expression) to pass
-                        
+
     FAILREGEX           Property to verify that the output of the test contains
                         certain strings (regular expression) to fail
 
