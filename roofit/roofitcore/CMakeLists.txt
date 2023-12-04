@@ -493,6 +493,10 @@ if(cuda)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_CUDA)
 endif()
 
+if(fftw3)
+  target_compile_definitions(RooFitCore PUBLIC ROOFIT_MATH_FFTW3)
+endif()
+
 target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # For recent clang, this can facilitate auto-vectorisation.
