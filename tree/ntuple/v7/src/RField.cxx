@@ -2948,8 +2948,16 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
    if (!fClass)
       throw RException(R__FAIL("cannot get type information for " + GetType()));
    fSize = fClass->Size();
-   fOffsets[0] = fClass->GetDataMember("first")->GetOffset();
-   fOffsets[1] = fClass->GetDataMember("second")->GetOffset();
+
+   auto firstElem = fClass->GetRealData("first");
+   if (!firstElem)
+      throw RException(R__FAIL("first: no such member"));
+   fOffsets[0] = firstElem->GetThisOffset();
+
+   auto secondElem = fClass->GetRealData("second");
+   if (!secondElem)
+      throw RException(R__FAIL("second: no such member"));
+   fOffsets[1] = secondElem->GetThisOffset();
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>

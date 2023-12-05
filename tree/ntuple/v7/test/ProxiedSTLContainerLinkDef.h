@@ -31,13 +31,4 @@
 #pragma link C++ class std::unordered_map<int, CustomStruct>+;
 #pragma link C++ class std::unordered_map<float, std::vector<bool>>+;
 
-#pragma link C++ class std::pair<char, long>+;
-#pragma link C++ class std::pair<char, std::int64_t>+;
-#pragma link C++ class std::pair<char, std::string>+;
-#pragma link C++ class std::pair<int, CustomStruct>+;
-#pragma link C++ class std::pair<int, std::vector<CustomStruct>>+;
-#pragma link C++ class std::pair<float, std::map<char, std::int32_t>>+;
-#pragma link C++ class std::pair<char, std::int32_t>+;
-#pragma link C++ class std::pair<float, std::vector<bool>>+;
-
 #endif
