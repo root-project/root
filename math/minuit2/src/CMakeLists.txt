@@ -216,8 +216,8 @@ target_link_libraries(Minuit2 PUBLIC Minuit2Math Minuit2Common)
 
 install(TARGETS Minuit2
         EXPORT Minuit2Targets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
 
 install(FILES ${MINUIT2_HEADERS} DESTINATION include/Minuit2/Minuit2)
