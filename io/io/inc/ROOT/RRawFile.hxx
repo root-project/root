@@ -19,9 +19,12 @@
 #include <memory>
 #include <string>
 
+#ifdef R__TESTING_MODE
+#include <random>
+#endif
+
 namespace ROOT {
 namespace Internal {
-
 /**
  * \class RRawFile RRawFile.hxx
  * \ingroup IO
@@ -138,7 +141,26 @@ protected:
    /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
-public:
+public:   
+#ifdef R__TESTING_MODE
+   enum EFailureType { kNone, kBitFlip, kShortRead };
+   
+   struct RFailureInjectionContext{
+      EFailureType fFailureType {kNone};
+      double fOccurrenceProbability {0};
+      std::uint64_t fRangeBegin {0};
+      std::uint64_t fRangeEnd {0};
+      std::uint64_t fBitIndex {0};
+      std::random_device fSeed;
+      std::mt19937 fGenerator {fSeed()};
+   };
+
+   static RFailureInjectionContext& GetFailureInjectionContext(){
+      static RFailureInjectionContext context {};
+      return context;
+   }
+#endif
+
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
    RRawFile &operator=(const RRawFile &) = delete;
@@ -159,6 +181,13 @@ public:
     * Short reads indicate the end of the file
     */
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
+  
+#ifdef R__TESTING_MODE
+   void TriggerBitFlip(void* buffer, size_t total_bytes,std::uint64_t offset);
+   void TriggerShortRead(void* buffer, size_t total_bytes);
+   void PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset);
+#endif  
+   size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
    /// Read from fFilePos offset. Returns the actual number of bytes read.
    size_t Read(void *buffer, size_t nbytes);
    /// Change the cursor fFilePos

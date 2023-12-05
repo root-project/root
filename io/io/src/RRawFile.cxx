@@ -29,6 +29,9 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <random>
+
+#include <iostream> // remove
 
 namespace {
 const char *kTransportSeparator = "://";
@@ -162,7 +165,7 @@ size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
    return res;
 }
 
-size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Internal::RRawFile::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    if (!fIsOpen)
       OpenImpl();
@@ -206,6 +209,74 @@ size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64
    memcpy(buffer, thisBuffer->fBuffer, remainingBytes);
    totalBytes += remainingBytes;
    return totalBytes;
+}
+
+#ifdef R__TESTING_MODE
+   void ROOT::Internal::RRawFile::TriggerShortRead(void* buffer, size_t total_bytes)
+   {
+      auto &context = GetFailureInjectionContext();
+      uint32_t startPosition = context.fBitIndex;
+
+      auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
+
+      // for all bytes in the buffer from the random start point until the end of the buffer, make them zero
+      for (size_t byte_idx = startPosition; byte_idx < total_bytes; ++byte_idx) {
+         byte_ptr[byte_idx] = 0x00;
+      }
+   }
+
+   void ROOT::Internal::RRawFile::TriggerBitFlip(void* buffer, size_t total_bytes, std::uint64_t offset)
+   {    
+      auto &context = GetFailureInjectionContext();
+
+      // generate a random value to compare to fOccurrenceProbability
+      std::uniform_int_distribution<std::mt19937::result_type> probability_dist(0.0,1.0);
+      double probability_value = probability_dist(context.fGenerator);
+
+      // only trigger bit flip according to probability value set
+      if (probability_value <= context.fOccurrenceProbability)
+      {
+         auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
+
+         std::uniform_int_distribution<std::mt19937::result_type> byte_dist(0, total_bytes-1);
+         std::uniform_int_distribution<std::mt19937::result_type> bit_dist(0, 7);
+
+         unsigned char &chosen_byte = byte_ptr[byte_dist(context.fGenerator)];
+         chosen_byte ^= (1 << bit_dist(context.fGenerator));
+      }
+   }
+
+   void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset)
+   {
+      auto &context = GetFailureInjectionContext();
+   
+      // check if current buffer lies within the requested range
+      if (offset >= context.fRangeBegin && (offset + total_bytes) <= context.fRangeEnd)
+      {
+         // trigger failure
+         switch(GetFailureInjectionContext().fFailureType) {
+            case kBitFlip:
+               TriggerBitFlip(buffer, total_bytes, offset);
+               break;
+            case kShortRead:
+               TriggerShortRead(buffer, total_bytes);
+               break;
+            default:
+               break;
+         }
+      }
+   }
+#endif
+
+size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+{
+   size_t total_bytes = DoReadAt(buffer,nbytes,offset);
+
+#ifdef R__TESTING_MODE
+   PossiblyInjectFailure(buffer, total_bytes, offset);
+#endif
+
+   return total_bytes;
 }
 
 void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
