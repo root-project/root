@@ -189,7 +189,7 @@ void rs101_limitexample()
    // 3-d plot of the parameter points
    dataCanvas->cd(2);
    // also plot the points in the markov chain
-   RooDataSet *chainData = mcInt->GetChainAsDataSet();
+   std::unique_ptr<RooDataSet> chainData{mcInt->GetChainAsDataSet()};
 
    assert(chainData);
    std::cout << "plotting the chain data - nentries = " << chainData->numEntries() << std::endl;

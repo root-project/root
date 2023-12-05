@@ -53,7 +53,8 @@ void rf303_conditional()
    // ---------------------------------------------------------------------------------------------
 
    // Make subset of experimental data with only y values
-   RooDataSet *expDataY = (RooDataSet *)expDataXY->reduce(y);
+   std::unique_ptr<RooAbsData> expAbsDataY{expDataXY->reduce(y)};
+   RooDataSet *expDataY = static_cast<RooDataSet*>(expAbsDataY.get());
 
    // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
    std::unique_ptr<RooDataSet> data{model.generate(x, ProtoData(*expDataY))};
@@ -73,12 +74,12 @@ void rf303_conditional()
    model.plotOn(xframe, ProjWData(*expDataY));
 
    // Speed up (and approximate) projection by using binned clone of data for projection
-   RooAbsData *binnedDataY = expDataY->binnedClone();
+   std::unique_ptr<RooDataHist> binnedDataY{expDataY->binnedClone()};
    model.plotOn(xframe, ProjWData(*binnedDataY), LineColor(kCyan), LineStyle(kDotted));
 
    // Show effect of projection with too coarse binning
    ((RooRealVar *)expDataY->get()->find("y"))->setBins(5);
-   RooAbsData *binnedDataY2 = expDataY->binnedClone();
+   std::unique_ptr<RooDataHist> binnedDataY2{expDataY->binnedClone()};
    model.plotOn(xframe, ProjWData(*binnedDataY2), LineColor(kRed));
 
    // Make canvas and draw RooPlots

@@ -71,7 +71,7 @@ void rf603_multicpu()
 
    // Calculate likelihood ratio for each event, define subset of events with high signal likelihood
    data->addColumn(llratio_func);
-   RooDataSet *dataSel = (RooDataSet *)data->reduce(Cut("llratio>0.7"));
+   std::unique_ptr<RooAbsData> dataSel{data->reduce(Cut("llratio>0.7"))};
 
    // Make plot frame and plot data
    RooPlot *frame = x.frame(Title("Projection on X with LLratio(y,z)>0.7"), Bins(40));

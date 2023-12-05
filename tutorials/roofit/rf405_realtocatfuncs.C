@@ -96,7 +96,7 @@ void rf405_realtocatfuncs()
    xb->setRange("alt", "x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9");
 
    // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the frame
-   RooDataSet *dataSel = (RooDataSet *)data->reduce(CutRange("alt"), EventRange(0, 5000));
+   std::unique_ptr<RooAbsData> dataSel{data->reduce(CutRange("alt"), EventRange(0, 5000))};
    dataSel->plotOn(xframe, MarkerColor(kGreen), LineColor(kGreen));
 
    new TCanvas("rf405_realtocatfuncs", "rf405_realtocatfuncs", 600, 600);
