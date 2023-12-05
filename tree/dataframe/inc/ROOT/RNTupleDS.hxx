@@ -47,10 +47,10 @@ class RNTupleColumnReader;
 class RNTupleDS final : public ROOT::RDF::RDataSource {
    friend class Internal::RNTupleColumnReader;
 
-   /// The PrepareNextRanges() method populates the fNextRanges list with REntryRange records.
+   /// The PrepareNextRanges() method populates the fNextRanges list with REntryRangeDS records.
    /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of
-   /// REntryRange records to return the list of ranges ready to use by the RDF loop manager.
-   struct REntryRange {
+   /// REntryRangeDS records to return the list of ranges ready to use by the RDF loop manager.
+   struct REntryRangeDS {
       std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fSource;
       ULong64_t fFirstEntry = 0; ///< First entry index in fSource
       /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
@@ -59,7 +59,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    /// The first source is used to extract the schema and build the prototype fields. The page source
    /// is used to extract a clone of the descriptor to fPrincipalDescriptor. Afterwards it is moved
-   /// into the first REntryRange.
+   /// into the first REntryRangeDS.
    std::unique_ptr<Detail::RPageSource> fPrincipalSource;
    /// A clone of the first pages source's descriptor.
    std::unique_ptr<RNTupleDescriptor> fPrincipalDescriptor;
@@ -85,9 +85,9 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::vector<std::vector<Internal::RNTupleColumnReader *>> fActiveColumnReaders;
 
    unsigned int fNSlots = 0;
-   ULong64_t fSeenEntries = 0;              ///< The number of entries so far returned by GetEntryRanges()
-   std::vector<REntryRange> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
-   std::vector<REntryRange> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
+   ULong64_t fSeenEntries = 0;                ///< The number of entries so far returned by GetEntryRanges()
+   std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
+   std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
    /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
    /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
