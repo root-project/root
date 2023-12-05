@@ -322,7 +322,7 @@ TEST(RNTuple, StdSet)
    {
       auto model = RNTupleModel::Create();
       auto set_field = model->MakeField<std::set<float>>({"mySet", "float set"});
-      auto set_field2 = model->MakeField<std::set<std::pair<int, CustomStruct>>>({"mySet2"});
+      auto set_field2 = model->MakeField<std::set<std::tuple<int, char, CustomStruct>>>({"mySet2"});
 
       auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
       auto mySet4 = RFieldBase::Create("mySet4", "std::set<std::set<char>>").Unwrap();
@@ -335,8 +335,9 @@ TEST(RNTuple, StdSet)
       auto set_field4 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet4");
       for (int i = 0; i < 2; i++) {
          *set_field = {static_cast<float>(i), 3.14, 0.42};
-         *set_field2 = {std::make_pair(i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
-                        std::make_pair(i + 1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})};
+         *set_field2 = {
+            std::make_tuple(i, static_cast<char>(i + 65), CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+            std::make_tuple(i + 1, static_cast<char>(i + 97), CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})};
          *set_field3 = {"Hello", "world!", std::to_string(i)};
          *set_field4 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
          ntuple->Fill();
@@ -347,27 +348,27 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ(2, ntuple->GetNEntries());
 
    auto viewSet = ntuple->GetView<std::set<float>>("mySet");
-   auto viewSet2 = ntuple->GetView<std::set<std::pair<int, CustomStruct>>>("mySet2");
+   auto viewSet2 = ntuple->GetView<std::set<std::tuple<int, char, CustomStruct>>>("mySet2");
    auto viewSet3 = ntuple->GetView<std::set<std::string>>("mySet3");
    auto viewSet4 = ntuple->GetView<std::set<std::set<char>>>("mySet4");
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(std::set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
 
-      auto pairSet = std::set<std::pair<int, CustomStruct>>(
-         {std::make_pair(i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
-          std::make_pair(i + 1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
-      EXPECT_EQ(pairSet, viewSet2(i));
+      auto tupleSet = std::set<std::tuple<int, char, CustomStruct>>(
+         {std::make_tuple(i, static_cast<char>(i + 65), CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+          std::make_tuple(i + 1, static_cast<char>(i + 97), CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
+      EXPECT_EQ(tupleSet, viewSet2(i));
 
       EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet3(i));
       EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet4(i));
    }
 
    ntuple->LoadEntry(0);
-   auto mySet2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::pair<int, CustomStruct>>>("mySet2");
-   auto pairSet =
-      std::set<std::pair<int, CustomStruct>>({std::make_pair(0, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
-                                              std::make_pair(1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
-   EXPECT_EQ(pairSet, *mySet2);
+   auto mySet2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::tuple<int, char, CustomStruct>>>("mySet2");
+   auto tupleSet = std::set<std::tuple<int, char, CustomStruct>>(
+      {std::make_tuple(0, 'A', CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+       std::make_tuple(1, 'a', CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
+   EXPECT_EQ(tupleSet, *mySet2);
 }
 
 TEST(RNTuple, StdUnorderedSet)
