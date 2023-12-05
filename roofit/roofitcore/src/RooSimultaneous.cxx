@@ -1065,7 +1065,7 @@ RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet
     data->add(globClone) ;
   }
 
-  return RooFit::Detail::owningPtr(std::move(data));
+  return RooFit::makeOwningPtr(std::move(data));
 }
 
 

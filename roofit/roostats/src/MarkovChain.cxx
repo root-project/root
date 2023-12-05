@@ -138,7 +138,7 @@ RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(RooArgSet* whichVars) co
       args.add(*whichVars);
    }
 
-   return RooFit::Detail::owningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(args)});
+   return RooFit::makeOwningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(args)});
 }
 
 RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(const RooCmdArg &arg1, const RooCmdArg &arg2,
@@ -146,7 +146,7 @@ RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(const RooCmdArg &arg1, c
                                                         const RooCmdArg &arg5, const RooCmdArg &arg6,
                                                         const RooCmdArg &arg7, const RooCmdArg &arg8) const
 {
-   return RooFit::Detail::owningPtr<RooDataSet>(
+   return RooFit::makeOwningPtr<RooDataSet>(
       std::unique_ptr<RooAbsData>{fChain->reduce(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)});
 }
 
@@ -162,7 +162,7 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(RooArgSet* whichVars) 
    }
 
    std::unique_ptr<RooAbsData> data{fChain->reduce(args)};
-   return RooFit::Detail::owningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet&>(*data).binnedClone()});
+   return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet&>(*data).binnedClone()});
 }
 
 RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(const RooCmdArg &arg1, const RooCmdArg &arg2,
@@ -171,7 +171,7 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(const RooCmdArg &arg1,
                                                           const RooCmdArg &arg7, const RooCmdArg &arg8) const
 {
    std::unique_ptr<RooAbsData> data{fChain->reduce(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)};
-   return RooFit::Detail::owningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet &>(*data).binnedClone()});
+   return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet &>(*data).binnedClone()});
 }
 
 THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const

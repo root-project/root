@@ -460,7 +460,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const Roo
   if (title) ret->SetTitle(title) ;
 
   ret->copyGlobalObservables(*this);
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -474,7 +474,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut)
   RooFormulaVar cutVar(cut,cut,*get()) ;
   auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -486,7 +486,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar)
 {
   auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -517,7 +517,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, con
     ret = reduceEng(varSubset2,nullptr,nullptr,0,std::numeric_limits<std::size_t>::max());
   }
   ret->copyGlobalObservables(*this);
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -541,7 +541,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, con
 
   auto ret = reduceEng(varSubset2,&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr(std::move(ret));
 }
 
 
@@ -1050,7 +1050,7 @@ RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars,
     }
   }
 
-  return RooFit::Detail::owningPtr(std::move(C));
+  return RooFit::makeOwningPtr(std::move(C));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1523,7 +1523,7 @@ RooFit::OwningPtr<TList> splitImpl(RooAbsData const &data, const RooAbsCategory 
       }
    }
 
-   return RooFit::Detail::owningPtr(std::move(dsetList));
+   return RooFit::makeOwningPtr(std::move(dsetList));
 }
 
 } // namespace

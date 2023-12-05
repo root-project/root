@@ -59,7 +59,7 @@ public:
 
   /// Return empty clone of this RooDataHist.
   RooFit::OwningPtr<RooAbsData> emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet*vars=nullptr, const char* /*wgtVarName*/=nullptr) const override {
-    return RooFit::Detail::owningPtr(std::make_unique<RooDataHist>(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()));
+    return RooFit::makeOwningPtr(std::make_unique<RooDataHist>(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()));
   }
 
   /// Add `wgt` to the bin content enclosed by the coordinates passed in `row`.

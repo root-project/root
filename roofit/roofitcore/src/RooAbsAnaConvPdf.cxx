@@ -630,7 +630,7 @@ RooFit::OwningPtr<RooArgSet> RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
 
   cVars->remove(tmp.begin(), tmp.end(), true, true);
 
-  return RooFit::Detail::owningPtr(std::move(cVars));
+  return RooFit::makeOwningPtr(std::move(cVars));
 }
 
 
