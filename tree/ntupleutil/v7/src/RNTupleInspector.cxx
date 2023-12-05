@@ -307,18 +307,24 @@ std::unique_ptr<TH1D> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribut
                                                                                     std::string histName,
                                                                                     std::string histTitle, size_t nBins)
 {
+   auto hist = std::make_unique<TH1D>();
+
    if (histName.empty())
       histName = "pageSizeHistCol" + std::to_string(physicalColumnId);
+   hist->SetName(histName.c_str());
 
    if (histTitle.empty())
       histTitle = "Page size distribution for column with ID " + std::to_string(physicalColumnId);
+   hist->SetTitle(histTitle.c_str());
+   hist->SetXTitle("Page size (B)");
+   hist->SetYTitle("N_{pages}");
 
    auto colInfo = GetColumnInspector(physicalColumnId);
    auto histMinMax =
       std::minmax_element(colInfo.GetCompressedPageSizes().begin(), colInfo.GetCompressedPageSizes().end());
-   auto hist = std::make_unique<TH1D>(
-      std::string(histName).c_str(), std::string(histTitle).c_str(), nBins, *histMinMax.first,
-      *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
+
+   hist->SetBins(nBins, *histMinMax.first,
+                 *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
 
    for (const auto pageSize : colInfo.GetCompressedPageSizes()) {
       hist->Fill(pageSize);
@@ -331,16 +337,22 @@ std::unique_ptr<TH1D>
 ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental::EColumnType colType,
                                                               std::string histName, std::string histTitle, size_t nBins)
 {
+   auto hist = std::make_unique<TH1D>();
+
    if (histName.empty())
       histName = "pageSizeHistCol" + Detail::RColumnElementBase::GetTypeName(colType);
+   hist->SetName(histName.c_str());
 
    if (histTitle.empty())
       histTitle = "Page size distribution for columns with type " + Detail::RColumnElementBase::GetTypeName(colType);
+   hist->SetTitle(histTitle.c_str());
+   hist->SetXTitle("Page size (B)");
+   hist->SetYTitle("N_{pages}");
 
    auto colIds = GetColumnsByType(colType);
 
    if (colIds.empty())
-      return std::make_unique<TH1D>(std::string(histName).c_str(), std::string(histTitle).c_str(), nBins, 0, nBins);
+      return hist;
 
    std::vector<std::uint64_t> pageSizes;
    std::for_each(colIds.begin(), colIds.end(), [this, &pageSizes](const auto colId) {
@@ -350,9 +362,8 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental
    });
 
    auto histMinMax = std::minmax_element(pageSizes.begin(), pageSizes.end());
-   auto hist = std::make_unique<TH1D>(
-      std::string(histName).c_str(), std::string(histTitle).c_str(), nBins, *histMinMax.first,
-      *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
+   hist->SetBins(nBins, *histMinMax.first,
+                 *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
 
    for (const auto pageSize : pageSizes) {
       hist->Fill(pageSize);
