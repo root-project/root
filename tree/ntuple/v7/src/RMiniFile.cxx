@@ -1378,6 +1378,31 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    return offset;
 }
 
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len)
+{
+   std::uint64_t offset;
+   if (fFileSimple) {
+      if (fIsBare) {
+         offset = fFileSimple.fKeyOffset;
+         fFileSimple.fKeyOffset += nbytes;
+      } else {
+         offset = fFileSimple.WriteKey(/*buffer=*/nullptr, nbytes, len, -1, 100, kBlobClassName);
+      }
+   } else {
+      offset = fFileProper.WriteKey(/*buffer=*/nullptr, nbytes, len);
+   }
+   return offset;
+}
+
+void ROOT::Experimental::Internal::RNTupleFileWriter::WriteIntoReservedBlob(const void *buffer, size_t nbytes,
+                                                                            std::int64_t offset)
+{
+   if (fFileSimple) {
+      fFileSimple.Write(buffer, nbytes, offset);
+   } else {
+      fFileProper.Write(buffer, nbytes, offset);
+   }
+}
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteNTupleHeader(
    const void *data, size_t nbytes, size_t lenHeader)

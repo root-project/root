@@ -123,6 +123,30 @@ TEST(MiniFile, SimpleKeys)
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
+
+   // Reserve a blob and fully write it.
+   char blob2 = '2';
+   auto offBlob2 = writer->ReserveBlob(1, 1);
+   writer->WriteIntoReservedBlob(&blob2, 1, offBlob2);
+
+   // Reserve a blob, but only write at the beginning.
+   char blob3 = '3';
+   auto offBlob3 = writer->ReserveBlob(2, 2);
+   writer->WriteIntoReservedBlob(&blob3, 1, offBlob3);
+
+   // Reserve a blob, but only write somewhere in the middle.
+   char blob4 = '4';
+   auto offBlob4 = writer->ReserveBlob(3, 3);
+   auto offBlob4Write = offBlob4 + 1;
+   writer->WriteIntoReservedBlob(&blob4, 1, offBlob4Write);
+
+   // Reserve a blob, but don't write it at all.
+   auto offBlob5 = writer->ReserveBlob(2, 2);
+
+   // For good measure, write a final blob to make sure all indices match up.
+   char blob6 = '6';
+   auto offBlob6 = writer->WriteBlob(&blob6, 1, 1);
+
    writer->Commit();
 
    // Manually check the written keys.
@@ -155,6 +179,30 @@ TEST(MiniFile, SimpleKeys)
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob1);
    EXPECT_EQ(buffer[offBlob1], blob1);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob2);
+   EXPECT_EQ(buffer[offBlob2], blob2);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob3);
+   EXPECT_EQ(buffer[offBlob3], blob3);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob4);
+   EXPECT_EQ(buffer[offBlob4Write], blob4);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob5);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob6);
+   EXPECT_EQ(buffer[offBlob6], blob6);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
@@ -180,6 +228,30 @@ TEST(MiniFile, ProperKeys)
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
+
+   // Reserve a blob and fully write it.
+   char blob2 = '2';
+   auto offBlob2 = writer->ReserveBlob(1, 1);
+   writer->WriteIntoReservedBlob(&blob2, 1, offBlob2);
+
+   // Reserve a blob, but only write at the beginning.
+   char blob3 = '3';
+   auto offBlob3 = writer->ReserveBlob(2, 2);
+   writer->WriteIntoReservedBlob(&blob3, 1, offBlob3);
+
+   // Reserve a blob, but only write somewhere in the middle.
+   char blob4 = '4';
+   auto offBlob4 = writer->ReserveBlob(3, 3);
+   auto offBlob4Write = offBlob4 + 1;
+   writer->WriteIntoReservedBlob(&blob4, 1, offBlob4Write);
+
+   // Reserve a blob, but don't write it at all.
+   auto offBlob5 = writer->ReserveBlob(2, 2);
+
+   // For good measure, write a final blob to make sure all indices match up.
+   char blob6 = '6';
+   auto offBlob6 = writer->WriteBlob(&blob6, 1, 1);
+
    writer->Commit();
 
    // Manually check the written keys.
@@ -212,6 +284,30 @@ TEST(MiniFile, ProperKeys)
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob1);
    EXPECT_EQ(buffer[offBlob1], blob1);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob2);
+   EXPECT_EQ(buffer[offBlob2], blob2);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob3);
+   EXPECT_EQ(buffer[offBlob3], blob3);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob4);
+   EXPECT_EQ(buffer[offBlob4Write], blob4);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob5);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob6);
+   EXPECT_EQ(buffer[offBlob6], blob6);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
