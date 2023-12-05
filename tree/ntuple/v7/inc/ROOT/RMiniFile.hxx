@@ -180,6 +180,11 @@ public:
    std::uint64_t WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
    /// Writes a new record as an RBlob key into the file
    std::uint64_t WriteBlob(const void *data, size_t nbytes, size_t len);
+   /// Reserves a new record as an RBlob key in the file.
+   std::uint64_t ReserveBlob(size_t nbytes, size_t len);
+   /// Write into a reserved record; the caller is responsible for making sure that the written byte range is in the
+   /// previously reserved key.
+   void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit();
 };
