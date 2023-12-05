@@ -28,6 +28,11 @@
 #
 # ===========================================================================
 
+# Set any policies required by this module. Note that there is no check for
+# whether a given policy exists or not. If it is required, it is required...
+cmake_policy(PUSH)
+cmake_policy(SET CMP0074 NEW)
+
 #----------------------------------------------------------------------------
 # DEBUG : print out the variables passed via find_package arguments
 #
@@ -161,3 +166,6 @@ foreach(_remaining ${ROOT_FIND_COMPONENTS})
     endif()
     unset(ROOT_FIND_REQUIRED_${_remaining})
 endforeach()
+
+# Clear out any policy settings made for this module.
+cmake_policy(POP)
