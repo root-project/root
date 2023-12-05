@@ -36,7 +36,7 @@ void rf706_histpdf()
    std::unique_ptr<RooDataSet> data1{p.generate(x, 500)};
 
    // Create a binned dataset with 20 bins and 500 events
-   RooDataHist *hist1 = data1->binnedClone();
+   std::unique_ptr<RooDataHist> hist1{data1->binnedClone()};
 
    // Represent data in dh as pdf in x
    RooHistPdf histpdf1("histpdf1", "histpdf1", x, *hist1, 0);
@@ -54,7 +54,7 @@ void rf706_histpdf()
    std::unique_ptr<RooDataSet> data2{p.generate(x, 100000)};
 
    // Create a binned dataset with 10 bins and 100K events
-   RooDataHist *hist2 = data2->binnedClone();
+   std::unique_ptr<RooDataHist> hist2{data2->binnedClone()};
 
    // Represent data in dh as pdf in x, apply 2nd order interpolation
    RooHistPdf histpdf2("histpdf2", "histpdf2", x, *hist2, 2);
