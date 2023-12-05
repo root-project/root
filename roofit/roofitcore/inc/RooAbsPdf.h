@@ -156,13 +156,13 @@ public:
   template <typename... CmdArgs_t>
   RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, CmdArgs_t const&... cmdArgs)
   {
-    return RooFit::Detail::owningPtr(fitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
+    return RooFit::makeOwningPtr(fitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
 
   template <typename... CmdArgs_t>
   RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, CmdArgs_t const&... cmdArgs)
   {
-    return RooFit::Detail::owningPtr(createNLLImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
+    return RooFit::makeOwningPtr(createNLLImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
 
   // Constraint management

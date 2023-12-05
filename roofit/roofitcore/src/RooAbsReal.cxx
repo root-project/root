@@ -490,7 +490,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createProfile(const RooArgSet& paramsO
 
   // Create and return profile object
   auto out = std::make_unique<RooProfileLL>(name.c_str(),(std::string("Profile of ") + GetTitle()).c_str(),*this,paramsOfInterest);
-  return RooFit::Detail::owningPtr(std::move(out));
+  return RooFit::makeOwningPtr<RooAbsReal>(std::move(out));
 }
 
 
@@ -585,7 +585,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
 
   auto out = std::make_unique<RooAddition>(fullName.c_str(), title.c_str(), components);
   out->addOwnedComponents(std::move(components));
-  return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
+  return RooFit::makeOwningPtr<RooAbsReal>(std::move(out));
 }
 
 
@@ -612,7 +612,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
     const std::string name = std::string(GetName()) + integralNameSuffix(iset,nset,rangeName).Data();
 
     auto out = std::make_unique<RooRealIntegral>(name.c_str(), title.c_str(), *this, iset, nset, cfg, rangeName);
-    return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
+    return RooFit::makeOwningPtr<RooAbsReal>(std::move(out));
   }
 
   // Process integration over remaining integration variables
@@ -686,11 +686,11 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
    cachedIntegral->setOperMode(ADirty) ;
       }
       //cachedIntegral->disableCache(true) ;
-      return RooFit::Detail::owningPtr<RooAbsReal>(std::move(cachedIntegral));
+      return RooFit::makeOwningPtr<RooAbsReal>(std::move(cachedIntegral));
     }
   }
 
-  return RooFit::Detail::owningPtr(std::move(integral));
+  return RooFit::makeOwningPtr(std::move(integral));
 }
 
 
@@ -3076,7 +3076,7 @@ RooFit::OwningPtr<RooAbsFunc> RooAbsReal::bindVars(const RooArgSet &vars, const 
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":bindVars: cannot bind to " << vars << std::endl ;
     return nullptr;
   }
-  return RooFit::Detail::owningPtr(std::unique_ptr<RooAbsFunc>{std::move(binding)});
+  return RooFit::makeOwningPtr(std::unique_ptr<RooAbsFunc>{std::move(binding)});
 }
 
 
@@ -3222,7 +3222,7 @@ RooFit::OwningPtr<RooAbsArg> RooAbsReal::createFundamental(const char* newname) 
   fund->removeRange();
   fund->setPlotLabel(getPlotLabel());
   fund->setAttribute("fundamentalCopy");
-  return RooFit::Detail::owningPtr<RooAbsArg>(std::move(fund));
+  return RooFit::makeOwningPtr<RooAbsArg>(std::move(fund));
 }
 
 
@@ -3897,7 +3897,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createScanRI(const RooArgSet& iset, co
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumRunningInt>(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
   ret->setInterpolationOrder(intOrder) ;
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr<RooAbsReal>(std::move(ret));
 }
 
 
@@ -3959,7 +3959,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, con
   cdf->addOwnedComponents(cloneList) ;
   cdf->addOwnedComponents(loList) ;
 
-  return RooFit::Detail::owningPtr(std::move(cdf));
+  return RooFit::makeOwningPtr(std::move(cdf));
 }
 
 
@@ -4228,7 +4228,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const R
    }
 
    std::unique_ptr<RooAbsReal> chi2{createChi2(data, chi2CmdList)};
-   return RooFit::Detail::owningPtr(RooFit::FitHelpers::minimize(*this, *chi2, data, pc));
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::minimize(*this, *chi2, data, pc));
 }
 
 
@@ -4262,7 +4262,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const Ro
                                             arg5, arg6, arg7, arg8);
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
 
-   return RooFit::Detail::owningPtr(std::move(chi2));
+   return RooFit::makeOwningPtr<RooAbsReal>(std::move(chi2));
 #else
    throw std::runtime_error("createChi2() is not supported without the legacy evaluation backend");
    return nullptr;
@@ -4365,7 +4365,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const 
    }
 
    std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata, chi2CmdList)};
-   return RooFit::Detail::owningPtr(RooFit::FitHelpers::minimize(*this, *xychi2, xydata, pc));
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::minimize(*this, *xychi2, xydata, pc));
 }
 
 
@@ -4445,7 +4445,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const Roo
 
    std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
 
-   return RooFit::Detail::owningPtr(
+   return RooFit::makeOwningPtr<RooAbsReal>(
       std::make_unique<RooXYChi2Var>(name.c_str(), name.c_str(), *this, data, yvar, integrate, cfg));
 #else
    throw std::runtime_error("createChi2() is not supported without the legacy evaluation backend");

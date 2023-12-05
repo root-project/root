@@ -53,9 +53,11 @@ public:
   void printValue(std::ostream& os) const override { os << _string; }
 
 
-  RooFit::OwningPtr<RooAbsArg> createFundamental(const char* newname=nullptr) const override {
-    return RooFit::Detail::owningPtr(std::make_unique<RooStringVar>(newname ? newname : GetName(), GetTitle(), "", 1));
-  }
+   RooFit::OwningPtr<RooAbsArg> createFundamental(const char *newname = nullptr) const override
+   {
+      return RooFit::makeOwningPtr<RooAbsArg>(
+         std::make_unique<RooStringVar>(newname ? newname : GetName(), GetTitle(), "", 1));
+   }
 
 protected:
   // Internal consistency checking (needed by RooDataSet)

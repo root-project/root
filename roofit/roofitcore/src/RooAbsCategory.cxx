@@ -643,7 +643,7 @@ RooFit::OwningPtr<RooAbsArg> RooAbsCategory::createFundamental(const char* newna
     fund->defineStateUnchecked(type.first, type.second);
   }
 
-  return RooFit::Detail::owningPtr<RooAbsArg>(std::move(fund));
+  return RooFit::makeOwningPtr<RooAbsArg>(std::move(fund));
 }
 
 

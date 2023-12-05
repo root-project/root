@@ -263,7 +263,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
 
   msgSvc.getStream(1).addTopic(RooFit::ObjectHandling);
 
-  return RooFit::Detail::owningPtr(std::move(ws));
+  return RooFit::makeOwningPtr(std::move(ws));
 }
 
 

@@ -155,7 +155,7 @@ RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet&
   if (!_cacheAlpha) {
     par1->add(alpha.arg()) ;
   }
-  return RooFit::Detail::owningPtr(std::move(par1));
+  return RooFit::makeOwningPtr(std::move(par1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

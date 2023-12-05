@@ -135,7 +135,7 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
 
    // check if global fit has been already done
    if (fFitResult && fGlobalFitDone) {
-      return RooFit::Detail::owningPtr(std::move(nll));
+      return RooFit::makeOwningPtr(std::move(nll));
    }
 
       // calculate MLE
@@ -154,7 +154,7 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
       }
    }
 
-   return RooFit::Detail::owningPtr(std::move(nll));
+   return RooFit::makeOwningPtr(std::move(nll));
 }
 
 RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {
