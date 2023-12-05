@@ -339,6 +339,9 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental
 
    auto colIds = GetColumnsByType(colType);
 
+   if (colIds.empty())
+      return std::make_unique<TH1D>(std::string(histName).c_str(), std::string(histTitle).c_str(), nBins, 0, nBins);
+
    std::vector<std::uint64_t> pageSizes;
    std::for_each(colIds.begin(), colIds.end(), [this, &pageSizes](const auto colId) {
       auto colInfo = GetColumnInspector(colId);

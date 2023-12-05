@@ -492,6 +492,14 @@ TEST(RNTupleInspector, PageSizeDistribution)
       nFloatPages += inspector->GetColumnInspector(colId).GetNPages();
    }
    EXPECT_EQ(nFloatPages, floatPageSizeHisto->Integral());
+
+   // Requesting a histogram for a column with a physical ID not present in the given RNTuple should throw
+   EXPECT_THROW(inspector->GetPageSizeDistribution(inspector->GetDescriptor()->GetNPhysicalColumns() + 1),
+                ROOT::Experimental::RException);
+
+   // Requesting a histogram for a column type not present in the given RNTuple should give an empty histogram
+   auto nonExistingTypeHisto = inspector->GetPageSizeDistribution(EColumnType::kReal32);
+   EXPECT_EQ(0, nonExistingTypeHisto->Integral());
 }
 
 TEST(RNTupleInspector, FieldInfoCompressed)
