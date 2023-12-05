@@ -365,12 +365,12 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (canonicalType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
 
-   if (auto [arrayBaseType, arraySize] = ParseArrayType(canonicalType); !arraySize.empty()) {
-      // TODO(jalopezg): support multi-dimensional row-major (C order) arrays in RArrayField
-      if (arraySize.size() > 1)
-         return R__FAIL("multi-dimensional array type not supported " + canonicalType);
-      auto itemField = Create("_0", arrayBaseType).Unwrap();
-      return {std::make_unique<RArrayField>(fieldName, std::move(itemField), arraySize[0])};
+   if (auto [arrayBaseType, arraySizes] = ParseArrayType(canonicalType); !arraySizes.empty()) {
+      std::unique_ptr<RFieldBase> arrayField = Create("_0", arrayBaseType).Unwrap();
+      for (int i = arraySizes.size() - 1; i >= 0; --i) {
+         arrayField = std::make_unique<RArrayField>((i == 0) ? fieldName : "_0", std::move(arrayField), arraySizes[i]);
+      }
+      return arrayField;
    }
 
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
