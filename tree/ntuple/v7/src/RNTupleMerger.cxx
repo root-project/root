@@ -38,7 +38,8 @@ ROOT::Experimental::RFieldMerger::Merge(const ROOT::Experimental::RFieldDescript
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::BuildColumnIdMap(std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns)
+void ROOT::Experimental::RNTupleMerger::BuildColumnIdMap(
+   std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns)
 {
    for (auto &column : columns) {
       column.fColumnOutputId = fOutputIdMap.size();
@@ -47,7 +48,8 @@ void ROOT::Experimental::RNTupleMerger::BuildColumnIdMap(std::vector<ROOT::Exper
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::ValidateColumns(std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns)
+void ROOT::Experimental::RNTupleMerger::ValidateColumns(
+   std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns)
 {
    // First ensure that we have the same number of columns
    if (fOutputIdMap.size() != columns.size()) {
@@ -65,7 +67,8 @@ void ROOT::Experimental::RNTupleMerger::ValidateColumns(std::vector<ROOT::Experi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> ROOT::Experimental::RNTupleMerger::CollectColumns(const Detail::RPageSource &source, bool firstSource)
+std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo>
+ROOT::Experimental::RNTupleMerger::CollectColumns(const Detail::RPageSource &source, bool firstSource)
 {
    auto desc = source.GetSharedDescriptorGuard();
    std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> columns;
@@ -74,16 +77,17 @@ std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> ROOT::Experimental::
    // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
    // In either case, we also assign the output ids here
    if (firstSource) {
-     BuildColumnIdMap(columns);
+      BuildColumnIdMap(columns);
    } else {
-     ValidateColumns(columns);
+      ValidateColumns(columns);
    }
    return columns;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::AddColumnsFromField(std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns, const RNTupleDescriptor &desc,
-                         const RFieldDescriptor &fieldDesc, const std::string &prefix)
+void ROOT::Experimental::RNTupleMerger::AddColumnsFromField(
+   std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns, const RNTupleDescriptor &desc,
+   const RFieldDescriptor &fieldDesc, const std::string &prefix)
 {
    for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
       std::string name = prefix + field.GetFieldName() + ".";
