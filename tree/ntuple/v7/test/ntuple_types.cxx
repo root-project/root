@@ -149,10 +149,7 @@ TEST(RNTuple, ArrayField)
    // Malformed type names
    EXPECT_THROW(RFieldBase::Create("test", "unsigned int[]").Unwrap(), ROOT::Experimental::RException);
    EXPECT_THROW(RFieldBase::Create("test", "unsigned int [[2").Unwrap(), ROOT::Experimental::RException);
-   EXPECT_THROW(RFieldBase::Create("test", "unsigned[2] int[10]").Unwrap(), ROOT::Experimental::RException);
-
-   // Multi-dimensional arrays are not currently supported
-   EXPECT_THROW(RFieldBase::Create("test", "int32_t[10][11]").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned[2] int[10").Unwrap(), ROOT::Experimental::RException);
 
    unsigned char charArray[] = {0x00, 0x01, 0x02, 0x03};
 
@@ -188,6 +185,54 @@ TEST(RNTuple, ArrayField)
       EXPECT_EQ(0, memcmp(viewArray1(i), fs, sizeof(fs)));
       EXPECT_EQ(0, memcmp(viewArray2(i), charArray, sizeof(charArray)));
    }
+}
+
+TEST(RNTuple, NDimArrayField)
+{
+   auto field = RFieldBase::Create("test", "int32_t[2][3]").Unwrap();
+   EXPECT_EQ((6 * sizeof(int32_t)), field->GetValueSize());
+   EXPECT_EQ(alignof(int32_t[2][3]), field->GetAlignment());
+
+   FileRaii fileGuard("test_ntuple_rfield_array.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("dim2", "int[2][3]").Unwrap());
+      model->AddField(RFieldBase::Create("dim3", "int[1][2][3]").Unwrap());
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto dim2_field = ntuple->GetModel()->GetDefaultEntry()->Get<int[2][3]>("dim2");
+      auto dim3_field = ntuple->GetModel()->GetDefaultEntry()->Get<int[1][2][3]>("dim3");
+      (*dim2_field)[0][0] = 0;
+      (*dim2_field)[0][1] = 1;
+      (*dim2_field)[0][2] = 2;
+      (*dim2_field)[1][0] = 3;
+      (*dim2_field)[1][1] = 4;
+      (*dim2_field)[1][2] = 5;
+      (*dim3_field)[0][0][0] = 0;
+      (*dim3_field)[0][0][1] = 1;
+      (*dim3_field)[0][0][2] = 2;
+      (*dim3_field)[0][1][0] = 3;
+      (*dim3_field)[0][1][1] = 4;
+      (*dim3_field)[0][1][2] = 5;
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1, ntuple->GetNEntries());
+   auto viewDim2 = ntuple->GetView<int[2][3]>("dim2");
+   auto viewDim3 = ntuple->GetView<int[1][2][3]>("dim3");
+   EXPECT_EQ(0, viewDim2(0)[0][0]);
+   EXPECT_EQ(1, viewDim2(0)[0][1]);
+   EXPECT_EQ(2, viewDim2(0)[0][2]);
+   EXPECT_EQ(3, viewDim2(0)[1][0]);
+   EXPECT_EQ(4, viewDim2(0)[1][1]);
+   EXPECT_EQ(5, viewDim2(0)[1][2]);
+   EXPECT_EQ(0, viewDim3(0)[0][0][0]);
+   EXPECT_EQ(1, viewDim3(0)[0][0][1]);
+   EXPECT_EQ(2, viewDim3(0)[0][0][2]);
+   EXPECT_EQ(3, viewDim3(0)[0][1][0]);
+   EXPECT_EQ(4, viewDim3(0)[0][1][1]);
+   EXPECT_EQ(5, viewDim3(0)[0][1][2]);
 }
 
 TEST(RNTuple, StdPair)
