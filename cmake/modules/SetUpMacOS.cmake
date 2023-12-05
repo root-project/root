@@ -125,3 +125,27 @@ if(CMAKE_GENERATOR MATCHES Ninja)
             " Downloading the latest version of Ninja might solve the problem.\n")
   endif()
 endif()
+
+# Set developer flags
+if(dev)
+  # Warnings are errors.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+
+  # Do not relink just because a dependent .so has changed.
+  # I.e. relink only if a header included by the libs .o-s has changed,
+  # whether or not that header "belongs" to a different .so.
+  set(CMAKE_LINK_DEPENDS_NO_SHARED On)
+
+  # Split debug info for faster builds.
+  if(NOT gnuinstall)
+    # We won't install DWARF files.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gsplit-dwarf")
+  endif()
+
+  # Turn on stdlib checking
+  if (libcxx)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LIBCPP_ENABLE_ASSERTIONS=1")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")
+  endif()
+endif()
