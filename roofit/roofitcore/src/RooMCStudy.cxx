@@ -640,7 +640,7 @@ RooFit::OwningPtr<RooFitResult> RooMCStudy::refit(RooAbsData* genSample)
     fr = std::unique_ptr<RooFitResult>{doFit(genSample)};
   }
 
-  return RooFit::Detail::owningPtr(std::move(fr));
+  return RooFit::makeOwningPtr(std::move(fr));
 }
 
 

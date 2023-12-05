@@ -1707,7 +1707,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet& whatVars, con
     data->SetName(dsetName) ;
   }
 
-  return RooFit::Detail::owningPtr(std::move(data));
+  return RooFit::makeOwningPtr(std::move(data));
 }
 
 
@@ -1782,7 +1782,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) cons
   std::unique_ptr<RooDataSet> ret{generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,false,spec._randProto,spec._resampleProto,
               spec._init,spec._extended)};
   spec._init = true ;
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr(std::move(ret));
 }
 
 
@@ -1811,7 +1811,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) cons
 RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, double nEvents, bool verbose, bool autoBinned, const char* binnedTag, bool expectedData, bool extended) const
 {
   if (nEvents==0 && extendMode()==CanNotBeExtended) {
-    return RooFit::Detail::owningPtr(std::make_unique<RooDataSet>("emptyData","emptyData",whatVars));
+    return RooFit::makeOwningPtr(std::make_unique<RooDataSet>("emptyData","emptyData",whatVars));
   }
 
   // Request for binned generation
@@ -1827,7 +1827,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, dou
   else {
     coutE(Generation)  << "RooAbsPdf::generate(" << GetName() << ") cannot create a valid context" << endl;
   }
-  return RooFit::Detail::owningPtr(std::move(generated));
+  return RooFit::makeOwningPtr(std::move(generated));
 }
 
 
@@ -1897,7 +1897,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, con
 {
   std::unique_ptr<RooAbsGenContext> context{genContext(whatVars,&prototype,nullptr,verbose)};
   if (context) {
-    return RooFit::Detail::owningPtr(generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto));
+    return RooFit::makeOwningPtr(generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto));
   }
   coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") ERROR creating generator context" << endl ;
   return nullptr;
@@ -2214,7 +2214,7 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet &whatVa
 
   }
 
-  return RooFit::Detail::owningPtr(std::move(hist));
+  return RooFit::makeOwningPtr(std::move(hist));
 }
 
 
@@ -2990,7 +2990,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, co
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumCdf>(name.c_str(),name.c_str(),*this,*ivar,"numcdf");
   ret->setInterpolationOrder(intOrder) ;
-  return RooFit::Detail::owningPtr(std::move(ret));
+  return RooFit::makeOwningPtr<RooAbsReal>(std::move(ret));
 }
 
 

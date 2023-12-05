@@ -750,7 +750,7 @@ RooFit::OwningPtr<RooArgSet> RooFFTConvPdf::actualParameters(const RooArgSet& ns
   std::unique_ptr<RooArgSet> vars{getVariables()};
   vars->remove(*std::unique_ptr<RooArgSet>{actualObservables(nset)});
 
-  return RooFit::Detail::owningPtr(std::move(vars));
+  return RooFit::makeOwningPtr(std::move(vars));
 }
 
 

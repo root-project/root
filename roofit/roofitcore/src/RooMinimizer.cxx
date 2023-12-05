@@ -641,7 +641,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
 
    fitRes->setStatusHistory(_statusHistory);
 
-   return RooFit::Detail::owningPtr(std::move(fitRes));
+   return RooFit::makeOwningPtr(std::move(fitRes));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -911,7 +911,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    }
    res->fillCorrMatrix(globalCC, corrs, covs);
 
-   return RooFit::Detail::owningPtr(std::move(res));
+   return RooFit::makeOwningPtr(std::move(res));
 }
 
 /// Try to recover from invalid function values. When invalid function values

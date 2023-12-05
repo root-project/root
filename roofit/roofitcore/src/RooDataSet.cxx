@@ -779,7 +779,8 @@ RooFit::OwningPtr<RooAbsData> RooDataSet::emptyClone(const char* newName, const 
    }
 
    using namespace RooFit;
-   return RooFit::Detail::owningPtr(std::make_unique<RooDataSet>(newName, newTitle, vars2, WeightVar(wgtVarName), StoreError(errorSet), StoreAsymError(asymErrorSet)));
+   return RooFit::makeOwningPtr<RooAbsData>(std::make_unique<RooDataSet>(
+      newName, newTitle, vars2, WeightVar(wgtVarName), StoreError(errorSet), StoreAsymError(asymErrorSet)));
 }
 
 
@@ -882,7 +883,7 @@ RooFit::OwningPtr<RooDataHist> RooDataSet::binnedClone(const char* newName, cons
     title = std::string(GetTitle()) + "_binned" ;
   }
 
-  return RooFit::Detail::owningPtr(std::make_unique<RooDataHist>(name,title,*get(),*this));
+  return RooFit::makeOwningPtr(std::make_unique<RooDataHist>(name,title,*get(),*this));
 }
 
 

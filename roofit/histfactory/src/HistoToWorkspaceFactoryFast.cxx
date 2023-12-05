@@ -239,7 +239,7 @@ namespace HistFactory{
     // properties of the measurement
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement( "model_"+ch_name, ws_single.get(), measurement );
 
-    return RooFit::Detail::owningPtr(std::move(ws_single));
+    return RooFit::makeOwningPtr(std::move(ws_single));
 
   }
 
@@ -289,7 +289,7 @@ namespace HistFactory{
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
 
     // Done.  Return the pointer
-    return RooFit::Detail::owningPtr(std::move(ws));
+    return RooFit::makeOwningPtr(std::move(ws));
 
   }
 
@@ -1604,7 +1604,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       throw hf_exc();
     }
 
-    return RooFit::Detail::owningPtr(std::move(combined));
+    return RooFit::makeOwningPtr(std::move(combined));
   }
 
 

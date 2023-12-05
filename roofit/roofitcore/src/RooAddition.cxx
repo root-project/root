@@ -55,21 +55,10 @@ ClassImp(RooAddition);
 /// \param[in] sumSet The value of the function will be the sum of the values in this set
 /// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in `sumSet`
 
-RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-                         , bool takeOwnership
-#endif
-  )
-  : RooAbsReal(name, title)
-  , _set("!set","set of components",this)
-  , _cacheMgr(this,10)
+RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet)
+   : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
 {
   _set.addTyped<RooAbsReal>(sumSet);
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-  for (RooAbsArg *comp : sumSet) {
-    if (takeOwnership) _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
-  }
-#endif
 }
 
 
@@ -88,14 +77,8 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 /// \param[in] sumSet2 Right-hand element of the pair-wise products
 /// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
 ///
-RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-                         , bool takeOwnership
-#endif
-  )
-    : RooAbsReal(name, title)
-    , _set("!set","set of components",this)
-    , _cacheMgr(this,10)
+RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet1, const RooArgList &sumSet2)
+   : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
 {
   if (sumSet1.size() != sumSet2.size()) {
     coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << std::endl;
@@ -126,12 +109,6 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     auto prod = std::make_unique<RooProduct>( _name, _name , RooArgSet(*comp1, *comp2));
     _set.add(*prod);
     _ownedList.addOwned(std::move(prod));
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-    if (takeOwnership) {
-        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp1});
-        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp2});
-    }
-#endif
   }
 }
 
