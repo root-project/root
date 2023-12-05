@@ -311,7 +311,7 @@ RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string>
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
 {
-   // This datasource uses the GetColumnReaders2 API
+   // This datasource uses the newer GetColumnReaders() API
    return {};
 }
 
