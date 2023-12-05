@@ -1249,7 +1249,8 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Writ
    Write(&strTitle, strTitle.GetSize(), offset);
    offset += strTitle.GetSize();
    auto offsetData = offset;
-   Write(buffer, nbytes, offset);
+   if (buffer)
+      Write(buffer, nbytes, offset);
 
    return offsetData;
 }
