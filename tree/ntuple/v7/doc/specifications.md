@@ -704,7 +704,7 @@ Fixed-sized arrays are stored as two fields:
   - A repetitive field of type `std::array<T, N>` with no attached columns. The array size `N` is stored in the field meta-data.
   - Child field of type `T` named `_0`, which must be a type with RNTuple I/O support.
 
-Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
+Note that T can itself be an array type, which includes support for multidimensional C-style arrays.
 
 #### std::variant<T1, T2, ..., Tn>
 
