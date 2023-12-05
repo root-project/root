@@ -121,7 +121,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    void *fValuePtr = nullptr;                  ///< Used to reuse the object created by fValue when reconnecting sources
    Long64_t fLastEntry = -1;                   ///< Last entry number that was read
    /// For chains, the logical entry and the physical entry in any particular file can be different.
-   /// The entry offset stores the logical entry number (sum of all previous entries) when file of the corresponding
+   /// The entry offset stores the logical entry number (sum of all previous physical entries) when a file of the corresponding
    /// data source was opened.
    ULong64_t fEntryOffset = 0;
 
