@@ -353,7 +353,7 @@ void RNTupleDS::PrepareNextRanges()
    // Easy work scheduling: one file per slot. We skip empty files (files without entries).
    if (nRemainingFiles >= fNSlots) {
       while ((fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles)) {
-         REntryRange range;
+         REntryRangeDS range;
 
          if (fPrincipalSource) {
             // Avoid reopening the first file, which has been opened already to read the schema
@@ -424,7 +424,7 @@ void RNTupleDS::PrepareNextRanges()
          R__ASSERT(iRange > 0);
          auto end = rangesByCluster[iRange - 1].second;
 
-         REntryRange range;
+         REntryRangeDS range;
          // The last range for this file just takes the already opened page source. All previous ranges clone.
          if (iSlot == N - 1) {
             range.fSource = std::move(source);
@@ -463,10 +463,10 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    std::swap(fCurrentRanges, fNextRanges);
    PrepareNextRanges();
 
-   // Create ranges for the RDF loop manager from the list of REntryRange records.
-   // The entry ranges that are relative to the page source in REntryRange are translated into absolute
+   // Create ranges for the RDF loop manager from the list of REntryRangeDS records.
+   // The entry ranges that are relative to the page source in REntryRangeDS are translated into absolute
    // entry ranges, given the current state of the entry cursor.
-   // We remember the connection from first absolute entry index of a range to its REntryRange record
+   // We remember the connection from first absolute entry index of a range to its REntryRangeDS record
    // so that we can properly rewire the column reader in InitSlot
    fFirstEntry2RangeIdx.clear();
    ULong64_t nEntriesPerSource = 0;
