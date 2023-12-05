@@ -1,6 +1,6 @@
 /// \file ROOT/RNTupleMerger.hxx
 /// \ingroup NTuple ROOT7
-/// \author Jakob Blomer <jblomer@cern.ch> & Max Orok <maxwellorok@gmail.com>
+/// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>
 /// \date 2020-07-08
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -57,8 +57,8 @@ class RNTupleMerger {
 private:
    // Struct to hold column information
    struct RColumnInfo {
-      std::string fColumnName;
-      std::string fColumnTypeAndVersion;
+      std::string fColumnName; ///< The qualified field name to which the column belongs, followed by the column index
+      std::string fColumnTypeAndVersion; ///< "<type>.<version>" of the field to which the column belongs
       DescriptorId_t fColumnInputId;
       DescriptorId_t fColumnOutputId;
 
@@ -71,64 +71,18 @@ private:
 
    /// Build the internal column id map from the first source
    /// This is where we assign the output ids for the first source
-   void BuildColumnIdMap(std::vector<RColumnInfo> &columns)
-   {
-      for (auto &column : columns) {
-         column.fColumnOutputId = fOutputIdMap.size();
-         fOutputIdMap[column.fColumnName + "." + column.fColumnTypeAndVersion] = column.fColumnOutputId;
-      }
-   }
+   void BuildColumnIdMap(std::vector<RColumnInfo> &columns);
 
    /// Validate the columns against the internal map that is built from the first source
    /// This is where we assign the output ids for the remaining sources
-   void ValidateColumns(std::vector<RColumnInfo> &columns)
-   {
-      // First ensure that we have the same number of columns
-      if (fOutputIdMap.size() != columns.size()) {
-         throw RException(R__FAIL("Columns between sources do NOT match"));
-      }
-      // Then ensure that we have the same names of columns and assign the ids
-      for (auto &column : columns) {
-         try {
-            column.fColumnOutputId = fOutputIdMap.at(column.fColumnName + "." + column.fColumnTypeAndVersion);
-         } catch (const std::out_of_range &) {
-            throw RException(R__FAIL("Column NOT found in the first source w/ name " + column.fColumnName +
-                                     " type and version " + column.fColumnTypeAndVersion));
-         }
-      }
-   }
+   void ValidateColumns(std::vector<RColumnInfo> &columns);
 
    /// Recursively add columns from a given field
    void AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
-                            const RFieldDescriptor &fieldDesc, const std::string &suffix = "")
-   {
-      for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
-         std::string name = suffix + field.GetFieldName() + ".";
-         const std::string typeAndVersion = field.GetTypeName() + "." + std::to_string(field.GetTypeVersion());
-         for (const auto &column : desc.GetColumnIterable(field)) {
-            columns.emplace_back(name + std::to_string(column.GetIndex()), typeAndVersion, column.GetPhysicalId(),
-                                 kInvalidDescriptorId);
-         }
-         AddColumnsFromField(columns, desc, field, name);
-      }
-   }
+                            const RFieldDescriptor &fieldDesc, const std::string &prefix = "");
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const Detail::RPageSource *source, bool firstSource)
-   {
-      auto desc = source->GetSharedDescriptorGuard();
-      std::vector<RColumnInfo> columns;
-      // Here we recursively find the columns and fill the RColumnInfo vector
-      AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldZero());
-      // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
-      // In either case, we also assign the output ids here
-      if (firstSource) {
-         BuildColumnIdMap(columns);
-      } else {
-         ValidateColumns(columns);
-      }
-      return columns;
-   }
+   std::vector<RColumnInfo> CollectColumns(const Detail::RPageSource &source, bool firstSource);
 
    // Internal map that holds column name, type, and type id : output ID information
    std::unordered_map<std::string, DescriptorId_t> fOutputIdMap;
