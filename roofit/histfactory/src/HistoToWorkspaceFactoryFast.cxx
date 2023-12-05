@@ -75,8 +75,13 @@ std::vector<double> histToVector(TH1 const &hist)
    // Must get the full size of the TH1 (No direct method to do this...)
    int numBins = hist.GetNbinsX() * hist.GetNbinsY() * hist.GetNbinsZ();
    std::vector<double> out(numBins);
+   int histIndex = 0;
    for (int i = 0; i < numBins; ++i) {
-      out[i] = hist.GetBinContent(i + 1);
+      while (hist.IsBinUnderflow(histIndex) || hist.IsBinOverflow(histIndex)) {
+         ++histIndex;
+      }
+      out[i] = hist.GetBinContent(histIndex);
+      ++histIndex;
    }
    return out;
 }
