@@ -164,6 +164,18 @@ They should be replaced with the suitable STL-compatible interfaces, or you can 
 
 - `RooWorkspace::componentIterator()`: use `RooWorkspace::components()` with range-based loop
 
+### Deprecation of legacy test statistics classes in public interface
+
+Instantiating the following classes and even including their header files is deprecated, and the headers will be removed in ROOT 6.34:
+
+* RooAbsTestStatistic
+* RooAbsOptTestStatistic
+* RooNLLVar
+* RooChi2Var
+* RooXYChi2Var
+
+Please use the higher-level functions `RooAbsPdf::createNLL()` and `RooAbsPdf::createChi2()` if you want to create objects that represent test statistics.
+
 ## 2D Graphics Libraries
 
 
