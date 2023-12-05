@@ -457,6 +457,11 @@ def makePCHInput():
    allHeadersContent = getSTLIncludes()
    allHeadersContent += getExtraIncludes(clingetpchList)
 
+   # Make sure we don't get warnings from the old RooFit test statistics
+   # headers that are deprecated. This line can be removed once the deprecaded
+   # headers are gone (ROOT 6.32.00):
+   allHeadersContent += "#define ROOFIT_BUILDS_ITSELF\n"
+
    allLinkdefsContent = ""
 
    # Loop over the dictionaries, ROOT modules

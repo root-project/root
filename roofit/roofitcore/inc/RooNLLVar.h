@@ -16,6 +16,31 @@
 #ifndef ROO_NLL_VAR
 #define ROO_NLL_VAR
 
+// We can't print deprecation warnings when including headers in cling, because
+// this will be done automatically anyway.
+#ifdef __CLING__
+#ifndef ROOFIT_BUILDS_ITSELF
+// These warnings should only be suppressed when building ROOT itself!
+#warning "Including RooNLLVar.h is deprecated, and this header will be removed in ROOT v6.34: please use RooAbsPdf::createNLL() to create likelihood objects"
+#else
+// If we are builting RooFit itself, this will serve as a reminder to actually
+// remove this deprecate public header. Here is now this needs to be done:
+//    1. Move this header file from inc/ to src/
+//    2. Remove the LinkDef entry, ClassDefOverride, and ClassImpl macros for
+//       this class
+//    3. If there are are tests using this class in the test/ directory, change
+//       the include to use a relative path the moved header file in the src/
+//       directory, e.g. #include <RemovedInterface.h> becomes #include
+//       "../src/RemovedInterface.h"
+//    4. Remove this ifndef-else-endif block from the header
+//    5. Remove the deprecation warning at the end of the class declaration
+#include <RVersion.h>
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 34, 00)
+#error "Please remove this deprecated public interface."
+#endif
+#endif
+#endif
+
 #include "RooAbsOptTestStatistic.h"
 #include "RooCmdArg.h"
 #include "RooAbsPdf.h"
@@ -82,7 +107,12 @@ private:
   std::unique_ptr<RooAbsPdf> _offsetPdf; ///<! An optional per-bin likelihood offset
 
   ClassDefOverride(RooNLLVar,0) // Function representing (extended) -log(L) of p.d.f and dataset
+
+#ifndef ROOFIT_BUILDS_ITSELF
+} R__DEPRECATED(6,34, "Please use RooAbsPdf::createNLL() to create likelihood objects");
+#else
 };
+#endif
 
 #endif
 
