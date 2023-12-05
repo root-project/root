@@ -122,7 +122,7 @@ void rf403_weightedevts()
    // ------------------------------------------------------------------------------------
 
    // Construct binned clone of unbinned weighted dataset
-   RooDataHist *binnedData = wdata.binnedClone();
+   std::unique_ptr<RooAbsData> binnedData{wdata.binnedClone()};
    binnedData->Print("v");
 
    // Perform chi2 fit to binned weighted dataset using sum-of-weights errors
@@ -130,7 +130,8 @@ void rf403_weightedevts()
    // NB: Within the usual approximations of a chi2 fit, a chi2 fit to weighted
    // data using sum-of-weights-squared errors does give correct error
    // estimates
-   std::unique_ptr<RooAbsReal> chi2{p2.createChi2(*binnedData, DataError(RooAbsData::SumW2))};
+   std::unique_ptr<RooAbsReal> chi2{
+      p2.createChi2(static_cast<RooDataHist &>(*binnedData), DataError(RooAbsData::SumW2))};
    RooMinimizer m(*chi2);
    m.migrad();
    m.hesse();

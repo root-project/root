@@ -128,6 +128,6 @@ void rf404_categories()
    tagCat.addToRange("soso", "NetTagger-2");
 
    // Use category range in dataset reduction specification
-   RooDataSet *goodData = (RooDataSet *)data->reduce(CutRange("good"));
-   goodData->table(tagCat)->Print("v");
+   std::unique_ptr<RooAbsData> goodData{data->reduce(CutRange("good"))};
+   static_cast<RooDataSet&>(*goodData).table(tagCat)->Print("v");
 }

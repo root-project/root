@@ -48,7 +48,7 @@ void rf307_fullpereventerrors()
    std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr, 10000)};
 
    // Construct a histogram pdf to describe the shape of the dtErr distribution
-   RooDataHist *expHistDterr = expDataDterr->binnedClone();
+   std::unique_ptr<RooDataHist> expHistDterr{expDataDterr->binnedClone()};
    RooHistPdf pdfErr("pdfErr", "pdfErr", dterr, *expHistDterr);
 
    // C o n s t r u c t   c o n d i t i o n a l   p r o d u c t   d e c a y _ d m ( d t | d t e r r ) * p d f ( d t e r
