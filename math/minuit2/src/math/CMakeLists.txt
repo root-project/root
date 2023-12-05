@@ -89,8 +89,8 @@ set_target_properties(Minuit2Math PROPERTIES CXX_EXTENSIONS OFF)
 
 install(TARGETS Minuit2Math
         EXPORT Minuit2Targets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
 
 install(FILES ${FIT_HEADERS} DESTINATION include/Minuit2/Fit)
