@@ -477,6 +477,8 @@ TEST(RNTupleInspector, PageSizeDistribution)
    auto intPageSizeHisto = inspector->GetPageSizeDistribution(intColId);
    EXPECT_STREQ(Form("pageSizeHistCol%d", intColId), intPageSizeHisto->GetName());
    EXPECT_STREQ(Form("Page size distribution for column with ID %d", intColId), intPageSizeHisto->GetTitle());
+   EXPECT_STREQ("Page size (B)", intPageSizeHisto->GetXaxis()->GetTitle());
+   EXPECT_STREQ("N_{pages}", intPageSizeHisto->GetYaxis()->GetTitle());
 
    // Make sure that all page sizes are included in the histogram
    EXPECT_EQ(inspector->GetColumnInspector(intColId).GetNPages(), intPageSizeHisto->Integral());
@@ -485,6 +487,8 @@ TEST(RNTupleInspector, PageSizeDistribution)
       inspector->GetPageSizeDistribution(EColumnType::kSplitReal32, "floatPageSize", "Float page size distribution");
    EXPECT_STREQ("floatPageSize", floatPageSizeHisto->GetName());
    EXPECT_STREQ("Float page size distribution", floatPageSizeHisto->GetTitle());
+   EXPECT_STREQ("Page size (B)", floatPageSizeHisto->GetXaxis()->GetTitle());
+   EXPECT_STREQ("N_{pages}", floatPageSizeHisto->GetYaxis()->GetTitle());
 
    // Make sure that all page sizes are included in the histogram
    int nFloatPages = 0;
