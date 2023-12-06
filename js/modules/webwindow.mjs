@@ -622,12 +622,20 @@ class WebWindowHandle {
             if (!isStr(msg))
                return console.log(`unsupported message kind: ${typeof msg}`);
 
-            const i1 = msg.indexOf(':'),
-                  credit = parseInt(msg.slice(0, i1)),
+            const i0 = msg.indexOf(':'),
+                  server_md5 = msg.slice(0, i0),
+                  i1 = msg.indexOf(':', i0 + 1),
+                  credit = Number.parseInt(msg.slice(i0 + 1, i1)),
                   i2 = msg.indexOf(':', i1 + 1),
                   // cansend = parseInt(msg.slice(i1 + 1, i2)),  // TODO: take into account when sending messages
                   i3 = msg.indexOf(':', i2 + 1),
-                  chid = parseInt(msg.slice(i2 + 1, i3));
+                  chid = Number.parseInt(msg.slice(i2 + 1, i3));
+
+            if (this.key && sessionKey) {
+               const client_md5 = hexMD5(`${sessionKey}:${msg.slice(i0+1)}:${this.key}`);
+               if (server_md5 !== client_md5)
+                  return console.log(`Failure checking server md5 sum ${server_md5}`);
+            }
 
             this.ackn++;            // count number of received packets,
             this.cansend += credit; // how many packets client can send
