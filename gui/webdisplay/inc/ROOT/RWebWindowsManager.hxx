@@ -96,6 +96,8 @@ public:
 
    static bool IsMainThrd();
    static void AssignMainThrd();
+
+   static void SetLoopbackMode(bool on = true);
 };
 
 } // namespace Experimental
