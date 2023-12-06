@@ -66,6 +66,7 @@ struct DerivedC : public DerivedA, public DerivedA2 {
 struct StructWithArrays {
    unsigned char c[4];
    float f[2];
+   int i[2][1];
 };
 
 struct EmptyStruct {};

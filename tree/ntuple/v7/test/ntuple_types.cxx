@@ -164,7 +164,7 @@ TEST(RNTuple, ArrayField)
       auto array1_field = ntuple->GetModel()->GetDefaultEntry()->Get<float[2]>("array1");
       auto array2_field = ntuple->GetModel()->GetDefaultEntry()->Get<unsigned char[4]>("array2");
       for (int i = 0; i < 2; i++) {
-         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}});
+         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}, {{2*i}, {2*i + 1}}});
          new (array1_field) float[2]{0.0f, static_cast<float>(i)};
          memcpy(array2_field, charArray, sizeof(charArray));
          ntuple->Fill();
@@ -180,6 +180,8 @@ TEST(RNTuple, ArrayField)
       EXPECT_EQ(0, memcmp(viewStruct(i).c, "ntpl", 4));
       EXPECT_EQ(1.0f, viewStruct(i).f[0]);
       EXPECT_EQ(42.0f, viewStruct(i).f[1]);
+      EXPECT_EQ(2*i, viewStruct(i).i[0][0]);
+      EXPECT_EQ(2*i + 1, viewStruct(i).i[1][0]);
 
       float fs[] = {0.0f, static_cast<float>(i)};
       EXPECT_EQ(0, memcmp(viewArray1(i), fs, sizeof(fs)));
