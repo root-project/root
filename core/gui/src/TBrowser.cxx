@@ -113,9 +113,7 @@ Bool_t TBrowser::InitGraphics()
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
 
-   TString hname = gEnv->GetValue("Browser.Name", "TRootBrowserLite");
-
-   Bool_t isweb = gROOT->IsWebDisplay() || (hname == "ROOT::Experimental::RWebBrowserImp");
+   Bool_t isweb = gROOT->IsWebDisplay();
 
    if (gApplication)
       gApplication->InitializeGraphics(isweb);
