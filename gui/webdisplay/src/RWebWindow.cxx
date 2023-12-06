@@ -744,7 +744,8 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.GetWSId() == 0)
       return true;
 
-   bool is_longpoll = "root.longpoll"s == arg.GetFileName();
+   bool is_longpoll = arg.GetFileName() && ("root.longpoll"s == arg.GetFileName()),
+        is_remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
 
    if (arg.IsMethod("WS_CONNECT")) {
 
@@ -777,10 +778,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       key = url.GetValueFromOptions("key");
       if(url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
-      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
 
       for (auto &conn : fPendingConn)
-         if (_CanTrustIn(conn, key, ntry, remote, true))
+         if (_CanTrustIn(conn, key, ntry, is_remote, true))
              return true;
 
       return false;
@@ -802,13 +802,12 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          key = url.GetValueFromOptions("key");
       if (url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
-      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
 
       std::lock_guard<std::mutex> grd(fConnMutex);
 
       // check if in pending connection exactly this combination was checked
       for (size_t n = 0; n < fPendingConn.size(); ++n)
-         if (_CanTrustIn(fPendingConn[n], key, ntry, remote, false)) {
+         if (_CanTrustIn(fPendingConn[n], key, ntry, is_remote, false)) {
             conn = std::move(fPendingConn[n]);
          fPendingConn.erase(fPendingConn.begin() + n);
          break;
@@ -817,9 +816,8 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (conn) {
          conn->fWSId = arg.GetWSId();
          conn->fActive = true;
-         // only for longpoll connection keep key to be able check it again
-         if (!is_longpoll)
-             conn->fKey.clear();
+         // preserve key for the livetime of connection, used in MD5 coding
+         // conn->fKey.clear();
          conn->ResetStamps();
          fConn.emplace_back(conn);
          return true;
@@ -847,9 +845,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if(url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
 
-      bool remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
-
-      if (!_CanTrustIn(conn, key, ntry, remote, true)) {
+      if (!_CanTrustIn(conn, key, ntry, is_remote, true)) {
          printf("Not trust in the request\n");
          return false;
       }
@@ -898,10 +894,46 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.GetPostDataLength() <= 0)
       return true;
 
+   // here start testing of MD5 sum in the begin of the message
+
+   const char *buf0 = (const char *) arg.GetPostData();
+   Long_t data_len = arg.GetPostDataLength();
+
+   const char *buf = strchr(buf0, ':');
+   if (!buf) {
+      R__LOG_ERROR(WebGUILog()) << "missing separator for md5 checksum";
+      return false;
+   }
+
+   Int_t code_len =  buf - buf0;
+   data_len -= code_len + 1;
+   buf++; // starting of normal message
+
+   bool is_none = strncmp(buf0, "none:", 5) == 0, is_match = false;
+
+   if (!is_none) {
+      auto code = TString::Format("%s:%s:%s", fMgr->fSessionKey.c_str(), buf, conn->fKey.c_str());
+      TMD5 m;
+      m.Update((const UChar_t *) code.Data(), code.Length());
+      m.Final();
+
+      is_match = !is_none && (strncmp(buf0, m.AsString(), code_len) == 0);
+   }
+
+   // IMPORTANT: final place where MD5 sum of input message checked!
+   if (!is_match) {
+      // mismatch of md5 checksum
+      if (is_remote && IsRequireAuthKey())
+         return false;
+      if (!is_none) {
+         R__LOG_ERROR(WebGUILog()) << "wrong md5 sum provided";
+         return false;
+      }
+   }
+
    // here processing of received data should be performed
    // this is task for the implemented windows
 
-   const char *buf = (const char *)arg.GetPostData();
    char *str_end = nullptr;
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
@@ -924,12 +956,12 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
    Long_t processed_len = (str_end + 1 - buf);
 
-   if (processed_len > arg.GetPostDataLength()) {
+   if (processed_len > data_len) {
       R__LOG_ERROR(WebGUILog()) << "corrupted buffer";
       return false;
    }
 
-   std::string cdata(str_end + 1, arg.GetPostDataLength() - processed_len);
+   std::string cdata(str_end + 1, data_len - processed_len);
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
