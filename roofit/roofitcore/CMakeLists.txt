@@ -130,6 +130,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit.h
     RooFit/Config.h
     RooFit/Detail/AnalyticalIntegrals.h
+    RooFit/Detail/BatchModeDataHelpers.h
     RooFit/Detail/CodeSquashContext.h
     RooFit/Detail/DataMap.h
     RooFit/Detail/EvaluateFuncs.h
