@@ -306,6 +306,8 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_PyTorch.C)
     list(APPEND tmva_veto tmva/RBatchGenerator_PyTorch.py)
   endif()
+  #veto this tutorial since it is added directly
+  list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
   if (NOT PY_SONNET_FOUND OR NOT PY_GRAPH_NETS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
@@ -591,9 +593,9 @@ if (PY_KERAS_FOUND)
   set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
   set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
 endif()
-if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
-   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser-py)
-endif()
+#if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
+#   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser-py)
+#endif()
 
 
 #--List long-running tutorials to label them as "longtest"
@@ -622,6 +624,12 @@ ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURR
                 PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
 ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
                 FAILREGEX "Error in" "error:" LABELS tutorial)
+# define Python GNN parsing tutorial needed to run before
+if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
+  ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${PYTHON_EXECUTABLE_Development_Main}
+  ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
+  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
+endif()
 
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})

@@ -1,6 +1,9 @@
 // Macor evaluating a GNN model which was generated with the Parser macro
 //
 
+// need to add include path to find generated model file
+R__ADD_INCLUDE_PATH($PWD)
+R__ADD_INCLUDE_PATH($ROOTSYS/runtutorials)
 #include "encoder.hxx"
 #include "core.hxx"
 #include "decoder.hxx"
