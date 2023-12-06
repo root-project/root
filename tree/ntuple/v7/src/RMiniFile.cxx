@@ -203,8 +203,10 @@ struct RTFKey {
    RTFKey() : fInfoShort() {}
    RTFKey(std::uint64_t seekKey, std::uint64_t seekPdir,
           const RTFString &clName, const RTFString &objName, const RTFString &titleName,
-          std::uint32_t szObjInMem, std::uint32_t szObjOnDisk = 0)
+          std::size_t szObjInMem, std::size_t szObjOnDisk = 0)
    {
+      R__ASSERT(szObjInMem < std::numeric_limits<std::int32_t>::max());
+      R__ASSERT(szObjOnDisk < std::numeric_limits<std::int32_t>::max());
       fObjLen = szObjInMem;
       if ((seekKey > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())) ||
           (seekPdir > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())))
