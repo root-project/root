@@ -405,7 +405,16 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          // the web mode is requested
          const char *opt = argv[i] + 5;
          argv[i] = null;
-         gROOT->SetWebDisplay((*opt == '=') ? opt + 1 : "");
+         if (strcmp(opt, "=off") == 0)
+            gROOT->SetWebDisplay("off");
+         else {
+            printf("\nWARNING!\n");
+            printf("Web mode switch --web is disabled for security reason.\n");
+            printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
+            printf("For environments controlling the security issues you can enable web display by calling\n");
+            printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");
+            // gROOT->SetWebDisplay((*opt == '=') ? opt + 1 : "");
+         }
       } else if (!strcmp(argv[i], "-e")) {
          argv[i] = null;
          ++i;
