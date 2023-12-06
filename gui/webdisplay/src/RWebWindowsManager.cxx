@@ -90,6 +90,7 @@ std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 
 static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 static bool gWebWinMainThrdSet = true;
+static bool gWebWinLoopbackMode = true;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
@@ -115,6 +116,23 @@ void RWebWindowsManager::AssignMainThrd()
    gWebWinMainThrdSet = true;
    gWebWinMainThrd = std::this_thread::get_id();
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set loopback mode for THttpServer used for web widgets
+/// By default is on. Only local communication via localhost address is possible
+/// Disable it only if really necessary - it may open unauthorized access to your application from external nodes!!
+
+void RWebWindowsManager::SetLoopbackMode(bool on)
+{
+   gWebWinLoopbackMode = on;
+   if (!on) {
+      printf("\nWARNING!\n");
+      printf("Disabling loopback mode may leads to security problem.\n");
+      printf("See https://root.cern/about/security/ for more information.\n\n");
+   }
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
@@ -335,8 +353,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
-   // always use loopback
-   bool assign_loopback = true; // RWebWindowWSHandler::GetBoolEnv("WebGui.HttpLoopback", 1) == 1;
+   bool assign_loopback = gWebWinLoopbackMode;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
