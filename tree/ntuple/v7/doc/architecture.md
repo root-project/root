@@ -28,8 +28,8 @@ So unless the collection buffer needs to be reallocated, RNTuple tries to avoid 
 Note that RNTuple currently does not copy or move existing objects when the collection buffer is reallocated.
 
 
-# Naming Conventions
-====================
+Naming Conventions
+==================
 
 For byte arrays and collections of things, the RNTuple code uses the following variable name suffixes:
   - `XyzSize` denotes the size of Xyz in bytes on disk, i.e. after compression. Example: `fPageListSize`.
