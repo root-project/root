@@ -402,7 +402,11 @@ class WebWindowHandle {
       this.ackn = 0;
       this.cansend--; // decrease number of allowed send packets
 
-      this._websocket.send(prefix + msg);
+      let md5 = 'none';
+      if (this.key && sessionKey)
+         md5 = hexMD5(`${sessionKey}:${prefix}${msg}:${this.key}`);
+
+      this._websocket.send(`${md5}:${prefix}${msg}`);
 
       if ((this.kind === 'websocket') || (this.kind === 'longpoll')) {
          if (this.timerid) clearTimeout(this.timerid);
@@ -663,7 +667,7 @@ class WebWindowHandle {
             if ((this.state > 0) || (arg === 'force_close')) {
                console.log('websocket closed');
                this.state = 0;
-               this.invokeReceiver(true, 'onWebsocketClosed');
+               this.invokeReceiver(true, 'onWebsocketClosed');setBatchMode
             }
          };
 
