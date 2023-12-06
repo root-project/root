@@ -816,6 +816,8 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (conn) {
          conn->fWSId = arg.GetWSId();
          conn->fActive = true;
+         conn->fRecvSeq = 0;
+         conn->fSendSeq = 1;
          // preserve key for the livetime of connection, used in MD5 coding
          // conn->fKey.clear();
          conn->ResetStamps();
@@ -936,7 +938,20 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
    char *str_end = nullptr;
 
-   unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
+   unsigned long oper_seq = std::strtoul(buf, &str_end, 10);
+   if (!str_end || *str_end != ':') {
+      R__LOG_ERROR(WebGUILog()) << "missing operation sequence";
+      return false;
+   }
+
+   if (oper_seq <= conn->fRecvSeq) {
+      R__LOG_ERROR(WebGUILog()) << "supply same package again - MiM attacker?";
+      return false;
+   }
+
+   conn->fRecvSeq = oper_seq;
+
+   unsigned long ackn_oper = std::strtoul(str_end + 1, &str_end, 10);
    if (!str_end || *str_end != ':') {
       R__LOG_ERROR(WebGUILog()) << "missing number of acknowledged operations";
       return false;
@@ -1113,6 +1128,8 @@ std::string RWebWindow::_MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt
    if (txt)
       buf.reserve(data.length() + 100);
 
+   buf.append(std::to_string(conn->fSendSeq++));
+   buf.append(":");
    buf.append(std::to_string(conn->fRecvCount));
    buf.append(":");
    buf.append(std::to_string(conn->fSendCredits));
