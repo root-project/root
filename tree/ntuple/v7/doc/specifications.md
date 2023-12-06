@@ -493,7 +493,7 @@ The footer envelope has the following structure:
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
 The header flags do not need to be repeated.
-Readers should combine the feature flags from header and footer for the complete set of flags.
+Readers should combine (logical `or` of the bits) the feature flags from header and footer for the complete set of flags.
 
 #### Schema Extension Record Frame
 
