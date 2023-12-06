@@ -1140,7 +1140,7 @@ std::string RWebWindow::_MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt
 
 bool RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &conn)
 {
-   std::string hdr, data;
+   std::string hdr, data, prefix;
 
    {
       std::lock_guard<std::mutex> grd(conn->fMutex);
@@ -1162,6 +1162,21 @@ bool RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &conn)
 
       conn->fDoingSend = true;
    }
+
+   // add MD5 checksum for string send to client
+   if (!conn->fKey.empty() && !fMgr->fSessionKey.empty()) {
+      auto code = TString::Format("%s:%s:%s", fMgr->fSessionKey.c_str(), hdr.c_str(), conn->fKey.c_str());
+      TMD5 m;
+      m.Update((const UChar_t *) code.Data(), code.Length());
+      m.Final();
+
+      prefix = m.AsString();
+   } else {
+      prefix = "none";
+   }
+
+   prefix += ":";
+   hdr.insert(0, prefix);
 
    int res = 0;
 
