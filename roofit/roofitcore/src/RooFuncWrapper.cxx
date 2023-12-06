@@ -18,7 +18,7 @@
 #include <RooRealVar.h>
 #include <RooHelpers.h>
 #include <RooFit/Detail/CodeSquashContext.h>
-#include "RooFit/BatchModeDataHelpers.h"
+#include "RooFit/Detail/BatchModeDataHelpers.h"
 
 #include <TROOT.h>
 #include <TSystem.h>
@@ -70,7 +70,7 @@ void RooFuncWrapper::loadParamsAndData(RooAbsArg const *head, RooArgSet const &p
    std::map<RooFit::Detail::DataKey, std::span<const double>> spans;
 
    if (data) {
-      spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);
+      spans = RooFit::Detail::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);
    }
 
    std::size_t idx = 0;
@@ -101,7 +101,7 @@ void RooFuncWrapper::loadParamsAndData(RooAbsArg const *head, RooArgSet const &p
 
    if (head) {
       _nodeOutputSizes =
-         RooFit::BatchModeDataHelpers::determineOutputSizes(*head, [&spans](RooFit::Detail::DataKey key) {
+         RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(*head, [&spans](RooFit::Detail::DataKey key) {
             auto found = spans.find(key);
             return found != spans.end() ? found->second.size() : 0;
          });

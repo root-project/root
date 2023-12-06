@@ -33,6 +33,7 @@ class RooSimultaneous;
 class TNamed;
 
 namespace RooFit {
+namespace Detail {
 namespace BatchModeDataHelpers {
 
 std::map<RooFit::Detail::DataKey, std::span<const double>>
@@ -44,6 +45,7 @@ determineOutputSizes(RooAbsArg const &topNode,
                      std::function<std::size_t(RooFit::Detail::DataKey)> const &inputSizeFunc);
 
 } // namespace BatchModeDataHelpers
+} // namespace Detail
 } // namespace RooFit
 
 #endif
