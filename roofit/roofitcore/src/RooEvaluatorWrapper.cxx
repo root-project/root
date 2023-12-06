@@ -28,7 +28,7 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 #include <RooRealVar.h>
 #include <RooHelpers.h>
 #include <RooMsgService.h>
-#include "RooFit/BatchModeDataHelpers.h"
+#include "RooFit/Detail/BatchModeDataHelpers.h"
 #include <RooSimultaneous.h>
 
 #include <TList.h>
@@ -77,8 +77,8 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
 {
    _data = &data;
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-   auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, _simPdf, /*skipZeroWeights=*/true,
-                                                               _takeGlobalObservablesFromData, _vectorBuffers);
+   auto dataSpans = RooFit::Detail::BatchModeDataHelpers::getDataSpans(
+      *_data, _rangeName, _simPdf, /*skipZeroWeights=*/true, _takeGlobalObservablesFromData, _vectorBuffers);
    for (auto const &item : dataSpans) {
       _evaluator->setInput(item.first->GetName(), item.second, false);
    }
