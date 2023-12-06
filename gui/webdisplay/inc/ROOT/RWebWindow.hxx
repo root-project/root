@@ -83,6 +83,8 @@ private:
       int fSendCredits{0};                 ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0};               ///<! number of credits received from client
       bool fDoingSend{false};              ///<! true when performing send operation
+      unsigned long fRecvSeq{0};           ///<! sequence id of last received packet
+      unsigned long fSendSeq{1};           ///<! sequence id of last send packet
       std::queue<QueueItem> fQueue;        ///<! output queue
       std::map<int,std::shared_ptr<RWebWindow>> fEmbed; ///<! map of embed window for that connection, key value is channel id
       WebConn() = default;
@@ -105,6 +107,8 @@ private:
          fDoingSend = false;
          fSendCredits = 0;
          fClientCredits = 0;
+         fRecvSeq = 0;
+         fSendSeq = 1;
          while (!fQueue.empty())
             fQueue.pop();
       }
