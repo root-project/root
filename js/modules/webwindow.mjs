@@ -253,6 +253,8 @@ class WebWindowHandle {
       this.credits = credits || 10;
       this.cansend = this.credits;
       this.ackn = this.credits;
+      this.send_seq = 1; // sequence counter of send messages
+      this.recv_seq = 0; // sequence counter of received messages
    }
 
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
@@ -398,7 +400,7 @@ class WebWindowHandle {
 
       if (this.cansend <= 0) console.error(`should be queued before sending cansend: ${this.cansend}`);
 
-      const prefix = `${this.ackn}:${this.cansend}:${chid}:`;
+      const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`;
       this.ackn = 0;
       this.cansend--; // decrease number of allowed send packets
 
@@ -625,22 +627,31 @@ class WebWindowHandle {
             const i0 = msg.indexOf(':'),
                   server_md5 = msg.slice(0, i0),
                   i1 = msg.indexOf(':', i0 + 1),
-                  credit = Number.parseInt(msg.slice(i0 + 1, i1)),
+                  seq_id = Number.parseInt(msg.slice(i0 + 1, i1)),
                   i2 = msg.indexOf(':', i1 + 1),
-                  // cansend = parseInt(msg.slice(i1 + 1, i2)),  // TODO: take into account when sending messages
+                  credit = Number.parseInt(msg.slice(i1 + 1, i2)),
                   i3 = msg.indexOf(':', i2 + 1),
-                  chid = Number.parseInt(msg.slice(i2 + 1, i3));
+                  // cansend = parseInt(msg.slice(i2 + 1, i3)),  // TODO: take into account when sending messages
+                  i4 = msg.indexOf(':', i3 + 1),
+                  chid = Number.parseInt(msg.slice(i3 + 1, i4));
 
+            // for authentication MD5 sum and sequence id is important
+            // MD5 used to authenticate server
+            // sequence id is necessary to exclude submission of same packet again
             if (this.key && sessionKey) {
                const client_md5 = hexMD5(`${sessionKey}:${msg.slice(i0+1)}:${this.key}`);
                if (server_md5 !== client_md5)
                   return console.log(`Failure checking server md5 sum ${server_md5}`);
             }
 
+            if (seq_id <= this.recv_seq)
+               return console.log(`Failure with packet sequence ${seq_id} <= ${this.recv_seq}`);
+
+            this.recv_seq = seq_id; // sequence id of received packet
             this.ackn++;            // count number of received packets,
             this.cansend += credit; // how many packets client can send
 
-            msg = msg.slice(i3 + 1);
+            msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
                console.log(`GET chid=0 message ${msg}`);
@@ -675,7 +686,7 @@ class WebWindowHandle {
             if ((this.state > 0) || (arg === 'force_close')) {
                console.log('websocket closed');
                this.state = 0;
-               this.invokeReceiver(true, 'onWebsocketClosed');setBatchMode
+               this.invokeReceiver(true, 'onWebsocketClosed');
             }
          };
 
