@@ -165,6 +165,21 @@ if(builtin_nlohmannjson)
   add_subdirectory(builtins/nlohmann)
 endif()
 
+#--- Check for civetweb ---------------------------------------------------------
+if(NOT builtin_civetweb)
+  message(STATUS "Looking for civetweb")
+  if(fail-on-missing)
+    find_package(civetweb 1.15 REQUIRED)
+  else()
+    find_package(civetweb 1.15 QUIET)
+    if(civetweb_FOUND)
+      message(STATUS "Found civetweb version ${civetweb_VERSION}")
+    else()
+      message(STATUS "civetweb not found. Switching on builtin_civetweb option")
+      set(builtin_civetweb ON CACHE BOOL "Enabled because civetweb not found" FORCE)
+    endif()
+  endif()
+endif()
 
 #---Check for Unuran ------------------------------------------------------------------
 if(unuran AND NOT builtin_unuran)
