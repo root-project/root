@@ -197,8 +197,8 @@ protected:
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting);
 
    /// Seal a page using the provided buffer.
-   static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element,
-      int compressionSetting, void *buf);
+   static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting, void *buf,
+                               bool allowAlias = true);
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
