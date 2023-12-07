@@ -25,6 +25,7 @@
 
 #include <TError.h>
 
+#include <cassert>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -132,7 +133,7 @@ public:
    /// Connect the field and its subfields to the page source
    void Connect(RPageSource &source, ULong64_t entryOffset)
    {
-      R__ASSERT(fLastEntry == -1);
+      assert(fLastEntry == -1);
       fEntryOffset = entryOffset;
 
       // Create a new, real field from the prototype and set its field ID in the context of the given page source
@@ -344,7 +345,7 @@ bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
 
 void RNTupleDS::PrepareNextRanges()
 {
-   R__ASSERT(fNextRanges.empty());
+   assert(fNextRanges.empty());
    auto nFiles = fFileNames.empty() ? 1 : fFileNames.size();
    auto nRemainingFiles = nFiles - fNextFileIndex;
    if (nRemainingFiles == 0)
@@ -357,7 +358,7 @@ void RNTupleDS::PrepareNextRanges()
 
          if (fPrincipalSource) {
             // Avoid reopening the first file, which has been opened already to read the schema
-            R__ASSERT(fNextFileIndex == 0);
+            assert(fNextFileIndex == 0);
             std::swap(fPrincipalSource, range.fSource);
          } else {
             range.fSource = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
@@ -383,7 +384,7 @@ void RNTupleDS::PrepareNextRanges()
       std::unique_ptr<Detail::RPageSource> source;
       if (fPrincipalSource) {
          // Avoid reopening the first file, which has been opened already to read the schema
-         R__ASSERT(fNextFileIndex == 0);
+         assert(fNextFileIndex == 0);
          std::swap(source, fPrincipalSource);
       } else {
          source = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
@@ -421,7 +422,7 @@ void RNTupleDS::PrepareNextRanges()
       for (; iSlot < N; ++iSlot) {
          auto start = rangesByCluster[iRange].first;
          iRange += nClustersPerSlot + static_cast<int>(iSlot < remainder);
-         R__ASSERT(iRange > 0);
+         assert(iRange > 0);
          auto end = rangesByCluster[iRange - 1].second;
 
          REntryRangeDS range;
@@ -445,7 +446,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    if (fNextRanges.empty())
       return ranges;
-   R__ASSERT(fNextRanges.size() <= fNSlots);
+   assert(fNextRanges.size() <= fNSlots);
 
    // We need to distinguish between single threaded and multi-threaded runs.
    // In single threaded mode, InitSlot is only called once and column readers have to be rewired
@@ -533,7 +534,7 @@ void RNTupleDS::Initialize()
    fSeenEntries = 0;
    fNextFileIndex = 0;
    if (!fCurrentRanges.empty() && (fFileNames.size() <= fNSlots)) {
-      R__ASSERT(fNextRanges.empty());
+      assert(fNextRanges.empty());
       std::swap(fCurrentRanges, fNextRanges);
       fNextFileIndex = std::max(fFileNames.size(), std::size_t(1));
    } else {
@@ -552,8 +553,8 @@ void RNTupleDS::Finalize()
 
 void RNTupleDS::SetNSlots(unsigned int nSlots)
 {
-   R__ASSERT(fNSlots == 0);
-   R__ASSERT(nSlots > 0);
+   assert(fNSlots == 0);
+   assert(nSlots > 0);
    fNSlots = nSlots;
    fActiveColumnReaders.resize(fNSlots);
 }
