@@ -576,3 +576,10 @@ ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::Experimental::RNTupl
    ROOT::RDataFrame rdf(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple->MakePageSource()));
    return rdf;
 }
+
+ROOT::RDataFrame
+ROOT::RDF::Experimental::FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames)
+{
+   ROOT::RDataFrame rdf(std::make_unique<ROOT::Experimental::RNTupleDS>(ntupleName, fileNames));
+   return rdf;
+}
