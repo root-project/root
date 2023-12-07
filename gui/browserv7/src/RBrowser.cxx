@@ -272,8 +272,8 @@ RBrowser::RBrowser(bool use_rcanvas)
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
-                            [this](unsigned connid, const std::string &arg) { ProcessMsg(connid, arg); });
+   fWebWindow->SetCallBacks([this](unsigned connid) { if (!fConnId) { fConnId = connid; SendInitMsg(connid); } else fConnId = 0xffffff; },
+                            [this](unsigned connid, const std::string &arg) { if ((connid == fConnId) && (fConnId != 0xffffff)) ProcessMsg(connid, arg); });
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
