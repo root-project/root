@@ -451,10 +451,10 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       ntuple->Fill();
       ntuple->Fill();
       ntuple->CommitCluster();
-      // Parallel zip not available; all pages committed separately
-      EXPECT_EQ(5, counters.fNCommitPage);
+      // Parallel zip not available, but pages are still vector-commited
+      EXPECT_EQ(0, counters.fNCommitPage);
       EXPECT_EQ(0, counters.fNCommitSealedPage);
-      EXPECT_EQ(0, counters.fNCommitSealedPageV);
+      EXPECT_EQ(1, counters.fNCommitSealedPageV);
    }
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
@@ -471,15 +471,10 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       ntuple->Fill();
       ntuple->Fill();
       ntuple->CommitCluster();
-#ifdef R__USE_IMT
       // All pages in all columns committed via a single call to `CommitSealedPageV()`
       EXPECT_EQ(0, counters.fNCommitPage);
-      EXPECT_EQ(1, counters.fNCommitSealedPageV);
-#else
-      EXPECT_EQ(3, counters.fNCommitPage);
-      EXPECT_EQ(0, counters.fNCommitSealedPageV);
-#endif
       EXPECT_EQ(0, counters.fNCommitSealedPage);
+      EXPECT_EQ(1, counters.fNCommitSealedPageV);
    }
 }
 

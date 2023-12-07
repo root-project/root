@@ -51,10 +51,11 @@ private:
          // Compression scratch buffer for fSealedPage.
          std::unique_ptr<unsigned char[]> fBuf;
          RPageStorage::RSealedPage *fSealedPage = nullptr;
-         explicit RPageZipItem(RPage page)
-            : fPage(page), fBuf(nullptr) {}
          bool IsSealed() const { return fSealedPage != nullptr; }
-         void AllocateSealedPageBuf() { fBuf = std::unique_ptr<unsigned char[]>(new unsigned char[fPage.GetNBytes()]); }
+         void AllocateSealedPageBuf(std::size_t nBytes)
+         {
+            fBuf = std::unique_ptr<unsigned char[]>(new unsigned char[nBytes]);
+         }
       };
    public:
       RColumnBuf() = default;
@@ -66,17 +67,14 @@ private:
 
       /// Returns a reference to the newly buffered page. The reference remains
       /// valid until the return value of DrainBufferedPages() is destroyed.
-      /// Note that `BufferPage()` yields the ownership of `page` to RColumnBuf.
-      RPageZipItem &BufferPage(
-         RPageStorage::ColumnHandle_t columnHandle, const RPage &page)
+      RPageZipItem &BufferPage(RPageStorage::ColumnHandle_t columnHandle)
       {
          if (!fCol) {
             fCol = columnHandle;
          }
          // Safety: Insertion at the end of a deque never invalidates references
          // to existing elements.
-         fBufferedPages.push_back(RPageZipItem(page));
-         return fBufferedPages.back();
+         return fBufferedPages.emplace_back();
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
       bool IsEmpty() const { return fBufferedPages.empty(); }
