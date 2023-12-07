@@ -350,8 +350,8 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detai
 }
 
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
-ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
-   const RColumnElementBase &element, int compressionSetting, void *buf)
+ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element,
+                                                int compressionSetting, void *buf, bool allowAlias)
 {
    unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
    bool isAdoptedBuffer = true;
@@ -365,7 +365,7 @@ ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
    }
    auto zippedBytes = packedBytes;
 
-   if ((compressionSetting != 0) || !element.IsMappable()) {
+   if ((compressionSetting != 0) || !element.IsMappable() || !allowAlias) {
       zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
       if (!isAdoptedBuffer)
          delete[] pageBuf;
