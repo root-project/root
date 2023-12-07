@@ -123,10 +123,10 @@ protected:
    Int_t           fTimer;                  ///< Timer flag
    std::atomic<TApplication*> fApplication; ///< Pointer to current application
    TInterpreter    *fInterpreter;           ///< Command interpreter
-   Bool_t          fBatch;                  ///< True if session without graphics
+   Bool_t          fBatch = kTRUE;          ///< True if session without graphics
    TString         fWebDisplay;             ///< If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
-   Bool_t          fIsWebDisplay;           ///< True if session with graphics on web
-   Bool_t          fIsWebDisplayBatch;      ///< True if session with graphics on web and batch mode
+   Bool_t          fIsWebDisplay = kFALSE;  ///< True if session with graphics on web
+   Bool_t          fIsWebDisplayBatch = kFALSE; ///< True if session with graphics on web and batch mode
    Bool_t          fEditHistograms;         ///< True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;              ///< True if command executed from a popup menu
    Bool_t          fMustClean;              ///< True if object destructor scans canvases
