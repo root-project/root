@@ -175,43 +175,17 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Expe
 {
    WaitForAllTasks();
 
-   // If we have only sealed pages in all buffered columns, commit them in a single `CommitSealedPageV()` call
-   bool singleCommitCall = std::all_of(fBufferedColumns.begin(), fBufferedColumns.end(),
-                                       [](auto &bufColumn) { return bufColumn.HasSealedPagesOnly(); });
-   if (singleCommitCall) {
-      std::vector<RSealedPageGroup> toCommit;
-      toCommit.reserve(fBufferedColumns.size());
-      for (auto &bufColumn : fBufferedColumns) {
-         const auto &sealedPages = bufColumn.GetSealedPages();
-         toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
-      }
-      fInnerSink->CommitSealedPageV(toCommit);
-
-      for (auto &bufColumn : fBufferedColumns)
-         bufColumn.DropBufferedPages();
-      return fInnerSink->CommitCluster(nEntries);
-   }
-
-   // Otherwise, try to do it per column
+   std::vector<RSealedPageGroup> toCommit;
+   toCommit.reserve(fBufferedColumns.size());
    for (auto &bufColumn : fBufferedColumns) {
-      // In practice, either all (see above) or none of the buffered pages have been sealed, depending on whether
-      // a task scheduler is available. The rare condition of a few columns consisting only of sealed pages should
-      // not happen unless the API is misused.
-      if (!bufColumn.IsEmpty() && bufColumn.HasSealedPagesOnly())
-         throw RException(R__FAIL("only a few columns have all pages sealed"));
-
-      // Slow path: if the buffered column contains both sealed and unsealed pages, commit them one by one.
-      // TODO(jalopezg): coalesce contiguous sealed pages and commit via `CommitSealedPageV()`.
-      auto drained = bufColumn.DrainBufferedPages();
-      for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained)) {
-         if (bufPage.IsSealed()) {
-            fInnerSink->CommitSealedPage(bufColumn.GetHandle().fPhysicalId, *bufPage.fSealedPage);
-         } else {
-            fInnerSink->CommitPage(bufColumn.GetHandle(), bufPage.fPage);
-         }
-         ReleasePage(bufPage.fPage);
-      }
+      R__ASSERT(bufColumn.HasSealedPagesOnly());
+      const auto &sealedPages = bufColumn.GetSealedPages();
+      toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
    }
+   fInnerSink->CommitSealedPageV(toCommit);
+
+   for (auto &bufColumn : fBufferedColumns)
+      bufColumn.DropBufferedPages();
    return fInnerSink->CommitCluster(nEntries);
 }
 
