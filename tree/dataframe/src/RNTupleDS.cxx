@@ -124,14 +124,14 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    /// For chains, the logical entry and the physical entry in any particular file can be different.
    /// The entry offset stores the logical entry number (sum of all previous physical entries) when a file of the corresponding
    /// data source was opened.
-   ULong64_t fEntryOffset = 0;
+   Long64_t fEntryOffset = 0;
 
 public:
    RNTupleColumnReader(RNTupleDS *ds, RFieldBase *protoField) : fDataSource(ds), fProtoField(protoField) {}
    ~RNTupleColumnReader() = default;
 
    /// Connect the field and its subfields to the page source
-   void Connect(RPageSource &source, ULong64_t entryOffset)
+   void Connect(RPageSource &source, Long64_t entryOffset)
    {
       assert(fLastEntry == -1);
       fEntryOffset = entryOffset;
