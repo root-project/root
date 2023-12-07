@@ -97,8 +97,24 @@ list(APPEND CMAKE_MODULE_PATH "${ROOT_CMAKE_DIR}/modules")
 #----------------------------------------------------------------------------
 # Find external packages which were used in ROOT
 include(CMakeFindDependencyMacro)
+
 if (NOT ROOT_builtin_nlohmannjson_FOUND)
-  find_dependency(nlohmann_json @nlohmann_json_VERSION@)
+  if(ROOT_FIND_COMPONENTS)
+    # test all libs which uses nlohmann_json in public interface
+    foreach(_cpt ROOTEve)
+       list(FIND ROOT_FIND_COMPONENTS ${_cpt} _found_lib)
+       if(NOT (${_found_lib} EQUAL -1))
+          set(_need_json TRUE)
+       endif()
+    endforeach()
+  else()
+    # if components not specified - suppose all
+    set(_need_json TRUE)
+  endif()
+endif()
+
+if(_need_json)
+   find_dependency(nlohmann_json @nlohmann_json_VERSION@)
 endif()
 if(ROOT_minuit2_mpi_FOUND)
   find_dependency(MPI)
