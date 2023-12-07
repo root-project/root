@@ -140,6 +140,7 @@ public:
       fField = fProtoField->Clone(fProtoField->GetName());
       {
          auto descGuard = source.GetSharedDescriptorGuard();
+         // Set the on-disk field IDs for the field and the subfield
          fField->SetOnDiskId(
             descGuard->FindFieldId(fDataSource->fFieldId2QualifiedName.at(fProtoField->GetOnDiskId())));
          auto iProto = fProtoField->cbegin();
@@ -154,10 +155,12 @@ public:
          f.ConnectPageSource(source);
 
       if (fValuePtr) {
+         // When the reader reconnects to a new file, the fValuePtr is already set
          fValue = std::make_unique<RFieldBase::RValue>(fField->BindValue(fValuePtr));
          fValue->TakeOwnership();
          fValuePtr = nullptr;
       } else {
+         // For the first file, create a new object for this field (reader)
          fValue = std::make_unique<RFieldBase::RValue>(fField->GenerateValue());
       }
    }
