@@ -72,6 +72,8 @@ private:
 
    bool InformListener(const std::string &msg);
 
+   static std::string GenerateKey(int keylen = 8);
+
 public:
    RWebWindowsManager();
 

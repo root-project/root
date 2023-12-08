@@ -133,6 +133,19 @@ void RWebWindowsManager::SetLoopbackMode(bool on)
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Static method to generate kryptographic key
+
+std::string RWebWindowsManager::GenerateKey(int keylen)
+{
+   // try to randomize??
+   gRandom->SetSeed();
+   std::string key;
+   for(int n = 0; n < keylen; n++)
+      key.append(TString::Itoa(gRandom->Integer(0xFFFFFFF), 16).Data());
+   return key;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
@@ -140,9 +153,7 @@ void RWebWindowsManager::SetLoopbackMode(bool on)
 
 RWebWindowsManager::RWebWindowsManager()
 {
-   gRandom->SetSeed(0);
-   for(int n = 0; n < 8; n++)
-      fSessionKey.append(TString::Itoa(gRandom->Integer(0xFFFFFFF), 16).Data());
+   fSessionKey = GenerateKey(8);
 
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
    if (fExternalProcessEvents)
@@ -555,6 +566,8 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 
    if (win.IsRequireAuthKey() || produced_key) {
       key = win.GenerateKey();
+      if (key.empty())
+         return "";
       addr.append("?key=");
       addr.append(key);
       qmark = true;

@@ -20,7 +20,6 @@
 #include "TUrl.h"
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TRandom3.h"
 #include "TMD5.h"
 
 #include <cstring>
@@ -608,18 +607,20 @@ void RWebWindow::RemoveKey(const std::string &key)
 std::string RWebWindow::GenerateKey() const
 {
    int ntry = 100000;
-   TRandom3 rnd;
-   rnd.SetSeed();
-   TString key;
+
+   std::string key;
 
    do {
-      for(int n = 0; n < 10; n++)
-         key += TString::Itoa(rnd.Integer(0xFFFFFFF), 16);
-   } while ((--ntry > 0) && HasKey(key.Data()));
+      key = RWebWindowsManager::GenerateKey(8);
+   } while ((--ntry > 0) && (HasKey(key) || (key == fMgr->fSessionKey)));
 
-   if (ntry <= 0) key.Clear();
 
-   return key.Data();
+   if (ntry <= 0) {
+      R__LOG_ERROR(WebGUILog()) << "Fail to generate new connection key";
+      key.clear();
+   }
+
+   return key;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -643,7 +644,7 @@ void RWebWindow::CheckPendingConnections()
          std::chrono::duration<double> diff = stamp - e->fSendStamp;
 
          if (diff.count() > tmout) {
-            R__LOG_DEBUG(0, WebGUILog()) << "Halt process after " << diff.count() << " sec";
+            R__LOG_DEBUG(0, WebGUILog()) << "Remove pending connection " << e->fKey << " after " << diff.count() << " sec";
             selected.emplace_back(e);
             return true;
          }
@@ -653,7 +654,6 @@ void RWebWindow::CheckPendingConnections()
 
       fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
    }
-
 }
 
 
@@ -809,9 +809,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       for (size_t n = 0; n < fPendingConn.size(); ++n)
          if (_CanTrustIn(fPendingConn[n], key, ntry, is_remote, false)) {
             conn = std::move(fPendingConn[n]);
-         fPendingConn.erase(fPendingConn.begin() + n);
-         break;
-      }
+            fPendingConn.erase(fPendingConn.begin() + n);
+            break;
+         }
 
       if (conn) {
          conn->fWSId = arg.GetWSId();
@@ -851,7 +851,6 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          printf("Not trust in the request\n");
          return false;
       }
-
    }
 
    if (arg.IsMethod("WS_CLOSE")) {
@@ -868,6 +867,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
             conn->fKeyUsed = 0;
             conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
             conn->ResetData();
+            conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
             fPendingConn.emplace_back(conn);
          } else {
             std::lock_guard<std::mutex> grd(fConnMutex);
@@ -1046,7 +1046,6 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
                conn->fDisplayHandle->Resize(width, height);
          }
       } else if (cdata == "GENERATE_KEY") {
-
          if (fMaster) {
             R__LOG_ERROR(WebGUILog()) << "Not able to generate new key with master connections";
          } else {
