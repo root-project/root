@@ -143,15 +143,14 @@ jobs:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
-                    --platform        ${{ matrix.platform }}
                     --incremental     $INCREMENTAL
-                    --sha             ${{ github.sha }}
                     --base_ref        ${{ github.base_ref }}
                     --sha             ${{ github.sha }}
                     --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --head_sha        ${{ github.event.pull_request.head.sha }}
-                    --repository      ${{ github.server_url }}/${{ github.repository }}"
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
