@@ -424,7 +424,7 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
 /// TSystem::OpenDirectory. If the directory can be opened, then current
 /// glob is used as regex expression (via TRegexp) to find subdirectories or
 /// store those files in the directory that match the regex.
-void RecursiveGlob(TList &l, const std::string &glob)
+void RecursiveGlob(TList &out, const std::string &glob)
 {
    std::string dirname;
    std::string basename; // current glob to expand, could be a directory or file.
@@ -479,11 +479,11 @@ void RecursiveGlob(TList &l, const std::string &glob)
          // but for GCC < 9.1 this requires an extra linking flag https://en.cppreference.com/w/cpp/filesystem
          bool isDirectory = TSystemFile().IsDirectory((dirname + '/' + dirEntry).c_str());
          if (!remainder.empty() && isDirectory) {
-            RecursiveGlob(l, dirname + '/' + dirEntry + '/' + remainder);
+            RecursiveGlob(out, dirname + '/' + dirEntry + '/' + remainder);
          } else if (remainder.empty() && !isDirectory) {
             // Using '/' as separator here as it was done in TChain::Add
             // In principle this should be using the appropriate platform separator
-            l.Add(new TObjString((dirname + '/' + dirEntry).c_str()));
+            out.Add(new TObjString((dirname + '/' + dirEntry).c_str()));
          }
       }
 
