@@ -327,7 +327,7 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
       }
       std::string fullPath = treeDir->GetPath();            // e.g. "file.root:/dir"
       fullPath = fullPath.substr(fullPath.rfind(":/") + 1); // e.g. "/dir"
-      fullPath += "/";
+      fullPath += '/';
       fullPath += tree.GetName(); // e.g. "/dir/tree"
       return {fullPath};
    }
@@ -436,9 +436,9 @@ void RecursiveGlob(TList &l, const std::string &glob)
 
    const auto wildcardPos = glob.find_first_of(wildcardSpecials);
    // Get the closest slash, to the left of the first wildcard
-   auto slashLPos = glob.rfind("/", wildcardPos);
+   auto slashLPos = glob.rfind('/', wildcardPos);
    // Get the closest slash, to the right of the first wildcard
-   const auto slashRPos = glob.find("/", wildcardPos);
+   const auto slashRPos = glob.find('/', wildcardPos);
 
    if (slashLPos != std::string::npos) {
       // Separate the base directory in the glob.
@@ -477,9 +477,9 @@ void RecursiveGlob(TList &l, const std::string &glob)
 
          // TODO: It might be better to use std::file_system::is_directory(),
          // but for GCC < 9.1 this requires an extra linking flag https://en.cppreference.com/w/cpp/filesystem
-         bool isDirectory = TSystemFile().IsDirectory((dirname + "/" + dirEntry).c_str());
+         bool isDirectory = TSystemFile().IsDirectory((dirname + '/' + dirEntry).c_str());
          if (!remainder.empty() && isDirectory) {
-            RecursiveGlob(l, dirname + '/' + dirEntry + "/" + remainder);
+            RecursiveGlob(l, dirname + '/' + dirEntry + '/' + remainder);
          } else if (remainder.empty() && !isDirectory) {
             // Using '/' as separator here as it was done in TChain::Add
             // In principle this should be using the appropriate platform separator
