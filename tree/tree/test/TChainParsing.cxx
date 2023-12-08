@@ -197,21 +197,29 @@ std::vector<std::string> GetFileNamesVec(const TObjArray *chainFiles)
    return chainFileNames;
 }
 
+void MakeDirIfNotExist(const char *dir)
+{
+   // Note that AccessPathName returns FALSE if the dir DOES exist
+   if (gSystem->AccessPathName(dir, kFileExists)) {
+      ASSERT_EQ(gSystem->mkdir(dir), 0);
+   }
+}
+
 TEST(TChainParsing, RecursiveGlob)
 {
    // Need to change working directory to ensure "*" only adds files we create here.
-   auto testDir = "testdir";
-   ASSERT_EQ(gSystem->mkdir(testDir), 0);
+   const auto *testDir = "testdir";
+   MakeDirIfNotExist(testDir);
    gSystem->ChangeDirectory(testDir);
 
    const auto *cwd = gSystem->WorkingDirectory();
 
-   ASSERT_EQ(gSystem->mkdir("testglob"), 0);
-   ASSERT_EQ(gSystem->mkdir("testglob/subdir1"), 0);
-   ASSERT_EQ(gSystem->mkdir("testglob/subdir1/subdir11"), 0);
-   ASSERT_EQ(gSystem->mkdir("testglob/subdir2"), 0);
-   ASSERT_EQ(gSystem->mkdir("testglob/subdir2/subdir21"), 0);
-   ASSERT_EQ(gSystem->mkdir("testglob/subdir3"), 0);
+   MakeDirIfNotExist("testglob");
+   MakeDirIfNotExist("testglob/subdir1");
+   MakeDirIfNotExist("testglob/subdir1/subdir11");
+   MakeDirIfNotExist("testglob/subdir2");
+   MakeDirIfNotExist("testglob/subdir2/subdir21");
+   MakeDirIfNotExist("testglob/subdir3");
 
    // Unsorted to also test sorting the final list of globbed files.
    std::vector<std::string> fileNames{"0a.root",
@@ -264,13 +272,6 @@ TEST(TChainParsing, RecursiveGlob)
    for (std::size_t i = 0; i < expectedFileNamesGlobDir.size(); i++) {
       EXPECT_EQ(globDirChainFileNames[i], expectedFileNamesGlobDir[i]);
    }
-
-   gSystem->ChangeDirectory("../");
-#if defined(_WIN32) || defined(_WIN64)
-   gSystem->Exec(Form("rmdir /s /q %s", testDir));
-#else
-   gSystem->Exec(Form("rm -rf %s", testDir));
-#endif
 }
 
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
