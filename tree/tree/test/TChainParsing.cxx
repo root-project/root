@@ -11,13 +11,18 @@
 
 #include "gtest/gtest.h"
 
-template <typename T1, typename T2>
-void EXPECT_VEC_EQ(const std::vector<T1> &v1, const std::vector<T2> &v2)
+void EXPECT_VEC_EQ(const std::vector<std::string> &v1, const std::vector<std::string> &v2)
 {
    ASSERT_EQ(v1.size(), v2.size());
    for (std::size_t i = 0ul; i < v1.size(); ++i) {
       EXPECT_EQ(v1[i], v2[i]);
    }
+}
+
+std::string ConcatUnixFileName(const char *dir, const char *name)
+{
+   std::unique_ptr<char[]> fileName{gSystem->ConcatFileName(dir, name)};
+   return gSystem->UnixPathName(fileName.get());
 }
 
 TEST(TChainParsing, RemoteAdd)
@@ -151,14 +156,11 @@ TEST(TChainParsing, GlobbingWithTreenameToken)
 
    const auto *cwd = gSystem->WorkingDirectory();
    for (std::size_t i = 0; i < 5; i++) {
-      const auto *fileName = chainFiles->At(i)->GetTitle();
-      const auto *treeName = chainFiles->At(i)->GetName();
-      EXPECT_STREQ(treeName, "events");
-      const auto *fullPathToFile = gSystem->ConcatFileName(cwd, fileNames[i].c_str());
-      const auto *normalizedPath = gSystem->UnixPathName(fullPathToFile);
-      EXPECT_STREQ(fileName, normalizedPath);
-      // The docs of `ConcatFileName` tell us we should delete the string
-      delete[] fullPathToFile;
+      const std::string fileName = chainFiles->At(i)->GetTitle();
+      const std::string treeName = chainFiles->At(i)->GetName();
+      EXPECT_EQ(treeName, "events");
+      const auto normalizedPath = ConcatUnixFileName(cwd, fileNames[i].c_str());
+      EXPECT_EQ(fileName, normalizedPath);
    }
 
    for (const auto &fileName : fileNames) {
@@ -224,15 +226,17 @@ TEST(TChainParsing, RecursiveGlob)
       FillTree(fileName.c_str(), "events");
    }
 
-   TChain nodir, none, nested, globDir;
+   TChain nodir;
+   TChain none;
+   TChain nested;
+   TChain globDir;
 
    nodir.Add("*");
    const auto *nodirFiles = nodir.GetListOfFiles();
    ASSERT_TRUE(nodirFiles);
    EXPECT_EQ(nodirFiles->GetEntries(), 1);
-   auto expectedFileNameNodir = gSystem->ConcatFileName(cwd, "0a.root");
-   EXPECT_STREQ(nodirFiles->At(0)->GetTitle(), gSystem->UnixPathName(expectedFileNameNodir));
-   delete[] expectedFileNameNodir;
+   auto expectedFileNameNodir = ConcatUnixFileName(cwd, "0a.root");
+   EXPECT_EQ(std::string{nodirFiles->At(0)->GetTitle()}, expectedFileNameNodir);
 
    none.Add("testglob/*");
    const auto *noneChainFiles = none.GetListOfFiles();
@@ -253,14 +257,12 @@ TEST(TChainParsing, RecursiveGlob)
    const auto *globDirChainFiles = globDir.GetListOfFiles();
    ASSERT_TRUE(globDirChainFiles);
    EXPECT_EQ(globDirChainFiles->GetEntries(), 3);
-   std::vector<char *> expectedFileNamesGlobDir{gSystem->ConcatFileName(cwd, "testglob/subdir1/1a.root"),
-                                                gSystem->ConcatFileName(cwd, "testglob/subdir1/1b.root"),
-                                                gSystem->ConcatFileName(cwd, "testglob/subdir3/3a.root")};
+   std::vector<std::string> expectedFileNamesGlobDir{ConcatUnixFileName(cwd, "testglob/subdir1/1a.root"),
+                                                     ConcatUnixFileName(cwd, "testglob/subdir1/1b.root"),
+                                                     ConcatUnixFileName(cwd, "testglob/subdir3/3a.root")};
    auto globDirChainFileNames = GetFileNamesVec(globDirChainFiles);
    for (std::size_t i = 0; i < expectedFileNamesGlobDir.size(); i++) {
-      EXPECT_EQ(globDirChainFileNames[i], gSystem->UnixPathName(expectedFileNamesGlobDir[i]));
-      // The docs of `ConcatFileName` tell us we should delete the string
-      delete[] expectedFileNamesGlobDir[i];
+      EXPECT_EQ(globDirChainFileNames[i], expectedFileNamesGlobDir[i]);
    }
 
    gSystem->ChangeDirectory("../");
