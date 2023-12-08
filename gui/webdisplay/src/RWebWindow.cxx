@@ -832,7 +832,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   // special sequrity check for the lonhpoll requests
+   // special sequrity check for the longpoll requests
    if(is_longpoll) {
       auto conn = FindConnection(arg.GetWSId());
       if (!conn)
@@ -847,10 +847,8 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if(url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
 
-      if (!_CanTrustIn(conn, key, ntry, is_remote, true)) {
-         printf("Not trust in the request\n");
+      if (!_CanTrustIn(conn, key, ntry, is_remote, true))
          return false;
-      }
    }
 
    if (arg.IsMethod("WS_CLOSE")) {
@@ -861,10 +859,12 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (conn) {
          ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
          bool do_clear_on_close = false;
-         if (conn->fKeyUsed < 0) {
+         if (!conn->fNewKey.empty()) {
             // case when same handle want to be reused by client with new key
             std::lock_guard<std::mutex> grd(fConnMutex);
             conn->fKeyUsed = 0;
+            conn->fKey = conn->fNewKey;
+            conn->fNewKey.clear();
             conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
             conn->ResetData();
             conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
@@ -1049,14 +1049,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          if (fMaster) {
             R__LOG_ERROR(WebGUILog()) << "Not able to generate new key with master connections";
          } else {
-            auto newkey = GenerateKey();
-            if(newkey.empty()) {
-               R__LOG_ERROR(WebGUILog()) << "Fail to generate new key by GENERATE_KEY request";
-            } else {
-               SubmitData(conn->fConnId, true, "NEW_KEY="s + newkey, -1);
-               conn->fKey = newkey;
-               conn->fKeyUsed = -1;
-            }
+            conn->fNewKey = GenerateKey();
+            if(!conn->fNewKey.empty())
+               SubmitData(conn->fConnId, true, "NEW_KEY="s + conn->fNewKey, -1);
          }
       }
    } else if (fPanelName.length() && (conn->fReady < 10)) {
