@@ -14,7 +14,9 @@
 #  R_ROOT_DIR - As reported by R
 #  R_EXECUTABLE - the R executable
 #  R_SCRIPT - the Rscript executable, which runs R non-interactively
+#
 # Autor: Omar Andres Zapata Mesa 31/05/2013
+# Contributor: Blake Madden 2023-12-10
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(CMAKE_FIND_APPBUNDLE "LAST")
