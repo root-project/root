@@ -40,7 +40,7 @@ namespace cling {
                             llvm::StringRef FileName,
                             bool IsAngled,
                             clang::CharSourceRange FilenameRange,
-                            const clang::FileEntry *File,
+                            clang::OptionalFileEntryRef File,
                             llvm::StringRef SearchPath,
                             llvm::StringRef RelativePath,
                             const clang::Module *Imported,
@@ -57,12 +57,12 @@ namespace cling {
       m_Callbacks->EnteredSubmodule(M, ImportLoc, ForPragma);
     }
 
-    bool FileNotFound(llvm::StringRef FileName,
-                      llvm::SmallVectorImpl<char>& RecoveryPath) override {
+    bool FileNotFound(llvm::StringRef FileName) override {
       if (m_Callbacks)
-        return m_Callbacks->FileNotFound(FileName, RecoveryPath);
+        return m_Callbacks->FileNotFound(FileName);
 
-      // Returning true would mean that the preprocessor should try to recover.
+      // Returning true would mean that the preprocessor should silently skip
+      // this file.
       return false;
     }
   };
@@ -329,7 +329,7 @@ namespace cling {
           // Wrap both the existing source and our source. We give our own
           // source preference to the existing one.
           IntrusiveRefCntPtr<ExternalASTSource> S;
-          S = new MultiplexExternalSemaSource(*m_ExternalSemaSource, *wrapper);
+          S = new MultiplexExternalSemaSource(m_ExternalSemaSource, wrapper);
 
           Ctx.setExternalSource(S);
         } else {
@@ -387,8 +387,7 @@ namespace cling {
     return m_DeserializationListener.get();
   }
 
-  bool InterpreterCallbacks::FileNotFound(llvm::StringRef,
-                                          llvm::SmallVectorImpl<char>&) {
+  bool InterpreterCallbacks::FileNotFound(llvm::StringRef) {
     // Default implementation is no op.
     return false;
   }

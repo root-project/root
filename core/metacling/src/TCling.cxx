@@ -198,6 +198,7 @@ extern "C" {
 #else
 #include "Windows4Root.h"
 #include <Psapi.h>
+#include <direct.h>
 #undef GetModuleFileName
 #define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
@@ -861,7 +862,7 @@ namespace {
    // Yes, throwing exceptions in error handlers is bad.
    // Doing nothing is pretty terrible, too.
    void exceptionErrorHandler(void * /*user_data*/,
-                              const std::string& reason,
+                              const char *reason,
                               bool /*gen_crash_diag*/) {
       throw std::runtime_error(std::string(">>> Interpreter compilation error:\n") + reason);
    }
@@ -1398,9 +1399,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
-      // The -O1 optimization flag has nasty side effects on Windows (32 bit)
+      // The -O1 optimization flag has nasty side effects on Windows (32 and 64 bit)
       // See the GitHub issues #9809 and #9944
-#if !defined(_MSC_VER) || defined(_WIN64)
+      // TODO: to be reviewed after the upgrade of LLVM & Clang
+#ifndef _MSC_VER
       clingArgsStorage.push_back("-O1");
       // Disable optimized register allocation which is turned on automatically
       // by -O1, but seems to require -O2 to not explode in run time.
@@ -1411,7 +1413,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // Process externally passed arguments if present.
    llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
-   if (EnvOpt.hasValue()) {
+   if (EnvOpt.has_value()) {
       StringRef Env(*EnvOpt);
       while (!Env.empty()) {
          StringRef Arg;
@@ -1423,7 +1425,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    auto GetEnvVarPath = [](const std::string &EnvVar,
                        std::vector<std::string> &Paths) {
       llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
-      if (EnvOpt.hasValue()) {
+      if (EnvOpt.has_value()) {
          StringRef Env(*EnvOpt);
          while (!Env.empty()) {
             StringRef Arg;
@@ -1450,7 +1452,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
-   if (EnvOpt.hasValue())
+   if (EnvOpt.has_value())
      clingArgsStorage.push_back("-ftime-report");
 
    // Add the overlay file. Note that we cannot factor it out for both root
@@ -1473,7 +1475,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       std::string ModulesCachePath;
       EnvOpt = llvm::sys::Process::GetEnv("CLING_MODULES_CACHE_PATH");
-      if (EnvOpt.hasValue()){
+      if (EnvOpt.has_value()){
          StringRef Env(*EnvOpt);
          assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
          ModulesCachePath = Env.str();
@@ -1535,7 +1537,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    // Add the Rdict module file extension.
    cling::Interpreter::ModuleFileExtensions extensions;
    EnvOpt = llvm::sys::Process::GetEnv("ROOTDEBUG_RDICT");
-   if (!EnvOpt.hasValue())
+   if (!EnvOpt.has_value())
       extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>());
 
    fInterpreter = std::make_unique<cling::Interpreter>(interpArgs.size(),
@@ -2646,6 +2648,13 @@ void TCling::AddIncludePath(const char *path)
       path += 2;
    TString sPath(path);
    gSystem->ExpandPathName(sPath);
+#ifdef _MSC_VER
+   if (sPath.BeginsWith("/")) {
+      char drive[3];
+      snprintf(drive, 3, "%c:", _getdrive() + 'A' - 1);
+      sPath.Prepend(drive);
+   }
+#endif
    fInterpreter->AddIncludePath(sPath.Data());
 }
 
@@ -3189,7 +3198,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
       return kTRUE;
 
    //FIXME: We must use the cling::Interpreter::lookupFileOrLibrary iface.
-   const clang::DirectoryLookup *CurDir = nullptr;
+   clang::ConstSearchDirIterator *CurDir = nullptr;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
    auto FE = HS.LookupFile(file_name.c_str(),
@@ -3208,7 +3217,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                            /*BuildSystemModule*/ false,
                            /*OpenFile*/ false,
                            /*CacheFail*/ false);
-   if (FE && FE->isValid()) {
+   if (FE) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
       // this works only with header (and source) files...

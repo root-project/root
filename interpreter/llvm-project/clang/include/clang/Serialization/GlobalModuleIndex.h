@@ -33,7 +33,6 @@ class MemoryBuffer;
 
 namespace clang {
 
-class DirectoryEntry;
 class FileEntry;
 class FileManager;
 class IdentifierIterator;

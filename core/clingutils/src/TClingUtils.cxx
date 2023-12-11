@@ -2936,6 +2936,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       unsigned int dropDefault = normCtxt.GetConfig().DropDefaultArg(*Template);
 
       llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
+      llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       llvm::ArrayRef<clang::TemplateArgument> template_arguments = TST->template_arguments();
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
       unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
@@ -2962,7 +2963,10 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                         desArgs.push_back(*I);
                         continue;
                      }
-                     clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, templateDecl) );
+                     clang::TemplateName UnderlyingTN(templateDecl);
+                     if (clang::UsingShadowDecl *USD = templateName.getAsUsingShadowDecl())
+                        UnderlyingTN = clang::TemplateName(USD);
+                     clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, UnderlyingTN) );
                      desArgs.push_back(clang::TemplateArgument(templateNameWithNSS));
                      mightHaveChanged = true;
                      continue;
@@ -3017,6 +3021,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                                                                                               RAngleLoc,
                                                                                               TTP,
                                                                                               desArgs,
+                                                                                              canonArgs,
                                                                                               HasDefaultArgs);
                // The substition can fail, in which case there would have been compilation
                // error printed on the screen.
@@ -3329,7 +3334,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
 
    const FileEntry *headerFE = sourceManager.getFileEntryForID(headerFID);
    while (includeLoc.isValid() && sourceManager.isInSystemHeader(includeLoc)) {
-      const DirectoryLookup *foundDir = nullptr;
+      ConstSearchDirIterator *foundDir = nullptr;
       // use HeaderSearch on the basename, to make sure it takes a header from
       // the include path (e.g. not from /usr/include/bits/)
       assert(headerFE && "Couldn't find FileEntry from FID!");
@@ -3378,7 +3383,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
    // points to the same file as the long version. If such a short version
    // exists it will be returned. If it doesn't the long version is returned.
    bool isAbsolute = llvm::sys::path::is_absolute(headerFileName);
-   llvm::Optional<clang::FileEntryRef> FELong;
+   clang::OptionalFileEntryRef FELong;
    // Find the longest available match.
    for (llvm::sys::path::const_iterator
            IDir = llvm::sys::path::begin(headerFileName),
@@ -3394,7 +3399,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       assert(trailingPart.data() + trailingPart.size()
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
-      const DirectoryLookup* FoundDir = nullptr;
+      ConstSearchDirIterator* FoundDir = nullptr;
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
@@ -3418,7 +3423,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       assert(trailingPart.data() + trailingPart.size()
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
-      const DirectoryLookup* FoundDir = nullptr;
+      ConstSearchDirIterator* FoundDir = nullptr;
       // Can we find it, and is it the same file as the long version?
       // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
@@ -3613,12 +3618,14 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    {
       clang::Sema& S = interp.getCI()->getSema();
       cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
+      llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       bool HasDefaultArgs;
       TemplateArgumentLoc defTArgLoc = S.SubstDefaultTemplateArgumentIfAvailable(Template,
                                                                                  TemplateLoc,
                                                                                  LAngleLoc,
                                                                                  ttpdPtr,
                                                                                  preceedingTArgs,
+                                                                                 canonArgs,
                                                                                  HasDefaultArgs);
       // The substition can fail, in which case there would have been compilation
       // error printed on the screen.
@@ -4494,7 +4501,7 @@ static bool hasSomeTypedefSomewhere(const clang::Type* T) {
       return false; // shrug...
     }
     bool VisitTypeOfType(const TypeOfType* TOT) {
-      return TOT->getUnderlyingType().getTypePtr();
+      return TOT->getUnmodifiedType().getTypePtr();
     }
     bool VisitElaboratedType(const ElaboratedType* ET) {
       NestedNameSpecifier* NNS = ET->getQualifier();
@@ -4658,7 +4665,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       // Make sure it got replaced from this template
       const clang::ClassTemplateDecl *replacedCtxt = nullptr;
 
-      const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDecl()->getDeclContext();
+      const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDeclContext();
       const clang::CXXRecordDecl *decl = llvm::dyn_cast<clang::CXXRecordDecl>(replacedDeclCtxt);
       unsigned int index = substType->getReplacedParameter()->getIndex();
       if (decl) {
@@ -4718,7 +4725,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
       if ((replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
           || /* the following is likely just redundant */
-          substType->getReplacedParameter()->getDecl()
+          substType->getReplacedParameter()
           == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))
       {
          const auto &TAs = TST->template_arguments();
@@ -4753,7 +4760,8 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
          clang::QualType SubTy = TA.getAsType();
          // Check if the type needs more desugaring and recurse.
-         if (llvm::isa<clang::SubstTemplateTypeParmType>(SubTy)
+         if (llvm::isa<clang::ElaboratedType>(SubTy)
+             || llvm::isa<clang::SubstTemplateTypeParmType>(SubTy)
              || llvm::isa<clang::TemplateSpecializationType>(SubTy)) {
             clang::QualType newSubTy = ReSubstTemplateArg(SubTy,instance);
             mightHaveChanged = SubTy != newSubTy;
