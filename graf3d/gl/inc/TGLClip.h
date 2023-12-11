@@ -139,8 +139,8 @@ public:
 class TGLClipSet : public TGLOverlayElement
 {
 private:
-   TGLClipSet(const TGLClipSet&);            // Not implemented
-   TGLClipSet& operator=(const TGLClipSet&); // Not implemented
+   TGLClipSet(const TGLClipSet&) = delete;
+   TGLClipSet& operator=(const TGLClipSet&) = delete;
 
 protected:
    TGLClipPlane          *fClipPlane;

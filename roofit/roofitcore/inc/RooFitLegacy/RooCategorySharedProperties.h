@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -19,7 +21,7 @@
 \class RooCategorySharedProperties
 \ingroup Roofitcore
 
-RooCategorySharedProperties is the container for all properties
+Container for all properties
 that are shared between instance of RooCategory objects that
 are clones of each other. At present the only property that is
 shared in this way is the list of alternate named range definitions
@@ -54,3 +56,5 @@ protected:
 
 
 #endif
+
+/// \endcond

@@ -131,6 +131,19 @@ public:
       }
    }
 
+   template <typename Collection>
+   void fill_seq(Collection const &coll, size_t nmax)
+   {
+      set_seq();
+      size_t n = 0;
+      for (auto const &item : coll) {
+         if (n >= nmax)
+            break;
+         append_child() << item;
+         ++n;
+      }
+   }
+
    template <typename Collection, typename TransformationFunc>
    void fill_seq(Collection const &coll, TransformationFunc func)
    {

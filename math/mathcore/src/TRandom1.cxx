@@ -22,7 +22,7 @@ Comp. Phys. Comm. 60 (1990) 329-344".
 #include "TRandom1.h"
 #include "TRandom3.h"
 #include "TMath.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 // Number of instances with automatic seed selection
 int TRandom1::fgNumEngines = 0;

@@ -23,8 +23,8 @@ class TAxis;
 class TH2GL : public TGLPlot3D
 {
 private:
-   TH2GL(const TH2GL&);            // Not implemented
-   TH2GL& operator=(const TH2GL&); // Not implemented
+   TH2GL(const TH2GL&) = delete;
+   TH2GL& operator=(const TH2GL&) = delete;
 
 protected:
    TH2                *fM; // Model object dynamic-casted to TH2.

@@ -17,7 +17,7 @@
 /**
 \class RooCollectionProxy
 \ingroup Roofitcore
-RooCollectionProxy is the concrete proxy for RooArgSet or RooArgList objects.
+Concrete proxy for RooArgSet or RooArgList objects.
 A RooCollectionProxy is the general mechanism to store a RooArgSet or RooArgList
 with RooAbsArgs in a RooAbsArg.
 Creating a RooCollectionProxy adds all members of the proxied RooArgSet to the proxy owners
@@ -88,7 +88,7 @@ public:
    // Assignment is deleted because it is not clear how it should behave.
    // Should default assignment be used? But then, it will use the assignment
    // operators of the RooFit collections, which actually don't do assignment,
-   // but value syncronization! Should it be re-implemented to be actual
+   // but value synchronization! Should it be re-implemented to be actual
    // assignment? That would be inconsistent with the base class! So it's
    // better to not support it at all.
    RooCollectionProxy &operator=(RooCollectionProxy const &other) = delete;
@@ -117,7 +117,7 @@ public:
    using RooAbsCollection::addOwned;
 
 // The following function is not memory safe, because it takes ownership of var
-// without moving it. It is not publically available in the memory safe
+// without moving it. It is not publicly available in the memory safe
 // interfaces mode.
 #ifdef ROOFIT_MEMORY_SAFE_INTERFACES
 protected:

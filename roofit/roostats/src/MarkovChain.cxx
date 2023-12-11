@@ -42,32 +42,15 @@ static const char* DATASET_NAME = "dataset_MarkovChain_local_";
 static const char* DEFAULT_NAME = "_markov_chain";
 static const char* DEFAULT_TITLE = "Markov Chain";
 
-MarkovChain::MarkovChain() :
-   TNamed(DEFAULT_NAME, DEFAULT_TITLE)
-{
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
-}
+MarkovChain::MarkovChain() : TNamed(DEFAULT_NAME, DEFAULT_TITLE) {}
 
-MarkovChain::MarkovChain(RooArgSet& parameters) :
-   TNamed(DEFAULT_NAME, DEFAULT_TITLE)
+MarkovChain::MarkovChain(RooArgSet &parameters) : TNamed(DEFAULT_NAME, DEFAULT_TITLE)
 {
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
    SetParameters(parameters);
 }
 
-MarkovChain::MarkovChain(const char* name, const char* title,
-      RooArgSet& parameters) : TNamed(name, title)
+MarkovChain::MarkovChain(const char *name, const char *title, RooArgSet &parameters) : TNamed(name, title)
 {
-   fParameters = nullptr;
-   fDataEntry = nullptr;
-   fChain = nullptr;
-   fNLL = nullptr;
    SetParameters(parameters);
 }
 
@@ -88,7 +71,7 @@ void MarkovChain::SetParameters(RooArgSet& parameters)
    fDataEntry = new RooArgSet();
    fDataEntry->addClone(parameters);
    fDataEntry->addClone(nll);
-   fNLL = (RooRealVar*)fDataEntry->find(NLL_NAME);
+   fNLL = static_cast<RooRealVar*>(fDataEntry->find(NLL_NAME));
 
    fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry, RooFit::WeightVar(WEIGHT_NAME));
 }
@@ -108,10 +91,10 @@ void MarkovChain::AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn)
 {
    // Discards the first n accepted points.
 
-   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*const_cast<RooArgSet*>(otherChain.Get()));
    int counter = 0;
    for( int i=0; i < otherChain.Size(); i++ ) {
-      RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
+      RooArgSet* entry = const_cast<RooArgSet*>(otherChain.Get(i));
       counter += 1;
       if( counter > burnIn ) {
          AddFast( *entry, otherChain.NLL(), otherChain.Weight() );
@@ -124,10 +107,10 @@ void MarkovChain::Add(MarkovChain& otherChain, double discardEntries)
    // burn-in used in the Bayesian calculator where the first n accepted
    // terms from the proposal function are discarded.
 
-   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*const_cast<RooArgSet*>(otherChain.Get()));
    double counter = 0.0;
    for( int i=0; i < otherChain.Size(); i++ ) {
-      RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
+      RooArgSet* entry = const_cast<RooArgSet*>(otherChain.Get(i));
       counter += otherChain.Weight();
       if( counter > discardEntries ) {
          AddFast( *entry, otherChain.NLL(), otherChain.Weight() );
@@ -155,7 +138,7 @@ RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(RooArgSet* whichVars) co
       args.add(*whichVars);
    }
 
-   return RooFit::Detail::owningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(args)});
+   return RooFit::makeOwningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(args)});
 }
 
 RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(const RooCmdArg &arg1, const RooCmdArg &arg2,
@@ -163,7 +146,7 @@ RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(const RooCmdArg &arg1, c
                                                         const RooCmdArg &arg5, const RooCmdArg &arg6,
                                                         const RooCmdArg &arg7, const RooCmdArg &arg8) const
 {
-   return RooFit::Detail::owningPtr<RooDataSet>(
+   return RooFit::makeOwningPtr<RooDataSet>(
       std::unique_ptr<RooAbsData>{fChain->reduce(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)});
 }
 
@@ -179,7 +162,7 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(RooArgSet* whichVars) 
    }
 
    std::unique_ptr<RooAbsData> data{fChain->reduce(args)};
-   return RooFit::Detail::owningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet&>(*data).binnedClone()});
+   return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet&>(*data).binnedClone()});
 }
 
 RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(const RooCmdArg &arg1, const RooCmdArg &arg2,
@@ -188,18 +171,19 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(const RooCmdArg &arg1,
                                                           const RooCmdArg &arg7, const RooCmdArg &arg8) const
 {
    std::unique_ptr<RooAbsData> data{fChain->reduce(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)};
-   return RooFit::Detail::owningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet &>(*data).binnedClone()});
+   return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet &>(*data).binnedClone()});
 }
 
 THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
 {
    RooArgList axes;
-   if (whichVars == nullptr)
+   if (whichVars == nullptr) {
       axes.add(*fParameters);
-   else
+   } else {
       axes.add(*whichVars);
+   }
 
-   Int_t dim = axes.getSize();
+   Int_t dim = axes.size();
    std::vector<double> min(dim);
    std::vector<double> max(dim);
    std::vector<Int_t> bins(dim);

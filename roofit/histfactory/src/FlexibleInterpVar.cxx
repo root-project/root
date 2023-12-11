@@ -57,7 +57,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
                  std::vector<int> const& code) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code), _interpBoundary(1.)
+  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code)
 {
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
@@ -197,20 +197,25 @@ double FlexibleInterpVar::evaluate() const
 {
    double total(_nominal);
    for (std::size_t i = 0; i < _paramList.size(); ++i) {
-      if (_interpCode[i] < 0 || _interpCode[i] > 4) {
+      int code = _interpCode[i];
+      if (code < 0 || code > 4) {
          coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
                                << " with unknown interpolation code" << std::endl;
       }
+      // To get consistent codes with the PiecewiseInterpolation
+      if (code == 4) {
+         code = 5;
+      }
       double paramVal = static_cast<const RooAbsReal *>(&_paramList[i])->getVal();
-      total = RooFit::Detail::EvaluateFuncs::flexibleInterp(
-         _interpCode[i], _low[i], _high[i], _interpBoundary, _nominal, paramVal, total);
+      total += RooFit::Detail::EvaluateFuncs::flexibleInterp(code, _low[i], _high[i], _interpBoundary, _nominal,
+                                                             paramVal, total);
    }
 
-  if(total<=0) {
-     total= TMath::Limits<double>::Min();
-  }
+   if (total <= 0) {
+      total = TMath::Limits<double>::Min();
+   }
 
-  return total;
+   return total;
 }
 
 void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
@@ -219,12 +224,21 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
    std::string resName = "total_" + ctx.getTmpVarName();
    ctx.addToCodeBody(this, "double " + resName + " = " + std::to_string(_nominal) + ";\n");
-   std::string code = "";
+   std::string code;
    for (std::size_t i = 0; i < n; ++i) {
-      code += resName + " = " +
-              ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i],
-                            _low[i], _high[i], _interpBoundary,
-                            _nominal, _paramList[i], resName) +
+
+      int interpCode = _interpCode[i];
+      if (interpCode < 0 || interpCode > 4) {
+         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
+                               << " with unknown interpolation code" << std::endl;
+      }
+      // To get consistent codes with the PiecewiseInterpolation
+      if (interpCode == 4) {
+         interpCode = 5;
+      }
+      code += resName + " += " +
+              ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", interpCode, _low[i], _high[i],
+                            _interpBoundary, _nominal, _paramList[i], resName) +
               ";\n";
    }
    code += resName + " = " + resName + " <= 0 ? TMath::Limits<double>::Min() : " + resName + ";\n";
@@ -232,25 +246,29 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
    ctx.addResult(this, resName);
 }
 
-void FlexibleInterpVar::computeBatch(double* output, size_t /*nEvents*/, RooFit::Detail::DataMap const& dataMap) const
+void FlexibleInterpVar::computeBatch(double *output, size_t /*nEvents*/, RooFit::Detail::DataMap const &dataMap) const
 {
-  double total(_nominal) ;
+   double total(_nominal);
 
-  for (std::size_t i = 0; i < _paramList.size(); ++i) {
-     if (_interpCode[i] < 0 || _interpCode[i] > 4) {
-        coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i << " with unknown interpolation code"
-                              << std::endl;
-     }
-     total = RooFit::Detail::EvaluateFuncs::flexibleInterp(_interpCode[i], _low[i],
-                                                                          _high[i], _interpBoundary, _nominal,
-                                                                          dataMap.at(&_paramList[i])[0], total);
-  }
+   for (std::size_t i = 0; i < _paramList.size(); ++i) {
+      int code = _interpCode[i];
+      if (code < 0 || code > 4) {
+         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
+                               << " with unknown interpolation code" << std::endl;
+      }
+      // To get consistent codes with the PiecewiseInterpolation
+      if (code == 4) {
+         code = 5;
+      }
+      total += RooFit::Detail::EvaluateFuncs::flexibleInterp(code, _low[i], _high[i], _interpBoundary, _nominal,
+                                                             dataMap.at(&_paramList[i])[0], total);
+   }
 
-  if(total<=0) {
-     total= TMath::Limits<double>::Min();
-  }
+   if (total <= 0) {
+      total = TMath::Limits<double>::Min();
+   }
 
-  output[0] = total;
+   output[0] = total;
 }
 
 void FlexibleInterpVar::printMultiline(std::ostream& os, Int_t contents,

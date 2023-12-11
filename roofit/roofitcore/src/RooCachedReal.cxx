@@ -14,7 +14,7 @@
 \class RooCachedReal
 \ingroup Roofitcore
 
-RooCachedReal is an implementation of RooAbsCachedReal that can cache
+Implementation of RooAbsCachedReal that can cache
 any external RooAbsReal input function provided in the constructor.
 **/
 
@@ -32,7 +32,6 @@ any external RooAbsReal input function provided in the constructor.
 using namespace std;
 
 ClassImp(RooCachedReal);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,16 +93,6 @@ RooCachedReal::RooCachedReal(const RooCachedReal& other, const char* name) :
  {
  }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooCachedReal::~RooCachedReal()
-{
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to create an internal cache object that represent
 /// each cached function configuration. This interface allows to create and
@@ -127,7 +116,7 @@ RooAbsCachedReal::FuncCacheElem* RooCachedReal::createCache(const RooArgSet* nse
 
 void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
 {
-  unsigned nDim = cache.hist()->get()->getSize();
+  unsigned nDim = cache.hist()->get()->size();
   if (nDim>1) {
     unsigned nCat(0);
     for(RooAbsArg * arg : *cache.hist()->get()) {
@@ -142,7 +131,7 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
   // Make deep clone of self and attach to dataset observables
   if (!cache.sourceClone()) {
     RooAbsArg* sourceClone = func.arg().cloneTree() ;
-    cache.setSourceClone((RooAbsReal*)sourceClone) ;
+    cache.setSourceClone(static_cast<RooAbsReal*>(sourceClone)) ;
     cache.sourceClone()->recursiveRedirectServers(*cache.hist()->get()) ;
     cache.sourceClone()->recursiveRedirectServers(cache.paramTracker()->parameters());
   }

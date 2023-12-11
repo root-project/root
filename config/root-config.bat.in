@@ -109,32 +109,20 @@ for %%w in (%*) do (
       set out=!out! !prefix!
    )
    if "!arg!"=="--version" (
-      rem Output the version number. If RVersion.h can not be found, give up.
-      if exist !incdir!\RVersion.h (
-         for /f "tokens=2,3" %%a in (!incdir!\RVersion.h) do (
-            if "%%a"=="ROOT_RELEASE" (
-               set ROOT_RELEASE=%%~b
-            )
-         )
-         set out=!out! !ROOT_RELEASE!
-      ) else (
-         echo "cannot read ${incdir}/RVersion.h"
-         exit /b 1
-      )
+      set out=!out! @ROOT_VERSION@
    )
    if "!arg!"=="--git-revision" (
-      rem Output the git revision number. If RGitCommit.h can not be found, give up.
-      if exist !incdir!\RGitCommit.h (
-         for /f "tokens=2,3" %%a in (!incdir!\RGitCommit.h) do (
-            if "%%a"=="ROOT_GIT_COMMIT" (
-               set ROOT_GIT_COMMIT=%%~b
-            )
+      if exist !etcdir!\gitinfo.txt (
+         for /f "skip=1" %%l in (!etcdir!\gitinfo.txt) do (
+            set ROOT_GIT_COMMIT=%%~l
+            goto COMMITSET
          )
-         set out=!out! !ROOT_GIT_COMMIT!
       ) else (
-         echo "cannot read !incdir!\RGitCommit.h"
+         echo "cannot read !etcdir!\gitinfo.txt"
          exit /b 1
       )
+      :COMMITSET
+      set out=!out! !ROOT_GIT_COMMIT!
    )
    if "!arg!"=="--python-version" (
       set out=!out! @pythonvers@

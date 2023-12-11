@@ -1,4 +1,4 @@
-import { createHttpRequest, BIT, loadScript, internals, settings, browser,
+import { createHttpRequest, BIT, internals, settings, browser,
          create, getMethods, addMethods, isNodeJs, isObject, isFunc, isStr,
          clTObject, clTNamed, clTString, clTObjString, clTKey, clTFile, clTList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTStyle, clTImagePalette,
@@ -731,7 +731,7 @@ function getPairStreamer(si, typname, file) {
 
       if (!si) {
          let p1 = typname.indexOf('<');
-         const p2 = typname.lastIndexOf('>')
+         const p2 = typname.lastIndexOf('>');
          function GetNextName() {
             let res = '', p = p1 + 1, cnt = 0;
             while ((p < p2) && (cnt >= 0)) {
@@ -925,7 +925,7 @@ function createMemberStreamer(element, file) {
             const arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
             for (let n = 0; n < len; ++n) arr[n] = this.read(buf);
             return arr;
-         }
+         };
 
          if (member.type < kOffsetL)
             member.func = function(buf, obj) { obj[this.name] = this.read(buf); };
@@ -1001,7 +1001,7 @@ function createMemberStreamer(element, file) {
                if (handle.arrkind === 0) return buf.readTString();
                return buf.classStreamer({}, handle.classname);
             });
-         }
+         };
          break;
       }
       case kChar:
@@ -1052,11 +1052,11 @@ function createMemberStreamer(element, file) {
          else {
             member.arrkind = getArrayKind(member.typename);
             if (member.arrkind > 0)
-               member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); }
+               member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); };
             else if (member.arrkind === 0)
-               member.readitem = function(buf) { return buf.readTString(); }
+               member.readitem = function(buf) { return buf.readTString(); };
             else
-               member.readitem = function(buf) { return buf.classStreamer({}, this.typename); }
+               member.readitem = function(buf) { return buf.classStreamer({}, this.typename); };
          }
 
          if (member.readitem !== undefined) {
@@ -1067,13 +1067,13 @@ function createMemberStreamer(element, file) {
                      itemarr[i] = member2.readitem(buf2);
                   return itemarr;
                });
-            }
+            };
 
             member.func = function(buf, obj) {
                const ver = buf.readVersion(),
                      res = this.read_loop(buf, obj[this.cntname]);
                obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
-            }
+            };
             member.branch_func = function(buf, obj) {
                // this is special functions, used by branch in the STL container
                const ver = buf.readVersion(), sz0 = obj[this.stl_size], res = new Array(sz0);
@@ -1083,7 +1083,7 @@ function createMemberStreamer(element, file) {
                   res[loop0] = this.read_loop(buf, cnt);
                }
                obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
-            }
+            };
 
             member.objs_branch_func = function(buf, obj) {
                // special function when branch read as part of complete object
@@ -1099,7 +1099,7 @@ function createMemberStreamer(element, file) {
                }
 
                buf.checkByteCount(ver, this.typename);
-            }
+            };
          } else {
             console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
             member.func = function(buf, obj) {
@@ -1189,7 +1189,7 @@ function createMemberStreamer(element, file) {
                const ver = buf.readVersion();
                buf.checkByteCount(ver);
                obj[this.name] = null;
-            }
+            };
          } else
             if (!element.$fictional) {
                member.read_version = function(buf, cnt) {
@@ -1204,7 +1204,7 @@ function createMemberStreamer(element, file) {
                      if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
                   }
                   return ver;
-               }
+               };
 
                member.func = function(buf, obj) {
                   const ver = this.read_version(buf);
@@ -1213,7 +1213,7 @@ function createMemberStreamer(element, file) {
 
                   if (!buf.checkByteCount(ver, this.typename)) res = null;
                   obj[this.name] = res;
-               }
+               };
 
                member.branch_func = function(buf, obj) {
                   // special function to read data from STL branch
@@ -1227,14 +1227,14 @@ function createMemberStreamer(element, file) {
                   if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
 
                   obj[this.name] = arr;
-               }
+               };
                member.split_func = function(buf, arr, n) {
                   // function to read array from member-wise streaming
                   const ver = this.read_version(buf);
                   for (let i = 0; i < n; ++i)
                      arr[i][this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
                   buf.checkByteCount(ver, this.typename);
-               }
+               };
                member.objs_branch_func = function(buf, obj) {
                   // special function when branch read as part of complete object
                   // objects already preallocated and only appropriate member must be set
@@ -1249,7 +1249,7 @@ function createMemberStreamer(element, file) {
                   }
 
                   if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
-               }
+               };
             }
          break;
       }
@@ -1296,7 +1296,7 @@ function addClassMethods(clname, streamer) {
    if (methods) {
       for (const key in methods) {
          if (isFunc(methods[key]) || (key.indexOf('_') === 0))
-            streamer.push({ name: key, method: methods[key], func(buf, obj) { obj[this.name] = this.method; } });
+            streamer.push({ name: key, method: methods[key], func(_buf, obj) { obj[this.name] = this.method; } });
       }
    }
 
@@ -1342,16 +1342,6 @@ zip_MASK_BITS = [
    zip_border = [  // Order of the bit length code lengths
    16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
 
-//    zip_STORED_BLOCK = 0,
-//    zip_STATIC_TREES = 1,
-//    zip_DYN_TREES    = 2,
-
-/* for inflate */
-//    zip_lbits = 9,            // bits in base literal/length lookup table
-//    zip_dbits = 6,            // bits in base distance lookup table
-//    zip_INBUFSIZ = 32768,     // Input buffer size
-//    zip_INBUF_EXTRA = 64,     // Extra buffer
-
 function ZIP_inflate(arr, tgt) {
    /* variables (inflate) */
    const zip_slide = new Array(2 * zip_WSIZE),
@@ -1389,35 +1379,27 @@ function ZIP_inflate(arr, tgt) {
    }
 
    /* objects (inflate) */
-   function ZIP_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
+   function zip_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
                           n,     // number of codes (assumed <= N_MAX)
                           s,     // number of simple-valued codes (0..s-1)
                           d,     // list of base values for non-simple codes
                           e,     // list of extra bits for non-simple codes
                           mm) {  // maximum lookup bits
-      this.status = 0;     // 0: success, 1: incomplete table, 2: bad input
-      this.root = null;    // (zip_HuftList) starting table
-      this.m = 0;          // maximum lookup bits, returns actual
-
-   /* Given a list of code lengths and a maximum table size, make a set of
-      tables to decode that set of codes. Return zero on success, one if
-      the given code set is incomplete (the tables are still built in this
-      case), two if the input is invalid (all zero length codes or an
-      oversubscribed set of lengths), and three if not enough memory.
-      The code with value 256 is special, and the tables are constructed
-      so that no bits beyond that code are fetched when that code is
-      decoded. */
-
-      const BMAX = 16,      // maximum bit length of any code
-            N_MAX = 288,    // maximum number of codes in any set
-            c = Array(BMAX+1).fill(0),  // bit length count table
-            lx = Array(BMAX+1).fill(0), // stack of bits per table
-            u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
-            v = Array(N_MAX).fill(0), // values in order of bit length
-            x = Array(BMAX+1).fill(0), // bit offsets, then code stack
-            r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
-            el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
-       let rr = null, // temporary variable, use in assignment
+      const res = {
+         status: 0,    // 0: success, 1: incomplete table, 2: bad input
+         root: null,   // (zip_HuftList) starting table
+         m: 0          // maximum lookup bits, returns actual
+      },
+      BMAX = 16,      // maximum bit length of any code
+      N_MAX = 288,    // maximum number of codes in any set
+      c = Array(BMAX+1).fill(0),  // bit length count table
+      lx = Array(BMAX+1).fill(0), // stack of bits per table
+      u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
+      v = Array(N_MAX).fill(0), // values in order of bit length
+      x = Array(BMAX+1).fill(0), // bit offsets, then code stack
+      r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
+      el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
+      let rr = null, // temporary variable, use in assignment
           a,         // counter for codes of length k
           f,         // i repeats in table every f entries
           h,         // table level
@@ -1431,7 +1413,7 @@ function ZIP_inflate(arr, tgt) {
           y,         // number of dummy codes added
           z,         // number of entries in current table
           o,
-          tail = this.root = null, // (zip_HuftList)
+          tail = null,   // (zip_HuftList)
           i = n;         // counter, current code
 
       // Generate counts for each bit length
@@ -1439,12 +1421,8 @@ function ZIP_inflate(arr, tgt) {
          c[p[pidx++]]++; // assume all entries <= BMAX
       while (--i > 0);
 
-      if (c[0] === n) {   // null input--all zero length codes
-         this.root = null;
-         this.m = 0;
-         this.status = 0;
-         return this;
-      }
+      if (c[0] === n)    // null input--all zero length codes
+         return res;
 
       // Find minimum and maximum length, bound *m by those
       for (j = 1; j <= BMAX; ++j)
@@ -1463,15 +1441,15 @@ function ZIP_inflate(arr, tgt) {
       // Adjust last length count to fill out codes, if needed
       for (y = 1 << j; j < i; ++j, y <<= 1) {
          if ((y -= c[j]) < 0) {
-            this.status = 2;  // bad input: more codes than bits
-            this.m = mm;
-            return this;
+            res.status = 2;  // bad input: more codes than bits
+            res.m = mm;
+            return res;
          }
       }
       if ((y -= c[i]) < 0) {
-         this.status = 2;
-         this.m = mm;
-         return this;
+         res.status = 2;
+         res.m = mm;
+         return res;
       }
       c[i] += y;
 
@@ -1532,7 +1510,7 @@ function ZIP_inflate(arr, tgt) {
                   q[o] = { e: 0, b: 0, n: 0, t: null }; // new zip_HuftNode
 
                if (tail == null)
-                  tail = this.root = { next: null, list: null }; // new zip_HuftList();
+                  tail = res.root = { next: null, list: null }; // new zip_HuftList();
                else
                   tail = tail.next = { next: null, list: null }; // new zip_HuftList();
                tail.next = null;
@@ -1588,13 +1566,12 @@ function ZIP_inflate(arr, tgt) {
       }
 
       /* return actual size of base table */
-      this.m = lx[1];
+      res.m = lx[1];
 
       /* Return true (1) if we were given an incomplete table */
-      this.status = ((y !== 0 && g !== 1) ? 1 : 0);
-     /* end of constructor */
+      res.status = ((y !== 0 && g !== 1) ? 1 : 0);
 
-      return this;
+      return res;
    }
 
    /* routines (inflate) */
@@ -1724,7 +1701,7 @@ function ZIP_inflate(arr, tgt) {
          // make a complete, but wrong code set
          zip_fixed_bl = 7;
 
-         let h = new ZIP_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
+         let h = zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
          if (h.status !== 0)
             throw new Error('HufBuild error: ' + h.status);
          zip_fixed_tl = h.root;
@@ -1734,7 +1711,7 @@ function ZIP_inflate(arr, tgt) {
          l.fill(5, 0, 30); // make an incomplete code set
          zip_fixed_bd = 5;
 
-         h = new ZIP_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
+         h = zip_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
          if (h.status > 1) {
             zip_fixed_tl = null;
             throw new Error('HufBuild error: '+h.status);
@@ -1755,7 +1732,7 @@ function ZIP_inflate(arr, tgt) {
       let i, j,  // temporary variables
           l,     // last length
           t,     // (zip_HuftNode) literal/length code table
-          h;     // (ZIP_HuftBuild)
+          h;     // (zip_HuftBuild)
       const ll = new Array(286+30).fill(0); // literal/length and distance code lengths
 
       // read in table lengths
@@ -1782,7 +1759,7 @@ function ZIP_inflate(arr, tgt) {
 
       // build decoding table for trees--single level, 7 bit lookup
       zip_bl = 7;
-      h = new ZIP_HuftBuild(ll, 19, 19, null, null, zip_bl);
+      h = zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
       if (h.status !== 0)
          return -1;  // incomplete code set
 
@@ -1831,31 +1808,23 @@ function ZIP_inflate(arr, tgt) {
 
       // build the decoding tables for literal/length and distance codes
       zip_bl = 9; // zip_lbits;
-      h = new ZIP_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
+      h = zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
       if (zip_bl === 0)  // no literals or lengths
          h.status = 1;
-      if (h.status !== 0) {
-         // if (h.status == 1); // **incomplete literal tree**
+      if (h.status !== 0)
          return -1;     // incomplete code set
-      }
       zip_tl = h.root;
       zip_bl = h.m;
 
       for (i = 0; i < nd; ++i)
          ll[i] = ll[i + nl];
       zip_bd = 6; // zip_dbits;
-      h = new ZIP_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
+      h = zip_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
       zip_td = h.root;
       zip_bd = h.m;
 
-      if (zip_bd === 0 && nl > 257) {   // lengths but no distances
-         // **incomplete distance tree**
-         return -1;
-      }
-
-      // if (h.status == 1); // **incomplete distance tree**
-
-      if (h.status !== 0)
+      // incomplete distance tree
+      if ((zip_bd === 0 && nl > 257) || (h.status !== 0))   // lengths but no distances
          return -1;
 
       // decompress until an end-of-block code
@@ -2012,12 +1981,13 @@ function LZ4_uncompress(input, output, sIdx, eIdx) {
 
       // Copy the match
       let pos = j - offset; // position of the match copy in the current output
-      const end = j + match_length + 4 // minmatch = 4;
-      while (j < end) output[j++] = output[pos++]
+      const end = j + match_length + 4; // minmatch = 4;
+      while (j < end) output[j++] = output[pos++];
    }
 
    return j;
 }
+
 
 /** @summary Reads header envelope, determines zipped size and unzip content
   * @return {Promise} with unzipped content
@@ -2040,12 +2010,12 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
 
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'L') && getCode(curr + 2) === 8) { fmt = 'new'; off = 2; } else
          if (checkChar(curr, 'C') && checkChar(curr+1, 'S') && getCode(curr + 2) === 8) { fmt = 'old'; off = 0; } else
-         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) fmt = 'LZMA'; else
+         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) { fmt = 'LZMA'; off = 0; } else
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'S') && getCode(curr + 2) === 1) fmt = 'ZSTD'; else
          if (checkChar(curr, 'L') && checkChar(curr+1, '4')) { fmt = 'LZ4'; off = 0; CHKSUM = 8; }
 
          /*   C H E C K   H E A D E R   */
-         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD')) {
+         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD') && (fmt !== 'LZMA')) {
             if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
             return Promise.resolve(null);
          }
@@ -2053,52 +2023,38 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
          const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
                uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
 
+         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const tgt8arr = new Uint8Array(tgtbuf, fullres);
+
          if (fmt === 'ZSTD') {
-            const handleZsdt = ZstdCodec => {
-               return new Promise((resolveFunc, rejectFunc) => {
-                  ZstdCodec.run(zstd => {
-                     // const simple = new zstd.Simple();
-                     const streaming = new zstd.Streaming(),
-                           data2 = streaming.decompress(uint8arr),
-                           reslen = data2.length;
+            const promise = internals._ZstdStream
+                            ? Promise.resolve(internals._ZstdStream)
+                            : (isNodeJs() ? import('@oneidentity/zstd-js') : import(/* webpackIgnore: true */ './base/zstd.mjs'))
+                              .then(({ ZstdInit }) => ZstdInit()).then(({ ZstdStream }) => { internals._ZstdStream = ZstdStream; return ZstdStream; });
+            return promise.then(ZstdStream => {
+               const data2 = ZstdStream.decompress(uint8arr),
+                     reslen = data2.length;
 
-                     if (data2.byteOffset !== 0)
-                        return rejectFunc(Error('ZSTD result with byteOffset != 0'));
+               for (let i = 0; i < reslen; ++i)
+                   tgt8arr[i] = data2[i];
 
-                     // shortcut when exactly required data unpacked
-                     // if ((tgtsize == reslen) && data2.buffer)
-                     //    resolveFunc(new DataView(data2.buffer));
-
-                     // need to copy data while zstd does not provide simple way of doing it
-                     if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-                     const tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-                     for (let i = 0; i < reslen; ++i)
-                        tgt8arr[i] = data2[i];
-
-                     fullres += reslen;
-                     curr += srcsize;
-                     resolveFunc(true);
-                  });
-               });
-            },
-
-            promise = isNodeJs()
-                        ? import('zstd-codec').then(handle => handleZsdt(handle.ZstdCodec))
-                        : loadScript('../../zstd/zstd-codec.min.js')
-                          .catch(() => loadScript('https://root.cern/js/zstd/zstd-codec.min.js'))
-                          // eslint-disable-next-line no-undef
-                         .then(() => handleZsdt(ZstdCodec));
-            return promise.then(() => nextPortion());
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
+         } else if (fmt === 'LZMA') {
+            return import(/* webpackIgnore: true */ './base/lzma.mjs').then(lzma => {
+               const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
+                     reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
          }
 
-         //  place for unpacking
-         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
 
-         const tgt8arr = new Uint8Array(tgtbuf, fullres),
-               reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
          if (reslen <= 0) break;
-
          fullres += reslen;
          curr += srcsize;
       }
@@ -2991,7 +2947,7 @@ class TFile {
          }
 
          send_new_request(true);
-      }
+      };
 
       return send_new_request(true).then(() => promise);
    }
@@ -3062,7 +3018,9 @@ class TFile {
          }
 
          return R__unzip(blob1, key.fObjlen).then(objbuf => {
-            if (!objbuf) return Promise.reject(Error('Fail to UNZIP buffer'));
+            if (!objbuf)
+               return Promise.reject(Error(`Fail to UNZIP buffer for ${key.fName}`));
+
             const buf = new TBuffer(objbuf, 0, this);
             buf.fTagOffset = key.fKeylen;
             return buf;
@@ -3150,7 +3108,13 @@ class TFile {
 
       const lst = {};
       buf.mapObject(1, lst);
-      buf.classStreamer(lst, clTList);
+
+      try {
+         buf.classStreamer(lst, clTList);
+      } catch (err) {
+          console.error('Fail extract streamer infos', err);
+          return;
+      }
 
       lst._typename = clTStreamerInfoList;
 
@@ -3655,7 +3619,7 @@ class TLocalFile extends TFile {
             cnt += 2;
             if (cnt >= place.length) return resolve(blobs);
             reader.readAsArrayBuffer(file.slice(place[cnt], place[cnt] + place[cnt + 1]));
-         }
+         };
 
          reader.readAsArrayBuffer(file.slice(place[0], place[0] + place[1]));
       });
@@ -3718,14 +3682,14 @@ class TNodejsFile extends TFile {
          let cnt = 0;
 
          // eslint-disable-next-line n/handle-callback-err
-         const readfunc = (err, bytesRead, buf) => {
+         const readfunc = (_err, _bytesRead, buf) => {
             const res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
             if (place.length === 2) return resolve(res);
             blobs.push(res);
             cnt += 2;
             if (cnt >= place.length) return resolve(blobs);
             this.fs.read(this.fd, Buffer.alloc(place[cnt + 1]), 0, place[cnt + 1], place[cnt], readfunc);
-         }
+         };
 
          this.fs.read(this.fd, Buffer.alloc(place[1]), 0, place[1], place[0], readfunc);
       });
@@ -3853,8 +3817,7 @@ function openFile(arg) {
 addClassMethods(clTNamed, CustomStreamers[clTNamed]);
 addClassMethods(clTObjString, CustomStreamers[clTObjString]);
 
-export {
-   kChar, kShort, kInt, kLong, kFloat, kCounter,
+export { kChar, kShort, kInt, kLong, kFloat, kCounter,
    kCharStar, kDouble, kDouble32, kLegacyChar,
    kUChar, kUShort, kUInt, kULong, kBits,
    kLong64, kULong64, kBool, kFloat16,
@@ -3862,6 +3825,4 @@ export {
    kAnyP, kStreamer, kStreamLoop, kSTLp, kSTL,
    clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, clTBasket,
    R__unzip, addUserStreamer, createStreamerElement, createMemberStreamer,
-   openFile, reconstructObject, FileProxy,
-   TBuffer /*, TDirectory, TFile, TLocalFile, TNodejsFile */
-};
+   openFile, reconstructObject, FileProxy, TBuffer }; /*, TDirectory, TFile, TLocalFile, TNodejsFile */

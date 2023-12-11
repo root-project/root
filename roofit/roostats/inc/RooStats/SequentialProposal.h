@@ -20,7 +20,7 @@ namespace RooStats {
 class SequentialProposal : public ProposalFunction {
 
    public:
-   SequentialProposal() : RooStats::ProposalFunction(), fDivisor(0) {}
+      SequentialProposal() : fDivisor(0) {}
       SequentialProposal(double divisor) ;
 
       /// Populate xPrime with a new proposed point
@@ -34,8 +34,6 @@ class SequentialProposal : public ProposalFunction {
       /// Return the probability of proposing the point x1 given the starting
       /// point x2
       double GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
-
-      ~SequentialProposal() override {}
 
       ClassDefOverride(SequentialProposal,1) // A concrete implementation of ProposalFunction, that uniformly samples the parameter space.
 

@@ -75,12 +75,12 @@ RooArgSet getConstraintsSet(RooAbsPdf *pdf, RooAbsData *data, RooArgSet constrai
       doStripDisconnected = true;
 #ifndef NDEBUG
       did_default_constraint_algo = true;
-      N_default_constraints = default_constraints->getSize();
+      N_default_constraints = default_constraints->size();
 #endif
    }
 #ifndef NDEBUG
    if (did_default_constraint_algo) {
-      assert(N_default_constraints == static_cast<std::size_t>(constrained_parameters.getSize()));
+      assert(N_default_constraints == static_cast<std::size_t>(constrained_parameters.size()));
    }
 #endif
 
@@ -152,7 +152,7 @@ std::unique_ptr<RooSubsidiaryL> buildSubsidiaryL(RooAbsPdf *pdf, RooAbsData *dat
    // Include constraints, if any, in likelihood
    if (!allConstraints.empty()) {
 
-      oocoutI(nullptr, Minimization) << " Including the following contraint terms in minimization: " << allConstraints
+      oocoutI(nullptr, Minimization) << " Including the following constraint terms in minimization: " << allConstraints
                                      << std::endl;
       if (!global_observables.empty()) {
          oocoutI(nullptr, Minimization) << "The following global observables have been defined: " << global_observables
@@ -183,9 +183,9 @@ RooAbsPdf *getBinnedPdf(RooAbsPdf *pdf)
       binnedPdf = pdf;
    } else if (pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
       // Default case: top-level pdf is a product of RRSP and other pdfs
-      for (const auto component : ((RooProdPdf *)pdf)->pdfList()) {
+      for (const auto component : (static_cast<RooProdPdf *>(pdf))->pdfList()) {
          if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
-            binnedPdf = (RooAbsPdf *)component;
+            binnedPdf = static_cast<RooAbsPdf *>(component);
             break;
          }
       }
@@ -257,11 +257,11 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
          bool binnedL = (binnedPdf != nullptr);
          if (binnedPdf == nullptr && component_pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
             // Default case: top-level pdf is a product of RRSP and other pdfs
-            for (const auto component : ((RooProdPdf *)component_pdf)->pdfList()) {
+            for (const auto component : (static_cast<RooProdPdf *>(component_pdf))->pdfList()) {
                if (component->getAttribute("MAIN_MEASUREMENT")) {
                   // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to
                   // be passed to the slave calculator
-                  binnedPdf = (RooAbsPdf *)component;
+                  binnedPdf = static_cast<RooAbsPdf *>(component);
                   break;
                }
             }
@@ -272,7 +272,7 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
             components.push_back(std::make_unique<RooBinnedL>((binnedPdf ? binnedPdf : component_pdf), dset));
          } else {
             components.push_back(
-               std::make_unique<RooUnbinnedL>((binnedPdf ? binnedPdf : component_pdf), dset, _extended, _batchMode));
+               std::make_unique<RooUnbinnedL>((binnedPdf ? binnedPdf : component_pdf), dset, _extended, _evalBackend));
          }
          //         }
          components.back()->setSimCount(N_components);
@@ -331,7 +331,7 @@ std::unique_ptr<RooAbsL> NLLFactory::build()
    } else if (auto binnedPdf = getBinnedPdf(&_pdf)) {
       likelihood = std::make_unique<RooBinnedL>(binnedPdf, &_data);
    } else { // unbinned
-      likelihood = std::make_unique<RooUnbinnedL>(&_pdf, &_data, _extended, _batchMode);
+      likelihood = std::make_unique<RooUnbinnedL>(&_pdf, &_data, _extended, _evalBackend);
    }
 
    auto subsidiary = buildSubsidiaryL(&_pdf, &_data, _constrainedParameters, _externalConstraints, _globalObservables,
@@ -396,9 +396,9 @@ NLLFactory &NLLFactory::GlobalObservablesTag(const char *globalObservablesTag)
    return *this;
 }
 
-NLLFactory &NLLFactory::BatchMode(RooFit::BatchModeOption batchMode)
+NLLFactory &NLLFactory::EvalBackend(RooFit::EvalBackend evalBackend)
 {
-   _batchMode = batchMode;
+   _evalBackend = evalBackend;
    return *this;
 }
 

@@ -37,6 +37,9 @@ ROOT.gROOT.SetBatch()
 
 cppMIME = 'text/x-c++src'
 
+# Keep display handle for canvases to be able update them
+_canvasHandles = {}
+
 _jsMagicHighlight = """
 Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
 console.log("JupyROOT - %%cpp magic configured");
@@ -48,9 +51,9 @@ _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 _jsCode = """
 
-<div id="{jsDivId}"
-     style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
+<div id="{jsDivId}" style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px; position: relative">
 </div>
+
 <script>
 
 function display_{jsDivId}(Core) {{
@@ -71,7 +74,7 @@ if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
     requirejs.config({{
-       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.2.1/build/jsroot', 'https://jsroot.gsi.de/7.2.1/build/jsroot' ] }}
+       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.4.3/build/jsroot', 'https://jsroot.gsi.de/7.4.3/build/jsroot' ] }}
     }})(['JSRootCore'],  function(Core) {{
        display_{jsDivId}(Core);
     }});
@@ -94,7 +97,7 @@ if (typeof requirejs !== 'undefined') {{
     // Try loading a local version of requirejs and fallback to cdn if not possible.
     script_load_{jsDivId}(base_url + 'static/build/jsroot.js', function(){{
         console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
-        script_load_{jsDivId}('https://root.cern/js/7.2.1/build/jsroot.js', function(){{
+        script_load_{jsDivId}('https://root.cern/js/7.4.3/build/jsroot.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
@@ -109,6 +112,11 @@ def TBufferJSONAvailable():
    if hasattr(ROOT,"TBufferJSON"):
        return True
    print(TBufferJSONErrorMessage, file=sys.stderr)
+   return False
+
+def TWebCanvasAvailable():
+   if hasattr(ROOT,"TWebCanvas"):
+       return True
    return False
 
 def RCanvasAvailable():
@@ -289,7 +297,15 @@ def invokeAclic(cell):
         processCppCode(".L %s+" %fileName)
 
 def produceCanvasJson(canvas):
+
+   if canvas.IsUpdated() and not canvas.IsDrawn():
+       canvas.Draw()
+
+   if TWebCanvasAvailable():
+       return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 3)
+
    # Add extra primitives to canvas with custom colors, palette, gStyle
+
    prim = canvas.GetListOfPrimitives()
 
    style = ROOT.gStyle
@@ -406,12 +422,12 @@ class StreamCapture(object):
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
-    return [NotebookDrawer(can) for can in lOfC if can.IsDrawn()]
+    return [NotebookDrawer(can) for can in lOfC if can.IsDrawn() or can.IsUpdated()]
 
 def GetRCanvasDrawers():
     if not RCanvasAvailable(): return []
     lOfC = ROOT.Experimental.RCanvas.GetCanvases()
-    return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown()]
+    return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown() or can.IsUpdated()]
 
 def GetGeometryDrawer():
     if not hasattr(ROOT,'gGeoManager'): return
@@ -478,8 +494,10 @@ class NotebookDrawer(object):
     def __del__(self):
         if self.isRCanvas:
             self.drawableObject.ClearShown()
+            self.drawableObject.ClearUpdated()
         elif self.isCanvas:
             self.drawableObject.ResetDrawn()
+            self.drawableObject.ResetUpdated()
         else:
             ROOT.gGeoManager.SetUserPaintVolume(None)
 
@@ -492,7 +510,7 @@ class NotebookDrawer(object):
        primitivesNames = map(lambda p: p.ClassName(), primitives)
        return sorted(primitivesNames)
 
-    def _getUID(self):
+    def _getUniqueDivId(self):
         '''
         Every DIV containing a JavaScript snippet must be unique in the
         notebook. This method provides a unique identifier.
@@ -501,15 +519,23 @@ class NotebookDrawer(object):
         identifier with the UID throughout all open Notebooks the UID is
         generated as a timestamp.
         '''
-        return int(round(time.time() * 1000))
+        return  'root_plot_' + str(int(round(time.time() * 1000)))
 
     def _canJsDisplay(self):
+        # returns true if js-based drawing should be used
         if not TBufferJSONAvailable():
            return False
-        if self.isRCanvas: return True
-        if not self.isCanvas: return True
+        # RCanvas clways displayed with jsroot
+        if self.isRCanvas:
+            return True
+        # check if jsroot was disabled
+        if not _enableJSVis:
+            return False
+        # geometry can be drawn, TWebCanvas also can be used
+        if not self.isCanvas or TWebCanvasAvailable():
+            return True
+
         # to be optimised
-        if not _enableJSVis: return False
         primitivesTypesNames = self._getListOfPrimitivesNamesAndTypes()
         for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
@@ -525,25 +551,24 @@ class NotebookDrawer(object):
         else:
             json = produceCanvasJson(self.drawableObject).Data()
 
-        # Here we could optimise the string manipulation
-        divId = 'root_plot_' + str(self._getUID())
+        divId = self._getUniqueDivId()
 
+        width = _jsCanvasWidth
         height = _jsCanvasHeight
-        width = _jsCanvasHeight
         options = "all"
 
         if self.isCanvas:
-            height = self.drawableObject.GetWw()
-            width = self.drawableObject.GetWh()
+            if self.drawableObject.GetWindowWidth() > 0: width = self.drawableObject.GetWindowWidth()
+            if self.drawableObject.GetWindowHeight() > 0: height = self.drawableObject.GetWindowHeight()
             options = ""
 
         if self.isRCanvas:
-            if (self.drawableObject.GetWidth() > 0): width = self.drawableObject.GetWidth()
-            if (self.drawableObject.GetHeight() > 0): height = self.drawableObject.GetHeight()
+            if self.drawableObject.GetWidth() > 0: width = self.drawableObject.GetWidth()
+            if self.drawableObject.GetHeight() > 0: height = self.drawableObject.GetHeight()
             options = ""
 
-        thisJsCode = _jsCode.format(jsCanvasWidth = height,
-                                    jsCanvasHeight = width,
+        thisJsCode = _jsCode.format(jsCanvasWidth = width,
+                                    jsCanvasHeight = height,
                                     jsonContent = json,
                                     jsDrawOptions = options,
                                     jsDivId = divId)
@@ -552,8 +577,32 @@ class NotebookDrawer(object):
     def _getJsDiv(self):
         return display.HTML(self._getJsCode())
 
+    def _getDrawId(self):
+        if self.isCanvas:
+            return self.drawableObject.GetName()
+        if self.isRCanvas:
+            return self.drawableObject.GetUID()
+        # all other objects do not support update and can be ignored
+        return ''
+
+    def _getUpdated(self):
+        if self.isCanvas:
+            return self.drawableObject.IsUpdated()
+        if self.isRCanvas:
+            return self.drawableObject.IsUpdated()
+        return False
+
     def _jsDisplay(self):
-        display.display(self._getJsDiv())
+        global _canvasHandles
+        name = self._getDrawId()
+        updated = self._getUpdated()
+        jsdiv = self._getJsDiv()
+        if name and (name in _canvasHandles) and updated:
+            _canvasHandles[name].update(jsdiv)
+        elif name:
+            _canvasHandles[name] = display.display(jsdiv, display_id=True)
+        else:
+            display.display(jsdiv)
         return 0
 
     def _getPngImage(self):
@@ -566,8 +615,16 @@ class NotebookDrawer(object):
         return img
 
     def _pngDisplay(self):
+        global _canvasHandles
+        name = self._getDrawId()
+        updated = self._getUpdated()
         img = self._getPngImage()
-        display.display(img)
+        if updated and name and (name in _canvasHandles):
+            _canvasHandles[name].update(img)
+        elif name:
+            _canvasHandles[name] = display.display(img, display_id=True)
+        else:
+            display.display(img)
 
     def _display(self):
        if _enableJSVisDebug:
@@ -580,9 +637,6 @@ class NotebookDrawer(object):
             self._pngDisplay()
 
     def GetDrawableObjects(self):
-        if not self.isCanvas:
-           return [self._getJsDiv()]
-
         if _enableJSVisDebug:
            return [self._getJsDiv(),self._getPngImage()]
 

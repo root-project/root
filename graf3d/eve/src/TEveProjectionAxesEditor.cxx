@@ -30,14 +30,14 @@ ClassImp(TEveProjectionAxesEditor);
 TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t width, Int_t height,
                                                    UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
+   fM(nullptr),
 
-   fLabMode(0),
-   fAxesMode(0),
+   fLabMode(nullptr),
+   fAxesMode(nullptr),
 
-   fCenterFrame(0),
-   fDrawCenter(0),
-   fDrawOrigin(0)
+   fCenterFrame(nullptr),
+   fDrawCenter(nullptr),
+   fDrawOrigin(nullptr)
 {
    // Constructor.
 

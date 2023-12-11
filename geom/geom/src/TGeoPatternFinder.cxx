@@ -54,7 +54,7 @@ ClassImp(TGeoPatternHoneycomb);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGeoPatternFinder::ThreadData_t::ThreadData_t() : fMatrix(0), fCurrent(-1), fNextIndex(-1) {}
+TGeoPatternFinder::ThreadData_t::ThreadData_t() : fMatrix(nullptr), fCurrent(-1), fNextIndex(-1) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -95,7 +95,7 @@ void TGeoPatternFinder::CreateThreadData(Int_t nthreads)
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == 0) {
+      if (fThreadData[tid] == nullptr) {
          fThreadData[tid] = new ThreadData_t;
          fThreadData[tid]->fMatrix = CreateMatrix();
       }
@@ -112,7 +112,7 @@ TGeoPatternFinder::TGeoPatternFinder()
    fStep = 0;
    fStart = 0;
    fEnd = 0;
-   fVolume = 0;
+   fVolume = nullptr;
    fThreadSize = 0;
 }
 
@@ -208,7 +208,7 @@ TGeoNode *TGeoPatternFinder::CdNext()
 {
    ThreadData_t &td = GetThreadData();
    if (td.fNextIndex < 0)
-      return NULL;
+      return nullptr;
    cd(td.fNextIndex);
    return GetNodeOffset(td.fCurrent);
 }
@@ -354,7 +354,7 @@ Bool_t TGeoPatternX::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternX::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Int_t ind = (Int_t)(1. + (point[0] - fStart) / fStep) - 1;
    if (dir) {
       td.fNextIndex = ind;
@@ -548,7 +548,7 @@ Bool_t TGeoPatternY::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternY::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Int_t ind = (Int_t)(1. + (point[1] - fStart) / fStep) - 1;
    if (dir) {
       td.fNextIndex = ind;
@@ -738,7 +738,7 @@ Bool_t TGeoPatternZ::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternZ::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Int_t ind = (Int_t)(1. + (point[2] - fStart) / fStep) - 1;
    if (dir) {
       td.fNextIndex = ind;
@@ -906,7 +906,7 @@ Bool_t TGeoPatternParaX::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternParaX::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Double_t txy = ((TGeoPara *)fVolume->GetShape())->GetTxy();
    Double_t txz = ((TGeoPara *)fVolume->GetShape())->GetTxz();
    Double_t tyz = ((TGeoPara *)fVolume->GetShape())->GetTyz();
@@ -1088,7 +1088,7 @@ Bool_t TGeoPatternParaY::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternParaY::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Double_t tyz = ((TGeoPara *)fVolume->GetShape())->GetTyz();
    Double_t yt = point[1] - tyz * point[2];
    Int_t ind = (Int_t)(1. + (yt - fStart) / fStep) - 1;
@@ -1274,7 +1274,7 @@ Bool_t TGeoPatternParaZ::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Double_t zt = point[2];
    Int_t ind = (Int_t)(1. + (zt - fStart) / fStep) - 1;
    if (dir) {
@@ -1463,7 +1463,7 @@ Bool_t TGeoPatternTrapZ::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Double_t zt = point[2];
    Int_t ind = (Int_t)(1. + (zt - fStart) / fStep) - 1;
    if (dir) {
@@ -1628,7 +1628,7 @@ TGeoNode *TGeoPatternCylR::FindNode(Double_t *point, const Double_t *dir)
    ThreadData_t &td = GetThreadData();
    if (!td.fMatrix)
       td.fMatrix = gGeoIdentity;
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Double_t r = TMath::Sqrt(point[0] * point[0] + point[1] * point[1]);
    Int_t ind = (Int_t)(1. + (r - fStart) / fStep) - 1;
    if (dir) {
@@ -1695,7 +1695,7 @@ void TGeoPatternCylR::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 
 TGeoPatternCylPhi::TGeoPatternCylPhi()
 {
-   fSinCos = 0;
+   fSinCos = nullptr;
    CreateThreadData(1);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -1796,7 +1796,7 @@ Bool_t TGeoPatternCylPhi::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
    if (phi < 0)
       phi += 360;
@@ -1966,7 +1966,7 @@ void TGeoPatternSphR::cd(Int_t idiv)
 
 TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2079,7 +2079,7 @@ void TGeoPatternSphTheta::cd(Int_t idiv)
 
 TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2126,7 +2126,7 @@ void TGeoPatternSphTheta::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 
 TGeoPatternSphPhi::TGeoPatternSphPhi()
 {
-   fSinCos = 0;
+   fSinCos = nullptr;
    CreateThreadData(1);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -2231,7 +2231,7 @@ Bool_t TGeoPatternSphPhi::IsOnBoundary(const Double_t *point) const
 TGeoNode *TGeoPatternSphPhi::FindNode(Double_t *point, const Double_t *dir)
 {
    ThreadData_t &td = GetThreadData();
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
    if (phi < 0)
       phi += 360;
@@ -2316,8 +2316,8 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb()
 {
    fNrows = 0;
    fAxisOnRows = 0;
-   fNdivisions = 0;
-   fStart = 0;
+   fNdivisions = nullptr;
+   fStart = nullptr;
    CreateThreadData(1);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -2327,8 +2327,8 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows) : TGeoP
 {
    fNrows = nrows;
    fAxisOnRows = 0;
-   fNdivisions = 0;
-   fStart = 0;
+   fNdivisions = nullptr;
+   fStart = nullptr;
    CreateThreadData(1);
    // compute everything else
 }
@@ -2377,7 +2377,7 @@ void TGeoPatternHoneycomb::cd(Int_t idiv)
 
 TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@
 \class RooNumGenFactory
 \ingroup Roofitcore
 
-RooNumGenFactory is a factory to instantiate numeric integrators
+%Factory to instantiate numeric integrators
 from a given function binding and a given configuration. The factory
 searches for a numeric integrator registered with the factory that
 has the ability to perform the numeric integration. The choice of
@@ -42,8 +42,6 @@ the preference of the caller as encoded in the configuration object.
 
 
 #include "RooMsgService.h"
-
-using namespace std ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,8 +156,8 @@ const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name)
 RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars, const RooNumGenConfig& config, bool verbose, RooAbsReal* maxFuncVal)
 {
   // Find method defined configuration
-  Int_t ndim = genVars.getSize() ;
-  bool cond = (condVars.getSize() > 0) ? true : false ;
+  Int_t ndim = genVars.size() ;
+  bool cond = (!condVars.empty()) ? true : false ;
 
   bool hasCat(false) ;
   for (const auto arg : genVars) {
@@ -188,7 +186,7 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
   // Check that a method was defined for this case
   if (!method.CompareTo("N/A")) {
     oocoutE(nullptr,Integration) << "RooNumGenFactory::createSampler: No sampler method has been defined for "
-                 << (cond?"a conditional ":"a ") << ndim << "-dimensional p.d.f" << endl ;
+                 << (cond?"a conditional ":"a ") << ndim << "-dimensional p.d.f" << std::endl;
     return nullptr ;
   }
 

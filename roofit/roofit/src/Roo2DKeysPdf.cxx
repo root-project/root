@@ -167,12 +167,12 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   Int_t bad = 0;
   const RooAbsReal & xx = x.arg();
   const RooAbsReal & yy = y.arg();
-  if(! (RooRealVar*)( (RooArgSet*)data.get(0) )->find( xx.GetName() ) )
+  if(! static_cast<RooRealVar*>((const_cast<RooArgSet *>(data.get(0)))->find( xx.GetName() )) )
   {
     cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<xx.GetName()<<" not in the data set" <<endl;
     bad = 1;
   }
-  if(! (RooRealVar*)( (RooArgSet*)data.get(0) )->find( yy.GetName() ) )
+  if(! static_cast<RooRealVar*>((const_cast<RooArgSet *>(data.get(0)))->find( yy.GetName() )) )
   {
     cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<yy.GetName()<<" not in the data set" << endl;
     bad = 1;
@@ -186,8 +186,8 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 
   //copy the data into local arrays
   const RooArgSet * values = data.get();
-  const RooRealVar* X = ((RooRealVar*)(values->find(xx.GetName())) ) ;
-  const RooRealVar* Y = ((RooRealVar*)(values->find(yy.GetName())) ) ;
+  auto X = static_cast<RooRealVar const*>(values->find(xx.GetName()));
+  auto Y = static_cast<RooRealVar const*>(values->find(yy.GetName()));
 
   for (Int_t j=0;j<_nEvents;++j)
   {
@@ -361,7 +361,10 @@ double Roo2DKeysPdf::evaluateFull(double thisX, double thisY) const
 
   double f=0.0;
 
-  double rx2, ry2, zx, zy;
+  double rx2;
+  double ry2;
+  double zx;
+  double zy;
   if( _MirrorAtBoundary )
   {
     for (Int_t j = 0; j < _nEvents; ++j)
@@ -534,11 +537,11 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) con
   const RooAbsReal & xx = x.arg();
   const RooAbsReal & yy = y.arg();
   RooArgSet values( RooArgList( xx, yy ));
-  RooRealVar * xArg = ((RooRealVar*)(values.find(xx.GetName())) ) ;
-  RooRealVar * yArg = ((RooRealVar*)(values.find(yy.GetName())) ) ;
+  RooRealVar * xArg = (static_cast<RooRealVar*>(values.find(xx.GetName())) ) ;
+  RooRealVar * yArg = (static_cast<RooRealVar*>(values.find(yy.GetName())) ) ;
 
   TH2F * hist = (TH2F*)xArg->createHistogram("hist", *yArg);
-  hist = (TH2F*)this->fillHistogram(hist, RooArgList(*xArg, *yArg) );
+  hist = static_cast<TH2F*>(this->fillHistogram(hist, RooArgList(*xArg, *yArg) ));
   hist->SetName(histName);
 
   file->Write();
@@ -567,7 +570,9 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   RooAbsReal & xArg = (RooAbsReal&)x.arg();
   RooAbsReal & yArg = (RooAbsReal&)y.arg();
 
-  double theX, theY, hx/*, hy*/;
+  double theX;
+  double theY;
+  double hx;
   TString label = name;
   label += " the source data for 2D Keys PDF";
   TTree * _theTree =  new TTree(name, label);

@@ -103,7 +103,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins = GetNumBins( vars );
 
   // Add the parameters (with checking)
-  addVarSet( vars );
+  _dataVars.addTyped<RooRealVar>(vars);
   addParamSet( paramSet );
 }
 
@@ -138,7 +138,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins = GetNumBins( vars );
 
   // Add the parameters (with checking)
-  addVarSet( vars );
+  _dataVars.addTyped<RooRealVar>(vars);
   addParamSet( paramSet );
 }
 
@@ -289,7 +289,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
   RooArgList paramSet;
 
-  Int_t numVars = vars.getSize();
+  Int_t numVars = vars.size();
   Int_t numBins = GetNumBins( vars );
 
   if( numVars == 0 ) {
@@ -327,8 +327,8 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
 
-    RooRealVar* varx = (RooRealVar*) vars.at(0);
-    RooRealVar* vary = (RooRealVar*) vars.at(1);
+    RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
+    RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));
 
     // For each bin, create a RooRealVar
     for( Int_t j = 0; j < vary->numBins(); ++j) {
@@ -362,9 +362,9 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
 
-    RooRealVar* varx = (RooRealVar*) vars.at(0);
-    RooRealVar* vary = (RooRealVar*) vars.at(1);
-    RooRealVar* varz = (RooRealVar*) vars.at(2);
+    RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
+    RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));
+    RooRealVar* varz = static_cast<RooRealVar*>(vars.at(2));
 
     // For each bin, create a RooRealVar
     for( Int_t k = 0; k < varz->numBins(); ++k) {
@@ -516,27 +516,6 @@ Int_t ParamHistFunc::getCurrentBin() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return 0 for success
-/// return 1 for failure
-/// Check that the elements
-/// are actually RooRealVar's
-/// If so, add them to the
-/// list of vars
-Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
-  for(auto const& comp : vars) {
-    if (!dynamic_cast<RooRealVar*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in variables list is not of type RooRealVar";
-      coutE(InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
-    }
-    _dataVars.add( *comp );
-  }
-  return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // return 0 for success
@@ -546,7 +525,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // the right number of arguments:
 
   Int_t numVarBins  = GetNumBins(_dataVars);
-  Int_t numElements = params.getSize();
+  Int_t numElements = params.size();
 
   if( numVarBins != numElements ) {
     std::cout << "ParamHistFunc::addParamSet - ERROR - "
@@ -563,16 +542,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // If so, add them to the
   // list of params
 
-  for (const auto comp : params) {
-    if (!dynamic_cast<const RooAbsReal*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in parameter list is not of type RooAbsReal.";
-      coutE(InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
-    }
-
-    _paramSet.add( *comp );
-  }
+  _paramSet.addTyped<RooAbsReal>(params);
 
   return 0;
 }
@@ -655,7 +625,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)nullptr) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)nullptr)) ;
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }
@@ -718,7 +688,7 @@ std::list<double>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double
 
   std::list<double>* hint = new std::list<double> ;
 
-  // Widen range slighty
+  // Widen range slightly
   xlo = xlo - 0.01*(xhi-xlo) ;
   xhi = xhi + 0.01*(xhi-xlo) ;
 

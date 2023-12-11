@@ -274,6 +274,9 @@ void RModel::GenerateIntermediateTensorInfo() {
             fGC += "std::vector<int64_t> fTensor_" + i.first  + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
             fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
         }
+        if (i.second.type == ETensorType::BOOL){
+            fGC += "bool tensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";         
+        }
     }
 }
 
@@ -328,6 +331,10 @@ void RModel::GenerateOutput() {
         }
         case  ETensorType::DOUBLE : {
             fGC += "double* tensor_" + fInputTensorNames[i] + ",";
+            break;
+        }
+        case  ETensorType::BOOL :{
+            fGC += "bool* tensor_" + fInputTensorNames[i] + ",";
             break;
         }
         default: {
@@ -596,7 +603,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
 
         // this needs to be changed, similar to the text file
         return -1;
-   
+
     } else if (fWeightFile == WeightFileType::Text) {
         std::ofstream f;
         if(fIsGNNComponent) {
@@ -687,6 +694,14 @@ void RModel::PrintIntermediateTensors() {
             if (i < it.second.shape.size() - 1) std::cout << ",";
         }
         std::cout << "]" << std::endl;
+    }
+}
+
+void RModel::PrintOutputTensors() {
+    std::cout << "Model specify the following output tensors:\n";
+    for (auto& it: fOutputTensorNames) {
+        std::cout << "Tensor name: \"" << it << "\"\t";
+        std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
     }
 }
 

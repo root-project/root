@@ -19,7 +19,7 @@
 \class RooRandomizeParamMCSModule
 \ingroup Roofitcore
 
-RooRandomizeParamMCSModule is an add-on modules to RooMCStudy that
+Add-on module to RooMCStudy that
 allows you to randomize input generation parameters. Randomized generation
 parameters can be sampled from a uniform or Gaussian distribution.
 For every randomized parameter, an extra variable is added to
@@ -47,15 +47,13 @@ number of expected events of an extended p.d.f
 using namespace std ;
 
 ClassImp(RooRandomizeParamMCSModule);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
 RooRandomizeParamMCSModule::RooRandomizeParamMCSModule() :
-  RooAbsMCStudyModule("RooRandomizeParamMCSModule","RooRandomizeParamMCSModule"), _data(nullptr)
+  RooAbsMCStudyModule("RooRandomizeParamMCSModule","RooRandomizeParamMCSModule")
 {
 }
 
@@ -67,24 +65,11 @@ RooRandomizeParamMCSModule::RooRandomizeParamMCSModule() :
 RooRandomizeParamMCSModule::RooRandomizeParamMCSModule(const RooRandomizeParamMCSModule& other) :
   RooAbsMCStudyModule(other),
   _unifParams(other._unifParams),
-  _gausParams(other._gausParams),
-  _data(nullptr)
+  _gausParams(other._gausParams)
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooRandomizeParamMCSModule:: ~RooRandomizeParamMCSModule()
-{
-  if (_data) {
-    delete _data ;
-  }
-}
-
-
+RooRandomizeParamMCSModule:: ~RooRandomizeParamMCSModule() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Request uniform smearing of param in range [lo,hi] in RooMCStudy
@@ -321,7 +306,7 @@ bool RooRandomizeParamMCSModule::initializeInstance()
   }
 
   // Create new dataset to be merged with RooMCStudy::fitParDataSet
-  _data = new RooDataSet("DeltaLLSigData","Additional data for Delta(-log(L)) study",_genParSet) ;
+  _data = std::make_unique<RooDataSet>("DeltaLLSigData","Additional data for Delta(-log(L)) study",_genParSet) ;
 
   return true ;
 }
@@ -428,7 +413,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
 
 RooDataSet* RooRandomizeParamMCSModule::finalizeRun()
 {
-  return _data ;
+  return _data.get();
 }
 
 

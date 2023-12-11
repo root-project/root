@@ -64,22 +64,8 @@ RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const Roo
                             << ") ERROR: coefficient list and exponent list must be of same length" << std::endl;
       return;
    }
-   for (auto coef : coefList) {
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutE(InputArguments) << "RooPower::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _coefList.add(*coef);
-   }
-   for (auto exp : expList) {
-      if (!dynamic_cast<RooAbsReal *>(exp)) {
-         coutE(InputArguments) << "RooPower::ctor(" << GetName() << ") ERROR: coefficient " << exp->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _expList.add(*exp);
-   }
+   _coefList.addTyped<RooAbsReal>(coefList);
+   _expList.addTyped<RooAbsReal>(expList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,15 +180,17 @@ std::string RooPower::getFormulaExpression(bool expand) const
    for (std::size_t i = 0; i < _coefList.size(); ++i) {
       if (i != 0)
          ss << "+";
-      if (expand)
+      if (expand) {
          ss << static_cast<RooAbsReal *>(_coefList.at(i))->getVal();
-      else
+      } else {
          ss << _coefList.at(i)->GetName();
+      }
       ss << "*pow(" << _x.GetName() << ",";
-      if (expand)
+      if (expand) {
          ss << static_cast<RooAbsReal *>(_expList.at(i))->getVal();
-      else
+      } else {
          ss << _expList.at(i)->GetName();
+      }
       ss << ")";
    }
    return ss.str();

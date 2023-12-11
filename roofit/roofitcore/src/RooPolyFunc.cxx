@@ -138,17 +138,7 @@ RooPolyFunc::RooPolyFunc() {}
 RooPolyFunc::RooPolyFunc(const char *name, const char *title, const RooAbsCollection &vars)
    : RooAbsReal(name, title), _vars("x", "list of dependent variables", this)
 {
-   for (const auto &var : vars) {
-      if (!dynamic_cast<RooAbsReal *>(var)) {
-         std::stringstream ss;
-         ss << "RooPolyFunc::ctor(" << GetName() << ") ERROR: coefficient " << var->GetName()
-            << " is not of type RooAbsReal";
-         const std::string errorMsg = ss.str();
-         coutE(InputArguments) << errorMsg << std::endl;
-         throw std::runtime_error(errorMsg);
-      }
-      _vars.add(*var);
-   }
+   _vars.addTyped<RooAbsReal>(vars);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,10 +171,11 @@ std::string RooPolyFunc::asString() const
          auto exp = dynamic_cast<RooRealVar *>(term->at(i_var));
          if (exp->getVal() == 0)
             continue;
-         if (first)
+         if (first) {
             ss << " * (";
-         else
+         } else {
             ss << "*";
+         }
          ss << "pow(" << var->GetName() << "," << exp->getVal() << ")";
          first = false;
       }

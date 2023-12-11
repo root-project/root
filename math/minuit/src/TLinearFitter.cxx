@@ -93,7 +93,7 @@ fitters and doesn't require to set the initial values of parameters.
 ### 2.Setting the formula
 
 #### 2.1 The linear formula syntax:
-     -Additive parts are separated by 2 plus signes "++"
+     -Additive parts are separated by 2 plus signs "++"
       --for example "1 ++ x" - for fitting a straight line
      -All standard functions, undrestood by TFormula, can be used
       as additive parts
@@ -504,7 +504,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Add another linear fitter to this linear fitter. Points and Design matrices
-///are added, but the previos fitting results (if any) are deleted.
+///are added, but the previous fitting results (if any) are deleted.
 ///Fitters must have same formulas (this is not checked). Fixed parameters are not changed
 
 void TLinearFitter::Add(TLinearFitter *tlf)
@@ -547,7 +547,7 @@ void TLinearFitter::Add(TLinearFitter *tlf)
 
    fChisquare=0;
    fH=0;
-   fRobust=0;
+   fRobust=false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -768,7 +768,7 @@ void TLinearFitter::Clear(Option_t * /*option*/)
    fNdim=0;
    if (fFormula) delete [] fFormula;
    fFormula=nullptr;
-   fIsSet=0;
+   fIsSet=false;
    if (fFixedParams) delete [] fFixedParams;
    fFixedParams=nullptr;
 
@@ -799,7 +799,7 @@ void TLinearFitter::ClearPoints()
    fParSign.Zero();
 
    for (Int_t i=0; i<fNfunctions; i++)
-      fFixedParams[i]=0;
+      fFixedParams[i]=false;
    fChisquare=0;
    fNpoints=0;
 
@@ -1028,7 +1028,7 @@ void TLinearFitter::FixParameter(Int_t ipar)
    }
    if (!fFixedParams)
       fFixedParams = new Bool_t[fNfunctions];
-   fFixedParams[ipar] = 1;
+   fFixedParams[ipar] = true;
    fNfixed++;
 }
 
@@ -1047,7 +1047,7 @@ void TLinearFitter::FixParameter(Int_t ipar, Double_t parvalue)
    }
    if(!fFixedParams)
       fFixedParams = new Bool_t[fNfunctions];
-   fFixedParams[ipar] = 1;
+   fFixedParams[ipar] = true;
    if (fParams.GetNoElements()<fNfunctions)
       fParams.ResizeTo(fNfunctions);
    fParams(ipar) = parvalue;
@@ -1067,7 +1067,7 @@ void TLinearFitter::ReleaseParameter(Int_t ipar)
       Warning("ReleaseParameter","This parameter is not fixed\n");
       return;
    } else {
-      fFixedParams[ipar] = 0;
+      fFixedParams[ipar] = false;
       fNfixed--;
    }
 }
@@ -1501,7 +1501,7 @@ void TLinearFitter::SetBasisFunctions(TObjArray * functions)
    fY2Temp=0;
    fY2=0;
    for (int i=0; i<size; i++)
-      fFixedParams[i]=0;
+      fFixedParams[i]=false;
    fIsSet=kFALSE;
    fChisquare=0;
 
@@ -1644,7 +1644,7 @@ void TLinearFitter::SetFormula(const char *formula)
    fY2Temp=0;
    fY2=0;
    for (i=0; i<size; i++)
-      fFixedParams[i]=0;
+      fFixedParams[i]=false;
    fIsSet=kFALSE;
    fChisquare=0;
 
@@ -1699,7 +1699,7 @@ void TLinearFitter::SetFormula(TFormula *function)
    fY2Temp=0;
    fY2=0;
    for (Int_t i=0; i<size; i++)
-      fFixedParams[i]=0;
+      fFixedParams[i]=false;
    //check if any parameters are fixed (not for pure TFormula)
 
    if (function->InheritsFrom(TF1::Class())){
@@ -1726,9 +1726,9 @@ Bool_t TLinearFitter::UpdateMatrix()
       for (Int_t i=0; i<fNpoints; i++) {
          AddToDesign(TMatrixDRow(fX, i).GetPtr(), fY(i), fE(i));
       }
-      return 1;
+      return true;
    } else
-      return 0;
+      return false;
 
 }
 

@@ -22,7 +22,7 @@
 #include "RooChangeTracker.h"
 #include "RooRealVar.h"
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "Rtypes.h"
 
 #include <list>
@@ -194,13 +194,12 @@ public:
   class RealVector {
   public:
 
-    RealVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
-      _nativeReal(nullptr), _real(nullptr), _buf(nullptr), _nativeBuf(nullptr), _tracker(nullptr), _nset(nullptr) {
+    RealVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) {
       _vec.reserve(initialCapacity);
     }
 
     RealVector(RooAbsReal* arg, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
-      _nativeReal(arg), _real(nullptr), _buf(nullptr), _nativeBuf(nullptr), _tracker(nullptr), _nset(nullptr) {
+      _nativeReal(arg) {
       _vec.reserve(initialCapacity);
     }
 
@@ -210,7 +209,7 @@ public:
     }
 
     RealVector(const RealVector& other, RooAbsReal* real=nullptr) :
-      _vec(other._vec), _nativeReal(real?real:other._nativeReal), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf), _nset(nullptr) {
+      _vec(other._vec), _nativeReal(real?real:other._nativeReal), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf) {
       if (other._tracker) {
         _tracker = new RooChangeTracker(Form("track_%s",_nativeReal->GetName()),"tracker",other._tracker->parameters()) ;
       } else {
@@ -298,23 +297,23 @@ public:
 
     std::size_t size() const { return _vec.size() ; }
 
-    void resize(Int_t siz) {
-      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(double))) {
+    void resize(Int_t newSize) {
+      if (newSize < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(double))) {
         // do an expensive copy, if we save at least a factor 2 in size
         std::vector<double> tmp;
-        tmp.reserve(std::max(siz, Int_t(VECTOR_BUFFER_SIZE / sizeof(double))));
+        tmp.reserve(std::max(newSize, Int_t(VECTOR_BUFFER_SIZE / sizeof(double))));
         if (!_vec.empty())
-          tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + siz));
-        if (Int_t(tmp.size()) != siz)
-          tmp.resize(siz);
+          tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + newSize));
+        if (Int_t(tmp.size()) != newSize)
+          tmp.resize(newSize);
         _vec.swap(tmp);
       } else {
-        _vec.resize(siz);
+        _vec.resize(newSize);
       }
     }
 
-    void reserve(Int_t siz) {
-      _vec.reserve(siz);
+    void reserve(Int_t newSize) {
+      _vec.reserve(newSize);
     }
 
     const std::vector<double>& data() const {
@@ -328,12 +327,12 @@ public:
 
   private:
     friend class RooVectorDataStore ;
-    RooAbsReal* _nativeReal ; ///< Instance which our data belongs to. This is the variable in the dataset.
-    RooAbsReal* _real ; ///< Instance where we should write data into when load() is called.
-    double* _buf ; ///<!
-    double* _nativeBuf ; ///<!
-    RooChangeTracker* _tracker ;
-    RooArgSet* _nset ; ///<!
+    RooAbsReal* _nativeReal = nullptr; ///< Instance which our data belongs to. This is the variable in the dataset.
+    RooAbsReal* _real = nullptr; ///< Instance where we should write data into when load() is called.
+    double* _buf = nullptr; ///<!
+    double* _nativeBuf = nullptr; ///<!
+    RooChangeTracker* _tracker = nullptr;
+    RooArgSet* _nset = nullptr; ///<!
     ClassDef(RealVector,1) // STL-vector-based Data Storage class
   } ;
 
@@ -394,18 +393,18 @@ public:
       if (_bufEH) *_bufEH = _vecEH[idx];
     }
 
-    void resize(Int_t siz) {
-      RealVector::resize(siz);
-      if(_bufE) _vecE.resize(siz);
-      if(_bufEL) _vecEL.resize(siz);
-      if(_bufEH) _vecEH.resize(siz);
+    void resize(Int_t newSize) {
+      RealVector::resize(newSize);
+      if(_bufE) _vecE.resize(newSize);
+      if(_bufEL) _vecEL.resize(newSize);
+      if(_bufEH) _vecEH.resize(newSize);
     }
 
-    void reserve(Int_t siz) {
-      RealVector::reserve(siz);
-      if(_bufE) _vecE.reserve(siz);
-      if(_bufEL) _vecEL.reserve(siz);
-      if(_bufEH) _vecEH.reserve(siz);
+    void reserve(Int_t newSize) {
+      RealVector::reserve(newSize);
+      if(_bufE) _vecE.reserve(newSize);
+      if(_bufEL) _vecEL.reserve(newSize);
+      if(_bufEH) _vecEH.reserve(newSize);
     }
 
     double* bufE() const { return _bufE; }
@@ -430,14 +429,13 @@ public:
 
   class CatVector {
   public:
-    CatVector(UInt_t initialCapacity = VECTOR_BUFFER_SIZE) :
-      _cat(nullptr), _buf(nullptr), _nativeBuf(nullptr)
+    CatVector(UInt_t initialCapacity = VECTOR_BUFFER_SIZE)
     {
       _vec.reserve(initialCapacity);
     }
 
     CatVector(RooAbsCategory* cat, UInt_t initialCapacity = VECTOR_BUFFER_SIZE) :
-      _cat(cat), _buf(nullptr), _nativeBuf(nullptr)
+      _cat(cat)
     {
       _vec.reserve(initialCapacity);
     }
@@ -506,23 +504,23 @@ public:
 
     std::size_t size() const { return _vec.size() ; }
 
-    void resize(Int_t siz) {
-      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > VECTOR_BUFFER_SIZE) {
+    void resize(Int_t newSize) {
+      if (newSize < Int_t(_vec.capacity()) / 2 && _vec.capacity() > VECTOR_BUFFER_SIZE) {
         // do an expensive copy, if we save at least a factor 2 in size
         std::vector<RooAbsCategory::value_type> tmp;
-        tmp.reserve(std::max(siz, VECTOR_BUFFER_SIZE));
+        tmp.reserve(std::max(newSize, VECTOR_BUFFER_SIZE));
         if (!_vec.empty())
-          tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + siz));
-        if (Int_t(tmp.size()) != siz)
-          tmp.resize(siz);
+          tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + newSize));
+        if (Int_t(tmp.size()) != newSize)
+          tmp.resize(newSize);
         _vec.swap(tmp);
       } else {
-        _vec.resize(siz);
+        _vec.resize(newSize);
       }
     }
 
-    void reserve(Int_t siz) {
-      _vec.reserve(siz);
+    void reserve(Int_t newSize) {
+      _vec.reserve(newSize);
     }
 
     void setBufArg(RooAbsCategory* arg) { _cat = arg; }
@@ -532,9 +530,9 @@ public:
 
   private:
     friend class RooVectorDataStore ;
-    RooAbsCategory* _cat;
-    RooAbsCategory::value_type* _buf;  ///<!
-    RooAbsCategory::value_type* _nativeBuf;  ///<!
+    RooAbsCategory* _cat = nullptr;
+    RooAbsCategory::value_type* _buf = nullptr;  ///<!
+    RooAbsCategory::value_type* _nativeBuf = nullptr;  ///<!
     std::vector<RooAbsCategory::value_type> _vec;
     ClassDef(CatVector,2) // STL-vector-based Data Storage class
   } ;

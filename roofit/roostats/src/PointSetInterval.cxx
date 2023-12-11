@@ -60,23 +60,13 @@ PointSetInterval::PointSetInterval(const char* name, RooAbsData& data) :
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-PointSetInterval::~PointSetInterval()
-{
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to determine if a parameter point is in the interval
 
 bool PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
 {
-  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPointsInInterval );
-  RooDataHist* hist = dynamic_cast<RooDataHist*>( fParameterPointsInInterval );
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPointsInInterval );
+  RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPointsInInterval );
 
   if( !this->CheckParameters(parameterPoint) ){
     //    std::cout << "problem with parameters" << std::endl;
@@ -84,10 +74,11 @@ bool PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
   }
 
   if( hist ) {
-    if ( hist->weight( parameterPoint , 0 ) > 0 ) // positive value indicates point is in interval
-      return true;
-    else
-      return false;
+    if (hist->weight(parameterPoint, 0) > 0) { // positive value indicates point is in interval
+       return true;
+    } else {
+       return false;
+    }
   }
   else if( tree ){
     const RooArgSet* thisPoint = nullptr;
@@ -127,7 +118,7 @@ RooArgSet* PointSetInterval::GetParameters() const
 
 bool PointSetInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
-   if (parameterPoint.getSize() != fParameterPointsInInterval->get()->getSize() ) {
+   if (parameterPoint.size() != fParameterPointsInInterval->get()->size() ) {
      std::cout << "PointSetInterval: argument size is wrong, parameters don't match: arg=" << parameterPoint
           << " interval=" << (*fParameterPointsInInterval->get()) << std::endl;
       return false;
@@ -144,8 +135,9 @@ bool PointSetInterval::CheckParameters(const RooArgSet &parameterPoint) const
 
 double PointSetInterval::UpperLimit(RooRealVar& param )
 {
-  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPointsInInterval );
-  double low = 0, high = 0;
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPointsInInterval );
+  double low = 0;
+  double high = 0;
   if( tree ){
     tree->getRange(param, low, high);
     return high;
@@ -157,8 +149,9 @@ double PointSetInterval::UpperLimit(RooRealVar& param )
 
 double PointSetInterval::LowerLimit(RooRealVar& param )
 {
-  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPointsInInterval );
-  double low = 0, high = 0;
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPointsInInterval );
+  double low = 0;
+  double high = 0;
   if( tree ){
     tree->getRange(param, low, high);
     return low;

@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <memory>
 #include <set>
 
 #include <nlohmann/json.hpp>
@@ -648,7 +649,7 @@ X axis is used for eta and Y axis for phi.
 REveCaloDataHist::REveCaloDataHist():
    REveCaloData(),
 
-   fHStack(0)
+   fHStack(nullptr)
 {
    fHStack = new THStack();
    fEps    = 1e-5;
@@ -807,8 +808,8 @@ void REveCaloDataHist::GetCellData(const REveCaloData::CellId_t &id,
 Int_t REveCaloDataHist::AddHistogram(TH2F* hist)
 {
    if (!fEtaAxis) {
-      fEtaAxis.reset(new TAxis(*hist->GetXaxis()));
-      fPhiAxis.reset(new TAxis(*hist->GetYaxis()));
+      fEtaAxis = std::make_unique<TAxis>(*hist->GetXaxis());
+      fPhiAxis = std::make_unique<TAxis>(*hist->GetYaxis());
    }
    fHStack->Add(hist);
    fSliceInfos.push_back(SliceInfo_t());

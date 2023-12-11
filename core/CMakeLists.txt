@@ -8,16 +8,17 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
-file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-  "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${GIT_TIMESTAMP}\n")
+include(SetROOTVersion)
 
-file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-"#ifndef ROOT_RGITCOMMIT_H
-#define ROOT_RGITCOMMIT_H
-  #define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
-  #define ROOT_GIT_COMMIT \"${GIT_DESCRIBE_ALWAYS}\"
-#endif"
+# Update etc/gitinfo.txt for every build.
+add_custom_target(gitinfotxt
+  ALL
+  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
+  WORKING_DIRECTORY 
+  COMMENT "Updating etc/gitinfo.txt."
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
 )
+install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
@@ -33,38 +34,6 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
 
 add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-)
-
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-)
-
-add_custom_target(gitcommit ALL DEPENDS
-  ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-)
-
-set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
-
-set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
-
-install(FILES ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
 
 generateHeader(Core
@@ -72,7 +41,7 @@ generateHeader(Core
   ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
 )
 
-add_dependencies(Core CLING gitcommit rconfigure)
+add_dependencies(Core CLING rconfigure)
 
 target_link_libraries(Core
   PRIVATE

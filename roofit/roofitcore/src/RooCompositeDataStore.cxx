@@ -19,7 +19,7 @@
 \class RooCompositeDataStore
 \ingroup Roofitcore
 
-RooCompositeDataStore combines several disjunct datasets into one. This is useful for simultaneous PDFs
+Combines several disjunct datasets into one. This is useful for simultaneous PDFs
 that do not depend on the same observable such as a PDF depending on `x` combined with another one depending
 on `y`.
 The composite storage will store two different datasets, `{x}` and `{y}`, but they can be passed as a single
@@ -48,7 +48,7 @@ ClassImp(RooCompositeDataStore);
 
 RooCompositeDataStore::RooCompositeDataStore()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -65,7 +65,7 @@ RooCompositeDataStore::RooCompositeDataStore(
     const RooAbsCategory::value_type idx = indexCat.lookupIndex(iter.first);
     _dataMap[idx] = iter.second;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -79,7 +79,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = item.second->clone() ;
     _dataMap[item.first] = clonedata ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -89,7 +89,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname) :
   RooAbsDataStore(other,vars,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(true)
 {
-  RooCategory* newIdx = (RooCategory*) vars.find(other._indexCat->GetName()) ;
+  RooCategory* newIdx = static_cast<RooCategory*>(vars.find(other._indexCat->GetName())) ;
   if (newIdx) {
     _indexCat = newIdx ;
   }
@@ -99,7 +99,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = item.second->clone(vars) ;
     _dataMap[item.first] = clonedata ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -115,7 +115,7 @@ RooCompositeDataStore::~RooCompositeDataStore()
       delete item.second;
     }
   }
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -395,7 +395,7 @@ void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarS
 void RooCompositeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
   for (auto const& item : _dataMap) {
-    RooArgSet* subset = (RooArgSet*) set.selectCommon(*item.second->get()) ;
+    RooArgSet* subset = static_cast<RooArgSet*>(set.selectCommon(*item.second->get())) ;
     item.second->setArgStatus(*subset,active) ;
     delete subset ;
   }

@@ -6,13 +6,13 @@ import { TH2Painter } from '../hist2d/TH2Painter.mjs';
 import { getTEfficiencyBoundaryFunc } from '../base/math.mjs';
 
 
-const kIsBayesian       = BIT(14),  // Bayesian statistics are used
-      kPosteriorMode    = BIT(15),  // Use posterior mean for best estimate (Bayesian statistics)
+const kIsBayesian = BIT(14),  // Bayesian statistics are used
+      kPosteriorMode = BIT(15),  // Use posterior mean for best estimate (Bayesian statistics)
  //   kShortestInterval = BIT(16),  // Use shortest interval, not implemented - too complicated
-      kUseBinPrior      = BIT(17),  // Use a different prior for each bin
-      kUseWeights       = BIT(18),  // Use weights
-      getBetaAlpha      = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].first : obj.fBeta_alpha,
-      getBetaBeta       = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].second : obj.fBeta_beta;
+      kUseBinPrior = BIT(17),  // Use a different prior for each bin
+      kUseWeights = BIT(18),  // Use weights
+      getBetaAlpha = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].first : obj.fBeta_alpha,
+      getBetaBeta = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].second : obj.fBeta_beta;
 
 /**
  * @summary Painter for TEfficiency object
@@ -40,7 +40,7 @@ class TEfficiencyPainter extends ObjectPainter {
       if (obj.TestBit(kIsBayesian)) {
          // parameters for the beta prior distribution
          const alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha,
-               beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
+               beta = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin) : obj.fBeta_beta;
 
          let aa, bb;
          if (obj.TestBit(kUseWeights)) {
@@ -75,7 +75,7 @@ class TEfficiencyPainter extends ObjectPainter {
       let alpha = 0, beta = 0;
       if (obj.TestBit(kIsBayesian)) {
          alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha;
-         beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
+         beta = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin) : obj.fBeta_beta;
       }
 
       return value - this.fBoundary(total, passed, obj.fConfLevel, false, alpha, beta);
@@ -88,7 +88,7 @@ class TEfficiencyPainter extends ObjectPainter {
       let alpha = 0, beta = 0;
       if (obj.TestBit(kIsBayesian)) {
          alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha;
-         beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
+         beta = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin) : obj.fBeta_beta;
       }
 
       return this.fBoundary(total, passed, obj.fConfLevel, true, alpha, beta) - value;

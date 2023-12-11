@@ -31,7 +31,7 @@ def generateBinnedAsimov(pdf, x, n_events):
     One should in principle be able to use
     pdf.generateBinned(x, n_events, RooFit::ExpectedData()).
     Unfortunately it has a problem: it also has the bin bias that this tutorial
-    demostrates, to if we would use it, the biases would cancel out.
+    demonstrates, to if we would use it, the biases would cancel out.
     """
     data_h = ROOT.RooDataHist("dataH", "dataH", {x})
     x_binning = x.getBinning()
@@ -186,10 +186,9 @@ fit6.Print()
 # each bin a constant counterterm \f[n\log(n/N)\f], we get terms for each
 # bin that are closer to each other in order of magnitude as long as the
 # initial model is not extremely off. Proving this mathematically is left
-# as an excercise to the reader.
+# as an exercise to the reader.
 
-# This counterterms can be enabled in RooFit if you use a binned
-# RooDataHist to do your fit and pass the Offset("bin") option to
+# This counterterms can be enabled by passing the Offset("bin") option to
 # RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
 
 fit7 = model.fitTo(model_data, Offset="bin", Save=True, PrintLevel=-1, SumW2Error=False)

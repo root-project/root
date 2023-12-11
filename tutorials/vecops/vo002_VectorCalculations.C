@@ -69,7 +69,7 @@ void vo002_VectorCalculations()
              << "fast_sin(" << v1 << ") = " << v_fast_sin << std::endl;
 
    // It may happen that a custom operation needs to be applied to the RVec.
-   // In this case, the Map utitlity can be used:
+   // In this case, the Map utility can be used:
    auto v_transf = Map(v1, [](double x) { return x * 2 / 3; });
 
    std::cout << "Applying [](double x){return x * 2 / 3;} to " << v1 << " leads to " << v_transf << "\n";

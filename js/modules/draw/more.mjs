@@ -10,18 +10,17 @@ import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 async function drawText() {
    const text = this.getObject(),
          pp = this.getPadPainter(),
-         main = this.getFramePainter();
-   let w = pp.getPadWidth(),
-       h = pp.getPadHeight(),
-       pos_x = text.fX, pos_y = text.fY,
-       use_frame = false,
+         w = pp.getPadWidth(),
+         h = pp.getPadHeight(),
+         fp = this.getFramePainter();
+   let pos_x = text.fX, pos_y = text.fY,
        fact = 1,
        annot = this.matchObjectType(clTAnnotation);
 
    this.createAttText({ attr: text });
 
-   if (annot && main?.mode3d && isFunc(main?.convert3DtoPadNDC)) {
-      const pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
+   if (annot && fp?.mode3d && isFunc(fp?.convert3DtoPadNDC)) {
+      const pos = fp.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
       pos_x = pos.x;
       pos_y = pos.y;
       this.isndc = true;
@@ -29,11 +28,6 @@ async function drawText() {
    } else if (text.TestBit(BIT(14))) {
       // NDC coordinates
       this.isndc = true;
-   } else if (main && !main.mode3d) {
-      // frame coordiantes
-      w = main.getFrameWidth();
-      h = main.getFrameHeight();
-      use_frame = 'upper_layer';
    } else if (pp.getRootPad(true)) {
       // force pad coordiantes
    } else {
@@ -43,7 +37,7 @@ async function drawText() {
       text.fTextAlign = 22;
    }
 
-   this.createG(use_frame);
+   this.createG();
 
    this.draw_g.attr('transform', null); // remove transofrm from interactive changes
 
@@ -74,7 +68,7 @@ async function drawText() {
             this.pos_dx += dx;
             this.pos_dy += dy;
             makeTranslate(this.draw_g, this.pos_dx, this.pos_dy);
-         }
+         };
       }
 
       if (!this.moveEnd) {
@@ -84,15 +78,15 @@ async function drawText() {
             text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc);
             text.fY = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
             this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
-         }
+         };
       }
 
       if (annot !== '3d')
          addMoveHandler(this);
       else {
-         main.processRender3D = true;
+         fp.processRender3D = true;
          this.handleRender3D = () => {
-            const pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
+            const pos = fp.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
                   new_x = this.axisToSvg('x', pos.x, true),
                   new_y = this.axisToSvg('y', pos.y, true);
             makeTranslate(this.draw_g, new_x - this.pos_x, new_y - this.pos_y);
@@ -146,7 +140,7 @@ function drawPolyLine() {
       this.dx += dx;
       this.dy += dy;
       makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
-   }
+   };
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
@@ -163,7 +157,7 @@ function drawPolyLine() {
       }
       this.submitCanvExec(exec + 'Notify();;');
       this.redraw();
-   }
+   };
 }
 
 /** @summary Draw TEllipse
@@ -259,7 +253,7 @@ function drawEllipse() {
       this.x += dx;
       this.y += dy;
       makeTranslate(this.draw_g.select('path'), this.x, this.y);
-   }
+   };
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
@@ -267,7 +261,7 @@ function drawEllipse() {
       ellipse.fX1 = this.svgToAxis('x', this.x);
       ellipse.fY1 = this.svgToAxis('y', this.y);
       this.submitCanvExec(`SetX1(${ellipse.fX1});;SetY1(${ellipse.fY1});;Notify();;`);
-   }
+   };
 }
 
 /** @summary Draw TPie
@@ -346,7 +340,7 @@ function drawBox() {
             side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
 
       return (this.borderMode > 0) ? [path, side1, side2] : [path, side2, side1];
-   }
+   };
 
    const paths = this.getPathes();
 
@@ -383,7 +377,7 @@ function drawBox() {
          this.c_y1 = this.c_y2 = false;
       if (this.c_y1 !== this.c_y2 && this.c_x1 && this.c_x2)
          this.c_x1 = this.c_x2 = false;
-   }
+   };
 
    this.moveDrag = function(dx, dy) {
       if (this.c_x1) this.x1 += dx;
@@ -395,7 +389,7 @@ function drawBox() {
             pathes = this.getPathes();
 
       pathes.forEach((path, i) => d3_select(nodes[i]).attr('d', path));
-   }
+   };
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
@@ -406,7 +400,7 @@ function drawBox() {
       if (this.c_y1) { box.fY1 = this.svgToAxis('y', this.y1); exec += `SetY1(${box.fY1});;`; }
       if (this.c_y2) { box.fY2 = this.svgToAxis('y', this.y2); exec += `SetY2(${box.fY2});;`; }
       this.submitCanvExec(exec + 'Notify();;');
-   }
+   };
 }
 
 /** @summary Draw TMarker
@@ -441,7 +435,7 @@ function drawMarker() {
       this.dx += dx;
       this.dy += dy;
       makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
-   }
+   };
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
@@ -450,7 +444,7 @@ function drawMarker() {
       marker.fY = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
       this.submitCanvExec(`SetX(${marker.fX});;SetY(${marker.fY});;Notify();;`);
       this.redraw();
-   }
+   };
 }
 
 /** @summary Draw TPolyMarker
@@ -483,7 +477,7 @@ function drawPolyMarker() {
       this.dx += dx;
       this.dy += dy;
       makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
-   }
+   };
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
@@ -500,7 +494,7 @@ function drawPolyMarker() {
       }
       this.submitCanvExec(exec + 'Notify();;');
       this.redraw();
-   }
+   };
 }
 
 /** @summary Draw JS image

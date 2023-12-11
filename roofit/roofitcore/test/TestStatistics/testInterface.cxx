@@ -78,7 +78,7 @@ TEST(Interface, createNLLModularLAndOffset)
 }
 
 // Verifies that the fitTo parallelize interface creates a valid minimization
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
 TEST(Interface, fitTo)
 #else
 TEST(Interface, DISABLED_fitTo)

@@ -29,10 +29,10 @@ TEvePointSetArrayEditor::TEvePointSetArrayEditor(const TGWindow *p,
                                                  Int_t width, Int_t height,
                                                  UInt_t options, Pixel_t back) :
    TGedFrame(p,width, height, options | kVerticalFrame, back),
-   fM(0),
-   fRange(0)
+   fM(nullptr),
+   fRange(nullptr)
 {
-   fM = 0;
+   fM = nullptr;
    MakeTitle("TEvePointSetArray");
 
    fRange = new TEveGDoubleValuator(this,"Range", 200, 0);

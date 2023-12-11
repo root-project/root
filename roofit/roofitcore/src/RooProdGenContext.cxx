@@ -19,7 +19,7 @@
 \class RooProdGenContext
 \ingroup Roofitcore
 
-RooProdGenContext is an efficient implementation of the generator context
+Efficient implementation of the generator context
 specific for RooProdPdf PDFs. The sim-context owns a list of
 component generator contexts that are used to generate the dependents
 for each component PDF sequentially.
@@ -39,7 +39,6 @@ for each component PDF sequentially.
 using namespace std;
 
 ClassImp(RooProdGenContext);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +63,11 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   }
 
   // Factorize product in irreducible terms
-  RooLinkedList termList,depsList,impDepList,crossDepList,intList ;
+  RooLinkedList termList;
+  RooLinkedList depsList;
+  RooLinkedList impDepList;
+  RooLinkedList crossDepList;
+  RooLinkedList intList;
   model.factorizeProduct(deps,RooArgSet(),termList,depsList,impDepList,crossDepList,intList) ;
 
   if (dologD(Generation)) {

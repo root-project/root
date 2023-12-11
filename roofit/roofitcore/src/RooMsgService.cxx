@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 
-The class RooMsgService is a singleton that organizes messages generated in RooFit.
+Singleton class that organizes messages generated in RooFit.
 Each message has a message level RooFit::MsgLevel (DEBUG,INFO,PROGRESS,WARNING,ERROR or FATAL),
 an source object, and a RooFit::MsgTopic.
 RooMsgService allows to filter and redirect messages into streams
@@ -167,7 +167,7 @@ RooWorkspace* RooMsgService::debugWorkspace()
 /// <tr><td> ObjectName(const char*)   <td> Restrict stream to messages from object with given name
 /// <tr><td> ClassName(const char*)    <td> Restrict stream to messages from objects with given class name
 /// <tr><td> BaseClassName(const char*)<td> Restrict stream to messages from objects with given base class name
-/// <tr><td> LabelName(const chat*)    <td> Restrict stream to messages from objects setAtrribute(const char*) tag with given name
+/// <tr><td> LabelName(const chat*)    <td> Restrict stream to messages from objects setAttribute(const char*) tag with given name
 /// <tr><th> Output redirection options <th>
 /// <tr><td> OutputFile(const char*)  <td> Send output to file with given name. Multiple streams can write to same file.
 /// <tr><td> OutputStream(ostream&)   <td> Send output to given C++ stream. Multiple message streams can write to same c++ stream
@@ -367,55 +367,6 @@ void RooMsgService::restoreState()
 {
   _streams = _streamsSaved.top() ;
   _streamsSaved.pop() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
-
-bool RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  return (activeStream(self,topic,level)>=0) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
-
-bool RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  return (activeStream(self,topic,level)>=0) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find appropriate logging stream for message from given object with given topic and message level
-
-Int_t RooMsgService::activeStream(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  if (level<_globMinLevel) return -1 ;
-  for (UInt_t i=0 ; i<_streams.size() ; i++) {
-    if (_streams[i].match(level,topic,self)) {
-      return i ;
-    }
-  }
-  return -1 ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find appropriate logging stream for message from given object with given topic and message level
-
-Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  if (level<_globMinLevel) return -1 ;
-  for (UInt_t i=0 ; i<_streams.size() ; i++) {
-    if (_streams[i].match(level,topic,self)) {
-      return i ;
-    }
-  }
-  return -1 ;
 }
 
 

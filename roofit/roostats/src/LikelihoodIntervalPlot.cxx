@@ -57,52 +57,15 @@ using namespace RooStats;
 /// LikelihoodIntervalPlot default constructor
 /// with default parameters
 
-LikelihoodIntervalPlot::LikelihoodIntervalPlot()
-{
-  fInterval = nullptr;
-  fNdimPlot = 0;
-  fParamsPlot = nullptr;
-  fColor = 0;
-  fFillStyle = 4050; // half transparent
-  fLineColor = 0;
-  fMaximum = -1;
-  fNPoints = 0;  // default depends if 1D or 2D
-  // default is variable range
-  fXmin = 0;
-  fXmax = -1;
-  fYmin = 0;
-  fYmax = -1;
-  fPrecision = -1; // use default
-  fPlotObject = nullptr;
-}
+LikelihoodIntervalPlot::LikelihoodIntervalPlot() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// LikelihoodIntervalPlot copy constructor
 
-LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
+LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval *theInterval)
+   : fInterval(theInterval), fParamsPlot(fInterval->GetParameters())
 {
-  fInterval = theInterval;
-  fParamsPlot = fInterval->GetParameters();
-  fNdimPlot = fParamsPlot->getSize();
-  fColor = 0;
-  fLineColor = 0;
-  fFillStyle = 4050; // half transparent
-  fMaximum = -1;
-  fNPoints = 0;  // default depends if 1D or 2D
-  // default is variable range
-  fXmin = 0;
-  fXmax = -1;
-  fYmin = 0;
-  fYmax = -1;
-  fPrecision = -1; // use default
-  fPlotObject = nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// LikelihoodIntervalPlot destructor
-
-LikelihoodIntervalPlot::~LikelihoodIntervalPlot()
-{
+   fNdimPlot = fParamsPlot->size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +74,7 @@ void LikelihoodIntervalPlot::SetLikelihoodInterval(LikelihoodInterval* theInterv
 {
   fInterval = theInterval;
   fParamsPlot = fInterval->GetParameters();
-  fNdimPlot = fParamsPlot->getSize();
+  fNdimPlot = fParamsPlot->size();
 
   return;
 }
@@ -120,8 +83,8 @@ void LikelihoodIntervalPlot::SetLikelihoodInterval(LikelihoodInterval* theInterv
 
 void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
 {
-  fNdimPlot = params->getSize();
-  fParamsPlot = (RooArgSet*) params->clone((std::string(params->GetName())+"_clone").c_str());
+  fNdimPlot = params->size();
+  fParamsPlot = static_cast<RooArgSet*>(params->clone((std::string(params->GetName())+"_clone").c_str()));
 
   return;
 }
@@ -177,7 +140,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          extraParams.add(*arg);
       }
    }
-   if (extraParams.getSize() > 0)
+   if (!extraParams.empty())
       fParamsPlot->remove(extraParams,true,true);
 
    if(fNdimPlot > 2){
@@ -192,7 +155,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
    RooAbsReal* newProfile = nullptr;
    std::unique_ptr<RooAbsReal> newProfileOwner;
    RooAbsReal* oldProfile = fInterval->GetLikelihoodRatio();
-   if (fNdimPlot != intervalParams->getSize() ) {
+   if (fNdimPlot != int(intervalParams->size()) ) {
       RooProfileLL * profilell = dynamic_cast<RooProfileLL*>(oldProfile);
       if (!profilell) return;
       RooAbsReal & nll =  profilell->nll();
@@ -236,7 +199,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       const double xcont_min = fInterval->LowerLimit(*myparam);
       const double xcont_max = fInterval->UpperLimit(*myparam);
 
-      RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(myparam->GetName());
+      RooRealVar* myarg = static_cast<RooRealVar *>(newProfile->getVariables()->find(myparam->GetName()));
       double x1 = myarg->getMin();
       double x2 = myarg->getMax();
 
@@ -260,7 +223,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          tmp->SetNpx(nPoints);
 
          // clone the function to avoid later to sample it
-         TF1 * f1 = (TF1*) tmp->Clone();
+         TF1 * f1 = static_cast<TF1*>(tmp->Clone());
          delete tmp;
 
          f1->SetTitle(title);
@@ -380,9 +343,9 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       RooArgList params(*newProfile->getVariables());
       // set values and error for the POI to the best fit values
-      for (int i = 0; i < params.getSize(); ++i) {
-         RooRealVar & par =  (RooRealVar &) params[i];
-         RooRealVar * fitPar =  (RooRealVar *) (fInterval->GetBestFitParameters()->find(par.GetName() ) );
+      for (std::size_t i = 0; i < params.size(); ++i) {
+         RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
+         RooRealVar * fitPar =  static_cast<RooRealVar *> (fInterval->GetBestFitParameters()->find(par.GetName() ) );
          if (fitPar) {
             par.setVal( fitPar->getVal() );
          }
@@ -460,7 +423,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          if (!useMinuit) {
 
             // set levels of contours if make contours without minuit
-            TH2 * h = (TH2*) hist2D->Clone();
+            TH2 * h = static_cast<TH2*>(hist2D->Clone());
             h->SetContour(1,&cont_level);
 
             TVirtualPad * currentPad = gPad;
@@ -470,10 +433,10 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
             gPad->Update();
 
             // get graphs from the contours
-            TObjArray *contoursOrig = (TObjArray*) gROOT->GetListOfSpecials()->FindObject("contours");
+            TObjArray *contoursOrig = static_cast<TObjArray*>(gROOT->GetListOfSpecials()->FindObject("contours"));
             // CLONE THE LIST IN CASE IT GETS DELETED
             TObjArray *contours = nullptr;
-            if (contoursOrig) contours = (TObjArray*) contoursOrig->Clone();
+            if (contoursOrig) contours = static_cast<TObjArray*>(contoursOrig->Clone());
 
             delete tmpCanvas;
             delete h;
@@ -508,7 +471,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
             if (contours) {
                int ncontours = contours->GetSize();
                for (int icont = 0; icont < ncontours; ++icont) {
-                  TList *  contourList = (TList*)contours->At(icont);
+                  TList *  contourList = static_cast<TList*>(contours->At(icont));
                   if (contourList && contourList->GetSize() > 0) {
                      for(auto * gr : static_range_cast<TGraph*>(*contourList)) {
                         if (fLineColor) gr->SetLineColor(fLineColor);

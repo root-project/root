@@ -25,7 +25,7 @@
 #include "TMultiGraph.h"
 #include "TSystem.h"
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 void xRooNode::Interactive_Pull()
 {
@@ -44,15 +44,15 @@ void xRooNode::Interactive_Pull()
             std::string parName = _h->GetXaxis()->GetBinLabel(i);
             // ensure point is back .. sometimes editing mode allows point to drift
             auto _gr = static_cast<TGraph *>(static_cast<TMultiGraph *>(gPad->GetPrimitive("editables"))
-                                                 ->GetListOfGraphs()
-                                                 ->FindObject(parName.c_str()));
+                                                ->GetListOfGraphs()
+                                                ->FindObject(parName.c_str()));
             _gr->SetPoint(0, i - 1, static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetPointY(i - 1));
          }
          gPad->GetMother()->GetMother()->cd();
-         doRestore=false;
+         doRestore = false;
          return;
       }
-      doRestore=true;
+      doRestore = true;
       // mouse up event, if this was an original point it needs snapping back
       // double _y = select->GetPointY(0);
       TString _name = select->GetName();
@@ -61,7 +61,9 @@ void xRooNode::Interactive_Pull()
          _varyName = TString(_name(_name.Index(";") + 1, _name.Length()));
          _name = _name(0, _name.Index(";"));
       }
-      auto _h = static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetHistogram();
+      auto _h = static_cast<TH1 *>(gPad->GetPrimitive("nominal")->FindObject("scales"));
+      if (!_h)
+         return;
       for (int i = 1; i <= _h->GetNbinsX(); i++) {
          if (_name == _h->GetXaxis()->GetBinLabel(i)) {
             auto _gr = static_cast<TGraph *>(gPad->GetPrimitive("nominal"));
@@ -75,11 +77,12 @@ void xRooNode::Interactive_Pull()
                      gPad->GetPrimitive(TString::Format("%s;variation %d", select->GetName(), vNum)));
                }
                _varyName = TString::Format("variation %d", vNum);
-               if (!newPoint)
+               if (!newPoint) {
                   newPoint = static_cast<TGraphAsymmErrors *>(
                      select->Clone(TString::Format("%s;%s", select->GetName(), _varyName.Data())));
+               }
                newPoint->SetPointX(0, _gr->GetPointX(i - 1));
-               newPoint->SetMarkerColor(860 + (vNum-1)*20);
+               newPoint->SetMarkerColor(860 + (vNum - 1) * 20);
                newPoint->SetLineColor(newPoint->GetMarkerColor());
                newPoint->SetPointEYlow(0, 0);
                newPoint->SetPointEYhigh(0, 0); // remove errors because currently meaningless!
@@ -89,8 +92,9 @@ void xRooNode::Interactive_Pull()
             } else {
                select->SetPointX(0, _gr->GetPointX(i - 1));
             }
-            static_cast<TGraph *>(static_cast<TMultiGraph *>(gPad->GetPrimitive("editables"))
-                                            ->GetListOfGraphs()->FindObject(_name))->SetPoint(0, i - 1, _gr->GetPointY(i - 1));
+            static_cast<TGraph *>(
+               static_cast<TMultiGraph *>(gPad->GetPrimitive("editables"))->GetListOfGraphs()->FindObject(_name))
+               ->SetPoint(0, i - 1, _gr->GetPointY(i - 1));
             break;
          }
       }
@@ -115,10 +119,9 @@ void xRooNode::Interactive_Pull()
             _pars.setRealValue(parName.c_str(), _val);
             g->SetTitle(TString::Format("%s=%g", parName.c_str(), _val));
          } else {
-            _pars.setRealValue(parName.c_str(),
-                               static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetPointY(i - 1) *
-                                     _h->GetBinError(i) +
-                                  _h->GetBinContent(i));
+            _pars.setRealValue(parName.c_str(), static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetPointY(i - 1) *
+                                                      _h->GetBinError(i) +
+                                                   _h->GetBinContent(i));
          }
       }
       TAttLine bak = *gStyle;
@@ -130,10 +133,12 @@ void xRooNode::Interactive_Pull()
       gPad->GetMother()->GetMother()->cd(1);
       _node->Draw(TString::Format("same overlay%s", _varyName.Data()));
       // TODO: find the drawn variation and set its title equal to a _pars value string
-      static_cast<TAttLine&>(*gStyle) = bak;
-      static_cast<TAttFill&>(*gStyle) = bak2;
+      static_cast<TAttLine &>(*gStyle) = bak;
+      static_cast<TAttFill &>(*gStyle) = bak2;
       _pars = *snap;
       _tmpPad->GetCanvas()->cd();
+      gPad->GetCanvas()->Paint();
+      gPad->GetCanvas()->Update();
    }
 }
 
@@ -143,7 +148,7 @@ void xRooNode::Interactive_PLLPlot()
    // TObject *select = gPad->GetSelected();
    // if(!select) return;
    // if (!select->InheritsFrom(TGraph::Class())) {gPad->SetUniqueID(0); return;}
-   // gPad->GetCanvas()->FeedbackMode(kTRUE);
+   // gPad->GetCanvas()->FeedbackMode(true);
 
    auto _pull_pad = gPad->GetPad(1);
    auto _hidden_pad = gPad->GetPad(2);
@@ -162,16 +167,16 @@ void xRooNode::Interactive_PLLPlot()
    // if(pxold) gVirtualX->DrawLine(pxold,pymin,pxold,pymax);
    // gVirtualX->DrawLine(px,pymin,px,pymax);
    gPad->SetUniqueID(px);
-   Float_t upx = gPad->AbsPixeltoX(px);
-   Float_t x = gPad->PadtoX(upx);
+   float upx = gPad->AbsPixeltoX(px);
+   float x = gPad->PadtoX(upx);
 
    // find which graph in the hidden pad best reflects current x value
    TObject *foundGraph = nullptr;
    for (auto g : *_hidden_pad->GetListOfPrimitives()) {
       double midpoint = TString(g->GetName()).Atof();
-      if (!foundGraph)
+      if (!foundGraph) {
          foundGraph = g;
-      else {
+      } else {
          midpoint = (midpoint + TString(foundGraph->GetName()).Atof()) / 2.;
       }
       if (midpoint >= x)
@@ -218,10 +223,11 @@ void xRooNode::InteractiveObject::Interactive_PLLPlot(TVirtualPad *pad, TObject 
    if (auto g = dynamic_cast<TGraph *>(obj); g && pad && pad->GetMother() && pad->GetNumber() == 1) {
       auto frPad = pad->GetMother()->GetPad(2);
       if (frPad) {
-         if (!g->IsHighlight())
+         if (!g->IsHighlight()) {
             x = -1;
-         else if (x >= 0)
+         } else if (x >= 0) {
             x += 1;
+         }
          // x is the point index
          TVirtualPad *_pad = frPad->GetPad(x);
          auto selPad = dynamic_cast<TVirtualPad *>(frPad->GetPrimitive("selected"));
@@ -245,4 +251,4 @@ void xRooNode::InteractiveObject::Interactive_PLLPlot(TVirtualPad *pad, TObject 
    }
 }
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;

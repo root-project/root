@@ -25,7 +25,6 @@ public:
   RooPoisson(const char *name, const char *title, RooAbsReal::Ref _x, RooAbsReal::Ref _mean, bool noRounding=false);
   RooPoisson(const RooPoisson& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooPoisson(*this,newname); }
-  inline ~RooPoisson() override {  }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
@@ -35,6 +34,8 @@ public:
 
   /// Switch off/on rounding of `x` to the nearest integer.
   void setNoRounding(bool flag = true) {_noRounding = flag;}
+  bool getNoRounding() const { return _noRounding; }
+  
   /// Switch on or off protection against negative means.
   void protectNegativeMean(bool flag = true) {_protectNegative = flag;}
 

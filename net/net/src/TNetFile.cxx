@@ -9,48 +9,44 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TNetFile                                                             //
-//                                                                      //
-// A TNetFile is like a normal TFile except that it reads and writes    //
-// its data via a rootd server (for more on the rootd daemon see the    //
-// source files root/rootd/src/*.cxx). TNetFile file names are in       //
-// standard URL format with protocol "root" or "roots". The following   //
-// are valid TNetFile URL's:                                            //
-//                                                                      //
-//    root://hpbrun.cern.ch/root/hsimple.root                           //
-//    root://pcna49a:5151/~na49/data/run821.root                        //
-//    root://pcna49d.cern.ch:5050//v1/data/run810.root                  //
-//                                                                      //
-// The only difference with the well known httpd URL's is that the root //
-// of the remote file tree is the user's home directory. Therefore an   //
-// absolute pathname requires a // after the host or port specifier     //
-// (see last example). Further the expansion of the standard shell      //
-// characters, like ~, $, .., are handled as expected.                  //
-// TNetFile (actually TUrl) uses 1094 as default port for rootd.        //
-//                                                                      //
-// Connecting to a rootd requires the remote user id and password.      //
-// TNetFile allows three ways for you to provide your login:            //
-//   1) Setting it globally via the static functions:                   //
-//         TAuthenticate::SetGlobalUser() and                           //
-//         TAuthenticate::SetGlobalPasswd()                             //
-//   2) Getting it from the ~/.netrc file (same file as used by ftp)    //
-//   3) Command line prompt                                             //
-// The different methods will be tried in the order given above.        //
-// On machines with AFS rootd will authenticate using AFS (if it was    //
-// compiled with AFS support).                                          //
-//                                                                      //
-// If the protocol is specified as "rootk" kerberos5 will be used for   //
-// authentication.                                                      //
-//                                                                      //
-// The rootd daemon lives in the directory $ROOTSYS/bin. It can be      //
-// started either via inetd or by hand from the command line (no need   //
-// to be super user). For more info about rootd see the web page:       //
-// Begin_Html <a href=http://root.cern.ch/root/NetFile.html>NetFile</a> //
-// End_Html                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TNetFile.cxx
+\class TNetFile
+\ingroup IO
+
+A TNetFile is like a normal TFile except that it reads and writes
+its data via a rootd server (for more on the rootd daemon see the
+source files in `root/rootd/src/`). TNetFile file names are in
+standard URL format with protocol "root" or "roots". The following
+are valid TNetFile URL's:
+- `root://hpbrun.cern.ch/root/hsimple.root`
+- `root://pcna49a:5151/~na49/data/run821.root`
+- `root://pcna49d.cern.ch:5050//v1/data/run810.root`
+
+The only difference with the well known httpd URL's is that the root
+of the remote file tree is the user's home directory. Therefore an
+absolute pathname requires a // after the host or port specifier
+(see last example). Further the expansion of the standard shell
+characters, like ~, $, .., are handled as expected.
+TNetFile (actually TUrl) uses 1094 as default port for rootd.
+
+Connecting to a rootd requires the remote user id and password.
+TNetFile allows three ways for you to provide your login:
+ Setting it globally via the static functions:
+1. TAuthenticate::SetGlobalUser() and TAuthenticate::SetGlobalPasswd()
+2. Getting it from the `~/.netrc` file (same file as used by ftp)
+3. Command line prompt
+The different methods will be tried in the order given above.
+On machines with AFS rootd will authenticate using AFS (if it was
+compiled with AFS support).
+
+If the protocol is specified as "rootk" kerberos5 will be used for
+authentication.
+
+The rootd daemon lives in the directory `$ROOTSYS/bin`. It can be
+started either via inetd or by hand from the command line (no need
+to be super user).
+**/
 
 #include <errno.h>
 

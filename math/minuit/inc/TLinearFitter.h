@@ -60,7 +60,7 @@
 //
 // 2.Setting the formula
 //  2.1 The linear formula syntax:
-//      -Additive parts are separated by 2 plus signes "++"
+//      -Additive parts are separated by 2 plus signs "++"
 //       --for example "1 ++ x" - for fitting a straight line
 //      -All standard functions, undrestood by TFormula, can be used
 //       as additive parts

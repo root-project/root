@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ## Convolution in cyclical angular observables theta, and
-## construction of p.d.f in terms of trasnformed angular
+## construction of p.d.f in terms of transformed angular
 ## coordinates, e.g. cos(theta), the convolution
 ## is performed in theta rather than cos(theta)
 ##

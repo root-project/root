@@ -320,7 +320,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    }
 
    // ----------------------------------
-   // querry intervals
+   // query intervals
    cout << "Profile Likelihood interval on s = [" << plInt->LowerLimit(*wspace->var("s")) << ", "
         << plInt->UpperLimit(*wspace->var("s")) << "]" << endl;
    // Profile Likelihood interval on s = [12.1902, 88.6871]

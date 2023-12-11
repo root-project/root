@@ -18,8 +18,8 @@ class FTFont;
 
 class TGLText : public TAttText {
 private:
-   TGLText(const TGLText&);            // Not implemented
-   TGLText& operator=(const TGLText&); // Not implemented
+   TGLText(const TGLText&) = delete;
+   TGLText& operator=(const TGLText&) = delete;
 
    Double_t fX; // X position
    Double_t fY; // Y position

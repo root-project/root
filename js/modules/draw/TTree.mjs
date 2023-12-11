@@ -20,7 +20,7 @@ function treeShowProgress(handle, str) {
       return showProgress();
 
    const main_box = document.createElement('p'),
-       text_node = document.createTextNode(str);
+         text_node = document.createTextNode(str);
 
    main_box.appendChild(text_node);
    main_box.title = 'Click on element to break';
@@ -67,7 +67,7 @@ TDrawSelector.prototype.ShowProgress = function(value) {
       ndig = 1;
 
    treeShowProgress(this, `TTree draw ${(value * 100).toFixed(ndig)} % `);
-}
+};
 
 /** @summary Draw result of tree drawing
   * @private */
@@ -154,11 +154,11 @@ function createTreePlayer(player) {
       this.root_version = root_version;
       this.askey = askey;
       this.draw_expr = expr;
-   }
+   };
 
    player.configureTree = function(tree) {
       this.local_tree = tree;
-   }
+   };
 
    player.showExtraButtons = function(args) {
       const main = this.selectDom(),
@@ -179,7 +179,7 @@ function createTreePlayer(player) {
       main.select('.treedraw_number').attr('value', args?.numentries || ''); // .on('change', () => this.performDraw());
       main.select('.treedraw_first').attr('value', args?.firstentry || ''); // .on('change', () => this.performDraw());
       main.select('.treedraw_clear').on('click', () => cleanup(this.drawid));
-   }
+   };
 
    player.showPlayer = function(args) {
       const main = this.selectDom();
@@ -230,7 +230,7 @@ function createTreePlayer(player) {
       this.checkResize();
 
       registerForResize(this);
-   }
+   };
 
    player.getValue = function(sel) {
       const elem = this.selectDom().select(sel);
@@ -238,7 +238,7 @@ function createTreePlayer(player) {
       const val = elem.property('value');
       if (val !== undefined) return val;
       return elem.attr('value');
-   }
+   };
 
    player.performLocalDraw = function() {
       if (!this.local_tree) return;
@@ -268,14 +268,14 @@ function createTreePlayer(player) {
       args.progress = treeDrawProgress.bind(args);
 
       treeDraw(this.local_tree, args).then(obj => args.progress(obj, true));
-   }
+   };
 
    player.getDrawOpt = function() {
       let res = 'player';
-      const expr = this.getValue('.treedraw_varexp')
+      const expr = this.getValue('.treedraw_varexp');
       if (expr) res += ':' + expr;
       return res;
-   }
+   };
 
    player.performDraw = function() {
       if (this.local_tree)
@@ -329,11 +329,11 @@ function createTreePlayer(player) {
          httpRequest(this.url + '/root.json.gz?compact=3', 'text').then(submitDrawRequest);
       } else
          submitDrawRequest();
-   }
+   };
 
    player.checkResize = function(/* arg */) {
       resize(this.drawid);
-   }
+   };
 
    return player;
 }

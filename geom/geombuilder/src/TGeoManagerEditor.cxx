@@ -158,9 +158,9 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    fGeometry = gGeoManager;
-   fTabMgr = 0;
-   fTab = 0;
-   fConnectedCanvas = 0;
+   fTabMgr = nullptr;
+   fTab = nullptr;
+   fConnectedCanvas = nullptr;
 
    fIsModified = kFALSE;
    TGCompositeFrame *f1;
@@ -317,7 +317,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
    label->SetTextColor(color);
    f2->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
    f1 = new TGCompositeFrame(f2, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedShape = 0;
+   fSelectedShape = nullptr;
    fLSelShape = new TGLabel(f1, "Select shape");
    gClient->GetColorByName("#0000ff", color);
    fLSelShape->SetTextColor(color);
@@ -357,7 +357,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
 
    // ComboBox for shape component
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedShape2 = 0;
+   fSelectedShape2 = nullptr;
    fLSelShape2 = new TGLabel(f1, "Select shape");
    gClient->GetColorByName("#0000ff", color);
    fLSelShape2->SetTextColor(color);
@@ -371,7 +371,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
 
    // ComboBox for medium component
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMedium2 = 0;
+   fSelectedMedium2 = nullptr;
    fLSelMedium2 = new TGLabel(f1, "Select medium");
    gClient->GetColorByName("#0000ff", color);
    fLSelMedium2->SetTextColor(color);
@@ -401,7 +401,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
    label->SetTextColor(color);
    f3->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
    f1 = new TGCompositeFrame(f3, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedVolume = 0;
+   fSelectedVolume = nullptr;
    fLSelVolume = new TGLabel(f1, "Select volume");
    gClient->GetColorByName("#0000ff", color);
    fLSelVolume->SetTextColor(color);
@@ -495,7 +495,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
    label->SetTextColor(color);
    f4->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
    f1 = new TGCompositeFrame(f4, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMaterial = 0;
+   fSelectedMaterial = nullptr;
    fLSelMaterial = new TGLabel(f1, "Select material");
    gClient->GetColorByName("#0000ff", color);
    fLSelMaterial->SetTextColor(color);
@@ -545,7 +545,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
    container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
    // ComboBox for materials
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMaterial2 = 0;
+   fSelectedMaterial2 = nullptr;
    fLSelMaterial2 = new TGLabel(f1, "Select material");
    gClient->GetColorByName("#0000ff", color);
    fLSelMaterial2->SetTextColor(color);
@@ -573,7 +573,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
    label->SetTextColor(color);
    f5->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
    f1 = new TGCompositeFrame(f5, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMedium = 0;
+   fSelectedMedium = nullptr;
    fLSelMedium = new TGLabel(f1, "Select medium");
    gClient->GetColorByName("#0000ff", color);
    fLSelMedium->SetTextColor(color);
@@ -631,7 +631,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t heigh
    label->SetTextColor(color);
    f6->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
    f1 = new TGCompositeFrame(f6, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMatrix = 0;
+   fSelectedMatrix = nullptr;
    fLSelMatrix = new TGLabel(f1, "Select matrix");
    gClient->GetColorByName("#0000ff", color);
    fLSelMatrix->SetTextColor(color);
@@ -846,7 +846,7 @@ void TGeoManagerEditor::SetModel(TObject *obj)
 
    fTab->SetTab(0);
    fCategories->Layout();
-   if (fTabMgr == 0) {
+   if (fTabMgr == nullptr) {
       fTabMgr = TGeoTabManager::GetMakeTabManager(fGedEditor);
       fTabMgr->fVolumeTab = fVolumeTab;
    }

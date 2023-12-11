@@ -53,7 +53,7 @@ function showProgress(msg, tmout) {
   * therefore try several workarounds
   * @private */
 function closeCurrentWindow() {
-   if (!window) return;
+   if (typeof window === 'undefined') return;
    window.close();
    window.open('', '_self').close();
 }
@@ -62,7 +62,7 @@ function closeCurrentWindow() {
   * @private */
 function tryOpenOpenUI(sources, args) {
    if (!sources || (sources.length === 0)) {
-      if (args.rejectFunc) {
+      if (isFunc(args.rejectFunc)) {
          args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
       }
@@ -99,11 +99,11 @@ function tryOpenOpenUI(sources, args) {
       element.parentNode.removeChild(element);
       // and try next
       tryOpenOpenUI(sources, args);
-   }
+   };
 
    element.onload = function() {
       console.log(`Load openui5 from ${src}`);
-   }
+   };
 
    document.head.appendChild(element);
 }
@@ -252,7 +252,7 @@ const ToolbarIcons = {
       return svg;
    }
 
-} // ToolbarIcons
+}; // ToolbarIcons
 
 
 /** @summary Register handle to react on window resize
@@ -263,7 +263,7 @@ const ToolbarIcons = {
   * @param {number} [delay] - one could specify delay after which resize event will be handled
   * @protected */
 function registerForResize(handle, delay) {
-   if (!handle || isBatchMode() || (typeof window === 'undefined')) return;
+   if (!handle || isBatchMode() || (typeof window === 'undefined') || (typeof document === 'undefined')) return;
 
    let myInterval = null, myDelay = delay || 300;
    if (myDelay < 20) myDelay = 20;
@@ -305,6 +305,9 @@ function detectRightButton(event) {
   * @private */
 function addMoveHandler(painter, enabled = true) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
+
+   if (painter.getPadPainter()?.isEditable() === false)
+      enabled = false;
 
    if (!enabled) {
       if (painter.draw_g.property('assigned_move')) {
@@ -393,20 +396,17 @@ function injectStyle(code, node, tag) {
 function selectgStyle(name) {
    gStyle.fName = name;
    switch (name) {
-      case 'Modern': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
-         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
+      case 'Modern': Object.assign(gStyle, { fFrameBorderMode: 0, fFrameFillColor: 0,
+         fCanvasBorderMode: 0, fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
          fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
          fOptStat: 1111, fStatY: 0.935,
          fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 });
          break;
-      case 'Plain': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
-         fPadColor: 0, fCanvasColor: 0,
+      case 'Plain': Object.assign(gStyle, { fFrameBorderMode: 0,
+         fCanvasBorderMode: 0, fPadBorderMode: 0, fPadColor: 0, fCanvasColor: 0,
          fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 });
          break;
-      case 'Bold': Object.assign(gStyle, {
-         fCanvasColor: 10, fCanvasBorderMode: 0,
+      case 'Bold': Object.assign(gStyle, { fCanvasColor: 10, fCanvasBorderMode: 0,
          fFrameLineWidth: 3, fFrameFillColor: 10,
          fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
          fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 });
@@ -418,17 +418,19 @@ function selectgStyle(name) {
   * @private */
 function saveCookie(obj, expires, name) {
    const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-       d = new Date();
+         d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+   if (typeof document !== 'undefined')
+      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
 /** @summary Read cookie with specified name
   * @private */
 function readCookie(name) {
-   if (typeof document === 'undefined') return null;
+   if (typeof document === 'undefined')
+      return null;
    const decodedCookie = decodeURIComponent(document.cookie),
-       ca = decodedCookie.split(';');
+         ca = decodedCookie.split(';');
    name += '=';
    for (let i = 0; i < ca.length; i++) {
       let c = ca[i];
@@ -516,7 +518,7 @@ async function saveFile(filename, content) {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
       });
-   } else if (typeof document === 'object') {
+   } else if (typeof document !== 'undefined') {
       const a = document.createElement('a');
       a.download = filename;
       a.href = content;

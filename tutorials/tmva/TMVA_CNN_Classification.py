@@ -25,8 +25,6 @@
 
 import ROOT
 
-#switch off MT in OpenMP (BLAS)
-ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
@@ -105,8 +103,8 @@ def MakeImagesTree(n, nh, nw):
     bkg.Print()
     f.Close()
 
-hasGPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
-hasCPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes"
+hasGPU = "tmva-gpu" in ROOT.gROOT.GetConfigFeatures()
+hasCPU = "tmva-cpu" in ROOT.gROOT.GetConfigFeatures()
 
 nevt = 1000    # use a larger value to get better results
 opt = [1, 1, 1, 1, 1]
@@ -121,7 +119,7 @@ if (not hasCPU and not hasGPU) :
     useTMVACNN = False
     useTMVADNN = False
 
-if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") != "yes":
+if not "tmva-pymva" in ROOT.gROOT.GetConfigFeatures():
     useKerasCNN = False
     usePyTorchCNN = False
 else:
@@ -145,15 +143,18 @@ if not useTMVACNN:
 
 writeOutputFile = True
 
-num_threads = 4  # use default threads
+num_threads = 4  # use max 4 threads
 max_epochs = 10  # maximum number of epochs used for training
 
 
 # do enable MT running
-if num_threads >= 0:
+if "imt" in ROOT.gROOT.GetConfigFeatures():
     ROOT.EnableImplicitMT(num_threads)
+    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")  # switch OFF MT in OpenBLAS
+    print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
+else:
+    print("Running in serial mode since ROOT does not support MT")
 
-print("Running with nthreads  = ", ROOT.GetThreadPoolSize())
 
 
 

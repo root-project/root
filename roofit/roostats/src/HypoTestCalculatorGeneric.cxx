@@ -135,7 +135,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    std::unique_ptr<RooArgSet> saveAll {(RooArgSet*) bothParams->snapshot()};
 
    // check whether we have a ToyMCSampler and if so, keep a pointer to it
-   ToyMCSampler* toymcs = dynamic_cast<ToyMCSampler*>( fTestStatSampler );
+   ToyMCSampler* toymcs = dynamic_cast<ToyMCSampler*>(fTestStatSampler );
 
 
    // evaluate test statistic on data
@@ -148,9 +148,9 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       if (!allTS) return nullptr;
       //oocoutP(nullptr,Generation) << "All Test Statistics on data: " << endl;
       //allTS->Print("v");
-      RooRealVar* firstTS = (RooRealVar*)allTS->at(0);
+      RooRealVar* firstTS = static_cast<RooRealVar*>(allTS->at(0));
       obsTestStat = firstTS->getVal();
-      if (allTS->getSize()<=1) {
+      if (allTS->size()<=1) {
         allTS = nullptr; // don't save
       }
    }else{
@@ -177,7 +177,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       detOut_null = toymcs->GetSamplingDistributions(paramPointNull);
       if( detOut_null ) {
         samp_null = new SamplingDistribution( detOut_null->GetName(), detOut_null->GetTitle(), *detOut_null );
-        if (detOut_null->get()->getSize()<=1) {
+        if (detOut_null->get()->size()<=1) {
           delete detOut_null;
           detOut_null= nullptr;
         }
@@ -208,7 +208,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       detOut_alt = toymcs->GetSamplingDistributions(paramPointAlt);
       if( detOut_alt ) {
         samp_alt = new SamplingDistribution( detOut_alt->GetName(), detOut_alt->GetTitle(), *detOut_alt );
-        if (detOut_alt->get()->getSize()<=1) {
+        if (detOut_alt->get()->size()<=1) {
           delete detOut_alt;
           detOut_alt= nullptr;
         }

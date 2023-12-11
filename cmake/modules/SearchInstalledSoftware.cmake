@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -998,8 +998,6 @@ if(xrootd AND NOT builtin_xrootd)
       message(STATUS "XROOTD not found, enabling 'builtin_xrootd' option")
       set(builtin_xrootd ON CACHE BOOL "Enabled because xrootd is enabled, but external xrootd was not found (${xrootd_description})" FORCE)
     endif()
-  else()
-    set(XROOTD_VERSIONNUM ${xrdversnum})  # variable used internally
   endif()
 endif()
 
@@ -1018,27 +1016,9 @@ if(builtin_xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
 
-if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER_EQUAL 500000000)
-  if(xproofd)
-    if(fail-on-missing)
-      message(FATAL_ERROR "XROOTD is version 5 or greater. The legacy xproofd servers can not be built with this version. Use -Dxproofd:BOOL=OFF to disable.")
-    else()
-      message(STATUS "XROOTD is version 5 or greater. The legacy xproofd servers can not be built with this version. Disabling 'xproofd' option.")
-      set(xproofd OFF CACHE BOOL "Disabled because xrootd version is 5 or greater" FORCE)
-    endif()
-  endif()
-endif()
-
-#---check if netxng and netx can be built-------------------------------
-if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER 300030005)
+#---check if netxng can be built-------------------------------
+if(xrootd)
   set(netxng ON)
-else()
-  set(netxng OFF)
-endif()
-if(xrootd AND XROOTD_VERSIONNUM VERSION_LESS 500000000)
-  set(netx ON)
-else()
-  set(netx OFF)
 endif()
 
 #---make sure non-builtin xrootd is not using builtin_openssl-----------
@@ -1387,9 +1367,9 @@ if(builtin_vc)
   set(vc ON CACHE BOOL "Enabled because builtin_vc requested (${vc_description})" FORCE)
 elseif(vc)
   if(fail-on-missing)
-    find_package(Vc 1.3.0 CONFIG QUIET REQUIRED)
+    find_package(Vc 1.4.4 CONFIG QUIET REQUIRED)
   else()
-    find_package(Vc 1.3.0 CONFIG QUIET)
+    find_package(Vc 1.4.4 CONFIG QUIET)
     if(NOT Vc_FOUND)
       message(STATUS "Vc library not found, support for it disabled.")
       message(STATUS "Please enable the option 'builtin_vc' to build Vc internally.")
@@ -1411,7 +1391,7 @@ if(vc AND NOT Vc_FOUND AND NO_CONNECTION)
 endif()
 
 if(vc AND NOT Vc_FOUND)
-  set(Vc_VERSION "1.4.3")
+  set(Vc_VERSION "1.4.4")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1421,7 +1401,7 @@ if(vc AND NOT Vc_FOUND)
 
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
-    URL_HASH SHA256=988ea0053f3fbf17544ca776a2749c097b3139089408b0286fa4e9e8513e037f
+    URL_HASH SHA256=5933108196be44c41613884cd56305df320263981fe6a49e648aebb3354d57f3
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1637,6 +1617,12 @@ if(vdt OR builtin_vdt)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
     set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
+    add_library(VDT::VDT STATIC IMPORTED GLOBAL)
+    set_target_properties(VDT::VDT
+      PROPERTIES
+        IMPORTED_LOCATION "${VDT_LIBRARIES}"
+        INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}"
+    )
   endif()
 endif()
 
@@ -1668,7 +1654,11 @@ endif()
 
 if(tmva-sofie)
   message(STATUS "Looking for Protobuf")
-  find_package(Protobuf)
+  set(protobuf_MODULE_COMPATIBLE TRUE)
+  find_package(Protobuf CONFIG)
+  if(NOT Protobuf_FOUND)
+    find_package(Protobuf MODULE)
+  endif()
   if(NOT Protobuf_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "Protobuf libraries not found and they are required (tmva-sofie option enabled)")
@@ -1717,11 +1707,7 @@ if (cudnn)
   endif()
 endif(cudnn)
 
-#
 #---TMVA and its dependencies------------------------------------------------------------
-if (tmva AND NOT mlp)
-  message(FATAL_ERROR "The 'tmva' option requires 'mlp', please enable mlp with -Dmlp=ON")
-endif()
 if(tmva)
   if(tmva-cpu AND imt)
     message(STATUS "Looking for BLAS for optional parts of TMVA")
@@ -1736,8 +1722,14 @@ if(tmva)
   else()
     set(tmva-cpu OFF CACHE BOOL "Disabled because 'imt' is disabled (${tmva-cpu_description})" FORCE)
   endif()
-  if(tmva-gpu AND NOT CUDA_FOUND)
+  if(tmva-gpu AND NOT CMAKE_CUDA_COMPILER)
     set(tmva-gpu OFF CACHE BOOL "Disabled because cuda not found" FORCE)
+  endif()
+  if(tmva-gpu)
+    # So far, TMVA is the only package that uses the CUDA toolkit. RooFit is
+    # just compiling libraries with the NVidia compiler itself. If more ROOT
+    # components depend on the CUDA toolkit, this should be moved.
+    find_package(CUDAToolkit REQUIRED)
   endif()
   if(tmva-pymva)
     if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND)))
@@ -1760,7 +1752,7 @@ else()
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
   set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
   set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
-endif()
+endif(tmva)
 
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)

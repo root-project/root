@@ -14,15 +14,13 @@
 #include "asfont.h"
 #include "ximage.h"
 #include "transform.h"
-#include "asimagexml.h"
 #include "import.h"
 #include "export.h"
-#include "pixmap.h"
 #include "char2uni.h"
 
 /****h* libAfterImage/libAfterImage
  * NAME
- * libAfterImage - generic imaging library originally designed for 
+ * libAfterImage - generic imaging library originally designed for
  * AfterStep X Window Manager.
  *
  * PURPOSE
@@ -262,7 +260,7 @@
  *          asimage2mask_ximage(), asimage2pixmap(), asimage2mask()
  *
  *   Transformations :
- *          scale_asimage(), tile_asimage(), merge_layers(), 
+ *          scale_asimage(), tile_asimage(), merge_layers(),
  * 			make_gradient(),
  *          flip_asimage(), mirror_asimage(), pad_asimage(),
  *          blur_asimage_gauss(), fill_asimage(), adjust_asimage_hsv()

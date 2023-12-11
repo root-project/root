@@ -6,8 +6,8 @@
 ///
 /// \authors Ilka Antcheva, Fons Rademakers
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <TApplication.h>
 #include <TGClient.h>

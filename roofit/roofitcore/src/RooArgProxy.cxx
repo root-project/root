@@ -25,7 +25,7 @@ using namespace std ;
 \class RooArgProxy
 \ingroup Roofitcore
 
-RooArgProxy is the abstract interface for RooAbsArg proxy classes.
+Abstract interface for RooAbsArg proxy classes.
 A RooArgProxy is the general mechanism to store references
 to other RooAbsArgs inside a RooAbsArg.
 
@@ -38,7 +38,6 @@ points to gets redirected (e.g. in a copy or clone operation).
 
 
 ClassImp(RooArgProxy);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +45,7 @@ ClassImp(RooArgProxy);
 
 RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
           bool valueServer, bool shapeServer, bool proxyOwnsArg) :
-  TNamed(inName,desc), _owner(owner), _arg(nullptr),
+  TNamed(inName,desc), _owner(owner),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
   _owner->registerProxy(*this) ;
@@ -59,13 +58,17 @@ RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
 /// control if the inserted client-server link in the owner propagates value and/or
 /// shape dirty flags. If proxyOwnsArg is true, the proxy takes ownership of its component
 
-RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
-          bool valueServer, bool shapeServer, bool proxyOwnsArg) :
-  TNamed(inName,desc), _owner(owner), _arg(&arg),
-  _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
+RooArgProxy::RooArgProxy(const char *inName, const char *desc, RooAbsArg *owner, RooAbsArg &arg, bool valueServer,
+                         bool shapeServer, bool proxyOwnsArg)
+   : TNamed(inName, desc),
+     _owner(owner),
+     _arg(&arg),
+     _valueServer(valueServer),
+     _shapeServer(shapeServer),
+     _isFund(_arg->isFundamental()),
+     _ownArg(proxyOwnsArg)
 {
   _owner->registerProxy(*this) ;
-  _isFund = _arg->isFundamental() ;
 }
 
 
@@ -79,7 +82,7 @@ RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy
   _isFund(other._isFund), _ownArg(other._ownArg)
 {
   if (_ownArg) {
-    _arg = _arg ? (RooAbsArg*) _arg->Clone() : nullptr ;
+    _arg = _arg ? static_cast<RooAbsArg*>(_arg->Clone()) : nullptr ;
   }
 
   _owner->registerProxy(*this) ;

@@ -14,6 +14,8 @@
 
 #include "RtypesCore.h"
 
+#include <string>
+
 namespace ROOT {
 
 /// The global settings depend on a global variable named R__ZipMode which can be
@@ -100,6 +102,8 @@ struct RCompressionSetting {
          kUndefined
       };
    };
+
+   static std::string AlgorithmToString(EAlgorithm::EValues algorithm);
 };
 
 enum ECompressionAlgorithm {

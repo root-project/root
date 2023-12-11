@@ -59,13 +59,13 @@ namespace {
 /// We want RLoopManagers to be able to add their code to a global "code to execute via cling",
 /// so that, lazily, we can jit everything that's needed by all RDFs in one go, which is potentially
 /// much faster than jitting each RLoopManager's code separately.
-static std::string &GetCodeToJit()
+std::string &GetCodeToJit()
 {
    static std::string code;
    return code;
 }
 
-static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
+bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 {
    return (leaves.find(leaf) != leaves.end());
 }
@@ -73,7 +73,7 @@ static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 ///////////////////////////////////////////////////////////////////////////////
 /// This overload does not check whether the leaf/branch is already in bNamesReg. In case this is a friend leaf/branch,
 /// `allowDuplicates` controls whether we add both `friendname.bname` and `bname` or just the shorter version.
-static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
                              const std::string &friendName, bool allowDuplicates)
 {
    if (!friendName.empty()) {
@@ -91,7 +91,7 @@ static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bN
 
 ///////////////////////////////////////////////////////////////////////////////
 /// This overload makes sure that the TLeaf has not been already inserted.
-static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
                              const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf,
                              bool allowDuplicates)
 {
@@ -105,7 +105,7 @@ static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bN
    foundLeaves.insert(leaf);
 }
 
-static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b,
+void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b,
                           std::string prefix, std::string &friendName, bool allowDuplicates)
 {
    for (auto sb : *b->GetListOfBranches()) {
@@ -131,7 +131,7 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
    }
 }
 
-static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
                                std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
 {
    std::set<TLeaf *> foundLeaves;
@@ -214,7 +214,7 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
    }
 }
 
-static void ThrowIfNSlotsChanged(unsigned int nSlots)
+void ThrowIfNSlotsChanged(unsigned int nSlots)
 {
    const auto currentSlots = RDFInternal::GetNSlots();
    if (currentSlots != nSlots) {
@@ -299,7 +299,7 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
    return {std::move(what), static_cast<ULong64_t>(entryRange.first), end, slot};
 }
 
-static auto MakeDatasetColReadersKey(const std::string &colName, const std::type_info &ti)
+auto MakeDatasetColReadersKey(const std::string &colName, const std::type_info &ti)
 {
    // We use a combination of column name and column type name as the key because in some cases we might end up
    // with concrete readers that use different types for the same column, e.g. std::vector and RVec here:
@@ -665,7 +665,7 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
       actionPtr->Run(slot, entry);
    for (auto *namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->CheckFilters(slot, entry);
-   for (auto &callback : fCallbacks)
+   for (auto &callback : fCallbacksEveryNEvents)
       callback(slot);
 }
 
@@ -759,9 +759,8 @@ void RLoopManager::CleanUpNodes()
    for (auto *ptr : fBookedRanges)
       ptr->ResetChildrenCount();
 
-   fCallbacks.clear();
+   fCallbacksEveryNEvents.clear();
    fCallbacksOnce.clear();
-   fSampleCallbacks.clear();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
@@ -837,8 +836,22 @@ void RLoopManager::Run(bool jit)
 
    InitNodes();
 
+   // Exceptions can occur during the event loop. In order to ensure proper cleanup of nodes
+   // we use RAII: even in case of an exception, the destructor of the object is invoked and
+   // all the cleanup takes place.
+   class NodesCleanerRAII {
+      RLoopManager &fRLM;
+
+   public:
+      NodesCleanerRAII(RLoopManager &thisRLM) : fRLM(thisRLM) {}
+      ~NodesCleanerRAII() { fRLM.CleanUpNodes(); }
+   };
+
+   NodesCleanerRAII runKeeper(*this);
+
    TStopwatch s;
    s.Start();
+
    switch (fLoopType) {
    case ELoopType::kNoFilesMT: RunEmptySourceMT(); break;
    case ELoopType::kROOTFilesMT: RunTreeProcessorMT(); break;
@@ -848,8 +861,6 @@ void RLoopManager::Run(bool jit)
    case ELoopType::kDataSource: RunDataSource(); break;
    }
    s.Stop();
-
-   CleanUpNodes();
 
    fNRuns++;
 
@@ -960,7 +971,7 @@ void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(u
    if (everyNEvents == 0ull)
       fCallbacksOnce.emplace_back(std::move(f), fNSlots);
    else
-      fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
+      fCallbacksEveryNEvents.emplace_back(everyNEvents, std::move(f), fNSlots);
 }
 
 std::vector<std::string> RLoopManager::GetFiltersNames()

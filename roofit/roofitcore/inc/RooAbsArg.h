@@ -61,12 +61,9 @@ class CodeSquashContext;
 
 class RooRefArray : public TObjArray {
  public:
-  RooRefArray() : TObjArray() {
-  } ;
-  RooRefArray(const RooRefArray& other) : TObjArray(other) {
-  }
-  RooRefArray& operator=(const RooRefArray& other) = default;
-  ~RooRefArray() override {} ;
+    RooRefArray() = default;
+    RooRefArray(const RooRefArray &other) : TObjArray(other) {}
+    RooRefArray &operator=(const RooRefArray &other) = default;
  protected:
   ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;
@@ -136,36 +133,36 @@ public:
 
   /// Retrieve a client iterator.
   inline TIterator* clientIterator() const
-  R__SUGGEST_ALTERNATIVE("Use clients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use clients() and begin(), end() or range-based loops.") {
     // Return iterator over all client RooAbsArgs
     return makeLegacyIterator(_clientList);
   }
   inline TIterator* valueClientIterator() const
-  R__SUGGEST_ALTERNATIVE("Use valueClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
     // Return iterator over all shape client RooAbsArgs
     return makeLegacyIterator(_clientListValue);
   }
   inline TIterator* shapeClientIterator() const
-  R__SUGGEST_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
     // Return iterator over all shape client RooAbsArgs
     return makeLegacyIterator(_clientListShape);
   }
   inline TIterator* serverIterator() const
-  R__SUGGEST_ALTERNATIVE("Use servers() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
     // Return iterator over all server RooAbsArgs
     return makeLegacyIterator(_serverList);
   }
 
   inline RooFIter valueClientMIterator() const
-  R__SUGGEST_ALTERNATIVE("Use valueClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListValue)));
   }
   inline RooFIter shapeClientMIterator() const
-  R__SUGGEST_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListShape)));
   }
   inline RooFIter serverMIterator() const
-  R__SUGGEST_ALTERNATIVE("Use servers() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_serverList)));
   }
 
@@ -381,7 +378,7 @@ public:
     return true ;
   }
   virtual bool hasRange(const char*) const {
-    // Has this argument a defined range (dummy interface always returns flase)
+    // Has this argument a defined range (dummy interface always returns false)
     return false ;
   }
 
@@ -531,7 +528,7 @@ public:
   //   * passing an initializer list
   // Before, there was only an overload taking a RooArg set, which caused an
   // implicit creation of a RooArgSet when a RooArgList was passed. This needs
-  // to be avoided, because if the passed RooArgList is owning the argumnets,
+  // to be avoided, because if the passed RooArgList is owning the arguments,
   // this information will be lost with the copy. The solution is to have one
   // overload that takes a general RooAbsCollection, and one overload for
   // RooArgList that is invoked in the case of passing an initializer list.

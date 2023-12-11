@@ -76,14 +76,7 @@ RooPolynomial::RooPolynomial(const char *name, const char *title, RooAbsReal &x,
       _lowestOrder = 0;
    }
 
-   for (auto *coef : coefList) {
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutE(InputArguments) << "RooPolynomial::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _coefList.add(*coef);
-   }
+   _coefList.addTyped<RooAbsReal>(coefList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,8 +84,7 @@ RooPolynomial::RooPolynomial(const char *name, const char *title, RooAbsReal &x,
 RooPolynomial::RooPolynomial(const char *name, const char *title, RooAbsReal &x)
    : RooAbsPdf(name, title),
      _x("x", "Dependent", this, x),
-     _coefList("coefList", "List of coefficients", this),
-     _lowestOrder(1)
+     _coefList("coefList", "List of coefficients", this)
 {
 }
 
@@ -111,7 +103,7 @@ RooPolynomial::RooPolynomial(const RooPolynomial &other, const char *name)
 
 double RooPolynomial::evaluate() const
 {
-   const unsigned sz = _coefList.getSize();
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? 1. : 0.;
 
@@ -154,8 +146,9 @@ double RooPolynomial::analyticalIntegral(Int_t code, const char *rangeName) cons
 {
    R__ASSERT(code == 1);
 
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? xmax - xmin : 0.0;
 
@@ -167,8 +160,9 @@ double RooPolynomial::analyticalIntegral(Int_t code, const char *rangeName) cons
 std::string RooPolynomial::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
                                                        RooFit::Detail::CodeSquashContext &ctx) const
 {
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
+   const unsigned sz = _coefList.size();
    if (!sz)
       return std::to_string(_lowestOrder ? xmax - xmin : 0.0);
 

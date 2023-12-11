@@ -93,7 +93,7 @@ void LikelihoodJob::update_state()
          auto message_end = message_begin + message.size() / sizeof(update_state_t);
          std::vector<update_state_t> to_update(message_begin, message_end);
          for (auto const &item : to_update) {
-            RooRealVar *rvar = (RooRealVar *)vars_.at(item.var_index);
+            RooRealVar *rvar = static_cast<RooRealVar *>(vars_.at(item.var_index));
             rvar->setVal(static_cast<double>(item.value));
             if (rvar->isConstant() != item.is_constant) {
                rvar->setConstant(static_cast<bool>(item.is_constant));
@@ -141,13 +141,13 @@ void LikelihoodJob::updateWorkersParameters()
       bool valChanged = false;
       bool constChanged = false;
       std::vector<update_state_t> to_update;
-      for (std::size_t ix = 0u; ix < static_cast<std::size_t>(vars_.getSize()); ++ix) {
+      for (std::size_t ix = 0u; ix < static_cast<std::size_t>(vars_.size()); ++ix) {
          valChanged = !vars_[ix].isIdentical(save_vars_[ix], true);
          constChanged = (vars_[ix].isConstant() != save_vars_[ix].isConstant());
 
          if (valChanged || constChanged) {
             if (constChanged) {
-               ((RooRealVar *)&save_vars_[ix])->setConstant(vars_[ix].isConstant());
+               (static_cast<RooRealVar *>(&save_vars_[ix]))->setConstant(vars_[ix].isConstant());
             }
             // TODO: Check with Wouter why he uses copyCache in MPFE; makes it very difficult to extend, because
             // copyCache is protected (so must be friend). Moved setting value to if-block below.

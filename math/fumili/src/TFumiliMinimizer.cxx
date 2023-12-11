@@ -394,7 +394,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
       Error("EvaluateFCN", " type of fit method is not supported, it must be chi2 or log-likelihood");
    }
 
-   // now TFumili excludes fixed prameter in second-derivative matrix
+   // now TFumili excludes fixed parameter in second-derivative matrix
    // ned to get them using the static instance of TFumili
    double * zmatrix = fgFumili->GetZ();
    double * pl0 = fgFumili->GetPL0(); // parameter limits
@@ -521,7 +521,7 @@ bool TFumiliMinimizer::SetVariableValue(unsigned int ivar, double val) {
 bool TFumiliMinimizer::Minimize() {
    // perform the minimization using the algorithm chosen previously by the user
    // By default Migrad is used.
-   // Return true if the found minimum is valid and update internal chached values of
+   // Return true if the found minimum is valid and update internal cached values of
    // minimum values, errors and covariance matrix.
 
    if (fFumili == nullptr) {

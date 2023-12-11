@@ -19,7 +19,7 @@
 \class RooAbsOptTestStatistic
 \ingroup Roofitcore
 
-RooAbsOptTestStatistic is the abstract base class for test
+Abstract base class for test
 statistics objects that evaluate a function or PDF at each point of a given
 dataset.  This class provides generic optimizations, such as
 caching and precalculation of constant terms that can be made for
@@ -35,31 +35,32 @@ Support for calculation in partitions is needed to allow multi-core
 parallelized calculation of test statistics.
 **/
 
+#include "RooAbsOptTestStatistic.h"
+
 #include "Riostream.h"
 #include "TClass.h"
 #include <cstring>
 
-
-#include "RooAbsOptTestStatistic.h"
-#include "RooMsgService.h"
-#include "RooAbsPdf.h"
 #include "RooAbsData.h"
-#include "RooDataHist.h"
-#include "RooArgSet.h"
-#include "RooRealVar.h"
-#include "RooErrorHandler.h"
-#include "RooGlobalFunc.h"
-#include "RooBinning.h"
 #include "RooAbsDataStore.h"
-#include "RooCategory.h"
-#include "RooDataSet.h"
-#include "RooProdPdf.h"
+#include "RooAbsPdf.h"
 #include "RooAddPdf.h"
+#include "RooArgSet.h"
+#include "RooBinSamplingPdf.h"
+#include "RooBinning.h"
+#include "RooCategory.h"
+#include "RooDataHist.h"
+#include "RooDataSet.h"
+#include "RooErrorHandler.h"
+#include "RooFitImplHelpers.h"
+#include "RooGlobalFunc.h"
+#include "RooMsgService.h"
+#include "RooProdPdf.h"
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
+#include "RooRealVar.h"
 #include "RooTrace.h"
 #include "RooVectorDataStore.h"
-#include "RooBinSamplingPdf.h"
 
 #include "ROOT/StringUtils.hxx"
 
@@ -114,6 +115,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic &oth
    : RooAbsTestStatistic(other, name),
      _sealed(other._sealed),
      _sealNotice(other._sealNotice),
+     _skipZeroWeights(other._skipZeroWeights),
      _integrateBinsPrecision(other._integrateBinsPrecision)
 {
    // Don't do a thing in master mode
@@ -227,7 +229,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
     //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
   } else {
-    _dataClone = (RooAbsData*) indata.Clone() ;
+    _dataClone = static_cast<RooAbsData*>(indata.Clone()) ;
   }
   _ownData = true ;
 
@@ -296,7 +298,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // *********************************************************************
 
   // Remove projected dependents from normalization set
-  if (projDeps.getSize()>0) {
+  if (!projDeps.empty()) {
 
     _projDeps = new RooArgSet;
     projDeps.snapshot(*_projDeps, false) ;
@@ -365,7 +367,8 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
 double RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) const
 {
   // Default implementation returns sum of components
-  double sum(0), carry(0);
+  double sum(0);
+  double carry(0);
   for (Int_t i = 0; i < n; ++i) {
     double y = array[i]->getValV();
     carry += reinterpret_cast<RooAbsOptTestStatistic*>(array[i])->getCarry();
@@ -568,7 +571,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
         arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
-      RooArgSet* constNodes = (RooArgSet*) trackNodes.selectByAttrib("Constant",true) ;
+      RooArgSet* constNodes = static_cast<RooArgSet*>(trackNodes.selectByAttrib("Constant",true)) ;
       trackNodes.remove(*constNodes) ;
       delete constNodes ;
 
@@ -582,28 +585,28 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
     _funcClone->findConstantNodes(*_dataClone->get(),_cachedNodes) ;
 
     // Cache constant nodes with dataset - also cache entries corresponding to zero-weights in data when using BinnedLikelihood
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet,!_funcClone->getAttribute("BinnedLikelihood")) ;
+    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
 
     // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
     for (auto cacheArg : _cachedNodes) {
       cacheArg->setOperMode(RooAbsArg::AClean) ;
     }
 
-    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpressionCached",true) ;
+    RooArgSet* constNodes = static_cast<RooArgSet*>(_cachedNodes.selectByAttrib("ConstantExpressionCached",true)) ;
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
-    if (constNodes->getSize()>0) {
-      if (constNodes->getSize()<20) {
+    if (!constNodes->empty()) {
+      if (constNodes->size()<20) {
         coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
       }
     }
-    if (actualTrackNodes.getSize()>0) {
-      if (actualTrackNodes.getSize()<20) {
+    if (!actualTrackNodes.empty()) {
+      if (actualTrackNodes.size()<20) {
         coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions will be evaluated in cache-and-track-mode." << endl ;
       }
     }
     delete constNodes ;
@@ -693,8 +696,8 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
   _data = _dataClone ;
 
   // ReCache constant nodes with dataset
-  if (_cachedNodes.getSize()>0) {
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet) ;
+  if (!_cachedNodes.empty()) {
+    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
   }
 
   // Adjust internal event count
@@ -771,3 +774,8 @@ const char* RooAbsOptTestStatistic::cacheUniqueSuffix() const {
    return Form("_%lx", _dataClone->uniqueId().value()) ;
 }
 
+
+void RooAbsOptTestStatistic::runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
+{
+   _dataClone->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, _skipZeroWeights);
+}

@@ -57,12 +57,13 @@ inline double gaussianIntegral(double xMin, double xMax, double mean, double sig
    // Don't put this "prd" inside the "if" because clad will not be able to differentiate the code correctly (as of
    // v1.1)!
    double prd = scaledMin * scaledMax;
-   if (prd < 0.0)
+   if (prd < 0.0) {
       cond = 2.0 - (ecmin + ecmax);
-   else if (scaledMax <= 0.0)
+   } else if (scaledMax <= 0.0) {
       cond = ecmax - ecmin;
-   else
+   } else {
       cond = ecmin - ecmax;
+   }
    return resultScale * 0.5 * cond;
 }
 
@@ -236,11 +237,22 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
 
 inline double logNormalIntegral(double xMin, double xMax, double m0, double k)
 {
-   double root2 = std::sqrt(2.);
+   const double root2 = std::sqrt(2.);
 
-   double ln_k = TMath::Abs(TMath::Log(k));
+   double ln_k = TMath::Abs(std::log(k));
    double ret =
-      0.5 * (TMath::Erf(TMath::Log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(TMath::Log(xMin / m0) / (root2 * ln_k)));
+      0.5 * (TMath::Erf(std::log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(std::log(xMin / m0) / (root2 * ln_k)));
+
+   return ret;
+}
+
+inline double logNormalIntegralStandard(double xMin, double xMax, double mu, double sigma)
+{
+   const double root2 = std::sqrt(2.);
+
+   double ln_k = std::abs(sigma);
+   double ret =
+      0.5 * (TMath::Erf((std::log(xMax) - mu) / (root2 * ln_k)) - TMath::Erf((std::log(xMin) - mu) / (root2 * ln_k)));
 
    return ret;
 }

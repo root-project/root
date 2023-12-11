@@ -19,7 +19,7 @@
 \class RooUniformBinning
 \ingroup Roofitcore
 
-RooUniformBinning is an implementation of RooAbsBinning that provides
+Implementation of RooAbsBinning that provides
 a uniform binning in 'n' bins between the range end points. A RooUniformBinning
 is 'elastic': if the range changes the binning will change accordingly, unlike
 e.g. the binning of class RooBinning.
@@ -34,55 +34,23 @@ e.g. the binning of class RooBinning.
 using namespace std;
 
 ClassImp(RooUniformBinning);
-;
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default Constructor
-/// coverity[UNINIT_CTOR]
-
-RooUniformBinning::RooUniformBinning(const char* name) :
-  RooAbsBinning(name)
-{
-  _array = nullptr ;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct range [xlo,xhi] with 'nBins' bins
 
 RooUniformBinning::RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name) :
   RooAbsBinning(name),
-  _array(nullptr),
   _nbins(nBins)
 {
   setRange(xlo,xhi) ;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooUniformBinning::~RooUniformBinning()
-{
-  if (_array) delete[] _array ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char* name) :
-  RooAbsBinning(name)
+RooUniformBinning::RooUniformBinning(const RooUniformBinning &other, const char *name)
+   : RooAbsBinning(name), _xlo(other._xlo), _xhi(other._xhi), _nbins(other._nbins), _binw(other._binw)
 {
-  _array = nullptr ;
-  _xlo   = other._xlo ;
-  _xhi   = other._xhi ;
-  _nbins = other._nbins ;
-  _binw  = other._binw ;
 }
 
 
@@ -103,10 +71,7 @@ void RooUniformBinning::setRange(double xlo, double xhi)
   _binw = (xhi-xlo)/_nbins ;
 
   // Delete any out-of-date boundary arrays at this point
-  if (_array) {
-    delete[] _array ;
-    _array = nullptr ;
-  }
+  _array.clear();
 }
 
 
@@ -189,14 +154,13 @@ double RooUniformBinning::binHigh(Int_t i) const
 
 double* RooUniformBinning::array() const
 {
-  if (_array) delete[] _array ;
-  _array = new double[_nbins+1] ;
+  _array.resize(_nbins+1);
 
   Int_t i ;
   for (i=0 ; i<=_nbins ; i++) {
     _array[i] = _xlo + i*_binw ;
   }
-  return _array ;
+  return _array.data();
 }
 
 

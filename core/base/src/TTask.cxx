@@ -115,6 +115,7 @@ TTask::TTask(const char* name, const char *title)
    fBreakin     = 0;
    fBreakout    = 0;
    fTasks       = new TList();
+   fTasks->SetOwner(kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,9 +126,11 @@ TTask& TTask::operator=(const TTask& tt)
    if (this != &tt) {
       TNamed::operator=(tt);
       if (fTasks)
-         fTasks->Delete();
-      else
+         fTasks->Clear();
+      else {
          fTasks = new TList;
+         fTasks->SetOwner(kTRUE);
+      }
       TIter next(tt.fTasks);
       while (auto element = next())
          if (auto task = dynamic_cast<TTask *>(element))
@@ -147,6 +150,7 @@ TTask& TTask::operator=(const TTask& tt)
 TTask::TTask(const TTask &other) : TNamed(other)
 {
    fTasks = new TList();
+   fTasks->SetOwner(kTRUE);
    TIter next(other.fTasks);
    while (auto element = next())
       if (auto task = dynamic_cast<TTask *>(element))
@@ -163,19 +167,18 @@ TTask::TTask(const TTask &other) : TNamed(other)
 
 TTask::~TTask()
 {
-   if (!fTasks) return;
-   fTasks->Delete();
    delete fTasks;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add TTask to this.
 
 void  TTask::Add(TTask *task)
 {
-   if (!fTasks)
+   if (!fTasks) {
       fTasks = new TList;
+      fTasks->SetOwner(kTRUE);
+   }
    fTasks->Add(task);
 }
 

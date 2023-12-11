@@ -228,11 +228,12 @@ namespace RooStats {
       /// set the acceptable level or error for Keys interval determination
       virtual void SetEpsilon(double epsilon)
       {
-         if (epsilon < 0)
+         if (epsilon < 0) {
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
                                   << "negative epsilon value" << std::endl;
-         else
+         } else {
             fEpsilon = epsilon;
+         }
       }
 
       /// Set the type of interval to find.  This will only have an effect for
@@ -262,68 +263,70 @@ namespace RooStats {
       /// when determining the confidence interval by Keys
       virtual void SetDelta(double delta)
       {
-         if (delta < 0.)
+         if (delta < 0.) {
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
                                   << "negative delta value" << std::endl;
-         else
+         } else {
             fDelta = delta;
+         }
       }
 
    private:
       inline bool AcceptableConfLevel(double confLevel);
       inline bool WithinDeltaFraction(double a, double b);
 
+      constexpr static const double DEFAULT_EPSILON = 0.01;
+      constexpr static const double DEFAULT_DELTA   = 10e-6;
+
    protected:
-      // data members
-      RooArgSet  fParameters;     ///< parameters of interest for this interval
-      MarkovChain* fChain;        ///< the markov chain
-      double fConfidenceLevel;  ///< Requested confidence level (eg. 0.95 for 95% CL)
+      RooArgSet fParameters;         ///< parameters of interest for this interval
+      MarkovChain *fChain = nullptr; ///< the markov chain
+      double fConfidenceLevel = 0.0; ///< Requested confidence level (eg. 0.95 for 95% CL)
 
-      RooDataHist* fDataHist;     ///< the binned Markov Chain data
-      THnSparse* fSparseHist;     ///< the binned Markov Chain data
-      double fHistConfLevel;    ///< the actual conf level determined by hist
-      double fHistCutoff;       ///< cutoff bin size to be in interval
+      RooDataHist *fDataHist = nullptr; ///< the binned Markov Chain data
+      THnSparse *fSparseHist = nullptr; ///< the binned Markov Chain data
+      double fHistConfLevel = 0.0;      ///< the actual conf level determined by hist
+      double fHistCutoff = -1;          ///< cutoff bin size to be in interval
 
-      RooNDKeysPdf* fKeysPdf;     ///< the kernel estimation pdf
-      RooProduct* fProduct;       ///< the (keysPdf * heaviside) product
-      Heaviside* fHeaviside;      ///< the Heaviside function
-      RooDataHist* fKeysDataHist; ///< data hist representing product
-      RooRealVar* fCutoffVar;     ///< cutoff variable to use for integrating keys pdf
-      double fKeysConfLevel;    ///< the actual conf level determined by keys
-      double fKeysCutoff;       ///< cutoff keys pdf value to be in interval
-      double fFull;             ///< Value of intergral of fProduct
+      RooNDKeysPdf *fKeysPdf = nullptr;     ///< the kernel estimation pdf
+      RooProduct *fProduct = nullptr;       ///< the (keysPdf * heaviside) product
+      Heaviside *fHeaviside = nullptr;      ///< the Heaviside function
+      RooDataHist *fKeysDataHist = nullptr; ///< data hist representing product
+      RooRealVar *fCutoffVar = nullptr;     ///< cutoff variable to use for integrating keys pdf
+      double fKeysConfLevel = 0.0;          ///< the actual conf level determined by keys
+      double fKeysCutoff = -1;              ///< cutoff keys pdf value to be in interval
+      double fFull = 0.0;                   ///< Value of intergral of fProduct
 
-      double fLeftSideTF;       ///< left side tail-fraction for interval
-      double fTFConfLevel;      ///< the actual conf level of tail-fraction interval
+      double fLeftSideTF = -1;    ///< left side tail-fraction for interval
+      double fTFConfLevel = 0.0;  ///< the actual conf level of tail-fraction interval
       std::vector<Int_t> fVector; ///< vector containing the Markov chain data
-      double fVecWeight;        ///< sum of weights of all entries in fVector
-      double fTFLower;          ///< lower limit of the tail-fraction interval
-      double fTFUpper;          ///< upper limit of the tail-fraction interval
+      double fVecWeight = 0;      ///< sum of weights of all entries in fVector
+      double fTFLower;            ///< lower limit of the tail-fraction interval
+      double fTFUpper;            ///< upper limit of the tail-fraction interval
 
-      TH1* fHist;                 ///< the binned Markov Chain data
+      TH1 *fHist = nullptr; ///< the binned Markov Chain data
 
-      bool fUseKeys;            ///< whether to use kernel estimation
-      bool fUseSparseHist;      ///< whether to use sparse hist (vs. RooDataHist)
-      bool fIsHistStrict;       ///< whether the specified confidence level is a
-                                  ///< floor for the actual confidence level (strict),
-                                  ///< or a ceiling (not strict) for determination by
-                                  ///< histogram
-      Int_t fDimension;           ///< number of variables
-      Int_t fNumBurnInSteps;      ///< number of steps to discard as burn in, starting
-                                  ///< from the first
-      RooRealVar** fAxes;         ///< array of pointers to RooRealVars representing
-                                  ///< the axes of the histogram
-                                  ///< fAxes[0] represents x-axis, [1] y, [2] z, etc
+      bool fUseKeys = false;        ///< whether to use kernel estimation
+      bool fUseSparseHist = false;  ///< whether to use sparse hist (vs. RooDataHist)
+      bool fIsHistStrict = true;    ///< whether the specified confidence level is a
+                                    ///< floor for the actual confidence level (strict),
+                                    ///< or a ceiling (not strict) for determination by
+                                    ///< histogram
+      Int_t fDimension = 1;         ///< number of variables
+      Int_t fNumBurnInSteps = 0;    ///< number of steps to discard as burn in, starting
+                                    ///< from the first
+      RooRealVar **fAxes = nullptr; ///< array of pointers to RooRealVars representing
+                                    ///< the axes of the histogram
+                                    ///< fAxes[0] represents x-axis, [1] y, [2] z, etc
 
-      double fEpsilon;          ///< acceptable error for Keys interval determination
+      double fEpsilon = DEFAULT_EPSILON; ///< acceptable error for Keys interval determination
 
-      double fDelta;            ///< topCutoff (a) considered == bottomCutoff (b) iff
-                                  ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
-                                  ///< Theoretically, the Abs is not needed here, but
-                                  ///< floating-point arithmetic does not always work
-                                  ///< perfectly, and the Abs doesn't hurt
-      enum IntervalType fIntervalType;
-
+      double fDelta = DEFAULT_DELTA; ///< topCutoff (a) considered == bottomCutoff (b) iff
+                                     ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+                                     ///< Theoretically, the Abs is not needed here, but
+                                     ///< floating-point arithmetic does not always work
+                                     ///< perfectly, and the Abs doesn't hurt
+      enum IntervalType fIntervalType = kShortest;
 
       // functions
       virtual void DetermineInterval();

@@ -96,7 +96,7 @@ protected:
   mutable RooSetProxy _refCoefNorm ;   ///<! Reference observable set for coefficient interpretation
   mutable TNamed* _refCoefRangeName = nullptr;  ///<! Reference range name for coefficient interpretation
 
-  mutable std::vector<double> _coefCache; ///<! Transiet cache with transformed values of coefficients
+  mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
 
   mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
@@ -107,7 +107,6 @@ protected:
   void getCompIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& compIntList, Int_t& code, const char* isetRangeName) const ;
   class IntCacheElem : public RooAbsCacheElement {
   public:
-    ~IntCacheElem() override {} ;
     RooArgList _intList ; ///< List of component integrals
     RooArgList containedArgs(Action) override ;
   } ;

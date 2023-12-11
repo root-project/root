@@ -77,7 +77,7 @@ namespace Math {
 
       /**
           create from an existing rng.
-          User manage the rng pointer which is then deleted olny by calling Terminate()
+          User manage the rng pointer which is then deleted only by calling Terminate()
       */
       GSLRandomEngine( GSLRngWrapper * rng);
 
@@ -251,7 +251,7 @@ namespace Math {
       double ChiSquare(double nu) const;
 
       /**
-         F distrbution
+         F distribution
       */
       double FDist(double nu1, double nu2) const;
 

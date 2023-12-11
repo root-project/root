@@ -131,7 +131,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
   // loop over points to test
   for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
      // get a parameter point from the list of points to test.
-    point = (RooArgSet*) fPointsToTest->get(i);//->clone("temp");
+    point = const_cast<RooArgSet*>(fPointsToTest->get(i));//->clone("temp");
 
     // set parameters of interest to current point
     fPOI->assign(*point);
@@ -154,8 +154,12 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
 
     SamplingDistribution* samplingDist=nullptr;
     double sigma;
-    double upperEdgeOfAcceptance, upperEdgeMinusSigma, upperEdgePlusSigma;
-    double lowerEdgeOfAcceptance, lowerEdgeMinusSigma, lowerEdgePlusSigma;
+    double upperEdgeOfAcceptance;
+    double upperEdgeMinusSigma;
+    double upperEdgePlusSigma;
+    double lowerEdgeOfAcceptance;
+    double lowerEdgeMinusSigma;
+    double lowerEdgePlusSigma;
     Int_t additionalMC=0;
 
     // the adaptive sampling algorithm wants at least one toy event to be outside

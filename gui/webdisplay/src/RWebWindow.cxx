@@ -270,13 +270,12 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindOrCreateConnection(unsigned
             keyvalue = url.GetValueFromOptions("key");
       }
 
-      if (!keyvalue.empty())
-         for (size_t n = 0; n < fPendingConn.size(); ++n)
-            if (fPendingConn[n]->fKey == keyvalue) {
-               key = std::move(fPendingConn[n]);
-               fPendingConn.erase(fPendingConn.begin() + n);
-               break;
-            }
+      for (size_t n = 0; n < fPendingConn.size(); ++n)
+         if (fPendingConn[n]->fKey == keyvalue) {
+            key = std::move(fPendingConn[n]);
+            fPendingConn.erase(fPendingConn.begin() + n);
+            break;
+         }
 
       if (key) {
          key->fWSId = wsid;
@@ -443,7 +442,10 @@ void RWebWindow::ProvideQueueEntry(unsigned connid, EQueueEntryKind kind, std::s
       fInputQueue.emplace(connid, kind, std::move(arg));
    }
 
-   InvokeCallbacks();
+   // if special python mode is used, process events called from special thread
+   // there is no other way to get regular calls in main python thread,
+   // therefore invoke widgets callbacks directly - which potentially can be dangerous
+   InvokeCallbacks(fUseProcessEvents);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -676,16 +678,6 @@ std::string RWebWindow::GetConnToken() const
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Internal method to verify and thread id has to be assigned from manager again
-/// Special case when ProcessMT was enabled just until thread id will be assigned
-
-void RWebWindow::CheckThreadAssign()
-{
-   if (fProcessMT && fMgr->fExternalProcessEvents)
-      fMgr->AssignWindowThreadId(*this);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from RWebWindowWSHandler
 /// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
 
@@ -855,6 +847,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (nchannel == 0) {
       // special system channel
       if ((cdata.compare(0, 6, "READY=") == 0) && !conn->fReady) {
+
          std::string key = cdata.substr(6);
 
          if (key.empty() && IsNativeOnlyConn()) {
@@ -1479,6 +1472,7 @@ void RWebWindow::SendBinary(unsigned connid, const void *data, std::size_t len)
 void RWebWindow::AssignThreadId()
 {
    fUseServerThreads = false;
+   fUseProcessEvents = false;
    fProcessMT = false;
    fCallbacksThrdIdSet = true;
    fCallbacksThrdId = std::this_thread::get_id();
@@ -1500,6 +1494,7 @@ void RWebWindow::AssignThreadId()
 void RWebWindow::UseServerThreads()
 {
    fUseServerThreads = true;
+   fUseProcessEvents = false;
    fCallbacksThrdIdSet = false;
    fProcessMT = true;
 }
@@ -1564,7 +1559,8 @@ void RWebWindow::StopThread()
 
 void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 {
-   if (!fUseServerThreads) AssignThreadId();
+   if (!fUseServerThreads && !fUseProcessEvents)
+      AssignThreadId();
    fDataCallback = func;
 }
 
@@ -1573,7 +1569,8 @@ void RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 
 void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 {
-   if (!fUseServerThreads) AssignThreadId();
+   if (!fUseServerThreads && !fUseProcessEvents)
+      AssignThreadId();
    fConnCallback = func;
 }
 
@@ -1582,7 +1579,8 @@ void RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
 
 void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 {
-   if (!fUseServerThreads) AssignThreadId();
+   if (!fUseServerThreads && !fUseProcessEvents)
+      AssignThreadId();
    fDisconnCallback = func;
 }
 
@@ -1600,7 +1598,8 @@ void RWebWindow::SetClearOnClose(const std::shared_ptr<void> &handle)
 
 void RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn)
 {
-   if (!fUseServerThreads) AssignThreadId();
+   if (!fUseServerThreads && !fUseProcessEvents)
+      AssignThreadId();
    fConnCallback = conn;
    fDataCallback = data;
    fDisconnCallback = disconn;

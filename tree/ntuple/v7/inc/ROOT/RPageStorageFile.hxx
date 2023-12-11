@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <array>
 #include <cstdio>
@@ -56,7 +56,7 @@ class RPagePool;
 The written file can be either in ROOT format or in RNTuple bare format.
 */
 // clang-format on
-class RPageSinkFile : public RPageSink {
+class RPageSinkFile : public RPagePersistentSink {
 private:
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 

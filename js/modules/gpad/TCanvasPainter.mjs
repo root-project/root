@@ -4,8 +4,17 @@ import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorEx
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
 import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
-import { TPadPainter, clTButton } from './TPadPainter.mjs';
+import { TPadPainter, clTButton, createWebObjectOptions } from './TPadPainter.mjs';
 
+const kShowEventStatus = BIT(15),
+     // kAutoExec = BIT(16),
+      kMenuBar = BIT(17),
+      kShowToolBar = BIT(18),
+      kShowEditor = BIT(19),
+     // kMoveOpaque = BIT(20),
+     // kResizeOpaque = BIT(21),
+     // kIsGrayscale = BIT(22),
+      kShowToolTips = BIT(23);
 
 /** @summary direct draw of TFrame object,
   * @desc pad or canvas should already exist
@@ -16,18 +25,6 @@ function directDrawTFrame(dom, obj, opt) {
    if (opt === '3d') fp.mode3d = true;
    return fp.redraw();
 }
-
-const TCanvasStatusBits = {
-   kShowEventStatus: BIT(15),
-   kAutoExec: BIT(16),
-   kMenuBar: BIT(17),
-   kShowToolBar: BIT(18),
-   kShowEditor: BIT(19),
-   kMoveOpaque: BIT(20),
-   kResizeOpaque: BIT(21),
-   kIsGrayscale: BIT(22),
-   kShowToolTips: BIT(23)
-};
 
 /**
   * @summary Painter for TCanvas object
@@ -42,6 +39,11 @@ class TCanvasPainter extends TPadPainter {
       super(dom, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
+      if ((dom === null) && (canvas === null)) {
+         // for web canvas details are important
+         settings.SmallPad.width = 20;
+         settings.SmallPad.height = 10;
+      }
    }
 
    /** @summary Cleanup canvas painter */
@@ -82,7 +84,7 @@ class TCanvasPainter extends TPadPainter {
             sidebar2 = origin.select('.side_panel2'),
             lst = [];
       let sidebar = origin.select('.side_panel'),
-          main = this.selectDom(),  force;
+          main = this.selectDom(), force;
 
       while (main.node().firstChild)
          lst.push(main.node().removeChild(main.node().firstChild));
@@ -254,7 +256,7 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Submit menu request
      * @private */
-   async submitMenuRequest(painter, kind, reqid) {
+   async submitMenuRequest(_painter, _kind, reqid) {
       // only single request can be handled, no limit better in RCanvas
       return new Promise(resolveFunc => {
          this._getmenu_callback = resolveFunc;
@@ -268,7 +270,7 @@ class TCanvasPainter extends TPadPainter {
       if (this._readonly || !painter) return;
 
       if (!snapid) snapid = painter.snapid;
-      if (snapid && isStr(snapid))
+      if (snapid && isStr(snapid) && exec)
          return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
@@ -390,9 +392,9 @@ class TCanvasPainter extends TPadPainter {
          this.websocketTimeout(`proj${kind}`, 'reset');
          this.drawProjection(kind, hist);
       } else if (msg.slice(0, 5) === 'CTRL:') {
-         const ctrl = parse(msg.slice(5));
+         const ctrl = parse(msg.slice(5)) || {};
          let resized = false;
-         if ((ctrl?.title !== undefined) && (typeof document !== 'undefined'))
+         if ((ctrl.title !== undefined) && (typeof document !== 'undefined'))
             document.title = ctrl.title;
          if (ctrl.x && ctrl.y && typeof window !== 'undefined') {
             window.moveTo(ctrl.x, ctrl.y);
@@ -459,7 +461,7 @@ class TCanvasPainter extends TPadPainter {
          return this.activateGed(this, null, 'toggle');
       if (funcname === 'ToggleStatus')
          return this.activateStatusBar('toggle');
-      super.clickPadButton(funcname, evnt);
+      return super.clickPadButton(funcname, evnt);
    }
 
    /** @summary Returns true if event status shown in the canvas */
@@ -469,6 +471,12 @@ class TCanvasPainter extends TPadPainter {
       if (this.brlayout)
          return this.brlayout.hasStatus();
       return getHPainter()?.hasStatusLine() ?? false;
+   }
+
+   /** @summary Check if status bar can be toggled
+     * @private */
+   canStatusBar() {
+      return this.testUI5() || this.brlayout || getHPainter();
    }
 
    /** @summary Show/toggle event status bar
@@ -608,16 +616,16 @@ class TCanvasPainter extends TPadPainter {
    completeCanvasSnapDrawing() {
       if (!this.pad) return;
 
-      if (document && !this.embed_canvas && this._websocket)
+      if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
          document.title = this.pad.fTitle;
 
       if (this._all_sections_showed) return;
       this._all_sections_showed = true;
-      this.showSection('Menu', this.pad.TestBit(TCanvasStatusBits.kMenuBar));
-      this.showSection('StatusBar', this.pad.TestBit(TCanvasStatusBits.kShowEventStatus));
-      this.showSection('ToolBar', this.pad.TestBit(TCanvasStatusBits.kShowToolBar));
-      this.showSection('Editor', this.pad.TestBit(TCanvasStatusBits.kShowEditor));
-      this.showSection('ToolTips', this.pad.TestBit(TCanvasStatusBits.kShowToolTips) || this._highlight_connect);
+      this.showSection('Menu', this.pad.TestBit(kMenuBar));
+      this.showSection('StatusBar', this.pad.TestBit(kShowEventStatus));
+      this.showSection('ToolBar', this.pad.TestBit(kShowToolBar));
+      this.showSection('Editor', this.pad.TestBit(kShowEditor));
+      this.showSection('ToolTips', this.pad.TestBit(kShowToolTips) || this._highlight_connect);
    }
 
    /** @summary Handle highlight in canvas - deliver information to server
@@ -636,7 +644,7 @@ class TCanvasPainter extends TPadPainter {
       if ((hint.user_info.binx !== undefined) && (hint.user_info.biny !== undefined)) {
          arr[2] = hint.user_info.binx.toString();
          arr[3] = hint.user_info.biny.toString();
-      }  else if (hint.user_info.bin !== undefined)
+      } else if (hint.user_info.bin !== undefined)
          arr[2] = hint.user_info.bin.toString();
 
 
@@ -675,12 +683,11 @@ class TCanvasPainter extends TPadPainter {
             if (painter.snapid)
                msg = 'DRAWOPT:' + JSON.stringify([painter.snapid.toString(), painter.getDrawOpt() || '']);
             break;
-         case 'pave_moved':
-            if (isFunc(painter.fillWebObjectOptions)) {
-               const info = painter.fillWebObjectOptions();
-               if (info) msg = 'PRIMIT6:' + toJSON(info);
-            }
+         case 'pave_moved': {
+            const info = createWebObjectOptions(painter);
+            if (info) msg = 'PRIMIT6:' + toJSON(info);
             break;
+         }
          case 'logx':
          case 'logy':
          case 'logz': {
@@ -744,25 +751,24 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Return actual TCanvas status bits  */
    getStatusBits() {
       let bits = 0;
-      if (this.hasEventStatus()) bits |= TCanvasStatusBits.kShowEventStatus;
-      if (this.hasGed()) bits |= TCanvasStatusBits.kShowEditor;
-      if (this.isTooltipAllowed()) bits |= TCanvasStatusBits.kShowToolTips;
-      if (this.use_openui) bits |= TCanvasStatusBits.kMenuBar;
+      if (this.hasEventStatus()) bits |= kShowEventStatus;
+      if (this.hasGed()) bits |= kShowEditor;
+      if (this.isTooltipAllowed()) bits |= kShowToolTips;
+      if (this.use_openui) bits |= kMenuBar;
       return bits;
    }
 
    /** @summary produce JSON for TCanvas, which can be used to display canvas once again */
    produceJSON() {
       const canv = this.getObject(),
-          fill0 = (canv.fFillStyle === 0);
+            fill0 = (canv.fFillStyle === 0);
 
       if (fill0) canv.fFillStyle = 1001;
 
       if (!this.normal_canvas) {
          // fill list of primitives from painters
          this.forEachPainterInPad(p => {
-            if (p.$secondary) return; // ignore all secondary painters
-
+            if (p.isSecondary()) return; // ignore all secondary painters
             const subobj = p.getObject();
             if (subobj?._typename)
                canv.fPrimitives.Add(subobj, p.getDrawOpt());
@@ -834,12 +840,12 @@ async function ensureTCanvas(painter, frame_kind) {
 
    // simple check - if canvas there, can use painter
    const noframe = (frame_kind === false) || (frame_kind === '3d') ? 'noframe' : '',
-       promise = painter.getCanvSvg().empty()
-                 ? TCanvasPainter.draw(painter.getDom(), null, noframe)
-                 : Promise.resolve(true);
+         promise = painter.getCanvSvg().empty()
+                   ? TCanvasPainter.draw(painter.getDom(), null, noframe)
+                   : Promise.resolve(true);
 
    return promise.then(() => {
-      if ((frame_kind !== false) &&  painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
+      if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
          directDrawTFrame(painter.getDom(), null, frame_kind);
 
       painter.addToPadPrimitives();
@@ -851,7 +857,7 @@ async function ensureTCanvas(painter, frame_kind) {
   * @private */
 async function drawTPadSnapshot(dom, snap /*, opt */) {
    const can = create(clTCanvas),
-       painter = new TCanvasPainter(dom, can);
+         painter = new TCanvasPainter(dom, can);
    painter.normal_canvas = false;
    painter.addPadButtons();
 
@@ -862,14 +868,12 @@ async function drawTPadSnapshot(dom, snap /*, opt */) {
    });
 }
 
-/** @summary draw TGaxis object
+/** @summary draw TFrame object
   * @private */
-function drawTFrame(dom, obj, opt) {
+async function drawTFrame(dom, obj, opt) {
    const fp = new TFramePainter(dom, obj);
-   return ensureTCanvas(fp, false).then(() => {
-      if (opt === '3d') fp.mode3d = true;
-      return fp.redraw();
-   });
+   fp.mode3d = opt === '3d';
+   return ensureTCanvas(fp, false).then(() => fp.redraw());
 }
 
 export { ensureTCanvas, drawTPadSnapshot, drawTFrame, TPadPainter, TCanvasPainter };

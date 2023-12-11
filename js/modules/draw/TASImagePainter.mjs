@@ -1,4 +1,4 @@
-import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette } from '../core.mjs';
+import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette, getDocument } from '../core.mjs';
 import { toHex } from '../base/colors.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
@@ -45,7 +45,7 @@ class TASImagePainter extends ObjectPainter {
          const r1 = (pal.fPoints[indx] - l) / (pal.fPoints[indx] - pal.fPoints[indx-1]),
                r2 = (l - pal.fPoints[indx-1]) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
 
-         rgba[lvl*4]   = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
+         rgba[lvl*4] = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
          rgba[lvl*4+1] = Math.min(255, Math.round((pal.fColorGreen[indx-1] * r1 + pal.fColorGreen[indx] * r2) / 256));
          rgba[lvl*4+2] = Math.min(255, Math.round((pal.fColorBlue[indx-1] * r1 + pal.fColorBlue[indx] * r2) / 256));
          rgba[lvl*4+3] = Math.min(255, Math.round((pal.fColorAlpha[indx-1] * r1 + pal.fColorAlpha[indx] * r2) / 256));
@@ -127,7 +127,7 @@ class TASImagePainter extends ObjectPainter {
 
       let offx = 0, offy = 0, sizex = width, sizey = height;
 
-      if (constRatio && fp) {
+      if (constRatio) {
          const image_ratio = height/width,
                frame_ratio = fp.getFrameHeight() / fp.getFrameWidth();
 
@@ -165,16 +165,17 @@ class TASImagePainter extends ObjectPainter {
             pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
       }
 
-      const res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() };
+      const res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() },
+            doc = getDocument();
 
       if (!res.can_zoom || ((fp?.zoom_xmin === fp?.zoom_xmax) && (fp?.zoom_ymin === fp?.zoom_ymax)))
          return res;
 
       return new Promise(resolveFunc => {
-         const image = document.createElement('img');
+         const image = doc.createElement('img');
 
          image.onload = () => {
-            const canvas = document.createElement('canvas');
+            const canvas = doc.createElement('canvas');
             canvas.width = image.width;
             canvas.height = image.height;
 
@@ -183,7 +184,7 @@ class TASImagePainter extends ObjectPainter {
 
             const arr = context.getImageData(0, 0, image.width, image.height).data,
                   z = this.getImageZoomRange(fp, res.constRatio, image.width, image.height),
-                  canvas2 = document.createElement('canvas');
+                  canvas2 = doc.createElement('canvas');
             canvas2.width = z.xmax - z.xmin;
             canvas2.height = z.ymax - z.ymin;
 
@@ -208,7 +209,7 @@ class TASImagePainter extends ObjectPainter {
             res.url = canvas2.toDataURL();
 
             resolveFunc(res);
-         }
+         };
 
          image.onerror = () => resolveFunc(res);
 
@@ -277,7 +278,7 @@ class TASImagePainter extends ObjectPainter {
          if (!res?.url)
             return this;
 
-         const img = this.createG(fp)
+         const img = this.createG(!!fp)
              .append('image')
              .attr('href', res.url)
              .attr('width', rect.width)
@@ -301,7 +302,7 @@ class TASImagePainter extends ObjectPainter {
             fp.setAxesRanges(create(clTAxis), 0, 1, create(clTAxis), 0, 1, null, 0, 0);
             fp.createXY({ ndim: 2, check_pad_range: false });
             return fp.addInteractivity();
-         })
+         });
       });
    }
 
@@ -345,7 +346,7 @@ class TASImagePainter extends ObjectPainter {
          Object.assign(pal, { fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
          pal.fAxis.fChopt = '+';
          this.draw_palette = pal;
-         this.fPalette = true; // to emulate behaviour of hist painter
+         this._color_palette = true; // to emulate behaviour of hist painter
       }
 
       let pal_painter = this.getPadPainter().findPainterFor(this.draw_palette);
@@ -381,7 +382,7 @@ class TASImagePainter extends ObjectPainter {
 
          this.selectCurrentPad(prev_name);
          // mark painter as secondary - not in list of TCanvas primitives
-         pal_painter.$secondary = true;
+         pal_painter.setSecondary(this);
 
          // make dummy redraw, palette will be updated only from histogram painter
          pal_painter.redraw = function() {};
@@ -393,7 +394,7 @@ class TASImagePainter extends ObjectPainter {
    toggleColz() {
       if (this.getObject()?.fPalette) {
          this.options.Zscale = !this.options.Zscale;
-         this.drawColorPalette(this.options.Zscale, true);
+         return this.drawColorPalette(this.options.Zscale, true);
       }
    }
 
@@ -402,16 +403,13 @@ class TASImagePainter extends ObjectPainter {
       return this.drawImage();
    }
 
-   /** @summary Process click on TASImage-defined buttons */
+   /** @summary Process click on TASImage-defined buttons
+     * @desc may return promise or simply false */
    clickButton(funcname) {
-      if (!this.isMainPainter()) return false;
+      if (this.isMainPainter() && funcname === 'ToggleColorZ')
+         return this.toggleColz();
 
-      switch (funcname) {
-         case 'ToggleColorZ': this.toggleColz(); break;
-         default: return false;
-      }
-
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar for TASImage */

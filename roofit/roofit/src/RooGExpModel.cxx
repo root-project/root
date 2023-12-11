@@ -93,8 +93,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
   _meanSF("meanSF", "Scale factor for mean", this, RooRealConstant::value(1)),
-  ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
-  rsf("rsf","RLife Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
+  ssf("ssf","Sigma Scale Factor",this,RooRealConstant::value(1)),
+  rsf("rsf","RLife Scale Factor",this,RooRealConstant::value(1)),
   _flip(type==Flipped),_nlo(nlo), _flatSFInt(false), _asympInt(false)
 {
 }
@@ -176,13 +176,6 @@ RooGExpModel::RooGExpModel(const RooGExpModel& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooGExpModel::~RooGExpModel()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooGExpModel::basisCode(const char* name) const
 {
@@ -210,16 +203,33 @@ namespace {
 /// Approximation of the log of the complex error function
 double logErfC(double xx)
 {
-  double t,z,ans;
+  double t;
+  double z;
+  double ans;
   z=std::abs(xx);
   t=1.0/(1.0+0.5*z);
 
-  if(xx >= 0.0)
-    ans=log(t)+(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
-   t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
-  else
-    ans=log(2.0-t*exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
-        t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277))))))))));
+  if (xx >= 0.0) {
+     ans = log(t) +
+           (-z * z - 1.26551223 +
+            t * (1.00002368 +
+                 t * (0.37409196 +
+                      t * (0.09678418 +
+                           t * (-0.18628806 +
+                                t * (0.27886807 +
+                                     t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+  } else {
+     ans = log(
+        2.0 -
+        t *
+           exp(-z * z - 1.26551223 +
+               t * (1.00002368 +
+                    t * (0.37409196 +
+                         t * (0.09678418 +
+                              t * (-0.18628806 +
+                                   t * (0.27886807 + t * (-1.13520398 +
+                                                          t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))))));
+  }
 
   return ans;
 }
@@ -278,10 +288,10 @@ double RooGExpModel::evaluate() const
   double sig = sigma*ssf ;
   double rtau = rlife*rsf ;
 
-  double tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0. ;
+  double tau = (_basisCode!=noBasis)?(static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal():0. ;
   // added, FMV 07/27/03
   if (basisType == coshBasis && _basisCode!=noBasis ) {
-     double dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+     double dGamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
      if (dGamma==0) basisType = expBasis;
   }
 
@@ -321,7 +331,7 @@ double RooGExpModel::evaluate() const
     return 0. ;
   }
 
-  double omega = (basisType!=expBasis)?((RooAbsReal*)basis().getParameter(2))->getVal():0. ;
+  double omega = (basisType!=expBasis)?(static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal():0. ;
 
   // *** 3nd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
@@ -360,7 +370,7 @@ double RooGExpModel::evaluate() const
 
   // *** 6th form: Convolution with exp(-t/tau)*sinh(dgamma*t/2), used for sinhBasis ***
   if (basisType==sinhBasis) {
-    double dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    double dgamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
 
     if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName()
               << ") 6th form = " << dgamma << ", tau = " << tau << endl;
@@ -380,7 +390,7 @@ double RooGExpModel::evaluate() const
 
   // *** 7th form: Convolution with exp(-t/tau)*cosh(dgamma*t/2), used for coshBasis ***
   if (basisType==coshBasis) {
-    double dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    double dgamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
 
     if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName()
                << ") 7th form = " << dgamma << ", tau = " << tau << endl;
@@ -505,7 +515,8 @@ double RooGExpModel::calcDecayConv(double sign, double tau, double sig, double r
     double expArg1 = sig*sig/(2*tau*tau)-sign*xp/tau ;
     double expArg2 = sig*sig/(2*rtau*rtau)+xp/rtau ;
 
-    double term1, term2 ;
+    double term1;
+    double term2;
     if (expArg1<300) {
       term1 = exp(expArg1) *RooMath::erfc(sig/(root2*tau)-sign*xp/(root2*sig)) ;
     } else {
@@ -660,11 +671,11 @@ double RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
 
-  double tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
+  double tau = (_basisCode!=noBasis)?(static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal():0 ;
 
   // added FMV, 07/24/03
   if (basisType == coshBasis && _basisCode!=noBasis ) {
-     double dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+     double dGamma = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal();
      if (dGamma==0) basisType = expBasis;
   }
   double fsign = _flip?-1:1 ;
@@ -694,7 +705,7 @@ double RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const
     return result*ssfInt ;
   }
 
-  double omega = (basisType!=expBasis) ?((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
+  double omega = (basisType!=expBasis) ?(static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() : 0 ;
 
   // *** 2nd form: unity, used for sinBasis and cosBasis with tau=0 (PDF is zero) ***
   //if (tau==0&&omega!=0) {
@@ -747,7 +758,7 @@ double RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const
     return result*ssfInt ;
   }
 
-  double dgamma = ((basisType==coshBasis)||(basisType==sinhBasis))?((RooAbsReal*)basis().getParameter(2))->getVal():0 ;
+  double dgamma = ((basisType==coshBasis)||(basisType==sinhBasis))?(static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal():0 ;
 
   // *** 6th form: Convolution with exp(-t/tau)*sinh(dgamma*t/2), used for sinhBasis ***
   if (basisType==sinhBasis) {
@@ -906,10 +917,11 @@ void RooGExpModel::generateEvent(Int_t code)
   while (true) {
     double xgau = RooRandom::randomGenerator()->Gaus(0,(sigma*ssf));
     double xexp = RooRandom::uniform();
-    if (!_flip)
+    if (!_flip) {
       xgen = xgau + (rlife*rsf)*log(xexp);  // modified, FMV 08/13/03
-    else
-      xgen = xgau - (rlife*rsf)*log(xexp);
+    } else {
+      xgen = xgau - (rlife * rsf) * log(xexp);
+    }
 
     if (xgen < (x.max() - _mean*_meanSF) && xgen > (x.min() - _mean*_meanSF)) {
       x = xgen + _mean*_meanSF;

@@ -111,9 +111,9 @@ namespace cling {
         SourceLocation fileNameLoc;
         // Remember this file wth full path, not "./File.h" (ROOT-8863).
         bool isAngled = true;
-        const DirectoryLookup* FromDir = 0;
+        ConstSearchDirIterator FromDir = nullptr;
         const FileEntry* FromFile = 0;
-        const DirectoryLookup* CurDir = 0;
+        ConstSearchDirIterator* CurDir = nullptr;
         bool needCacheUpdate = false;
 
         if (FileName.equals(m_PrevFileName.first))
@@ -333,7 +333,7 @@ namespace cling {
                                             llvm::StringRef /*FileName*/,
                                             bool /*IsAngled*/,
                                        clang::CharSourceRange /*FilenameRange*/,
-                                            const clang::FileEntry *File,
+                                            clang::OptionalFileEntryRef File,
                                             llvm::StringRef /*SearchPath*/,
                                             llvm::StringRef /*RelativePath*/,
                                             const clang::Module */*Imported*/,
@@ -342,7 +342,7 @@ namespace cling {
     if (!File)
       return;
 
-    auto found = m_Map.find(File);
+    auto found = m_Map.find(*File);
     if (found == m_Map.end())
      return; // nothing to do, file not referred in any annotation
 

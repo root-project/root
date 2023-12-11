@@ -1,5 +1,5 @@
 import { httpRequest, browser, source_dir, settings, internals, constants, create, clone,
-         findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, getPromise,
+         findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, postponePromise, getPromise,
          prROOT, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
          clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kInspect } from '../core.mjs';
 import { REVISION, DoubleSide, FrontSide,
@@ -118,7 +118,7 @@ function buildCompositeVolume(comp, maxlvl, side) {
   * @return {Object} with scene, renderer and other attributes
   * @private */
 function getHistPainter3DCfg(painter) {
-   const main =  painter?.getFramePainter();
+   const main = painter?.getFramePainter();
    if (painter?.mode3d && isFunc(main?.create3DScene) && main?.renderer) {
       let scale_x = 1, scale_y = 1, scale_z = 1,
           offset_x = 0, offset_y = 0, offset_z = 0;
@@ -238,7 +238,7 @@ function expandGeoObject(parent, obj) {
    }
 
    if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) {
+      if (!parent._childs) { // deepscan-disable-line
          createItem(parent, shape.fNode.fLeft, 'Left');
          createItem(parent, shape.fNode.fRight, 'Right');
       }
@@ -280,7 +280,7 @@ function provideVisStyle(obj) {
    const vis = !testGeoBit(obj, geoBITS.kVisNone) && testGeoBit(obj, geoBITS.kVisThis);
    let chld = testGeoBit(obj, geoBITS.kVisDaughters);
 
-   if (chld && (!obj.fNodes || (obj.fNodes.arr.length === 0))) chld = false;
+   if (chld && !obj.fNodes?.arr?.length) chld = false;
 
    if (vis && chld) return ' geovis_all';
    if (vis) return ' geovis_this';
@@ -756,12 +756,12 @@ class TGeoPainter extends ObjectPainter {
    updateVRControllersList() {
       const gamepads = navigator.getGamepads && navigator.getGamepads();
       // Has controller list changed?
-      if (this.vrControllers && (gamepads.length === this.vrControllers.length))  return;
+      if (this.vrControllers && (gamepads.length === this.vrControllers.length)) return;
       // Hide meshes.
       this._controllersMeshes.forEach(mesh => { mesh.visible = false; });
       this._vrControllers = [];
       for (let i = 0; i < gamepads.length; ++i) {
-         if (!gamepads[i] || !gamepads[i].pose)  continue;
+         if (!gamepads[i] || !gamepads[i].pose) continue;
          this._vrControllers.push({
             gamepad: gamepads[i],
             mesh: this._controllersMeshes[i]
@@ -773,7 +773,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Process VR controller intersection
      * @private */
    processVRControllerIntersections() {
-      let intersects = []
+      let intersects = [];
       for (let i = 0; i < this._vrControllers.length; ++i) {
          const controller = this._vrControllers[i].mesh,
                end = controller.localToWorld(this._raycasterEnd.set(0, 0, -1)),
@@ -782,7 +782,7 @@ class TGeoPainter extends ObjectPainter {
          intersects = intersects.concat(this._controls.getOriginDirectionIntersects(origin, end));
       }
       // Remove duplicates.
-      intersects = intersects.filter(function (item, pos) { return intersects.indexOf(item) === pos; });
+      intersects = intersects.filter((item, pos) => { return intersects.indexOf(item) === pos; });
       this._controls.processMouseMove(intersects);
    }
 
@@ -1339,7 +1339,7 @@ class TGeoPainter extends ObjectPainter {
                   const item = {
                      matrix0: new Matrix4(),
                      minvert: new Matrix4()
-                  }
+                  };
 
                   mesh.trans[i] = item;
 
@@ -2180,11 +2180,11 @@ class TGeoPainter extends ObjectPainter {
          lines.unshift(tooltip);
 
          return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines };
-      }
+      };
 
       this._controls.processMouseLeave = function() {
          this.processMouseMove([]); // to disable highlight and reset browser
-      }
+      };
 
       this._controls.processDblClick = () => {
          // painter already cleaned up, ignore any incoming events
@@ -2200,7 +2200,7 @@ class TGeoPainter extends ObjectPainter {
             this.adjustCameraPosition(true);
 
          this.render3D();
-      }
+      };
    }
 
    /** @summary Main function in geometry creation loop
@@ -2785,7 +2785,7 @@ class TGeoPainter extends ObjectPainter {
          if (this._fit_main_area && !this._webgl) {
             // create top-most SVG for geomtery drawings
             const doc = getDocument(),
-                svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', w);
             svg.setAttribute('height', h);
             svg.appendChild(this._renderer.jsroot_dom);
@@ -2866,7 +2866,7 @@ class TGeoPainter extends ObjectPainter {
       if (filename === 'asis') return dataUrl;
       dataUrl.replace('image/png', 'image/octet-stream');
       const doc = getDocument(),
-          link = doc.createElement('a');
+            link = doc.createElement('a');
       if (isStr(link.download)) {
          doc.body.appendChild(link); // Firefox requires the link to be in the body
          link.download = filename || 'geometry.png';
@@ -2883,7 +2883,7 @@ class TGeoPainter extends ObjectPainter {
          return '';
 
       if (this._camera.isOrthographicCamera) {
-         const zoom = Math.round(this._camera.zoom * 100)
+         const zoom = Math.round(this._camera.zoom * 100);
          return this.ctrl.camera_kind + (zoom === 100 ? '' : `,zoom=${zoom}`);
       }
 
@@ -2899,14 +2899,14 @@ class TGeoPainter extends ObjectPainter {
             let s = '';
             if (v < 0) { s = 'n'; v = -v; }
             return s + v.toFixed(0);
-         }
+         };
 
          let res = `${kind}camx${conv(p.x)},camy${conv(p.y)},camz${conv(p.z)}`;
          if (t.x || t.y || t.z) res += `,camlx${conv(t.x)},camly${conv(t.y)},camlz${conv(t.z)}`;
          return res;
       }
 
-      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl)
+      if (!this._lookat || !this._camera0pos)
          return '';
 
       const pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
@@ -2967,7 +2967,7 @@ class TGeoPainter extends ObjectPainter {
             midx = (box.max.x + box.min.x)/2,
             midy = (box.max.y + box.min.y)/2,
             midz = (box.max.z + box.min.z)/2,
-            more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar')  ? 0.2 : 0.1;
+            more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar') ? 0.2 : 0.1;
 
       if (this._scene_size && !force) {
          const d = this._scene_size, test = (v1, v2, scale) => {
@@ -3133,7 +3133,7 @@ class TGeoPainter extends ObjectPainter {
          } else {
             // screen heigher than actual geometry
             const m = (this._camera.top + this._camera.bottom) / 2;
-            this._camera.top  = m + szx / screen_ratio / 2;
+            this._camera.top = m + szx / screen_ratio / 2;
             this._camera.bottom = m - szx / screen_ratio / 2;
          }
       }
@@ -3359,21 +3359,19 @@ class TGeoPainter extends ObjectPainter {
       else
          res.forEach(str => elem.append('p').text(str));
 
-      return new Promise(resolveFunc => {
-         setTimeout(() => {
-            arg.domatrix = true;
-            tm1 = new Date().getTime();
-            numvis = this._clones.scanVisible(arg);
-            tm2 = new Date().getTime();
+      return postponePromise(() => {
+         arg.domatrix = true;
+         tm1 = new Date().getTime();
+         numvis = this._clones.scanVisible(arg);
+         tm2 = new Date().getTime();
 
-            const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
-            if (this.isBatchMode())
-               res.push(last_str);
-            else
-               elem.append('p').text(last_str);
-            resolveFunc(this);
-         }, 100);
-      });
+         const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
+         if (this.isBatchMode())
+            res.push(last_str);
+         else
+            elem.append('p').text(last_str);
+         return this;
+      }, 100);
    }
 
    /** @summary Handle drop operation
@@ -3616,7 +3614,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < npoints-1; ++k, pos+=6) {
-         buf[pos]   = projx ? projv : track.fPoints[k*4];
+         buf[pos] = projx ? projv : track.fPoints[k*4];
          buf[pos+1] = projy ? projv : track.fPoints[k*4+1];
          buf[pos+2] = projz ? projv : track.fPoints[k*4+2];
          buf[pos+3] = projx ? projv : track.fPoints[k*4+4];
@@ -3655,7 +3653,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < npoints-1; ++k, pos += 6) {
-         buf[pos]   = projx ? projv : fP[k*3];
+         buf[pos] = projx ? projv : fP[k*3];
          buf[pos+1] = projy ? projv : fP[k*3+1];
          buf[pos+2] = projz ? projv : fP[k*3+2];
          buf[pos+3] = projx ? projv : fP[k*3+3];
@@ -3689,7 +3687,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < track.fN-1; ++k, pos+=6) {
-         buf[pos]   = projx ? projv : track.fP[k*3];
+         buf[pos] = projx ? projv : track.fP[k*3];
          buf[pos+1] = projy ? projv : track.fP[k*3+1];
          buf[pos+2] = projz ? projv : track.fP[k*3+2];
          buf[pos+3] = projx ? projv : track.fP[k*3+3];
@@ -3721,15 +3719,9 @@ class TGeoPainter extends ObjectPainter {
             projv = this.ctrl.projectPos,
             projx = (this.ctrl.project === 'x'),
             projy = (this.ctrl.project === 'y'),
-            projz = (this.ctrl.project === 'z');
-      let hit_size = Math.max(hit.fMarkerSize * this.getOverallSize() * 0.005, 0.2),
-          style = hit.fMarkerStyle;
-
-      // FIXME: styles 2 and 4 does not work properly, see Misc/basic3d demo
-      // style 4 is very bad for hits representation
-      if ((style === 4) || (style === 2)) { style = 7; hit_size *= 1.5; }
-
-      const pnts = new PointsCreator(nhits, this._webgl, hit_size);
+            projz = (this.ctrl.project === 'z'),
+            hit_scale = Math.max(hit.fMarkerSize * this.getOverallSize() * (this._dummy ? 0.015 : 0.005), 0.2),
+            pnts = new PointsCreator(nhits, this._webgl, hit_scale);
 
       for (let i = 0; i < nhits; i++) {
          pnts.addPoint(projx ? projv : hit.fP[i*3],
@@ -3737,7 +3729,7 @@ class TGeoPainter extends ObjectPainter {
                        projz ? projv : hit.fP[i*3+2]);
       }
 
-      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style }).then(mesh => {
+      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style: hit.fMarkerStyle }).then(mesh => {
          mesh.defaultOrder = mesh.renderOrder = 1000000; // to bring points to the front
          mesh.highlightScale = 2;
          mesh.geo_name = itemname;
@@ -4103,7 +4095,7 @@ class TGeoPainter extends ObjectPainter {
        else {
          const spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
-            info = document.createElement('p');
+            info = getDocument().createElement('p');
             info.setAttribute('class', 'geo_info');
             info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);
@@ -4686,7 +4678,7 @@ class TGeoPainter extends ObjectPainter {
                   this._other_side = other_side;
                   this.rotateY(Math.PI);
                }
-            }
+            };
          }
 
          function setTopRotation(mesh, first_angle = -1) {
@@ -4703,7 +4695,7 @@ class TGeoPainter extends ObjectPainter {
                   this.rotateX((angle - this._last_angle) * Math.PI/2);
                   this._last_angle = angle;
                }
-            }
+            };
          }
 
          let textbox = new Box3().setFromObject(mesh);
@@ -5611,7 +5603,7 @@ function provideMenu(menu, item, hpainter) {
   * @private */
 function browserIconClick(hitem, hpainter) {
    if (hitem._volume) {
-      if (hitem._more && hitem._volume.fNodes && (hitem._volume.fNodes.arr.length > 0))
+      if (hitem._more && hitem._volume.fNodes?.arr?.length)
          toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
       else
          toggleGeoBit(hitem._volume, geoBITS.kVisThis);
@@ -5681,7 +5673,7 @@ function createItem(node, obj, name) {
    else if (obj._typename === 'TGeoMixture')
       sub._icon = 'img_geomixture';
    else if ((obj._typename.indexOf(clTGeoNode) === 0) && obj.fVolume) {
-      sub._title = 'node:'  + obj._typename;
+      sub._title = 'node:' + obj._typename;
       if (obj.fTitle) sub._title += ' ' + obj.fTitle;
       volume = obj.fVolume;
    } else if (obj._typename.indexOf(clTGeoVolume) === 0)
@@ -5731,7 +5723,7 @@ function createItem(node, obj, name) {
          sub._icon += provideVisStyle(obj);
 
       sub._menu = provideMenu;
-      sub._icon_click  = browserIconClick;
+      sub._icon_click = browserIconClick;
    }
 
    if (!node._childs) node._childs = [];
@@ -5768,7 +5760,7 @@ async function drawDummy3DGeom(painter) {
                   fTrans: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false }),
          pp = painter.getPadPainter(),
-         opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' +  pp.pad.fFillColor : '';
+         opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' + pp.pad.fFillColor : '';
 
    return TGeoPainter.draw(painter.getDom(), obj, opt)
                      .then(geop => { geop._dummy = true; return geop; });
@@ -5826,7 +5818,7 @@ function build(obj, opt) {
 
       obj.nodes.forEach(node => {
          nodes[node.id] = ClonedNodes.formatServerElement(node);
-      })
+      });
 
       clones = new ClonedNodes(null, nodes);
       clones.name_prefix = clones.getNodeName(0);

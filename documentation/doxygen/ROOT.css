@@ -27,5 +27,6 @@ div.contents {
 .legacybox {
   border: 3px solid #879ecb;
   background-color: #fdf06b;
+  color: #000000;
   padding: 15px;
 }

@@ -14,9 +14,9 @@
 #include "RooMinimizer.h"
 
 // including derived classes for factory method
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
 #include "LikelihoodGradientJob.h"
-#endif // R__HAS_ROOFIT_MULTIPROCESS
+#endif // ROOFIT_MULTIPROCESS
 
 namespace RooFit {
 namespace TestStatistics {
@@ -72,7 +72,7 @@ LikelihoodGradientWrapper::create(LikelihoodGradientMode likelihoodGradientMode,
 {
    switch (likelihoodGradientMode) {
    case LikelihoodGradientMode::multiprocess: {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
       return std::make_unique<LikelihoodGradientJob>(std::move(likelihood), std::move(calculationIsClean), nDim,
                                                      minimizer);
 #else

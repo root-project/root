@@ -104,7 +104,7 @@ protected:
   PdfCacheElem* createCache(const RooArgSet* nset) const override ;
   TString histNameSuffix() const override ;
 
-  // mutable std:: map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
+  // mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxiliary Cache information (do not persist)
   double _bufFrac ; // Sampling buffer size as fraction of domain size
   BufStrat _bufStrat ; // Strategy to fill the buffer
 

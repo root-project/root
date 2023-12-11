@@ -408,7 +408,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Available choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
 
   // reset the number of fitting data points
@@ -1094,7 +1094,7 @@ double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, 
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Available choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
 
   if (extended) {
@@ -1118,7 +1118,7 @@ double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, 
          } else {
             // use (-inf +inf)
             data.Range().GetRange(&xmin[0],&xmax[0]);
-            // check if funcition is zero at +- inf
+            // check if function is zero at +- inf
             if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
                MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
                return 0;
@@ -1266,7 +1266,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    }
 #endif
    else {
-      Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+      Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Available choices:\n "
                                              "ROOT::EExecutionPolicy::kSequential (default)\n "
                                              "ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
    }
@@ -1439,7 +1439,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    // for binned likelihood fits
    // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
    // add as well constant term for saturated model to make it like a Chi2/2
-   // by default is etended. If extended is false the fit is not extended and
+   // by default is extended. If extended is false the fit is not extended and
    // the global poisson term is removed (i.e is a binomial fit)
    // (remember that in this case one needs to have a function with a fixed normalization
    // like in a non extended unbinned fit)
@@ -1587,7 +1587,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 
       } else {
          // standard case no weights or iWeight=1
-         // this is needed for Poisson likelihood (which are extened and not for multinomial)
+         // this is needed for Poisson likelihood (which are extended and not for multinomial)
          // the formula below  include constant term due to likelihood of saturated model (f(x) = y)
          // (same formula as in Baker-Cousins paper, page 439 except a factor of 2
          if (extended) nloglike = fval - y;
@@ -1636,7 +1636,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("FitUtil::EvaluatePoissonLogL",
-            "Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+            "Execution policy unknown. Available choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
    }
 
 #ifdef DEBUG
@@ -1818,7 +1818,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    // }
    else {
       Error("FitUtil::EvaluatePoissonLogLGradient",
-            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+            "Execution policy unknown. Available choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
 #ifndef R__USE_IMT

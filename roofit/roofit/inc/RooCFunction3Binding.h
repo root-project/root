@@ -104,7 +104,6 @@ class RooCFunction3Ref : public TObject {
   RooCFunction3Ref(VO (*ptr)(VI1,VI2,VI3)=nullptr) : _ptr(ptr) {
     // Constructor of persistable function reference
   } ;
-  ~RooCFunction3Ref() override {} ;
 
   VO operator()(VI1 x,VI2 y, VI3 z) const {
     // Evaluate embedded function
@@ -168,7 +167,7 @@ template<class VO, class VI1, class VI2, class VI3>
 void RooCFunction3Ref<VO,VI1,VI2,VI3>::Streamer(TBuffer &R__b)
 {
   // Custom streamer for function pointer reference object. When writing,
-  // the function pointer is substituted by its registerd name. When function
+  // the function pointer is substituted by its registered name. When function
   // is unregistered name 'UNKNOWN' is written and a warning is issues. When
   // reading back, the embedded name is converted back to a function pointer
   // using the mapping service. When name UNKNOWN is encountered a warning is
@@ -181,7 +180,8 @@ void RooCFunction3Ref<VO,VI1,VI2,VI3>::Streamer(TBuffer &R__b)
    // Stream an object of class RooCFunction3Ref
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
+     UInt_t R__s;
+     UInt_t R__c;
      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
      // Read name from file
@@ -195,7 +195,7 @@ void RooCFunction3Ref<VO,VI1,VI2,VI3>::Streamer(TBuffer &R__b)
 
      } else {
 
-       // Lookup pointer to C function wih given name
+       // Lookup pointer to C function with given name
        _ptr = fmap().lookupPtr(tmpName.Data()) ;
 
        if (_ptr==nullptr) {
@@ -245,7 +245,6 @@ public:
   RooCFunction3Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z);
   RooCFunction3Binding(const RooCFunction3Binding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction3Binding(*this,newname); }
-  inline ~RooCFunction3Binding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
@@ -316,7 +315,6 @@ public:
   RooCFunction3PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z);
   RooCFunction3PdfBinding(const RooCFunction3PdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction3PdfBinding(*this,newname); }
-  inline ~RooCFunction3PdfBinding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer

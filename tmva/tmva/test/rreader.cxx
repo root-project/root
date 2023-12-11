@@ -35,7 +35,7 @@ void TrainClassificationModel()
 
    // Open trees with signal and background events
    const std::string filename = "http://root.cern.ch/files/tmva_class_example.root";
-   auto data = TFile::Open(filename.c_str());
+   std::unique_ptr<TFile> data{TFile::Open(filename.c_str())};
    auto signal = (TTree *)data->Get("TreeS");
    auto background = (TTree *)data->Get("TreeB");
 
@@ -77,7 +77,7 @@ void TrainRegressionModel()
 
    // Open trees with signal and background events
    const std::string filename = "http://root.cern.ch/files/tmva_reg_example.root";
-   auto data = TFile::Open(filename.c_str());
+   std::unique_ptr<TFile> data{TFile::Open(filename.c_str())};
    auto tree = (TTree *)data->Get("TreeR");
 
    // Add variables and register the trees with the dataloader
@@ -116,7 +116,7 @@ void TrainMulticlassModel()
 
    // Open trees with signal and background events
    const std::string filename = "http://root.cern.ch/files/tmva_multiclass_example.root";
-   auto data = TFile::Open(filename.c_str());
+   std::unique_ptr<TFile> data{TFile::Open(filename.c_str())};
    auto signal = (TTree *)data->Get("TreeS");
    auto background0 = (TTree *)data->Get("TreeB0");
    auto background1 = (TTree *)data->Get("TreeB1");

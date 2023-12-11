@@ -1256,7 +1256,7 @@ public:
       if (n != this->size()) {
          std::string msg = "Cannot index RVecN of size " + std::to_string(this->size()) +
                            " with condition vector of different size (" + std::to_string(n) + ").";
-         throw std::runtime_error(std::move(msg));
+         throw std::runtime_error(msg);
       }
 
       size_type n_true = 0ull;
@@ -1287,7 +1287,7 @@ public:
       if (pos >= size_type(this->fSize)) {
          std::string msg = "RVecN::at: size is " + std::to_string(this->fSize) + " but out-of-bounds index " +
                            std::to_string(pos) + " was requested.";
-         throw std::out_of_range(std::move(msg));
+         throw std::out_of_range(msg);
       }
       return this->operator[](pos);
    }
@@ -1297,7 +1297,7 @@ public:
       if (pos >= size_type(this->fSize)) {
          std::string msg = "RVecN::at: size is " + std::to_string(this->fSize) + " but out-of-bounds index " +
                            std::to_string(pos) + " was requested.";
-         throw std::out_of_range(std::move(msg));
+         throw std::out_of_range(msg);
       }
       return this->operator[](pos);
    }
@@ -2471,7 +2471,7 @@ RVec<T> Sort(const RVec<T> &v)
 
 /// Return copy of RVec with elements sorted based on a comparison operator
 ///
-/// The comparison operator has to fullfill the same requirements of the
+/// The comparison operator has to fulfill the same requirements of the
 /// predicate of by std::sort.
 ///
 ///
@@ -2522,7 +2522,7 @@ RVec<T> StableSort(const RVec<T> &v)
 /// Return copy of RVec with elements sorted based on a comparison operator
 /// while keeping the order of equal elements.
 ///
-/// The comparison operator has to fullfill the same requirements of the
+/// The comparison operator has to fulfill the same requirements of the
 /// predicate of std::stable_sort.
 ///
 /// This helper is different from StableArgsort since it does not return an RVec of indices,
@@ -3132,6 +3132,45 @@ inline RVec<std::size_t> Range(std::size_t begin, std::size_t end)
    ret.reserve(begin < end ? end - begin : 0u);
    for (auto i = begin; i < end; ++i)
       ret.push_back(i);
+   return ret;
+}
+
+/// Allows for negative begin, end, and/or stride. Produce RVec<int> with entries equal to begin, begin+stride, ... , N,
+/// where N is the first integer such that N+stride exceeds or equals N in the positive or negative direction (same as in Python).
+/// An empty RVec is returned if begin >= end and stride > 0 or if
+/// begin < end and stride < 0. Throws a runtime_error if stride==0
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// cout << Range(1, 5, 2) << "\n";
+/// // { 1, 3 }
+/// cout << Range(-1, -11, -4) << "\n";
+/// // { -1, -5, -9 }
+/// ~~~
+inline RVec<long long int> Range(long long int begin, long long int end, long long int stride)
+{
+   if (stride==0ll)
+   {
+      throw std::runtime_error("Range: the stride must not be zero");
+   }
+   RVec<long long int> ret;
+   float ret_cap = std::ceil(static_cast<float>(end-begin) / stride); //the capacity to reserve
+   //ret_cap < 0 if either begin > end & stride > 0, or begin < end & stride < 0. In both cases, an empty RVec should be returned
+   if (ret_cap < 0)
+   {
+      return ret;
+   }
+   ret.reserve(static_cast<size_t>(ret_cap));
+   if (stride > 0)
+   {
+      for (auto i = begin; i < end; i+=stride)
+         ret.push_back(i);
+   }
+   else
+   {
+      for (auto i = begin; i > end; i+=stride)
+         ret.push_back(i);
+   }
    return ret;
 }
 

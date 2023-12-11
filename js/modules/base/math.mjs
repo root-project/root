@@ -17,14 +17,14 @@
 /* eslint-disable no-unreachable-loop */
 /* eslint-disable eqeqeq */
 
-const kMACHEP  = 1.11022302462515654042363166809e-16,
-      kMINLOG  = -708.396418532264078748994506896,
-      kMAXLOG  = 709.782712893383973096206318587,
+const kMACHEP = 1.11022302462515654042363166809e-16,
+      kMINLOG = -708.396418532264078748994506896,
+      kMAXLOG = 709.782712893383973096206318587,
       kMAXSTIR = 108.116855767857671821730036754,
-      kBig     = 4.503599627370496e15,
-      kBiginv  =  2.22044604925031308085e-16,
-      kSqrt2   = 1.41421356237309515,
-      M_PI    =  3.14159265358979323846264338328;
+      kBig = 4.503599627370496e15,
+      kBiginv = 2.22044604925031308085e-16,
+      kSqrt2 = 1.41421356237309515,
+      M_PI = 3.14159265358979323846264338328;
 
 /** @summary Polynomialeval function
   * @desc calculates a value of a polynomial of the form:
@@ -279,8 +279,8 @@ function erf(x) {
 function lognormal_cdf_c(x, m, s, x0) {
    if (x0 === undefined) x0 = 0;
    const z = (Math.log((x-x0))-m)/(s*kSqrt2);
-   if (z > 1.)  return 0.5*erfc(z);
-   else         return 0.5*(1.0 - erf(z));
+   if (z > 1.) return 0.5*erfc(z);
+   else return 0.5*(1.0 - erf(z));
 }
 
 /** @summary lognormal_cdf_c function
@@ -288,15 +288,15 @@ function lognormal_cdf_c(x, m, s, x0) {
 function lognormal_cdf(x, m, s, x0 = 0) {
    const z = (Math.log((x-x0))-m)/(s*kSqrt2);
    if (z < -1.) return 0.5*erfc(-z);
-   else         return 0.5*(1.0 + erf(z));
+   else return 0.5*(1.0 + erf(z));
 }
 
 /** @summary normal_cdf_c function
   * @memberof Math */
 function normal_cdf_c(x, sigma, x0 = 0) {
    const z = (x-x0)/(sigma*kSqrt2);
-   if (z > 1.)  return 0.5*erfc(z);
-   else         return 0.5*(1.-erf(z));
+   if (z > 1.) return 0.5*erfc(z);
+   else return 0.5*(1.-erf(z));
 }
 
 /** @summary normal_cdf function
@@ -304,7 +304,7 @@ function normal_cdf_c(x, sigma, x0 = 0) {
 function normal_cdf(x, sigma, x0 = 0) {
    const z = (x-x0)/(sigma*kSqrt2);
    if (z < -1.) return 0.5*erfc(-z);
-   else         return 0.5*(1.0 + erf(z));
+   else return 0.5*(1.0 + erf(z));
 }
 
 /** @summary log normal pdf
@@ -516,7 +516,7 @@ function ndtri(y0) {
 /** @summary normal_quantile function
   * @memberof Math */
 function normal_quantile(z, sigma) {
-   return  sigma * ndtri(z);
+   return sigma * ndtri(z);
 }
 
 /** @summary normal_quantile_c function
@@ -530,7 +530,7 @@ function normal_quantile_c(z, sigma) {
 function igamc(a,x) {
    // LM: for negative values returns 0.0
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
-   if (a <= 0)  return 0.0;
+   if (a <= 0) return 0.0;
 
    if (x <= 0) return 1.0;
 
@@ -552,15 +552,15 @@ function igamc(a,x) {
        pkm1 = x + 1.0,
        qkm1 = z * x,
        ans = pkm1/qkm1,
-       yc, r, t, pk,  qk;
+       yc, r, t, pk, qk;
 
    do {
       c += 1.0;
       y += 1.0;
       z += 2.0;
       yc = y * c;
-      pk = pkm1 * z  -  pkm2 * yc;
-      qk = qkm1 * z  -  qkm2 * yc;
+      pk = pkm1 * z - pkm2 * yc;
+      qk = qkm1 * z - qkm2 * yc;
       if (qk)
       {
          r = pk/qk;
@@ -686,7 +686,7 @@ function igami(a, y0) {
    dir = 0;
 
    for ( i=0; i<400; ++i ) {
-      x = x1  +  d * (x0 - x1);
+      x = x1 + d * (x0 - x1);
       y = igamc( a, x );
       lgm = (x0 - x1)/(x1 + x0);
       if ( Math.abs(lgm) < dithresh )
@@ -734,29 +734,29 @@ function landau_pdf(x, xi, x0 = 0) {
    if (xi <= 0) return 0;
    const v = (x - x0)/xi;
    let u, ue, us, denlan;
-   const p1 = [0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253],
-         q1 = [1.0         ,-0.3388260629, 0.09594393323, -0.01608042283,    0.003778942063],
-         p2 = [0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411,   0.0001283617211],
-         q2 = [1.0         , 0.7428795082, 0.3153932961,   0.06694219548,    0.008790609714],
+   const p1 = [0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635, 0.001511162253],
+         q1 = [1.0 ,-0.3388260629, 0.09594393323, -0.01608042283, 0.003778942063],
+         p2 = [0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411, 0.0001283617211],
+         q2 = [1.0 , 0.7428795082, 0.3153932961, 0.06694219548, 0.008790609714],
          p3 = [0.1788544503, 0.09359161662,0.006325387654, 0.00006611667319,-0.000002031049101],
-         q3 = [1.0         , 0.6097809921, 0.2560616665,   0.04746722384,    0.006957301675],
-         p4 = [0.9874054407, 118.6723273,  849.2794360,   -743.7792444,      427.0262186],
-         q4 = [1.0         , 106.8615961,  337.6496214,    2016.712389,      1597.063511],
-         p5 = [1.003675074,  167.5702434,  4789.711289,    21217.86767,     -22324.94910],
-         q5 = [1.0         , 156.9424537,  3745.310488,    9834.698876,      66924.28357],
-         p6 = [1.000827619,  664.9143136,  62972.92665,    475554.6998,     -5743609.109],
-         q6 = [1.0         , 651.4101098,  56974.73333,    165917.4725,     -2815759.939],
+         q3 = [1.0 , 0.6097809921, 0.2560616665, 0.04746722384, 0.006957301675],
+         p4 = [0.9874054407, 118.6723273, 849.2794360, -743.7792444, 427.0262186],
+         q4 = [1.0 , 106.8615961, 337.6496214, 2016.712389, 1597.063511],
+         p5 = [1.003675074, 167.5702434, 4789.711289, 21217.86767, -22324.94910],
+         q5 = [1.0 , 156.9424537, 3745.310488, 9834.698876, 66924.28357],
+         p6 = [1.000827619, 664.9143136, 62972.92665, 475554.6998, -5743609.109],
+         q6 = [1.0 , 651.4101098, 56974.73333, 165917.4725, -2815759.939],
          a1 = [0.04166666667,-0.01996527778, 0.02709538966],
          a2 = [-1.845568670,-4.284640743];
 
    if (v < -5.5) {
-      u   = Math.exp(v+1.0);
+      u = Math.exp(v+1.0);
       if (u < 1e-10) return 0.0;
-      ue  = Math.exp(-1/u);
-      us  = Math.sqrt(u);
+      ue = Math.exp(-1/u);
+      us = Math.sqrt(u);
       denlan = 0.3989422803*(ue/us)*(1+(a1[0]+(a1[1]+a1[2]*u)*u)*u);
    } else if (v < -1) {
-      u   = Math.exp(-v-1);
+      u = Math.exp(-v-1);
       denlan = Math.exp(-u)*Math.sqrt(u)*
          (p1[0]+(p1[1]+(p1[2]+(p1[3]+p1[4]*v)*v)*v)*v)/
          (q1[0]+(q1[1]+(q1[2]+(q1[3]+q1[4]*v)*v)*v)*v);
@@ -767,19 +767,19 @@ function landau_pdf(x, xi, x0 = 0) {
       denlan = (p3[0]+(p3[1]+(p3[2]+(p3[3]+p3[4]*v)*v)*v)*v)/
          (q3[0]+(q3[1]+(q3[2]+(q3[3]+q3[4]*v)*v)*v)*v);
    } else if (v < 12) {
-      u   = 1/v;
+      u = 1/v;
       denlan = u*u*(p4[0]+(p4[1]+(p4[2]+(p4[3]+p4[4]*u)*u)*u)*u)/
          (q4[0]+(q4[1]+(q4[2]+(q4[3]+q4[4]*u)*u)*u)*u);
    } else if (v < 50) {
-      u   = 1/v;
+      u = 1/v;
       denlan = u*u*(p5[0]+(p5[1]+(p5[2]+(p5[3]+p5[4]*u)*u)*u)*u)/
          (q5[0]+(q5[1]+(q5[2]+(q5[3]+q5[4]*u)*u)*u)*u);
    } else if (v < 300) {
-      u   = 1/v;
+      u = 1/v;
       denlan = u*u*(p6[0]+(p6[1]+(p6[2]+(p6[3]+p6[4]*u)*u)*u)*u)/
          (q6[0]+(q6[1]+(q6[2]+(q6[3]+q6[4]*u)*u)*u)*u);
    } else {
-      u   = 1/(v-v*Math.log(v)/(v+1));
+      u = 1/(v-v*Math.log(v)/(v+1));
       denlan = u*u*(1+(a2[0]+a2[1]*u)*u);
    }
    return denlan/xi;
@@ -818,12 +818,12 @@ function beta_pdf(x, a, b) {
   if (x < 0 || x > 1.0) return 0;
   if (x == 0 ) {
      if (a < 1) return Number.POSITIVE_INFINITY;
-     else if (a > 1) return  0;
+     else if (a > 1) return 0;
      else if ( a == 1) return b; // to avoid a nan from log(0)*0
    }
    if (x == 1 ) {
       if (b < 1) return Number.POSITIVE_INFINITY;
-      else if (b > 1) return  0;
+      else if (b > 1) return 0;
       else if ( b == 1) return a; // to avoid a nan from log(0)*0
    }
    return Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) +
@@ -869,16 +869,16 @@ function incbcf(a,b,x) {
 
    do {
       xk = -( x * k1 * k2 )/( k3 * k4 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
       qkm1 = qk;
 
       xk = ( x * k5 * k6 )/( k7 * k8 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
@@ -953,16 +953,16 @@ function incbd(a,b,x) {
    n = 0;
    do {
       xk = -( z * k1 * k2 )/( k3 * k4 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
       qkm1 = qk;
 
       xk = ( z * k5 * k6 )/( k7 * k8 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
@@ -1057,8 +1057,8 @@ function incbet(aa,bb,xx) {
       return 0.0;
 
    // LM: changed: for X > 1 return 1.
-   if  (xx <= 0.0)  return 0.0;
-   if ( xx >= 1.0)  return 1.0;
+   if (xx <= 0.0) return 0.0;
+   if ( xx >= 1.0) return 1.0;
 
    flag = 0;
 
@@ -1134,7 +1134,7 @@ function incbet(aa,bb,xx) {
       else
          t = 1.0 - t;
    }
-   return  t;
+   return t;
 }
 
 /** @summary copy of ROOT::Math::Cephes::incbi
@@ -1240,13 +1240,13 @@ function incbi(aa,bb,yy0) {
          {
             if ( i != 0 )
             {
-               x = x0  +  di * (x1 - x0);
+               x = x0 + di * (x1 - x0);
                if ( x == 1.0 )
                   x = 1.0 - kMACHEP;
                if ( x == 0.0 )
                {
                   di = 0.5;
-                  x = x0  +  di * (x1 - x0);
+                  x = x0 + di * (x1 - x0);
                   if ( x == 0.0 )
                      return process_done(); // goto under;
                }
@@ -1499,7 +1499,7 @@ function gamma_pdf(x, alpha, theta, x0 = 0) {
 /** @summary tdistribution_cdf_c function
   * @memberof Math */
 function tdistribution_cdf_c(x, r, x0 = 0) {
-   const p    = x - x0,
+   const p = x - x0,
          sign = (p > 0) ? 1. : -1;
    return .5 - .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
 }
@@ -1507,9 +1507,9 @@ function tdistribution_cdf_c(x, r, x0 = 0) {
 /** @summary tdistribution_cdf function
   * @memberof Math */
 function tdistribution_cdf(x, r, x0 = 0) {
-   const p    = x - x0,
+   const p = x - x0,
          sign = (p > 0) ? 1. : -1;
-   return  .5 + .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
+   return .5 + .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
 }
 
 /** @summary tdistribution_pdf function
@@ -1551,7 +1551,7 @@ function fdistribution_pdf(x, n, m, x0 = 0) {
       return 0.0;
 
    return Math.exp((n/2) * Math.log(n) + (m/2) * Math.log(m) + lgamma((n+m)/2) - lgamma(n/2) - lgamma(m/2)
-                 + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m +  n*(x-x0)));
+                 + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m + n*(x-x0)));
 }
 
 /** @summary fdistribution_cdf_c function
@@ -1587,7 +1587,7 @@ function Prob(chi2, ndf) {
 
    if (chi2 <= 0) {
       if (chi2 < 0) return 0;
-      else          return 1;
+      else return 1;
    }
 
    return chisquared_cdf_c(chi2,ndf,0);
@@ -1639,8 +1639,8 @@ function LaplaceDistI(x, alpha = 0, beta = 1) {
 function Student(T, ndf) {
    if (ndf < 1) return 0;
 
-   const r   = ndf,
-         rh  = 0.5*r,
+   const r = ndf,
+         rh = 0.5*r,
          rh1 = rh + 0.5,
          denom = Math.sqrt(r*Math.PI)*gamma(rh)*Math.pow(1+T*T/r, rh1);
    return gamma(rh1)/denom;
@@ -1653,7 +1653,7 @@ function StudentI(T, ndf) {
 
    return (T > 0)
      ? (1 - 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5))
-     :  0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
+     : 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
 }
 
 /** @summary LogNormal function
@@ -1719,14 +1719,14 @@ function landaun(f, x, i) {
 /** @summary Crystal ball function
   * @memberof Math */
 function crystalball_function(x, alpha, n, sigma, mean = 0) {
-   if (sigma < 0.)     return 0.;
+   if (sigma < 0.) return 0.;
    let z = (x - mean)/sigma;
    if (alpha < 0) z = -z;
    const abs_alpha = Math.abs(alpha);
-   if (z  > -abs_alpha)
+   if (z > -abs_alpha)
       return Math.exp(-0.5 * z * z);
    const nDivAlpha = n/abs_alpha,
-         AA =  Math.exp(-0.5*abs_alpha*abs_alpha),
+         AA = Math.exp(-0.5*abs_alpha*abs_alpha),
          B = nDivAlpha - abs_alpha,
          arg = nDivAlpha/(B-z);
   return AA * Math.pow(arg,n);
@@ -1752,7 +1752,7 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    const useLog = (n == 1.0),
          abs_alpha = Math.abs(alpha);
 
-   let z = (x-mean)/sigma, intgaus = 0., intpow  = 0.;
+   let z = (x-mean)/sigma, intgaus = 0., intpow = 0.;
    if (alpha < 0 ) z = -z;
 
    const sqrtpiover2 = Math.sqrt(M_PI/2.),
@@ -1764,7 +1764,7 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
 
       if (!useLog) {
          const C = (n/abs_alpha) * (1./(n-1)) * Math.exp(-alpha*alpha/2.);
-         intpow  = C - A /(n-1.) * Math.pow(B-z,-n+1);
+         intpow = C - A /(n-1.) * Math.pow(B-z,-n+1);
       }
       else {
          // for n=1 the primitive of 1/x is log(x)
@@ -1774,7 +1774,7 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    } else {
       intgaus = normal_cdf_c(z, 1);
       intgaus *= sqrt2pi;
-      intpow  = 0;
+      intpow = 0;
    }
    return sigma * (intgaus + intpow);
 }
@@ -1826,7 +1826,7 @@ function ChebyshevN(n, x, c) {
 
 /** @summary Chebyshev0 function
   * @memberof Math */
-function Chebyshev0(x, c0) {
+function Chebyshev0(_x, c0) {
    return c0;
 }
 
@@ -1985,7 +1985,7 @@ function eff_MidPInterval(total,passed,level,bUpper) {
 /** @summary for a central confidence interval for a Beta distribution
   * @memberof Math */
 function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
-   const  a = passed + alpha,
+   const a = passed + alpha,
           b = total - passed + beta;
    if (bUpper) {
       if ((a > 0) && (b > 0))
@@ -2003,7 +2003,7 @@ function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
 /** @summary Return function to calculate boundary of TEfficiency
   * @memberof Math */
 function getTEfficiencyBoundaryFunc(option, isbayessian) {
-   const  kFCP = 0,       // Clopper-Pearson interval (recommended by PDG)
+   const kFCP = 0,       // Clopper-Pearson interval (recommended by PDG)
           kFNormal = 1,   // Normal approximation
           kFWilson = 2,   // Wilson interval
           kFAC = 3,       // Agresti-Coull interval
@@ -2031,20 +2031,60 @@ function getTEfficiencyBoundaryFunc(option, isbayessian) {
    return eff_ClopperPearson;
 }
 
-export {
-   gamma, gamma as tgamma, gamma as Gamma,
+/** @summary Square function
+  * @memberof Math */
+function Sq(x) {
+   return x * x;
+}
+
+/** @summary Pi function
+  * @memberof Math */
+function Pi() {
+   return Math.PI;
+}
+
+/** @summary TwoPi function
+  * @memberof Math */
+function TwoPi() {
+   return 2 * Math.PI;
+}
+
+/** @summary PiOver2 function
+  * @memberof Math */
+function PiOver2()
+{
+   return Math.PI / 2;
+}
+
+/** @summary PiOver4 function
+  * @memberof Math */
+function PiOver4()
+{
+   return Math.PI / 4;
+}
+
+/** @summary InvPi function
+  * @memberof Math */
+function InvPi()
+{
+   return 1 / Math.PI;
+}
+
+
+
+export { gamma, gamma as tgamma, gamma as Gamma,
    Polynomialeval, Polynomial1eval, stirf,
    gamma_pdf, ndtri, normal_quantile, normal_quantile_c, lognormal_cdf_c, lognormal_cdf,
    igami, igamc, igam, lgam, lgamma, erfc, erf,
    beta_pdf, inc_beta, BetaIncomplete,
-   pseries, incbet, incbi, beta_quantile,  chisquared_cdf_c,
+   pseries, incbet, incbi, beta_quantile, chisquared_cdf_c,
    beta, inc_gamma, inc_gamma_c, landau_pdf, beta_cdf_c, Landau,
    fdistribution_pdf, fdistribution_pdf as FDist,
    fdistribution_cdf, fdistribution_cdf as FDistI,
    fdistribution_cdf_c,
    normal_cdf_c, normal_cdf_c as gaussian_cdf_c,
    normal_cdf, normal_cdf as gaussian_cdf,
-   lognormal_pdf, normal_pdf, crystalball_function, crystalball_pdf,  crystalball_cdf, crystalball_cdf_c,
+   lognormal_pdf, normal_pdf, crystalball_function, crystalball_pdf, crystalball_cdf, crystalball_cdf_c,
 
    chisquared_cdf, gamma_quantile_c, gamma_quantile, breitwigner_cdf_c, breitwigner_cdf,
    cauchy_cdf_c, cauchy_cdf, cauchy_pdf, gaussian_pdf,
@@ -2056,5 +2096,6 @@ export {
    ChebyshevN, Chebyshev0, Chebyshev1, Chebyshev2, Chebyshev3, Chebyshev4,
    Chebyshev5, Chebyshev6, Chebyshev7, Chebyshev8, Chebyshev9, Chebyshev10,
 
-   getTEfficiencyBoundaryFunc
-};
+   getTEfficiencyBoundaryFunc,
+
+   Sq, Pi, TwoPi, PiOver2, PiOver4, InvPi };

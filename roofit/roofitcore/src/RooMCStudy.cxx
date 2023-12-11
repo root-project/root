@@ -19,7 +19,7 @@
 \class RooMCStudy
 \ingroup Roofitcore
 
-RooMCStudy is a helper class to facilitate Monte Carlo studies
+Helper class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF
 to multiple toy Monte Carlo sets. These may be generated from either same PDF
 or from a different PDF with similar parameters.
@@ -138,7 +138,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
     // WVE do something here
-    throw std::string("RooMCStudy::RooMCStudy() Error in parsing arguments passed to contructor") ;
+    throw std::string("RooMCStudy::RooMCStudy() Error in parsing arguments passed to constructor") ;
     return ;
   }
 
@@ -425,7 +425,7 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
     } else {
 
       // Load sample from internal list
-      _genSample = (RooDataSet*) _genDataList.At(nSamples) ;
+      _genSample = static_cast<RooDataSet*>(_genDataList.At(nSamples)) ;
       existingData = true ;
       if (!_genSample) {
       oocoutW(_fitModel,Generation) << "RooMCStudy::run: WARNING: Sample #" << nSamples << " not loaded, skipping" << endl ;
@@ -640,7 +640,7 @@ RooFit::OwningPtr<RooFitResult> RooMCStudy::refit(RooAbsData* genSample)
     fr = std::unique_ptr<RooFitResult>{doFit(genSample)};
   }
 
-  return RooFit::Detail::owningPtr(std::move(fr));
+  return RooFit::makeOwningPtr(std::move(fr));
 }
 
 
@@ -741,7 +741,8 @@ void RooMCStudy::calcPulls()
     const auto par = static_cast<RooRealVar*>(*it);
     _fitParData->addColumn(*std::unique_ptr<RooErrorVar>{par->errorVar()});
 
-    TString name(par->GetName()), title(par->GetTitle()) ;
+    TString name(par->GetName());
+    TString title(par->GetTitle());
     name.Append("pull") ;
     title.Append(" Pull") ;
 
@@ -815,9 +816,9 @@ const RooDataSet& RooMCStudy::fitParDataSet()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an argset with the fit parameters for the given sample number
 ///
-/// NB: The fit parameters are only stored for successfull fits,
+/// NB: The fit parameters are only stored for successful fits,
 ///     thus the maximum sampleNum can be less that the number
-///     of generated samples and if so, the indeces will
+///     of generated samples and if so, the indices will
 ///     be out of synch with genData() and fitResult()
 
 const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
@@ -847,7 +848,7 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
   }
 
   // Retrieve fit result object
-  const RooFitResult* fr = (RooFitResult*) _fitResList.At(sampleNum) ;
+  const RooFitResult* fr = static_cast<RooFitResult*>(_fitResList.At(sampleNum)) ;
   if (fr) {
     return fr ;
   } else {
@@ -877,7 +878,7 @@ RooAbsData* RooMCStudy::genData(Int_t sampleNum) const
     return nullptr ;
   }
 
-  return  (RooAbsData*) _genDataList.At(sampleNum) ;
+  return  static_cast<RooAbsData*>(_genDataList.At(sampleNum)) ;
 }
 
 
@@ -1106,7 +1107,8 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
   cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
   cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
-  TString name(param.GetName()), title(param.GetTitle()) ;
+  TString name(param.GetName());
+  TString title(param.GetTitle());
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,-100,100) ;
   pvar.setBins(100) ;
@@ -1115,7 +1117,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
   RooPlot* frame = makeFrameAndPlotCmd(pvar, cmdList, true) ;
   if (frame) {
 
-    // Pick up optonal FitGauss command from list
+    // Pick up optional FitGauss command from list
     RooCmdConfig pc("RooMCStudy::plotPull(" + std::string(_genModel->GetName()) + ")");
     pc.defineInt("fitGauss","FitGauss",0,0) ;
     pc.allowUndefined() ;
@@ -1181,14 +1183,14 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
     // FrameBins, FrameRange or none are given, build custom frame command list
     RooCmdArg bins = RooFit::Bins(nbins) ;
     RooCmdArg range = RooFit::Range(xlo,xhi) ;
-    RooCmdArg autor = symRange ? RooFit::AutoSymRange(*_fitParData,0.2) : RooFit::AutoRange(*_fitParData,0.2) ;
+    RooCmdArg autoRange = symRange ? RooFit::AutoSymRange(*_fitParData,0.2) : RooFit::AutoRange(*_fitParData,0.2) ;
     RooLinkedList frameCmdList ;
 
     if (pc.hasProcessed("Bins")) frameCmdList.Add(&bins) ;
     if (pc.hasProcessed("Range")) {
       frameCmdList.Add(&range) ;
     } else {
-      frameCmdList.Add(&autor) ;
+      frameCmdList.Add(&autoRange) ;
     }
     frame = param.frame(frameCmdList) ;
   }
@@ -1255,8 +1257,8 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, double lo, double hi, Int
     _canAddFitResults=false ;
   }
 
-
-  TString name(param.GetName()), title(param.GetTitle()) ;
+  TString name(param.GetName());
+  TString title(param.GetTitle());
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,lo,hi) ;
   pvar.setBins(nbins) ;

@@ -53,7 +53,7 @@ const std::type_info &TypeName2TypeID(const std::string &name)
    if (auto c = TClass::GetClass(name.c_str())) {
       if (!c->GetTypeInfo()) {
          std::string msg("Cannot extract type_info of type ");
-         msg += name.c_str();
+         msg += name;
          msg += ".";
          throw std::runtime_error(msg);
       }
@@ -86,7 +86,7 @@ const std::type_info &TypeName2TypeID(const std::string &name)
       return typeid(bool);
    else {
       std::string msg("Cannot extract type_info of type ");
-      msg += name.c_str();
+      msg += name;
       msg += ".";
       throw std::runtime_error(msg);
    }

@@ -55,7 +55,7 @@ using std::endl;
 #define NGEN 1000000
 
 int izone = 0;
-TCanvas * c1 = 0;
+TCanvas * c1 = nullptr;
 
 // test using UNURAN string interface
 void testStringAPI() {
@@ -95,7 +95,7 @@ void testStringAPI() {
    w.Stop();
    cout << "Time using TRandom::Gaus  \t=\t " << w.CpuTime() << endl;
 
-   assert(c1 != 0);
+   assert(c1 != nullptr);
    c1->cd(++izone);
    h1->Draw();
    c1->cd(++izone);
@@ -240,7 +240,7 @@ void testDistrMultiDim() {
    w.Stop();
    cout << "Time using Unuran method " << unr.MethodName() << "\t=\t\t " << w.CpuTime() << endl;
 
-   assert(c1 != 0);
+   assert(c1 != nullptr);
    c1->cd(++izone);
    h1->Draw();
 
@@ -350,7 +350,7 @@ void testEmpDistr() {
    TH1D * h1b = new TH1D("h1bUnr","Unuran bin Generated data",100,-10,10);
    TH1D * h2 = new TH1D("h2GR","Data from TH1::GetRandom",100,-10,10);
 
-   h0->FillN(Ndata,x,0,1); // fill histogram with starting data
+   h0->FillN(Ndata,x,nullptr,1); // fill histogram with starting data
 
    TUnuran unr;
    TUnuranEmpDist dist(x,x+Ndata,1);

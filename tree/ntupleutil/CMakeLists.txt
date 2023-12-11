@@ -25,6 +25,7 @@ LINKDEF
 DEPENDENCIES
   ROOTNTuple
   Tree
+  Hist
 )
 
 if(MSVC)

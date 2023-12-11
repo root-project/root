@@ -14,6 +14,8 @@
 
 #include "TNamed.h"
 
+#include <vector>
+
 class TArrayI;
 
 class TColor : public TNamed {
@@ -80,14 +82,16 @@ public:
                      { TColor::RGB2HLS(r, g, b, h, l, s); } // backward compatible
    static void    RGB2HSV(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &s, Float_t &v);
    static Int_t   GetColor(const char *hexcolor);
-   static Int_t   GetColor(Float_t r, Float_t g, Float_t b);
-   static Int_t   GetColor(Int_t r, Int_t g, Int_t b);
+   static Int_t   GetColor(Float_t r, Float_t g, Float_t b, Float_t a = 1.);
+   static Int_t   GetColor(Int_t r, Int_t g, Int_t b, Float_t a = 1.);
    static Int_t   GetColor(ULong_t pixel);
    static Int_t   GetColorBright(Int_t color);
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
    static Int_t   GetFreeColorIndex();
    static const TArrayI& GetPalette();
+   static Int_t   GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
+   static Int_t   GetRadialGradient(Double_t r, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
    static ULong_t Number2Pixel(Int_t ci);
    static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
    static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
@@ -96,7 +100,7 @@ public:
    static const char *PixelAsHexString(ULong_t pixel);
    static Bool_t  SaveColor(std::ostream &out, Int_t ci);
    static void    SetColorThreshold(Float_t t);
-   static Bool_t  DefinedColors();
+   static Bool_t  DefinedColors(Int_t set_always_on = 0);
    static void    InvertPalette();
    static Bool_t  IsGrayscale();
    static void    SetGrayscale(Bool_t set = kTRUE);

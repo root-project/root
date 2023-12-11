@@ -208,7 +208,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
    std::unique_ptr<RooArgSet> values;
    RooAbsPdf *pdf;
    std::unique_ptr<RooDataSet> data;
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend::Legacy());
 
    RooArgSet savedValues;
    values->snapshot(savedValues);
@@ -330,7 +330,7 @@ std::unique_ptr<RooWorkspace> makeSimBinnedConstrainedWorkspace()
    w.factory("PROD::model_A(model_phys_A,model_subs_A)");
    w.factory("PROD::model_B(model_phys_B,model_subs_B)");
 
-   // Construct simulatenous pdf
+   // Construct simultaneous pdf
    w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
 
    // Construct dataset from physics pdf

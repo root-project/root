@@ -28,6 +28,11 @@
 #
 # ===========================================================================
 
+# Set any policies required by this module. Note that there is no check for
+# whether a given policy exists or not. If it is required, it is required...
+cmake_policy(PUSH)
+cmake_policy(SET CMP0074 NEW)
+
 #----------------------------------------------------------------------------
 # DEBUG : print out the variables passed via find_package arguments
 #
@@ -53,6 +58,11 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 # It's up to the user what to do with these
 @ROOT_COMPILER_FLAG_HINTS@
 
+#-----------------------------------------------------------------------
+# Provide the C++ standard used by this build of ROOT
+#
+set(ROOT_CXX_STANDARD @CMAKE_CXX_STANDARD@)
+
 #----------------------------------------------------------------------------
 # Configure the path to the ROOT headers, using a relative path if possible.
 # This is only known at CMake time, so we expand a CMake supplied variable.
@@ -61,6 +71,7 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 @ROOT_LIBRARY_DIR_SETUP@
 @ROOT_BINDIR_SETUP@
 @ROOT_BINARY_DIR_SETUP@
+@ROOT_CMAKE_DIR_SETUP@
 
 # Python version used to build ROOT
 set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING_Development_Main@)
@@ -85,6 +96,10 @@ foreach(_opt ${_root_enabled_options})
 endforeach()
 
 #----------------------------------------------------------------------------
+# Make any modules bundled with ROOT visible to CMake
+list(APPEND CMAKE_MODULE_PATH "${ROOT_CMAKE_DIR}/modules")
+
+#----------------------------------------------------------------------------
 # Find external packages which were used in ROOT
 include(CMakeFindDependencyMacro)
 if (NOT ROOT_builtin_nlohmannjson_FOUND)
@@ -96,6 +111,12 @@ endif()
 if(ROOT_minuit2_omp_FOUND)
   find_dependency(OpenMP)
   find_dependency(Threads)
+endif()
+if(ROOT_vdt_FOUND AND NOT TARGET VDT::VDT)
+  if(ROOT_builtin_vdt_FOUND)
+    set(Vdt_ROOT "${_thisdir}/.." CACHE PATH "Location of (the builtin) VDT")
+  endif()
+  find_dependency(Vdt)
 endif()
 
 #----------------------------------------------------------------------------
@@ -153,3 +174,6 @@ foreach(_remaining ${ROOT_FIND_COMPONENTS})
     endif()
     unset(ROOT_FIND_REQUIRED_${_remaining})
 endforeach()
+
+# Clear out any policy settings made for this module.
+cmake_policy(POP)

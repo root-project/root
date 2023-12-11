@@ -37,10 +37,10 @@
 /// ownership status. Arguments supplied in the constructor are always added
 /// as unowned elements.
 ///
-/// 
+///
 /// Uniquely identifying RooArgSet objects
 /// ---------------------------------------
-/// 
+///
 /// \warning Before v6.28, it was ensured that no RooArgSet objects on the heap
 /// were located at an address that had already been used for a RooArgSet before.
 /// With v6.28, this is not guaranteed anymore. Hence, if your code uses pointer
@@ -121,7 +121,7 @@ void* RooArgSet::operator new (size_t bytes)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Overloaded new operator with placement does not guarante that all
+/// Overloaded new operator with placement does not guarantee that all
 /// RooArgSets allocated with new have a unique address, but uses the global
 /// operator.
 
@@ -150,10 +150,9 @@ void RooArgSet::operator delete (void* ptr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooArgSet::RooArgSet() :
-  RooAbsCollection()
+RooArgSet::RooArgSet()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -165,7 +164,7 @@ RooArgSet::RooArgSet(const RooAbsCollection& coll) :
   RooAbsCollection(coll.GetName())
 {
   add(coll,true) ; // verbose to catch duplicate errors
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -184,7 +183,7 @@ RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) 
     add(*var1,true) ;
   }
   add(collection,true) ; // verbose to catch duplicate errors
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -193,7 +192,7 @@ RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) 
 RooArgSet::RooArgSet(const char *name) :
   RooAbsCollection(name)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -204,7 +203,7 @@ RooArgSet::RooArgSet(const RooArgSet& set1, const RooArgSet& set2, const char *n
 {
   add(set1) ;
   add(set2) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -222,9 +221,9 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
              << " is not a RooAbsArg, ignored" << endl ;
       continue ;
     }
-    add(*(RooAbsArg*)obj) ;
+    add(*static_cast<RooAbsArg*>(obj)) ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -235,7 +234,7 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
   : RooAbsCollection(other,name)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -244,7 +243,7 @@ RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
 
 RooArgSet::~RooArgSet()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -512,9 +511,10 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
       }
       condStack[condStackLevel] = status ;
 
-      if (verbose) cxcoutD(Eval) << "RooArgSet::readFromStream(" << GetName()
-                 << "): conditional expression " << expr << " = "
-                 << (condStack[condStackLevel]?"true":"false") << endl ;
+      if (verbose) {
+        cxcoutD(Eval) << "RooArgSet::readFromStream(" << GetName() << "): conditional expression " << expr << " = "
+                      << (condStack[condStackLevel] ? "true" : "false") << endl;
+      }
       continue ; // go to next line
     }
 

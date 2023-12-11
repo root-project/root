@@ -32,7 +32,7 @@ protected:
    explicit ROnFrameDrawable(const char *type) : RDrawable(type) {}
 
 public:
-   virtual ~ROnFrameDrawable() = default;
+   ~ROnFrameDrawable() override = default;
 
    RAttrValue<bool> onFrame{this, "onFrame", false};  ///<! is drawn on the frame or not
    RAttrValue<bool> clipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame

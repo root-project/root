@@ -21,6 +21,7 @@
 #include <ROOT/RPageSinkBuf.hxx>
 
 #include <algorithm>
+#include <memory>
 
 void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
@@ -34,11 +35,10 @@ void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 }
 
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
-   : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions())
-   , fMetrics("RPageSinkBuf")
-   , fInnerSink(std::move(inner))
+   : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions()), fInnerSink(std::move(inner))
 {
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fMetrics = RNTupleMetrics("RPageSinkBuf");
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTuplePlainCounter*>("ParallelZip", "",
          "compressing pages in parallel")
    });
@@ -53,10 +53,35 @@ ROOT::Experimental::Detail::RPageSinkBuf::~RPageSinkBuf()
    WaitForAllTasks();
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model,
-                                                          unsigned char * /* serializedHeader */,
-                                                          std::uint32_t /* length */)
+ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Detail::RPageSinkBuf::AddColumn(DescriptorId_t /*fieldId*/, const RColumn &column)
 {
+   return ColumnHandle_t{fNColumns++, &column};
+}
+
+void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<RFieldBase *> &fields,
+                                                             NTupleSize_t firstEntry)
+{
+   auto connectField = [&](RFieldBase &f) {
+      // Field Zero would have id 0.
+      ++fNFields;
+      f.SetOnDiskId(fNFields);
+      f.ConnectPageSink(*this, firstEntry); // issues in turn one or several calls to `AddColumn()`
+   };
+   for (auto *f : fields) {
+      connectField(*f);
+      for (auto &descendant : *f) {
+         connectField(descendant);
+      }
+   }
+   fBufferedColumns.resize(fNColumns);
+}
+
+void ROOT::Experimental::Detail::RPageSinkBuf::Create(RNTupleModel &model)
+{
+   auto &fieldZero = *model.GetFieldZero();
+   ConnectFields(fieldZero.GetSubFields(), 0U);
+
    fInnerModel = model.Clone();
    fInnerSink->Create(*fInnerModel);
 }
@@ -64,11 +89,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
 void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
                                                             NTupleSize_t firstEntry)
 {
-   RPageSink::UpdateSchema(changeset, firstEntry);
-   bool isIncremental = !fBufferedColumns.empty();
-   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
-   if (!isIncremental)
-      return;
+   ConnectFields(changeset.fAddedFields, firstEntry);
 
    // The buffered page sink maintains a copy of the RNTupleModel for the inner sink; replicate the changes there
    // TODO(jalopezg): we should be able, in general, to simplify the buffered sink.
@@ -100,8 +121,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelCh
    fInnerSink->UpdateSchema(innerChangeset, firstEntry);
 }
 
-ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
    RPage bufPage = ReservePage(columnHandle, page.GetNElements());
@@ -114,7 +134,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // CommitCluster().
    auto &zipItem = fBufferedColumns.at(columnHandle.fPhysicalId).BufferPage(columnHandle, bufPage);
    if (!fTaskScheduler) {
-      return RNTupleLocator{};
+      return;
    }
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
@@ -127,24 +147,20 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
                             GetWriteOptions().GetCompression(), zipItem.fBuf.get());
       zipItem.fSealedPage = &sealedPage;
    });
-
-   // we're feeding bad locators to fOpenPageRanges but it should not matter
-   // because they never get written out
-   return RNTupleLocator{};
 }
 
-ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
-                                                               const RSealedPage &sealedPage)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPage(DescriptorId_t /*physicalColumnId*/,
+                                                                const RSealedPage & /*sealedPage*/)
 {
-   fInnerSink->CommitSealedPage(physicalColumnId, sealedPage);
-   // we're feeding bad locators to fOpenPageRanges but it should not matter
-   // because they never get written out
-   return RNTupleLocator{};
+   throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
 
-std::uint64_t
-ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> /*ranges*/)
+{
+   throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
+}
+
+std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
    WaitForAllTasks();
 
@@ -188,17 +204,12 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
    return fInnerSink->CommitCluster(nEntries);
 }
 
-ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroupImpl(unsigned char * /* serializedPageList */,
-                                                                 std::uint32_t /* length */)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroup()
 {
    fInnerSink->CommitClusterGroup();
-   // We're not using that locator any further, so it is safe to return a dummy one
-   return RNTupleLocator{};
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl(unsigned char * /* serializedFooter */,
-                                                                 std::uint32_t /* length */)
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitDataset()
 {
    fInnerSink->CommitDataset();
 }

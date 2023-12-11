@@ -23,7 +23,8 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <memory>
+#include <string_view>
 #ifdef R__ENABLE_DAOS
 # include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -33,10 +34,7 @@
 
 #include <utility>
 
-
-ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : fNTupleName(name)
-{
-}
+ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : fMetrics(""), fNTupleName(name) {}
 
 ROOT::Experimental::Detail::RPageStorage::~RPageStorage() {}
 
@@ -76,8 +74,24 @@ ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::ToColumnSet() c
    return result;
 }
 
+bool ROOT::Experimental::Detail::RPageSource::REntryRange::IntersectsWith(const RClusterDescriptor &clusterDesc) const
+{
+   if (fFirstEntry == kInvalidNTupleIndex) {
+      /// Entry range unset, we assume that the entry range covers the complete source
+      return true;
+   }
+
+   if (clusterDesc.GetNEntries() == 0)
+      return true;
+   if ((clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()) <= fFirstEntry)
+      return false;
+   if (clusterDesc.GetFirstEntryIndex() >= (fFirstEntry + fNEntries))
+      return false;
+   return true;
+}
+
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
-   : RPageStorage(name), fMetrics(""), fOptions(options)
+   : RPageStorage(name), fOptions(options)
 {
 }
 
@@ -117,6 +131,14 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
 void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHandle)
 {
    fActivePhysicalColumns.Erase(columnHandle.fPhysicalId);
+}
+
+void ROOT::Experimental::Detail::RPageSource::SetEntryRange(const REntryRange &range)
+{
+   if ((range.fFirstEntry + range.fNEntries) > GetNEntries()) {
+      throw RException(R__FAIL("invalid entry range"));
+   }
+   fEntryRange = range;
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()
@@ -202,7 +224,7 @@ void ROOT::Experimental::Detail::RPageSource::PrepareLoadCluster(
 void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nReadV", "", "number of vector read requests"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nRead", "", "number of byte ranges read"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadPayload", "B", "volume read from storage (required)"),
@@ -293,9 +315,8 @@ void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::st
 
 //------------------------------------------------------------------------------
 
-
 ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
-   : RPageStorage(name), fMetrics(""), fOptions(options.Clone())
+   : RPageStorage(name), fOptions(options.Clone())
 {
 }
 
@@ -328,8 +349,55 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detai
    return realSink;
 }
 
+ROOT::Experimental::Detail::RPageStorage::RSealedPage
+ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
+   const RColumnElementBase &element, int compressionSetting, void *buf)
+{
+   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   bool isAdoptedBuffer = true;
+   auto packedBytes = page.GetNBytes();
+
+   if (!element.IsMappable()) {
+      packedBytes = element.GetPackedSize(page.GetNElements());
+      pageBuf = new unsigned char[packedBytes];
+      isAdoptedBuffer = false;
+      element.Pack(pageBuf, page.GetBuffer(), page.GetNElements());
+   }
+   auto zippedBytes = packedBytes;
+
+   if ((compressionSetting != 0) || !element.IsMappable()) {
+      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
+      if (!isAdoptedBuffer)
+         delete[] pageBuf;
+      pageBuf = reinterpret_cast<unsigned char *>(buf);
+      isAdoptedBuffer = true;
+   }
+
+   R__ASSERT(isAdoptedBuffer);
+
+   return RSealedPage{pageBuf, static_cast<std::uint32_t>(zippedBytes), page.GetNElements()};
+}
+
+ROOT::Experimental::Detail::RPageStorage::RSealedPage
+ROOT::Experimental::Detail::RPageSink::SealPage(
+   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+{
+   R__ASSERT(fCompressor);
+   return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::Detail::RPagePersistentSink::RPagePersistentSink(std::string_view name,
+                                                                     const RNTupleWriteOptions &options)
+   : RPageSink(name, options)
+{
+}
+
+ROOT::Experimental::Detail::RPagePersistentSink::~RPagePersistentSink() {}
+
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+ROOT::Experimental::Detail::RPagePersistentSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
    fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex(),
@@ -337,8 +405,8 @@ ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const R
    return ColumnHandle_t{columnId, &column};
 }
 
-void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChangeset &changeset,
-                                                         NTupleSize_t firstEntry)
+void ROOT::Experimental::Detail::RPagePersistentSink::UpdateSchema(const RNTupleModelChangeset &changeset,
+                                                                   NTupleSize_t firstEntry)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto addField = [&](RFieldBase &f) {
@@ -395,7 +463,7 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
       fSerializationContext.MapSchema(descriptor, /*forHeaderExtension=*/true);
 }
 
-void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
+void ROOT::Experimental::Detail::RPagePersistentSink::Create(RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
@@ -420,7 +488,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fDescriptorBuilder.BeginHeaderExtension();
 }
 
-void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).fNElements += page.GetNElements();
 
@@ -430,7 +498,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHand
    fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
 }
 
-void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitSealedPage(
    ROOT::Experimental::DescriptorId_t physicalColumnId,
    const ROOT::Experimental::Detail::RPageStorage::RSealedPage &sealedPage)
 {
@@ -443,7 +511,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Detail::RPageSink::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+ROOT::Experimental::Detail::RPagePersistentSink::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
 {
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
    for (auto &range : ranges) {
@@ -453,7 +521,8 @@ ROOT::Experimental::Detail::RPageSink::CommitSealedPageVImpl(std::span<RPageStor
    return locators;
 }
 
-void ROOT::Experimental::Detail::RPageSink::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges)
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitSealedPageV(
+   std::span<RPageStorage::RSealedPageGroup> ranges)
 {
    auto locators = CommitSealedPageVImpl(ranges);
    unsigned i = 0;
@@ -470,7 +539,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPageV(std::span<RPageSto
    }
 }
 
-std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+std::uint64_t ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
    auto nbytes = CommitClusterImpl(nEntries);
 
@@ -492,7 +561,7 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
    return nbytes;
 }
 
-void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitClusterGroup()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -521,7 +590,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
-void ROOT::Experimental::Detail::RPageSink::CommitDataset()
+void ROOT::Experimental::Detail::RPagePersistentSink::CommitDataset()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -532,47 +601,10 @@ void ROOT::Experimental::Detail::RPageSink::CommitDataset()
    CommitDatasetImpl(bufFooter.get(), szFooter);
 }
 
-ROOT::Experimental::Detail::RPageStorage::RSealedPage
-ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
-   const RColumnElementBase &element, int compressionSetting, void *buf)
-{
-   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
-   bool isAdoptedBuffer = true;
-   auto packedBytes = page.GetNBytes();
-
-   if (!element.IsMappable()) {
-      packedBytes = element.GetPackedSize(page.GetNElements());
-      pageBuf = new unsigned char[packedBytes];
-      isAdoptedBuffer = false;
-      element.Pack(pageBuf, page.GetBuffer(), page.GetNElements());
-   }
-   auto zippedBytes = packedBytes;
-
-   if ((compressionSetting != 0) || !element.IsMappable()) {
-      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
-      if (!isAdoptedBuffer)
-         delete[] pageBuf;
-      pageBuf = reinterpret_cast<unsigned char *>(buf);
-      isAdoptedBuffer = true;
-   }
-
-   R__ASSERT(isAdoptedBuffer);
-
-   return RSealedPage{pageBuf, static_cast<std::uint32_t>(zippedBytes), page.GetNElements()};
-}
-
-ROOT::Experimental::Detail::RPageStorage::RSealedPage
-ROOT::Experimental::Detail::RPageSink::SealPage(
-   const RPage &page, const RColumnElementBase &element, int compressionSetting)
-{
-   R__ASSERT(fCompressor);
-   return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
-}
-
-void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::string &prefix)
+void ROOT::Experimental::Detail::RPagePersistentSink::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),

@@ -44,6 +44,7 @@
 #include <functional>
 
 #ifdef USE_ROOT_ERROR
+#include "TError.h"
 #include "TROOT.h"
 #include "TMinuit2TraceObject.h"
 #endif
@@ -190,11 +191,11 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string &name, d
 
    if (step <= 0) {
       print.Info("Parameter", name, "has zero or invalid step size - consider it as constant");
-      fState.Add(name.c_str(), val);
+      fState.Add(name, val);
    } else
-      fState.Add(name.c_str(), val, step);
+      fState.Add(name, val, step);
 
-   unsigned int minuit2Index = fState.Index(name.c_str());
+   unsigned int minuit2Index = fState.Index(name);
    if (minuit2Index != ivar) {
       print.Warn("Wrong index", minuit2Index, "used for the variable", name);
       ivar = minuit2Index;
@@ -242,7 +243,7 @@ bool Minuit2Minimizer::SetFixedVariable(unsigned int ivar, const std::string &na
    // use 10%
    double step = (val != 0) ? 0.1 * std::abs(val) : 0.1;
    if (!SetVariable(ivar, name, val, step)) {
-      ivar = fState.Index(name.c_str());
+      ivar = fState.Index(name);
    }
    fState.Fix(ivar);
    return true;
@@ -417,6 +418,38 @@ void Minuit2Minimizer::SetHessianFunction(std::function<bool(const std::vector<d
    fcn->SetHessianFunction(hfunc);
 }
 
+namespace {
+
+ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::Math::MinimizerOptions const &options)
+{
+   ROOT::Minuit2::MnStrategy st{strategyLevel};
+   // set strategy and add extra options if needed
+   const ROOT::Math::IOptions *minuit2Opt = options.ExtraOptions();
+   if (!minuit2Opt) {
+      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   }
+   if (!minuit2Opt) {
+      return st;
+   }
+   auto customize = [&minuit2Opt](const char *name, auto val) {
+      minuit2Opt->GetValue(name, val);
+      return val;
+   };
+   // set extra  options
+   st.SetGradientNCycles(customize("GradientNCycles", int(st.GradientNCycles())));
+   st.SetHessianNCycles(customize("HessianNCycles", int(st.HessianNCycles())));
+   st.SetHessianGradientNCycles(customize("HessianGradientNCycles", int(st.HessianGradientNCycles())));
+
+   st.SetGradientTolerance(customize("GradientTolerance", st.GradientTolerance()));
+   st.SetGradientStepTolerance(customize("GradientStepTolerance", st.GradientStepTolerance()));
+   st.SetHessianStepTolerance(customize("HessianStepTolerance", st.HessianStepTolerance()));
+   st.SetHessianG2Tolerance(customize("HessianG2Tolerance", st.HessianG2Tolerance()));
+
+   return st;
+}
+
+} // namespace
+
 bool Minuit2Minimizer::Minimize()
 {
    // perform the minimization
@@ -443,7 +476,7 @@ bool Minuit2Minimizer::Minimize()
 
    const int printLevel = PrintLevel();
    if (PrintLevel() >= 1) {
-      // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
+      // print the real number of maxfcn used (defined in ModularFunctionMinimizer)
       int maxfcn_used = maxfcn;
       if (maxfcn_used == 0) {
          int nvar = fState.VariableParameters();
@@ -464,38 +497,13 @@ bool Minuit2Minimizer::Minimize()
    if (Precision() > 0)
       fState.SetPrecision(Precision());
 
-   // set strategy and add extra options if needed
-   ROOT::Minuit2::MnStrategy strategy(strategyLevel);
-   ROOT::Math::IOptions *minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   // add extra options if needed
+   const ROOT::Math::IOptions *minuit2Opt = fOptions.ExtraOptions();
+   if (!minuit2Opt) {
+      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   }
    if (minuit2Opt) {
       // set extra  options
-      int nGradCycles = strategy.GradientNCycles();
-      int nHessCycles = strategy.HessianNCycles();
-      int nHessGradCycles = strategy.HessianGradientNCycles();
-
-      double gradTol = strategy.GradientTolerance();
-      double gradStepTol = strategy.GradientStepTolerance();
-      double hessStepTol = strategy.HessianStepTolerance();
-      double hessG2Tol = strategy.HessianG2Tolerance();
-
-      minuit2Opt->GetValue("GradientNCycles", nGradCycles);
-      minuit2Opt->GetValue("HessianNCycles", nHessCycles);
-      minuit2Opt->GetValue("HessianGradientNCycles", nHessGradCycles);
-
-      minuit2Opt->GetValue("GradientTolerance", gradTol);
-      minuit2Opt->GetValue("GradientStepTolerance", gradStepTol);
-      minuit2Opt->GetValue("HessianStepTolerance", hessStepTol);
-      minuit2Opt->GetValue("HessianG2Tolerance", hessG2Tol);
-
-      strategy.SetGradientNCycles(nGradCycles);
-      strategy.SetHessianNCycles(nHessCycles);
-      strategy.SetHessianGradientNCycles(nHessGradCycles);
-
-      strategy.SetGradientTolerance(gradTol);
-      strategy.SetGradientStepTolerance(gradStepTol);
-      strategy.SetHessianStepTolerance(hessStepTol);
-      strategy.SetHessianG2Tolerance(hessStepTol);
-
       int storageLevel = 1;
       bool ret = minuit2Opt->GetValue("StorageLevel", storageLevel);
       if (ret)
@@ -539,6 +547,8 @@ bool Minuit2Minimizer::Minimize()
       SetTraceObject(*traceObj);
    }
 
+   const ROOT::Minuit2::MnStrategy strategy = customizedStrategy(strategyLevel, fOptions);
+
    const ROOT::Minuit2::FCNGradientBase *gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>(fMinuitFCN);
    if (gradFCN != nullptr) {
       // use gradient
@@ -550,7 +560,7 @@ bool Minuit2Minimizer::Minimize()
       fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
    }
 
-   // check if Hesse needs to be run. We do it when is requested (IsValidError() == true)
+   // check if Hesse needs to be run. We do it when is requested (IsValidError() == true , set by SetParabError(true) in fitConfig)
    // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
    // AND when we have a valid minimum,
    // AND  when the the current covariance matrix is estimated using the iterative approximation (Dcovar != 0 , i.e. Hesse has not computed  before)
@@ -654,8 +664,8 @@ bool Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min)
 
    // set the minimum values in the fValues vector
    const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
-   if (paramsObj.size() == 0)
-      return 0;
+   if (paramsObj.empty())
+      return false;
    assert(fDim == paramsObj.size());
    // re-size vector if it has changed after a new minimization
    if (fValues.size() != fDim)
@@ -704,7 +714,7 @@ const double *Minuit2Minimizer::Errors() const
 {
    // return error at minimum (set to zero for fixed and constant params)
    const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
-   if (paramsObj.size() == 0)
+   if (paramsObj.empty())
       return nullptr;
    assert(fDim == paramsObj.size());
    // be careful for multiple calls of this function. I will redo an allocation here
@@ -1030,7 +1040,7 @@ int Minuit2Minimizer::RunMinosError(unsigned int i, double &errLow, double &errU
 
    int mstatus = 0;
    if (lowerInvalid || upperInvalid) {
-      // set status accroding to bit
+      // set status according to bit
       // bit 1:  lower invalid Minos errors
       // bit 2:  upper invalid Minos error
       // bit 3:   invalid because max FCN
@@ -1201,7 +1211,6 @@ bool Minuit2Minimizer::Hesse()
       return false;
    }
 
-   const int strategy = Strategy();
    const int maxfcn = MaxFunctionCalls();
    print.Info("Using max-calls", maxfcn);
 
@@ -1213,7 +1222,7 @@ bool Minuit2Minimizer::Hesse()
    if (Precision() > 0)
       fState.SetPrecision(Precision());
 
-   ROOT::Minuit2::MnHesse hesse(strategy);
+   ROOT::Minuit2::MnHesse hesse(customizedStrategy(Strategy(), fOptions));
 
    // case when function minimum exists
    if (fMinimum) {
@@ -1253,6 +1262,8 @@ bool Minuit2Minimizer::Hesse()
       covStatusType = "full but made positive defined";
    if (covStatus == 3)
       covStatusType = "accurate";
+   if (covStatus == 0)
+      covStatusType = "full but not positive defined";
 
    if (!fState.HasCovariance()) {
       // if false means error is not valid and this is due to a failure in Hesse
@@ -1310,17 +1321,15 @@ int Minuit2Minimizer::CovMatrixStatus() const
 void Minuit2Minimizer::SetTraceObject(MnTraceObject &obj)
 {
    // set trace object
-   if (!fMinimizer)
-      return;
-   fMinimizer->Builder().SetTraceObject(obj);
+   if (fMinimizer)
+      fMinimizer->Builder().SetTraceObject(obj);
 }
 
 void Minuit2Minimizer::SetStorageLevel(int level)
 {
    // set storage level
-   if (!fMinimizer)
-      return;
-   fMinimizer->Builder().SetStorageLevel(level);
+   if (fMinimizer)
+      fMinimizer->Builder().SetStorageLevel(level);
 }
 
 } // end namespace Minuit2

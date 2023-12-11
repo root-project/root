@@ -495,7 +495,7 @@
 # else
 #   define _R__DEPRECATED_LATER(REASON) __attribute__((deprecated(REASON)))
 # endif
-#elif defined(_MSC_VER) || !defined(R__NO_DEPRECATION)
+#elif defined(_MSC_VER) && !defined(R__NO_DEPRECATION)
 #   define _R__DEPRECATED_LATER(REASON) __pragma(deprecated(REASON))
 #else
 /* Deprecation not supported for this compiler. */
@@ -508,12 +508,12 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* USE AS `R__DEPRECATED(6,32, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.32 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,31,0)
-# define _R__DEPRECATED_632(REASON) _R__DEPRECATED_LATER(REASON)
+/* USE AS `R__DEPRECATED(6,34, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.34 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,33,0)
+# define _R__DEPRECATED_634(REASON) _R__DEPRECATED_LATER(REASON)
 #else
-# define _R__DEPRECATED_632(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+# define _R__DEPRECATED_634(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`

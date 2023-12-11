@@ -37,7 +37,6 @@ public:
 
   RooGenFitStudy(const char* name=nullptr, const char* title=nullptr) ;
   RooGenFitStudy(const RooGenFitStudy& other) ;
-  ~RooGenFitStudy() override ;
   RooAbsStudy* clone(const char* newname="") const override { return new RooGenFitStudy(newname?newname:GetName(),GetTitle()) ; }
 
   void setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={}) ;
@@ -60,16 +59,16 @@ public:
   RooLinkedList _genOpts ;
   RooLinkedList _fitOpts ;
 
-  RooAbsPdf* _genPdf ; ///<!
+  RooAbsPdf* _genPdf = nullptr; ///<!
   RooArgSet _genObs ; ///<!
-  RooAbsPdf* _fitPdf ; ///<!
+  RooAbsPdf* _fitPdf = nullptr; ///<!
   RooArgSet _fitObs ; ///<!
 
-  RooAbsPdf::GenSpec* _genSpec ; ///<!
-  RooRealVar* _nllVar ; ///<!
-  RooRealVar* _ngenVar ; ///<!
+  RooAbsPdf::GenSpec* _genSpec = nullptr; ///<!
+  RooRealVar* _nllVar = nullptr; ///<!
+  RooRealVar* _ngenVar = nullptr; ///<!
   std::unique_ptr<RooArgSet> _params; ///<!
-  RooArgSet* _initParams; ///<!
+  RooArgSet* _initParams= nullptr; ///<!
 
   ClassDefOverride(RooGenFitStudy,2) // Generate-and-Fit study module
 } ;

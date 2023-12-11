@@ -14,7 +14,7 @@
 \class RooCachedPdf
 \ingroup Roofitcore
 
-RooCachedPdf is an implementation of RooAbsCachedPdf that can cache
+Implementation of RooAbsCachedPdf that can cache
 any external RooAbsPdf input function provided in the constructor.
 **/
 
@@ -30,8 +30,6 @@ any external RooAbsPdf input function provided in the constructor.
 using namespace std;
 
 ClassImp(RooCachedPdf);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +38,7 @@ ClassImp(RooCachedPdf);
 /// in the binning named "cache" in the observables of the function. The dimensions
 /// of the cache are automatically matched to the number of observables used
 /// in each use context. Multiple cache in different observable may exists
-/// simultanously if the cached p.d.f is used with multiple observable
+/// simultaneously if the cached p.d.f is used with multiple observable
 /// configurations simultaneously
 
 RooCachedPdf::RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf) :
@@ -85,17 +83,6 @@ RooCachedPdf::RooCachedPdf(const RooCachedPdf& other, const char* name) :
  {
  }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooCachedPdf::~RooCachedPdf()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Update contents of cache histogram by resampling the input p.d.f. Note that
 /// the cache is filled with normalized p.d.f values so that the RooHistPdf
@@ -105,14 +92,14 @@ RooCachedPdf::~RooCachedPdf()
 void RooCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 {
 
-  if (cache.hist()->get()->getSize()>1) {
+  if (cache.hist()->get()->size()>1) {
     coutP(Eval) << "RooCachedPdf::fillCacheObject(" << GetName() << ") filling multi-dimensional cache" ;
   }
 
   // Update contents of histogram
-  ((RooAbsPdf&)pdf.arg()).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
+  (const_cast<RooAbsPdf &>(static_cast<RooAbsPdf const&>(pdf.arg()))).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
 
-  if (cache.hist()->get()->getSize()>1) {
+  if (cache.hist()->get()->size()>1) {
     ccoutP(Eval) << endl ;
   }
 

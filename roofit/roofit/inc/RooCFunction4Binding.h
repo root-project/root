@@ -100,7 +100,6 @@ class RooCFunction4Ref : public TObject {
   RooCFunction4Ref(VO (*ptr)(VI1,VI2,VI3,VI4)=nullptr) : _ptr(ptr) {
     // Constructor of persistable function reference
   } ;
-  ~RooCFunction4Ref() override {} ;
 
   VO operator()(VI1 x,VI2 y,VI3 z,VI4 w) const {
     // Evaluate embedded function
@@ -161,7 +160,7 @@ template<class VO, class VI1, class VI2, class VI3, class VI4>
 void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
 {
   // Custom streamer for function pointer reference object. When writing,
-  // the function pointer is substituted by its registerd name. When function
+  // the function pointer is substituted by its registered name. When function
   // is unregistered name 'UNKNOWN' is written and a warning is issues. When
   // reading back, the embedded name is converted back to a function pointer
   // using the mapping service. When name UNKNOWN is encountered a warning is
@@ -174,7 +173,8 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
    // Stream an object of class RooCFunction4Ref
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
+     UInt_t R__s;
+     UInt_t R__c;
      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
      // Read name from file
@@ -188,7 +188,7 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
 
      } else {
 
-       // Lookup pointer to C function wih given name
+       // Lookup pointer to C function with given name
        _ptr = fmap().lookupPtr(tmpName.Data()) ;
 
        if (_ptr==nullptr) {
@@ -232,7 +232,6 @@ public:
   RooCFunction4Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w);
   RooCFunction4Binding(const RooCFunction4Binding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction4Binding(*this,newname); }
-  inline ~RooCFunction4Binding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
@@ -305,7 +304,6 @@ public:
   RooCFunction4PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w);
   RooCFunction4PdfBinding(const RooCFunction4PdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction4PdfBinding(*this,newname); }
-  inline ~RooCFunction4PdfBinding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer

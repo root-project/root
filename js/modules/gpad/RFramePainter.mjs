@@ -80,7 +80,7 @@ class RFramePainter extends RObjectPainter {
    recalculateRange(Proj) {
       this.projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90 || this.scale_ymax >=90))) {
+      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >=90))) {
          console.warn(`Mercator Projection: latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
          this.projection = 0;
       }
@@ -416,7 +416,7 @@ class RFramePainter extends RObjectPainter {
          const pr1 = draw_horiz.drawAxis(layer, w, h,
                                    draw_horiz.invert_side ? null : `translate(0,${h})`,
                                    (ticksx > 1) ? -h : 0, disable_x_draw,
-                                   undefined, false),
+                                   undefined, false, this.getPadPainter().getPadHeight() - h - this.getFrameY()),
 
           pr2 = draw_vertical.drawAxis(layer, w, h,
                                    draw_vertical.invert_side ? `translate(${w})` : null,
@@ -727,17 +727,14 @@ class RFramePainter extends RObjectPainter {
          pr = this.drawAxes().then(() => this.addInteractivity());
       }
 
-      return pr.then(() => {
-         if (!this.isBatchMode()) {
-            top_rect.style('pointer-events', 'visibleFill');  // let process mouse events inside frame
-
-            FrameInteractive.assign(this);
-            this.addBasicInteractivity();
-         }
-
-         return this;
-      });
+      return pr.then(() => { return this; });
    }
+
+   /** @summary Returns frame X position */
+   getFrameX() { return this._frame_x || 0; }
+
+   /** @summary Returns frame Y position */
+   getFrameY() { return this._frame_y || 0; }
 
    /** @summary Returns frame width */
    getFrameWidth() { return this._frame_width || 0; }
@@ -755,7 +752,7 @@ class RFramePainter extends RObjectPainter {
          transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
-      }
+      };
    }
 
    /** @summary Returns palette associated with frame */
@@ -976,7 +973,7 @@ class RFramePainter extends RObjectPainter {
          });
       }
 
-      if (typeof dox === 'undefined')  dox = doy = doz = true;  else
+      if (typeof dox === 'undefined') dox = doy = doz = true; else
       if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
@@ -998,7 +995,7 @@ class RFramePainter extends RObjectPainter {
          return;
       }
       if (!axis || axis === 'any')
-         return this.zoom_changed_x || this.zoom_changed_y  || this.zoom_changed_z;
+         return this.zoom_changed_x || this.zoom_changed_y || this.zoom_changed_z;
 
       if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
 
@@ -1098,8 +1095,10 @@ class RFramePainter extends RObjectPainter {
 
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
       menu.add('separator');
-      menu.add('Save as frame.png', () => this.getPadPainter().saveAs('png', 'frame', 'frame.png'));
-      menu.add('Save as frame.svg', () => this.getPadPainter().saveAs('svg', 'frame', 'frame.svg'));
+
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => this.getPadPainter().saveAs(fmt, 'frame', `frame.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -1135,7 +1134,10 @@ class RFramePainter extends RObjectPainter {
    addInteractivity(for_second_axes) {
       if (this.isBatchMode() || (!settings.Zooming && !settings.ContextMenu))
          return true;
+
       FrameInteractive.assign(this);
+      if (!for_second_axes)
+         this.addBasicInteractivity();
       return this.addFrameInteractivity(for_second_axes);
    }
 
@@ -1148,7 +1150,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Toggle log scale on the specified axes */
    toggleAxisLog(axis) {
       const handle = this[axis+'_handle'];
-      if (handle) handle.changeAxisLog('toggle');
+      return handle?.changeAxisLog('toggle');
    }
 
 } // class RFramePainter

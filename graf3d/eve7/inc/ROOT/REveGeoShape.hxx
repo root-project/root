@@ -51,7 +51,7 @@ protected:
 
 public:
    REveGeoShape(const std::string &name = "REveGeoShape", const std::string &title = "");
-   virtual ~REveGeoShape();
+   ~REveGeoShape() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
@@ -94,7 +94,7 @@ protected:
 
 public:
    REveGeoShapeProjected();
-   virtual ~REveGeoShapeProjected();
+   ~REveGeoShapeProjected() override;
 
    void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
    void UpdateProjection() override;

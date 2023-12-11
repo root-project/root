@@ -18,6 +18,7 @@
 #include <RooFit/Detail/DataMap.h>
 #include <RooNumber.h>
 
+#include <cstddef>
 #include <map>
 #include <sstream>
 #include <string>
@@ -26,8 +27,6 @@
 
 template <class T>
 class RooTemplateProxy;
-
-class TString;
 
 namespace RooFit {
 
@@ -103,7 +102,6 @@ public:
    std::unique_ptr<LoopScope> beginLoop(RooAbsArg const *in);
 
    std::string getTmpVarName();
-   std::string makeValidVarName(TString in) const;
 
    std::string buildArg(RooAbsCollection const &x);
    std::string buildArg(std::span<const double> arr);
@@ -129,6 +127,8 @@ private:
    }
 
    std::string buildArg(std::string const &x) { return x; }
+
+   std::string buildArg(std::nullptr_t) { return "nullptr"; }
 
    std::string buildArg(RooAbsArg const &arg) { return getResult(arg); }
 

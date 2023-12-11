@@ -48,19 +48,19 @@ public:
   double eval(const double* /*x*/) const ;
   double eval(double  /*x*/) const ;
 
-  RooAbsFunc& binding() { return *_binding ; }
+  inline RooAbsFunc& binding() { return _ownedBinding ? *_ownedBinding : *_binding; }
+  inline RooAbsFunc const& binding() const { return _ownedBinding ? *_ownedBinding : *_binding; }
 
 protected:
 
-  bool          _ownBinding ; ///< Do we own the binding function
-  RooArgSet       _nset ;       ///< Normalization observables
-  RooAbsFunc*     _binding ;    ///< Function binding
-  double*       _x ;          ///<! Transfer array ;
-  Int_t           _npar ;       ///<! Number of parameters ;
-  Int_t           _nobs ;       ///<! Number of observables ;
+  std::unique_ptr<RooAbsFunc> _ownedBinding; ///< Do we own the binding function
+  RooArgSet _nset;                           ///< Normalization observables
+  RooAbsFunc *_binding = nullptr;            ///< Function binding
+  mutable std::vector<double> _x;            ///<! Transfer array ;
+  Int_t _npar = 0;                           ///<! Number of parameters ;
+  Int_t _nobs;                               ///<! Number of observables ;
 
   ClassDef(RooFunctor,0) // Export RooAbsReal as functor
 };
 
 #endif
-

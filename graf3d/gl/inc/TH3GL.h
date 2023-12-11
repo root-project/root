@@ -26,8 +26,8 @@ class TH3;
 class TH3GL : public TGLPlot3D
 {
 private:
-   TH3GL(const TH3GL&);            // Not implemented
-   TH3GL& operator=(const TH3GL&); // Not implemented
+   TH3GL(const TH3GL&) = delete;
+   TH3GL& operator=(const TH3GL&) = delete;
 
 protected:
    TH3                *fM;  // Model object dynamic-casted to TH3.

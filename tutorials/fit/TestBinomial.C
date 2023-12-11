@@ -99,7 +99,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
       xmin, xmax);
    TF1*  fM2Fit = new TF1("fM2Fit", "[0]/(1+exp(([1]-x)/[2]))",
       xmin, xmax);
-   TF1*  fM2Fit2 = 0;
+   TF1*  fM2Fit2 = nullptr;
 
    TRandom3 rb(seed);
 

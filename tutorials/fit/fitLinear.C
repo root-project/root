@@ -33,7 +33,7 @@ void fitLinear()
 
    //Generate points along a 3rd degree polynomial:
    makePoints(n, x, y, e, 3);
-   TGraphErrors *gre3 = new TGraphErrors(n, x, y, 0, e);
+   TGraphErrors *gre3 = new TGraphErrors(n, x, y, nullptr, e);
    gre3->Draw("a*");
    //Fit the graph with the predefined "pol3" function
    gre3->Fit("pol3");
@@ -43,7 +43,7 @@ void fitLinear()
 
    //Generate points along a sin(x)+sin(2x) function
    makePoints(n, x, y, e, 2);
-   TGraphErrors *gre2=new TGraphErrors(n, x, y, 0, e);
+   TGraphErrors *gre2=new TGraphErrors(n, x, y, nullptr, e);
    gre2->Draw("*same");
    gre2->SetMarkerColor(kBlue);
    gre2->SetLineColor(kBlue);
@@ -62,7 +62,7 @@ void fitLinear()
 
    //Generate points along a -2+exp(-x) function
    makePoints(n, x, y, e, 4);
-   TGraphErrors *gre4=new TGraphErrors(n, x, y, 0, e);
+   TGraphErrors *gre4=new TGraphErrors(n, x, y, nullptr, e);
    gre4->Draw("*same");
    gre4->SetMarkerColor(kRed);
    gre4->SetLineColor(kRed);

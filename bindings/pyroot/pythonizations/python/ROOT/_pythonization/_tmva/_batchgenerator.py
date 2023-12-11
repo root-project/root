@@ -197,7 +197,15 @@ class BaseGenerator:
 
         self.train_columns = [c for c in self.all_columns if c not in [target, weights]]
 
-        from ROOT import TMVA
+        from ROOT import TMVA, EnableThreadSafety
+
+        # The RBatchGenerator will create a separate C++ thread for I/O.
+        # Enable thread safety in ROOT from here, to make sure there is no
+        # interference between the main Python thread (which might call into
+        # cling via cppyy) and the I/O thread.
+        EnableThreadSafety()
+
+        expanded_filter = " && ".join(["(" + fltr + ")" for fltr in filters])
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
             tree_name,
@@ -205,7 +213,7 @@ class BaseGenerator:
             chunk_size,
             batch_size,
             self.given_columns,
-            filters,
+            expanded_filter,
             max_vec_sizes_list,
             vec_padding,
             validation_split,

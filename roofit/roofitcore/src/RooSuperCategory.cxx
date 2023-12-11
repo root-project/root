@@ -19,7 +19,7 @@
 \class RooSuperCategory
 \ingroup Roofitcore
 
-The RooSuperCategory can join several RooAbsCategoryLValue objects into
+Joins several RooAbsCategoryLValue objects into
 a single category. For this, it uses a RooMultiCategory, which takes care
 of enumerating all the permutations of possible states.
 In addition, the super category derives from RooAbsCategoryLValue, *i.e.*, it allows for
@@ -44,9 +44,9 @@ using namespace std;
 
 ClassImp(RooSuperCategory);
 
-RooSuperCategory::RooSuperCategory() :
-  RooAbsCategoryLValue(),
-  _multiCat("MultiCatProxy", "Stores a RooMultiCategory", this, true, true, true) { }
+RooSuperCategory::RooSuperCategory() : _multiCat("MultiCatProxy", "Stores a RooMultiCategory", this, true, true, true)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a super category from other categories.
@@ -99,9 +99,10 @@ bool RooSuperCategory::setIndex(Int_t index, bool printError)
   for (auto arg : _multiCat->_catSet) {
     auto cat = static_cast<RooAbsCategoryLValue*>(arg);
     if (cat->empty()) {
-      if (printError)
-        coutE(InputArguments) << __func__ << ": Found a category with zero states. Cannot set state for '"
-            << cat->GetName() << "'." << std::endl;
+      if (printError) {
+         coutE(InputArguments) << __func__ << ": Found a category with zero states. Cannot set state for '"
+                               << cat->GetName() << "'." << std::endl;
+      }
       continue;
     }
     const value_type thisIndex = index % cat->size();

@@ -19,7 +19,7 @@
 \class RooCurve
 \ingroup Roofitcore
 
-A RooCurve is a one-dimensional graphical representation of a real-valued function.
+One-dimensional graphical representation of a real-valued function.
 A curve is approximated by straight line segments with end points chosen to give
 a "good" approximation to the true curve. The goodness of the approximation is
 controlled by a precision and a resolution parameter.
@@ -41,7 +41,6 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
-#include "RooRealIntegral.h"
 #include "RooRealBinding.h"
 #include "RooMsgService.h"
 #include "RooProduct.h"
@@ -79,15 +78,11 @@ RooCurve::RooCurve()
 /// factor to rescale the expression after normalization.
 /// If shiftToZero is set, the entire curve is shifted down to make the lowest
 /// point of the curve go through zero.
-RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double xhi, Int_t xbins,
-    double scaleFactor, const RooArgSet *normVars, double prec, double resolution,
-    bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, double eeVal,
-    bool showProg) :
-        TGraph(),
-        RooPlotable(),
-        _showProgress(showProg)
+RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double xhi, Int_t xbins, double scaleFactor,
+                   const RooArgSet *normVars, double prec, double resolution, bool shiftToZero, WingMode wmode,
+                   Int_t nEvalError, Int_t doEEVal, double eeVal, bool showProg)
+   : _showProgress(showProg)
 {
-
   // grab the function's name and title
   TString name(f.GetName());
   SetName(name.Data());
@@ -189,17 +184,20 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
 
   // Make deque of points in X
   deque<double> pointList ;
-  double x,y ;
+  double x;
+  double y;
 
   // Add X points of C1
-  Int_t i1,n1 = c1.GetN() ;
+  Int_t i1;
+  Int_t n1 = c1.GetN();
   for (i1=0 ; i1<n1 ; i1++) {
     c1.GetPoint(i1,x,y) ;
     pointList.push_back(x) ;
   }
 
   // Add X points of C2
-  Int_t i2,n2 = c2.GetN() ;
+  Int_t i2;
+  Int_t n2 = c2.GetN();
   for (i2=0 ; i2<n2 ; i2++) {
     c2.GetPoint(i2,x,y) ;
     pointList.push_back(x) ;
@@ -342,7 +340,8 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
 
   // store points of the coarse scan and calculate any refinements necessary
   double minDx= resolution*(xhi-xlo);
-  double x1,x2= xlo;
+  double x1;
+  double x2 = xlo;
 
   if (wmode==Extended) {
     // Add two points to make curve jump from 0 to yval at the left end of the plotting range.
@@ -528,11 +527,18 @@ void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/,
 
 double RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 {
-  Int_t i,np = hist.GetN() ;
-  double x,y,eyl,eyh,exl,exh ;
+  Int_t i;
+  Int_t np = hist.GetN();
+  double x;
+  double y;
+  double eyl;
+  double eyh;
+  double exl;
+  double exh;
 
   // Find starting and ending bin of histogram based on range of RooCurve
-  double xstart,xstop ;
+  double xstart;
+  double xstop;
 
   GetPoint(0,xstart,y) ;
   GetPoint(GetN()-1,xstop,y) ;
@@ -589,7 +595,10 @@ double RooCurve::average(double xFirst, double xLast) const
   // Find first and last mid points
   Int_t ifirst = findPoint(xFirst,1e10) ;
   Int_t ilast  = findPoint(xLast,1e10) ;
-  double xFirstPt,yFirstPt,xLastPt,yLastPt ;
+  double xFirstPt;
+  double yFirstPt;
+  double xLastPt;
+  double yLastPt;
   GetPoint(ifirst,xFirstPt,yFirstPt) ;
   GetPoint(ilast,xLastPt,yLastPt) ;
 
@@ -614,7 +623,11 @@ double RooCurve::average(double xFirst, double xLast) const
     const_cast<RooCurve&>(*this).GetPoint(ilast,xLastPt,yLastPt) ;
   }
 
-  double sum(0),x1,y1,x2,y2 ;
+  double sum(0);
+  double x1;
+  double y1;
+  double x2;
+  double y2;
 
   // Trapezoid integration from lower edge to first midpoint
   sum += (xFirstPt-xFirst)*(yFirst+yFirstPt)/2 ;
@@ -640,8 +653,11 @@ double RooCurve::average(double xFirst, double xLast) const
 
 Int_t RooCurve::findPoint(double xvalue, double tolerance) const
 {
-  double delta(std::numeric_limits<double>::max()),x,y ;
-  Int_t i,n = GetN() ;
+  double delta(std::numeric_limits<double>::max());
+  double x;
+  double y;
+  Int_t i;
+  Int_t n = GetN();
   Int_t ibest(-1) ;
   for (i=0 ; i<n ; i++) {
     GetPoint(i,x,y);
@@ -667,7 +683,8 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
   int ibest = findPoint(xvalue,1e10) ;
 
   // Get position of best point
-  double xbest, ybest ;
+  double xbest;
+  double ybest;
   const_cast<RooCurve*>(this)->GetPoint(ibest,xbest,ybest) ;
 
   // Handle trivial case of being dead on
@@ -676,7 +693,9 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
   }
 
   // Get nearest point on other side w.r.t. xvalue
-  double xother,yother, retVal(0) ;
+  double xother;
+  double yother;
+  double retVal(0);
   if (xbest<xvalue) {
     if (ibest==n-1) {
       // Value beyond end requested -- return value of last point
@@ -788,7 +807,8 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector
 
 void RooCurve::calcBandInterval(const vector<RooCurve*>& plusVar, const vector<RooCurve*>& minusVar,Int_t i, const TMatrixD& C, double /*Z*/, double& lo, double& hi) const
 {
-  vector<double> y_plus(plusVar.size()), y_minus(minusVar.size()) ;
+  vector<double> y_plus(plusVar.size());
+  vector<double> y_minus(minusVar.size());
   Int_t j(0) ;
   for (vector<RooCurve*>::const_iterator iter=plusVar.begin() ; iter!=plusVar.end() ; ++iter) {
     y_plus[j++] = (*iter)->interpolate(GetX()[i]) ;
@@ -834,7 +854,8 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,doub
     hi = y[y.size()-delta] ;
   } else {
     // Estimate R.M.S of variations at each point and use that as Gaussian sigma
-    double sum_y(0), sum_ysq(0) ;
+    double sum_y(0);
+    double sum_ysq(0);
     for (unsigned int k=0 ; k<y.size() ; k++) {
       sum_y   += y[k] ;
       sum_ysq += y[k]*y[k] ;
@@ -859,7 +880,10 @@ bool RooCurve::isIdentical(const RooCurve& other, double tol, bool verbose) cons
 {
   // Determine X range and Y range
   Int_t n= min(GetN(),other.GetN());
-  double xmin(1e30), xmax(-1e30), ymin(1e30), ymax(-1e30) ;
+  double xmin(1e30);
+  double xmax(-1e30);
+  double ymin(1e30);
+  double ymax(-1e30);
   for(Int_t i= 0; i < n; i++) {
     if (fX[i]<xmin) xmin=fX[i] ;
     if (fX[i]>xmax) xmax=fX[i] ;

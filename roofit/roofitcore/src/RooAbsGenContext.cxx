@@ -19,7 +19,7 @@
 \class RooAbsGenContext
 \ingroup Roofitcore
 
-RooAbsGenContext is the abstract base class for generator contexts of
+Abstract base class for generator contexts of
 RooAbsPdf objects. A generator context is an object that controls
 the generation of events from a given p.d.f in one or more sessions.
 This class defines the common interface for all such contexts and organizes
@@ -51,8 +51,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   TNamed(model),
   _prototype(prototype),
   _isValid(true),
-  _verbose(verbose),
-  _genData(nullptr)
+  _verbose(verbose)
 {
   // Check PDF dependents
   if (model.recursiveCheckObservables(&vars)) {
@@ -186,7 +185,8 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
   if (_verbose) Print("v") ;
 
   // create a new dataset
-  TString name(GetName()),title(GetTitle());
+  TString name(GetName());
+  TString title(GetTitle());
   name.Append("Data");
   title.Prepend("Generated From ");
 

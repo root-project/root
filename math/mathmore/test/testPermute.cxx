@@ -163,8 +163,8 @@ int testPermute()
 
    if ( showGraphics )
    {
-      TCanvas* c1 = new TCanvas("c1", "Comparision of Permutation Time", 600, 400);
-      TH2F* hpx = new TH2F("hpx", "Comparision of Permutation Time", arraysize, minsize, maxsize, arraysize, tM[0],tS[arraysize-1]);
+      TCanvas* c1 = new TCanvas("c1", "Comparison of Permutation Time", 600, 400);
+      TH2F* hpx = new TH2F("hpx", "Comparison of Permutation Time", arraysize, minsize, maxsize, arraysize, tM[0],tS[arraysize-1]);
       hpx->SetStats(kFALSE);
       hpx->Draw();
 

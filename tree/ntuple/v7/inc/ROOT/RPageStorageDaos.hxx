@@ -20,7 +20,7 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <array>
 #include <atomic>
@@ -140,7 +140,7 @@ Currently, an object is allocated for ntuple metadata (anchor/header/footer).
 Objects can correspond to pages or clusters of pages depending on the RNTuple-DAOS mapping strategy.
 */
 // clang-format on
-class RPageSinkDaos : public RPageSink {
+class RPageSinkDaos : public RPagePersistentSink {
 private:
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 

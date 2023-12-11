@@ -68,10 +68,9 @@ of a main program creating an interactive version is shown below:
 
 #include <ROOT/RConfig.hxx>
 #include <ROOT/TErrorDefaultHandler.hxx>
+#include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
-#include "RVersion.h"
-#include "RGitCommit.h"
 #include <string>
 #include <map>
 #include <cstdlib>
@@ -192,13 +191,20 @@ static Int_t IVERSQ()
 
 static Int_t IDATQQ(const char *date)
 {
+   if (!date) {
+      Error("TSystem::IDATQQ", "nullptr date string, expected e.g. 'Dec 21 2022'");
+      return -1;
+   }
+
    static const char *months[] = {"Jan","Feb","Mar","Apr","May",
                                   "Jun","Jul","Aug","Sep","Oct",
                                   "Nov","Dec"};
-
    char  sm[12];
    Int_t yy, mm=0, dd;
-   sscanf(date, "%s %d %d", sm, &dd, &yy);
+   if (sscanf(date, "%s %d %d", sm, &dd, &yy) != 3) {
+      Error("TSystem::IDATQQ", "Cannot parse date string '%s', expected e.g. 'Dec 21 2022'", date);
+      return -1;
+   }
    for (int i = 0; i < 12; i++)
       if (!strncmp(sm, months[i], 3)) {
          mm = i+1;
@@ -2383,15 +2389,8 @@ Longptr_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 
 void TROOT::ReadGitInfo()
 {
-#ifdef ROOT_GIT_COMMIT
-   fGitCommit = ROOT_GIT_COMMIT;
-#endif
-#ifdef ROOT_GIT_BRANCH
-   fGitBranch = ROOT_GIT_BRANCH;
-#endif
-
-   TString gitinfo = "gitinfo.txt";
-   char *filename = gSystem->ConcatFileName(TROOT::GetEtcDir(), gitinfo);
+   TString filename = "gitinfo.txt";
+   gSystem->PrependPathName(TROOT::GetEtcDir(), filename);
 
    FILE *fp = fopen(filename, "r");
    if (fp) {
@@ -2399,15 +2398,16 @@ void TROOT::ReadGitInfo()
       // read branch name
       s.Gets(fp);
       fGitBranch = s;
-      // read commit SHA1
+      // read commit hash
       s.Gets(fp);
       fGitCommit = s;
       // read date/time make was run
       s.Gets(fp);
       fGitDate = s;
       fclose(fp);
+   } else {
+      Error("ReadGitInfo()", "Cannot determine git info: etc/gitinfo.txt not found!");
    }
-   delete [] filename;
 }
 
 Bool_t &GetReadingObject() {

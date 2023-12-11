@@ -35,13 +35,10 @@ class TScatterPainter extends TGraphPainter {
 
       if (pal) return pal;
 
-      if (this.options.PadPalette)
-         pal = this.getPadPainter()?.findInPrimitives('palette', clTPaletteAxis);
-      else if (gr) {
+      if (gr) {
          pal = create(clTPaletteAxis);
 
          const fp = this.get_main();
-
          Object.assign(pal, { fX1NDC: fp.fX2NDC + 0.005, fX2NDC: fp.fX2NDC + 0.05, fY1NDC: fp.fY1NDC, fY2NDC: fp.fY2NDC, fInit: 1, $can_move: true });
          Object.assign(pal.fAxis, { fChopt: '+', fLineColor: 1, fLineSyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11, fNdiv: 510 });
          gr.fFunctions.AddFirst(pal, '');
@@ -71,19 +68,16 @@ class TScatterPainter extends TGraphPainter {
       let scale = 1, offset = 0;
       if (!fpainter || !hpainter || !scatter) return;
 
-
       if (scatter.fColor) {
          const pal = this.getPalette();
          if (pal)
             pal.$main_painter = this;
 
-         if (!this.fPalette) {
-            const pp = this.getPadPainter();
-            if (isFunc(pp?.getCustomPalette))
-               this.fPalette = pp.getCustomPalette();
-         }
-         if (!this.fPalette)
-            this.fPalette = getColorPalette(this.options.Palette);
+         const pp = this.getPadPainter();
+         if (!this._color_palette && isFunc(pp?.getCustomPalette))
+            this._color_palette = pp.getCustomPalette();
+         if (!this._color_palette)
+            this._color_palette = getColorPalette(this.options.Palette, pp?.isGrayscale());
 
          let minc = scatter.fColor[0], maxc = scatter.fColor[0];
          for (let i = 1; i < scatter.fColor.length; ++i) {
@@ -109,7 +103,7 @@ class TScatterPainter extends TGraphPainter {
          }
 
          if (maxs <= mins)
-            maxs = mins > 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
+            maxs = mins < 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
 
          scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
          offset = mins;
@@ -124,7 +118,7 @@ class TScatterPainter extends TGraphPainter {
                grx = funcs.grx(pnt.x),
                gry = funcs.gry(pnt.y),
                size = scatter.fSize ? scatter.fMinMarkerSize + scale * (scatter.fSize[i] - offset) : scatter.fMarkerSize,
-               color = scatter.fColor ? this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
+               color = scatter.fColor ? this.fContour.getPaletteColor(this._color_palette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
                handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
 
           this.draw_g.append('svg:path')

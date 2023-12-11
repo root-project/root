@@ -16,8 +16,6 @@
 #ifndef ROO_CACHE_MANAGER
 #define ROO_CACHE_MANAGER
 
-#include "Rtypes.h"
-
 #include "RooMsgService.h"
 #include "RooNormSetCache.h"
 #include "RooAbsReal.h"
@@ -26,7 +24,10 @@
 #include "RooAbsCache.h"
 #include "RooAbsCacheElement.h"
 #include "RooNameReg.h"
-#include "RooHelpers.h"
+
+#include <ROOT/StringUtils.hxx>
+#include "Rtypes.h"
+
 #include <vector>
 
 
@@ -103,13 +104,13 @@ public:
 
 protected:
 
-  Int_t _maxSize ;    ///<! Maximum size
-  Int_t _size ;       ///<! Actual use
-  Int_t _lastIndex ;  ///<! Last slot accessed
+  Int_t _maxSize ;       ///<! Maximum size
+  Int_t _size = 0;       ///<! Actual use
+  Int_t _lastIndex = -1; ///<! Last slot accessed
 
   std::vector<RooNormSetCache> _nsetCache ; ///<! Normalization/Integration set manager
   std::vector<T*> _object ;                 ///<! Payload
-  bool _wired ;               ///<! In wired mode, there is a single payload which is returned always
+  bool _wired = false;               ///<! In wired mode, there is a single payload which is returned always
 
   ClassDefOverride(RooCacheManager,2) // Cache Manager class generic objects
 } ;
@@ -119,13 +120,12 @@ protected:
 /// made with this constructor is not registered with its owner
 /// and will not receive information on server redirects and
 /// cache operation mode changes.
-template<class T>
-RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(nullptr)
+template <class T>
+RooCacheManager<T>::RooCacheManager(Int_t maxSize) : _maxSize(maxSize)
 {
-  _maxSize = maxSize ;
+
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
   _object.resize(_maxSize,nullptr) ; // = new T*[maxSize] ;
-  _wired = false ;
 }
 
 
@@ -133,16 +133,13 @@ RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(nullptr)
 /// made with this constructor is registered with its owner
 /// and will receive information on server redirects and
 /// cache operation mode changes.
-template<class T>
-RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCache(owner)
+template <class T>
+RooCacheManager<T>::RooCacheManager(RooAbsArg *owner, Int_t maxSize)
+   : RooAbsCache(owner), _maxSize(maxSize)
 {
-  _maxSize = maxSize ;
-  _size = 0 ;
 
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
   _object.resize(_maxSize,nullptr) ; // = new T*[maxSize] ;
-  _wired = false ;
-  _lastIndex = -1 ;
 
   Int_t i ;
   for (i=0 ; i<_maxSize ; i++) {
@@ -152,16 +149,13 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
 }
 
 /// Copy constructor.
-template<class T>
-RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* owner) : RooAbsCache(other,owner)
+template <class T>
+RooCacheManager<T>::RooCacheManager(const RooCacheManager &other, RooAbsArg *owner)
+   : RooAbsCache(other, owner), _maxSize(other._maxSize), _size(other._size)
 {
-  _maxSize = other._maxSize ;
-  _size = other._size ;
 
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[_maxSize] ;
   _object.resize(_maxSize,nullptr) ; // = new T*[_maxSize] ;
-  _wired = false ;
-  _lastIndex = -1 ;
 
   //std::cout << "RooCacheManager:cctor(" << this << ") other = " << &other << " _size=" << _size << " _maxSize = " << _maxSize << std::endl ;
 
@@ -316,22 +310,32 @@ T* RooCacheManager<T>::getObjByIndex(Int_t index) const
 }
 
 
-/// Create RooArgSet contatining the objects that are both in the cached set 1
-//with a given index and an input argSet.
-template<class T>
-RooArgSet RooCacheManager<T>::selectFromSet1(RooArgSet const& argSet, int index) const
+/// Create RooArgSet containing the objects that are both in the cached set 1
+/// with a given index and an input argSet.
+template <class T>
+RooArgSet RooCacheManager<T>::selectFromSet1(RooArgSet const &argSet, int index) const
 {
-  return RooHelpers::selectFromArgSet(argSet, _nsetCache.at(index).nameSet1());
+   RooArgSet output;
+   for (auto const &name : ROOT::Split(_nsetCache.at(index).nameSet1(), ":")) {
+      if (RooAbsArg *arg = argSet.find(name.c_str())) {
+         output.add(*arg);
+      }
+   }
+   return output;
 }
 
-
-/// Create RooArgSet contatining the objects that are both in the cached set 2
-//with a given index and an input argSet.
-template<class T>
-RooArgSet RooCacheManager<T>::selectFromSet2(RooArgSet const& argSet, int index) const
+/// Create RooArgSet containing the objects that are both in the cached set 2
+/// with a given index and an input argSet.
+template <class T>
+RooArgSet RooCacheManager<T>::selectFromSet2(RooArgSet const &argSet, int index) const
 {
-  return RooHelpers::selectFromArgSet(argSet, _nsetCache.at(index).nameSet2());
+   RooArgSet output;
+   for (auto const &name : ROOT::Split(_nsetCache.at(index).nameSet2(), ":")) {
+      if (RooAbsArg *arg = argSet.find(name.c_str())) {
+         output.add(*arg);
+      }
+   }
+   return output;
 }
-
 
 #endif

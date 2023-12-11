@@ -71,25 +71,13 @@ using namespace std;
 /// By default, PdfProposal does NOT own the PDF that serves as the
 /// proposal density function
 
-PdfProposal::PdfProposal() : ProposalFunction()
-{
-   fPdf = nullptr;
-   fOwnsPdf = false;
-   fCacheSize = 1;
-   fCachePosition = 0;
-}
+PdfProposal::PdfProposal() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// By default, PdfProposal does NOT own the PDF that serves as the
 /// proposal density function
 
-PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
-{
-   fPdf = &pdf;
-   fOwnsPdf = false;
-   fCacheSize = 1;
-   fCachePosition = 0;
-}
+PdfProposal::PdfProposal(RooAbsPdf &pdf) : fPdf(&pdf) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// determine whether these two RooArgSets represent the same point
@@ -97,10 +85,11 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
 bool PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 {
    if (x1.equals(x2)) {
-      for (auto const *r : static_range_cast<RooRealVar*>(x1))
+      for (auto const *r : static_range_cast<RooRealVar *>(x1)) {
          if (r->getVal() != x2.getRealValue(r->GetName())) {
             return false;
          }
+      }
       return true;
    }
    return false;
@@ -156,7 +145,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine whether or not the proposal density is symmetric for
-/// points x1 and x2 - that is, whether the probabilty of reaching x2
+/// points x1 and x2 - that is, whether the propabilty of reaching x2
 /// from x1 is equal to the probability of reaching x1 from x2
 
 bool PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)

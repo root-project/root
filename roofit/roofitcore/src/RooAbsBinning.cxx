@@ -19,7 +19,7 @@
 \class RooAbsBinning
 \ingroup Roofitcore
 
-RooAbsBinning is the abstract base class for RooRealVar binning definitions.
+Abstract base class for RooRealVar binning definitions.
 This class defines the interface to retrieve bin boundaries, ranges etc.
 **/
 
@@ -115,13 +115,16 @@ void RooAbsBinning::printValue(ostream &os) const
 
 void RooAbsBinning::Streamer(TBuffer &R__b)
 {
-   UInt_t R__s, R__c;
+   UInt_t R__s;
+   UInt_t R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
-      if (R__v==1) {
-   TObject::Streamer(R__b);
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v) {
+      }
+      if (R__v == 1) {
+         TObject::Streamer(R__b);
       } else {
-   TNamed::Streamer(R__b);
+         TNamed::Streamer(R__b);
       }
       RooPrintable::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, RooAbsBinning::IsA());
@@ -132,4 +135,3 @@ void RooAbsBinning::Streamer(TBuffer &R__b)
       R__b.SetByteCount(R__c, true);
    }
 }
-

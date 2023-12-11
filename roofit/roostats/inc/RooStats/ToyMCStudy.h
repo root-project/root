@@ -43,8 +43,6 @@ class ToyMCStudy: public RooAbsStudy {
 
       RooAbsStudy* clone(const char* /*newname*/="") const override { return new ToyMCStudy(*this) ; }
 
-      ~ToyMCStudy() override {}
-
       // RooAbsStudy interfaces
       bool initialize(void) override;
       bool execute(void) override;
@@ -72,20 +70,12 @@ class ToyMCStudy: public RooAbsStudy {
 class ToyMCPayload : public TNamed {
 
    public:
-
-      ToyMCPayload() {
-         // proof constructor, do not use
-    fDataSet = nullptr;
-      }
-
-      ToyMCPayload(RooDataSet* sd)
+      ToyMCPayload() : fDataSet(nullptr)
       {
-         fDataSet = sd;
+         // proof constructor, do not use
       }
 
-      ~ToyMCPayload() override {
-      }
-
+      ToyMCPayload(RooDataSet *sd) : fDataSet(sd) {}
 
       RooDataSet* GetSamplingDistributions()
       {

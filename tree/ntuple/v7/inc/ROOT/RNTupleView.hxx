@@ -18,7 +18,7 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <iterator>
 #include <memory>

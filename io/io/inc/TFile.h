@@ -39,7 +39,6 @@
 #include <mutex>
 #endif
 
-
 class TMap;
 class TFree;
 class TArrayC;
@@ -117,8 +116,8 @@ protected:
 
 #ifdef R__USE_IMT
    std::mutex                                 fWriteMutex;  ///<!Lock for writing baskets / keys into the file.
-   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 #endif
+   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 
@@ -323,9 +322,6 @@ public:
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
 
-   static Bool_t       SetCacheFileDir(ROOT::Internal::TStringView cacheDir, Bool_t operateDisconnected = kTRUE,
-                                       Bool_t forceCacheread = kFALSE)
-     { return SetCacheFileDir(std::string_view(cacheDir), operateDisconnected, forceCacheread); }
    static Bool_t       SetCacheFileDir(std::string_view cacheDir, Bool_t operateDisconnected = kTRUE,
                                        Bool_t forceCacheread = kFALSE);
    static const char  *GetCacheFileDir();

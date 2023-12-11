@@ -19,8 +19,7 @@
 \class RooFormula
 \ingroup Roofitcore
 
-RooFormula internally uses ROOT's TFormula to compute user-defined expressions
-of RooAbsArgs.
+Internally uses ROOT's TFormula to compute user-defined expressions of RooAbsArgs.
 
 The string expression can be any valid TFormula expression referring to the
 listed servers either by name or by their ordinal list position. These three are
@@ -105,12 +104,12 @@ void convertArobaseReferences(std::string &formula)
       formula += ']';
 }
 
-/// Replace all occurences of `what` with `with` inside of `inout`.
-void replaceAll(std::string &inout, std::string_view what, std::string_view with)
+/// Replace all occurrences of `what` with `with` inside of `inOut`.
+void replaceAll(std::string &inOut, std::string_view what, std::string_view with)
 {
-   for (std::string::size_type pos{}; inout.npos != (pos = inout.find(what.data(), pos, what.length()));
+   for (std::string::size_type pos{}; inOut.npos != (pos = inOut.find(what.data(), pos, what.length()));
         pos += with.length()) {
-      inout.replace(pos, what.length(), with.data(), with.length());
+      inOut.replace(pos, what.length(), with.data(), with.length());
    }
 }
 
@@ -167,12 +166,13 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
          std::size_t nOld = varName.length();
          std::size_t nNew = replacement.size();
          auto wbIter = isWordBoundary.begin() + pos;
-         if (nNew > nOld)
+         if (nNew > nOld) {
             isWordBoundary.insert(wbIter + nOld, nNew - nOld, false);
-         else if (nNew < nOld)
+         } else if (nNew < nOld) {
             isWordBoundary.erase(wbIter + nNew, wbIter + nOld);
+         }
 
-         // Do the actual replacment
+         // Do the actual replacement
          formula.replace(pos, varName.length(), replacement);
       }
 
@@ -195,7 +195,7 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
 /// the formula expression.
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& varList,
     bool checkVariables) :
-  TNamed(name, formula), _tFormula{nullptr}
+  TNamed(name, formula)
 {
   _origList.add(varList);
   _isCategory = findCategoryServers(_origList);
@@ -361,7 +361,7 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
   // We only consider the usedVariables() for replacement, because only these
   // are registered as servers.
   for (const auto arg : usedVariables()) {
-    RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
+    RooAbsReal* replace = static_cast<RooAbsReal*>(arg->findNewServer(newDeps,nameChange)) ;
     if (replace) {
       _origList.replace(*arg, *replace);
 

@@ -168,19 +168,20 @@ class RObjectPainter extends ObjectPainter {
 
       const pp = this.getPadPainter(),
             rfont = pp?._dfltRFont || { fFamily: 'Arial', fStyle: '', fWeight: '' },
-            text_angle  = this.v7EvalAttr(name + '_angle', 0),
-            text_align  = this.v7EvalAttr(name + '_align', dflts.align || 'none'),
-            text_color  = this.v7EvalColor(name + '_color', dflts.color || 'none'),
+            text_angle = this.v7EvalAttr(name + '_angle', 0),
+            text_align = this.v7EvalAttr(name + '_align', dflts.align || 'none'),
+            text_color = this.v7EvalColor(name + '_color', dflts.color || 'none'),
             font_family = this.v7EvalAttr(name + '_font_family', rfont.fFamily || 'Arial'),
-            font_style  = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
+            font_style = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
             font_weight = this.v7EvalAttr(name + '_font_weight', rfont.fWeight || '');
-       let text_size   = this.v7EvalAttr(name + '_size', dflts.size || 12);
+       let text_size = this.v7EvalAttr(name + '_size', dflts.size || 12);
 
        if (isStr(text_size)) text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
        if (!fontScale) fontScale = pp?.getPadHeight() || 100;
 
-       const handler = new FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
+       const handler = new FontHandler(null, text_size, fontScale);
+       handler.setNameStyleWeight(font_family, font_style, font_weight);
 
        if (text_angle) handler.setAngle(360 - text_angle);
        if (text_align !== 'none') handler.setAlign(text_align);
@@ -196,7 +197,7 @@ class RObjectPainter extends ObjectPainter {
       const color = this.v7EvalColor(prefix + 'color', ''),
             pattern = this.v7EvalAttr(prefix + 'style', 0);
 
-      this.createAttFill({ pattern, color,  color_as_svg: true });
+      this.createAttFill({ pattern, color, color_as_svg: true });
    }
 
    /** @summary Create this.lineatt object based on v7 line attributes */

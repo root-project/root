@@ -17,7 +17,7 @@
 \class RooEffGenContext
 \ingroup Roofitcore
 
-RooEffGenContext is a specialized generator context for p.d.fs represented
+Specialized generator context for p.d.fs represented
 by class RooEffProd, which are p.d.fs multiplied with an efficiency function.
 This generator context generates events from such products by first
 generating events from a dedicated generator context of the input p.d.f.
@@ -29,8 +29,6 @@ and applying an extra rejection step based on the efficiency function.
 #include "RooEffGenContext.h"
 #include "RooAbsPdf.h"
 #include "RooRandom.h"
-
-using namespace std;
 
 ClassImp(RooEffGenContext);
 
@@ -44,17 +42,9 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf,
 {
    RooArgSet x(eff, eff.GetName());
    x.snapshot(_cloneSet, true);
-   _eff = dynamic_cast<RooAbsReal *>(_cloneSet.find(eff.GetName()));
-   _generator = pdf.genContext(vars, prototype, auxProto, verbose);
+   initializeEff(eff);
+   _generator = std::unique_ptr<RooAbsGenContext>{pdf.genContext(vars, prototype, auxProto, verbose)};
    vars.snapshot(_vars, true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooEffGenContext::~RooEffGenContext()
-{
-   delete _generator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,13 +88,13 @@ void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
 
-void RooEffGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
+void RooEffGenContext::printMultiline(std::ostream &os, Int_t content, bool verbose, TString indent) const
 {
    RooAbsGenContext::printMultiline(os, content, verbose, indent);
-   os << indent << "--- RooEffGenContext ---" << endl;
+   os << indent << "--- RooEffGenContext ---" << std::endl;
    os << indent << "Using EFF ";
    _eff->printStream(os, kName | kArgs | kClassName, kSingleLine, indent);
-   os << indent << "PDF generator" << endl;
+   os << indent << "PDF generator" << std::endl;
 
    TString indent2(indent);
    indent2.Append("    ");

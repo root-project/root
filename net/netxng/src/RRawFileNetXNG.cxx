@@ -13,12 +13,16 @@
 
 #include <TError.h>
 
+#include <cctype>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
+#include <utility>
 #include <XrdCl/XrdClFile.hh>
 #include <XrdCl/XrdClFileSystem.hh>
-
+#include <XrdVersion.hh>
 
 namespace {
 constexpr int kDefaultBlockSize = 128 * 1024; // Read in relatively large 128k blocks for better network utilization
@@ -105,3 +109,74 @@ void ROOT::Internal::RRawFileNetXNG::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
    delete info;
 }
 
+ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVLimits()
+{
+   if (fIOVecLimits)
+      return *fIOVecLimits;
+
+   EnsureOpen();
+   // Start with xrootd default values
+   fIOVecLimits = RIOVecLimits{1024, 2097136, static_cast<std::uint64_t>(-1)};
+
+#if XrdVNUMBER >= 40000
+   std::string strLastURL;
+   pImpl->file.GetProperty("LastURL", strLastURL);
+   XrdCl::URL lastURL(strLastURL);
+   // local redirect will split vector reads into multiple local reads anyway,
+   // so we are fine with the default values
+   if (lastURL.GetProtocol().compare("file") == 0 && lastURL.GetHostId().compare("localhost") == 0) {
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "Local redirect, using default values");
+      return *fIOVecLimits;
+   }
+
+   std::string strDataServer;
+   if (!pImpl->file.GetProperty("DataServer", strDataServer)) {
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "Cannot get DataServer property, using default values");
+      return *fIOVecLimits;
+   }
+   XrdCl::URL dataServer(strDataServer);
+#else
+   XrdCl::URL dataServer(pImpl->file.GetDataServer());
+#endif
+
+   XrdCl::FileSystem fs(dataServer);
+   XrdCl::Buffer arg;
+   XrdCl::Buffer *response = nullptr;
+   arg.FromString("readv_ior_max readv_iov_max");
+
+   XrdCl::XRootDStatus status = fs.Query(XrdCl::QueryCode::Config, arg, response);
+   if (!status.IsOK()) {
+      delete response;
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "Cannot query readv limits, using default values");
+      return *fIOVecLimits;
+   }
+   std::istringstream strmResponse;
+   strmResponse.str(response->ToString());
+   delete response;
+
+   std::string readvIorMax;
+   std::string readvIovMax;
+   if (!std::getline(strmResponse, readvIorMax) || !std::getline(strmResponse, readvIovMax)) {
+      if (gDebug >= 1)
+         Info("GetReadVLimits", "unexpected response from querying readv limits, using default values");
+      return *fIOVecLimits;
+   }
+
+   if (!readvIovMax.empty() && std::isdigit(readvIovMax[0])) {
+      std::size_t val = std::stoi(readvIovMax);
+      // Workaround a dCache bug reported here: https://sft.its.cern.ch/jira/browse/ROOT-6639
+      if (val == 0x7FFFFFFF)
+         return *fIOVecLimits;
+
+      fIOVecLimits->fMaxSingleSize = val;
+   }
+
+   if (!readvIorMax.empty() && std::isdigit(readvIorMax[0])) {
+      fIOVecLimits->fMaxReqs = std::stoi(readvIorMax);
+   }
+
+   return *fIOVecLimits;
+}

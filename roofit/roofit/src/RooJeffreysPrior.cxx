@@ -47,26 +47,11 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
   _paramSet("!paramSet","Parameters",this),
   _cacheMgr(this, 1, true, false)
 {
-  for (const auto comp : obsSet) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " in observable list is not of type RooAbsReal" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
-    _obsSet.add(*comp) ;
-  }
-
-  for (const auto comp : paramSet) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " in parameter list is not of type RooAbsReal" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
-    _paramSet.add(*comp) ;
-  }
+  _obsSet.addTyped<RooAbsReal>(obsSet);
+  _paramSet.addTyped<RooAbsReal>(paramSet);
 
   // use a different integrator by default.
-  if(paramSet.getSize()==1)
+  if(paramSet.size()==1)
     this->specialIntegratorConfig(true)->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ;
 }
 
@@ -84,14 +69,6 @@ RooJeffreysPrior::RooJeffreysPrior(const RooJeffreysPrior& other, const char* na
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooJeffreysPrior::~RooJeffreysPrior()
-{
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return current value of self
 
 double RooJeffreysPrior::evaluate() const
@@ -99,7 +76,7 @@ double RooJeffreysPrior::evaluate() const
   RooHelpers::LocalChangeMsgLevel msgLvlRAII(RooFit::WARNING);
 
 
-  CacheElem* cacheElm = (CacheElem*) _cacheMgr.getObj(nullptr);
+  CacheElem* cacheElm = static_cast<CacheElem*>(_cacheMgr.getObj(nullptr));
   if (!cacheElm) {
     //Internally, we have to enlarge the range of fit parameters to make
     //fits converge even if we are close to the limit of a parameter. Therefore, we clone the pdf and its

@@ -26,7 +26,7 @@ void multivarGaus() {
   TH2F* hYZ = new TH2F("hYZ", "hYZ;y;z;Counts", 100, -5, 5, 100, -5, 5);
 
   const int MAX = 10000;
-  for (int evnts = 0; evnts < MAX; ++evnts) {
+  for (int iEvent = 0; iEvent < MAX; ++iEvent) {
     rnd.GaussianND(dim, pars, cov, genpars);
     auto x = genpars[0];
     auto y = genpars[1];

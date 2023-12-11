@@ -19,10 +19,10 @@
 \class RooConvCoefVar
 \ingroup Roofitcore
 
-RooConvCoefVar is an auxilary class that represents the coefficient
+Auxiliary class that represents the coefficient
 of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object
 to be able to interface these coefficient terms with the generic
-RooRealIntegral integration mechanism
+RooRealIntegral integration mechanism.
 **/
 
 #include "RooAbsAnaConvPdf.h"
@@ -31,12 +31,11 @@ RooRealIntegral integration mechanism
 using namespace std;
 
 ClassImp(RooConvCoefVar);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constuctor given a RooAbsAnaConvPdf a coefficient index and a set with the
-/// convoluted observable(s)
+/// Constructor given a RooAbsAnaConvPdf a coefficient index and a set with the
+/// convoluted observable(s).
 
 RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input,
                 Int_t coefIdx, const RooArgSet* varList) :
@@ -78,7 +77,7 @@ double RooConvCoefVar::getValV(const RooArgSet*) const
 
 double RooConvCoefVar::evaluate() const
 {
-  return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefficient(_coefIdx) ;
+  return (const_cast<RooAbsAnaConvPdf &>(static_cast<RooAbsAnaConvPdf const&>(_convPdf.arg()))).coefficient(_coefIdx) ;
 }
 
 
@@ -88,7 +87,7 @@ double RooConvCoefVar::evaluate() const
 
 Int_t RooConvCoefVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
-  Int_t code = ((RooAbsAnaConvPdf&)_convPdf.arg()).getCoefAnalyticalIntegral(_coefIdx,allVars,analVars,rangeName) ;
+  Int_t code = (static_cast<RooAbsAnaConvPdf const&>(_convPdf.arg())).getCoefAnalyticalIntegral(_coefIdx,allVars,analVars,rangeName) ;
   return code ;
 }
 
@@ -99,6 +98,5 @@ Int_t RooConvCoefVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 
 double RooConvCoefVar::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefAnalyticalIntegral(_coefIdx,code,rangeName) ;
+  return (static_cast<RooAbsAnaConvPdf const&>(_convPdf.arg())).coefAnalyticalIntegral(_coefIdx,code,rangeName) ;
 }
-

@@ -31,11 +31,6 @@ namespace RooStats {
       /// explicitly delete all the set content (the returned set does not own the content)
       static RooArgSet *GetAsArgSet(RooFitResult *result, TString prefix="", bool withErrorsAndPulls=false);
 
-      DetailedOutputAggregator() {
-         fResult = nullptr;
-         fBuiltSet = nullptr;
-      }
-
       /// For each variable in aset, prepend prefix to its name and add
       /// to the internal store. Note this will not appear in the produced
       /// dataset unless CommitSet is called.
@@ -43,7 +38,7 @@ namespace RooStats {
 
       const RooArgList* GetAsArgList() const {
          // Returns this set of detailed output.
-         // Note that the ownership of the returned list is not transfered
+         // Note that the ownership of the returned list is not transferred
          // It is managed by the DetailedOutputAggregator class
          return fBuiltSet;
       }
@@ -57,10 +52,9 @@ namespace RooStats {
 
    private:
 
-      RooDataSet *fResult;
-      RooArgList *fBuiltSet;
+      RooDataSet *fResult = nullptr;
+      RooArgList *fBuiltSet = nullptr;
 
-   protected:
       ClassDef(DetailedOutputAggregator,1)
    };
 }

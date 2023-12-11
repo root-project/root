@@ -14,7 +14,7 @@
 \class RooAbsCachedPdf
 \ingroup Roofitcore
 
-RooAbsCachedPdf is the abstract base class for p.d.f.s that need or
+Abstract base class for p.d.f.s that need or
 want to cache their evaluate() output in a RooHistPdf defined in
 terms of the used observables. This base class manages the creation
 and storage of all RooHistPdf cache p.d.fs and the RooDataHists
@@ -131,12 +131,12 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   cache = createCache(nset) ;
 
   // Check if we have contents registered already in global expensive object cache
-  auto htmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
+  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
 
-  if (htmp) {
+  if (histTmp) {
 
     cache->hist()->reset() ;
-    cache->hist()->add(*htmp) ;
+    cache->hist()->add(*histTmp) ;
 
   } else {
 
@@ -154,7 +154,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
        << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
-  if (htmp) {
+  if (histTmp) {
     ccoutI(Caching) << " from preexisting content." ;
   }
   ccoutI(Caching) << std::endl ;
@@ -379,7 +379,10 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
     return getVal(normSet) ;
   }
 
-  RooArgSet *allVars(nullptr),*anaVars(nullptr),*normSet2(nullptr),*dummy(nullptr) ;
+  RooArgSet *allVars(nullptr);
+  RooArgSet *anaVars(nullptr);
+  RooArgSet *normSet2(nullptr);
+  RooArgSet *dummy(nullptr);
   const std::vector<int> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
 
   PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,false) ;

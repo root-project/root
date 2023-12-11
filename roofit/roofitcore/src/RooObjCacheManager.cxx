@@ -19,8 +19,8 @@
 \class RooObjCacheManager
 \ingroup Roofitcore
 
-Class RooObjCacheManager is an implementation of class RooCacheManager<RooAbsCacheElement>
-and specializes in the storage of cache elements that contain RooAbsArg objects.
+Implementation of a RooCacheManager<RooAbsCacheElement>
+that specializes in the storage of cache elements that contain RooAbsArg objects.
 Caches with RooAbsArg derived payload require special care as server redirects
 cache operation mode changes and constant term optimization calls may need to be
 forwarded to such cache payload. This cache manager takes care of all these operations
@@ -33,11 +33,7 @@ have a sensible default implementation.
 #include "RooObjCacheManager.h"
 #include "RooMsgService.h"
 
-using namespace std ;
-
 ClassImp(RooObjCacheManager);
-   ;
-
 
 bool RooObjCacheManager::_clearObsList(false) ;
 
@@ -52,8 +48,7 @@ RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, bool cle
   RooCacheManager<RooAbsCacheElement>(owner,maxSize),
   _clearOnRedirect(clearCacheOnServerRedirect),
   _allowOptimize(allowOptimize),
-  _optCacheModeSeen(false),
-  _optCacheObservables(nullptr)
+  _optCacheModeSeen(false)
 {
 }
 
@@ -65,8 +60,7 @@ RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsAr
   RooCacheManager<RooAbsCacheElement>(other,owner),
   _clearOnRedirect(other._clearOnRedirect),
   _allowOptimize(other._allowOptimize),
-  _optCacheModeSeen(false), // cache mode properties are not transferred in copy ctor
-  _optCacheObservables(nullptr)
+  _optCacheModeSeen(false) // cache mode properties are not transferred in copy ctor
 {
 }
 
@@ -134,7 +128,7 @@ void RooObjCacheManager::operModeHook()
 
 void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes)
 {
-  oocxcoutD(_owner,Caching) << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
+  oocxcoutD(_owner,Caching) << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << std::endl;
 
   _optCacheModeSeen = true ;
 

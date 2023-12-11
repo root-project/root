@@ -72,12 +72,6 @@ RooCmdArg processMap(const char *name, Func_t func, Map_t const &map)
 
 namespace Experimental {
 
-std::string &defaultBatchMode()
-{
-   static std::string batchMode = "off";
-   return batchMode;
-}
-
 RooCmdArg ParallelGradientOptions(bool enable, int orderStrategy, int chainFactor)
 {
    return RooCmdArg("ParallelGradientOptions", enable, chainFactor, orderStrategy, 0, nullptr, nullptr, nullptr,
@@ -103,6 +97,24 @@ RooCmdArg Slice(const RooArgSet &sliceSet)
 }
 RooCmdArg Slice(RooCategory &cat, const char *label)
 {
+   // We don't support adding multiple slices for a single category by
+   // concatenating labels with a comma. Users were trying to do that, and were
+   // surprised it did not work. So we explicitly check if there is a comma,
+   // and if there is, we will give some helpful advice on how to get to the
+   // desired plot.
+   std::string lbl{label};
+   if (lbl.find(',') != std::string::npos) {
+      std::stringstream errorMsg;
+      errorMsg << "RooFit::Slice(): you tried to pass a comma-separated list of state labels \"" << label
+               << "\" for a given category, but selecting multiple slices like this is not supported!"
+               << " If you want to make a plot of multiple slices, use the ProjWData() command where you pass a "
+                  "dataset that includes "
+                  "the desired slices. If the slices are a subset of all slices, then you can create such a dataset "
+                  "with RooAbsData::reduce(RooFit::Cut(\"cat==cat::label_1 || cat==cat::label_2 || ...\")). You can "
+                  "find some examples in the rf501_simultaneouspdf tutorial.";
+      oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
+      throw std::invalid_argument(errorMsg.str().c_str());
+   }
    return RooCmdArg("SliceCat", 0, 0, 0, 0, label, nullptr, &cat, nullptr);
 }
 RooCmdArg Slice(std::map<RooCategory *, std::string> const &arg)
@@ -294,11 +306,11 @@ RooCmdArg Index(RooCategory &icat)
 }
 RooCmdArg Import(const char *state, TH1 &histo)
 {
-   return RooCmdArg("ImportHistoSlice", 0, 0, 0, 0, state, nullptr, &histo, nullptr);
+   return RooCmdArg("ImportDataSlice", 0, 0, 0, 0, state, nullptr, &histo, nullptr);
 }
 RooCmdArg Import(const char *state, RooDataHist &dhist)
 {
-   return RooCmdArg("ImportDataHistSlice", 0, 0, 0, 0, state, nullptr, &dhist, nullptr);
+   return RooCmdArg("ImportDataSlice", 0, 0, 0, 0, state, nullptr, &dhist, nullptr);
 }
 RooCmdArg Import(TH1 &histo, bool importDensity)
 {
@@ -307,11 +319,11 @@ RooCmdArg Import(TH1 &histo, bool importDensity)
 
 RooCmdArg Import(const std::map<std::string, RooDataHist *> &arg)
 {
-   return processMap("ImportDataHistSliceMany", processImportItem<RooDataHist>, arg);
+   return processMap("ImportDataSliceMany", processImportItem<RooDataHist>, arg);
 }
 RooCmdArg Import(const std::map<std::string, TH1 *> &arg)
 {
-   return processMap("ImportHistoSliceMany", processImportItem<TH1>, arg);
+   return processMap("ImportDataSliceMany", processImportItem<TH1>, arg);
 }
 
 // RooDataSet::ctor arguments
@@ -394,22 +406,17 @@ RooCmdArg TimingAnalysis(bool flag)
 }
 RooCmdArg BatchMode(std::string const &batchMode)
 {
+   oocoutW(nullptr, InputArguments) << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
    std::string lower = batchMode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
-   BatchModeOption mode;
-   if (lower == "off")
-      mode = BatchModeOption::Off;
-   else if (lower == "cpu")
-      mode = BatchModeOption::Cpu;
-   else if (lower == "cuda")
-      mode = BatchModeOption::Cuda;
-   else if (lower == "codegen")
-      mode = BatchModeOption::CodeGen;
-   // Note that the "old" argument is undocumented, because accessing the
-   // old batch mode is an advanced developer feature.
-   else
-      throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");
-   return RooCmdArg("BatchMode", static_cast<int>(mode));
+   if (lower == "off") {
+      return EvalBackend::Legacy();
+   } else if (lower == "cpu") {
+      return EvalBackend::Cpu();
+   } else if (lower == "cuda") {
+      return EvalBackend::Cuda();
+   }
+   throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");
 }
 /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see
 /// RooAbsPdf::fitTo().
@@ -479,6 +486,70 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop)
 }
 
 // RooAbsPdf::fitTo arguments
+
+EvalBackend::EvalBackend(EvalBackend::Value value) : RooCmdArg{"EvalBackend", static_cast<int>(value)} {}
+EvalBackend::EvalBackend(std::string const &name) : EvalBackend{toValue(name)} {}
+EvalBackend::Value EvalBackend::toValue(std::string const &name)
+{
+   std::string lower = name;
+   std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
+   if (lower == toName(Value::Legacy))
+      return Value::Legacy;
+   if (lower == toName(Value::Cpu))
+      return Value::Cpu;
+   if (lower == toName(Value::Cuda))
+      return Value::Cuda;
+   if (lower == toName(Value::Codegen))
+      return Value::Codegen;
+   if (lower == toName(Value::CodegenNoGrad))
+      return Value::CodegenNoGrad;
+   throw std::runtime_error("Only supported string values for EvalBackend() are \"legacy\", \"cpu\", \"cuda\", "
+                            "\"codegen\", or \"codegen_no_grad\".");
+}
+EvalBackend EvalBackend::Legacy()
+{
+   return EvalBackend(Value::Legacy);
+}
+EvalBackend EvalBackend::Cpu()
+{
+   return EvalBackend(Value::Cpu);
+}
+EvalBackend EvalBackend::Cuda()
+{
+   return EvalBackend(Value::Cuda);
+}
+EvalBackend EvalBackend::Codegen()
+{
+   return EvalBackend(Value::Codegen);
+}
+EvalBackend EvalBackend::CodegenNoGrad()
+{
+   return EvalBackend(Value::CodegenNoGrad);
+}
+std::string EvalBackend::name() const
+{
+   return toName(value());
+}
+std::string EvalBackend::toName(EvalBackend::Value value)
+{
+   if (value == Value::Legacy)
+      return "legacy";
+   if (value == Value::Cpu)
+      return "cpu";
+   if (value == Value::Cuda)
+      return "cuda";
+   if (value == Value::Codegen)
+      return "codegen";
+   if (value == Value::CodegenNoGrad)
+      return "codegen_no_grad";
+   return "";
+}
+EvalBackend::Value &EvalBackend::defaultValue()
+{
+   static Value value = Value::Legacy;
+   return value;
+}
+
 RooCmdArg PrefitDataFraction(double data_ratio)
 {
    return RooCmdArg("Prefit", 0, 0, data_ratio, 0, nullptr, nullptr, nullptr, nullptr);
@@ -603,12 +674,13 @@ RooCmdArg Offset(std::string const &mode)
    std::string lower = mode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
    OffsetMode modeVal = OffsetMode::None;
-   if (lower == "none")
+   if (lower == "none") {
       modeVal = OffsetMode::None;
-   else if (lower == "initial")
+   } else if (lower == "initial") {
       modeVal = OffsetMode::Initial;
-   else if (lower == "bin")
+   } else if (lower == "bin") {
       modeVal = OffsetMode::Bin;
+   }
    return RooCmdArg("OffsetLikelihood", static_cast<int>(modeVal));
 }
 

@@ -2,28 +2,28 @@
 !IF "$(CFG)" == ""
 CFG=libAfterImage - Win32 Debug
 !MESSAGE No configuration specified. Defaulting to libAfterImage - Win32 Debug.
-!ENDIF 
+!ENDIF
 
 !IF "$(CFG)" != "libAfterImage - Win32 Release" && "$(CFG)" != "libAfterImage - Win32 Debug"
 !MESSAGE Invalid configuration "$(CFG)" specified.
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "libAfterImage.mak" CFG="libAfterImage - Win32 Debug"
-!MESSAGE 
+!MESSAGE
 !MESSAGE Possible choices for configuration are:
-!MESSAGE 
+!MESSAGE
 !MESSAGE "libAfterImage - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE "libAfterImage - Win32 Debug" (based on "Win32 (x86) Static Library")
-!MESSAGE 
+!MESSAGE
 !ERROR An invalid configuration is specified.
-!ENDIF 
+!ENDIF
 
 !IF "$(OS)" == "Windows_NT"
 NULL=
-!ELSE 
+!ELSE
 NULL=nul
-!ENDIF 
+!ENDIF
 
 CPP=cl.exe
 RSC=rc.exe
@@ -47,11 +47,11 @@ DISTCLEAN: CLEAN
 
 CPP_PROJ=$(FREETYPEDIRI) /nologo /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_DEBUG_OUTPUT" /D "_MBCS" /D "_LIB" /Fp"$(INTDIR)\libAfterImage.pch" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c  $(NMAKECXXFLAGS)
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\libAfterImage.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\libAfterImage.bsc"
 BSC32_SBRS= \
-	
+
 LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"libAfterImage.lib" 
+LIB32_FLAGS=/nologo /out:"libAfterImage.lib"
 LIB32_OBJS= \
 	"$(INTDIR)\png.obj" \
 	"$(INTDIR)\pngerror.obj" \
@@ -126,14 +126,12 @@ LIB32_OBJS= \
 	"$(INTDIR)\asfont.obj" \
 	"$(INTDIR)\asimage.obj" \
 	"$(INTDIR)\asstorage.obj" \
-	"$(INTDIR)\asimagexml.obj" \
 	"$(INTDIR)\asvisual.obj" \
 	"$(INTDIR)\blender.obj" \
 	"$(INTDIR)\bmp.obj" \
 	"$(INTDIR)\char2uni.obj" \
 	"$(INTDIR)\export.obj" \
 	"$(INTDIR)\import.obj" \
-	"$(INTDIR)\pixmap.obj" \
 	"$(INTDIR)\transform.obj" \
 	"$(INTDIR)\ungif.obj" \
 	"$(INTDIR)\xcf.obj" \
@@ -170,11 +168,11 @@ DISTCLEAN: CLEAN
 
 CPP_PROJ=$(FREETYPEDIRI) /nologo /W3 /Gm /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_DEBUG_OUTPUT" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c $(NMAKECXXFLAGS)
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\libAfterImage.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\libAfterImage.bsc"
 BSC32_SBRS= \
-	
+
 LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"$(OUTDIR)\libAfterImage.lib" 
+LIB32_FLAGS=/nologo /out:"$(OUTDIR)\libAfterImage.lib"
 LIB32_OBJS= \
 	"$(INTDIR)\png.obj" \
 	"$(INTDIR)\pngerror.obj" \
@@ -249,14 +247,12 @@ LIB32_OBJS= \
 	"$(INTDIR)\asfont.obj" \
 	"$(INTDIR)\asimage.obj" \
 	"$(INTDIR)\asstorage.obj" \
-	"$(INTDIR)\asimagexml.obj" \
 	"$(INTDIR)\asvisual.obj" \
 	"$(INTDIR)\blender.obj" \
 	"$(INTDIR)\bmp.obj" \
 	"$(INTDIR)\char2uni.obj" \
 	"$(INTDIR)\export.obj" \
 	"$(INTDIR)\import.obj" \
-	"$(INTDIR)\pixmap.obj" \
 	"$(INTDIR)\transform.obj" \
 	"$(INTDIR)\ungif.obj" \
 	"$(INTDIR)\xcf.obj" \
@@ -271,46 +267,46 @@ LIB32_OBJS= \
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
 
-!ENDIF 
+!ENDIF
 
 .c{$(INTDIR)}.obj::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 
 !IF "$(NO_EXTERNAL_DEPS)" != "1"
 !IF EXISTS("libAfterImage.dep")
 !INCLUDE "libAfterImage.dep"
-!ELSE 
+!ELSE
 !MESSAGE Cannot find "libAfterImage.dep"
-!ENDIF 
-!ENDIF 
+!ENDIF
+!ENDIF
 
 
 !IF "$(CFG)" == "libAfterImage - Win32 Release" || "$(CFG)" == "libAfterImage - Win32 Debug"
@@ -741,13 +737,10 @@ SOURCE=.\asimage.c
 
 "$(INTDIR)\asimage.obj" : $(SOURCE) "$(INTDIR)"
 
+
 SOURCE=.\asstorage.c
 
 "$(INTDIR)\asstorage.obj" : $(SOURCE) "$(INTDIR)"
-
-SOURCE=.\asimagexml.c
-
-"$(INTDIR)\asimagexml.obj" : $(SOURCE) "$(INTDIR)"
 
 
 SOURCE=.\asvisual.c
@@ -785,13 +778,6 @@ SOURCE=.\import.c
 "$(INTDIR)\import.obj" : $(SOURCE) "$(INTDIR)"
 
 
-SOURCE=.\pixmap.c
-
-"$(INTDIR)\pixmap.obj" : $(SOURCE) "$(INTDIR)"
-
-
-SOURCE=.\transform.c
-
 "$(INTDIR)\transform.obj" : $(SOURCE) "$(INTDIR)"
 
 
@@ -823,5 +809,5 @@ SOURCE=.\scanline.c
 "$(INTDIR)\scanline.obj" : $(SOURCE) "$(INTDIR)"
 
 
-!ENDIF 
+!ENDIF
 

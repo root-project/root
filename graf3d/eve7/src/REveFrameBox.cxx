@@ -25,7 +25,7 @@ a set of objects.
 REveFrameBox::REveFrameBox() :
    fFrameType   (kFT_None),
    fFrameSize   (0),
-   fFramePoints (0),
+   fFramePoints (nullptr),
 
    fFrameWidth  (1),
    fFrameColor  (1),

@@ -6,7 +6,7 @@
 
 # CMakeLists.txt for the ROOT tutorials programs.
 # Author: Pere Mato, 25/10/2010
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(tutorials)
 
@@ -64,20 +64,15 @@ function(ROOT_ADD_TUTORIAL macrofile rc)
 endfunction()
 
 #---Tutorials disabled depending on the build components-------------
-if(NOT ROOT_minuit2_FOUND)
-  set(minuit2_veto fit/fit2dHist.C fit/fitCircle.C
-                   fit/minuit2FitBench2D.C fit/minuit2FitBench.C
-                   fit/minuit2GausFit.C fit/NumericalMinimization.C
-                   fit/combinedFit.C fit/TestBinomial.C
-                   fit/fitNormSum.C fit/vectorizedFit.C
-                   tutorials/roostats/rs_bernsteinCorrection.C)
-endif()
 
 if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
 endif()
 
-if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8)
+# RBatchGenerator tutorials need Python 3.8+.
+# Also, they don't work on Windows at the moment.
+if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8 OR
+    (MSVC AND NOT win_broken_tests))
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
@@ -134,10 +129,6 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
     list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
 endif()
 
-if(NOT ROOT_mlp_FOUND)
-   set(mlp_veto legacy/mlp/*.C)
-endif()
-
 if(NOT ROOT_spectrum_FOUND)
    set(spectrum_veto spectrum/*.C)
 endif()
@@ -162,8 +153,14 @@ endif()
 
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  xml/*.C
-                histfactory/*.C    # histfactory requires xml
-                unfold/*.C)        # unfold requires xml
+                histfactory/*.C   # histfactory requires xml
+                histfactory/*.py
+                roostats/*.C      # most roostats tutorials require xml too,
+                roostats/*.py)    # because they create test data with histfactory
+endif()
+
+if(NOT ROOT_unfold_FOUND)
+  list(APPEND xml_veto unfold/*.C)
 endif()
 
 if(NOT ROOT_mpi_FOUND)
@@ -174,6 +171,7 @@ if(NOT xrootd)
   set(xrootd_veto dataframe/df101_h1Analysis.C
                   dataframe/df102_NanoAODDimuonAnalysis.C
                   dataframe/df103_NanoAODHiggsAnalysis.C
+                  dataframe/df106_HiggsToFourLeptons.C
                   tmva/tmva103_Application.C
                   dataframe/df033_Describe.py
                   dataframe/df102_NanoAODDimuonAnalysis.py
@@ -192,21 +190,6 @@ if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
 endif()
 
-# The following tests use hist2workspace, which requires xml
-if(NOT ROOT_xml_FOUND)
-  list(APPEND xml_veto roostats/OneSidedFrequentistUpperLimitWithBands.C
-                       roostats/StandardBayesianMCMCDemo.C
-                       roostats/StandardBayesianNumericalDemo.C
-                       roostats/StandardFeldmanCousinsDemo.C
-                       roostats/StandardFrequentistDiscovery.C
-                       roostats/StandardHistFactoryPlotsWithCategories.C
-                       roostats/StandardHypoTestDemo.C
-                       roostats/StandardHypoTestInvDemo.C
-                       roostats/StandardProfileInspectorDemo.C
-                       roostats/StandardProfileLikelihoodDemo.C
-                       roostats/StandardTestStatDistributionDemo.C
-                       roostats/TwoSidedFrequentistUpperLimitWithBands.C)
-endif()
 set(histfactory_veto histfactory/makeExample.C)
 
 if(NOT ROOT_fitsio_FOUND)
@@ -304,6 +287,7 @@ else()
   find_python_module(keras QUIET)
   find_python_module(sonnet QUIET)
   find_python_module(graph_nets QUIET)
+  find_python_module(sklearn QUIET)
   if (NOT PY_KERAS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras.C)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras_HiggsModel.C)
@@ -315,12 +299,19 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
     list(APPEND tmva_veto tmva/RBatchGenerator_TensorFlow.py)
   endif()
+  if (NOT PY_SKLEARN_FOUND)
+    list(APPEND tmva_veto tmva/TMVA_SOFIE_Models.py)
+  endif()
   if (NOT PY_TORCH_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_PyTorch.C)
     list(APPEND tmva_veto tmva/RBatchGenerator_PyTorch.py)
   endif()
+  #veto this tutorial since it is added directly
+  list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
   if (NOT PY_SONNET_FOUND OR NOT PY_GRAPH_NETS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN.py)
+    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
+    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Application.C)
   endif()
   if (NOT tmva-sofie)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
@@ -447,7 +438,6 @@ set(all_veto hsimple.C
              ${extra_veto}
              ${gdml_veto}
              ${gui_veto}
-             ${minuit2_veto}
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
@@ -468,19 +458,11 @@ set(all_veto hsimple.C
              ${vecgeom_veto}
              ${root7_veto}
              ${xrootd_veto}
-             ${mlp_veto}
              ${spectrum_veto}
              ${dataframe_veto}
              ${macm1_veto}
              ${clad_veto}
              )
-
-# These tutorials seem to trigger segfaults related to TClass* and RDataFrame
-# JITting on many platforms. Disable for now and revert once the issue is fixed
-list(APPEND all_veto tmva/RBatchGenerator_NumPy.py)
-list(APPEND all_veto tmva/RBatchGenerator_TensorFlow.py)
-list(APPEND all_veto tmva/RBatchGenerator_PyTorch.py)
-list(APPEND all_veto tmva/RBatchGenerator_filters_vectors.py)
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(root7 AND webgui)
@@ -537,7 +519,6 @@ set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
 set(xml-xmlmodifyfile-depends tutorial-xml-xmlnewfile)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
-set(histfactory-example-depends tutorial-roostats-CreateExampleFile)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(fit-myfit-depends tutorial-fit-fitslicesy)
@@ -561,12 +542,24 @@ set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 set(multicore-mp105_processEntryList-depends tutorial-multicore-mp104_processH1)
 
-#--many roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
-foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
-               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
-               StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
-               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands StandardProfileLikelihoodDemo)
-  set(roostats-${tname}-depends tutorial-roostats-CreateExampleFile)
+#--many histfactory and roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
+foreach(tname histfactory-hf001_example
+              roostats-ModelInspector
+              roostats-OneSidedFrequentistUpperLimitWithBands
+              roostats-OneSidedFrequentistUpperLimitWithBands
+              roostats-StandardBayesianMCMCDemo
+              roostats-StandardBayesianNumericalDemo
+              roostats-StandardFeldmanCousinsDemo
+              roostats-StandardFrequentistDiscovery
+              roostats-StandardHistFactoryPlotsWithCategories
+              roostats-StandardHypoTestDemo
+              roostats-StandardHypoTestInvDemo
+              roostats-StandardProfileInspectorDemo
+              roostats-StandardProfileLikelihoodDemo
+              roostats-StandardTestStatDistributionDemo
+              roostats-TwoSidedFrequentistUpperLimitWithBands)
+  set(${tname}-depends tutorial-roostats-CreateExampleFile)
+  set(${tname}-py-depends tutorial-roostats-CreateExampleFile)
 endforeach()
 
 #--dependency for TMVA tutorials
@@ -600,6 +593,10 @@ if (PY_KERAS_FOUND)
   set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
   set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
 endif()
+#if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
+#   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser-py)
+#endif()
+
 
 #--List long-running tutorials to label them as "longtest"
 set (long_running
@@ -627,6 +624,12 @@ ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURR
                 PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
 ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
                 FAILREGEX "Error in" "error:" LABELS tutorial)
+# define Python GNN parsing tutorial needed to run before
+if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
+  ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${PYTHON_EXECUTABLE_Development_Main}
+  ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
+  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
+endif()
 
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
@@ -649,7 +652,7 @@ foreach(t ${tutorials})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 2400) # 40m
+     set(thisTestTimeout 3000) # 50m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()
@@ -683,7 +686,7 @@ foreach(t ${mpi_tutorials})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 2400) # 40m
+     set(thisTestTimeout 3000) # 50m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()
@@ -753,6 +756,7 @@ if(ROOT_pyroot_FOUND)
   endif()
   if(NOT test_distrdf_dask)
     list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
+    list(APPEND pyveto dataframe/distrdf003_live_visualization.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
@@ -783,6 +787,11 @@ if(ROOT_pyroot_FOUND)
   if(NOT PY_KERAS_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
+  elseif(ROOT_ARCHITECTURE MATCHES macosx)
+    #veto also keras tutorial on macos due to issue in disabling eager execution on macos
+    list(APPEND pyveto tmva/keras/RegressionKeras.py)
+    list(APPEND pyveto tmva/keras/ApplicationRegressionKeras.py)
+    list(APPEND pyveto tmva/keras/MultiClassKeras.py)
   endif()
 
   find_python_module(torch QUIET)
@@ -819,6 +828,9 @@ if(ROOT_pyroot_FOUND)
   # Avoid a race condition: make sure Python tutorial is ran after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
   set(roofit-rf512_wsfactory_oper-depends tutorial-roofit-rf512_wsfactory_oper)
+  set (tmva-Higgs_CNN_Classification-depends tutorial-tmva-TMVA_Higgs_Classification)
+  set (tmva-TMVA_CNN_Classification-depends tutorial-tmva-TMVA_CNN_Classification)
+  set (tmva-TMVA_RNN_Classification-depends tutorial-tmva-TMVA_RNN_Classification)
 
   #----------------------------------------------------------------------
   # List requirements for python tutorials.

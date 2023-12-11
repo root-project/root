@@ -2,19 +2,20 @@
 // Authors: Jonas Rembser, CERN  06/2021
 
 #include <RooAddition.h>
-#include <RooConstVar.h>
 #include <RooCategory.h>
+#include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
+#include <RooProdPdf.h>
+#include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
-#include <RooProdPdf.h>
-#include <RooWorkspace.h>
 #include <RooThresholdCategory.h>
+#include <RooWorkspace.h>
 
-#include <gtest/gtest.h>
+#include "gtest_wrapper.h"
 
 #include <memory>
 
@@ -48,14 +49,18 @@ TEST(RooSimultaneous, SingleChannelCrossCheck)
 
    using AbsRealPtr = std::unique_ptr<RooAbsReal>;
 
-   AbsRealPtr nllDirect{modelConstrained.createNLL(combData, BatchMode("off"))};
-   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData, BatchMode("off"))};
-   AbsRealPtr nllDirectBatch{modelConstrained.createNLL(combData, BatchMode("cpu"))};
-   AbsRealPtr nllSimWrappedBatch{modelSim.createNLL(combData, BatchMode("cpu"))};
+   AbsRealPtr nllDirectBatch{modelConstrained.createNLL(combData, EvalBackend::Cpu())};
+   AbsRealPtr nllSimWrappedBatch{modelSim.createNLL(combData, EvalBackend::Cpu())};
+
+   EXPECT_FLOAT_EQ(nllDirectBatch->getVal(), nllSimWrappedBatch->getVal()) << "Inconsistency in BatchMode";
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   AbsRealPtr nllDirect{modelConstrained.createNLL(combData, EvalBackend::Legacy())};
+   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData, EvalBackend::Legacy())};
 
    EXPECT_FLOAT_EQ(nllDirect->getVal(), nllSimWrapped->getVal()) << "Inconsistency in old RooFit";
    EXPECT_FLOAT_EQ(nllDirect->getVal(), nllDirectBatch->getVal()) << "Old RooFit and BatchMode don't agree";
-   EXPECT_FLOAT_EQ(nllDirectBatch->getVal(), nllSimWrappedBatch->getVal()) << "Inconsistency in BatchMode";
+#endif
 }
 
 /// Forum issue
@@ -125,12 +130,14 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    // We don't care about the fit result, just that it doesn't crash.
    using namespace RooFit;
-   sim.fitTo(*ds, BatchMode(false), PrintLevel(-1));
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   sim.fitTo(*ds, EvalBackend::Legacy(), PrintLevel(-1));
    m0.setVal(0.5);
    m0.setError(0.0);
    m1.setVal(0.5);
    m1.setError(0.0);
-   sim.fitTo(*ds, BatchMode(true), PrintLevel(-1));
+#endif
+   sim.fitTo(*ds, EvalBackend::Cpu(), PrintLevel(-1));
 }
 
 /// GitHub issue #11396.
@@ -175,8 +182,10 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    const char *cutRange1 = "SideBandLo_cat1,SideBandHi_cat1";
    const char *cutRange2 = "SideBandLo_cat2,SideBandHi_cat2";
    using RealPtr = std::unique_ptr<RooAbsReal>;
-   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), BatchMode("off"))};
-   RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), BatchMode("cpu"))};
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Legacy())};
+#endif
+   RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Cpu())};
 
    // In simultaneous PDFs, the probability is normalized over the categories,
    // so we have to do that as well when computing the reference value. Since
@@ -191,22 +200,44 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    RooAddition nllSimRef{"nllSimRef", "nllSimRef", {*nll1, *nll2, RooConst(normTerm)}};
 
    const double nllSimRefVal = nllSimRef.getVal();
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
    const double nllSimVal = nllSim->getVal();
-   const double nllSimBatchVal = nllSimBatch->getVal();
-
    EXPECT_FLOAT_EQ(nllSimVal, nllSimRefVal);
-   EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimVal) << "BatchMode and old RooFit don't agree!";
+#endif
+   const double nllSimBatchVal = nllSimBatch->getVal();
+   EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimRefVal) << "BatchMode and old RooFit don't agree!";
 }
+
+class TestStatisticTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
+public:
+   TestStatisticTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
+private:
+   void SetUp() override
+   {
+      RooRandom::randomGenerator()->SetSeed(1337ul);
+      _evalBackend = std::get<0>(GetParam());
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
+   }
+
+   void TearDown() override { _changeMsgLvl.reset(); }
+
+protected:
+   RooFit::EvalBackend _evalBackend;
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+};
 
 /// Checks that the Range() command argument for fitTo can be used to select
 /// specific components from a RooSimultaneous. Covers GitHub issue #8231.
-TEST(RooSimultaneous, RangedCategory)
+TEST_P(TestStatisticTest, RangedCategory)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    using namespace RooFit;
 
-   // Create the model with the RooWorkspace to not explicitely depend on
+   // Create the model with the RooWorkspace to not explicitly depend on
    // non-RooFitCore classes like RooGaussian
    RooWorkspace ws;
    ws.factory("Gaussian::pdfA(x[-10, 10], mu[0, -10, 10], sigma[2.0, 0.1, 10.0])");
@@ -249,12 +280,11 @@ TEST(RooSimultaneous, RangedCategory)
       sigma.setError(0.0);
    };
 
-   constexpr auto batchMode = "off";
-
-   // Funciton to do the fit
+   // Function to do the fit
    auto doFit = [&](RooAbsPdf &pdf, RooAbsData &dataset, const char *range = nullptr) {
       resetParameters();
-      std::unique_ptr<RooFitResult> res{pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), BatchMode(batchMode))};
+      std::unique_ptr<RooFitResult> res{
+         pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), _evalBackend)};
       resetParameters();
       return res;
    };
@@ -272,6 +302,13 @@ TEST(RooSimultaneous, RangedCategory)
    EXPECT_TRUE(resB->isIdentical(*resBref)) << "Selecting only state B didn't work!";
    EXPECT_TRUE(resAB->isIdentical(*res)) << "Result when selecting all states inconsistent with default fit!";
 }
+
+INSTANTIATE_TEST_SUITE_P(RooSimultaneous, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
+                         [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
+                            return ss.str();
+                         });
 
 /// Check that the dataset generation from a nested RooSimultaneous with
 /// protodata containing the category values works.

@@ -19,8 +19,7 @@
 \class RooGenFitStudy
 \ingroup Roofitcore
 
-RooGenFitStudy is an abstract base class for RooStudyManager modules
-
+Abstract base class for RooStudyManager modules
 **/
 
 #include "Riostream.h"
@@ -35,23 +34,13 @@ RooGenFitStudy is an abstract base class for RooStudyManager modules
 #include "RooFitResult.h"
 
 
-using namespace std ;
-
 ClassImp(RooGenFitStudy);
-  ;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
 RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) :
-  RooAbsStudy(name?name:"RooGenFitStudy",title?title:"RooGenFitStudy"),
-  _genPdf(nullptr),
-  _fitPdf(nullptr),
-  _genSpec(nullptr),
-  _nllVar(nullptr),
-  _ngenVar(nullptr),
-  _initParams(nullptr)
+  RooAbsStudy(name?name:"RooGenFitStudy",title?title:"RooGenFitStudy")
 {
 }
 
@@ -65,27 +54,11 @@ RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) :
   _genPdfName(other._genPdfName),
   _genObsName(other._genObsName),
   _fitPdfName(other._fitPdfName),
-  _fitObsName(other._fitObsName),
-  _genPdf(nullptr),
-  _fitPdf(nullptr),
-  _genSpec(nullptr),
-  _nllVar(nullptr),
-  _ngenVar(nullptr),
-  _initParams(nullptr)
+  _fitObsName(other._fitObsName)
 {
   for(TObject * o : other._genOpts) _genOpts.Add(o->Clone());
   for(TObject * o : other._fitOpts) _fitOpts.Add(o->Clone());
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooGenFitStudy::~RooGenFitStudy()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function called after insertion into workspace
@@ -98,13 +71,13 @@ bool RooGenFitStudy::attach(RooWorkspace& w)
   if (pdf) {
     _genPdf = pdf ;
   } else {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: generator p.d.f named " << _genPdfName << " not found in workspace " << w.GetName() << endl ;
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: generator p.d.f named " << _genPdfName << " not found in workspace " << w.GetName() << std::endl ;
     ret = true ;
   }
 
   _genObs.add(w.argSet(_genObsName)) ;
   if (_genObs.empty()) {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no generator observables defined" << endl ;
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no generator observables defined" << std::endl ;
     ret = true ;
   }
 
@@ -112,13 +85,13 @@ bool RooGenFitStudy::attach(RooWorkspace& w)
   if (pdf) {
     _fitPdf = pdf ;
   } else {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: fitting p.d.f named " << _fitPdfName << " not found in workspace " << w.GetName() << endl ;
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: fitting p.d.f named " << _fitPdfName << " not found in workspace " << w.GetName() << std::endl ;
     ret = true ;
   }
 
   _fitObs.add(w.argSet(_fitObsName)) ;
   if (_fitObs.empty()) {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no fitting observables defined" << endl ;
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no fitting observables defined" << std::endl ;
     ret = true ;
   }
 
@@ -168,7 +141,7 @@ bool RooGenFitStudy::initialize()
   _params->add(*_nllVar) ;
   _params->add(*_ngenVar) ;
 
-  _genSpec = _genPdf->prepareMultiGen(_genObs,(RooCmdArg&)*_genOpts.At(0),(RooCmdArg&)*_genOpts.At(1),(RooCmdArg&)*_genOpts.At(2)) ;
+  _genSpec = _genPdf->prepareMultiGen(_genObs,static_cast<RooCmdArg&>(*_genOpts.At(0)),static_cast<RooCmdArg&>(*_genOpts.At(1)),static_cast<RooCmdArg&>(*_genOpts.At(2))) ;
 
   registerSummaryOutput(*_params,modelParams) ;
   return false ;
@@ -183,7 +156,7 @@ bool RooGenFitStudy::execute()
 {
   _params->assign(*_initParams) ;
   std::unique_ptr<RooDataSet> data{_genPdf->generate(*_genSpec)};
-  std::unique_ptr<RooFitResult> fr{_fitPdf->fitTo(*data,RooFit::Save(true),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2))};
+  std::unique_ptr<RooFitResult> fr{_fitPdf->fitTo(*data,RooFit::Save(true),static_cast<RooCmdArg&>(*_fitOpts.At(0)),static_cast<RooCmdArg&>(*_fitOpts.At(1)),static_cast<RooCmdArg&>(*_fitOpts.At(2)))};
 
   if (fr->status()==0) {
     _ngenVar->setVal(data->sumEntries()) ;

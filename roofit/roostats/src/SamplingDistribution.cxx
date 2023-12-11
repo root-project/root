@@ -40,42 +40,34 @@ using namespace RooStats;
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistribution constructor
 
-SamplingDistribution::SamplingDistribution( const char *name, const char *title,
-                   std::vector<double>& samplingDist, const char * varName) :
-  TNamed(name,title)
+SamplingDistribution::SamplingDistribution(const char *name, const char *title, std::vector<double> &samplingDist,
+                                           const char *varName)
+   : TNamed(name, title), fSamplingDist(samplingDist), fVarName(varName)
 {
-  fSamplingDist = samplingDist;
   // need to check STL stuff here.  Will this = operator work as wanted, or do we need:
   //  std::copy(samplingDist.begin(), samplingDist.end(), fSamplingDist.begin());
 
   // WVE must fill sampleWeights vector here otherwise append behavior potentially undefined
   fSampleWeights.resize(fSamplingDist.size(),1.0) ;
-
-  fVarName = varName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistribution constructor
 
-SamplingDistribution::SamplingDistribution( const char *name, const char *title,
-                   std::vector<double>& samplingDist, std::vector<double>& sampleWeights, const char * varName) :
-  TNamed(name,title)
+SamplingDistribution::SamplingDistribution(const char *name, const char *title, std::vector<double> &samplingDist,
+                                           std::vector<double> &sampleWeights, const char *varName)
+   : TNamed(name, title), fSamplingDist(samplingDist), fSampleWeights(sampleWeights), fVarName(varName)
 {
-  fSamplingDist = samplingDist;
-  fSampleWeights = sampleWeights;
   // need to check STL stuff here.  Will this = operator work as wanted, or do we need:
   //  std::copy(samplingDist.begin(), samplingDist.end(), fSamplingDist.begin());
-
-  fVarName = varName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistribution constructor (with name and title)
 
-SamplingDistribution::SamplingDistribution( const char *name, const char *title, const char * varName) :
-  TNamed(name,title)
+SamplingDistribution::SamplingDistribution(const char *name, const char *title, const char *varName)
+   : TNamed(name, title), fVarName(varName)
 {
-  fVarName = varName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,10 +123,7 @@ SamplingDistribution::SamplingDistribution(
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistribution default constructor
 
-SamplingDistribution::SamplingDistribution( ) :
-  TNamed("SamplingDistribution_DefaultName","SamplingDistribution")
-{
-}
+SamplingDistribution::SamplingDistribution() : TNamed("SamplingDistribution_DefaultName", "SamplingDistribution") {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistribution destructor
@@ -360,12 +349,13 @@ double SamplingDistribution::InverseCDF(double pvalue,
     int delta = (int)(sigmaVariation*sqrt(1.0*nominal)); // note sqrt(small fraction)
     int variation = nominal+delta;
 
-    if(variation>=(Int_t)fSamplingDist.size()-1)
-      inverseWithVariation = RooNumber::infinity();
-    else if(variation<=0)
-      inverseWithVariation = -1.*RooNumber::infinity();
-    else
-      inverseWithVariation =  fSamplingDist[ variation ];
+    if (variation >= (Int_t)fSamplingDist.size() - 1) {
+         inverseWithVariation = RooNumber::infinity();
+    } else if (variation <= 0) {
+         inverseWithVariation = -1. * RooNumber::infinity();
+    } else {
+         inverseWithVariation = fSamplingDist[variation];
+    }
 
     return fSamplingDist[nominal];
   }
@@ -373,15 +363,14 @@ double SamplingDistribution::InverseCDF(double pvalue,
     int delta = (int)(sigmaVariation*sqrt(1.0*fSamplingDist.size()- nominal)); // note sqrt(small fraction)
     int variation = nominal+delta;
 
+    if (variation >= (Int_t)fSamplingDist.size() - 1) {
+         inverseWithVariation = RooNumber::infinity();
 
-    if(variation>=(Int_t)fSamplingDist.size()-1)
-      inverseWithVariation = RooNumber::infinity();
-
-    else if(variation<=0)
-      inverseWithVariation = -1.*RooNumber::infinity();
-    else
-      inverseWithVariation =  fSamplingDist[ variation+1 ];
-
+    } else if (variation <= 0) {
+         inverseWithVariation = -1. * RooNumber::infinity();
+    } else {
+         inverseWithVariation = fSamplingDist[variation + 1];
+    }
 
     /*
       std::cout << "dgb SamplingDistribution::InverseCDF. variation = " << variation

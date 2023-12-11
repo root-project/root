@@ -24,9 +24,8 @@ New contributions to this class have been written by Matthias Wolf (error estima
 The objects of this class store and access with lightweight methods the
 information calculated by LimitResults through a Lent calculation using
 MC toy experiments.
-In some ways can be considered an extended and extensible implementation of the
-TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
-
+In some ways can be considered an extended and extensible implementation of
+TConfidenceLevel..
 */
 
 
@@ -49,7 +48,7 @@ ClassImp(RooStats::HybridResult);
 using namespace RooStats;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construtor
+/// Constructor
 
 HybridResult::HybridResult( const char *name) :
    HypoTestResult(name),
@@ -62,7 +61,7 @@ HybridResult::HybridResult( const char *name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construtor
+/// Constructor
 
 HybridResult::HybridResult( const char *name,
                             const std::vector<double>& testStat_sb_vals,

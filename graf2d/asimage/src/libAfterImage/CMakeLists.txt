@@ -11,7 +11,7 @@ if(WIN32)
   # to keep the old way of selecting the runtime library with the -MD/-MDd compiler flag
   cmake_policy(SET CMP0091 OLD)
 else()
-  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 endif()
 
 SET(LIB_NAME libAfterImage)
@@ -47,12 +47,11 @@ SET(SRC_FILES
     libjpeg/jdtrans.c libjpeg/jerror.c libjpeg/jfdctflt.c libjpeg/jfdctfst.c libjpeg/jfdctint.c libjpeg/jidctflt.c libjpeg/jidctfst.c
     libjpeg/jidctint.c libjpeg/jmemmgr.c libjpeg/jmemnobs.c libjpeg/jquant1.c libjpeg/jquant2.c libjpeg/jutils.c
     libungif/dgif_lib.c libungif/egif_lib.c libungif/gif_err.c libungif/gifalloc.c libungif/gif_hash.c afterbase.c ascmap.c asfont.c
-    asimage.c asstorage.c asimagexml.c asvisual.c blender.c bmp.c char2uni.c
-    export.c import.c pixmap.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
+    asimage.c asstorage.c asvisual.c blender.c bmp.c char2uni.c
+    export.c import.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
     imencdec.c scanline.c
 )
 
 ADD_LIBRARY(${LIB_NAME} STATIC ${H_FILES} ${SRC_FILES})
 
 install(TARGETS ${LIB_NAME} DESTINATION ${LIB_DESTINATION})
-

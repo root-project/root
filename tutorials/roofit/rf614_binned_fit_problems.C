@@ -26,7 +26,7 @@
 // One should in principle be able to use
 // pdf.generateBinned(x, nEvents, RooFit::ExpectedData()).
 // Unfortunately it has a problem: it also has the bin bias that this tutorial
-// demostrates, to if we would use it, the biases would cancel out.
+// demonstrates, to if we would use it, the biases would cancel out.
 std::unique_ptr<RooDataHist> generateBinnedAsimov(RooAbsPdf const &pdf, RooRealVar &x, int nEvents)
 {
    auto dataH = std::make_unique<RooDataHist>("dataH", "dataH", RooArgSet{x});
@@ -182,10 +182,9 @@ void rf614_binned_fit_problems()
    // each bin a constant counterterm \f[n\log(n/N)\f], we get terms for each
    // bin that are closer to each other in order of magnitude as long as the
    // initial model is not extremely off. Proving this mathematically is left
-   // as an excercise to the reader.
+   // as an exercise to the reader.
 
-   // This counterterms can be enabled in RooFit if you use a binned
-   // RooDataHist to do your fit and pass the Offset("bin") option to
+   // This counterterms can be enabled by passing the Offset("bin") option to
    // RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
 
    std::unique_ptr<RooFitResult> fit7{

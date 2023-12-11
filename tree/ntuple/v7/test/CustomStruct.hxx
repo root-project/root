@@ -4,8 +4,9 @@
 #include <RtypesCore.h> // for Double32_t
 #include <TRootIOCtor.h>
 
+#include <cstddef>
 #include <cstdint>
-#include <set>
+#include <functional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -30,10 +31,16 @@ struct CustomStruct {
    std::vector<float> v1;
    std::vector<std::vector<float>> v2;
    std::string s;
+   std::byte b{0};
 
    bool operator<(const CustomStruct &c) const { return a < c.a && v1 < c.v1 && v2 < c.v2 && s < c.s; }
 
    bool operator==(const CustomStruct &c) const { return a == c.a && v1 == c.v1 && v2 == c.v2 && s == c.s; }
+};
+
+template <>
+struct std::hash<CustomStruct> {
+   std::size_t operator()(const CustomStruct &c) const noexcept { return std::hash<float>{}(c.a); }
 };
 
 struct DerivedA : public CustomStruct {
@@ -59,6 +66,7 @@ struct DerivedC : public DerivedA, public DerivedA2 {
 struct StructWithArrays {
    unsigned char c[4];
    float f[2];
+   int i[2][1];
 };
 
 struct EmptyStruct {};

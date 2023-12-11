@@ -7,26 +7,74 @@ TEST(RNtuplePrint, FullString)
       auto model = RNTupleModel::Create();
       auto fieldPx = model->MakeField<float>("px");
       auto fieldPy = model->MakeField<float>("py");
-      auto fieldPz = model->MakeField<float>("pz");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", fileGuard.GetPath());
+      auto fieldProj = RFieldBase::Create("proj", "float").Unwrap();
+      model->AddProjectedField(std::move(fieldProj), [](const std::string &) { return std::string("px"); });
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       *fieldPx = 1.0;
       *fieldPy = 1.0;
-      *fieldPz = 1.0;
-      ntuple->Fill();
+      writer->Fill();
    }
-   auto ntuple2 = RNTupleReader::Open("Staff", fileGuard.GetPath());
-   std::ostringstream os;
-   ntuple2->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, os);
-   std::string fString{std::string("")
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   std::ostringstream osSummary;
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osSummary);
+   std::string reference{std::string("")
        + "************************************ NTUPLE ************************************\n"
-       + "* N-Tuple : Staff                                                              *\n"
+       + "* N-Tuple : ntpl                                                               *\n"
        + "* Entries : 1                                                                  *\n"
        + "********************************************************************************\n"
        + "* Field 1   : px (float)                                                       *\n"
        + "* Field 2   : py (float)                                                       *\n"
-       + "* Field 3   : pz (float)                                                       *\n"
+       + "* Field 3   : proj (float)                                                     *\n"
        + "********************************************************************************\n"};
-   EXPECT_EQ(fString, os.str());
+   EXPECT_EQ(reference, osSummary.str());
+
+   std::ostringstream osDetails;
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, osDetails);
+   reference =
+       "============================================================\n"
+       "NTUPLE:      ntpl\n"
+       "Compression: 0\n"
+       "------------------------------------------------------------\n"
+       "  # Entries:        1\n"
+       "  # Fields:         4\n"
+       "  # Columns:        2\n"
+       "  # Alias Columns:  1\n"
+       "  # Pages:          2\n"
+       "  # Clusters:       1\n"
+       "  Size on storage:  8 B\n"
+       "  Compression rate: 1.00\n"
+       "  Header size:      .* B\n"
+       "  Footer size:      .* B\n"
+       "  Meta-data / data: .*\n"
+       "------------------------------------------------------------\n"
+       "CLUSTER DETAILS\n"
+       "------------------------------------------------------------\n"
+       "  #     0   Entry range:     .0..0.  --  1\n"
+       "            # Pages:         2\n"
+       "            Size on storage: 8 B\n"
+       "            Compression:     1.00\n"
+       "------------------------------------------------------------\n"
+       "COLUMN DETAILS\n"
+       "------------------------------------------------------------\n"
+       "  px .#0.  --  Real32                                 .id:0.\n"
+       "    # Elements:          1\n"
+       "    # Pages:             1\n"
+       "    Avg elements / page: 1\n"
+       "    Avg page size:       4 B\n"
+       "    Size on storage:     4 B\n"
+       "    Compression:         1.00\n"
+       "............................................................\n"
+       "  py .#0.  --  Real32                                 .id:1.\n"
+       "    # Elements:          1\n"
+       "    # Pages:             1\n"
+       "    Avg elements / page: 1\n"
+       "    Avg page size:       4 B\n"
+       "    Size on storage:     4 B\n"
+       "    Compression:         1.00\n"
+       "............................................................\n";
+   EXPECT_THAT(osDetails.str(), testing::MatchesRegex(reference));
 }
 
 TEST(RNtuplePrint, Int)

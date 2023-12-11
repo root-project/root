@@ -122,7 +122,6 @@ private:
       RNTuplePlainCounter &fParallelZip;
    };
    std::unique_ptr<RCounters> fCounters;
-   RNTupleMetrics fMetrics;
    /// The inner sink, responsible for actually performing I/O.
    std::unique_ptr<RPageSink> fInnerSink;
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
@@ -130,14 +129,10 @@ private:
    std::unique_ptr<RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
+   DescriptorId_t fNFields = 0;
+   DescriptorId_t fNColumns = 0;
 
-protected:
-   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RNTupleLocator CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
-   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
-   RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
-   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
+   void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry);
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -147,11 +142,20 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    ~RPageSinkBuf() override;
 
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
+   void Create(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
+   void CommitClusterGroup() final;
+   void CommitDataset() final;
+
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 } // namespace Detail

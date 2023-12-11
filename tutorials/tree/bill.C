@@ -108,7 +108,7 @@ void billtr(const char *billtname, Int_t compress) {
    //read N histograms from a tree
    timer.Start();
    TFile f(billtname);
-   TH1F *h = 0;
+   TH1F *h = nullptr;
    TTree *T = (TTree*)f.Get("T");
    T->SetBranchAddress("event",&h);
    TH1F *hmeant = new TH1F("hmeant","hist mean from tree",100,0,1);

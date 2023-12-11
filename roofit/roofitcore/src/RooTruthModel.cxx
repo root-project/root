@@ -19,27 +19,28 @@
 \class RooTruthModel
 \ingroup Roofitcore
 
-RooTruthModel is an implementation of RooResolution
-model that provides a delta-function resolution model.
+Implements a RooResolution model that corresponds to a delta function.
 The truth model supports <i>all</i> basis functions because it evaluates each basis function as
 as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basis
 functions used in D mixing have been hand coded for increased execution speed.
 **/
 
-#include "Riostream.h"
-#include "RooBatchCompute.h"
-#include "RooTruthModel.h"
-#include "RooGenContext.h"
-#include "RooAbsAnaConvPdf.h"
+#include <RooTruthModel.h>
 
-#include "TError.h"
+#include <RooAbsAnaConvPdf.h>
+#include <RooBatchCompute.h>
+#include <RooGenContext.h>
+
+#include <Riostream.h>
+
+#include <TError.h>
 
 #include <algorithm>
+#include <limits>
+
 using namespace std ;
 
 ClassImp(RooTruthModel);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,15 +58,6 @@ RooTruthModel::RooTruthModel(const char *name, const char *title, RooAbsRealLVal
 
 RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) :
   RooResolutionModel(other,name)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooTruthModel::~RooTruthModel()
 {
 }
 
@@ -178,7 +170,7 @@ double RooTruthModel::evaluate() const
       (basisSign==Plus  && x<0)) return 0 ;
 
 
-  double tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  double tau = (static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal() ;
   // Return desired basis function
   switch(basisType) {
   case expBasis: {
@@ -186,11 +178,11 @@ double RooTruthModel::evaluate() const
     return exp(-std::abs((double)x)/tau) ;
   }
   case sinBasis: {
-    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dm = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*sin(x*dm) ;
   }
   case cosBasis: {
-    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dm = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*cos(x*dm) ;
   }
   case linBasis: {
@@ -202,11 +194,11 @@ double RooTruthModel::evaluate() const
     return exp(-tscaled)*tscaled*tscaled;
   }
   case sinhBasis: {
-    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dg = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*sinh(x*dg/2) ;
   }
   case coshBasis: {
-    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    double dg = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
     return exp(-std::abs((double)x)/tau)*cosh(x*dg/2) ;
   }
   default:
@@ -328,127 +320,159 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 }
 
 
+namespace {
+
+// From asking WolframAlpha: integrate exp(-x/tau) over x.
+inline double indefiniteIntegralExpBasisPlus(double x, double tau, double /*dm*/)
+{
+   // Restrict to positive x
+   x = std::max(x, 0.0);
+   return -tau * std::exp(-x / tau);
+}
+
+// From asking WolframAlpha: integrate exp(-x/tau)* x / tau over x.
+inline double indefiniteIntegralLinBasisPlus(double x, double tau, double /*dm*/)
+{
+   // Restrict to positive x
+   x = std::max(x, 0.0);
+   return -(tau + x) * std::exp(-x / tau);
+}
+
+// From asking WolframAlpha: integrate exp(-x/tau) * (x / tau)^2 over x.
+inline double indefiniteIntegralQuadBasisPlus(double x, double tau, double /*dm*/)
+{
+   // Restrict to positive x
+   x = std::max(x, 0.0);
+   return -(std::exp(-x / tau) * (2 * tau * tau + x * x + 2 * tau * x)) / tau;
+}
+
+// A common factor that appears in the integrals of the trigonometric
+// function bases (sin and cos).
+inline double commonFactorPlus(double x, double tau, double dm)
+{
+   const double num = tau * std::exp(-x / tau);
+   const double den = dm * dm * tau * tau + 1.0;
+   return num / den;
+}
+
+// A common factor that appears in the integrals of the hyperbolic
+// trigonometric function bases (sinh and cosh).
+inline double commonFactorHyperbolicPlus(double x, double tau, double dm)
+{
+   const double num = 2 * tau * std::exp(-x / tau);
+   const double den = dm * dm * tau * tau - 4.0;
+   return num / den;
+}
+
+// From asking WolframAlpha: integrate exp(-x/tau)*sin(x*m) over x.
+inline double indefiniteIntegralSinBasisPlus(double x, double tau, double dm)
+{
+   // Restrict to positive x
+   x = std::max(x, 0.0);
+   const double fac = commonFactorPlus(x, tau, dm);
+   // Only multiply with the sine term if the coefficient is non zero,
+   // i.e. if x was not infinity. Otherwise, we are evaluating the
+   // sine of infinity, which is NAN!
+   return fac != 0.0 ? fac * (-tau * dm * std::cos(dm * x) - std::sin(dm * x)) : 0.0;
+}
+
+// From asking WolframAlpha: integrate exp(-x/tau)*cos(x*m) over x.
+inline double indefiniteIntegralCosBasisPlus(double x, double tau, double dm)
+{
+   // Restrict to positive x
+   x = std::max(x, 0.0);
+   const double fac = commonFactorPlus(x, tau, dm);
+   return fac != 0.0 ? fac * (tau * dm * std::sin(dm * x) - std::cos(dm * x)) : 0.0;
+}
+
+// From asking WolframAlpha: integrate exp(-x/tau)*sinh(x*m/2) over x.
+inline double indefiniteIntegralSinhBasisPlus(double x, double tau, double dm)
+{
+   // Restrict to positive x
+   x = std::max(x, 0.0);
+   const double fac = commonFactorHyperbolicPlus(x, tau, dm);
+   const double arg = 0.5 * dm * x;
+   return fac != 0.0 ? fac * (tau * dm * std::cosh(arg) - 2. * std::sinh(arg)) : 0.0;
+}
+
+// From asking WolframAlpha: integrate exp(-x/tau)*cosh(x*m/2) over x.
+inline double indefiniteIntegralCoshBasisPlus(double x, double tau, double dm)
+{
+   // Restrict to positive x
+   x = std::max(x, 0.0);
+   const double fac = commonFactorHyperbolicPlus(x, tau, dm);
+   const double arg = 0.5 * dm * x;
+   return fac != 0.0 ? fac * (tau * dm * std::sinh(arg) + 2. * std::cosh(arg)) : 0.0;
+}
+
+// Integrate one of the basis functions. Takes a function that represents the
+// indefinite integral, some parameters, and a flag that indicates whether the
+// basis function is symmetric or antisymmetric. This information is used to
+// evaluate the integrals for the "Minus" and "Sum" cases.
+template <class Function>
+double definiteIntegral(Function indefiniteIntegral, double xmin, double xmax, double tau, double dm,
+                        RooTruthModel::BasisSign basisSign, bool isSymmetric)
+{
+   // Note: isSymmetric == false implies antisymmetric
+   if (tau == 0.0)
+      return isSymmetric ? 1.0 : 0.0;
+   double result = 0.0;
+   if (basisSign != RooTruthModel::Minus) {
+      result += indefiniteIntegral(xmax, tau, dm) - indefiniteIntegral(xmin, tau, dm);
+   }
+   if (basisSign != RooTruthModel::Plus) {
+      const double resultMinus = indefiniteIntegral(-xmax, tau, dm) - indefiniteIntegral(-xmin, tau, dm);
+      result += isSymmetric ? -resultMinus : resultMinus;
+   }
+   return result;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement analytical integrals when used as p.d.f and for compiled
 /// basis functions.
 
-double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooTruthModel::analyticalIntegral(Int_t code, const char *rangeName) const
 {
+   // Code must be 1
+   R__ASSERT(code == 1);
 
-  // Code must be 1
-  R__ASSERT(code==1) ;
+   // Unconvoluted PDF
+   if (_basisCode == noBasis)
+      return 1;
 
-  // Unconvoluted PDF
-  if (_basisCode==noBasis) return 1 ;
+   // Precompiled basis functions
+   BasisType basisType = (BasisType)((_basisCode == 0) ? 0 : (_basisCode / 10) + 1);
+   BasisSign basisSign = (BasisSign)(_basisCode - 10 * (basisType - 1) - 2);
 
-  // Precompiled basis functions
-  BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
-  BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
-  //cout << " calling RooTruthModel::analyticalIntegral with basisType " << basisType << endl;
+   const bool needsDm =
+      basisType == sinBasis || basisType == cosBasis || basisType == sinhBasis || basisType == coshBasis;
 
-  double tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+   const double tau = (static_cast<RooAbsReal *>(basis().getParameter(1)))->getVal();
+   const double dm =
+      needsDm ? (static_cast<RooAbsReal *>(basis().getParameter(2)))->getVal() : std::numeric_limits<Double_t>::quiet_NaN();
 
-  const double xmin = x.min(rangeName);
-  const double xmax = x.max(rangeName);
+   const double xmin = x.min(rangeName);
+   const double xmax = x.max(rangeName);
 
-  switch (basisType) {
-  case expBasis:
-    {
-      // WVE fixed for ranges
-      double result(0) ;
-      if (tau==0) return 1 ;
-      if ((basisSign != Minus) && (xmax>0)) {
-   result += tau*(-exp(-xmax/tau) -  -exp(-max(0.,xmin)/tau) ) ; // plus and both
-      }
-      if ((basisSign != Plus) && (xmin<0)) {
-   result -= tau*(-exp(-max(0.,xmin)/tau)) - -tau*exp(-xmax/tau) ;   // minus and both
-      }
+   auto integrate = [&](auto indefiniteIntegral, bool isSymmetric) {
+      return definiteIntegral(indefiniteIntegral, xmin, xmax, tau, dm, basisSign, isSymmetric);
+   };
 
-      return result ;
-    }
-  case sinBasis:
-    {
-      double result(0) ;
-      if (tau==0) return 0 ;
-      double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) {
-         double term = exp(-xmax/tau);
-         // We only multiply with the sine term if the coefficient is non zero,
-         // i.e. if xmax was not infinity. Otherwise, we are evaluating the
-         // sine of infinity, whic is NAN! Same applies to the other terms
-         // below.
-         if(term > 0.0) term *= -1/tau*sin(dm*xmax) - dm*cos(dm*xmax);
-         term += dm;
-         result += term;
-      }
-      if (basisSign != Plus) {
-         double term = exp(xmin/tau);
-         if (term > 0.0) term *= -1/tau*sin(dm*(-xmin)) - dm*cos(dm*(-xmin));
-         term += dm;
-         result -= term;
-      }
-      return result / (1/(tau*tau) + dm*dm) ;
-    }
-  case cosBasis:
-    {
-      double result(0) ;
-      if (tau==0) return 1 ;
-      double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) {
-         double term = exp(-xmax/tau);
-         if(term > 0.0) term *= -1/tau*cos(dm*xmax) + dm*sin(dm*xmax);
-         term += 1/tau;
-         result += term;
-      }
-      if (basisSign != Plus) {
-         double term = exp( xmin/tau);
-         if(term > 0.0) term *= -1/tau*cos(dm*(-xmin)) + dm*sin(dm*(-xmin));
-         term += 1/tau;
-         result += term;
-      }
-      return result / (1/(tau*tau) + dm*dm) ;
-    }
-  case linBasis:
-    {
-      if (tau==0) return 0 ;
-      double t_max = xmax/tau ;
-      return tau*( 1 - (1 + t_max)*exp(-t_max) ) ;
-    }
-  case quadBasis:
-    {
-      if (tau==0) return 0 ;
-      double t_max = xmax/tau ;
-      return tau*( 2 - (2 + (2 + t_max)*t_max)*exp(-t_max) ) ;
-    }
-  case sinhBasis:
-    {
-      double result(0) ;
-      if (tau==0) return 0 ;
-      double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      double taup = 2*tau/(2-tau*dg);
-      double taum = 2*tau/(2+tau*dg);
-      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-xmax/taup)) - taum*(1-exp(-xmax/taum)) ) ;
-      if (basisSign != Plus)  result -= 0.5*( taup*(1-exp( xmin/taup)) - taum*(1-exp( xmin/taum)) ) ;
-      return result ;
-    }
-  case coshBasis:
-    {
-      double result(0) ;
-      if (tau==0) return 1 ;
-      double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      double taup = 2*tau/(2-tau*dg);
-      double taum = 2*tau/(2+tau*dg);
-      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-xmax/taup)) + taum*(1-exp(-xmax/taum)) ) ;
-      if (basisSign != Plus)  result += 0.5*( taup*(1-exp( xmin/taup)) + taum*(1-exp( xmin/taum)) ) ;
-      return result ;
-    }
-  default:
-    R__ASSERT(0) ;
-  }
+   switch (basisType) {
+   case expBasis: return integrate(indefiniteIntegralExpBasisPlus, /*isSymmetric=*/true);
+   case sinBasis: return integrate(indefiniteIntegralSinBasisPlus, /*isSymmetric=*/false);
+   case cosBasis: return integrate(indefiniteIntegralCosBasisPlus, /*isSymmetric=*/true);
+   case linBasis: return integrate(indefiniteIntegralLinBasisPlus, /*isSymmetric=*/false);
+   case quadBasis: return integrate(indefiniteIntegralQuadBasisPlus, /*isSymmetric=*/true);
+   case sinhBasis: return integrate(indefiniteIntegralSinhBasisPlus, /*isSymmetric=*/false);
+   case coshBasis: return integrate(indefiniteIntegralCoshBasisPlus, /*isSymmetric=*/true);
+   default: R__ASSERT(0);
+   }
 
-  R__ASSERT(0) ;
-  return 0 ;
+   R__ASSERT(0);
+   return 0;
 }
 
 

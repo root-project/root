@@ -69,6 +69,7 @@ struct InitializedTensor{
          case ETensorType::DOUBLE: fSize*=sizeof(double); break;
          case ETensorType::INT32: fSize*=sizeof(int32_t); break;
          case ETensorType::INT64: fSize*=sizeof(int64_t); break;
+         case ETensorType::BOOL:  fSize*=sizeof(bool); break;
          default:
           throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
       }
@@ -97,6 +98,12 @@ struct InitializedTensor{
       case ETensorType::INT64: {
           std::shared_ptr<void> tData(malloc(fSize * sizeof(int64_t)), free);
           std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int64_t));
+          fData = tData;
+          break;
+      }
+      case ETensorType::BOOL: {
+          std::shared_ptr<void> tData(malloc(fSize * sizeof(bool)), free);
+          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(bool));
           fData = tData;
           break;
       }
@@ -424,11 +431,16 @@ extern "C" void sgemm_(const char * transa, const char * transb, const int * m, 
 
 
 struct GNN_Data {
-      RTensor<float> node_data;
-      RTensor<float> edge_data;
-      RTensor<float> global_data;
+      RTensor<float> node_data;      // the node feature data, tensor with shape (num_nodes, num_node_features)
+      RTensor<float> edge_data;      // the edge feature data, tensor with shape (num_edges, num_edge_features)
+      RTensor<float> global_data;    // the global features, tensor with shape (1, num_global_features)
+      RTensor<int> edge_index;       // the edge index (receivers and senders for each edge), tensor with shape (2, num_edges)
+                                     // edge_index[0,:] are the receivers and edge_index[1,:] are the senders
 
-      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})){}
+
+      // need to have default constructor since RTensor has not one
+      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})), edge_index(RTensor<int>({})) {}
+
 };
 
 template<typename T>
@@ -439,8 +451,12 @@ TMVA::Experimental::RTensor<T> Concatenate( TMVA::Experimental::RTensor<T> & t1,
       throw std::runtime_error("TMVA RTensor Concatenate - tensors have different memory layout");
    auto & shape1 = t1.GetShape();
    auto & shape2 = t2.GetShape();
-   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis])
+   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis]) {
+      std::cout << "axis " << axis << " sizes " << t1.GetSize() << " " << t2.GetSize() << "  ";
+      std::cout << "shape 1 : " << ConvertShapeToString(t1.GetShape());
+      std::cout << " shape 2 : " << ConvertShapeToString(t2.GetShape()) << std::endl;
       throw std::runtime_error("TMVA RTensor Concatenate - tensors have incompatible shapes");
+   }
    std::vector<size_t> outShape = shape1;
    outShape[axis] = shape1[axis] + shape2[axis];
    TMVA::Experimental::RTensor<T> tout(outShape, t1.GetMemoryLayout());
@@ -470,6 +486,8 @@ inline GNN_Data Concatenate(GNN_Data & data1, GNN_Data & data2, int axis = 0) {
    out.node_data = Concatenate(data1.node_data,data2.node_data, axis);
    out.edge_data = Concatenate(data1.edge_data,data2.edge_data, axis);
    out.global_data = Concatenate<float>(data1.global_data,data2.global_data, axis-1);
+   // assume sender/receivers of data1 and data2 are the same
+   out.edge_index = data1.edge_index.Copy();
    return out;
 }
 
@@ -478,9 +496,11 @@ inline GNN_Data Copy(const GNN_Data & data) {
    out.node_data = RTensor<float>(data.node_data.GetShape());
    out.edge_data = RTensor<float>(data.edge_data.GetShape());
    out.global_data = RTensor<float>(data.global_data.GetShape());
+   out.edge_index = RTensor<int>(data.edge_index.GetShape());
    std::copy(data.node_data.GetData(), data.node_data.GetData()+ data.node_data.GetSize(), out.node_data.GetData());
    std::copy(data.edge_data.GetData(), data.edge_data.GetData()+ data.edge_data.GetSize(), out.edge_data.GetData());
    std::copy(data.global_data.GetData(), data.global_data.GetData()+ data.global_data.GetSize(), out.global_data.GetData());
+   std::copy(data.edge_index.GetData(), data.edge_index.GetData()+ data.edge_index.GetSize(), out.edge_index.GetData());
    return out;
 }
 

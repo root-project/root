@@ -211,9 +211,9 @@ namespace cling {
      auto isDirectlyReacheable = [&PP](llvm::StringRef FileName) {
        SourceLocation fileNameLoc;
        bool isAngled = false;
-       const DirectoryLookup* FromDir = nullptr;
+       ConstSearchDirIterator FromDir = nullptr;
        const FileEntry* FromFile = nullptr;
-       const DirectoryLookup* CurDir = nullptr;
+       ConstSearchDirIterator* CurDir = nullptr;
 
        auto FE = PP.LookupFile(fileNameLoc, FileName, isAngled, FromDir,
                                FromFile,
@@ -223,7 +223,7 @@ namespace cling {
                                /*SkipCache*/ false,
                                /*OpenFile*/ false, /*CacheFail*/ true);
        // Return true if we can '#include' the given filename
-       return FE.hasValue();
+       return FE.has_value();
      };
 
      SourceLocation spellingLoc = m_SMgr.getSpellingLoc(D->getBeginLoc());
@@ -1149,7 +1149,7 @@ namespace cling {
       VISIT_DECL(Pointer, getPointeeType);
       VISIT_DECL(LValueReference, getPointeeType);
       VISIT_DECL(RValueReference, getPointeeType);
-      VISIT_DECL(TypeOf, getUnderlyingType);
+      VISIT_DECL(TypeOf, getUnmodifiedType);
       VISIT_DECL(Elaborated, getNamedType);
       VISIT_DECL(UnaryTransform, getUnderlyingType);
 #undef VISIT_DECL
@@ -1273,7 +1273,7 @@ namespace cling {
       Visit(TN.getAsTemplateDecl());
       break;
     case clang::TemplateName::QualifiedTemplate:
-      Visit(TN.getAsQualifiedTemplateName()->getTemplateDecl());
+      Visit(TN.getAsQualifiedTemplateName()->getUnderlyingTemplate().getAsTemplateDecl());
       break;
     case clang::TemplateName::DependentTemplate:
       VisitNestedNameSpecifier(TN.getAsDependentTemplateName()->getQualifier());
@@ -1364,7 +1364,6 @@ namespace cling {
 
   bool ForwardDeclPrinter::shouldSkipImpl(EnumDecl *D) {
     if (!D->getIdentifier()){
-      D->printName(Log());
       Log() << "Enum: Empty name\n";
       return true;
     }

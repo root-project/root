@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <TBranch.h>
 #include <TChain.h>
@@ -46,7 +46,7 @@ private:
    std::uint64_t fNbytesNext = gUpdateFrequencyBytes;
 
 public:
-   virtual ~RDefaultProgressCallback() {}
+   ~RDefaultProgressCallback() override {}
    void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
    {
       // Report if more than 50MB (compressed) where written since the last status update

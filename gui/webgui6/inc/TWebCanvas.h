@@ -64,6 +64,8 @@ protected:
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
 
       WebConn(unsigned id) : fConnId(id) {}
+      bool is_batch() const { return fConnId == 0; }
+      bool match(unsigned id) const { return !is_batch() && ((fConnId == id) || (id == 0)); }
       void reset()
       {
          fCheckedVersion = fSendVersion = fDrawVersion = 0;
@@ -88,7 +90,7 @@ protected:
    Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
-   TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
+   std::vector<TPad *> fAllPads;   ///<! list of all pads recognized during streaming
    Int_t fStyleDelivery{0};        ///<! gStyle delivery to clients: 0:never, 1:once, 2:always
    Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
@@ -123,6 +125,7 @@ protected:
 
    UInt_t CalculateColorsHash();
    void AddColorsPalette(TPadWebSnapshot &master);
+   void AddCustomFonts(TPadWebSnapshot &master);
 
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
@@ -135,15 +138,15 @@ protected:
 
    void AddSendQueue(unsigned connid, const std::string &msg);
 
-   void CheckDataToSend(unsigned connid = 0);
+   Bool_t CheckDataToSend(unsigned connid = 0);
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
    virtual Bool_t IsJSSupportedClass(TObject *obj, Bool_t many_primitives = kFALSE);
 
-   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 0) && (fWebConn[0].fConnId == connid); }
+   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 1) && (fWebConn[1].fConnId == connid); }
 
-   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 0) && (fWebConn[0].fDrawVersion > 0); }
+   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 1) && (fWebConn[1].fDrawVersion > 0); }
 
    void ShowCmd(const std::string &arg, Bool_t show);
 
@@ -239,6 +242,8 @@ public:
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
    Bool_t IsFixedSize() const { return fFixedSize; }
+
+   static Font_t AddFont(const char *name, const char *ttffile, Int_t precision = 2);
 
    static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0, Bool_t batchmode = kFALSE);
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0, Bool_t batchmode = kFALSE);

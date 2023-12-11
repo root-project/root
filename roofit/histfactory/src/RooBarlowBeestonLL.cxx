@@ -46,15 +46,9 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 
 ////////////////////////////////////////////////////////////////////////////////
 
- RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() :
-   RooAbsReal("RooBarlowBeestonLL","RooBarlowBeestonLL"),
-   _nll(),
-//   _obs("paramOfInterest","Parameters of interest",this),
-//  _par("nuisanceParam","Nuisance parameters",this,false,false),
-  _pdf(nullptr), _data(nullptr)
+/// Default constructor. Should only be used by proof.
+RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() : RooAbsReal("RooBarlowBeestonLL", "RooBarlowBeestonLL")
 {
-  // Default constructor
-  // Should only be used by proof.
 }
 
 
@@ -63,10 +57,9 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, const char *title,
                    RooAbsReal& nllIn /*, const RooArgSet& observables*/) :
   RooAbsReal(name,title),
-  _nll("input","-log(L) function",this,nllIn),
+  _nll("input","-log(L) function",this,nllIn)
   //  _obs("paramOfInterest","Parameters of interest",this),
   //  _par("nuisanceParam","Nuisance parameters",this,false,false),
-  _pdf(nullptr), _data(nullptr)
 {
   // Constructor of profile likelihood given input likelihood nll w.r.t
   // the given set of variables. The input log likelihood is minimized w.r.t
@@ -92,7 +85,6 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBee
   _nll("nll",this,other._nll),
   //  _obs("obs",this,other._obs),
   //  _par("par",this,other._par),
-  _pdf(nullptr), _data(nullptr),
   _paramFixed(other._paramFixed)
 {
   // Copy constructor
@@ -107,7 +99,7 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBee
 
 void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() const {
   for (auto const *var : static_range_cast<RooRealVar *>(*bin_center)) {
-    RooRealVar* target = (RooRealVar*) observables->find(var->GetName()) ;
+    RooRealVar* target = static_cast<RooRealVar*>(observables->find(var->GetName())) ;
     target->setVal(var->getVal()) ;
   }
 }
@@ -149,11 +141,11 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
   }
 
   // Loop over the channels
-  RooSimultaneous* simPdf = (RooSimultaneous*) _pdf;
-  RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
+  auto simPdf = static_cast<RooSimultaneous*>(_pdf);
+  auto channelCat = static_cast<RooCategory const*>(&simPdf->indexCat());
   for (const auto& nameIdx : *channelCat) {
 
-    // Warning: channel cat name is not necesarily the same name
+    // Warning: channel cat name is not necessarily the same name
     // as the pdf's (for example, if someone does edits)
     RooAbsPdf* channelPdf = simPdf->getPdf(nameIdx.first.c_str());
     std::string channel_name = channelPdf->GetName();
@@ -223,10 +215,11 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
    std::cout << "Failed to find pois mean or tau parameter for " << gamma_stat->GetName() << std::endl;
       }
       else {
-   if(verbose) std::cout << "Found pois mean and tau for parameter: " << gamma_stat->GetName()
-               << " tau: " << tau->GetName() << " " << tau->getVal()
-               << " pois_mean: " << pois_mean->GetName() << " " << pois_mean->getVal()
-               << std::endl;
+   if (verbose) {
+      std::cout << "Found pois mean and tau for parameter: " << gamma_stat->GetName() << " tau: " << tau->GetName()
+                << " " << tau->getVal() << " pois_mean: " << pois_mean->GetName() << " " << pois_mean->getVal()
+                << std::endl;
+   }
       }
 
       cache.tau = tau;
@@ -382,7 +375,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &ob
   if (id == typeid(RooProdPdf)) {
     RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
     RooArgList list(prod->pdfList());
-    for (int i = 0, n = list.getSize(); i < n; ++i) {
+    for (int i = 0, n = list.size(); i < n; ++i) {
       RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
       FactorizePdf(observables, *pdfi, obsTerms, constraints);
     }
@@ -440,7 +433,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       BarlowCache& bin_cache = channel_cache.at(i);
       if( !bin_cache.hasStatUncert ) continue;
 
-      RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      RooAbsPdf* sum_pdf = static_cast<RooAbsPdf*>(bin_cache.sumPdf);
       RooArgSet* obsSet = bin_cache.observables;
       double binVolume = bin_cache.binVolume;
 
@@ -462,7 +455,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       BarlowCache& bin_cache = channel_cache.at(i);
       if( !bin_cache.hasStatUncert ) continue;
 
-      RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      RooAbsPdf* sum_pdf = static_cast<RooAbsPdf*>(bin_cache.sumPdf);
       RooArgSet* obsSet = bin_cache.observables;
       double binVolume = bin_cache.binVolume;
 
@@ -624,10 +617,10 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
     std::unique_ptr<RooArgSet> obsStart{(RooArgSet*) _obs.snapshot(false)};
 
     // Start from previous global minimum
-    if (_paramAbsMin.getSize()>0) {
+    if (_paramAbsMin.size()>0) {
       const_cast<RooSetProxy&>(_par).assignValueOnly(_paramAbsMin) ;
     }
-    if (_obsAbsMin.getSize()>0) {
+    if (_obsAbsMin.size()>0) {
       const_cast<RooSetProxy&>(_obs).assignValueOnly(_obsAbsMin) ;
     }
 

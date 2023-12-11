@@ -33,8 +33,8 @@ ClassImp(TEveProjectionAxesGL);
 
 TEveProjectionAxesGL::TEveProjectionAxesGL() :
    TGLObject(),
-   fM(0),
-   fProjection(0)
+   fM(nullptr),
+   fProjection(nullptr)
 {
    fDLCache    = kFALSE; // Disable display list.
 }
@@ -65,7 +65,7 @@ void TEveProjectionAxesGL::SetBBox()
 void TEveProjectionAxesGL::FilterOverlappingLabels(Int_t idx, Float_t ref) const
 {
    TGLAxisPainter::LabVec_t &orig = fAxisPainter.RefLabVec();
-   if (orig.size() == 0) return;
+   if (orig.empty()) return;
 
    Float_t center = fM->GetManager()->GetProjection()->GetProjectedCenter()[idx];
 
@@ -317,7 +317,7 @@ void TEveProjectionAxesGL::Draw(TGLRnrCtx& rnrCtx) const
 
 void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
-   if (rnrCtx.Selection() || rnrCtx.Highlight() || fM->fManager->GetBBox() == 0) return;
+   if (rnrCtx.Selection() || rnrCtx.Highlight() || fM->fManager->GetBBox() == nullptr) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
 

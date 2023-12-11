@@ -93,8 +93,8 @@ namespace RooStats {
    // (from G. Petrucciani)
       if (auto prod = dynamic_cast<RooProdPdf *>(&pdf)) {
          RooArgList list(prod->pdfList());
-         for (int i = 0, n = list.getSize(); i < n; ++i) {
-            RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
+         for (int i = 0, n = list.size(); i < n; ++i) {
+            RooAbsPdf *pdfi = static_cast<RooAbsPdf *>(list.at(i));
             FactorizePdf(observables, *pdfi, obsTerms, constraints);
          }
       } else if (dynamic_cast<RooExtendPdf *>(&pdf)) {
@@ -105,7 +105,7 @@ namespace RooStats {
          FactorizePdf(observables, static_cast<RooAbsPdf&>(**iter), obsTerms, constraints);
       } else if (auto sim = dynamic_cast<RooSimultaneous *>(&pdf)) {  //|| dynamic_cast<RooSimultaneousOpt>(&pdf)) {
          assert(sim != nullptr);
-         RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().clone(sim->indexCat().GetName());
+         RooAbsCategoryLValue *cat = static_cast<RooAbsCategoryLValue *>(sim->indexCat().clone(sim->indexCat().GetName()));
          for (int ic = 0, nc = cat->numBins((const char *)nullptr); ic < nc; ++ic) {
             cat->setBin(ic);
             RooAbsPdf* catPdf = sim->getPdf(cat->getCurrentLabel());
@@ -134,7 +134,8 @@ namespace RooStats {
 
    RooAbsPdf * MakeNuisancePdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name) {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
-      RooArgList obsTerms, constraints;
+      RooArgList obsTerms;
+      RooArgList constraints;
       FactorizePdf(observables, pdf, obsTerms, constraints);
       if(constraints.empty()) {
          oocoutW(nullptr, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
@@ -158,18 +159,22 @@ namespace RooStats {
 
          RooArgList list(prod->pdfList()); RooArgList newList;
 
-         for (int i = 0, n = list.getSize(); i < n; ++i) {
-            RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
+         for (int i = 0, n = list.size(); i < n; ++i) {
+            RooAbsPdf *pdfi = static_cast<RooAbsPdf *>(list.at(i));
             RooAbsPdf *newPdfi = StripConstraints(*pdfi, observables);
             if(newPdfi != nullptr) newList.add(*newPdfi);
          }
 
-         if(newList.empty()) return nullptr; // only constraints in product
-         // return single component (no longer a product)
-         else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained",
-                                                                                                               newList.at(0)->GetName())));
-         else return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
-            TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
+         if (newList.empty()) {
+            return nullptr; // only constraints in product
+            // return single component (no longer a product)
+         } else if (newList.size() == 1) {
+            return dynamic_cast<RooAbsPdf *>(
+               newList.at(0)->clone(TString::Format("%s_unconstrained", newList.at(0)->GetName())));
+         } else {
+            return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
+                                  TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
+         }
 
       } else if (dynamic_cast<RooExtendPdf*>(&pdf)) {
 
@@ -189,7 +194,7 @@ namespace RooStats {
       } else if (auto sim = dynamic_cast<RooSimultaneous *>(&pdf)) {  //|| dynamic_cast<RooSimultaneousOpt *>(&pdf)) {
 
          assert(sim != nullptr);
-         RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone(); assert(cat != nullptr);
+         RooAbsCategoryLValue *cat = static_cast<RooAbsCategoryLValue *>(sim->indexCat().Clone()); assert(cat != nullptr);
          RooArgList pdfList;
 
          for (int ic = 0, nc = cat->numBins((const char *)nullptr); ic < nc; ++ic) {
@@ -206,7 +211,7 @@ namespace RooStats {
             TString::Format("%s without constraints", sim->GetTitle()).Data(), pdfList, *cat);
 
       } else if (pdf.dependsOn(observables)) {
-         return (RooAbsPdf *) pdf.clone(TString::Format("%s_unconstrained", pdf.GetName()).Data());
+         return static_cast<RooAbsPdf *>(pdf.clone(TString::Format("%s_unconstrained", pdf.GetName()).Data()));
       }
 
       return nullptr; // just  a constraint term
@@ -237,12 +242,12 @@ namespace RooStats {
       public:
          std::map<TString, double> fVarVals;
          double fInval;
-         TTree *fTree;
+         TTree *fTree = nullptr;
 
-         BranchStore(const vector <TString> &params = vector <TString>(), double _inval = -999.) : fTree(nullptr) {
-            fInval = _inval;
-            for(unsigned int i = 0;i<params.size();i++)
-               fVarVals[params[i]] = _inval;
+         BranchStore(const vector<TString> &params = vector<TString>(), double _inval = -999.) : fInval(_inval)
+         {
+         for (unsigned int i = 0; i < params.size(); i++)
+            fVarVals[params[i]] = _inval;
          }
 
          ~BranchStore() {
@@ -324,7 +329,7 @@ namespace RooStats {
    void PrintListContent(const RooArgList & l, std::ostream & os ) {
       bool first = true;
       os << "( ";
-      for (int i = 0; i< l.getSize(); ++i) {
+      for (std::size_t i = 0; i< l.size(); ++i) {
          if (first) {
             first=false ;
          } else {

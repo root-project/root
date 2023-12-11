@@ -1,4 +1,4 @@
-import { addMethods, settings, nsREX } from '../core.mjs';
+import { addMethods, settings, nsREX, isFunc } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
 import { makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -10,12 +10,12 @@ import { createMenu } from '../gui/menu.mjs';
 /** @summary draw RText object
   * @private */
 function drawText() {
-   const text      = this.getObject(),
-       pp        = this.getPadPainter(),
-       onframe   = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
-       clipping  = onframe ? this.v7EvalAttr('clipping', false) : false,
-       p         = pp.getCoordinate(text.fPos, onframe),
-       textFont  = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 });
+   const text = this.getObject(),
+       pp = this.getPadPainter(),
+       onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+       clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
+       p = pp.getCoordinate(text.fPos, onframe),
+       textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 });
 
    this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -29,12 +29,12 @@ function drawText() {
 /** @summary draw RLine object
   * @private */
 function drawLine() {
-    const line     = this.getObject(),
-        pp       = this.getPadPainter(),
-        onframe  = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+    const line = this.getObject(),
+        pp = this.getPadPainter(),
+        onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
         clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
-        p1       = pp.getCoordinate(line.fP1, onframe),
-        p2       = pp.getCoordinate(line.fP2, onframe);
+        p1 = pp.getCoordinate(line.fP1, onframe),
+        p2 = pp.getCoordinate(line.fP2, onframe);
 
     this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -49,12 +49,12 @@ function drawLine() {
 /** @summary draw RBox object
   * @private */
 function drawBox() {
-   const box      = this.getObject(),
-       pp       = this.getPadPainter(),
-       onframe  = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+   const box = this.getObject(),
+       pp = this.getPadPainter(),
+       onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
        clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
-       p1       = pp.getCoordinate(box.fP1, onframe),
-       p2       = pp.getCoordinate(box.fP2, onframe);
+       p1 = pp.getCoordinate(box.fP1, onframe),
+       p2 = pp.getCoordinate(box.fP2, onframe);
 
    this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -72,11 +72,11 @@ function drawBox() {
 /** @summary draw RMarker object
   * @private */
 function drawMarker() {
-    const marker   = this.getObject(),
-        pp       = this.getPadPainter(),
-        onframe  = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+    const marker = this.getObject(),
+        pp = this.getPadPainter(),
+        onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
         clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
-        p        = pp.getCoordinate(marker.fP, onframe);
+        p = pp.getCoordinate(marker.fP, onframe);
 
     this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -100,10 +100,9 @@ class RPalettePainter extends RObjectPainter {
 
    /** @summary get palette */
    getHistPalette() {
-      const drawable = this.getObject(),
-          pal = drawable ? drawable.fPalette : null;
+      const pal = this.getObject()?.fPalette;
 
-      if (pal && !pal.getColor)
+      if (pal && !isFunc(pal.getColor))
          addMethods(pal, `${nsREX}RPalette`);
 
       return pal;
@@ -122,15 +121,15 @@ class RPalettePainter extends RObjectPainter {
       if (!framep)
          return console.log('no frame painter - no palette');
 
-      const zmin         = contour[0],
-            zmax         = contour[contour.length-1],
-            rect         = framep.getFrameRect(),
-            pad_width    = this.getPadPainter().getPadWidth(),
-            pad_height   = this.getPadPainter().getPadHeight(),
-            visible      = this.v7EvalAttr('visible', true),
-            vertical     = this.v7EvalAttr('vertical', true);
-      let gmin         = palette.full_min,
-          gmax         = palette.full_max,
+      const zmin = contour[0],
+            zmax = contour[contour.length-1],
+            rect = framep.getFrameRect(),
+            pad_width = this.getPadPainter().getPadWidth(),
+            pad_height = this.getPadPainter().getPadHeight(),
+            visible = this.v7EvalAttr('visible', true),
+            vertical = this.v7EvalAttr('vertical', true);
+      let gmin = palette.full_min,
+          gmax = palette.full_max,
           palette_x, palette_y, palette_width, palette_height;
 
       if (drag) {
@@ -307,7 +306,7 @@ class RPalettePainter extends RObjectPainter {
                if (!zoom_rect_visible && doing_zoom)
                   moving_labels = framep.z_handle.processLabelsMove('start', last_pos);
             }, 500);
-         },  assignHandlers = () => {
+         }, assignHandlers = () => {
             this.draw_g.selectAll('.axis_zoom, .axis_labels')
                        .on('mousedown', startRectSel)
                        .on('dblclick', () => framep.unzoom('z'));

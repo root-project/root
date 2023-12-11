@@ -27,7 +27,7 @@ ClassImp(TEveDigitSetGL);
 /// Constructor.
 
 TEveDigitSetGL::TEveDigitSetGL() :
-   TGLObject(), fHighlightSet(0)
+   TGLObject(), fHighlightSet(nullptr)
 {
 }
 
@@ -71,7 +71,7 @@ void TEveDigitSetGL::DrawFrameIfNeeded(TGLRnrCtx& rnrCtx) const
 {
    TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
 
-   if (DS.fFrame != 0 && ! rnrCtx.SecSelection() &&
+   if (DS.fFrame != nullptr && ! rnrCtx.SecSelection() &&
        ! (rnrCtx.Selection() && ! DS.fSelectViaFrame) &&
        ! (rnrCtx.Highlight() && ! DS.fHighlightFrame))
    {
@@ -107,7 +107,7 @@ void TEveDigitSetGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
          fHighlightSet = & DS.RefSelectedSet();
          TGLObject::DrawHighlight(rnrCtx, pshp, 1);
       }
-      fHighlightSet = 0;
+      fHighlightSet = nullptr;
    }
    else
    {

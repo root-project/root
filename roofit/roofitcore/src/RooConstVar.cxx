@@ -19,16 +19,13 @@
 \class RooConstVar
 \ingroup Roofitcore
 
-RooConstVar represent a constant real-valued object
+Represents a constant real-valued object.
 **/
 
 #include "RooConstVar.h"
 #include "RooNumber.h"
 
-using namespace std;
-
 ClassImp(RooConstVar);
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +51,7 @@ RooConstVar::RooConstVar(const RooConstVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
-void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
+void RooConstVar::writeToStream(std::ostream& os, bool /*compact*/) const
 {
   os << _value ;
 }
@@ -63,12 +60,12 @@ void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
 
 void RooConstVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   // Just return a stringy-fied version of the const value.
+   // Just return a stringy-field version of the const value.
    // Formats to the maximum precision.
    constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
    std::stringstream ss;
    ss.precision(max_precision);
-   // Just use toString to make sure we do not ouput 'inf'.
+   // Just use toString to make sure we do not output 'inf'.
    // This is really ugly for large numbers...
    ss << std::fixed << RooNumber::toString(_value);
    ctx.addResult(this, ss.str());

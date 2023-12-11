@@ -19,7 +19,7 @@
 \class RooAddition
 \ingroup Roofitcore
 
-RooAddition calculates the sum of a set of RooAbsReal terms, or
+Calculates the sum of a set of RooAbsReal terms, or
 when constructed with two sets, it sums the product of the terms
 in the two sets.
 **/
@@ -33,11 +33,14 @@ in the two sets.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"
-#include "RooNLLVar.h"
 #include "RooNLLVarNew.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooNLLVar.h"
+#include "RooChi2Var.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -52,27 +55,10 @@ ClassImp(RooAddition);
 /// \param[in] sumSet The value of the function will be the sum of the values in this set
 /// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in `sumSet`
 
-RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-                         , bool takeOwnership
-#endif
-  )
-  : RooAbsReal(name, title)
-  , _set("!set","set of components",this)
-  , _cacheMgr(this,10)
+RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet)
+   : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
 {
-  for (RooAbsArg *comp : sumSet) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " is not of type RooAbsReal" << std::endl;
-      RooErrorHandler::softAbort() ;
-    }
-    _set.add(*comp) ;
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-    if (takeOwnership) _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
-#endif
-  }
-
+  _set.addTyped<RooAbsReal>(sumSet);
 }
 
 
@@ -91,16 +77,10 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 /// \param[in] sumSet2 Right-hand element of the pair-wise products
 /// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
 ///
-RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-                         , bool takeOwnership
-#endif
-  )
-    : RooAbsReal(name, title)
-    , _set("!set","set of components",this)
-    , _cacheMgr(this,10)
+RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet1, const RooArgList &sumSet2)
+   : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
 {
-  if (sumSet1.getSize() != sumSet2.getSize()) {
+  if (sumSet1.size() != sumSet2.size()) {
     coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << std::endl;
     RooErrorHandler::softAbort() ;
   }
@@ -129,12 +109,6 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     auto prod = std::make_unique<RooProduct>( _name, _name , RooArgSet(*comp1, *comp2));
     _set.add(*prod);
     _ownedList.addOwned(std::move(prod));
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-    if (takeOwnership) {
-        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp1});
-        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp2});
-    }
-#endif
   }
 }
 
@@ -195,7 +169,7 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
       std::string className = GetName();
       std::string varName = "elements" + className;
       std::string sumName = "sum" + className;
-      std::string code = "";
+      std::string code;
       std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
       int idx = 0;
       for (RooAbsArg *it : _set) {
@@ -240,12 +214,17 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<ROOT::Experimental::RooNLLVarNew*>(arg)) {
-      nllArg = (RooAbsReal*)arg ;
+    if (dynamic_cast<RooNLLVarNew*>(arg)) {
+      nllArg = static_cast<RooAbsReal*>(arg) ;
+    }
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+    if (dynamic_cast<RooNLLVar*>(arg)) {
+      nllArg = static_cast<RooAbsReal*>(arg) ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
-      chi2Arg = (RooAbsReal*)arg ;
+      chi2Arg = static_cast<RooAbsReal*>(arg) ;
     }
+#endif
   }
 
   if (nllArg && !chi2Arg) {
@@ -285,7 +264,7 @@ bool RooAddition::setData(RooAbsData& data, bool cloneData)
 
 void RooAddition::printMetaArgs(std::ostream& os) const
 {
-  // We can use the implementation of RooRealSumPdf with an empy coefficient list.
+  // We can use the implementation of RooRealSumPdf with an empty coefficient list.
   static const RooArgList coefs{};
   RooRealSumPdf::printMetaArgs(_set, coefs, os);
 }
@@ -299,7 +278,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
+  CacheElem* cache = static_cast<CacheElem*>(_cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName)));
   if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code+1;
@@ -321,7 +300,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
+  CacheElem *cache = static_cast<CacheElem*>(_cacheMgr.getObjByIndex(code-1));
   if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );

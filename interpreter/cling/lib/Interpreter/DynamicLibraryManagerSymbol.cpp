@@ -384,7 +384,7 @@ std::string cached_realpath(llvm::StringRef path, llvm::StringRef base_path = ""
     if (S_ISLNK(st_mode)) {
       llvm::StringRef symlink = cached_readlink(result.c_str());
       if (llvm::sys::path::is_relative(symlink)) {
-        result.set_size(old_size);
+        result.resize(old_size);
         result = cached_realpath(symlink, result, true, symlooplevel - 1);
       } else {
         result = cached_realpath(symlink, "", true, symlooplevel - 1);
@@ -1141,9 +1141,13 @@ namespace cling {
 
     auto ObjF = llvm::object::ObjectFile::createObjectFile(FileName);
     if (!ObjF) {
+      std::string Message;
+      handleAllErrors(ObjF.takeError(), [&](llvm::ErrorInfoBase &EIB) {
+        Message += EIB.message() + "; ";
+      });
       if (DEBUG > 1)
         cling::errs() << "[DyLD] Failed to read object file "
-                      << FileName << "\n";
+                      << FileName << ". Message: '" << Message << "\n";
       return true;
     }
 

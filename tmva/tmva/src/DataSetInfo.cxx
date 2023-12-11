@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : DataSetInfo                                                           *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::DataSetInfo
@@ -85,10 +85,10 @@ TMVA::DataSetInfo::~DataSetInfo()
    ClearDataSet();
 
    for(UInt_t i=0, iEnd = fClasses.size(); i<iEnd; ++i) {
-      delete fClasses[i];
+      if (fClasses[i]) delete fClasses[i];
    }
 
-   delete fTargetsForMulticlass;
+   if (fTargetsForMulticlass) delete fTargetsForMulticlass;
 
    delete fLogger;
 }
@@ -97,7 +97,7 @@ TMVA::DataSetInfo::~DataSetInfo()
 
 void TMVA::DataSetInfo::ClearDataSet() const
 {
-   if(fDataSet!=0) { delete fDataSet; fDataSet=0; }
+   if(fDataSet) { delete fDataSet; fDataSet=nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

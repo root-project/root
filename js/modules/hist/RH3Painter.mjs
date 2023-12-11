@@ -51,7 +51,7 @@ class RH3Painter extends RHistPainter {
          }
       }
 
-      this.draw_content = this.gmaxbin > 0;
+      this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
    }
 
   /** @summary Count histogram statistic */
@@ -242,7 +242,7 @@ class RH3Painter extends RHistPainter {
       }
 
       return pnts.createPoints({ color: this.v7EvalColor('fill_color', 'red') }).then(mesh => {
-         main.toplevel.add(mesh);
+         main.add3DMesh(mesh);
 
          mesh.bins = bins;
          mesh.painter = this;
@@ -319,19 +319,19 @@ class RH3Painter extends RHistPainter {
 
          for (let k = 0, nn = -3; k < indicies.length; ++k) {
             const vert = vertices[indicies[k]];
-            single_bin_verts[k*3]   = vert.x-0.5;
+            single_bin_verts[k*3] = vert.x-0.5;
             single_bin_verts[k*3+1] = vert.y-0.5;
             single_bin_verts[k*3+2] = vert.z-0.5;
 
             if (k%6 === 0) nn+=3;
-            single_bin_norms[k*3]   = normals[nn];
+            single_bin_norms[k*3] = normals[nn];
             single_bin_norms[k*3+1] = normals[nn+1];
             single_bin_norms[k*3+2] = normals[nn+2];
          }
          use_helper = true;
 
-         if (this.options.Box === 11)  use_colors = true;  else
-         if (this.options.Box === 12) { use_colors = true; use_helper = false; }  else
+         if (this.options.Box === 11) use_colors = true; else
+         if (this.options.Box === 12) { use_colors = true; use_helper = false; } else
          if (this.options.Color) { use_colors = true; use_opacity = 0.5; use_scale = false; use_helper = false; use_lambert = true; }
       }
 
@@ -357,7 +357,7 @@ class RH3Painter extends RHistPainter {
             scaley = (main.gry(yaxis.GetBinCoord(j2)) - main.gry(yaxis.GetBinCoord(j1))) / (j2 - j1) * dj,
             scalez = (main.grz(zaxis.GetBinCoord(k2)) - main.grz(zaxis.GetBinCoord(k1))) / (k2 - k1) * dk,
             cols_size = [];
-      let nbins = 0, i, j, k, wei, bin_content,  num_colors = 0, cols_sequence = [];
+      let nbins = 0, i, j, k, wei, bin_content, num_colors = 0, cols_sequence = [];
 
       for (i = i1; i < i2; i += di) {
          for (j = j1; j < j2; j += dj) {
@@ -459,11 +459,11 @@ class RH3Painter extends RHistPainter {
 
                // Grab the coordinates and scale that are being assigned to each bin
                for (let vi = 0; vi < buffer_size; vi+=3, vvv+=3) {
-                  bin_v[vvv]   = grx + single_bin_verts[vi]*scalex*wei;
+                  bin_v[vvv] = grx + single_bin_verts[vi]*scalex*wei;
                   bin_v[vvv+1] = gry + single_bin_verts[vi+1]*scaley*wei;
                   bin_v[vvv+2] = grz + single_bin_verts[vi+2]*scalez*wei;
 
-                  bin_n[vvv]   = single_bin_norms[vi];
+                  bin_n[vvv] = single_bin_norms[vi];
                   bin_n[vvv+1] = single_bin_norms[vi+1];
                   bin_n[vvv+2] = single_bin_norms[vi+2];
                }
@@ -484,7 +484,7 @@ class RH3Painter extends RHistPainter {
                   vvv = nbins * helper_segments.length * 3;
                   for (let n = 0; n < helper_segments.length; ++n, vvv += 3) {
                      const vert = Box3D.Vertices[helper_segments[n]];
-                     helper_p[vvv]   = grx + (vert.x-0.5)*scalex*wei;
+                     helper_p[vvv] = grx + (vert.x-0.5)*scalex*wei;
                      helper_p[vvv+1] = gry + (vert.y-0.5)*scaley*wei;
                      helper_p[vvv+2] = grz + (vert.z-0.5)*scalez*wei;
                   }
@@ -544,7 +544,7 @@ class RH3Painter extends RHistPainter {
             return tip;
          };
 
-         main.toplevel.add(combined_bins);
+         main.add3DMesh(combined_bins);
 
          if (helper_kind[nseq] > 0) {
             const lcolor = this.v7EvalColor('line_color', 'lightblue'),
@@ -554,7 +554,7 @@ class RH3Painter extends RHistPainter {
                           ? createLineSegments(bin_verts[nseq], helper_material, helper_indexes[nseq])
                           : createLineSegments(helper_positions[nseq], helper_material);
 
-            main.toplevel.add(lines);
+            main.add3DMesh(lines);
          }
       }
 
@@ -718,7 +718,7 @@ class RH3Painter extends RHistPainter {
             case 'box': o.Box = 10 + sub; break;
             case 'sphere': o.Sphere = 10 + sub; break;
             case 'col': o.Color = true; break;
-            case 'scat': o.Scatter = true;  break;
+            case 'scat': o.Scatter = true; break;
             default: o.Box = 10;
          }
 

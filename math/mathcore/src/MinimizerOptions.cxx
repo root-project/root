@@ -44,7 +44,7 @@ void MinimizerOptions::SetDefaultMinimizer(const char * type, const char * algo)
    // set the default minimizer type and algorithm
    if (type) Minim::gDefaultMinimizer = std::string(type);
    if (algo) Minim::gDefaultMinimAlgo = std::string(algo);
-   if (Minim::gDefaultMinimAlgo == "" && ( Minim::gDefaultMinimizer == "Minuit" ||
+   if (Minim::gDefaultMinimAlgo.empty() && ( Minim::gDefaultMinimizer == "Minuit" ||
        Minim::gDefaultMinimizer == "Minuit2") )
       Minim::gDefaultMinimAlgo = "Migrad";
 }
@@ -102,28 +102,32 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
    // return default minimizer
    // if is "" (no default is set) read from etc/system.rootrc
 
+
+   // The "default default" minimizer in case there is nothing set in .rootrc
+   static constexpr auto defaultDefaultMinimizer = "Minuit2";
+
 #ifdef MATH_NO_PLUGIN_MANAGER
    if (Minim::gDefaultMinimizer.size() != 0)
       return Minim::gDefaultMinimizer;
 
-   Minim::gDefaultMinimizer = "Minuit2";  // in case no PM exists
+   Minim::gDefaultMinimizer = defaultDefaultMinimizer;  // in case no PM exists
 
 #else
    R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
-   if (Minim::gDefaultMinimizer.size() != 0)
+   if (!Minim::gDefaultMinimizer.empty())
       return Minim::gDefaultMinimizer;
 
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    // Another thread also waiting for the write lock might have
    // done the assignment
-   if (Minim::gDefaultMinimizer.size() != 0)
+   if (!Minim::gDefaultMinimizer.empty())
       return Minim::gDefaultMinimizer;
 
    // use value defined in etc/system.rootrc  (if not found Minuit is used)
    if (gEnv)
-      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");
+      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter",defaultDefaultMinimizer);
 #endif
 
    return Minim::gDefaultMinimizer;

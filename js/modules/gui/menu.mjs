@@ -1,4 +1,4 @@
-import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect } from '../core.mjs';
+import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect, getDocument } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
@@ -101,17 +101,13 @@ class JSRootMenu {
          return;
       }
 
-      if (!without_sub) {
-         this.add('sub:' + top_name, () => {
-            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
-            this.input('Provide draw option', opt, 'text').then(call_back);
-         }, title);
-      }
+      if (!without_sub)
+         this.add('sub:' + top_name, opts[0], call_back, title);
 
-      for (let i = 0; i < opts.length; ++i) {
+      for (let i = 1; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
              group = i+1;
-         if ((opts.length > 5) && name) {
+         if (opts.length > 5) {
             // check if there are similar options, which can be grouped once again
             while ((group < opts.length) && (opts[group].indexOf(name) === 0)) group++;
          }
@@ -133,8 +129,13 @@ class JSRootMenu {
          } else
             this.add(name, opts[i], call_back);
       }
-      if (!without_sub)
+      if (!without_sub) {
+         this.add('<input>', () => {
+            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+            this.input('Provide draw option', opt, 'text').then(call_back);
+         }, 'Enter draw option in dialog');
          this.add('endsub:');
+      }
    }
 
    /** @summary Add color selection menu entries
@@ -231,7 +232,7 @@ class JSRootMenu {
       add(55, 'Rainbow');
       add(51, 'Deep Sea');
       add(52, 'Grayscale', 'New gray scale');
-      add(1,  '', 'Old gray scale', (curr > 0) && (curr < 10));
+      add(1, '', 'Old gray scale', (curr > 0) && (curr < 10));
       add(50, 'ROOT 5', 'Default color palette in ROOT 5', (curr >= 10) && (curr < 51));
       add(53, '', 'Dark body radiator');
       add(54, '', 'Two-color hue');
@@ -441,10 +442,12 @@ class JSRootMenu {
 
       this.add('column:');
 
+      const doc = getDocument();
+
       for (let n = 1; n < 20; ++n) {
          const id = n*10 + prec,
                handler = new FontHandler(id, 14),
-               txt = d3_select(document.createElementNS('http://www.w3.org/2000/svg', 'text'));
+               txt = d3_select(doc.createElementNS('http://www.w3.org/2000/svg', 'text'));
          let fullname = handler.getFontName(), qual = '';
          if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
          if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
@@ -577,7 +580,7 @@ class JSRootMenu {
          });
 
          this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle,
-            arg => { painter.textatt.change(undefined,  undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
+            arg => { painter.textatt.change(undefined, undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
 
          this.add('endsub:');
       }
@@ -589,7 +592,7 @@ class JSRootMenu {
       const is_gaxis = faxis._typename === clTGaxis;
 
       this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val;  painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+         faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
       this.add('sub:Labels');
@@ -599,7 +602,7 @@ class JSRootMenu {
             arg => { faxis.InvertBit(EAxisBits.kLabelsVert); painter.interactiveRedraw('pad', `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
       this.addColorMenu('Color', faxis.fLabelColor,
             arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
-      this.addSizeMenu('Offset', 0, 0.1, 0.01, faxis.fLabelOffset,
+      this.addSizeMenu('Offset', -0.02, 0.1, 0.01, faxis.fLabelOffset,
             arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
       let a = faxis.fLabelSize >= 1;
       this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
@@ -695,10 +698,10 @@ class JSRootMenu {
       this.addchk(settings.Tooltip, 'Tooltip', flag => { settings.Tooltip = flag; });
       this.addchk(settings.ContextMenu, 'Context menus', flag => { settings.ContextMenu = flag; });
       this.add('sub:Zooming');
-      this.addchk(settings.Zooming,   'Global', flag => { settings.Zooming = flag; });
-      this.addchk(settings.ZoomMouse, 'Mouse',  flag => { settings.ZoomMouse = flag; });
-      this.addchk(settings.ZoomWheel, 'Wheel',  flag => { settings.ZoomWheel = flag; });
-      this.addchk(settings.ZoomTouch, 'Touch',  flag => { settings.ZoomTouch = flag; });
+      this.addchk(settings.Zooming, 'Global', flag => { settings.Zooming = flag; });
+      this.addchk(settings.ZoomMouse, 'Mouse', flag => { settings.ZoomMouse = flag; });
+      this.addchk(settings.ZoomWheel, 'Wheel', flag => { settings.ZoomWheel = flag; });
+      this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
       this.add('endsub:');
       this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
@@ -723,10 +726,16 @@ class JSRootMenu {
       this.add('endsub:');
 
       if (with_hierarchy) {
+         this.add('sub:Browser');
          this.add('Hierarchy limit:  ' + settings.HierarchyLimit, () => this.input('Max number of items in hierarchy', settings.HierarchyLimit, 'int', 10, 100000).then(val => {
             settings.HierarchyLimit = val;
             if (handle_func) handle_func('refresh');
          }));
+         this.add('Browser width:  ' + settings.BrowserWidth, () => this.input('Browser width in px', settings.BrowserWidth, 'int', 50, 2000).then(val => {
+            settings.BrowserWidth = val;
+            if (handle_func) handle_func('width');
+         }));
+         this.add('endsub:');
       }
 
       this.add('Dark mode: ' + (settings.DarkMode ? 'On' : 'Off'), () => {
@@ -1069,17 +1078,17 @@ class StandaloneMenu extends JSRootMenu {
    /** @summary Build HTML elements of the menu
      * @private */
    _buildContextmenu(menu, left, top, loc) {
-      const outer = document.createElement('div'),
-
-       container_style =
+      const doc = getDocument(),
+            outer = doc.createElement('div'),
+            container_style =
          'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
          'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
          'font-size: 13px; color: rgb(0, 0, 0, 0.8); line-height: 15px;';
 
-      // if loc !== document.body then its a submenu, so it needs to have position: relative;
-      if (loc === document.body) {
+      // if loc !== doc.body then its a submenu, so it needs to have position: relative;
+      if (loc === doc.body) {
          // delete all elements with className jsroot_ctxt_container
-         const deleteElems = document.getElementsByClassName('jsroot_ctxt_container');
+         const deleteElems = doc.getElementsByClassName('jsroot_ctxt_container');
          while (deleteElems.length > 0)
             deleteElems[0].parentNode.removeChild(deleteElems[0]);
 
@@ -1113,13 +1122,13 @@ class StandaloneMenu extends JSRootMenu {
          }
 
          if (d.divider) {
-            const hr = document.createElement('hr');
+            const hr = doc.createElement('hr');
             hr.style = 'width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15)';
             outer.appendChild(hr);
             return;
          }
 
-         const item = document.createElement('div');
+         const item = doc.createElement('div');
          item.style.position = 'relative';
          outer.appendChild(item);
 
@@ -1129,7 +1138,7 @@ class StandaloneMenu extends JSRootMenu {
             return;
          }
 
-         const hovArea = document.createElement('div');
+         const hovArea = doc.createElement('div');
          hovArea.style.width = '100%';
          hovArea.style.height = '100%';
          hovArea.style.display = 'flex';
@@ -1140,34 +1149,34 @@ class StandaloneMenu extends JSRootMenu {
          item.appendChild(hovArea);
          if (!d.text) d.text = 'item';
 
-         const text = document.createElement('div');
+         const text = doc.createElement('div');
          text.style = 'margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap';
 
          if (d.text.indexOf('<svg') >= 0) {
             if (need_check_area) {
                text.style.display = 'flex';
 
-               const chk = document.createElement('span');
+               const chk = doc.createElement('span');
                chk.innerHTML = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
 
-               const sub = document.createElement('div');
+               const sub = doc.createElement('div');
                sub.innerHTML = d.text;
                text.appendChild(sub);
             } else
                text.innerHTML = d.text;
          } else {
             if (need_check_area) {
-               const chk = document.createElement('span');
+               const chk = doc.createElement('span');
                chk.innerHTML = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
             }
 
-            const sub = document.createElement('span');
+            const sub = doc.createElement('span');
             if (d.text.indexOf('<nobr>') === 0)
                sub.textContent = d.text.slice(6, d.text.length-7);
             else
@@ -1184,12 +1193,12 @@ class StandaloneMenu extends JSRootMenu {
             } else if (item.classList.contains('jsroot_ctxt_focus')) {
                item.style['background-color'] = null;
                item.classList.remove('jsroot_ctxt_focus');
-               item.querySelector('.jsroot_ctxt_container')?.remove()
+               item.querySelector('.jsroot_ctxt_container')?.remove();
             }
          }
 
          if (d.extraText || d.sub) {
-            const extraText = document.createElement('span');
+            const extraText = doc.createElement('span');
             extraText.className = 'jsroot_ctxt_extraText';
             extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
             extraText.textContent = d.sub ? '\u25B6' : d.extraText;
@@ -1240,10 +1249,10 @@ class StandaloneMenu extends JSRootMenu {
 
       loc.appendChild(outer);
 
-      const docWidth = document.documentElement.clientWidth, docHeight = document.documentElement.clientHeight;
+      const docWidth = doc.documentElement.clientWidth, docHeight = doc.documentElement.clientHeight;
 
       // Now determine where the contextmenu will be
-      if (loc === document.body) {
+      if (loc === doc.body) {
          if (left + outer.offsetWidth > docWidth) {
             // Does sub-contextmenu overflow window width?
             outer.style.left = (docWidth - outer.offsetWidth) + 'px';
@@ -1294,12 +1303,15 @@ class StandaloneMenu extends JSRootMenu {
 
       if (!event && this.show_evnt) event = this.show_evnt;
 
-      document.body.addEventListener('click', this.remove_handler);
+      const doc = getDocument(),
+            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.scrollX, y: window.scrollY };
 
-      const oldmenu = document.getElementById(this.menuname);
+      doc.body.addEventListener('click', this.remove_handler);
+
+      const oldmenu = doc.getElementById(this.menuname);
       if (oldmenu) oldmenu.remove();
 
-      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + window.pageXOffset, (event?.clientY || 0) + window.pageYOffset, document.body);
+      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + woffset.x, (event?.clientY || 0) + woffset.y, doc.body);
 
       this.element.setAttribute('id', this.menuname);
 
@@ -1387,7 +1399,7 @@ function createMenu(evnt, handler, menuname) {
 /** @summary Close previousely created and shown JSROOT menu
   * @param {string} [menuname] - optional menu name */
 function closeMenu(menuname) {
-   const element = document.getElementById(menuname || 'root_ctx_menu');
+   const element = getDocument().getElementById(menuname || 'root_ctx_menu');
    element?.remove();
    return !!element;
 }

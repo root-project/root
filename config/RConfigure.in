@@ -34,7 +34,6 @@
 #@setresuid@ R__HAS_SETRESUID   /**/
 #@hasmathmore@ R__HAS_MATHMORE   /**/
 #@haspthread@ R__HAS_PTHREAD    /**/
-#@hascuda@ R__HAS_CUDA    /**/
 #@hasxft@ R__HAS_XFT    /**/
 #@hascocoa@ R__HAS_COCOA    /**/
 #@hasvc@ R__HAS_VC    /**/
@@ -42,14 +41,6 @@
 #@hasveccore@ R__HAS_VECCORE    /**/
 #@usecxxmodules@ R__USE_CXXMODULES   /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
-#@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
-#@cudahasstdstringview@ R__CUDA_HAS_STD_STRING_VIEW   /**/
-#@hasstdexpstringview@ R__HAS_STD_EXPERIMENTAL_STRING_VIEW   /**/
-#@hasstodstringview@ R__HAS_STOD_STRING_VIEW /**/
-#@hasopplusequalstringview@ R__HAS_OP_EQUAL_PLUS_STRING_VIEW /**/
-#@hasstdapply@ R__HAS_STD_APPLY /**/
-#@hasstdinvoke@ R__HAS_STD_INVOKE /**/
-#@hasstdindexsequence@ R__HAS_STD_INDEX_SEQUENCE /**/
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
 #@has_found_attribute_noinline@ R__HAS_ATTRIBUTE_NOINLINE /**/
 #@hashardwareinterferencesize@ R__HAS_HARDWARE_INTERFERENCE_SIZE /**/
@@ -61,7 +52,6 @@
 #@hasdataframe@ R__HAS_DATAFRAME /**/
 #@use_less_includes@ R__LESS_INCLUDES /**/
 #@hastbb@ R__HAS_TBB /**/
-#@hasroofit_multiprocess@ R__HAS_ROOFIT_MULTIPROCESS /**/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC

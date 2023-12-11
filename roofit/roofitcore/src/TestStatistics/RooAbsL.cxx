@@ -53,9 +53,12 @@ bool RooAbsL::isExtendedHelper(RooAbsPdf *pdf, Extended extended)
 /// handle common tasks.
 RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data, std::size_t N_events,
                  std::size_t N_components, Extended extended)
-   : pdf_(std::move(pdf)), data_(std::move(data)), N_events_(N_events), N_components_(N_components)
+   : pdf_(std::move(pdf)),
+     data_(std::move(data)),
+     N_events_(N_events),
+     N_components_(N_components),
+     extended_(isExtendedHelper(pdf_.get(), extended))
 {
-   extended_ = isExtendedHelper(pdf_.get(), extended);
    if (extended == Extended::Auto) {
       if (extended_) {
          oocoutI(nullptr, Minimization)
@@ -193,7 +196,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    // TODO
 
    // Jonas R.: The following code is commented out, because the functionality
-   // to mask out-ot-range entries with `RooDataHist::cacheValidEntries` has
+   // to mask out-of-range entries with `RooDataHist::cacheValidEntries` has
    // been removed from the RooDataHist. If you want to implement ranged fits
    // properly, please create a RooDataHist for the requested range with
    // `RooDataHist::reduce`.

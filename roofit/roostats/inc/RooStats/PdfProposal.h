@@ -78,11 +78,12 @@ namespace RooStats {
       /// Default (and minimum) is 1
       virtual void SetCacheSize(Int_t size)
       {
-         if (size > 0)
+         if (size > 0) {
             fCacheSize = size;
-         else
-            coutE(Eval) << "Warning: Requested non-positive cache size: " <<
-               size << ". Cache size unchanged." << std::endl;
+         } else {
+            coutE(Eval) << "Warning: Requested non-positive cache size: " << size << ". Cache size unchanged."
+                        << std::endl;
+         }
       }
 
       /// set whether we own the PDF that serves as the proposal density function
@@ -99,16 +100,16 @@ namespace RooStats {
       }
 
    protected:
-      RooAbsPdf* fPdf; /// the proposal density function
+      RooAbsPdf *fPdf = nullptr;               /// the proposal density function
       std::map<RooRealVar*, RooAbsReal*> fMap; /// map of values in pdf to update
       std::map<RooRealVar*, RooAbsReal*>::iterator fIt; /// pdf iterator
       RooArgSet fLastX; /// the last point we were at
-      Int_t fCacheSize; /// how many points to generate each time
-      Int_t fCachePosition; /// our position in the cached proposal data set
+      Int_t fCacheSize = 1;               /// how many points to generate each time
+      Int_t fCachePosition = 0;           /// our position in the cached proposal data set
       std::unique_ptr<RooDataSet> fCache; /// the cached proposal data set
       RooArgSet fMaster; /// pointers to master variables needed for updates
-      bool fOwnsPdf; /// whether we own the proposal density function
-      //bool fIsAlwaysSymmetric; // does Q(x1 | x2) == Q(x2 | x1) for all x1, x2
+      bool fOwnsPdf = false; /// whether we own the proposal density function
+      // bool fIsAlwaysSymmetric; // does Q(x1 | x2) == Q(x2 | x1) for all x1, x2
 
       /// determine whether these two RooArgSets represent the same point
       virtual bool Equals(RooArgSet& x1, RooArgSet& x2);

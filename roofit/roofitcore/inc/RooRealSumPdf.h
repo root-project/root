@@ -31,7 +31,6 @@ public:
          RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
   RooRealSumPdf(const RooRealSumPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooRealSumPdf(*this,newname) ; }
-  ~RooRealSumPdf() override ;
 
   double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;
@@ -79,7 +78,6 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    ~CacheElem() override {} ;
     RooArgList containedArgs(Action) override { RooArgList ret(_funcIntList) ; ret.add(_funcNormList) ; return ret ; }
     RooArgList _funcIntList ;
     RooArgList _funcNormList ;
@@ -134,6 +132,8 @@ private:
   static void printMetaArgs(RooArgList const& funcList, RooArgList const& coefList, std::ostream& os);
 
   static void setCacheAndTrackHints(RooArgList const& funcList, RooArgSet& trackNodes);
+
+  inline void setExtended(bool extended) { _extended = extended; }
 
   ClassDefOverride(RooRealSumPdf, 5) // PDF constructed from a sum of (non-pdf) functions
 };

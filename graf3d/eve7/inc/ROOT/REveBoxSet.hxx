@@ -68,7 +68,7 @@ protected:
 
 public:
    REveBoxSet(const char* n="REveBoxSet", const char* t="");
-   virtual ~REveBoxSet() {}
+   ~REveBoxSet() override {}
 
    void Reset(EBoxType_e boxType, Bool_t valIsCol, Int_t chunkSize);
    void Reset();

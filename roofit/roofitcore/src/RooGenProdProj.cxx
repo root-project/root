@@ -83,11 +83,12 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
-  RooAbsReal(other, name),
-  _compSetN("compSetN","Set of integral components owned by numerator",this),
-  _compSetD("compSetD","Set of integral components owned by denominator",this),
-  _intList("intList","List of integrals",this)
+RooGenProdProj::RooGenProdProj(const RooGenProdProj &other, const char *name)
+   : RooAbsReal(other, name),
+     _compSetN("compSetN", "Set of integral components owned by numerator", this),
+     _compSetD("compSetD", "Set of integral components owned by denominator", this),
+     _intList("intList", "List of integrals", this),
+     _haveD(other._haveD)
 {
   // Copy constructor
   _compSetOwnedN = std::make_unique<RooArgSet>();
@@ -106,7 +107,7 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   }
 
   // Fill _intList
-  _haveD = other._haveD ;
+
   _intList.add(*_compSetN.find(other._intList.at(0)->GetName())) ;
   if (other._haveD) {
     _intList.add(*_compSetD.find(other._intList.at(1)->GetName())) ;
@@ -130,7 +131,8 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
 RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet,
                 RooArgSet& saveSet, const char* isetRangeName, bool doFactorize)
 {
-  RooArgSet anaIntSet, numIntSet ;
+  RooArgSet anaIntSet;
+  RooArgSet numIntSet;
 
   // First determine subset of observables in intSet that are factorizable
   for (const auto arg : intSet) {
@@ -149,7 +151,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   numIntSet.add(intSet) ;
 
   // The idea of the RooGenProdProj is that we divide two integral objects each
-  // created with this makeIntgral() function to get the normalized integral of
+  // created with this makeIntegral() function to get the normalized integral of
   // a product. Therefore, we don't need to normalize the numerater and
   // denominator integrals themselves. Doing the normalization would be
   // expensive and it would cancel out anyway. However, if we don't specify an

@@ -44,18 +44,10 @@ using namespace RooStats;
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-ConfidenceBelt::ConfidenceBelt() :
-   TNamed(), fParameterPoints(nullptr)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name) :
-  TNamed(name,name), fParameterPoints(nullptr)
+  TNamed(name,name)
 {
 }
 
@@ -63,7 +55,7 @@ ConfidenceBelt::ConfidenceBelt(const char* name) :
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title) :
-   TNamed(name,title), fParameterPoints(nullptr)
+   TNamed(name,title)
 {
 }
 
@@ -71,7 +63,7 @@ ConfidenceBelt::ConfidenceBelt(const char* name, const char* title) :
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name, RooAbsData& data) :
-  TNamed(name,name), fParameterPoints((RooAbsData*)data.Clone("PointsToTestForBelt"))
+  TNamed(name,name), fParameterPoints(static_cast<RooAbsData*>(data.Clone("PointsToTestForBelt")))
 {
 }
 
@@ -79,14 +71,7 @@ ConfidenceBelt::ConfidenceBelt(const char* name, RooAbsData& data) :
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooAbsData& data) :
-   TNamed(name,title), fParameterPoints((RooAbsData*)data.Clone("PointsToTestForBelt"))
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-ConfidenceBelt::~ConfidenceBelt()
+   TNamed(name,title), fParameterPoints(static_cast<RooAbsData*>(data.Clone("PointsToTestForBelt")))
 {
 }
 
@@ -120,8 +105,8 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
                 double cl, double leftside){
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
-  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
-  RooDataHist* hist = dynamic_cast<RooDataHist*>( fParameterPoints );
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
+  RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
 
   //  cout << "add: " << tree << " " << hist << endl;
 
@@ -177,8 +162,8 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRe
                 double cl, double leftside){
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
-  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
-  RooDataHist* hist = dynamic_cast<RooDataHist*>( fParameterPoints );
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
+  RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
 
   if( !this->CheckParameters(parameterPoint) )
     std::cout << "problem with parameters" << std::endl;
@@ -216,8 +201,8 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
 {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
-  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
-  RooDataHist* hist = dynamic_cast<RooDataHist*>( fParameterPoints );
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
+  RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
 
   if( !this->CheckParameters(parameterPoint) ){
     std::cout << "problem with parameters" << std::endl;
@@ -279,7 +264,7 @@ RooArgSet* ConfidenceBelt::GetParameters() const
 
 bool ConfidenceBelt::CheckParameters(RooArgSet &parameterPoint) const
 {
-   if (parameterPoint.getSize() != fParameterPoints->get()->getSize() ) {
+   if (parameterPoint.size() != fParameterPoints->get()->size() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;
       return false;
    }

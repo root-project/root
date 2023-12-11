@@ -17,7 +17,7 @@ namespace ROOT {
 namespace Minuit2 {
 
 //
-// construct from user parameters (befor minimization)
+// construct from user parameters (before minimization)
 //
 MnUserParameterState::MnUserParameterState(const std::vector<double> &par, const std::vector<double> &err)
    : fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
@@ -31,7 +31,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
      fParameters(par), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()),
      fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance())
 {
-   // construct from user parameters (befor minimization)
+   // construct from user parameters (before minimization)
 
    for (std::vector<MinuitParameter>::const_iterator ipar = MinuitParameters().begin();
         ipar != MinuitParameters().end(); ++ipar) {
@@ -45,7 +45,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
 }
 
 //
-// construct from user parameters + errors (befor minimization)
+// construct from user parameters + errors (before minimization)
 //
 MnUserParameterState::MnUserParameterState(const std::vector<double> &par, const std::vector<double> &cov,
                                            unsigned int nrow)
@@ -89,7 +89,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const Mn
      fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()),
      fIntCovariance(cov)
 {
-   // construct from user parameters + errors (befor minimization) using
+   // construct from user parameters + errors (before minimization) using
    // MnUserParameters and MnUserCovariance objects
 
    fIntCovariance.Scale(0.5);
@@ -119,7 +119,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
    //
    // construct from internal parameters (after minimization)
    //
-   // std::cout << "build a MnUSerParameterState after minimization.." << std::endl;
+   // std::cout << "build a MnUserParameterState after minimization.." << std::endl;
 
    for (std::vector<MinuitParameter>::const_iterator ipar = trafo.Parameters().begin();
         ipar != trafo.Parameters().end(); ++ipar) {
@@ -176,12 +176,14 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
 
       assert(fCovariance.Nrow() == VariableParameters());
 
-      fCovStatus = 1; // when is valid
+      if (!st.Error().IsNotPosDef())
+         fCovStatus = 1; // when is valid and not NotPosDef
    }
    if (st.Error().IsMadePosDef())
       fCovStatus = 2;
    if (st.Error().IsAccurate())
       fCovStatus = 3;
+
 }
 
 MnUserCovariance MnUserParameterState::Hessian() const
@@ -474,7 +476,7 @@ unsigned int MnUserParameterState::Index(const std::string &name) const
 
 const char *MnUserParameterState::Name(unsigned int i) const
 {
-   // convert external number into name of Parameter (API returing a const char *)
+   // convert external number into name of Parameter (API returning a const char *)
    return fParameters.Name(i);
 }
 const std::string &MnUserParameterState::GetName(unsigned int i) const

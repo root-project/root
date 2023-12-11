@@ -19,7 +19,7 @@
 \class RooRealIntegral
 \ingroup Roofitcore
 
-RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects.
+Performs hybrid numerical/analytical integrals of RooAbsReal objects.
 The class performs none of the actual integration, but only manages the logic
 of what variables can be integrated analytically, accounts for eventual jacobian
 terms and defines what numerical integrations needs to be done to complement the
@@ -28,25 +28,28 @@ The actual analytical integrations (if any) are done in the PDF themselves, the 
 integration is performed in the various implementations of the RooAbsIntegrator base class.
 **/
 
-#include "RooRealIntegral.h"
+#include <RooRealIntegral.h>
 
-#include "RooMsgService.h"
-#include "RooArgSet.h"
-#include "RooAbsRealLValue.h"
-#include "RooAbsCategoryLValue.h"
-#include "RooRealBinding.h"
-#include "RooInvTransform.h"
-#include "RooSuperCategory.h"
-#include "RooNumIntFactory.h"
-#include "RooNumIntConfig.h"
-#include "RooNameReg.h"
-#include "RooExpensiveObjectCache.h"
-#include "RooConstVar.h"
-#include "RooDouble.h"
-#include "RooTrace.h"
-#include "RooHelpers.h"
+#include <RooAbsCategoryLValue.h>
+#include <RooAbsRealLValue.h>
+#include <RooArgSet.h>
+#include <RooConstVar.h>
+#include <RooDouble.h>
+#include <RooExpensiveObjectCache.h>
+#include <RooFuncWrapper.h>
+#include <RooHelpers.h>
+#include <RooInvTransform.h>
+#include <RooMsgService.h>
+#include <RooNameReg.h>
+#include <RooNumIntConfig.h>
+#include <RooNumIntFactory.h>
+#include <RooRealBinding.h>
+#include <RooSuperCategory.h>
+#include <RooTrace.h>
 
-#include "TClass.h"
+#include "RooFitImplHelpers.h"
+
+#include <TClass.h>
 
 #include <iostream>
 #include <memory>
@@ -257,9 +260,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _jacList("!jacList","Jacobian product term",this,false,false),
   _facList("!facList","Variables independent of function",this,false,true),
   _function("!func","Function to be integrated",this,false,false),
-  _iconfig((RooNumIntConfig*)config),
+  _iconfig(const_cast<RooNumIntConfig*>(config)),
   _sumCat("!sumCat","SuperCategory for summation",this,false,false),
-  _rangeName((TNamed*)RooNameReg::ptr(rangeName))
+  _rangeName(const_cast<TNamed*>(RooNameReg::ptr(rangeName)))
 {
   //   A) Check that all dependents are lvalues
   //
@@ -267,7 +270,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      lvalues that are higher in the expression tree
   //
   //   C) Check for dependents that the PDF insists on integrating
-  //      analytically iself
+  //      analytically itself
   //
   //   D) Make list of servers that can be integrated analytically
   //      Add all parameters/dependents as value/shape servers
@@ -293,7 +296,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 //   cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
 
   // Use objects integrator configuration if none is specified
-  if (!_iconfig) _iconfig = (RooNumIntConfig*) function.getIntegratorConfig() ;
+  if (!_iconfig) _iconfig = const_cast<RooNumIntConfig*>(function.getIntegratorConfig());
 
   // Save private copy of funcNormSet, if supplied, excluding factorizing terms
   if (funcNormSet) {
@@ -342,7 +345,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Initial fill of list of LValue branches
   RooArgSet exclLVBranches("exclLVBranches") ;
-  RooArgSet branchList,branchListVD ;
+  RooArgSet branchList;
+  RooArgSet branchListVD;
   function.branchNodeServerList(&branchList) ;
 
   for (auto branch: branchList) {
@@ -422,7 +426,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Check for dependents that the PDF insists on integrating *
-  //      analytically iself                                       *
+  //      analytically itself                                       *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntOKDepList ;
@@ -707,6 +711,7 @@ bool RooRealIntegral::initNumIntegrator() const
 
   // Create appropriate numeric integrator using factory
   bool isBinned = _function->isBinnedDistribution(_intList) ;
+  std::string integratorName = RooNumIntFactory::instance().getIntegratorName(*_numIntegrand,*_iconfig,0,isBinned);
   _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig,0,isBinned);
 
   if(_numIntEngine == nullptr || !_numIntEngine->isValid()) {
@@ -715,7 +720,7 @@ bool RooRealIntegral::initNumIntegrator() const
   }
 
   cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator "
-           << _numIntEngine->ClassName() << " to calculate Int" << _intList << std::endl ;
+           << integratorName << " to calculate Int" << _intList << std::endl ;
 
   if (_intList.size()>3) {
     cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") evaluation requires " << _intList.size() << "-D numeric integration step. Evaluation may be slow, sufficient numeric precision for fitting & minimization is not guaranteed" << std::endl ;
@@ -730,23 +735,21 @@ bool RooRealIntegral::initNumIntegrator() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) :
-  RooAbsReal(other,name),
-  _valid(other._valid),
-  _respectCompSelect(other._respectCompSelect),
-  _sumList("!sumList",this,other._sumList),
-  _intList("!intList",this,other._intList),
-  _anaList("!anaList",this,other._anaList),
-  _jacList("!jacList",this,other._jacList),
-  _facList("!facList","Variables independent of function",this,false,true),
-  _function("!func",this,other._function),
-  _iconfig(other._iconfig),
-  _sumCat("!sumCat",this,other._sumCat),
-  _mode(other._mode),
-  _intOperMode(other._intOperMode),
-  _restartNumIntEngine(false),
-  _rangeName(other._rangeName),
-  _cacheNum(false)
+RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
+   : RooAbsReal(other, name),
+     _valid(other._valid),
+     _respectCompSelect(other._respectCompSelect),
+     _sumList("!sumList", this, other._sumList),
+     _intList("!intList", this, other._intList),
+     _anaList("!anaList", this, other._anaList),
+     _jacList("!jacList", this, other._jacList),
+     _facList("!facList", "Variables independent of function", this, false, true),
+     _function("!func", this, other._function),
+     _iconfig(other._iconfig),
+     _sumCat("!sumCat", this, other._sumCat),
+     _mode(other._mode),
+     _intOperMode(other._intOperMode),
+     _rangeName(other._rangeName)
 {
  if(other._funcNormSet) {
    _funcNormSet = std::make_unique<RooArgSet>();
@@ -849,9 +852,9 @@ double RooRealIntegral::evaluate() const
   case Hybrid:
     {
       // Cache numeric integrals in >1d expensive object cache
-      RooDouble* cacheVal(nullptr) ;
-      if ((_cacheNum && !_intList.empty()) || _intList.getSize()>=_cacheAllNDim) {
-        cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
+      RooDouble const* cacheVal(nullptr) ;
+      if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
+        cacheVal = static_cast<RooDouble const*>(expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters()))  ;
       }
 
       if (cacheVal) {
@@ -888,7 +891,7 @@ double RooRealIntegral::evaluate() const
         _sumList.assign(_saveSum) ;
 
         // Cache numeric integrals in >1d expensive object cache
-        if ((_cacheNum && !_intList.empty()) || _intList.getSize()>=_cacheAllNDim) {
+        if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
           RooDouble* val = new RooDouble(retVal) ;
           expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
           //     cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
@@ -931,12 +934,12 @@ double RooRealIntegral::evaluate() const
     for (const auto arg : _facList) {
       // Multiply by fit range for 'real' dependents
       if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-        RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
+        RooAbsRealLValue* argLV = static_cast<RooAbsRealLValue*>(arg) ;
         retVal *= (argLV->getMax(intRange()) - argLV->getMin(intRange())) ;
       }
       // Multiply by number of states for category dependents
       if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
-        RooAbsCategoryLValue* argLV = (RooAbsCategoryLValue*)arg ;
+        RooAbsCategoryLValue* argLV = static_cast<RooAbsCategoryLValue*>(arg) ;
         retVal *= argLV->numTypes() ;
       }
     }
@@ -990,7 +993,7 @@ double RooRealIntegral::sum() const
     // Add integrals for all permutations of categories summed over
     double total(0) ;
 
-    RooSuperCategory* sumCat = (RooSuperCategory*) _sumCat.first() ;
+    RooSuperCategory* sumCat = static_cast<RooSuperCategory*>(_sumCat.first()) ;
     for (const auto& nameIdx : *sumCat) {
       sumCat->setIndex(nameIdx);
       if (!_rangeName || sumCat->inRange(RooNameReg::str(_rangeName))) {
@@ -1088,14 +1091,69 @@ void RooRealIntegral::setAllowComponentSelection(bool allow){
 
 void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   if (!_sumList.empty() || !_intList.empty()) {
+   if (_sumList.empty() && _intList.empty()) {
+      ctx.addResult(this, _function.arg().buildCallToAnalyticIntegral(_mode, RooNameReg::str(_rangeName), ctx));
+      return;
+   }
+
+   if (intVars().size() != 1 || _intList.size() != 1) {
       std::stringstream errorMsg;
-      errorMsg << "Only analytical integrals are supported for AD for class" << _function.GetName();
+      errorMsg << "Only analytical integrals and 1D numeric integrals are supported for AD for class"
+               << _function.GetName();
       coutE(Minimization) << errorMsg.str() << std::endl;
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
-   ctx.addResult(this, _function.arg().buildCallToAnalyticIntegral(_mode, RooNameReg::str(_rangeName), ctx));
+   auto &intVar = static_cast<RooAbsRealLValue &>(*_intList[0]);
+
+   RooFuncWrapper wrapper{GetName(), GetTitle(), *_function, {}, nullptr, nullptr, false};
+
+   RooArgSet params;
+   _function->getParameters(nullptr, params);
+
+   std::string paramsName = ctx.getTmpVarName();
+
+   std::stringstream ss;
+
+   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
+   ctx.addResult(this, resName);
+   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
+
+   ss  << "double " << paramsName << "[] = {";
+   std::string args;
+   int intVarIdx = 0;
+   for (RooAbsArg *param : params) {
+      // Fill the integration variable with dummy value for now. This will then
+      // be reset in the sampling loop.
+      if (param->namePtr() == intVar.namePtr()) {
+         args += "0.0,";
+      } else if (!param->isConstant()) {
+         args += ctx.getResult(*param) + ",";
+         intVarIdx++;
+      }
+   }
+   if (!args.empty()) {
+      args.pop_back();
+   }
+   ss << args << "};\n";
+
+   // TODO: once Clad has support for higher-order functions (follow also the
+   // Clad issue #637), we could refactor this code into an actual function
+   // instead of hardcoding it here as a string.
+   ss << "{\n"
+      << "   const int n = 1000; // number of sampling points\n"
+      << "   double d = " << intVar.getMax(intRange()) << " - " << intVar.getMin(intRange()) << ";\n"
+      << "   double eps = d / n;\n"
+      << "   for (int i = 0; i < n; ++i) {\n"
+      << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * i;\n"
+      // TODO: the second "paramsName" should be nullptr, but until Clad issue
+      // 636 is fixed, we have to pass a non-nullptr dummy.
+      << "      " << resName << " += " << " + " << ctx.buildCall(wrapper.funcName(), paramsName, paramsName) << ";\n"
+      << "   }\n"
+      << "   " << resName << " *= " << " d / n;\n"
+      << "}\n";
+
+   ctx.addToGlobalScope(ss.str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1149,10 +1207,11 @@ void RooRealIntegral::printMultiline(ostream& os, Int_t contents, bool verbose, 
   os << indent << "  Arguments included in Jacobian are " << _jacList << std::endl ;
   os << indent << "  Factorized arguments are " << _facList << std::endl ;
   os << indent << "  Function normalization set " ;
-  if (_funcNormSet)
+  if (_funcNormSet) {
     _funcNormSet->Print("1") ;
-  else
-    os << "<none>" ;
+  } else {
+    os << "<none>";
+  }
 
   os << std::endl ;
 }

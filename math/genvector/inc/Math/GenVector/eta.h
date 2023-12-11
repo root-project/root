@@ -36,7 +36,7 @@ namespace ROOT {
         but one has to be careful when rho is much smaller than z (large eta values)
         Formula is  eta = log( zs + sqrt(zs^2 + 1) )  where zs = z/rho
 
-        For large value of z_scaled (tan(theta) ) one can appoximate the sqrt via a Taylor expansion
+        For large value of z_scaled (tan(theta) ) one can approximate the sqrt via a Taylor expansion
         We do the approximation of the sqrt if the numerical error is of the same order of second term of
         the sqrt.expansion:
         eps > 1/zs^4   =>   zs > 1/(eps^0.25)

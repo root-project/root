@@ -42,16 +42,16 @@ TGeoNodeCache::TGeoNodeCache()
    fCurrentID = 0;
    fIndex = 0;
    fPath = "";
-   fTop = 0;
-   fNode = 0;
-   fMatrix = 0;
-   fStack = 0;
-   fMatrixBranch = 0;
-   fMPB = 0;
-   fNodeBranch = 0;
-   fInfoBranch = 0;
-   fPWInfo = 0;
-   fNodeIdArray = 0;
+   fTop = nullptr;
+   fNode = nullptr;
+   fMatrix = nullptr;
+   fStack = nullptr;
+   fMatrixBranch = nullptr;
+   fMPB = nullptr;
+   fNodeBranch = nullptr;
+   fInfoBranch = nullptr;
+   fPWInfo = nullptr;
+   fNodeIdArray = nullptr;
    for (Int_t i = 0; i < 100; i++)
       fIdBranch[i] = 0;
 }
@@ -81,16 +81,16 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    fInfoBranch = new TGeoStateInfo *[fGeoInfoStackSize];
    for (Int_t i = 0; i < fGeoCacheMaxLevels; i++) {
       fMPB[i] = new TGeoHMatrix(TString::Format("global_%d", i));
-      fMatrixBranch[i] = 0;
-      fNodeBranch[i] = 0;
+      fMatrixBranch[i] = nullptr;
+      fNodeBranch[i] = nullptr;
    }
    for (Int_t i = 0; i < fGeoInfoStackSize; i++) {
-      fInfoBranch[i] = 0;
+      fInfoBranch[i] = nullptr;
    }
-   fPWInfo = 0;
+   fPWInfo = nullptr;
    fMatrix = fMatrixBranch[0] = fMPB[0];
    fNodeBranch[0] = top;
-   fNodeIdArray = 0;
+   fNodeIdArray = nullptr;
    for (Int_t i = 0; i < 100; i++)
       fIdBranch[i] = 0;
    if (nodeid)
@@ -393,7 +393,7 @@ Int_t TGeoNodeCache::PushState(Bool_t ovlp, Int_t startlevel, Int_t nmany, Doubl
 Bool_t TGeoNodeCache::PopState(Int_t &nmany, Double_t *point)
 {
    if (!fStackLevel)
-      return 0;
+      return false;
    Bool_t ovlp = ((TGeoCacheState *)fStack->At(--fStackLevel))->GetState(fLevel, nmany, point);
    Refresh();
    //   return (fStackLevel+1);
@@ -406,7 +406,7 @@ Bool_t TGeoNodeCache::PopState(Int_t &nmany, Double_t *point)
 Bool_t TGeoNodeCache::PopState(Int_t &nmany, Int_t level, Double_t *point)
 {
    if (level <= 0)
-      return 0;
+      return false;
    Bool_t ovlp = ((TGeoCacheState *)fStack->At(level - 1))->GetState(fLevel, nmany, point);
    Refresh();
    return ovlp;
@@ -491,9 +491,9 @@ TGeoCacheState::TGeoCacheState()
    memset(fIdBranch, 0, 30 * sizeof(Int_t));
    memset(fPoint, 0, 3 * sizeof(Int_t));
    fOverlapping = kFALSE;
-   fNodeBranch = 0;
-   fMatrixBranch = 0;
-   fMatPtr = 0;
+   fNodeBranch = nullptr;
+   fMatrixBranch = nullptr;
+   fMatPtr = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -513,7 +513,7 @@ TGeoCacheState::TGeoCacheState(Int_t capacity)
    fMatPtr = new TGeoHMatrix *[capacity];
    for (Int_t i = 0; i < capacity; i++) {
       fMatrixBranch[i] = new TGeoHMatrix("global");
-      fNodeBranch[i] = 0;
+      fNodeBranch[i] = nullptr;
    }
 }
 
@@ -603,7 +603,7 @@ void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t
    Int_t nelem = level + 1 - fStart;
    memcpy(fNodeBranch, node_branch + fStart, nelem * sizeof(TGeoNode *));
    memcpy(fMatPtr, mat_branch + fStart, nelem * sizeof(TGeoHMatrix *));
-   TGeoHMatrix *last = 0;
+   TGeoHMatrix *last = nullptr;
    TGeoHMatrix *current;
    for (Int_t i = 0; i < nelem; i++) {
       current = mat_branch[i + fStart];
@@ -632,7 +632,7 @@ Bool_t TGeoCacheState::GetState(Int_t &level, Int_t &nmany, Double_t *point) con
    Int_t nelem = level + 1 - fStart;
    memcpy(node_branch + fStart, fNodeBranch, nelem * sizeof(TGeoNode *));
    memcpy(mat_branch + fStart, fMatPtr, (level + 1 - fStart) * sizeof(TGeoHMatrix *));
-   TGeoHMatrix *last = 0;
+   TGeoHMatrix *last = nullptr;
    TGeoHMatrix *current;
    for (Int_t i = 0; i < nelem; i++) {
       current = mat_branch[i + fStart];

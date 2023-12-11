@@ -26,7 +26,8 @@
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RSpan.hxx>
-#include <ROOT/RStringView.hxx>
+#include <memory>
+#include <string_view>
 
 #include <TClassRef.h>
 
@@ -379,7 +380,7 @@ private:
    /// Limit for committing cluster no matter the other tunables
    std::size_t fMaxUnzippedClusterSize;
    /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
-   NTupleSize_t fUnzippedClusterSizeEst;
+   std::size_t fUnzippedClusterSizeEst;
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
@@ -426,6 +427,13 @@ public:
 
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
+   /// Return the entry number that was last committed in a cluster.
+   NTupleSize_t GetLastCommitted() const { return fLastCommitted; }
+   /// Return the entry number that was last committed in a cluster group.
+   NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
+   /// Return the number of entries filled so far.
+   NTupleSize_t GetNEntries() const { return fNEntries; }
+
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
@@ -452,7 +460,7 @@ public:
    /// ~~~
    std::unique_ptr<RNTupleModel::RUpdater> CreateModelUpdater()
    {
-      return std::unique_ptr<RNTupleModel::RUpdater>(new RNTupleModel::RUpdater(*this));
+      return std::make_unique<RNTupleModel::RUpdater>(*this);
    }
 };
 

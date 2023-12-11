@@ -34,7 +34,7 @@ TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
    fRnrMarkers    (kTRUE),
    fRnrLines      (kTRUE),
    fDepthTest     (kTRUE),
-   fLastLine      (0)
+   fLastLine      (nullptr)
 {
    InitMainTrans();
    fPickable = kTRUE;

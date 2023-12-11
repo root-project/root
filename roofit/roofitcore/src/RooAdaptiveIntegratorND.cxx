@@ -19,8 +19,7 @@
 \class RooAdaptiveIntegratorND
 \ingroup Roofitcore
 
-RooAdaptiveIntegratorND implements an adaptive one-dimensional
-numerical integration algorithm.
+Adaptive one-dimensional numerical integration algorithm.
 **/
 
 
@@ -43,8 +42,6 @@ numerical integration algorithm.
 
 using namespace std;
 
-ClassImp(RooAdaptiveIntegratorND);
-;
 
 // Register this class with RooNumIntConfig
 
@@ -76,13 +73,14 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
 /// integration limits are taken from the definition in the function binding
 ///_func = function.
 
-RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, const RooNumIntConfig& config) :
-  RooAbsIntegrator(function)
+RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc &function, const RooNumIntConfig &config)
+   : RooAbsIntegrator(function),
+     _nWarn(static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")))
 {
 
   _rooFunctor = std::make_unique<RooFunctor>(function);
   _func = std::make_unique<ROOT::Math::Functor>(*_rooFunctor, static_cast<unsigned int>(_rooFunctor->nObs()));
-  _nWarn = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")) ;
+
   switch (_func->NDim()) {
   case 1: throw string(Form("RooAdaptiveIntegratorND::ctor ERROR dimension of function must be at least 2")) ;
   case 2: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEval2D")) ; break ;
@@ -110,8 +108,8 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 {
   delete _integrator ;
   if (_nError>_nWarn) {
-    coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName
-           << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;
+    oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName
+           << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << std::endl;
   }
 
 }
@@ -171,11 +169,11 @@ double RooAdaptiveIntegratorND::integral(const double* /*yvec*/)
   if (_integrator->Status()==1) {
     _nError++ ;
     if (_nError<=_nWarn) {
-      coutW(NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName() << ") WARNING: target rel. precision not reached due to nEval limit of "
+      oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName() << ") WARNING: target rel. precision not reached due to nEval limit of "
              << _nmax << ", estimated rel. precision is " << Form("%3.1e",_integrator->RelError()) << endl ;
     }
     if (_nError==_nWarn) {
-      coutW(NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName()
+      oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName()
              << ") Further warnings on target precision are suppressed conform specification in integrator specification" << endl ;
     }
   }

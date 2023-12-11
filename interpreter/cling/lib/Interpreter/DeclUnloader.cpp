@@ -327,23 +327,21 @@ namespace {
     }
   }
 
-  typedef llvm::SmallVector<VarDecl*, 2> Vars;
-  class StaticVarCollector : public RecursiveASTVisitor<StaticVarCollector> {
-    Vars& m_V;
+  template <class EntryType>
+  void removeSpecializationImpl(llvm::FoldingSetVector<EntryType>& Specs,
+                                const EntryType* Entry) {
+    // Remove only Entry from Specs, keep all others.
+    llvm::FoldingSetVector<EntryType> Keep;
+    for (auto& Spec : Specs) {
+      if (&Spec != Entry) {
+        // Avoid assertion on add.
+        Spec.SetNextInBucket(nullptr);
+        Keep.InsertNode(&Spec);
+      }
+    }
 
-  public:
-    StaticVarCollector(FunctionDecl* FD, Vars& V) : m_V(V) {
-      TraverseStmt(FD->getBody());
-    }
-    bool VisitDeclStmt(DeclStmt* DS) {
-      for (DeclStmt::decl_iterator I = DS->decl_begin(), E = DS->decl_end();
-           I != E; ++I)
-        if (VarDecl* VD = dyn_cast<VarDecl>(*I))
-          if (VD->isStaticLocal())
-            m_V.push_back(VD);
-      return true;
-    }
-  };
+    std::swap(Specs, Keep);
+  }
 
   // Template instantiation of templated function first creates a canonical
   // declaration and after the actual template specialization. For example:
@@ -362,43 +360,18 @@ namespace {
   class FunctionTemplateDeclExt : public FunctionTemplateDecl {
   public:
     static void removeSpecialization(FunctionTemplateDecl* self,
-                                     const FunctionDecl* specialization) {
-      assert(self && specialization && "Cannot be null!");
-      assert(specialization == specialization->getCanonicalDecl() &&
+                                     const FunctionDecl* spec) {
+      assert(self && spec && "Cannot be null!");
+      assert(spec == spec->getCanonicalDecl() &&
              "Not the canonical specialization!?");
-      typedef llvm::SmallVector<FunctionDecl*, 4> Specializations;
-      typedef llvm::FoldingSetVector<FunctionTemplateSpecializationInfo> Set;
 
-      FunctionTemplateDeclExt* This = (FunctionTemplateDeclExt*)self;
-      Specializations specializations;
-      const Set& specs = This->getCommonPtr()->Specializations;
+      auto* This = static_cast<FunctionTemplateDeclExt*>(self);
+      auto& specs = This->getCommonPtr()->Specializations;
+      removeSpecializationImpl(specs, spec->getTemplateSpecializationInfo());
 
-      if (!specs.size()) // nothing to remove
-        return;
-
-      // Collect all the specializations without the one to remove.
-      for (Set::const_iterator I = specs.begin(), E = specs.end(); I != E;
-           ++I) {
-        assert(I->getFunction() && "Must have a specialization.");
-        if (I->getFunction() != specialization)
-          specializations.push_back(I->getFunction());
-      }
-
-      This->getCommonPtr()->Specializations.clear();
-
-      // Readd the collected specializations.
-      void* InsertPos = nullptr;
-      FunctionTemplateSpecializationInfo* FTSI = nullptr;
-      for (size_t i = 0, e = specializations.size(); i < e; ++i) {
-        FTSI = specializations[i]->getTemplateSpecializationInfo();
-        assert(FTSI && "Must not be null.");
-        // Avoid assertion on add.
-        FTSI->SetNextInBucket(nullptr);
-        This->addSpecialization(FTSI, InsertPos);
-      }
 #ifndef NDEBUG
-      const TemplateArgumentList* args =
-          specialization->getTemplateSpecializationArgs();
+      const TemplateArgumentList* args = spec->getTemplateSpecializationArgs();
+      void* InsertPos = nullptr;
       assert(!self->findSpecialization(args->asArray(), InsertPos) &&
              "Finds the removed decl again!");
 #endif
@@ -417,35 +390,10 @@ namespace {
       assert(self && spec && "Cannot be null!");
       assert(spec == spec->getCanonicalDecl() &&
              "Not the canonical specialization!?");
-      typedef llvm::SmallVector<ClassTemplateSpecializationDecl*, 4>
-          Specializations;
-      typedef llvm::FoldingSetVector<ClassTemplateSpecializationDecl> Set;
 
-      ClassTemplateDeclExt* This = (ClassTemplateDeclExt*)self;
-      Specializations specializations;
-      Set& specs = This->getCommonPtr()->Specializations;
-
-      if (!specs.size()) // nothing to remove
-        return;
-
-      // Collect all the specializations without the one to remove.
-      for (Set::iterator I = specs.begin(), E = specs.end(); I != E; ++I) {
-        if (&*I != spec)
-          specializations.push_back(&*I);
-      }
-
-      This->getCommonPtr()->Specializations.clear();
-
-      // Readd the collected specializations.
-      void* InsertPos = nullptr;
-      ClassTemplateSpecializationDecl* CTSD = nullptr;
-      for (size_t i = 0, e = specializations.size(); i < e; ++i) {
-        CTSD = specializations[i];
-        assert(CTSD && "Must not be null.");
-        // Avoid assertion on add.
-        CTSD->SetNextInBucket(nullptr);
-        This->AddSpecialization(CTSD, InsertPos);
-      }
+      auto* This = static_cast<ClassTemplateDeclExt*>(self);
+      auto& specs = This->getCommonPtr()->Specializations;
+      removeSpecializationImpl(specs, spec);
     }
 
     static void
@@ -454,57 +402,47 @@ namespace {
       assert(self && spec && "Cannot be null!");
       assert(spec == spec->getCanonicalDecl() &&
              "Not the canonical specialization!?");
-      typedef llvm::SmallVector<ClassTemplatePartialSpecializationDecl*, 4>
-          Specializations;
-      typedef llvm::FoldingSetVector<ClassTemplatePartialSpecializationDecl>
-          Set;
 
-      ClassTemplateDeclExt* This = (ClassTemplateDeclExt*)self;
-      Specializations specializations;
-      Set& specs = This->getPartialSpecializations();
+      auto* This = static_cast<ClassTemplateDeclExt*>(self);
+      auto& specs = This->getPartialSpecializations();
+      removeSpecializationImpl(specs, spec);
+    }
+  };
 
-      if (!specs.size()) // nothing to remove
-        return;
+  // A template specialization is attached to the list of specialization of
+  // the templated variable.
+  //
+  class VarTemplateDeclExt : public VarTemplateDecl {
+  public:
+    static void removeSpecialization(VarTemplateDecl* self,
+                                     VarTemplateSpecializationDecl* spec) {
+      assert(!isa<VarTemplatePartialSpecializationDecl>(spec) &&
+             "Use removePartialSpecialization");
+      assert(self && spec && "Cannot be null!");
+      assert(spec == spec->getCanonicalDecl() &&
+             "Not the canonical specialization!?");
 
-      // Collect all the specializations without the one to remove.
-      for (Set::iterator I = specs.begin(), E = specs.end(); I != E; ++I) {
-        if (&*I != spec)
-          specializations.push_back(&*I);
-      }
+      auto* This = static_cast<VarTemplateDeclExt*>(self);
+      auto& specs = This->getCommonPtr()->Specializations;
+      removeSpecializationImpl(specs, spec);
+    }
 
-      This->getPartialSpecializations().clear();
+    static void
+    removePartialSpecialization(VarTemplateDecl* self,
+                                VarTemplatePartialSpecializationDecl* spec) {
+      assert(self && spec && "Cannot be null!");
+      assert(spec == spec->getCanonicalDecl() &&
+             "Not the canonical specialization!?");
 
-      // Readd the collected specializations.
-      void* InsertPos = nullptr;
-      ClassTemplatePartialSpecializationDecl* CTPSD = nullptr;
-      for (size_t i = 0, e = specializations.size(); i < e; ++i) {
-        CTPSD = specializations[i];
-        assert(CTPSD && "Must not be null.");
-        // Avoid assertion on add.
-        CTPSD->SetNextInBucket(nullptr);
-        This->AddPartialSpecialization(CTPSD, InsertPos);
-      }
+      auto* This = static_cast<VarTemplateDeclExt*>(self);
+      auto& specs = This->getPartialSpecializations();
+      removeSpecializationImpl(specs, spec);
     }
   };
 } // end anonymous namespace
 
 namespace cling {
   using namespace clang;
-
-  ///\brief Return whether `D' is a template that was first instantiated non-
-  /// locally, i.e. in a PCH/module. If `D' is not an instantiation, return
-  /// false.
-  bool DeclUnloader::isInstantiatedInPCH(const Decl* D) {
-    SourceManager& SM = D->getASTContext().getSourceManager();
-    if (const auto FD = dyn_cast<FunctionDecl>(D))
-      return FD->isTemplateInstantiation() &&
-             !SM.isLocalSourceLocation(FD->getPointOfInstantiation());
-    else if (const auto CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
-      return !SM.isLocalSourceLocation(CTSD->getPointOfInstantiation());
-    else if (const auto VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
-      return !SM.isLocalSourceLocation(VTSD->getPointOfInstantiation());
-    return false;
-  }
 
   void DeclUnloader::resetDefinitionData(TagDecl* decl) {
     auto canon = dyn_cast<CXXRecordDecl>(decl->getCanonicalDecl());
@@ -579,8 +517,19 @@ namespace cling {
 
     DeclContext* DC = D->getLexicalDeclContext();
 
-    if (DC->containsDecl(D))
-      DC->removeDecl(D);
+    if (DC->containsDecl(D)) {
+      if (auto* ND = dyn_cast<NamedDecl>(D)) {
+        auto* LookupDC = DC;
+        while (LookupDC->getDeclKind() == Decl::LinkageSpec ||
+               LookupDC->getDeclKind() == Decl::Export)
+          LookupDC = LookupDC->getParent();
+
+        if (!LookupDC->noload_lookup(ND->getDeclName()).empty())
+          DC->removeDecl(D);
+      } else {
+        DC->removeDecl(D);
+      }
+    }
 
     // With the bump allocator this is a no-op.
     m_Sema->getASTContext().Deallocate(D);
@@ -669,7 +618,7 @@ namespace cling {
     return Successful;
   }
 
-  bool DeclUnloader::VisitFunctionDecl(FunctionDecl* FD) {
+  bool DeclUnloader::VisitFunctionDecl(FunctionDecl* FD, bool RemoveSpec) {
     // The Structors need to be handled differently.
     if (!isa<CXXConstructorDecl>(FD) && !isa<CXXDestructorDecl>(FD)) {
       // Cleanup the module if the transaction was committed and code was
@@ -677,15 +626,18 @@ namespace cling {
       // which we will remove soon. (Eg. mangleDeclName iterates the redecls)
       GlobalDecl GD(FD);
       MaybeRemoveDeclFromModule(GD);
+
       // Handle static locals. void func() { static int var; } is represented in
       // the llvm::Module is a global named @func.var
-      Vars V;
-      StaticVarCollector c(FD, V);
-      for (Vars::iterator I = V.begin(), E = V.end(); I != E; ++I) {
-        GlobalDecl GD(*I);
-        MaybeRemoveDeclFromModule(GD);
+      for (auto D : FunctionDecl::castToDeclContext(FD)->noload_decls()) {
+        if (auto VD = dyn_cast<VarDecl>(D))
+          if (VD->isStaticLocal()) {
+            GlobalDecl GD(VD);
+            MaybeRemoveDeclFromModule(GD);
+          }
       }
     }
+
     // VisitRedeclarable() will mess around with this!
     bool wasCanonical = FD->isCanonicalDecl();
     // FunctionDecl : DeclaratiorDecl, DeclContext, Redeclarable
@@ -693,10 +645,40 @@ namespace cling {
     // DeclContext and when trying to remove them we need the full redecl chain
     // still in place.
     bool Successful = VisitDeclContext(FD);
+    // The body of member functions of a templated class only gets instantiated
+    // when the function is used, i.e.
+    // `-ClassTemplateDecl
+    //   |-TemplateTypeParmDecl referenced typename depth 0 index 0 T
+    //   |-CXXRecordDecl struct Foo definition
+    //   | |-DefinitionData
+    //   | `-CXXMethodDecl f 'T (T)'
+    //   |   |-ParmVarDecl 0x55e5787cac70 referenced x 'T'
+    //   |   `-CompoundStmt
+    //   |     `-ReturnStmt
+    //   |       `-DeclRefExpr 'T' lvalue ParmVar 0x55e5787cac70 'x' 'T'
+    //   `-ClassTemplateSpecializationDecl struct Foo definition
+    //     |-DefinitionData
+    //     |-TemplateArgument type 'int'
+    //     | `-BuiltinType 'int'
+    //     |-CXXMethodDecl f 'int (int)'    <<<< Instantiation pending
+    //     | `-ParmVarDecl x 'int':'int'
+    //     |-CXXConstructorDecl implicit used constexpr Foo 'void () noexcept'
+    //     inline default trivial
+    //
+    // Such functions should not be deleted from the AST, but returned to the
+    // 'pending instantiation' state.
+    if (auto MSI = FD->getMemberSpecializationInfo()) {
+      MSI->setPointOfInstantiation(SourceLocation());
+      MSI->setTemplateSpecializationKind(
+          TemplateSpecializationKind::TSK_ImplicitInstantiation);
+      FD->setBody(nullptr);
+      FD->setInstantiationIsPending(true);
+      return Successful;
+    }
     Successful &= VisitRedeclarable(FD, FD->getDeclContext());
     Successful &= VisitDeclaratorDecl(FD);
 
-    if (FD->isFunctionTemplateSpecialization() && wasCanonical) {
+    if (RemoveSpec && FD->isFunctionTemplateSpecialization() && wasCanonical) {
       // Only the canonical declarations are registered in the list of the
       // specializations.
       FunctionTemplateDecl* FTD
@@ -722,6 +704,10 @@ namespace cling {
     }
 
     return Successful;
+  }
+
+  bool DeclUnloader::VisitFunctionDecl(FunctionDecl* FD) {
+    return VisitFunctionDecl(FD, /*RemoveSpec=*/true);
   }
 
   bool DeclUnloader::VisitCXXConstructorDecl(CXXConstructorDecl* CXXCtor) {
@@ -976,7 +962,7 @@ namespace cling {
         }
       }
       // DeferredDecls exist even without Module.
-      m_CodeGen->forgetDecl(GD, mangledName);
+      m_CodeGen->forgetDecl(mangledName);
     }
   }
 
@@ -1027,10 +1013,10 @@ namespace cling {
   bool DeclUnloader::VisitFunctionTemplateDecl(FunctionTemplateDecl* FTD) {
     bool Successful = true;
 
-    // Remove specializations:
+    // Remove specializations, but do not invalidate the iterator!
     for (FunctionTemplateDecl::spec_iterator I = FTD->loaded_spec_begin(),
            E = FTD->loaded_spec_end(); I != E; ++I)
-      Successful &= Visit(*I);
+      Successful &= VisitFunctionDecl(*I, /*RemoveSpec=*/false);
 
     Successful &= VisitRedeclarableTemplateDecl(FTD);
     Successful &= VisitFunctionDecl(FTD->getTemplatedDecl());
@@ -1040,10 +1026,11 @@ namespace cling {
   bool DeclUnloader::VisitClassTemplateDecl(ClassTemplateDecl* CTD) {
     // ClassTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
-    // Remove specializations:
+    // Remove specializations, but do not invalidate the iterator!
     for (ClassTemplateDecl::spec_iterator I = CTD->loaded_spec_begin(),
            E = CTD->loaded_spec_end(); I != E; ++I)
-      Successful &= Visit(*I);
+      Successful &=
+          VisitClassTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
 
     Successful &= VisitRedeclarableTemplateDecl(CTD);
     Successful &= Visit(CTD->getTemplatedDecl());
@@ -1051,18 +1038,62 @@ namespace cling {
   }
 
   bool DeclUnloader::VisitClassTemplateSpecializationDecl(
-                                        ClassTemplateSpecializationDecl* CTSD) {
+      ClassTemplateSpecializationDecl* CTSD, bool RemoveSpec) {
     // ClassTemplateSpecializationDecl: CXXRecordDecl, FoldingSet
     bool Successful = VisitCXXRecordDecl(CTSD);
-    ClassTemplateSpecializationDecl* CanonCTSD =
-      static_cast<ClassTemplateSpecializationDecl*>(CTSD->getCanonicalDecl());
-    if (auto D = dyn_cast<ClassTemplatePartialSpecializationDecl>(CanonCTSD))
-      ClassTemplateDeclExt::removePartialSpecialization(
-                                                    D->getSpecializedTemplate(),
-                                                    D);
-    else
-      ClassTemplateDeclExt::removeSpecialization(CTSD->getSpecializedTemplate(),
-                                                 CanonCTSD);
+    if (RemoveSpec) {
+      ClassTemplateSpecializationDecl* CanonCTSD =
+          static_cast<ClassTemplateSpecializationDecl*>(
+              CTSD->getCanonicalDecl());
+      if (auto D = dyn_cast<ClassTemplatePartialSpecializationDecl>(CanonCTSD))
+        ClassTemplateDeclExt::removePartialSpecialization(
+            D->getSpecializedTemplate(), D);
+      else
+        ClassTemplateDeclExt::removeSpecialization(
+            CTSD->getSpecializedTemplate(), CanonCTSD);
+    }
     return Successful;
+  }
+
+  bool DeclUnloader::VisitClassTemplateSpecializationDecl(
+      ClassTemplateSpecializationDecl* CTSD) {
+    return VisitClassTemplateSpecializationDecl(CTSD, /*RemoveSpec=*/true);
+  }
+
+  bool DeclUnloader::VisitVarTemplateDecl(VarTemplateDecl* VTD) {
+    // VarTemplateDecl: TemplateDecl, Redeclarable
+    bool Successful = true;
+    // Remove specializations, but do not invalidate the iterator!
+    for (VarTemplateDecl::spec_iterator I = VTD->loaded_spec_begin(),
+                                        E = VTD->loaded_spec_end();
+         I != E; ++I)
+      Successful &=
+          VisitVarTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
+
+    Successful &= VisitRedeclarableTemplateDecl(VTD);
+    Successful &= Visit(VTD->getTemplatedDecl());
+    return Successful;
+  }
+
+  bool DeclUnloader::VisitVarTemplateSpecializationDecl(
+      VarTemplateSpecializationDecl* VTSD, bool RemoveSpec) {
+    // VarTemplateSpecializationDecl: VarDecl, FoldingSet
+    bool Successful = VisitVarDecl(VTSD);
+    if (RemoveSpec) {
+      VarTemplateSpecializationDecl* CanonVTSD =
+          static_cast<VarTemplateSpecializationDecl*>(VTSD->getCanonicalDecl());
+      if (auto D = dyn_cast<VarTemplatePartialSpecializationDecl>(CanonVTSD))
+        VarTemplateDeclExt::removePartialSpecialization(
+            D->getSpecializedTemplate(), D);
+      else
+        VarTemplateDeclExt::removeSpecialization(VTSD->getSpecializedTemplate(),
+                                                 CanonVTSD);
+    }
+    return Successful;
+  }
+
+  bool DeclUnloader::VisitVarTemplateSpecializationDecl(
+      VarTemplateSpecializationDecl* VTSD) {
+    return VisitVarTemplateSpecializationDecl(VTSD, /*RemoveSpec=*/true);
   }
 } // end namespace cling

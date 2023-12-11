@@ -38,7 +38,6 @@ public:
              std::unique_ptr<RooDataHist> dhist, int intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHistPdf(*this,newname); }
-  ~RooHistPdf() override ;
 
   RooDataHist& dataHist()  {
     // Return RooDataHist that is represented
@@ -153,6 +152,12 @@ private:
 
   static std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
                                                   const RooArgSet &obs, bool histFuncMode);
+
+private:
+  inline void initializeOwnedDataHist(std::unique_ptr<RooDataHist> &&dataHist)
+  {
+     _ownedDataHist = std::move(dataHist);
+  }
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };

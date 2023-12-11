@@ -39,7 +39,6 @@ public:
     return _nbins+1;
   }
   void binNumbers(double const * x, int * bins, std::size_t n, int coef) const override;
-  Int_t rawBinNumber(double x) const;
   virtual double nearestBoundary(double x) const;
 
   void setRange(double xlo, double xhi) override;
@@ -75,15 +74,15 @@ protected:
   bool binEdges(Int_t bin, double& xlo, double& xhi) const;
   void updateBinCount();
 
-  double _xlo;          ///< Lower bound
-  double _xhi;          ///< Upper bound
-  bool _ownBoundLo;     ///< Does the lower bound coincide with a bin boundary
-  bool _ownBoundHi;     ///< Does the upper bound coincide with a bin boundary
-  Int_t _nbins;           ///< Numer of bins
+  double _xlo = 0.0;          ///< Lower bound
+  double _xhi = 0.0;          ///< Upper bound
+  bool _ownBoundLo = true;     ///< Does the lower bound coincide with a bin boundary
+  bool _ownBoundHi = true;     ///< Does the upper bound coincide with a bin boundary
+  Int_t _nbins;           ///< Number of bins
 
   std::vector<double> _boundaries; ///< Boundaries
-  mutable double* _array;          ///<! Array of boundaries
-  mutable Int_t _blo;                ///<! bin number for _xlo
+  mutable double* _array = nullptr;          ///<! Array of boundaries
+  mutable Int_t _blo = 0.0;                ///<! bin number for _xlo
 
   ClassDefOverride(RooBinning,3) // Generic binning specification
 };

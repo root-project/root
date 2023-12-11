@@ -43,7 +43,7 @@ class RH1Painter extends RHistPainter {
          hsum = hmax;
       } else {
          const left = this.getSelectIndex('x', 'left'),
-             right = this.getSelectIndex('x', 'right');
+               right = this.getSelectIndex('x', 'right');
 
          if (when_axis_changed)
             if ((left === this.scan_xleft) && (right === this.scan_xright)) return;
@@ -81,7 +81,7 @@ class RH1Painter extends RHistPainter {
 
       this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
 
-      if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300 && Math.abs(hmax) < 1e-300)))
+      if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300) && (Math.abs(hmax) < 1e-300)))
          this.draw_content = false;
       else
          this.draw_content = true;
@@ -314,7 +314,7 @@ class RH1Painter extends RHistPainter {
           rect = pmain.getFrameRect();
 
       if (!this.draw_content || (rect.width <= 0) || (rect.height <= 0)) {
-         this.removeG()
+         this.removeG();
          return false;
       }
 
@@ -487,7 +487,7 @@ class RH1Painter extends RHistPainter {
                curry = gry;
             } else {
                if (draw_markers || show_text || show_line) {
-                  if (bestimin === bestimax)  draw_bin(bestimin);  else
+                  if (bestimin === bestimax) draw_bin(bestimin); else
                      if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
                         draw_bin(bestimax); draw_bin(bestimin);
                      }
@@ -603,6 +603,7 @@ class RH1Painter extends RHistPainter {
             x1 = xaxis.GetBinCoord(bin),
             x2 = xaxis.GetBinCoord(bin+di),
             xlbl = this.getAxisBinTip('x', bin, di);
+
       let cont = histo.getBinContent(bin+1);
 
       if (name) tips.push(name);
@@ -642,6 +643,7 @@ class RH1Painter extends RHistPainter {
             histo = this.getHisto(), xaxis = this.getAxis('x'),
             left = this.getSelectIndex('x', 'left', -1),
             right = this.getSelectIndex('x', 'right', 2);
+
       let findbin = null, show_rect,
           grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right;
@@ -659,11 +661,11 @@ class RH1Painter extends RHistPainter {
       }
 
       const pnt_x = funcs.swap_xy ? pnt.y : pnt.x,
-          pnt_y = funcs.swap_xy ? pnt.x : pnt.y;
+            pnt_y = funcs.swap_xy ? pnt.x : pnt.y;
 
       while (l < r-1) {
          const m = Math.round((l+r)*0.5),
-             xx = GetBinGrX(m);
+               xx = GetBinGrX(m);
          if ((xx === null) || (xx < pnt_x - 0.5))
             if (funcs.swap_xy) r = m; else l = m;
           else if (xx > pnt_x + 0.5)
@@ -675,18 +677,18 @@ class RH1Painter extends RHistPainter {
       grx1 = GetBinGrX(findbin);
 
       if (funcs.swap_xy) {
-         while ((l>left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
-         while ((r<right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
+         while ((l > left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
+         while ((r < right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
       } else {
-         while ((l>left) && (GetBinGrX(l-1) > grx1 - 2)) --l;
-         while ((r<right) && (GetBinGrX(r+1) < grx1 + 2)) ++r;
+         while ((l > left) && (GetBinGrX(l-1) > grx1 - 2)) --l;
+         while ((r < right) && (GetBinGrX(r+1) < grx1 + 2)) ++r;
       }
 
       if (l < r) {
          // many points can be assigned with the same cursor position
          // first try point around mouse y
          let best = height;
-         for (let m=l; m<=r; m++) {
+         for (let m = l; m <= r; m++) {
             const dist = Math.abs(GetBinGrY(m) - pnt_y);
             if (dist < best) { best = dist; findbin = m; }
          }
@@ -709,6 +711,12 @@ class RH1Painter extends RHistPainter {
 
       if (grx1 > grx2)
          [grx1, grx2] = [grx2, grx1];
+
+      if (this.isDisplayItem() && ((findbin <= histo.dx) || (findbin >= histo.dx + histo.nx))) {
+         // special case when zoomed out of scale and bin is not available
+         ttrect.remove();
+         return null;
+      }
 
       const midx = Math.round((grx1 + grx2)/2),
             midy = gry1 = gry2 = GetBinGrY(findbin);
@@ -733,7 +741,7 @@ class RH1Painter extends RHistPainter {
 
          if (this.options.Error) {
             const cont = histo.getBinContent(findbin+1),
-                binerr = histo.getBinError(findbin+1);
+                  binerr = histo.getBinError(findbin+1);
 
             gry1 = Math.round(funcs.gry(cont + binerr)); // up
             gry2 = Math.round(funcs.gry(cont - binerr)); // down
@@ -750,7 +758,7 @@ class RH1Painter extends RHistPainter {
          gry2 = Math.max(gry2, midy + msize);
 
          if (!pnt.touch && (pnt.nproc === 1))
-            if ((pnt_y<gry1) || (pnt_y>gry2)) findbin = null;
+            if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
       } else if (this.options.Line)
 
          show_rect = false;
@@ -776,7 +784,7 @@ class RH1Painter extends RHistPainter {
 
       if (findbin !== null) {
          // if bin on boundary found, check that x position is ok
-         if ((findbin === left) && (grx1 > pnt_x + gapx))  findbin = null; else
+         if ((findbin === left) && (grx1 > pnt_x + gapx)) findbin = null; else
          if ((findbin === right-1) && (grx2 < pnt_x - gapx)) findbin = null; else
          // if bars option used check that bar is not match
          if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx)) findbin = null; else
@@ -851,7 +859,7 @@ class RH1Painter extends RHistPainter {
       }
 
       if (res.changed) {
-         res.user_info = { obj: histo,  name: 'histo',
+         res.user_info = { obj: histo, name: 'histo',
                            bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
       }

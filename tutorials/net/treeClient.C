@@ -99,7 +99,7 @@ void treeClient(Bool_t evol=kFALSE)
          messlen  += mess.Length();
          cmesslen += mess.CompLength();
 
-         file->ResetAfterMerge(0);  // This resets only the TTree objects.
+         file->ResetAfterMerge(nullptr);  // This resets only the TTree objects.
          hpx->Reset();
       }
    }

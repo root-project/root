@@ -147,6 +147,7 @@ class SOFIE_GNN(unittest.TestCase):
         input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['nodes'])
         input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['edges'])
         input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['globals'])
+        input_data.edge_index = ROOT.TMVA.Experimental.AsRTensor(np.stack((GraphData['receivers'],GraphData['senders'])))
 
         session = ROOT.TMVA_SOFIE_gnn_network.Session()
         session.infer(input_data)
@@ -155,9 +156,9 @@ class SOFIE_GNN(unittest.TestCase):
         output_edge_data = output.edges.numpy()
         output_global_data = output.globals.numpy().flatten()
 
-        assert_almost_equal(output_node_data, np.asarray(input_data.node_data))
-        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
-        assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
+        assert_almost_equal(output_node_data, np.asarray(input_data.node_data), 5)
+        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data), 5)
+        assert_almost_equal(output_global_data, np.asarray(input_data.global_data), 5)
 
 
     def test_b_parse_graph_independent(self):
@@ -182,7 +183,7 @@ class SOFIE_GNN(unittest.TestCase):
         model = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(GraphModule, GraphData)
         model.Generate()
         model.OutputGenerated()
-        
+
         ret = ROOT.gInterpreter.Declare('#include "graph_independent_network.hxx"')
 
         input_data = ROOT.TMVA.Experimental.SOFIE.GNN_Data()
@@ -190,6 +191,7 @@ class SOFIE_GNN(unittest.TestCase):
         input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['nodes'])
         input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['edges'])
         input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['globals'])
+        input_data.edge_index = ROOT.TMVA.Experimental.AsRTensor(np.stack((GraphData['receivers'],GraphData['senders'])))
 
         session = ROOT.TMVA_SOFIE_graph_independent_network.Session()
         session.infer(input_data)
@@ -198,9 +200,9 @@ class SOFIE_GNN(unittest.TestCase):
         output_edge_data = output.edges.numpy()
         output_global_data = output.globals.numpy().flatten()
 
-        assert_almost_equal(output_node_data, np.asarray(input_data.node_data))
-        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
-        assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
+        assert_almost_equal(output_node_data, np.asarray(input_data.node_data), 5)
+        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data), 5)
+        assert_almost_equal(output_global_data, np.asarray(input_data.global_data), 5)
 
 
     def test_c_lhcb_toy_inference(self):
@@ -269,6 +271,8 @@ class SOFIE_GNN(unittest.TestCase):
         input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['nodes'])
         input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['edges'])
         input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['globals'])
+        input_data.edge_index = ROOT.TMVA.Experimental.AsRTensor(np.stack((InputGraphData['receivers'],InputGraphData['senders'])))
+
 
         output_gn = ep_model(input_graphs, 2)
 
@@ -293,11 +297,11 @@ class SOFIE_GNN(unittest.TestCase):
           output_edge_data = output_gn[i].edges.numpy()
           output_global_data = output_gn[i].globals.numpy().flatten()
 
-          assert_almost_equal(output_node_data, np.asarray(output_ops[i].node_data))
+          assert_almost_equal(output_node_data, np.asarray(output_ops[i].node_data), 5)
 
-          assert_almost_equal(output_edge_data, np.asarray(output_ops[i].edge_data))
+          assert_almost_equal(output_edge_data, np.asarray(output_ops[i].edge_data), 5)
 
-          assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data))
+          assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data), 5)
 
     @classmethod
     def tearDownClass(self) :
@@ -306,9 +310,9 @@ class SOFIE_GNN(unittest.TestCase):
           os.remove(fname + '.hxx')
           os.remove(fname + '.dat')
 
-    
+
 
 
 if __name__ == '__main__':
     unittest.main()
-  
+

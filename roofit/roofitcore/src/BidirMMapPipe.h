@@ -144,7 +144,7 @@ namespace BidirMMapPipe_impl {
             } impl;
         public:
             /// default constructor
-            Pages() : m_pimpl(nullptr) { }
+            Pages() = default;
 
             /// destructor
             ~Pages();
@@ -194,7 +194,7 @@ namespace BidirMMapPipe_impl {
             friend class BidirMMapPipe_impl::PageChunk;
 
             /// pointer to implementation
-            impl* m_pimpl;
+            impl* m_pimpl = nullptr;
 
             /// constructor
             Pages(PageChunk* parent, Page* pages, unsigned npg);
@@ -451,7 +451,7 @@ class BidirMMapPipe {
          */
         size_type read(void* addr, size_type sz);
 
-        /** @brief wirte to pipe
+        /** @brief write to pipe
          *
          * @param addr  where to get data to write from
          * @param sz    size of data to write (in bytes)
@@ -558,7 +558,7 @@ class BidirMMapPipe {
          * conditions are polled for, otherwise only the indicated ones. On
          * return, the revents fields contain the events that occurred for each
          * pipe; error Error, EndOfFile or Invalid events are always set,
-         * regardless of wether they were in the set of requested events.
+         * regardless of whether they were in the set of requested events.
          *
          * poll may block slightly longer than specified by timeout due to OS
          * timer granularity and OS scheduling. Due to its implementation, the
@@ -945,7 +945,7 @@ class BidirMMapPipe {
          *
          * @param plist linked list of pages to send
          *
-         * the implementation gathers the different write(s) whereever
+         * the implementation gathers the different write(s) wherever
          * possible; if mmap works, this results in a single write to transfer
          * the list of pages sent, if we need to copy things through the pipe,
          * we have one write to transfer which pages are sent, and then one

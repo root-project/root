@@ -22,11 +22,10 @@
 class RooUniformBinning : public RooAbsBinning {
 public:
 
-  RooUniformBinning(const char* name=nullptr) ;
+  RooUniformBinning(const char* name=nullptr) : RooAbsBinning{name} {}
   RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name=nullptr) ;
   RooUniformBinning(const RooUniformBinning& other, const char* name=nullptr) ;
   RooAbsBinning* clone(const char* name=nullptr) const override { return new RooUniformBinning(*this,name?name:GetName()) ; }
-  ~RooUniformBinning() override ;
 
   void setRange(double xlo, double xhi) override ;
 
@@ -46,15 +45,13 @@ public:
   double* array() const override ;
 
 protected:
+   mutable std::vector<double> _array; ///<! do not persist
+   double _xlo;
+   double _xhi;
+   Int_t _nbins;
+   double _binw;
 
-  mutable double* _array ; ///<! do not persist
-  double _xlo ;
-  double _xhi ;
-  Int_t    _nbins ;
-  double _binw ;
-
-
-  ClassDefOverride(RooUniformBinning,1) // Uniform binning specification
+   ClassDefOverride(RooUniformBinning, 1) // Uniform binning specification
 };
 
 #endif

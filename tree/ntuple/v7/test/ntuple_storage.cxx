@@ -14,29 +14,25 @@ public:
 protected:
    RPageAllocatorHeap fPageAllocator{};
 
-   void CreateImpl(const RNTupleModel &, unsigned char *, std::uint32_t) final {}
-   RNTupleLocator CommitPageImpl(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final
+   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Detail::RColumn &) final
    {
-      fCounters.fNCommitPage++;
       return {};
    }
-   RNTupleLocator CommitSealedPageImpl(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
+
+   void Create(RNTupleModel &) final {}
+   void UpdateSchema(const ROOT::Experimental::Detail::RNTupleModelChangeset &, NTupleSize_t) final {}
+   void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
+   void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
    {
       fCounters.fNCommitSealedPage++;
-      return {};
    }
-   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) override
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) override
    {
       fCounters.fNCommitSealedPageV++;
-      auto nLocators =
-         std::accumulate(ranges.begin(), ranges.end(), 0, [](size_t c, const RPageStorage::RSealedPageGroup &r) {
-            return c + std::distance(r.fFirst, r.fLast);
-         });
-      return std::vector<RNTupleLocator>(nLocators);
    }
-   std::uint64_t CommitClusterImpl(NTupleSize_t) final { return 0; }
-   RNTupleLocator CommitClusterGroupImpl(unsigned char *, std::uint32_t) final { return {}; }
-   void CommitDatasetImpl(unsigned char *, std::uint32_t) final {}
+   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   void CommitClusterGroup() final {}
+   void CommitDataset() final {}
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
    {
@@ -54,19 +50,24 @@ TEST(RNTuple, Basics)
 {
    FileRaii fileGuard("test_ntuple_barefile.ntuple");
 
-   auto model = RNTupleModel::Create();
-   auto wrPt = model->MakeField<float>("pt", 42.0);
-
    {
+      auto model = RNTupleModel::Create();
+      auto wrPt = model->MakeField<float>("pt", 42.0);
+
       RNTupleWriteOptions options;
       options.SetContainerFormat(ENTupleContainerFormat::kBare);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      EXPECT_EQ(ntuple->GetNEntries(), 0);
       ntuple->Fill();
+      EXPECT_EQ(ntuple->GetNEntries(), 1);
+      EXPECT_EQ(ntuple->GetLastCommitted(), 0);
       ntuple->CommitCluster();
+      EXPECT_EQ(ntuple->GetLastCommitted(), 1);
       *wrPt = 24.0;
       ntuple->Fill();
       *wrPt = 12.0;
       ntuple->Fill();
+      EXPECT_EQ(ntuple->GetNEntries(), 3);
    }
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
@@ -79,18 +80,25 @@ TEST(RNTuple, Basics)
    EXPECT_EQ(24.0, *rdPt);
    ntuple->LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
+
+   try {
+      ntuple->LoadEntry(3);
+      FAIL() << "loading a non-existing entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 3 out of bounds"));
+   }
 }
 
 TEST(RNTuple, Extended)
 {
    FileRaii fileGuard("test_ntuple_barefile_ext.ntuple");
 
-   auto model = RNTupleModel::Create();
-   auto wrVector = model->MakeField<std::vector<double>>("vector");
-
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
+      auto model = RNTupleModel::Create();
+      auto wrVector = model->MakeField<std::vector<double>>("vector");
+
       RNTupleWriteOptions options;
       options.SetContainerFormat(ENTupleContainerFormat::kBare);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
@@ -167,14 +175,13 @@ TEST(RNTuple, InvalidWriteOptions) {
 TEST(RNTuple, PageFilling) {
    FileRaii fileGuard("test_ntuple_page_filling.root");
 
-   auto model = RNTupleModel::Create();
-   auto fldX = model->MakeField<std::int16_t>("x");
-
-   RNTupleWriteOptions options;
-   // Exercises the page swapping algorithm with pages just big enough to hold 2 elements
-   options.SetApproxUnzippedPageSize(4);
-
    {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<std::int16_t>("x");
+
+      RNTupleWriteOptions options;
+      // Exercises the page swapping algorithm with pages just big enough to hold 2 elements
+      options.SetApproxUnzippedPageSize(4);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       for (std::int16_t i = 0; i < 8; ++i) {
          *fldX = i;
@@ -215,14 +222,13 @@ TEST(RNTuple, PageFilling) {
 TEST(RNTuple, PageFillingString) {
    FileRaii fileGuard("test_ntuple_page_filling_string.root");
 
-   auto model = RNTupleModel::Create();
-   // A string column exercises RColumn::AppendV
-   auto fldX = model->MakeField<std::string>("x");
-
-   RNTupleWriteOptions options;
-   options.SetApproxUnzippedPageSize(16);
-
    {
+      auto model = RNTupleModel::Create();
+      // A string column exercises RColumn::AppendV
+      auto fldX = model->MakeField<std::string>("x");
+
+      RNTupleWriteOptions options;
+      options.SetApproxUnzippedPageSize(16);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       // 1 page: 17 characters
       *fldX = "01234567890123456";
@@ -481,10 +487,9 @@ TEST(RPageSink, Empty)
 {
    FileRaii fileGuard("test_ntuple_empty.ntuple");
 
-   auto model = RNTupleModel::Create();
-   auto wrPt = model->MakeField<float>("pt", 42.0);
-
    {
+      auto model = RNTupleModel::Create();
+      auto wrPt = model->MakeField<float>("pt", 42.0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
    }
 
@@ -498,10 +503,9 @@ TEST(RPageSink, MultipleClusterGroups)
 {
    FileRaii fileGuard("test_ntuple_multi_cluster_groups.ntuple");
 
-   auto model = RNTupleModel::Create();
-   auto wrPt = model->MakeField<float>("pt", 42.0);
-
    {
+      auto model = RNTupleModel::Create();
+      auto wrPt = model->MakeField<float>("pt", 42.0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       ntuple->Fill();
       ntuple->CommitCluster();

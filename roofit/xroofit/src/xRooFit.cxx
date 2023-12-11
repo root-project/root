@@ -12,6 +12,11 @@
 
 #include "RVersion.h"
 
+// #define private public
+// #include "Minuit2/Minuit2Minimizer.h"
+// #undef private
+// #include "Minuit2/FunctionMinimum.h"
+
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
 #define protected public
 #endif
@@ -39,6 +44,7 @@
 
 #include "RooStats/AsymptoticCalculator.h"
 #include "Math/GenAlgoOptions.h"
+#include "Math/Minimizer.h"
 #include "RooMinimizer.h"
 #include "coutCapture.h"
 
@@ -51,16 +57,30 @@
 #include "RooStringVar.h"
 
 #include "RooRealProxy.h"
+#include "RooSuperCategory.h"
 
 #include "xRooFitVersion.h"
 
-#include <signal.h>
+#include <csignal>
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
+
+std::shared_ptr<RooLinkedList> xRooFit::sDefaultNLLOptions = nullptr;
+std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::sDefaultFitConfig = nullptr;
 
 RooCmdArg xRooFit::ReuseNLL(bool flag)
 {
-   return RooCmdArg("ReuseNLL", flag, 0, 0, 0, 0, 0, 0, 0);
+   return RooCmdArg("ReuseNLL", flag, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
+}
+
+RooCmdArg xRooFit::Tolerance(double val)
+{
+   return RooCmdArg("Tolerance", 0, 0, val);
+}
+
+RooCmdArg xRooFit::StrategySequence(const char *val)
+{
+   return RooCmdArg("StrategySequence", 0, 0, 0, 0, val);
 }
 
 xRooNLLVar xRooFit::createNLL(const std::shared_ptr<RooAbsPdf> pdf, const std::shared_ptr<RooAbsData> data,
@@ -112,11 +132,12 @@ std::shared_ptr<const RooFitResult> xRooFit::fitTo(RooAbsPdf &pdf,
 }
 
 std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>>
-xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> &fr, bool expected, int seed)
+xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, int seed)
 {
 
    std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> out;
 
+   auto fr = &_fr;
    if (!fr)
       return out;
 
@@ -183,7 +204,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
                          cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
                          cClass != RooBifurGauss::Class()) {
                         TString className = (cClass) ? cClass->GetName() : "undefined";
-                        oocoutW((TObject *)0, Generation)
+                        oocoutW((TObject *)nullptr, Generation)
                            << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                            << " of type " << className << " is a non-supported type - result might be not correct "
                            << std::endl;
@@ -203,7 +224,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
                         // Gamma(b, n+1, ...._ in this case n+1 is the server and we don;t have a direct dependency, but
                         // we want to set n to the b value so in case of the Gamma ignore this test
                         if (cClass != RooGamma::Class()) {
-                           oocoutE((TObject *)0, Generation)
+                           oocoutE((TObject *)nullptr, Generation)
                               << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                               << " has no direct dependence on global observable- cannot generate it " << std::endl;
                            continue;
@@ -215,48 +236,47 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
                      // the mode of the Gamma is (k-1)*theta where theta is the inverse of the rate parameter.
                      // we assume that the global observable is defined as ngobs = k-1 and the theta parameter has the
                      // name theta otherwise we use other procedure which might be wrong
-                     RooAbsReal *thetaGamma = 0;
+                     RooAbsReal *thetaGamma = nullptr;
                      if (cClass == RooGamma::Class()) {
-                        RooFIter itc(thePdf->serverMIterator());
-                        for (RooAbsArg *a2 = itc.next(); a2 != 0; a2 = itc.next()) {
+                        for (RooAbsArg *a2 : thePdf->servers()) {
                            if (TString(a2->GetName()).Contains("theta")) {
                               thetaGamma = dynamic_cast<RooAbsReal *>(a2);
                               break;
                            }
                         }
-                        if (thetaGamma == 0) {
-                           oocoutI((TObject *)0, Generation)
+                        if (thetaGamma == nullptr) {
+                           oocoutI((TObject *)nullptr, Generation)
                               << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                               << " is a Gamma distribution and no server named theta is found. Assume that the Gamma "
                                  "scale is  1 "
                               << std::endl;
                         }
                      }
-                     RooFIter iter2(thePdf->serverMIterator());
-                     for (RooAbsArg *a2 = iter2.next(); a2 != 0; a2 = iter2.next()) {
+                     for (RooAbsArg *a2 : thePdf->servers()) {
                         RooAbsReal *rrv2 = dynamic_cast<RooAbsReal *>(a2);
                         if (rrv2 && !rrv2->dependsOn(*gob) &&
                             (!rrv2->isConstant() || !rrv2->InheritsFrom("RooConstVar"))) {
 
                            // found server not depending on the gob
                            if (foundServer) {
-                              oocoutE((TObject *)0, Generation)
+                              oocoutE((TObject *)nullptr, Generation)
                                  << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                                  << " constraint term has more server depending on nuisance- cannot generate it "
                                  << std::endl;
                               foundServer = false;
                               break;
                            }
-                           if (thetaGamma && thetaGamma->getVal() > 0)
+                           if (thetaGamma && thetaGamma->getVal() > 0) {
                               rrv.setVal(rrv2->getVal() / thetaGamma->getVal());
-                           else
+                           } else {
                               rrv.setVal(rrv2->getVal());
+                           }
                            foundServer = true;
                         }
                      }
 
                      if (!foundServer) {
-                        oocoutE((TObject *)0, Generation)
+                        oocoutE((TObject *)nullptr, Generation)
                            << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global "
                               "observables will not be set to Asimov value "
                            << thePdf->GetName() << std::endl;
@@ -281,11 +301,11 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
          // do subpdf's individually
          _obs->add(w);
          _out.first.reset(new RooDataSet(
-            uuid.Data(), TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy").Data(), *_obs, "weightVar"));
+            uuid, TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"), *_obs, "weightVar"));
 
          for (auto &c : s->indexCat()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 00)
-            std::string cLabel = c.first.c_str();
+            std::string cLabel = c.first;
 #else
             std::string cLabel = c->GetName();
 #endif
@@ -310,10 +330,10 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
          auto r = dynamic_cast<RooRealVar *>(o);
          if (!r)
             continue;
-         if (_pdf->isBinnedDistribution(*r)) {
+         if (auto res = _pdf->binBoundaries(*r, -std::numeric_limits<double>::infinity(),
+                                            std::numeric_limits<double>::infinity())) {
             binnings[r] = std::shared_ptr<RooAbsBinning>(r->getBinning().clone(r->getBinning().GetName()));
-            auto res = _pdf->binBoundaries(*r, -std::numeric_limits<double>::infinity(),
-                                           std::numeric_limits<double>::infinity());
+
             std::vector<double> boundaries;
             boundaries.reserve(res->size());
             for (auto &rr : *res) {
@@ -340,7 +360,8 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
          _out.first->add(_tmp);
       } else {
          if (_pdf->canBeExtended()) {
-            _out.first = std::unique_ptr<RooDataSet>{_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected))};
+            _out.first =
+               std::unique_ptr<RooDataSet>{_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected))};
          } else {
             if (expected) {
                // use AsymptoticCalculator because generate expected not working correctly on unextended pdf?
@@ -371,16 +392,49 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
    };
 
    out = genSubPdf(&pdf);
-   out.first->SetName(uuid);
+   out.first->SetName(expected ? (TString(fr->GetName()) + "_asimov") : uuid);
+
+   // from now on we store the globs in the dataset
+   if (out.second) {
+      out.first->setGlobalObservables(*out.second);
+      out.second.reset();
+   }
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 00)
    // store fitResult name on the weightVar
    if (auto w = dynamic_cast<RooDataSet *>(out.first.get())->weightVar()) {
       w->setStringAttribute("fitResult", fr->GetName());
+      w->setAttribute("expected", expected);
    }
 #endif
 
    *_allVars = *_snap;
+
+   // June2023: Added this because found that generation was otherwise getting progressively slower
+   // the RooAbsPdf::generate does a clone, and it seems that the RooCacheManager of the original pdf
+   // is getting polluted on each generate call, causing it to grow larger and therefore the clone of it
+   // to take longer and longer. So sterilize to clear the caches of all components
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
+   auto _ws = pdf._myws;
+#else
+   auto _ws = pdf.workspace();
+#endif
+   if (_ws) {
+      // do explicitly rather than via xRooNode sterilize method because don't want to invoke the constructor
+      // workspace tweaking features (which sets poi etc etc)
+      for (auto obj : _ws->components()) {
+         for (int i = 0; i < obj->numCaches(); i++) {
+            if (auto cache = dynamic_cast<RooObjCacheManager *>(obj->getCache(i))) {
+               cache->reset();
+            }
+         }
+         if (RooAbsPdf *p = dynamic_cast<RooAbsPdf *>(obj); p) {
+            p->setNormRange(p->normRange());
+         }
+         obj->setValueDirty();
+      }
+      // xRooNode(pdf.workspace()).sterilize();
+   }
 
    return out;
 }
@@ -391,17 +445,38 @@ std::shared_ptr<RooLinkedList> xRooFit::createNLLOptions()
       l->Delete();
       delete l;
    });
-   out->Add(RooFit::Offset().Clone());
-   out->Add(
-      RooFit::Optimize(0)
-         .Clone()); // disable const-optimization at the construction step ... can happen in the minimization though
+   for (auto opt : *defaultNLLOptions()) {
+      out->Add(opt->Clone(nullptr)); // nullptr needed because accessing Clone via TObject base class puts
+                                     // "" instead, so doesnt copy names
+   }
    return out;
+}
+
+std::shared_ptr<RooLinkedList> xRooFit::defaultNLLOptions()
+{
+   if (sDefaultNLLOptions)
+      return sDefaultNLLOptions;
+   sDefaultNLLOptions = std::shared_ptr<RooLinkedList>(new RooLinkedList, [](RooLinkedList *l) {
+      l->Delete();
+      delete l;
+   });
+   sDefaultNLLOptions->Add(RooFit::Offset().Clone());
+   // disable const-optimization at the construction step ... can happen in the minimization though
+   sDefaultNLLOptions->Add(RooFit::Optimize(0).Clone());
+   return sDefaultNLLOptions;
 }
 
 std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::createFitConfig()
 {
-   auto fFitConfig = std::make_shared<ROOT::Fit::FitConfig>();
-   auto &fitConfig = *fFitConfig;
+   return std::make_shared<ROOT::Fit::FitConfig>(*defaultFitConfig());
+}
+
+std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::defaultFitConfig()
+{
+   if (sDefaultFitConfig)
+      return sDefaultFitConfig;
+   sDefaultFitConfig = std::make_shared<ROOT::Fit::FitConfig>();
+   auto &fitConfig = *sDefaultFitConfig;
    fitConfig.SetParabErrors(true); // will use to run hesse after fit
    fitConfig.MinimizerOptions().SetMinimizerType("Minuit2");
    fitConfig.MinimizerOptions().SetErrorDef(0.5); // ensures errors are +/- 1 sigma ..IMPORTANT
@@ -410,7 +485,7 @@ std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::createFitConfig()
    fitConfig.MinimizerOptions().SetMaxFunctionCalls(
       -1); // calls per iteration. if left as 0 will set automatically to 500*nPars below
    fitConfig.MinimizerOptions().SetMaxIterations(-1); // if left as 0 will set automatically to 500*nPars
-   fitConfig.MinimizerOptions().SetStrategy(0);
+   fitConfig.MinimizerOptions().SetStrategy(-1);      // will start at front of StrategySequence (given below)
    // fitConfig.MinimizerOptions().SetTolerance(
    //         1); // default is 0.01 (i think) but roominimizer uses 1 as default - use specify with
    //         ROOT::Math::MinimizerOptions::SetDefaultTolerance(..)
@@ -420,14 +495,24 @@ std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::createFitConfig()
    auto extraOpts = const_cast<ROOT::Math::IOptions *>(fitConfig.MinimizerOptions().ExtraOptions());
    extraOpts->SetValue("OptimizeConst", 2); // if 0 will disable constant term optimization and cache-and-track of the
                                             // NLL. 1 = just caching, 2 = cache and track
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 29, 00)
+   extraOpts->SetValue("StrategySequence", "0s01s12s2s3m");
+   extraOpts->SetValue("HesseStrategy", 3); // if hesse is run after minimization, will use this strategy
+#else
    extraOpts->SetValue("StrategySequence", "0s01s12s2m");
+   extraOpts->SetValue("HesseStrategy", 2); // when hesse is run after minimization, will use this strategy
+#endif
    extraOpts->SetValue("LogSize", 0); // length of log to capture and save
    extraOpts->SetValue("BoundaryCheck",
                        0.); // if non-zero, warn if any post-fit value is close to boundary (e.g. 0.01 = within 1%)
    extraOpts->SetValue("TrackProgress", 30);               // seconds between output to log of evaluation progress
    extraOpts->SetValue("xRooFitVersion", GIT_COMMIT_HASH); // not really options but here for logging purposes
    // extraOpts->SetValue("ROOTVersion",ROOT_VERSION_CODE); - not needed as should by part of the ROOT TFile definition
-   return fFitConfig;
+
+   // extraOpts->SetValue("HessianStepTolerance",0.);
+   // extraOpts->SetValue("HessianG2Tolerance",0.);
+
+   return sDefaultFitConfig;
 }
 
 class ProgressMonitor : public RooAbsReal {
@@ -447,13 +532,17 @@ public:
       }
    };
    ProgressMonitor(RooAbsReal &f, int interval = 30)
-      : RooAbsReal(Form("progress_%s", f.GetName()), ""), fFunc("func", "func", this, f), fInterval(interval)
+      : RooAbsReal(Form("progress_%s", f.GetName()), ""),
+        oldHandlerr(signal(SIGINT, interruptHandler)),
+        fFunc("func", "func", this, f),
+        fInterval(interval)
    {
       s.Start();
-      oldHandlerr = signal(SIGINT, interruptHandler);
+
       me = this;
+      vars.reset(std::unique_ptr<RooAbsCollection>(f.getVariables())->selectByAttrib("Constant", false));
    }
-   virtual ~ProgressMonitor()
+   ~ProgressMonitor() override
    {
       if (oldHandlerr) {
          signal(SIGINT, oldHandlerr);
@@ -461,46 +550,100 @@ public:
       if (me == this)
          me = nullptr;
    };
-   ProgressMonitor(const ProgressMonitor &other, const char *name = 0)
+   ProgressMonitor(const ProgressMonitor &other, const char *name = nullptr)
       : RooAbsReal(other, name), fFunc("func", this, other.fFunc), fInterval(other.fInterval)
    {
    }
-   virtual TObject *clone(const char *newname) const override { return new ProgressMonitor(*this, newname); }
+   TObject *clone(const char *newname) const override { return new ProgressMonitor(*this, newname); }
 
    double evaluate() const override
    {
-      if (fInterrupt)
+      if (fInterrupt) {
+         throw std::runtime_error("Keyboard interrupt");
          return std::numeric_limits<double>::quiet_NaN();
+      }
       double out = fFunc;
-      if (prevMin == std::numeric_limits<double>::infinity())
+      if (prevMin == std::numeric_limits<double>::infinity()) {
          prevMin = out;
-      if (!std::isnan(out))
+         prevPars.addClone(*vars);
+      }
+      if (!std::isnan(out)) {
+         if (out < minVal) {
+            if (minPars.empty())
+               minPars.addClone(*vars);
+            minPars = *vars;
+         }
          minVal = std::min(minVal, out);
+      }
       counter++;
       if (s.RealTime() > fInterval) {
+         double evalRate = (counter - prevCounter) / s.RealTime();
          s.Reset();
-         std::cerr << (counter) << ") " << TDatime().AsString() << " : " << minVal << " Delta = " << (minVal - prevMin)
-                   << std::endl;
+         std::cerr << (counter) << ") (" << evalRate << "Hz) " << TDatime().AsString();
+         if (!fState.empty())
+            std::cerr << " : " << fState;
+         std::cerr << " : " << minVal << " Delta = " << (minVal - prevMin);
+         if (minVal < prevMin) {
+            std::cerr << " : ";
+            // compare minPars and prevPars, print biggest deltas
+            std::vector<std::pair<double, std::string>> parDeltas;
+            parDeltas.reserve(minPars.size());
+            for (auto p : minPars) {
+               parDeltas.emplace_back(std::pair<double, std::string>(
+                  dynamic_cast<RooRealVar *>(p)->getVal() - prevPars.getRealValue(p->GetName()), p->GetName()));
+            }
+            std::sort(parDeltas.begin(), parDeltas.end(),
+                      [](auto &left, auto &right) { return std::abs(left.first) > std::abs(right.first); });
+            int i;
+            for (i = 0; i < std::min(3, int(parDeltas.size())); i++) {
+               if (parDeltas.at(i).first == 0)
+                  break;
+               if (i != 0)
+                  std::cerr << ",";
+               std::cerr << parDeltas.at(i).second << (parDeltas.at(i).first >= 0 ? "+" : "-") << "="
+                         << std::abs(parDeltas.at(i).first) << "("
+                         << minPars.getRealValue(parDeltas.at(i).second.c_str()) << ")";
+            }
+            if (i < int(parDeltas.size()) && parDeltas.at(i).first != 0)
+               std::cerr << " ...";
+            prevPars.assignFast(minPars);
+         }
+         std::cerr << std::endl;
          prevMin = minVal;
+         prevCounter = counter;
       } else {
          s.Continue();
       }
       return out;
    }
 
+   std::string fState;
+
 private:
    RooRealProxy fFunc;
    mutable int counter = 0;
    mutable double minVal = std::numeric_limits<double>::infinity();
    mutable double prevMin = std::numeric_limits<double>::infinity();
+   mutable RooArgList minPars;
+   mutable RooArgList prevPars;
+   mutable int prevCounter = 0;
    mutable int fInterval = 0; // time in seconds before next report
    mutable TStopwatch s;
+   std::shared_ptr<RooAbsCollection> vars;
 };
 bool ProgressMonitor::fInterrupt = false;
 ProgressMonitor *ProgressMonitor::me = nullptr;
 
-std::shared_ptr<const RooFitResult>
-xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &_fitConfig)
+xRooFit::StoredFitResult::StoredFitResult(RooFitResult *_fr) : TNamed(*_fr)
+{
+   fr.reset(_fr);
+}
+
+xRooFit::StoredFitResult::StoredFitResult(const std::shared_ptr<RooFitResult> &_fr) : TNamed(*_fr), fr(_fr) {}
+
+std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
+                                                      const std::shared_ptr<ROOT::Fit::FitConfig> &_fitConfig,
+                                                      const std::shared_ptr<RooLinkedList> &nllOpts)
 {
 
    auto myFitConfig = _fitConfig ? _fitConfig : createFitConfig();
@@ -520,28 +663,35 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       while (st.NextToken()) {
          TString parName = st;
          TString parVal = nll.getStringAttribute(parName);
-         if (parVal.IsFloat())
+         if (parVal.IsFloat()) {
             fUserPars.addClone(RooRealVar(parName, parName, parVal.Atof()));
-         else
+         } else {
             fUserPars.addClone(RooStringVar(parName, parName, parVal));
+         }
       }
    }
 
    auto _nllVars = std::unique_ptr<RooAbsCollection>(_nll->getVariables());
 
-   std::unique_ptr<RooAbsCollection> constPars(_nllVars->selectByAttrib("Constant", kTRUE));
+   std::unique_ptr<RooAbsCollection> constPars(_nllVars->selectByAttrib("Constant", true));
    constPars->add(fUserPars, true); // add here so checked for when loading from cache
-   std::unique_ptr<RooAbsCollection> floatPars(_nllVars->selectByAttrib("Constant", kFALSE));
+   std::unique_ptr<RooAbsCollection> floatPars(_nllVars->selectByAttrib("Constant", false));
 
    int _progress = 0;
    double boundaryCheck = 0;
    std::string s;
    int logSize = 0;
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 29, 00)
+   int hesseStrategy = 3; // uses most precise hesse settings (step sizes and g2 tolerances)
+#else
+   int hesseStrategy = 2; // uses most precise hesse settings (step sizes and g2 tolerances)
+#endif
    if (fitConfig.MinimizerOptions().ExtraOptions()) {
       fitConfig.MinimizerOptions().ExtraOptions()->GetNamedValue("StrategySequence", s);
       fitConfig.MinimizerOptions().ExtraOptions()->GetIntValue("TrackProgress", _progress);
       fitConfig.MinimizerOptions().ExtraOptions()->GetRealValue("BoundaryCheck", boundaryCheck);
       fitConfig.MinimizerOptions().ExtraOptions()->GetIntValue("LogSize", logSize);
+      fitConfig.MinimizerOptions().ExtraOptions()->GetIntValue("HesseStrategy", hesseStrategy);
    }
    TString m_strategy = s;
 
@@ -553,9 +703,20 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       if (auto nllDir = cacheDir->GetDirectory(nll.GetName()); nllDir) {
          if (auto keys = nllDir->GetListOfKeys(); keys) {
             for (auto &&k : *keys) {
-               auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+               auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
                if (cl->InheritsFrom("RooFitResult")) {
-                  if (auto cachedFit = nllDir->Get<RooFitResult>(k->GetName()); cachedFit) {
+                  StoredFitResult *storedFr =
+                     nllDir->GetList() ? dynamic_cast<StoredFitResult *>(nllDir->GetList()->FindObject(k->GetName()))
+                                       : nullptr;
+                  if (auto cachedFit =
+                         (storedFr) ? storedFr->fr.get() : dynamic_cast<TKey *>(k)->ReadObject<RooFitResult>();
+                      cachedFit) {
+                     if (!storedFr) {
+                        storedFr = new StoredFitResult(cachedFit);
+                        nllDir->Add(storedFr);
+                        // std::cout << "Loaded " << nllDir->GetPath() << "/" << k->GetName() << " : " << k->GetTitle()
+                        // << std::endl;
+                     }
                      bool match = true;
                      if (!cachedFit->floatParsFinal().equals(*floatPars)) {
                         match = false;
@@ -577,9 +738,13 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
                         }
                      }
                      if (match) {
-                        return std::shared_ptr<RooFitResult>(cachedFit); // return a copy;
+                        return storedFr->fr;
+                        // return std::shared_ptr<RooFitResult>(cachedFit,[](RooFitResult*){}); // dir owns the
+                        // fitResult - this means dir needs to stay open for fits to be valid return
+                        // std::make_shared<RooFitResult>(*cachedFit); // return a copy ... dir doesn't need to stay
+                        // open, but fit result isn't shared
                      } else {
-                        delete cachedFit;
+                        // delete cachedFit;
                      }
                   }
                }
@@ -597,7 +762,7 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
    // check how many parameters we have ... if 0 parameters then we wont run a fit, we just evaluate nll and return ...
-   if (floatPars->getSize() == 0 || fitConfig.MinimizerOptions().MaxFunctionCalls() == 1) {
+   if (floatPars->empty() || fitConfig.MinimizerOptions().MaxFunctionCalls() == 1) {
       std::shared_ptr<RooFitResult> result;
       RooArgList parsList;
       parsList.add(*floatPars);
@@ -614,13 +779,26 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       result->setCovQual(-1);
       result->setMinNLL(_nll->getVal());
       result->setEDM(0);
-      result->setStatus(floatPars->getSize() == 0 ? 0 : 1);
+      result->setStatus(floatPars->empty() ? 0 : 1);
+
+      std::vector<std::pair<std::string, int>> statusHistory;
+      statusHistory.emplace_back(std::make_pair("EVAL", result->status()));
+      result->setStatusHistory(statusHistory);
 
       if (cacheDir && cacheDir->IsWritable()) {
          // save a copy of fit result to relevant dir
          if (!cacheDir->GetDirectory(nll.GetName()))
             cacheDir->mkdir(nll.GetName());
          if (auto dir = cacheDir->GetDirectory(nll.GetName()); dir) {
+            // save NLL opts if was given one, unless already present
+            if (nllOpts) {
+               if (strlen(nllOpts->GetName()) == 0) {
+                  nllOpts->SetName(TUUID().AsString());
+               }
+               if (!dir->FindKey(nllOpts->GetName())) {
+                  dir->WriteObject(nllOpts.get(), nllOpts->GetName());
+               }
+            }
             dir->WriteObject(result.get(), result->GetName());
          }
       }
@@ -630,24 +808,75 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       return result;
    }
 
-   int strategy = fitConfig.MinimizerOptions().Strategy();
-   // Note: AsymptoticCalculator enforces not less than 1 on tolerance - should we do so too?
+   std::shared_ptr<RooFitResult> out;
 
-   if (_progress) {
-      _nll = new ProgressMonitor(*_nll, _progress);
-      ProgressMonitor::fInterrupt = false;
+   // check if any floatPars are categorical .. if so, need to a "discrete minimization" over the permutations
+   RooArgSet floatCats;
+   for (auto p : *floatPars) {
+      if (p->isCategory()) {
+         floatCats.add(*p);
+      }
+   }
+   if (!floatCats.empty()) {
+      RooSuperCategory allCats("floatCats", "Floating categorical parameters", floatCats);
+      std::unique_ptr<RooAbsCollection> _snap(floatCats.snapshot());
+      floatCats.setAttribAll("Constant");
+
+      std::shared_ptr<const RooFitResult> bestFr;
+      for (auto c : allCats) {
+         allCats.setIndex(c.second);
+         Info("minimize", "Minimizing with discrete %s", c.first.c_str());
+         auto fr = minimize(nll, _fitConfig, nllOpts);
+         if (!fr) {
+            Warning("minimize", "Minimization with discrete %s failed", c.first.c_str());
+            continue;
+         }
+         if (!bestFr || fr->minNll() < bestFr->minNll()) {
+            bestFr = fr;
+         }
+      }
+
+      floatCats.setAttribAll("Constant", false);
+
+      if (!bestFr)
+         return out;
+
+      // create a copy of the fit result, give it a new uuid, and move the const categories into the float area
+      out = std::make_shared<RooFitResult>(*bestFr);
+      const_cast<RooArgList &>(out->floatParsFinal())
+         .addClone(*std::unique_ptr<RooAbsCollection>(out->constPars().selectCommon(floatCats)));
+      const_cast<RooArgList &>(out->floatParsInit()).addClone(*_snap);
+      const_cast<RooArgList &>(out->constPars()).remove(floatCats);
+      out->SetName(TUUID().AsString());
    }
 
+   bool restore = !fitConfig.UpdateAfterFit();
    std::string logs;
-   std::unique_ptr<RooFitResult> out;
-   {
+   if (!out) {
+      int strategy = fitConfig.MinimizerOptions().Strategy();
+      // Note: AsymptoticCalculator enforces not less than 1 on tolerance - should we do so too?
+      if (_progress) {
+         _nll = new ProgressMonitor(*_nll, _progress);
+         ProgressMonitor::fInterrupt = false;
+      }
       auto logger = (logSize > 0) ? std::make_unique<cout_redirect>(logs, logSize) : nullptr;
       RooMinimizer _minimizer(*_nll);
       _minimizer.fitter()->Config() = fitConfig;
+      //      if(fitConfig.MinimizerOptions().ExtraOptions()) {
+      //         //for loading hesse options
+      //         double a;
+      //         if(fitConfig.MinimizerOptions().ExtraOptions()->GetValue("HessianStepTolerance",a)) {
+      //            ROOT::Math::MinimizerOptions::Default("Minuit2").SetValue("HessianStepTolerance",a);
+      //         }
+      //         if(fitConfig.MinimizerOptions().ExtraOptions()->GetValue("HessianG2Tolerance",a)) {
+      //            ROOT::Math::MinimizerOptions::Default("Minuit2").SetValue("HessianG2Tolerance",a);
+      //         }
+      //      }
 
       bool autoMaxCalls = (_minimizer.fitter()->Config().MinimizerOptions().MaxFunctionCalls() == 0);
       if (autoMaxCalls) {
-         _minimizer.fitter()->Config().MinimizerOptions().SetMaxFunctionCalls(500 * floatPars->size());
+         _minimizer.fitter()->Config().MinimizerOptions().SetMaxFunctionCalls(
+            500 * floatPars->size() * floatPars->size()); // hesse requires O(N^2) function calls
       }
       if (_minimizer.fitter()->Config().MinimizerOptions().MaxIterations() == 0) {
          _minimizer.fitter()->Config().MinimizerOptions().SetMaxIterations(500 * floatPars->size());
@@ -658,7 +887,6 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
          false); // turn "off" so can run hesse as a separate step, appearing in status
       bool minos = _minimizer.fitter()->Config().MinosErrors();
       _minimizer.fitter()->Config().SetMinosErrors(false);
-      bool restore = !_minimizer.fitter()->Config().UpdateAfterFit();
       _minimizer.fitter()->Config().SetUpdateAfterFit(true); // note: seems to always take effect
 
       std::vector<std::pair<std::string, int>> statusHistory;
@@ -693,16 +921,43 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       int sIdx = -1;
       TString minim = _minimizer.fitter()->Config().MinimizerType();
       TString algo = _minimizer.fitter()->Config().MinimizerAlgoType();
-      if (minim == "Minuit2")
-         sIdx = m_strategy.Index('0' + strategy);
-      else if (minim == "Minuit")
+      if (minim == "Minuit2") {
+         if (strategy == -1) {
+            sIdx = 0;
+         } else {
+            sIdx = m_strategy.Index('0' + strategy);
+         }
+         if (sIdx == -1) {
+            Warning("minimize", "Strategy %d not specified in StrategySequence %s ... defaulting to start of sequence",
+                    strategy, m_strategy.Data());
+            sIdx = 0;
+         }
+      } else if (minim == "Minuit")
          sIdx = m_strategy.Index('m');
 
       int tries = 0;
       int maxtries = 4;
       bool first = true;
       while (tries < maxtries && sIdx != -1) {
-         status = _minimizer.minimize(minim, algo);
+         if (m_strategy(sIdx) == 'm') {
+            minim = "Minuit";
+            algo = "migradImproved";
+         } else if (m_strategy(sIdx) == 's') {
+            algo = "Scan";
+         } else {
+            strategy = int(m_strategy(sIdx) - '0');
+            _minimizer.setStrategy(strategy);
+            minim = "Minuit2";
+            algo = "Migrad";
+         }
+         if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
+            fff->fState = minim + algo + std::to_string(_minimizer.fitter()->Config().MinimizerOptions().Strategy());
+         }
+         try {
+            status = _minimizer.minimize(minim, algo);
+         } catch (const std::exception &e) {
+            std::cerr << "Exception while minimizing: " << e.what() << std::endl;
+         }
          if (first && actualFirstMinimizer != _minimizer.fitter()->Config().MinimizerType())
             actualFirstMinimizer = _minimizer.fitter()->Config().MinimizerType();
          first = false;
@@ -718,17 +973,18 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
                      ->Result()
                      .Status(); // note: Minuit failure is status code 4, minuit2 that is edm above max
          minim = _minimizer.fitter()->Config().MinimizerType(); // may have changed value
-         statusHistory.emplace_back(
-            _minimizer.fitter()->Config().MinimizerType() + _minimizer.fitter()->Config().MinimizerAlgoType() +
-               std::to_string(_minimizer.fitter()->Config().MinimizerOptions().Strategy()),
-            status);
+         statusHistory.emplace_back(_minimizer.fitter()->Config().MinimizerType() +
+                                       _minimizer.fitter()->Config().MinimizerAlgoType() +
+                                       std::to_string(_minimizer.fitter()->Config().MinimizerOptions().Strategy()),
+                                    status);
          if (status % 1000 == 0)
             break; // fit was good
 
          if (status == 4 && minim != "Minuit") {
-            if (printLevel >= -1)
+            if (printLevel >= -1) {
                Warning("fitTo", "%s Hit max function calls of %d", fitName.Data(),
                        _minimizer.fitter()->Config().MinimizerOptions().MaxFunctionCalls());
+            }
             if (autoMaxCalls) {
                if (printLevel >= -1)
                   Warning("fitTo", "will try doubling this");
@@ -743,27 +999,19 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
          // NOTE: minuit2 seems to distort the tolerance in a weird way, so that tol becomes 100 times smaller than
          // specified Also note that if fits are failing because of edm over max, it can be a good idea to activate the
          // Offset option when building nll
-         if (printLevel >= -1)
-            Warning("fitTo", "%s Status=%d (edm=%f, tol=%f, strat=%d), tries=#%d...", fitName.Data(), status,
+         if (printLevel >= -1) {
+            Warning("fitTo", "%s %s%s Status=%d (edm=%f, tol=%f, strat=%d), tries=#%d...", fitName.Data(),
+                    _minimizer.fitter()->Config().MinimizerType().c_str(),
+                    _minimizer.fitter()->Config().MinimizerAlgoType().c_str(), status,
                     _minimizer.fitter()->Result().Edm(), _minimizer.fitter()->Config().MinimizerOptions().Tolerance(),
                     _minimizer.fitter()->Config().MinimizerOptions().Strategy(), tries);
+         }
 
          // decide what to do next based on strategy sequence
          if (sIdx == m_strategy.Length() - 1) {
             break; // done
          }
 
-         if (m_strategy(sIdx + 1) == 'm') {
-            minim = "Minuit";
-            algo = "migradImproved";
-         } else if (m_strategy(sIdx + 1) == 's') {
-            algo = "Scan";
-         } else {
-            strategy = int(m_strategy(sIdx + 1) - '0');
-            _minimizer.setStrategy(strategy);
-            minim = "Minuit2";
-            algo = "Migrad";
-         }
          tries--;
          sIdx++;
       }
@@ -783,22 +1031,81 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
          Warning("fitTo", "%s final status is %d", fitName.Data(), status);
       }
 
-      if (hesse && _minimizer.fitter()->Result().IsValid()) { // only do hesse if was a valid min
+      // currently dont have a way to access the covariance "dcovar" which is a metric from iterative
+      // covariance method that is used by minuit2 to say if the covariance is accurate or not
+      // See MinimumError.h: IsAccurate if Dcovar < 0.1
+      // Note that if strategy=2 or strategy=1 and Dcovar>0.05 then hesse will be forced to be run (see
+      // VariadicMetricBuilder) So only in Strategy=0 can you skip hesse (even if SetParabErrors false).
 
-         // remove limits on pars before calculation
-         // interesting note: error on pars before hesse can be significantly
-         // smaller than after hesse ... what is the pre-hesse error corresponding to?
-         auto parSettings = _minimizer.fitter()->Config().ParamsSettings();
+      double dCovar = std::numeric_limits<double>::quiet_NaN();
+      // if(auto _minuit2 = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer*>(_minimizer.fitter()->GetMinimizer());
+      // _minuit2 && _minuit2->fMinimum) {
+      //    dCovar = _minuit2->fMinimum->Error().Dcovar();
+      // }
+
+      // only do hesse if was a valid min and not strat2 or above (since such strat already ran hesse, albeit with
+      // allowing for forced pos-def) or if requested hesse strategy is different to the strategy that minimization ran
+      // at
+      if (hesse && (strategy < 2 || strategy != hesseStrategy) && _minimizer.fitter()->Result().IsValid()) {
+         // Note: minima where the covariance was made posdef are deemed 'valid' ...
+
+         // remove limits on pars before calculation - CURRENTLY HAS NO EFFECT, minuit still holds the state as
+         // transformed interesting note: error on pars before hesse can be significantly smaller than after hesse ...
+         // what is the pre-hesse error corresponding to? - corresponds to approximation of covariance matrix calculated
+         // with iterative method
+         /*auto parSettings = _minimizer.fitter()->Config().ParamsSettings();
          for (auto &ss : _minimizer.fitter()->Config().ParamsSettings()) {
             ss.RemoveLimits();
          }
 
+         for(auto f : *floatPars) {
+            auto v = dynamic_cast<RooRealVar*>(f);
+            if(v->hasRange(nullptr)) v->setRange("backup",v->getMin(),v->getMax());
+            v->removeRange();
+         }*/
+
+         // std::cout << "nIterations = " << _minimizer.fitter()->GetMinimizer()->NIterations() << std::endl;
+         // std::cout << "covQual before hesse = " << _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() <<
+         // std::endl;
+
+         _minimizer.fitter()->Config().MinimizerOptions().SetStrategy(hesseStrategy);
+
+         // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianStepTolerance",0.1);
+         // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianG2Tolerance",0.02);
+
+         if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
+            fff->fState = TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy());
+         }
+
          //_nll->getVal(); // for reasons I dont understand, if nll evaluated before hesse call the edm is smaller? -
          // and also becomes WRONG :-S
+
+         // auto _status = (_minimizer.fitter()->CalculateHessErrors()) ? _minimizer.fitter()->Result().Status() : -1;
          auto _status = _minimizer.hesse(); // note: I have seen that you can get 'full covariance quality' without
                                             // running hesse ... is that expected?
+         // note: hesse status will be -1 if hesse failed (no covariance matrix)
+         // otherwise the status appears to be whatever was the status before
+         // note that hesse succeeds even if the cov matrix it calculates is forced pos def. Failure is only
+         // if it cannot calculate a cov matrix at all.
+         if (_status != -1)
+            _status = 0; // mark as hesse succeeded, although need to look at covQual to see if was any good
 
-         _minimizer.fitter()->Config().SetParamsSettings(parSettings);
+         /*for(auto f : *floatPars) {
+            auto v = dynamic_cast<RooRealVar*>(f);
+            if(v->hasRange("backup")) {
+               v->setRange(v->getMin(),v->getMax());
+               v->removeRange("backup");
+            }
+         }
+         _minimizer.fitter()->Config().SetParamsSettings(parSettings);*/
+
+         /*for (auto &ss : _minimizer.fitter()->Config().ParamsSettings()) {
+            if( ss.HasLowerLimit() || ss.HasUpperLimit() ) std::cout << ss.Name() << " limit restored " <<
+         ss.LowerLimit() << " - " << ss.UpperLimit() << std::endl;
+         }*/
+
+         statusHistory.push_back(std::pair<std::string, int>(
+            TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy()), _status));
 
          if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff && fff->fInterrupt) {
             delete _nll;
@@ -809,6 +1116,17 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
          }
       }
 
+      // call minos if requested on any parameters
+      if (status == 0 && minos) {
+         if (std::unique_ptr<RooAbsCollection> mpars(floatPars->selectByAttrib("minos", true)); !mpars->empty()) {
+            if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
+               fff->fState = "Minos";
+            }
+            auto _status = _minimizer.minos(*mpars);
+            statusHistory.push_back(std::pair("Minos", _status));
+         }
+      }
+
       // DO NOT DO THIS - seems to mess with the NLL function in a way that breaks the cache - reactivating wont fix
       // if(constOptimize) { _minimizer.optimizeConst(0); } // doing this because saw happens in RooAbsPdf::minimizeNLL
       // method
@@ -816,20 +1134,33 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       // signal(SIGINT,gOldHandlerr);
       out = std::unique_ptr<RooFitResult>{_minimizer.save(fitName, resultTitle)};
 
+      // if status is 0 (min succeeded) but the covQual isn't fully accurate but requested hesse, reflect that in the
+      // status
+      if (out->status() == 0 && out->covQual() != 3 && hesse) {
+         if (out->covQual() == 2) { // was made posdef
+            out->setStatus(1);      // indicates covariance made pos-def
+         } else { // anything else indicates either hessian is approximate or something else wrong (e.g. not pos-def
+                  // return from strat3)
+            out->setStatus(2); // hesse invalid
+         }
+      }
+
       out->setStatusHistory(statusHistory);
 
       // userPars wont have been added to the RooFitResult by RooMinimizer
       const_cast<RooArgList &>(out->constPars()).addClone(fUserPars, true);
 
+      if (!std::isnan(dCovar)) {
+         const_cast<RooArgList &>(out->constPars())
+            .addClone(RooRealVar(".dCovar", "dCovar from minimization", dCovar), true);
+      }
+
       if (boundaryCheck) {
          // check if any of the parameters are at their limits (potentially a problem with fit)
          // or their errors go over their limits (just a warning)
-         RooFIter itr = floatPars->fwdIterator();
-         RooAbsArg *a = 0;
          int limit_status = 0;
          std::string listpars;
-         while ((a = itr.next())) {
-            RooRealVar *v = dynamic_cast<RooRealVar *>(a);
+         for (auto *v : dynamic_range_cast<RooRealVar *>(*floatPars)) {
             if (!v)
                continue;
             double vRange = v->getMax() - v->getMin();
@@ -865,12 +1196,13 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
             }
          }
          if (limit_status == 900) {
-            if (printLevel >= 0)
-               Warning("miminize", "BOUNDCHK: Parameters within %g%% limit in fit result: %s", boundaryCheck * 100,
+            if (printLevel >= 0) {
+               Warning("minimize", "BOUNDCHK: Parameters within %g%% limit in fit result: %s", boundaryCheck * 100,
                        listpars.c_str());
+            }
          } else if (limit_status > 0) {
             if (printLevel >= 0)
-               Warning("miminize", "BOUNDCHK: Parameters near limit in fit result");
+               Warning("minimize", "BOUNDCHK: Parameters near limit in fit result");
          }
 
          // store the limit check result
@@ -904,9 +1236,10 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       // value
       out->setMinNLL(_nll->getVal());
 
-      // ensure no asymm errors on any pars
+      // ensure no asymm errors on any pars unless had minuitMinos
       for (auto o : out->floatParsFinal()) {
-         if (auto v = dynamic_cast<RooRealVar *>(o); v)
+         if (auto v = dynamic_cast<RooRealVar *>(o);
+             v && !v->getAttribute("minos") && !v->getAttribute("xminos") && !v->getAttribute("xMinos"))
             v->removeAsymError();
       }
 
@@ -921,28 +1254,46 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
 
       // call minos if requested on any parameters
       if (status == 0 && minos) {
-         std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib("minos", true));
-         for (auto p : *pars) {
-            xRooFit::minos(nll, *out, p->GetName(), myFitConfig);
+         for (auto label : {"xminos", "xMinos"}) {
+            std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib(label, true));
+            for (auto p : *pars) {
+               Info("minimize", "Computing xminos error for %s", p->GetName());
+               xRooFit::minos(nll, *out, p->GetName(), myFitConfig);
+            }
+            if (!pars->empty())
+               *floatPars = out->floatParsFinal(); // put values back to best fit
          }
-         if (!pars->empty())
-            *floatPars = out->floatParsFinal(); // put values back to best fit
-      }
-
-      if (restore) {
-         *floatPars = out->floatParsInit();
       }
    }
+
+   if (restore) {
+      *floatPars = out->floatParsInit();
+   }
+
    if (out && !logs.empty()) {
       // save logs to StringVar in constPars list
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 28, 00)
       const_cast<RooArgList &>(out->constPars()).addOwned(std::make_unique<RooStringVar>(".log", "log", logs.c_str()));
+#else
+      const_cast<RooArgList &>(out->constPars()).addOwned(*new RooStringVar(".log", "log", logs.c_str()));
+#endif
    }
 
    if (out && cacheDir && cacheDir->IsWritable()) {
-      // save a copy of fit result to relevant dir
+      // std::cout << "Saving " << out->GetName() << " " << out->GetTitle() << " to " << nll.GetName() << std::endl;
+      //  save a copy of fit result to relevant dir
       if (!cacheDir->GetDirectory(nll.GetName()))
          cacheDir->mkdir(nll.GetName());
       if (auto dir = cacheDir->GetDirectory(nll.GetName()); dir) {
+         // save NLL opts if was given one, unless already present
+         if (nllOpts) {
+            if (strlen(nllOpts->GetName()) == 0) {
+               nllOpts->SetName(TUUID().AsString());
+            }
+            if (!dir->FindKey(nllOpts->GetName())) {
+               dir->WriteObject(nllOpts.get(), nllOpts->GetName());
+            }
+         }
 
          // also save the fitConfig ... unless one with same name already present
          std::string configName;
@@ -955,14 +1306,22 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
             dir->WriteObject(&fitConfig, configName.data());
          }
          // add the fitConfig name into the fit result before writing, so can retrieve in future
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 28, 00)
          const_cast<RooArgList &>(out->constPars())
             .addOwned(std::make_unique<RooStringVar>(".fitConfigName", "fitConfigName", configName.c_str()));
-
+#else
+         const_cast<RooArgList &>(out->constPars())
+            .addOwned(*new RooStringVar(".fitConfigName", "fitConfigName", configName.c_str()));
+#endif
          dir->WriteObject(out.get(), out->GetName());
+         auto sfr = new StoredFitResult(out);
+         dir->Add(sfr);
+         return sfr->fr;
+         // return std::shared_ptr<const RooFitResult>(out, [](const RooFitResult*){}); // disowned shared_ptr
       }
    }
 
-   return std::shared_ptr<const RooFitResult>(std::move(out));
+   return out;
 }
 
 // calculate asymmetric errors, if required, on the named parameter that was floating in the fit
@@ -989,6 +1348,7 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
 
    double val_best = par_hat->getVal();
    double val_err = (par_hat->hasError() ? par_hat->getError() : -1);
+   double orig_err = val_err;
    double nll_min = ufit.minNll();
 
    int status = 0;
@@ -1003,7 +1363,8 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
       double val_pre =
          val_guess -
          10 * precision * sigma_guess; // this is just to set value st. guarantees will do at least one iteration
-      bool lastOverflow = false, lastUnderflow = false;
+      bool lastOverflow = false;
+      bool lastUnderflow = false;
       while (std::abs(val_pre - val_guess) > precision * sigma_guess) {
          val_pre = val_guess;
          if (val_guess > 0 && par->getMax() < val_guess)
@@ -1011,6 +1372,7 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
          if (val_guess < 0 && par->getMin() > val_guess)
             par->setMin(2 * val_guess);
          par->setVal(val_guess);
+         // std::cout << "Guessing " << val_guess << std::endl;
          auto result = xRooFit::minimize(nll, myFitConfig);
          if (!result) {
             status = 1;
@@ -1024,7 +1386,7 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
          if (tmu <= 0) {
             // found an alternative or improved minima
             std::cout << "Warning: Alternative best-fit of " << par->GetName() << " @ " << val_guess << " vs "
-                      << val_best << std::endl;
+                      << val_best << " (delta=" << tmu / 2. << ")" << std::endl;
             double new_guess = val_guess + (val_guess - val_best);
             val_best = val_guess;
             val_guess = new_guess;
@@ -1107,13 +1469,17 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
    double lo = par_hat->getErrorLo();
    double hi = par_hat->getErrorHi();
    if (std::isnan(hi)) {
-      hi = findValue(val_best + val_err, 1);
+      hi = findValue(val_best + val_err, 1) + val_best -
+           par_hat->getVal(); // put error wrt par_hat value, even if found better min
+      if (hi > val_err)
+         val_err = hi; // in case val_err was severe underestimate, don't want to waste time being too 'near' min
    }
    if (std::isnan(lo)) {
-      lo = -findValue(val_best - val_err, -1);
+      lo = -findValue(val_best - val_err, -1) + val_best -
+           par_hat->getVal(); // put error wrt par_hat value, even if found better min
    }
    dynamic_cast<RooRealVar *>(ufit.floatParsFinal().find(parName))->setAsymError(lo, hi);
-   par_hat->setError(val_err);
+   par_hat->setError(orig_err);
 
    fitConfig.SetParabErrors(pErrs);
    fitConfig.SetMinosErrors(mErrs);
@@ -1123,7 +1489,7 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
    for (unsigned int i = 0; i < ufit.numStatusHistory(); i++) {
       statusHistory.emplace_back(ufit.statusLabelHistory(i), ufit.statusCodeHistory(i));
    }
-   statusHistory.emplace_back(TString::Format("xMINOS_%s", parName), status);
+   statusHistory.emplace_back(TString::Format("xMinos:%s", parName), status);
    const_cast<RooFitResult &>(ufit).setStatusHistory(statusHistory);
    const_cast<RooFitResult &>(ufit).setStatus(ufit.status() + status);
 
@@ -1143,10 +1509,11 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
       if (p->hasClients())
          continue;
       flagCount += p->getAttribute("hypoTest");
-      if (p->getAttribute("hypoTest"))
+      if (p->getAttribute("hypoTest")) {
          topPdfs.push_front(p);
-      else
+      } else {
          topPdfs.push_back(p);
+      }
    }
    if (topPdfs.empty()) {
       Error("hypoTest", "Cannot find top-level pdf in workspace");
@@ -1241,11 +1608,12 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
          altVal = mu->getMin("physical");
          Info("hypoTest", "No altVal specified - using min of given physical range = %g", altVal);
       } else {
-         if (!std::isnan(altVal))
+         if (!std::isnan(altVal)) {
             Info("hypoTest", "alt hypo: %g - CLs activated", altVal);
-         else
+         } else {
             Info("hypoTest", "No altVal found - to specify setStringAttribute(\"altVal\",\"<value>\") on POI or set "
                              "the physical range");
+         }
       }
       bool doCLs = !std::isnan(altVal) && std::abs(mu->getMin("hypoPoints")) > altVal &&
                    std::abs(mu->getMax("hypoPoints")) > altVal;
@@ -1264,7 +1632,8 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
       std::vector<int> expSig = {-2, -1, 0, 1, 2};
       if (std::isnan(altVal))
          expSig.clear();
-      std::map<int, TGraphErrors> exp_pcls, exp_cls;
+      std::map<int, TGraphErrors> exp_pcls;
+      std::map<int, TGraphErrors> exp_cls;
       for (auto &s : expSig) {
          exp_pcls[s].SetNameTitle(TString::Format("exp%d_p%s", s, sCL),
                                   TString::Format("Expected (%d#sigma) p_{%s};%s", s, sCL, mu->GetTitle()));
@@ -1303,13 +1672,14 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
             exp_pcls[s].SetPoint(exp_pcls[s].GetN(), testVal,
                                  (doCLs) ? hp.pCLs_asymp(s).first : hp.pNull_asymp(s).first);
          }
-         if (doCLs)
+         if (doCLs) {
             Info("hypoTest", "%s=%g: %s=%g sigma_mu=%g %s=%g", mu->GetName(), testVal, obs_ts->GetName(),
                  obs_ts->GetPointY(obs_ts->GetN() - 1), hp.sigma_mu().first, obs_pcls->GetName(),
                  obs_pcls->GetPointY(obs_pcls->GetN() - 1));
-         else
+         } else {
             Info("hypoTest", "%s=%g: %s=%g %s=%g", mu->GetName(), testVal, obs_ts->GetName(),
                  obs_ts->GetPointY(obs_ts->GetN() - 1), obs_pcls->GetName(), obs_pcls->GetPointY(obs_pcls->GetN() - 1));
+         }
       };
 
       if (mu->getBins("hypoPoints") <= 0) {
@@ -1388,7 +1758,7 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
          band2->SetBit(kCanDelete);
          band2up->SetBit(kCanDelete);
          band2down->SetBit(kCanDelete);
-         auto ax = (TNamed *)band2->Clone(".axis");
+         auto ax = static_cast<TNamed *>(band2->Clone(".axis"));
          ax->SetTitle(TString::Format("Hypothesis Test;%s", mu->GetTitle()));
          ax->Draw("AF");
          band2->Draw("F");
@@ -1476,4 +1846,35 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
    return out;
 }
 
-END_XROOFIT_NAMESPACE
+double round_to_digits(double value, int digits)
+{
+   if (value == 0.0)
+      return 0.0;
+   double factor = pow(10.0, digits - ceil(log10(std::abs(value))));
+   return std::round(value * factor) / factor;
+};
+double round_to_decimal(double value, int decimal_places)
+{
+   const double multiplier = std::pow(10.0, decimal_places);
+   return std::round(value * multiplier) / multiplier;
+}
+
+// rounds error to 1 or 2 sig fig and round value to match that precision
+std::pair<double, double> xRooFit::matchPrecision(const std::pair<double, double> &in)
+{
+   auto out = in;
+   if (!std::isinf(out.second)) {
+      auto tmp = out.second;
+      out.second = round_to_digits(out.second, 2);
+      int expo = (out.second == 0) ? 0 : (int)std::floor(std::log10(std::abs(out.second)));
+      if (TString::Format("%e", out.second)(0) != '1') {
+         out.second = round_to_digits(tmp, 1);
+         out.first = (expo >= 0) ? round(out.first) : round_to_decimal(out.first, -expo);
+      } else if (out.second != 0) {
+         out.first = (expo >= 0) ? round(out.first) : round_to_decimal(out.first, -expo + 1);
+      }
+   }
+   return out;
+}
+
+END_XROOFIT_NAMESPACE;

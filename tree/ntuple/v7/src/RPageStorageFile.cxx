@@ -45,9 +45,8 @@
 #include <queue>
 
 ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
-   const RNTupleWriteOptions &options)
-   : RPageSink(ntupleName, options)
-   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
+                                                         const RNTupleWriteOptions &options)
+   : RPagePersistentSink(ntupleName, options), fPageAllocator(std::make_unique<RPageAllocatorHeap>())
 {
    R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
@@ -372,7 +371,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
-      R__ASSERT(clusterInfo.fClusterId != kInvalidDescriptorId);
+
+      if (clusterInfo.fClusterId == kInvalidDescriptorId)
+         throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
 
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
       clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
@@ -395,7 +396,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    if (!cachedPage.IsNull())
       return cachedPage;
 
-   R__ASSERT(clusterId != kInvalidDescriptorId);
+   if (clusterId == kInvalidDescriptorId)
+      throw RException(R__FAIL("entry out of bounds"));
+
    RClusterInfo clusterInfo;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
@@ -545,12 +548,42 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadClusters(std::span<RCluster::RK
    }
 
    auto nReqs = readRequests.size();
-   {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-      fFile->ReadV(&readRequests[0], nReqs);
+   auto readvLimits = fFile->GetReadVLimits();
+
+   int iReq = 0;
+   while (nReqs > 0) {
+      auto nBatch = std::min(nReqs, readvLimits.fMaxReqs);
+
+      if (readvLimits.HasSizeLimit()) {
+         std::uint64_t totalSize = 0;
+         for (std::size_t i = 0; i < nBatch; ++i) {
+            if (readRequests[iReq + i].fSize > readvLimits.fMaxSingleSize) {
+               nBatch = i;
+               break;
+            }
+
+            totalSize += readRequests[iReq + i].fSize;
+            if (totalSize > readvLimits.fMaxTotalSize) {
+               nBatch = i;
+               break;
+            }
+         }
+      }
+
+      if (nBatch <= 1) {
+         nBatch = 1;
+         RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+         fFile->ReadAt(readRequests[iReq].fBuffer, readRequests[iReq].fSize, readRequests[iReq].fOffset);
+      } else {
+         RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+         fFile->ReadV(&readRequests[iReq], nBatch);
+      }
+      fCounters->fNReadV.Inc();
+      fCounters->fNRead.Add(nBatch);
+
+      iReq += nBatch;
+      nReqs -= nBatch;
    }
-   fCounters->fNReadV.Inc();
-   fCounters->fNRead.Add(nReqs);
 
    return clusters;
 }

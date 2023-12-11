@@ -19,7 +19,7 @@
 \class RooAbsTestStatistic
 \ingroup Roofitcore
 
-RooAbsTestStatistic is the abstract base class for all test
+Abstract base class for all test
 statistics. Test statistics that evaluate the PDF at each data
 point should inherit from the RooAbsOptTestStatistic class which
 implements several generic optimizations that can be done for such
@@ -45,7 +45,7 @@ combined in the main thread.
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 #include "RooAbsOptTestStatistic.h"
 #include "RooCategory.h"
 
@@ -72,7 +72,7 @@ ClassImp(RooAbsTestStatistic);
 /// - rangeName Fit data only in range with given name
 /// - addCoefRangeName If not null, all RooAddPdf components of `real` will be instructed to fix their fraction definitions to the given named range.
 /// - nCPU If larger than one, the test statistic calculation will be parallelized over multiple processes.
-///   By default the data is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+///   By default the data is split with 'bulk' partitioning (each process calculates a contiguous block of fraction 1/nCPU
 ///   of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
 ///   in each processing block many vary greatly thereby distributing the workload rather unevenly.
 /// - interleave is set to true, the interleave partitioning strategy is used where each partition
@@ -93,7 +93,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _paramSet("paramSet","Set of parameters",this),
   _func(&real),
   _data(&data),
-  _projDeps((RooArgSet*)projDeps.Clone()),
+  _projDeps(static_cast<RooArgSet*>(projDeps.Clone())),
   _rangeName(cfg.rangeName),
   _addCoefRangeName(cfg.addCoefRangeName),
   _splitRange(cfg.splitCutRange),
@@ -119,7 +119,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _paramSet("paramSet","Set of parameters",this),
   _func(other._func),
   _data(other._data),
-  _projDeps((RooArgSet*)other._projDeps->Clone()),
+  _projDeps(static_cast<RooArgSet*>(other._projDeps->Clone())),
   _rangeName(other._rangeName),
   _addCoefRangeName(other._addCoefRangeName),
   _splitRange(other._splitRange),
@@ -176,7 +176,8 @@ double RooAbsTestStatistic::evaluate() const
     if (_mpinterl == RooFit::BulkPartition || _mpinterl == RooFit::Interleave ) {
       ret = combinedValue(reinterpret_cast<RooAbsReal**>(const_cast<std::unique_ptr<RooAbsTestStatistic>*>(_gofArray.data())),_gofArray.size());
     } else {
-      double sum = 0., carry = 0.;
+      double sum = 0.;
+      double carry = 0.;
       int i = 0;
       for (auto& gof : _gofArray) {
         if (i % _numSets == _setNum || (_mpinterl==RooFit::Hybrid && gof->_mpinterl != RooFit::SimComponents )) {
@@ -207,8 +208,8 @@ double RooAbsTestStatistic::evaluate() const
     // Start calculations in parallel
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
 
-
-    double sum(0), carry = 0.;
+    double sum(0);
+    double carry = 0.;
     for (Int_t i = 0; i < _nCPU; ++i) {
       double y = _mpfeArray[i]->getValV();
       carry += _mpfeArray[i]->getCarry();
@@ -230,7 +231,9 @@ double RooAbsTestStatistic::evaluate() const
   } else {
 
     // Evaluate as straight FUNC
-    Int_t nFirst(0), nLast(_nEvents), nStep(1) ;
+    Int_t nFirst(0);
+    Int_t nLast(_nEvents);
+    Int_t nStep(1);
 
     switch (_mpinterl) {
     case RooFit::BulkPartition:
@@ -256,6 +259,7 @@ double RooAbsTestStatistic::evaluate() const
       break ;
     }
 
+    runRecalculateCache(nFirst, nLast, nStep);
     double ret = evaluatePartition(nFirst,nLast,nStep);
 
     if (numSets()==1) {
@@ -283,7 +287,7 @@ bool RooAbsTestStatistic::initialize()
   if (MPMaster == _gofOpMode) {
     initMPMode(_func,_data,_projDeps,_rangeName,_addCoefRangeName) ;
   } else if (SimMaster == _gofOpMode) {
-    initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName,_addCoefRangeName) ;
+    initSimMode(static_cast<RooSimultaneous*>(_func),_data,_projDeps,_rangeName,_addCoefRangeName) ;
   }
   _init = true;
   return false;
@@ -415,7 +419,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i));
 
     ccoutD(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl;
-    _mpfeArray[i] = new RooRealMPFE(Form("%s_%zx_MPFE%d",GetName(),(size_t)this,i),Form("%s_%zx_MPFE%d",GetTitle(),(size_t)this,i),*gof,false);
+    _mpfeArray[i] = new RooRealMPFE(Form("%s_%zx_MPFE%d",GetName(),reinterpret_cast<size_t>(this),i),Form("%s_%zx_MPFE%d",GetTitle(),reinterpret_cast<size_t>(this),i),*gof,false);
     //_mpfeArray[i]->setVerbose(true,true);
     _mpfeArray[i]->initialize();
     if (i > 0) {
@@ -463,7 +467,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
     // Retrieve the PDF for this simCat state
     RooAbsPdf* pdf = simpdf->getPdf(catName.c_str());
-    RooAbsData* dset = (RooAbsData*) dsetList->FindObject(catName.c_str());
+    RooAbsData* dset = static_cast<RooAbsData*>(dsetList->FindObject(catName.c_str()));
 
     if (pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
       ccoutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << _gofArray.size() << " for state " << catName

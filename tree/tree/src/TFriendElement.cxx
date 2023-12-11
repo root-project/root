@@ -37,10 +37,10 @@ ClassImp(TFriendElement);
 
 TFriendElement::TFriendElement() : TNamed()
 {
-   fFile       = 0;
-   fTree       = 0;
+   fFile       = nullptr;
+   fTree       = nullptr;
    fOwnFile    = kFALSE;
-   fParentTree = 0;
+   fParentTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +52,8 @@ TFriendElement::TFriendElement() : TNamed()
 TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *filename)
     :TNamed(treename,filename)
 {
-   fFile       = 0;
-   fTree       = 0;
+   fFile       = nullptr;
+   fTree       = nullptr;
    fOwnFile    = kTRUE;
    fParentTree = tree;
    fTreeName   = treename;
@@ -81,7 +81,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
     :TNamed(treename,file?file->GetName():"")
 {
    fFile       = file;
-   fTree       = 0;
+   fTree       = nullptr;
    fOwnFile    = kFALSE;
    fParentTree = tree;
    fTreeName   = treename;
@@ -119,7 +119,7 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
 {
    fTree       = friendtree;
    fTreeName   = "";
-   fFile       = 0;
+   fFile       = nullptr;
    fOwnFile    = kFALSE;
    fParentTree = tree;
    if (fTree) {
@@ -174,9 +174,9 @@ TTree *TFriendElement::DisConnect()
    if (fTree)
       fTree->RemoveExternalFriend(this);
    if (fOwnFile) delete fFile;
-   fFile = 0;
-   fTree = 0;
-   return 0;
+   fFile = nullptr;
+   fTree = nullptr;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +200,7 @@ TFile *TFriendElement::GetFile()
    if (fFile && fFile->IsZombie()) {
       MakeZombie();
       delete fFile;
-      fFile = 0;
+      fFile = nullptr;
    }
    return fFile;
 }

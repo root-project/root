@@ -58,7 +58,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fLabels  = nullptr;
    fModLabs = nullptr;
    fBits2   = 0;
-   fTimeDisplay = 0;
+   fTimeDisplay = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -609,6 +609,26 @@ const char *TAxis::GetTimeFormatOnly() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the time offset in GMT.
+
+UInt_t TAxis::GetTimeOffset() {
+
+  Int_t idF = fTimeFormat.Index("%F")+2;
+  if (idF<2) {
+    Warning("GetGMTimeOffset","Time format is not set!");
+    return 0;
+  }
+  TString stime=fTimeFormat(idF,19);
+  if (stime.Length() != 19) {
+    Warning("GetGMTimeOffset","Bad time format!");
+    return 0;
+  }
+
+  TDatime datime(stime.Data());
+  return datime.Convert(kTRUE);  // Convert to unix gmt time
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the ticks option (see SetTicks)
 
 const char *TAxis::GetTicks() const
@@ -851,7 +871,7 @@ void TAxis::SetDefaults()
    strlcpy(name,GetName(),2);
    name[1] = 0;
    TAttAxis::ResetAttAxis(name);
-   fTimeDisplay = 0;
+   fTimeDisplay = false;
    SetTimeFormat();
 }
 
@@ -1039,11 +1059,11 @@ void TAxis::SetRange(Int_t first, Int_t last)
    ) {
       fFirst = 1;
       fLast = fNbins;
-      SetBit(kAxisRange, 0);
+      SetBit(kAxisRange, false);
    } else {
       fFirst = std::max(first, 0);
       fLast = std::min(last, nCells);
-      SetBit(kAxisRange, 1);
+      SetBit(kAxisRange, true);
    }
 
 }
@@ -1221,7 +1241,7 @@ void TAxis::Streamer(TBuffer &R__b)
          if (fFirst < 0 || fFirst > fNbins) fFirst = 0;
          if (fLast  < 0 || fLast  > fNbins) fLast  = 0;
          if (fLast  < fFirst) { fFirst = 0; fLast = 0;}
-         if (fFirst ==0 && fLast == 0) SetBit(kAxisRange,0);
+         if (fFirst ==0 && fLast == 0) SetBit(kAxisRange,false);
       }
       if (R__v > 3) {
          R__b >> fTimeDisplay;

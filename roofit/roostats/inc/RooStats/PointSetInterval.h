@@ -28,10 +28,6 @@ namespace RooStats {
     /// constructor from name and data set specifying the interval points
     PointSetInterval(const char* name, RooAbsData&);
 
-    /// destructor
-    ~PointSetInterval() override;
-
-
     /// check if parameter is in the interval
     bool IsInInterval(const RooArgSet&) const override;
 

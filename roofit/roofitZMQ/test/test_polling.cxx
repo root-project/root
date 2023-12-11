@@ -13,7 +13,7 @@
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 #include "RooFit_ZMQ/ZeroMQPoller.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include "gtest/gtest.h"
 
@@ -38,8 +38,9 @@ std::string unique_tmp_ipc_address(const char *filename_template)
    strcpy(filename_template_mutable, filename_template);
    while (mkstemp(filename_template_mutable) >= 0) {
    }
+   std::string tmpPath = gSystem->TempDirectory();
    std::stringstream ss;
-   ss << "ipc://" << RooFit::tmpPath() << filename_template_mutable << ".ipc";
+   ss << "ipc://" << tmpPath << "/roofit_" << filename_template_mutable << ".ipc";
    return ss.str();
 }
 
@@ -53,18 +54,21 @@ TEST(Polling, doublePoll)
    } while (child_pid == -1); // retry if fork fails
 
    if (child_pid > 0) { // master
-      sigset_t sigmask, sigmask_old;
+      sigset_t sigmask;
+      sigset_t sigmask_old;
       sigemptyset(&sigmask);
       sigaddset(&sigmask, SIGCHLD);
       sigprocmask(SIG_BLOCK, &sigmask, &sigmask_old);
 
-      ZmqLingeringSocketPtr<> pusher, puller;
+      ZmqLingeringSocketPtr<> pusher;
+      ZmqLingeringSocketPtr<> puller;
       pusher.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
       pusher->bind(M2C_address);
       puller.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
       puller->bind(C2M_address);
 
-      ZeroMQPoller poller1, poller2;
+      ZeroMQPoller poller1;
+      ZeroMQPoller poller2;
       poller1.register_socket(*puller, zmq::event_flags::pollin);
       poller2.register_socket(*puller, zmq::event_flags::pollin);
 
@@ -83,8 +87,8 @@ TEST(Polling, doublePoll)
 
       kill(child_pid, SIGTERM);
 
-      pusher.reset(nullptr);
-      puller.reset(nullptr);
+      pusher.reset();
+      puller.reset();
       zmqSvc().close_context(); // if you don't close context in parent process as well, the next repeat will hang
 
       // wait for child
@@ -112,7 +116,8 @@ TEST(Polling, doublePoll)
 
       sigprocmask(SIG_SETMASK, &sigmask_old, nullptr);
    } else { // child
-      sigset_t sigmask, sigmask_old;
+      sigset_t sigmask;
+      sigset_t sigmask_old;
       sigemptyset(&sigmask);
       sigaddset(&sigmask, SIGTERM);
       sigprocmask(SIG_BLOCK, &sigmask, &sigmask_old);
@@ -126,13 +131,15 @@ TEST(Polling, doublePoll)
          std::exit(1);
       }
 
-      ZmqLingeringSocketPtr<> puller, pusher;
+      ZmqLingeringSocketPtr<> puller;
+      ZmqLingeringSocketPtr<> pusher;
       puller.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
       puller->connect(M2C_address);
       pusher.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
       pusher->connect(C2M_address);
 
-      ZeroMQPoller poller1, poller2;
+      ZeroMQPoller poller1;
+      ZeroMQPoller poller2;
       poller1.register_socket(*puller, zmq::event_flags::pollin);
       poller2.register_socket(*puller, zmq::event_flags::pollin);
 
@@ -155,8 +162,8 @@ TEST(Polling, doublePoll)
       while (!terminated) {
       }
 
-      puller.reset(nullptr);
-      pusher.reset(nullptr);
+      puller.reset();
+      pusher.reset();
       zmqSvc().close_context();
       _Exit(0);
    }

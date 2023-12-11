@@ -31,8 +31,8 @@ public:
    const char* GetName() const override { return "Selected"; }
 
 private:
-   TGLPShapeObj(const TGLPShapeObj &); // Not implemented
-   TGLPShapeObj& operator=(const TGLPShapeObj &); // Not implemented
+   TGLPShapeObj(const TGLPShapeObj &) = delete;
+   TGLPShapeObj& operator=(const TGLPShapeObj &) = delete;
 
    ClassDefOverride(TGLPShapeObj, 0) // This object wraps TGLPhysicalShape (not a TObject)
 };

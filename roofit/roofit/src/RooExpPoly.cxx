@@ -75,14 +75,7 @@ RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const
       _lowestOrder = 0;
    }
 
-   for (auto coef : coefList) {
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutE(InputArguments) << "RooExpPoly::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _coefList.add(*coef);
-   }
+   _coefList.addTyped<RooAbsReal>(coefList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,7 +248,8 @@ double deltaerfi(double x1, double x2)
 
 double RooExpPoly::analyticalIntegral(int /*code*/, const char *rangeName) const
 {
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
    const unsigned sz = _coefList.size();
    if (!sz)
       return xmax - xmin;
@@ -311,10 +305,11 @@ std::string RooExpPoly::getFormulaExpression(bool expand) const
    for (auto coef : _coefList) {
       if (order != _lowestOrder)
          ss << "+";
-      if (expand)
-         ss << ((RooAbsReal *)coef)->getVal();
-      else
+      if (expand) {
+         ss << (static_cast<RooAbsReal *>(coef))->getVal();
+      } else {
          ss << coef->GetName();
+      }
       ss << "*pow(" << _x.GetName() << "," << order << ")";
       ++order;
    }

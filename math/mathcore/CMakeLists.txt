@@ -119,8 +119,6 @@ ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler f
 ROOT_ADD_C_FLAG(_flags -Wno-maybe-uninitialized)  # Avoid what it seems a compiler false positive warning
 ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)
 
-set_source_files_properties(src/triangle.c COMPILE_FLAGS "${_flags}")
-
 if(imt)
   set(MATHCORE_DEPENDENCIES Imt)
 endif()
@@ -155,10 +153,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/GaussLegendreIntegrator.cxx
     src/GenAlgoOptions.cxx
     src/GoFTest.cxx
+    src/IOptions.cxx
     src/Integrator.cxx
     src/IntegratorOptions.cxx
     src/MersenneTwisterEngine.cxx
     src/MinimTransformFunction.cxx
+    src/Minimizer.cxx
     src/MinimizerOptions.cxx
     src/MinimizerVariableTransformation.cxx
     src/MixMaxEngineImpl17.cxx
@@ -189,7 +189,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/TRandomGen.cxx
     src/TStatistic.cxx
     src/UnBinData.cxx
-    src/triangle.c
     src/VectorizedTMath.cxx
   LIBRARIES
     ${MATHCORE_LIBRARIES}

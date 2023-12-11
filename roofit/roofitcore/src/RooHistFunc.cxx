@@ -19,7 +19,7 @@
 \class RooHistFunc
 \ingroup Roofitcore
 
-RooHistFunc implements a real-valued function sampled from a
+A real-valued function sampled from a
 multidimensional histogram. The histogram can have an arbitrary number of real or
 discrete dimensions and may have negative values.
 **/
@@ -31,7 +31,7 @@ discrete dimensions and may have negative values.
 #include "RooCategory.h"
 #include "RooWorkspace.h"
 #include "RooHistPdf.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include "TError.h"
 #include "TBuffer.h"
@@ -53,10 +53,9 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
              const RooDataHist& dhist, Int_t intOrder) :
   RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(vars) ;
   _depList.add(vars) ;
@@ -77,7 +76,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
     }
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -93,10 +92,9 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
              const RooDataHist& dhist, Int_t intOrder) :
   RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(histObs) ;
   _depList.add(funcObs) ;
@@ -117,23 +115,21 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
     }
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
-
-RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& vars,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistFunc{name, title, vars, *dhist, intOrder}
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet &vars, std::unique_ptr<RooDataHist> dhist,
+                         int intOrder)
+   : RooHistFunc{name, title, vars, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
 
-
-RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistFunc{name, title, pdfObs, histObs, *dhist, intOrder}
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList &pdfObs, const RooArgList &histObs,
+                         std::unique_ptr<RooDataHist> dhist, int intOrder)
+   : RooHistFunc{name, title, pdfObs, histObs, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
 
 
@@ -150,7 +146,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   _totVolume(other._totVolume),
   _unitNorm(other._unitNorm)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 
   _histObsList.addClone(other._histObsList) ;
 }
@@ -161,7 +157,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 
 RooHistFunc::~RooHistFunc()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -453,10 +449,10 @@ bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
 
       // Check if histograms are identical
-      if (areIdentical((RooDataHist&)*wsdata,*_dataHist)) {
+      if (areIdentical(static_cast<RooDataHist&>(*wsdata),*_dataHist)) {
 
         // Exists and is of correct type, and identical -- adjust internal pointer to WS copy
-        _dataHist = (RooDataHist*) wsdata ;
+        _dataHist = static_cast<RooDataHist*>(wsdata) ;
       } else {
 
         // not identical, clone rename and import
@@ -466,7 +462,7 @@ bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
           coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
           return true ;
         }
-        _dataHist = (RooDataHist*) ws.embeddedData(uniqueName) ;
+        _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName)) ;
       }
 
     } else {
@@ -488,7 +484,7 @@ bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
   ws.import(*_dataHist,RooFit::Embedded()) ;
 
   // Redirect our internal pointer to the copy in the workspace
-  _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
+  _dataHist = static_cast<RooDataHist*>(ws.embeddedData(_dataHist->GetName())) ;
   return false ;
 }
 

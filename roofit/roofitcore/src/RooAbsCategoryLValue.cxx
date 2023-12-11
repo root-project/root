@@ -19,7 +19,7 @@
 \class RooAbsCategoryLValue
 \ingroup Roofitcore
 
-RooAbsCategoryLValue is the common abstract base class for objects that represent a
+Abstract base class for objects that represent a
 discrete value that can be set from the outside, i.e. that may appear on the left
 hand side of an assignment ("*lvalue*").
 
@@ -116,7 +116,7 @@ bool RooAbsCategoryLValue::setOrdinal(UInt_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the cached value from given source and raise dirty flag.
-/// It is the callers responsability to ensure that the sources
+/// It is the callers responsibility to ensure that the sources
 /// cache is clean(valid) before this function is called, e.g. by
 /// calling syncCache() on the source.
 

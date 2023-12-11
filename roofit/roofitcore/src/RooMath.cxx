@@ -82,9 +82,16 @@ double RooMath::interpolate(double ya[], Int_t n, double x)
    // Int to Double conversion is faster via array lookup than type conversion!
    static double itod[20] = {0.0,  1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0,  8.0,  9.0,
                              10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
-   int i, m, ns = 1;
-   double den, dif, dift /*,ho,hp,w*/, y, dy;
-   double c[20], d[20];
+   int i;
+   int m;
+   int ns = 1;
+   double den;
+   double dif;
+   double dift /*,ho,hp,w*/;
+   double y;
+   double dy;
+   double c[20];
+   double d[20];
 
    dif = std::abs(x);
    for (i = 1; i <= n; i++) {
@@ -116,9 +123,19 @@ double RooMath::interpolate(double xa[], double ya[], Int_t n, double x)
    // Int to Double conversion is faster via array lookup than type conversion!
    //   static double itod[20] = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
    //                10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0} ;
-   int i, m, ns = 1;
-   double den, dif, dift, ho, hp, w, y, dy;
-   double c[20], d[20];
+   int i;
+   int m;
+   int ns = 1;
+   double den;
+   double dif;
+   double dift;
+   double ho;
+   double hp;
+   double w;
+   double y;
+   double dy;
+   double c[20];
+   double d[20];
 
    dif = std::abs(x - xa[0]);
    for (i = 1; i <= n; i++) {

@@ -75,11 +75,6 @@ if(IS_ABSOLUTE ${CMAKE_INSTALL_DATADIR})
 else()
   set(datadir ${prefix}/${CMAKE_INSTALL_DATADIR})
 endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_ELISPDIR})
-  set(elispdir ${CMAKE_INSTALL_ELISPDIR})
-else()
-  set(elispdir ${prefix}/${CMAKE_INSTALL_ELISPDIR})
-endif()
 if(IS_ABSOLUTE ${CMAKE_INSTALL_FONTDIR})
   set(ttffontdir ${CMAKE_INSTALL_FONTDIR})
 else()
@@ -306,7 +301,6 @@ set(gslflags)
 set(shadowpw ${value${shadowpw}})
 set(buildmathmore ${value${mathmore}})
 set(buildroofit ${value${roofit}})
-set(buildminuit2 ${value${minuit2}})
 set(buildunuran ${value${unuran}})
 set(buildgdml ${value${gdml}})
 set(buildhttp ${value${http}})
@@ -369,11 +363,6 @@ if(CMAKE_USE_PTHREADS_INIT)
   set(haspthread define)
 else()
   set(haspthread undef)
-endif()
-if(cuda)
-  set(hascuda define)
-else()
-  set(hascuda undef)
 endif()
 if(x11)
   set(hasxft define)
@@ -499,116 +488,6 @@ if (uring)
 else()
   set(hasuring undef)
 endif()
-if (roofit_multiprocess)
-  set(hasroofit_multiprocess define)
-else()
-  set(hasroofit_multiprocess undef)
-endif()
-
-# clear cache to allow reconfiguring
-# with a different CMAKE_CXX_STANDARD
-unset(found_stdapply CACHE)
-unset(found_stdindexsequence CACHE)
-unset(found_stdinvoke CACHE)
-unset(found_stdstringview CACHE)
-unset(found_stdexpstringview CACHE)
-unset(found_stod_stringview CACHE)
-
-set(hasstdexpstringview undef)
-set(cudahasstdstringview undef)
-CHECK_CXX_SOURCE_COMPILES("#include <string_view>
-  int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
-if(found_stdstringview)
-  set(hasstdstringview define)
-  if(cuda)
-      if (WIN32)
-        set(PLATFORM_NULL_FILE "nul")
-      else()
-        set(PLATFORM_NULL_FILE "/dev/null")
-      endif()
-      execute_process(
-        COMMAND "echo"
-          "-e" "#include <string_view>\nint main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}"
-        COMMAND "${CMAKE_CUDA_COMPILER}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "${PLATFORM_NULL_FILE}" "-x" "c++" "-"
-        RESULT_VARIABLE nvcc_compiled_string_view)
-      unset(PLATFORM_NULL_FILE CACHE)
-      if (nvcc_compiled_string_view EQUAL "0")
-        set(cudahasstdstringview define)
-      endif()
-  endif()
-else()
-  set(hasstdstringview undef)
-
-  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-   int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
-  if(found_stdexpstringview)
-    set(hasstdexpstringview define)
-  else()
-    set(hasstdexpstringview undef)
-  endif()
-endif()
-
-if(found_stdstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string_view>
-     int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
-elseif(found_stdexpstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-     int main() { size_t pos; std::experimental::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
-else()
-  set(found_stod_stringview false)
-endif()
-
-if(found_stod_stringview)
-  set(hasstodstringview define)
-else()
-  set(hasstodstringview undef)
-endif()
-
-if(found_stdstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string>
-     #include <string_view>
-     int main() { std::string s; std::string_view v; s += v; return 0;}" found_opplusequal_stringview)
-elseif(found_stdexpstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string>
-     #include <experimental/string_view>
-     int main() { std::string s; std::experimental::string_view v; s += v; return 0;}" found_opplusequal_stringview)
-else()
-  set(found_opplusequal_stringview false)
-endif()
-
-if(found_opplusequal_stringview)
-  set(hasopplusequalstringview define)
-else()
-  set(hasopplusequalstringview undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <tuple>
-int main() { std::apply([](int, int){}, std::make_tuple(1,2)); return 0;}" found_stdapply)
-if(found_stdapply)
-  set(hasstdapply define)
-else()
-  set(hasstdapply undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <functional>
-int main() { return std::invoke([](int i){return i;}, 0); }" found_stdinvoke)
-if(found_stdinvoke)
-  set(hasstdinvoke define)
-else()
-  set(hasstdinvoke undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <utility>
-#include <type_traits>
-int main() {
-  static_assert(std::is_same<std::integer_sequence<std::size_t, 0, 1, 2>, std::make_index_sequence<3>>::value, \"\");
-  return 0;
-}" found_stdindexsequence)
-if(found_stdindexsequence)
-  set(hasstdindexsequence define)
-else()
-  set(hasstdindexsequence undef)
-endif()
 
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
@@ -651,7 +530,8 @@ else()
 endif()
 
 if(root7 AND webgui)
-   set(root_browser_class "ROOT::RWebBrowserImp")
+#   set(root_browser_class "ROOT::RWebBrowserImp")
+   set(root_browser_class "TRootBrowser")
 else()
    set(root_browser_class "TRootBrowser")
 endif()
@@ -752,6 +632,10 @@ set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 set(ROOT_BINARY_DIR ${ROOT_BINDIR})
 ")
+set(ROOT_CMAKE_DIR_SETUP "
+# ROOT configured for use from the build tree - absolute paths are used.
+set(ROOT_CMAKE_DIR ${CMAKE_SOURCE_DIR}/cmake)
+")
 
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
 export(TARGETS ${exported_targets} NAMESPACE ROOT:: FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
@@ -790,6 +674,10 @@ get_filename_component(ROOT_BINDIR \"\${_ROOT_BINDIR}\" REALPATH)
 set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" REALPATH)
+")
+set(ROOT_CMAKE_DIR_SETUP "
+## ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_CMAKE_DIR \"\${_thisdir}\" REALPATH)
 ")
 
 # used by ROOTConfig.cmake from the build directory
@@ -849,7 +737,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRE
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
 if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
   configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY NEWLINE_STYLE UNIX)
@@ -921,8 +808,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
-install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
 if(NOT gnuinstall)
   install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp

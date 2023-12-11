@@ -35,7 +35,7 @@ namespace RooStats {
 class ModelConfig final : public TNamed, public RooWorkspaceHandle {
 
 public:
-   ModelConfig(RooWorkspace *ws = nullptr) : TNamed()
+   ModelConfig(RooWorkspace *ws = nullptr)
    {
       if (ws)
          SetWS(*ws);
@@ -57,10 +57,11 @@ public:
    ModelConfig *Clone(const char *name = "") const override
    {
       ModelConfig *mc = new ModelConfig(*this);
-      if (strcmp(name, "") == 0)
+      if (strcmp(name, "") == 0) {
          mc->SetName(this->GetName());
-      else
+      } else {
          mc->SetName(name);
+      }
       return mc;
    }
 
@@ -148,7 +149,7 @@ public:
    /// Specify the constraint parameters
    virtual void SetConstraintParameters(const RooArgSet &set)
    {
-      if (!SetHasOnlyParameters(set, "ModelConfig::SetConstainedParameters"))
+      if (!SetHasOnlyParameters(set, "ModelConfig::SetConstrainedParameters"))
          return;
       fConstrParamsName = std::string(GetName()) + "_ConstrainedParams";
       DefineSetInWS(fConstrParamsName.c_str(), set);
@@ -219,11 +220,11 @@ public:
       if (!GetWS())
          return;
 
-      if (GetWS()->pdf(name))
+      if (GetWS()->pdf(name)) {
          fPdfName = name;
-      else{
+      } else {
          std::stringstream ss;
-         ss << "pdf " << name << " does not exist in workspace" ;
+         ss << "pdf " << name << " does not exist in workspace";
          const std::string errorMsg = ss.str();
          coutE(ObjectHandling) << errorMsg << std::endl;
          throw std::runtime_error(errorMsg);
@@ -236,11 +237,11 @@ public:
       if (!GetWS())
          return;
 
-      if (GetWS()->pdf(name))
+      if (GetWS()->pdf(name)) {
          fPriorPdfName = name;
-      else{
+      } else {
          std::stringstream ss;
-         ss << "pdf " << name << " does not exist in workspace" ;
+         ss << "pdf " << name << " does not exist in workspace";
          const std::string errorMsg = ss.str();
          coutE(ObjectHandling) << errorMsg << std::endl;
          throw std::runtime_error(errorMsg);
@@ -253,11 +254,11 @@ public:
       if (!GetWS())
          return;
 
-      if (GetWS()->data(name))
+      if (GetWS()->data(name)) {
          fProtoDataName = name;
-      else{
+      } else {
          std::stringstream ss;
-         ss << "dataset " << name << " does not exist in workspace" ;
+         ss << "dataset " << name << " does not exist in workspace";
          const std::string errorMsg = ss.str();
          coutE(ObjectHandling) << errorMsg << std::endl;
          throw std::runtime_error(errorMsg);
@@ -313,24 +314,16 @@ public:
    /// overload the print method
    void Print(Option_t *option = "") const override;
 
-   std::unique_ptr<RooAbsReal> createNLL(RooAbsData &data, const RooLinkedList &cmdList = {}) const;
-
-   /// Takes an arbitrary number of RooCmdArg command options and calls
-   /// createNLL(RooAbsData& data, const RooLinkedList& cmdList).
-   template <typename... Args>
-   std::unique_ptr<RooAbsReal> createNLL(RooAbsData &data, RooCmdArg const &arg1, Args const &...args) const
+   template <typename... CmdArgs_t>
+   std::unique_ptr<RooAbsReal> createNLL(RooAbsData &data, CmdArgs_t const &...cmdArgs) const
    {
-      return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+      return createNLLImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...));
    }
 
-   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, const RooLinkedList &cmdList = {});
-
-   /// Takes an arbitrary number of RooCmdArg command options and calls
-   /// ModelConfig::fitTo(RooAbsData& data, const RooLinkedList& cmdList).
-   template <typename... Args>
-   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, RooCmdArg const &arg1, Args const &...args)
+   template <typename... CmdArgs_t>
+   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, CmdArgs_t const &...cmdArgs)
    {
-      return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+      return fitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...));
    }
 
 protected:
@@ -366,6 +359,10 @@ protected:
    std::string fSnapshotName; ///< name for RooArgSet that specifies a particular hypothesis
 
    std::string fObservablesName; ///< name for RooArgSet specifying observable parameters.
+
+private:
+   std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
+   std::unique_ptr<RooFitResult> fitToImpl(RooAbsData &data, const RooLinkedList &cmdList);
 
    ClassDefOverride(ModelConfig,
                     6); ///< A class that holds configuration information for a model using a workspace as a store

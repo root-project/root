@@ -19,7 +19,7 @@
 \class RooPlot
 \ingroup Roofitcore
 
-A RooPlot is a plot frame and a container for graphics objects
+Plot frame and a container for graphics objects
 within that frame. As a frame, it provides the TH1-style public interface
 for setting plot ranges, configuring axes, etc. As a container, it
 holds an arbitrary set of objects that might be histograms of data,
@@ -182,22 +182,22 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 /// Create an 1-dimensional with all properties taken from 'var', but
 /// with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
-RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, double xmin, double xmax, Int_t nbins)
+RooPlot::RooPlot(const char *name, const char *title, const RooAbsRealLValue &var, double xmin, double xmax,
+                 Int_t nbins)
+   : _hist(new TH1D(name, title, nbins, xmin, xmax)),
+     _plotVar(const_cast<RooAbsRealLValue *>(&var)),
+     _normBinWidth((xmax - xmin) / nbins)
 {
-  _hist = new TH1D(name,title,nbins,xmin,xmax) ;
   _hist->Sumw2(false) ;
   _hist->GetSumw2()->Set(0) ;
   _hist->SetDirectory(nullptr);
 
   // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
-  _plotVar = const_cast<RooAbsRealLValue*>(&var);
 
   TString xtitle= var.getTitle(true);
   SetXTitle(xtitle.Data());
 
   initialize();
-
-  _normBinWidth = (xmax-xmin)/nbins ;
 }
 
 
@@ -206,6 +206,7 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
 /// with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
 RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nbins)
+   : _plotVar(const_cast<RooAbsRealLValue *>(&var)), _normBinWidth((xmax - xmin) / nbins)
 {
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
   _hist->Sumw2(false) ;
@@ -213,7 +214,6 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nb
   _hist->SetDirectory(nullptr);
 
   // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
-  _plotVar = const_cast<RooAbsRealLValue*>(&var);
 
   TString xtitle= var.getTitle(true);
   SetXTitle(xtitle.Data());
@@ -223,8 +223,6 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nb
   title.Append("\"");
   SetTitle(title.Data());
   initialize();
-
-  _normBinWidth = (xmax-xmin)/nbins ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,9 +304,6 @@ void RooPlot::initialize()
   _hist->SetDirectory(nullptr);
   // Default vertical padding of our enclosed objects
   setPadFactor(0.05);
-  // We don't know our normalization yet
-  _normNumEvts= 0;
-  _normBinWidth = 0;
 }
 
 
@@ -318,9 +313,9 @@ void RooPlot::initialize()
 TString RooPlot::histName() const
 {
   if (_plotVar) {
-    return TString(Form("frame_%s_%zx",_plotVar->GetName(),(size_t)this)) ;
+    return TString(Form("frame_%s_%zx",_plotVar->GetName(),reinterpret_cast<size_t>(this))) ;
   } else {
-    return TString(Form("frame_%zx",(size_t)this)) ;
+    return TString(Form("frame_%zx",reinterpret_cast<size_t>(this))) ;
   }
 }
 
@@ -460,7 +455,8 @@ namespace {
       std::map<int,double> minValues;
       std::map<int,double> maxValues;
       int n = graph->GetN();
-      double x, y;
+      double x;
+      double y;
       // for each bin, find the min and max points to form an envelope
       for(int i=0; i<n; ++i){
         graph->GetPoint(i,x,y);
@@ -504,7 +500,8 @@ namespace {
     int n = graph->GetN();
     double xmin = hist->GetXaxis()->GetXmin();
     double xmax = hist->GetXaxis()->GetXmax();
-    double x, y;
+    double x;
+    double y;
     // as this graph is histogram-like, we expect there to be one point per bin
     // we just move these points to the respective bin centers
     for(int i=0; i<n; ++i){
@@ -564,7 +561,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
 
 void RooPlot::updateFitRangeNorm(const TH1* hist)
 {
-  const TAxis* xa = ((TH1*)hist)->GetXaxis() ;
+  const TAxis* xa = const_cast<TH1 *>(hist)->GetXaxis() ;
   _normBinWidth = (xa->GetXmax()-xa->GetXmin())/hist->GetNbinsX() ;
   _normNumEvts = hist->GetEntries()/_normBinWidth ;
 }
@@ -587,7 +584,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
 
     if (std::abs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
       coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac
-            << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+            << " will supersede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
     }
 
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
@@ -613,7 +610,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update our y-axis limits to accomodate an object whose spread
+/// Update our y-axis limits to accommodate an object whose spread
 /// in y is (ymin,ymax). Use the specified y-axis label if we don't
 /// have one assigned already.
 
@@ -954,14 +951,14 @@ bool RooPlot::drawAfter(const char *after, const char *target)
 /// methods to change the drawing style attributes of a contained
 /// object directly.
 
-TObject *RooPlot::findObject(const char *name, const TClass* clas) const
+TObject *RooPlot::findObject(const char *name, const TClass* tClass) const
 {
   TObject *ret = nullptr;
 
   for(auto const& item : _items) {
     TObject &obj = *item.first;
     if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName()))
-        && (!clas || (obj.IsA()==clas))) {
+        && (!tClass || (obj.IsA()==tClass))) {
       ret = &obj ;
     }
   }
@@ -1079,19 +1076,19 @@ void RooPlot::SetMinimum(double minimum)
 ///
 /// \note The \f$ \chi^2 \f$ is calculated between a *plot of the original distribution* and the data.
 /// It therefore has more rounding errors than directly calculating the \f$ \chi^2 \f$ from a PDF or
-/// function. To do this, use RooChi2Var.
+/// function. To do this, use RooAbsReal::createChi2(RooDataHist&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&).
 double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitParam) const
 {
 
   // Find curve object
-  RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
+  RooCurve* curve = static_cast<RooCurve*>(findObject(curvename,RooCurve::Class())) ;
   if (!curve) {
     coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << endl ;
     return -1. ;
   }
 
   // Find histogram object
-  RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
+  RooHist* hist = static_cast<RooHist*>(findObject(histname,RooHist::Class())) ;
   if (!hist) {
     coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << endl ;
     return -1. ;
@@ -1383,7 +1380,8 @@ void RooPlot::Streamer(TBuffer &R__b)
     if (_dir)
       _dir->Remove(this);
 
-    UInt_t R__s, R__c;
+    UInt_t R__s;
+    UInt_t R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v > 1) {
       R__b.ReadClassBuffer(RooPlot::Class(),this,R__v,R__s,R__c);

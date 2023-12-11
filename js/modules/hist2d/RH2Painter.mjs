@@ -1,6 +1,5 @@
 import { gStyle, isStr, kNoZoom, kInspect } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { floatToString, TRandom, addHighlightStyle } from '../base/BasePainter.mjs';
 import { RHistPainter } from './RHistPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
@@ -132,16 +131,16 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
-      if (super.clickButton(funcname)) return true;
+      const res = super.clickButton(funcname);
+      if (res) return res;
 
       switch (funcname) {
-         case 'ToggleColor': this.toggleColor(); break;
-         case 'Toggle3D': this.toggleMode3D(); break;
-         default: return false;
+         case 'ToggleColor': return this.toggleColor();
+         case 'Toggle3D': return this.toggleMode3D();
       }
 
       // all methods here should not be processed further
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar with RH2-related functions */
@@ -165,8 +164,7 @@ class RH2Painter extends RHistPainter {
       } else
          this.options.Color = !this.options.Color;
 
-
-      this.redraw();
+      return this.redraw();
    }
 
    /** @summary Perform automatic zoom inside non-zero region of histogram */
@@ -254,12 +252,13 @@ class RH2Painter extends RHistPainter {
       this.zmax = this.gmaxbin;
 
       // this value used for logz scale drawing
-      if (this.gminposbin === null) this.gminposbin = this.gmaxbin*1e-4;
+      if ((this.gminposbin === null) && (this.gmaxbin > 0))
+         this.gminposbin = this.gmaxbin*1e-4;
 
-      if (this.options.Axis > 0) { // Paint histogram axis only
+      if (this.options.Axis > 0)  // Paint histogram axis only
          this.draw_content = false;
-      } else
-         this.draw_content = this.gmaxbin > 0;
+      else
+         this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
    }
 
    /** @summary Count statistic */
@@ -362,9 +361,9 @@ class RH2Painter extends RHistPainter {
       if ((print_under > 0) || (print_over > 0)) {
          const m = data.matrix;
 
-         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | '  + m[7].toFixed(0));
-         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | '  + m[5].toFixed(0));
-         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | '  + m[2].toFixed(0));
+         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | ' + m[7].toFixed(0));
+         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | ' + m[5].toFixed(0));
+         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | ' + m[2].toFixed(0));
       }
 
       return true;
@@ -494,8 +493,8 @@ class RH2Painter extends RHistPainter {
 
             switch (this.options.Contour) {
                case 1: break;
-               case 11: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: icol }); break;
-               case 12: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: 1, style: (colindx%5 + 1), width: 1 }); break;
+               case 11: fillcolor = 'none'; lineatt = this.createAttLine({ color: icol, std: false }); break;
+               case 12: fillcolor = 'none'; lineatt = this.createAttLine({ color: 1, style: (colindx%5 + 1), width: 1, std: false }); break;
                case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
                case 14: break;
             }
@@ -529,7 +528,7 @@ class RH2Painter extends RHistPainter {
       if (handle === null) handle = this.prepareDraw({ rounding: false });
 
       const histo = this.getHisto(),
-            textFont  = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
+            textFont = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
             text_offset = this.options.BarOffset || 0,
             text_g = this.draw_g.append('svg:g').attr('class', 'th2_text'),
             di = handle.stepi, dj = handle.stepj,
@@ -608,10 +607,10 @@ class RH2Painter extends RHistPainter {
                   yc = (handle.gry[j] + handle.gry[j+dj])/2;
                   dxn = scale_x*dx/dn;
                   dyn = scale_y*dy/dn;
-                  x1  = xc - dxn;
-                  x2  = xc + dxn;
-                  y1  = yc - dyn;
-                  y2  = yc + dyn;
+                  x1 = xc - dxn;
+                  x2 = xc + dxn;
+                  y1 = yc - dyn;
+                  y2 = yc + dyn;
                   dx = Math.round(x2-x1);
                   dy = Math.round(y2-y1);
 
@@ -620,8 +619,8 @@ class RH2Painter extends RHistPainter {
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(2/(dx**2 + dy**2));
-                        si  = Math.round(anr*(dx + dy));
-                        co  = Math.round(anr*(dx - dy));
+                        si = Math.round(anr*(dx + dy));
+                        co = Math.round(anr*(dx - dy));
                         if (si || co)
                            cmd += `m${-si},${co}` + makeLine(si, -co) + makeLine(-co, -si);
                      }

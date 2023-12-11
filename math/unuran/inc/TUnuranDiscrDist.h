@@ -74,9 +74,9 @@ public:
       fXmax(-1),
       fMode(0),
       fSum(0),
-      fHasDomain(0),
-      fHasMode(0),
-      fHasSum(0),
+      fHasDomain(false),
+      fHasMode(false),
+      fHasSum(false),
       fOwnFunc(false)
    {}
 

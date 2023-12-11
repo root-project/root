@@ -26,6 +26,11 @@ class RCanvasPainter extends RPadPainter {
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
       this.v7canvas = true;
+      if ((dom === null) && (canvas === null)) {
+         // for web canvas details are important
+         settings.SmallPad.width = 20;
+         settings.SmallPad.height = 10;
+      }
    }
 
    /** @summary Cleanup canvas painter */
@@ -509,7 +514,7 @@ class RCanvasPainter extends RPadPainter {
          return this.activateGed(this, null, 'toggle');
       if (funcname === 'ToggleStatus')
          return this.activateStatusBar('toggle');
-      super.clickPadButton(funcname, evnt);
+      return super.clickPadButton(funcname, evnt);
    }
 
    /** @summary returns true when event status area exist for the canvas */
@@ -521,10 +526,17 @@ class RCanvasPainter extends RPadPainter {
       return hp ? hp.hasStatusLine() : false;
    }
 
+   /** @summary Check if status bar can be toggled
+     * @private */
+   canStatusBar() {
+      return this.testUI5() || this.brlayout || getHPainter();
+   }
+
    /** @summary Show/toggle event status bar
      * @private */
    activateStatusBar(state) {
-      if (this.testUI5()) return;
+      if (this.testUI5())
+         return;
       if (this.brlayout)
          this.brlayout.createStatusLine(23, state);
       else
@@ -716,15 +728,15 @@ function drawRFrameTitle(reason, drag) {
    if (!fp)
       return console.log('no frame painter - no title');
 
-   const rect         = fp.getFrameRect(),
-         fx           = rect.x,
-         fy           = rect.y,
-         fw           = rect.width,
+   const rect = fp.getFrameRect(),
+         fx = rect.x,
+         fy = rect.y,
+         fw = rect.width,
          // fh           = rect.height,
-         ph           = this.getPadPainter().getPadHeight(),
-         title        = this.getObject(),
-         title_width  = fw,
-         textFont     = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
+         ph = this.getPadPainter().getPadHeight(),
+         title = this.getObject(),
+         title_width = fw,
+         textFont = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
    let title_margin = this.v7EvalLength('margin', ph, 0.02),
        title_height = this.v7EvalLength('height', ph, 0.05);
 
@@ -915,8 +927,8 @@ registerMethods(`${nsREX}RPalette`, {
 /** @summary draw RFont object
   * @private */
 function drawRFont() {
-   const font   = this.getObject(),
-         svg    = this.getCanvSvg(),
+   const font = this.getObject(),
+         svg = this.getCanvSvg(),
          clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
    let defs = svg.selectChild('.canvas_defs');
 
@@ -924,10 +936,21 @@ function drawRFont() {
       defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
    let entry = defs.selectChild('.' + clname);
-   if (entry.empty())
-      entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
-
-   entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : 'normal'}; font-style: ${font.fStyle ? font.fStyle : 'normal'}; src: ${font.fSrc}; }`);
+   if (entry.empty()) {
+      entry = defs.append('style')
+                  .attr('type', 'text/css')
+                  .attr('class', clname)
+                  .text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : 'normal'}; font-style: ${font.fStyle ? font.fStyle : 'normal'}; src: ${font.fSrc}; }`);
+      const p1 = font.fSrc.indexOf('base64,'),
+            p2 = font.fSrc.lastIndexOf(' format(');
+      if (p1 > 0 && p2 > p1) {
+         const base64 = font.fSrc.slice(p1 + 7, p2 - 2),
+               is_ttf = font.fSrc.indexOf('data:application/font-ttf') > 0;
+         // TODO: for the moment only ttf format supported by jsPDF
+         if (is_ttf)
+            entry.property('$fonthandler', { name: font.fFamily, format: 'ttf', base64 });
+      }
+   }
 
    if (font.fDefault)
       this.getPadPainter()._dfltRFont = font;

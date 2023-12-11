@@ -19,7 +19,7 @@
 \class RooPolyVar
 \ingroup Roofitcore
 
-Class RooPolyVar is a RooAbsReal implementing a polynomial in terms
+A RooAbsReal implementing a polynomial in terms
 of a list of RooAbsReal coefficients
 \f[f(x) = \sum_{i} a_{i} \cdot x^i \f]
 Class RooPolyvar implements analytical integrals of all polynomials
@@ -44,7 +44,7 @@ ClassImp(RooPolyVar);
 /// Construct polynomial in x with coefficients in coefList. If
 /// lowestOrder is not zero, then the first element in coefList is
 /// interpreted as as the 'lowestOrder' coefficients and all
-/// subsequent coeffient elements are shifted by a similar amount.
+/// subsequent coefficient elements are shifted by a similar amount.
 RooPolyVar::RooPolyVar(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList,
                        Int_t lowestOrder)
    : RooAbsReal(name, title),
@@ -59,14 +59,7 @@ RooPolyVar::RooPolyVar(const char *name, const char *title, RooAbsReal &x, const
       _lowestOrder = 0;
    }
 
-   for (RooAbsArg *coef : coefList) {
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _coefList.add(*coef);
-   }
+   _coefList.addTyped<RooAbsReal>(coefList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +102,7 @@ void RooPolyVar::fillCoeffValues(std::vector<double> &wksp, RooListProxy const &
 
 double RooPolyVar::evaluate() const
 {
-   const unsigned sz = _coefList.getSize();
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? 1. : 0.;
 
@@ -183,8 +176,9 @@ double RooPolyVar::analyticalIntegral(Int_t code, const char *rangeName) const
 {
    R__ASSERT(code == 1);
 
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? xmax - xmin : 0.0;
 
@@ -196,8 +190,9 @@ double RooPolyVar::analyticalIntegral(Int_t code, const char *rangeName) const
 std::string RooPolyVar::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
                                                     RooFit::Detail::CodeSquashContext &ctx) const
 {
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
+   const unsigned sz = _coefList.size();
    if (!sz)
       return std::to_string(_lowestOrder ? xmax - xmin : 0.0);
 

@@ -24,7 +24,7 @@
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RSpan.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <atomic>
 #include <cstddef>
@@ -111,6 +111,8 @@ public:
    };
 
 protected:
+   RNTupleMetrics fMetrics;
+
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
    void WaitForAllTasks()
@@ -154,9 +156,10 @@ public:
    /// of allocating pages.
    virtual void ReleasePage(RPage &page) = 0;
 
-   /// Page storage implementations have their own metrics. The RPageSink and RPageSource classes provide
-   /// a default set of metrics.
-   virtual RNTupleMetrics &GetMetrics() = 0;
+   /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
+   /// overriding this.
+   virtual RNTupleMetrics &GetMetrics() { return fMetrics; }
+
    /// Returns the NTuple name.
    const std::string &GetNTupleName() const { return fNTupleName; }
 
@@ -172,61 +175,19 @@ public:
 The page sink takes the list of columns and afterwards a series of page commits and cluster commits.
 The user is responsible to commit clusters at a consistent point, i.e. when all pages corresponding to data
 up to the given entry number are committed.
+
+An object of this class may either be a wrapper (for example a RPageSinkBuf) or a "persistent" sink,
+inheriting from RPagePersistentSink.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
-private:
-   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
-   Internal::RNTupleSerializer::RContext fSerializationContext;
-
 protected:
-   /// Default I/O performance counters that get registered in fMetrics
-   struct RCounters {
-      RNTupleAtomicCounter &fNPageCommitted;
-      RNTupleAtomicCounter &fSzWritePayload;
-      RNTupleAtomicCounter &fSzZip;
-      RNTupleAtomicCounter &fTimeWallWrite;
-      RNTupleAtomicCounter &fTimeWallZip;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
-   };
-   std::unique_ptr<RCounters> fCounters;
-   RNTupleMetrics fMetrics;
-
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
    std::unique_ptr<RNTupleCompressor> fCompressor;
-
-   /// Remembers the starting cluster id for the next cluster group
-   std::uint64_t fNextClusterInGroup = 0;
-   /// Used to calculate the number of entries in the current cluster
-   NTupleSize_t fPrevClusterNEntries = 0;
-   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
-   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
-   RNTupleDescriptorBuilder fDescriptorBuilder;
-
-   virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
-   virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
-   virtual RNTupleLocator
-   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
-   /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
-   /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
-   /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
-   /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
-   /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
-   /// optimized implementation though.
-   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
-   /// Returns the number of bytes written to storage (excluding metadata)
-   virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
-   /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
-   /// Typically, the implementation takes care of compressing and writing the provided buffer.
-   virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
-   virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
@@ -238,17 +199,6 @@ protected:
    /// Seal a page using the provided buffer.
    static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element,
       int compressionSetting, void *buf);
-
-   /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
-   /// the counters registered in the internal RNTupleMetrics object.
-   /// This set of counters can be extended by a subclass by calling `fMetrics.MakeCounter<...>()`.
-   ///
-   /// A subclass using the default set of metrics is always responsible for updating the counters
-   /// appropriately, e.g. `fCounters->fNPageCommited.Inc()`
-   ///
-   /// Alternatively, a subclass might provide its own RNTupleMetrics object by overriding the
-   /// GetMetrics() member function.
-   void EnableDefaultMetrics(const std::string &prefix);
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
@@ -266,39 +216,120 @@ public:
    /// Returns the sink's write options.
    const RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// To do so, Create() calls CreateImpl() after updating the descriptor.
    /// Create() associates column handles to the columns referenced by the model
-   void Create(RNTupleModel &model);
+   virtual void Create(RNTupleModel &model) = 0;
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Create(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
-   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry);
+   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) = 0;
 
    /// Write a page to the storage. The column must have been added before.
-   void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
+   virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
-   void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage);
+   virtual void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
-   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges);
+   virtual void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) = 0;
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
-   std::uint64_t CommitCluster(NTupleSize_t nEntries);
+   virtual std::uint64_t CommitCluster(NTupleSize_t nEntries) = 0;
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
-   void CommitClusterGroup();
+   virtual void CommitClusterGroup() = 0;
    /// Finalize the current cluster and the entrire data set.
-   void CommitDataset();
+   virtual void CommitDataset() = 0;
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
+};
 
-   /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by overriding this.
-   RNTupleMetrics &GetMetrics() override { return fMetrics; };
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RPagePersistentSink
+\ingroup NTuple
+\brief Base class for a sink with a physical storage backend
+*/
+// clang-format on
+class RPagePersistentSink : public RPageSink {
+private:
+   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
+   Internal::RNTupleSerializer::RContext fSerializationContext;
+
+   /// Remembers the starting cluster id for the next cluster group
+   std::uint64_t fNextClusterInGroup = 0;
+   /// Used to calculate the number of entries in the current cluster
+   NTupleSize_t fPrevClusterNEntries = 0;
+   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
+   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+
+protected:
+   RNTupleDescriptorBuilder fDescriptorBuilder;
+
+   /// Default I/O performance counters that get registered in fMetrics
+   struct RCounters {
+      RNTupleAtomicCounter &fNPageCommitted;
+      RNTupleAtomicCounter &fSzWritePayload;
+      RNTupleAtomicCounter &fSzZip;
+      RNTupleAtomicCounter &fTimeWallWrite;
+      RNTupleAtomicCounter &fTimeWallZip;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
+   };
+   std::unique_ptr<RCounters> fCounters;
+
+   virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
+
+   virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   virtual RNTupleLocator
+   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
+   /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
+   /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
+   /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
+   /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
+   /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
+   /// optimized implementation though.
+   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
+   /// Returns the number of bytes written to storage (excluding metadata)
+   virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
+   /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
+   /// Typically, the implementation takes care of compressing and writing the provided buffer.
+   virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
+   virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
+
+   /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
+   /// the counters registered in the internal RNTupleMetrics object.
+   /// This set of counters can be extended by a subclass by calling `fMetrics.MakeCounter<...>()`.
+   ///
+   /// A subclass using the default set of metrics is always responsible for updating the counters
+   /// appropriately, e.g. `fCounters->fNPageCommited.Inc()`
+   void EnableDefaultMetrics(const std::string &prefix);
+
+public:
+   RPagePersistentSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
+
+   RPagePersistentSink(const RPagePersistentSink &) = delete;
+   RPagePersistentSink &operator=(const RPagePersistentSink &) = delete;
+   RPagePersistentSink(RPagePersistentSink &&) = default;
+   RPagePersistentSink &operator=(RPagePersistentSink &&) = default;
+   ~RPagePersistentSink() override;
+
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
+   void Create(RNTupleModel &model) final;
+   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
+   void CommitClusterGroup() final;
+   void CommitDataset() final;
 };
 
 // clang-format off
@@ -314,6 +345,15 @@ The page source also gives access to the ntuple's meta-data.
 // clang-format on
 class RPageSource : public RPageStorage {
 public:
+   /// Used in SetEntryRange / GetEntryRange
+   struct REntryRange {
+      NTupleSize_t fFirstEntry = kInvalidNTupleIndex;
+      NTupleSize_t fNEntries = 0;
+
+      /// Returns true if the given cluster has entries within the entry range
+      bool IntersectsWith(const RClusterDescriptor &clusterDesc) const;
+   };
+
    /// An RAII wrapper used for the read-only access to RPageSource::fDescriptor. See GetExclDescriptorGuard().
    class RSharedDescriptorGuard {
       const RNTupleDescriptor &fDescriptor;
@@ -359,6 +399,7 @@ public:
 private:
    RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
+   REntryRange fEntryRange; ///< Used by the cluster pool to prevent reading beyond the given range
 
 protected:
    /// Default I/O performance counters that get registered in fMetrics
@@ -396,8 +437,6 @@ protected:
    };
 
    std::unique_ptr<RCounters> fCounters;
-   /// Wraps the I/O counters and is observed by the RNTupleReader metrics
-   RNTupleMetrics fMetrics;
 
    RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
@@ -475,6 +514,11 @@ public:
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
 
+   /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
+   /// the given range. The range needs to be within [0, GetNEntries()).
+   void SetEntryRange(const REntryRange &range);
+   REntryRange GetEntryRange() const { return fEntryRange; }
+
    /// Allocates and fills a page that contains the index-th element
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
@@ -503,9 +547,6 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
-
-   /// Returns the default metrics object.  Subclasses might alternatively override the method and provide their own metrics object.
-   RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
 } // namespace Detail

@@ -23,6 +23,9 @@ class TF2Painter extends TH2Painter {
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
 
+   /** @summary Returns primary function which was then drawn as histogram */
+   getPrimaryObject() { return this.$func; }
+
    /** @summary Update histogram */
    updateObject(obj /*, opt */) {
       if (!obj || (this.getClassName() !== obj._typename)) return false;
@@ -53,12 +56,12 @@ class TF2Painter extends TH2Painter {
 
    /** @summary Create histogram for TF2 drawing
      * @private */
-   createTF2Histogram(func, hist = undefined) {
-      let nsave = func.fSave.length;
-      if ((nsave > 6) && (nsave !== (func.fSave[nsave-2]+1)*(func.fSave[nsave-1]+1) + 6))
+   createTF2Histogram(func, hist) {
+      let nsave = func.fSave.length - 6;
+      if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
          nsave = 0;
 
-      this._use_saved_points = (nsave > 6) && (settings.PreferSavedPoints || this.force_saved);
+      this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || this.force_saved);
 
       const fp = this.getFramePainter(),
             pad = this.getPadPainter()?.getRootPad(true),
@@ -81,8 +84,8 @@ class TF2Painter extends TH2Painter {
          if (hist.fNcells !== (nx + 2) * (ny + 2)) {
             hist.fNcells = (nx + 2) * (ny + 2);
             hist.fArray = new Float32Array(hist.fNcells);
-            hist.fArray.fill(0);
          }
+         hist.fArray.fill(0);
          hist.fXaxis.fNbins = nx;
          hist.fXaxis.fXbins = [];
          hist.fYaxis.fNbins = ny;
@@ -135,20 +138,41 @@ class TF2Painter extends TH2Painter {
       }
 
       if (this._use_saved_points) {
-         const npx = Math.round(func.fSave[nsave-2]),
-               npy = Math.round(func.fSave[nsave-1]),
-               dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / (npx - 1),
-               dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / (npy - 1);
+         const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
+               ymin = func.fSave[nsave+2], ymax = func.fSave[nsave+3],
+               npx = Math.round(func.fSave[nsave+4]),
+               npy = Math.round(func.fSave[nsave+5]),
+               dx = (xmax - xmin) / npx,
+               dy = (ymax - ymin) / npy;
+          function getSave(x, y) {
+            if (x < xmin || x > xmax) return 0;
+            if (dx <= 0) return 0;
+            if (y < ymin || y > ymax) return 0;
+            if (dy <= 0) return 0;
+            const ibin = Math.min(npx-1, Math.floor((x-xmin)/dx)),
+                  jbin = Math.min(npy-1, Math.floor((y-ymin)/dy)),
+                  xlow = xmin + ibin*dx,
+                  ylow = ymin + jbin*dy,
+                  t = (x-xlow)/dx,
+                  u = (y-ylow)/dy,
+                  k1 = jbin*(npx+1) + ibin,
+                  k2 = jbin*(npx+1) + ibin +1,
+                  k3 = (jbin+1)*(npx+1) + ibin +1,
+                  k4 = (jbin+1)*(npx+1) + ibin;
+            return (1-t)*(1-u)*func.fSave[k1] +t*(1-u)*func.fSave[k2] +t*u*func.fSave[k3] + (1-t)*u*func.fSave[k4];
+         }
 
-         ensureBins(npx+1, npy+1);
-         hist.fXaxis.fXmin = func.fSave[nsave-6] - dx/2;
-         hist.fXaxis.fXmax = func.fSave[nsave-5] + dx/2;
-         hist.fYaxis.fXmin = func.fSave[nsave-4] - dy/2;
-         hist.fYaxis.fXmax = func.fSave[nsave-3] + dy/2;
+         ensureBins(func.fNpx, func.fNpy);
+         hist.fXaxis.fXmin = func.fXmin;
+         hist.fXaxis.fXmax = func.fXmax;
+         hist.fYaxis.fXmin = func.fYmin;
+         hist.fYaxis.fXmax = func.fYmax;
 
-         for (let k = 0, j = 0; j <= npy; ++j) {
-            for (let i = 0; i <= npx; ++i) {
-               const z = func.fSave[k++];
+         for (let j = 0; j < func.fNpy; ++j) {
+            const y = hist.fYaxis.GetBinCenter(j + 1);
+            for (let i = 0; i < func.fNpx; ++i) {
+               const x = hist.fXaxis.GetBinCenter(i + 1),
+                     z = getSave(x, y);
                hist.setBinContent(hist.getBin(i+1, j+1), Number.isFinite(z) ? z : 0);
             }
          }
@@ -172,21 +196,17 @@ class TF2Painter extends TH2Painter {
       return hist;
    }
 
+   /** @summary Extract function ranges */
    extractAxesProperties(ndim) {
       super.extractAxesProperties(ndim);
 
       const func = this.$func, nsave = func?.fSave.length ?? 0;
 
       if (nsave > 6 && this._use_saved_points) {
-         const npx = Math.round(func.fSave[nsave-2]),
-             npy = Math.round(func.fSave[nsave-1]),
-             dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / (npx - 1),
-             dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / (npy - 1);
-
-         this.xmin = Math.min(this.xmin, func.fSave[nsave-6] - dx/2);
-         this.xmax = Math.max(this.xmax, func.fSave[nsave-5] + dx/2);
-         this.ymin = Math.min(this.ymin, func.fSave[nsave-4] - dy/2);
-         this.ymax = Math.max(this.ymax, func.fSave[nsave-3] + dy/2);
+         this.xmin = Math.min(this.xmin, func.fSave[nsave-6]);
+         this.xmax = Math.max(this.xmax, func.fSave[nsave-5]);
+         this.ymin = Math.min(this.ymin, func.fSave[nsave-4]);
+         this.ymax = Math.max(this.ymax, func.fSave[nsave-3]);
       }
       if (func) {
          this.xmin = Math.min(this.xmin, func.fXmin);
@@ -240,17 +260,21 @@ class TF2Painter extends TH2Painter {
                   color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
                   lines: this.getTF2Tooltips(pnt), exact: true, menu: true };
 
-      if (ttrect.empty()) {
-         ttrect = this.draw_g.append('svg:circle')
-                             .attr('class', 'tooltip_bin')
-                             .style('pointer-events', 'none')
-                             .style('fill', 'none')
-                             .attr('r', (this.lineatt?.width ?? 1) + 4);
-      }
+      if (pnt.disabled)
+         ttrect.remove();
+      else {
+         if (ttrect.empty()) {
+            ttrect = this.draw_g.append('svg:circle')
+                                .attr('class', 'tooltip_bin')
+                                .style('pointer-events', 'none')
+                                .style('fill', 'none')
+                                .attr('r', (this.lineatt?.width ?? 1) + 4);
+         }
 
-      ttrect.attr('cx', pnt.x)
-            .attr('cy', pnt.y)
-            .call(this.lineatt?.func)
+         ttrect.attr('cx', pnt.x)
+               .attr('cy', pnt.y)
+               .call(this.lineatt?.func);
+      }
 
       return res;
    }
@@ -281,14 +305,13 @@ class TF2Painter extends TH2Painter {
          opt = 'cont3';
       else if (d.opt === 'SAME')
          opt = 'cont2 same';
-      else
-         opt = d.opt;
 
       // workaround for old waves.C
-      if (opt === 'SAMECOLORZ' || opt === 'SAMECOLOR' || opt === 'SAMECOLZ')
-         opt = 'SAMECOL';
+      const o2 = isStr(opt) ? opt.toUpperCase() : '';
+      if (o2 === 'SAMECOLORZ' || o2 === 'SAMECOLOR' || o2 === 'SAMECOLZ')
+         opt = 'samecol';
 
-      if (opt.indexOf('SAME') === 0) {
+      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
          if (!getElementMainPainter(dom))
             opt = 'A_ADJUST_FRAME_' + opt.slice(4);
       }
@@ -297,7 +320,6 @@ class TF2Painter extends TH2Painter {
 
       if (webcanv_hist) {
          const dummy = new ObjectPainter(dom);
-
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH2F);
       }
 
@@ -312,7 +334,6 @@ class TF2Painter extends TH2Painter {
       painter.webcanv_hist = webcanv_hist;
       painter.force_saved = force_saved;
       painter.createTF2Histogram(tf2, hist);
-
       return THistPainter._drawHist(painter, opt);
    }
 

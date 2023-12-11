@@ -14,7 +14,7 @@
 \class RooNumRunningInt
 \ingroup Roofitcore
 
-Class RooNumRunningInt is an implementation of RooAbsCachedReal that represents a running integral
+Implementation of RooAbsCachedReal that represents a running integral
 \f[ RI(f(x)) = \int_{xlow}^{x} f(x') dx'                 \f]
 that is calculated internally with a numeric technique: The input function
 is first sampled into a histogram, which is then numerically integrated.
@@ -99,15 +99,17 @@ const char* RooNumRunningInt::inputBaseName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct RunningIntegral CacheElement
 
-RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const RooArgSet* nset) :
-  FuncCacheElem(self,nset), _self(&const_cast<RooNumRunningInt&>(self))
+RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt &self, const RooArgSet *nset)
+   : FuncCacheElem(self, nset),
+     _self(&const_cast<RooNumRunningInt &>(self)),
+     _xx(static_cast<RooRealVar *>(hist()->get()->find(self.x.arg().GetName())))
 {
   // Instantiate temp arrays
   _ax.resize(hist()->numEntries());
   _ay.resize(hist()->numEntries());
 
   // Copy X values from histo
-  _xx = (RooRealVar*) hist()->get()->find(self.x.arg().GetName()) ;
+
   for (int i=0 ; i<hist()->numEntries() ; i++) {
     hist()->get(i) ;
     _ax[i] = _xx->getVal() ;

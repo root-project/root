@@ -75,8 +75,13 @@ std::vector<double> histToVector(TH1 const &hist)
    // Must get the full size of the TH1 (No direct method to do this...)
    int numBins = hist.GetNbinsX() * hist.GetNbinsY() * hist.GetNbinsZ();
    std::vector<double> out(numBins);
+   int histIndex = 0;
    for (int i = 0; i < numBins; ++i) {
-      out[i] = hist.GetBinContent(i + 1);
+      while (hist.IsBinUnderflow(histIndex) || hist.IsBinOverflow(histIndex)) {
+         ++histIndex;
+      }
+      out[i] = hist.GetBinContent(histIndex);
+      ++histIndex;
    }
    return out;
 }
@@ -118,7 +123,7 @@ namespace HistFactory{
     // creating a ModelConfig
 
     // Make a ModelConfig and configure it
-    ModelConfig * proto_config = (ModelConfig *) ws_single->obj("ModelConfig");
+    ModelConfig * proto_config = static_cast<ModelConfig *>(ws_single->obj("ModelConfig"));
     if( proto_config == nullptr ) {
       std::cout << "Error: Did not find 'ModelConfig' object in file: " << ws_single->GetName()
       << std::endl;
@@ -161,7 +166,7 @@ namespace HistFactory{
       throw hf_exc();
     }
     if(!measurement.GetPOIList().empty()){
-      proto_config->GuessObsAndNuisance(*expData, RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO));
+      proto_config->GuessObsAndNuisance(*expData, RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO));
     }
 
     // Now, let's loop over any additional asimov datasets
@@ -207,7 +212,7 @@ namespace HistFactory{
   }
 
 
-  // We want to eliminate this interface and use the measurment directly
+  // We want to eliminate this interface and use the measurement directly
   RooFit::OwningPtr<RooWorkspace> HistoToWorkspaceFactoryFast::MakeSingleChannelModel( Measurement& measurement, Channel& channel ) {
 
     // This is a pretty light-weight wrapper function
@@ -234,7 +239,7 @@ namespace HistFactory{
     // properties of the measurement
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement( "model_"+ch_name, ws_single.get(), measurement );
 
-    return RooFit::Detail::owningPtr(std::move(ws_single));
+    return RooFit::makeOwningPtr(std::move(ws_single));
 
   }
 
@@ -284,7 +289,7 @@ namespace HistFactory{
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
 
     // Done.  Return the pointer
-    return RooFit::Detail::owningPtr(std::move(ws));
+    return RooFit::makeOwningPtr(std::move(ws));
 
   }
 
@@ -359,7 +364,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       // do nothing if the constraint term already exists
       if(proto.pdf(constraintName)) return;
 
-      // case systematic is uniform (asssume they are like a Gaussian but with
+      // case systematic is uniform (assume they are like a Gaussian but with
       // a large width (100 instead of 1)
       const double gaussSigma = isUniform ? 100. : 1.0;
       if (isUniform) {
@@ -433,8 +438,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     std::vector<string> prodNames;
 
     vector<NormFactor> normList = sample.GetNormFactorList();
-    vector<string> normFactorNames, rangeNames;
-
+    vector<string> normFactorNames;
+    vector<string> rangeNames;
 
     string overallNorm_times_sigmaEpsilon = sample.GetName() + "_" + channel + "_scaleFactors";
     auto sigEps = proto.arg(sigmaEpsilon);
@@ -481,7 +486,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         cxcoutI(HistFactory) <<"<NormFactor Name =\""<<*nit<<"\"> is duplicated for <Sample Name=\""
             << sample.GetName() << "\">, but only one factor will be included.  \n Instead, define something like"
             << "\n\t<Function Name=\""<<*nit<<"Squared\" Expression=\""<<*nit<<"*"<<*nit<<"\" Var=\""<<*nit<<rangeNames.at(rangeIndex)
-            << "\"> \nin your top-level XML's <Measurment> entry and use <NormFactor Name=\""<<*nit<<"Squared\" in your channel XML file."<< endl;
+            << "\"> \nin your top-level XML's <Measurement> entry and use <NormFactor Name=\""<<*nit<<"Squared\" in your channel XML file."<< endl;
       }
       ++rangeIndex;
     }
@@ -499,7 +504,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     totSystTermNames.push_back(prefix);
 
     RooArgSet params(prefix.c_str());
-    vector<double> lowVec, highVec;
+    vector<double> lowVec;
+    vector<double> highVec;
 
     std::map<std::string, double>::iterator itconstr;
     for(unsigned int i = 0; i < systList.size(); ++i) {
@@ -534,7 +540,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
          // build the gamma parameter k = as y_s + 1
          RooAbsArg * kappa = factory(proto, "sum::k_%s(%s,1.)",name,yvar->GetName());
          RooAbsArg * gamma = factory(proto, "Gamma::%sConstraint(%s, %s, %s, 0.0)",beta->GetName(),beta->GetName(), kappa->GetName(), theta->GetName());
-         if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG)) {
+         if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG)) {
            alphaOfBeta->Print("t");
            gamma->Print("t");
          }
@@ -578,7 +584,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
                                                                      tauName.c_str(),kappaName.c_str(),alphaName);
 
             cxcoutI(HistFactory) << "Added a log-normal constraint for " << name << std::endl;
-            if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG))
+            if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG))
               alphaOfBeta->Print("t");
             params.add(*alphaOfBeta);
          }
@@ -597,7 +603,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
        //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
 
        assert(!params.empty());
-       assert(int(lowVec.size()) == params.getSize() );
+       assert(lowVec.size() == params.size());
 
        FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
        interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
@@ -793,8 +799,11 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       proto.Print();
     }
 
-    RooArgSet likelihoodTerms("likelihoodTerms"), constraintTerms("constraintTerms");
-    vector<string> likelihoodTermNames, constraintTermNames, totSystTermNames;
+    RooArgSet likelihoodTerms("likelihoodTerms");
+    RooArgSet constraintTerms("constraintTerms");
+    vector<string> likelihoodTermNames;
+    vector<string> constraintTermNames;
+    vector<string> totSystTermNames;
     // All histogram functions to be multiplied in each sample
     std::vector<std::vector<RooAbsArg*>> allSampleHistFuncs;
     std::vector<RooProduct*> sampleScaleFactors;
@@ -803,7 +812,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     std::vector< pair<const TH1*, std::unique_ptr<TH1>> > statHistPairs; // <nominal, error>
     const std::string statFuncName = "mc_stat_" + channel_name;
 
-    string prefix, range;
+    string prefix;
+    string range;
 
     /////////////////////////////
     // shared parameters
@@ -883,7 +893,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         // make list of abstract parameters that interpolate in space of variations
         RooArgList interpParams = makeInterpolationParameters(sample.GetHistoSysList(), proto);
 
-        // next, cerate the constraint terms
+        // next, create the constraint terms
         for(std::size_t i = 0; i < interpParams.size(); ++i) {
           bool isUniform = measurement.GetUniformSyst().count(sample.GetHistoSysList()[i].GetName()) > 0;
           makeGaussianConstraint(interpParams[i], proto, isUniform, constraintTermNames);
@@ -963,7 +973,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           // Next, try to get the common ParamHistFunc (it may have been
           // created by another sample in this channel)
           // or create it if it doesn't yet exist:
-          RooAbsReal* paramHist = dynamic_cast<ParamHistFunc*>( proto.function(statFuncName) );
+          RooAbsReal* paramHist = dynamic_cast<ParamHistFunc*>(proto.function(statFuncName) );
           if( paramHist == nullptr ) {
 
             // Get a RooArgSet of the observables:
@@ -1156,7 +1166,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
           // Now that we have the list of ShapeSys ParamHistFunc names,
           // we create the total RooProduct
-          // we multiply the expected functio
+          // we multiply the expected function
 
           for(std::string const& name : ShapeSysNames) {
             sampleHistFuncs.push_back(proto.function(name));
@@ -1294,7 +1304,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       observablesStr += name;
     }
 
-    // We create two sets, one for backwards compatability
+    // We create two sets, one for backwards compatibility
     // The other to make a consistent naming convention
     // between individual channels and the combined workspace
     proto.defineSet("observables", observablesStr.c_str());
@@ -1308,7 +1318,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     auto model = make_unique<RooProdPdf>(
         ("model_"+channel_name).c_str(),    // MB : have changed this into conditional pdf. Much faster for toys!
-        "product of Poissons accross bins for a single channel",
+        "product of Poissons across bins for a single channel",
         constraintTerms, RooFit::Conditional(likelihoodTerms,observables));
     // can give channel a title by setting title of corresponding data histogram
     if (channel.GetData().GetHisto() && strlen(channel.GetData().GetHisto()->GetTitle())>0) {
@@ -1331,8 +1341,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // New Asimov Generation: Use the code in the Asymptotic calculator
     // Need to get the ModelConfig...
     int asymcalcPrintLevel = 0;
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO)) asymcalcPrintLevel = 1;
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG)) asymcalcPrintLevel = 2;
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO)) asymcalcPrintLevel = 1;
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG)) asymcalcPrintLevel = 2;
     AsymptoticCalculator::SetPrintLevel(asymcalcPrintLevel);
     unique_ptr<RooAbsData> asimov_dataset(AsymptoticCalculator::GenerateAsimovData(*model, observables));
     proto.import(*asimov_dataset, RooFit::Rename("asimovData"));
@@ -1369,7 +1379,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     }
 
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO)) {
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO)) {
       proto.Print();
     }
 
@@ -1495,7 +1505,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     auto combined = std::make_unique<RooWorkspace>("combined");
 
 
-    RooCategory* channelCat = dynamic_cast<RooCategory*>( combined->factory(channelString.str()) );
+    RooCategory* channelCat = dynamic_cast<RooCategory*>(combined->factory(channelString.str()) );
     if (!channelCat) throw std::runtime_error("Unable to construct a category from string " + channelString.str());
 
     auto simPdf= std::make_unique<RooSimultaneous>("simPdf","",pdfMap, *channelCat);
@@ -1529,7 +1539,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     }
 
 
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO))
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO))
       combined->Print();
 
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
@@ -1594,7 +1604,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       throw hf_exc();
     }
 
-    return RooFit::Detail::owningPtr(std::move(combined));
+    return RooFit::makeOwningPtr(std::move(combined));
   }
 
 
@@ -1727,7 +1737,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   binNumber = 0;
 
   // Creat the output histogram
-  TH1* ErrorHist = (TH1*) HistTemplate->Clone( Name.c_str() );
+  TH1* ErrorHist = static_cast<TH1*>(HistTemplate->Clone( Name.c_str() ));
   ErrorHist->Reset();
 
   // Fill the output histogram

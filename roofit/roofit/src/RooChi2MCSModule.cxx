@@ -42,22 +42,12 @@ ClassImp(RooChi2MCSModule);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooChi2MCSModule::RooChi2MCSModule() :
-  RooAbsMCStudyModule("RooChi2MCSModule","RooChi2Module"),
-  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
-
-{
-  // Constructor of module
-}
+RooChi2MCSModule::RooChi2MCSModule() : RooAbsMCStudyModule("RooChi2MCSModule", "RooChi2Module") {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooChi2MCSModule::RooChi2MCSModule(const RooChi2MCSModule& other) :
-  RooAbsMCStudyModule(other),
-  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
-{
-}
+RooChi2MCSModule::RooChi2MCSModule(const RooChi2MCSModule &other) : RooAbsMCStudyModule(other) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -135,7 +125,7 @@ bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
   std::unique_ptr<RooArgSet> floatPars{static_cast<RooArgSet*>(fitParams()->selectByAttrib("Constant",false))};
 
   _chi2->setVal(chi2Var->getVal()) ;
-  _ndof->setVal(binnedData->numEntries()-floatPars->getSize()-1) ;
+  _ndof->setVal(binnedData->numEntries()-floatPars->size()-1) ;
   _chi2red->setVal(_chi2->getVal()/_ndof->getVal()) ;
   _prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal()))) ;
 

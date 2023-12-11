@@ -19,7 +19,7 @@
 \class RooRecursiveFraction
 \ingroup Roofitcore
 
-Class RooRecursiveFraction is a RooAbsReal implementation that
+A RooAbsReal implementation that
 calculates the plain fraction of sum of RooAddPdf components
 from a set of recursive fractions: for a given set of input fractions
 \f$ {a_i} \f$, it returns \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.
@@ -35,21 +35,7 @@ from a set of recursive fractions: for a given set of input fractions
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooRecursiveFraction);
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooRecursiveFraction::RooRecursiveFraction()
-{
-
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of plain RooAddPdf fraction from list of recursive fractions
@@ -58,12 +44,12 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
   RooAbsReal(name, title),
   _list("list","First set of components",this)
 {
-  for (Int_t ifrac=fracList.getSize()-1 ; ifrac>=0 ; ifrac--) {
+  for (Int_t ifrac=fracList.size()-1 ; ifrac>=0 ; ifrac--) {
     RooAbsArg* comp = fracList.at(ifrac) ;
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       std::stringstream errorMsg;
       errorMsg << "RooRecursiveFraction::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << std::endl;
       coutE(InputArguments) << errorMsg.str();
       throw std::invalid_argument(errorMsg.str());
     }
@@ -84,18 +70,6 @@ RooRecursiveFraction::RooRecursiveFraction(const RooRecursiveFraction& other, co
 
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooRecursiveFraction::~RooRecursiveFraction()
-{
-
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.
 double RooRecursiveFraction::evaluate() const
@@ -111,4 +85,3 @@ double RooRecursiveFraction::evaluate() const
 
   return prod ;
 }
-

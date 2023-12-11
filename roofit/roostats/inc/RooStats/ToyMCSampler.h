@@ -182,10 +182,11 @@ class ToyMCSampler: public TestStatSampler {
             oocoutE(nullptr,InputArguments) << "Cannot set test statistic for this index." << std::endl;
             return;
          }
-         if( fTestStatistics.size() == i)
+         if (fTestStatistics.size() == i) {
             fTestStatistics.push_back(testStatistic);
-         else
+         } else {
             fTestStatistics[i] = testStatistic;
+         }
       }
       void SetTestStatistic(TestStatistic *t) override { return SetTestStatistic(t,0); }
 
@@ -242,27 +243,28 @@ class ToyMCSampler: public TestStatSampler {
 
 
       /// densities, snapshots, and test statistics to reweight to
-      RooAbsPdf *fPdf; ///< model (can be alt or null)
+      RooAbsPdf *fPdf = nullptr; ///< model (can be alt or null)
       std::unique_ptr<const RooArgSet> fParametersForTestStat;
       std::vector<TestStatistic*> fTestStatistics;
 
       std::string fSamplingDistName; ///< name of the model
-      RooAbsPdf *fPriorNuisance;     ///< prior pdf for nuisance parameters
-      const RooArgSet *fNuisancePars;
-      const RooArgSet *fObservables;
-      const RooArgSet *fGlobalObservables;
+      RooAbsPdf *fPriorNuisance = nullptr; ///< prior pdf for nuisance parameters
+      const RooArgSet *fNuisancePars = nullptr;
+      const RooArgSet *fObservables = nullptr;
+      const RooArgSet *fGlobalObservables = nullptr;
       Int_t fNToys;   ///< number of toys to generate
-      Int_t fNEvents; ///< number of events per toy (may be ignored depending on settings)
-      double fSize;
-      bool fExpectedNuisancePar; ///< whether to use expectation values for nuisance parameters (ie Asimov data set)
-      bool fGenerateBinned;
-      TString fGenerateBinnedTag;
-      bool fGenerateAutoBinned;
+      Int_t fNEvents = 0; ///< number of events per toy (may be ignored depending on settings)
+      double fSize = 0.05;
+      bool fExpectedNuisancePar =
+         false; ///< whether to use expectation values for nuisance parameters (ie Asimov data set)
+      bool fGenerateBinned = false;
+      TString fGenerateBinnedTag = "";
+      bool fGenerateAutoBinned = true;
 
       /// minimum no of toys in tails for adaptive sampling
       /// (taking weights into account, therefore double)
       /// Default: 0.0 which means no adaptive sampling
-      double fToysInTails;
+      double fToysInTails = 0.0;
       /// maximum no of toys
       /// (taking weights into account, therefore double)
       double fMaxToys;
@@ -270,11 +272,11 @@ class ToyMCSampler: public TestStatSampler {
       double fAdaptiveLowLimit;
       double fAdaptiveHighLimit;
 
-      const RooDataSet *fProtoData; ///< in dev
+      const RooDataSet *fProtoData = nullptr; ///< in dev
 
-      ProofConfig *fProofConfig;   ///<!
+      ProofConfig *fProofConfig = nullptr; ///<!
 
-      mutable NuisanceParametersSampler *fNuisanceParametersSampler; ///<!
+      mutable NuisanceParametersSampler *fNuisanceParametersSampler = nullptr; ///<!
 
       // objects below cache information and are mutable and non-persistent
       mutable std::unique_ptr<RooArgSet> _allVars; ///<!
@@ -287,7 +289,7 @@ class ToyMCSampler: public TestStatSampler {
       mutable std::unique_ptr<RooAbsPdf::GenSpec> _gs4; ///<! GenSpec #4
 
       static bool fgAlwaysUseMultiGen ;  ///< Use PrepareMultiGen always
-      bool fUseMultiGen ;                ///< Use PrepareMultiGen?
+      bool fUseMultiGen = false;         ///< Use PrepareMultiGen?
 
    protected:
    ClassDefOverride(ToyMCSampler, 4) // A simple implementation of the TestStatSampler interface

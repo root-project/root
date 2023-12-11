@@ -811,16 +811,14 @@ __global__ void CrossEntropy(AFloat * result,
    __shared__ AFloat sdata[TDevice::BlockSize];
 
    if ((i < m) && (j < n)) {
-       AFloat norm = 1 / ((AFloat) (m * n));
-       AFloat sig  = 1.0 / (1.0 + exp(-output[index]));
-       if (Y[index] == 0)
-          sdata[tid] = -weights[i] * norm * log(1.0 - sig);
-       else if (Y[index] == 1.0)
-          sdata[tid] = -weights[i] * norm * log(sig);
-       else {
-          AFloat ce  = Y[index] * log(sig) + (1.0 - Y[index]) * log(1.0 - sig);
-          sdata[tid] = -weights[i] * norm * ce;
-       }
+      AFloat norm = 1 / ((AFloat) (m * n));
+      AFloat x = output[index];
+      AFloat lr = std::log(1. + exp(-x));
+      if (x < -75.) lr = -x;
+      else if (x > 75.) lr = exp(-x);
+
+      AFloat ce  = Y[index] * lr + (1.0 - Y[index]) * (x + lr);
+      sdata[tid] = weights[i] * norm * ce;
    } else {
        sdata[tid] = 0.0;
    }

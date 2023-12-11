@@ -11,6 +11,7 @@
 #include <ROOT/RDF/RDatasetSpec.hxx>
 #include <ROOT/RDF/RInterface.hxx> // ChangeEmptyEntryRange, ChangeSpec
 #include <ROOT/RDF/RResultMap.hxx> // CloneResultAndAction
+#include <RtypesCore.h>            // ULong64_t
 #include <TSystem.h>               // AccessPathName
 
 #include <gtest/gtest.h>
@@ -27,6 +28,37 @@ void EXPECT_VEC_EQ(const std::vector<T> &v1, const std::vector<T> &v2)
       EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
    }
 }
+
+struct InputFilesRAII {
+   std::vector<std::string> fFileNames;
+
+   InputFilesRAII(const std::string &treeName, const std::vector<std::string> &fileNames, ULong64_t entriesPerFile = 10,
+                  const std::vector<ULong64_t> &beginEntryPerFile = {})
+      : fFileNames(fileNames)
+   {
+      auto realBeginEntries = beginEntryPerFile.empty() ? std::vector<ULong64_t>(fileNames.size()) : beginEntryPerFile;
+
+      for (std::size_t i = 0; i < fileNames.size(); i++) {
+         TFile f(fFileNames[i].c_str(), "recreate");
+         TTree t(treeName.c_str(), treeName.c_str());
+         // Always create a new TTree cluster every 10 entries
+         t.SetAutoFlush(10);
+         ULong64_t x;
+         t.Branch("x", &x);
+         for (ULong64_t j = realBeginEntries[i]; j < (realBeginEntries[i] + entriesPerFile); j++) {
+            x = j;
+            t.Fill();
+         }
+         t.Write();
+      }
+   }
+
+   ~InputFilesRAII()
+   {
+      for (const auto &fileName : fFileNames)
+         gSystem->Unlink(fileName.c_str());
+   }
+};
 
 TEST(RDataFrameCloning, Count)
 {
@@ -344,27 +376,27 @@ TEST(RDataFrameCloning, ChangeEmptyEntryRange)
 TEST(RDataFrameCloning, ChangeSpec)
 {
    std::string treeName{"events"};
-   std::vector<std::string> fileNames{"dataframe_cloning_changespec_0.root", "dataframe_cloning_changespec_1.root",
-                                      "dataframe_cloning_changespec_2.root"};
+   std::size_t nFiles{3};
+   // Each file has 30 entries, starting from a different value
+   ULong64_t entriesPerFile{30};
+   std::vector<ULong64_t> beginEntryPerFile{0, 30, 60};
+   std::vector<std::string> fileNames(nFiles);
+   std::string prefix{"dataframe_cloning_changespec_"};
+   std::generate(fileNames.begin(), fileNames.end(), [n = 0, &prefix]() mutable {
+      auto name = prefix + std::to_string(n) + ".root";
+      n++;
+      return name;
+   });
+   InputFilesRAII files{treeName, fileNames, entriesPerFile, beginEntryPerFile};
+
    // The dataset will have a total of 90 entries. We partition it in 6 different global ranges.
    // Schema: one range per complete file, one range with a portion of a single file,
    // two ranges that span more than one file.
    std::vector<std::pair<Long64_t, Long64_t>> globalRanges{{0, 30}, {30, 60}, {60, 90}, {0, 20}, {20, 50}, {50, 90}};
-   {
-      ROOT::RDF::RSnapshotOptions opts;
-      opts.fAutoFlush = 10;
 
-      auto df = ROOT::RDataFrame(90).Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"});
-      for (unsigned i = 0; i < 3; i++) {
-         // This makes sure that each output file has a different range of values for column x,
-         // according to the current global entry of the dataset.
-         ChangeEmptyEntryRange(df, std::pair<Long64_t, Long64_t>(globalRanges[i]));
-         df.Snapshot<ULong64_t>(treeName, fileNames[i], {"x"}, opts);
-      }
-   }
    std::vector<ROOT::RDF::Experimental::RDatasetSpec> specs;
-   specs.reserve(6);
-   for (unsigned i = 0; i < 6; i++) {
+   specs.reserve(globalRanges.size());
+   for (unsigned i = 0; i < globalRanges.size(); i++) {
       ROOT::RDF::Experimental::RDatasetSpec spec;
       // Every spec represents a different portion of the global dataset
       spec.AddSample({"", treeName, fileNames});
@@ -378,8 +410,8 @@ TEST(RDataFrameCloning, ChangeSpec)
    // every partition and checking that they correspond to the values
    // in the ranges defined by globalRanges.
    std::vector<std::vector<ULong64_t>> expectedOutputs;
-   expectedOutputs.reserve(6);
-   for (unsigned i = 0; i < 6; i++) {
+   expectedOutputs.reserve(globalRanges.size());
+   for (unsigned i = 0; i < globalRanges.size(); i++) {
       const auto &currentRange = globalRanges[i];
       auto nValues{currentRange.second - currentRange.first};
       std::vector<ULong64_t> takeValues(nValues);
@@ -393,14 +425,10 @@ TEST(RDataFrameCloning, ChangeSpec)
    EXPECT_VEC_EQ(*take, expectedOutputs[0]);
 
    // Other executions modify the internal spec
-   for (unsigned i = 1; i < 6; i++) {
+   for (unsigned i = 1; i < globalRanges.size(); i++) {
       ChangeSpec(df, std::move(specs[i]));
       auto clone = CloneResultAndAction(take);
       EXPECT_VEC_EQ(*clone, expectedOutputs[i]);
-   }
-
-   for (const auto &name : fileNames) {
-      gSystem->Unlink(name.c_str());
    }
 }
 
@@ -483,4 +511,93 @@ TEST(RDataFrameCloning, VaryWithFilters)
       EXPECT_DOUBLE_EQ(histo.GetMean(), clone.GetMean());
       EXPECT_EQ(histo.GetEntries(), clone.GetEntries());
    }
+}
+
+TEST(RDataFrameCloning, DefinePerSample)
+{
+   std::string treeName{"events"};
+   std::size_t nFiles{3};
+   std::vector<std::string> fileNames(nFiles);
+   std::string prefix{"dataframe_cloning_definepersample_"};
+   std::generate(fileNames.begin(), fileNames.end(), [n = 0, &prefix]() mutable {
+      auto name = prefix + std::to_string(n) + ".root";
+      n++;
+      return name;
+   });
+   InputFilesRAII files{treeName, fileNames};
+   std::vector<double> weights(nFiles);
+   std::iota(weights.begin(), weights.end(), 1.);
+
+   // The first specification takes the first two files and reads them both from beginning to end.
+   // The second specification takes the second and third file, but only reads the third one.
+   // This simulates two tasks that might be created when logically splitting the input dataset.
+   std::vector<std::pair<Long64_t, Long64_t>> globalRanges{{0, 20}, {10, 20}};
+   std::vector<std::vector<std::string>> taskFileNames{
+      {"dataframe_cloning_definepersample_0.root", "dataframe_cloning_definepersample_1.root"},
+      {"dataframe_cloning_definepersample_1.root", "dataframe_cloning_definepersample_2.root"}};
+   std::vector<ROOT::RDF::Experimental::RDatasetSpec> specs;
+   specs.reserve(2);
+   for (unsigned i = 0; i < 2; i++) {
+      ROOT::RDF::Experimental::RDatasetSpec spec;
+      spec.AddSample({"", treeName, taskFileNames[i]});
+      spec.WithGlobalRange({globalRanges[i].first, globalRanges[i].second});
+      specs.push_back(spec);
+   }
+
+   // Launch first execution with dataset spec
+   ROOT::RDataFrame df{specs[0]};
+   auto dfWithCols =
+      df.DefinePerSample("sample_weight",
+                         [&weights, &fileNames](unsigned int, const ROOT::RDF::RSampleInfo &id) {
+                            if (id.Contains(fileNames[0])) {
+                               return weights[0];
+                            } else if (id.Contains(fileNames[1])) {
+                               return weights[1];
+                            } else if (id.Contains(fileNames[2])) {
+                               return weights[2];
+                            } else {
+                               return -999.;
+                            }
+                         })
+         .DefinePerSample("sample_name", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.AsString(); });
+
+   // One filter per each different combination of weight and sample name
+   // Counting the entries passing each filter should return exactly the entries
+   // of the corresponding file, i.e. 10.
+   auto c0 = dfWithCols
+                .Filter(
+                   [&weights, &fileNames, &treeName](double weight, const std::string &name) {
+                      return weight == weights[0] && name == (fileNames[0] + "/" + treeName);
+                   },
+                   {"sample_weight", "sample_name"})
+                .Count();
+   auto c1 = dfWithCols
+                .Filter(
+                   [&weights, &fileNames, &treeName](double weight, const std::string &name) {
+                      return weight == weights[1] && name == (fileNames[1] + "/" + treeName);
+                   },
+                   {"sample_weight", "sample_name"})
+                .Count();
+   auto c2 = dfWithCols
+                .Filter(
+                   [&weights, &fileNames, &treeName](double weight, const std::string &name) {
+                      return weight == weights[2] && name == (fileNames[2] + "/" + treeName);
+                   },
+                   {"sample_weight", "sample_name"})
+                .Count();
+
+   std::vector<ULong64_t> expectedFirstTask{10, 10, 0};
+   EXPECT_EQ(*c0, expectedFirstTask[0]);
+   EXPECT_EQ(*c1, expectedFirstTask[1]);
+   EXPECT_EQ(*c2, expectedFirstTask[2]);
+
+   // Assign the other specification and clone actions
+   ChangeSpec(df, std::move(specs[1]));
+   auto c3 = CloneResultAndAction(c0);
+   auto c4 = CloneResultAndAction(c1);
+   auto c5 = CloneResultAndAction(c2);
+   std::vector<ULong64_t> expectedSecondTask{0, 0, 10};
+   EXPECT_EQ(*c3, expectedSecondTask[0]);
+   EXPECT_EQ(*c4, expectedSecondTask[1]);
+   EXPECT_EQ(*c5, expectedSecondTask[2]);
 }

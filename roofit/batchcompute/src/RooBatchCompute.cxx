@@ -60,9 +60,9 @@ void fillArrays(std::vector<Batch> &arrays, const VarVector &vars, double *buffe
          std::stringstream ss;
          ss << "The span number " << i << " passed to Batches::Batches() is empty!";
          throw std::runtime_error(ss.str());
-      } else if (span.size() > 1)
+      } else if (span.size() > 1) {
          arrays[i].set(span.data(), true);
-      else {
+      } else {
          std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
          arrays[i].set(&buffer[i * bufferSize], false);
       }
@@ -179,9 +179,8 @@ public:
    }
    /// Return the sum of an input array
    double reduceSum(Config const &, InputArr input, size_t n) override;
-   ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weightSpan,
-                             std::span<const double> weights, double weightSum,
-                             std::span<const double> binVolumes) override;
+   ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
+                             std::span<const double> offsetProbas) override;
 }; // End class RooBatchComputeClass
 
 namespace {
@@ -213,16 +212,17 @@ double RooBatchComputeClass::reduceSum(Config const &, InputArr input, size_t n)
 }
 
 ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const double> probas,
-                                                std::span<const double> weightSpan, std::span<const double> weights,
-                                                double weightSum, std::span<const double> binVolumes)
+                                                std::span<const double> weights, std::span<const double> offsetProbas)
 {
    ReduceNLLOutput out;
 
    double badness = 0.0;
 
+   ROOT::Math::KahanSum<double> nllSum;
+
    for (std::size_t i = 0; i < probas.size(); ++i) {
 
-      const double eventWeight = weightSpan.size() > 1 ? weightSpan[i] : weightSpan[0];
+      const double eventWeight = weights.size() > 1 ? weights[i] : weights[0];
 
       if (0. == eventWeight)
          continue;
@@ -231,18 +231,22 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
       double term = logOut.first;
       badness += logOut.second;
 
-      if (!binVolumes.empty()) {
-         term -= std::log(weights[i]) - std::log(binVolumes[i]) - std::log(weightSum);
+      if (!offsetProbas.empty()) {
+         term -= std::log(offsetProbas[i]);
       }
 
       term *= -eventWeight;
 
-      out.nllSum.Add(term);
+      nllSum.Add(term);
    }
+
+   out.nllSum = nllSum.Sum();
+   out.nllSumCarry = nllSum.Carry();
 
    if (badness != 0.) {
       // Some events with evaluation errors. Return "badness" of errors.
-      out.nllSum = ROOT::Math::KahanSum<double>(RooNaNPacker::packFloatIntoNaN(badness));
+      out.nllSum = RooNaNPacker::packFloatIntoNaN(badness);
+      out.nllSumCarry = 0.0;
    }
 
    return out;

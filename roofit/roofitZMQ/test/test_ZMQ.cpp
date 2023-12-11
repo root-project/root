@@ -12,7 +12,7 @@
 
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include "gtest/gtest.h"
 
@@ -100,8 +100,7 @@ void elaborate_bind(const ZmqLingeringSocketPtr<> &socket, std::string name)
 
 class AllSocketTypes
    : public ::testing::TestWithParam<std::tuple<int, std::pair<zmq::socket_type, zmq::socket_type>,
-                                                std::pair<std::string, std::string> /* socket_names */>> {
-};
+                                                std::pair<std::string, std::string> /* socket_names */>> {};
 
 TEST_P(AllSocketTypes, forkHandshake)
 {
@@ -124,7 +123,7 @@ TEST_P(AllSocketTypes, forkHandshake)
 
       EXPECT_EQ(receipt, 1212);
 
-      socket.reset(nullptr);
+      socket.reset();
       zmqSvc().close_context(); // if you don't close context in parent process as well, the next repeat will hang
 
       wait_for_child(child_pid, true, 5);
@@ -140,13 +139,14 @@ TEST_P(AllSocketTypes, forkHandshake)
       }
       // take care, don't just use _exit, it will not cleanly destroy context etc!
       // if you really need to, at least close and destroy everything properly
-      socket.reset(nullptr);
+      socket.reset();
       zmqSvc().close_context();
       _Exit(0);
    }
 }
 
-std::string ipc{"ipc://" + RooFit::tmpPath() + "ZMQ_test_fork.ipc"};
+std::string tmpPath = gSystem->TempDirectory();
+std::string ipc{"ipc://" + tmpPath + "/roofit_ZMQ_test_fork.ipc"};
 std::string tcp_server{"tcp://127.0.0.1:6660"};
 std::string tcp_client{"tcp://*:6660"};
 auto socket_name_options = ::testing::Values(std::make_pair(tcp_server, tcp_client), std::make_pair(ipc, ipc));
@@ -165,8 +165,7 @@ INSTANTIATE_TEST_SUITE_P(PAIRPAIR, AllSocketTypes,
 class AsyncSocketTypes
    : public ::testing::TestWithParam<
         std::tuple<int /* repeat_nr */, std::pair<zmq::socket_type, zmq::socket_type>,
-                   std::pair<std::string, std::string> /* socket_names */, bool /* expect_throw */>> {
-};
+                   std::pair<std::string, std::string> /* socket_names */, bool /* expect_throw */>> {};
 
 TEST_P(AsyncSocketTypes, forkMultiSendReceive)
 {
@@ -190,7 +189,7 @@ TEST_P(AsyncSocketTypes, forkMultiSendReceive)
          EXPECT_ANY_THROW(zmqSvc().send(*socket, std::string("anybody out there?")));
          // NOTE: also in case of a throw, be sure to properly close down the connection!
          // Otherwise, you may get zombies waiting for a reply.
-         socket.reset(nullptr);
+         socket.reset();
          zmqSvc().close_context(); // if you don't close context in parent process as well, the next repeat will hang
          wait_for_child(child_pid, true, 5);
          return;
@@ -204,7 +203,7 @@ TEST_P(AsyncSocketTypes, forkMultiSendReceive)
 
       zmqSvc().send(*socket, std::string("kthxbye"));
 
-      socket.reset(nullptr);
+      socket.reset();
       zmqSvc().close_context(); // if you don't close context in parent process as well, the next repeat will hang
 
       wait_for_child(child_pid, true, 5);
@@ -219,7 +218,7 @@ TEST_P(AsyncSocketTypes, forkMultiSendReceive)
          EXPECT_ANY_THROW(zmqSvc().receive<std::string>(*socket));
          // NOTE: also in case of a throw, be sure to properly close down the connection!
          // Otherwise, you may get zombies waiting for a reply.
-         socket.reset(nullptr);
+         socket.reset();
          zmqSvc().close_context();
          _Exit(0);
       } else {
@@ -236,7 +235,7 @@ TEST_P(AsyncSocketTypes, forkMultiSendReceive)
 
       // take care, don't just use _exit, it will not cleanly destroy context etc!
       // if you really need to, at least close and destroy everything properly
-      socket.reset(nullptr);
+      socket.reset();
       zmqSvc().close_context();
       _Exit(0);
    }
@@ -264,7 +263,7 @@ TEST_P(AsyncSocketTypes, forkIgnoreSomeMessages)
          EXPECT_ANY_THROW(zmqSvc().send(*socket, std::string("anybody out there?")));
          // NOTE: also in case of a throw, be sure to properly close down the connection!
          // Otherwise, you may get zombies waiting for a reply.
-         socket.reset(nullptr);
+         socket.reset();
          zmqSvc().close_context(); // if you don't close context in parent process as well, the next repeat will hang
          wait_for_child(child_pid, true, 5);
          return;
@@ -278,7 +277,7 @@ TEST_P(AsyncSocketTypes, forkIgnoreSomeMessages)
 
       zmqSvc().send(*socket, std::string("kthxbye"));
 
-      socket.reset(nullptr);
+      socket.reset();
       zmqSvc().close_context(); // if you don't close context in parent process as well, the next repeat will hang
 
       wait_for_child(child_pid, true, 5);
@@ -301,7 +300,7 @@ TEST_P(AsyncSocketTypes, forkIgnoreSomeMessages)
 
       // take care, don't just use _exit, it will not cleanly destroy context etc!
       // if you really need to, at least close and destroy everything properly
-      socket.reset(nullptr);
+      socket.reset();
       zmqSvc().close_context();
       _Exit(0);
    }

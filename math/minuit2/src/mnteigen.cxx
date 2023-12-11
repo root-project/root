@@ -20,7 +20,7 @@ namespace Minuit2 {
 
 int mneigen(double *a, unsigned int ndima, unsigned int n, unsigned int mits, double *work, double precis)
 {
-   // compute matrix eignevalues (transaltion from mneig.F of Minuit)
+   // compute matrix eignevalues (translation from mneig.F of Minuit)
 
    /* System generated locals */
    unsigned int a_dim1, a_offset, i__1, i__2, i__3;

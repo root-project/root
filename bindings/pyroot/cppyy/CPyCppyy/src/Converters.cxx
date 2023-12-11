@@ -25,7 +25,7 @@
 #if __cplusplus > 201402L
 #include <cstddef>
 #endif
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #define UNKNOWN_SIZE         -1
 #define UNKNOWN_ARRAY_SIZE   -2

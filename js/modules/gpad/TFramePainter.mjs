@@ -1,4 +1,4 @@
-import { gStyle, settings, isFunc, isStr, browser, clTAxis, kNoZoom } from '../core.mjs';
+import { gStyle, settings, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
@@ -26,6 +26,12 @@ function setPainterTooltipEnabled(painter, on) {
       painter.control.setTooltipEnabled(on);
 }
 
+/** @summary Return pointers on touch event
+  * @private */
+function get_touch_pointers(event, node) {
+   return event.$touch_arr ?? d3_pointers(event, node);
+}
+
 /** @summary Returns coordinates transformation func
   * @private */
 function getEarthProjectionFunc(id) {
@@ -34,11 +40,11 @@ function getEarthProjectionFunc(id) {
       case 1: return (l, b) => {
          const DegToRad = Math.PI/180,
                alpha2 = (l/2)*DegToRad,
-               delta  = b*DegToRad,
-               r2     = Math.sqrt(2),
-               f      = 2*r2/Math.PI,
-               cdec   = Math.cos(delta),
-               denom  = Math.sqrt(1.0 + cdec*Math.cos(alpha2));
+               delta = b*DegToRad,
+               r2 = Math.sqrt(2),
+               f = 2*r2/Math.PI,
+               cdec = Math.cos(delta),
+               denom = Math.sqrt(1.0 + cdec*Math.cos(alpha2));
          return {
             x: cdec*Math.sin(alpha2)*2.0*r2/denom/f/DegToRad,
             y: Math.sin(delta)*r2/denom/f/DegToRad
@@ -47,7 +53,7 @@ function getEarthProjectionFunc(id) {
       // mercator
       case 2: return (l, b) => { return { x: l, y: Math.log(Math.tan((Math.PI/2 + b/180*Math.PI)/2)) }; };
       // sinusoidal
-      case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
+      case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b }; };
       // parabolic
       case 4: return (l, b) => { return { x: l*(2.0*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
       // Mollweide projection
@@ -72,6 +78,21 @@ function getEarthProjectionFunc(id) {
    }
 }
 
+/** @summary Unzoom preselected range for main histogram painter
+  * @desc Used with TGraph where Y zooming selected with fMinimum/fMaximum but histogram
+  * axis range can be wider. Or for normal histogram drawing when preselected range smaller than histogram range
+  * @private */
+function unzoomHistogramYRange(main) {
+    if (!isFunc(main?.getDimension) || main.getDimension() !== 1) return;
+
+    const ymin = main.draw_content ? main.hmin : main.ymin,
+          ymax = main.draw_content ? main.hmax : main.ymax;
+
+    if ((main.zoom_ymin !== main.zoom_ymax) && (ymin !== ymax) &&
+        (ymin <= main.zoom_ymin) && (main.zoom_ymax <= ymax))
+       main.zoom_ymin = main.zoom_ymax = 0;
+}
+
 // global, allow single drag at once
 let drag_rect = null, drag_kind = '', drag_painter = null;
 
@@ -88,6 +109,9 @@ function addDragHandler(_painter, arg) {
 
    const painter = _painter, pp = painter.getPadPainter();
    if (pp?._fast_drawing || pp?.isBatchMode()) return;
+   // cleanup all drag elements when canvas is not ediatable
+   if (pp?.isEditable() === false)
+      arg.cleanup = true;
 
    if (!isFunc(arg.getDrawG))
       arg.getDrawG = () => painter?.draw_g;
@@ -136,7 +160,7 @@ function addDragHandler(_painter, arg) {
       if (arg.minheight && newheight < arg.minheight) newheight = arg.minheight;
 
       const change_size = (newwidth !== arg.width) || (newheight !== arg.height),
-          change_pos = (newx !== oldx) || (newy !== oldy);
+            change_pos = (newx !== oldx) || (newy !== oldy);
 
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
@@ -172,9 +196,8 @@ function addDragHandler(_painter, arg) {
 
       return change_size || change_pos;
    },
-
-    drag_move = d3_drag().subject(Object),
-       drag_move_off = d3_drag().subject(Object);
+   drag_move = d3_drag().subject(Object),
+   drag_move_off = d3_drag().subject(Object);
 
    drag_move_off.on('start', null).on('drag', null).on('end', null);
 
@@ -359,7 +382,7 @@ const TooltipHandler = {
          if (!rect || rect.empty())
             pnt = null; // disable
          else if (pnt.touch && evnt) {
-            const pos = d3_pointers(evnt, rect.node());
+            const pos = get_touch_pointers(evnt, rect.node());
             pnt = (pos && pos.length === 1) ? { touch: true, x: pos[0][0], y: pos[0][1] } : null;
          } else if (evnt) {
             const pos = d3_pointer(evnt, rect.node());
@@ -367,19 +390,21 @@ const TooltipHandler = {
          }
       }
 
-      let hints = [], nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false, textheight = 11;
+      let nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false, textheight = 11;
       const hmargin = 3, wmargin = 3, hstep = 1.2,
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
-            pad_width = pp.getPadWidth(),
+            pad_width = pp?.getPadWidth(),
             font = new FontHandler(160, textheight),
             disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
-      if (pnt && disable_tootlips) pnt.disabled = true; // indicate that highlighting is not required
-      if (pnt) pnt.painters = true; // get also painter
+      if (pnt) {
+         pnt.disabled = disable_tootlips; // indicate that highlighting is not required
+         pnt.painters = true; // get also painter
+      }
 
       // collect tooltips from pad painter - it has list of all drawn objects
-      if (pp) hints = pp.processPadTooltipEvent(pnt);
+      const hints = pp?.processPadTooltipEvent(pnt) ?? [];
 
       if (pp?._deliver_webcanvas_events && pp?.is_active_pad && pnt && isFunc(pp?.deliverWebCanvasEvent))
          pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints);
@@ -431,7 +456,7 @@ const TooltipHandler = {
           hint = null, best_dist2 = 1e10, best_hint = null;
 
       // try to select hint with exact match of the position when several hints available
-      for (let k = 0; k < (hints?.length || 0); ++k) {
+      for (let k = 0; k < hints.length; ++k) {
          if (!hints[k]) continue;
          if (!hint) hint = hints[k];
 
@@ -681,9 +706,14 @@ const TooltipHandler = {
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
       }
 
-      const main_svg = this.draw_g.selectChild('.main_layer');
+      const top_rect = this.draw_g.selectChild('path'),
+            main_svg = this.draw_g.selectChild('.main_layer');
+
+      top_rect.style('pointer-events', 'visibleFill')  // let process mouse events inside frame
+              .style('cursor', 'default');             // show normal cursor
 
       main_svg.style('pointer-events', 'visibleFill')
+              .style('cursor', 'default')
               .property('handlers_set', 0);
 
       const pp = this.getPadPainter(),
@@ -691,7 +721,7 @@ const TooltipHandler = {
 
       if (main_svg.property('handlers_set') !== handlers_set) {
          const close_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, null) : null,
-             mouse_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: false }) : null;
+               mouse_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: false }) : null;
 
          main_svg.property('handlers_set', handlers_set)
                  .on('mouseenter', mouse_handler)
@@ -799,7 +829,7 @@ const TooltipHandler = {
 
    /** @summary Handle key press */
    processKeyPress(evnt) {
-      const allowed = ['PageUp', 'PageDown', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'PrintScreen', '*'],
+      const allowed = ['PageUp', 'PageDown', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'PrintScreen', 'Escape', '*'],
             main = this.selectDom(),
             pp = this.getPadPainter();
       let key = evnt.key;
@@ -822,6 +852,7 @@ const TooltipHandler = {
          case 'ArrowDown': zoom.name = 'y'; zoom.dleft = -1; zoom.dright = 1; break;
          case 'Ctrl ArrowUp': zoom.name = 'y'; zoom.dleft = zoom.dright = 1; break;
          case 'Ctrl ArrowDown': zoom.name = 'y'; zoom.dleft = zoom.dright = -1; break;
+         case 'Escape': pp?.enlargePad(null, false, true); return true;
       }
 
       if (zoom.dleft || zoom.dright) {
@@ -870,9 +901,9 @@ const TooltipHandler = {
       }
 
       if (!dblckick) {
- pp.selectObjectPainter(exact ? exact.painter : this,
-               { x: pnt.x + (this._frame_x || 0),  y: pnt.y + (this._frame_y || 0) });
-}
+         pp.selectObjectPainter(exact ? exact.painter : this,
+               { x: pnt.x + (this._frame_x || 0), y: pnt.y + (this._frame_y || 0) });
+      }
 
       return res;
    },
@@ -937,14 +968,16 @@ const TooltipHandler = {
       if (this.zoom_kind > 100) return;
 
       const frame = this.getFrameSvg(),
-          pos = d3_pointer(evnt, frame.node());
+            pos = d3_pointer(evnt, frame.node());
 
       if ((evnt.buttons === 3) || (evnt.button === 1)) {
          this.clearInteractiveElements();
          this._shifting_buttons = evnt.buttons;
 
-         d3_select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
-                          .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+         if (!evnt.$emul) {
+            d3_select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
+                             .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+         }
 
          setPainterTooltipEnabled(this, false);
          evnt.preventDefault();
@@ -962,8 +995,7 @@ const TooltipHandler = {
       const w = this.getFrameWidth(), h = this.getFrameHeight();
 
       this.zoom_lastpos = pos;
-      this.zoom_curr = [Math.max(0, Math.min(w, pos[0])),
-                         Math.max(0, Math.min(h, pos[1]))];
+      this.zoom_curr = [Math.max(0, Math.min(w, pos[0])), Math.max(0, Math.min(h, pos[1]))];
 
       this.zoom_origin = [0, 0];
       this.zoom_second = false;
@@ -986,8 +1018,10 @@ const TooltipHandler = {
          this.zoom_origin[1] = this.zoom_curr[1];
       }
 
-      d3_select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
-                       .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+      if (!evnt.$emul) {
+         d3_select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
+                          .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+      }
 
       this.zoom_rect = null;
 
@@ -997,7 +1031,7 @@ const TooltipHandler = {
       evnt.stopPropagation();
 
       if (this.zoom_kind !== 1)
-         setTimeout(() => this.startLabelsMove(), 500);
+         return postponePromise(() => this.startLabelsMove(), 500);
    },
 
    /** @summary Starts labels move */
@@ -1035,9 +1069,9 @@ const TooltipHandler = {
       }
 
       const x = Math.min(this.zoom_origin[0], this.zoom_curr[0]),
-          y = Math.min(this.zoom_origin[1], this.zoom_curr[1]),
-          w = Math.abs(this.zoom_curr[0] - this.zoom_origin[0]),
-          h = Math.abs(this.zoom_curr[1] - this.zoom_origin[1]);
+            y = Math.min(this.zoom_origin[1], this.zoom_curr[1]),
+            w = Math.abs(this.zoom_curr[0] - this.zoom_origin[0]),
+            h = Math.abs(this.zoom_curr[1] - this.zoom_origin[1]);
 
       if (!this.zoom_rect) {
          // ignore small changes, can be switching to labels move
@@ -1058,11 +1092,13 @@ const TooltipHandler = {
 
       evnt.preventDefault();
 
-      d3_select(window).on('mousemove.zoomRect', null)
-                       .on('mouseup.zoomRect', null);
+      if (!evnt.$emul) {
+         d3_select(window).on('mousemove.zoomRect', null)
+                          .on('mouseup.zoomRect', null);
+      }
 
       const m = d3_pointer(evnt, this.getFrameSvg().node());
-      let kind = this.zoom_kind;
+      let kind = this.zoom_kind, pr;
 
       if (this.zoom_labels)
          this.zoom_labels.processLabelsMove('stop', m);
@@ -1097,16 +1133,16 @@ const TooltipHandler = {
 
          if (namex === 'x2') {
             this.zoomChangedInteractive(namex, true);
-            this.zoomSingle(namex, xmin, xmax);
+            pr = this.zoomSingle(namex, xmin, xmax);
             kind = 0;
          } else if (namey === 'y2') {
             this.zoomChangedInteractive(namey, true);
-            this.zoomSingle(namey, ymin, ymax);
+            pr = this.zoomSingle(namey, ymin, ymax);
             kind = 0;
          } else if (isany) {
             this.zoomChangedInteractive('x', true);
             this.zoomChangedInteractive('y', true);
-            this.zoom(xmin, xmax, ymin, ymax);
+            pr = this.zoom(xmin, xmax, ymin, ymax);
             kind = 0;
          }
       }
@@ -1127,17 +1163,20 @@ const TooltipHandler = {
             this.getPadPainter()?.selectObjectPainter(this, null, 'yaxis');
             break;
       }
+
+      // return promise - if any
+      return pr;
    },
 
    /** @summary Handle mouse double click on frame */
    mouseDoubleClick(evnt) {
       evnt.preventDefault();
       const m = d3_pointer(evnt, this.getFrameSvg().node()),
-          fw = this.getFrameWidth(), fh = this.getFrameHeight();
+            fw = this.getFrameWidth(), fh = this.getFrameHeight();
       this.clearInteractiveElements();
 
       const valid_x = (m[0] >= 0) && (m[0] <= fw),
-          valid_y = (m[1] >= 0) && (m[1] <= fh);
+            valid_y = (m[1] >= 0) && (m[1] <= fh);
 
       if (valid_x && valid_y && this._dblclick_handler)
          if (this.processFrameClick({ x: m[0], y: m[1] }, true)) return;
@@ -1152,10 +1191,10 @@ const TooltipHandler = {
          kind = this.swap_xy ? 'y' : 'x';
          if ((m[1] < 0) && this[kind+'2_handle']) kind += '2'; // let unzoom second axis
       }
-      this.unzoom(kind).then(changed => {
+      return this.unzoom(kind).then(changed => {
          if (changed) return;
          const pp = this.getPadPainter(), rect = this.getFrameRect();
-         if (pp) pp.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
+         return pp?.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
       });
    },
 
@@ -1169,7 +1208,7 @@ const TooltipHandler = {
       if ((this.zoom_kind !== 0) || drag_kind)
          return;
 
-      const arr = d3_pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
 
       // normally double-touch will be handled
       // touch with single click used for context menu
@@ -1224,7 +1263,6 @@ const TooltipHandler = {
       } else
          this.zoom_kind = 101; // x and y
 
-
       drag_kind = 'zoom'; // block other possible dragging
 
       setPainterTooltipEnabled(this, false);
@@ -1237,9 +1275,11 @@ const TooltipHandler = {
             .attr('height', this.zoom_origin[1] - this.zoom_curr[1])
             .call(addHighlightStyle, true);
 
-      d3_select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
-                       .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
-                       .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+      if (!evnt.$emul) {
+         d3_select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
+                          .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
+                          .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+      }
    },
 
    /** @summary Move touch zooming */
@@ -1248,7 +1288,7 @@ const TooltipHandler = {
 
       evnt.preventDefault();
 
-      const arr = d3_pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
 
       if (arr.length !== 2)
          return this.clearInteractiveElements();
@@ -1282,9 +1322,11 @@ const TooltipHandler = {
       drag_kind = ''; // reset global flag
 
       evnt.preventDefault();
-      d3_select(window).on('touchmove.zoomRect', null)
-                       .on('touchend.zoomRect', null)
-                       .on('touchcancel.zoomRect', null);
+      if (!evnt.$emul) {
+         d3_select(window).on('touchmove.zoomRect', null)
+                          .on('touchend.zoomRect', null)
+                          .on('touchcancel.zoomRect', null);
+      }
 
       let xmin, xmax, ymin, ymax, isany = false, namex = 'x', namey = 'y';
       const xid = this.swap_xy ? 1 : 0, yid = 1 - xid, changed = [true, true];
@@ -1333,8 +1375,7 @@ const TooltipHandler = {
          return handle2.analyzeWheelEvent(event, dmin, item.second, test_ignore);
       }
       const handle = this[item.name + '_handle'];
-      if (handle) return handle.analyzeWheelEvent(event, dmin, item, test_ignore);
-      console.error(`Fail to analyze zooming event for ${item.name}`);
+      return handle?.analyzeWheelEvent(event, dmin, item, test_ignore);
    },
 
     /** @summary return true if default Y zooming should be enabled
@@ -1367,24 +1408,26 @@ const TooltipHandler = {
             w = this.getFrameWidth(), h = this.getFrameHeight();
 
       if (this.can_zoom_x)
-         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1]  >= 0) && (cur[1] <= h), cur[1] < 0);
+         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1] >= 0) && (cur[1] <= h), cur[1] < 0);
 
       if (this.can_zoom_y)
          this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
 
-      this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
+      let pr = this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
 
       if (itemx.changed) this.zoomChangedInteractive('x', true);
       if (itemy.changed) this.zoomChangedInteractive('y', true);
 
       if (itemx.second) {
-         this.zoomSingle('x2', itemx.second.min, itemx.second.max);
+         pr = pr.then(() => this.zoomSingle('x2', itemx.second.min, itemx.second.max));
          if (itemx.second.changed) this.zoomChangedInteractive('x2', true);
       }
       if (itemy.second) {
-         this.zoomSingle('y2', itemy.second.min, itemy.second.max);
+         pr = pr.then(() => this.zoomSingle('y2', itemy.second.min, itemy.second.max));
          if (itemy.second.changed) this.zoomChangedInteractive('y2', true);
       }
+
+      return pr;
    },
 
    /** @summary Show frame context menu */
@@ -1404,7 +1447,7 @@ const TooltipHandler = {
          evnt.preventDefault();
          evnt.stopPropagation(); // disable main context menu
          const ms = d3_pointer(evnt, svg_node),
-               tch = d3_pointers(evnt, svg_node);
+               tch = get_touch_pointers(evnt, svg_node);
          if (tch.length === 1)
              pnt = { x: tch[0][0], y: tch[0][1], touch: true };
          else if (ms.length === 2)
@@ -1412,7 +1455,7 @@ const TooltipHandler = {
        } else if ((evnt?.x !== undefined) && (evnt?.y !== undefined) && (evnt?.clientX === undefined)) {
           pnt = evnt;
           const rect = svg_node.getBoundingClientRect();
-          evnt  = { clientX: rect.left + pnt.x, clientY: rect.top + pnt.y };
+          evnt = { clientX: rect.left + pnt.x, clientY: rect.top + pnt.y };
        }
 
        if ((kind === 'painter') && obj) {
@@ -1457,7 +1500,7 @@ const TooltipHandler = {
 
       this.clearInteractiveElements();
 
-      createMenu(evnt, menu_painter).then(menu => {
+      return createMenu(evnt, menu_painter).then(menu => {
          let domenu = menu.painter.fillContextMenu(menu, kind, obj);
 
          // fill frame menu by default - or append frame elements when activated in the frame corner
@@ -1465,10 +1508,10 @@ const TooltipHandler = {
             domenu = fp.fillContextMenu(menu);
 
          if (domenu) {
-            exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
+            return exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
                 // suppress any running zooming
                 setPainterTooltipEnabled(menu.painter, false);
-                menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
+                return menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
             });
          }
       });
@@ -1477,7 +1520,7 @@ const TooltipHandler = {
   /** @summary Activate touch handling on frame
     * @private */
    startSingleTouchHandling(kind, evnt) {
-      const arr = d3_pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
       if (arr.length !== 1) return;
 
       evnt.preventDefault();
@@ -1504,7 +1547,7 @@ const TooltipHandler = {
       let pos;
 
       try {
-        pos = d3_pointers(evnt, frame.node())[0];
+        pos = get_touch_pointers(evnt, frame.node())[0];
       } catch (err) {
         pos = [0, 0];
         if (evnt?.changedTouches)
@@ -1561,7 +1604,7 @@ const TooltipHandler = {
       Object.assign(painter, this);
    }
 
-} // FrameInterative
+}; // FrameInterative
 
 
 /**
@@ -1633,7 +1676,7 @@ class TFramePainter extends ObjectPainter {
    recalculateRange(Proj, change_x, change_y) {
       this.projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90 || this.scale_ymax >= 90))) {
+      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >= 90))) {
          console.warn(`Mercator Projection: Latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
          this.projection = 0;
       }
@@ -1823,8 +1866,9 @@ class TFramePainter extends ObjectPainter {
       this.logx = this.logy = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad();
+            pp = this.getPadPainter(), pad = pp.getRootPad(),
+            pad_logx = pad.fLogx,
+            pad_logy = (opts.ndim === 1 ? pad.fLogv : undefined) ?? pad.fLogy;
 
       this.scales_ndim = opts.ndim;
 
@@ -1835,7 +1879,7 @@ class TFramePainter extends ObjectPainter {
       this.scale_ymax = this.ymax;
 
       if (opts.extra_y_space) {
-         const log_scale = this.swap_xy ? pad.fLogx : pad.fLogy;
+         const log_scale = this.swap_xy ? pad_logx : pad_logy;
          if (log_scale && (this.scale_ymax > 0))
             this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
          else
@@ -1886,7 +1930,7 @@ class TFramePainter extends ObjectPainter {
 
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
-                                        log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                        log: this.swap_xy ? pad_logy : pad_logx,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
                                         logcheckmin: this.swap_xy,
@@ -1900,7 +1944,7 @@ class TFramePainter extends ObjectPainter {
 
       this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                       { reverse: this.reverse_y,
-                                        log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                        log: this.swap_xy ? pad_logx : pad_logy,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
@@ -1923,8 +1967,8 @@ class TFramePainter extends ObjectPainter {
       this.logx2 = this.logy2 = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad();
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad();
 
       if (opts.second_x) {
          this.scale_x2min = this.x2min;
@@ -1965,6 +2009,7 @@ class TFramePainter extends ObjectPainter {
                                            noexp_changed: this.x2_noexp_changed,
                                            logcheckmin: this.swap_xy,
                                            logminfactor: logminfactorX });
+
          this.x2_handle.assignFrameMembers(this, 'x2');
       }
 
@@ -1990,7 +2035,7 @@ class TFramePainter extends ObjectPainter {
      * @private */
    getGrFuncs(second_x, second_y) {
       const use_x2 = second_x && this.grx2,
-          use_y2 = second_y && this.gry2;
+            use_y2 = second_y && this.gry2;
       if (!use_x2 && !use_y2) return this;
 
       return {
@@ -2132,10 +2177,10 @@ class TFramePainter extends ObjectPainter {
       if (AxisPos === undefined) AxisPos = 0;
 
       const layer = this.getFrameSvg().selectChild('.axis_layer'),
-          w = this.getFrameWidth(),
-          h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad(true);
+            w = this.getFrameWidth(),
+            h = this.getFrameHeight(),
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad(true);
 
       this.x_handle.invert_side = (AxisPos >= 10);
       this.x_handle.lbls_both_sides = !this.x_handle.invert_side && (pad?.fTickx > 1); // labels on both sides
@@ -2146,7 +2191,7 @@ class TFramePainter extends ObjectPainter {
       this.y_handle.has_obstacle = has_y_obstacle;
 
       const draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
-          draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
+            draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
 
       if ((!disable_x_draw || !disable_y_draw) && pp._fast_drawing)
          disable_x_draw = disable_y_draw = true;
@@ -2156,15 +2201,15 @@ class TFramePainter extends ObjectPainter {
       if (!disable_x_draw || !disable_y_draw) {
          const can_adjust_frame = !shrink_forbidden && settings.CanAdjustFrame,
 
-          pr1 = draw_horiz.drawAxis(layer, w, h,
-                                       draw_horiz.invert_side ? null : `translate(0,${h})`,
-                                       pad?.fTickx ? -h : 0, disable_x_draw,
-                                       undefined, false),
+         pr1 = draw_horiz.drawAxis(layer, w, h,
+                                   draw_horiz.invert_side ? null : `translate(0,${h})`,
+                                   pad?.fTickx ? -h : 0, disable_x_draw,
+                                   undefined, false, pp.getPadHeight() - h - this.getFrameY()),
 
-          pr2 = draw_vertical.drawAxis(layer, w, h,
-                                          draw_vertical.invert_side ? `translate(${w})` : null,
-                                          pad?.fTicky ? w : 0, disable_y_draw,
-                                          draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
+         pr2 = draw_vertical.drawAxis(layer, w, h,
+                                      draw_vertical.invert_side ? `translate(${w})` : null,
+                                      pad?.fTicky ? w : 0, disable_y_draw,
+                                      draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
 
          pr = Promise.all([pr1, pr2]).then(() => {
             this.drawGrids();
@@ -2471,14 +2516,6 @@ class TFramePainter extends ObjectPainter {
               .attr('height', h)
               .attr('viewBox', `0 0 ${w} ${h}`);
 
-      if (!this.isBatchMode()) {
-         top_rect.style('pointer-events', 'visibleFill')  // let process mouse events inside frame
-                 .style('cursor', 'default');             // show normal cursor
-         main_svg.style('cursor', 'default');             // show normal cursor
-         FrameInteractive.assign(this);
-         this.addBasicInteractivity();
-      }
-
       return this;
    }
 
@@ -2486,7 +2523,7 @@ class TFramePainter extends ObjectPainter {
      * @param {number} value - 0 (linear), 1 (log) or 2 (log2) */
    changeAxisLog(axis, value) {
       const pp = this.getPadPainter(),
-          pad = pp?.getRootPad(true);
+            pad = pp?.getRootPad(true);
       if (!pad) return;
 
       pp._interactively_changed = true;
@@ -2509,12 +2546,12 @@ class TFramePainter extends ObjectPainter {
       // directly change attribute in the pad
       pad[name] = value;
 
-      this.interactiveRedraw('pad', `log${axis}`);
+      return this.interactiveRedraw('pad', `log${axis}`);
    }
 
    /** @summary Toggle log state on the specified axis */
    toggleAxisLog(axis) {
-      this.changeAxisLog(axis, 'toggle');
+      return this.changeAxisLog(axis, 'toggle');
    }
 
    /** @summary Fill context menu for the frame
@@ -2524,18 +2561,22 @@ class TFramePainter extends ObjectPainter {
           pp = this.getPadPainter(),
           pad = pp?.getRootPad(true),
           is_pal = kind === 'pal';
+
       if (is_pal) kind = 'z';
 
       if ((kind === 'x') || (kind === 'y') || (kind === 'z') || (kind === 'x2') || (kind === 'y2')) {
          const faxis = obj || this[kind+'axis'],
-             handle = this[`${kind}_handle`];
+               handle = this[`${kind}_handle`];
+        if (!isFunc(faxis?.TestBit))
+           return false;
+
          menu.add(`header: ${kind.toUpperCase()} axis`);
          menu.add('Unzoom', () => this.unzoom(kind));
          if (pad) {
             const member = 'fLog'+kind[0];
             menu.add('sub:SetLog '+kind[0], () => {
                menu.input('Enter log kind: 0 - off, 1 - log10, 2 - log2, 3 - ln, ...', pad[member], 'int', 0, 10000).then(v => {
-                  this.changeAxisLog(kind[0], v)
+                  this.changeAxisLog(kind[0], v);
                });
             });
             menu.addchk(pad[member] === 0, 'linear', () => this.changeAxisLog(kind[0], 0));
@@ -2622,8 +2663,10 @@ class TFramePainter extends ObjectPainter {
       }, 'Store frame position and graphical attributes to gStyle');
 
       menu.add('separator');
-      menu.add('Save as frame.png', () => pp.saveAs('png', 'frame', 'frame.png'));
-      menu.add('Save as frame.svg', () => pp.saveAs('svg', 'frame', 'frame.svg'));
+
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => pp.saveAs(fmt, 'frame', `frame.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }
@@ -2631,15 +2674,15 @@ class TFramePainter extends ObjectPainter {
    /** @summary Fill option object used in TWebCanvas
      * @private */
    fillWebObjectOptions(res) {
-      if (!res) {
-         if (!this.snapid) return null;
-         res = { _typename: 'TWebObjectOptions', snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: '', fopt: [] };
-       }
-
       res.fcust = 'frame';
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
-      return res;
    }
+
+   /** @summary Returns frame X position */
+   getFrameX() { return this._frame_x || 0; }
+
+   /** @summary Returns frame Y position */
+   getFrameY() { return this._frame_y || 0; }
 
    /** @summary Returns frame width */
    getFrameWidth() { return this._frame_width || 0; }
@@ -2657,7 +2700,7 @@ class TFramePainter extends ObjectPainter {
          transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
-      }
+      };
    }
 
    /** @summary Configure user-defined click handler
@@ -2759,7 +2802,10 @@ class TFramePainter extends ObjectPainter {
             this.zoom_xmin = this.zoom_xmax = 0;
          }
          if (unzoom_y) {
-            if (this.zoom_ymin !== this.zoom_ymax) changed = true;
+            if (this.zoom_ymin !== this.zoom_ymax) {
+               changed = true;
+               unzoomHistogramYRange(this.getMainPainter());
+            }
             this.zoom_ymin = this.zoom_ymax = 0;
          }
          if (unzoom_z) {
@@ -2803,7 +2849,7 @@ class TFramePainter extends ObjectPainter {
 
       // first process zooming
       if (zoom_v) {
- this.forEachPainter(obj => {
+         this.forEachPainter(obj => {
             if (!isFunc(obj.canZoomInside)) return;
             if (zoom_v && obj.canZoomInside(name[0], vmin, vmax)) {
                this[`zoom_${name}min`] = vmin;
@@ -2812,11 +2858,14 @@ class TFramePainter extends ObjectPainter {
                zoom_v = false;
             }
          });
-}
+      }
 
       // and process unzoom, if any
       if (unzoom_v) {
-         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) changed = true;
+         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) {
+            changed = true;
+            if (name === 'y') unzoomHistogramYRange(this.getMainPainter());
+         }
          this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
       }
 
@@ -2843,7 +2892,7 @@ class TFramePainter extends ObjectPainter {
          });
       }
 
-      if (typeof dox === 'undefined')  dox = doy = doz = true;  else
+      if (typeof dox === 'undefined') dox = doy = doz = true; else
       if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
@@ -2865,7 +2914,7 @@ class TFramePainter extends ObjectPainter {
          return;
       }
       if (!axis || axis === 'any')
-         return this.zoom_changed_x || this.zoom_changed_y  || this.zoom_changed_z;
+         return this.zoom_changed_x || this.zoom_changed_y || this.zoom_changed_z;
 
       if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
 
@@ -2922,6 +2971,9 @@ class TFramePainter extends ObjectPainter {
          return false;
 
       FrameInteractive.assign(this);
+      if (!for_second_axes)
+         this.addBasicInteractivity();
+
       return this.addFrameInteractivity(for_second_axes);
    }
 

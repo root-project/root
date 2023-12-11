@@ -26,14 +26,15 @@ RooArgSets with the same contents may be passed to an object that
 caches intermediate results dependent on the normalization/integration set
 To avoid unnecessary cache faulting, This class tracks all instances
 with the same contents and reports to the owner if the present nset/iset
-is truely different from the current reference. Class RooNormSet only
+is truly different from the current reference. Class RooNormSet only
 evaluates each RooArgSet pointer once, it therefore assumes that
 RooArgSets with normalization and/or integration sets are not changes
 during their lifetime.
 **/
 
 #include <RooNormSetCache.h>
-#include <RooHelpers.h>
+
+#include "RooFitImplHelpers.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear contents
@@ -85,11 +86,6 @@ bool RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
 
   // B - Check if dependents(set1/set2) are compatible with current cache
 
-//   cout << "RooNormSetCache::autoCache set1 = " << (set1?*set1:RooArgSet()) << " set2 = " << (set2?*set2:RooArgSet()) << endl;
-//   if (set1) set1->Print("v");
-//   if (set2) set2->Print("v");
-  //if (self) self->Print("v");
-
   RooArgSet set1d;
   RooArgSet set2d;
   if (self) {
@@ -99,8 +95,6 @@ bool RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
     if(set1) set1->snapshot(set1d);
     if(set2) set2->snapshot(set2d);
   }
-
-//   cout << "RooNormSetCache::autoCache set1d = " << *set1d << " set2 = " << *set2d << endl;
 
   using RooHelpers::getColonSeparatedNameString;
 
@@ -119,9 +113,7 @@ bool RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
     add(set1,set2);
     _name1 = getColonSeparatedNameString(set1d);
     _name2 = getColonSeparatedNameString(set2d);
-//     cout << "RooNormSetCache::autoCache() _name1 refilled from " << *set1d << " to " ; _name1.printValue(cout) ; cout << endl;
-//     cout << "RooNormSetCache::autoCache() _name2 refilled from " << *set2d << " to " ; _name2.printValue(cout) ; cout << endl;
-    _set2RangeName = (TNamed*) set2RangeName;
+    _set2RangeName = const_cast<TNamed*>(set2RangeName);
   }
 
   return true;

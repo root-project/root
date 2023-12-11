@@ -96,7 +96,7 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
   //
   // convVar  :  convolution variable (on which both pdf and resmodel should depend)
   // pdf      :  input 'physics' pdf
-  // resmodel :  input 'resultion' pdf
+  // resmodel :  input 'resolution' pdf
   //
   // output is pdf(x) (X) resmodel(x) = Int [ pdf(x') resmodel (x-x') ] dx'
   //
@@ -174,13 +174,13 @@ RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooData
   RooArgSet modelDep;
   _conv->model().getObservables(&vars, modelDep);
   modelDep.remove(_conv->var(),true,true) ;
-  Int_t numAddDep = modelDep.getSize() ;
+  Int_t numAddDep = modelDep.size() ;
 
   RooArgSet dummy ;
-  bool pdfCanDir = (((RooAbsPdf&)_conv->pdf()).getGenerator(_conv->var(),dummy) != 0 && \
-            ((RooAbsPdf&)_conv->pdf()).isDirectGenSafe(_conv->var())) ;
-  bool resCanDir = (((RooAbsPdf&)_conv->model()).getGenerator(_conv->var(),dummy) !=0  &&
-            ((RooAbsPdf&)_conv->model()).isDirectGenSafe(_conv->var())) ;
+  bool pdfCanDir = ((static_cast<RooAbsPdf&>(_conv->pdf())).getGenerator(_conv->var(),dummy) != 0 && \
+            (static_cast<RooAbsPdf&>(_conv->pdf())).isDirectGenSafe(_conv->var())) ;
+  bool resCanDir = ((static_cast<RooAbsPdf&>(_conv->model())).getGenerator(_conv->var(),dummy) !=0  &&
+            (static_cast<RooAbsPdf&>(_conv->model())).isDirectGenSafe(_conv->var())) ;
 
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable

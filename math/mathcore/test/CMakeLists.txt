@@ -6,7 +6,7 @@
 
 project(mathcore-tests)
 
-set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree
+set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree Minuit2
               Rint Postscript Matrix Physics MathCore Thread)
 
 set(TestSource
@@ -32,21 +32,17 @@ set(TestSource
     testIntegrationMultiDim.cxx
     testAnalyticalIntegrals.cxx
     testTStatistic.cxx
+    fit/SparseDataComparer.cxx
+    fit/SparseFit3.cxx
+    fit/SparseFit4.cxx
+    fit/testBinnedFitExecPolicy.cxx
     fit/testFit.cxx
     fit/testGraphFit.cxx
-    fit/SparseDataComparer.cxx
-    fit/SparseFit4.cxx
-    fit/SparseFit3.cxx
-    fit/testBinnedFitExecPolicy.cxx
-    fit/testLogLExecPolicy.cxx )
+    fit/testLogLExecPolicy.cxx
+    fit/testMinim.cxx)
 
 if(mathmore)
   list(APPEND Libraries MathMore)
-endif()
-
-if(minuit2)
-  list(APPEND TestSource fit/testMinim.cxx)
-  list(APPEND Libraries Minuit2)
 endif()
 
 if(r)

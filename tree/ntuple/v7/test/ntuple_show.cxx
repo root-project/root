@@ -35,6 +35,7 @@ TEST(RNTupleShow, BasicTypes)
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt");
       auto fielddb = model->MakeField<double>("db");
+      auto fieldbyte = model->MakeField<std::byte>("byte");
       auto fieldint = model->MakeField<int>("int");
       auto fielduint = model->MakeField<unsigned>("uint");
       auto field64uint = model->MakeField<std::uint64_t>("uint64");
@@ -43,10 +44,12 @@ TEST(RNTupleShow, BasicTypes)
       auto fieldchar = model->MakeField<uint8_t>("uint8");
       auto fieldbitset = model->MakeField<std::bitset<65>>("bitset");
       auto fielduniqueptr = model->MakeField<std::unique_ptr<std::string>>("pstring");
+      auto fieldatomic = model->MakeField<std::atomic<bool>>("atomic");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
 
       *fieldPt = 5.0f;
       *fielddb = 9.99;
+      *fieldbyte = std::byte{137};
       *fieldint = -4;
       *fielduint = 3;
       *field64uint = 44444444444ull;
@@ -55,10 +58,12 @@ TEST(RNTupleShow, BasicTypes)
       *fieldchar = 97;
       *fieldbitset = std::bitset<65>("10000000000000000000000000000010000000000000000000000000000010010");
       *fielduniqueptr = std::make_unique<std::string>("abc");
+      *fieldatomic = false;
       ntuple->Fill();
 
       *fieldPt = 8.5f;
       *fielddb = 9.998;
+      *fieldbyte = std::byte{42};
       *fieldint = -94;
       *fielduint = -30;
       *field64uint = 2299994967294ull;
@@ -67,6 +72,7 @@ TEST(RNTupleShow, BasicTypes)
       *fieldchar = 98;
       fieldbitset->flip();
       fielduniqueptr->reset();
+      *fieldatomic = true;
       ntuple->Fill();
    }
 
@@ -79,6 +85,7 @@ TEST(RNTupleShow, BasicTypes)
       + "{\n"
       + "  \"pt\": 5,\n"
       + "  \"db\": 9.99,\n"
+      + "  \"byte\": 0x89,\n"
       + "  \"int\": -4,\n"
       + "  \"uint\": 3,\n"
       + "  \"uint64\": 44444444444,\n"
@@ -86,7 +93,8 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"boolean\": true,\n"
       + "  \"uint8\": 97,\n"
       + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\",\n"
-      + "  \"pstring\": \"abc\"\n"
+      + "  \"pstring\": \"abc\",\n"
+      + "  \"atomic\": false\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString, os.str());
@@ -98,6 +106,7 @@ TEST(RNTupleShow, BasicTypes)
       + "{\n"
       + "  \"pt\": 8.5,\n"
       + "  \"db\": 9.998,\n"
+      + "  \"byte\": 0x2a,\n"
       + "  \"int\": -94,\n"
       + "  \"uint\": 4294967266,\n"
       + "  \"uint64\": 2299994967294,\n"
@@ -105,13 +114,18 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"boolean\": false,\n"
       + "  \"uint8\": 98,\n"
       + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\",\n"
-      + "  \"pstring\": null\n"
+      + "  \"pstring\": null,\n"
+      + "  \"atomic\": true\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString1, os1.str());
 
-   // TODO(jblomer): this should fail to an exception instead
-   EXPECT_DEATH(ntuple2->Show(2), ".*");
+   try {
+      ntuple2->LoadEntry(2);
+      FAIL() << "loading a non-existing entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 2 out of bounds"));
+   }
 }
 
 TEST(RNTupleShow, Vectors)
@@ -258,20 +272,20 @@ TEST(RNTupleShow, Objects)
 
       *customStructfield =
          CustomStruct{4.1f, std::vector<float>{0.1f, 0.2f, 0.3f},
-                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example1String"};
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example1String", std::byte{0}};
       *customStructVec = {
          CustomStruct{4.2f, std::vector<float>{0.1f, 0.2f, 0.3f},
-                      std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example2String"},
+                      std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example2String", std::byte{0}},
          CustomStruct{4.3f, std::vector<float>{0.1f, 0.2f, 0.3f},
-                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "Example3String"},
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "Example3String", std::byte{0}},
          CustomStruct{4.4f, std::vector<float>{0.1f, 0.3f},
-                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example4String"}};
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example4String", std::byte{0}}};
       *customStructArray = {
          CustomStruct{4.5f, std::vector<float>{0.1f, 0.2f, 0.3f},
-                      std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "AnotherString1"},
+                      std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "AnotherString1", std::byte{0}},
          CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f},
-                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2"}};
-      *derivedAfield = {};
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2", std::byte{0}}};
+      *derivedAfield = DerivedA();
       ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
@@ -290,22 +304,24 @@ TEST(RNTupleShow, Objects)
       + "    \"a\": 4.1,\n"
       + "    \"v1\": [0.1, 0.2, 0.3],\n"
       + "    \"v2\": [[1.1, 1.2, 1.3], [2.1, 2.2, 2.3]],\n"
-      + "    \"s\": \"Example1String\"\n"
+      + "    \"s\": \"Example1String\",\n"
+      + "    \"b\": 0x00\n"
       + "  },\n"
       + "  \"CustomStructVec\": [{\"a\": 4.2, \"v1\": [0.1, 0.2, 0.3], \"v2\": [[1.1, 1.3], [2.1, 2.2, 2.3]], "
-      +      "\"s\": \"Example2String\"}, {\"a\": 4.3, \"v1\": [0.1, 0.2, 0.3], "
-      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"Example3String\"}, "
+      +      "\"s\": \"Example2String\", \"b\": 0x00}, {\"a\": 4.3, \"v1\": [0.1, 0.2, 0.3], "
+      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"Example3String\", \"b\": 0x00}, "
       +      "{\"a\": 4.4, \"v1\": [0.1, 0.3], \"v2\": [[1.1, 1.2, 1.3], [2.1, 2.2, 2.3]], "
-      +      "\"s\": \"Example4String\"}],\n"
+      +      "\"s\": \"Example4String\", \"b\": 0x00}],\n"
       + "  \"CustomStructArray\": [{\"a\": 4.5, \"v1\": [0.1, 0.2, 0.3], \"v2\": [[1.1, 1.3], [2.1, 2.2, 2.3]], "
-      +      "\"s\": \"AnotherString1\"}, {\"a\": 4.6, \"v1\": [0.1, 0.2, 0.3], "
-      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\"}],\n"
+      +      "\"s\": \"AnotherString1\", \"b\": 0x00}, {\"a\": 4.6, \"v1\": [0.1, 0.2, 0.3], "
+      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\", \"b\": 0x00}],\n"
       + "  \"DerivedA\": {\n"
       + "    \":_0\": {\n"
       + "      \"a\": 0,\n"
       + "      \"v1\": [],\n"
       + "      \"v2\": [],\n"
-      + "      \"s\": \"\"\n"
+      + "      \"s\": \"\",\n"
+      + "      \"b\": 0x00\n"
       + "    },\n"
       + "    \"a_v\": [],\n"
       + "    \"a_s\": \"\"\n"
@@ -381,12 +397,12 @@ TEST(RNTupleShow, RVec)
 
       *fieldIntVec = ROOT::RVec<int>{1, 2, 3};
       *fieldFloatVecVec = ROOT::RVec<ROOT::RVec<float>>{ROOT::RVec<float>{0.1, 0.2}, ROOT::RVec<float>{1.1, 1.2}};
-      *fieldCustomStructVec = ROOT::RVec<CustomStruct>{{}, {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo"}};
+      *fieldCustomStructVec = ROOT::RVec<CustomStruct>{CustomStruct(), {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
       ntuple->Fill();
 
       fieldIntVec->emplace_back(4);
       fieldFloatVecVec->emplace_back(ROOT::RVec<float>{2.1, 2.2});
-      fieldCustomStructVec->emplace_back(CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "bar"});
+      fieldCustomStructVec->emplace_back(CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "bar", std::byte{0}});
       ntuple->Fill();
    }
 
@@ -399,8 +415,8 @@ TEST(RNTupleShow, RVec)
       + "{\n"
       + "  \"intVec\": [1, 2, 3],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format on
    EXPECT_EQ(os.str(), expected1);
@@ -412,9 +428,9 @@ TEST(RNTupleShow, RVec)
       + "{\n"
       + "  \"intVec\": [1, 2, 3, 4],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"},"
-      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00},"
+      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format on
    EXPECT_EQ(os2.str(), expected2);
@@ -440,7 +456,7 @@ TEST(RNTupleShow, RVecTypeErased)
 
       ROOT::RVec<int> intVec = {1, 2, 3};
       ROOT::RVec<ROOT::RVec<float>> floatVecVec{ROOT::RVec<float>{0.1, 0.2}, ROOT::RVec<float>{1.1, 1.2}};
-      ROOT::RVec<CustomStruct> customStructVec{{}, {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo"}};
+      ROOT::RVec<CustomStruct> customStructVec{CustomStruct(), {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
 
       m->Freeze();
       m->GetDefaultEntry()->CaptureValueUnsafe("intVec", &intVec);
@@ -453,7 +469,7 @@ TEST(RNTupleShow, RVecTypeErased)
 
       intVec.emplace_back(4);
       floatVecVec.emplace_back(ROOT::RVec<float>{2.1, 2.2});
-      customStructVec.emplace_back(CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "bar"});
+      customStructVec.emplace_back(CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "bar", std::byte{0}});
       ntuple->Fill();
    }
 
@@ -466,8 +482,8 @@ TEST(RNTupleShow, RVecTypeErased)
       + "{\n"
       + "  \"intVec\": [1, 2, 3],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format on
    EXPECT_EQ(fString, os.str());
@@ -479,9 +495,9 @@ TEST(RNTupleShow, RVecTypeErased)
       + "{\n"
       + "  \"intVec\": [1, 2, 3, 4],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"},"
-      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00},"
+      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format off
    EXPECT_EQ(fString1, os1.str());
@@ -524,6 +540,32 @@ TEST(RNTupleShow, CollectionProxy)
       // clang-format on
       EXPECT_EQ(os.str(), expected);
    }
+}
+
+TEST(RNTupleShow, Map)
+{
+   FileRaii fileGuard("test_ntuple_show_map.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto mapF = model->MakeField<std::map<std::string, float>>("mapF");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+
+      *mapF = {{"foo", 3.14}, {"bar", 2.72}};
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(1U, ntuple->GetNEntries());
+
+   std::ostringstream os;
+   ntuple->Show(0, os);
+   // clang-format off
+   std::string expected{std::string("")
+      + "{\n"
+      + "  \"mapF\": [{\"_0\": \"bar\", \"_1\": 2.72}, {\"_0\": \"foo\", \"_1\": 3.14}]\n"
+      + "}\n"};
+   // clang-format on
+   EXPECT_EQ(os.str(), expected);
 }
 
 TEST(RNTupleShow, Enum)

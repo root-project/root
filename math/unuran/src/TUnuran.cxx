@@ -305,7 +305,7 @@ bool  TUnuran::SetDiscreteDistribution(const TUnuranDiscrDist & dist)
    if (fUdistr == nullptr) return false;
    unsigned int ret = 0;
    // if a probability mesh function is provided
-   if (dist.ProbVec().size() == 0) {
+   if (dist.ProbVec().empty()) {
       ret = unur_distr_set_extobj(fUdistr, &dist );
       ret |= unur_distr_discr_set_pmf(fUdistr, &DiscrDist::Pmf);
       if (dist.HasCdf() ) ret |= unur_distr_discr_set_cdf(fUdistr, &DiscrDist::Cdf);
@@ -461,7 +461,7 @@ bool  TUnuran::SetLogLevel(unsigned int debugLevel)
 }
 
 bool TUnuran::InitPoisson(double mu, const std::string & method) {
-   // initializaton for a Poisson
+   // initialization for a Poisson
    double p[1];
    p[0] = mu;
 
@@ -475,7 +475,7 @@ bool TUnuran::InitPoisson(double mu, const std::string & method) {
 }
 
 bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & method ) {
-   // initializaton for a Binomial
+   // initialization for a Binomial
    double par[2];
    par[0] = ntot;
    par[1] = prob;

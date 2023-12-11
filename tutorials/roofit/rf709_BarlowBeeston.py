@@ -85,7 +85,7 @@ model1 = ROOT.RooProdPdf("model1", "model1", {hc_sig, hc_bkg}, Conditional=(mode
 # can be re-used.
 # The first ParamHistFunc will create one parameter per bin, such as `p_ph_sig2_gamma_bin_0`.
 # This allows bin 0 to fluctuate up and down.
-# Then, the SAME parameters are connected to the background histogram, so the bins flucutate
+# Then, the SAME parameters are connected to the background histogram, so the bins fluctuate
 # synchronously. This reduces the number of parameters.
 p_ph_sig2 = ROOT.RooParamHistFunc("p_ph_sig2", "p_ph_sig2", dh_sig)
 p_ph_bkg2 = ROOT.RooParamHistFunc("p_ph_bkg2", "p_ph_bkg2", dh_bkg, p_ph_sig2, True)

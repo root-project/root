@@ -89,8 +89,8 @@ WinNT.*.Editor:          notepad
 # if the next line is activated, the default viewer will be OpenGL.
 #Viewer3D.DefaultDrawOption:   ogl
 
-# Default Fitter (current choices are Minuit and Fumili).
-Root.Fitter:             Minuit
+# Default Fitter (current choices are Minuit, Minuit2, and Fumili).
+#Root.Fitter:             Minuit2
 
 # Specify list of file endings which TTabCom (TAB completion) should ignore.
 #TabCom.FileIgnore:       .cpp:.h:.cmz
@@ -247,8 +247,8 @@ WebGui.HttpPortMin:         8800
 WebGui.HttpPortMax:         9800
 # Exact IP iddress to bind bind http server (default - empty)
 WebGui.HttpBind:
-# Use only loopback address to bind http server (default - no)
-WebGui.HttpLoopback:        no
+# Use only loopback address to bind http server (default - yes)
+WebGui.HttpLoopback:        yes
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem

@@ -5,20 +5,22 @@
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
+#include <RooAddPdf.h>
+#include <RooCategory.h>
+#include <RooConstVar.h>
+#include <RooExponential.h>
+#include <RooGaussian.h>
+#include <RooGlobalFunc.h>
+#include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
-#include <RooRealVar.h>
-#include <RooConstVar.h>
-#include <RooWorkspace.h>
-#include <RooGlobalFunc.h>
-#include <RooGaussian.h>
-#include <RooHelpers.h>
+#include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
+#include <RooPoisson.h>
+#include <RooProdPdf.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
-#include <RooProdPdf.h>
-#include <RooPoisson.h>
-#include <RooCategory.h>
+#include <RooWorkspace.h>
 
 #include <TROOT.h>
 
@@ -33,7 +35,7 @@ const bool writeJsonFiles = true;
 // will be written out and read back, and then the values of the old and new
 // RooAbsReal will be compared for equality in each bin of the observable that
 // is called "x" by convention.
-int validate(RooWorkspace &ws1, std::string const &argName)
+int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
 {
    RooWorkspace ws2;
 
@@ -57,27 +59,27 @@ int validate(RooWorkspace &ws1, std::string const &argName)
       x2.setBin(i);
       const double val1 = arg1.getVal(nset1);
       const double val2 = arg2.getVal(nset2);
-      allGood &= val1 == val2;
+      allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
    }
 
    return allGood ? 0 : 1;
 }
 
-int validate(std::vector<std::string> const &expressions)
+int validate(std::vector<std::string> const &expressions, bool exact = true)
 {
    RooWorkspace ws;
    for (std::size_t iExpr = 0; iExpr < expressions.size() - 1; ++iExpr) {
       ws.factory(expressions[iExpr]);
    }
    const std::string argName = ws.factory(expressions.back())->GetName();
-   return validate(ws, argName);
+   return validate(ws, argName, exact);
 }
 
-int validate(RooAbsArg const &arg)
+int validate(RooAbsArg const &arg, bool exact = true)
 {
    RooWorkspace ws;
    ws.import(arg, RooFit::Silence());
-   return validate(ws, arg.GetName());
+   return validate(ws, arg.GetName(), exact);
 }
 
 } // namespace
@@ -115,10 +117,30 @@ TEST(RooFitHS3, AttributesIO)
 
 TEST(RooFitHS3, RooAddPdf)
 {
-   int status =
-      validate({"Gaussian::signalModel(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
-                "ArgusBG::background(x, 5.291, argpar[-20.0, -100., -1.])",
-                "SUM::model(nsig[200, 0., 10000] * signalModel, nbkg[800, 0., 10000] * background)"});
+   int status = validate({"Gaussian::sig(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
+                          "ArgusBG::bkg(x, 5.291, argpar[-20.0, -100., -1.])",
+                          "SUM::model(nsig[200, 0., 10000] * sig, nbkg[800, 0., 10000] * bkg)"});
+   EXPECT_EQ(status, 0);
+
+   // With the next part of the test, we want to cover the closure of
+   // coefficient normalization reference observables.
+   RooWorkspace ws;
+   ws.factory("Gaussian::sig_1(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])");
+   ws.factory("Uniform::sig_2(x_2[0, 10])");
+
+   ws.factory("ArgusBG::bkg_1(x, 5.291, argpar[-20.0, -100., -1.])");
+   // Some pdf in x_2 needs to be non linear, otherwise the reference
+   // normalization set makes no difference.
+   ws.factory("Polynomial::bkg_2(x_2, {a2[1.0, 0.0, 2.0]}, 2)");
+
+   ws.factory("PROD::sig(sig_1, sig_2)");
+   ws.factory("PROD::bkg(bkg_1, bkg_2)");
+
+   ws.factory("nsig[200, 0., 10000]");
+   ws.factory("nbkg[800, 0., 10000]");
+   RooAddPdf addPdf{"model_cond", "model_cond", {*ws.pdf("sig"), *ws.pdf("bkg")}, {*ws.var("nsig"), *ws.var("nbkg")}};
+   addPdf.fixCoefNormalization({*ws.var("x"), *ws.var("x_2")});
+   status = validate(addPdf);
    EXPECT_EQ(status, 0);
 }
 
@@ -151,7 +173,13 @@ TEST(RooFitHS3, RooConstVar)
 
 TEST(RooFitHS3, RooExponential)
 {
-   int status = validate({"Exponential::exponential(x[0, 10], c[-0.1])"});
+   int status = validate({"Exponential::exponential_1(x[0, 10], c[-0.1])"});
+   EXPECT_EQ(status, 0);
+   RooWorkspace ws;
+   ws.factory("x[0, 10]");
+   ws.factory("c[-0.1]");
+   RooExponential exponential2{"exponential_2", "exponential_2", *ws.var("x"), *ws.var("c"), true};
+   status = validate(exponential2);
    EXPECT_EQ(status, 0);
 }
 
@@ -179,6 +207,12 @@ TEST(RooFitHS3, RooGamma)
 TEST(RooFitHS3, RooGaussian)
 {
    int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooBernstein)
+{
+   int status = validate({"RooBernstein::bernstein(x[0, 10], { a[1], 3, b[5, 0, 20] })"});
    EXPECT_EQ(status, 0);
 }
 
@@ -229,7 +263,14 @@ TEST(RooFitHS3, RooLandau)
 
 TEST(RooFitHS3, RooLognormal)
 {
-   int status = validate({"Lognormal::lognormal(x[0.1, 2.0], m0[0.0, 0.1, 10], k[3.0, 1.1, 10])"});
+   RooWorkspace ws;
+   int status = validate({"Lognormal::lognormal_1(x[1.0, 1.1, 10], mu_2[2.0, 1.1, 10], k_1[2.0, 1.1, 5.0])"});
+   EXPECT_EQ(status, 0);
+   ws.factory("x[1.0, 1.1, 10]");
+   ws.factory("mu_2[0.7, 0.1, 2.3]");
+   ws.factory("k_2[0.7, 0.1, 1.6]");
+   RooLognormal lognormal2{"lognormal_2", "lognormal_2", *ws.var("x"), *ws.var("mu_2"), *ws.var("k_2"), true};
+   status = validate(lognormal2);
    EXPECT_EQ(status, 0);
 }
 
@@ -255,8 +296,19 @@ TEST(RooFitHS3, RooMultiVarGaussian)
 
 TEST(RooFitHS3, RooPoisson)
 {
-   int status = validate({"Poisson::poisson(x[0, 10], mean[5])"});
-   EXPECT_EQ(status, 0);
+   int status = 0;
+
+   for (auto noRounding : {false, true}) {
+
+      std::string name = "poisson";
+      name += noRounding ? "_true" : "_false";
+
+      RooRealVar x{"x", "x", 0, 10};
+      RooRealVar mean{"mean", "mean", 5};
+      RooPoisson poisson{name.c_str(), name.c_str(), x, mean, noRounding};
+      status = validate(poisson);
+      EXPECT_EQ(status, 0);
+   }
 }
 
 TEST(RooFitHS3, RooPolynomial)

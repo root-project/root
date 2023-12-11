@@ -34,32 +34,21 @@ MaxLikelihoodEstimateTestStat: TestStatistic that returns maximum likelihood
 estimate of a specified parameter.
 */
 
-class MaxLikelihoodEstimateTestStat: public TestStatistic {
+class MaxLikelihoodEstimateTestStat : public TestStatistic {
 
-   public:
-
-   //__________________________________
-   MaxLikelihoodEstimateTestStat() :
-   fPdf(nullptr),fParameter(nullptr), fUpperLimit(true)
+public:
+   MaxLikelihoodEstimateTestStat()
+      : fStrategy(::ROOT::Math::MinimizerOptions::DefaultStrategy()),
+        fPrintLevel(::ROOT::Math::MinimizerOptions::DefaultPrintLevel())
    {
-     /// constructor
-     ///      fPdf = pdf;
-     ///      fParameter = parameter;
-
-   fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
-   fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
-
    }
-   //__________________________________
-   MaxLikelihoodEstimateTestStat(RooAbsPdf& pdf, RooRealVar& parameter) :
-   fPdf(&pdf),fParameter(&parameter), fUpperLimit(true)
-   {
-      // constructor
-      //      fPdf = pdf;
-      //      fParameter = parameter;
-   fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
-   fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
+   MaxLikelihoodEstimateTestStat(RooAbsPdf &pdf, RooRealVar &parameter)
+      : fPdf(&pdf),
+        fParameter(&parameter),
+        fStrategy(::ROOT::Math::MinimizerOptions::DefaultStrategy()),
+        fPrintLevel(::ROOT::Math::MinimizerOptions::DefaultPrintLevel())
+   {
    }
 
   //______________________________
@@ -142,10 +131,10 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
 
    private:
-      RooAbsPdf *fPdf;
-      RooRealVar *fParameter;
+      RooAbsPdf *fPdf = nullptr;
+      RooRealVar *fParameter = nullptr;
       RooArgSet fConditionalObs;
-      bool fUpperLimit;
+      bool fUpperLimit = true;
       TString fMinimizer;
       Int_t fStrategy;
       Int_t fPrintLevel;

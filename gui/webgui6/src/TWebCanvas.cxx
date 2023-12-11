@@ -32,13 +32,14 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TH1.h"
-#include "TH1K.h"
 #include "TH2.h"
+#include "TH1K.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
 #include "TGaxis.h"
 #include "TScatter.h"
 #include "TCutG.h"
@@ -57,20 +58,37 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <vector>
+
 
 class TWebCanvasTimer : public TTimer {
    TWebCanvas &fCanv;
    Bool_t fProcessing{kFALSE};
+   Bool_t fSlow{kFALSE};
+   Int_t fSlowCnt{0};
 public:
    TWebCanvasTimer(TWebCanvas &canv) : TTimer(10, kTRUE), fCanv(canv) {}
+
+   Bool_t IsSlow() const { return fSlow; }
+   void SetSlow(Bool_t slow = kTRUE)
+   {
+      fSlow = slow;
+      fSlowCnt = 0;
+      SetTime(slow ? 1000 : 10);
+   }
 
    /// used to send control messages to clients
    void Timeout() override
    {
       if (fProcessing || fCanv.fProcessingData) return;
       fProcessing = kTRUE;
-      fCanv.CheckDataToSend();
+      Bool_t res = fCanv.CheckDataToSend();
       fProcessing = kFALSE;
+      if (res) {
+         fSlowCnt = 0;
+      } else if (++fSlowCnt > 10 && !IsSlow()) {
+         SetSlow(kTRUE);
+      }
    }
 };
 
@@ -100,6 +118,20 @@ Either by specifying `root --web=off` when starting ROOT or by setting `Canvas.N
 
 using namespace std::string_literals;
 
+static const std::string sid_pad_histogram = "__pad_histogram__";
+
+
+struct WebFont_t {
+   Int_t fIndx{0};
+   TString fName;
+   TString fFormat;
+   TString fData;
+   WebFont_t() = default;
+   WebFont_t(Int_t indx, const TString &name, const TString &fmt, const TString &data) : fIndx(indx), fName(name), fFormat(fmt), fData(data) {}
+};
+
+static std::vector<WebFont_t> gWebFonts;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
@@ -112,8 +144,14 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 1);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
-   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 0) > 0;
+   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 1) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
+
+   fWebConn.emplace_back(0); // add special connection which only used to perform updates
+
+   fTimer->TurnOn();
+
+   // fAsyncMode = kTRUE;
 }
 
 
@@ -123,6 +161,68 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
 TWebCanvas::~TWebCanvas()
 {
    delete fTimer;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add font to static list of fonts upported by the canvas
+/// Name specifies name of the font, second is font file with .ttf or .woff2 extension 
+/// Only True Type Fonts (ttf) are supported by PDF
+/// Returns font index which can be used in 
+///   auto font_indx = TWebCanvas::AddFont("test", "test.ttf", 2);
+///   gStyle->SetStatFont(font_indx);
+
+Font_t TWebCanvas::AddFont(const char *name, const char *fontfile, Int_t precision)
+{
+   Font_t maxindx = 22;
+   for (auto &entry : gWebFonts) {
+      if (entry.fName == name)
+         return precision > 0 ? entry.fIndx*10 + precision : entry.fIndx;
+      if (entry.fIndx > maxindx)
+         maxindx = entry.fIndx;
+   }
+
+   TString fullname = fontfile, fmt = "ttf";
+   auto pos = fullname.Last('.');
+   if (pos != kNPOS) {
+      fmt = fullname(pos+1, fullname.Length() - pos);
+      fmt.ToLower();
+      if ((fmt != "ttf") && (fmt != "woff2")) {
+         ::Error("TWebCanvas::AddFont", "Unsupported font file extension %s", fmt.Data());
+         return (Font_t) -1;
+      }
+   }
+
+   gSystem->ExpandPathName(fullname);
+
+   if (gSystem->AccessPathName(fullname.Data(), kReadPermission)) {
+      ::Error("TWebCanvas::AddFont", "Not possible to read font file %s", fullname.Data());
+      return (Font_t) -1;
+   }
+
+   std::ifstream is(fullname.Data(), std::ios::in | std::ios::binary);
+   std::string res;
+   if (is) {
+      is.seekg(0, std::ios::end);
+      res.resize(is.tellg());
+      is.seekg(0, std::ios::beg);
+      is.read((char *)res.data(), res.length());
+      if (!is)
+         res.clear();
+   }
+
+   if (res.empty()) {
+      ::Error("TWebCanvas::AddFont", "Fail to read font file %s", fullname.Data());
+      return (Font_t) -1;
+   }
+
+   TString base64 = TBase64::Encode(res.c_str(), res.length());
+
+   maxindx++;
+   
+   gWebFonts.emplace_back(maxindx, name, fmt, base64);
+
+   return precision > 0 ? maxindx*10 + precision : maxindx;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -259,9 +359,10 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    auto *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
 
    TView *view = nullptr;
-   auto savepad = gPad;
 
-   pad->cd();
+   TVirtualPad::TContext ctxt;
+
+   gPad = pad;
 
    if (obj->InheritsFrom(TAtt3D::Class()) && !pad->GetView()) {
       pad->GetViewer3D("pad");
@@ -293,8 +394,8 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
       painter->SetPainting(nullptr);
 
    gVirtualPS = saveps;
-   if (savepad)
-      savepad->cd();
+
+   fPadsStatus[pad]._has_specials = true;
 
    // if there are master PS, do not create separate entries
    if (!masterps && !ps.IsEmptyPainting())
@@ -325,7 +426,7 @@ UInt_t TWebCanvas::CalculateColorsHash()
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Add special canvas objects like colors list at selected palette
+/// Add special canvas objects with list of colors and color palette
 
 void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 {
@@ -343,10 +444,9 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 
    TArrayI pal = TColor::GetPalette();
 
-   auto *listofcols = new TWebPainting;
+   auto listofcols = new TWebPainting;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
-      if (colors->At(n))
-         listofcols->AddColor(n, (TColor *)colors->At(n));
+      listofcols->AddColor(n, (TColor *)colors->At(n));
 
    // store palette in the buffer
    auto *tgt = listofcols->Reserve(pal.GetSize());
@@ -355,6 +455,19 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
    listofcols->FixSize();
 
    master.NewSpecials().SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add special canvas objects with custom fonts
+
+void TWebCanvas::AddCustomFonts(TPadWebSnapshot &master)
+{
+   for (auto &entry : gWebFonts) {
+      TString code = TString::Format("%d:%s:%s:%s", entry.fIndx, entry.fName.Data(), entry.fFormat.Data(), entry.fData.Data());
+      auto custom_font = new TWebPainting;
+      custom_font->AddOper(code.Data());
+      master.NewSpecials().SetSnapshot(TWebSnapshot::kFont, custom_font, kTRUE);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -393,9 +506,13 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
    }
 
-   TList *primitives = pad->GetListOfPrimitives();
+   // for the first time add custom fonts to the canvas snapshot
+   if (resfunc && (version == 0))
+      AddCustomFonts(paddata);
 
-   if (primitives) fPrimitivesLists.Add(primitives); // add list of primitives
+   fAllPads.emplace_back(pad);
+
+   TList *primitives = pad->GetListOfPrimitives();
 
    TWebPS masterps;
    bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
@@ -407,6 +524,15 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    bool need_frame = false, has_histo = false, need_palette = false;
    std::string need_title;
 
+   auto checkNeedPalette = [](TH1* hist, const TString &opt) {
+      auto check = [&opt](const TString &arg) {
+         return opt.Contains(arg + "Z") || opt.Contains(arg + "HZ");
+      };
+
+      return ((hist->GetDimension() == 2) && (check("COL") || check("LEGO") || check("LEGO4") || check("SURF2"))) ||
+             ((hist->GetDimension() == 3) && (check("BOX2") || check("BOX3")));
+   };
+
    while (process_primitives && ((obj = iter()) != nullptr)) {
       TString opt = iter.GetOption();
       opt.ToUpper();
@@ -414,6 +540,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if (obj->InheritsFrom(THStack::Class())) {
          // workaround for THStack, create extra components before sending to client
          auto hs = static_cast<THStack *>(obj);
+         if (strlen(obj->GetTitle()) > 0)
+            need_title = obj->GetTitle();
          TVirtualPad::TContext ctxt(pad, kFALSE);
          hs->BuildPrimitives(iter.GetOption());
          has_histo = true;
@@ -424,15 +552,18 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             TVirtualPad::TContext ctxt(kFALSE);
             mg->GetHistogram(); // force creation of histogram without any drawings
             has_histo = true;
+            if (strlen(obj->GetTitle()) > 0)
+               need_title = obj->GetTitle();
          }
       } else if (obj->InheritsFrom(TFrame::Class())) {
-         frame = static_cast<TFrame *>(obj);
+         if (!frame)
+            frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
          has_histo = true;
-         if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && (strlen(obj->GetTitle()) > 0))
+         if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && !opt.Contains("AXIS") && !opt.Contains("AXIG") && (strlen(obj->GetTitle()) > 0))
             need_title = obj->GetTitle();
-         if (obj->InheritsFrom(TH2::Class()) && (opt.Contains("COLZ") || opt.Contains("LEGO2Z") || opt.Contains("LEGO4Z") || opt.Contains("SURF2Z")))
+         if (checkNeedPalette(static_cast<TH1*>(obj), opt))
             need_palette = true;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          if (opt.Contains("A")) {
@@ -440,6 +571,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             if (!has_histo && (strlen(obj->GetTitle()) > 0))
                need_title = obj->GetTitle();
          }
+      } else if (obj->InheritsFrom(TGraph2D::Class())) {
+         if (!has_histo && (strlen(obj->GetTitle()) > 0))
+            need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TScatter::Class())) {
          need_frame = need_palette = true;
          if (strlen(obj->GetTitle()) > 0)
@@ -490,6 +624,89 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       masterps.CreatePainting(); // create for next operations
    };
 
+   auto check_cutg_in_options = [&](const TString &opt) {
+      auto p1 = opt.Index("["), p2 = opt.Index("]");
+      if ((p1 != kNPOS) && (p2 != kNPOS) && p2 > p1 + 1) {
+         TString cutname = opt(p1 + 1, p2 - p1 - 1);
+         TObject *cutg = primitives->FindObject(cutname.Data());
+         if (!cutg || (cutg->IsA() != TCutG::Class())) {
+            cutg = gROOT->GetListOfSpecials()->FindObject(cutname.Data());
+            if (cutg && cutg->IsA() == TCutG::Class())
+               paddata.NewPrimitive(cutg, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, cutg);
+         }
+      }
+   };
+
+   auto check_save_tf1 = [&](TObject *fobj, bool ignore_nodraw = false) {
+      if (!paddata.IsBatchMode() && !fTF1UseSave)
+         return;
+      if (!ignore_nodraw && fobj->TestBit(TF1::kNotDraw))
+         return;
+
+      auto f1 = static_cast<TF1 *>(fobj);
+      f1->Save(0, 0, 0, 0, 0, 0);
+   };
+
+   auto create_stats = [&]() {
+      TPaveStats *stats = nullptr;
+      if ((gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
+         stats = new TPaveStats(
+                        gStyle->GetStatX() - gStyle->GetStatW(),
+                        gStyle->GetStatY() - gStyle->GetStatH(),
+                        gStyle->GetStatX(),
+                        gStyle->GetStatY(), "brNDC");
+
+          // do not set optfit and optstat, they calling pad->Update,
+          // values correctly set already in TPaveStats constructor
+          // stats->SetOptFit(gStyle->GetOptFit());
+          // stats->SetOptStat(gStyle->GetOptStat());
+          stats->SetFillColor(gStyle->GetStatColor());
+          stats->SetFillStyle(gStyle->GetStatStyle());
+          stats->SetBorderSize(gStyle->GetStatBorderSize());
+          stats->SetTextFont(gStyle->GetStatFont());
+          if (gStyle->GetStatFont()%10 > 2)
+             stats->SetTextSize(gStyle->GetStatFontSize());
+          stats->SetFitFormat(gStyle->GetFitFormat());
+          stats->SetStatFormat(gStyle->GetStatFormat());
+          stats->SetName("stats");
+
+          stats->SetTextColor(gStyle->GetStatTextColor());
+          stats->SetTextAlign(12);
+          stats->SetBit(kCanDelete);
+          stats->SetBit(kMustCleanup);
+      }
+
+      return stats;
+   };
+
+   auto check_graph_funcs = [&](TGraph *gr, TList *funcs = nullptr) {
+      if (!funcs && gr)
+         funcs = gr->GetListOfFunctions();
+      if (!funcs)
+         return;
+
+      TIter fiter(funcs);
+      TPaveStats *stats = nullptr;
+      bool has_tf1 = false;
+
+      while (auto fobj = fiter()) {
+        if (fobj->InheritsFrom(TPaveStats::Class()))
+            stats = dynamic_cast<TPaveStats *> (fobj);
+        else if (fobj->InheritsFrom(TF1::Class())) {
+           check_save_tf1(fobj);
+           has_tf1 = true;
+        }
+      }
+
+      if (!stats && has_tf1 && gr && !gr->TestBit(TGraph::kNoStats)) {
+         stats = create_stats();
+         if (stats) {
+            stats->SetParent(funcs);
+            funcs->Add(stats);
+         }
+      }
+   };
+
    iter.Reset();
 
    bool first_obj = true;
@@ -505,7 +722,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          continue;
       } else if (obj->InheritsFrom(TH1K::Class())) {
          flush_master();
-         TH1K *hist = (TH1K *)obj;
+         TH1K *hist = static_cast<TH1K *>(obj);
 
          Int_t nbins = hist->GetXaxis()->GetNbins();
 
@@ -522,65 +739,40 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          while (auto fobj = fiter())
             h1->GetListOfFunctions()->Add(fobj->Clone());
 
-         TString hopt = iter.GetOption();
-         if (title && first_obj) hopt.Append(";;use_pad_title");
-
-         paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
 
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
-         TH1 *hist = (TH1 *)obj;
-         TIter fiter(hist->GetListOfFunctions());
-         TObject *fobj = nullptr;
+         TH1 *hist = static_cast<TH1 *>(obj);
+         hist->BufferEmpty();
+
          TPaveStats *stats = nullptr;
          TObject *palette = nullptr;
 
-         hist->BufferEmpty();
-
-         while ((fobj = fiter()) != nullptr) {
-           if (fobj->InheritsFrom(TPaveStats::Class()))
-              stats = dynamic_cast<TPaveStats *> (fobj);
-           else if (fobj->InheritsFrom("TPaletteAxis"))
-              palette = fobj;
+         TIter fiter(hist->GetListOfFunctions());
+         while (auto fobj = fiter()) {
+            if (fobj->InheritsFrom(TPaveStats::Class()))
+               stats = dynamic_cast<TPaveStats *> (fobj);
+            else if (fobj->InheritsFrom("TPaletteAxis"))
+               palette = fobj;
+            else if (fobj->InheritsFrom(TF1::Class()))
+               check_save_tf1(fobj);
          }
 
          TString hopt = iter.GetOption();
          TString o = hopt;
          o.ToUpper();
 
-         if (!stats && (first_obj || o.Contains("SAMES")) && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
-            stats = new TPaveStats(
-                           gStyle->GetStatX() - gStyle->GetStatW(),
-                           gStyle->GetStatY() - gStyle->GetStatH(),
-                           gStyle->GetStatX(),
-                           gStyle->GetStatY(), "brNDC");
-
-             stats->SetParent(hist);
-             // do not set optfit and optstat, they calling pad->Update,
-             // values correctly set already in TPaveStats constructor
-             // stats->SetOptFit(gStyle->GetOptFit());
-             // stats->SetOptStat(gStyle->GetOptStat());
-             stats->SetFillColor(gStyle->GetStatColor());
-             stats->SetFillStyle(gStyle->GetStatStyle());
-             stats->SetBorderSize(gStyle->GetStatBorderSize());
-             stats->SetTextFont(gStyle->GetStatFont());
-             if (gStyle->GetStatFont()%10 > 2)
-                stats->SetTextSize(gStyle->GetStatFontSize());
-             stats->SetFitFormat(gStyle->GetFitFormat());
-             stats->SetStatFormat(gStyle->GetStatFormat());
-             stats->SetName("stats");
-
-             stats->SetTextColor(gStyle->GetStatTextColor());
-             stats->SetTextAlign(12);
-             stats->SetBit(kCanDelete);
-             stats->SetBit(kMustCleanup);
-
-             hist->GetListOfFunctions()->Add(stats);
+         if (!stats && (first_obj || o.Contains("SAMES"))) {
+            stats = create_stats();
+            if (stats) {
+                stats->SetParent(hist);
+                hist->GetListOfFunctions()->Add(stats);
+            }
          }
 
-         if (!palette && CanCreateObject("TPaletteAxis") && (hist->GetDimension() > 1) &&
-              (o.Contains("COLZ") || o.Contains("LEGO2Z") || o.Contains("LEGO4Z") || o.Contains("SURF2Z"))) {
+         if (!palette && CanCreateObject("TPaletteAxis") && checkNeedPalette(hist, o)) {
             std::stringstream exec;
             exec << "new TPaletteAxis(0,0,0,0, (TH1*)" << std::hex << std::showbase << (size_t)hist << ");";
             palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
@@ -588,79 +780,80 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                hist->GetListOfFunctions()->AddFirst(palette);
          }
 
-         if (title && first_obj) hopt.Append(";;use_pad_title");
-
-         // if (stats) hopt.Append(";;use_pad_stats");
-
-         if (palette) hopt.Append(";;use_pad_palette");
-
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
-         if (hist->GetDimension() == 2) {
-            TString opt = iter.GetOption();
-            auto p1 = opt.Index("["), p2 = opt.Index("]");
-            if ((p1 != kNPOS) && (p2 != kNPOS) && p2 > p1 + 1) {
-               TString cutname = opt(p1 + 1, p2 - p1 - 1);
-               TObject *cutg = primitives->FindObject(cutname.Data());
-               if (!cutg || (cutg->IsA() != TCutG::Class())) {
-                  cutg = gROOT->GetListOfSpecials()->FindObject(cutname.Data());
-                  if (cutg && cutg->IsA() == TCutG::Class())
-                     paddata.NewPrimitive(cutg, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, cutg);
-               }
-            }
-         }
-
-         // do not extract objects from list of functions - stats and func need to be handled together with hist
-         //
-         // fiter.Reset();
-         // while ((fobj = fiter()) != nullptr)
-         //    CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
-
-         // fPrimitivesLists.Add(hist->GetListOfFunctions());
+         if (hist->GetDimension() == 2)
+            check_cutg_in_options(iter.GetOption());
 
          first_obj = false;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          flush_master();
 
-         TGraph *gr = (TGraph *)obj;
-         auto funcs = gr->GetListOfFunctions();
+         TGraph *gr = static_cast<TGraph *>(obj);
 
-         TIter fiter(funcs);
-         TObject *fobj = nullptr;
-         TPaveStats *stats = nullptr;
-
-         while ((fobj = fiter()) != nullptr) {
-           if (fobj->InheritsFrom(TPaveStats::Class()))
-               stats = dynamic_cast<TPaveStats *> (fobj);
-         }
-
-         // ensure histogram exists on server to draw it properly on clients side
-         if (!IsReadOnly() && first_obj)
-            gr->GetHistogram();
+         check_graph_funcs(gr);
 
          TString gropt = iter.GetOption();
-         if (title && first_obj) gropt.Append(";;use_pad_title");
-         if (stats) gropt.Append(";;use_pad_stats");
+
+         // ensure histogram exists on server to draw it properly on clients side
+         if (!IsReadOnly() && (first_obj || gropt.Index("A", 0, TString::kIgnoreCase) != kNPOS ||
+               (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS) || (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS)))
+            gr->GetHistogram();
 
          paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
-         fiter.Reset();
-         while ((fobj = fiter()) != nullptr)
-            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
+         first_obj = false;
+      } else if (obj->InheritsFrom(TGraph2D::Class())) {
+         flush_master();
 
-         if (funcs)
-            fPrimitivesLists.Add(funcs);
+         TGraph2D *gr2d = static_cast<TGraph2D *>(obj);
+
+         check_graph_funcs(nullptr, gr2d->GetListOfFunctions());
+
+         // ensure correct range of histogram
+         if (!IsReadOnly() && first_obj) {
+            TString gropt = iter.GetOption();
+            gropt.ToUpper();
+            Bool_t zscale = gropt.Contains("TRI1") || gropt.Contains("TRI2") || gropt.Contains("COL");
+            Bool_t real_draw = gropt.Contains("TRI") || gropt.Contains("LINE") || gropt.Contains("ERR") || gropt.Contains("P0");
+
+            TString hopt = !real_draw ? iter.GetOption() : (zscale ? "lego2z" : "lego2");
+            if (title) hopt.Append(";;use_pad_title");
+
+            // if gr2d not draw - let create histogram with correspondent content
+            auto hist = gr2d->GetHistogram(real_draw ? "empty" : "");
+
+            paddata.NewPrimitive(gr2d, hopt.Data(), "#hist").SetSnapshot(TWebSnapshot::kObject, hist);
+         }
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+         first_obj = false;
+      } else if (obj->InheritsFrom(TMultiGraph::Class())) {
+         flush_master();
+
+         TMultiGraph *mgr = static_cast<TMultiGraph *>(obj);
+         TIter fiter(mgr->GetListOfFunctions());
+         while (auto fobj = fiter()) {
+            if (fobj->InheritsFrom(TF1::Class()))
+               check_save_tf1(fobj);
+         }
+
+         TIter giter(mgr->GetListOfGraphs());
+         while (auto gobj = giter())
+            check_graph_funcs(static_cast<TGraph *>(gobj));
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+
          first_obj = false;
       } else if (obj->InheritsFrom(TScatter::Class())) {
          flush_master();
 
-         TScatter *scatter = (TScatter *)obj;
-         auto funcs = scatter->GetGraph()->GetListOfFunctions();
+         TScatter *scatter = static_cast<TScatter *>(obj);
 
-         TIter fiter(funcs);
-         TObject *fobj = nullptr, *palette = nullptr;
+         TObject *palette = nullptr;
 
-         while ((fobj = fiter()) != nullptr) {
+         TIter fiter(scatter->GetGraph()->GetListOfFunctions());
+         while (auto fobj = fiter()) {
             if (fobj->InheritsFrom("TPaletteAxis"))
                palette = fobj;
          }
@@ -674,21 +867,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             exec << "new TPaletteAxis(0,0,0,0,0,0);";
             palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
             if (palette)
-               funcs->AddFirst(palette);
+               scatter->GetGraph()->GetListOfFunctions()->AddFirst(palette);
          }
 
-         TString scopt = iter.GetOption();
-         if (title && first_obj) scopt.Append(";;use_pad_title");
-         if (palette) scopt.Append(";;use_pad_palette");
-
-         paddata.NewPrimitive(obj, scopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
-
-         fiter.Reset();
-         while ((fobj = fiter()) != nullptr)
-            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
-
-         if (funcs)
-            fPrimitivesLists.Add(funcs);
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          first_obj = false;
       } else if (obj->InheritsFrom(TF1::Class())) {
@@ -697,18 +879,18 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          TString f1opt = iter.GetOption();
 
-         if (f1->IsA() == TF1::Class() || f1->IsA() == TF2::Class()) {
-            if (paddata.IsBatchMode() || fTF1UseSave)
-               f1->Save(0, 0, 0, 0, 0, 0);
-            if (fTF1UseSave)
-               f1opt.Append(";force_saved");
-         }
+         check_save_tf1(obj, true);
+         // if (fTF1UseSave)
+         //   f1opt.Append(";force_saved");
 
          if (first_obj) {
             auto hist = f1->GetHistogram();
             paddata.NewPrimitive(hist, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, hist);
             f1opt.Append(";webcanv_hist");
          }
+
+         if (f1->IsA() == TF2::Class())
+            check_cutg_in_options(iter.GetOption());
 
          paddata.NewPrimitive(f1, f1opt.Data()).SetSnapshot(TWebSnapshot::kObject, f1);
 
@@ -722,12 +904,17 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             paddata.NewPrimitive(func, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, func);
 
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+      } else if (obj->InheritsFrom(TFrame::Class())) {
+         flush_master();
+         if (frame && (obj == frame)) {
+            paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+            frame = nullptr; // add frame only once
+         }
       } else if (IsJSSupportedClass(obj, usemaster)) {
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
          CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
-         pad_status._has_specials = true;
       }
    }
 
@@ -759,68 +946,58 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    if (!resfunc)
       return;
 
-   // now move all primitives and functions into separate list to perform I/O
-
-   TList save_lst;
-   TIter diter(&fPrimitivesLists);
-   TList *dlst = nullptr;
-   while ((dlst = (TList *)diter()) != nullptr) {
-      TIter fiter(dlst);
-      while ((obj = fiter()) != nullptr)
-         save_lst.Add(obj, fiter.GetOption());
-      save_lst.Add(dlst); // add list itself to have marker
-      dlst->Clear("nodelete");
+   // now hide all primitives to perform I/O
+   std::vector<TList *> all_primitives(fAllPads.size());
+   for (unsigned n = 0; n < fAllPads.size(); ++n) {
+      all_primitives[n] = fAllPads[n]->fPrimitives;
+      fAllPads[n]->fPrimitives = nullptr;
    }
 
    // execute function to prevent storing of colors with custom TCanvas streamer
-   // TODO: Olivier - we need to change logic here!
    TColor::DefinedColors();
 
-   // invoke callback for master painting
+   // invoke callback for streaming
    resfunc(&paddata);
 
-   TIter siter(&save_lst);
-   diter.Reset();
-   while ((dlst = (TList *)diter()) != nullptr) {
-      while ((obj = siter()) != nullptr) {
-         if (obj == dlst)
-            break;
-         dlst->Add(obj, siter.GetOption());
-      }
+   // and restore back primitives - delete any temporary if necessary
+   for (unsigned n = 0; n < fAllPads.size(); ++n) {
+      if (fAllPads[n]->fPrimitives)
+         delete fAllPads[n]->fPrimitives;
+      fAllPads[n]->fPrimitives = all_primitives[n];
    }
-
-   save_lst.Clear("nodelete");
-
-   fPrimitivesLists.Clear("nodelete");
+   fAllPads.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add control message for specified connection
 /// Same control message can be overwritten many time before it really sends to the client
 /// If connid == 0, message will be add to all connections
-/// If parameter send_immediately specified, tries to submit message immediately
-/// Otherwise short timer is activated and message send afterwards
+/// After ctrl message is add to the output, short timer is activated and message send afterwards
 
 void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value)
 {
-   for (auto &conn : fWebConn)
-      if ((conn.fConnId == connid) || (connid == 0))
-         conn.fCtrl[key] = value;
+   Bool_t new_ctrl = kFALSE;
 
-   if (!fTimer->IsRunning())
-      fTimer->TurnOn();
+   for (auto &conn : fWebConn) {
+      if (conn.match(connid)) {
+         conn.fCtrl[key] = value;
+         new_ctrl = kTRUE;
+      }
+   }
+
+   if (new_ctrl && fTimer->IsSlow())
+      fTimer->SetSlow(kFALSE);
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add message to send queue for specified connection
 /// If connid == 0, message will be add to all connections
-/// Return kFALSE if queue is full or connection is not exists
 
 void TWebCanvas::AddSendQueue(unsigned connid, const std::string &msg)
 {
    for (auto &conn : fWebConn) {
-      if ((conn.fConnId == connid) || (connid == 0))
+      if (conn.match(connid))
          conn.fSend.emplace(msg);
    }
 }
@@ -830,26 +1007,26 @@ void TWebCanvas::AddSendQueue(unsigned connid, const std::string &msg)
 /// Check if any data should be send to client
 /// If connid != 0, only selected connection will be checked
 
-void TWebCanvas::CheckDataToSend(unsigned connid)
+Bool_t TWebCanvas::CheckDataToSend(unsigned connid)
 {
-   if (!Canvas() || !fWindow)
-      return;
+   if (!Canvas())
+      return kFALSE;
 
-   bool isMoreData = false;
+   bool isMoreData = false, isAnySend = false;
 
    for (auto &conn : fWebConn) {
 
       bool isConnData = !conn.fCtrl.empty() || !conn.fSend.empty() ||
                         ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion));
 
-      while ((!connid || (conn.fConnId == connid)) && fWindow->CanSend(conn.fConnId, true)) {
+      while ((conn.is_batch() && !connid) || (conn.match(connid) && fWindow && fWindow->CanSend(conn.fConnId, true))) {
          // check if any control messages still there to keep timer running
 
          std::string buf;
 
          if (!conn.fCtrl.empty()) {
-              buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
-              conn.fCtrl.clear();
+            buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+            conn.fCtrl.clear();
          } else if (!conn.fSend.empty()) {
             std::swap(buf, conn.fSend.front());
             conn.fSend.pop();
@@ -868,6 +1045,12 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
             holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
 
             CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf, &conn, this](TPadWebSnapshot *snap) {
+               if (conn.is_batch()) {
+                  // for batch connection only calling of CreatePadSnapshot is important
+                  buf.clear();
+                  return;
+               }
+
                auto json = TBufferJSON::ToJSON(snap, fJsonComp);
                auto hash = json.Hash();
                if (conn.fLastSendHash && (conn.fLastSendHash == hash) && conn.fSendVersion) {
@@ -890,20 +1073,20 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
             break;
          }
 
-         if (!buf.empty())
+         if (!buf.empty() && !conn.is_batch()) {
             fWindow->Send(conn.fConnId, buf);
+            isAnySend = true;
+         }
       }
 
       if (isConnData)
          isMoreData = true;
    }
 
-   bool is_running = fTimer->IsRunning();
-   if (is_running && !isMoreData)
-      fTimer->TurnOff();
-   else if (!is_running && isMoreData)
-      fTimer->TurnOn();
+   if (fTimer->IsSlow() && isMoreData)
+      fTimer->SetSlow(kFALSE);
 
+   return isAnySend;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1122,6 +1305,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
    for (unsigned n = 0; n < arr->size(); ++n) {
       auto &r = arr->at(n);
+
       TPad *pad = dynamic_cast<TPad *>(FindPrimitive(r.snapid));
 
       if (!pad)
@@ -1232,7 +1416,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
       TObjLink *objlnk = nullptr;
 
-      TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", 1, pad, &objlnk));
+      TH1 *hist = static_cast<TH1 *>(FindPrimitive(sid_pad_histogram, 1, pad, &objlnk));
 
       if (hist) {
 
@@ -1376,6 +1560,8 @@ void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
 {
    std::string buf = lines;
 
+   Int_t indx = 0;
+
    while (obj && !buf.empty()) {
       std::string sub = buf;
       auto pos = buf.find(";;");
@@ -1390,8 +1576,10 @@ void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
 
       std::stringstream exec;
       exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
-      Info("ProcessLinesForObject", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+      if (indx < 3 || gDebug > 0)
+         Info("ProcessLinesForObject", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
       gROOT->ProcessLine(exec.str().c_str());
+      indx++;
    }
 }
 
@@ -1405,13 +1593,15 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       return kTRUE;
 
    // try to identify connection for given WS request
-   unsigned indx = 0;
-   for (auto &c : fWebConn) {
-      if (c.fConnId == connid) break;
-      indx++;
+   unsigned indx = 0; // first connection is batch and excluded
+   while(++indx < fWebConn.size()) {
+      if (fWebConn[indx].fConnId == connid)
+         break;
    }
    if (indx >= fWebConn.size())
       return kTRUE;
+
+   Bool_t is_main_connection = indx == 1; // first connection allow to make changes
 
    struct FlagGuard {
       Bool_t &flag;
@@ -1443,7 +1633,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          fWebConn[indx].fDrawVersion = std::stoll(cdata);
       } else {
          fWebConn[indx].fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
-         if ((indx == 0) && !IsReadOnly())
+         if (is_main_connection && !IsReadOnly())
             if (DecodePadOptions(separ+1, false))
                CheckCanvasModified();
       }
@@ -1484,18 +1674,18 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
-      if ((indx == 0) && !IsReadOnly())
+      if (is_main_connection && !IsReadOnly())
          if (DecodePadOptions(arg.substr(9), true))
             CheckCanvasModified();
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
-      if (indx == 0) {
+      if (is_main_connection) {
          AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
    } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
-      if (indx == 0) {
+      if (is_main_connection) {
          auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
          if (!arr || (arr->size() != 4)) {
             Error("ProcessData", "Wrong arguments count %d in highlight message", (int)(arr ? arr->size() : -1));
@@ -1886,19 +2076,12 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate(Bool_t async)
 {
-   Bool_t modified = CheckCanvasModified();
+   CheckCanvasModified();
 
-   if (!fWindow) {
-      if (modified) {
-         TCanvasWebSnapshot holder(IsReadOnly(), false, true); // readonly, set ids, batchmode
-         CreatePadSnapshot(holder, Canvas(), 0, nullptr);
-      }
-   } else {
-      CheckDataToSend();
+   CheckDataToSend();
 
-      if (!fProcessingData && !IsAsyncMode() && !async)
-         WaitWhenCanvasPainted(fCanvVersion);
-   }
+   if (!fProcessingData && !IsAsyncMode() && !async)
+      WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
 }
@@ -1942,7 +2125,7 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
          return kFALSE; // wait ~1 min if no new connection established
       }
 
-      if ((fWebConn.size() > 0) && (fWebConn.front().fDrawVersion >= ver)) {
+      if ((fWebConn.size() > 1) && (fWebConn[1].fDrawVersion >= ver)) {
          if (gDebug > 2)
             Info("WaitWhenCanvasPainted", "ver %ld got painted", (long)ver);
          return kTRUE;
@@ -2228,138 +2411,140 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
    if (!pad)
       pad = Canvas();
 
-   std::string kind;
-   auto separ = sid.find("#");
+   std::string subelement;
    long unsigned id = 0;
-   bool search_hist = false;
+   bool search_hist = (sid == sid_pad_histogram);
+   if (!search_hist) {
+      auto separ = sid.find("#");
 
-   if (sid == "histogram") {
-      search_hist = true;
-   } else if (separ == std::string::npos) {
-      id = std::stoul(sid);
-   } else {
-      kind = sid.substr(separ + 1);
-      id = std::stoul(sid.substr(0, separ));
+      if (separ == std::string::npos) {
+         id = std::stoul(sid);
+      } else {
+         subelement = sid.substr(separ + 1);
+         id = std::stoul(sid.substr(0, separ));
+      }
+      if (TString::Hash(&pad, sizeof(pad)) == id)
+         return pad;
    }
-
-   if (!search_hist && TString::Hash(&pad, sizeof(pad)) == id)
-      return pad;
-
-   auto getHistogram = [](TObject *obj) -> TH1* {
-      auto offset = obj->IsA()->GetDataMemberOffset("fHistogram");
-      if (offset > 0)
-         return *((TH1 **)((char*) obj + offset));
-      ::Error("getHistogram", "Cannot access fHistogram data member in %s", obj->ClassName());
-      return nullptr;
-   };
 
    for (auto lnk = pad->GetListOfPrimitives()->FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
       TObject *obj = lnk->GetObject();
       if (!obj) continue;
 
-      TString opt = lnk->GetOption();
-      opt.ToUpper();
-
-      TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
-      TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
-      TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
-      TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
-      THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
-      TF1 *f1 = obj->InheritsFrom(TF1::Class()) ? static_cast<TF1 *>(obj) : nullptr;
-
-      if (search_hist) {
-         if (objlnk)
-            *objlnk = lnk;
-
-         if (h1)
-            return h1;
-         if (gr)
-            return getHistogram(gr);
-         if (scatter)
-            return getHistogram(scatter);
-         if (mg && opt.Contains("A"))
-            return getHistogram(mg);
-         if (hs)
-            return getHistogram(hs);
-         if (f1)
-            return getHistogram(f1);
-
-         if (objlnk)
-            *objlnk = nullptr;
-
+      if (!search_hist && (TString::Hash(&obj, sizeof(obj)) != id)) {
+         if (obj->InheritsFrom(TPad::Class())) {
+            obj = FindPrimitive(sid, idcnt, (TPad *)obj, objlnk, objpad);
+            if (objpad && !*objpad)
+               *objpad = pad;
+             if (obj)
+                return obj;
+         }
          continue;
       }
 
-      if ((TString::Hash(&obj, sizeof(obj)) == id) && (--idcnt <= 0)) {
-         if (objpad)
-            *objpad = pad;
+      // one may require to access n-th object
+      if (!search_hist && --idcnt > 0)
+         continue;
 
-         if (kind.compare(0, 4, "hist") == 0) {
-            if (gr)
-               obj = h1 = getHistogram(gr);
+      if (objpad)
+         *objpad = pad;
+
+      if (objlnk)
+         *objlnk = lnk;
+
+      if (search_hist)
+         subelement = "hist";
+
+      auto getHistogram = [](TObject *container) -> TH1* {
+         auto offset = container->IsA()->GetDataMemberOffset("fHistogram");
+         if (offset > 0)
+            return *((TH1 **)((char *)container + offset));
+         ::Error("getHistogram", "Cannot access fHistogram data member in %s", container->ClassName());
+         return nullptr;
+      };
+
+      while(!subelement.empty() && obj) {
+         // do not return link if sub-selement is searched - except for histogram
+         if (!search_hist && objlnk)
+            *objlnk = nullptr;
+
+         std::string kind = subelement;
+         auto separ = kind.find("#");
+         if (separ == std::string::npos) {
+            subelement.clear();
+         } else {
+            kind.resize(separ);
+            subelement = subelement.substr(separ + 1);
+         }
+
+         TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
+         TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
+         TGraph2D *gr2d = obj->InheritsFrom(TGraph2D::Class()) ? static_cast<TGraph2D *>(obj) : nullptr;
+         TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
+         TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
+         THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
+         TF1 *f1 = obj->InheritsFrom(TF1::Class()) ? static_cast<TF1 *>(obj) : nullptr;
+
+         if (kind.compare("hist") == 0) {
+            if (h1)
+               obj = h1;
+            else if (gr)
+               obj = getHistogram(gr);
             else if (mg)
-               obj = h1 = getHistogram(mg);
+               obj = getHistogram(mg);
             else if (hs)
-               obj = h1 = getHistogram(hs);
+               obj = getHistogram(hs);
             else if (scatter)
-               obj = h1 = getHistogram(scatter);
+               obj = getHistogram(scatter);
             else if (f1)
-               obj = h1 = getHistogram(f1);
-
-            kind.erase(0,4);
-            if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
-            objlnk = nullptr;
-         }
-
-         if (h1 && (kind == "x"))
-            return h1->GetXaxis();
-         if (h1 && (kind == "y"))
-            return h1->GetYaxis();
-         if (h1 && (kind == "z"))
-            return h1->GetZaxis();
-
-         if ((h1 || gr || scatter) && !kind.empty() && (kind.compare(0,5,"func_") == 0)) {
+               obj = getHistogram(f1);
+            else if (gr2d)
+               obj = getHistogram(gr2d);
+            else
+               obj = nullptr;
+         } else if (kind.compare("x") == 0) {
+            obj = h1 ? h1->GetXaxis() : nullptr;
+         } else if (kind.compare("y") == 0) {
+            obj = h1 ? h1->GetYaxis() : nullptr;
+         } else if (kind.compare("z") == 0) {
+            obj = h1 ? h1->GetZaxis() : nullptr;
+         } else if ((kind.compare(0,5,"func_") == 0) || (kind.compare(0,5,"indx_") == 0)) {
             auto funcname = kind.substr(5);
-            TCollection *col = h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions());
-            return col ? col->FindObject(funcname.c_str()) : nullptr;
-         }
-
-         if ((h1 || gr) && !kind.empty() && (kind.compare(0,5,"indx_") == 0)) {
-            auto col = h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions();
-            return col ? col->At(std::stoi(kind.substr(5))) : nullptr;
-         }
-
-         if (!kind.empty() && (kind.compare(0,7,"member_") == 0)) {
+            TList *col = nullptr;
+            if (h1)
+               col = h1->GetListOfFunctions();
+            else if (gr)
+               col = gr->GetListOfFunctions();
+            else if (mg)
+               col = mg->GetListOfFunctions();
+            else if (scatter->GetGraph())
+               col = scatter->GetGraph()->GetListOfFunctions();
+            if (!col)
+               obj = nullptr;
+            else if (kind.compare(0,5,"func_") == 0)
+               obj = col->FindObject(funcname.c_str());
+            else
+               obj = col->At(std::stoi(funcname));
+         } else if (kind.compare(0,7,"graphs_") == 0) {
+            TList *graphs = mg ? mg->GetListOfGraphs() : nullptr;
+            obj = graphs ? graphs->At(std::stoi(kind.substr(7))) : nullptr;
+         } else if (kind.compare(0,6,"hists_") == 0) {
+            TList *hists = hs ? hs->GetHists() : nullptr;
+            obj = hists ? hists->At(std::stoi(kind.substr(6))) : nullptr;
+         } else if (kind.compare(0,6,"stack_") == 0) {
+            auto stack = hs ? hs->GetStack() : nullptr;
+            obj = stack ? stack->At(std::stoi(kind.substr(6))) : nullptr;
+         } else if (kind.compare(0,7,"member_") == 0) {
             auto member = kind.substr(7);
             auto offset = obj->IsA() ? obj->IsA()->GetDataMemberOffset(member.c_str()) : 0;
-            if (offset > 0) {
-               TObject **mobj = (TObject **)((char*) obj + offset);
-               return *mobj;
-            }
-            return nullptr;
+            obj = (offset > 0) ? *((TObject **)((char *) obj + offset)) : nullptr;
+         } else {
+             obj = nullptr;
          }
+      }
 
-         if (objlnk)
-            *objlnk = lnk;
+      if (!search_hist || obj)
          return obj;
-      }
-
-      if (h1 || gr || scatter) {
-         TIter fiter(h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions()));
-         TObject *fobj = nullptr;
-         while ((fobj = fiter()) != nullptr)
-            if (TString::Hash(&fobj, sizeof(fobj)) == id) {
-               if (objpad)
-                  *objpad = pad;
-               return fobj;
-            }
-      } else if (obj->InheritsFrom(TPad::Class())) {
-         obj = FindPrimitive(sid, idcnt, (TPad *)obj, objlnk, objpad);
-         if (objpad && !*objpad)
-            *objpad = pad;
-         if (obj)
-            return obj;
-      }
    }
 
    return nullptr;
@@ -2386,4 +2571,3 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    return imp;
 }
-

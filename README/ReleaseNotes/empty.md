@@ -12,23 +12,26 @@ For more information, see:
 
 The following people have contributed to this new version:
 
- Bertrand Bellenot, CERN/SFT,\
- Jakob Blomer, CERN/SFT,\
- Rene Brun, CERN/SFT,\
+ Guilherme Amadio, CERN/IT,\
+ Bertrand Bellenot, CERN/EP-SFT,\
+ Jakob Blomer, CERN/EP-SFT,\
+ Rene Brun,\
  Philippe Canal, FNAL,\
- Olivier Couet, CERN/SFT,\
- Gerri Ganis, CERN/SFT,\
- Andrei Gheata, CERN/SFT,\
- Enrico Guiraud, CERN/SFT,\
+ Olivier Couet, CERN/EP-SFT,\
+ Gerri Ganis, CERN/EP-SFT,\
+ Florine de Geus, CERN/ATLAS,\
+ Andrei Gheata, CERN/EP-SFT,\
+ Enrico Guiraud, CERN/EP-SFT and Princeton,\
+ Jonas Hahnfeld, CERN/EP-SFT,\
  Sergey Linev, GSI,\
- Javier Lopez-Gomez, CERN/SFT,\
- Pere Mato, CERN/SFT,\
- Lorenzo Moneta, CERN/SFT,\
- Axel Naumann, CERN/SFT,\
- Danilo Piparo, CERN/SFT,\
- Fons Rademakers, CERN/SFT,\
- Jonas Rembser, CERN/SFT,\
- Enric Tejedor Saavedra, CERN/SFT,\
+ Pere Mato, CERN/EP-SFT,\
+ Lorenzo Moneta, CERN/EP-SFT,\
+ Alja Mrak Tadel, UCSD/CMS,\
+ Axel Naumann, CERN/EP-SFT,\
+ Vincenzo Eduardo Padulano, CERN/EP-SFT,\
+ Danilo Piparo, CERN/EP-SFT,\
+ Fons Rademakers, CERN/IT,\
+ Jonas Rembser, CERN/EP-SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,

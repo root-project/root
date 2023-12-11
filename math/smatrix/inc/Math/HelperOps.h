@@ -19,7 +19,7 @@
  */
 #include "Math/StaticCheck.h"
 #include <algorithm>  // required by std::copy
-#include <assert.h>
+#include <cassert>
 
 namespace ROOT {
 
@@ -124,7 +124,7 @@ namespace Math {
 
 
    /**
-       Dummy Structure which flags an error to avoid assigment from expression based on a
+       Dummy Structure which flags an error to avoid assignment from expression based on a
        general matrix to a symmetric matrix
    */
    template <class T, unsigned int D1, unsigned int D2, class A>

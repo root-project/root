@@ -17,6 +17,8 @@
 #include <RooConstraintSum.h>
 #include <RooMsgService.h>
 
+#include "RooFitImplHelpers.h"
+
 namespace {
 
 std::unique_ptr<RooArgSet>
@@ -30,7 +32,7 @@ getGlobalObservables(RooAbsPdf const &pdf, RooArgSet const *globalObservables, c
       throw std::invalid_argument(errMsg);
    }
    if (globalObservables) {
-      // pass-throught of global observables
+      // pass-through of global observables
       return std::make_unique<RooArgSet>(*globalObservables);
    }
 
@@ -160,10 +162,11 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
          // In this case we don't take global observables from data
          takeGlobalObservablesFromData = false;
       } else {
-         if (!glObs)
+         if (!glObs) {
             oocoutI(&pdf, Minimization)
                << "The global observables are not defined , normalize constraints with respect to the parameters "
                << cPars << std::endl;
+         }
          takeGlobalObservablesFromData = false;
       }
 

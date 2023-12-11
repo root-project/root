@@ -1,8 +1,7 @@
 import { gStyle, createHistogram, createTPolyLine, isFunc, isStr,
          clTMultiGraph, clTH1D, clTF2, clTProfile2D, kInspect } from '../core.mjs';
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
+import { kBlack } from '../base/colors.mjs';
 import { TRandom, floatToString, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { EAxisBits } from '../base/ObjectPainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -24,7 +23,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          arrx = handle.grx,
          arry = handle.gry;
 
-   let lj = 0, ipoly, poly,  np, npmax = 0,
+   let lj = 0, ipoly, poly, np, npmax = 0,
        i, j, k, n, m, ljfill, count,
        xsave, ysave, itars, ix, jx;
 
@@ -37,7 +36,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             return kk-1;
        }
       return nlevels-1;
-   },  BinarySearch = zc => {
+   }, BinarySearch = zc => {
       if (zc < first_level)
          return -1;
       if (zc >= last_level)
@@ -54,7 +53,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
       return l;
    },
    LevelSearch = nlevels < 10 ? LinearSearch : BinarySearch,
-   PaintContourLine = (elev1, icont1, x1, y1,  elev2, icont2, x2, y2) => {
+   PaintContourLine = (elev1, icont1, x1, y1, elev2, icont2, x2, y2) => {
       /* Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels */
       const vert = (x1 === x2),
             tlen = vert ? (y2 - y1) : (x2 - x1),
@@ -97,7 +96,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          for (k = 0; k < 4; k++)
             ir[k] = LevelSearch(zc[k]);
 
-         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
+         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) { // deepscan-disable-line
             x[3] = x[0] = (arrx[i] + arrx[i+1])/2;
             x[2] = x[1] = (arrx[i+1] + arrx[i+2])/2;
 
@@ -119,8 +118,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             n++;
             lj=2;
             for (ix=1; ix<=4; ix++) {
-               if (n === 1) m = 4;
-               else        m = n-1;
+               m = (n === 1) ? 4 : n-1;
                ljfill = PaintContourLine(zc[n-1], ir[n-1], x[n-1], y[n-1], zc[m-1], ir[m-1], x[m-1], y[m-1]);
                lj += 2*ljfill;
                n = m;
@@ -135,12 +133,12 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
                   ysave = yarr[ix];
                   itars = itarr[ix];
                   for (jx=ix; jx<=lj-5; jx +=2) {
-                     xarr[jx]  = xarr[jx+2];
-                     yarr[jx]  = yarr[jx+2];
+                     xarr[jx] = xarr[jx+2];
+                     yarr[jx] = yarr[jx+2];
                      itarr[jx] = itarr[jx+2];
                   }
-                  xarr[lj-3]  = xsave;
-                  yarr[lj-3]  = ysave;
+                  xarr[lj-3] = xsave;
+                  yarr[lj-3] = ysave;
                   itarr[lj-3] = itars;
                   if (count > kMAXCOUNT) break;
                   count++;
@@ -201,9 +199,9 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
 
       while (true) {
          iminus = npmax;
-         iplus  = iminus+1;
-         xp[iminus]= xx[istart];   yp[iminus] = yy[istart];
-         xp[iplus] = xx[istart+1]; yp[iplus]  = yy[istart+1];
+         iplus = iminus+1;
+         xp[iminus]= xx[istart]; yp[iminus] = yy[istart];
+         xp[iplus] = xx[istart+1]; yp[iplus] = yy[istart+1];
          xx[istart] = xx[istart+1] = xmin;
          yy[istart] = yy[istart+1] = ymin;
          while (true) {
@@ -268,7 +266,7 @@ class Triangles3DHandler {
       let nsegments = 0, lpos = null, lindx = 0,  // buffer for lines
           ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
           normindx = [],                             // buffer to remember place of vertex for each bin
-          pntindx = 0, lastpart = 0,  gridcnt = 0;
+          pntindx = 0, lastpart = 0, gridcnt = 0;
 
       function checkSide(z, level1, level2, eps) {
          return (z < level1 - eps) ? -1 : (z > level2 + eps ? 1 : 0);
@@ -319,7 +317,7 @@ class Triangles3DHandler {
 
          lpos[lindx] = x1; lpos[lindx+1] = y1; lpos[lindx+2] = z1; lindx+=3;
          lpos[lindx] = x2; lpos[lindx+1] = y2; lpos[lindx+2] = z2; lindx+=3;
-      }
+      };
 
       function addCrossingPoint(xx1, yy1, zz1, xx2, yy2, zz2, crossz, with_grid) {
          if (pntindx >= pntbuf.length)
@@ -370,7 +368,7 @@ class Triangles3DHandler {
 
             // always show top segments
             if ((lvl > 1) && (lvl === levels.length - 1) && (side_sum === 3) && (z1 <= this.grz_max))
-               side1 = side2 =  side3 = side_sum = 0;
+               side1 = side2 = side3 = side_sum = 0;
 
 
             if (side_sum === 3) continue;
@@ -392,7 +390,7 @@ class Triangles3DHandler {
 
                // check if any(contours for given level exists
                if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1))) // deepscan-disable-line
                       ++ngridsegments;
 
                continue;
@@ -534,7 +532,6 @@ class TH2Painter extends THistPainter {
      * @param {object} histo - histogram object */
    constructor(dom, histo) {
       super(dom, histo);
-      this.fPalette = null;
       this.wheel_zoomy = true;
       this._show_empty_bins = false;
    }
@@ -759,19 +756,19 @@ class TH2Painter extends THistPainter {
 
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
-      if (super.clickButton(funcname)) return true;
+      const res = super.clickButton(funcname);
+      if (res) return res;
 
-      if (this !== this.getMainPainter()) return false;
-
-      switch (funcname) {
-         case 'ToggleColor': this.toggleColor(); break;
-         case 'ToggleColorZ': this.toggleColz(); break;
-         case 'Toggle3D': this.toggleMode3D(); break;
-         default: return false;
+      if (this.isMainPainter()) {
+         switch (funcname) {
+            case 'ToggleColor': return this.toggleColor();
+            case 'ToggleColorZ': return this.toggleColz();
+            case 'Toggle3D': return this.toggleMode3D();
+         }
       }
 
       // all methods here should not be processed further
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar with histogram-related functions */
@@ -803,7 +800,7 @@ class TH2Painter extends THistPainter {
 
       this.copyOptionsToOthers();
 
-      this.interactiveRedraw('pad', 'drawopt');
+      return this.interactiveRedraw('pad', 'drawopt');
    }
 
    /** @summary Perform automatic zoom inside non-zero region of histogram */
@@ -878,11 +875,13 @@ class TH2Painter extends THistPainter {
             const bin_content = histo.fBins.arr[n].fContent;
             if (n === 0) this.gminbin = this.gmaxbin = bin_content;
 
-            if (bin_content < this.gminbin) this.gminbin = bin_content; else
-               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+            if (bin_content < this.gminbin)
+               this.gminbin = bin_content;
+            else if (bin_content > this.gmaxbin)
+               this.gmaxbin = bin_content;
 
-            if (bin_content > 0)
-               if ((this.gminposbin === null) || (this.gminposbin > bin_content)) this.gminposbin = bin_content;
+            if ((bin_content > 0) && ((this.gminposbin === null) || (this.gminposbin > bin_content)))
+               this.gminposbin = bin_content;
          }
       } else {
          // global min/max, used at the moment in 3D drawing
@@ -904,15 +903,15 @@ class TH2Painter extends THistPainter {
       }
 
       // this value used for logz scale drawing
-      if (this.gminposbin === null)
+      if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
       if (this.options.Axis > 0) {
          // Paint histogram axis only
          this.draw_content = false;
       } else {
-         this.draw_content = this.gmaxbin > 0;
-         if (!this.draw_content  && this.options.Zero && this.isTH2Poly()) {
+         this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
+         if (!this.draw_content && this.options.Zero && this.isTH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
          }
@@ -921,18 +920,20 @@ class TH2Painter extends THistPainter {
 
    /** @summary Count TH2 histogram statistic
      * @desc Optionally one could provide condition function to select special range */
-   countStat(cond) {
-      if (!cond && this.options.cutg)
-         cond = (x, y) => this.options.cutg.IsInside(x, y);
+   countStat(cond, count_skew) {
+      if (!isFunc(cond))
+         cond = this.options.cutg ? (x, y) => this.options.cutg.IsInside(x, y) : null;
 
       const histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis,
             fp = this.getFramePainter(),
             funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
-            res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0], xmax: 0, ymax: 0, wmax: null },
+            res = { name: histo.fName, entries: 0, eff_entries: 0, integral: 0,
+                    meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    xmax: 0, ymax: 0, wmax: null, skewx: 0, skewy: 0, skewd: 0, kurtx: 0, kurty: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && (Math.abs(histo.fTsumw) > 1e-300) && !cond;
-      let stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
+      let stat_sum0 = 0, stat_sumw2 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0,
-          xside, yside, xx, yy, zz;
+          xside, yside, xx, yy, zz, xleft, xright, yleft, yright;
 
       if (this.isTH2Poly()) {
          const len = histo.fBins.arr.length;
@@ -979,6 +980,7 @@ class TH2Painter extends THistPainter {
 
             if (!has_counted_stat) {
                stat_sum0 += zz;
+               stat_sumw2 += zz * zz;
                stat_sumx1 += xx * zz;
                stat_sumy1 += yy * zz;
                stat_sumx2 += xx * xx * zz;
@@ -986,10 +988,10 @@ class TH2Painter extends THistPainter {
             }
          }
       } else {
-         const xleft = this.getSelectIndex('x', 'left'),
-               xright = this.getSelectIndex('x', 'right'),
-               yleft = this.getSelectIndex('y', 'left'),
-               yright = this.getSelectIndex('y', 'right');
+         xleft = this.getSelectIndex('x', 'left');
+         xright = this.getSelectIndex('x', 'right');
+         yleft = this.getSelectIndex('y', 'left');
+         yright = this.getSelectIndex('y', 'right');
 
          for (let xi = 0; xi <= this.nbinsx + 1; ++xi) {
             xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
@@ -1015,6 +1017,7 @@ class TH2Painter extends THistPainter {
 
                if (!has_counted_stat) {
                   stat_sum0 += zz;
+                  stat_sumw2 += zz * zz;
                   stat_sumx1 += xx * zz;
                   stat_sumy1 += yy * zz;
                   stat_sumx2 += xx**2 * zz;
@@ -1027,6 +1030,7 @@ class TH2Painter extends THistPainter {
 
       if (has_counted_stat) {
          stat_sum0 = histo.fTsumw;
+         stat_sumw2 = histo.fTsumw2;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
@@ -1048,6 +1052,40 @@ class TH2Painter extends THistPainter {
       if (histo.fEntries > 1)
          res.entries = histo.fEntries;
 
+      res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
+
+      if (count_skew && !this.isTH2Poly()) {
+         let sumx3 = 0, sumy3 = 0, sumx4 = 0, sumy4 = 0, np = 0, w = 0;
+         for (let xi = xleft; xi < xright; ++xi) {
+            xx = xaxis.GetBinCoord(xi + 0.5);
+            for (let yi = yleft; yi < yright; ++yi) {
+               yy = yaxis.GetBinCoord(yi + 0.5);
+               if (cond && !cond(xx, yy)) continue;
+               w = histo.getBinContent(xi + 1, yi + 1);
+               np += w;
+               sumx3 += w * Math.pow(xx - res.meanx, 3);
+               sumy3 += w * Math.pow(yy - res.meany, 3);
+               sumx4 += w * Math.pow(xx - res.meanx, 4);
+               sumy4 += w * Math.pow(yy - res.meany, 4);
+            }
+         }
+
+         const stddev3x = Math.pow(res.rmsx, 3),
+               stddev3y = Math.pow(res.rmsy, 3),
+               stddev4x = Math.pow(res.rmsx, 4),
+               stddev4y = Math.pow(res.rmsy, 4);
+         if (np * stddev3x !== 0)
+            res.skewx = sumx3 / (np * stddev3x);
+         if (np * stddev3y !== 0)
+            res.skewy = sumy3 / (np * stddev3y);
+         res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
+         if (np * stddev4x !== 0)
+            res.kurtx = sumx4 / (np * stddev4x) - 3;
+         if (np * stddev4y !== 0)
+            res.kurty = sumy4 / (np * stddev4y) - 3;
+         res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
+      }
+
       return res;
    }
 
@@ -1058,16 +1096,16 @@ class TH2Painter extends THistPainter {
 
       if (dostat === 1) dostat = 1111;
 
-      const data = this.countStat(),
-          print_name = Math.floor(dostat % 10),
-          print_entries = Math.floor(dostat / 10) % 10,
-          print_mean = Math.floor(dostat / 100) % 10,
-          print_rms = Math.floor(dostat / 1000) % 10,
-          print_under = Math.floor(dostat / 10000) % 10,
-          print_over = Math.floor(dostat / 100000) % 10,
-          print_integral = Math.floor(dostat / 1000000) % 10,
-          print_skew = Math.floor(dostat / 10000000) % 10,
-          print_kurt = Math.floor(dostat / 100000000) % 10;
+      const print_name = Math.floor(dostat % 10),
+            print_entries = Math.floor(dostat / 10) % 10,
+            print_mean = Math.floor(dostat / 100) % 10,
+            print_rms = Math.floor(dostat / 1000) % 10,
+            print_under = Math.floor(dostat / 10000) % 10,
+            print_over = Math.floor(dostat / 100000) % 10,
+            print_integral = Math.floor(dostat / 1000000) % 10,
+            print_skew = Math.floor(dostat / 10000000) % 10,
+            print_kurt = Math.floor(dostat / 100000000) % 10,
+            data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
 
       stat.clearPave();
 
@@ -1090,13 +1128,21 @@ class TH2Painter extends THistPainter {
       if (print_integral > 0)
          stat.addText('Integral = ' + stat.format(data.matrix[4], 'entries'));
 
-      if (print_skew > 0) {
-         stat.addText('Skewness x = <undef>');
-         stat.addText('Skewness y = <undef>');
+      if (print_skew === 2) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)} #pm ${stat.format(data.skewd)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)} #pm ${stat.format(data.skewd)}`);
+      } else if (print_skew > 0) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)}`);
       }
 
-      if (print_kurt > 0)
-         stat.addText('Kurt = <undef>');
+      if (print_kurt === 2) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)} #pm ${stat.format(data.kurtd)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)} #pm ${stat.format(data.kurtd)}`);
+      } else if (print_kurt > 0) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)}`);
+      }
 
       if ((print_under > 0) || (print_over > 0)) {
          const get = i => data.matrix[i].toFixed(0);
@@ -1106,7 +1152,7 @@ class TH2Painter extends THistPainter {
          stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit, 2);
 
       return true;
    }
@@ -1119,7 +1165,8 @@ class TH2Painter extends THistPainter {
             palette = this.getHistPalette(),
             entries = [],
             show_empty = this._show_empty_bins,
-            can_merge = (handle.ybar2 === 1) && (handle.ybar1 === 0);
+            can_merge_x = (handle.xbar2 === 1) && (handle.xbar1 === 0),
+            can_merge_y = (handle.ybar2 === 1) && (handle.ybar1 === 0);
 
       let dx, dy, x1, y2, binz, is_zero, colindx, last_entry = null,
           skip_zero = !this.options.Zero;
@@ -1135,9 +1182,13 @@ class TH2Painter extends THistPainter {
 
       // now start build
       for (let i = handle.i1; i < handle.i2; ++i) {
-         dx = handle.grx[i+1] - handle.grx[i];
-         x1 = Math.round(handle.grx[i] + dx*handle.xbar1);
-         dx = Math.round(dx*(handle.xbar2 - handle.xbar1)) || 1;
+         dx = (handle.grx[i+1] - handle.grx[i]) || 1;
+         if (can_merge_x)
+            x1 = handle.grx[i];
+         else {
+            x1 = Math.round(handle.grx[i] + dx*handle.xbar1);
+            dx = Math.round(dx*(handle.xbar2 - handle.xbar1)) || 1;
+         }
 
          for (let j = handle.j2 - 1; j >= handle.j1; --j) {
             binz = histo.getBinContent(i + 1, j + 1);
@@ -1159,10 +1210,10 @@ class TH2Painter extends THistPainter {
             }
 
             dy = (handle.gry[j] - handle.gry[j+1]) || 1;
-            if (can_merge)
+            if (can_merge_y)
                y2 = handle.gry[j+1];
-             else {
-               y2 = Math.round(handle.gry[j+1] + dy*handle.ybar2);
+            else {
+               y2 = Math.round(handle.gry[j] - dy*handle.ybar2);
                dy = Math.round(dy*(handle.ybar2 - handle.ybar1)) || 1;
             }
 
@@ -1170,7 +1221,7 @@ class TH2Painter extends THistPainter {
             let entry = entries[colindx];
             if (!entry)
                entry = entries[colindx] = { path: cmd1 };
-             else if (can_merge && (entry === last_entry)) {
+             else if (can_merge_y && (entry === last_entry)) {
                entry.y1 = y2 + dy;
                continue;
             } else {
@@ -1185,7 +1236,7 @@ class TH2Painter extends THistPainter {
             entry.x1 = x1;
             entry.y2 = y2;
 
-            if (can_merge) {
+            if (can_merge_y) {
                entry.y1 = y2 + dy;
                last_entry = entry;
             } else
@@ -1195,12 +1246,12 @@ class TH2Painter extends THistPainter {
       }
 
       entries.forEach((entry, colindx) => {
-        if (entry) {
-           this.draw_g
-               .append('svg:path')
-               .attr('fill', palette.getColor(colindx))
-               .attr('d', entry.path);
-        }
+         if (entry) {
+            this.draw_g
+                .append('svg:path')
+                .attr('fill', palette.getColor(colindx))
+                .attr('d', entry.path);
+         }
       });
 
       return handle;
@@ -1370,8 +1421,8 @@ class TH2Painter extends THistPainter {
 
          switch (this.options.Contour) {
             case 1: break;
-            case 11: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: icol }); break;
-            case 12: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: 1, style: (ipoly%5 + 1), width: 1 }); break;
+            case 11: fillcolor = 'none'; lineatt = this.createAttLine({ color: icol, std: false }); break;
+            case 12: fillcolor = 'none'; lineatt = this.createAttLine({ color: 1, style: (ipoly%5 + 1), width: 1, std: false }); break;
             case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
             case 14: break;
          }
@@ -1521,7 +1572,7 @@ class TH2Painter extends THistPainter {
          if (colPaths[colindx]) {
             item = this.draw_g
                      .append('svg:path')
-                     .style('fill', colindx ? this.fPalette.getColor(colindx) : 'none')
+                     .style('fill', colindx ? this._color_palette.getColor(colindx) : 'none')
                      .attr('d', colPaths[colindx]);
             if (draw_lines)
                item.call(this.lineatt.func);
@@ -1665,10 +1716,10 @@ class TH2Painter extends THistPainter {
                   yc = (handle.gry[j] + handle.gry[j+1])/2;
                   dxn = scale_x*dx/dn;
                   dyn = scale_y*dy/dn;
-                  x1  = xc - dxn;
-                  x2  = xc + dxn;
-                  y1  = yc - dyn;
-                  y2  = yc + dyn;
+                  x1 = xc - dxn;
+                  x2 = xc + dxn;
+                  y1 = yc - dyn;
+                  y2 = yc + dyn;
                   dx = Math.round(x2-x1);
                   dy = Math.round(y2-y1);
 
@@ -1677,8 +1728,8 @@ class TH2Painter extends THistPainter {
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(9/(dx**2 + dy**2));
-                        si  = Math.round(anr*(dx + dy));
-                        co  = Math.round(anr*(dx - dy));
+                        si = Math.round(anr*(dx + dy));
+                        co = Math.round(anr*(dx - dy));
                         if (si || co)
                            cmd += `m${-si},${co}${makeLine(si, -co)}${makeLine(-co, -si)}`;
                      }
@@ -1721,7 +1772,7 @@ class TH2Painter extends THistPainter {
           zdiff, dgrx, dgry, xx, yy, ww, hh, xyfactor,
           uselogz = false, logmin = 0;
 
-      if (pad?.fLogz && (absmax > 0)) {
+      if ((pad?.fLogv ?? pad?.fLogz) && (absmax > 0)) {
          uselogz = true;
          const logmax = Math.log(absmax);
          if (absmin > 0)
@@ -1817,26 +1868,26 @@ class TH2Painter extends THistPainter {
 
    /** @summary Draw histogram bins as candle plot */
    drawBinsCandle() {
-      const kNoOption           = 0,
-            kBox                = 1,
-            kMedianLine         = 10,
-            kMedianNotched      = 20,
-            kMedianCircle       = 30,
-            kMeanLine           = 100,
-            kMeanCircle         = 300,
-            kWhiskerAll         = 1000,
-            kWhisker15          = 2000,
-            kAnchor             = 10000,
-            kPointsOutliers     = 100000,
-            kPointsAll          = 200000,
-            kPointsAllScat      = 300000,
-            kHistoLeft          = 1000000,
-            kHistoRight         = 2000000,
-            kHistoViolin        = 3000000,
+      const kNoOption = 0,
+            kBox = 1,
+            kMedianLine = 10,
+            kMedianNotched = 20,
+            kMedianCircle = 30,
+            kMeanLine = 100,
+            kMeanCircle = 300,
+            kWhiskerAll = 1000,
+            kWhisker15 = 2000,
+            kAnchor = 10000,
+            kPointsOutliers = 100000,
+            kPointsAll = 200000,
+            kPointsAllScat = 300000,
+            kHistoLeft = 1000000,
+            kHistoRight = 2000000,
+            kHistoViolin = 3000000,
             kHistoZeroIndicator = 10000000,
-            kHorizontal         = 100000000,
-            fallbackCandle      = kBox + kMedianLine + kMeanCircle + kWhiskerAll + kAnchor,
-            fallbackViolin      = kMeanCircle + kWhiskerAll + kHistoViolin + kHistoZeroIndicator;
+            kHorizontal = 100000000,
+            fallbackCandle = kBox + kMedianLine + kMeanCircle + kWhiskerAll + kAnchor,
+            fallbackViolin = kMeanCircle + kWhiskerAll + kHistoViolin + kHistoZeroIndicator;
 
       let fOption = kNoOption;
 
@@ -1986,7 +2037,7 @@ class TH2Painter extends THistPainter {
          markers += swapXY ? this.markeratt.create(y, x) : this.markeratt.create(x, y);
       }, make_cmarker = (x, y) => {
          if (!attrcmarkers) {
-            attrcmarkers = new TAttMarkerHandler({ attr: histo, style: 24 });
+            attrcmarkers = this.createAttMarker({ attr: histo, style: 24, std: false });
             attrcmarkers.resetPos();
          }
          cmarkers += swapXY ? attrcmarkers.create(y, x) : attrcmarkers.create(x, y);
@@ -2250,7 +2301,7 @@ class TH2Painter extends THistPainter {
       }
 
       if (dashed_lines) {
-         const dashed = new TAttLineHandler({ attr: histo, style: 2 });
+         const dashed = this.createAttLine({ attr: histo, style: 2, std: false, color: kBlack });
          this.draw_g.append('svg:path')
              .attr('d', dashed_lines)
              .call(dashed.func)
@@ -2590,8 +2641,8 @@ class TH2Painter extends THistPainter {
       let ndig = 0, tickStep = 1;
       const rect = this.getPadPainter().getFrameRect(),
             palette = this.getHistPalette(),
-            outerRadius = Math.min(rect.width, rect.height) * 0.5 - 60,
-            innerRadius = outerRadius - 10,
+            outerRadius = Math.max(10, Math.min(rect.width, rect.height) * 0.5 - 60),
+            innerRadius = Math.max(2, outerRadius - 10),
             data = [], labels = [],
             getColor = indx => palette.calcColor(indx, used.length),
             formatValue = v => v.toString(),
@@ -2636,18 +2687,18 @@ class TH2Painter extends THistPainter {
          .sortSubgroups(d3_descending)
          .sortChords(d3_descending),
 
-       chords = chord(data),
+      chords = chord(data),
 
-       group = this.draw_g.append('g')
+      group = this.draw_g.append('g')
          .attr('font-size', 10)
          .attr('font-family', 'sans-serif')
          .selectAll('g')
          .data(chords.groups)
          .join('g'),
 
-       arc = d3_arc().innerRadius(innerRadius).outerRadius(outerRadius),
+      arc = d3_arc().innerRadius(innerRadius).outerRadius(outerRadius),
 
-       ribbon = d3_ribbon().radius(innerRadius - 1).padAngle(1 / innerRadius);
+      ribbon = d3_ribbon().radius(innerRadius - 1).padAngle(1 / innerRadius);
 
       function ticks({ startAngle, endAngle, value }) {
          const k = (endAngle - startAngle) / value,
@@ -2912,7 +2963,7 @@ class TH2Painter extends THistPainter {
          }
 
          if (res.changed) {
-            res.user_info = { obj: histo,  name: histo.fName,
+            res.user_info = { obj: histo, name: histo.fName,
                               bin: i+1, cont: p.fMedian, binx: i+1, biny: 1,
                               grx: pnt.x, gry: pnt.y };
          }
@@ -3094,19 +3145,18 @@ class TH2Painter extends THistPainter {
       const need_palette = this.options.Zscale && this.options.canHavePalette();
 
       // draw new palette, resize frame if required
-      return this.drawColorPalette(need_palette, true).then(pp => {
+      return this.drawColorPalette(need_palette, true).then(async pp => {
          let pr;
          if (this.options.Circular && this.isMainPainter())
             pr = this.drawBinsCircular();
           else if (this.options.Chord && this.isMainPainter())
             pr = this.drawBinsChord();
           else
-            pr = this.drawAxes().then(() => this.draw2DBins())
-
+            pr = this.drawAxes().then(() => this.draw2DBins());
 
          return pr.then(() => this.completePalette(pp));
       }).then(() => this.drawHistTitle())
-        .then(() => this.drawNextFunction(0, true))
+        .then(() => this.updateFunctions())
         .then(() => {
             this.updateStatWebCanvas();
             return this.addInteractivity();

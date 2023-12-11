@@ -198,6 +198,7 @@ extern "C" {
 #else
 #include "Windows4Root.h"
 #include <Psapi.h>
+#include <direct.h>
 #undef GetModuleFileName
 #define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
@@ -861,7 +862,7 @@ namespace {
    // Yes, throwing exceptions in error handlers is bad.
    // Doing nothing is pretty terrible, too.
    void exceptionErrorHandler(void * /*user_data*/,
-                              const std::string& reason,
+                              const char *reason,
                               bool /*gen_crash_diag*/) {
       throw std::runtime_error(std::string(">>> Interpreter compilation error:\n") + reason);
    }
@@ -1398,9 +1399,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
-      // The -O1 optimization flag has nasty side effects on Windows (32 bit)
+      // The -O1 optimization flag has nasty side effects on Windows (32 and 64 bit)
       // See the GitHub issues #9809 and #9944
-#if !defined(_MSC_VER) || defined(_WIN64)
+      // TODO: to be reviewed after the upgrade of LLVM & Clang
+#ifndef _MSC_VER
       clingArgsStorage.push_back("-O1");
       // Disable optimized register allocation which is turned on automatically
       // by -O1, but seems to require -O2 to not explode in run time.
@@ -1411,7 +1413,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // Process externally passed arguments if present.
    llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
-   if (EnvOpt.hasValue()) {
+   if (EnvOpt.has_value()) {
       StringRef Env(*EnvOpt);
       while (!Env.empty()) {
          StringRef Arg;
@@ -1423,7 +1425,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    auto GetEnvVarPath = [](const std::string &EnvVar,
                        std::vector<std::string> &Paths) {
       llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
-      if (EnvOpt.hasValue()) {
+      if (EnvOpt.has_value()) {
          StringRef Env(*EnvOpt);
          while (!Env.empty()) {
             StringRef Arg;
@@ -1450,7 +1452,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
-   if (EnvOpt.hasValue())
+   if (EnvOpt.has_value())
      clingArgsStorage.push_back("-ftime-report");
 
    // Add the overlay file. Note that we cannot factor it out for both root
@@ -1473,7 +1475,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       std::string ModulesCachePath;
       EnvOpt = llvm::sys::Process::GetEnv("CLING_MODULES_CACHE_PATH");
-      if (EnvOpt.hasValue()){
+      if (EnvOpt.has_value()){
          StringRef Env(*EnvOpt);
          assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
          ModulesCachePath = Env.str();
@@ -1535,7 +1537,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    // Add the Rdict module file extension.
    cling::Interpreter::ModuleFileExtensions extensions;
    EnvOpt = llvm::sys::Process::GetEnv("ROOTDEBUG_RDICT");
-   if (!EnvOpt.hasValue())
+   if (!EnvOpt.has_value())
       extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>());
 
    fInterpreter = std::make_unique<cling::Interpreter>(interpArgs.size(),
@@ -2646,6 +2648,13 @@ void TCling::AddIncludePath(const char *path)
       path += 2;
    TString sPath(path);
    gSystem->ExpandPathName(sPath);
+#ifdef _MSC_VER
+   if (sPath.BeginsWith("/")) {
+      char drive[3];
+      snprintf(drive, 3, "%c:", _getdrive() + 'A' - 1);
+      sPath.Prepend(drive);
+   }
+#endif
    fInterpreter->AddIncludePath(sPath.Data());
 }
 
@@ -3189,7 +3198,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
       return kTRUE;
 
    //FIXME: We must use the cling::Interpreter::lookupFileOrLibrary iface.
-   const clang::DirectoryLookup *CurDir = nullptr;
+   clang::ConstSearchDirIterator *CurDir = nullptr;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
    auto FE = HS.LookupFile(file_name.c_str(),
@@ -3208,7 +3217,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                            /*BuildSystemModule*/ false,
                            /*OpenFile*/ false,
                            /*CacheFail*/ false);
-   if (FE && FE->isValid()) {
+   if (FE) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
       // this works only with header (and source) files...
@@ -4289,6 +4298,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
 Bool_t TCling::CheckClassTemplate(const char *name)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+   // Interpreter transaction ahead, needs locking
+   R__LOCKGUARD(gInterpreterMutex);
    const clang::Decl *decl
       = lh.findClassTemplate(name,
                              gDebug > 5 ? cling::LookupHelper::WithDiagnostics
@@ -7029,6 +7040,11 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
 const char* TCling::GetClassSharedLibs(const char* cls)
 {
    if (fCxxModulesEnabled) {
+      // Lock the interpreter mutex before interacting with cling.
+      // TODO: Can we move this further deep? In principle the lock should be in
+      // GetClassSharedLibsForModule, but it might be needed also for
+      // getLookupHelper?
+      R__LOCKGUARD(gInterpreterMutex);
       llvm::StringRef className = cls;
       // If we get a class name containing lambda, we cannot parse it and we
       // can exit early.
@@ -8936,6 +8952,7 @@ void TCling::MethodInfo_Delete(MethodInfo_t* minfo) const
 void TCling::MethodInfo_CreateSignature(MethodInfo_t* minfo, TString& signature) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    info->CreateSignature(signature);
 }
 
@@ -8976,6 +8993,7 @@ MethodInfo_t* TCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 void* TCling::MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->InterfaceMethod();
 }
 
@@ -9016,6 +9034,7 @@ int TCling::MethodInfo_Next(MethodInfo_t* minfo) const
 Long_t TCling::MethodInfo_Property(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->Property();
 }
 
@@ -9024,6 +9043,7 @@ Long_t TCling::MethodInfo_Property(MethodInfo_t* minfo) const
 Long_t TCling::MethodInfo_ExtraProperty(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->ExtraProperty();
 }
 
@@ -9032,6 +9052,7 @@ Long_t TCling::MethodInfo_ExtraProperty(MethodInfo_t* minfo) const
 TypeInfo_t* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return (TypeInfo_t*)info->Type();
 }
 
@@ -9041,6 +9062,7 @@ const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    TTHREAD_TLS_DECL(TString, mangled_name);
+   // The next call locks the interpreter mutex.
    mangled_name = info->GetMangledName();
    return mangled_name;
 }
@@ -9050,6 +9072,7 @@ const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->GetPrototype();
 }
 
@@ -9058,6 +9081,7 @@ const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_Name(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->Name();
 }
 
@@ -9066,6 +9090,7 @@ const char* TCling::MethodInfo_Name(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->TypeName();
 }
 
@@ -9074,6 +9099,7 @@ const char* TCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
 std::string TCling::MethodInfo_TypeNormalizedName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next part locks the interpreter mutex.
    if (info && info->IsValid())
       return info->Type()->NormalizedName(*fNormalizedCtxt);
    else
@@ -9085,6 +9111,7 @@ std::string TCling::MethodInfo_TypeNormalizedName(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_Title(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->Title();
 }
 

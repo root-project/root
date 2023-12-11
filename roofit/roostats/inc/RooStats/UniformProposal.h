@@ -25,7 +25,7 @@ namespace RooStats {
    class UniformProposal : public ProposalFunction {
 
    public:
-      UniformProposal() : ProposalFunction() {}
+      UniformProposal() = default;
 
       /// Populate xPrime with a new proposed point
       void Propose(RooArgSet& xPrime, RooArgSet& x) override;
@@ -38,8 +38,6 @@ namespace RooStats {
       /// Return the probability of proposing the point x1 given the starting
       /// point x2
       double GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
-
-      ~UniformProposal() override {}
 
       ClassDefOverride(UniformProposal,1) // A concrete implementation of ProposalFunction, that uniformly samples the parameter space.
    };

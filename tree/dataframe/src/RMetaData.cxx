@@ -9,84 +9,105 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RMetaData.hxx"
+#include <nlohmann/json.hpp>
 #include <stdexcept> // std::logic_error
+
+struct ROOT::Internal::RDF::RMetaDataJson {
+   nlohmann::json payload;
+};
 
 namespace ROOT {
 namespace RDF {
 namespace Experimental {
 
+RMetaData::RMetaData() : fJson{std::make_unique<Internal::RDF::RMetaDataJson>()} {}
+
+RMetaData::RMetaData(RMetaData const &other) : fJson{std::make_unique<Internal::RDF::RMetaDataJson>(*other.fJson)} {}
+
+RMetaData::RMetaData(RMetaData &&) = default;
+
+RMetaData &RMetaData::operator=(RMetaData const &other)
+{
+   fJson = std::make_unique<Internal::RDF::RMetaDataJson>(*other.fJson);
+   return *this;
+}
+
+RMetaData &RMetaData::operator=(RMetaData &&) = default;
+
+RMetaData::~RMetaData() = default;
+
 void RMetaData::Add(const std::string &key, int val)
 {
-   fJson[key] = val;
+   fJson->payload[key] = val;
 }
 
 void RMetaData::Add(const std::string &key, double val)
 {
-   fJson[key] = val;
+   fJson->payload[key] = val;
 }
 
 void RMetaData::Add(const std::string &key, const std::string &val)
 {
-   fJson[key] = val;
+   fJson->payload[key] = val;
 }
 
 std::string RMetaData::Dump(const std::string &key) const
 {
-   return fJson[key].dump();
+   return fJson->payload[key].dump();
 }
 
 int RMetaData::GetI(const std::string &key) const
 {
-   if (!fJson.contains(key))
+   if (!fJson->payload.contains(key))
       throw std::logic_error("No key with name " + key + " in the metadata object.");
-   if (!fJson[key].is_number_integer())
+   if (!fJson->payload[key].is_number_integer())
       throw std::logic_error("Key " + key + " is not of type int.");
-   return fJson[key].get<int>();
+   return fJson->payload[key].get<int>();
 }
 
 double RMetaData::GetD(const std::string &key) const
 {
-   if (!fJson.contains(key))
+   if (!fJson->payload.contains(key))
       throw std::logic_error("No key with name " + key + " in the metadata object.");
-   if (!fJson[key].is_number_float())
+   if (!fJson->payload[key].is_number_float())
       throw std::logic_error("Key " + key + " is not of type double.");
-   return fJson[key].get<double>();
+   return fJson->payload[key].get<double>();
 }
 
 std::string RMetaData::GetS(const std::string &key) const
 {
-   if (!fJson.contains(key))
+   if (!fJson->payload.contains(key))
       throw std::logic_error("No key with name " + key + " in the metadata object.");
-   if (!fJson[key].is_string())
+   if (!fJson->payload[key].is_string())
       throw std::logic_error("Key " + key + " is not of type string.");
-   return fJson[key].get<std::string>();
+   return fJson->payload[key].get<std::string>();
 }
 
 int RMetaData::GetI(const std::string &key, int defaultVal) const
 {
-   if (!fJson.contains(key))
+   if (!fJson->payload.contains(key))
       return defaultVal;
-   if (!fJson[key].is_number_integer())
+   if (!fJson->payload[key].is_number_integer())
       throw std::logic_error("Key " + key + " is not of type int.");
-   return fJson[key].get<int>();
+   return fJson->payload[key].get<int>();
 }
 
 double RMetaData::GetD(const std::string &key, double defaultVal) const
 {
-   if (!fJson.contains(key))
+   if (!fJson->payload.contains(key))
       return defaultVal;
-   if (!fJson[key].is_number_float())
+   if (!fJson->payload[key].is_number_float())
       throw std::logic_error("Key " + key + " is not of type double.");
-   return fJson[key].get<double>();
+   return fJson->payload[key].get<double>();
 }
 
 const std::string RMetaData::GetS(const std::string &key, const std::string &defaultVal) const
 {
-   if (!fJson.contains(key))
+   if (!fJson->payload.contains(key))
       return defaultVal;
-   if (!fJson[key].is_string())
+   if (!fJson->payload[key].is_string())
       throw std::logic_error("Key " + key + " is not of type string.");
-   return fJson[key].get<std::string>();
+   return fJson->payload[key].get<std::string>();
 }
 
 } // namespace Experimental

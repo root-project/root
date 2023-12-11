@@ -15,7 +15,7 @@
 \class RooBinnedL
 \ingroup Roofitcore
 
-Class RooBinnedL implements a -log(likelihood) calculation from a dataset
+Implements a -log(likelihood) calculation from a dataset
 (assumed to be binned) and a PDF. The NLL is calculated as
 \f[
  \sum_\mathrm{data} -\log( \mathrm{pdf}(x_\mathrm{data}))
@@ -56,11 +56,11 @@ RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
    paramTracker_ = std::make_unique<RooChangeTracker>("chtracker","change tracker",params,true);
 
    std::unique_ptr<RooArgSet> obs(pdf->getObservables(data));
-   if (obs->getSize() != 1) {
+   if (obs->size() != 1) {
       throw std::logic_error(
          "RooBinnedL can only be created from combination of pdf and data which has exactly one observable!");
    } else {
-      RooRealVar *var = (RooRealVar *)obs->first();
+      RooRealVar *var = static_cast<RooRealVar *>(obs->first());
       std::list<double> *boundaries = pdf->binBoundaries(*var, var->getMin(), var->getMax());
       std::list<double>::iterator biter = boundaries->begin();
       _binw.resize(boundaries->size() - 1);

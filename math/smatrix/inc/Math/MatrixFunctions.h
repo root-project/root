@@ -25,7 +25,7 @@
 // 20 Mar 2001 (TG) creation
 // 20 Mar 2001 (TG) Added Matrix * Vector multiplication
 // 21 Mar 2001 (TG) Added transpose, product
-// 11 Apr 2001 (TG) transpose() speed improvment by removing rows(), cols()
+// 11 Apr 2001 (TG) transpose() speed improvement by removing rows(), cols()
 //                  through static members of Matrix and Expr class
 //
 // ********************************************************************
@@ -300,7 +300,7 @@ struct meta_matrix_dot {
            meta_matrix_dot<I-1>::f(lhs,rhs,offset);
   }
 
-  // multiplication using i and j indeces
+  // multiplication using i and j indices
   template <class MatrixA, class MatrixB>
   static inline typename MatrixA::value_type g(const MatrixA& lhs,
                                                const MatrixB& rhs,

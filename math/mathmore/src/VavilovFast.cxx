@@ -56,7 +56,7 @@ VavilovFast::VavilovFast(double kappa, double beta2)
 
 VavilovFast::~VavilovFast()
 {
-   // desctructor (clean up resources)
+   // destructor (clean up resources)
 }
 
 void VavilovFast::SetKappaBeta2 (double kappa, double beta2)

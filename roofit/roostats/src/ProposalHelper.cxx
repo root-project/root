@@ -50,26 +50,7 @@ static const double SIGMA_RANGE_DIVISOR = 5;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ProposalHelper::ProposalHelper()
-{
-   fPdfProp = new PdfProposal();
-   fVars = nullptr;
-   fOwnsPdfProp = true;
-   fOwnsPdf = false;
-   fOwnsCluesPdf = false;
-   fOwnsVars = false;
-   fUseUpdates = false;
-   fPdf = nullptr;
-   fSigmaRangeDivisor = SIGMA_RANGE_DIVISOR;
-   fCluesPdf = nullptr;
-   fUniformPdf = nullptr;
-   fClues = nullptr;
-   fCovMatrix = nullptr;
-   fCluesFrac = -1;
-   fUniFrac = -1;
-   fCacheSize = -1;
-   fCluesOptions = nullptr;
-}
+ProposalHelper::ProposalHelper() : fPdfProp(new PdfProposal()), fSigmaRangeDivisor(SIGMA_RANGE_DIVISOR) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -135,11 +116,11 @@ void ProposalHelper::CreatePdf()
 
 void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
 {
-   Int_t size = xVec.getSize();
+   Int_t size = xVec.size();
    fCovMatrix = new TMatrixDSym(size);
    RooRealVar* r;
    for (Int_t i = 0; i < size; i++) {
-      r = (RooRealVar*)xVec.at(i);
+      r = static_cast<RooRealVar*>(xVec.at(i));
       double range = r->getMax() - r->getMin();
       (*fCovMatrix)(i,i) = range / fSigmaRangeDivisor;
    }
@@ -150,11 +131,11 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
 void ProposalHelper::CreateCluesPdf()
 {
    if (fClues != nullptr) {
-      if (fCluesOptions == nullptr)
+      if (fCluesOptions == nullptr) {
          fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues);
-      else
-         fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues,
-               fCluesOptions);
+      } else {
+         fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues, fCluesOptions);
+      }
    }
 }
 

@@ -31,7 +31,7 @@ GetInterface() method.
 TGTreeTable::TGTreeTable(TGWindow *p, Int_t id, TTree *tree,
                          const char *expression, const char *selection,
                          const char *option, UInt_t nrows, UInt_t ncolumns)
-   : TGTable(p, id, 0, nrows, ncolumns)
+   : TGTable(p, id, nullptr, nrows, ncolumns)
 {
    TTreeTableInterface *iface = new TTreeTableInterface(tree, expression,
                                                         selection, option);

@@ -43,7 +43,7 @@ void qa2() {
    c1->SetGridx();
    c1->SetGridy();
 
-   h1f->SetDirectory(0);
+   h1f->SetDirectory(nullptr);
 
    c1->Update();
 

@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/09/2023',
+version_date = '21/11/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -68,12 +68,27 @@ btoa_func = isNodeJs() ? str => Buffer.from(str, 'latin1').toString('base64') : 
 browser = { isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false, screenWidth: 1200 };
 
 if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typeof navigator !== 'undefined')) {
-   browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
-   browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-   browser.isChrome = !!window.chrome;
-   browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
-   browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
-   browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
+   navigator.userAgentData?.brands?.forEach(item => {
+      if (item.brand === 'HeadlessChrome') {
+         browser.isChromeHeadless = true;
+         browser.chromeVersion = parseInt(item.version);
+      } else if (item.brand === 'Chromium') {
+         browser.isChrome = true;
+         browser.chromeVersion = parseInt(item.version);
+      }
+   });
+
+   if (browser.chromeVersion) {
+      browser.isFirefox = false;
+      browser.isWin = navigator.userAgentData.platform === 'Windows';
+   } else {
+      browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
+      browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+      browser.isChrome = !!window.chrome;
+      browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
+      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
+      browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
+   }
    browser.touches = ('ontouchend' in document); // identify if touch events are supported
    browser.screenWidth = window.screen?.width ?? 1200;
 }
@@ -235,6 +250,10 @@ settings = {
    IgnoreUrlOptions: false,
    /** @summary how many items shown on one level of hierarchy */
    HierarchyLimit: 250,
+   /** @summary default display kind for the hierarchy painter */
+   DislpayKind: 'simple',
+   /** @summary default left area width in browser layout */
+   BrowserWidth: 250,
    /** @summary custom format for all X values, when not specified {@link gStyle.fStatFormat} is used */
    XValuesFormat: undefined,
    /** @summary custom format for all Y values, when not specified {@link gStyle.fStatFormat} is used */
@@ -265,7 +284,13 @@ settings = {
    /** @summary Configures dark mode for the GUI */
    DarkMode: false,
    /** @summary Prefer to use saved points in TF1/TF2, avoids eval() and Function() when possible */
-   PreferSavedPoints: false
+   PreferSavedPoints: false,
+   /** @summary Angle in degree for axis labels tilt when available space is not enough */
+   AxisTiltAngle: 25,
+   /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
+   StripAxisLabels: true,
+   /** @summary Draw TF1 by default as curve or line */
+   FuncAsCurve: false
 },
 
 /** @namespace
@@ -386,7 +411,8 @@ gStyle = {
    fYAxisExpXOffset: 0,
    fYAxisExpYOffset: 0,
    fAxisMaxDigits: 5,
-   fStripDecimals: true
+   fStripDecimals: true,
+   fBarWidth: 1
 };
 
 /** @summary Method returns current document in use
@@ -429,13 +455,11 @@ async function injectCode(code) {
       const promise = code.indexOf('JSROOT.require') >= 0 ? _ensureJSROOT() : Promise.resolve(true);
 
       return promise.then(() => {
-         return new Promise(resolve => {
-            const element = document.createElement('script');
-            element.setAttribute('type', 'text/javascript');
-            element.innerHTML = code;
-            document.head.appendChild(element);
-            setTimeout(() => resolve(true), 10); // while onload event not fired, just postpone resolve
-         });
+         const element = document.createElement('script');
+         element.setAttribute('type', 'text/javascript');
+         element.innerHTML = code;
+         document.head.appendChild(element);
+         return postponePromise(true, 10); // while onload event not fired, just postpone resolve
       });
    }
 
@@ -456,7 +480,7 @@ async function loadScript(url) {
       const scripts = url, loadNext = () => {
          if (!scripts.length) return true;
          return loadScript(scripts.shift()).then(loadNext, loadNext);
-      }
+      };
       return loadNext();
    }
 
@@ -873,7 +897,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
       switch (kind) {
          case 'head': method = 'HEAD'; break;
          case 'posttext': method = 'POST'; kind = 'text'; break;
-         case 'postbuf':  method = 'POST'; kind = 'buf'; break;
+         case 'postbuf': method = 'POST'; kind = 'buf'; break;
          case 'post':
          case 'multi': method = 'POST'; break;
       }
@@ -1012,7 +1036,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
-      clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D',
+      clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
       kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
@@ -1150,7 +1174,7 @@ function create(typename, target) {
          break;
       case clTH2:
          create(clTH1, obj);
-         extend(obj, { fScalefactor: 1, fTsumwy: 0,  fTsumwy2: 0, fTsumwxy: 0 });
+         extend(obj, { fScalefactor: 1, fTsumwy: 0, fTsumwy2: 0, fTsumwxy: 0 });
          break;
       case clTH2I:
       case 'TH2L64':
@@ -1163,7 +1187,7 @@ function create(typename, target) {
          break;
       case clTH3:
          create(clTH1, obj);
-         extend(obj, { fTsumwy: 0,  fTsumwy2: 0, fTsumwz: 0,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
+         extend(obj, { fTsumwy: 0, fTsumwy2: 0, fTsumwz: 0, fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
          break;
       case 'TH3I':
       case 'TH3L64':
@@ -1464,19 +1488,19 @@ function getMethods(typename, obj) {
       m.Clear = function() {
          this.arr = [];
          this.opt = [];
-      }
+      };
       m.Add = function(obj, opt) {
          this.arr.push(obj);
          this.opt.push(isStr(opt) ? opt : '');
-      }
+      };
       m.AddFirst = function(obj, opt) {
          this.arr.unshift(obj);
          this.opt.unshift(isStr(opt) ? opt : '');
-      }
+      };
       m.RemoveAt = function(indx) {
          this.arr.splice(indx, 1);
          this.opt.splice(indx, 1);
-      }
+      };
    }
 
    if ((typename === clTPaveText) || (typename === clTPaveStats)) {
@@ -1485,10 +1509,10 @@ function getMethods(typename, obj) {
          line.fTitle = txt;
          line.fTextAlign = this.fTextAlign;
          this.fLines.Add(line);
-      }
+      };
       m.Clear = function() {
          this.fLines.Clear();
-      }
+      };
    }
 
    if ((typename.indexOf(clTF1) === 0) || (typename === clTF2)) {
@@ -1496,8 +1520,7 @@ function getMethods(typename, obj) {
          if (!obj) return;
          if (this.formulas === undefined) this.formulas = [];
          this.formulas.push(obj);
-      }
-
+      };
       m.GetParName = function(n) {
          if (this.fParams?.fParNames)
             return this.fParams.fParNames[n];
@@ -1508,19 +1531,19 @@ function getMethods(typename, obj) {
             }
          }
          return (this.fNames && this.fNames[n]) ? this.fNames[n] : `p${n}`;
-      }
+      };
       m.GetParValue = function(n) {
          if (this.fParams?.fParameters) return this.fParams.fParameters[n];
          if (this.fFormula?.fClingParameters) return this.fFormula.fClingParameters[n];
          if (this.fParams) return this.fParams[n];
          return undefined;
-      }
+      };
       m.GetParError = function(n) {
          return this.fParErrors ? this.fParErrors[n] : undefined;
-      }
+      };
       m.GetNumPars = function() {
          return this.fNpar;
-      }
+      };
    }
 
    if (((typename.indexOf(clTGraph) === 0) || (typename === clTCutG)) && (typename !== clTGraphPolargram) && (typename !== clTGraphTime)) {
@@ -1538,7 +1561,7 @@ function getMethods(typename, obj) {
          }
 
          return oddNodes;
-      }
+      };
    }
 
    if (typename.indexOf(clTH1) === 0 || typename.indexOf(clTH2) === 0 || typename.indexOf(clTH3) === 0) {
@@ -1552,42 +1575,42 @@ function getMethods(typename, obj) {
          if (bin < this.fSumw2.length)
             return Math.sqrt(this.fSumw2[bin]);
          return Math.sqrt(Math.abs(this.fArray[bin]));
-      }
+      };
       m.setBinContent = function(bin, content) {
          // Set bin content - only trivial case, without expansion
          this.fEntries++;
          this.fTsumw = 0;
          if ((bin >= 0) && (bin < this.fArray.length))
             this.fArray[bin] = content;
-      }
+      };
    }
 
    if (typename.indexOf(clTH1) === 0) {
-      m.getBin = function(x) { return x; }
-      m.getBinContent = function(bin) { return this.fArray[bin]; }
+      m.getBin = function(x) { return x; };
+      m.getBinContent = function(bin) { return this.fArray[bin]; };
       m.Fill = function(x, weight) {
          const a = this.fXaxis,
                bin = Math.max(0, 1 + Math.min(a.fNbins, Math.floor((x - a.fXmin) / (a.fXmax - a.fXmin) * a.fNbins)));
          this.fArray[bin] += weight ?? 1;
          this.fEntries++;
-      }
+      };
    }
 
    if (typename.indexOf(clTH2) === 0) {
-      m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
-      m.getBinContent = function(x, y) { return this.fArray[this.getBin(x, y)]; }
+      m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
+      m.getBinContent = function(x, y) { return this.fArray[this.getBin(x, y)]; };
       m.Fill = function(x, y, weight) {
          const a1 = this.fXaxis, a2 = this.fYaxis,
                bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
                bin2 = Math.max(0, 1 + Math.min(a2.fNbins, Math.floor((y - a2.fXmin) / (a2.fXmax - a2.fXmin) * a2.fNbins)));
          this.fArray[bin1 + (a1.fNbins + 2)*bin2] += weight ?? 1;
          this.fEntries++;
-      }
+      };
    }
 
    if (typename.indexOf(clTH3) === 0) {
-      m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); }
-      m.getBinContent = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; }
+      m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); };
+      m.getBinContent = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; };
       m.Fill = function(x, y, z, weight) {
          const a1 = this.fXaxis, a2 = this.fYaxis, a3 = this.fZaxis,
                bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
@@ -1595,32 +1618,91 @@ function getMethods(typename, obj) {
                bin3 = Math.max(0, 1 + Math.min(a3.fNbins, Math.floor((z - a3.fXmin) / (a3.fXmax - a3.fXmin) * a3.fNbins)));
          this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2)*bin3)] += weight ?? 1;
          this.fEntries++;
-      }
+      };
+   }
+
+   if (typename === clTPad || typename === clTCanvas) {
+      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01) {
+         if (!ny) {
+            const ndiv = nx;
+            if (ndiv < 2) return this;
+            nx = ny = Math.round(Math.sqrt(ndiv));
+            if (nx * ny < ndiv) nx += 1;
+         }
+         if (nx*ny < 2)
+            return 0;
+         this.fPrimitives.Clear();
+         const dy = 1/ny, dx = 1/nx;
+         let n = 0;
+         for (let iy = 0; iy < ny; iy++) {
+            const y2 = 1 - iy*dy - ymargin;
+            let y1 = y2 - dy + 2*ymargin;
+            if (y1 < 0) y1 = 0;
+            if (y1 > y2) continue;
+            for (let ix = 0; ix < nx; ix++) {
+               const x1 = ix*dx + xmargin,
+                     x2 = x1 + dx -2*xmargin;
+               if (x1 > x2) continue;
+               n++;
+               const pad = create(clTPad);
+               pad.fName = pad.fTitle = `${this.fName}_${n}`;
+               pad.fNumber = n;
+               if (this._typename !== clTCanvas) {
+                  pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
+                  pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
+                  pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+               } else {
+                  pad.fAbsWNDC = x2 - x1;
+                  pad.fAbsHNDC = y2 - y1;
+                  pad.fAbsXlowNDC = x1;
+                  pad.fAbsYlowNDC = y1;
+               }
+
+               this.fPrimitives.Add(pad);
+            }
+         }
+         return nx * ny;
+      };
+      m.GetPad = function(number) {
+         return this.fPrimitives.arr.find(elem => { return elem._typename === clTPad && elem.fNumber === number; });
+      };
    }
 
    if (typename.indexOf(clTProfile) === 0) {
-      if (typename.indexOf(clTProfile2D) === 0) {
-         m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
+      if (typename === clTProfile3D) {
+         m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); };
+         m.getBinContent = function(x, y, z) {
+            const bin = this.getBin(x, y, z);
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
+            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
+         };
+         m.getBinEntries = function(x, y, z) {
+            const bin = this.getBin(x, y, z);
+            return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
+         };
+      } else if (typename === clTProfile2D) {
+         m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
          m.getBinContent = function(x, y) {
             const bin = this.getBin(x, y);
             if (bin < 0 || bin >= this.fNcells) return 0;
             if (this.fBinEntries[bin] < 1e-300) return 0;
             if (!this.fArray) return 0;
             return this.fArray[bin]/this.fBinEntries[bin];
-         }
+         };
          m.getBinEntries = function(x, y) {
             const bin = this.getBin(x, y);
             if (bin < 0 || bin >= this.fNcells) return 0;
             return this.fBinEntries[bin];
-         }
+         };
       } else {
-         m.getBin = function(x) { return x; }
+         m.getBin = function(x) { return x; };
          m.getBinContent = function(bin) {
             if (bin < 0 || bin >= this.fNcells) return 0;
             if (this.fBinEntries[bin] < 1e-300) return 0;
             if (!this.fArray) return 0;
             return this.fArray[bin]/this.fBinEntries[bin];
-         }
+         };
       }
       m.getBinEffectiveEntries = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
@@ -1630,11 +1712,11 @@ function getMethods(typename, obj) {
             return sumOfWeights;
          const sumOfWeightsSquare = this.fBinSumw2[bin];
          return (sumOfWeightsSquare > 0) ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0;
-      }
+      };
       m.getBinError = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
          const cont = this.fArray[bin],               // sum of bin w *y
-               sum  = this.fBinEntries[bin],          // sum of bin weights
+               sum = this.fBinEntries[bin],          // sum of bin weights
                err2 = this.fSumw2[bin],               // sum of bin w * y^2
                neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
          if (sum < 1e-300) return 0;                  // for empty bins
@@ -1657,7 +1739,7 @@ function getMethods(typename, obj) {
          // default case : fErrorMode = kERRORMEAN
          // return standard error on the mean of y
          return eprim/Math.sqrt(neff);
-      }
+      };
    }
 
    if (typename === clTAxis) {
@@ -1665,41 +1747,41 @@ function getMethods(typename, obj) {
          if (this.fNbins <= 0) return 0;
          if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
          return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
-      }
+      };
       m.GetBinCenter = function(bin) {
          if (this.fNbins <= 0) return 0;
          if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
          return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
-      }
+      };
    }
 
    if (typename.indexOf('ROOT::Math::LorentzVector') === 0) {
-      m.Px = m.X = function() { return this.fCoordinates.Px(); }
-      m.Py = m.Y = function() { return this.fCoordinates.Py(); }
-      m.Pz = m.Z = function() { return this.fCoordinates.Pz(); }
-      m.E = m.T = function() { return this.fCoordinates.E(); }
-      m.M2 = function() { return this.fCoordinates.M2(); }
-      m.M = function() { return this.fCoordinates.M(); }
-      m.R = m.P = function() { return this.fCoordinates.R(); }
-      m.P2 = function() { return this.P() * this.P(); }
-      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); }
-      m.Phi = m.phi = function() { return Math.atan2(this.fCoordinates.Py(), this.fCoordinates.Px()); }
-      m.Eta = m.eta = function() { return Math.atanh(this.Pz()/this.P()); }
+      m.Px = m.X = function() { return this.fCoordinates.Px(); };
+      m.Py = m.Y = function() { return this.fCoordinates.Py(); };
+      m.Pz = m.Z = function() { return this.fCoordinates.Pz(); };
+      m.E = m.T = function() { return this.fCoordinates.E(); };
+      m.M2 = function() { return this.fCoordinates.M2(); };
+      m.M = function() { return this.fCoordinates.M(); };
+      m.R = m.P = function() { return this.fCoordinates.R(); };
+      m.P2 = function() { return this.P() * this.P(); };
+      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); };
+      m.Phi = m.phi = function() { return Math.atan2(this.fCoordinates.Py(), this.fCoordinates.Px()); };
+      m.Eta = m.eta = function() { return Math.atanh(this.Pz()/this.P()); };
    }
 
    if (typename.indexOf('ROOT::Math::PxPyPzE4D') === 0) {
-      m.Px = m.X = function() { return this.fX; }
-      m.Py = m.Y = function() { return this.fY; }
-      m.Pz = m.Z = function() { return this.fZ; }
-      m.E = m.T = function() { return this.fT; }
-      m.P2 = function() { return this.fX**2 + this.fY**2 + this.fZ**2; }
-      m.R = m.P = function() { return Math.sqrt(this.P2()); }
-      m.Mag2 = m.M2 = function() { return this.fT**2 - this.fX**2 - this.fY**2 - this.fZ**2; }
-      m.Mag = m.M = function() { return (this.M2() >= 0) ? Math.sqrt(this.M2()) : -Math.sqrt(-this.M2()); }
-      m.Perp2 = m.Pt2 = function() { return this.fX**2 + this.fY**2; }
-      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); }
-      m.Phi = m.phi = function() { return Math.atan2(this.fY, this.fX); }
-      m.Eta = m.eta = function() { return Math.atanh(this.Pz/this.P()); }
+      m.Px = m.X = function() { return this.fX; };
+      m.Py = m.Y = function() { return this.fY; };
+      m.Pz = m.Z = function() { return this.fZ; };
+      m.E = m.T = function() { return this.fT; };
+      m.P2 = function() { return this.fX**2 + this.fY**2 + this.fZ**2; };
+      m.R = m.P = function() { return Math.sqrt(this.P2()); };
+      m.Mag2 = m.M2 = function() { return this.fT**2 - this.fX**2 - this.fY**2 - this.fZ**2; };
+      m.Mag = m.M = function() { return (this.M2() >= 0) ? Math.sqrt(this.M2()) : -Math.sqrt(-this.M2()); };
+      m.Perp2 = m.Pt2 = function() { return this.fX**2 + this.fY**2; };
+      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); };
+      m.Phi = m.phi = function() { return Math.atan2(this.fY, this.fX); };
+      m.Eta = m.eta = function() { return Math.atanh(this.Pz/this.P()); };
    }
 
    methodsCache[typename] = m;
@@ -1747,6 +1829,17 @@ function isStr(arg) { return typeof arg === 'string'; }
   * @private */
 function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
 
+/** @summary Postpone func execution and return result in promise
+  * @private */
+function postponePromise(func, timeout) {
+   return new Promise(resolveFunc => {
+      setTimeout(() => {
+         const res = isFunc(func) ? func() : func;
+         resolveFunc(res);
+      }, timeout);
+   });
+}
+
 /** @summary Provide promise in any case
   * @private */
 function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
@@ -1771,11 +1864,12 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
          clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
-         clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTProfile, clTProfile2D, clTHStack,
+         clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTF3,
+         clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
          clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats, kInspect,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,
-         getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, _ensureJSROOT };
+         getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, postponePromise, _ensureJSROOT };

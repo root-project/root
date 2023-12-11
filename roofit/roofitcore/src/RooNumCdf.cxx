@@ -14,8 +14,8 @@
 \class RooNumCdf
 \ingroup Roofitcore
 
-Class RooNumCdf is an implementation of RooNumRunningInt specialized
-to calculate cumulative distribution functions from p.d.f.s. The main
+Implementation of RooNumRunningInt
+that calculates cumulative distribution functions from p.d.f.s. The main
 difference between RooNumCdf and RooNumRunningInt is that this class
 imposes special end-point conditions on the interpolated histogram
 that represents the output so that the value at the lower bound is
@@ -34,12 +34,7 @@ orders.
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
 
-using namespace std;
-
 ClassImp(RooNumCdf);
-  ;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a cumulative distribution function from given input p.d.f over observable x.
@@ -51,27 +46,6 @@ RooNumCdf::RooNumCdf(const char *name, const char *title, RooAbsPdf& _pdf, RooRe
  {
  }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-RooNumCdf::RooNumCdf(const RooNumCdf& other, const char* name) :
-   RooNumRunningInt(other,name)
- {
- }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNumCdf::~RooNumCdf()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill cache using running integral cache elements calculate()
 /// method with specification of cdf-specific boundary conditions
@@ -81,5 +55,3 @@ void RooNumCdf::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
   RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;
   riCache.calculate(true) ;
 }
-
-

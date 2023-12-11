@@ -134,16 +134,18 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    bool writeOutputFile = true;
 
+#ifdef R__USE_IMT
    int num_threads = 4;  // use by default 4 threads if value is not set before
    // switch off MT in OpenBLAS to avoid conflict with tbb
    gSystem->Setenv("OMP_NUM_THREADS", "1");
-
-   TMVA::Tools::Instance();
 
    // do enable MT running
    if (num_threads >= 0) {
       ROOT::EnableImplicitMT(num_threads);
    }
+#endif
+
+   TMVA::Tools::Instance();
 
 
    std::cout << "Running with nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
@@ -320,7 +322,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       // parameters) The training string must be concatenates with the `|` delimiter
       TString trainingString1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
                               "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-                              "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+                              "MaxEpochs=10,WeightDecay=1e-4,Regularization=None,"
                               "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.");
 
       TString trainingStrategyString("TrainingStrategy=");
@@ -388,7 +390,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       // Training strategies.
       TString trainingString1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
                               "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-                              "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+                              "MaxEpochs=10,WeightDecay=1e-4,Regularization=None,"
                               "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.0");
 
       TString trainingStrategyString("TrainingStrategy=");
@@ -467,7 +469,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
          factory.BookMethod(
             loader, TMVA::Types::kPyKeras, "PyKeras",
             "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:tf.keras:"
-            "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=20:BatchSize=100:"
+            "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=10:BatchSize=100:"
             "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
       }
    }
@@ -485,7 +487,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
          // book PyTorch method only if PyTorch model could be created
          Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
          TString methodOpt = "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
-                             "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=20:BatchSize=100";
+                             "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=10:BatchSize=100";
          methodOpt += TString(":UserCode=") + pyTorchFileName;
          factory.BookMethod(loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
       }

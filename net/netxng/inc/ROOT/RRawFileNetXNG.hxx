@@ -14,6 +14,7 @@
 
 #include <ROOT/RRawFile.hxx>
 #include <memory>
+#include <optional>
 
 namespace ROOT {
 namespace Internal {
@@ -31,7 +32,8 @@ larger chunks than the default for local files, assuming that remote file access
 class RRawFileNetXNG : public RRawFile
 {
 private:
-   std::unique_ptr<RRawFileNetXNGImpl> pImpl; //< pointer to implementation
+   std::unique_ptr<RRawFileNetXNGImpl> pImpl; ///< pointer to implementation
+   std::optional<RIOVecLimits> fIOVecLimits;  ///< Set by GetReadVLimits and then cached
 
 protected:
    void OpenImpl() final;
@@ -44,6 +46,7 @@ public:
    ~RRawFileNetXNG();
    std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final { return kFeatureHasSize | kFeatureHasAsyncIo; }
+   RIOVecLimits GetReadVLimits() final;
 };
 
 } // namespace Internal

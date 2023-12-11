@@ -22,8 +22,8 @@ See the individual documentations in TTree.
 #include "TPluginManager.h"
 #include "TClass.h"
 
-TClass              *TVirtualTreePlayer::fgPlayer  = 0;
-TVirtualTreePlayer  *TVirtualTreePlayer::fgCurrent = 0;
+TClass              *TVirtualTreePlayer::fgPlayer  = nullptr;
+TVirtualTreePlayer  *TVirtualTreePlayer::fgCurrent = nullptr;
 
 ClassImp(TVirtualTreePlayer);
 
@@ -39,10 +39,10 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreePlayer"))) {
          if (h->LoadPlugin() == -1)
-            return 0;
+            return nullptr;
          TVirtualTreePlayer::SetPlayer(h->GetClass());
       }
-      if (!fgPlayer) return 0;
+      if (!fgPlayer) return nullptr;
    }
 
    //create an instance of the Tree player
@@ -59,7 +59,7 @@ TVirtualTreePlayer::~TVirtualTreePlayer()
 {
    if (fgCurrent==this) {
       // Make sure fgCurrent does not point to a deleted player.
-      fgCurrent=0;
+      fgCurrent=nullptr;
    }
 }
 

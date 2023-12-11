@@ -505,7 +505,6 @@ class RAxisPainter extends RObjectPainter {
                 else
                   this.titlePos = 'right';
 
-
                this.changeAxisAttr(0, 'title_position', this.titlePos, 'title_offset', this.titleOffset / this.scalingSize);
 
                drag_rect.remove();
@@ -684,6 +683,10 @@ class RAxisPainter extends RObjectPainter {
             arg.x = pos;
             arg.y = fix_coord;
             arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
+            if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
+               arg.align = 21;
+               arg.y += this.labelsFont.size;
+            }
          }
 
          arg.post_process = process_drawtext_ready;
@@ -704,8 +707,7 @@ class RAxisPainter extends RObjectPainter {
                          align: this.vertical ? ((side < 0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
                          latex: 1,
                          text: '#times' + this.formatExp(10, this.order),
-                         draw_g: label_g
-         });
+                         draw_g: label_g });
       }
 
       return this.finishTextDrawing(label_g).then(() => {
@@ -946,13 +948,13 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Redraw axis, used in standalone mode for RAxisDrawable */
    redraw() {
       const drawable = this.getObject(),
-            pp   = this.getPadPainter(),
-            pos  = pp.getCoordinate(drawable.fPos),
+            pp = this.getPadPainter(),
+            pos = pp.getCoordinate(drawable.fPos),
             reverse = this.v7EvalAttr('reverse', false),
             labels_len = drawable.fLabels.length,
             min = (labels_len > 0) ? 0 : this.v7EvalAttr('min', 0),
             max = (labels_len > 0) ? labels_len : this.v7EvalAttr('max', 100);
-      let len  = pp.getPadLength(drawable.fVertical, drawable.fLength);
+      let len = pp.getPadLength(drawable.fVertical, drawable.fLength);
 
       // in vertical direction axis drawn in negative direction
       if (drawable.fVertical) len -= pp.getPadHeight();

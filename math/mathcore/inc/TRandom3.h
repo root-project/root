@@ -33,9 +33,10 @@ private:
 public:
    TRandom3(UInt_t seed=4357);
    ~TRandom3() override;
-   /// return current element of the state used for generate the random number
-   /// Note that it is not the seed of the generator that was used in the SetSeed function
-    UInt_t    GetSeed() const override { return fMt[fCount624];}
+    /// Return one element of the generator state used to generate the random numbers.
+    /// Note that it is not the seed of the generator that was used in the SetSeed function and 
+    /// the full state (624 numbers) is required to define the generator and have a reproducible output.
+    UInt_t    GetSeed() const override { return fMt[fCount624 % 624];}
    using TRandom::Rndm;
     Double_t  Rndm( ) override;
     void      RndmArray(Int_t n, Float_t *array) override;

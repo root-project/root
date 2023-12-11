@@ -28,11 +28,11 @@ class RPavePainter extends RObjectPainter {
       this.onFrame = fp && this.v7EvalAttr('onFrame', true);
       this.corner = this.v7EvalAttr('corner', ECorner.kTopRight);
 
-      const visible      = this.v7EvalAttr('visible', true),
-            offsetx      = this.v7EvalLength('offsetX', rect.width, 0.02),
-            offsety      = this.v7EvalLength('offsetY', rect.height, 0.02),
-            pave_width   = this.v7EvalLength('width', rect.width, 0.3),
-            pave_height  = this.v7EvalLength('height', rect.height, 0.3);
+      const visible = this.v7EvalAttr('visible', true),
+            offsetx = this.v7EvalLength('offsetX', rect.width, 0.02),
+            offsety = this.v7EvalLength('offsetY', rect.height, 0.02),
+            pave_width = this.v7EvalLength('width', rect.width, 0.3),
+            pave_height = this.v7EvalLength('height', rect.height, 0.3);
 
       this.createG();
 
@@ -163,13 +163,13 @@ class RLegendPainter extends RPavePainter {
 
    /** @summary draw RLegend content */
    async drawContent() {
-      const legend     = this.getObject(),
-            textFont   = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
-            width      = this.pave_width,
-            height     = this.pave_height,
-            pp         = this.getPadPainter();
+      const legend = this.getObject(),
+            textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
+            width = this.pave_width,
+            height = this.pave_height,
+            pp = this.getPadPainter();
 
-      let nlines     = legend.fEntries.length;
+      let nlines = legend.fEntries.length;
       if (legend.fTitle) nlines++;
 
       if (!nlines || !pp) return this;
@@ -252,18 +252,18 @@ class RPaveTextPainter extends RPavePainter {
 
    /** @summary draw RPaveText content */
    drawContent() {
-      const pavetext  = this.getObject(),
-            textFont  = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
-            width     = this.pave_width,
-            height    = this.pave_height,
-            nlines    = pavetext.fText.length;
+      const pavetext = this.getObject(),
+            textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
+            width = this.pave_width,
+            height = this.pave_height,
+            nlines = pavetext.fText.length;
 
       if (!nlines) return;
 
       const stepy = height / nlines, margin_x = 0.02 * width;
       let posy = 0;
 
-      textFont.setSize(height/(nlines * 1.2))
+      textFont.setSize(height/(nlines * 1.2));
 
       this.startTextDrawing(textFont, 'font');
 

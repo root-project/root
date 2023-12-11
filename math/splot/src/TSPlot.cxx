@@ -233,7 +233,7 @@ for signal reproduces correctly the PDF even where the latter vanishes,
 although the error bars remain sizeable. This results from the almost
 complete cancellation between positive and negative weights: the sum of
 weights is close to zero while the sum of weights squared is not. The
-occurence of negative weights occurs through the appearance of the
+occurrence of negative weights occurs through the appearance of the
 covariance matrix, and its negative components, in the definition of
 Eq. (2).
 
@@ -1013,7 +1013,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 
 void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t /*iflag*/)
 {
-   Double_t lik;
+   Double_t likelihood;
    Int_t i, ispecies;
 
    TVirtualFitter *fitter = TVirtualFitter::GetFitter();
@@ -1022,11 +1022,11 @@ void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t /*iflag*/)
    Int_t nes = pdftot->GetNcols();
    f=0;
    for (i=0; i<nev; i++){
-      lik=0;
+      likelihood=0;
       for (ispecies=0; ispecies<nes; ispecies++)
-         lik+=x[ispecies]*(*pdftot)(i, ispecies);
-      if (lik<0) lik=1;
-      f+=TMath::Log(lik);
+         likelihood+=x[ispecies]*(*pdftot)(i, ispecies);
+      if (likelihood<0) likelihood=1;
+      f+=TMath::Log(likelihood);
    }
    //extended likelihood, equivalent to chi2
    Double_t ntot=0;

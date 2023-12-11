@@ -19,12 +19,14 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RFloat16.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <Byteswap.h>
 #include <TError.h>
 
 #include <cstring> // for memcpy
+#include <cstddef> // for std::byte
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -69,7 +71,7 @@ namespace {
 /// Used on big-endian architectures for packing/unpacking elements whose column type requires
 /// a little-endian on-disk representation.
 template <std::size_t N>
-static void CopyBswap(void *destination, const void *source, std::size_t count)
+void CopyBswap(void *destination, const void *source, std::size_t count)
 {
    auto dst = reinterpret_cast<typename RByteSwap<N>::value_type *>(destination);
    auto src = reinterpret_cast<const typename RByteSwap<N>::value_type *>(source);
@@ -435,6 +437,13 @@ public:
 };
 
 template <>
+class RColumnElement<std::byte, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::byte);
+   RColumnElement() : RColumnElementBase(kSize) {}
+};
+
+template <>
 class RColumnElement<char, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(char);
@@ -583,6 +592,39 @@ public:
    void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
+template <>
+class RColumnElement<float, EColumnType::kReal16> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+   static constexpr std::size_t kBitsOnStorage = 16;
+   RColumnElement() : RColumnElementBase(kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final
+   {
+      float *floatArray = reinterpret_cast<float *>(src);
+      std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(dst);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         uint16Array[i] = Internal::FloatToHalf(floatArray[i]);
+         ByteSwapIfNecessary(uint16Array[i]);
+      }
+   }
+
+   void Unpack(void *dst, void *src, std::size_t count) const final
+   {
+      float *floatArray = reinterpret_cast<float *>(dst);
+      std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(src);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         ByteSwapIfNecessary(floatArray[i]);
+         floatArray[i] = Internal::HalfToFloat(uint16Array[i]);
+      }
+   }
+};
+
 #define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
    static constexpr std::size_t kSize = sizeof(CppT);           \
    static constexpr std::size_t kBitsOnStorage = BitsOnStorage; \
@@ -614,6 +656,8 @@ public:
       static constexpr bool kIsMappable = true;                           \
       __RCOLUMNELEMENT_SPEC_BODY(CppT, RColumnElementBase, BitsOnStorage) \
    }
+
+DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::byte, EColumnType::kByte, 8);
 
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(char, EColumnType::kByte, 8);
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(char, EColumnType::kChar, 8);
@@ -703,6 +747,7 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
    case EColumnType::kBit: return std::make_unique<RColumnElement<CppT, EColumnType::kBit>>();
    case EColumnType::kReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kReal64>>();
    case EColumnType::kReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32>>();
+   case EColumnType::kReal16: return std::make_unique<RColumnElement<CppT, EColumnType::kReal16>>();
    case EColumnType::kInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kInt64>>();
    case EColumnType::kUInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kUInt64>>();
    case EColumnType::kInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kInt32>>();

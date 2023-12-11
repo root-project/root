@@ -185,7 +185,6 @@ namespace HistFactory {
  */
 class HistoSys final : public HistogramUncertaintyBase {
 public:
-  ~HistoSys() override {}
   void PrintXML(std::ostream&) const override;
 };
 
@@ -195,7 +194,6 @@ public:
  */
   class HistoFactor final : public HistogramUncertaintyBase {
   public:
-    ~HistoFactor() override {}
     void PrintXML(std::ostream&) const override;
   };
 
@@ -206,10 +204,7 @@ public:
   class ShapeSys final : public HistogramUncertaintyBase {
 
   public:
-
-    ShapeSys() :
-      HistogramUncertaintyBase(),
-      fConstraintType(Constraint::Gaussian) {}
+    ShapeSys() : fConstraintType(Constraint::Gaussian) {}
     ShapeSys(const ShapeSys& other) :
       HistogramUncertaintyBase(other),
       fConstraintType(other.fConstraintType) {}
@@ -255,12 +250,6 @@ public:
   class ShapeFactor : public HistogramUncertaintyBase {
 
   public:
-
-    ShapeFactor() :
-      HistogramUncertaintyBase(),
-      fConstant{false},
-      fHasInitialShape{false} {}
-
     void Print(std::ostream& = std::cout) const override;
     void PrintXML(std::ostream&) const override;
     void writeToFile( const std::string& FileName, const std::string& DirName) override;
@@ -295,11 +284,11 @@ public:
 
   protected:
 
-    bool fConstant;
+    bool fConstant = false;
 
     // A histogram representing
     // the initial shape
-    bool fHasInitialShape;
+    bool fHasInitialShape = false;
   };
 
 /** \class StatError
@@ -309,11 +298,6 @@ public:
   class StatError : public HistogramUncertaintyBase {
 
   public:
-
-    StatError() :
-      HistogramUncertaintyBase(),
-      fActivate(false), fUseHisto(false) {}
-
     void Print(std::ostream& = std::cout) const override;
     void PrintXML(std::ostream&) const override;
     void writeToFile( const std::string& FileName, const std::string& DirName ) override;
@@ -343,8 +327,8 @@ public:
 
   protected:
 
-    bool fActivate;
-    bool fUseHisto; // Use an external histogram for the errors
+    bool fActivate = false;
+    bool fUseHisto = false; // Use an external histogram for the errors
   };
 
 /** \class StatErrorConfig

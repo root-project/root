@@ -45,19 +45,26 @@ class RooCmdArg;
 
 class TGraph;
 class TGraphErrors;
+class TMultiGraph;
 
 namespace RooStats {
 class HypoTestResult;
 class HypoTestInverterResult;
 } // namespace RooStats
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 class xRooNode;
 
 class xRooNLLVar : public std::shared_ptr<RooAbsReal> {
 
 public:
+   struct xValueWithError : public std::pair<double, double> {
+      xValueWithError(const std::pair<double, double> &in) : std::pair<double, double>(in) {}
+      double value() const { return std::pair<double, double>::first; }
+      double error() const { return std::pair<double, double>::second; }
+   };
+
    void Print(Option_t *opt = "");
 
    xRooNLLVar(RooAbsPdf &pdf, const std::pair<RooAbsData *, const RooAbsCollection *> &data,
@@ -86,12 +93,60 @@ public:
 
    class xRooFitResult : public std::shared_ptr<const RooFitResult> {
    public:
-      xRooFitResult(const std::shared_ptr<xRooNode> &in); // : fNode(in) { }
+      xRooFitResult(const std::shared_ptr<xRooNode> &in,
+                    const std::shared_ptr<xRooNLLVar> &nll = nullptr); // : fNode(in) { }
       const RooFitResult *operator->() const;
       //        operator std::shared_ptr<const RooFitResult>() const;
       operator const RooFitResult *() const;
       void Draw(Option_t *opt = "");
+
+      xRooNLLVar nll();
+      RooArgList poi()
+      {
+         return get()
+                   ? RooArgList(*std::unique_ptr<RooAbsCollection>(get()->floatParsFinal().selectByAttrib("poi", true)))
+                   : RooArgList();
+      }
+
+      // generate a conditional fit using the given poi set to the given values
+      // alias is used to store the fit result in the map under a different name
+      xRooFitResult cfit(const char *poiValues, const char *alias = nullptr);
+      // generate the conditional fit required for an impact calculation
+      xRooFitResult ifit(const char *np, bool up, bool prefit = false);
+      // calculate the impact on poi due to np. if approx is true, will use the covariance approximation instead
+      double impact(const char *poi, const char *np, bool up = true, bool prefit = false, bool approx = false);
+      double impact(const char *np, bool up = true, bool prefit = false, bool approx = false)
+      {
+         auto _poi = poi();
+         if (_poi.size() != 1)
+            throw std::runtime_error("xRooFitResult::impact: not one POI");
+         return impact(poi().contentsString().c_str(), np, up, prefit, approx);
+      }
+
+      // calculate error on poi conditional on the given NPs being held constant at their post-fit values
+      // The conditional error is often presented as the difference in quadrature to the total error i.e.
+      // error contribution due to conditional NPs = sqrt( pow(totError,2) - pow(condError,2) )
+      double conditionalError(const char *poi, const char *nps, bool up = true, bool approx = false);
+
+      // rank all the np based on impact ... will use the covariance approximation if full impact not available
+      // the approxThreshold sets the level below which the approximation will be returned
+      // e.g. set it to 0 to not do approximation
+      RooArgList ranknp(const char *poi, bool up = true, bool prefit = false,
+                        double approxThreshold = std::numeric_limits<double>::infinity());
+      // version that assumes only one parameter is poi
+      RooArgList
+      ranknp(bool up = true, bool prefit = false, double approxThreshold = std::numeric_limits<double>::infinity())
+      {
+         auto _poi = poi();
+         if (_poi.size() != 1)
+            throw std::runtime_error("xRooFitResult::ranknp: not one POI");
+         return ranknp(poi().contentsString().c_str(), up, prefit, approxThreshold);
+      }
+
       std::shared_ptr<xRooNode> fNode;
+      std::shared_ptr<xRooNLLVar> fNll;
+
+      std::shared_ptr<std::map<std::string, xRooFitResult>> fCfits;
    };
 
    xRooFitResult minimize(const std::shared_ptr<ROOT::Fit::FitConfig> & = nullptr);
@@ -100,11 +155,12 @@ public:
    std::shared_ptr<ROOT::Fit::FitConfig> fitConfig(); // returns fit config, or creates a default one if not existing
    ROOT::Math::IOptions *fitConfigOptions(); // return pointer to non-const version of the options inside the fit config
 
-   class xRooHypoPoint {
+   class xRooHypoPoint : public TNamed {
    public:
+      xRooHypoPoint(std::shared_ptr<RooStats::HypoTestResult> htr = nullptr, const RooAbsCollection *_coords = nullptr);
       static std::set<int> allowedStatusCodes;
-      void Print();
-      void Draw(Option_t *opt = "");
+      void Print(Option_t *opt = "") const override;
+      void Draw(Option_t *opt = "") override;
 
       // status bitmask of the available fit results
       // 0 = all ok
@@ -115,8 +171,11 @@ public:
       std::shared_ptr<const RooFitResult> ufit(bool readOnly = false);
       std::shared_ptr<const RooFitResult> cfit_null(bool readOnly = false);
       std::shared_ptr<const RooFitResult> cfit_alt(bool readOnly = false);
+      std::shared_ptr<const RooFitResult> cfit_lbound(bool readOnly = false); // cfit @ the lower bound of mu
+      std::shared_ptr<const RooFitResult> gfit() { return fGenFit; }          // non-zero if data was generated
 
-      std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> data;
+      std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> fData;
+      std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> data();
 
       std::pair<double, double> getVal(const char *what);
 
@@ -135,9 +194,17 @@ public:
             return std::pair(1, 0); // by construction
          auto null = pNull_toys(nSigma);
          auto alt = pAlt_toys(nSigma);
-         double pval = (null.first == 0) ? 0 : null.first / alt.first;
-         // TODO: should do error calculation like for asymp (calulate up and down separately and then take err)
-         return std::make_pair(pval, pval * sqrt(pow(null.second / null.first, 2) + pow(alt.second / alt.first, 2)));
+         double nom = (null.first == 0) ? 0 : null.first / alt.first;
+         // double up = (null.first + null.second == 0) ? 0 : ((alt.first-alt.second<=0) ?
+         // std::numeric_limits<double>::infinity() : (null.first + null.second)/(alt.first - alt.second)); double down
+         // = (null.first - null.second == 0) ? 0 : (null.first - null.second)/(alt.first + alt.second);
+         //  old way ... now doing like in pCLs_asymp by calculating the two variations ... but this is pessimistic
+         //  assumes p-values are anticorrelated!
+         //  so reverting to old
+         return std::make_pair(nom, (alt.first - alt.second <= 0)
+                                       ? std::numeric_limits<double>::infinity()
+                                       : (sqrt(pow(null.second, 2) + pow(alt.second * nom, 2)) / alt.first));
+         // return std::pair(nom,std::max(std::abs(up - nom), std::abs(down - nom)));
       }
       std::pair<double, double>
       ts_toys(double nSigma = std::numeric_limits<double>::quiet_NaN()); // test statistic value
@@ -148,12 +215,19 @@ public:
       xRooHypoPoint generateNull(int seed = 0);
       xRooHypoPoint generateAlt(int seed = 0);
 
-      void addNullToys(int nToys = 1, int seed = 0); // if seed=0 will use a random seed
-      void addAltToys(int nToys = 1, int seed = 0);  // if seed=0 will use a random seed
+      void
+      addNullToys(int nToys = 1, int seed = 0, double target = std::numeric_limits<double>::quiet_NaN(),
+                  double target_nSigma = std::numeric_limits<double>::quiet_NaN()); // if seed=0 will use a random seed
+      void
+      addAltToys(int nToys = 1, int seed = 0, double target = std::numeric_limits<double>::quiet_NaN(),
+                 double target_nSigma = std::numeric_limits<double>::quiet_NaN()); // if seed=0 will use a random seed
+      void
+      addCLsToys(int nToys = 1, int seed = 0, double target = std::numeric_limits<double>::quiet_NaN(),
+                 double target_nSigma = std::numeric_limits<double>::quiet_NaN()); // if seed=0 will use a random seed
 
-      RooArgList poi();
-      RooArgList alt_poi(); // values of the poi in the alt hypothesis (will be nans if not defined)
-      RooRealVar &mu_hat(); // throws exception if ufit not available
+      RooArgList poi() const;
+      RooArgList alt_poi() const; // values of the poi in the alt hypothesis (will be nans if not defined)
+      RooRealVar &mu_hat();       // throws exception if ufit not available
 
       std::shared_ptr<xRooHypoPoint>
       asimov(bool readOnly =
@@ -168,7 +242,7 @@ public:
 
       std::shared_ptr<const RooAbsCollection> coords; // pars of the nll that will be held const alongside POI
 
-      std::shared_ptr<const RooFitResult> fUfit, fNull_cfit, fAlt_cfit;
+      std::shared_ptr<const RooFitResult> fUfit, fNull_cfit, fAlt_cfit, fLbound_cfit;
       std::shared_ptr<const RooFitResult> fGenFit; // if the data was generated, this is the fit is was generated from
       bool isExpected = false;                     // if genFit, flag says is asimov or not
 
@@ -181,18 +255,24 @@ public:
       std::vector<std::tuple<int, double, double>> altToys;
 
       std::shared_ptr<xRooNLLVar> nllVar = nullptr; // hypopoints get a copy
+      std::shared_ptr<RooStats::HypoTestResult> hypoTestResult = nullptr;
+      std::shared_ptr<const RooFitResult> retrieveFit(int type);
+
+      TString tsTitle(bool inWords = false) const;
 
    private:
       std::pair<double, double> pX_toys(bool alt, double nSigma = std::numeric_limits<double>::quiet_NaN());
-      void addToys(bool alt, int nToys, int initialSeed = 0);
-
-      TString tsTitle();
+      size_t addToys(bool alt, int nToys, int initialSeed = 0, double target = std::numeric_limits<double>::quiet_NaN(),
+                     double target_nSigma = std::numeric_limits<double>::quiet_NaN(), bool targetCLs = false,
+                     double relErrThreshold = 2., size_t maxToys = 10000);
    };
 
    // use alt_value = nan to skip the asimov calculations
    xRooHypoPoint hypoPoint(const char *parName, double value,
                            double alt_value = std::numeric_limits<double>::quiet_NaN(),
                            const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
+   // same as above but specify parNames and values in a string
+   xRooHypoPoint hypoPoint(const char *parValues, double alt_value, const xRooFit::Asymptotics::PLLType &pllType);
    // this next method requires poi to be flagged in the model already (with "poi" attribute) .. must be exactly one
    xRooHypoPoint hypoPoint(double value, double alt_value = std::numeric_limits<double>::quiet_NaN(),
                            const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
@@ -205,8 +285,7 @@ public:
    public:
       friend class xRooNLLVar;
       xRooHypoSpace(const char *name = "", const char *title = "");
-
-      bool AddWorkspace(const char *wsFilename, const char *extraPars = "");
+      xRooHypoSpace(const RooStats::HypoTestInverterResult *result);
 
       bool AddModel(const xRooNode &pdf, const char *validity = "");
 
@@ -223,6 +302,7 @@ public:
       std::shared_ptr<RooArgSet> pars() const { return fPars; };
       RooArgList axes() const;
 
+      xRooHypoPoint &AddPoint(double value);            // adds by using the first axis var
       xRooHypoPoint &AddPoint(const char *coords = ""); // adds a new point at given coords or returns existing
 
       xRooHypoPoint &point(size_t i) { return at(i); }
@@ -233,19 +313,39 @@ public:
       //  expX: do expected, X sigma (use +X or -X for contour, otherwise will return band unless X=0)
       //  toys: pvalues from available toys
       //  readonly: don't compute anything, just return available values
-      std::shared_ptr<TGraphErrors> BuildGraph(const char *opt);
+      std::shared_ptr<TGraphErrors> graph(const char *opt) const;
 
-      // estimates where corresponding pValues graph becomes equal to 0.05
-      // linearly interpolates log(pVal) when obtaining limits.
-      // returns value and error
-      static std::pair<double, double> GetLimit(const TGraph &pValues, double target = 0.05);
+      // return a TMultiGraph containing the set of graphs for a particular visualization
+      std::shared_ptr<TMultiGraph> graphs(const char *opt);
 
       // will evaluate more points until limit is below given relative uncert
+      xValueWithError findlimit(const char *opt, double relUncert = std::numeric_limits<double>::infinity(),
+                                unsigned int maxTries = 20);
 
-      std::pair<double, double> FindLimit(const char *opt, double relUncert = std::numeric_limits<double>::infinity());
+      // get currently available limit, with error. Use nSigma = nan for observed limit
+      xValueWithError limit(const char *type = "cls", double nSigma = std::numeric_limits<double>::quiet_NaN()) const;
+      int scan(const char *type, size_t nPoints, double low = std::numeric_limits<double>::quiet_NaN(),
+               double high = std::numeric_limits<double>::quiet_NaN(),
+               const std::vector<double> &nSigmas = {0, 1, 2, -1, -2, std::numeric_limits<double>::quiet_NaN()},
+               double relUncert = 0.1);
+      int scan(const char *type = "cls",
+               const std::vector<double> &nSigmas = {0, 1, 2, -1, -2, std::numeric_limits<double>::quiet_NaN()},
+               double relUncert = 0.1)
+      {
+         return scan(type, 0, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+                     nSigmas, relUncert);
+      }
+      int scan(const char *type, double nSigma, double relUncert = 0.1)
+      {
+         return scan(type, std::vector<double>{nSigma}, relUncert);
+      }
 
       // key is nSigma or "obs" for observed
-      std::map<std::string, std::pair<double, double>> limits(const char *opt = "cls", double relUncert = 0.1);
+      // will only do obs if "obs" dataset is not a generated dataset
+      std::map<std::string, std::pair<double, double>>
+      limits(const char *opt = "cls",
+             const std::vector<double> &nSigmas = {0, 1, 2, -1, -2, std::numeric_limits<double>::quiet_NaN()},
+             double relUncert = std::numeric_limits<double>::infinity());
 
       std::shared_ptr<xRooNode> pdf(const RooAbsCollection &parValues) const;
       std::shared_ptr<xRooNode> pdf(const char *parValues = "") const;
@@ -254,6 +354,12 @@ public:
       RooStats::HypoTestInverterResult *result();
 
    private:
+      // estimates where corresponding pValues graph becomes equal to 0.05
+      // linearly interpolates log(pVal) when obtaining limits.
+      // returns value and error
+      static std::pair<double, double>
+      GetLimit(const TGraph &pValues, double target = std::numeric_limits<double>::quiet_NaN());
+
       static RooArgList toArgs(const char *str);
 
       xRooFit::Asymptotics::PLLType fTestStatType = xRooFit::Asymptotics::Unknown;
@@ -261,27 +367,59 @@ public:
 
       std::map<std::shared_ptr<xRooNode>, std::shared_ptr<xRooNLLVar>> fNlls; // existing NLL functions of added pdfs;
 
-      std::set<std::shared_ptr<xRooNode>> fWorkspaces; // added workspaces (kept open)
-
       std::set<std::pair<std::shared_ptr<RooArgList>, std::shared_ptr<xRooNode>>> fPdfs;
    };
 
    xRooHypoSpace hypoSpace(const char *parName, int nPoints, double low, double high,
                            double alt_value = std::numeric_limits<double>::quiet_NaN(),
                            const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
-   xRooHypoSpace
-   hypoSpace(const char *parName = "", const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
+   xRooHypoSpace hypoSpace(const char *parName = "",
+                           const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown,
+                           double alt_value = std::numeric_limits<double>::quiet_NaN());
    xRooHypoSpace hypoSpace(int nPoints, double low, double high,
                            double alt_value = std::numeric_limits<double>::quiet_NaN(),
                            const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
 
-   std::shared_ptr<RooArgSet> pars(bool stripGlobalObs = true);
+   std::shared_ptr<RooArgSet> pars(bool stripGlobalObs = true) const;
 
    void Draw(Option_t *opt = "");
+
+   TObject *Scan(const RooArgList &scanPars, const std::vector<std::vector<double>> &coords,
+                 const RooArgList &profilePars = RooArgList());
+   TObject *Scan(const char *scanPars, const std::vector<std::vector<double>> &coords,
+                 const RooArgList &profilePars = RooArgList());
+   TObject *Scan(const char *scanPars, size_t nPoints, double low, double high, size_t nPointsY, double ylow,
+                 double yhigh, const RooArgList &profilePars = RooArgList())
+   {
+      std::vector<std::vector<double>> coords;
+      if (nPoints) {
+         double step = (high - low) / (nPoints);
+         for (size_t i = 0; i < nPoints; i++) {
+            std::vector<double> coord({low + step * i});
+            if (nPointsY) {
+               double stepy = (yhigh - ylow) / (nPointsY);
+               for (size_t j = 0; j < nPointsY; j++) {
+                  coord.push_back({ylow + stepy * j});
+                  coords.push_back(coord);
+                  coord.resize(1);
+               }
+            } else {
+               coords.push_back(coord);
+            }
+         }
+      }
+      return Scan(scanPars, coords, profilePars);
+   }
+   TObject *
+   Scan(const char *scanPars, size_t nPoints, double low, double high, const RooArgList &profilePars = RooArgList())
+   {
+      return Scan(scanPars, nPoints, low, high, 0, 0, 0, profilePars);
+   }
 
    std::shared_ptr<RooAbsReal> func() const; // will assign globs when called
    std::shared_ptr<RooAbsPdf> pdf() const { return fPdf; }
    RooAbsData *data() const; // returns the data hidden inside the NLLVar if there is some
+   const RooAbsCollection *globs() const { return fGlobs.get(); }
 
    // NLL = nllTerm + constraintTerm
    // nllTerm = sum( entryVals ) + extendedTerm + simTerm [+ binnedDataTerm if activated binnedL option]
@@ -292,18 +430,25 @@ public:
    RooNLLVar *nllTerm() const;
    RooConstraintSum *constraintTerm() const;
 
-   double getEntryVal(size_t entry); // get the Nll value for a specific entry
+   double getEntryVal(size_t entry) const; // get the Nll value for a specific entry
    double extendedTerm() const;
    double simTerm() const;
    double binnedDataTerm() const;
+   double getEntryBinWidth(size_t entry) const;
+
+   double ndof() const;
+   double saturatedVal() const;
+   double saturatedConstraintTerm() const;
+   double saturatedNllTerm() const;
+   double pgof() const; // a goodness-of-fit pvalue based on profile likelihood of a saturated model
 
    // change the dataset - will check globs are the same
-   Bool_t setData(const std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> &_data);
-   Bool_t setData(const std::shared_ptr<RooAbsData> &data, const std::shared_ptr<const RooAbsCollection> &globs)
+   bool setData(const std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> &_data);
+   bool setData(const std::shared_ptr<RooAbsData> &data, const std::shared_ptr<const RooAbsCollection> &globs)
    {
       return setData(std::make_pair(data, globs));
    }
-   Bool_t setData(const xRooNode &data);
+   bool setData(const xRooNode &data);
 
    // using shared ptrs everywhere, even for RooLinkedList which needs custom deleter to clear itself
    // but still work ok for assignment operations
@@ -322,6 +467,6 @@ public:
    bool kReuseNLL = true;
 };
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;
 
 #endif // include guard

@@ -281,37 +281,35 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
 
 
   //  TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
-  double q = 0, qExtra = 0;
-  // do toys
-  for(int i=0; i<nToys; ++i){
-    cout << "on toy " << i << endl;
+    double q = 0;
+    double qExtra = 0;
+    // do toys
+    for (int i = 0; i < nToys; ++i) {
+       cout << "on toy " << i << endl;
 
-    std::unique_ptr<RooDataSet> tmpData{toyGen.generate(*x,data->numEntries())};
-    // check to see how well this correction fits
-    std::unique_ptr<RooFitResult> result{
-        corrected->fitTo(*tmpData,Save(),Minos(false),
-          Hesse(false),PrintLevel(printLevel))};
+       std::unique_ptr<RooDataSet> tmpData{toyGen.generate(*x, data->numEntries())};
+       // check to see how well this correction fits
+       std::unique_ptr<RooFitResult> result{
+          corrected->fitTo(*tmpData, Save(), Minos(false), Hesse(false), PrintLevel(printLevel))};
 
-    std::unique_ptr<RooFitResult> resultNull{
-        correctedNull->fitTo(*tmpData,Save(),Minos(false),
-          Hesse(false),PrintLevel(printLevel))};
+       std::unique_ptr<RooFitResult> resultNull{
+          correctedNull->fitTo(*tmpData, Save(), Minos(false), Hesse(false), PrintLevel(printLevel))};
 
+       std::unique_ptr<RooFitResult> resultExtra{
+          correctedExtra->fitTo(*tmpData, Save(), Minos(false), Hesse(false), PrintLevel(printLevel))};
 
-    std::unique_ptr<RooFitResult> resultExtra{
-        correctedExtra->fitTo(*tmpData,Save(),Minos(false),
-          Hesse(false),PrintLevel(printLevel))};
+       // Hypothesis test between previous correction (null)
+       // and this one (alternate).  Use -2 log LR for test statistic
+       q = 2 * (resultNull->minNll() - result->minNll());
 
+       qExtra = 2 * (result->minNll() - resultExtra->minNll());
 
-    // Hypothesis test between previous correction (null)
-    // and this one (alternate).  Use -2 log LR for test statistic
-    q = 2*(resultNull->minNll() - result->minNll());
-
-    qExtra = 2*(result->minNll() - resultExtra->minNll());
-
-    samplingDist->Fill(q);
-    samplingDistExtra->Fill(qExtra);
-    if (printLevel > 0)
-       cout << "NLL Results: null " <<  resultNull->minNll() << " ref = " << result->minNll() << " extra" << resultExtra->minNll() << endl;
+       samplingDist->Fill(q);
+       samplingDistExtra->Fill(qExtra);
+       if (printLevel > 0) {
+      cout << "NLL Results: null " << resultNull->minNll() << " ref = " << result->minNll() << " extra"
+           << resultExtra->minNll() << endl;
+       }
   }
 
   RooMsgService::instance().setGlobalKillBelow(msglevel);

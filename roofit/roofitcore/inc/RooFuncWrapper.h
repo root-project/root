@@ -28,11 +28,8 @@ class RooSimultaneous;
 /// represents the data entry.
 class RooFuncWrapper final : public RooAbsReal {
 public:
-   RooFuncWrapper(const char *name, const char *title, std::string const &funcBody, RooArgSet const &paramSet,
-                  const RooAbsData *data = nullptr, RooSimultaneous const *simPdf = nullptr);
-
    RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
-                  const RooAbsData *data = nullptr, RooSimultaneous const *simPdf = nullptr);
+                  const RooAbsData *data, RooSimultaneous const *simPdf, bool createGradient);
 
    RooFuncWrapper(const RooFuncWrapper &other, const char *name = nullptr);
 
@@ -40,7 +37,7 @@ public:
 
    double defaultErrorLevel() const override { return 0.5; }
 
-   bool hasGradient() const override { return true; }
+   bool hasGradient() const override { return _hasGradient; }
    void gradient(double *out) const override;
 
    void gradient(const double *x, double *g) const;
@@ -51,6 +48,11 @@ public:
 
    void dumpGradient();
 
+   /// No constant term optimization is possible in code-generation mode.
+   void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
+
+   std::string const &funcName() const { return _funcName; }
+
 protected:
    double evaluate() const override;
 
@@ -59,10 +61,10 @@ private:
 
    void updateGradientVarBuffer() const;
 
-   void loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet,
-                          const RooAbsData *data, RooSimultaneous const *simPdf);
+   void loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,
+                          RooSimultaneous const *simPdf);
 
-   void declareAndDiffFunction(std::string funcName, std::string const &funcBody);
+   void declareAndDiffFunction(std::string const &funcBody, bool createGradient);
 
    void buildFuncAndGradFunctors();
 
@@ -76,8 +78,10 @@ private:
    };
 
    RooListProxy _params;
+   std::string _funcName;
    Func _func;
    Grad _grad;
+   bool _hasGradient = false;
    mutable std::vector<double> _gradientVarBuffer;
    std::vector<double> _observables;
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;

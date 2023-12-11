@@ -13,7 +13,7 @@
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 #include "RooFit_ZMQ/ZeroMQPoller.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include "gtest/gtest.h"
 
@@ -38,12 +38,14 @@ protected:
          }
       }
 
+      std::string tmpPath = gSystem->TempDirectory();
+
       if (child_pid > 0) { // parent
          pusher.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
-         pusher->bind("ipc://" + RooFit::tmpPath() + "ZMQ_test_push_pull_P2C.ipc");
+         pusher->bind("ipc://" + tmpPath + "/roofit_ZMQ_test_push_pull_P2C.ipc");
       } else { // child
          puller.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
-         puller->connect("ipc://" + RooFit::tmpPath() + "ZMQ_test_push_pull_P2C.ipc");
+         puller->connect("ipc://" + tmpPath + "/roofit_ZMQ_test_push_pull_P2C.ipc");
 
          poller.register_socket(*puller, zmq::event_flags::pollin);
       }
@@ -74,10 +76,10 @@ protected:
                throw std::runtime_error(std::string("waitpid, errno ") + std::to_string(errno));
             }
          }
-         pusher.reset(nullptr);
+         pusher.reset();
          zmqSvc().close_context();
       } else { // child
-         puller.reset(nullptr);
+         puller.reset();
          zmqSvc().close_context();
          _Exit(0);
       }

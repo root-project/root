@@ -57,6 +57,9 @@ public:
       _evaluator->print(os);
    }
 
+   /// The RooFit::Evaluator is dealing with constant terms itself.
+   void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
+
 protected:
    double evaluate() const override { return _evaluator ? _evaluator->run()[0] : 0.0; }
 

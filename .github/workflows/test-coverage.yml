@@ -43,7 +43,7 @@ env:
   PYTHONUNBUFFERED: true
 
 jobs:
-  
+
   build-linux:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
 
@@ -83,7 +83,6 @@ jobs:
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
-      
 
       - name: Apply option override from matrix for this job
         env:

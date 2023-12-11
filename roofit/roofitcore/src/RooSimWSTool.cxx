@@ -18,7 +18,7 @@
 /// \class RooSimWSTool
 /// The RooSimWSTool is a tool operating on RooWorkspace objects that
 /// can clone PDFs into a series of variations that are joined together
-/// into a RooSimultanous PDF.
+/// into a RooSimultaneous PDF.
 ///
 /// ## Splitting a single PDF
 /// The simplest use case is to take a workspace PDF as prototype and
@@ -121,7 +121,6 @@ namespace {
 
 class SimWSIFace : public RooFactoryWSTool::IFace {
 public:
-  ~SimWSIFace() override {} ;
   std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
 } ;
 
@@ -129,7 +128,7 @@ static Int_t init();
 
 Int_t dummy = init() ;
 
-static Int_t init()
+Int_t init()
 {
   static SimWSIFace iface{};
   RooFactoryWSTool::registerSpecial("SIMCLONE",&iface);
@@ -164,7 +163,7 @@ RooSimWSTool::~RooSimWSTool()
 /// <table>
 /// <tr><th> Optional Arguments <th> Effect
 /// <tr><td> SplitParam(varname, catname)                   <td> Split parameter(s) with given name(s) in category(s) with given names
-/// <tr><td> SplitParam(var, cat)                           <td> Split given parameter(s) in givem category(s)
+/// <tr><td> SplitParam(var, cat)                           <td> Split given parameter(s) in given category(s)
 /// <tr><td> SplitParamConstrained(vname, cname, remainder) <td> Make constrained split in parameter(s) with given name(s) in category(s) with given names
 ///                                                   putting remainder fraction formula in state with name "remainder"
 /// <tr><td> SplitParamConstrained(var,cat,remainder)       <td> Make constrained split in parameter(s) with given name(s) in category(s) with given names
@@ -424,7 +423,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     masterSplitCat = masterSplitCatOwner.get();
     cleanupList.addOwned(std::move(masterSplitCatOwner));
   } else {
-    masterSplitCat = (RooAbsCategoryLValue*) splitCatSetFund.first() ;
+    masterSplitCat = static_cast<RooAbsCategoryLValue*>(splitCatSetFund.first()) ;
   }
   if (verbose) {
     oocoutI(nullptr, ObjectHandling) << "RooSimWSTool::executeBuild: list of splitting categories " << splitCatSet << endl ;
@@ -487,7 +486,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
      RooAbsArg* splitLeaf = _ws->fundArg(splitLeafName) ;
      if (!splitLeaf) {
        // If not create it now
-       splitLeaf = (RooAbsArg*) splitIter->first->clone(splitLeafName.c_str());
+       splitLeaf = static_cast<RooAbsArg*>(splitIter->first->clone(splitLeafName.c_str()));
        _ws->import(*splitLeaf,RooFit::Silence(!verbose)) ;
      }
      fracLeafList.add(*splitLeaf) ;
@@ -536,7 +535,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     fitCat = fitCatOwner.get();
     cleanupList.addOwned(std::move(fitCatOwner));
   } else {
-    fitCat = (RooAbsCategoryLValue*) fitCatList.first() ;
+    fitCat = static_cast<RooAbsCategoryLValue*>(fitCatList.first()) ;
   }
 
   // Create master PDF
@@ -595,14 +594,14 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     }
 
     // Customizer PDF for current state and add to master simPdf
-    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat->getCurrentLabel(),false) ;
+    RooAbsPdf* fcPdf = static_cast<RooAbsPdf*>(physCustomizer->build(masterSplitCat->getCurrentLabel(),false)) ;
     simPdf->addPdf(*fcPdf,fcStateName.c_str()) ;
   }
 
   _ws->import(*simPdf,obc._conflProtocol,RooFit::Silence(!verbose)) ;
 
   // Delete customizers
-  return (RooSimultaneous*) _ws->pdf(simPdf->GetName()) ;
+  return static_cast<RooSimultaneous*>(_ws->pdf(simPdf->GetName())) ;
 }
 
 
@@ -809,7 +808,7 @@ RooSimWSTool::MultiBuildConfig::MultiBuildConfig(const char* masterIndexCat)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master indes states 'miStateList'. This
+/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master index states 'miStateList'. This
 /// method parses the SplitParam() and SplitParamConstrained() arguments
 
 void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char* pdfName, const RooCmdArg& arg1,const RooCmdArg& arg2,
@@ -823,7 +822,7 @@ void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char*
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master indes states 'miStateList'.
+/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master index states 'miStateList'.
 
 void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char* pdfName, SplitRule& sr)
 {

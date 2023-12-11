@@ -51,8 +51,9 @@ ClassImp(RooRealBinding);
 /// defined range of the variables are clipped to fit in the defined
 /// range.
 
-RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, bool clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(), _nset(nset), _clipInvalid(clipInvalid), _rangeName(rangeName), _funcSave(0)
+RooRealBinding::RooRealBinding(const RooAbsReal &func, const RooArgSet &vars, const RooArgSet *nset, bool clipInvalid,
+                               const TNamed *rangeName)
+   : RooAbsFunc(vars.size()), _func(&func), _nset(nset), _clipInvalid(clipInvalid), _rangeName(rangeName), _funcSave(0)
 {
   // check that all of the arguments are real valued and store them
   for (unsigned int index=0; index < vars.size(); ++index) {

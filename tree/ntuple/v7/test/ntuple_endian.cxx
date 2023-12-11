@@ -36,14 +36,18 @@ protected:
    const RColumnElementBase &fElement;
    std::vector<RPageStorage::RSealedPage> fPages;
 
-   void CreateImpl(const RNTupleModel &, unsigned char *, std::uint32_t) final {}
-   RNTupleLocator CommitSealedPageImpl(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
+   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Detail::RColumn &) final
    {
       return {};
    }
-   std::uint64_t CommitClusterImpl(NTupleSize_t) final { return 0; }
-   RNTupleLocator CommitClusterGroupImpl(unsigned char *, std::uint32_t) final { return {}; }
-   void CommitDatasetImpl(unsigned char *, std::uint32_t) final {}
+
+   void Create(RNTupleModel &) final {}
+   void UpdateSchema(const ROOT::Experimental::Detail::RNTupleModelChangeset &, NTupleSize_t) final {}
+   void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
+   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   void CommitClusterGroup() final {}
+   void CommitDataset() final {}
 
    RPage ReservePage(ColumnHandle_t, std::size_t) final { return {}; }
    void ReleasePage(RPage &) final {}
@@ -54,11 +58,10 @@ public:
    {
       fCompressor = std::make_unique<ROOT::Experimental::Detail::RNTupleCompressor>();
    }
-   RNTupleLocator CommitPageImpl(ColumnHandle_t /*columnHandle*/, const RPage &page) final
+   void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage &page) final
    {
       auto P = SealPage(page, fElement, /*compressionSetting=*/0);
       fPages.emplace_back(P.fBuffer, P.fSize, P.fNElements);
-      return {};
    }
 
    const std::vector<RPageStorage::RSealedPage> &GetPages() const { return fPages; }
@@ -105,7 +108,7 @@ TEST(RColumnElementEndian, ByteCopy)
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(0, buf1, 4, 4);
    page1.GrowUnchecked(4);
-   sink1.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
    EXPECT_EQ(
       0, memcmp(sink1.GetPages()[0].fBuffer, "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
@@ -127,7 +130,7 @@ TEST(RColumnElementEndian, Cast)
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(0, buf1, 8, 4);
    page1.GrowUnchecked(4);
-   sink1.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
    EXPECT_EQ(
       0, memcmp(sink1.GetPages()[0].fBuffer, "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
@@ -150,7 +153,7 @@ TEST(RColumnElementEndian, Split)
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(0, buf1, 8, 2);
    page1.GrowUnchecked(2);
-   sink1.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
    EXPECT_EQ(
       0, memcmp(sink1.GetPages()[0].fBuffer, "\x07\x0f\x06\x0e\x05\x0d\x04\x0c\x03\x0b\x02\x0a\x01\x09\x00\x08", 16));
@@ -174,7 +177,7 @@ TEST(RColumnElementEndian, DeltaSplit)
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(0, buf1, 8, 4);
    page1.GrowUnchecked(4);
-   sink1.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
    EXPECT_EQ(
       0, memcmp(sink1.GetPages()[0].fBuffer, "\x03\x04\x04\x04\x02\x04\x04\x04\x01\x04\x04\x04\x00\x04\x04\x04", 16));

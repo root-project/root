@@ -310,9 +310,10 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, bool print
 /// Use lookupIndex() (preferred) or lookupName() instead.
 const RooCatType* RooAbsCategory::lookupType(RooAbsCategory::value_type index, bool printError) const
 {
-  for (const auto& item : stateNames())
-  if (item.second == index) {
-    return retrieveLegacyState(index);
+  for (const auto &item : stateNames()) {
+    if (item.second == index) {
+      return retrieveLegacyState(index);
+    }
   }
 
   if (printError) {
@@ -642,7 +643,7 @@ RooFit::OwningPtr<RooAbsArg> RooAbsCategory::createFundamental(const char* newna
     fund->defineStateUnchecked(type.first, type.second);
   }
 
-  return RooFit::Detail::owningPtr<RooAbsArg>(std::move(fund));
+  return RooFit::makeOwningPtr<RooAbsArg>(std::move(fund));
 }
 
 

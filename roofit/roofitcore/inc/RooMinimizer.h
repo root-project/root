@@ -71,7 +71,7 @@ public:
       bool verbose = false;           // local config
       bool profile = false;           // local config
       bool timingAnalysis = false;    // local config
-      std::string minimizerType = ""; // local config
+      std::string minimizerType;      // local config
    private:
       int getDefaultWorkers();
    };
@@ -84,7 +84,7 @@ public:
    enum PrintLevel { None = -1, Reduced = 0, Normal = 1, ExtraForProblem = 2, Maximum = 3 };
 
    // Setters on _theFitter
-   void setStrategy(int strat);
+   void setStrategy(int istrat);
    void setErrorLevel(double level);
    void setEps(double eps);
    void setMaxIterations(int n);
@@ -138,7 +138,13 @@ public:
 
    void saveStatus(const char *label, int status)
    {
-      _statusHistory.push_back(std::pair<std::string, int>(label, status));
+      _statusHistory.emplace_back(label, status);
+   }
+
+   /// Clears the Minuit status history.
+   void clearStatusHistory()
+   {
+      _statusHistory.clear();
    }
 
    int evalCounter() const;

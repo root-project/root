@@ -18,7 +18,7 @@
 /**  \class RooAbsArg
      \ingroup Roofitcore
 
-RooAbsArg is the common abstract base class for objects that
+Common abstract base class for objects that
 represent a value and a "shape" in RooFit. Values or shapes usually depend on values
 or shapes of other RooAbsArg instances. Connecting several RooAbsArg in
 a computation graph models an expression tree that can be evaluated.
@@ -27,7 +27,7 @@ a computation graph models an expression tree that can be evaluated.
 Therefore, RooAbsArg provides functionality to connect objects of type RooAbsArg into
 a computation graph to pass values between those objects.
 A value can e.g. be a real-valued number, (instances of RooAbsReal), or an integer, that is,
-catgory index (instances of RooAbsCategory). The third subclass of RooAbsArg is RooStringVar,
+category index (instances of RooAbsCategory). The third subclass of RooAbsArg is RooStringVar,
 but it is rarely used.
 
 The "shapes" that a RooAbsArg can possess can e.g. be the definition
@@ -76,6 +76,7 @@ for single nodes.
 #include <RooConstVar.h>
 #include <RooExpensiveObjectCache.h>
 #include <RooHelpers.h>
+#include "RooFitImplHelpers.h"
 #include <RooListProxy.h>
 #include <RooMsgService.h>
 #include <RooRealIntegral.h>
@@ -110,10 +111,7 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsArg::RooAbsArg()
-{
-  _namePtr = RooNameReg::instance().constPtr(GetName()) ;
-}
+RooAbsArg::RooAbsArg() : _namePtr(RooNameReg::instance().constPtr(GetName())) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object with the specified name and descriptive title.
@@ -146,7 +144,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
 {
 
   // Copy server list by hand
-  bool valueProp, shapeProp ;
+  bool valueProp;
+  bool shapeProp;
   for (const auto server : other._serverList) {
     valueProp = server->_clientListValue.containsByNamePtr(&other);
     shapeProp = server->_clientListShape.containsByNamePtr(&other);
@@ -545,7 +544,7 @@ RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData* set, boo
 }
 
 
-/// Return the parameters of this p.d.f when used in conjuction with dataset 'data'.
+/// Return the parameters of this p.d.f when used in conjunction with dataset 'data'.
 RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData& data, bool stripDisconnected) const
 {
   return getParameters(&data,stripDisconnected) ;
@@ -613,7 +612,7 @@ void RooAbsArg::addParameters(RooAbsCollection& params, const RooArgSet* nset, b
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Obtain an estimate of the number of parameters of the function and its daughters.
-/// Calling `addParamters` for large functions (NLL) can cause many reallocations of
+/// Calling `addParameters` for large functions (NLL) can cause many reallocations of
 /// `params` due to the recursive behaviour. This utility function aims to pre-compute
 /// the total number of parameters, so that enough memory is reserved.
 /// The estimate is not fully accurate (overestimate) as there is no equivalent to `getParametersHook`.
@@ -1147,7 +1146,7 @@ bool RooAbsArg::callRedirectServersHook(RooAbsCollection const &newSet, bool mus
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace some servers of this object. If there are proxies that correspond
 /// to the replaced servers, these proxies are adjusted as well.
-/// \param[in] replacements Map that specifiecs which args replace which servers.
+/// \param[in] replacements Map that specifies which args replace which servers.
 bool RooAbsArg::redirectServers(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements)
 {
    bool ret(false);
@@ -1322,7 +1321,7 @@ bool RooAbsArg::redirectServersHook(const RooAbsCollection & /*newServerList*/, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register an RooArgProxy in the proxy list. This function is called by owned
-/// proxies upon creation. After registration, this arg wil forward pointer
+/// proxies upon creation. After registration, this arg will forward pointer
 /// changes from serverRedirects and updates in cached normalization sets
 /// to the proxies immediately after they occur. The proxied argument is
 /// also added as value and/or shape server
@@ -1367,7 +1366,7 @@ void RooAbsArg::unRegisterProxy(RooArgProxy& proxy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register an RooSetProxy in the proxy list. This function is called by owned
-/// proxies upon creation. After registration, this arg wil forward pointer
+/// proxies upon creation. After registration, this arg will forward pointer
 /// changes from serverRedirects and updates in cached normalization sets
 /// to the proxies immediately after they occur.
 
@@ -1402,7 +1401,7 @@ void RooAbsArg::unRegisterProxy(RooSetProxy& proxy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register an RooListProxy in the proxy list. This function is called by owned
-/// proxies upon creation. After registration, this arg wil forward pointer
+/// proxies upon creation. After registration, this arg will forward pointer
 /// changes from serverRedirects and updates in cached normalization sets
 /// to the proxies immediately after they occur.
 
@@ -1543,9 +1542,9 @@ void RooAbsArg::printClassName(ostream& os) const
 }
 
 
+/// Print address of this RooAbsArg.
 void RooAbsArg::printAddress(ostream& os) const
 {
-  // Print addrss of this RooAbsArg
   os << this ;
 }
 
@@ -1820,10 +1819,11 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
   // this node has not been processed (FindObject returns a null pointer)
   auto obj = processedNodes.findArg(this);
   assert(obj != this); // obj == this cannot happen
-  if (obj)
+  if (obj) {
      // here for nodes with duplicate names
-     cxcoutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName()
-                           << " node " << this << " exists already as " << obj << " but with the SAME name !" << endl;
+     cxcoutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName() << " node " << this << " exists already as "
+                           << obj << " but with the SAME name !" << endl;
+  }
 
   processedNodes.Add(this);
 
@@ -2149,7 +2149,7 @@ RooAbsCache* RooAbsArg::getCache(Int_t index) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return RooArgSet with all variables (tree leaf nodes of expresssion tree)
+/// Return RooArgSet with all variables (tree leaf nodes of expression tree)
 
 RooFit::OwningPtr<RooArgSet> RooAbsArg::getVariables(bool stripDisconnected) const
 {
@@ -2311,9 +2311,9 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 void RooAbsArg::attachToStore(RooAbsDataStore& store)
 {
   if (dynamic_cast<RooTreeDataStore*>(&store)) {
-    attachToTree(((RooTreeDataStore&)store).tree()) ;
+    attachToTree((static_cast<RooTreeDataStore&>(store)).tree()) ;
   } else if (dynamic_cast<RooVectorDataStore*>(&store)) {
-    attachToVStore((RooVectorDataStore&)store) ;
+    attachToVStore(static_cast<RooVectorDataStore&>(store)) ;
   }
 }
 
@@ -2470,14 +2470,17 @@ RooAbsArg::makeLegacyIterator(const RooAbsArg::RefCountList_t& list) const {
 
 void RooRefArray::Streamer(TBuffer &R__b)
 {
-   UInt_t R__s, R__c;
+   UInt_t R__s;
+   UInt_t R__c;
    if (R__b.IsReading()) {
 
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v) {
+      }
 
       // Make temporary refArray and read that from the streamer
       auto refArray = std::make_unique<TRefArray>();
-      refArray->Streamer(R__b) ;
+      refArray->Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, refArray->IsA());
 
       // Schedule deferred processing of TRefArray into proxy list
@@ -2485,17 +2488,16 @@ void RooRefArray::Streamer(TBuffer &R__b)
 
    } else {
 
-     R__c = R__b.WriteVersion(RooRefArray::IsA(), true);
+      R__c = R__b.WriteVersion(RooRefArray::IsA(), true);
 
-     // Make a temporary refArray and write that to the streamer
-     TRefArray refArray;
-     for(TObject * tmpObj : *this) {
-       refArray.Add(tmpObj) ;
-     }
+      // Make a temporary refArray and write that to the streamer
+      TRefArray refArray;
+      for (TObject *tmpObj : *this) {
+         refArray.Add(tmpObj);
+      }
 
-     refArray.Streamer(R__b) ;
-     R__b.SetByteCount(R__c, true) ;
-
+      refArray.Streamer(R__b);
+      R__b.SetByteCount(R__c, true);
    }
 }
 
@@ -2539,7 +2541,7 @@ std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSe
 /// to form the C++ code that AD tools can understand. Any class that wants to support AD, has to
 /// implement this function.
 ///
-/// \param[in] ctx An object to manage auxilary information for code-squashing. Also takes the
+/// \param[in] ctx An object to manage auxiliary information for code-squashing. Also takes the
 /// code string that this class outputs into the squashed code through the 'addToCodeBody' function.
 void RooAbsArg::translate(RooFit::Detail::CodeSquashContext & /*ctx*/) const
 {
