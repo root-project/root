@@ -22,7 +22,7 @@ By default method 0 (UsrPwd) is used; host equivalence via /etc/hosts.deny
 and/or $HOME/.rhosts is tested (by default; it can be disabled).
 
 A specific method can be given priority by adding the suffix shown in the
-table (column Sfx) to the specified protocol: for example
+table (column Sfx) to the specified protocol: for example:
 
   TFile *f = TFile::Open("roots://host.doma.in/~fserv/TheFile.root","read")
 
