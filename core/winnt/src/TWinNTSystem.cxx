@@ -155,9 +155,9 @@ namespace {
    typedef NET_API_STATUS (WINAPI *pfn1)(LPVOID);
    typedef NET_API_STATUS (WINAPI *pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
    typedef NET_API_STATUS (WINAPI *pfn3)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*,
-                                       DWORD, LPDWORD, LPDWORD, PDWORD);
+                                         DWORD, LPDWORD, LPDWORD, PDWORD_PTR);
    typedef NET_API_STATUS (WINAPI *pfn4)(LPCWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
-                                       LPDWORD, PDWORD);
+                                         LPDWORD, PDWORD_PTR);
    static pfn1 p2NetApiBufferFree;
    static pfn2 p2NetUserGetInfo;
    static pfn3 p2NetLocalGroupGetMembers;
@@ -3158,7 +3158,8 @@ Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
 {
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
-   DWORD Index = 0, ResumeHandle = 0, Total = 0;
+   DWORD Index = 0, Total = 0;
+   DWORD_PTR ResumeHandle = 0;
    LOCALGROUP_MEMBERS_INFO_1 *MemberInfo;
    WCHAR wszGroupName[256];
    int iRetOp = 0;
@@ -3217,7 +3218,8 @@ Bool_t TWinNTSystem::GetNbGroups()
 {
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
-   DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
+   DWORD Index = 0, Total = 0, i;
+   DWORD_PTR ResumeHandle = 0;
    LOCALGROUP_INFO_0 *GroupInfo;
    char szAnsiName[256];
    DWORD dwLastError = 0;
@@ -3345,7 +3347,8 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
 
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
-   DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
+   DWORD Index = 0, Total = 0, i;
+   DWORD_PTR ResumeHandle = 0;
    LOCALGROUP_MEMBERS_INFO_1 *MemberInfo;
    char szAnsiMemberName[256];
    char szFullMemberName[256];
@@ -3478,7 +3481,8 @@ Bool_t TWinNTSystem::CollectGroups()
 {
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
-   DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
+   DWORD Index = 0, Total = 0, i;
+   DWORD_PTR ResumeHandle = 0;
    LOCALGROUP_INFO_0 *GroupInfo;
    char szAnsiName[256];
    DWORD dwLastError = 0;
