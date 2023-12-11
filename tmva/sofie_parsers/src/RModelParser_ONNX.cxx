@@ -385,6 +385,37 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          allInitializedTensors[input_name] = i;
          break;
       }
+      case ETensorType::DOUBLE: {
+         std::shared_ptr<void> data(malloc(fLength * sizeof(double)), free);
+         if (tensorproto->raw_data().empty() == false) {
+            auto raw_data_ptr = reinterpret_cast<double *>(const_cast<char *>(tensorproto->raw_data().c_str()));
+            std::memcpy(data.get(), raw_data_ptr, fLength * sizeof(double));
+         } else {
+            tensorproto->mutable_double_data()->ExtractSubrange(0, tensorproto->double_data_size(),
+                                                               static_cast<double *>(data.get()));
+         }
+
+         if (verbose) std::cout << "add DOUBLE initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::DOUBLE, shape, data);
+         allInitializedTensors[input_name] = i;
+         break;
+      }
+      case ETensorType::INT32: {
+         std::shared_ptr<void> data(malloc(fLength * sizeof(int32_t)), free);
+
+         if (tensorproto->raw_data().empty() == false) {
+            auto raw_data_ptr = reinterpret_cast<int32_t *>(const_cast<char *>(tensorproto->raw_data().c_str()));
+            std::memcpy(data.get(), raw_data_ptr, fLength * sizeof(int32_t));
+         } else {
+            tensorproto->mutable_int32_data()->ExtractSubrange(0, tensorproto->int32_data_size(),
+                                                               static_cast<int32_t *>(data.get()));
+         }
+
+         if (verbose) std::cout << "add INT32 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::INT32, shape, data);
+         allInitializedTensors[input_name] = i;
+         break;
+      }
       case ETensorType::INT64: {
          std::shared_ptr<void> data(malloc(fLength * sizeof(int64_t)), free);
 
