@@ -69,6 +69,7 @@ struct InitializedTensor{
          case ETensorType::DOUBLE: fSize*=sizeof(double); break;
          case ETensorType::INT32: fSize*=sizeof(int32_t); break;
          case ETensorType::INT64: fSize*=sizeof(int64_t); break;
+         case ETensorType::BOOL:  fSize*=sizeof(bool); break;
          default:
           throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
       }
@@ -97,6 +98,12 @@ struct InitializedTensor{
       case ETensorType::INT64: {
           std::shared_ptr<void> tData(malloc(fSize * sizeof(int64_t)), free);
           std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int64_t));
+          fData = tData;
+          break;
+      }
+      case ETensorType::BOOL: {
+          std::shared_ptr<void> tData(malloc(fSize * sizeof(bool)), free);
+          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(bool));
           fData = tData;
           break;
       }

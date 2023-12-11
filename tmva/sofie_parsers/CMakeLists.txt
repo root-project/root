@@ -56,6 +56,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseFuseConvTransposeAdd.cxx
     src/ParseFuseMatMulAdd.cxx
     src/ParseMatMul.cxx
+    src/ParseComparision.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf
