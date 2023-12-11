@@ -312,8 +312,8 @@ Begin_Macro(source)
 
    //add legend
    TLegend* leg1 = new TLegend(0.3,0.1,0.7,0.5);
-   leg1->AddEntry(pEff,"95%","F");
-   leg1->AddEntry(pCopy,"68.3%","F");
+   leg1->AddEntry(pEff,"68.3%","F");
+   leg1->AddEntry(pCopy,"90%","F");
 
    pEff->Draw("A4");
    pCopy->Draw("same4");
