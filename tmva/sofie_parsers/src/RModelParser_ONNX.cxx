@@ -32,6 +32,12 @@ extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseMin;
 extern ParserFuncSignature ParseMean;
 extern ParserFuncSignature ParseSum;
+//Comparision Operators
+extern ParserFuncSignature ParseEq;
+extern ParserFuncSignature ParseLess;
+extern ParserFuncSignature ParseLessEq;
+extern ParserFuncSignature ParseGreater;
+extern ParserFuncSignature ParseGreaterEq;
 // Reduce operators
 extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSumsquare;
@@ -94,6 +100,12 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Min", ParseMin);
    RegisterOperator("Mean", ParseMean);
    RegisterOperator("Sum", ParseSum);
+   //Comparision Operators
+   RegisterOperator("Equal", ParseEq);
+   RegisterOperator("Less", ParseLess);
+   RegisterOperator("LessOrEqual", ParseLessEq);
+   RegisterOperator("Greater", ParseGreater);
+   RegisterOperator("GreaterOrEqual", ParseGreaterEq);
    // Reduce operators
    RegisterOperator("ReduceMean", ParseReduceMean);
    RegisterOperator("ReduceSumsquare", ParseReduceSumsquare);
