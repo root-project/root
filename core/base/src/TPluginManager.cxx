@@ -178,11 +178,17 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the name of the iarg-th argument's type match `type_name`
-Bool_t TPluginHandler::CheckNameMatch(int iarg, const char *type_name)
+Bool_t TPluginHandler::CheckNameMatch(int iarg, const std::type_info& ti)
 {
-   const TMethodArg *arg = static_cast<const TMethodArg *>(fMethod->GetListOfMethodArgs()->At(iarg));
+   int err = 0;
+   char* demangled_name = TClassEdit::DemangleTypeIdName(ti, err);
+   if (err) {
+      return false;
+   }
    std::string norm_name;
-   TClassEdit::GetNormalizedName(norm_name, type_name);
+   TClassEdit::GetNormalizedName(norm_name, demangled_name);
+   free(demangled_name);
+   const TMethodArg *arg = static_cast<const TMethodArg *>(fMethod->GetListOfMethodArgs()->At(iarg));
    return norm_name == arg->GetTypeNormalizedName();
 }
 
