@@ -7,16 +7,22 @@
 #include "TTree.h"
 
 #include "ROOT/InternalTreeUtils.hxx"
+#include <ROOT/FoundationUtils.hxx>
 
 #include "gtest/gtest.h"
 
-template <typename T>
-void EXPECT_VEC_EQ(const std::vector<T> &v1, const std::vector<T> &v2)
+void EXPECT_VEC_EQ(const std::vector<std::string> &v1, const std::vector<std::string> &v2)
 {
    ASSERT_EQ(v1.size(), v2.size());
    for (std::size_t i = 0ul; i < v1.size(); ++i) {
       EXPECT_EQ(v1[i], v2[i]);
    }
+}
+
+std::string ConcatUnixFileName(const char *dir, const char *name)
+{
+   std::unique_ptr<char[]> fileName{gSystem->ConcatFileName(dir, name)};
+   return gSystem->UnixPathName(fileName.get());
 }
 
 TEST(TChainParsing, RemoteAdd)
@@ -150,14 +156,11 @@ TEST(TChainParsing, GlobbingWithTreenameToken)
 
    const auto *cwd = gSystem->WorkingDirectory();
    for (std::size_t i = 0; i < 5; i++) {
-      const auto *fileName = chainFiles->At(i)->GetTitle();
-      const auto *treeName = chainFiles->At(i)->GetName();
-      EXPECT_STREQ(treeName, "events");
-      const auto *fullPathToFile = gSystem->ConcatFileName(cwd, fileNames[i].c_str());
-      const auto *normalizedPath = gSystem->UnixPathName(fullPathToFile);
-      EXPECT_STREQ(fileName, normalizedPath);
-      // The docs of `ConcatFileName` tell us we should delete the string
-      delete[] fullPathToFile;
+      const std::string fileName = chainFiles->At(i)->GetTitle();
+      const std::string treeName = chainFiles->At(i)->GetName();
+      EXPECT_EQ(treeName, "events");
+      const auto normalizedPath = ConcatUnixFileName(cwd, fileNames[i].c_str());
+      EXPECT_EQ(fileName, normalizedPath);
    }
 
    for (const auto &fileName : fileNames) {
@@ -184,6 +187,93 @@ TEST(TChainParsing, GlobbingWithNonExistingDir)
    }
 }
 
+std::vector<std::string> GetFileNamesVec(const TObjArray *chainFiles)
+{
+   std::vector<std::string> chainFileNames;
+   chainFileNames.reserve(chainFiles->GetEntries());
+   for (const auto *obj : *chainFiles) {
+      chainFileNames.push_back(obj->GetTitle());
+   }
+   return chainFileNames;
+}
+
+void MakeDirIfNotExist(const char *dir)
+{
+   // Note that AccessPathName returns FALSE if the dir DOES exist
+   if (gSystem->AccessPathName(dir, kFileExists)) {
+      ASSERT_EQ(gSystem->mkdir(dir), 0);
+   }
+}
+
+TEST(TChainParsing, RecursiveGlob)
+{
+   // Need to change working directory to ensure "*" only adds files we create here.
+   const auto *testDir = "testdir";
+   MakeDirIfNotExist(testDir);
+   gSystem->ChangeDirectory(testDir);
+
+   const auto *cwd = gSystem->WorkingDirectory();
+
+   MakeDirIfNotExist("testglob");
+   MakeDirIfNotExist("testglob/subdir1");
+   MakeDirIfNotExist("testglob/subdir1/subdir11");
+   MakeDirIfNotExist("testglob/subdir2");
+   MakeDirIfNotExist("testglob/subdir2/subdir21");
+   MakeDirIfNotExist("testglob/subdir3");
+
+   // Unsorted to also test sorting the final list of globbed files.
+   std::vector<std::string> fileNames{"0a.root",
+                                      "testglob/subdir1/1a.root",
+                                      "testglob/subdir1/1b.root",
+                                      "testglob/subdir3/3a.root",
+                                      "testglob/subdir2/subdir21/21a.root",
+                                      "testglob/subdir2/subdir21/21b.root",
+                                      "testglob/subdir1/subdir11/11b.root",
+                                      "testglob/subdir1/subdir11/11a.root"};
+   for (const auto &fileName : fileNames) {
+      FillTree(fileName.c_str(), "events");
+   }
+
+   TChain nodir;
+   TChain none;
+   TChain nested;
+   TChain globDir;
+
+   nodir.Add("*");
+   const auto *nodirFiles = nodir.GetListOfFiles();
+   ASSERT_TRUE(nodirFiles);
+   EXPECT_EQ(nodirFiles->GetEntries(), 1);
+   auto expectedFileNameNodir = ConcatUnixFileName(cwd, "0a.root");
+   EXPECT_EQ(std::string{nodirFiles->At(0)->GetTitle()}, expectedFileNameNodir);
+
+   none.Add("testglob/*");
+   const auto *noneChainFiles = none.GetListOfFiles();
+   ASSERT_TRUE(noneChainFiles);
+   EXPECT_EQ(noneChainFiles->GetEntries(), 0);
+
+   nested.Add("testglob/*/*/*.root");
+   const auto *nestedChainFiles = nested.GetListOfFiles();
+   ASSERT_TRUE(nestedChainFiles);
+   EXPECT_EQ(nestedChainFiles->GetEntries(), 4);
+   std::vector<std::string> expectedFileNamesNested{
+      "testglob/subdir1/subdir11/11a.root", "testglob/subdir1/subdir11/11b.root", "testglob/subdir2/subdir21/21a.root",
+      "testglob/subdir2/subdir21/21b.root"};
+   auto nestedChainFileNames = GetFileNamesVec(nestedChainFiles);
+   EXPECT_VEC_EQ(nestedChainFileNames, expectedFileNamesNested);
+
+   globDir.Add("*/subdir[0-9]/*");
+   const auto *globDirChainFiles = globDir.GetListOfFiles();
+   ASSERT_TRUE(globDirChainFiles);
+   EXPECT_EQ(globDirChainFiles->GetEntries(), 3);
+   std::vector<std::string> expectedFileNamesGlobDir{ConcatUnixFileName(cwd, "testglob/subdir1/1a.root"),
+                                                     ConcatUnixFileName(cwd, "testglob/subdir1/1b.root"),
+                                                     ConcatUnixFileName(cwd, "testglob/subdir3/3a.root")};
+   auto globDirChainFileNames = GetFileNamesVec(globDirChainFiles);
+   for (std::size_t i = 0; i < expectedFileNamesGlobDir.size(); i++) {
+      EXPECT_EQ(globDirChainFileNames[i], expectedFileNamesGlobDir[i]);
+   }
+}
+
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 // No XRootD support on Windows
 TEST(TChainParsing, RemoteGlob)
@@ -201,12 +291,7 @@ TEST(TChainParsing, RemoteGlob)
       "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleElectron.root",
       "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root"};
 
-   std::vector<std::string> chainFileNames;
-   chainFileNames.reserve(chainFiles->GetEntries());
-   for (const auto *obj : *chainFiles) {
-      chainFileNames.push_back(obj->GetTitle());
-   }
-
+   auto chainFileNames = GetFileNamesVec(chainFiles);
    EXPECT_VEC_EQ(chainFileNames, expectedFileNames);
 }
 #endif

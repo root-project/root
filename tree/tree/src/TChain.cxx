@@ -296,8 +296,10 @@ Int_t TChain::Add(TChain* chain)
 ///   c.Add("myfile.root?#treename");
 ///   ~~~
 /// - Wildcard treatment is triggered by any of the special characters:
-///   <b>[]*?</b> which may be used in the file name, eg. specifying "xxx*.root"
-///   adds all files starting with xxx in the current file system directory.
+///   <b>[]*?</b> which may be used in the file name or subdirectory name,
+///   eg. specifying "xxx*.root" adds all files starting with xxx in the
+///   current file system directory and "*/*.root" adds all the files in the
+///   current subdirectories (but not in the subsubdirectories).
 ///
 /// The second format accepted for \p name may have the form of a URL, e.g.:
 ///
