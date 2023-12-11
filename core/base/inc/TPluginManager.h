@@ -145,18 +145,18 @@ private:
    Bool_t CheckForExecPlugin(Int_t nargs);
    void LoadPluginImpl();
 
-   bool CheckNameMatch(int iarg, const char *type_name);
+   bool CheckNameMatch(int iarg, const std::type_info &ti);
 
    template <typename T0>
    bool CheckExactMatch(int iarg, const T0&)
    {
-      return CheckNameMatch(iarg, typeid(T0).name());
+      return CheckNameMatch(iarg, typeid(T0));
    }
 
    template <typename T0, typename... T>
    bool CheckExactMatch(int iarg, const T0&, const T&... params)
    {
-      if (CheckNameMatch(iarg, typeid(T0).name()))
+      if (CheckNameMatch(iarg, typeid(T0)))
          return CheckExactMatch(iarg + 1, params...);
       else
          return false;
