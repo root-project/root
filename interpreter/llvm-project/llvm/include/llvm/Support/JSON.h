@@ -49,9 +49,11 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cmath>
 #include <map>
 
 namespace llvm {
@@ -83,7 +85,7 @@ std::string fixUTF8(llvm::StringRef S);
 class Array;
 class ObjectKey;
 class Value;
-template <typename T> Value toJSON(const llvm::Optional<T> &Opt);
+template <typename T> Value toJSON(const std::optional<T> &Opt);
 
 /// An Object is a JSON object, which maps strings to heterogenous JSON values.
 /// It simulates DenseMap<ObjectKey, Value>. ObjectKey is a maybe-owned string.
@@ -133,14 +135,14 @@ public:
   // Look up a property, returning nullptr if it doesn't exist.
   Value *get(StringRef K);
   const Value *get(StringRef K) const;
-  // Typed accessors return None/nullptr if
+  // Typed accessors return std::nullopt/nullptr if
   //   - the property doesn't exist
   //   - or it has the wrong type
-  llvm::Optional<std::nullptr_t> getNull(StringRef K) const;
-  llvm::Optional<bool> getBoolean(StringRef K) const;
-  llvm::Optional<double> getNumber(StringRef K) const;
-  llvm::Optional<int64_t> getInteger(StringRef K) const;
-  llvm::Optional<llvm::StringRef> getString(StringRef K) const;
+  std::optional<std::nullptr_t> getNull(StringRef K) const;
+  std::optional<bool> getBoolean(StringRef K) const;
+  std::optional<double> getNumber(StringRef K) const;
+  std::optional<int64_t> getInteger(StringRef K) const;
+  std::optional<llvm::StringRef> getString(StringRef K) const;
   const json::Object *getObject(StringRef K) const;
   json::Object *getObject(StringRef K);
   const json::Array *getArray(StringRef K) const;
@@ -191,10 +193,9 @@ public:
   void push_back(Value &&E);
   template <typename... Args> void emplace_back(Args &&...A);
   void pop_back();
-  // FIXME: insert() takes const_iterator since C++11, old libstdc++ disagrees.
-  iterator insert(iterator P, const Value &E);
-  iterator insert(iterator P, Value &&E);
-  template <typename It> iterator insert(iterator P, It A, It Z);
+  iterator insert(const_iterator P, const Value &E);
+  iterator insert(const_iterator P, Value &&E);
+  template <typename It> iterator insert(const_iterator P, It A, It Z);
   template <typename... Args> iterator emplace(const_iterator P, Args &&...A);
 
   friend bool operator==(const Array &L, const Array &R);
@@ -226,20 +227,20 @@ inline bool operator!=(const Array &L, const Array &R) { return !(L == R); }
 /// Each Value is one of the JSON kinds:
 ///   null    (nullptr_t)
 ///   boolean (bool)
-///   number  (double or int64)
+///   number  (double, int64 or uint64)
 ///   string  (StringRef)
 ///   array   (json::Array)
 ///   object  (json::Object)
 ///
 /// The kind can be queried directly, or implicitly via the typed accessors:
-///   if (Optional<StringRef> S = E.getAsString()
+///   if (std::optional<StringRef> S = E.getAsString()
 ///     assert(E.kind() == Value::String);
 ///
 /// Array and Object also have typed indexing accessors for easy traversal:
 ///   Expected<Value> E = parse(R"( {"options": {"font": "sans-serif"}} )");
 ///   if (Object* O = E->getAsObject())
 ///     if (Object* Opts = O->getObject("options"))
-///       if (Optional<StringRef> Font = Opts->getString("font"))
+///       if (std::optional<StringRef> Font = Opts->getString("font"))
 ///         assert(Opts->at("font").kind() == Value::String);
 ///
 /// === Converting JSON values to C++ types ===
@@ -260,13 +261,13 @@ inline bool operator!=(const Array &L, const Array &R) { return !(L == R); }
 ///   - std::string
 ///   - vector<T>, where T is deserializable
 ///   - map<string, T>, where T is deserializable
-///   - Optional<T>, where T is deserializable
+///   - std::optional<T>, where T is deserializable
 /// ObjectMapper can help writing fromJSON() functions for object types.
 ///
 /// For conversion in the other direction, the serializer function is:
 ///    toJSON(const T&) -> json::Value
 /// If this exists, then it also allows constructing Value from T, and can
-/// be used to serialize vector<T>, map<string, T>, and Optional<T>.
+/// be used to serialize vector<T>, map<string, T>, and std::optional<T>.
 ///
 /// === Serialization ===
 ///
@@ -334,9 +335,20 @@ public:
   Value(T B) : Type(T_Boolean) {
     create<bool>(B);
   }
-  // Integers (except boolean). Must be non-narrowing convertible to int64_t.
+
+  // Unsigned 64-bit long integers.
+  template <typename T,
+            typename = std::enable_if_t<std::is_same<T, uint64_t>::value>,
+            bool = false, bool = false>
+  Value(T V) : Type(T_UINT64) {
+    create<uint64_t>(uint64_t{V});
+  }
+
+  // Integers (except boolean and uint64_t).
+  // Must be non-narrowing convertible to int64_t.
   template <typename T, typename = std::enable_if_t<std::is_integral<T>::value>,
-            typename = std::enable_if_t<!std::is_same<T, bool>::value>>
+            typename = std::enable_if_t<!std::is_same<T, bool>::value>,
+            typename = std::enable_if_t<!std::is_same<T, uint64_t>::value>>
   Value(T I) : Type(T_Integer) {
     create<int64_t>(int64_t{I});
   }
@@ -374,6 +386,7 @@ public:
       return Boolean;
     case T_Double:
     case T_Integer:
+    case T_UINT64:
       return Number;
     case T_String:
     case T_StringRef:
@@ -386,26 +399,29 @@ public:
     llvm_unreachable("Unknown kind");
   }
 
-  // Typed accessors return None/nullptr if the Value is not of this type.
-  llvm::Optional<std::nullptr_t> getAsNull() const {
+  // Typed accessors return std::nullopt/nullptr if the Value is not of this
+  // type.
+  std::optional<std::nullptr_t> getAsNull() const {
     if (LLVM_LIKELY(Type == T_Null))
       return nullptr;
-    return llvm::None;
+    return std::nullopt;
   }
-  llvm::Optional<bool> getAsBoolean() const {
+  std::optional<bool> getAsBoolean() const {
     if (LLVM_LIKELY(Type == T_Boolean))
       return as<bool>();
-    return llvm::None;
+    return std::nullopt;
   }
-  llvm::Optional<double> getAsNumber() const {
+  std::optional<double> getAsNumber() const {
     if (LLVM_LIKELY(Type == T_Double))
       return as<double>();
     if (LLVM_LIKELY(Type == T_Integer))
       return as<int64_t>();
-    return llvm::None;
+    if (LLVM_LIKELY(Type == T_UINT64))
+      return as<uint64_t>();
+    return std::nullopt;
   }
   // Succeeds if the Value is a Number, and exactly representable as int64_t.
-  llvm::Optional<int64_t> getAsInteger() const {
+  std::optional<int64_t> getAsInteger() const {
     if (LLVM_LIKELY(Type == T_Integer))
       return as<int64_t>();
     if (LLVM_LIKELY(Type == T_Double)) {
@@ -415,14 +431,24 @@ public:
                       D <= double(std::numeric_limits<int64_t>::max())))
         return D;
     }
-    return llvm::None;
+    return std::nullopt;
   }
-  llvm::Optional<llvm::StringRef> getAsString() const {
+  std::optional<uint64_t> getAsUINT64() const {
+    if (Type == T_UINT64)
+      return as<uint64_t>();
+    else if (Type == T_Integer) {
+      int64_t N = as<int64_t>();
+      if (N >= 0)
+        return as<uint64_t>();
+    }
+    return std::nullopt;
+  }
+  std::optional<llvm::StringRef> getAsString() const {
     if (Type == T_String)
       return llvm::StringRef(as<std::string>());
     if (LLVM_LIKELY(Type == T_StringRef))
       return as<llvm::StringRef>();
-    return llvm::None;
+    return std::nullopt;
   }
   const json::Object *getAsObject() const {
     return LLVM_LIKELY(Type == T_Object) ? &as<json::Object>() : nullptr;
@@ -459,11 +485,12 @@ private:
 
   friend class OStream;
 
-  enum ValueType : char {
+  enum ValueType : char16_t {
     T_Null,
     T_Boolean,
     T_Double,
     T_Integer,
+    T_UINT64,
     T_StringRef,
     T_String,
     T_Object,
@@ -471,8 +498,9 @@ private:
   };
   // All members mutable, see moveFrom().
   mutable ValueType Type;
-  mutable llvm::AlignedCharArrayUnion<bool, double, int64_t, llvm::StringRef,
-                                      std::string, json::Array, json::Object>
+  mutable llvm::AlignedCharArrayUnion<bool, double, int64_t, uint64_t,
+                                      llvm::StringRef, std::string, json::Array,
+                                      json::Object>
       Union;
   friend bool operator==(const Value &, const Value &);
 };
@@ -506,14 +534,14 @@ template <typename... Args> inline void Array::emplace_back(Args &&...A) {
   V.emplace_back(std::forward<Args>(A)...);
 }
 inline void Array::pop_back() { V.pop_back(); }
-inline typename Array::iterator Array::insert(iterator P, const Value &E) {
+inline typename Array::iterator Array::insert(const_iterator P, const Value &E) {
   return V.insert(P, E);
 }
-inline typename Array::iterator Array::insert(iterator P, Value &&E) {
+inline typename Array::iterator Array::insert(const_iterator P, Value &&E) {
   return V.insert(P, std::move(E));
 }
 template <typename It>
-inline typename Array::iterator Array::insert(iterator P, It A, It Z) {
+inline typename Array::iterator Array::insert(const_iterator P, It A, It Z) {
   return V.insert(P, A, Z);
 }
 template <typename... Args>
@@ -717,6 +745,14 @@ inline bool fromJSON(const Value &E, bool &Out, Path P) {
   P.report("expected boolean");
   return false;
 }
+inline bool fromJSON(const Value &E, uint64_t &Out, Path P) {
+  if (auto S = E.getAsUINT64()) {
+    Out = *S;
+    return true;
+  }
+  P.report("expected uint64_t");
+  return false;
+}
 inline bool fromJSON(const Value &E, std::nullptr_t &Out, Path P) {
   if (auto S = E.getAsNull()) {
     Out = *S;
@@ -726,9 +762,9 @@ inline bool fromJSON(const Value &E, std::nullptr_t &Out, Path P) {
   return false;
 }
 template <typename T>
-bool fromJSON(const Value &E, llvm::Optional<T> &Out, Path P) {
+bool fromJSON(const Value &E, std::optional<T> &Out, Path P) {
   if (E.getAsNull()) {
-    Out = llvm::None;
+    Out = std::nullopt;
     return true;
   }
   T Result;
@@ -764,8 +800,8 @@ bool fromJSON(const Value &E, std::map<std::string, T> &Out, Path P) {
   return false;
 }
 
-// Allow serialization of Optional<T> for supported T.
-template <typename T> Value toJSON(const llvm::Optional<T> &Opt) {
+// Allow serialization of std::optional<T> for supported T.
+template <typename T> Value toJSON(const std::optional<T> &Opt) {
   return Opt ? Value(*Opt) : Value(nullptr);
 }
 
@@ -805,11 +841,11 @@ public:
   /// Maps a property to a field, if it exists.
   /// If the property exists and is invalid, reports an error.
   /// (Optional requires special handling, because missing keys are OK).
-  template <typename T> bool map(StringLiteral Prop, llvm::Optional<T> &Out) {
+  template <typename T> bool map(StringLiteral Prop, std::optional<T> &Out) {
     assert(*this && "Must check this is an object before calling map()");
     if (const Value *E = O->get(Prop))
       return fromJSON(*E, Out, P.field(Prop));
-    Out = llvm::None;
+    Out = std::nullopt;
     return true;
   }
 

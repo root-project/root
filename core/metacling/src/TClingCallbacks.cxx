@@ -84,7 +84,7 @@ extern "C" {
 class AutoloadLibraryMU : public llvm::orc::MaterializationUnit {
 public:
    AutoloadLibraryMU(const std::string &Library, const llvm::orc::SymbolNameVector &Symbols)
-      : MaterializationUnit(getSymbolFlagsMap(Symbols), nullptr), fLibrary(Library), fSymbols(Symbols)
+      : MaterializationUnit({getSymbolFlagsMap(Symbols), nullptr}), fLibrary(Library), fSymbols(Symbols)
    {
    }
 
@@ -203,7 +203,8 @@ public:
       }
 
       if (!missing.empty())
-         return llvm::make_error<llvm::orc::SymbolsNotFound>(std::move(missing));
+         return llvm::make_error<llvm::orc::SymbolsNotFound>(
+            JD.getExecutionSession().getSymbolStringPool(), std::move(missing));
 
       return llvm::Error::success();
    }
@@ -231,7 +232,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          llvm::StringRef FileName,
                                          bool /*IsAngled*/,
                                          clang::CharSourceRange /*FilenameRange*/,
-                                         const clang::FileEntry *FE,
+                                         clang::OptionalFileEntryRef FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
                                          const clang::Module * Imported,
@@ -279,9 +280,8 @@ bool TClingCallbacks::LibraryLoadingFailed(const std::string& errmessage, const 
 // Preprocessor callbacks used to handle special cases like for example:
 // #include "myMacro.C+"
 //
-bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
-                                   llvm::SmallVectorImpl<char> &RecoveryPath) {
-   // Method called via Callbacks->FileNotFound(Filename, RecoveryPath)
+bool TClingCallbacks::FileNotFound(llvm::StringRef FileName) {
+   // Method called via Callbacks->FileNotFound(Filename)
    // in Preprocessor::HandleIncludeDirective(), initially allowing to
    // change the include path, and allowing us to compile code via ACLiC
    // when specifying #include "myfile.C+", and suppressing the preprocessor
@@ -330,21 +330,11 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
                                                 SemaR.TUScope);
          int retcode = TCling__CompileMacro(fname.c_str(), options.c_str());
          if (retcode) {
-            // compilation was successful, let's remember the original
-            // preprocessor "include not found" error suppression flag
-            if (!fPPChanged)
-               fPPOldFlag = PP.GetSuppressIncludeNotFoundError();
-            PP.SetSuppressIncludeNotFoundError(true);
-            fPPChanged = true;
+            // compilation was successful, tell the preprocess to silently
+            // skip the file
+            return true;
          }
-         return false;
       }
-   }
-   if (fPPChanged) {
-      // restore the original preprocessor "include not found" error
-      // suppression flag
-      PP.SetSuppressIncludeNotFoundError(fPPOldFlag);
-      fPPChanged = false;
    }
    return false;
 }
@@ -425,7 +415,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFirstMatchOnly /*=true*/)
 {
    llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
-   if (envUseGMI.hasValue())
+   if (envUseGMI.has_value())
       if (!envUseGMI->empty() && !ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI))
          return false;
 
@@ -619,7 +609,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 // filename.
 //
 bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R,
-                                           Scope *S, const FileEntry* FE /*=0*/) {
+                                           Scope *S, clang::OptionalFileEntryRef FE) {
    if (!fROOTSpecialNamespace) {
       // init error or rootcling
       return false;

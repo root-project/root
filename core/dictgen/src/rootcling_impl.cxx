@@ -3494,7 +3494,7 @@ public:
 
    void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                            llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
-                           const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
+                           clang::OptionalFileEntryRef /*File*/, llvm::StringRef /*SearchPath*/,
                            llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
                            clang::SrcMgr::CharacteristicKind /*FileType*/) override
    {
@@ -3536,7 +3536,8 @@ public:
          Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
          HeaderSearch& HS = PP.getHeaderSearchInfo();
          // FIXME: Reduce to Core.Rtypes.h.
-         Module* CoreModule = HS.lookupModule("Core", /*AllowSearch*/false);
+         Module* CoreModule = HS.lookupModule("Core", SourceLocation(),
+                                              /*AllowSearch*/false);
          assert(M && "Must have module Core");
          PP.makeModuleVisible(CoreModule, ImportLoc);
       }
@@ -3892,7 +3893,7 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch 
          continue;
 
       clang::ModuleMap::KnownHeader SuggestedModule;
-      const clang::DirectoryLookup *CurDir = nullptr;
+      clang::ConstSearchDirIterator *CurDir = nullptr;
       if (auto FE = headerSearch.LookupFile(
                header, clang::SourceLocation(),
                /*isAngled*/ false,

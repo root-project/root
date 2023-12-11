@@ -517,8 +517,19 @@ namespace cling {
 
     DeclContext* DC = D->getLexicalDeclContext();
 
-    if (DC->containsDecl(D))
-      DC->removeDecl(D);
+    if (DC->containsDecl(D)) {
+      if (auto* ND = dyn_cast<NamedDecl>(D)) {
+        auto* LookupDC = DC;
+        while (LookupDC->getDeclKind() == Decl::LinkageSpec ||
+               LookupDC->getDeclKind() == Decl::Export)
+          LookupDC = LookupDC->getParent();
+
+        if (!LookupDC->noload_lookup(ND->getDeclName()).empty())
+          DC->removeDecl(D);
+      } else {
+        DC->removeDecl(D);
+      }
+    }
 
     // With the bump allocator this is a no-op.
     m_Sema->getASTContext().Deallocate(D);
@@ -951,7 +962,7 @@ namespace cling {
         }
       }
       // DeferredDecls exist even without Module.
-      m_CodeGen->forgetDecl(GD, mangledName);
+      m_CodeGen->forgetDecl(mangledName);
     }
   }
 

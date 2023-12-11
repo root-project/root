@@ -26,9 +26,9 @@
 #include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Host.h>
-#include <llvm/Support/TargetRegistry.h>
 #include <llvm/Target/TargetMachine.h>
 
 #ifdef __linux__
@@ -167,23 +167,23 @@ namespace {
       return Addr;
     }
 
-    void reserveAllocationSpace(uintptr_t CodeSize, uint32_t CodeAlign,
-                                uintptr_t RODataSize, uint32_t RODataAlign,
+    void reserveAllocationSpace(uintptr_t CodeSize, Align CodeAlign,
+                                uintptr_t RODataSize, Align RODataAlign,
                                 uintptr_t RWDataSize,
-                                uint32_t RWDataAlign) override {
+                                Align RWDataAlign) override {
       m_Code.setAllocation(
-          Super::allocateCodeSection(CodeSize, CodeAlign,
+          Super::allocateCodeSection(CodeSize, CodeAlign.value(),
                                      /*SectionID=*/0,
                                      /*SectionName=*/"codeReserve"),
           CodeSize);
       m_ROData.setAllocation(
-          Super::allocateDataSection(RODataSize, RODataAlign,
+          Super::allocateDataSection(RODataSize, RODataAlign.value(),
                                      /*SectionID=*/0,
                                      /*SectionName=*/"rodataReserve",
                                      /*IsReadOnly=*/true),
           RODataSize);
       m_RWData.setAllocation(
-          Super::allocateDataSection(RWDataSize, RWDataAlign,
+          Super::allocateDataSection(RWDataSize, RWDataAlign.value(),
                                      /*SectionID=*/0,
                                      /*SectionName=*/"rwataReserve",
                                      /*IsReadOnly=*/false),
@@ -194,114 +194,24 @@ namespace {
   };
 
   /// A JITLinkMemoryManager for Cling that never frees its allocations.
-  class ClingJITLinkMemoryManager : public JITLinkMemoryManager {
+  class ClingJITLinkMemoryManager : public InProcessMemoryManager {
   public:
-    Expected<std::unique_ptr<Allocation>>
-    allocate(const JITLinkDylib* JD,
-             const SegmentsRequestMap& Request) override {
-      // A copy of InProcessMemoryManager::allocate with an empty implementation
-      // of IPMMAlloc::deallocate.
+    using InProcessMemoryManager::InProcessMemoryManager;
 
-      using AllocationMap = DenseMap<unsigned, sys::MemoryBlock>;
+    void deallocate(std::vector<FinalizedAlloc> Allocs,
+                    OnDeallocatedFunction OnDeallocated) override {
+      // Disabled until CallFunc is informed about unloading, and can
+      // re-generate the wrapper (if the decl is still available). See
+      // https://github.com/root-project/root/issues/10898
 
-      // Local class for allocation.
-      class IPMMAlloc : public Allocation {
-      public:
-        IPMMAlloc(AllocationMap SegBlocks) : SegBlocks(std::move(SegBlocks)) {}
-        MutableArrayRef<char> getWorkingMemory(ProtectionFlags Seg) override {
-          assert(SegBlocks.count(Seg) && "No allocation for segment");
-          return {static_cast<char*>(SegBlocks[Seg].base()),
-                  SegBlocks[Seg].allocatedSize()};
-        }
-        JITTargetAddress getTargetMemory(ProtectionFlags Seg) override {
-          assert(SegBlocks.count(Seg) && "No allocation for segment");
-          return pointerToJITTargetAddress(SegBlocks[Seg].base());
-        }
-        void finalizeAsync(FinalizeContinuation OnFinalize) override {
-          OnFinalize(applyProtections());
-        }
-        Error deallocate() override {
-          // Disabled until CallFunc is informed about unloading, and can
-          // re-generate the wrapper (if the decl is still available). See
-          // https://github.com/root-project/root/issues/10898
-          return Error::success();
-        }
-
-      private:
-        Error applyProtections() {
-          for (auto& KV : SegBlocks) {
-            auto& Prot = KV.first;
-            auto& Block = KV.second;
-            if (auto EC = sys::Memory::protectMappedMemory(Block, Prot))
-              return errorCodeToError(EC);
-            if (Prot & sys::Memory::MF_EXEC)
-              sys::Memory::InvalidateInstructionCache(Block.base(),
-                                                      Block.allocatedSize());
-          }
-          return Error::success();
-        }
-
-        AllocationMap SegBlocks;
-      };
-
-      if (!isPowerOf2_64((uint64_t)sys::Process::getPageSizeEstimate()))
-        return make_error<StringError>("Page size is not a power of 2",
-                                       inconvertibleErrorCode());
-
-      AllocationMap Blocks;
-      const sys::Memory::ProtectionFlags ReadWrite =
-          static_cast<sys::Memory::ProtectionFlags>(sys::Memory::MF_READ |
-                                                    sys::Memory::MF_WRITE);
-
-      // Compute the total number of pages to allocate.
-      size_t TotalSize = 0;
-      for (auto& KV : Request) {
-        const auto& Seg = KV.second;
-
-        if (Seg.getAlignment() > sys::Process::getPageSizeEstimate())
-          return make_error<StringError>("Cannot request higher than page "
-                                         "alignment",
-                                         inconvertibleErrorCode());
-
-        TotalSize = alignTo(TotalSize, sys::Process::getPageSizeEstimate());
-        TotalSize += Seg.getContentSize();
-        TotalSize += Seg.getZeroFillSize();
+      // We still have to release the allocations which resets their addresses
+      // to FinalizedAlloc::InvalidAddr, or the assertion in ~FinalizedAlloc
+      // will be unhappy...
+      for (auto &Alloc : Allocs) {
+        Alloc.release();
       }
-
-      // Allocate one slab to cover all the segments.
-      std::error_code EC;
-      auto SlabRemaining =
-          sys::Memory::allocateMappedMemory(TotalSize, nullptr, ReadWrite, EC);
-
-      if (EC)
-        return errorCodeToError(EC);
-
-      // Allocate segment memory from the slab.
-      for (auto& KV : Request) {
-
-        const auto& Seg = KV.second;
-
-        uint64_t SegmentSize =
-            alignTo(Seg.getContentSize() + Seg.getZeroFillSize(),
-                    sys::Process::getPageSizeEstimate());
-        assert(SlabRemaining.allocatedSize() >= SegmentSize &&
-               "Mapping exceeds allocation");
-
-        sys::MemoryBlock SegMem(SlabRemaining.base(), SegmentSize);
-        SlabRemaining =
-            sys::MemoryBlock((char*)SlabRemaining.base() + SegmentSize,
-                             SlabRemaining.allocatedSize() - SegmentSize);
-
-        // Zero out the zero-fill memory.
-        memset(static_cast<char*>(SegMem.base()) + Seg.getContentSize(), 0,
-               Seg.getZeroFillSize());
-
-        // Record the block for this segment.
-        Blocks[KV.first] = std::move(SegMem);
-      }
-
-      return std::unique_ptr<InProcessMemoryManager::Allocation>(
-          new IPMMAlloc(std::move(Blocks)));
+      // Pretend we successfully deallocated everything...
+      OnDeallocated(Error::success());
     }
   };
 
@@ -414,7 +324,7 @@ Error RTDynamicLibrarySearchGenerator::tryToGenerate(
 /// is called, which in turn may be used to provide lookup across different
 /// IncrementalJIT instances.
 class DelegateGenerator : public DefinitionGenerator {
-  using LookupFunc = std::function<Expected<JITEvaluatedSymbol>(StringRef)>;
+  using LookupFunc = std::function<Expected<llvm::orc::ExecutorAddr>(StringRef)>;
   LookupFunc lookup;
 
 public:
@@ -428,7 +338,9 @@ public:
       auto Addr = lookup(*KV.first);
       if (auto Err = Addr.takeError())
         return Err;
-      Symbols[KV.first] = Addr.get();
+      Symbols[KV.first] = JITEvaluatedSymbol(
+          Addr->getValue(),
+          JITSymbolFlags::Exported);
     }
     if (Symbols.empty())
       return Error::success();
@@ -551,8 +463,9 @@ IncrementalJIT::IncrementalJIT(
       // memory segments; the default InProcessMemoryManager (which is mostly
       // copied above) already does slab allocation to keep all segments
       // together which is needed for exception handling support.
+      unsigned PageSize = *sys::Process::getPageSize();
       auto ObjLinkingLayer = std::make_unique<ObjectLinkingLayer>(
-          ES, std::make_unique<ClingJITLinkMemoryManager>());
+          ES, std::make_unique<ClingJITLinkMemoryManager>(PageSize));
       ObjLinkingLayer->addPlugin(std::make_unique<EHFrameRegistrationPlugin>(
           ES, std::make_unique<InProcessEHFrameRegistrar>()));
       return ObjLinkingLayer;
@@ -774,7 +687,7 @@ void* IncrementalJIT::getSymbolAddress(StringRef Name, bool IncludeHostSymbols){
   if (!IncludeHostSymbols)
     insertInfo = m_ForbidDlSymbols.insert(Name);
 
-  Expected<JITEvaluatedSymbol> Symbol = Jit->lookup(Name);
+  Expected<llvm::orc::ExecutorAddr> Symbol = Jit->lookup(Name);
 
   // If m_ForbidDlSymbols already contained Name before we tried to insert it
   // then some calling frame has added it and will remove it later because its
@@ -789,7 +702,7 @@ void* IncrementalJIT::getSymbolAddress(StringRef Name, bool IncludeHostSymbols){
     return nullptr;
   }
 
-  return jitTargetAddressToPointer<void*>(Symbol->getAddress());
+  return jitTargetAddressToPointer<void*>(Symbol->getValue());
 }
 
 bool IncrementalJIT::doesSymbolAlreadyExist(StringRef UnmangledName) {

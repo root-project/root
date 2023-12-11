@@ -388,10 +388,8 @@ void BackendPasses::CreatePasses(llvm::Module& M, int OptLevel)
   PMBuilder.SLPVectorize = OptLevel > 1 ? 1 : 0; // m_CGOpts.VectorizeSLP
   PMBuilder.LoopVectorize = OptLevel > 1 ? 1 : 0; // m_CGOpts.VectorizeLoop
 
-  PMBuilder.DisableTailCalls = m_CGOpts.DisableTailCalls;
   PMBuilder.DisableUnrollLoops = !m_CGOpts.UnrollLoops;
   PMBuilder.MergeFunctions = m_CGOpts.MergeFunctions;
-  PMBuilder.RerollLoops = m_CGOpts.RerollLoops;
 
   PMBuilder.LibraryInfo = new TargetLibraryInfoImpl(m_TM.getTargetTriple());
 
@@ -422,14 +420,6 @@ void BackendPasses::CreatePasses(llvm::Module& M, int OptLevel)
     m_MPM[OptLevel]->add(new UniqueCUDAStructorName());
   m_MPM[OptLevel]->add(createTargetTransformInfoWrapperPass(
                                                    m_TM.getTargetIRAnalysis()));
-
-  m_TM.adjustPassManager(PMBuilder);
-
-  PMBuilder.addExtension(PassManagerBuilder::EP_EarlyAsPossible,
-                         [&](const PassManagerBuilder &,
-                             legacy::PassManagerBase &PM) {
-                              PM.add(createAddDiscriminatorsPass());
-                            });
 
   //if (!CGOpts.RewriteMapFiles.empty())
   //  addSymbolRewriterPass(CGOpts, m_MPM);
