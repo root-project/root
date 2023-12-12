@@ -1135,6 +1135,8 @@ std::string RWebWindow::_MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt
       buf.append("$$nullbinary$$");
    } else {
       buf.append("$$binary$$");
+      if (!conn->fKey.empty() && !fMgr->fSessionKey.empty())
+         buf.append(HMAC(conn->fKey, fMgr->fSessionKey, data.data(), data.length()));
    }
 
    return buf;
