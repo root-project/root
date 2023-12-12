@@ -71,5 +71,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
 
 target_include_directories(ROOTTMVASofieParser PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+target_include_directories(ROOTTMVASofieParser BEFORE PUBLIC
+  ${Protobuf_INCLUDE_DIRS})
 set_target_properties(ROOTTMVASofieParser PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
