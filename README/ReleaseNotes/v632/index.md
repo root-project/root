@@ -17,6 +17,7 @@ The following people have contributed to this new version:
  Jakob Blomer, CERN/EP-SFT,\
  Rene Brun,\
  Philippe Canal, FNAL,\
+ Jolly Chen, CERN/EP-SFT,\
  Olivier Couet, CERN/EP-SFT,\
  Gerri Ganis, CERN/EP-SFT,\
  Florine de Geus, CERN/ATLAS,\
@@ -48,7 +49,18 @@ The following people have contributed to this new version:
 
 
 ## TTree Libraries
+### Add files from subdirectories with `TChain::Add` globbing
+It is now possible to add files from multiple subdirectories with `TChain::Add` globbing. For example,
+```
+TChain::Add("/path/to/tree/*/*.root")
+```
+grabs all the root files with the path `/path/to/tree/somedir/file.root` (but not `/path/to/tree/file.root` and `/path/to/tree/somedir/anotherdir/file.root`).
 
+Another example:
+```
+TChain::Add("/path/to/tree/subdir[0-9]/*.root")
+```
+This grabs all the root files in subdirectories that have a name starting with `subdir` and ending with some digit.
 
 ## Histogram Libraries
 
