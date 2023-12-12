@@ -144,6 +144,7 @@ clang/LLVM technology.
 #include <utility>
 #include <vector>
 #include <functional>
+#include <optional>
 
 #ifndef R__WIN32
 #include <cxxabi.h>
@@ -1412,7 +1413,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    }
 
    // Process externally passed arguments if present.
-   llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
+   std::optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
    if (EnvOpt.has_value()) {
       StringRef Env(*EnvOpt);
       while (!Env.empty()) {
@@ -1422,9 +1423,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       }
    }
 
-   auto GetEnvVarPath = [](const std::string &EnvVar,
-                       std::vector<std::string> &Paths) {
-      llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
+   auto GetEnvVarPath = [](const std::string &EnvVar, std::vector<std::string> &Paths) {
+      std::optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
       if (EnvOpt.has_value()) {
          StringRef Env(*EnvOpt);
          while (!Env.empty()) {
