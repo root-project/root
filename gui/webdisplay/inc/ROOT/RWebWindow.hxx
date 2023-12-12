@@ -237,6 +237,8 @@ private:
 
    static void SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)>);
 
+   static std::string HMAC(const std::string &key, const std::string &sessionKey, const char *msg, int msglen);
+
 public:
 
    RWebWindow();

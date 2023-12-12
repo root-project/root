@@ -46,6 +46,7 @@ RWebWindow::WebConn::~WebConn()
 }
 
 
+
 /** \class ROOT::RWebWindow
 \ingroup webdisplay
 
@@ -524,11 +525,8 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
 
    int intry = ntry.empty() ? -1 : std::stoi(ntry);
 
-   auto code = TString::Format("%s:%s:%s", fMgr->fSessionKey.c_str(), ntry.c_str(), conn->fKey.c_str());
-   TMD5 m;
-   m.Update((const UChar_t *) code.Data(), code.Length());
-   m.Final();
-   std::string expected = m.AsString();
+   auto msg = TString::Format("attempt_%s", ntry.c_str());
+   auto expected = HMAC(conn->fKey, fMgr->fSessionKey, msg.Data(), msg.Length());
 
    if (!IsRequireAuthKey())
       return (conn->fKey.empty() && key.empty()) || (key == conn->fKey) || (key == expected);
@@ -914,12 +912,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    bool is_none = strncmp(buf0, "none:", 5) == 0, is_match = false;
 
    if (!is_none) {
-      auto code = TString::Format("%s:%s:%s", fMgr->fSessionKey.c_str(), buf, conn->fKey.c_str());
-      TMD5 m;
-      m.Update((const UChar_t *) code.Data(), code.Length());
-      m.Final();
+      std::string hmac = HMAC(conn->fKey, fMgr->fSessionKey, buf, data_len);
 
-      is_match = !is_none && (strncmp(buf0, m.AsString(), code_len) == 0);
+      is_match = strncmp(buf0, hmac.c_str(), code_len) == 0;
    }
 
    // IMPORTANT: final place where MD5 sum of input message checked!
@@ -1176,12 +1171,7 @@ bool RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &conn)
 
    // add MD5 checksum for string send to client
    if (!conn->fKey.empty() && !fMgr->fSessionKey.empty()) {
-      auto code = TString::Format("%s:%s:%s", fMgr->fSessionKey.c_str(), hdr.c_str(), conn->fKey.c_str());
-      TMD5 m;
-      m.Update((const UChar_t *) code.Data(), code.Length());
-      m.Final();
-
-      prefix = m.AsString();
+      prefix = HMAC(conn->fKey, fMgr->fSessionKey, hdr.c_str(), hdr.length());
    } else {
       prefix = "none";
    }
@@ -1982,4 +1972,39 @@ bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsi
       return false;
 
    return gStartDialogFunc(window, connid, args);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Calculate HMAC checksum for provided key and message
+/// Key combained from connection key and session key
+
+std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionKey, const char *msg, int msglen)
+{
+   TMD5 m1;
+   // calculate MD5 of sessionKey + key;
+   m1.Update((const UChar_t *) sessionKey.c_str(), sessionKey.length());
+   m1.Update((const UChar_t *) key.c_str(), key.length());
+   m1.Final();
+   std::string kbis = m1.AsString();
+   std::string ki = kbis, ko = kbis;
+   const int ipad = 0x5c;
+   const int opad = 0x36;
+   for (size_t i = 0; i < kbis.length(); ++i) {
+      ki[i] = kbis[i] ^ ipad;
+      ko[i] = kbis[i] ^ opad;
+   }
+
+   TMD5 m2;
+   // calculate MD5 for ko + msg;
+   m2.Update((const UChar_t *) ko.c_str(), ko.length());
+   m2.Update((const UChar_t *) msg, msglen);
+   m2.Final();
+
+   TMD5 m3;
+   // calculate MD5 for ki + m2.AsString();
+   m3.Update((const UChar_t *) ki.c_str(), ki.length());
+   m3.Update((const UChar_t *) m2.AsString(), strlen(m2.AsString()));
+   m3.Final();
+
+   return m3.AsString();
 }
