@@ -538,8 +538,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
       llvm::SmallVector<NamedDecl*, 4> lookupResults;
       for(LookupResult::iterator I = R.begin(), E = R.end(); I < E; ++I)
          lookupResults.push_back(*I);
-      UpdateWithNewDecls(DC, Name, llvm::makeArrayRef(lookupResults.data(),
-                                                      lookupResults.size()));
+      UpdateWithNewDecls(DC, Name, llvm::ArrayRef(lookupResults.data(), lookupResults.size()));
       return true;
    }
    return false;
