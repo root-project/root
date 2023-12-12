@@ -13,6 +13,7 @@
 
 #include <stack>
 #include <string>
+#include <optional>
 
 namespace clang {
    class Decl;
@@ -126,8 +127,8 @@ public:
    void UnlockCompilationDuringUserCodeExecution(void *StateInfo) override;
 
 private:
-   bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
-                            clang::Scope *S, clang::OptionalFileEntryRef FE = llvm::None);
+   bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R, clang::Scope *S,
+                             clang::OptionalFileEntryRef FE = std::nullopt);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);

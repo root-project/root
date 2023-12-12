@@ -44,6 +44,8 @@
 #include "TClingUtils.h"
 #include "ClingRAII.h"
 
+#include <optional>
+
 using namespace clang;
 using namespace cling;
 using namespace ROOT::Internal;
@@ -414,7 +416,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
 bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFirstMatchOnly /*=true*/)
 {
-   llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
+   std::optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
    if (envUseGMI.has_value())
       if (!envUseGMI->empty() && !ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI))
          return false;
