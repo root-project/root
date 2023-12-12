@@ -13,7 +13,7 @@
 
 /**
 \file Evaluator.cxx
-\class Evaluator
+\class RooFit::Evaluator
 \ingroup Roofitcore
 
 Evaluates a RooAbsReal object in other ways than recursive graph

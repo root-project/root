@@ -714,7 +714,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Import a dataset (RooDataSet or RooDataHist) into the work space. The workspace will contain a copy of the data.
+///  Import a dataset (RooDataSet or RooDataHist) into the workspace. The workspace will contain a copy of the data.
 ///  The dataset and its variables can be renamed upon insertion with the options below
 ///
 ///  <table>
@@ -896,7 +896,7 @@ bool RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define a named set in the work space through a comma separated list of
+/// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
 
 bool RooWorkspace::defineSet(const char* name, const char* contentList)
@@ -931,7 +931,7 @@ bool RooWorkspace::defineSet(const char* name, const char* contentList)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define a named set in the work space through a comma separated list of
+/// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
 
 bool RooWorkspace::extendSet(const char* name, const char* newContents)

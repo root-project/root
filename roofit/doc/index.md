@@ -8,3 +8,4 @@ For developers, there is also the \ref roofit_dev_docs, which serves as a refere
 
 \defgroup roofit_dev_docs RooFit Developer Documentation
 \brief How-to guides on how to extend \ref Roofitmain with custom classes or to work on %RooFit itself.
+\ingroup Roofitmain

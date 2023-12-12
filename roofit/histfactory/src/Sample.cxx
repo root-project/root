@@ -17,9 +17,9 @@
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
-RooStats::HistFactory::Sample::Sample() : fNormalizeByTheory(false), fStatErrorActivate(false) {}
+RooStats::HistFactory::Sample::Sample() {}
 
-// copy constructor (important for python)
+// copy constructor (important for Python)
 RooStats::HistFactory::Sample::Sample(const Sample& other) :
   fName(other.fName), fInputFile(other.fInputFile),
   fHistoName(other.fHistoName), fHistoPath(other.fHistoPath),
