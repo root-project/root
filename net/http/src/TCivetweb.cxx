@@ -779,6 +779,21 @@ Bool_t TCivetweb::Create(const char *args)
 
    options[op++] = nullptr;
 
+   if (is_socket && !mg_check_feature(MG_FEATURES_X_DOMAIN_SOCKET)) {
+      Error("Create", "civetweb compiled without sockets binding support");
+      return kFALSE;
+   }
+
+   if (IsSecured() && !mg_check_feature(MG_FEATURES_SSL)) {
+      Error("Create", "civetweb compiled without SSL support");
+      return kFALSE;
+   }
+
+   if (!mg_check_feature(MG_FEATURES_WEBSOCKET)) {
+      Error("Create", "civetweb compiled without websockets support");
+      return kFALSE;
+   }
+
    if (IsSecured()) {
 		/* Initialize with SSL support */
 		mg_init_library(MG_FEATURES_TLS);
