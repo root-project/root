@@ -276,6 +276,9 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
             "</body>\n"
             "</html>\n", std::regex("\\$url"), url);
          url = "file://"s + tmpfile;
+
+         os.close();
+         gSystem->Chmod(tmpfile.c_str(), 0400); // only read for user itself
       } else {
          R__LOG_ERROR(WebGUILog()) << "Fail to create temporary HTML file to startup widget";
          return nullptr;
