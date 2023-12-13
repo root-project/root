@@ -269,7 +269,32 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
 SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 
+/// \brief Add ProgressBar to a ROOT::RDF::RNode
+/// \param[in] df RDataFrame node at which ProgressBar is called.
+///
+/// The ProgressBar can be added not only at the RDataFrame head node, but also at any any computational node,
+/// such as Filter or Define.
+/// ###Example usage:
+/// ~~~{.cpp}
+/// ROOT::RDataFrame df("tree", "file.root");
+/// auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
+/// ROOT::RDF::Experimental::AddProgressBar(df_1);
+/// ~~~
 void AddProgressBar(ROOT::RDF::RNode df);
+
+/// \brief Add ProgressBar to an RDataFrame
+/// \param[in] df RDataFrame for which ProgressBar is called.
+///
+/// This function adds a ProgressBar to display the event statistics in the terminal every
+/// \b m events and every \b n seconds, including elapsed time, currently processed file,
+/// currently processed events, the rate of event processing
+/// and an estimated remaining time (per file being processed).
+/// ProgressBar should be added after the dataframe object (df) is created first:
+/// ~~~{.cpp}
+/// ROOT::RDataFrame df("tree", "file.root");
+/// ROOT::RDF::Experimental::AddProgressBar(df);
+/// ~~~
+/// For more details see ROOT::RDF::Experimental::ProgressHelper Class.
 void AddProgressBar(ROOT::RDataFrame df);
 
 class ProgressBarAction;
