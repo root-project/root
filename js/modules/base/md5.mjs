@@ -183,6 +183,26 @@ function rstr2binl(input) {
   return output;
 }
 
+function rstr2binl_2(input, arr) {
+  const fulllen = input.length + arr.length,
+        output = [];
+
+  output[(fulllen >> 2) - 1] = undefined;
+  for (let i = 0; i < output.length; i += 1)
+    output[i] = 0;
+  const length8 = input.length * 8;
+  for (let i = 0; i < length8; i += 8)
+    output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << i % 32;
+
+  const length8_2 = arr.length * 8;
+  for (let i2 = 0; i2 < length8_2; i2 += 8) {
+    const i = length8 + i2;
+    output[i >> 5] |= (arr[i2 / 8] & 0xff) << i % 32;
+  }
+
+  return output;
+}
+
 /**
  * Calculate the MD5 of a raw string
  *
@@ -191,6 +211,10 @@ function rstr2binl(input) {
  */
 function rstrMD5(s) {
   return binl2rstr(binlMD5(rstr2binl(s), s.length * 8));
+}
+
+function rstrMD5_2(s, arr) {
+  return binl2rstr(binlMD5(rstr2binl_2(s, arr), (s.length + arr.length) * 8));
 }
 
 /**
@@ -228,6 +252,11 @@ function str2rstrUTF8(input) {
 function rawMD5(s) {
   return rstrMD5(str2rstrUTF8(s));
 }
+
+function rawMD5_2(s, arr) {
+  return rstrMD5_2(str2rstrUTF8(s), arr);
+}
+
 /**
  * Encodes input string as Hex encoded string
  *
@@ -238,4 +267,9 @@ function hexMD5(s) {
   return rstr2hex(rawMD5(s));
 }
 
-export { hexMD5 };
+function hexMD5_2(s, arr) {
+  return rstr2hex(rawMD5_2(s, arr));
+}
+
+
+export { hexMD5, hexMD5_2 };
