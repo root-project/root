@@ -1,11 +1,29 @@
 import { httpRequest, createHttpRequest, loadScript, decodeUrl,
          browser, setBatchMode, isBatchMode, isObject, isFunc, isStr, btoa_func } from './core.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
-import { hexMD5 } from './base/md5.mjs';
+import { hexMD5, hexMD5_2 } from './base/md5.mjs';
 
 
 // secret session key used for hashing connections keys
 let sessionKey = '';
+
+/** @summary HMAC implementation
+ * @desc see https://en.wikipedia.org/wiki/HMAC for more details
+ * @private */
+function HMAC(key, m, o) {
+   const kbis = hexMD5(sessionKey + key),
+         ipad = 0x5c, opad = 0x36;
+   let ki = '', ko = '';
+   for (let i = 0; i < kbis.length; ++i) {
+      const code = kbis.charCodeAt(i);
+      ki += String.fromCharCode(code ^ ipad);
+      ko += String.fromCharCode(code ^ opad);
+   }
+
+   const hash = (o === undefined) ? hexMD5(ko + m) : hexMD5_2(ko, new Uint8Array(m, o));
+
+   return hexMD5(ki + hash);
+}
 
 /**
  * @summary Class emulating web socket with long-poll http requests
@@ -406,7 +424,7 @@ class WebWindowHandle {
 
       let md5 = 'none';
       if (this.key && sessionKey)
-         md5 = hexMD5(`${sessionKey}:${prefix}${msg}:${this.key}`);
+         md5 = HMAC(this.key, `${prefix}${msg}`);
 
       this._websocket.send(`${md5}:${prefix}${msg}`);
 
@@ -531,7 +549,7 @@ class WebWindowHandle {
    getConnArgs(ntry) {
       let args = '';
       if (this.key && sessionKey) {
-         const k = hexMD5(`${sessionKey}:${ntry}:${this.key}`);
+         const k = HMAC(this.key, `attempt_${ntry}`);
          args += `key=${k}&ntry=${ntry}`;
       } else if (this.key)
          args += `key=${this.key}`;
@@ -604,18 +622,39 @@ class WebWindowHandle {
             let msg = e.data;
 
             if (this.next_binary) {
-               const binchid = this.next_binary;
+               const binchid = this.next_binary,
+                     server_hash = this.next_binary_hash;
                delete this.next_binary;
+               delete this.next_binary_hash;
 
                if (msg instanceof Blob) {
                   // convert Blob object to BufferArray
                   const reader = new FileReader(), qitem = this.reserveQueueItem();
                   // The file's text will be printed here
-                  reader.onload = event => this.markQueueItemDone(qitem, event.target.result, 0);
+                  reader.onload = event => {
+                     let result = event.target.result;
+                     if (this.key && sessionKey) {
+                        const hash = HMAC(this.key, result, 0);
+                        if (hash !== server_hash) {
+                           console.log('Discard binary buffer');
+                           result = new ArrayBuffer(0);
+                        }
+                     }
+
+                     this.markQueueItemDone(qitem, result, 0);
+                  };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // this is from CEF or LongPoll handler
-                  this.provideData(binchid, msg, e.offset || 0);
+                  let result = msg;
+                  if (this.key && sessionKey) {
+                     const hash = HMAC(this.key, result, e.offset || 0);
+                     if (hash !== server_hash) {
+                        console.log('Discard binary buffer');
+                        result = new ArrayBuffer(0);
+                     }
+                  }
+                  this.provideData(binchid, result, e.offset || 0);
                }
 
                return;
@@ -635,11 +674,11 @@ class WebWindowHandle {
                   i4 = msg.indexOf(':', i3 + 1),
                   chid = Number.parseInt(msg.slice(i3 + 1, i4));
 
-            // for authentication MD5 sum and sequence id is important
-            // MD5 used to authenticate server
+            // for authentication HMAC checksum and sequence id is important
+            // HMAC used to authenticate server
             // sequence id is necessary to exclude submission of same packet again
             if (this.key && sessionKey) {
-               const client_md5 = hexMD5(`${sessionKey}:${msg.slice(i0+1)}:${this.key}`);
+               const client_md5 = HMAC(this.key, msg.slice(i0+1));
                if (server_md5 !== client_md5)
                   return console.log(`Failure checking server md5 sum ${server_md5}`);
             }
@@ -670,9 +709,10 @@ class WebWindowHandle {
                      sessionStorage.setItem('RWebWindow_Key', newkey);
                   location.reload(true);
                }
-            } else if (msg === '$$binary$$')
+            } else if (msg.slice(0, 10) === '$$binary$$') {
                this.next_binary = chid;
-            else if (msg === '$$nullbinary$$')
+               this.next_binary_hash = msg.slice(10);
+            } else if (msg === '$$nullbinary$$')
                this.provideData(chid, new ArrayBuffer(0), 0);
             else
                this.provideData(chid, msg);
