@@ -528,6 +528,8 @@ TCivetweb::~TCivetweb()
 {
    if (fCtx && !fTerminating)
       mg_stop(fCtx);
+
+   mg_exit_library();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -535,7 +537,7 @@ TCivetweb::~TCivetweb()
 
 Int_t TCivetweb::ProcessLog(const char *message)
 {
-   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
+   if ((gDebug > 0) || strstr(message, "cannot bind to"))
       Error("Log", "%s", message);
 
    return 0;
@@ -776,6 +778,14 @@ Bool_t TCivetweb::Create(const char *args)
    options[op++] = dir_listening.Data();
 
    options[op++] = nullptr;
+
+   if (IsSecured()) {
+		/* Initialize with SSL support */
+		mg_init_library(MG_FEATURES_TLS);
+	} else {
+		/* Initialize without SSL support */
+		mg_init_library(MG_FEATURES_DEFAULT);
+	}
 
    // try to remove socket file - if any
    if (is_socket && !sport.Contains(","))
