@@ -450,12 +450,12 @@ bool RWebWindowsManager::CreateServer(bool with_http)
          if (http_maxage >= 0)
             engine.Append(TString::Format("&max_age=%d", http_maxage));
 
-         if (use_secure) {
+         if (use_secure && !strchr(ssl_cert,'&')) {
             engine.Append("&ssl_cert=");
             engine.Append(ssl_cert);
          }
 
-         if (extra_args && strlen(extra_args) > 0) {
+         if (!use_unix_socket && !assign_loopback && extra_args && strlen(extra_args) > 0) {
             engine.Append("&");
             engine.Append(extra_args);
          }
