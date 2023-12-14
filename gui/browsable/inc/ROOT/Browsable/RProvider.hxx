@@ -145,6 +145,8 @@ private:
    template<class Map_t>
    void CleanThis(Map_t &fmap)
    {
+      if (fmap.empty())
+         return;
       auto fiter = fmap.begin();
       while (fiter != fmap.end()) {
          if (fiter->second.provider == this)
