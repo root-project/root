@@ -22,11 +22,22 @@ namespace Experimental {
 
 /**
 \ingroup dataframe
-\brief Class representing a sample (grouping of trees (and their fileglobs) and (optional) metadata)
+\brief Class representing a sample which is a grouping of trees and their fileglobs, and, optionally, the sample's
+metadata information via the RMetaData object.
 
- This class should be passed to RDatasetSpec in order to build a RDataFrame.
+ The class is passed to an RDatasetSpec object in order to build an RDataFrame.
+
+ For example, an RSample object can be built as follows:
+ ~~~{.cpp}
+ // First, create the RMetaData object (to, optionally, add to the sample)
+ ROOT::RDF::Experimental::RMetaData meta;
+ meta.Add("sample_name", "name"");
+ // Create an RSample with metadata information
+ ROOT::RDF::Experimental::RSample mySample("mySampleName", "outputTree1", "outputFile.root", meta);
+ ~~~
 */
 class RSample {
+   /// Name of the sample.
    std::string fSampleName;
    /**
     * A list of names of trees.
@@ -40,9 +51,11 @@ class RSample {
     * They can contain the globbing characters supported by TChain. See TChain::Add for more information.
     */
    std::vector<std::string> fFileNameGlobs;
+   /// An instance of the RMetaData class.
    RMetaData fMetaData;
 
-   unsigned int fSampleId{0}; // global sample index, set inside of the RDatasetSpec
+   /// Global sample index, set inside of the RDatasetSpec.
+   unsigned int fSampleId{0};
 
 public:
    RSample(RSample &&) = default;

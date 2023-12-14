@@ -71,21 +71,31 @@ RSample::RSample(const std::string &sampleName, const std::vector<std::string> &
    }
 }
 
+/// @brief Get the name of the sample (RSample object).
 const std::string &RSample::GetSampleName() const
 {
    return fSampleName;
 }
 
+/// @brief Get the collection of the tree names associated with the sample.
 const std::vector<std::string> &RSample::GetTreeNames() const
 {
    return fTreeNames;
 }
 
+/// @brief Get the collection of the filename globs associated with the sample.
 const std::vector<std::string> &RSample::GetFileNameGlobs() const
 {
    return fFileNameGlobs;
 }
 
+/// @brief Get an instance of the RMetaData class.
+///
+/// Once this is done, the further access to the RMetaData information is granted, for example
+/// (given the metadata has a key "sample_name" that has an associated value of type string):
+/// ~~~{.cpp}
+/// mySample.GetMetadata().GetS("sample_name");
+/// ~~~
 const RMetaData &RSample::GetMetaData() const
 {
    return fMetaData;
