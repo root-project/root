@@ -32,11 +32,21 @@ namespace Experimental {
 /**
 \class ROOT::RDF::Experimental::RMetaData
 \ingroup dataframe
-\brief Class behaving as a heterogenuous dictionary to store dataset metadata
+\brief Class behaving as a heterogenuous dictionary to store the metadata of a dataset.
 
- This class should be passed to an RSample object which represents a single dataset sample.
- Once a dataframe is built with RMetaData object, it could be accessed via DefinePerSample.
-*/
+ The supported types of the metadata are: std::string, int and double. An example of creating the RMetaData object:
+ ~~~{.cpp}
+ ROOT::RDF::Experimental::RMetaData meta;
+ meta.Add("sample_name", "name"");
+ meta.Add("luminosity", 10064);
+ meta.Add("xsecs", 1.0);
+ ~~~
+
+ The RMetaData object is passed to an RSample object which represents a single dataset sample.
+
+ A dataframe built with the RMetaData object can be accessed with the \ref ROOT::RDF::RInterface< Proxied,
+DS_t>::DefinePerSample "DefinePerSample()" method.
+**/
 class RMetaData {
 public:
 
