@@ -558,7 +558,7 @@ while test $# -gt 0; do
     --git-revision)
       ### Output the git revision. Give up if gitinfo.txt can not be found.
       if test -r "${etcdir}/gitinfo.txt"; then
-         out="$out `head -m2 \"${etcdir}/gitinfo.txt\" | tail -n`"
+         out="$out `head -n 2 \"${etcdir}/gitinfo.txt\" | tail -n 1`"
       else
          echo "cannot read ${etcdir}/gitinfo.txt"
          exit 1
