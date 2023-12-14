@@ -41,7 +41,7 @@ and, optionally, the metadata information (using the RMetaData class objects).
 Adding global friend trees and/or setting the range of events to be processed
 are also available.
 
-Note, there exists yet another method to build RDataFrame from the dataset information using the JSON file format: ROOT::RDataFrame FromSpec(const std::string &jsonFile). 
+Note, there exists yet another method to build RDataFrame from the dataset information using the JSON file format: \ref FromSpec(const std::string &jsonFile) "FromSpec()". 
 */
 
 class RDatasetSpec {

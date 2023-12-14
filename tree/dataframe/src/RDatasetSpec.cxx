@@ -117,8 +117,8 @@ std::vector<RSample> RDatasetSpec::MoveOutSamples()
 /// Note that adding this metadata information to the RSample object is optional.
 /// ~~~{.cpp}
 /// // Create the RMetaData object which will be used to create the RSample object.
-/// ROOT::RDF::RMetaData meta;
-/// meta.Add("sample_name", name);
+/// ROOT::RDF::Experimental::RMetaData meta;
+/// meta.Add("sample_name", "name");
 /// // Create the RSample object "mySample" with sample name "mySampleName", tree name "outputTree1",
 /// // file name "outputFile.root" and associated metadata information.
 /// ROOT::RDF::Experimental::RSample mySample("mySampleName", "outputTree1", "outputFile.root", meta);
