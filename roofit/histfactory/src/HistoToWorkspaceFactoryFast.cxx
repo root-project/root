@@ -822,6 +822,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       constraintTermNames.push_back("lumiConstraint");
     } else {
       proto.var("Lumi")->setConstant();
+      proto.defineSet("globalObservables",RooArgSet()); // create empty set as is assumed it exists later
     }
     ///////////////////////////////////
     // loop through estimates, add expectation, floating bin predictions,
