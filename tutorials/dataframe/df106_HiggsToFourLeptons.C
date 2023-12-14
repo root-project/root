@@ -86,7 +86,7 @@ void df106_HiggsToFourLeptons()
 
    // Perform the analysis
    // Access metadata information that is stored in the JSON config file of the RDataFrame
-   // The metadata contained in the JSON file is accessible within a `DefinePerSample` call, through the `RDFSampleInfo`
+   // The metadata contained in the JSON file is accessible within a `DefinePerSample` call, through the `RSampleInfo`
    // class
    auto df_analysis =
       df.DefinePerSample("xsecs", [](unsigned int slot, const RSampleInfo &id) { return id.GetD("xsecs"); })
