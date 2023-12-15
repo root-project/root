@@ -29,7 +29,7 @@ foreach(policy ${policy_new})
   endif()
 endforeach()
 
-set(policy_old CMP0135 CMP0144)
+set(policy_old CMP0116 CMP0135 CMP0144)
 foreach(policy ${policy_old})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} OLD)
