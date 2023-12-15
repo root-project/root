@@ -29,14 +29,12 @@ foreach(policy ${policy_new})
   endif()
 endforeach()
 
-# ignore JAVA_ROOT when find_package(Java 1.8 ...) called
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
-  cmake_policy(SET CMP0144 OLD)
-endif()
-
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  cmake_policy(SET CMP0135 OLD)
-endif()
+set(policy_old CMP0135 CMP0144)
+foreach(policy ${policy_old})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} OLD)
+  endif()
+endforeach()
 
 include(cmake/modules/CaptureCommandLine.cmake)
 
