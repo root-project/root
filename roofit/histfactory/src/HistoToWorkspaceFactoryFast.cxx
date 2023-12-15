@@ -1253,11 +1253,12 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     for(unsigned int i=0; i<systToFix.size(); ++i){
       RooRealVar* temp = proto.var(systToFix.at(i));
       if(!temp) {
-        cxcoutE(HistFactory) << "could not find variable " << systToFix.at(i)
+        cxcoutW(HistFactory) << "could not find variable " << systToFix.at(i)
             << " could not set it to constant" << endl;
+      } else {
+        // set the parameter constant
+        temp->setConstant();
       }
-      // set the parameter constant
-      temp->setConstant();
     }
 
     //////////////////////////////////////
