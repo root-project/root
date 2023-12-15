@@ -548,9 +548,24 @@ FactoryTestParams param11{"ClassFactory1D",
                           5e-3, // increase tolerance because the numeric integration algos are still different
                           /*randomizeParameters=*/true};
 
+FactoryTestParams param12{"BifurGauss",
+                          [](RooWorkspace &ws) {
+                             ws.factory("x[0, -10, 10]");
+                             ws.factory("mu[0, -10, 10]");
+                             ws.factory("BifurGauss::model(x, mu, sigmaL[3.0, 0.01, 10], sigmaR[2.0, 0.01, 10])");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          1e-4,
+                          /*randomizeParameters=*/false};
+
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
                          testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param8p1,
-                                         param9, param10, param11),
+                                         param9, param10, param11, param12),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });

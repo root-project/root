@@ -37,7 +37,7 @@ inline double gaussianIntegral(double xMin, double xMax, double mean, double sig
    // The normalisation constant 1./sqrt(2*pi*sigma^2) is left out in evaluate().
    // Therefore, the integral is scaled up by that amount to make RooFit normalise
    // correctly.
-   double resultScale = std::sqrt(TMath::TwoPi()) * sigma;
+   double resultScale = 0.5 * std::sqrt(TMath::TwoPi()) * sigma;
 
    // Here everything is scaled and shifted into a standard normal distribution:
    double xscale = TMath::Sqrt2() * sigma;
@@ -64,7 +64,23 @@ inline double gaussianIntegral(double xMin, double xMax, double mean, double sig
    } else {
       cond = ecmin - ecmax;
    }
-   return resultScale * 0.5 * cond;
+   return resultScale * cond;
+}
+
+inline double bifurGaussIntegral(double xMin, double xMax, double mean, double sigmaL, double sigmaR)
+{
+   const double xscaleL = TMath::Sqrt2() * sigmaL;
+   const double xscaleR = TMath::Sqrt2() * sigmaR;
+
+   const double resultScale = 0.5 * std::sqrt(TMath::TwoPi());
+
+   if (xMax < mean) {
+      return resultScale * (sigmaL * (TMath::Erf((xMax - mean) / xscaleL) - TMath::Erf((xMin - mean) / xscaleL)));
+   } else if (xMin > mean) {
+      return resultScale * (sigmaR * (TMath::Erf((xMax - mean) / xscaleR) - TMath::Erf((xMin - mean) / xscaleR)));
+   } else {
+      return resultScale * (sigmaR * TMath::Erf((xMax - mean) / xscaleR) - sigmaL * TMath::Erf((xMin - mean) / xscaleL));
+   }
 }
 
 inline double exponentialIntegral(double xMin, double xMax, double constant)
