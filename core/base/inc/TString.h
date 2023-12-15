@@ -843,19 +843,6 @@ inline Bool_t operator!=(const TString &s1, const TSubString &s2)
 inline Bool_t operator!=(const char *s1, const TSubString &s2)
 { return !(s2 == s1); }
 
-#ifndef WIN32
-// To avoid ambiguities.
-inline Bool_t operator==(const char *s1, const std::string_view &s2)
-{
-  return std::string_view(s1) == s2;
-}
-
-inline Bool_t operator==(const std::string_view &s1, const char *s2)
-{
-  return s1 == std::string_view(s2);
-}
-#endif
-
 namespace llvm {
    class raw_ostream;
 }
