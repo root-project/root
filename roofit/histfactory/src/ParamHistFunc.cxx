@@ -208,7 +208,11 @@ RooAbsReal& ParamHistFunc::getParameter( Int_t index ) const {
   const int j = tmp / n.z;
   const int k = tmp % n.z;
 
-  return static_cast<RooAbsReal&>(_paramSet[i + j * n.x + k * n.xy]);
+  const int idx = i + j * n.x + k * n.xy;
+  if (idx >= _numBins) {
+    throw std::runtime_error("invalid index");
+  }
+  return static_cast<RooAbsReal &>(_paramSet[idx]);
 }
 
 
