@@ -104,9 +104,12 @@ if(builtin_civetweb)
   endif()
 
 else()
-  message(STATUS "Linking with ${civetweb_LIBRARIES} includes from ${civetweb_INCLUDE_DIR}")
+
   target_include_directories(RHTTP SYSTEM PRIVATE ${civetweb_INCLUDE_DIR})
   target_link_libraries(RHTTP PRIVATE ${civetweb_LIBRARIES})
+  # workaround for R__memcompress failure with external civetweb
+  target_compile_definitions(RHTTP PRIVATE -D_EXTERNAL_CIVETWEB)
+
 endif(builtin_civetweb)
 
 if(FASTCGI_FOUND)

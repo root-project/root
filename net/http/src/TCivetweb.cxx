@@ -463,8 +463,15 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       case THttpCallArg::kZipAlways: dozip = kTRUE; break;
       }
 
+      #ifdef _EXTERNAL_CIVETWEB
+      // with external civeweb one gets failure R__memcompress
+      // while it is not critical, try to avoid for now
+      // to be tested later
+      (void) dozip;
+      #else
       if (dozip)
          arg->CompressWithGzip();
+      #endif
 
       std::string hdr = arg->FillHttpHeader("HTTP/1.1");
       mg_printf(conn, "%s", hdr.c_str());
