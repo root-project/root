@@ -319,7 +319,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             constraints.add(getConstraint(ws, parname));
          } else if (modtype == "shapesys") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
-            // funName should be "<channel_name>_<sysname>_ShapeSys"
+            // funcName should be "<channel_name>_<sysname>_ShapeSys"
             std::vector<double> vals;
             for (const auto &v : mod["data"]["vals"].children()) {
                vals.push_back(v.val_double());
@@ -327,6 +327,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             std::vector<std::string> parnames;
             for (const auto &v : mod["parameters"].children()) {
                parnames.push_back(v.val());
+            }
+            if (vals.empty()) {
+               RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname + "' with 0 values!");
             }
             std::string constraint(mod["constraint"].val());
             shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
@@ -925,6 +928,13 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             auto &data = mod["data"].set_map();
             auto &vals = data["vals"];
             vals.fill_seq(sys.constraints);
+         } else {
+            auto &data = mod["data"].set_map();
+            auto &vals = data["vals"];
+            vals.set_seq();
+            for (std::size_t i = 0; i < sys.parameters.size(); ++i) {
+               vals.append_child() << 0;
+            }
          }
       }
 
