@@ -33,6 +33,14 @@ inline double gaussianEvaluate(double x, double mean, double sigma)
    return std::exp(-0.5 * arg * arg / (sig * sig));
 }
 
+inline double bifurGaussEvaluate(double x, double mean, double sigmaL, double sigmaR)
+{
+   // Note: this simplification does not work with Clad as of v1.1!
+   // return gaussianEvaluate(x, mean, x < mean ? sigmaL : sigmaR);
+   if(x < mean) return gaussianEvaluate(x, mean, sigmaL);
+   return gaussianEvaluate(x, mean, sigmaR);
+}
+
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
 template <bool pdfMode = false>
 inline double polynomialEvaluate(double const *coeffs, int nCoeffs, int lowestOrder, double x)
