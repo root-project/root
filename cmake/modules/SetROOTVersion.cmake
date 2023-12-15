@@ -50,31 +50,39 @@ function(SET_ROOT_VERSION)
   math(EXPR ROOT_PATCH_VERSION_ODD ${ROOT_PATCH_VERSION}%2)
   # For release versions (even patch version number) we use the number from
   # core/foundation/inc/ROOT/RVersion.hxx, not that of git: it's more stable / reliable.
-  if(NOT GIT_DESCRIBE_ERRCODE AND ${ROOT_PATCH_VERSION_ODD} EQUAL 1)
-    execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
-                    OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
-                    ERROR_QUIET
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(${ROOT_PATCH_VERSION_ODD} EQUAL 1)
+    if(NOT GIT_DESCRIBE_ERRCODE)
+      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
+                      OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
+                      ERROR_QUIET
+                      OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
-      # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
-      # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
-      # tag might end on "-rc1" or similar; parse version number in front.
-      string(REGEX REPLACE "^tags/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
-      string(REGEX REPLACE "^tags/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
-      string(REGEX REPLACE "^tags/v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALL})
-      string(REGEX REPLACE "^v([0-9]+)-([0-9]+)-(.*)" "\\1.\\2.\\3" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
-    elseif("${GIT_DESCRIBE_ALL}" MATCHES "/v[0-9]+-[0-9]+.*-patches$")
-      # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
-      # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
-      string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
-      string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
-      set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
+      if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
+        # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
+        # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
+        # tag might end on "-rc1" or similar; parse version number in front.
+        string(REGEX REPLACE "^tags/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
+        string(REGEX REPLACE "^tags/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
+        string(REGEX REPLACE "^tags/v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALL})
+        string(REGEX REPLACE "^v([0-9]+)-([0-9]+)-(.*)" "\\1.\\2.\\3" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
+      elseif("${GIT_DESCRIBE_ALL}" MATCHES "/v[0-9]+-[0-9]+.*-patches$")
+        # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
+        # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
+        string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
+        string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
+        set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
+      else()
+        # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
+        # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
+
+        # Use what was set above in SET_VERSION_FROM_FILE().
+      endif()
+    endif()
+  else()
+    if (${GIT_DESCRIBE_ALL} MATCHES "^tags/")
+      string(REGEX REPLACE "^tags/" "" GIT_DESCRIBE_ALWAYS ${GIT_DESCRIBE_ALL})
     else()
-      # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
-      # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
-
-      # Use what was set above in SET_VERSION_FROM_FILE().
+      message(WARNING "GIT_DESCRIBE_ALL is `${GIT_DESCRIBE_ALL}`·with a format unexpected for tags. Not setting the commit.")
     endif()
   endif()
 
