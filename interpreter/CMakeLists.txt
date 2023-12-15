@@ -459,7 +459,7 @@ if (builtin_clang)
   endif()
   set(CLANG_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/clang/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/tools/clang/include
+    ${Clang_DIR}/include
     CACHE STRING "Clang include directories.")
 else()
   set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
