@@ -62,6 +62,34 @@ def make_mlp_model(gin, model, function_target, type):
     upd.AddInitializedTensors(val)
     gin.createUpdateFunction(upd)
 
+def make_linear_model(gin, model, function_target, type):
+    """
+    Create an Linear model and add it to the GNN Initializer.
+
+    Parameters:
+        gin: The GNN Initializer to which the model will be added.
+        model: The model extracted from graph_nets's GNN component
+        function_target: Target for the function to update either of nodes, edges or globals
+        graph_type: The type of the graph, i.e. GNN or GraphIndependent
+
+    """
+    activation = gbl_namespace.TMVA.Experimental.SOFIE.Activation.Invalid
+    upd = gbl_namespace.TMVA.Experimental.SOFIE.RFunction_MLP(function_target, 1, activation, False, type)
+    kernel_tensor_names = gbl_namespace.std.vector['std::string'](1)
+    bias_tensor_names   = gbl_namespace.std.vector['std::string'](1)
+
+    if (len(model.variables) == 1) :
+       kernel_tensor_names[0] = model.variables[0].name
+    else :
+       bias_tensor_names[0] = model.variables[0].name
+       kernel_tensor_names[0] = model.variables[1].name
+
+    val = gbl_namespace.std.vector['std::vector<std::string>']()
+    val.push_back(kernel_tensor_names)
+    val.push_back(bias_tensor_names)
+    upd.AddInitializedTensors(val)
+    gin.createUpdateFunction(upd)
+
 def add_layer_norm(gin, module_layer, function_target):
     """
     Add a LayerNormalization operator to the particular function target
@@ -148,18 +176,20 @@ def add_update_function(gin, component_model, graph_type, function_target):
         function_target: Target for the function to update either of nodes, edges or globals
 
     """
-    if (component_model.name == 'mlp'):
+    if (type(component_model).__name__ == 'MLP'):
         make_mlp_model(gin, component_model, function_target, graph_type)
-    elif (component_model.name == 'sequential'):
+    elif (type(component_model).__name__ == 'Sequential'):
         for i in component_model._layers:
-            if(i.name == 'mlp'):
+            if(type(i).__name__ == 'MLP'):
                 make_mlp_model(gin, i, function_target, graph_type)
-            elif(i.name == 'layer_norm'):
+            elif(type(i).__name__ == 'LayerNorm'):
                 add_layer_norm(gin, i, function_target)
             else:
-                raise RuntimeError("Invalid Model for node update")
+                raise RuntimeError("Invalid Model " + type(i).__name__ + " for layer update")
+    elif (type(component_model).__name__ == 'Linear'):
+        make_linear_model(gin, component_model, function_target, graph_type)
     else:
-        raise RuntimeError("Invalid Model for update function")
+        raise RuntimeError("Invalid Model " + type(component_model).__name__ + " for update function")
     add_weights(gin, component_model.variables, function_target)
 
 
@@ -273,18 +303,23 @@ class RModel_GraphIndependent:
 
 
         # adding the node update function
-        node_model = graph_module._node_model._model
-        add_update_function(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
+        # when an update is present in graph_nets, the update function has the _model attribute
+        # otherwise it is just a simple function defining output = input.
+        node_model = graph_module._node_model
+        if (hasattr(node_model,"_model")) :
+            add_update_function(gin, node_model._model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
                                          gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES)
 
         # adding the edge update function
-        edge_model = graph_module._edge_model._model
-        add_update_function(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
+        edge_model = graph_module._edge_model
+        if (hasattr(edge_model,"_model")) :
+            add_update_function(gin, edge_model._model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
                                              gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES)
 
         # adding the global update function
-        global_model = graph_module._global_model._model
-        add_update_function(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
+        global_model = graph_module._global_model
+        if (hasattr(global_model,"_model")) :
+            add_update_function(gin, global_model._model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
                                              gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS)
 
         graph_independent_model = gbl_namespace.TMVA.Experimental.SOFIE.RModel_GraphIndependent(gin)
