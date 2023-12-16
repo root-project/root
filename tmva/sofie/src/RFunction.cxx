@@ -62,9 +62,9 @@ std::string RFunction_Update::GenerateModel(const std::string& filename, long re
     return modelGenerationString;
 }
 
-std::string RFunction_Update::Generate(const std::vector<std::string>& inputPtrs) {
+std::string RFunction_Update::Generate(const std::vector<std::string>& inputs) {
     std::string inferFunc = fFuncName+".infer(";
-    for(auto&it : inputPtrs) {
+    for(auto&it : inputs) {
         inferFunc+=it;
         inferFunc+=",";
     }
