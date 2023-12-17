@@ -5,18 +5,13 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 #
-# Try to find XROOTD
-# Once done this will define
+# Try to find XROOTD. The following variables will be defined:
 #
 #  XROOTD_FOUND - system has XROOTD
-#  XROOTD_INCLUDE_DIR - the XROOTD include directory
 #  XROOTD_INCLUDE_DIRS - with additonal include directories (non cached)
 #  XROOTD_LIBRARIES - The libraries needed to use XROOTD
-#  XROOTD_CFLAGS - Additional compilation flags (defines)
-#  XROOTD_OLDPACK - old-style packaging for XROOTD libraries
-#  XROOTD_NOMAIN - No main available: xproofd not build
-#  XROOTD_NOOLDCLNT - No old client available: use built-in version
-#
+#  XROOTD_VERSION - The XROOTD version
+#  XROOTD_VERSIONNUM - The XROOTD version code without dots
 
 if(XROOTD_XrdClient_LIBRARY AND XROOTD_INCLUDE_DIR)
   set(XROOTD_FIND_QUIETLY TRUE)
@@ -54,7 +49,7 @@ if (XROOTD_INCLUDE_DIR)
   endif()
   if ( ${xrdversnum} EQUAL 300030000 )
      SET(XROOTD_FOUND FALSE)
-     message(WARNING " >>> Cannot build with XRootD version 3.3.0: please install >=3.3.1 or <= 3.2.x")
+     message(WARNING " >>> Cannot build with XRootD version 3.3.0: please install >=3.3.1")
   else()
      SET(XROOTD_FOUND TRUE)
   endif ()
@@ -67,10 +62,9 @@ if(XROOTD_FOUND)
     if (${xrdvers} STREQUAL "\"unknown\"")
        message(STATUS "Found untagged Xrootd version: assuming very recent (setting -DROOTXRDVERS=${xrdversnum})")
     else ()
-       message(STATUS "Found Xrootd version num: ${xrdvers} (setting -DROOTXRDVERS=${xrdversnum})")
+       message(STATUS "Found Xrootd version num: ${xrdvers} (setting -DROOTXRDVERS=${xrdversnum} include dir=${XROOTD_INCLUDE_DIR})")
     endif()
   endif()
-  set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrdversnum}")
 
   if ( ${xrdversnum} LESS 300010000 )
      set(XROOTD_OLDPACK TRUE)
@@ -88,11 +82,9 @@ if(XROOTD_FOUND)
         set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/proof/xrdinc)
      endif()
   endif()
-endif()
 
-if(XROOTD_FOUND)
+
   # Search for the required libraries; this depends on packaging ...
-
   if(XROOTD_OLDPACK)
     foreach(l XrdNet XrdOuc XrdSys XrdClient Xrd)
       find_library(XROOTD_${l}_LIBRARY
@@ -142,7 +134,6 @@ if(XROOTD_FOUND)
     if (XROOTD_XrdClient_LIBRARY)
        list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdClient_LIBRARY})
     else ()
-       set(XROOTD_NOOLDCLNT TRUE)
        if(NOT XROOTD_FIND_QUIETLY)
           message(STATUS "             libXrdClient not found: use built-in")
        endif ()
@@ -150,19 +141,28 @@ if(XROOTD_FOUND)
 
     # libXrdCl
     if(${xrdversnum} GREATER 300030000)
-       find_library(XROOTD_XrdCl_LIBRARY
-          NAMES XrdCl
-          HINTS ${searchpath}
-          PATH_SUFFIXES lib)
-       if (XROOTD_XrdCl_LIBRARY)
-          list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdCl_LIBRARY})
-       endif ()
+      find_library(XROOTD_XrdCl_LIBRARY
+        NAMES XrdCl
+        HINTS ${searchpath}
+        PATH_SUFFIXES lib)
+      if (XROOTD_XrdCl_LIBRARY)
+        list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdCl_LIBRARY})
+        # Check for the presence of XRootD client headers
+        find_path(XROOTD_XrdCl_INCLUDE_DIR
+          NAME XrdClFileSystem.hh
+          PATHS ${XROOTD_INCLUDE_DIRS}
+          PATH_SUFFIXES XrdCl)
+        if(NOT XROOTD_XrdCl_INCLUDE_DIR)
+          message(WARNING "${XROOTD_XrdCl_LIBRARY} was found, but headers such as 'XrdCl/XrdClFileSystem.hh' are missing. The package xrootd-client-devel might be missing.")
+        endif()
+      endif ()
     endif ()
-
   endif()
 
   if(XROOTD_LIBRARIES)
     set(XROOTD_FOUND TRUE)
+    set(XROOTD_VERSION "${xrdvers}" CACHE INTERNAL "XRootD version" FORCE)
+    set(XROOTD_VERSIONNUM "${xrdversnum}" CACHE INTERNAL "XRootD version without dots" FORCE)
     if(NOT XROOTD_FIND_QUIETLY )
       message(STATUS "             include_dirs: ${XROOTD_INCLUDE_DIRS}")
       message(STATUS "             libraries: ${XROOTD_LIBRARIES}")
@@ -170,12 +170,6 @@ if(XROOTD_FOUND)
   else ()
     set(XROOTD_FOUND FALSE)
   endif ()
-endif()
-
-if(XROOTD_FOUND AND NOT TARGET Xrootd::Xrootd)
-  add_library(Xrootd::Xrootd INTERFACE IMPORTED)
-  set_property(TARGET Xrootd::Xrootd PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${XROOTD_INCLUDE_DIRS}")
-  set_property(TARGET Xrootd::Xrootd PROPERTY INTERFACE_LINK_LIBRARIES "${XROOTD_LIBRARIES}")
 endif()
 
 mark_as_advanced(XROOTD_INCLUDE_DIR
@@ -188,4 +182,3 @@ mark_as_advanced(XROOTD_INCLUDE_DIR
                  XROOTD_XrdSys_LIBRARY
                  XROOTD_XrdOuc_LIBRARY
                  XROOTD_Xrd_LIBRARY )
-

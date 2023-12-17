@@ -8,7 +8,7 @@ include(ExternalProject)
 
 find_package(OpenSSL REQUIRED)
 
-set(XROOTD_VERSION "5.5.2")
+set(XROOTD_VERSION "5.5.2" CACHE INTERNAL "" FORCE)
 set(XROOTD_VERSIONNUM 500050002 CACHE INTERNAL "" FORCE)
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
@@ -27,12 +27,8 @@ foreach(lib XrdUtils XrdCl)
   list(APPEND XROOTD_LIBRARIES ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/${libname})
 endforeach()
 
-if(OPENSSL_VERSION VERSION_GREATER_EQUAL 3)
-   set(XROOTD_WITH_OPENSSL3 "-DWITH_OPENSSL3=TRUE")
-endif()
-
 ExternalProject_Add(
-    XROOTD
+    BUILTIN_XROOTD
     URL ${XROOTD_SRC_URI}
     URL_HASH SHA256=ec4e0490b8ee6a3254a4ea4449342aa364bc95b78dc9a8669151be30353863c6
     INSTALL_DIR ${XROOTD_PREFIX}
@@ -51,42 +47,30 @@ ExternalProject_Add(
                ${XROOTD_WITH_OPENSSL3}
                -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_PREFIX}/${XROOTD_LIBDIR}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
-            COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
     TIMEOUT 600
 )
 
+# CMake checks for existence when a target is linked to XRootD
+file(MAKE_DIRECTORY ${XROOTD_PREFIX}/include/xrootd)
+
 if(builtin_openssl)
-  add_dependencies(XROOTD OPENSSL)
+  add_dependencies(BUILTIN_XROOTD OPENSSL)
 endif()
 
 list(APPEND XROOTD_LIBRARIES OpenSSL::SSL)
 
-unset(XROOTD_FOUND CACHE)
 unset(XROOTD_FOUND PARENT_SCOPE)
 set(XROOTD_FOUND TRUE CACHE BOOL "" FORCE)
 
-set(XROOTD_INCLUDE_DIRS ${XROOTD_PREFIX}/include/xrootd ${XROOTD_DESTDIR}/include/xrootd/private)
-set(XROOTD_NOMAIN TRUE)
-set(XROOTD_CFLAGS "-DROOTXRDVERS=${XROOTD_VERSIONNUM}")
-
-set(XROOTD_INCLUDE_DIR ${XROOTD_PREFIX}/include/xrootd ${XROOTD_PREFIX}/include/xrootd/private CACHE INTERNAL "" FORCE)
-set(XROOTD_INCLUDE_DIRS ${XROOTD_PREFIX}/include/xrootd ${XROOTD_PREFIX}/include/xrootd/private CACHE INTERNAL "" FORCE)
-set(XROOTD_LIBRARY ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/${XROOTD_LIBNAME} CACHE INTERNAL "" FORCE)
+set(XROOTD_INCLUDE_DIRS ${XROOTD_PREFIX}/include/xrootd CACHE INTERNAL "" FORCE)
 set(XROOTD_LIBRARIES ${XROOTD_LIBRARIES} CACHE INTERNAL "" FORCE)
 
-add_library(xrootd INTERFACE)
-foreach(dir ${XROOTD_INCLUDE_DIR})
-  target_include_directories(xrootd INTERFACE $<BUILD_INTERFACE:${dir}>)
-endforeach()
-target_link_libraries(xrootd INTERFACE $<BUILD_INTERFACE:${XROOTD_LIBRARIES}>)
-set_property(TARGET xrootd PROPERTY INTERFACE_BUILD_RPATH ${XROOTD_PREFIX}/${XROOTD_LIBDIR})
-add_dependencies(xrootd XROOTD)
+list(APPEND CMAKE_BUILD_RPATH ${XROOTD_PREFIX}/${XROOTD_LIBDIR})
+add_dependencies(XRootD BUILTIN_XROOTD)
 
-add_library(Xrootd::Xrootd ALIAS xrootd)
-
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS XROOTD)
+set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS BUILTIN_XROOTD)
 
 install(DIRECTORY ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
 install(DIRECTORY ${XROOTD_PREFIX}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)

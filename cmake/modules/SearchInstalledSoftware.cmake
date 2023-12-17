@@ -105,6 +105,16 @@ if(NOT builtin_nlohmannjson)
       set(CMAKE_REQUIRED_QUIET ${_old_CMAKE_REQUIRED_QUIET})
     endif()
   endif()
+
+  # ROOTEve wants to know if it comes with json_fwd.hpp:
+  if(TARGET nlohmann_json::nlohmann_json)
+    get_target_property(inc_dirs nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+    foreach(dir ${inc_dirs})
+      if(EXISTS "${dir}/nlohmann/json_fwd.hpp")
+        target_compile_definitions(nlohmann_json::nlohmann_json INTERFACE NLOHMANN_JSON_PROVIDES_FWD_HPP)
+      endif()
+    endforeach()
+  endif()
 endif()
 
 if(builtin_nlohmannjson)
@@ -683,7 +693,7 @@ if(ssl AND NOT builtin_openssl)
   if(fail-on-missing)
     find_package(OpenSSL REQUIRED)
   else()
-    find_package(OpenSSL)
+    find_package(OpenSSL COMPONENTS SSL)
     if(NOT OPENSSL_FOUND)
       if(WIN32) # builtin OpenSSL does not work on Windows
         message(STATUS "Switching OFF 'ssl' option.")
@@ -980,11 +990,18 @@ if(monalisa)
   endif()
 endif()
 
-#---Check for Xrootd support---------------------------------------------------------
+#---Configure Xrootd support---------------------------------------------------------
 
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(XROOTD_${suffix} CACHE)
 endforeach()
+
+if(xrootd OR builtin_xrootd)
+  # This is the target that ROOT will use, irrespective of whether XRootD is a builtin or in the system.
+  # All targets should only link to ROOT::XRootD. Refrain from using XRootD variables.
+  add_library(XRootD INTERFACE IMPORTED GLOBAL)
+  add_library(ROOT::XRootD ALIAS XRootD)
+endif()
 
 if(xrootd AND NOT builtin_xrootd)
   message(STATUS "Looking for XROOTD")
@@ -994,6 +1011,9 @@ if(xrootd AND NOT builtin_xrootd)
       message(FATAL_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
                           "or include the installation of XROOTD in the CMAKE_PREFIX_PATH. "
                           "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
+    elseif(NO_CONNECTION)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
+        " option or the 'fail-on-missing' to automatically disable options requiring internet access")
     else()
       message(STATUS "XROOTD not found, enabling 'builtin_xrootd' option")
       set(builtin_xrootd ON CACHE BOOL "Enabled because xrootd is enabled, but external xrootd was not found (${xrootd_description})" FORCE)
@@ -1001,19 +1021,21 @@ if(xrootd AND NOT builtin_xrootd)
   endif()
 endif()
 
-if(builtin_xrootd AND NO_CONNECTION)
-  if(fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  else()
-    message(STATUS "No internet connection, disabling 'builtin_xrootd' option")
-    set(builtin_xrootd OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    set(xrootd OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
-endif()
 if(builtin_xrootd)
-  list(APPEND ROOT_BUILTINS XROOTD)
+  if(NO_CONNECTION)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
+      " option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  endif()
+  list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
   add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
+endif()
+
+# Finalise the XRootD target configuration
+if(TARGET XRootD)
+  target_include_directories(XRootD SYSTEM INTERFACE "$<BUILD_INTERFACE:${XROOTD_INCLUDE_DIRS}>")
+  target_link_libraries(XRootD INTERFACE $<BUILD_INTERFACE:${XROOTD_LIBRARIES}>)
+  target_compile_definitions(XRootD INTERFACE $<BUILD_INTERFACE:ROOTXRDVERS=${XROOTD_VERSIONNUM}>)
 endif()
 
 #---check if netxng can be built-------------------------------
@@ -1581,14 +1603,16 @@ if(vdt OR builtin_vdt)
           set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
         endif()
       endif()
-    endif()
+     else()
+       add_library(VDT ALIAS VDT::VDT)
+     endif()
   endif()
   if(builtin_vdt)
     set(vdt_version 0.4.4)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
-      VDT
+      BUILTIN_VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       URL_HASH SHA256=8b1664b45ec82042152f89d171dd962aea9bb35ac53c8eebb35df1cb9c34e498
       INSTALL_DIR ${CMAKE_BINARY_DIR}
@@ -1605,12 +1629,19 @@ if(vdt OR builtin_vdt)
       TIMEOUT 600
     )
     ExternalProject_Add_Step(
-       VDT copy2externals
+       BUILTIN_VDT copy2externals
        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
        DEPENDEES install
     )
     set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
+    if(NOT TARGET VDT)
+      add_library(VDT IMPORTED SHARED)
+      add_dependencies(VDT BUILTIN_VDT)
+      set_target_properties(VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
+      target_include_directories(VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
+    endif()
+
     install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
