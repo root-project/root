@@ -63,7 +63,7 @@ TEST(TBasket, IOBits)
    ASSERT_NE(eIOBits, nullptr);
 
    Int_t supported = static_cast<Int_t>(TBasket::EIOBits::kSupported);
-   Bool_t foundSupported = false;
+   bool foundSupported = false;
    for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
 
       if (!strcmp(constant->GetName(), "kSupported")) {
@@ -79,7 +79,7 @@ TEST(TBasket, IOBits)
    TEnum *eUnsupportedIOBits = (TEnum *)cl->GetListOfEnums()->FindObject("EUnsupportedIOBits");
    ASSERT_NE(eUnsupportedIOBits, nullptr);
    Int_t unsupported = static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported);
-   Bool_t foundUnsupported = false;
+   bool foundUnsupported = false;
    for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eUnsupportedIOBits->GetConstants())) {
 
       if (!strcmp(constant->GetName(), "kUnsupported")) {
@@ -406,8 +406,8 @@ TEST(TBasket, TestSettingIOBits)
 
    offset = cl->GetDataMemberOffset("fReadEntryOffset");
    ASSERT_GT(offset, 0);
-   Bool_t *readEntryOffset = reinterpret_cast<Bool_t *>(reinterpret_cast<char *>(basket) + offset);
-   EXPECT_EQ(*readEntryOffset, kFALSE);
-   readEntryOffset = reinterpret_cast<Bool_t *>(reinterpret_cast<char *>(basket2) + offset);
-   EXPECT_EQ(*readEntryOffset, kTRUE);
+   bool *readEntryOffset = reinterpret_cast<bool *>(reinterpret_cast<char *>(basket) + offset);
+   EXPECT_EQ(*readEntryOffset, false);
+   readEntryOffset = reinterpret_cast<bool *>(reinterpret_cast<char *>(basket2) + offset);
+   EXPECT_EQ(*readEntryOffset, true);
 }

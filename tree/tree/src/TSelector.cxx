@@ -29,25 +29,25 @@ It contains the following main methods:
   entries in the Tree. When using PROOF, Begin() is called on the
   client only.
 
-- Bool_t TSelector::Notify(). This method is called at the first entry
+- bool TSelector::Notify(). This method is called at the first entry
   of a new file in a chain.
 
-- Bool_t TSelector::Process(Long64_t entry). This method is called
+- bool TSelector::Process(Long64_t entry). This method is called
   to process an entry. It is the user's responsibility to read
   the corresponding entry in memory (may be just a partial read).
   Once the entry is in memory one can apply a selection and if the
   entry is selected histograms can be filled. Processing stops
-  when this function returns kFALSE. This function combines the
+  when this function returns false. This function combines the
   next two functions in one, avoiding to have to maintain state
   in the class to communicate between these two functions.
   See WARNING below about entry.
   This method is used by PROOF.
 
-- Bool_t TSelector::ProcessCut(Long64_t entry). This method is called
+- bool TSelector::ProcessCut(Long64_t entry). This method is called
   before processing entry. It is the user's responsibility to read
   the corresponding entry in memory (may be just a partial read).
-  The function returns kTRUE if the entry must be processed,
-  kFALSE otherwise. This method is obsolete, use Process().
+  The function returns true if the entry must be processed,
+  false otherwise. This method is obsolete, use Process().
   See WARNING below about entry.
 
 - void TSelector::ProcessFill(Long64_t entry). This method is called
@@ -143,13 +143,13 @@ TSelector *TSelector::GetSelector(const char *filename)
 {
    // If the filename does not contain "." assume class is compiled in
    TString localname;
-   Bool_t fromFile = kFALSE;
+   bool fromFile = false;
    if (strchr(filename, '.') != nullptr) {
       //Interpret/compile filename via CINT
       localname  = ".L ";
       localname += filename;
       gROOT->ProcessLine(localname);
-      fromFile = kTRUE;
+      fromFile = true;
    }
 
    //loop on all classes known to CINT to find the class on filename
@@ -168,9 +168,9 @@ TSelector *TSelector::GetSelector(const char *filename)
    // this returns 0 (== failure) in the case the class is already in memory
    // but does not have a dictionary, so we just raise a flag for better
    // diagnostic in the case the class is not found in the CINT ClassInfo table.
-   Bool_t autoloaderr = kFALSE;
+   bool autoloaderr = false;
    if (!fromFile && gCling->AutoLoad(localname) != 1)
-      autoloaderr = kTRUE;
+      autoloaderr = true;
 
    TClass *selCl = TClass::GetClass(localname);
    if (selCl) {
@@ -195,12 +195,12 @@ TSelector *TSelector::GetSelector(const char *filename)
 
    } else {
       ClassInfo_t *cl = gCling->ClassInfo_Factory(localname);
-      Bool_t ok = kFALSE;
-      Bool_t nameFound = kFALSE;
+      bool ok = false;
+      bool nameFound = false;
       if (cl && gCling->ClassInfo_IsValid(cl)) {
          if (localname == gCling->ClassInfo_FullName(cl)) {
-            nameFound = kTRUE;
-            if (gCling->ClassInfo_IsBase(cl,"TSelector")) ok = kTRUE;
+            nameFound = true;
+            if (gCling->ClassInfo_IsBase(cl,"TSelector")) ok = true;
          }
       }
       if (!ok) {
@@ -234,24 +234,24 @@ TSelector *TSelector::GetSelector(const char *filename)
 /// Find out if this is a standard selection used for Draw actions
 /// (either TSelectorDraw, TProofDraw or deriving from them).
 
-Bool_t TSelector::IsStandardDraw(const char *selec)
+bool TSelector::IsStandardDraw(const char *selec)
 {
    // Make sure we have a name
    if (!selec) {
       ::Info("TSelector::IsStandardDraw",
              "selector name undefined - do nothing");
-      return kFALSE;
+      return false;
    }
 
-   Bool_t stdselec = kFALSE;
+   bool stdselec = false;
    if (!strchr(selec, '.')) {
       if (strstr(selec, "TSelectorDraw")) {
-         stdselec = kTRUE;
+         stdselec = true;
       } else {
          TClass *cl = TClass::GetClass(selec);
          if (cl && (cl->InheritsFrom("TProofDraw") ||
                     cl->InheritsFrom("TSelectorDraw")))
-            stdselec = kTRUE;
+            stdselec = true;
       }
    }
 
@@ -290,7 +290,7 @@ void TSelector::ImportOutput(TList *output) {
    }
 
    // Cleanup original list
-   output->SetOwner(kFALSE);
+   output->SetOwner(false);
    output->Clear("nodelete");
 
    // Done
@@ -300,8 +300,8 @@ void TSelector::ImportOutput(TList *output) {
 ////////////////////////////////////////////////////////////////////////////////
 ///    This method is called before processing entry. It is the user's responsibility to read
 ///    the corresponding entry in memory (may be just a partial read).
-///    The function returns kTRUE if the entry must be processed,
-///    kFALSE otherwise. This method is obsolete, use Process().
+///    The function returns true if the entry must be processed,
+///    false otherwise. This method is obsolete, use Process().
 ///
 /// WARNING when a selector is used with a TChain:
 ///    in the Process, ProcessCut, ProcessFill function, you must use
@@ -310,10 +310,10 @@ void TSelector::ImportOutput(TList *output) {
 ///    Assuming that fChain is the pointer to the TChain being processed,
 ///    use fChain->GetTree()->GetEntry(entry);
 
-Bool_t TSelector::ProcessCut(Long64_t /*entry*/)
+bool TSelector::ProcessCut(Long64_t /*entry*/)
 {
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -357,7 +357,7 @@ void TSelector::ProcessFill(Long64_t /*entry*/)
 ///  Assuming that fChain is the pointer to the TChain being processed,
 ///  use: `fChain->GetTree()->GetEntry(entry)`.
 
-Bool_t TSelector::Process(Long64_t /*entry*/) {
+bool TSelector::Process(Long64_t /*entry*/) {
 
-   return kFALSE;
+   return false;
 }

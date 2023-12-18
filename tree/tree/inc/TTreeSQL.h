@@ -50,19 +50,19 @@ protected:
    TSQLResult            *fResult;
    TSQLRow               *fRow;
    TSQLServer            *fServer;
-   Bool_t                 fBranchChecked;
+   bool                   fBranchChecked;
    TSQLTableInfo         *fTableInfo;
 
    void                   CheckBasket(TBranch *tb);
-   Bool_t                 CheckBranch(TBranch *tb);
-   Bool_t                 CheckTable(const TString &table) const;
+   bool                   CheckBranch(TBranch *tb);
+   bool                   CheckTable(const TString &table) const;
    void                   CreateBranches();
    std::vector<Int_t>    *GetColumnIndice(TBranch *branch);
    void                   Init();
    void                   ResetQuery();
    TString                ConvertTypeName(const TString& typeName );
    virtual void           CreateBranch(const TString& branchName,const TString &typeName);
-   Bool_t                 CreateTable(const TString& table);
+   bool                   CreateTable(const TString& table);
    TBasket               *CreateBasket(TBranch * br) override;
 
    TBranch               *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel) override;

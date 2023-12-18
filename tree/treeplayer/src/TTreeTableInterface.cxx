@@ -45,7 +45,7 @@ TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
    Long64_t firstentry)
    : TVirtualTableInterface(), fTree(tree), fFormulas(nullptr), fEntry(0),
      fNEntries(nentries), fFirstEntry(firstentry), fManager(nullptr), fSelect(nullptr), fSelector(nullptr), fInput(nullptr),
-     fForceDim(kFALSE), fEntries(nullptr), fNRows(0), fNColumns(0)
+     fForceDim(false), fEntries(nullptr), fNRows(0), fNColumns(0)
 {
    if (fTree == nullptr) {
       Error("TTreeTableInterface", "No tree supplied");
@@ -101,13 +101,13 @@ void TTreeTableInterface::SetVariablesExpression(const char *varexp)
 {
    // FIXME check if enough protection against wrong expressions is in place
 
-   Bool_t allvar = kFALSE;
+   bool allvar = false;
 
    if (varexp) {
-      if (!strcmp(varexp, "*")) { allvar = kTRUE; }
+      if (!strcmp(varexp, "*")) { allvar = true; }
    } else {
       // if varexp is empty, take all available leaves as a column
-      allvar = kTRUE;
+      allvar = true;
    }
 
    if (allvar) {
@@ -185,7 +185,7 @@ void TTreeTableInterface::SyncFormulas()
             case  1:
             case  2:
             case -1:
-               fForceDim = kTRUE;
+               fForceDim = true;
                break;
             case  0:
                break;
@@ -225,7 +225,7 @@ void TTreeTableInterface::InitEntries()
       Int_t ndata = 1;
       if (fForceDim){
          if (fManager)
-            ndata = fManager->GetNdata(kTRUE);
+            ndata = fManager->GetNdata(true);
          else {
             for (ui = 0; ui < fNColumns; ui++){
                if (ndata < ((TTreeFormula*)fFormulas->At(ui))->GetNdata())
@@ -237,13 +237,13 @@ void TTreeTableInterface::InitEntries()
                ndata = 0;
          }
       }
-      Bool_t skip = kFALSE;
+      bool skip = false;
 
       // Loop over the instances of the selection condition
       for (Int_t inst = 0; inst < ndata; inst++){
          if (fSelect){
             if (fSelect->EvalInstance(inst) == 0){
-               skip = kTRUE;
+               skip = true;
                entry++;
             }
          }

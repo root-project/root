@@ -75,8 +75,8 @@ End_Macro
 
 TSpider::TSpider()
 {
-   fDisplayAverage=kFALSE;
-   fForceDim=kFALSE;
+   fDisplayAverage=false;
+   fForceDim=false;
    fPolargram=nullptr;
    fInput=nullptr;
    fManager=nullptr;
@@ -94,10 +94,10 @@ TSpider::TSpider()
    fAveragePoly=nullptr;
    fEntry=0;
    fSuperposed=nullptr;
-   fShowRange=kFALSE;
-   fAngularLabels=kFALSE;
+   fShowRange=false;
+   fAngularLabels=false;
    fAverageSlices=nullptr;
-   fSegmentDisplay=kFALSE;
+   fSegmentDisplay=false;
    fNentries=0;
    fFirstEntry=0;
    fArraySize=0;
@@ -128,18 +128,18 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
    gROOT->GetListOfCleanups()->Add(this);
    fNx=2;
    fNy=2;
-   fDisplayAverage=kFALSE;
+   fDisplayAverage=false;
    fSelect=nullptr;
    fManager=nullptr;
    fCanvas=nullptr;
    fAveragePoly=nullptr;
    fEntry=fFirstEntry;
    fSuperposed=nullptr;
-   fShowRange=kFALSE;
-   fAngularLabels=kTRUE;
-   fForceDim=kFALSE;
+   fShowRange=false;
+   fAngularLabels=true;
+   fForceDim=false;
    fAverageSlices=nullptr;
-   fSegmentDisplay=kFALSE;
+   fSegmentDisplay=false;
    if (firstentry < 0 || firstentry > tree->GetEstimate()) firstentry = 0;
    fFirstEntry = firstentry;
    if (nentries>0) fNentries = nentries;
@@ -156,9 +156,9 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
 
    TString opt = option;
 
-   if (opt.Contains("average")) fDisplayAverage=kTRUE;
-   if (opt.Contains("showrange")) fShowRange=kTRUE;
-   if (opt.Contains("segment")) fSegmentDisplay=kTRUE;
+   if (opt.Contains("average")) fDisplayAverage=true;
+   if (opt.Contains("showrange")) fShowRange=true;
+   if (opt.Contains("segment")) fSegmentDisplay=true;
 
    fNcols=8;
 
@@ -246,7 +246,7 @@ void TSpider::AddVariable(const char* varexp)
       Int_t ndata=1;
       if(fForceDim){
          if(fManager)
-            ndata = fManager->GetNdata(kTRUE);
+            ndata = fManager->GetNdata(true);
          else {
             for(ui=0;ui<fNcols;++ui){
                if(ndata<((TTreeFormula*)fFormulas->At(ui))->GetNdata())
@@ -257,13 +257,13 @@ void TSpider::AddVariable(const char* varexp)
          }
       }
 
-      Bool_t loaded = kFALSE;
-      Bool_t skip = kFALSE;
+      bool loaded = false;
+      bool skip = false;
       // Loop over the instances of the selection condition
       for(Int_t inst=0;inst<ndata;++inst){
          if(fSelect){
             if(fSelect->EvalInstance(inst) == 0){
-               skip = kTRUE;
+               skip = true;
                ++entry;
             }
          }
@@ -271,9 +271,9 @@ void TSpider::AddVariable(const char* varexp)
             // EvalInstance(0) always needs to be called so that
             // the proper branches are loaded.
             ((TTreeFormula*)fFormulas->At(fNcols-1))->EvalInstance(0);
-            loaded = kTRUE;
+            loaded = true;
          } else if (inst == 0) {
-            loaded = kTRUE;
+            loaded = true;
          }
       }
       if(!skip){
@@ -414,7 +414,7 @@ void TSpider::DeleteVariable(const char* varexp)
       fCanvas->Divide(fNx,fNy);
    }
    Draw("");
-   if(fNcols == 2) SetSegmentDisplay(kTRUE);
+   if(fNcols == 2) SetSegmentDisplay(true);
 
    if(fAverageSlices){
       for(ui = 0;ui<fNcols;++ui){
@@ -865,7 +865,7 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
       Int_t ndata=1;
       if(fForceDim){
          if(fManager)
-            ndata = fManager->GetNdata(kTRUE);
+            ndata = fManager->GetNdata(true);
          else {
             for(ui=0;ui<fNcols;++ui){
                if(ndata<((TTreeFormula*)fFormulas->At(ui))->GetNdata())
@@ -875,13 +875,13 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
                ndata = 0;
          }
       }
-      Bool_t loaded = kFALSE;
-      Bool_t skip = kFALSE;
+      bool loaded = false;
+      bool skip = false;
       // Loop over the instances of the selection condition
       for(Int_t inst=0;inst<ndata;++inst){
          if(fSelect){
             if(fSelect->EvalInstance(inst) == 0){
-               skip = kTRUE;
+               skip = true;
                ++entry;
             }
          }
@@ -891,9 +891,9 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
             for (ui=0;ui<fNcols;ui++) {
                ((TTreeFormula*)fFormulas->At(ui))->EvalInstance(0);
             }
-            loaded = kTRUE;
+            loaded = true;
          } else if (inst == 0) {
-            loaded = kTRUE;
+            loaded = true;
          }
       }
       if(!skip){
@@ -1022,7 +1022,7 @@ void TSpider::SetAverageFillStyle(Style_t sty)
 ////////////////////////////////////////////////////////////////////////////////
 /// Display or not the average.
 
-void TSpider::SetDisplayAverage(Bool_t disp)
+void TSpider::SetDisplayAverage(bool disp)
 {
    if(disp == fDisplayAverage) return;
 
@@ -1091,7 +1091,7 @@ void TSpider::SetCurrentEntries()
       Int_t ndata=1;
       if(fForceDim){
          if(fManager)
-            ndata = fManager->GetNdata(kTRUE);
+            ndata = fManager->GetNdata(true);
          else {
             for(ui=0;ui<fNcols;++ui){
                if(ndata < ((TTreeFormula*)fFormulas->At(ui))->GetNdata())
@@ -1101,13 +1101,13 @@ void TSpider::SetCurrentEntries()
                ndata = 0;
          }
       }
-      Bool_t loaded = kFALSE;
-      Bool_t skip = kFALSE;
+      bool loaded = false;
+      bool skip = false;
       // Loop over the instances of the selection condition
       for(Int_t inst=0;inst<ndata;++inst){
          if(fSelect){
             if(fSelect->EvalInstance(inst) == 0){
-               skip = kTRUE;
+               skip = true;
                ++entry;
             }
          }
@@ -1117,9 +1117,9 @@ void TSpider::SetCurrentEntries()
             for (ui=0;ui<fNcols;ui++) {
                ((TTreeFormula*)fFormulas->At(ui))->EvalInstance(0);
             }
-            loaded = kTRUE;
+            loaded = true;
          } else if (inst == 0) {
-            loaded = kTRUE;
+            loaded = true;
          }
       }
       if(!skip){
@@ -1377,7 +1377,7 @@ void TSpider::SetNy(UInt_t ny)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the segment display or not.
 
-void TSpider::SetSegmentDisplay(Bool_t seg)
+void TSpider::SetSegmentDisplay(bool seg)
 {
    if(seg == fSegmentDisplay) return;
 
@@ -1538,7 +1538,7 @@ void TSpider::SyncFormulas()
             case  1:
             case  2:
             case -1:
-               fForceDim = kTRUE;
+               fForceDim = true;
                break;
             case  0:
                break;

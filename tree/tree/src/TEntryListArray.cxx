@@ -336,14 +336,14 @@ void TEntryListArray::ConvertToTEntryListArray(TEntryList *e)
 /// - When tree is a chain, the entry is assumed to be global index and the local
 /// entry is recomputed from the treeoffset information of the chain
 
-Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
+bool TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
 {
    //When subentry = -1, add all subentries (remove the sublist if it exists)
    //When subentry != -1 and the entry is not present,
    //add only the given subentry, creating a TEntryListArray to hold the subentries for the given entry
    //Return true only if the entry is new (not the subentry)
 
-   Bool_t result = false;
+   bool result = false;
 
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
@@ -382,9 +382,9 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
    return result;
 }
 
-Bool_t TEntryListArray::Enter(Long64_t localentry, const char *treename, const char *filename, Long64_t subentry)
+bool TEntryListArray::Enter(Long64_t localentry, const char *treename, const char *filename, Long64_t subentry)
 {
-   Bool_t result = false;
+   bool result = false;
    SetTree(treename, filename);
    TEntryListArray *currentArray = dynamic_cast<TEntryListArray *>(fCurrent);
    if (currentArray) {
@@ -454,7 +454,7 @@ void TEntryListArray::Print(const Option_t* option) const
 {
    TString opt = option;
    opt.ToUpper();
-   Bool_t new_line = !opt.Contains("EOL");
+   bool new_line = !opt.Contains("EOL");
 
    if (!opt.Contains("S") && new_line) {
       TEntryList::Print(option);
@@ -500,9 +500,9 @@ void TEntryListArray::Print(const Option_t* option) const
 ///
 /// If subentry != -1, only the given subentry is removed
 
-Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
+bool TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
 {
-   Bool_t result = kFALSE;
+   bool result = false;
 
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
@@ -537,15 +537,15 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
    } else if (subentry == -1) {
       return TEntryList::Remove(entry);
    }
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove the given sublist and return true if succeeded
 
-Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
+bool TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
 {
-   if (!e) return kFALSE;
+   if (!e) return false;
    if (tree) {
       SetTree(tree->GetTree());
       TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
@@ -555,7 +555,7 @@ Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
    }
 
    if (!fSubLists || !fSubLists->Remove(e)) {
-      return kFALSE;
+      return false;
    }
    // fSubLists->Sort(); --> for TObjArray
    delete e;
@@ -563,13 +563,13 @@ Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
       delete fSubLists;
       fSubLists = nullptr;
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove the sublists for the given entry --> not being used...
 
-Bool_t TEntryListArray::RemoveSubListForEntry(Long64_t entry, TTree *tree)
+bool TEntryListArray::RemoveSubListForEntry(Long64_t entry, TTree *tree)
 {
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);

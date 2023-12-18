@@ -92,11 +92,11 @@ public:
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetLocalValuePointer( char *from, Int_t instance = 0);
 
-   virtual Bool_t    HasCounter() const;
-   virtual Bool_t    IsString() const;
+   virtual bool      HasCounter() const;
+   virtual bool      IsString() const;
 
-   virtual Bool_t    IsInteger() const;
-   virtual Bool_t    IsReference() const  {  return kFALSE; }
+   virtual bool      IsInteger() const;
+   virtual bool      IsReference() const  {  return false; }
 
    // Method for multiple variable dimensions.
    virtual Int_t GetPrimaryIndex();
@@ -111,7 +111,7 @@ public:
    virtual void  SetBranch(TBranch* br)  { if ( fNext ) fNext->SetBranch(br); }
    virtual void  UpdateSizes(TArrayI *garr);
 
-   virtual Bool_t    Update();
+   virtual bool      Update();
 
    DECLARE_GETVAL(virtual,);
    DECLARE_READVAL(virtual,);
@@ -181,7 +181,7 @@ public:
 
 class TFormLeafInfoNumerical : public TFormLeafInfo {
    EDataType fKind;
-   Bool_t    fIsBool;
+   bool      fIsBool;
 public:
    TFormLeafInfoNumerical(TVirtualCollectionProxy *holder_of);
    TFormLeafInfoNumerical(EDataType kind);
@@ -193,8 +193,8 @@ public:
 
    ~TFormLeafInfoNumerical() override;
 
-   Bool_t    IsString() const override;
-   Bool_t    Update() override;
+   bool      IsString() const override;
+   bool      Update() override;
 };
 
 // TFormLeafInfoCollectionObject
@@ -202,9 +202,9 @@ public:
 // it is split.
 
 class TFormLeafInfoCollectionObject : public TFormLeafInfo {
-   Bool_t fTop;  //If true, it indicates that the branch itself contains
+   bool fTop;  //If true, it indicates that the branch itself contains
 public:
-   TFormLeafInfoCollectionObject(TClass* classptr = nullptr, Bool_t fTop = kTRUE);
+   TFormLeafInfoCollectionObject(TClass* classptr = nullptr, bool fTop = true);
    TFormLeafInfoCollectionObject(const TFormLeafInfoCollectionObject &orig);
 
    void Swap(TFormLeafInfoCollectionObject &other);
@@ -229,13 +229,13 @@ public:
 // member on a TClonesArray object stored in a TTree.
 
 class TFormLeafInfoClones : public TFormLeafInfo {
-   Bool_t fTop;  //If true, it indicates that the branch itself contains
+   bool fTop;  //If true, it indicates that the branch itself contains
 public:
    //either the clonesArrays or something inside the clonesArray
    TFormLeafInfoClones(TClass* classptr = nullptr, Longptr_t offset = 0);
-   TFormLeafInfoClones(TClass* classptr, Longptr_t offset, Bool_t top);
+   TFormLeafInfoClones(TClass* classptr, Longptr_t offset, bool top);
    TFormLeafInfoClones(TClass* classptr, Longptr_t offset, TStreamerElement* element,
-                       Bool_t top = kFALSE);
+                       bool top = false);
    TFormLeafInfoClones(const TFormLeafInfoClones &orig);
 
    void Swap(TFormLeafInfoClones &other);
@@ -259,7 +259,7 @@ public:
 // on a generic collection object stored in a TTree.
 
 class TFormLeafInfoCollection : public TFormLeafInfo {
-   Bool_t fTop;  //If true, it indicates that the branch itself contains
+   bool fTop;  //If true, it indicates that the branch itself contains
    //either the clonesArrays or something inside the clonesArray
    TClass                  *fCollClass;
    TString                  fCollClassName;
@@ -270,12 +270,12 @@ public:
    TFormLeafInfoCollection(TClass* classptr,
                            Longptr_t offset,
                            TStreamerElement* element,
-                           Bool_t top = kFALSE);
+                           bool top = false);
 
    TFormLeafInfoCollection(TClass* motherclassptr,
                            Longptr_t offset = 0,
                            TClass* elementclassptr = nullptr,
-                           Bool_t top = kFALSE);
+                           bool top = false);
 
    TFormLeafInfoCollection();
    TFormLeafInfoCollection(const TFormLeafInfoCollection& orig);
@@ -287,14 +287,14 @@ public:
 
    TFormLeafInfo* DeepCopy() const override;
 
-   Bool_t    Update() override;
+   bool      Update() override;
 
    DECLARE_GETVAL( , override);
    DECLARE_READVAL( , override);
    Int_t     GetCounterValue(TLeaf* leaf) override;
    Int_t     ReadCounterValue(char* where) override;
    virtual Int_t     GetCounterValue(TLeaf* leaf, Int_t instance);
-   Bool_t    HasCounter() const override;
+   bool      HasCounter() const override;
    void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0) override;
    void     *GetValuePointer(char  *thisobj, Int_t instance = 0) override;
    void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
@@ -320,7 +320,7 @@ public:
 
    TFormLeafInfo* DeepCopy() const override;
 
-   Bool_t    Update() override;
+   bool      Update() override;
 
    void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0) override;
    void     *GetValuePointer(char  *from, Int_t instance = 0) override;
@@ -358,7 +358,7 @@ class TFormLeafInfoMethod : public TFormLeafInfo {
    TString      fCopyFormat;
    TString      fDeleteFormat;
    void        *fValuePointer;
-   Bool_t       fIsByValue;
+   bool         fIsByValue;
 
 public:
    static TClass *ReturnTClass(TMethodCall *mc);
@@ -376,9 +376,9 @@ public:
    TClass*  GetClass() const override;
    void    *GetLocalValuePointer( TLeaf *from, Int_t instance = 0) override;
    void    *GetLocalValuePointer(char *from, Int_t instance = 0) override;
-   Bool_t   IsInteger() const override;
-   Bool_t   IsString() const override;
-   Bool_t   Update() override;
+   bool     IsInteger() const override;
+   bool     IsString() const override;
+   bool     Update() override;
 };
 
 // TFormLeafInfoMultiVarDim is a small helper class to implement reading a
@@ -430,7 +430,7 @@ public:
    LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) override { return GetValue(leaf, i); }
    Int_t    GetVarDim() override;
    Int_t    GetVirtVarDim() override;
-   Bool_t   Update() override;
+   bool     Update() override;
    void     UpdateSizes(TArrayI *garr) override;
 };
 
@@ -501,8 +501,8 @@ class TFormLeafInfoCast : public TFormLeafInfo {
 public:
    TClass *fCasted;     //! Pointer to the class we are trying to case to
    TString fCastedName; //! Name of the class we are casting to.
-   Bool_t  fGoodCast;   //! Marked by ReadValue.
-   Bool_t  fIsTObject;  //! Indicated whether the fClass inherits from TObject.
+   bool    fGoodCast;   //! Marked by ReadValue.
+   bool    fIsTObject;  //! Indicated whether the fClass inherits from TObject.
 
    TFormLeafInfoCast(TClass* classptr = nullptr, TClass* casted = nullptr);
    TFormLeafInfoCast(const TFormLeafInfoCast& orig);
@@ -516,7 +516,7 @@ public:
    DECLARE_READVAL( , override);
    // Currently only implemented in TFormLeafInfoCast
    Int_t GetNdata() override;
-   Bool_t    Update() override;
+   bool      Update() override;
 };
 
 // TFormLeafInfoTTree is a small helper class to implement reading
@@ -542,7 +542,7 @@ public:
    DECLARE_GETVAL( , override);
    DECLARE_READVAL( , override);
    void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
-   Bool_t    Update() override;
+   bool      Update() override;
 };
 
 

@@ -56,7 +56,7 @@ public:
    Int_t GetCollectionType() const override { return CollectionKind; }
    ULong_t GetIncrement() const override { return sizeof(typename CollectionT::ValueType); }
    UInt_t Sizeof() const override { return sizeof(CollectionT); }
-   Bool_t HasPointers() const override { return kFALSE; }
+   bool HasPointers() const override { return false; }
 
    TClass *GetValueClass() const override
    {
@@ -81,7 +81,7 @@ public:
    void *At(UInt_t idx) override { return &fObject->v[idx]; }
    void Clear(const char * /*opt*/ = "") override { fObject->v.clear(); }
    UInt_t Size() const override { return fObject->v.size(); }
-   void *Allocate(UInt_t n, Bool_t /*forceDelete*/) override
+   void *Allocate(UInt_t n, bool /*forceDelete*/) override
    {
       fObject->v.resize(n);
       return fObject;
@@ -103,11 +103,11 @@ public:
    TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t /*version*/) override { return nullptr; }
    TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() override { return nullptr; }
 
-   CreateIterators_t GetFunctionCreateIterators(Bool_t /*read*/ = kTRUE) override { return &Func_CreateIterators; }
-   CopyIterator_t GetFunctionCopyIterator(Bool_t /*read*/ = kTRUE) override { return nullptr; }
-   Next_t GetFunctionNext(Bool_t /*read*/ = kTRUE) override { return &Func_Next; }
-   DeleteIterator_t GetFunctionDeleteIterator(Bool_t /*read*/ = kTRUE) override { return nullptr; }
-   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t /*read*/ = kTRUE) override
+   CreateIterators_t GetFunctionCreateIterators(bool /*read*/ = true) override { return &Func_CreateIterators; }
+   CopyIterator_t GetFunctionCopyIterator(bool /*read*/ = true) override { return nullptr; }
+   Next_t GetFunctionNext(bool /*read*/ = true) override { return &Func_Next; }
+   DeleteIterator_t GetFunctionDeleteIterator(bool /*read*/ = true) override { return nullptr; }
+   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(bool /*read*/ = true) override
    {
       return &Func_DeleteTwoIterators;
    }

@@ -57,10 +57,10 @@ class TBranchCacheInfo {
    }
 
    /// Return true if the basket has been marked as having the 'what' state.
-   Bool_t TestState(Int_t basketNumber, EStates what) const
+   bool TestState(Int_t basketNumber, EStates what) const
    {
       if (basketNumber < fBasketPedestal)
-         return kFALSE;
+         return false;
       return fInfo.TestBitNumber(kSize * (basketNumber - fBasketPedestal) + what);
    }
 
@@ -73,7 +73,7 @@ class TBranchCacheInfo {
 
 public:
    /// Return true if the basket has been marked as 'used'
-   Bool_t HasBeenUsed(Int_t basketNumber) const { return TestState(basketNumber, kUsed); }
+   bool HasBeenUsed(Int_t basketNumber) const { return TestState(basketNumber, kUsed); }
 
    /// Mark if the basket has been marked as 'used'
    void SetUsed(Int_t basketNumber)
@@ -83,7 +83,7 @@ public:
    }
 
    /// Return true if the basket is currently in the cache.
-   Bool_t IsInCache(Int_t basketNumber) const { return TestState(basketNumber, kLoaded); }
+   bool IsInCache(Int_t basketNumber) const { return TestState(basketNumber, kLoaded); }
 
    /// Mark if the basket is currently in the cache.
    void SetIsInCache(Int_t basketNumber)
@@ -102,20 +102,20 @@ public:
    }
 
    /// Return true if the basket is currently vetoed.
-   Bool_t IsVetoed(Int_t basketNumber) const { return TestState(basketNumber, kVetoed); }
+   bool IsVetoed(Int_t basketNumber) const { return TestState(basketNumber, kVetoed); }
 
    /// Return true if all the baskets that are marked loaded are also
    /// mark as used.
-   Bool_t AllUsed() const
+   bool AllUsed() const
    {
       auto len = fInfo.GetNbits() / kSize + 1;
       for (UInt_t b = 0; b < len; ++b) {
          if (fInfo[kSize * b + kLoaded] && !fInfo[kSize * b + kUsed]) {
             // Not loaded or (loaded and used)
-            return kFALSE;
+            return false;
          }
       }
-      return kTRUE;
+      return true;
    }
 
    /// Return a set of unused basket, let's not re-read them.

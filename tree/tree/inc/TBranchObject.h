@@ -42,12 +42,12 @@ protected:
    TString     fClassName;        ///< Class name of referenced object
    TObject     *fOldObject;       ///< !Pointer to old object
 
-   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr);
+   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr);
 
 public:
    TBranchObject();
-   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
-   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
+   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
+   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
    ~TBranchObject() override;
 
            void        Browse(TBrowser *b) override;
@@ -55,12 +55,12 @@ public:
    virtual const char* GetObjClassName() { return fClassName.Data(); };
            Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0) override;
            Int_t       GetExpectedType(TClass *&clptr,EDataType &type) override;
-           Bool_t      IsFolder() const override;
+           bool        IsFolder() const override;
            void        Print(Option_t *option="") const override;
            void        Reset(Option_t *option="") override;
            void        ResetAfterMerge(TFileMergeInfo *) override;
            void        SetAddress(void *addobj) override;
-           void        SetAutoDelete(Bool_t autodel=kTRUE) override;
+           void        SetAutoDelete(bool autodel=true) override;
            void        SetBasketSize(Int_t buffsize) override;
            void        SetupAddresses() override;
            void        UpdateAddress() override;

@@ -31,7 +31,7 @@ class TBranchSTL: public TBranch {
                   TStreamerInfo* info, Int_t id );
       ~TBranchSTL() override;
               void           Browse( TBrowser *b ) override;
-              Bool_t         IsFolder() const override;
+              bool           IsFolder() const override;
               const char    *GetClassName() const override { return fClassName.Data(); }
               Int_t          GetExpectedType(TClass *&clptr,EDataType &type) override;
               Int_t          GetEntry(Long64_t entry = 0, Int_t getall = 0) override;

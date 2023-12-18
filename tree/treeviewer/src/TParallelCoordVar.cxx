@@ -157,23 +157,23 @@ void TParallelCoordVar::Draw(Option_t *option)
 /// single axis are conjugated as a "or": to be selected, the entry must be in
 /// one of the ranges.
 
-Bool_t TParallelCoordVar::Eval(Long64_t evtidx, TParallelCoordSelect *select)
+bool TParallelCoordVar::Eval(Long64_t evtidx, TParallelCoordSelect *select)
 {
    if (fRanges->GetSize() > 0){
       TIter next(fRanges);
-      Bool_t inarange = kFALSE;
-      Bool_t noOwnedRange = kTRUE;
+      bool inarange = false;
+      bool noOwnedRange = true;
       TParallelCoordRange *range;
       while ((range = (TParallelCoordRange*)next())){
          if(select->Contains(range)) {
-            noOwnedRange = kFALSE;
-            if(range->IsIn(fVal[evtidx])) inarange = kTRUE;
+            noOwnedRange = false;
+            if(range->IsIn(fVal[evtidx])) inarange = true;
          }
       }
-      if (noOwnedRange) return kTRUE;
+      if (noOwnedRange) return true;
       else return inarange;
    }
-   else return kTRUE;
+   else return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +187,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
    static Int_t pxold, pyold;
    static Int_t zoom; // -1:nothing zoomed or translated, 0:translating the axis, 1:zooming
    static Int_t pzoomold;
-   static Bool_t first = kTRUE;
+   static bool first = true;
 
    Int_t px1,px2,py1,py2,n=-1;
    px1 = gPad->XtoAbsPixel(fX1);
@@ -211,7 +211,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
             if(gPad->AbsPixeltoX(px)-fX1 > 0){
                zoom = 1;
                gVirtualX->DrawLine(gPad->XtoAbsPixel(fX1-0.05),py,gPad->XtoAbsPixel(fX1+0.05),py);
-               first = kTRUE;
+               first = true;
                pzoomold = py;
             } else {
                zoom = 0;
@@ -221,7 +221,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
             if(gPad->AbsPixeltoY(py)-fY1 > 0){
                zoom = 1;
                gVirtualX->DrawLine(px,gPad->YtoAbsPixel(fY1-0.05),px,gPad->YtoAbsPixel(fY1+0.05));
-               first=kTRUE;
+               first=true;
                pzoomold = px;
             } else {
                zoom = 0;
@@ -291,7 +291,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
                gPad->SetCursor(kArrowVer);
                if(!first) gVirtualX->DrawLine(gPad->XtoAbsPixel(fX1-0.05),pyold,gPad->XtoAbsPixel(fX1+0.05),pyold);
                gVirtualX->DrawLine(gPad->XtoAbsPixel(fX1-0.05),py,gPad->XtoAbsPixel(fX1+0.05),py);
-               first = kFALSE;
+               first = false;
             }
          } else {
             if(zoom==0){
@@ -302,7 +302,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
                gPad->SetCursor(kArrowHor);
                if(!first) gVirtualX->DrawLine(pxold,gPad->YtoAbsPixel(fY1-0.05),pxold,gPad->YtoAbsPixel(fY1+0.05));
                gVirtualX->DrawLine(px,gPad->YtoAbsPixel(fY1-0.05),px,gPad->YtoAbsPixel(fY1+0.05));
-               first = kFALSE;
+               first = false;
             }
          }
          pxold = px;
@@ -434,7 +434,7 @@ void TParallelCoordVar::GetQuantiles()
    prob[0]=0.25; prob[1]=0.5; prob[2] = 0.75;
    Long64_t first = fParallel->GetCurrentFirst();
    Long64_t nentries = fParallel->GetCurrentN();
-   if (!TestBit(kLogScale) && first==0 && nentries==fNentries) TMath::Quantiles(fNentries,3,fVal,quantiles,prob,kFALSE);
+   if (!TestBit(kLogScale) && first==0 && nentries==fNentries) TMath::Quantiles(fNentries,3,fVal,quantiles,prob,false);
    else {
       Double_t* val = new Double_t[nentries];
       Int_t selected = 0;
@@ -453,7 +453,7 @@ void TParallelCoordVar::GetQuantiles()
             ++selected;
          }
       }
-      TMath::Quantiles(selected,3,val,quantiles,prob,kFALSE);
+      TMath::Quantiles(selected,3,val,quantiles,prob,false);
       delete [] val;
    }
    fQua1 = quantiles[0];
@@ -538,9 +538,9 @@ void TParallelCoordVar::Init()
    fHistoLW    = 2;
    fHistoHeight     = 0.5;
    fRanges     = nullptr;
-   SetBit(kLogScale,kFALSE);
-   SetBit(kShowBox,kFALSE);
-   SetBit(kShowBarHisto,kTRUE);
+   SetBit(kLogScale,false);
+   SetBit(kShowBox,false);
+   SetBit(kShowBarHisto,true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -866,7 +866,7 @@ void TParallelCoordVar::SavePrimitive(std::ostream & out, Option_t* options)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the axis to display a candle.
 
-void TParallelCoordVar::SetBoxPlot(Bool_t box)
+void TParallelCoordVar::SetBoxPlot(bool box)
 {
    SetBit(kShowBox,box);
    if (box) SetHistogramHeight(0.5);
@@ -893,8 +893,8 @@ void TParallelCoordVar::SetHistogramHeight(Double_t h)
 {
    fHistoHeight = h;
    if (!fParallel->TestBit(TParallelCoord::kCandleChart)){
-      if(h!=0) SetBit(kShowBarHisto,kTRUE);
-      else SetBit(kShowBarHisto,kFALSE);
+      if(h!=0) SetBit(kShowBarHisto,true);
+      else SetBit(kShowBarHisto,false);
    }
 }
 
@@ -942,7 +942,7 @@ void TParallelCoordVar::SetCurrentLimits(Double_t min, Double_t max)
 ////////////////////////////////////////////////////////////////////////////////
 /// If true, the pad is updated while the motion of a dragged range.
 
-void TParallelCoordVar::SetLiveRangesUpdate(Bool_t on)
+void TParallelCoordVar::SetLiveRangesUpdate(bool on)
 {
    TIter next(fRanges);
    TParallelCoordRange* range;
@@ -952,18 +952,18 @@ void TParallelCoordVar::SetLiveRangesUpdate(Bool_t on)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the axis in log scale.
 
-void TParallelCoordVar::SetLogScale(Bool_t log)
+void TParallelCoordVar::SetLogScale(bool log)
 {
    if (log == TestBit (kLogScale)) return;
-   if (fMaxInit < 0)             SetBit(kLogScale,kFALSE);
+   if (fMaxInit < 0)             SetBit(kLogScale,false);
    else if (log) {
       if (fMaxCurrent < 0 ) fMaxCurrent = fMaxInit;
       if (fMinCurrent < 0 ) fMinCurrent = 0.00001*fMaxCurrent;
-      SetBit(kLogScale,kTRUE);
+      SetBit(kLogScale,true);
       SetCurrentMin(fMinCurrent);
       SetCurrentMax(fMaxCurrent);
    } else {
-      SetBit(kLogScale,kFALSE);
+      SetBit(kLogScale,false);
       SetCurrentMin(fMinInit);
       SetCurrentMax(fMaxInit);
    }
@@ -989,7 +989,7 @@ void TParallelCoordVar::SetValues(Long64_t length, Double_t* val)
 /// Set the X position of the axis in the case of a vertical axis.
 /// and rotate the axis if it was horizontal.
 
-void TParallelCoordVar::SetX(Double_t x, Bool_t gl)
+void TParallelCoordVar::SetX(Double_t x, bool gl)
 {
    TFrame *frame = gPad->GetFrame();
    if (!gl) {
@@ -1008,7 +1008,7 @@ void TParallelCoordVar::SetX(Double_t x, Bool_t gl)
 /// Set the Y position of the axis in the case of a horizontal axis.
 /// and rotate the axis if it was vertical.
 
-void TParallelCoordVar::SetY(Double_t y, Bool_t gl)
+void TParallelCoordVar::SetY(Double_t y, bool gl)
 {
    TFrame *frame = gPad->GetFrame();
    if (!gl) {

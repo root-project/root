@@ -39,7 +39,7 @@ private:
    TBasket& operator=(const TBasket&); ///< TBasket objects are not copiable.
 
    // Internal corner cases for ReadBasketBuffers
-   Int_t ReadBasketBuffersUnzip(char*, Int_t, Bool_t, TFile*);
+   Int_t ReadBasketBuffersUnzip(char*, Int_t, bool, TFile*);
    Int_t ReadBasketBuffersUncompressedCase();
 
    // Helper for managing the compressed buffer.
@@ -52,7 +52,7 @@ private:
    Int_t *GetCalculatedEntryOffset();
 
    // Returns true if the underlying TLeaf can regenerate the entry offsets for us.
-   Bool_t CanGenerateOffsetArray();
+   bool CanGenerateOffsetArray();
 
    // Manage buffer ownership.
    void   DisownBuffer();
@@ -63,17 +63,17 @@ protected:
    Int_t       fNevBufSize{0};                    ///< Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
    Int_t       fNevBuf{0};                        ///< Number of entries in basket
    Int_t       fLast{0};                          ///< Pointer to last used byte in basket
-   Bool_t      fHeaderOnly{kFALSE};               ///< True when only the basket header must be read/written
+   bool        fHeaderOnly{false};               ///< True when only the basket header must be read/written
    UChar_t     fIOBits{0};                        ///<!IO feature flags.  Serialized in custom portion of streamer to avoid forward compat issues unless needed.
-   Bool_t      fOwnsCompressedBuffer{kFALSE};     ///<! Whether or not we own the compressed buffer.
-   Bool_t      fReadEntryOffset{kFALSE};          ///<!Set to true if offset array was read from a file.
+   bool        fOwnsCompressedBuffer{false};     ///<! Whether or not we own the compressed buffer.
+   bool        fReadEntryOffset{false};          ///<!Set to true if offset array was read from a file.
    Int_t      *fDisplacement{nullptr};            ///<![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset{nullptr};             ///<[fNevBuf] Offset of entries in fBuffer(TKey); generated at runtime.  Special value
                                                   /// of `-1` indicates that the offset generation MUST be performed on first read.
    TBranch    *fBranch{nullptr};                  ///<Pointer to the basket support branch
    TBuffer    *fCompressedBufferRef{nullptr};     ///<! Compressed buffer.
    Int_t       fLastWriteBufferSize[3] = {0,0,0}; ///<! Size of the buffer last three buffers we wrote it to disk
-   Bool_t      fResetAllocation{false};           ///<! True if last reset re-allocated the memory
+   bool        fResetAllocation{false};           ///<! True if last reset re-allocated the memory
    UChar_t     fNextBufferSizeRecord{0};          ///<! Index into fLastWriteBufferSize of the last buffer written to disk
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t   fResetAllocationTime{0};           ///<! Time spent reallocating baskets in microseconds during last Reset operation.
@@ -140,7 +140,7 @@ public:
    ULong64_t       GetResetAllocationTime() const { return fResetAllocationTime; }
 #endif
    // Count of resets performed of basket size.
-   Bool_t          GetResetAllocationCount() const { return fResetAllocation; }
+   bool            GetResetAllocationCount() const { return fResetAllocation; }
 
    Int_t           LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree = nullptr);
    Long64_t        CopyTo(TFile *to);

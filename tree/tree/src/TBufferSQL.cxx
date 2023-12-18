@@ -54,7 +54,7 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc
 
 TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
                        TString *insert_query, TSQLRow ** r,
-                       void *buf, Bool_t adopt) :
+                       void *buf, bool adopt) :
    TBufferFile(mode,bufsiz,buf,adopt),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
 {
@@ -79,9 +79,9 @@ TBufferSQL::~TBufferSQL()
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
-void TBufferSQL::ReadBool(Bool_t &b)
+void TBufferSQL::ReadBool(bool &b)
 {
-   b = (Bool_t)atoi((*fRowPtr)->GetField(*fIter));
+   b = (bool)atoi((*fRowPtr)->GetField(*fIter));
 
    if (fIter != fColumnVec->end()) ++fIter;
 }
@@ -149,7 +149,7 @@ void TBufferSQL::ReadDouble(Double_t &d)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
-void TBufferSQL::WriteBool(Bool_t    b)
+void TBufferSQL::WriteBool(bool      b)
 {
    (*fInsertQuery) += b;
    (*fInsertQuery) += ",";
@@ -423,7 +423,7 @@ void TBufferSQL::WriteCharP(const Char_t *str)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Bool_t *b, Int_t n)
+void TBufferSQL::WriteFastArray(const bool *b, Int_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += b[i];
@@ -599,19 +599,19 @@ void TBufferSQL::WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Int_t, Bool_t, TMemberStreamer*)
+Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Int_t, bool, TMemberStreamer*)
 {
-   Fatal("WriteFastArray(void **, const TClass*, Int_t, Bool_t, TMemberStreamer*)","Not implemented yet");
+   Fatal("WriteFastArray(void **, const TClass*, Int_t, bool, TMemberStreamer*)","Not implemented yet");
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
-void TBufferSQL::ReadFastArray(Bool_t *b, Int_t n)
+void TBufferSQL::ReadFastArray(bool *b, Int_t n)
 {
    for(int i=0; i<n; ++i) {
-      b[i] = (Bool_t)atoi((*fRowPtr)->GetField(*fIter));
+      b[i] = (bool)atoi((*fRowPtr)->GetField(*fIter));
       ++fIter;
    }
 }
@@ -813,9 +813,9 @@ void     TBufferSQL::ReadFastArray(void  *, const TClass *, Int_t, TMemberStream
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
-void     TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)
+void     TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, bool, TMemberStreamer *, const TClass *)
 {
-   Fatal("ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)","Not implemented yet");
+   Fatal("ReadFastArray(void **, const TClass *, Int_t, bool, TMemberStreamer *, const TClass *)","Not implemented yet");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

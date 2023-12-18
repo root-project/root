@@ -112,7 +112,7 @@ Int_t TBranchRef::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 /// The function reads the branch containing the object referenced
 /// by the TRef.
 
-Bool_t TBranchRef::Notify()
+bool TBranchRef::Notify()
 {
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    UInt_t uid = fRefTable->GetUID();
@@ -129,7 +129,7 @@ Bool_t TBranchRef::Notify()
    } else {
       //scan the TRefTable of possible friend Trees
       TList *friends = fTree->GetListOfFriends();
-      if (!friends) return kTRUE;
+      if (!friends) return true;
       TObjLink *lnk = friends->FirstLink();
       while (lnk) {
          TFriendElement* elem = (TFriendElement*)lnk->GetObject();
@@ -144,13 +144,13 @@ Bool_t TBranchRef::Notify()
                // don't re-read, the user might have changed some object
                if (branch->GetReadEntry() != fRequestedEntry)
                   branch->GetEntry(fRequestedEntry);
-               return kTRUE;
+               return true;
             }
          }
          lnk = lnk->Next();
       }
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

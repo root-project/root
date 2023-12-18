@@ -168,7 +168,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fRealTimeAxis  = nullptr;
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
 
-   Bool_t isUNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   bool isUNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    if (isUNIX)
       fHostInfo = gSystem->GetFromPipe("uname -a");
    else
@@ -435,7 +435,7 @@ TTreePerfStats::BasketList_t TTreePerfStats::GetDuplicateBasketCache() const
 
    auto branches = cache->GetCachedBranches();
    for (size_t i = 0; i < fBasketsInfo.size(); ++i) {
-      Bool_t first = kTRUE;
+      bool first = true;
       for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
          auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) > 1) {
@@ -471,7 +471,7 @@ void TTreePerfStats::Paint(Option_t *option)
 
    TString opts(option);
    opts.ToLower();
-   Bool_t unzip = opts.Contains("unzip");
+   bool unzip = opts.Contains("unzip");
 
    //superimpose the time info (max 10 points)
    if (fGraphTime) {
@@ -541,8 +541,8 @@ void TTreePerfStats::Print(Option_t * option) const
 {
    TString opts(option);
    opts.ToLower();
-   Bool_t unzip = opts.Contains("unzip");
-   Bool_t basket = opts.Contains("basket");
+   bool unzip = opts.Contains("unzip");
+   bool basket = opts.Contains("basket");
    TTreePerfStats *ps = (TTreePerfStats*)this;
    ps->Finish();
 
@@ -583,7 +583,7 @@ void TTreePerfStats::PrintBasketInfo(Option_t *option) const
 
    TString opts(option);
    opts.ToLower();
-   Bool_t all = opts.Contains("allbasketinfo");
+   bool all = opts.Contains("allbasketinfo");
 
    TFile *file = fTree->GetCurrentFile();
    if (!file)

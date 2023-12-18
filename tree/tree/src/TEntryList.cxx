@@ -172,10 +172,10 @@ TEntryList::TEntryList() : fEntriesToProcess(0)
    fStringHash = 0;
    fTreeNumber = -1;
    fDirectory = nullptr;
-   fReapply = kFALSE;
+   fReapply = false;
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-   fShift = kFALSE;
+   fShift = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,14 +194,14 @@ TEntryList::TEntryList(const char *name, const char *title) :
    fFileName = "";
    fStringHash = 0;
    fTreeNumber = -1;
-   fReapply = kFALSE;
+   fReapply = false;
 
    fDirectory  = gDirectory;
    if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-   fShift = kFALSE;
+   fShift = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,14 +216,14 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
    fNBlocks = 0;
    fTreeNumber = -1;
    TEntryList::SetTree(tree);
-   fReapply = kFALSE;
+   fReapply = false;
 
    fDirectory  = gDirectory;
    if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-   fShift = kFALSE;
+   fShift = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,14 +238,14 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
    fN = 0;
    SetTree(treename, filename);
    fTreeNumber = -1;
-   fReapply = kFALSE;
+   fReapply = false;
 
    fDirectory  = gDirectory;
    if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-   fShift = kFALSE;
+   fShift = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,13 +262,13 @@ TEntryList::TEntryList(const TTree *tree) : fEntriesToProcess(0)
    SetTree(tree);
    fTreeNumber = -1;
 
-   fReapply = kFALSE;
+   fReapply = false;
    fDirectory  = gDirectory;
    if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-   fShift = kFALSE;
+   fShift = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -483,7 +483,7 @@ void TEntryList::Add(const TEntryList *elist)
          //the other list doesn't have sublists
          TIter next(fLists);
          TEntryList *el = nullptr;
-         Bool_t found = kFALSE;
+         bool found = false;
          while ((el = (TEntryList*)next())){
             if (!strcmp(el->fTreeName.Data(), elist->fTreeName.Data()) &&
                 !strcmp(el->fFileName.Data(), elist->fFileName.Data())){
@@ -491,7 +491,7 @@ void TEntryList::Add(const TEntryList *elist)
                //found a list for the same tree
                Long64_t oldn = el->GetN();
                el->Add(elist);
-               found = kTRUE;
+               found = true;
                fN = fN - oldn + el->GetN();
                break;
             }
@@ -624,7 +624,7 @@ void TEntryList::DirectoryAutoAdd(TDirectory* dir)
 /// - When tree is a chain, the entry is assumed to be global index and the local
 /// entry is recomputed from the treeoffset information of the chain
 
-Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
+bool TEntryList::Enter(Long64_t entry, TTree *tree)
 {
    if (!tree){
       if (!fLists) {
@@ -672,7 +672,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 
 }
 
-Bool_t TEntryList::Enter(Long64_t localentry, const char *treename, const char *filename)
+bool TEntryList::Enter(Long64_t localentry, const char *treename, const char *filename)
 {
    SetTree(treename, filename);
    if (fCurrent) {
@@ -710,10 +710,10 @@ void TEntryList::EnterRange(Long64_t start, Long64_t end, TTree *tree, UInt_t st
 /// - When tree is a chain, the entry is assumed to be global index and the local
 /// entry is recomputed from the treeoffset information of the chain
 
-Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
+bool TEntryList::Remove(Long64_t entry, TTree *tree)
 {
    if (entry < 0)
-     return kFALSE;
+     return false;
    if (!tree) {
       if (!fLists) {
          if (!fBlocks) return false;
@@ -836,7 +836,7 @@ Long64_t TEntryList::GetEntryAndTree(Long64_t index, Int_t &treenum)
 //Example:
 //First sublist - 20 entries, second sublist - 5 entries, third sublist - 10 entries
 //Second sublist doesn't correspond to any trees of the chain
-//Then, when GetEntryAndTree(21, treenum, kTRUE) is called, first entry of the
+//Then, when GetEntryAndTree(21, treenum, true) is called, first entry of the
 //third sublist will be returned
 
    Long64_t result = GetEntry(index);
@@ -863,10 +863,10 @@ Long64_t TEntryList::GetEntryAndTree(Long64_t index, Int_t &treenum)
 /// The function optionally (is 'local' is defined) checks file locality (i.e.
 /// protocol 'file://') returning the result in '*local' .
 
-void TEntryList::GetFileName(const char *filename, TString &fn, Bool_t *local)
+void TEntryList::GetFileName(const char *filename, TString &fn, bool *local)
 {
-   TUrl u(filename, kTRUE);
-   if (local) *local = (!strcmp(u.GetProtocol(), "file")) ? kTRUE : kFALSE;
+   TUrl u(filename, true);
+   if (local) *local = (!strcmp(u.GetProtocol(), "file")) ? true : false;
    if (strlen(u.GetAnchor()) > 0) {
       fn.Form("%s#%s", u.GetFile(), u.GetAnchor());
    } else {
@@ -891,12 +891,12 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename,
    if (!treename || !filename) return nullptr;
    TString option = opt;
    option.ToUpper();
-   Bool_t nexp = option.Contains("NE");
+   bool nexp = option.Contains("NE");
 
    TString fn;
-   Bool_t local;
+   bool local;
    GetFileName(filename, fn, &local);
-   if (nexp) local = kFALSE;
+   if (nexp) local = false;
 
    if (gDebug > 1)
       Info("GetEntryList", "file: %s, local? %d", filename, local);
@@ -1157,7 +1157,7 @@ void TEntryList::Reset()
    fTreeNumber = -1;
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-   fReapply = kFALSE;
+   fReapply = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1305,7 +1305,7 @@ void TEntryList::SetTree(const TTree *tree)
    TString filename;
    if (tree->GetTree()->GetCurrentFile()){
       filename = tree->GetTree()->GetCurrentFile()->GetName();
-      TUrl url(filename.Data(), kTRUE);
+      TUrl url(filename.Data(), true);
       if (!strcmp(url.GetProtocol(), "file")){
          gSystem->ExpandPathName(filename);
          if (!gSystem->IsAbsoluteFileName(filename))
@@ -1350,11 +1350,11 @@ void TEntryList::Subtract(const TEntryList *elist)
          //second list has sublists, try to find one for the same tree as this list
          TIter next1(elist->GetLists());
          templist = nullptr;
-         Bool_t found = kFALSE;
+         bool found = false;
          while ((templist = (TEntryList*)next1())){
             if (!strcmp(templist->fTreeName.Data(),fTreeName.Data()) &&
                 !strcmp(templist->fFileName.Data(),fFileName.Data())){
-               found = kTRUE;
+               found = true;
                break;
             }
          }
@@ -1472,7 +1472,7 @@ Int_t TEntryList::Relocate(const char *fn,
    // Read the lists
    TString nm(enlnm);
    if (nm.IsNull()) nm = "*";
-   TRegexp nmrg(nm, kTRUE);
+   TRegexp nmrg(nm, true);
    TIter nxk(fl->GetListOfKeys());
    TKey *key = nullptr;
    while ((key = (TKey *) nxk())) {
@@ -1523,7 +1523,7 @@ static Int_t GetCommonString(TString a, TString b, TString &c)
       c = "";
       return 2;
    }
-   Bool_t ashort = (a.Length() > b.Length()) ? kFALSE : kTRUE;
+   bool ashort = (a.Length() > b.Length()) ? false : true;
    Ssiz_t len = (ashort) ? a.Length() : b.Length();
    Int_t lcom = 0;
    for (Int_t i = 0; i < len; i++) {
@@ -1544,7 +1544,7 @@ static Int_t GetCommonString(TString a, TString b, TString &c)
 /// the found roots to the list as TObjStrings.
 /// Return the number of roots found.
 
-Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
+Int_t TEntryList::ScanPaths(TList *roots, bool notify)
 {
    TList *xrl = roots ? roots : new TList;
 
@@ -1554,10 +1554,10 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
       TIter nxl(fLists);
       TEntryList *enl = nullptr;
       while ((enl = (TEntryList *) nxl()))
-         nrl += enl->ScanPaths(xrl, kFALSE);
+         nrl += enl->ScanPaths(xrl, false);
    }
    // Apply to ourselves
-   Bool_t newobjs = kTRUE;
+   bool newobjs = true;
    TString path = gSystem->GetDirName(fFileName), com;
    TObjString *objs = nullptr;
    TIter nxr(xrl);
@@ -1567,7 +1567,7 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
          TUrl ucom(com);
          if (strlen(ucom.GetFile()) > 0 && strcmp(ucom.GetFile(), "/")) {
             objs->SetString(com.Data());
-            newobjs = kFALSE;
+            newobjs = false;
             break;
          }
       }
@@ -1588,7 +1588,7 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
    }
 
    if (xrl != roots) {
-      xrl->SetOwner(kTRUE);
+      xrl->SetOwner(true);
       SafeDelete(xrl);
    }
 

@@ -61,27 +61,27 @@ protected:
          if (fUnzipStatus) delete [] fUnzipStatus;
       }
       void   Clear(Int_t size);
-      Bool_t IsUntouched(Int_t index) const;
-      Bool_t IsProgress(Int_t index) const;
-      Bool_t IsFinished(Int_t index) const;
-      Bool_t IsUnzipped(Int_t index) const;
+      bool   IsUntouched(Int_t index) const;
+      bool   IsProgress(Int_t index) const;
+      bool   IsFinished(Int_t index) const;
+      bool   IsUnzipped(Int_t index) const;
       void   Reset(Int_t oldSize, Int_t newSize);
       void   SetUntouched(Int_t index);
       void   SetProgress(Int_t index);
       void   SetFinished(Int_t index);
       void   SetMissed(Int_t index);
       void   SetUnzipped(Int_t index, char* buf, Int_t len);
-      Bool_t TryUnzipping(Int_t index);
+      bool TryUnzipping(Int_t index);
    };
 
    typedef struct UnzipState UnzipState_t;
    UnzipState_t fUnzipState;
 
    // Members for paral. managing
-   Bool_t      fAsyncReading;
-   Bool_t      fEmpty;
+   bool        fAsyncReading;
+   bool        fEmpty;
    Int_t       fCycle;
-   Bool_t      fParallel; ///< Indicate if we want to activate the parallelism (for this instance)
+   bool        fParallel; ///< Indicate if we want to activate the parallelism (for this instance)
 
    std::unique_ptr<TMutex> fIOMutex;
 
@@ -120,9 +120,9 @@ public:
    TTreeCacheUnzip(TTree *tree, Int_t buffersize=0);
    ~TTreeCacheUnzip() override;
 
-   Int_t               AddBranch(TBranch *b, Bool_t subbranches = kFALSE) override;
-   Int_t               AddBranch(const char *branch, Bool_t subbranches = kFALSE) override;
-   Bool_t              FillBuffer() override;
+   Int_t               AddBranch(TBranch *b, bool subbranches = false) override;
+   Int_t               AddBranch(const char *branch, bool subbranches = false) override;
+   bool                FillBuffer() override;
    Int_t               ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc) override;
    void                SetEntryRange(Long64_t emin,   Long64_t emax) override;
    void                StopLearningPhase() override;
@@ -130,7 +130,7 @@ public:
 
    // Methods related to the thread
    static EParUnzipMode GetParallelUnzip();
-   static Bool_t        IsParallelUnzip();
+   static bool          IsParallelUnzip();
    static Int_t         SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable);
 
    // Unzipping related methods
@@ -138,7 +138,7 @@ public:
    Int_t          CreateTasks();
 #endif
    Int_t          GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
-   Int_t          GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free) override;
+   Int_t          GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, bool *free) override;
    Int_t          GetUnzipGroupSize() { return fUnzipGroupSize; }
    void           ResetCache() override;
    Int_t          SetBufferSize(Int_t buffersize) override;

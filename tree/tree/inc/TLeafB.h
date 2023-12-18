@@ -44,7 +44,7 @@ public:
    const char     *GetTypeName() const override;
    Double_t        GetValue(Int_t i = 0) const override { return IsUnsigned() ? (Double_t)((UChar_t) fValue[i]) : (Double_t)fValue[i]; }
    void           *GetValuePointer() const override { return fValue; }
-   Bool_t          IncludeRange(TLeaf *) override;
+   bool            IncludeRange(TLeaf *) override;
    void            Import(TClonesArray* list, Int_t n) override;
    void            PrintValue(Int_t i = 0) const override;
    void            ReadBasket(TBuffer&) override;

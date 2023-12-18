@@ -51,21 +51,21 @@ public:
    TTreeIndex();
    TTreeIndex(const TTree *T, const char *majorname, const char *minorname);
                  ~TTreeIndex() override;
-   void           Append(const TVirtualIndex *,Bool_t delaySort = kFALSE) override;
+   void                   Append(const TVirtualIndex *,bool delaySort = false) override;
    bool                   ConvertOldToNew();
    Long64_t               FindValues(Long64_t major, Long64_t minor) const;
-   Long64_t       GetEntryNumberFriend(const TTree *parent) override;
-   Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const override;
-   Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const override;
+   Long64_t               GetEntryNumberFriend(const TTree *parent) override;
+   Long64_t               GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const override;
+   Long64_t               GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const override;
    virtual Long64_t      *GetIndex()        const {return fIndex;}
    virtual Long64_t      *GetIndexValues()  const {return fIndexValues;}
    virtual Long64_t      *GetIndexValuesMinor()  const;
    const char            *GetMajorName()    const override {return fMajorName.Data();}
    const char            *GetMinorName()    const override {return fMinorName.Data();}
-   Long64_t       GetN()            const override {return fN;}
+   Long64_t               GetN()            const override {return fN;}
    virtual TTreeFormula  *GetMajorFormula();
    virtual TTreeFormula  *GetMinorFormula();
-   Bool_t         IsValidFor(const TTree *parent) override;
+   bool           IsValidFor(const TTree *parent) override;
    void           Print(Option_t *option="") const override;
    void           UpdateFormulaLeaves(const TTree *parent) override;
    void           SetTree(TTree *T) override;

@@ -68,7 +68,7 @@ protected:
    TGNumberEntryField      *fWeightCutField;
    TGColorSelect           *fHistColorSelect;
    TGedPatternSelect       *fHistPatternSelect;
-   Bool_t                   fDelay;
+   bool                     fDelay;
 
    void                    CleanUpSelections();
    void                    CleanUpVariables();
@@ -82,11 +82,11 @@ public:
                         Pixel_t back = GetDefaultFrameBackground());
    ~TParallelCoordEditor() override;
 
-   virtual void            DoActivateSelection(Bool_t);
+   virtual void            DoActivateSelection(bool);
    virtual void            DoAddSelection();
    virtual void            DoAddVariable();
    virtual void            DoApplySelect();
-   virtual void            DoDelayDrawing(Bool_t);
+   virtual void            DoDelayDrawing(bool);
    virtual void            DoDeleteSelection();
    virtual void            DoDeleteVar();
    virtual void            DoDotsSpacing();
@@ -96,8 +96,8 @@ public:
    virtual void            DoFirstEntry();
    virtual void            DoGlobalLineColor(Pixel_t);
    virtual void            DoGlobalLineWidth(Int_t);
-   virtual void            DoHideAllRanges(Bool_t);
-   virtual void            DoHistShowBoxes(Bool_t);
+   virtual void            DoHideAllRanges(bool);
+   virtual void            DoHistShowBoxes(bool);
    virtual void            DoHistWidth();
    virtual void            DoHistBinning();
    virtual void            DoHistColorSelect(Pixel_t);
@@ -109,11 +109,11 @@ public:
    virtual void            DoLiveEntriesToDraw();
    virtual void            DoLiveWeightCut(Int_t n);
    virtual void            DoNentries();
-   virtual void            DoPaintEntries(Bool_t);
+   virtual void            DoPaintEntries(bool);
    virtual void            DoSelectionSelect(const char* title);
    virtual void            DoSelectLineColor(Pixel_t);
    virtual void            DoSelectLineWidth(Int_t);
-   virtual void            DoShowRanges(Bool_t s);
+   virtual void            DoShowRanges(bool s);
    virtual void            DoUnApply();
    virtual void            DoVariableSelect(const char* var);
    virtual void            DoWeightCut();

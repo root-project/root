@@ -50,9 +50,9 @@ public:
    /// TVirtualRefProxy overload: Prepare reused reference object (e.g. ZERO data pointers)
    void* GetPreparedReference(void* data) override {  return data;               }
    /// TVirtualRefProxy overload: Update (and propagate) cached information
-   Bool_t Update() override;
+   bool   Update() override;
    /// TVirtualRefProxy overload: Flag to indicate if this is a container reference
-   Bool_t HasCounter()  const override             { return kFALSE;              }
+   bool   HasCounter()  const override             { return false;              }
    /// TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
    Int_t  GetCounterValue(TFormLeafInfoReference* /* info */, void* /* data */) override
    {  return 0;                                                                 }

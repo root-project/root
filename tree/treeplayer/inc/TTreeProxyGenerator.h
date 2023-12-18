@@ -53,11 +53,11 @@ namespace Internal {
       void AddForward(TClass *cl);
       void AddForward(const char *classname);
       void AddFriend(TFriendProxyDescriptor *desc);
-      void AddMissingClassAsEnum(const char *clname, Bool_t isscope);
+      void AddMissingClassAsEnum(const char *clname, bool isscope);
       void AddPragma(const char *pragma_text);
       void CheckForMissingClass(const char *clname);
 
-      Bool_t NeedToEmulate(TClass *cl, UInt_t level);
+      bool NeedToEmulate(TClass *cl, UInt_t level);
 
       void   ParseOptions();
 
