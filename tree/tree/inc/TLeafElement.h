@@ -46,7 +46,7 @@ public:
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    ~TLeafElement() override;
 
-   Bool_t           CanGenerateOffsetArray() override { return fLeafCount && fLenType; }
+   bool             CanGenerateOffsetArray() override { return fLeafCount && fLenType; }
    virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    DeserializeType  GetDeserializeType() const override;
 
@@ -58,16 +58,16 @@ public:
    Int_t            GetNdata() const override { return ((TBranchElement*)fBranch)->GetNdata()*fLen; }
    const char      *GetTypeName() const override { return ((TBranchElement*)fBranch)->GetTypeName(); }
 
-   Double_t         GetValue(Int_t i=0) const override { return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
-   Long64_t         GetValueLong64(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, kFALSE); }
-   LongDouble_t     GetValueLongDouble(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, kFALSE); }
-   template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
+   Double_t         GetValue(Int_t i=0) const override { return ((TBranchElement*)fBranch)->GetValue(i, fLen, false);}
+   Long64_t         GetValueLong64(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, false); }
+   LongDouble_t     GetValueLongDouble(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, false); }
+   template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, true);}
 
    bool             ReadBasketFast(TBuffer&, Long64_t) override;
 
    void            *GetValuePointer() const override { return ((TBranchElement*)fBranch)->GetValuePointer(); }
-   Bool_t           IncludeRange(TLeaf *) override;
-   Bool_t           IsOnTerminalBranch() const override;
+   bool             IncludeRange(TLeaf *) override;
+   bool             IsOnTerminalBranch() const override;
    void             PrintValue(Int_t i=0) const override {((TBranchElement*)fBranch)->PrintValue(i);}
    void             SetLeafCount(TLeaf *leaf) override { fLeafCount = leaf; }
 

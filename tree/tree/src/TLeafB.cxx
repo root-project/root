@@ -54,7 +54,7 @@ TLeafB::TLeafB(TBranch *parent, const char* name, const char* type)
 
 TLeafB::~TLeafB()
 {
-   if (ResetAddress(nullptr, kTRUE)) {
+   if (ResetAddress(nullptr, true)) {
       delete[] fValue;
       fValue = nullptr;
    }
@@ -109,16 +109,16 @@ const char *TLeafB::GetTypeName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafB::IncludeRange(TLeaf *input)
+bool TLeafB::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             this->SetMaximum( input->GetMaximum() );
         if (input->GetMinimum() < this->GetMinimum())
             this->SetMinimum( input->GetMinimum() );
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 

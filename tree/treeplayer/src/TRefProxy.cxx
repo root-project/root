@@ -28,9 +28,9 @@ stored contained in other objects from TTree::Draw
 ////////////////////////////////////////////////////////////////////////////////
 /// TVirtualRefProxy overload: Update (and propagate) cached information
 
-Bool_t TRefProxy::Update()
+bool TRefProxy::Update()
 {
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

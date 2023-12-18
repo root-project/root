@@ -32,12 +32,12 @@ class TTree;
 class TTreeFormula;
 
 class TSelectorEntries : public TSelector {
-   Bool_t          fOwnInput;       ///<  True if we created the input list.
+   bool            fOwnInput;       ///<  True if we created the input list.
 public :
    TTree          *fChain;          ///<! Pointer to the analyzed TTree or TChain
    TTreeFormula   *fSelect;         ///<  Pointer to selection formula
    Long64_t        fSelectedRows;   ///<  Number of selected entries
-   Bool_t          fSelectMultiple; ///<  True if selection has a variable index
+   bool            fSelectMultiple; ///<  True if selection has a variable index
 
    TSelectorEntries(TTree *tree = nullptr, const char *selection = nullptr);
    TSelectorEntries(const char *selection);
@@ -46,8 +46,8 @@ public :
    void     Begin(TTree *tree) override;
    void     SlaveBegin(TTree *tree) override;
    void     Init(TTree *tree) override;
-   Bool_t   Notify() override;
-   Bool_t   Process(Long64_t entry) override;
+   bool     Notify() override;
+   bool     Process(Long64_t entry) override;
    Int_t    GetEntry(Long64_t entry, Int_t getall = 0) override;
    virtual Long64_t GetSelectedRows() const { return fSelectedRows; }
    void     SetOption(const char *option) override { fOption = option; }

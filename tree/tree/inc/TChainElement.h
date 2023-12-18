@@ -40,9 +40,9 @@ protected:
    void         *fBaddress;          ///<! branch address when used as a branch
    TString       fBaddressClassName; ///<! Name of the class pointed to by fBaddress
    UInt_t        fBaddressType;      ///<! Type of the value pointed to by fBaddress
-   Bool_t        fBaddressIsPtr : 1; ///<! True if the address is a pointer to an address
-   Bool_t        fDecomposedObj : 1; ///<! True if the address needs the branch in MakeClass/DecomposedObj mode.
-   Bool_t        fCheckedType : 1;   ///<! True if the branch type and the address type have been checked.
+   bool          fBaddressIsPtr : 1; ///<! True if the address is a pointer to an address
+   bool          fDecomposedObj : 1; ///<! True if the address needs the branch in MakeClass/DecomposedObj mode.
+   bool          fCheckedType : 1;   ///<! True if the branch type and the address type have been checked.
    char         *fPackets;           ///<! Packet descriptor string
    TBranch     **fBranchPtr;         ///<! Address of user branch pointer (to updated upon loading a file)
    Int_t         fLoadResult;        ///<! Return value of TChain::LoadTree(); 0 means success
@@ -54,27 +54,27 @@ public:
    virtual void        CreatePackets();
    virtual void       *GetBaddress() const {return fBaddress;}
    virtual const char *GetBaddressClassName() const { return fBaddressClassName; }
-   virtual Bool_t      GetBaddressIsPtr() const { return fBaddressIsPtr; }
+   virtual bool        GetBaddressIsPtr() const { return fBaddressIsPtr; }
    virtual UInt_t      GetBaddressType() const { return fBaddressType; }
    virtual TBranch   **GetBranchPtr() const { return fBranchPtr; }
    virtual Long64_t    GetEntries() const {return fEntries;}
            Int_t       GetLoadResult() const { return fLoadResult; }
-           Bool_t      GetCheckedType() const { return fCheckedType; }
-           Bool_t      GetDecomposedObj() const { return fDecomposedObj; }
+           bool        GetCheckedType() const { return fCheckedType; }
+           bool        GetDecomposedObj() const { return fDecomposedObj; }
    virtual char       *GetPackets() const {return fPackets;}
    virtual Int_t       GetPacketSize() const {return fPacketSize;}
    virtual Int_t       GetStatus() const {return fStatus;}
-   virtual Bool_t      HasBeenLookedUp() { return TestBit(kHasBeenLookedUp); }
+   virtual bool        HasBeenLookedUp() { return TestBit(kHasBeenLookedUp); }
    void        ls(Option_t *option="") const override;
    virtual void        SetBaddress(void *add) {fBaddress = add;}
    virtual void        SetBaddressClassName(const char* clname) { fBaddressClassName = clname; }
-   virtual void        SetBaddressIsPtr(Bool_t isptr) { fBaddressIsPtr = isptr; }
+   virtual void        SetBaddressIsPtr(bool isptr) { fBaddressIsPtr = isptr; }
    virtual void        SetBaddressType(UInt_t type) { fBaddressType = type; }
    virtual void        SetBranchPtr(TBranch **ptr) { fBranchPtr = ptr; }
-           void        SetCheckedType(Bool_t m) { fCheckedType = m; }
-           void        SetDecomposedObj(Bool_t m) { fDecomposedObj = m; }
+           void        SetCheckedType(bool m) { fCheckedType = m; }
+           void        SetDecomposedObj(bool m) { fDecomposedObj = m; }
            void        SetLoadResult(Int_t result) { fLoadResult = result; }
-   virtual void        SetLookedUp(Bool_t y = kTRUE);
+   virtual void        SetLookedUp(bool y = true);
    virtual void        SetNumberEntries(Long64_t n) {fEntries=n;}
    virtual void        SetPacketSize(Int_t size = 100);
    virtual void        SetStatus(Int_t status) {fStatus = status;}

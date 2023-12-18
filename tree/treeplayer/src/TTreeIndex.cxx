@@ -233,9 +233,9 @@ TTreeIndex::~TTreeIndex()
 ////////////////////////////////////////////////////////////////////////////////
 /// Append 'add' to this index.  Entry 0 in add will become entry n+1 in this.
 /// If delaySort is true, do not sort the value, then you must call
-/// Append(0,kFALSE);
+/// Append(0,false);
 
-void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
+void TTreeIndex::Append(const TVirtualIndex *add, bool delaySort )
 {
 
    if (add && add->GetN()) {
@@ -463,7 +463,7 @@ TTreeFormula *TTreeIndex::GetMajorFormula()
 {
    if (!fMajorFormula) {
       fMajorFormula = new TTreeFormula("Major",fMajorName.Data(),fTree);
-      fMajorFormula->SetQuickLoad(kTRUE);
+      fMajorFormula->SetQuickLoad(true);
    }
    return fMajorFormula;
 }
@@ -475,7 +475,7 @@ TTreeFormula *TTreeIndex::GetMinorFormula()
 {
    if (!fMinorFormula) {
       fMinorFormula = new TTreeFormula("Minor",fMinorName.Data(),fTree);
-      fMinorFormula->SetQuickLoad(kTRUE);
+      fMinorFormula->SetQuickLoad(true);
    }
    return fMinorFormula;
 }
@@ -490,7 +490,7 @@ TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *parent)
       // is a friend of the parent TTree.
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
-      fMajorFormulaParent->SetQuickLoad(kTRUE);
+      fMajorFormulaParent->SetQuickLoad(true);
    }
    if (fMajorFormulaParent->GetTree() != parent) {
       fMajorFormulaParent->SetTree(const_cast<TTree*>(parent));
@@ -509,7 +509,7 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
       // is a friend of the parent TTree.
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),const_cast<TTree*>(parent));
-      fMinorFormulaParent->SetQuickLoad(kTRUE);
+      fMinorFormulaParent->SetQuickLoad(true);
    }
    if (fMinorFormulaParent->GetTree() != parent) {
       fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
@@ -519,16 +519,16 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if index can be applied to the TTree
+/// Return true if index can be applied to the TTree
 
-Bool_t TTreeIndex::IsValidFor(const TTree *parent)
+bool TTreeIndex::IsValidFor(const TTree *parent)
 {
    auto *majorFormula = GetMajorFormulaParent(parent);
    auto *minorFormula = GetMinorFormulaParent(parent);
    if ((majorFormula == nullptr || majorFormula->GetNdim() == 0) ||
        (minorFormula == nullptr || minorFormula->GetNdim() == 0))
-         return kFALSE;
-   return kTRUE;
+         return false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -540,13 +540,13 @@ Bool_t TTreeIndex::IsValidFor(const TTree *parent)
 void TTreeIndex::Print(Option_t * option) const
 {
    TString opt = option;
-   Bool_t printEntry = kFALSE;
+   bool printEntry = false;
    Long64_t n = fN;
    if (opt.Contains("10"))   n = 10;
    if (opt.Contains("100"))  n = 100;
    if (opt.Contains("1000")) n = 1000;
    if (opt.Contains("all")) {
-      printEntry = kTRUE;
+      printEntry = true;
    }
 
    if (printEntry) {
@@ -599,7 +599,7 @@ void TTreeIndex::Streamer(TBuffer &R__b)
       R__b.ReadFastArray(fIndex,fN);
       R__b.CheckByteCount(R__s, R__c, TTreeIndex::IsA());
    } else {
-      R__c = R__b.WriteVersion(TTreeIndex::IsA(), kTRUE);
+      R__c = R__b.WriteVersion(TTreeIndex::IsA(), true);
       TVirtualIndex::Streamer(R__b);
       fMajorName.Streamer(R__b);
       fMinorName.Streamer(R__b);
@@ -607,7 +607,7 @@ void TTreeIndex::Streamer(TBuffer &R__b)
       R__b.WriteFastArray(fIndexValues, fN);
       R__b.WriteFastArray(fIndexValuesMinor, fN);
       R__b.WriteFastArray(fIndex, fN);
-      R__b.SetByteCount(R__c, kTRUE);
+      R__b.SetByteCount(R__c, true);
    }
 }
 

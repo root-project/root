@@ -45,7 +45,7 @@
 
 TMPWorkerTree::TMPWorkerTree()
    : TMPWorker(), fFileNames(), fTreeName(), fTree(nullptr), fFile(nullptr), fEntryList(nullptr), fFirstEntry(0),
-     fTreeCache(nullptr), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
+     fTreeCache(nullptr), fTreeCacheIsLearning(false), fUseTreeCache(true), fCacheSize(-1)
 {
    Setup();
 }
@@ -53,7 +53,7 @@ TMPWorkerTree::TMPWorkerTree()
 TMPWorkerTree::TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries,
                              const std::string &treeName, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
    : TMPWorker(nWorkers, maxEntries), fFileNames(fileNames), fTreeName(treeName), fTree(nullptr), fFile(nullptr),
-     fEntryList(entries), fFirstEntry(firstEntry), fTreeCache(nullptr), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE),
+     fEntryList(entries), fFirstEntry(firstEntry), fTreeCache(nullptr), fTreeCacheIsLearning(false), fUseTreeCache(true),
      fCacheSize(-1)
 {
    Setup();
@@ -62,7 +62,7 @@ TMPWorkerTree::TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryLi
 TMPWorkerTree::TMPWorkerTree(TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries,
                              ULong64_t firstEntry)
    : TMPWorker(nWorkers, maxEntries), fTree(tree), fFile(nullptr), fEntryList(entries), fFirstEntry(firstEntry),
-     fTreeCache(nullptr), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
+     fTreeCache(nullptr), fTreeCacheIsLearning(false), fUseTreeCache(true), fCacheSize(-1)
 {
    Setup();
 }
@@ -78,7 +78,7 @@ TMPWorkerTree::~TMPWorkerTree()
 void TMPWorkerTree::Setup()
 {
    Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
-   if (uc != 1) fUseTreeCache = kFALSE;
+   if (uc != 1) fUseTreeCache = false;
    fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
 
@@ -285,7 +285,7 @@ Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, 
 
    UInt_t fileN = 0;
    UInt_t nProcessed = 0;
-   Bool_t setupcache = true;
+   bool setupcache = true;
 
    std::string mgroot = "[S" + std::to_string(GetNWorker()) + "]: ";
 

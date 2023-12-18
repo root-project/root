@@ -47,7 +47,7 @@ TBranchObject::TBranchObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a BranchObject.
 
-TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
+TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr /* = true */)
 : TBranch()
 {
    Init(tree,nullptr,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
@@ -56,7 +56,7 @@ TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classnam
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a BranchObject.
 
-TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
+TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr /* = true */)
 : TBranch()
 {
    Init(nullptr,parent,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
@@ -65,7 +65,7 @@ TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* clas
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialization routine (run from the constructor so do not make this function virtual)
 
-void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t /*splitlevel*/, Int_t compress, Bool_t isptrptr)
+void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t /*splitlevel*/, Int_t compress, bool isptrptr)
 {
    if (tree==nullptr && parent!=nullptr) tree = parent->GetTree();
    fTree   = tree;
@@ -89,10 +89,10 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    char** apointer = (char**) addobj;
    TObject* obj = (TObject*) (*apointer);
 
-   Bool_t delobj = kFALSE;
+   bool delobj = false;
    if (!obj) {
       obj = (TObject*) cl->New();
-      delobj = kTRUE;
+      delobj = true;
    }
 
    tree->BuildStreamerInfo(cl, obj);
@@ -137,7 +137,7 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    // in TLeafObject::ReadBasket, the object should be deleted
    // before calling Streamer.
    // It is foreseen to not set this bit in a future version.
-   if (isptrptr) SetAutoDelete(kTRUE);
+   if (isptrptr) SetAutoDelete(true);
 
    fDirectory = fTree->GetDirectory();
    fFileName = "";
@@ -255,12 +255,12 @@ Int_t TBranchObject::GetExpectedType(TClass *&expectedClass,EDataType &expectedT
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TRUE if more than one leaf or if fBrowsables, FALSE otherwise.
 
-Bool_t TBranchObject::IsFolder() const
+bool TBranchObject::IsFolder() const
 {
    Int_t nbranches = fBranches.GetEntriesFast();
 
    if (nbranches >= 1) {
-      return kTRUE;
+      return true;
    }
 
    TList* browsables = const_cast<TBranchObject*>(this)->GetBrowsables();
@@ -500,9 +500,9 @@ void TBranchObject::SetAddress(void* add)
 /// This function can be used to instruct Root in TBranchObject::ReadBasket
 /// to not delete the object referenced by a branchobject before reading a
 /// new entry. By default, the object is deleted.
-/// - If autodel is kTRUE, this existing object will be deleted, a new object
+/// - If autodel is true, this existing object will be deleted, a new object
 ///     created by the default constructor, then object->Streamer called.
-/// - If autodel is kFALSE, the existing object is not deleted. Root assumes
+/// - If autodel is false, the existing object is not deleted. Root assumes
 ///     that the user is taking care of deleting any internal object or array
 ///     This can be done in Streamer itself.
 /// - If this branch has sub-branches, the function sets autodel for these
@@ -514,7 +514,7 @@ void TBranchObject::SetAddress(void* add)
 /// not necessary to specify the option again when reading, unless you
 /// want to set the opposite mode.
 
-void TBranchObject::SetAutoDelete(Bool_t autodel)
+void TBranchObject::SetAutoDelete(bool autodel)
 {
    TBranch::SetAutoDelete(autodel);
 
@@ -557,7 +557,7 @@ void TBranchObject::Streamer(TBuffer& R__b)
 
       // make sure that all TStreamerInfo objects referenced by
       // this class are written to the file
-      R__b.ForceWriteInfo(TClass::GetClass(fClassName.Data())->GetStreamerInfo(), kTRUE);
+      R__b.ForceWriteInfo(TClass::GetClass(fClassName.Data())->GetStreamerInfo(), true);
 
       // if branch is in a separate file save this branch
       // as an independent key

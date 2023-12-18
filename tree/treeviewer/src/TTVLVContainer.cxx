@@ -79,7 +79,7 @@ void TGItemContext::Scan()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set item expression
 
-void TGItemContext::SetExpression(const char *name, const char *alias, Bool_t cut)
+void TGItemContext::SetExpression(const char *name, const char *alias, bool cut)
 {
    fItem->SetExpression(name, alias, cut);
 }
@@ -104,7 +104,7 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
    fContainer = (TTVLVContainer *) p;
 
    fTip = nullptr;
-   fIsCut = kFALSE;
+   fIsCut = false;
    fTrueName = name->GetString();
    fContext = new TGItemContext();
    fContext->Associate(this);
@@ -150,17 +150,17 @@ const char *TTVLVEntry::ConvertAliases()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if converted name is alias free
 
-Bool_t TTVLVEntry::FullConverted()
+bool TTVLVEntry::FullConverted()
 {
    TList *list = GetContainer()->GetViewer()->ExpressionList();
    TIter next(list);
    TTVLVEntry* item;
    while ((item=(TTVLVEntry*)next())) {
       if (item != this) {
-         if (fConvName.Contains(item->GetAlias())) return kFALSE;
+         if (fConvName.Contains(item->GetAlias())) return false;
       }
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ void TTVLVEntry::CopyItem(TTVLVEntry *dest)
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle mouse crossing event.
 
-Bool_t TTVLVEntry::HandleCrossing(Event_t *event)
+bool TTVLVEntry::HandleCrossing(Event_t *event)
 {
    if (fTip) {
       if (event->fType == kEnterNotify)
@@ -185,16 +185,16 @@ Bool_t TTVLVEntry::HandleCrossing(Event_t *event)
       else
          fTip->Hide();
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if alias name is not empty.
 
-Bool_t TTVLVEntry::HasAlias()
+bool TTVLVEntry::HasAlias()
 {
-   if (fAlias.Length()) return kTRUE;
-   return kFALSE;
+   if (fAlias.Length()) return true;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +225,7 @@ void TTVLVEntry::SetItemName(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set cut type
 
-void TTVLVEntry::SetCutType(Bool_t type)
+void TTVLVEntry::SetCutType(bool type)
 {
    if (fIsCut && type) return;
    if (!fIsCut && !type) return;
@@ -240,7 +240,7 @@ void TTVLVEntry::SetCutType(Bool_t type)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the true name, alias and type of the expression, then refresh it
 
-void TTVLVEntry::SetExpression(const char* name, const char* alias, Bool_t cutType)
+void TTVLVEntry::SetExpression(const char* name, const char* alias, bool cutType)
 {
    SetItemName(alias);
    SetAlias(alias);
@@ -317,7 +317,7 @@ TTVLVContainer::TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t opt
    fExpressionList = new TList;
    fCursor = gVirtualX->CreateCursor(kMove);
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
-   fMapSubwindows = kTRUE;
+   fMapSubwindows = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,7 +433,7 @@ const char* TTVLVContainer::ScanList()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle mouse button event in container.
 
-Bool_t TTVLVContainer::HandleButton(Event_t *event)
+bool TTVLVContainer::HandleButton(Event_t *event)
 {
    int total, selected;
 
@@ -441,7 +441,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
       fXp = event->fX;
       fYp = event->fY;
       if (fLastActive) {
-         fLastActive->Activate(kFALSE);
+         fLastActive->Activate(false);
          fLastActive = nullptr;
       }
       total = selected = 0;
@@ -452,14 +452,14 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
          TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
          ++total;
          if (f->GetId() == (Window_t)event->fUser[0]) {  // fUser[0] = subwindow
-            f->Activate(kTRUE);
+            f->Activate(true);
             if (f->GetTip()) (f->GetTip())->Hide();
             fX0 = f->GetX();
             fY0 = f->GetY();
             ++selected;
             fLastActive = f;
          } else {
-            f->Activate(kFALSE);
+            f->Activate(false);
          }
       }
 
@@ -473,7 +473,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
       if (selected == 1 && event->fCode == 1) {
          ULong_t *itemType = (ULong_t *) fLastActive->GetUserData();
          if (*itemType & TTreeViewer::kLTDragType) {
-            fDragging = kTRUE;
+            fDragging = true;
             gVirtualX->SetCursor(fId,fCursor);
             fXp = event->fX;
             fYp = event->fY;
@@ -483,7 +483,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
 
    if (event->fType == kButtonRelease) {
       if (fDragging) {
-         fDragging = kFALSE;
+         fDragging = false;
          gVirtualX->SetCursor(fId,fDefaultCursor);
          fLastActive->Move(fX0,fY0);
          TGFrameElement *el;
@@ -492,7 +492,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
             TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
             if ((f == fLastActive) || !f->IsActive()) continue;
             ULong_t *itemType = (ULong_t *) f->GetUserData();
-            fLastActive->Activate(kFALSE);
+            fLastActive->Activate(false);
             if (!(*itemType & TTreeViewer::kLTPackType)) {
                // dragging items to expressions
                ((TTVLVEntry *) fLastActive)->CopyItem(f);
@@ -536,13 +536,13 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
                      event->fCode, (event->fYRoot << 16) | event->fXRoot);
       }
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle mouse motion events.
 
-Bool_t TTVLVContainer::HandleMotion(Event_t *event)
+bool TTVLVContainer::HandleMotion(Event_t *event)
 {
    Int_t xf0, xff, yf0, yff;
    Int_t xpos = event->fX - (fXp-fX0);
@@ -565,9 +565,9 @@ Bool_t TTVLVContainer::HandleMotion(Event_t *event)
          itemType = (ULong_t *) f->GetUserData();
          if (*itemType & TTreeViewer::kLTExpressionType) {
             if (xpos>xf0 && xpos<xff && ypos>yf0 && ypos<yff) {
-               f->Activate(kTRUE);
+               f->Activate(true);
             } else {
-               f->Activate(kFALSE);
+               f->Activate(false);
             }
          }
       }
@@ -579,7 +579,7 @@ Bool_t TTVLVContainer::HandleMotion(Event_t *event)
       gVirtualX->RaiseWindow(fLastActive->GetId());
       SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER,(EWidgetMessageTypes)4),event->fX, event->fY);
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -626,7 +626,7 @@ void TTVLVContainer::RemoveNonStatic()
 void TTVLVContainer::SelectItem(const char* name)
 {
    if (fLastActive) {
-      fLastActive->Activate(kFALSE);
+      fLastActive->Activate(false);
       fLastActive = nullptr;
    }
    TGFrameElement *el;
@@ -635,11 +635,11 @@ void TTVLVContainer::SelectItem(const char* name)
    while ((el = (TGFrameElement *) next())) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (!strcmp(f->GetItemName()->GetString(),name)) {
-         f->Activate(kTRUE);
+         f->Activate(true);
          fLastActive = (TGLVEntry *) f;
          fSelected++;
       } else {
-         f->Activate(kFALSE);
+         f->Activate(false);
       }
    }
 }
@@ -778,7 +778,7 @@ void TGSelectBox::SaveText()
 {
    if (fEntry) {
 
-      Bool_t cutType;
+      bool cutType;
       TString name(fTe->GetText());
       if (name.Length())
          fEntry->SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
@@ -832,7 +832,7 @@ void TGSelectBox::InsertText(const char* text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Message interpreter
 
-Bool_t TGSelectBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
+bool TGSelectBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:
@@ -868,17 +868,17 @@ Bool_t TGSelectBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
          if (parm2) break;       // just to avoid warning on CC compiler
          break;
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if edited alias is not a leading string of other expression aliases
 
-Bool_t TGSelectBox::ValidateAlias()
+bool TGSelectBox::ValidateAlias()
 {
    if (!strcmp(fTeAlias->GetText(), "-empty-") || !strlen(fTeAlias->GetText())) {
       fViewer->Warning("ValidateAlias", "You should define the alias first.");
-      return kFALSE;
+      return false;
    }
    TList *list = fViewer->ExpressionList();
    TIter next(list);
@@ -888,9 +888,9 @@ Bool_t TGSelectBox::ValidateAlias()
          TString itemalias(item->GetAlias());
          if (itemalias.Contains(fTeAlias->GetText())) {
             fViewer->Warning("ValidAlias", "Alias can not be the leading string of other alias.");
-            return kFALSE;
+            return false;
          }
       }
    }
-   return kTRUE;
+   return true;
 }

@@ -44,7 +44,7 @@ To use this file, try the following session on your Tree T:
 /// Default, constructor.
 
 TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
-   fOwnInput(kFALSE), fChain(tree), fSelect(nullptr), fSelectedRows(0), fSelectMultiple(kFALSE)
+   fOwnInput(false), fChain(tree), fSelect(nullptr), fSelectedRows(0), fSelectMultiple(false)
 {
    if (selection && selection[0]) {
       TSelectorEntries::SetSelection(selection);
@@ -55,7 +55,7 @@ TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
 /// Constructor.
 
 TSelectorEntries::TSelectorEntries(const char *selection) :
-   fOwnInput(kFALSE), fChain(nullptr), fSelect(nullptr), fSelectedRows(0), fSelectMultiple(kFALSE)
+   fOwnInput(false), fChain(nullptr), fSelect(nullptr), fSelectedRows(0), fSelectMultiple(false)
 {
    TSelectorEntries::SetSelection(selection);
 }
@@ -101,10 +101,10 @@ void TSelectorEntries::SlaveBegin(TTree *tree)
 
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fChain);
-      fSelect->SetQuickLoad(kTRUE);
+      fSelect->SetQuickLoad(true);
       if (!fSelect->GetNdim()) {delete fSelect; fSelect = nullptr; return; }
    }
-   if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = kTRUE;
+   if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = true;
 
    fChain->ResetBit(TTree::kForceRead);
 }
@@ -133,10 +133,10 @@ void TSelectorEntries::Init(TTree * /* tree */)
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called at the first entry of a new tree in a chain.
 
-Bool_t TSelectorEntries::Notify()
+bool TSelectorEntries::Notify()
 {
    if (fSelect) fSelect->UpdateFormulaLeaves();
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ Bool_t TSelectorEntries::Notify()
 ///
 /// The return value is currently not used.
 
-Bool_t TSelectorEntries::Process(Long64_t /* entry */)
+bool TSelectorEntries::Process(Long64_t /* entry */)
 {
    if (!fSelectMultiple) {
       if (fSelect) {
@@ -173,7 +173,7 @@ Bool_t TSelectorEntries::Process(Long64_t /* entry */)
       Int_t ndata = fSelect->GetNdata();
 
       // No data at all, let's move on to the next entry.
-      if (!ndata) return kTRUE;
+      if (!ndata) return true;
 
       // Calculate the first values
       // Always call EvalInstance(0) to insure the loading
@@ -189,7 +189,7 @@ Bool_t TSelectorEntries::Process(Long64_t /* entry */)
          }
       }
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +198,7 @@ Bool_t TSelectorEntries::Process(Long64_t /* entry */)
 void TSelectorEntries::SetSelection(const char *selection)
 {
    if (!fInput) {
-      fOwnInput = kTRUE;
+      fOwnInput = true;
       fInput = new TList;
    }
    TNamed *cselection = (TNamed*)fInput->FindObject("selection");

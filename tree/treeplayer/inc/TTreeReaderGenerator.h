@@ -77,27 +77,27 @@ namespace Internal {
             }
          }
 
-      Bool_t IsClones() const { return fIsClones == kClones; }
+      bool IsClones() const { return fIsClones == kClones; }
 
-      Bool_t IsSTL() const { return fIsClones == kSTL; }
+      bool IsSTL() const { return fIsClones == kSTL; }
    };
 
    class TTreeReaderGenerator : public TTreeGeneratorBase
    {
       TString               fClassname;         ///< Class name of the selector
       TList                 fListOfReaders;     ///< List of readers
-      Bool_t                fIncludeAllLeaves;  ///< Should all leaves be included
-      Bool_t                fIncludeAllTopmost; ///< Should all topmost branches be included
+      bool                  fIncludeAllLeaves;  ///< Should all leaves be included
+      bool                  fIncludeAllTopmost; ///< Should all topmost branches be included
       std::vector<TString>  fIncludeLeaves;     ///< Branches whose leaves should be included
       std::vector<TString>  fIncludeStruct;     ///< Branches whom should be included
 
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name,
-                       TString branchName, TBranchDescriptor *parent = nullptr, Bool_t isLeaf = kTRUE);
+                       TString branchName, TBranchDescriptor *parent = nullptr, bool isLeaf = true);
       UInt_t AnalyzeBranches(TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info);
       UInt_t AnalyzeBranches(TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info);
       UInt_t AnalyzeOldBranch(TBranch *branch);
       UInt_t AnalyzeOldLeaf(TLeaf *leaf, Int_t nleaves);
-      Bool_t BranchNeedsReader(TString branchName, TBranchDescriptor *parent, Bool_t isLeaf);
+      bool   BranchNeedsReader(TString branchName, TBranchDescriptor *parent, bool isLeaf);
 
       void   ParseOptions();
       void   AnalyzeTree(TTree *tree);

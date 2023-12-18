@@ -60,18 +60,18 @@ void TTreeDrawArgsParser::ClearPrevious()
    for (i = 0; i < fgMaxDimension; i++) {
       fVarExp[i] = "";
    }
-   fAdd = kFALSE;
+   fAdd = false;
    fName = "";
    fNoParameters = 0;
    for (i = 0; i < fgMaxParameters; i++) {
-      fParameterGiven[i] = kFALSE;
+      fParameterGiven[i] = false;
       fParameters[i] = 0;
    }
-   fShouldDraw = kTRUE;
+   fShouldDraw = true;
    fOriginal = nullptr;
-   fDrawProfile = kFALSE;
-   fOptionSame = kFALSE;
-   fEntryList = kFALSE;
+   fDrawProfile = false;
+   fOptionSame = false;
+   fEntryList = false;
    fOutputType = kUNKNOWN;
 }
 
@@ -90,13 +90,13 @@ void TTreeDrawArgsParser::ClearPrevious()
 ///  - `fVarExp[0] := <first variable string>`
 ///  - `fVarExp[1] := <second variable string>`
 /// ..
-/// Returns kFALSE in case of an error.
+/// Returns false in case of an error.
 
-Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
+bool TTreeDrawArgsParser::SplitVariables(TString variables)
 {
    fDimension = 0;
    if (variables.Length() == 0)
-      return kTRUE;
+      return true;
 
    int prev = 0;
    int i;
@@ -112,9 +112,9 @@ Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
    if (fDimension < fgMaxDimension && i != prev)
       fVarExp[fDimension++] = variables(prev, i - prev);
    else
-      return kFALSE;
+      return false;
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,23 +126,23 @@ Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
 /// sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
 /// to appropriate values.
 ///
-/// Returns kFALSE in case of an error.
+/// Returns false in case of an error.
 
-Bool_t TTreeDrawArgsParser::ParseName(TString name)
+bool TTreeDrawArgsParser::ParseName(TString name)
 {
    name.ReplaceAll(" ", "");
 
    if (name.Length() != 0 && name[0] == '+') {
-      fAdd = kTRUE;
+      fAdd = true;
       name = name (1, name.Length() - 1);
    }
    else
-      fAdd = kFALSE;
-   Bool_t result = kTRUE;
+      fAdd = false;
+   bool result = true;
 
    fNoParameters = 0;
    for (int i = 0; i < fgMaxParameters; i++)
-      fParameterGiven[i] = kFALSE;
+      fParameterGiven[i] = false;
 
    if (char *p = (char*)strstr(name.Data(), "(")) {
       fName = name(0, p - name.Data());
@@ -155,12 +155,12 @@ Bool_t TTreeDrawArgsParser::ParseName(TString name)
             p++;
          TString s(q, p - q);
          if (sscanf(s.Data(), "%lf", &fParameters[i]) == 1) {
-            fParameterGiven[i] = kTRUE;
+            fParameterGiven[i] = true;
             fNoParameters++;
          }
          if (p == end) {
             Error("ParseName", "expected \')\'");
-            result = kFALSE;
+            result = false;
             break;
          }
          else if (*p == ')')
@@ -169,7 +169,7 @@ Bool_t TTreeDrawArgsParser::ParseName(TString name)
             p++;
          else {
             Error("ParseName", "impossible value for *q!");
-            result = kFALSE;
+            result = false;
             break;
          }
       }
@@ -183,7 +183,7 @@ Bool_t TTreeDrawArgsParser::ParseName(TString name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Split variables and parse name and parameters in brackets.
 
-Bool_t TTreeDrawArgsParser::ParseVarExp()
+bool TTreeDrawArgsParser::ParseVarExp()
 {
    char* gg = (char*)strstr(fExp.Data(), ">>");
    TString variables;
@@ -197,10 +197,10 @@ Bool_t TTreeDrawArgsParser::ParseVarExp()
       variables = fExp;
       name = "";
    }
-   Bool_t result = SplitVariables(variables) && ParseName(name);
+   bool result = SplitVariables(variables) && ParseName(name);
    if (!result) {
       Error("ParseVarExp", "error parsing variable expression");
-      return kFALSE;
+      return false;
    }
    return result;
 }
@@ -209,21 +209,21 @@ Bool_t TTreeDrawArgsParser::ParseVarExp()
 /// Check if options contain some data important for choosing the type of the
 /// drawn object.
 
-Bool_t TTreeDrawArgsParser::ParseOption()
+bool TTreeDrawArgsParser::ParseOption()
 {
    fOption.ToLower();
 
    if (fOption.Contains("goff")) {
-      fShouldDraw = kFALSE;
+      fShouldDraw = false;
    }
    if (fOption.Contains("prof")) {
-      fDrawProfile = kTRUE;
+      fDrawProfile = true;
    }
    if (fOption.Contains("same")) {
-      fOptionSame = kTRUE;
+      fOptionSame = true;
    }
    if (fOption.Contains("entrylist")){
-      fEntryList = kTRUE;
+      fEntryList = true;
    }
    return true;
 }
@@ -234,7 +234,7 @@ Bool_t TTreeDrawArgsParser::ParseOption()
 ///  - selection - selection expression; see TTree::Draw()
 ///  - option - Drawing option; see TTree::Draw
 
-Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Option_t *option)
+bool TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Option_t *option)
 {
    ClearPrevious();
 
@@ -242,11 +242,11 @@ Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Opt
    fSelection = selection;
    fExp = varexp;
    fOption = option;
-   Bool_t success = ParseVarExp();
+   bool success = ParseVarExp();
    success &= ParseOption();
 
    if (!success)
-      return kFALSE;
+      return false;
 
    // if the name was specified find the existing histogram
    if (fName != "") {
@@ -257,7 +257,7 @@ Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Opt
 
    DefineType();
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,16 +277,16 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
       return fOutputType = kPROFILE2D;
 
    if (fDimension == 2) {
-      Bool_t graph = kFALSE;
+      bool graph = false;
 // GG 9Mar2014: fixing ROOT-5337; should understand why it was like this, but we move to TSelectorDraw
 //              and this will disappear
 //      Int_t l = fOption.Length();
-//      if (l == 0 || fOption.Contains("same")) graph = kTRUE;
-      if (fOption.Contains("same")) graph = kTRUE;
-      if (fOption.Contains("p")     || fOption.Contains("*")    || fOption.Contains("l"))    graph = kTRUE;
-      if (fOption.Contains("surf")  || fOption.Contains("lego") || fOption.Contains("cont")) graph = kFALSE;
-      if (fOption.Contains("col")   || fOption.Contains("hist") || fOption.Contains("scat")) graph = kFALSE;
-      if (fOption.Contains("box"))                                                   graph = kFALSE;
+//      if (l == 0 || fOption.Contains("same")) graph = true;
+      if (fOption.Contains("same")) graph = true;
+      if (fOption.Contains("p")     || fOption.Contains("*")    || fOption.Contains("l"))    graph = true;
+      if (fOption.Contains("surf")  || fOption.Contains("lego") || fOption.Contains("cont")) graph = false;
+      if (fOption.Contains("col")   || fOption.Contains("hist") || fOption.Contains("scat")) graph = false;
+      if (fOption.Contains("box"))                                                   graph = false;
       if (graph)
          return fOutputType = kGRAPH;
       else
@@ -372,18 +372,18 @@ Double_t TTreeDrawArgsParser::GetIfSpecified(Int_t num, Double_t def) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns kTRUE if the *num*-th parameter was specified
+/// returns true if the *num*-th parameter was specified
 /// otherwise returns fFALSE
 /// in case of an error (wrong num) prints an error message and
-/// returns kFALSE.
+/// returns false.
 
-Bool_t TTreeDrawArgsParser::IsSpecified(int num) const
+bool TTreeDrawArgsParser::IsSpecified(int num) const
 {
    if (num >= 0 && num <= fgMaxParameters)
       return fParameterGiven[num];
    else
       Error("Specified", "wrong parameter %d; fgMaxParameters: %d", num, fgMaxParameters);
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

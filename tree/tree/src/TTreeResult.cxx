@@ -78,17 +78,17 @@ void TTreeResult::Close(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if result set is open and field index within range.
 
-Bool_t TTreeResult::IsValid(Int_t field)
+bool TTreeResult::IsValid(Int_t field)
 {
    if (!fResult) {
       Error("IsValid", "result set closed");
-      return kFALSE;
+      return false;
    }
    if (field < 0 || field >= GetFieldCount()) {
       Error("IsValid", "field index out of bounds");
-      return kFALSE;
+      return false;
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@ namespace Internal {
 
    class TFriendProxyDescriptor : public TNamed {
 
-      Bool_t fDuplicate;
+      bool fDuplicate;
       Int_t  fIndex;
       TList  fListOfTopProxies;
 
@@ -35,13 +35,13 @@ namespace Internal {
       Int_t  GetIndex() const { return fIndex; }
       TList *GetListOfTopProxies() { return &fListOfTopProxies; }
 
-      Bool_t IsEquivalent(const TFriendProxyDescriptor *other);
+      bool IsEquivalent(const TFriendProxyDescriptor *other);
 
       void OutputClassDecl(FILE *hf, int offset, UInt_t maxVarname);
       void OutputDecl(FILE *hf, int offset, UInt_t maxVarname);
 
-      Bool_t IsDuplicate() { return fDuplicate; }
-      void   SetDuplicate() { fDuplicate = kTRUE; }
+      bool IsDuplicate() { return fDuplicate; }
+      void   SetDuplicate() { fDuplicate = true; }
 
       ClassDefOverride(TFriendProxyDescriptor,0); // Describe a branch from a TTreeFriend.
    };

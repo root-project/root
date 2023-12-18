@@ -46,29 +46,29 @@ public:
    }
 
    // TFile related info. In general they are gathered and sent only sometimes as summaries
-   Bool_t SendFileCloseEvent(TFile * /*file*/) override { return kFALSE; }
-   Bool_t SendFileReadProgress(TFile * /*file*/) override { return kFALSE; }
-   Bool_t SendFileWriteProgress(TFile * /*file*/) override { return kFALSE; }
+   bool SendFileCloseEvent(TFile * /*file*/) override { return false; }
+   bool SendFileReadProgress(TFile * /*file*/) override { return false; }
+   bool SendFileWriteProgress(TFile * /*file*/) override { return false; }
 
-   Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = nullptr) override { return kFALSE; }
-   Bool_t SendInfoTime() override { return kFALSE; }
-   Bool_t SendInfoUser(const char * /*user*/ = nullptr) override { return kFALSE; }
-   Bool_t SendInfoDescription(const char * /*jobtag*/) override { return kFALSE; }
-   Bool_t SendInfoStatus(const char * /*status*/) override { return kFALSE; }
+   bool SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = nullptr) override { return false; }
+   bool SendInfoTime() override { return false; }
+   bool SendInfoUser(const char * /*user*/ = nullptr) override { return false; }
+   bool SendInfoDescription(const char * /*jobtag*/) override { return false; }
+   bool SendInfoStatus(const char * /*status*/) override { return false; }
 
-   Bool_t SendFileOpenProgress(TFile * /*file*/, TList * /*openphases*/, const char * /*openphasename*/,
-                               Bool_t /*forcesend*/ = kFALSE) override
+   bool SendFileOpenProgress(TFile * /*file*/, TList * /*openphases*/, const char * /*openphasename*/,
+                               bool /*forcesend*/ = false) override
    {
-      return kFALSE;
+      return false;
    }
 
-   Bool_t SendProcessingStatus(const char * /*status*/, Bool_t /*restarttimer*/ = kFALSE) override { return kFALSE; }
-   Bool_t SendProcessingProgress(Double_t nevent, Double_t /*nbytes*/, Bool_t /*force*/ = kFALSE) override
+   bool SendProcessingStatus(const char * /*status*/, bool /*restarttimer*/ = false) override { return false; }
+   bool SendProcessingProgress(Double_t nevent, Double_t /*nbytes*/, bool /*force*/ = false) override
    {
       long long millisec = gSystem->Now();
 
       if (fLastProgressSendTm && (millisec < fLastProgressSendTm + fPeriod))
-         return kTRUE;
+         return true;
 
       fLastProgressSendTm = millisec;
 
@@ -76,10 +76,10 @@ public:
 
       fViewer.SendProgress(nevent);
 
-      return kTRUE;
+      return true;
    }
    void SetLogLevel(const char * /*loglevel*/ = "WARNING") override {}
-   void Verbose(Bool_t /*onoff*/) override {}
+   void Verbose(bool /*onoff*/) override {}
 };
 
 
@@ -88,7 +88,7 @@ public:
    RTreeViewer &fViewer;
 
    /// constructor
-   RTreeDrawInvokeTimer(Long_t milliSec, Bool_t mode, RTreeViewer &viewer) : TTimer(milliSec, mode), fViewer(viewer) {}
+   RTreeDrawInvokeTimer(Long_t milliSec, bool mode, RTreeViewer &viewer) : TTimer(milliSec, mode), fViewer(viewer) {}
 
    /// timeout handler
    /// used to process postponed requests in main ROOT thread
@@ -119,7 +119,7 @@ RTreeViewer::RTreeViewer(TTree *tree)
 
    if (tree) SetTree(tree);
 
-   fTimer = std::make_unique<RTreeDrawInvokeTimer>(10, kTRUE, *this);
+   fTimer = std::make_unique<RTreeDrawInvokeTimer>(10, true, *this);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -475,7 +475,7 @@ void RTreeViewer::SendProgress(Double_t nevent)
 
    fLastSendProgress = progress;
 
-   if (fWebWindow->CanSend(0, kTRUE))
+   if (fWebWindow->CanSend(0, true))
       fWebWindow->Send(0, "PROGRESS:"s + progress);
 }
 

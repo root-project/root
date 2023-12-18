@@ -70,25 +70,25 @@ public:
    void           AddVariable(const char* varexp);
    void           AddSelection(const char* title);
    void           ApplySelectionToTree(); // *MENU*
-   static void    BuildParallelCoord(TSelectorDraw* selector, Bool_t candle);
+   static void    BuildParallelCoord(TSelectorDraw* selector, bool candle);
    void           CleanUpSelections(TParallelCoordRange* range);
    void           RemoveVariable(TParallelCoordVar* var);
-   Bool_t         RemoveVariable(const char* var);
+   bool           RemoveVariable(const char* var);
    void           DeleteSelection(TParallelCoordSelect* sel);
-   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
-   void   Draw(Option_t* options="") override;
-   void   ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
-   Bool_t         GetCandleChart() {return TestBit(kCandleChart);}
+   Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
+   void           Draw(Option_t* options="") override;
+   void           ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
+   bool           GetCandleChart() {return TestBit(kCandleChart);}
    Long64_t       GetCurrentFirst() {return fCurrentFirst;}
    Long64_t       GetCurrentN() {return fCurrentN;}
    TParallelCoordSelect* GetCurrentSelection();
-   Bool_t         GetCurveDisplay() const {return TestBit(kCurveDisplay);}
+   bool           GetCurveDisplay() const {return TestBit(kCurveDisplay);}
    Int_t          GetDotsSpacing() const {return fDotsSpacing;}
-   TEntryList    *GetEntryList(Bool_t sel=kTRUE);
+   TEntryList    *GetEntryList(bool sel=true);
    Double_t       GetGlobalMin();
    Double_t       GetGlobalMax();
-   Bool_t         GetGlobalScale() {return TestBit(kGlobalScale);}
-   Bool_t         GetGlobalLogScale() {return TestBit(kGlobalLogScale);}
+   bool           GetGlobalScale() {return TestBit(kGlobalScale);}
+   bool           GetGlobalLogScale() {return TestBit(kGlobalLogScale);}
    Color_t        GetLineColor() {return fLineColor;}
    Width_t        GetLineWidth() {return fLineWidth;}
    Int_t          GetNbins();
@@ -100,18 +100,18 @@ public:
    Double_t      *GetVariable(const char* var);
    Double_t      *GetVariable(Int_t i);
    TList         *GetVarList() {return fVarList;}
-   Bool_t         GetVertDisplay() const {return TestBit(kVertDisplay);}
+   bool           GetVertDisplay() const {return TestBit(kVertDisplay);}
    Int_t          GetWeightCut() const {return fWeightCut;};
-   void   Paint(Option_t* options="") override;
+   void           Paint(Option_t* options="") override;
    void           ResetTree();
-   void           SaveEntryLists(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
+   void           SaveEntryLists(const char* filename="", bool overwrite=false); // *MENU*
    void           SavePrimitive(std::ostream & out,Option_t *options) override;
-   void           SaveTree(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
+   void           SaveTree(const char* filename="", bool overwrite=false); // *MENU*
    void           SetAxisHistogramBinning(Int_t n=100); // *MENU*
    void           SetAxisHistogramHeight(Double_t h=0.5); // *MENU*
    void           SetAxisHistogramLineWidth(Int_t lw=2); // *MENU*
-   void           SetCandleChart(Bool_t can); // *TOGGLE* *GETTER=GetCandleChart
-   virtual void   SetCurveDisplay(Bool_t curve=true) {SetBit(kCurveDisplay,curve);} // *TOGGLE* *GETTER=GetCurveDisplay
+   void           SetCandleChart(bool can); // *TOGGLE* *GETTER=GetCandleChart
+   virtual void   SetCurveDisplay(bool curve=true) {SetBit(kCurveDisplay,curve);} // *TOGGLE* *GETTER=GetCurveDisplay
    void           SetCurrentEntries(TEntryList* entries) {fCurrentEntries = entries;}
    void           SetCurrentFirst(Long64_t);
    void           SetCurrentN(Long64_t);
@@ -119,17 +119,17 @@ public:
    void           SetCurrentSelection(TParallelCoordSelect* sel);
    void           SetDotsSpacing(Int_t s=0); // *MENU*
    static void    SetEntryList(TParallelCoord* para, TEntryList* enlist);
-   void           SetGlobalScale(Bool_t gl); // *TOGGLE* *GETTER=GetGlobalScale
-   void           SetGlobalLogScale(Bool_t); // *TOGGLE* *GETTER=GetGlobalLogScale
+   void           SetGlobalScale(bool gl); // *TOGGLE* *GETTER=GetGlobalScale
+   void           SetGlobalLogScale(bool); // *TOGGLE* *GETTER=GetGlobalLogScale
    void           SetGlobalMin(Double_t min);
    void           SetGlobalMax(Double_t max);
    void           SetInitEntries(TEntryList* entries) {fInitEntries = entries;}
    void           SetLineColor(Color_t col) {fLineColor = col;}
    void           SetLineWidth(Width_t wid) {fLineWidth = wid;}
-   void           SetLiveRangesUpdate(Bool_t);
+   void           SetLiveRangesUpdate(bool);
    void           SetNentries(Long64_t n) {fNentries = n;}
    void           SetTree(TTree* tree) {fTree = tree;}
-   void           SetVertDisplay(Bool_t vert=kTRUE); // *TOGGLE* *GETTER=GetVertDisplay
+   void           SetVertDisplay(bool vert=true); // *TOGGLE* *GETTER=GetVertDisplay
    void           SetWeightCut(Int_t w=0) {fWeightCut = w;} // *MENU*
    void           UnzoomAll(); // *MENU*
 

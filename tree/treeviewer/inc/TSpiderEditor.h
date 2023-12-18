@@ -75,7 +75,7 @@ public:
 
    virtual void         DoAddVar();
    virtual void         DoDeleteVar();
-   virtual void         DoDisplayAverage(Bool_t av);
+   virtual void         DoDisplayAverage(bool av);
    virtual void         DoGotoEntry();
    virtual void         DoGotoNext();
    virtual void         DoGotoPrevious();

@@ -90,7 +90,7 @@ void Debug(Int_t level, const char *va_(fmt), ...)
 
 namespace {
 
-   Bool_t AreDifferent(const TString& from, const TString& to)
+   bool AreDifferent(const TString& from, const TString& to)
    {
       FILE *left = fopen(from.Data(),"r");
       FILE *right = fopen(to.Data(),"r");
@@ -100,7 +100,7 @@ namespace {
 
       char *lvalue,*rvalue;
 
-      Bool_t areEqual = kTRUE;
+      bool areEqual = true;
 
       do {
          lvalue = fgets(leftbuffer, sizeof(leftbuffer), left);
@@ -113,8 +113,8 @@ namespace {
                areEqual = areEqual && (0 == strncmp(lvalue,rvalue,sizeof(leftbuffer)));
             }
          }
-         if (lvalue&&!rvalue) areEqual = kFALSE;
-         if (rvalue&&!lvalue) areEqual = kFALSE;
+         if (lvalue&&!rvalue) areEqual = false;
+         if (rvalue&&!lvalue) areEqual = false;
 
       } while(areEqual && lvalue && rvalue);
 
@@ -256,7 +256,7 @@ namespace Internal {
    ////////////////////////////////////////////////////////////////////////////////
    /// Return true if we should create a nested class representing this class
 
-   Bool_t TTreeProxyGenerator::NeedToEmulate(TClass *cl, UInt_t /* level */)
+   bool TTreeProxyGenerator::NeedToEmulate(TClass *cl, UInt_t /* level */)
    {
       return cl!=nullptr && cl->TestBit(TClass::kIsEmulation);
    }
@@ -410,7 +410,7 @@ namespace Internal {
    /// Generate an enum for a given type if it is not known in the list of class
    /// unless the type itself a template.
 
-   void TTreeProxyGenerator::AddMissingClassAsEnum(const char *clname, Bool_t isscope)
+   void TTreeProxyGenerator::AddMissingClassAsEnum(const char *clname, bool isscope)
    {
       if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == nullptr) {
 
@@ -440,15 +440,15 @@ namespace Internal {
       UInt_t len = strlen(clname);
       UInt_t nest = 0;
       UInt_t last = 0;
-      //Bool_t istemplate = kFALSE; // mark whether the current right most entity is a class template.
+      //bool istemplate = false; // mark whether the current right most entity is a class template.
 
       for (UInt_t i = 0; i < len; ++i) {
          switch (clname[i]) {
             case ':':
                if (nest == 0 && clname[i+1] == ':') {
                   TString incName(clname, i);
-                  AddMissingClassAsEnum(incName.Data(), kTRUE);
-                  //istemplate = kFALSE;
+                  AddMissingClassAsEnum(incName.Data(), true);
+                  //istemplate = false;
                }
                break;
             case '<':
@@ -467,13 +467,13 @@ namespace Internal {
                   if (isdigit(incName[0])) {
                      // Not a class name, nothing to do.
                   } else {
-                     AddMissingClassAsEnum(incName.Data(),kFALSE);
+                     AddMissingClassAsEnum(incName.Data(),false);
                   }
                   last = i + 1;
                }
          }
       }
-      AddMissingClassAsEnum(TClassEdit::ShortType(clname, TClassEdit::kDropTrailStar | TClassEdit::kLong64).c_str(),kFALSE);
+      AddMissingClassAsEnum(TClassEdit::ShortType(clname, TClassEdit::kDropTrailStar | TClassEdit::kLong64).c_str(),false);
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -524,7 +524,7 @@ namespace Internal {
       TBranchProxyClassDescriptor::ELocation outer_isclones = TBranchProxyClassDescriptor::kOut;
       TString containerName;
       TString subBranchPrefix;
-      Bool_t skipped = false;
+      bool skipped = false;
 
       {
          TIter peek = branches;
@@ -575,8 +575,8 @@ namespace Internal {
            element;
            element = (TStreamerElement*)elements() )
       {
-         Bool_t isBase = false;
-         Bool_t usedBranch = kTRUE;
+         bool isBase = false;
+         bool usedBranch = true;
          TString prefix;
          TIter peek = branches;
          TBranchElement *branch = (TBranchElement*)peek();
@@ -620,7 +620,7 @@ namespace Internal {
             }
          }
 
-         Bool_t ispointer = false;
+         bool ispointer = false;
          switch(element->GetType()) {
 
             case TVirtualStreamerInfo::kBool:    { proxyTypeName = "T" + middle + "BoolProxy"; break; }
@@ -804,7 +804,7 @@ namespace Internal {
                                                               local_prefix,
                                                               isclones, branch->GetSplitLevel(),
                                                               containerName);
-                     usedBranch = kFALSE;
+                     usedBranch = false;
                      lookedAt += AnalyzeBranches( level, cldesc, branches, objInfo );
                   }
 
@@ -879,8 +879,8 @@ namespace Internal {
                                                               local_prefix,
                                                               isclones, branch->GetSplitLevel(),
                                                               containerName);
-                     usedBranch = kFALSE;
-                     skipped = kTRUE;
+                     usedBranch = false;
+                     skipped = true;
                      lookedAt += AnalyzeBranches( level, cldesc, branches, objInfo );
                   }
 
@@ -1277,7 +1277,7 @@ namespace Internal {
       TString type;
 
       // TString prefix;
-      Bool_t isBase = false;
+      bool isBase = false;
       TString cname;
       TString middle;
       TBranchProxyClassDescriptor::ELocation isclones = TBranchProxyClassDescriptor::kOut;
@@ -1348,7 +1348,7 @@ namespace Internal {
       }
 
 
-      // Bool_t ispointer = false;
+      // bool ispointer = false;
       switch(element->GetType()) {
 
          case TVirtualStreamerInfo::kBool:    { type = "T" + middle + "BoolProxy"; break; }
@@ -1558,34 +1558,34 @@ namespace Internal {
    /// Add the "pragma C++ class" if needed and return
    /// true if it has been added _or_ if it is known to
    /// not be needed.
-   /// (I.e. return kFALSE if a container of this class
+   /// (I.e. return false if a container of this class
    /// can not have a "pragma C++ class"
 
-   static Bool_t R__AddPragmaForClass(TTreeProxyGenerator *gen, TClass *cl)
+   static bool R__AddPragmaForClass(TTreeProxyGenerator *gen, TClass *cl)
    {
-      if (!cl) return kFALSE;
+      if (!cl) return false;
       if (cl->GetCollectionProxy()) {
          TClass *valcl = cl->GetCollectionProxy()->GetValueClass();
          if (!valcl) {
             if (!cl->IsLoaded()) gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
-            return kTRUE;
+            return true;
          } else if (R__AddPragmaForClass(gen, valcl)) {
             if (!cl->IsLoaded()) gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
-            return kTRUE;
+            return true;
          }
       }
-      if (cl->IsLoaded()) return kTRUE;
-      return kFALSE;
+      if (cl->IsLoaded()) return true;
+      return false;
    }
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Add the "pragma C++ class" if needed and return
    /// true if it has been added _or_ if it is known to
    /// not be needed.
-   /// (I.e. return kFALSE if a container of this class
+   /// (I.e. return false if a container of this class
    /// can not have a "pragma C++ class"
 
-   static Bool_t R__AddPragmaForClass(TTreeProxyGenerator *gen, const char *classname)
+   static bool R__AddPragmaForClass(TTreeProxyGenerator *gen, const char *classname)
    {
       return R__AddPragmaForClass( gen, TClass::GetClass(classname) );
 
@@ -1643,15 +1643,15 @@ namespace Internal {
       // If they do we will generate the proxy in temporary file and modify the original
       // if and only if it is different.
 
-      Bool_t updating = kFALSE;
+      bool updating = false;
       if (gSystem->GetPathInfo( fHeaderFileName, nullptr, (Long_t*)nullptr, nullptr, nullptr ) == 0) {
          // file already exist
-         updating = kTRUE;
+         updating = true;
       }
 
 
       TString treefile;
-      Bool_t ischain = fTree->InheritsFrom(TChain::Class());
+      bool ischain = fTree->InheritsFrom(TChain::Class());
       if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile())
          treefile = fTree->GetDirectory()->GetFile()->GetName();
       else
@@ -1784,8 +1784,8 @@ namespace Internal {
       fprintf(hf,"public:\n");
       fprintf(hf,"   void %s_Begin(TTree*) {}\n",scriptfunc.Data());
       fprintf(hf,"   void %s_SlaveBegin(TTree*) {}\n",scriptfunc.Data());
-      fprintf(hf,"   Bool_t %s_Notify() { return kTRUE; }\n",scriptfunc.Data());
-      fprintf(hf,"   Bool_t %s_Process(Long64_t) { return kTRUE; }\n",scriptfunc.Data());
+      fprintf(hf,"   bool %s_Notify() { return true; }\n",scriptfunc.Data());
+      fprintf(hf,"   bool %s_Process(Long64_t) { return true; }\n",scriptfunc.Data());
       fprintf(hf,"   void %s_SlaveTerminate() {}\n",scriptfunc.Data());
       fprintf(hf,"   void %s_Terminate() {}\n",scriptfunc.Data());
       fprintf(hf,"};\n");
@@ -1859,8 +1859,8 @@ namespace Internal {
       fprintf(hf,"   void    Begin(::TTree *tree) override;\n");
       fprintf(hf,"   void    SlaveBegin(::TTree *tree) override;\n");
       fprintf(hf,"   void    Init(::TTree *tree) override;\n");
-      fprintf(hf,"   Bool_t  Notify() override;\n");
-      fprintf(hf,"   Bool_t  Process(Long64_t entry) override;\n");
+      fprintf(hf,"   bool    Notify() override;\n");
+      fprintf(hf,"   bool    Process(Long64_t entry) override;\n");
       fprintf(hf,"   void    SlaveTerminate() override;\n");
       fprintf(hf,"   void    Terminate() override;\n");
       fprintf(hf,"\n");
@@ -1923,14 +1923,14 @@ namespace Internal {
       fprintf(hf,"   }\n");
       fprintf(hf,"}\n");
       fprintf(hf,"\n");
-      fprintf(hf,"Bool_t %s::Notify()\n",classname.Data());
+      fprintf(hf,"bool %s::Notify()\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // Called when loading a new file.\n");
       fprintf(hf,"   // Get branch pointers.\n");
       fprintf(hf,"   fDirector.SetTree(fChain);\n");
       fprintf(hf,"   %s_Notify();\n",scriptfunc.Data());
       fprintf(hf,"   \n");
-      fprintf(hf,"   return kTRUE;\n");
+      fprintf(hf,"   return true;\n");
       fprintf(hf,"}\n");
       fprintf(hf,"   \n");
 
@@ -1963,7 +1963,7 @@ namespace Internal {
       fprintf(hf,"\n");
 
       // generate code for class member function Process
-      fprintf(hf,"inline Bool_t %s::Process(Long64_t entry)\n",classname.Data());
+      fprintf(hf,"inline bool %s::Process(Long64_t entry)\n",classname.Data());
       fprintf(hf,"{\n");
 
       fprintf(hf,"   // The Process() function is called for each entry in the tree (or possibly\n"
@@ -1999,7 +1999,7 @@ namespace Internal {
          }
       }
       fprintf(hf,"   %s_Process(entry);\n",scriptfunc.Data());
-      fprintf(hf,"   return kTRUE;\n");
+      fprintf(hf,"   return true;\n");
       fprintf(hf,"\n");
       fprintf(hf,"}\n\n");
 

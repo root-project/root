@@ -123,7 +123,7 @@ TBranch::TBranch()
 , fTransientBuffer(nullptr)
 , fBrowsables(nullptr)
 , fBulk(*this)
-, fSkipZip(kFALSE)
+, fSkipZip(false)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
@@ -160,7 +160,7 @@ TBranch::TBranch()
 ///        - `l` : a 64 bit unsigned integer (`ULong64_t`)
 ///        - `G` : a long signed integer (`Long_t`, which `sizeof` is platform dependent), stored as a 64 bit integer but usually held in memory as a 64 bit integer on 64 bit machines and 32 bit on 32 bit machines. Due to this difference, this data type is **not cross-platform**.
 ///        - `g` : a long unsigned integer (`ULong_t`, which `sizeof` is platform dependent), stored as a 64 bit unsigned integer but held in memory usually as a 64 bit integer on 64 bit machines and 32 bit on 32 bit machines. Due to this difference, this data type is **not cross-platform**.
-///        - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
+///        - `O` : [the letter `o`, not a zero] a boolean (`bool`)
 ///
 ///     Arrays of values are supported with the following syntax:
 ///     - If leaf name has the form var[nelem], where nelem is alphanumeric, then
@@ -236,7 +236,7 @@ TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leafl
 , fTransientBuffer(nullptr)
 , fBrowsables(nullptr)
 , fBulk(*this)
-, fSkipZip(kFALSE)
+, fSkipZip(false)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
@@ -290,7 +290,7 @@ TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *l
 , fTransientBuffer(nullptr)
 , fBrowsables(nullptr)
 , fBulk(*this)
-, fSkipZip(kFALSE)
+, fSkipZip(false)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
@@ -542,7 +542,7 @@ TBuffer* TBranch::GetTransientBuffer(Int_t size)
 /// Warning we also assume that the __current__ write basket is
 /// not present (aka has been removed) or is empty (no entries).
 
-void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
+void TBranch::AddBasket(TBasket& b, bool ondisk, Long64_t startEntry)
 {
    TBasket *basket = &b;
 
@@ -756,11 +756,11 @@ void TBranch::DeleteBaskets(Option_t* option)
 
 void TBranch::DropBaskets(Option_t* options)
 {
-   Bool_t all = kFALSE;
+   bool all = false;
    if (options && options[0]) {
       TString opt = options;
       opt.ToLower();
-      if (opt.Contains("all")) all = kTRUE;
+      if (opt.Contains("all")) all = true;
    }
 
    TBasket *basket;
@@ -1259,7 +1259,7 @@ TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer *user_buffer)
       R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       TFileCacheRead *pf = fTree->GetReadCache(file);
       if (pf){
-         if (pf->IsLearning()) pf->LearnBranch(this, kFALSE);
+         if (pf->IsLearning()) pf->LearnBranch(this, false);
          if (fSkipZip) pf->SetSkipZip();
       }
    }
@@ -1428,7 +1428,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket *&basket, Long64_t &first,
 /// This will return true if all the various preconditions necessary hold true
 /// to perform bulk IO (reasonable type, single TLeaf, etc); the bulk IO may
 /// still fail, depending on the contents of the individual TBaskets loaded.
-Bool_t TBranch::SupportsBulkRead() const {
+bool TBranch::SupportsBulkRead() const {
    return (fNleaves == 1) &&
           (static_cast<TLeaf*>(fLeaves.UncheckedAt(0))->GetDeserializeType() != TLeaf::DeserializeType::kExternal);
 }
@@ -1481,7 +1481,7 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
    // Remember which entry we are reading.
    fReadEntry = entry;
 
-   Bool_t enabled = !TestBit(kDoNotProcess);
+   bool enabled = !TestBit(kDoNotProcess);
    if (R__unlikely(!enabled)) return -1;
    TBasket *basket = nullptr;
    Long64_t first;
@@ -1599,7 +1599,7 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
    // Remember which entry we are reading.
    fReadEntry = entry;
 
-   Bool_t enabled = !TestBit(kDoNotProcess);
+   bool enabled = !TestBit(kDoNotProcess);
    if (R__unlikely(!enabled)) { return -1; }
    TBasket *basket = nullptr;
    Long64_t first;
@@ -2114,11 +2114,11 @@ Int_t TBranch::GetRow(Int_t)
 /// Return whether this branch is in a mode where the object are decomposed
 /// or not (Also known as MakeClass mode).
 
-Bool_t TBranch::GetMakeClass() const
+bool TBranch::GetMakeClass() const
 {
    // Regular TBranch and TBrancObject can not be in makeClass mode
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2258,20 +2258,20 @@ ROOT::TIOFeatures TBranch::GetIOFeatures() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if an existing object in a TBranchObject must be deleted.
+/// Return true if an existing object in a TBranchObject must be deleted.
 
-Bool_t TBranch::IsAutoDelete() const
+bool TBranch::IsAutoDelete() const
 {
    return TestBit(kAutoDelete);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if more than one leaf or browsables, kFALSE otherwise.
+/// Return true if more than one leaf or browsables, false otherwise.
 
-Bool_t TBranch::IsFolder() const
+bool TBranch::IsFolder() const
 {
    if (fNleaves > 1) {
-      return kTRUE;
+      return true;
    }
    TList* browsables = const_cast<TBranch*>(this)->GetBrowsables();
    return browsables && browsables->GetSize();
@@ -2706,14 +2706,14 @@ void TBranch::SetAddress(void* addr)
 /// referenced by a TBranchObject must be deleted or not before reading
 /// a new entry.
 ///
-/// If autodel is kTRUE, this existing object will be deleted, a new object
+/// If autodel is true, this existing object will be deleted, a new object
 /// created by the default constructor, then read from disk by the streamer.
 ///
-/// If autodel is kFALSE, the existing object is not deleted.  Root assumes
+/// If autodel is false, the existing object is not deleted.  Root assumes
 /// that the user is taking care of deleting any internal object or array
 /// (this can be done in the streamer).
 
-void TBranch::SetAutoDelete(Bool_t autodel)
+void TBranch::SetAutoDelete(bool autodel)
 {
    if (autodel) {
       SetBit(kAutoDelete, true);
@@ -2818,7 +2818,7 @@ void TBranch::SetCompressionSettings(Int_t settings)
 /// it was already non zero (and the new value is not zero)
 /// If updateExisting is true, also update all the existing branches.
 
-void TBranch::SetEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
+void TBranch::SetEntryOffsetLen(Int_t newdefault, bool updateExisting)
 {
    if (fEntryOffsetLen && newdefault) {
       fEntryOffsetLen = newdefault;
@@ -2827,7 +2827,7 @@ void TBranch::SetEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
       TIter next( GetListOfBranches() );
       TBranch *b;
       while ( ( b = (TBranch*)next() ) ) {
-         b->SetEntryOffsetLen( newdefault, kTRUE );
+         b->SetEntryOffsetLen( newdefault, true );
       }
    }
 }
@@ -2924,10 +2924,10 @@ void TBranch::SetFile(const char* fname)
 /// Return whether the setting was possible (it is not possible for
 /// TBranch and TBranchObject).
 
-Bool_t TBranch::SetMakeClass(Bool_t /* decomposeObj */)
+bool TBranch::SetMakeClass(bool /* decomposeObj */)
 {
    // Regular TBranch and TBrancObject can not be in makeClass mode
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2944,7 +2944,7 @@ void TBranch::SetObject(void * /* obj */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch status to Process or DoNotProcess.
 
-void TBranch::SetStatus(Bool_t status)
+void TBranch::SetStatus(bool status)
 {
    if (status) ResetBit(kDoNotProcess);
    else        SetBit(kDoNotProcess);
@@ -2959,7 +2959,7 @@ void TBranch::Streamer(TBuffer& b)
       UInt_t R__s, R__c;
       fTree = nullptr; // Will be set by TTree::Streamer
       fAddress = nullptr;
-      gROOT->SetReadingObject(kTRUE);
+      gROOT->SetReadingObject(true);
 
       // Reset transients.
       SetBit(TBranch::kDoNotUseBufferMap);
@@ -3004,7 +3004,7 @@ void TBranch::Streamer(TBuffer& b)
 
          }
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
-         gROOT->SetReadingObject(kFALSE);
+         gROOT->SetReadingObject(false);
          if (IsA() == TBranch::Class()) {
             if (fNleaves == 0) {
                fReadLeaves = &TBranch::ReadLeaves0Impl;
@@ -3079,7 +3079,7 @@ void TBranch::Streamer(TBuffer& b)
          }
          // Check Byte Count is not needed since it was done in ReadBuffer
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
-         gROOT->SetReadingObject(kFALSE);
+         gROOT->SetReadingObject(false);
          b.CheckByteCount(R__s, R__c, TBranch::IsA());
          if (IsA() == TBranch::Class()) {
             if (fNleaves == 0) {
@@ -3150,9 +3150,9 @@ void TBranch::Streamer(TBuffer& b)
          fFileName.Streamer(b);
       }
       fDirectory = nullptr;
-      if (v < 4) SetAutoDelete(kTRUE);
+      if (v < 4) SetAutoDelete(true);
       if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
-      gROOT->SetReadingObject(kFALSE);
+      gROOT->SetReadingObject(false);
       b.CheckByteCount(R__s, R__c, TBranch::IsA());
       //====end of old versions
       if (IsA() == TBranch::Class()) {

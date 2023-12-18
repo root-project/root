@@ -121,7 +121,7 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
    fFrame->SetMaximum(fYsize);
    fFrame->GetYaxis()->SetLimits(0,fYsize);
 
-   //Bool_t show = kFALSE;
+   //bool show = false;
    if (gPad) {
       gPad->Clear();
       //show = gPad->GetCanvas()->GetShowEventStatus();
@@ -382,7 +382,7 @@ char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 /// Displays the keys info in the directory
 /// corresponding to cursor position px,py
 
-Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const
+bool TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const
 {
    Double_t x = gPad->AbsPixeltoX(px);
    Double_t y = gPad->AbsPixeltoY(py);
@@ -402,10 +402,10 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TStri
       if (cl && cl == TDirectoryFile::Class()) {
          curdir->cd(key->GetName());
          TDirectory *subdir = gDirectory;
-         Bool_t gotInfo = GetObjectInfoDir(subdir, px, py, info);
+         bool gotInfo = GetObjectInfoDir(subdir, px, py, info);
          if (gotInfo) {
             dirsav->cd();
-            return kTRUE;
+            return true;
          }
          curdir->cd();
          continue;
@@ -432,7 +432,7 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TStri
                   } else {
                      info.Form("%s/%s, branch=%s, basket=%d, entry=%d",curdir->GetPath(),key->GetName(),branch->GetName(),i,entry);
                   }
-                  return kTRUE;
+                  return true;
                }
             }
          }
@@ -446,32 +446,32 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TStri
             info.Form("%s/%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
          }
          dirsav->cd();
-         return kTRUE;
+         return true;
       }
    }
    // Are we in the Keys list
    if (pbyte >= dir->GetSeekKeys() && pbyte < dir->GetSeekKeys()+dir->GetNbytesKeys()) {
       info.Form("%sKeys List, nbytes=%d",dir->GetPath(),dir->GetNbytesKeys());
       dirsav->cd();
-      return kTRUE;
+      return true;
    }
    if (dir == (TDirectory*)fFile) {
       // Are we in the TStreamerInfo
       if (pbyte >= fFile->GetSeekInfo() && pbyte < fFile->GetSeekInfo()+fFile->GetNbytesInfo()) {
          info.Form("%sStreamerInfo List, nbytes=%d",dir->GetPath(),fFile->GetNbytesInfo());
          dirsav->cd();
-         return kTRUE;
+         return true;
       }
       // Are we in the Free Segments
       if (pbyte >= fFile->GetSeekFree() && pbyte < fFile->GetSeekFree()+fFile->GetNbytesFree()) {
          info.Form("%sFree List, nbytes=%d",dir->GetPath(),fFile->GetNbytesFree());
          dirsav->cd();
-         return kTRUE;
+         return true;
       }
    }
    info.Form("(byte=%lld)",pbyte);
    dirsav->cd();
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,7 +546,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
    TKey *key;
    Int_t color = 0;
    TBox box;
-   TRegexp re(keys,kTRUE);
+   TRegexp re(keys,true);
    while ((key = (TKey*)next())) {
       Int_t nbytes = key->GetNbytes();
       Long64_t bseek = key->GetSeekKey();

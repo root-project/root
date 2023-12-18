@@ -32,7 +32,7 @@ namespace Internal {
                                                   const char *aliasname,
                                                   Int_t index) :
       TNamed(treename,aliasname),
-      fDuplicate(kFALSE),
+      fDuplicate(false),
       fIndex(index)
    {
    }
@@ -41,22 +41,22 @@ namespace Internal {
    /// Return true if this descriptor and the other are equivalent (describe the
    /// same entity).
 
-   Bool_t TFriendProxyDescriptor::IsEquivalent(const TFriendProxyDescriptor *other)
+   bool TFriendProxyDescriptor::IsEquivalent(const TFriendProxyDescriptor *other)
    {
-      if ( !other ) return kFALSE;
-      if ( strcmp(GetName(),other->GetName()) ) return kFALSE;
+      if ( !other ) return false;
+      if ( strcmp(GetName(),other->GetName()) ) return false;
 
       TBranchProxyDescriptor *desc;
       TBranchProxyDescriptor *othdesc;
 
-      if ( fListOfTopProxies.GetSize() != other->fListOfTopProxies.GetSize() ) return kFALSE;
+      if ( fListOfTopProxies.GetSize() != other->fListOfTopProxies.GetSize() ) return false;
       TIter next(&fListOfTopProxies);
       TIter othnext(&other->fListOfTopProxies);
       while ( (desc=(TBranchProxyDescriptor*)next()) ) {
          othdesc=(TBranchProxyDescriptor*)othnext();
-         if (!desc->IsEquivalent(othdesc) ) return kFALSE;
+         if (!desc->IsEquivalent(othdesc) ) return false;
       }
-      return kTRUE;
+      return true;
    }
 
    //////////////////////////////////////////////////////////////////////////

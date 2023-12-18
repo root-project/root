@@ -59,7 +59,7 @@ TLeafD32::TLeafD32(TBranch *parent, const char *name, const char *type) : TLeaf(
 
 TLeafD32::~TLeafD32()
 {
-   if (ResetAddress(nullptr, kTRUE))
+   if (ResetAddress(nullptr, true))
       delete[] fValue;
 
    if (fElement)

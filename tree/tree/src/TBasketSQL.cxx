@@ -59,12 +59,12 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
    } else {
       fBufferRef = new TBufferSQL(TBuffer::kWrite, fBufferSize, vc, fInsertQuery, fRowPtr);
    }
-   fHeaderOnly  = kTRUE;
+   fHeaderOnly  = true;
    fLast        = 0; // Must initialize before calling Streamer()
    //Streamer(*fBufferRef);
    fBuffer      = nullptr;
    fBranch      = branch;
-   fHeaderOnly  = kFALSE;
+   fHeaderOnly  = false;
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
 }
@@ -100,12 +100,12 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
    } else {
       fBufferRef   = new TBufferSQL(TBuffer::kWrite, fBufferSize, vc, fInsertQuery, fRowPtr);
    }
-   fHeaderOnly  = kTRUE;
+   fHeaderOnly  = true;
    fLast        = 0;
    //Streamer(*fBufferRef);
    fBuffer      = nullptr;
    fBranch      = branch;
-   fHeaderOnly  = kFALSE;
+   fHeaderOnly  = false;
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 

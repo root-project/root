@@ -39,7 +39,7 @@ TFriendElement::TFriendElement() : TNamed()
 {
    fFile       = nullptr;
    fTree       = nullptr;
-   fOwnFile    = kFALSE;
+   fOwnFile    = false;
    fParentTree = nullptr;
 }
 
@@ -54,7 +54,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
 {
    fFile       = nullptr;
    fTree       = nullptr;
-   fOwnFile    = kTRUE;
+   fOwnFile    = true;
    fParentTree = tree;
    fTreeName   = treename;
    if (treename && strchr(treename,'=')) {
@@ -82,7 +82,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
 {
    fFile       = file;
    fTree       = nullptr;
-   fOwnFile    = kFALSE;
+   fOwnFile    = false;
    fParentTree = tree;
    fTreeName   = treename;
    if (fParentTree && fParentTree->GetDirectory()
@@ -120,7 +120,7 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
    fTree       = friendtree;
    fTreeName   = "";
    fFile       = nullptr;
-   fOwnFile    = kFALSE;
+   fOwnFile    = false;
    fParentTree = tree;
    if (fTree) {
       fTreeName   = fTree->GetName();
@@ -189,12 +189,12 @@ TFile *TFriendElement::GetFile()
    if (strlen(GetTitle())) {
       TDirectory::TContext ctxt;
       fFile = TFile::Open(GetTitle());
-      fOwnFile = kTRUE;
+      fOwnFile = true;
    } else {
       TDirectory *dir = fParentTree->GetDirectory();
       if (dir) {
          fFile = dir->GetFile();
-         fOwnFile = kFALSE;
+         fOwnFile = false;
       }
    }
    if (fFile && fFile->IsZombie()) {

@@ -26,7 +26,7 @@ public:
    // TVirtualRefProxy overload: Clone the reference proxy (virtual constructor)
    TVirtualRefProxy* Clone() const override        { return new TRefArrayProxy(*this);}
    // TVirtualRefProxy overload: Flag to indicate if this is a container reference
-   Bool_t HasCounter()  const override             { return kTRUE;                    }
+   bool HasCounter()  const override             { return true;                    }
    // TVirtualRefProxy overload: Access referenced object(-data)
    void* GetObject(TFormLeafInfoReference* info, void* data, Int_t instance) override;
    // TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)

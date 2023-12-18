@@ -35,7 +35,7 @@ class TBrowser;
 class TTreePlayer;
 class TQueryResult;
 
-Bool_t operator==(const TQueryResult &qr1, const TQueryResult &qr2);
+bool operator==(const TQueryResult &qr1, const TQueryResult &qr2);
 
 
 class TQueryResult : public TNamed {
@@ -55,7 +55,7 @@ public:
 
 protected:
    Int_t           fSeqNum;       ///< query unique sequential number
-   Bool_t          fDraw;         ///< true if draw action query
+   bool            fDraw;         ///< true if draw action query
    EQueryStatus    fStatus;       ///< query status
    TDatime         fStart;        ///< time when processing started
    TDatime         fEnd;          ///< time when processing ended
@@ -71,8 +71,8 @@ protected:
    TString         fLibList;      ///< blank-separated list of libs loaded at fStart
    TString         fParList;      ///< colon-separated list of PAR loaded at fStart
    TList          *fOutputList;   ///< output list
-   Bool_t          fFinalized;    ///< whether Terminate has been run
-   Bool_t          fArchived;     ///< whether the query has been archived
+   bool            fFinalized;    ///< whether Terminate has been run
+   bool            fArchived;     ///< whether the query has been archived
    TString         fResultFile;   ///< URL of the file where results have been archived
    Float_t         fPrepTime;     ///< Prepare time (seconds) (millisec precision)
    Float_t         fInitTime;     ///< Initialization time (seconds) (millisec precision)
@@ -93,9 +93,9 @@ protected:
    virtual void    RecordEnd(EQueryStatus status, TList *outlist = nullptr);
    void            SaveSelector(const char *selec);
    void            SetArchived(const char *archfile);
-   virtual void    SetFinalized() { fFinalized = kTRUE; }
-   virtual void    SetInputList(TList *in, Bool_t adopt = kTRUE);
-   virtual void    SetOutputList(TList *out, Bool_t adopt = kTRUE);
+   virtual void    SetFinalized() { fFinalized = true; }
+   virtual void    SetInputList(TList *in, bool adopt = true);
+   virtual void    SetOutputList(TList *out, bool adopt = true);
    virtual void    SetProcessInfo(Long64_t ent, Float_t cpu = 0.,
                                   Long64_t siz = -1,
                                   Float_t inittime = 0., Float_t proctime = 0.);
@@ -110,7 +110,7 @@ public:
                     fInputList(nullptr), fEntries(-1), fFirst(-1), fBytes(0),
                     fLogFile(nullptr), fSelecHdr(nullptr), fSelecImp(nullptr),
                     fLibList("-"), fOutputList(nullptr),
-                    fFinalized(kFALSE), fArchived(kFALSE), fPrepTime(0.),
+                    fFinalized(false), fArchived(false), fPrepTime(0.),
                     fInitTime(0.), fProcTime(0.), fMergeTime(0.),
                     fRecvTime(-1), fTermTime(0.), fNumWrks(-1), fNumMergers(-1) { }
    ~TQueryResult() override;
@@ -144,19 +144,19 @@ public:
    Int_t          GetNumWrks() const { return fNumWrks; }
    Int_t          GetNumMergers() const { return fNumMergers; }
 
-   Bool_t         IsArchived() const { return fArchived; }
-   virtual Bool_t IsDone() const { return (fStatus > kRunning); }
-   Bool_t         IsDraw() const { return fDraw; }
-   Bool_t         IsFinalized() const { return fFinalized; }
+   bool           IsArchived() const { return fArchived; }
+   virtual bool   IsDone() const { return (fStatus > kRunning); }
+   bool           IsDraw() const { return fDraw; }
+   bool           IsFinalized() const { return fFinalized; }
 
-   Bool_t         Matches(const char *ref);
+   bool           Matches(const char *ref);
 
    void           Print(Option_t *opt = "") const override;
 
    ClassDefOverride(TQueryResult,5)  //Class describing a query
 };
 
-inline Bool_t operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)
+inline bool operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)
    { return !(qr1 == qr2); }
 
 #endif

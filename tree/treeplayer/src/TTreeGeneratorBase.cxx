@@ -158,7 +158,7 @@ namespace Internal {
    ////////////////////////////////////////////////////////////////////////////////
    /// Get name of class inside a container.
 
-   TString TTreeGeneratorBase::GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer)
+   TString TTreeGeneratorBase::GetContainedClassName(TBranchElement *branch, TStreamerElement *element, bool ispointer)
    {
       TString cname = branch->GetClonesName();
       if (cname.Length()==0) {

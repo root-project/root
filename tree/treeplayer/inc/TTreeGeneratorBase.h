@@ -43,7 +43,7 @@ namespace Internal {
 
          void    AddHeader(TClass *cl);
          void    AddHeader(const char *classname);
-         TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer);
+         TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, bool ispointer);
          TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element);
          TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl);
    };
