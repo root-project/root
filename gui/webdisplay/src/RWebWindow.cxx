@@ -526,7 +526,7 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
    int intry = ntry.empty() ? -1 : std::stoi(ntry);
 
    auto msg = TString::Format("attempt_%s", ntry.c_str());
-   auto expected = HMAC(conn->fKey, fMgr->fSessionKey, msg.Data(), msg.Length());
+   auto expected = HMAC(conn->fKey, fMgr->fUseSessionKey && remote ? fMgr->fSessionKey : ""s, msg.Data(), msg.Length());
 
    if (!IsRequireAuthKey())
       return (conn->fKey.empty() && key.empty()) || (key == conn->fKey) || (key == expected);
@@ -816,7 +816,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          conn->fActive = true;
          conn->fRecvSeq = 0;
          conn->fSendSeq = 1;
-         // preserve key for the livetime of connection, used in MD5 coding
+         // preserve key for longpoll or when with session key used for HMAC hash of messages
          // conn->fKey.clear();
          conn->ResetStamps();
          fConn.emplace_back(conn);
@@ -915,6 +915,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       std::string hmac = HMAC(conn->fKey, fMgr->fSessionKey, buf, data_len);
 
       is_match = strncmp(buf0, hmac.c_str(), code_len) == 0;
+   } else if (!fMgr->fUseSessionKey) {
+      // no packet signing without session key
+      is_match = true;
    }
 
    // IMPORTANT: final place where MD5 sum of input message checked!
@@ -923,7 +926,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (is_remote && IsRequireAuthKey())
          return false;
       if (!is_none) {
-         R__LOG_ERROR(WebGUILog()) << "wrong md5 sum provided";
+         R__LOG_ERROR(WebGUILog()) << "wrong hmac checksum provided";
          return false;
       }
    }
@@ -1135,7 +1138,7 @@ std::string RWebWindow::_MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt
       buf.append("$$nullbinary$$");
    } else {
       buf.append("$$binary$$");
-      if (!conn->fKey.empty() && !fMgr->fSessionKey.empty())
+      if (!conn->fKey.empty() && !fMgr->fSessionKey.empty() && fMgr->fUseSessionKey)
          buf.append(HMAC(conn->fKey, fMgr->fSessionKey, data.data(), data.length()));
    }
 
@@ -1171,8 +1174,8 @@ bool RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &conn)
       conn->fDoingSend = true;
    }
 
-   // add MD5 checksum for string send to client
-   if (!conn->fKey.empty() && !fMgr->fSessionKey.empty()) {
+   // add HMAC checksum for string send to client
+   if (!conn->fKey.empty() && !fMgr->fSessionKey.empty() && fMgr->fUseSessionKey) {
       prefix = HMAC(conn->fKey, fMgr->fSessionKey, hdr.c_str(), hdr.length());
    } else {
       prefix = "none";
