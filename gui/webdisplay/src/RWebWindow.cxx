@@ -1989,18 +1989,22 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
 {
    using namespace ROOT::Internal::SHA256;
 
-   auto as_string = [](sha256_t &hash) {
-      unsigned char digest[32];
+   auto get_digest = [](sha256_t &hash, bool as_hex = false) -> std::string {
+      std::string digest;
+      digest.resize(32);
 
-      sha256_final(&hash, reinterpret_cast<unsigned char *>(digest));
-      std::string res;
+      sha256_final(&hash, reinterpret_cast<unsigned char *>(digest.data()));
+
+      if (!as_hex) return digest;
 
       static const char* digits = "0123456789abcdef";
+      std::string hex;
       for (int n = 0; n < 32; n++) {
-         res += digits[digest[n] / 16];
-         res += digits[digest[n] % 16];
+         unsigned char code = (unsigned char) digest[n];
+         hex += digits[code / 16];
+         hex += digits[code % 16];
       }
-      return res;
+      return hex;
    };
 
    // calculate hash of sessionKey + key;
@@ -2008,7 +2012,7 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
    sha256_init(&hash1);
    sha256_update(&hash1, (const unsigned char *) sessionKey.data(), sessionKey.length());
    sha256_update(&hash1, (const unsigned char *) key.data(), key.length());
-   std::string kbis = as_string(hash1);
+   std::string kbis = get_digest(hash1);
 
    std::string ki = kbis, ko = kbis;
    const int ipad = 0x5c;
@@ -2023,13 +2027,13 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
    sha256_init(&hash2);
    sha256_update(&hash2, (const unsigned char *) ko.data(), ko.length());
    sha256_update(&hash2, (const unsigned char *) msg, msglen);
-   std::string m2s = as_string(hash2);
+   std::string m2digest = get_digest(hash2);
 
-   // calculate hash for ki + m2.AsString();
+   // calculate hash for ki + m2_digest;
    sha256_t hash3;
    sha256_init(&hash3);
    sha256_update(&hash3, (const unsigned char *) ki.data(), ki.length());
-   sha256_update(&hash3, (const unsigned char *) m2s.data(), m2s.length());
+   sha256_update(&hash3, (const unsigned char *) m2digest.data(), m2digest.length());
 
-   return as_string(hash3);
+   return get_digest(hash3, true);
 }
