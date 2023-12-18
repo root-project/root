@@ -20,7 +20,6 @@
 #include "TUrl.h"
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TMD5.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -28,6 +27,9 @@
 #include <assert.h>
 #include <algorithm>
 #include <fstream>
+
+// must be here because of defines
+#include "../../../core/foundation/res/ROOT/RSha256.hxx"
 
 using namespace ROOT;
 using namespace std::string_literals;
@@ -1985,12 +1987,29 @@ bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsi
 
 std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionKey, const char *msg, int msglen)
 {
-   TMD5 m1;
-   // calculate MD5 of sessionKey + key;
-   m1.Update((const UChar_t *) sessionKey.c_str(), sessionKey.length());
-   m1.Update((const UChar_t *) key.c_str(), key.length());
-   m1.Final();
-   std::string kbis = m1.AsString();
+   using namespace ROOT::Internal::SHA256;
+
+   auto as_string = [](sha256_t &hash) {
+      unsigned char digest[32];
+
+      sha256_final(&hash, reinterpret_cast<unsigned char *>(digest));
+      std::string res;
+
+      static const char* digits = "0123456789abcdef";
+      for (int n = 0; n < 32; n++) {
+         res += digits[digest[n] / 16];
+         res += digits[digest[n] % 16];
+      }
+      return res;
+   };
+
+   // calculate hash of sessionKey + key;
+   sha256_t hash1;
+   sha256_init(&hash1);
+   sha256_update(&hash1, (const unsigned char *) sessionKey.data(), sessionKey.length());
+   sha256_update(&hash1, (const unsigned char *) key.data(), key.length());
+   std::string kbis = as_string(hash1);
+
    std::string ki = kbis, ko = kbis;
    const int ipad = 0x5c;
    const int opad = 0x36;
@@ -1999,17 +2018,18 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
       ko[i] = kbis[i] ^ opad;
    }
 
-   TMD5 m2;
-   // calculate MD5 for ko + msg;
-   m2.Update((const UChar_t *) ko.c_str(), ko.length());
-   m2.Update((const UChar_t *) msg, msglen);
-   m2.Final();
+   // calculate hash for ko + msg;
+   sha256_t hash2;
+   sha256_init(&hash2);
+   sha256_update(&hash2, (const unsigned char *) ko.data(), ko.length());
+   sha256_update(&hash2, (const unsigned char *) msg, msglen);
+   std::string m2s = as_string(hash2);
 
-   TMD5 m3;
-   // calculate MD5 for ki + m2.AsString();
-   m3.Update((const UChar_t *) ki.c_str(), ki.length());
-   m3.Update((const UChar_t *) m2.AsString(), strlen(m2.AsString()));
-   m3.Final();
+   // calculate hash for ki + m2.AsString();
+   sha256_t hash3;
+   sha256_init(&hash3);
+   sha256_update(&hash3, (const unsigned char *) ki.data(), ki.length());
+   sha256_update(&hash3, (const unsigned char *) m2s.data(), m2s.length());
 
-   return m3.AsString();
+   return as_string(hash3);
 }
