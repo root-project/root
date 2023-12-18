@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
-/// \notebook
-/// H1 analysis example expressed in terms of TTreeReader
+///
+/// H1 analysis example expressed in terms of TTreeReader (see h1analysis.C).
 ///
 /// \macro_code
 ///
