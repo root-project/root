@@ -473,7 +473,7 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
-   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   // skip computation of the statistics along axis that have labels (can be extended and are alphanumeric)
    UInt_t labelBitMask = GetAxisLabelStatus();
    if (labelBitMask != (TH1::kXaxis | TH1::kYaxis)) {
       Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
@@ -650,7 +650,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
-///  @param fname  : Function name used for filling the historam
+///  @param fname  : Function name used for filling the histogram
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used to sample
 ///
@@ -731,7 +731,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
 ///
-///  @param h      : Histogram  pointer used for smpling random number
+///  @param h      : Histogram  pointer used for sampling random number
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used for sampling
 ///
@@ -832,7 +832,7 @@ void TH2::DoFitSlices(bool onX,
    char *name   = new char[2000];
    char *title  = new char[2000];
    const TArrayD *bins = outerAxis.GetXbins();
-   // outer axis boudaries used for creating reported histograms are different
+   // outer axis boundaries used for creating reported histograms are different
    // than the limits used in the projection loop (firstbin,lastbin)
    Int_t firstOutBin = outerAxis.TestBit(TAxis::kAxisRange) ? std::max(firstbin,1) : 1;
    Int_t lastOutBin = outerAxis.TestBit(TAxis::kAxisRange) ?  std::min(lastbin,outerAxis.GetNbins() ) : outerAxis.GetNbins();
@@ -1143,11 +1143,12 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 2 random numbers along axis x and y distributed according
-/// to the cell-contents of this 2-D histogram
-/// return a NaN if the histogram has a bin with negative content
+/// to the cell-contents of this 2-D histogram.
+///
+/// Return a NaN if the histogram has a bin with negative content
 ///
 /// @param[out] x  reference to random generated x value
-/// @param[out] y  reference to random generated x value
+/// @param[out] y  reference to random generated y value
 /// @param[in] rng (optional) Random number generator pointer used (default is gRandom)
 
 void TH2::GetRandom2(Double_t &x, Double_t &y, TRandom * rng)
@@ -1226,7 +1227,7 @@ void TH2::GetStats(Double_t *stats) const
             if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
          }
       }
-      // check for labels axis . In that case corresponsing statistics do not make sense and it is set to zero
+      // check for labels axis. In that case corresponding statistics do not make sense and it is set to zero
       Bool_t labelXaxis =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
       Bool_t labelYaxis =  ((const_cast<TAxis&>(fYaxis)).GetLabels() && fYaxis.CanExtend() );
 
@@ -3928,7 +3929,7 @@ TH2D::TH2D(const TMatrixDBase &m)
 
 TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
-   // intentially call virtual Copy method to warn if TProfile2D is copied
+   // intentionally call virtual Copy method to warn if TProfile2D is copied
    h2d.Copy(*this);
 }
 
@@ -4004,7 +4005,7 @@ void TH2D::Streamer(TBuffer &R__b)
 
 TH2D& TH2D::operator=(const TH2D &h2d)
 {
-   // intentially call virtual Copy method to warn if TProfile2D is copied
+   // intentionally call virtual Copy method to warn if TProfile2D is copied
    if (this != &h2d)
       h2d.Copy(*this);
    return *this;
