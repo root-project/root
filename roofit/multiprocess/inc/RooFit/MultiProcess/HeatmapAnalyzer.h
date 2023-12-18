@@ -19,15 +19,22 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
 
 namespace RooFit {
 namespace MultiProcess {
 
+namespace Detail {
+// To avoid unnecessary dependence on nlohman json in the interface. Note that
+// we should not forward declare nlohmann::json directly, since its declaration
+// might change (it is currently a typedef). With this wrapper type, we are
+// completely decoupled on nlohmann::json in the RMetaData interface.
+struct HeatmapAnalyzerJsonData;
+} // namespace Detail
+
 class HeatmapAnalyzer {
 public:
-   HeatmapAnalyzer(std::string const& logs_dir);
+   HeatmapAnalyzer(std::string const &logs_dir);
+   ~HeatmapAnalyzer();
 
    // main method of this class, produces heatmap
    std::unique_ptr<TH2I> analyze(int analyzed_gradient);
@@ -35,19 +42,11 @@ public:
    // getters to inspect logfiles
    std::vector<std::string> const getPartitionNames();
    std::vector<std::string> const getTaskNames();
-   json const getMetadata();
+   std::vector<std::string> const getMetadata();
 
 private:
-   // internal helper functions
-   std::string findTaskForDuration(json durations, int start_t, int end_t);
-   void sortTaskNames(std::vector<std::string> &task_names);
-
    TH2I matrix_;
-
-   json gradients_;
-   json metadata_;
-   std::vector<json> durations_;
-
+   std::unique_ptr<Detail::HeatmapAnalyzerJsonData> jsonData_;
    std::vector<std::string> tasks_names_;
    std::vector<std::string> eval_partitions_names_;
 };

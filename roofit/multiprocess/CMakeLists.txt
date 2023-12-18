@@ -29,11 +29,9 @@ target_include_directories(RooFitMultiProcess
         INTERFACE $<BUILD_INTERFACE:${RooFitMultiProcess_INCLUDE_DIR}>)
 
 if(builtin_nlohmannjson)
-  target_include_directories(RooFitMultiProcess
-    PRIVATE ${CMAKE_SOURCE_DIR}/builtins
-    INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/builtins)
+  target_include_directories(RooFitMultiProcess PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
 else()
-  target_link_libraries(RooFitMultiProcess PUBLIC nlohmann_json::nlohmann_json)
+  target_link_libraries(RooFitMultiProcess PRIVATE nlohmann_json::nlohmann_json)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
