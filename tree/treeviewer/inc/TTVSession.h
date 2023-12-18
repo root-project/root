@@ -39,10 +39,10 @@ public:
    TString              fCut;                   ///< Cut expression
    TString              fCutAlias;              ///< Cut alias
    TString              fOption;                ///< Graphic option
-   Bool_t               fScanRedirected;        ///< Redirect switch
-   Bool_t               fCutEnabled;            ///< True if current cut is active
+   bool                 fScanRedirected;        ///< Redirect switch
+   bool                 fCutEnabled;            ///< True if current cut is active
    TString              fUserCode;              ///< Command executed when record is connected
-   Bool_t               fAutoexec;              ///< Autoexecute user code command
+   bool                 fAutoexec;              ///< Autoexecute user code command
 
 public:
    TTVRecord();                                 ///< Default constructor
@@ -56,17 +56,17 @@ public:
    const char    *GetZ() const {return fZ;}
    const char *GetName() const override {return fName;}
    const char    *GetUserCode() const {return fUserCode;}
-   Bool_t         HasUserCode() const {return fUserCode.Length() != 0 ? kTRUE : kFALSE;}
-   Bool_t         MustExecuteCode() const {return fAutoexec;}
-   void           SetAutoexec(Bool_t autoexec=kTRUE) {fAutoexec=autoexec;} // *TOGGLE* *GETTER=MustExecuteCode
+   bool           HasUserCode() const {return fUserCode.Length() != 0 ? true : false;}
+   bool           MustExecuteCode() const {return fAutoexec;}
+   void           SetAutoexec(bool autoexec=true) {fAutoexec=autoexec;} // *TOGGLE* *GETTER=MustExecuteCode
    void           SetName(const char* name = "") {fName = name;}
    void           SetX(const char *x = "", const char *xal = "-empty-") {fX = x; fXAlias = xal;}
    void           SetY(const char *y = "", const char *yal = "-empty-") {fY = y; fYAlias = yal;}
    void           SetZ(const char *z = "", const char *zal = "-empty-") {fZ = z; fZAlias = zal;}
    void           SetCut(const char *cut = "", const char *cal = "-empty-") {fCut = cut; fCutAlias = cal;}
    void           SetOption(const char *option = "")             {fOption = option;}
-   void           SetRC(Bool_t redirect = kFALSE, Bool_t cut = kTRUE) {fScanRedirected = redirect; fCutEnabled = cut;}
-   void           SetUserCode(const char *code, Bool_t autoexec=kTRUE) {fUserCode = code; fAutoexec=autoexec;} // *MENU*
+   void           SetRC(bool redirect = false, bool cut = true) {fScanRedirected = redirect; fCutEnabled = cut;}
+   void           SetUserCode(const char *code, bool autoexec=true) {fUserCode = code; fAutoexec=autoexec;} // *MENU*
    void           SaveSource(std::ofstream &out);
 
    ClassDefOverride(TTVRecord, 0)    // A draw record for TTreeViewer
@@ -87,7 +87,7 @@ public:
    const char *GetName() const override      {return fName;}
    void           SetName(const char *name) {fName = name;}
    void           SetRecordName(const char* name);
-   TTVRecord     *AddRecord(Bool_t fromFile = kFALSE);
+   TTVRecord     *AddRecord(bool fromFile = false);
    Int_t          GetEntries() {return fRecords;}
    TTVRecord     *GetCurrent() {return GetRecord(fCurrent);}
    TTVRecord     *GetRecord(Int_t i);

@@ -65,7 +65,7 @@ TEventList::TEventList(): TNamed()
    fDelta      = 100;
    fList       = nullptr;
    fDirectory  = nullptr;
-   fReapply    = kFALSE;
+   fReapply    = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ TEventList::TEventList(): TNamed()
 /// This Eventlist is added to the list of objects in current directory.
 
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
-  :TNamed(name,title), fReapply(kFALSE)
+  :TNamed(name,title), fReapply(false)
 {
    fN = 0;
    if (initsize > 100) fSize  = initsize;
@@ -162,22 +162,22 @@ void TEventList::Add(const TEventList *alist)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TRUE if list contains entry.
 
-Bool_t TEventList::Contains(Long64_t entry)
+bool TEventList::Contains(Long64_t entry)
 {
-   if (GetIndex(entry) < 0) return kFALSE;
-   return kTRUE;
+   if (GetIndex(entry) < 0) return false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TRUE if list contains entries from entrymin to entrymax included.
 
-Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
+bool TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
 {
    Long64_t imax = TMath::BinarySearch(fN,fList,entrymax);
    //printf("ContainsRange: entrymin=%lld, entrymax=%lld,imax=%lld, fList[imax]=%lld\n",entrymin,entrymax,imax,fList[imax]);
 
-   if (fList[imax] < entrymin) return kFALSE;
-   return kTRUE;
+   if (fList[imax] < entrymin) return false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

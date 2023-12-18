@@ -57,15 +57,15 @@ protected:
    Double_t     **fVal;              ///<![fSelectedRows][fDimension] Local buffer for the variables
    Int_t          fValSize;
    Double_t      *fW;                ///<![fSelectedRows]Local buffer for weights
-   Bool_t        *fVarMultiple;      ///<![fDimension] True if fVar[i] has a variable index
-   Bool_t         fSelectMultiple;   ///<  True if selection has a variable index
-   Bool_t         fCleanElist;       ///<  True if original Tree elist must be saved
-   Bool_t         fObjEval;          ///<  True if fVar1 returns an object (or pointer to).
+   bool          *fVarMultiple;      ///<![fDimension] True if fVar[i] has a variable index
+   bool           fSelectMultiple;   ///<  True if selection has a variable index
+   bool           fCleanElist;       ///<  True if original Tree elist must be saved
+   bool           fObjEval;          ///<  True if fVar1 returns an object (or pointer to).
    Long64_t       fCurrentSubEntry;  ///<  Current subentry when fSelectMultiple is true. Used to fill TEntryListArray
 
 protected:
    virtual void      ClearFormula();
-   virtual Bool_t    CompileVariables(const char *varexp="", const char *selection="");
+   virtual bool      CompileVariables(const char *varexp="", const char *selection="");
    virtual void      InitArrays(Int_t newsize);
 
 private:
@@ -78,7 +78,7 @@ public:
 
    void      Begin(TTree *tree) override;
    virtual Int_t     GetAction() const {return fAction;}
-   virtual Bool_t    GetCleanElist() const {return fCleanElist;}
+   virtual bool      GetCleanElist() const {return fCleanElist;}
    virtual Int_t     GetDimension() const {return fDimension;}
    virtual Long64_t  GetDrawFlag() const {return fDraw;}
    TObject          *GetObject() const {return fObject;}
@@ -107,8 +107,8 @@ public:
    /// See TSelectorDraw::GetVal
    virtual Double_t *GetV4() const   {return GetVal(3);}
    virtual Double_t *GetW() const    {return fW;}
-   Bool_t    Notify() override;
-   Bool_t    Process(Long64_t /*entry*/) override { return kFALSE; }
+   bool      Notify() override;
+   bool      Process(Long64_t /*entry*/) override { return false; }
    void      ProcessFill(Long64_t entry) override;
    virtual void      ProcessFillMultiple(Long64_t entry);
    virtual void      ProcessFillObject(Long64_t entry);

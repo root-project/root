@@ -53,7 +53,7 @@ TLeafD::TLeafD(TBranch *parent, const char *name, const char *type)
 
 TLeafD::~TLeafD()
 {
-   if (ResetAddress(nullptr,kTRUE)) delete [] fValue;
+   if (ResetAddress(nullptr,true)) delete [] fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

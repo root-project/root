@@ -30,8 +30,8 @@ ClassImp(TTreeFormulaManager);
 TTreeFormulaManager::TTreeFormulaManager() : TObject()
 {
    fMultiplicity = 0;
-   fMultiVarDim = kFALSE;
-   fNeedSync = kFALSE;
+   fMultiVarDim = false;
+   fNeedSync = false;
    fNdata = 1;
 
    for (Int_t i = 0; i < kMAXFORMDIM + 1; i++) {
@@ -87,7 +87,7 @@ void TTreeFormulaManager::Add(TTreeFormula *adding)
 
    fFormulas.Add(adding);
    adding->fManager = this;
-   fNeedSync = kTRUE;
+   fNeedSync = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,14 +112,14 @@ void TTreeFormulaManager::CancelDimension(Int_t virt_dim)
 
 void TTreeFormulaManager::EnableMultiVarDims()
 {
-   fMultiVarDim = kTRUE;
+   fMultiVarDim = true;
    if (!fCumulUsedVarDims) fCumulUsedVarDims = new TArrayI;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of available instances in the formulas.
 
-Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
+Int_t TTreeFormulaManager::GetNdata(bool forceLoadDim)
 {
    Int_t k;
 
@@ -216,12 +216,12 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
 ////////////////////////////////////////////////////////////////////////////////
 /// Synchronize all the formulae.
 
-Bool_t TTreeFormulaManager::Sync()
+bool TTreeFormulaManager::Sync()
 {
    if (!fNeedSync) return true;
 
    TTreeFormula *current = nullptr;
-   Bool_t hasCast = kFALSE;
+   bool hasCast = false;
 
    fMultiplicity = 0;
    // We do not use an intermediary variable because ResetDimensions
@@ -277,7 +277,7 @@ Bool_t TTreeFormulaManager::Sync()
    case 2: fNdata = fCumulUsedSizes[0]; break;
    default: fNdata = 0;
    }
-   fNeedSync = kFALSE;
+   fNeedSync = false;
 
    return true;
 }

@@ -32,10 +32,10 @@ I/O classes for TreeViewer session handling.
 TTVRecord::TTVRecord()
 {
    fName = "";
-   fScanRedirected = kFALSE;
-   fCutEnabled     = kTRUE;
+   fScanRedirected = false;
+   fCutEnabled     = true;
    fUserCode = "";
-   fAutoexec = kFALSE;
+   fAutoexec = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ void TTVRecord::SaveSource(std::ofstream &out)
 {
    char quote = '"';
    out <<"//--- tree viewer record"<<std::endl;
-   out <<"   tv_record = tv_session->AddRecord(kTRUE);"<<std::endl;
+   out <<"   tv_record = tv_session->AddRecord(true);"<<std::endl;
    out <<"   tv_session->SetRecordName("<<quote<<GetName()<<quote<<");"<<std::endl;
    out <<"   tv_record->fX        = "<<quote<<fX.Data()<<quote<<";"<<std::endl;
    out <<"   tv_record->fY        = "<<quote<<fY.Data()<<quote<<";"<<std::endl;
@@ -113,13 +113,13 @@ void TTVRecord::SaveSource(std::ofstream &out)
    out <<"   tv_record->fCutAlias = "<<quote<<fCutAlias.Data()<<quote<<";"<<std::endl;
    out <<"   tv_record->fOption   = "<<quote<<fOption.Data()<<quote<<";"<<std::endl;
    if (fScanRedirected)
-      out <<"   tv_record->fScanRedirected = kTRUE;"<<std::endl;
+      out <<"   tv_record->fScanRedirected = true;"<<std::endl;
    else
-      out <<"   tv_record->fScanRedirected = kFALSE;"<<std::endl;
+      out <<"   tv_record->fScanRedirected = false;"<<std::endl;
    if (fCutEnabled)
-      out <<"   tv_record->fCutEnabled = kTRUE;"<<std::endl;
+      out <<"   tv_record->fCutEnabled = true;"<<std::endl;
    else
-      out <<"   tv_record->fCutEnabled = kFALSE;"<<std::endl;
+      out <<"   tv_record->fCutEnabled = false;"<<std::endl;
    if (fUserCode.Length()) {
       out <<"   tv_record->SetUserCode(\""<<fUserCode.Data()<<"\");"<<std::endl;
       if (fAutoexec) {
@@ -158,14 +158,14 @@ TTVSession::~TTVSession()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a record
 
-TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
+TTVRecord *TTVSession::AddRecord(bool fromFile)
 {
    TClonesArray &list = *fList;
    TTVRecord *newrec = new(list[fRecords++])TTVRecord();
    if (!fromFile) newrec->FormFrom(fViewer);
    fCurrent = fRecords - 1;
-   if (fRecords > 1) fViewer->ActivateButtons(kTRUE, kTRUE, kFALSE, kTRUE);
-   else              fViewer->ActivateButtons(kTRUE, kFALSE, kFALSE, kTRUE);
+   if (fRecords > 1) fViewer->ActivateButtons(true, true, false, true);
+   else              fViewer->ActivateButtons(true, false, false, true);
    if (!fromFile) {
       TString name = "";
       if (strlen(newrec->GetZ())) name += newrec->GetZ();
@@ -192,14 +192,14 @@ TTVRecord *TTVSession::GetRecord(Int_t i)
    if (i < 0)           fCurrent = 0;
    if (i > fRecords-1)  fCurrent = fRecords - 1;
    if (fCurrent>0 && fCurrent<fRecords-1)
-      fViewer->ActivateButtons(kTRUE, kTRUE, kTRUE, kTRUE);
+      fViewer->ActivateButtons(true, true, true, true);
    if (fCurrent == 0) {
-      if (fRecords > 1) fViewer->ActivateButtons(kTRUE, kFALSE, kTRUE, kTRUE);
-      else              fViewer->ActivateButtons(kTRUE, kFALSE, kFALSE, kTRUE);
+      if (fRecords > 1) fViewer->ActivateButtons(true, false, true, true);
+      else              fViewer->ActivateButtons(true, false, false, true);
    }
    if (fCurrent == fRecords-1) {
-      if (fRecords > 1) fViewer->ActivateButtons(kTRUE, kTRUE, kFALSE, kTRUE);
-      else              fViewer->ActivateButtons(kTRUE, kFALSE, kFALSE, kTRUE);
+      if (fRecords > 1) fViewer->ActivateButtons(true, true, false, true);
+      else              fViewer->ActivateButtons(true, false, false, true);
    }
    fViewer->SetCurrentRecord(fCurrent);
    return (TTVRecord *)fList->UncheckedAt(fCurrent);
@@ -232,7 +232,7 @@ void TTVSession::RemoveLastRecord()
    fViewer->UpdateCombo();
    fCurrent = crt;
    if (!fRecords) {
-      fViewer->ActivateButtons(kFALSE, kFALSE, kFALSE, kFALSE);
+      fViewer->ActivateButtons(false, false, false, false);
       return;
    }
    GetRecord(fCurrent);

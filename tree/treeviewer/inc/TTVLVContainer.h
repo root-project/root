@@ -47,7 +47,7 @@ public:
    void         Empty();                         // *MENU*
    void         RemoveItem();                    // *MENU*
    void         Scan();                          // *MENU*
-   void         SetExpression(const char *name="", const char *alias="-empty-", Bool_t cut=kFALSE); // *MENU*
+   void         SetExpression(const char *name="", const char *alias="-empty-", bool cut=false); // *MENU*
 
    ClassDefOverride(TGItemContext, 0)  // Context menu for TTVLVEntry
 };
@@ -61,11 +61,11 @@ protected:
    TString         fAlias;      ///< Alias for this entry
    TString         fConvName;   ///< Name converted into true expressions
    TGToolTip      *fTip;        ///< Tool tip associated with item
-   Bool_t          fIsCut;      ///< Flag for cut type items
+   bool            fIsCut;      ///< Flag for cut type items
    TGItemContext  *fContext;    ///< Associated context menu
 
 protected:
-   Bool_t         FullConverted();
+   bool           FullConverted();
 
 public:
    TTVLVEntry(const TGWindow *p,
@@ -80,14 +80,14 @@ public:
    const char     *GetConvName() {return fConvName;}
    const char     *GetTrueName() {return fTrueName.Data();}
    TGToolTip      *GetTip() {return fTip;}
-   Bool_t  HandleCrossing(Event_t *event) override;
-   Bool_t          HasAlias();
-   Bool_t          IsCut() {return fIsCut;}
+   bool            HandleCrossing(Event_t *event) override;
+   bool            HasAlias();
+   bool            IsCut() {return fIsCut;}
    void            PrependTilde();
-   void            SetCutType(Bool_t type=kFALSE);
+   void            SetCutType(bool type=false);
    void            SetItemName(const char* name);
    void            SetAlias(const char* alias) {fAlias = alias;}
-   void            SetExpression(const char* name, const char* alias, Bool_t cutType=kFALSE);
+   void            SetExpression(const char* name, const char* alias, bool cutType=false);
    void            SetTrueName(const char* name) {fTrueName = name;}
    void            SetToolTipText(const char *text, Long_t delayms = 1000);
    void            SetSmallPic(const TGPicture *spic);
@@ -136,8 +136,8 @@ public:
    void           RemoveNonStatic();
    const char    *ScanList();
    void           SelectItem(const char* name);
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t HandleMotion(Event_t *event) override;
+   bool           HandleButton(Event_t *event) override;
+   bool           HandleMotion(Event_t *event) override;
 
    ClassDefOverride(TTVLVContainer,0)  // A dragging-capable LVContainer
 };
@@ -184,8 +184,8 @@ public:
    void           SetEntry(TTVLVEntry *entry);
    void           SaveText();
    void           InsertText(const char* text);
-   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
-   Bool_t         ValidateAlias();
+   bool ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   bool           ValidateAlias();
 
    static TGSelectBox *GetInstance();
 

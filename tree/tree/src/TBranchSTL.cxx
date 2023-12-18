@@ -410,7 +410,7 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
       fObject = *(char**)fAddress;
    }
    TVirtualCollectionProxy::TPushPop helper( fCollProxy, fObject );
-   void* env = fCollProxy->Allocate( size, kTRUE );
+   void* env = fCollProxy->Allocate( size, true );
 
    //---------------------------------------------------------------------------
    // Process entries
@@ -590,11 +590,11 @@ TStreamerInfo* TBranchSTL::GetInfo() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Branch declared folder if at least one entry.
 
-Bool_t TBranchSTL::IsFolder() const
+bool TBranchSTL::IsFolder() const
 {
    if( fBranches.GetEntriesFast() >= 1 )
-      return kTRUE;
-   return kFALSE;
+      return true;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

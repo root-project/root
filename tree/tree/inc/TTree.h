@@ -136,10 +136,10 @@ protected:
    TBranchRef    *fBranchRef;             ///<  Branch supporting the TRefTable (if any)
    UInt_t         fFriendLockStatus;      ///<! Record which method is locking the friend recursion
    TBuffer       *fTransientBuffer;       ///<! Pointer to the current transient buffer.
-   Bool_t         fCacheDoAutoInit;       ///<! true if cache auto creation or resize check is needed
-   Bool_t         fCacheDoClusterPrefetch;///<! true if cache is prefetching whole clusters
-   Bool_t         fCacheUserSet;          ///<! true if the cache setting was explicitly given by user
-   Bool_t         fIMTEnabled;            ///<! true if implicit multi-threading is enabled for this tree
+   bool           fCacheDoAutoInit;       ///<! true if cache auto creation or resize check is needed
+   bool           fCacheDoClusterPrefetch;///<! true if cache is prefetching whole clusters
+   bool           fCacheUserSet;          ///<! true if the cache setting was explicitly given by user
+   bool           fIMTEnabled;            ///<! true if implicit multi-threading is enabled for this tree
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
    std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches to be processed in parallel when IMT is on, sorted by average task time
    std::vector<TBranch*> fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
@@ -156,7 +156,7 @@ protected:
 
 private:
    // For simplicity, although fIMTFlush is always disabled in non-IMT builds, we don't #ifdef it out.
-   mutable Bool_t fIMTFlush{false};               ///<! True if we are doing a multithreaded flush.
+   mutable bool fIMTFlush{false};               ///<! True if we are doing a multithreaded flush.
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
    mutable std::atomic<Long64_t> fIMTZipBytes;    ///<! Zip bytes for the IMT flush baskets.
 
@@ -173,24 +173,24 @@ protected:
    virtual TBranch *BranchImpRef(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImpArr(const char* branchname, EDataType datatype, std::size_t N, void* addobj, Int_t bufsize, Int_t splitlevel);
-   virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t ptr);
-   virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, Bool_t isptrptr, Int_t bufsize, Int_t splitlevel);
+   virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, bool ptr);
+   virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, bool isptrptr, Int_t bufsize, Int_t splitlevel);
    friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
    virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
 
-   Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE);
+   Long64_t         GetCacheAutoSize(bool withDefault = false);
    char             GetNewlineValue(std::istream &inputStream);
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
-   Int_t            SetCacheSizeAux(Bool_t autocache = kTRUE, Long64_t cacheSize = 0);
+   Int_t            SetCacheSizeAux(bool autocache = true, Long64_t cacheSize = 0);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
       // usage of TTree Friends. Implemented in TTree.cxx.
       TTree  *fTree;      // Pointer to the locked tree
       UInt_t  fMethodBit; // BIT for the locked method
-      Bool_t  fPrevious;  // Previous value of the BIT.
+      bool    fPrevious;  // Previous value of the BIT.
 
    protected:
       TFriendLock(const TFriendLock&);
@@ -318,14 +318,14 @@ public:
    TTree(const TTree& tt) = delete;
    TTree& operator=(const TTree& tt) = delete;
 
-   virtual Int_t           AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
-   virtual Int_t           AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
-   virtual Int_t           DropBranchFromCache(const char *bname, Bool_t subbranches = kFALSE);
-   virtual Int_t           DropBranchFromCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   virtual Int_t           AddBranchToCache(const char *bname, bool subbranches = false);
+   virtual Int_t           AddBranchToCache(TBranch *branch,   bool subbranches = false);
+   virtual Int_t           DropBranchFromCache(const char *bname, bool subbranches = false);
+   virtual Int_t           DropBranchFromCache(TBranch *branch,   bool subbranches = false);
    void                    AddClone(TTree*);
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
-   virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
+   virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", bool warn = false);
    // As the TBasket invokes Add{Tot,Zip}Bytes on its parent tree, we must do these updates in a thread-safe
    // manner only when we are flushing multiple baskets in parallel.
    virtual void            AddTotBytes(Int_t tot) { if (fIMTFlush) { fIMTTotBytes += tot; } else { fTotBytes += tot; } }
@@ -418,11 +418,11 @@ public:
    virtual TBranch        *BranchRef();
            void            Browse(TBrowser*) override;
    virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0");
-   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void *pointer = nullptr, Bool_t canOptimize = kTRUE);
+   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void *pointer = nullptr, bool canOptimize = true);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
-   virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
-   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "", Bool_t needCopyAddresses = false);
+   virtual void            CopyAddresses(TTree*,bool undo = false);
+   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "", bool needCopyAddresses = false);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
    virtual void            DirectoryAutoAdd(TDirectory *);
@@ -433,12 +433,12 @@ public:
    virtual Long64_t        Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual void            DropBaskets();
    virtual void            DropBuffers(Int_t nbytes);
-           Bool_t          EnableCache();
+           bool            EnableCache();
    virtual Int_t           Fill();
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
    virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-   virtual Int_t           FlushBaskets(Bool_t create_cluster = true) const;
+   virtual Int_t           FlushBaskets(bool create_cluster = true) const;
    virtual const char     *GetAlias(const char* aliasName) const;
            UInt_t          GetAllocationCount() const { return fAllocationCount; }
 #ifdef R__TRACK_BASKET_ALLOC_TIME
@@ -448,13 +448,13 @@ public:
    virtual Long64_t        GetAutoSave()  const {return fAutoSave;}
    virtual TBranch        *GetBranch(const char* name);
    virtual TBranchRef     *GetBranchRef() const { return fBranchRef; };
-   virtual Bool_t          GetBranchStatus(const char* branchname) const;
+   virtual bool            GetBranchStatus(const char* branchname) const;
    static  Int_t           GetBranchStyle();
    virtual Long64_t        GetCacheSize() const { return fCacheSize; }
    virtual TClusterIterator GetClusterIterator(Long64_t firstentry);
    virtual Long64_t        GetChainEntryNumber(Long64_t entry) const { return entry; }
    virtual Long64_t        GetChainOffset() const { return fChainOffset; }
-   virtual Bool_t          GetClusterPrefetch() const { return fCacheDoClusterPrefetch; }
+   virtual bool            GetClusterPrefetch() const { return fCacheDoClusterPrefetch; }
            TFile          *GetCurrentFile() const;
            Int_t           GetDefaultEntryOffsetLen() const {return fDefaultEntryOffsetLen;}
            Long64_t        GetDebugMax()  const { return fDebugMax; }
@@ -477,11 +477,11 @@ public:
    virtual TTree          *GetFriend(const char*) const;
    virtual const char     *GetFriendAlias(TTree*) const;
            TH1            *GetHistogram() { return GetPlayer()->GetHistogram(); }
-   virtual Bool_t          GetImplicitMT() { return fIMTEnabled; }
+   virtual bool            GetImplicitMT() { return fIMTEnabled; }
    virtual Int_t          *GetIndex() { return &fIndex.fArray[0]; }
    virtual Double_t       *GetIndexValues() { return &fIndexValues.fArray[0]; }
            ROOT::TIOFeatures GetIOFeatures() const;
-   virtual TIterator      *GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
+   virtual TIterator      *GetIteratorOnAllLeaves(bool dir = kIterForward);
    virtual TLeaf          *GetLeaf(const char* branchname, const char* leafname);
    virtual TLeaf          *GetLeaf(const char* name);
    virtual TList          *GetListOfClones() { return fClones; }
@@ -505,7 +505,7 @@ public:
    virtual Int_t           GetPacketSize() const { return fPacketSize; }
    virtual TVirtualPerfStats *GetPerfStats() const { return fPerfStats; }
            TTreeCache     *GetReadCache(TFile *file) const;
-           TTreeCache     *GetReadCache(TFile *file, Bool_t create);
+           TTreeCache     *GetReadCache(TFile *file, bool create);
    virtual Long64_t        GetReadEntry()  const { return fReadEntry; }
    virtual Long64_t        GetReadEvent()  const { return fReadEntry; }
    virtual Int_t           GetScanField()  const { return fScanField; }
@@ -544,8 +544,8 @@ public:
    virtual Double_t        GetWeight() const   { return fWeight; }
    virtual Long64_t        GetZipBytes() const { return fZipBytes; }
    virtual void            IncrementTotalBuffers(Int_t nbytes) { fTotalBuffers += nbytes; }
-           Bool_t          IsFolder() const override { return kTRUE; }
-   virtual Bool_t          InPlaceClone(TDirectory *newdirectory, const char *options = "");
+           bool            IsFolder() const override { return true; }
+   virtual bool            InPlaceClone(TDirectory *newdirectory, const char *options = "");
    virtual Int_t           LoadBaskets(Long64_t maxmemory = 2000000000);
    virtual Long64_t        LoadTree(Long64_t entry);
    virtual Long64_t        LoadTreeFriend(Long64_t entry, TTree* T);
@@ -553,11 +553,11 @@ public:
    virtual Int_t           MakeCode(const char *filename = nullptr);
    virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = nullptr, const char* cutfilename = nullptr, const char* option = nullptr, Int_t maxUnrolling = 3);
    virtual Int_t           MakeSelector(const char *selector = nullptr, Option_t *option = "");
-   Bool_t                  MemoryFull(Int_t nbytes);
+   bool                    MemoryFull(Int_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
-           Bool_t          Notify() override;
+           bool            Notify() override;
    virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option="");
            TPrincipal     *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
            void            Print(Option_t* option = "") const override; // *MENU*
@@ -578,13 +578,13 @@ public:
    virtual void            ResetBranchAddress(TBranch *);
    virtual void            ResetBranchAddresses();
    virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-   virtual Bool_t          SetAlias(const char* aliasName, const char* aliasFormula);
+   virtual bool            SetAlias(const char* aliasName, const char* aliasFormula);
    virtual void            SetAutoSave(Long64_t autos = -300000000);
    virtual void            SetAutoFlush(Long64_t autof = -30000000);
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = nullptr);
-   virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
-   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
+   virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, bool isptr);
+   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, bool isptr);
    template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = nullptr) {
       TClass *cl = TClass::GetClass<T>();
       EDataType type = kOther_t;
@@ -601,16 +601,16 @@ public:
       return SetBranchAddress(bname,add,ptr,cl,type,false);
    }
 #endif
-   virtual void            SetBranchStatus(const char* bname, Bool_t status = true, UInt_t* found = nullptr);
+   virtual void            SetBranchStatus(const char* bname, bool status = true, UInt_t* found = nullptr);
    static  void            SetBranchStyle(Int_t style = 1);  //style=0 for old branch, =1 for new branch style
    virtual Int_t           SetCacheSize(Long64_t cachesize = -1);
    virtual Int_t           SetCacheEntryRange(Long64_t first, Long64_t last);
    virtual void            SetCacheLearnEntries(Int_t n=10);
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
-   virtual void            SetClusterPrefetch(Bool_t enabled) { fCacheDoClusterPrefetch = enabled; }
+   virtual void            SetClusterPrefetch(bool enabled) { fCacheDoClusterPrefetch = enabled; }
    virtual void            SetDebug(Int_t level = 1, Long64_t min = 0, Long64_t max = 9999999); // *MENU*
-   virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, Bool_t updateExisting = kFALSE);
+   virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, bool updateExisting = false);
    virtual void            SetDirectory(TDirectory* dir);
    virtual Long64_t        SetEntries(Long64_t n = -1);
    virtual void            SetEstimate(Long64_t nentries = 1000000);
@@ -618,7 +618,7 @@ public:
    virtual void            SetFileNumber(Int_t number = 0);
    virtual void            SetEventList(TEventList* list);
    virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
-   virtual void            SetImplicitMT(Bool_t enabled) { fIMTEnabled = enabled; }
+   virtual void            SetImplicitMT(bool enabled) { fIMTEnabled = enabled; }
    virtual void            SetMakeClass(Int_t make);
    virtual void            SetMaxEntryLoop(Long64_t maxev = kMaxEntries) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 100000000000LL);
@@ -640,7 +640,7 @@ public:
    virtual void            SetNotify(TObject* obj);
 
    virtual void            SetObject(const char* name, const char* title);
-   virtual void            SetParallelUnzip(Bool_t opt=kTRUE, Float_t RelSize=-1);
+   virtual void            SetParallelUnzip(bool opt=true, Float_t RelSize=-1);
    virtual void            SetPerfStats(TVirtualPerfStats* perf);
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    void SetTargetMemoryRatio(Float_t ratio) { fTargetMemoryRatio = ratio; }
@@ -673,13 +673,13 @@ protected:
    TTree             *fTree;         ///< tree being iterated
    TIterator         *fLeafIter;     ///< current leaf sub-iterator.
    TIterator         *fTreeIter;     ///< current tree sub-iterator.
-   Bool_t             fDirection;    ///< iteration direction
+   bool               fDirection;    ///< iteration direction
 
    TTreeFriendLeafIter() : fTree(nullptr), fLeafIter(nullptr), fTreeIter(nullptr),
-       fDirection(kFALSE) { }
+       fDirection(false) { }
 
 public:
-   TTreeFriendLeafIter(const TTree* t, Bool_t dir = kIterForward);
+   TTreeFriendLeafIter(const TTree* t, bool dir = kIterForward);
    TTreeFriendLeafIter(const TTreeFriendLeafIter &iter);
    ~TTreeFriendLeafIter() override { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
    TIterator &operator=(const TIterator &rhs) override;
@@ -689,11 +689,11 @@ public:
    Option_t          *GetOption() const override;
    TObject           *Next() override;
    void               Reset() override { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
-   Bool_t operator !=(const TIterator&) const override {
+   bool operator !=(const TIterator&) const override {
       // TODO: Implement me
       return false;
    }
-   Bool_t operator !=(const TTreeFriendLeafIter&) const {
+   bool operator !=(const TTreeFriendLeafIter&) const {
       // TODO: Implement me
       return false;
    }

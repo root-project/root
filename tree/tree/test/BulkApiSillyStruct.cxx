@@ -37,7 +37,7 @@ protected:
 
       SillyStruct ss;
       TBranch *branch = tree->Branch("myEvent", &ss, 32000, 99);
-      branch->SetAutoDelete(kFALSE);
+      branch->SetAutoDelete(false);
 
       Int_t nb = 0;
       for (Long64_t ev = 0; ev < fEventCount; ev++) {

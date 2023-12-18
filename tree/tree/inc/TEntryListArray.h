@@ -40,8 +40,8 @@ protected:
 //    virtual TList* GetSubLists() const {
 //       return fSubLists;
 //    };
-   virtual Bool_t      RemoveSubList(TEntryListArray *e, TTree *tree = nullptr);
-   virtual Bool_t      RemoveSubListForEntry(Long64_t entry, TTree *tree = nullptr);
+   virtual bool        RemoveSubList(TEntryListArray *e, TTree *tree = nullptr);
+   virtual bool        RemoveSubListForEntry(Long64_t entry, TTree *tree = nullptr);
    virtual TEntryListArray* SetEntry(Long64_t entry, TTree *tree = nullptr);
 
 
@@ -60,20 +60,20 @@ public:
    Int_t       Contains(Long64_t entry, TTree *tree = nullptr) override {
       return TEntryList::Contains(entry, tree);
    };
-   virtual Bool_t      Enter(Long64_t entry, TTree *tree, Long64_t subentry);
-   virtual Bool_t      Enter(Long64_t entry, const char *treename, const char *filename, Long64_t subentry);
-   Bool_t      Enter(Long64_t entry, TTree *tree = nullptr) override {
+   virtual bool        Enter(Long64_t entry, TTree *tree, Long64_t subentry);
+   virtual bool        Enter(Long64_t entry, const char *treename, const char *filename, Long64_t subentry);
+   bool                Enter(Long64_t entry, TTree *tree = nullptr) override {
       return Enter(entry, tree, -1);
    };
-   Bool_t              Enter(Long64_t entry, const char *treename, const char *filename) override
+   bool                Enter(Long64_t entry, const char *treename, const char *filename) override
    {
       return Enter(entry, treename, filename, -1);
    };
-//    virtual Bool_t      Enter(Long64_t entry, TTree *tree, const TEntryList *e);
+//    virtual bool        Enter(Long64_t entry, TTree *tree, const TEntryList *e);
    virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = nullptr);
    void        Print(const Option_t* option = "") const override;
-   virtual Bool_t      Remove(Long64_t entry, TTree *tree, Long64_t subentry);
-   Bool_t      Remove(Long64_t entry, TTree *tree = nullptr) override {
+   virtual bool        Remove(Long64_t entry, TTree *tree, Long64_t subentry);
+   bool        Remove(Long64_t entry, TTree *tree = nullptr) override {
       return Remove(entry, tree, -1);
    };
    void        Reset() override;

@@ -174,9 +174,9 @@ public:
    }
    void SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
 
-   Bool_t IsChain() const { return TestBit(kBitIsChain); }
+   bool IsChain() const { return TestBit(kBitIsChain); }
 
-   Bool_t IsInvalid() const { return fLoadTreeStatus == kNoTree; }
+   bool IsInvalid() const { return fLoadTreeStatus == kNoTree; }
 
    TTree* GetTree() const { return fTree; }
    TEntryList* GetEntryList() const { return fEntryList; }
@@ -187,7 +187,7 @@ public:
    ///
    /// \return false if the previous entry was already the last entry. This allows
    ///   the function to be used in `while (reader.Next()) { ... }`
-   Bool_t Next() {
+   bool Next() {
       return SetEntry(GetCurrentEntry() + 1) == kEntryValid;
    }
 
@@ -196,7 +196,7 @@ public:
    /// \param entry If not TEntryList is set, the entry is a global entry (i.e.
    /// not the entry number local to the chain's current tree).
    /// \returns the `entry`'s read status, i.e. whether the entry is available.
-   EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
+   EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, false); }
 
    /// Set the next local tree entry. If a TEntryList is set, this function is
    /// equivalent to `SetEntry()`.
@@ -206,7 +206,7 @@ public:
    /// within `TSelector::Process()` always use `SetLocalEntry()` and not
    /// `SetEntry()`!
    /// \return the `entry`'s read status, i.e. whether the entry is available.
-   EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
+   EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, true); }
 
    EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
 
@@ -223,7 +223,7 @@ public:
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
    Long64_t GetEntries() const;
-   Long64_t GetEntries(Bool_t force);
+   Long64_t GetEntries(bool force);
 
    /// Returns the index of the current entry being read.
    ///
@@ -234,7 +234,7 @@ public:
    /// through `reader.GetEntryList()->GetEntry(reader.GetCurrentEntry())`.
    Long64_t GetCurrentEntry() const { return fEntry; }
 
-   Bool_t Notify() override;
+   bool Notify() override;
 
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
@@ -265,12 +265,12 @@ protected:
       fProxies[bpName].reset(p);
    }
 
-   Bool_t RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
+   bool RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
 
-   EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
+   EEntryStatus SetEntryBase(Long64_t entry, bool local);
 
-   Bool_t SetProxies();
+   bool SetProxies();
 
 private:
 
@@ -302,11 +302,11 @@ private:
 
    /// The end of the entry loop. When set (i.e. >= 0), it provides a way
    /// to stop looping over the TTree when we reach a certain entry: Next()
-   /// returns kFALSE when GetCurrentEntry() reaches fEndEntry.
+   /// returns false when GetCurrentEntry() reaches fEndEntry.
    Long64_t fEndEntry = -1LL;
    Long64_t fBeginEntry = 0LL; ///< This allows us to propagate the range to the TTreeCache
-   Bool_t fProxiesSet = kFALSE; ///< True if the proxies have been set, false otherwise
-   Bool_t fSetEntryBaseCallingLoadTree = kFALSE; ///< True if during the LoadTree execution triggered by SetEntryBase.
+   bool fProxiesSet = false; ///< True if the proxies have been set, false otherwise
+   bool fSetEntryBaseCallingLoadTree = false; ///< True if during the LoadTree execution triggered by SetEntryBase.
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;

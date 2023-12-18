@@ -40,7 +40,7 @@ protected:
    Int_t          fYsize;          ///< Size in K/Mbytes of Y axis
 
    virtual void     DrawMarker(Int_t marker, Long64_t eseek);
-   virtual Bool_t   GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;
+   virtual bool     GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;
    virtual void     PaintBox(TBox &box, Long64_t bseek, Int_t nbytes);
    virtual void     PaintDir(TDirectory *dir, const char *keys);
    virtual TObject *GetObject();

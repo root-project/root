@@ -679,7 +679,7 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
       if (id >= 0){ // Not root node?
          // Int_t offset = streamerInfo->GetOffsets()[id];
          TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
-         // Bool_t isPointer = element->IsaPointer();
+         // bool isPointer = element->IsaPointer();
          // TClass *classPointer = element->GetClassPointer();
 
          if (fSetupStatus == kSetupInternalError)

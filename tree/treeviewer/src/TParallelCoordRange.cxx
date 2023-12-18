@@ -40,8 +40,8 @@ TParallelCoordRange::TParallelCoordRange()
    fMax = 0;
    fVar = nullptr;
    fSelect = nullptr;
-   SetBit(kShowOnPad,kTRUE);
-   SetBit(kLiveUpdate,kFALSE);
+   SetBit(kShowOnPad,true);
+   SetBit(kLiveUpdate,false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, D
 
    SetLineColor(fSelect->GetLineColor());
 
-   SetBit(kShowOnPad,kTRUE);
+   SetBit(kShowOnPad,true);
    SetBit(kLiveUpdate,var->GetParallel()->TestBit(TParallelCoord::kLiveUpdate));
 }
 
@@ -142,7 +142,7 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
    if (!gPad) return;
    if (!gPad->IsEditable() && entry!=kMouseEnter) return;
 
-   Bool_t vert = fVar->GetVert();
+   bool vert = fVar->GetVert();
    static Int_t pxold, pyold;
    static Int_t mindragged = -1; //-1:nothing dragged, 0:max dragged, 1:mindragged, 2:both dragged;
    Int_t plx1,plx2,ply1,ply2;
@@ -357,7 +357,7 @@ TPoint* TParallelCoordRange::GetSliderPoints(Int_t pos)
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate if the given value is within the range or not.
 
-Bool_t TParallelCoordRange::IsIn(Double_t evtval)
+bool TParallelCoordRange::IsIn(Double_t evtval)
 {
    return evtval>=fMin && evtval<=fMax;
 }
@@ -368,15 +368,15 @@ Bool_t TParallelCoordRange::IsIn(Double_t evtval)
 void TParallelCoordRange::Paint(Option_t* /*options*/)
 {
    if(TestBit(kShowOnPad)){
-      PaintSlider(fMin,kTRUE);
-      PaintSlider(fMax,kTRUE);
+      PaintSlider(fMin,true);
+      PaintSlider(fMax,true);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a slider.
 
-void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
+void TParallelCoordRange::PaintSlider(Double_t value, bool fill)
 {
    SetLineColor(fSelect->GetLineColor());
 
@@ -473,8 +473,8 @@ TParallelCoordSelect::TParallelCoordSelect()
    : TList(), TAttLine(kBlue,1,1)
 {
    fTitle = "Selection";
-   SetBit(kActivated,kTRUE);
-   SetBit(kShowRanges,kTRUE);
+   SetBit(kActivated,true);
+   SetBit(kShowRanges,true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -484,8 +484,8 @@ TParallelCoordSelect::TParallelCoordSelect(const char* title)
    : TList(), TAttLine(kBlue,1,1)
 {
    fTitle = title;
-   SetBit(kActivated,kTRUE);
-   SetBit(kShowRanges,kTRUE);
+   SetBit(kActivated,true);
+   SetBit(kShowRanges,true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -502,7 +502,7 @@ TParallelCoordSelect::~TParallelCoordSelect()
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate the selection.
 
-void TParallelCoordSelect::SetActivated(Bool_t on)
+void TParallelCoordSelect::SetActivated(bool on)
 {
    TIter next(this);
    TParallelCoordRange* range;
@@ -513,7 +513,7 @@ void TParallelCoordSelect::SetActivated(Bool_t on)
 ////////////////////////////////////////////////////////////////////////////////
 /// Show the ranges needles.
 
-void TParallelCoordSelect::SetShowRanges(Bool_t s)
+void TParallelCoordSelect::SetShowRanges(bool s)
 {
    TIter next(this);
    TParallelCoordRange* range;

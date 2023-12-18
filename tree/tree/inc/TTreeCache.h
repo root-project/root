@@ -51,25 +51,25 @@ protected:
    TObjArray   *fBranches{nullptr};   ///<! List of branches to be stored in the cache
    TList       *fBrNames{nullptr};    ///<! list of branch names in the cache
    TTree       *fTree{nullptr};       ///<! pointer to the current Tree
-   Bool_t       fIsLearning{kTRUE};   ///<! true if cache is in learning mode
-   Bool_t       fIsManual{kFALSE};    ///<! true if cache is StopLearningPhase was used
-   Bool_t       fFirstBuffer{kTRUE};  ///<! true if first buffer is used for prefetching
-   Bool_t       fOneTime{kFALSE};     ///<! used in the learning phase
-   Bool_t       fReverseRead{kFALSE}; ///<! reading in reverse mode
+   bool         fIsLearning{true};   ///<! true if cache is in learning mode
+   bool         fIsManual{false};    ///<! true if cache is StopLearningPhase was used
+   bool         fFirstBuffer{true};  ///<! true if first buffer is used for prefetching
+   bool         fOneTime{false};     ///<! used in the learning phase
+   bool         fReverseRead{false}; ///<! reading in reverse mode
    Int_t        fFillTimes{0};        ///<! how many times we can fill the current buffer
-   Bool_t       fFirstTime{kTRUE};    ///<! save the fact that we processes the first entry
+   bool         fFirstTime{true};    ///<! save the fact that we processes the first entry
    Long64_t     fFirstEntry{-1};      ///<! save the value of the first entry
-   Bool_t       fReadDirectionSet{kFALSE}; ///<! read direction established
-   Bool_t       fEnabled{kTRUE};      ///<! cache enabled for cached reading
+   bool         fReadDirectionSet{false}; ///<! read direction established
+   bool         fEnabled{true};      ///<! cache enabled for cached reading
    EPrefillType fPrefillType;         ///<  Whether a pre-filling is enabled (and if applicable which type)
    static Int_t fgLearnEntries;       ///<  number of entries used for learning mode
-   Bool_t       fAutoCreated{kFALSE}; ///<! true if cache was automatically created
+   bool         fAutoCreated{false}; ///<! true if cache was automatically created
 
-   Bool_t       fLearnPrefilling{kFALSE}; ///<! true if we are in the process of executing LearnPrefill
+   bool         fLearnPrefilling{false}; ///<! true if we are in the process of executing LearnPrefill
 
    // These members hold cached data for missed branches when miss optimization
    // is enabled.  Pointers are only initialized if the miss cache is enabled.
-   Bool_t   fOptimizeMisses{kFALSE}; ///<! true if we should optimize cache misses.
+   bool     fOptimizeMisses{false}; ///<! true if we should optimize cache misses.
    Long64_t fFirstMiss{-1};          ///<! set to the event # of the first miss.
    Long64_t fLastMiss{-1};           ///<! set to the event # of the last miss.
 
@@ -115,27 +115,27 @@ private:
    // The miss cache is more CPU-intensive than the rest of the TTreeCache code;
    // for local work (i.e., laptop with SSD), this CPU cost may outweight the
    // benefit.
-   Bool_t CheckMissCache(char *buf, Long64_t pos,
+   bool CheckMissCache(char *buf, Long64_t pos,
                          int len); ///< Check the miss cache for a particular buffer, fetching if deemed necessary.
-   Bool_t FillMissCache();         ///< Fill the miss cache from the current set of active branches.
-   Bool_t CalculateMissCache();    ///< Calculate the appropriate miss cache to fetch; helper function for FillMissCache
+   bool FillMissCache();         ///< Fill the miss cache from the current set of active branches.
+   bool CalculateMissCache();    ///< Calculate the appropriate miss cache to fetch; helper function for FillMissCache
    IOPos  FindBranchBasketPos(TBranch &, Long64_t entry); ///< Given a branch and an entry, determine the file location
                                                           ///< (offset / size) of the corresponding basket.
    TBranch *CalculateMissEntries(Long64_t, int, bool);    ///< Given an file read, try to determine the corresponding branch.
-   Bool_t   ProcessMiss(Long64_t pos, int len); ///<! Given a file read not in the miss cache, handle (possibly) loading the data.
+   bool     ProcessMiss(Long64_t pos, int len); ///<! Given a file read not in the miss cache, handle (possibly) loading the data.
 
 public:
 
    TTreeCache();
    TTreeCache(TTree *tree, Int_t buffersize=0);
    ~TTreeCache() override;
-   Int_t                AddBranch(TBranch *b, Bool_t subgbranches = kFALSE) override;
-   Int_t                AddBranch(const char *branch, Bool_t subbranches = kFALSE) override;
-   virtual Int_t        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
-   virtual Int_t        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
-   virtual void         Disable() {fEnabled = kFALSE;}
-   virtual void         Enable() {fEnabled = kTRUE;}
-   Bool_t               GetOptimizeMisses() const { return fOptimizeMisses; }
+   Int_t                AddBranch(TBranch *b, bool subgbranches = false) override;
+   Int_t                AddBranch(const char *branch, bool subbranches = false) override;
+   virtual Int_t        DropBranch(TBranch *b, bool subbranches = false);
+   virtual Int_t        DropBranch(const char *branch, bool subbranches = false);
+   virtual void         Disable() {fEnabled = false;}
+   virtual void         Enable() {fEnabled = true;}
+   bool                 GetOptimizeMisses() const { return fOptimizeMisses; }
    const TObjArray     *GetCachedBranches() const { return fBranches; }
    EPrefillType         GetConfiguredPrefillType() const;
    Double_t             GetEfficiency() const;
@@ -147,12 +147,12 @@ public:
    Double_t             GetMissEfficiency() const;
    Double_t             GetMissEfficiencyRel() const;
    TTree               *GetTree() const {return fTree;}
-   Bool_t               IsAutoCreated() const {return fAutoCreated;}
-   virtual Bool_t       IsEnabled() const {return fEnabled;}
-   Bool_t               IsLearning() const override {return fIsLearning;}
+   bool                 IsAutoCreated() const {return fAutoCreated;}
+   virtual bool         IsEnabled() const {return fEnabled;}
+   bool                 IsLearning() const override {return fIsLearning;}
 
-   virtual Bool_t       FillBuffer();
-   Int_t                LearnBranch(TBranch *b, Bool_t subgbranches = kFALSE) override;
+   virtual bool         FillBuffer();
+   Int_t                LearnBranch(TBranch *b, bool subgbranches = false) override;
    virtual void         LearnPrefill();
 
    void                 Print(Option_t *option="") const override;
@@ -161,13 +161,13 @@ public:
    virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void         ResetCache();
    void                 ResetMissCache(); // Reset the miss cache.
-   void                 SetAutoCreated(Bool_t val) {fAutoCreated = val;}
+   void                 SetAutoCreated(bool val) {fAutoCreated = val;}
    Int_t                SetBufferSize(Int_t buffersize) override;
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
    void                 SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect) override;
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);
    static void          SetLearnEntries(Int_t n = 10);
-   void                 SetOptimizeMisses(Bool_t opt);
+   void                 SetOptimizeMisses(bool opt);
    void                 StartLearningPhase();
    virtual void         StopLearningPhase();
    virtual void         UpdateBranches(TTree *tree);

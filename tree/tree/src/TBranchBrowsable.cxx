@@ -76,13 +76,13 @@ It has to return the number of browsable helper objects for parent
 
 std::list<TVirtualBranchBrowsable::MethodCreateListOfBrowsables_t>
    TVirtualBranchBrowsable::fgGenerators;
-Bool_t TVirtualBranchBrowsable::fgGeneratorsSet=kFALSE;
+bool TVirtualBranchBrowsable::fgGeneratorsSet=false;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor setting all members according to parameters.
 
 TVirtualBranchBrowsable::TVirtualBranchBrowsable(const TBranch *branch, TClass *type,
-                                                 Bool_t typeIsPointer,
+                                                 bool typeIsPointer,
                                                  const TVirtualBranchBrowsable *parent /*=0*/):
 fBranch(branch), fParent(parent), fLeaves(nullptr), fClass(type), fTypeIsPointer(typeIsPointer)
 {
@@ -345,7 +345,7 @@ void TVirtualBranchBrowsable::RegisterDefaultGenerators()
    fgGenerators.push_back(&TMethodBrowsable::GetBrowsables);
    fgGenerators.push_back(&TNonSplitBrowsable::GetBrowsables);
    fgGenerators.push_back(&TCollectionPropertyBrowsable::GetBrowsables);
-   fgGeneratorsSet=kTRUE;
+   fgGeneratorsSet=true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,7 +408,7 @@ ClassImp(TMethodBrowsable);
 
 TMethodBrowsable::TMethodBrowsable(const TBranch* branch, TMethod* m,
                                    const TVirtualBranchBrowsable* parent /* =0 */):
-   TVirtualBranchBrowsable(branch, nullptr, kFALSE, parent), fMethod(m)
+   TVirtualBranchBrowsable(branch, nullptr, false, parent), fMethod(m)
 {
    TString name(m->GetName());
    name+="()";
@@ -527,7 +527,7 @@ Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 /// persistent data member, the methods GetX(), getX(), and X() will not
 /// be browsable.
 
-Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
+bool TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
 {
    long property = m->Property();
    const char* baseName=m->GetName();
@@ -560,13 +560,13 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
 
       // look for matching data member
       TClass* cl=m->GetClass();
-      if (!cl) return kTRUE;
+      if (!cl) return true;
       TList* members=cl->GetListOfDataMembers();
-      if (!members) return kTRUE;
+      if (!members) return true;
       if (!strncmp(baseName, "Get", 3) ||
           !strncmp(baseName, "get", 3))
          baseName+=3;
-      if (!baseName[0]) return kTRUE;
+      if (!baseName[0]) return true;
 
       TObject* mem=nullptr;
       const char* arrMemberNames[3]={"f%s","_%s","m%s"};
@@ -574,7 +574,7 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
          mem=members->FindObject(TString::Format(arrMemberNames[i],baseName));
       return (!mem ||! ((TDataMember*)mem)->IsPersistent());
    };
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

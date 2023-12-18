@@ -448,7 +448,7 @@ void TBranchClones::Streamer(TBuffer& b)
       }
       b.CheckByteCount(R__s, R__c, TBranchClones::IsA());
    } else {
-      R__c = b.WriteVersion(TBranchClones::IsA(), kTRUE);
+      R__c = b.WriteVersion(TBranchClones::IsA(), true);
       TNamed::Streamer(b);
       b << fCompress;
       b << fBasketSize;
@@ -463,7 +463,7 @@ void TBranchClones::Streamer(TBuffer& b)
       b << fBranchCount;
       fClassName.Streamer(b);
       fBranches.Streamer(b);
-      b.SetByteCount(R__c, kTRUE);
+      b.SetByteCount(R__c, true);
    }
 }
 

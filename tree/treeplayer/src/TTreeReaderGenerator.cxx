@@ -40,7 +40,7 @@ namespace Internal {
 
    TTreeReaderGenerator::TTreeReaderGenerator(TTree* tree, const char *classname, Option_t *option) :
       TTreeGeneratorBase(tree, option), fClassname(classname),
-      fIncludeAllLeaves(kFALSE), fIncludeAllTopmost(kFALSE)
+      fIncludeAllLeaves(false), fIncludeAllTopmost(false)
    {
       ParseOptions();
       AnalyzeTree(fTree);
@@ -51,7 +51,7 @@ namespace Internal {
    /// Add a reader to the generated code.
 
    void TTreeReaderGenerator::AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name,
-                                        TString branchName, TBranchDescriptor *parent, Bool_t isLeaf)
+                                        TString branchName, TBranchDescriptor *parent, bool isLeaf)
    {
       if(BranchNeedsReader(branchName, parent, isLeaf)) {
          // Ignore unknown types
@@ -100,7 +100,7 @@ namespace Internal {
       ELocation outer_isclones = kOut; // Is the parent branch a container
       TString containerName;   // Container name
       TString subBranchPrefix; // Prefix of sub-branch (if the elements and sub-branches do not match).
-      Bool_t skipped = false;  // Should the branch be skipped
+      bool skipped = false;  // Should the branch be skipped
 
       // Check for containers (TClonesArray or STL)
       {
@@ -154,9 +154,9 @@ namespace Internal {
            element;
            element = (TStreamerElement*)elements() )
       {
-         Bool_t isBase = false;     // Does the element correspond to a base class
-         Bool_t usedBranch = kTRUE; // Does the branch correspond to the element (i.e., they match)
-         Bool_t isLeaf = true;    // Is the branch a leaf (i.e. no sub-branches)
+         bool isBase = false;     // Does the element correspond to a base class
+         bool usedBranch = true; // Does the branch correspond to the element (i.e., they match)
+         bool isLeaf = true;    // Is the branch a leaf (i.e. no sub-branches)
          TIter peek = branches;     // Iterator for sub-branches
          // Always start with the first available sub-branch and if it does not match the element,
          // try the next ones
@@ -200,7 +200,7 @@ namespace Internal {
 
          TString dataType; // Data type of reader
          TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
-         Bool_t ispointer = false;
+         bool ispointer = false;
          ELocation isclones = outer_isclones; // Is the actual sub-branch a collection (inherit from parent branch)
          // Get data type
          switch(element->GetType()) {
@@ -377,7 +377,7 @@ namespace Internal {
                      cl = objInfo->GetClass();
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, branchname.Data(), local_prefix.Data(),
                                                     isclones, containerName, desc);
-                     usedBranch = kFALSE;
+                     usedBranch = false;
                      // Recurse: analyze the sub-elements with the same branches
                      lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
                   }
@@ -416,8 +416,8 @@ namespace Internal {
                      }
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, branchname.Data(), local_prefix.Data(),
                                                    isclones, containerName, desc);
-                     usedBranch = kFALSE;
-                     skipped = kTRUE;
+                     usedBranch = false;
+                     skipped = true;
                      // Recurse: analyze the sub-elements with the same branches
                      lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
                   }
@@ -576,7 +576,7 @@ namespace Internal {
          branchName.Form("%s.%s", leaf->GetBranch()->GetName(), leaf->GetName());
       }
 
-      AddReader(type, dataType, leaf->GetName(), branchName, nullptr, kTRUE);
+      AddReader(type, dataType, leaf->GetName(), branchName, nullptr, true);
 
       return 0;
    }
@@ -585,27 +585,27 @@ namespace Internal {
    /// Check whether a branch should have a corresponding reader added, depending
    /// on the options provided by the user.
 
-   Bool_t TTreeReaderGenerator::BranchNeedsReader(TString branchName, TBranchDescriptor *parent, Bool_t isLeaf)
+   bool TTreeReaderGenerator::BranchNeedsReader(TString branchName, TBranchDescriptor *parent, bool isLeaf)
    {
       if (isLeaf) { // Branch is a leaf
          // Include if all leaves should be included or it is contained in any of the lists.
-         if (fIncludeAllLeaves) return kTRUE;
-         if (std::find(fIncludeLeaves.begin(), fIncludeLeaves.end(), branchName) != fIncludeLeaves.end()) return kTRUE;
-         if (std::find(fIncludeStruct.begin(), fIncludeStruct.end(), branchName) != fIncludeStruct.end()) return kTRUE;
+         if (fIncludeAllLeaves) return true;
+         if (std::find(fIncludeLeaves.begin(), fIncludeLeaves.end(), branchName) != fIncludeLeaves.end()) return true;
+         if (std::find(fIncludeStruct.begin(), fIncludeStruct.end(), branchName) != fIncludeStruct.end()) return true;
          if (!parent) { // Branch is topmost (top-level leaf)
-            if (fIncludeAllTopmost) return kTRUE;
+            if (fIncludeAllTopmost) return true;
          } else {       // Branch is not topmost
             while (parent) { // Check if any parent is in the list of "include as leaves"
                if (std::find(fIncludeLeaves.begin(), fIncludeLeaves.end(), parent->fBranchName) != fIncludeLeaves.end()) {
-                  return kTRUE;
+                  return true;
                }
                parent = parent->fParent;
             }
          }
       } else {      // Branch is not a leaf (has sub-branches)
-         if (std::find(fIncludeStruct.begin(), fIncludeStruct.end(), branchName) != fIncludeStruct.end()) return kTRUE;
+         if (std::find(fIncludeStruct.begin(), fIncludeStruct.end(), branchName) != fIncludeStruct.end()) return true;
          if (!parent) { // Branch is topmost
-            if (fIncludeAllTopmost) return kTRUE;
+            if (fIncludeAllTopmost) return true;
          }
       }
       return false;
@@ -616,9 +616,9 @@ namespace Internal {
 
    void TTreeReaderGenerator::ParseOptions() {
       if (fOptionStr.EqualTo("")) { // Empty -> include all leaves
-         fIncludeAllLeaves = kTRUE;
+         fIncludeAllLeaves = true;
       } else if (fOptionStr.EqualTo("@")) { // "@" -> include all topmost
-         fIncludeAllTopmost = kTRUE;
+         fIncludeAllTopmost = true;
       } else { // Otherwise split at ";" to get names
          TObjArray *tokens = fOptionStr.Tokenize(TString(";"));
          for (Int_t i = 0; i < tokens->GetEntries(); ++i) {
@@ -713,11 +713,11 @@ namespace Internal {
                   if (containerName.EqualTo("vector<bool>")) {
                      AddReader(TTreeReaderDescriptor::ReaderType::kValue,
                             containerName,
-                            branch->GetName(), branch->GetName(), nullptr, kTRUE);
+                            branch->GetName(), branch->GetName(), nullptr, true);
                   } else { // Otherwise we can generate a TTreeReaderArray with the inner type
                      AddReader(TTreeReaderDescriptor::ReaderType::kArray,
                             TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
-                            branch->GetName(), branch->GetName(), nullptr, kTRUE);
+                            branch->GetName(), branch->GetName(), nullptr, true);
                   }
                   continue; // Nothing else to with this branch in these cases
                }
@@ -737,7 +737,7 @@ namespace Internal {
                   AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
                             : TTreeReaderDescriptor::ReaderType::kArray,
-                            cl->GetName(), branchName, branchName, nullptr, kTRUE);
+                            cl->GetName(), branchName, branchName, nullptr, true);
                   // TODO: can't we just put a continue here?
                }
             }
@@ -751,7 +751,7 @@ namespace Internal {
                   AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
                             : TTreeReaderDescriptor::ReaderType::kArray,
-                            desc->GetName(), desc->fBranchName, desc->fBranchName, nullptr, kTRUE);
+                            desc->GetName(), desc->fBranchName, desc->fBranchName, nullptr, true);
                }
             } else { // Top-level RAW type
                AnalyzeOldBranch(branch); // Analyze branch and extract readers
@@ -770,7 +770,7 @@ namespace Internal {
                AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
                             : TTreeReaderDescriptor::ReaderType::kArray,
-                            desc->GetName(), desc->fBranchName, desc->fBranchName, nullptr, kFALSE);
+                            desc->GetName(), desc->fBranchName, desc->fBranchName, nullptr, false);
             }
          }
          delete desc;
@@ -794,8 +794,8 @@ namespace Internal {
       // In the case of a chain, the GetDirectory information usually does
       // pertain to the Chain itself but to the currently loaded tree.
       // So we can not rely on it.
-      Bool_t ischain = fTree->InheritsFrom(TChain::Class());
-      Bool_t isHbook = fTree->InheritsFrom("THbookTree");
+      bool ischain = fTree->InheritsFrom(TChain::Class());
+      bool isHbook = fTree->InheritsFrom("THbookTree");
       if (isHbook)
          treefile = fTree->GetTitle();
 
@@ -873,8 +873,8 @@ R"CODE(
    void    Begin(TTree *tree) override;
    void    SlaveBegin(TTree *tree) override;
    void    Init(TTree *tree) override;
-   Bool_t  Notify() override;
-   Bool_t  Process(Long64_t entry) override;
+   bool    Notify() override;
+   bool    Process(Long64_t entry) override;
    Int_t   GetEntry(Long64_t entry, Int_t getall = 0) override { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }
    void    SetOption(const char *option) override { fOption = option; }
    void    SetObject(TObject *obj) override { fObject = obj; }
@@ -902,7 +902,7 @@ void )CODE" << fClassname << R"CODE(::Init(TTree *tree)
    fReader.SetTree(tree);
 }
 
-Bool_t )CODE" << fClassname << R"CODE(::Notify()
+bool )CODE" << fClassname << R"CODE(::Notify()
 {
    // The Notify() function is called when a new file is opened. This
    // can be either for a new TTree in a TChain or when when a new TTree
@@ -910,7 +910,7 @@ Bool_t )CODE" << fClassname << R"CODE(::Notify()
    // to the generated code, but the routine can be extended by the
    // user if needed. The return value is currently not used.
 
-   return kTRUE;
+   return true;
 }
 
 
@@ -978,7 +978,7 @@ void )CODE" << fClassname << R"CODE(::SlaveBegin(TTree * /*tree*/)
 
 }
 
-Bool_t )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
+bool )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
 {
    // The Process() function is called for each entry in the tree (or possibly
    // keyed object in the case of PROOF) to be processed. The entry argument
@@ -998,7 +998,7 @@ Bool_t )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
 
    fReader.SetLocalEntry(entry);
 
-   return kTRUE;
+   return true;
 }
 
 void )CODE" << fClassname << R"CODE(::SlaveTerminate()

@@ -119,9 +119,9 @@ protected:
       sample2.i = 1;
       sample2.d = d;
       auto br = tree->Branch("sample", &sample2, 32*1024, 99);
-      br->SetAutoDelete(kFALSE);
+      br->SetAutoDelete(false);
       auto br2 = tree2->Branch("sample", &sample2, 32*1024, 99);
-      br2->SetAutoDelete(kFALSE);
+      br2->SetAutoDelete(false);
       tree->Branch("elem", &elem, "elem/I");
       tree->Branch("sample2", &sample, "sample2[elem]/I");
 

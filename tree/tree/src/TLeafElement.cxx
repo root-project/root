@@ -141,7 +141,7 @@ TLeafElement::GetDeserializeType() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize N events from an input buffer.
-Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
+bool TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 {
    if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) == DeserializeType::kInvalid))
       GetDeserializeType(); // Set fDataTypeCache if need be.
@@ -177,22 +177,22 @@ TString TLeafElement::GetFullName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafElement::IncludeRange(TLeaf *input)
+bool TLeafElement::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             ((TBranchElement*)fBranch)->fMaximum = input->GetMaximum();
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if this leaf is does not have any sub-branch/leaf.
 
-Bool_t TLeafElement::IsOnTerminalBranch() const
+bool TLeafElement::IsOnTerminalBranch() const
 {
-   if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
-   return kTRUE;
+   if (fBranch->GetListOfBranches()->GetEntriesFast()) return false;
+   return true;
 }

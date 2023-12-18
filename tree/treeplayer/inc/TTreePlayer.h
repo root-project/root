@@ -42,7 +42,7 @@ private:
 
 protected:
    TTree         *fTree;            ///<! Pointer to current Tree
-   Bool_t         fScanRedirect;    ///<  Switch to redirect TTree::Scan output to a file
+   bool           fScanRedirect;    ///<  Switch to redirect TTree::Scan output to a file
    const char    *fScanFileName;    ///<  Name of the file where Scan is redirected
    Int_t          fDimension;       ///<  Dimension of the current expression
    Long64_t       fSelectedRows;    ///<  Number of selected entries
@@ -115,17 +115,17 @@ public:
    void      RecursiveRemove(TObject *obj) override;
    Long64_t  Scan(const char *varexp, const char *selection, Option_t *option
                           ,Long64_t nentries, Long64_t firstentry) override;
-   Bool_t            ScanRedirected() {return fScanRedirect;}
-   TSQLResult *Query(const char *varexp, const char *selection, Option_t *option
+   bool              ScanRedirected() {return fScanRedirect;}
+   TSQLResult       *Query(const char *varexp, const char *selection, Option_t *option
                              ,Long64_t nentries, Long64_t firstentry) override;
-   void      SetEstimate(Long64_t n) override;
-   void              SetScanRedirect(Bool_t on=kFALSE) {fScanRedirect = on;}
+   void              SetEstimate(Long64_t n) override;
+   void              SetScanRedirect(bool on=false) {fScanRedirect = on;}
    void              SetScanFileName(const char *name) {fScanFileName=name;}
-   void      SetTree(TTree *t) override {fTree = t;}
-   void      StartViewer(Int_t ww, Int_t wh) override;
-   Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
+   void              SetTree(TTree *t) override {fTree = t;}
+   void              StartViewer(Int_t ww, Int_t wh) override;
+   Int_t             UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
                                  ,Long64_t nentries, Long64_t firstentry) override;
-   void      UpdateFormulaLeaves() override;
+   void              UpdateFormulaLeaves() override;
 
    ClassDefOverride(TTreePlayer,3);  //Manager class to play with TTrees
 };

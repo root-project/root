@@ -53,7 +53,7 @@ TLeafG::TLeafG(TBranch *parent, const char *name, const char *type)
 
 TLeafG::~TLeafG()
 {
-   if (ResetAddress(nullptr,kTRUE)) delete [] fValue;
+   if (ResetAddress(nullptr,true)) delete [] fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,16 +124,16 @@ LongDouble_t TLeafG::GetValueLongDouble(Int_t i) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafG::IncludeRange(TLeaf *input)
+bool TLeafG::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             this->SetMaximum( input->GetMaximum() );
         if (input->GetMinimum() < this->GetMinimum())
             this->SetMinimum( input->GetMinimum() );
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 

@@ -81,8 +81,8 @@ private:
    TTree                *fMappedTree;           ///< Listed tree
    TBranch              *fMappedBranch;         ///< Listed branch
    Int_t                fDimension;             ///< Histogram dimension
-   Bool_t               fVarDraw;               ///< True if an item is double-clicked
-   Bool_t               fScanMode;              ///< Flag activated when Scan Box is double-clicked
+   bool                 fVarDraw;               ///< True if an item is double-clicked
+   bool                 fScanMode;              ///< Flag activated when Scan Box is double-clicked
    TContextMenu         *fContextMenu;          ///< Context menu for tree viewer
    TGSelectBox          *fDialogBox;            ///< Expression editor
    TList                *fTreeList;             ///< List of mapped trees
@@ -96,9 +96,9 @@ private:
    Cursor_t             fDefaultCursor;         ///< Default cursor
    Cursor_t             fWatchCursor;           ///< Watch cursor
    TTimer               *fTimer;                ///< Tree viewer timer
-   Bool_t               fCounting;              ///< True if timer is counting
-   Bool_t               fStopMapping;           ///< True if branch don't need remapping
-   Bool_t               fEnableCut;             ///< True if cuts are enabled
+   bool                 fCounting;              ///< True if timer is counting
+   bool                 fStopMapping;           ///< True if branch don't need remapping
+   bool                 fEnableCut;             ///< True if cuts are enabled
    Int_t                fNexpressions;          ///< Number of expression widgets
 ///@}
 
@@ -193,9 +193,9 @@ private:
    const char   *Ey();
    const char   *Ez();
    const char   *En(Int_t n);
-   void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = nullptr, Bool_t listIt = kTRUE);
+   void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = nullptr, bool listIt = true);
    void          MapOptions(Long_t parm1);
-   void          MapTree(TTree *tree, TGListTreeItem *parent = nullptr, Bool_t listIt = kTRUE);
+   void          MapTree(TTree *tree, TGListTreeItem *parent = nullptr, bool listIt = true);
    void          SetFile();
    const char   *ScanList();
    void          SetParentTree(TGListTreeItem *item);
@@ -207,47 +207,47 @@ public:
          ~TTreeViewer() override;
 
    void          AppendTree(TTree *tree);
-   void          ActivateButtons(Bool_t first, Bool_t previous,
-                                 Bool_t next , Bool_t last);
+   void          ActivateButtons(bool first, bool previous,
+                                 bool next , bool last);
    void  CloseWindow() override;
    void  Delete(Option_t *) override { }                          // *MENU*
    void          DoRefresh();
    void          EditExpression();
    void          Empty();
    void          EmptyAll();                                     // *MENU*
-   void          ExecuteCommand(const char* command, Bool_t fast = kFALSE); // *MENU*
+   void          ExecuteCommand(const char* command, bool fast = false); // *MENU*
    void          ExecuteDraw();
    void          ExecuteSpider();
    TTVLVEntry   *ExpressionItem(Int_t index);
    TList        *ExpressionList();
    const char   *GetGrOpt();
    TTree        *GetTree() {return fTree;}
-   Bool_t        HandleTimer(TTimer *timer) override;
-   Bool_t        IsCutEnabled() {return fEnableCut;}
-   Bool_t        IsScanRedirected();
+   bool          HandleTimer(TTimer *timer) override;
+   bool          IsCutEnabled() {return fEnableCut;}
+   bool          IsScanRedirected();
    Int_t         MakeSelector(const char* selector = nullptr);         // *MENU*
    void          Message(const char* msg) override;
    void          NewExpression();                                // *MENU*
    void          PrintEntries();
    Long64_t      Process(const char* filename, Option_t *option="", Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0); // *MENU*
-   Bool_t        ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   bool          ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*
    void          SaveSource(const char* filename="", Option_t *option="") override;            // *MENU*
    void          SetHistogramTitle(const char *title);
-   void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
+   void          SetCutMode(bool enabled = true) {fEnableCut = enabled;}
    void          SetCurrentRecord(Long64_t entry);
    void          SetGrOpt(const char *option);
    void          SetNexpressions(Int_t expr);
    void          SetRecordName(const char *name);                // *MENU*
    void          SetScanFileName(const char *name="");           // *MENU*
-   void          SetScanMode(Bool_t mode=kTRUE) {fScanMode = mode;}
-   void          SetScanRedirect(Bool_t mode);
+   void          SetScanMode(bool mode=true) {fScanMode = mode;}
+   void          SetScanRedirect(bool mode);
    void          SetSession(TTVSession *session);
-   void          SetUserCode(const char *code, Bool_t autoexec=kTRUE); // *MENU*
+   void          SetUserCode(const char *code, bool autoexec=true); // *MENU*
    void          SetTree(TTree* tree);
    void          SetTreeName(const char* treeName);              // *MENU*
-   Bool_t        SwitchTree(Int_t index);
+   bool          SwitchTree(Int_t index);
    void          UpdateCombo();
    void          UpdateRecord(const char *name="new name");      // *MENU*
 

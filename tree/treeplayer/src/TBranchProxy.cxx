@@ -199,7 +199,7 @@ void ROOT::Detail::TBranchProxy::Print()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize/cache the necessary information.
 
-Bool_t ROOT::Detail::TBranchProxy::Setup()
+bool ROOT::Detail::TBranchProxy::Setup()
 {
    // Should we check the type?
 

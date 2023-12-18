@@ -70,8 +70,8 @@ private:
 
    // TTree cache handling
    TTreeCache *fTreeCache;              ///< instance of the tree cache for the tree
-   Bool_t      fTreeCacheIsLearning;    ///< Whether cache is in learning phase
-   Bool_t      fUseTreeCache;           ///< Control usage of the tree cache
+   bool        fTreeCacheIsLearning;    ///< Whether cache is in learning phase
+   bool        fUseTreeCache;           ///< Control usage of the tree cache
    Long64_t    fCacheSize;              ///< Cache size
 };
 

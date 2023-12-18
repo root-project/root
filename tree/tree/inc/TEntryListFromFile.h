@@ -62,8 +62,8 @@ public:
    ~TEntryListFromFile() override;
    void        Add(const TEntryList * /* elist */) override {};
    Int_t       Contains(Long64_t /* entry */, TTree * /* tree = 0 */) override { return 0; };
-   Bool_t      Enter(Long64_t /* entry */, TTree * /* tree = 0 */) override { return kFALSE; };
-   Bool_t      Enter(Long64_t /* entry */, const char * /* treename */, const char * /* filename */) override { return kFALSE; };
+   bool        Enter(Long64_t /* entry */, TTree * /* tree = 0 */) override { return false; };
+   bool        Enter(Long64_t /* entry */, const char * /* treename */, const char * /* filename */) override { return false; };
    TEntryList *GetCurrentList() const override { return fCurrent; };
    TEntryList *GetEntryList(const char * /* treename */, const char * /* filename */, Option_t * /* opt="" */) override { return nullptr; };
 
@@ -83,7 +83,7 @@ public:
 
    Long64_t    Next() override;
    void        OptimizeStorage() override {};
-   Bool_t      Remove(Long64_t /*entry*/, TTree * /*tree = nullptr */) override{ return kFALSE; }
+   bool        Remove(Long64_t /*entry*/, TTree * /*tree = nullptr */) override{ return false; }
 
    void        Print(const Option_t* option = "") const override;
 

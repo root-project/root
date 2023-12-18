@@ -95,9 +95,9 @@ TClass* TFormLeafInfoReference::GetClass() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if any of underlying data has a array size counter
 
-Bool_t TFormLeafInfoReference::HasCounter() const
+bool TFormLeafInfoReference::HasCounter() const
 {
-   Bool_t result = fProxy ? fProxy->HasCounter() : false;
+   bool result = fProxy ? fProxy->HasCounter() : false;
    if (fNext) result |= fNext->HasCounter();
    return fCounter!=nullptr || result;
 }
@@ -154,9 +154,9 @@ TClass* TFormLeafInfoReference::GetValueClass(void* obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// TFormLeafInfo overload: Update (and propagate) cached information
 
-Bool_t TFormLeafInfoReference::Update()
+bool TFormLeafInfoReference::Update()
 {
-   Bool_t res = this->TFormLeafInfo::Update();
+   bool res = this->TFormLeafInfo::Update();
    if ( fProxy ) fProxy->Update();
    return res;
 }

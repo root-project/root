@@ -54,7 +54,7 @@ TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
    fTable(table.Data()),
    fResult(nullptr), fRow(nullptr),
    fServer(server),
-   fBranchChecked(kFALSE),
+   fBranchChecked(false),
    fTableInfo(nullptr)
 {
    fCurrentEntry = -1;
@@ -212,10 +212,10 @@ void TTreeSQL::CheckBasket(TBranch *branch)
 /// Check if the table has a column corresponding the branch
 /// and that the resultset are properly setup
 
-Bool_t TTreeSQL::CheckBranch(TBranch * tb)
+bool TTreeSQL::CheckBranch(TBranch * tb)
 {
    if (fServer==nullptr) {
-      return kFALSE;
+      return false;
    }
    TString leafName;
    TLeaf *leaf;
@@ -223,15 +223,15 @@ Bool_t TTreeSQL::CheckBranch(TBranch * tb)
    TString str = "";
    TString typeName = "";
 
-   if (!tb) return kFALSE;
+   if (!tb) return false;
 
    TBasketSQL *basket = (TBasketSQL *)tb->GetBasket(0);
-   if (!basket) return kFALSE;
+   if (!basket) return false;
 
    TSQLResult *rs = basket->GetResultSet();
    if (!rs) {
       Error("CheckBranch","%s has basket but no resultset yet",tb->GetName());
-      return kFALSE;
+      return false;
    }
 
    nl = tb->GetNleaves();
@@ -247,28 +247,28 @@ Bool_t TTreeSQL::CheckBranch(TBranch * tb)
       str += leafName;
 
       for (int i=0; i< rs->GetFieldCount(); ++i) {
-         if (str.CompareTo(rs->GetFieldName(i),TString::kIgnoreCase) == 0) return kTRUE;
+         if (str.CompareTo(rs->GetFieldName(i),TString::kIgnoreCase) == 0) return true;
       }
       // We assume that if ONE of the leaf is in the table, then ALL the leaf are in
       // the table.
       // TODO: this assumption is harmful if user changes branch structure while keep its name
       CreateBranch(str, typeName);
    }
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check the table exist in the database
 
-Bool_t TTreeSQL::CheckTable(const TString &table) const
+bool TTreeSQL::CheckTable(const TString &table) const
 {
-   if (fServer==nullptr) return kFALSE;
+   if (fServer==nullptr) return false;
    TSQLResult * tables = fServer->GetTables(fDB.Data(),table);
-   if (!tables) return kFALSE;
+   if (!tables) return false;
    TSQLRow * row = nullptr;
    while( (row = tables->Next()) ) {
       if(table.CompareTo(row->GetField(0),TString::kIgnoreCase)==0){
-         return kTRUE;
+         return true;
       }
    }
    // The table is a not a permanent table, let's see if it is a 'temporary' table
@@ -277,11 +277,11 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
    TSQLResult *res = fServer->GetColumns(fDB.Data(),table);
    if (res) {
       delete res;
-      return kTRUE;
+      return true;
    }
    gErrorIgnoreLevel = before;
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -485,7 +485,7 @@ void TTreeSQL::CreateBranches()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the database table corresponding to this TTree.
 
-Bool_t TTreeSQL::CreateTable(const TString &table)
+bool TTreeSQL::CreateTable(const TString &table)
 {
    if (fServer==nullptr) {
       Error("CreateTable","No TSQLServer specified");
@@ -595,7 +595,7 @@ Int_t TTreeSQL::Fill()
             Error("Fill","CheckBranch for %s failed",branch->GetName());
          }
       }
-      fBranchChecked = kTRUE;
+      fBranchChecked = true;
    }
    ResetQuery();
 
@@ -757,7 +757,7 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
       fCurrentEntry = -1;
    }
 
-   Bool_t reset = false;
+   bool reset = false;
    while ( fResult && fCurrentEntry < entry ) {
       ++fCurrentEntry;
       delete fRow;

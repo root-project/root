@@ -74,13 +74,13 @@ Base class of TTreeReaderValue.
 
       EReadStatus ProxyReadDefaultImpl();
 
-      typedef Bool_t (ROOT::Detail::TBranchProxy::*BranchProxyRead_t)();
+      typedef bool (ROOT::Detail::TBranchProxy::*BranchProxyRead_t)();
       template <BranchProxyRead_t Func>
       ROOT::Internal::TTreeReaderValueBase::EReadStatus ProxyReadTemplate();
 
       /// Return true if the branch was setup \em and \em read correctly.
       /// Use GetSetupStatus() to only check the setup status.
-      Bool_t IsValid() const { return fProxy && 0 == (int)fSetupStatus && 0 == (int)fReadStatus; }
+      bool IsValid() const { return fProxy && 0 == (int)fSetupStatus && 0 == (int)fReadStatus; }
       /// Return this TTreeReaderValue's setup status.
       /// Use this method to check e.g. whether the TTreeReaderValue is correctly setup and ready for reading.
       ESetupStatus GetSetupStatus() const { return fSetupStatus; }

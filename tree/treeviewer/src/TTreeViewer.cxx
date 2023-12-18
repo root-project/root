@@ -434,7 +434,7 @@ void TTreeViewer::AppendTree(TTree *tree)
    fTreeIndex++;
    TGListTreeItem *lTreeItem = fLt->AddItem(parent, tree->GetName(), itemType,
                gClient->GetPicture("tree_t.xpm"), gClient->GetPicture("tree_t.xpm"));
-   MapTree(fTree, lTreeItem, kFALSE);
+   MapTree(fTree, lTreeItem, false);
    fLt->OpenItem(parent);
    fLt->HighlightItem(lTreeItem);
    fClient->NeedRedraw(fLt);
@@ -466,7 +466,7 @@ void TTreeViewer::SetScanFileName(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the state of Scan check button.
 
-void TTreeViewer::SetScanRedirect(Bool_t mode)
+void TTreeViewer::SetScanRedirect(bool mode)
 {
    if (mode)
       fBarScan->SetState(kButtonDown);
@@ -498,7 +498,7 @@ void TTreeViewer::SetTree(TTree *tree)
    fTreeIndex++;
    TGListTreeItem *lTreeItem = fLt->AddItem(parent, tree->GetName(), itemType,
                gClient->GetPicture("tree_t.xpm"), gClient->GetPicture("tree_t.xpm"));
-   MapTree(fTree, lTreeItem, kFALSE);
+   MapTree(fTree, lTreeItem, false);
    fLt->OpenItem(parent);
    fLt->HighlightItem(lTreeItem);
    fClient->NeedRedraw(fLt);
@@ -563,7 +563,7 @@ void TTreeViewer::SetTreeName(const char* treeName)
    fTreeIndex++;
    TGListTreeItem *lTreeItem = fLt->AddItem(parent, treeName, itemType,
                gClient->GetPicture("tree_t.xpm"), gClient->GetPicture("tree_t.xpm"));
-   MapTree(fTree, lTreeItem, kFALSE);
+   MapTree(fTree, lTreeItem, false);
    fLt->OpenItem(parent);
    fLt->HighlightItem(lTreeItem);
    fClient->NeedRedraw(fLt);
@@ -607,10 +607,10 @@ void TTreeViewer::SetFile()
 void TTreeViewer::BuildInterface()
 {
    //--- timer & misc
-   fCounting = kFALSE;
-   fScanMode = kFALSE;
-   fEnableCut = kTRUE;
-   fTimer = new TTimer(this, 20, kTRUE);
+   fCounting = false;
+   fScanMode = false;
+   fEnableCut = true;
+   fTimer = new TTimer(this, 20, true);
    fLastOption = "";
    fSession = new TTVSession(this);
    //--- cursors
@@ -630,8 +630,8 @@ void TTreeViewer::BuildInterface()
    fMappedBranch = nullptr;
    fDialogBox = nullptr;
    fDimension = 0;
-   fVarDraw = kFALSE;
-   fStopMapping = kFALSE;
+   fVarDraw = false;
+   fStopMapping = false;
 //   fFilename = "";
    fSourceFile = "treeviewer.C";
    //--- lists : trees and widgets to be removed
@@ -958,7 +958,7 @@ void TTreeViewer::BuildInterface()
 
    //--- vertical splitter
    TGVSplitter *splitter = new TGVSplitter(fHf);
-   splitter->SetFrame(fV1,kTRUE);
+   splitter->SetFrame(fV1,true);
    lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
    fWidgets->Add(splitter);
    fWidgets->Add(lo);
@@ -1014,7 +1014,7 @@ void TTreeViewer::BuildInterface()
    //--- Status bar
    fStatusBar = new TGStatusBar(fBFrame, 10, 10);
    fStatusBar->SetWidth(200);
-   fStatusBar->Draw3DCorner(kFALSE);
+   fStatusBar->Draw3DCorner(false);
    lo = new TGLayoutHints(kLHintsCenterX | kLHintsCenterY | kLHintsLeft | kLHintsExpandX, 2,2,2,2);
    fWidgets->Add(lo);
    fBFrame->AddFrame(fStatusBar, lo);
@@ -1151,7 +1151,7 @@ void TTreeViewer::BuildInterface()
    PrintEntries();
    fProgressBar->SetPosition(0);
    fProgressBar->ShowPosition();
-   ActivateButtons(kFALSE, kFALSE, kFALSE, kFALSE);
+   ActivateButtons(false, false, false, false);
 
    // map the window
    ///SetWindowName("TreeViewer");
@@ -1249,8 +1249,8 @@ TTreeViewer::~TTreeViewer()
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable/disable session buttons.
 
-void TTreeViewer::ActivateButtons(Bool_t first, Bool_t previous,
-                                  Bool_t next, Bool_t last)
+void TTreeViewer::ActivateButtons(bool first, bool previous,
+                                  bool next, bool last)
 {
    if (first)    fBGFirst->SetState(kButtonUp);
    else          fBGFirst->SetState(kButtonDisabled);
@@ -1444,7 +1444,7 @@ void TTreeViewer::ExecuteDraw()
    // find graphics option
    const char* gopt = fBarOption->GetText();
    // just in case a previous interrupt was posted
-   gROOT->SetInterrupt(kFALSE);
+   gROOT->SetInterrupt(false);
    // check if cut is enabled
    const char *cut = "";
    if (fEnableCut) cut = Cut();
@@ -1457,16 +1457,16 @@ void TTreeViewer::ExecuteDraw()
    // check if Scan is checked and if there is something in the box
    if (fScanMode) {
 //      fBarScan->SetState(kButtonUp);
-      fScanMode = kFALSE;
+      fScanMode = false;
       if (ScanList() && strlen(ScanList())) varexp = ScanList();
       command = TString::Format("tv__tree->Scan(\"%s\",\"%s\",\"%s\", %lld, %lld);",
               varexp.Data(), cut, gopt, nentries, firstentry);
       if (fBarScan->GetState() == kButtonDown) {
-         ((TTreePlayer *)fTree->GetPlayer())->SetScanRedirect(kTRUE);
+         ((TTreePlayer *)fTree->GetPlayer())->SetScanRedirect(true);
       } else {
-         ((TTreePlayer *)fTree->GetPlayer())->SetScanRedirect(kFALSE);
+         ((TTreePlayer *)fTree->GetPlayer())->SetScanRedirect(false);
       }
-      ExecuteCommand(command.Data(), kTRUE);
+      ExecuteCommand(command.Data(), true);
       return;
    }
    // check if only histogram has to be updated
@@ -1512,14 +1512,14 @@ void TTreeViewer::ExecuteDraw()
    command = TString::Format("tv__tree->Draw(\"%s\",\"%s\",\"%s\", %lld, %lld);",
            varexp.Data(), cut, gopt, nentries, firstentry);
    if (fCounting) return;
-   fCounting = kTRUE;
+   fCounting = true;
    fTree->SetTimerInterval(200);
    fTimer->TurnOn();
    ExecuteCommand(command.Data());
    HandleTimer(fTimer);
    fTimer->TurnOff();
    fTree->SetTimerInterval(0);
-   fCounting = kFALSE;
+   fCounting = false;
    fProgressBar->SetPosition(0);
    fProgressBar->ShowPosition();
    TH1 *hist = fTree->GetHistogram();
@@ -1554,10 +1554,10 @@ void TTreeViewer::ExecuteSpider()
    Int_t dimension = 0;
    TString alias[3];
    TTVLVEntry *item;
-   Bool_t previousexp = kFALSE;
+   bool previousexp = false;
    // fill in expressions
    if (Ez() && strlen(Ez())) {
-      previousexp = kTRUE;
+      previousexp = true;
       dimension++;
       varexp = Ez();
       item = ExpressionItem(2);
@@ -1566,7 +1566,7 @@ void TTreeViewer::ExecuteSpider()
    }
    if ((Ez() && strlen(Ez())) && ((Ex() && strlen(Ex())) || (Ey() && strlen(Ey())))) varexp += ":";
    if (Ey() && strlen(Ey())) {
-      previousexp = kTRUE;
+      previousexp = true;
       dimension++;
       varexp += Ey();
       item = ExpressionItem(1);
@@ -1575,7 +1575,7 @@ void TTreeViewer::ExecuteSpider()
    }
    if (Ey() && strlen(Ey()) && Ex() && strlen(Ex())) varexp += ":";
    if (Ex() && strlen(Ex())) {
-      previousexp = kTRUE;
+      previousexp = true;
       dimension++;
       varexp += Ex();
       item = ExpressionItem(0);
@@ -1589,7 +1589,7 @@ void TTreeViewer::ExecuteSpider()
             varexp += ":";
             varexp += En(i+5);
          } else varexp = En(i+5);
-         previousexp = kTRUE;
+         previousexp = true;
       }
    }
    if (dimension<3) {
@@ -1611,7 +1611,7 @@ void TTreeViewer::ExecuteSpider()
    // find graphics option
    const char* gopt = fBarOption->GetText();
    // just in case a previous interrupt was posted
-   gROOT->SetInterrupt(kFALSE);
+   gROOT->SetInterrupt(false);
    // check if cut is enabled
    const char *cut = "";
    if (fEnableCut) cut = Cut();
@@ -1732,9 +1732,9 @@ void TTreeViewer::SetGrOpt(const char *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if scan is redirected
+/// Return true if scan is redirected
 
-Bool_t TTreeViewer::IsScanRedirected()
+bool TTreeViewer::IsScanRedirected()
 {
    return (fBarScan->GetState()==kButtonDown);
 }
@@ -1772,7 +1772,7 @@ void TTreeViewer::RemoveLastRecord()
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by the fTimer object.
 
-Bool_t TTreeViewer::HandleTimer(TTimer *timer)
+bool TTreeViewer::HandleTimer(TTimer *timer)
 {
    if (fCounting) {
       Double_t first = fSlider->GetMinPositionD();
@@ -1783,13 +1783,13 @@ Bool_t TTreeViewer::HandleTimer(TTimer *timer)
       fProgressBar->ShowPosition();
    }
    timer->Reset();
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle menu and other commands generated.
 
-Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
+bool TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    TRootHelpDialog *hd;
    TTVRecord *record;
@@ -1808,7 +1808,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                   fBarCommand->Clear();
                }
                if ((ERootTreeViewerCommands)parm1 == kBarOption) {
-                  fVarDraw = kFALSE;
+                  fVarDraw = false;
                   fBarH->SetState(kButtonDown);
                   ExecuteDraw();
                   fBarH->SetState(kButtonUp);
@@ -1864,7 +1864,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                         if (branch != fMappedBranch) {
                            fLVContainer->RemoveNonStatic();
                            MapBranch(branch);
-                           fStopMapping = kFALSE;
+                           fStopMapping = false;
                            fListView->Layout();
                         }
                         // activate context menu for this branch (no *MENU* methods ):)
@@ -1892,7 +1892,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                            if (branch!=fMappedBranch) {
                               fLVContainer->RemoveNonStatic();
                               MapBranch(branch);
-                              fStopMapping = kFALSE;
+                              fStopMapping = false;
                               fListView->Layout();
                            }
                         }
@@ -1930,12 +1930,12 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                      EmptyAll();
                      break;
                   case kDRAW:
-                     fVarDraw = kFALSE;
+                     fVarDraw = false;
                      ExecuteDraw();
                      break;
                   case kSTOP:
                      if (fCounting)
-                        gROOT->SetInterrupt(kTRUE);
+                        gROOT->SetInterrupt(true);
                      break;
                   case kCLOSE:
                      SendCloseMessage();
@@ -1995,7 +1995,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                         info.fFileTypes = gOpenTypes;
                         info.SetIniDir(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
-                        if (!info.fFilename) return kTRUE;
+                        if (!info.fFilename) return true;
                         dir = info.fIniDir;
                         TString command = TString::Format("tv__tree_file = new TFile(\"%s\");",
                            gSystem->UnixPathName(info.fFilename));
@@ -2023,7 +2023,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                         info.fFileTypes = gMacroTypes;
                         info.SetIniDir(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
-                        if (!info.fFilename) return kTRUE;
+                        if (!info.fFilename) return true;
                         dir = info.fIniDir;
                         gInterpreter->Reset();
                         if (!gInterpreter->IsLoaded(info.fFilename)) gInterpreter->LoadMacro(info.fFilename);
@@ -2063,7 +2063,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                         gSystem->Exec(rootx);
 #else
 #ifdef WIN32
-                        new TWin32SplashThread(kTRUE);
+                        new TWin32SplashThread(true);
 #else
                         char str[32];
                         snprintf(str,32, "About ROOT %s...", gROOT->GetVersion());
@@ -2248,7 +2248,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                            if (!(*itemType & kLTCutType) && !(*itemType & kLTBranchType)
                                && !(*itemType & kLTPackType)) {
                               if (strlen(item->GetTrueName())) {
-                                 fVarDraw = kTRUE;
+                                 fVarDraw = true;
                                  // draw on double-click
                                  ExecuteDraw();
                                  break;
@@ -2266,7 +2266,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                               }
                            }
                            if (*itemType & kLTPackType) {
-                              fScanMode = kTRUE;
+                              fScanMode = true;
                               ExecuteDraw();
                            }
                         }
@@ -2289,7 +2289,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
       default:
          break;
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2303,7 +2303,7 @@ void TTreeViewer::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute all user commands.
 
-void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
+void TTreeViewer::ExecuteCommand(const char* command, bool fast)
 {
    // Execute the command, write it to history file and echo it to output
    if (fBarRec->GetState() == kButtonDown) {
@@ -2326,7 +2326,7 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
       gROOT->ProcessLine(command);
    }
    // make sure that 'draw on double-click' flag is reset
-   fVarDraw = kFALSE;
+   fVarDraw = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2410,7 +2410,7 @@ void TTreeViewer::MapOptions(Long_t parm1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Map current tree and expand its content (including friends) in the lists.
 
-void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
+void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, bool listIt)
 {
    if (!tree) return;
    TObjArray *branches = tree->GetListOfBranches();
@@ -2425,7 +2425,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
       if (name.Contains("fBits") || name.Contains("fUniqueID")) continue;
       // now map sub-branches
       MapBranch(branch, "", parent, listIt);
-      fStopMapping = kFALSE;
+      fStopMapping = false;
    }
    //Map branches of friend Trees (if any)
    //Look at tree->GetTree() to insure we see both the friends of a chain
@@ -2442,7 +2442,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
          if (name.Contains("fBits") || name.Contains("fUniqueID")) continue;
          // now map sub-branches
          MapBranch(branch, fr->GetName(), parent, listIt);
-         fStopMapping = kFALSE;
+         fStopMapping = false;
       }
    }
 
@@ -2456,7 +2456,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Map current branch and expand its content in the list view.
 
-void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem *parent, Bool_t listIt)
+void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem *parent, bool listIt)
 {
    if (!branch) return;
    TString name;
@@ -2528,7 +2528,7 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
       if (!fStopMapping) {
          fMappedBranch = branch;
          fMappedTree = nullptr;
-         fStopMapping = kTRUE;
+         fStopMapping = true;
       }
       if ((branch->GetListOfBranches()->GetEntries()) ||
           (branch->GetNleaves())) {
@@ -2584,9 +2584,9 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
                   entry->SetAlias(textEntry->GetString());
                }
             } else {
-               pic = (gClient->GetMimeTypeList())->GetIcon("TLeaf",kFALSE);
+               pic = (gClient->GetMimeTypeList())->GetIcon("TLeaf",false);
                if (!pic) pic = gClient->GetPicture("leaf_t.xpm");
-               spic = gClient->GetMimeTypeList()->GetIcon("TLeaf",kTRUE);
+               spic = gClient->GetMimeTypeList()->GetIcon("TLeaf",true);
                if (!spic) spic = gClient->GetPicture("leaf_t.xpm");
                entry = new TTVLVEntry(fLVContainer,pic,spic,textEntry,nullptr,kLVSmallIcons);
                entry->SetUserData(new UInt_t(kLTDragType | kLTLeafType));
@@ -2803,9 +2803,9 @@ void TTreeViewer::SaveSource(const char* filename, Option_t *)
    for (Int_t crt=5; crt<fNexpressions+5; crt++) {
       item = ExpressionItem(crt);
       if (item->IsCut())
-         itemType = "kTRUE";
+         itemType = "true";
       else
-         itemType = "kFALSE";
+         itemType = "false";
       out <<"   item = treeview->ExpressionItem("<<crt<<");"<<std::endl;
       out <<"   item->SetExpression("<<quote<<item->GetTrueName()<<quote
           <<", "<<quote<<item->GetAlias()<<quote<<", "<<itemType.Data()<<");"<<std::endl;
@@ -2820,14 +2820,14 @@ void TTreeViewer::SaveSource(const char* filename, Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Makes current the tree at a given index in the list.
 
-Bool_t TTreeViewer::SwitchTree(Int_t index)
+bool TTreeViewer::SwitchTree(Int_t index)
 {
    TTree *tree = (TTree *) fTreeList->At(index);
    if (!tree) {
       Warning("SwitchTree", "No tree found.");
-      return kFALSE;
+      return false;
    }
-   if ((tree == fTree) && (tree == fMappedTree)) return kFALSE;     // nothing to switch
+   if ((tree == fTree) && (tree == fMappedTree)) return false;     // nothing to switch
    std::string command;
    if (tree != fTree) {
       command = "tv__tree = (TTree *) tv__tree_list->At";
@@ -2847,7 +2847,7 @@ Bool_t TTreeViewer::SwitchTree(Int_t index)
    MapWindow();
    ///Resize();  //ia
    PrintEntries();
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2882,7 +2882,7 @@ void TTreeViewer::SetHistogramTitle(const char *title)
 ////////////////////////////////////////////////////////////////////////////////
 /// user defined command for current record
 
-void TTreeViewer::SetUserCode(const char *code, Bool_t autoexec)
+void TTreeViewer::SetUserCode(const char *code, bool autoexec)
 {
    TTVRecord *rec = fSession->GetCurrent();
    if (rec) rec->SetUserCode(code, autoexec);

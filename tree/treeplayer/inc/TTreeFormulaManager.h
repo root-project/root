@@ -31,7 +31,7 @@ class TTreeFormulaManager : public TObject {
 private:
    TObjArray   fFormulas;
    Int_t       fMultiplicity;     ///< Indicator of the variability of the formula
-   Bool_t      fMultiVarDim;      ///< True if one of the variable has 2 variable size dimensions.
+   bool        fMultiVarDim;      ///< True if one of the variable has 2 variable size dimensions.
    Int_t       fNdata;            ///<! Last value calculated by GetNdata
 
    //the next line should be: mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
@@ -42,7 +42,7 @@ private:
    TArrayI    *fVarDims[kMAXFORMDIM+1];             ///< List of variable sizes dimensions.
    Int_t       fVirtUsedSizes[kMAXFORMDIM+1];       ///< Virtual size of lower dimensions as seen for this formula
 
-   Bool_t      fNeedSync;         // Indicate whether a new formula has been added since the last synchronization
+   bool        fNeedSync;         // Indicate whether a new formula has been added since the last synchronization
 
    friend class TTreeFormula;
 
@@ -64,10 +64,10 @@ public:
 
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
-   virtual Int_t      GetNdata(Bool_t forceLoadDim = kFALSE);
-   Bool_t     Notify() override { UpdateFormulaLeaves(); return kTRUE; }
+   virtual Int_t      GetNdata(bool forceLoadDim = false);
+   bool               Notify() override { UpdateFormulaLeaves(); return true; }
    virtual void       Remove(TTreeFormula*);
-   virtual Bool_t     Sync();
+   virtual bool       Sync();
    virtual void       UpdateFormulaLeaves();
 
    ClassDefOverride(TTreeFormulaManager,0) // A class coordinating several TTreeFormula objects.

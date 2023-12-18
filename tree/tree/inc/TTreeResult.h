@@ -41,7 +41,7 @@ private:
    TObjArray  *fResult;        ///< query result (TTreeRow objects)
    Int_t       fNextRow;       ///< row iterator
 
-   Bool_t  IsValid(Int_t field);
+   bool    IsValid(Int_t field);
    void    AddField(Int_t field, const char *fieldname);
    void    AddRow(TSQLRow *row);
 

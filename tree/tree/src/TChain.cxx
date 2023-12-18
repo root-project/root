@@ -70,7 +70,7 @@ ClassImp(TChain);
 /// Default constructor.
 
 TChain::TChain(Mode mode)
-   : TTree(), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(nullptr), fCanDeleteRefs(kFALSE), fTree(nullptr),
+   : TTree(), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(nullptr), fCanDeleteRefs(false), fTree(nullptr),
      fFile(nullptr), fFiles(nullptr), fStatus(nullptr), fProofChain(nullptr), fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    fTreeOffset = new Long64_t[fTreeOffsetLen];
@@ -139,7 +139,7 @@ TChain::TChain(Mode mode)
 
 TChain::TChain(const char *name, const char *title, Mode mode)
    : TTree(name, title, /*splitlevel*/ 99, nullptr), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(nullptr),
-     fCanDeleteRefs(kFALSE), fTree(nullptr), fFile(nullptr), fFiles(nullptr), fStatus(nullptr), fProofChain(nullptr),
+     fCanDeleteRefs(false), fTree(nullptr), fFile(nullptr), fFiles(nullptr), fStatus(nullptr), fProofChain(nullptr),
      fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    //
@@ -709,7 +709,7 @@ TFriendElement* TChain::AddFriend(const char* chain, TFile* dummy)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the whole chain or tree as a friend of this chain.
 
-TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* warn = kFALSE */)
+TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, bool /* warn = false */)
 {
    if (!chain) return nullptr;
    if (!fFriends) fFriends = new TList();
@@ -743,8 +743,8 @@ void TChain::Browse(TBrowser* b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// When closing a file during the chain processing, the file
-/// may be closed with option "R" if flag is set to kTRUE.
-/// by default flag is kTRUE.
+/// may be closed with option "R" if flag is set to true.
+/// by default flag is true.
 /// When closing a file with option "R", all TProcessIDs referenced by this
 /// file are deleted.
 /// Calling TFile::Close("R") might be necessary in case one reads a long list
@@ -754,7 +754,7 @@ void TChain::Browse(TBrowser* b)
 /// of the TProcessID data structures in memory by forcing a delete of
 /// the unused TProcessID.
 
-void TChain::CanDeleteRefs(Bool_t flag /* = kTRUE */)
+void TChain::CanDeleteRefs(bool flag /* = true */)
 {
    fCanDeleteRefs = flag;
 }
@@ -796,7 +796,7 @@ Long64_t TChain::Draw(const char* varexp, const TCut& selection,
    if (fProofChain) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       fProofChain->SetEventList(fEventList);
       fProofChain->SetEntryList(fEntryList);
       return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
@@ -816,7 +816,7 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
    if (fProofChain) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       fProofChain->SetEventList(fEventList);
       fProofChain->SetEntryList(fEntryList);
       return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
@@ -834,7 +834,7 @@ TBranch* TChain::FindBranch(const char* branchname)
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       return fProofChain->FindBranch(branchname);
    }
    if (fTree) {
@@ -855,7 +855,7 @@ TLeaf* TChain::FindLeaf(const char* searchname)
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       return fProofChain->FindLeaf(searchname);
    }
    if (fTree) {
@@ -895,7 +895,7 @@ TBranch* TChain::GetBranch(const char* name)
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       return fProofChain->GetBranch(name);
    }
    if (fTree) {
@@ -911,13 +911,13 @@ TBranch* TChain::GetBranch(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// See TTree::GetReadEntry().
 
-Bool_t TChain::GetBranchStatus(const char* branchname) const
+bool TChain::GetBranchStatus(const char* branchname) const
 {
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
-                                    " run TChain::SetProof(kTRUE, kTRUE) first");
+                                    " run TChain::SetProof(true, true) first");
       return fProofChain->GetBranchStatus(branchname);
    }
    return TTree::GetBranchStatus(branchname);
@@ -955,7 +955,7 @@ Long64_t TChain::GetEntries() const
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          Warning("GetEntries", "PROOF proxy not up-to-date:"
-                               " run TChain::SetProof(kTRUE, kTRUE) first");
+                               " run TChain::SetProof(true, true) first");
       return fProofChain->GetEntries();
    }
    if (fEntries == TTree::kMaxEntries) {
@@ -1054,7 +1054,7 @@ TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       return fProofChain->GetLeaf(branchname, leafname);
    }
    if (fTree) {
@@ -1075,7 +1075,7 @@ TLeaf* TChain::GetLeaf(const char* name)
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       return fProofChain->GetLeaf(name);
    }
    if (fTree) {
@@ -1101,7 +1101,7 @@ TObjArray* TChain::GetListOfBranches()
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       return fProofChain->GetListOfBranches();
    }
    if (fTree) {
@@ -1124,7 +1124,7 @@ TObjArray* TChain::GetListOfLeaves()
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       return fProofChain->GetListOfLeaves();
    }
    if (fTree) {
@@ -1197,7 +1197,7 @@ Long64_t TChain::GetReadEntry() const
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
          Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
-                                    " run TChain::SetProof(kTRUE, kTRUE) first");
+                                    " run TChain::SetProof(true, true) first");
       return fProofChain->GetReadEntry();
    }
    return TTree::GetReadEntry();
@@ -1230,7 +1230,7 @@ Double_t TChain::GetWeight() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move content to a new file. (NOT IMPLEMENTED for TChain)
-Bool_t TChain::InPlaceClone(TDirectory * /* new directory */, const char * /* options */)
+bool TChain::InPlaceClone(TDirectory * /* new directory */, const char * /* options */)
 {
    Error("InPlaceClone", "not implemented");
    return false;
@@ -1354,11 +1354,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
             // number (treeReadEntry) hence we do:
             at->LoadTreeFriend(entry, this);
          }
-         Bool_t needUpdate = kFALSE;
+         bool needUpdate = false;
          if (fTree->GetListOfFriends()) {
             for(auto fetree : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fTree->GetListOfFriends())) {
                if (fetree->IsUpdated()) {
-                  needUpdate = kTRUE;
+                  needUpdate = true;
                   fetree->ResetUpdated();
                }
             }
@@ -1391,16 +1391,16 @@ Long64_t TChain::LoadTree(Long64_t entry)
                         Int_t res = CheckBranchAddressType(br, TClass::GetClass(frelement->GetBaddressClassName()),
                                                          (EDataType) frelement->GetBaddressType(), frelement->GetBaddressIsPtr());
                         if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
-                           br->SetMakeClass(kTRUE);
+                           br->SetMakeClass(true);
                         }
                         frelement->SetDecomposedObj(br->GetMakeClass());
-                        frelement->SetCheckedType(kTRUE);
+                        frelement->SetCheckedType(true);
                      }
                      // FIXME: We may have to tell the branch it should
                      //        not be an owner of the object pointed at.
                      br->SetAddress(addr);
                      if (TestBit(kAutoDelete)) {
-                        br->SetAutoDelete(kTRUE);
+                        br->SetAutoDelete(true);
                      }
                   }
                }
@@ -1684,16 +1684,16 @@ Long64_t TChain::LoadTree(Long64_t entry)
                Int_t res = CheckBranchAddressType(br, TClass::GetClass(element->GetBaddressClassName()),
                                                   (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
                if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
-                  br->SetMakeClass(kTRUE);
+                  br->SetMakeClass(true);
                }
                element->SetDecomposedObj(br->GetMakeClass());
-               element->SetCheckedType(kTRUE);
+               element->SetCheckedType(true);
             }
             // FIXME: We may have to tell the branch it should
             //        not be an owner of the object pointed at.
             br->SetAddress(addr);
             if (TestBit(kAutoDelete)) {
-               br->SetAutoDelete(kTRUE);
+               br->SetAutoDelete(true);
             }
          }
       }
@@ -1724,9 +1724,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check / locate the files in the chain.
 /// By default only the files not yet looked up are checked.
-/// Use force = kTRUE to check / re-check every file.
+/// Use force = true to check / re-check every file.
 
-void TChain::Lookup(Bool_t force)
+void TChain::Lookup(bool force)
 {
    TIter next(fFiles);
    TChainElement* element = nullptr;
@@ -1741,7 +1741,7 @@ void TChain::Lookup(Bool_t force)
       // Count
       nlook++;
       // Get the Url
-      TUrl elemurl(element->GetTitle(), kTRUE);
+      TUrl elemurl(element->GetTitle(), true);
       // Save current options and anchor
       TString anchor = elemurl.GetAnchor();
       TString options = elemurl.GetOptions();
@@ -2009,11 +2009,11 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
    }
 
    // Options
-   Bool_t fastClone = kFALSE;
+   bool fastClone = false;
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("fast")) {
-      fastClone = kTRUE;
+      fastClone = true;
    }
 
    // The chain tree must have a list of branches
@@ -2148,7 +2148,7 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    suffix.Clear();
 
    // General case
-   TUrl url(name, kTRUE);
+   TUrl url(name, true);
    filename = (strcmp(url.GetProtocol(), "file")) ? url.GetUrl() : url.GetFileAndOptions();
 
    TString fn = url.GetFile();
@@ -2236,7 +2236,7 @@ Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentri
    if (fProofChain) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       fProofChain->SetEventList(fEventList);
       fProofChain->SetEntryList(fEntryList);
       return fProofChain->Process(filename, option, nentries, firstentry);
@@ -2258,7 +2258,7 @@ Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentrie
    if (fProofChain) {
       // Make sure the element list is up to date
       if (!TestBit(kProofUptodate))
-         SetProof(kTRUE, kTRUE);
+         SetProof(true, true);
       fProofChain->SetEventList(fEventList);
       fProofChain->SetEntryList(fEntryList);
       return fProofChain->Process(selector, option, nentries, firstentry);
@@ -2424,7 +2424,7 @@ Long64_t TChain::Scan(const char* varexp, const char* selection, Option_t* optio
 /// the address is set will have the option AutoDelete set
 /// For more details on AutoDelete, see TBranch::SetAutoDelete.
 
-void TChain::SetAutoDelete(Bool_t autodelete)
+void TChain::SetAutoDelete(bool autodelete)
 {
    if (autodelete) {
       SetBit(kAutoDelete, true);
@@ -2443,7 +2443,7 @@ Int_t TChain::SetCacheSize(Long64_t cacheSize)
    Int_t res = 0;
 
    // remember user has requested this cache setting
-   fCacheUserSet = kTRUE;
+   fCacheUserSet = true;
 
    if (fTree) {
       res = fTree->SetCacheSize(cacheSize);
@@ -2524,10 +2524,10 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
       if (branch) {
          res = CheckBranchAddressType(branch, TClass::GetClass(element->GetBaddressClassName()), (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
          if ((res & kNeedEnableDecomposedObj) && !branch->GetMakeClass()) {
-            branch->SetMakeClass(kTRUE);
+            branch->SetMakeClass(true);
          }
          element->SetDecomposedObj(branch->GetMakeClass());
-         element->SetCheckedType(kTRUE);
+         element->SetCheckedType(true);
          if (fClones) {
             void* oldAdd = branch->GetAddress();
             for (TObjLink* lnk = fClones->FirstLink(); lnk; lnk = lnk->Next()) {
@@ -2537,7 +2537,7 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
                   // the clone's branch is still pointing to us
                   cloneBr->SetAddress(add);
                   if ((res & kNeedEnableDecomposedObj) && !cloneBr->GetMakeClass()) {
-                     cloneBr->SetMakeClass(kTRUE);
+                     cloneBr->SetMakeClass(true);
                   }
                }
             }
@@ -2563,7 +2563,7 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
 /// Note: See the comments in TBranchElement::SetAddress() for a more
 /// detailed discussion of the meaning of the add parameter.
 
-Int_t TChain::SetBranchAddress(const char* bname, void* add, TClass* realClass, EDataType datatype, Bool_t isptr)
+Int_t TChain::SetBranchAddress(const char* bname, void* add, TClass* realClass, EDataType datatype, bool isptr)
 {
    return SetBranchAddress(bname, add, nullptr, realClass, datatype, isptr);
 }
@@ -2575,7 +2575,7 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TClass* realClass, 
 /// Note: See the comments in TBranchElement::SetAddress() for a more
 /// detailed discussion of the meaning of the add parameter.
 
-Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TClass* realClass, EDataType datatype, Bool_t isptr)
+Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TClass* realClass, EDataType datatype, bool isptr)
 {
    TChainElement* element = (TChainElement*) fStatus->FindObject(bname);
    if (!element) {
@@ -2605,7 +2605,7 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TCla
 ///  expression is returned in *found AND the error message 'unknown branch'
 ///  is suppressed.
 
-void TChain::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
+void TChain::SetBranchStatus(const char* bname, bool status, UInt_t* found)
 {
    // FIXME: We never explicitly set found to zero!
 
@@ -2777,14 +2777,14 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
    }
    fEntryList = elist;
    TList *elists = elist->GetLists();
-   Bool_t shift = kFALSE;
+   bool shift = false;
    TIter next(elists);
 
    //check, if there are sub-lists in the entry list, that don't
    //correspond to any trees in the chain
    while((templist = (TEntryList*)next())){
       if (templist->GetTreeNumber() < 0){
-         shift = kTRUE;
+         shift = true;
          break;
       }
    }
@@ -2843,7 +2843,7 @@ void TChain::SetEntryListFile(const char *filename, Option_t * /*opt*/)
       basename.Remove(dotslashpos+5);
    }
    fEntryList = new TEntryListFromFile(basename.Data(), behind_dot_root.Data(), fNtrees);
-   fEntryList->SetBit(kCanDelete, kTRUE);
+   fEntryList->SetBit(kCanDelete, true);
    fEntryList->SetDirectory(nullptr);
    ((TEntryListFromFile*)fEntryList)->SetFileNames(fFiles);
 }
@@ -2927,7 +2927,7 @@ void TChain::SetEventList(TEventList *evlist)
       enlist->SetTree(treename, filename);
       enlist->Enter(localentry);
    }
-   enlist->SetBit(kCanDelete, kTRUE);
+   enlist->SetBit(kCanDelete, true);
    enlist->SetReapplyCut(evlist->GetReapplyCut());
    SetEntryList(enlist);
 }
@@ -2971,14 +2971,14 @@ void TChain::SetPacketSize(Int_t size)
 /// Enable/Disable PROOF processing on the current default Proof (gProof).
 ///
 /// "Draw" and "Processed" commands will be handled by PROOF.
-/// The refresh and gettreeheader are meaningful only if on == kTRUE.
-/// If refresh is kTRUE the underlying fProofChain (chain proxy) is always
+/// The refresh and gettreeheader are meaningful only if on == true.
+/// If refresh is true the underlying fProofChain (chain proxy) is always
 /// rebuilt (even if already existing).
-/// If gettreeheader is kTRUE the header of the tree will be read from the
+/// If gettreeheader is true the header of the tree will be read from the
 /// PROOF cluster: this is only needed for browsing and should be used with
 /// care because it may take a long time to execute.
 
-void TChain::SetProof(Bool_t on, Bool_t refresh, Bool_t gettreeheader)
+void TChain::SetProof(bool on, bool refresh, bool gettreeheader)
 {
    if (!on) {
       // Disable

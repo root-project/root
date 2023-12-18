@@ -33,7 +33,7 @@ Base class of TTreeReaderArray.
          TTreeReaderValueBase(reader, branchname, dict) {}
 
       std::size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
-      Bool_t IsEmpty() const { return !GetSize(); }
+      bool IsEmpty() const { return !GetSize(); }
 
       EReadStatus GetReadStatus() const override { return fImpl ? fImpl->fReadStatus : kReadError; }
 

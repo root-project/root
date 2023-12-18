@@ -108,17 +108,17 @@ void TTreeRow::Close(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if row is open and field index within range.
 
-Bool_t TTreeRow::IsValid(Int_t field)
+bool TTreeRow::IsValid(Int_t field)
 {
    if (!fFields && !fOriginal) {
       Error("IsValid", "row closed");
-      return kFALSE;
+      return false;
    }
    if (field < 0 || field >= fColumnCount) {
       Error("IsValid", "field index out of bounds");
-      return kFALSE;
+      return false;
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,13 +185,13 @@ void TTreeRow::Streamer(TBuffer &R__b)
       R__b.ReadFastArray(fRow,nch);
       R__b.CheckByteCount(R__s, R__c, TTreeRow::IsA());
    } else {
-      R__c = R__b.WriteVersion(TTreeRow::Class(),kTRUE);
+      R__c = R__b.WriteVersion(TTreeRow::Class(),true);
       TSQLRow::Streamer(R__b);
       R__b << fColumnCount;
       R__b.WriteFastArray(fFields,fColumnCount);
       Int_t nch = fFields ? fFields[fColumnCount-1] : 0;
       R__b << nch;
       R__b.WriteFastArray(fRow,nch);
-      R__b.SetByteCount(R__c,kTRUE);
+      R__b.SetByteCount(R__c,true);
    }
 }

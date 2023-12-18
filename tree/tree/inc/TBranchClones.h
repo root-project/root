@@ -52,7 +52,7 @@ public:
    Int_t   GetEntry(Long64_t entry=0, Int_t getall = 0) override;
    virtual Int_t   GetN() const {return fN;}
    TClonesArray    *GetList() const {return fList;}
-   Bool_t          IsFolder() const override {return kTRUE;}
+   bool            IsFolder() const override {return true;}
    void    Print(Option_t *option="") const override;
    void    Reset(Option_t *option="") override;
    void    ResetAfterMerge(TFileMergeInfo *) override;

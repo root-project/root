@@ -34,7 +34,7 @@ private:
    TTreeFormula        *fSelect;     ///< Selection condition
    TSelectorDraw       *fSelector;   ///< Selector
    TList               *fInput;      ///< Used for fSelector.
-   Bool_t               fForceDim;   ///< Force dimension.
+   bool                 fForceDim;   ///< Force dimension.
    TEntryList          *fEntries;    ///< Currently active entries
    UInt_t               fNRows;      ///< Amount of rows in the data
    UInt_t               fNColumns;   ///< Amount of columns in the data

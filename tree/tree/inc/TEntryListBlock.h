@@ -48,13 +48,13 @@ class TEntryListBlock:public TObject
    Int_t    fN;                 ///< size of fIndices for I/O  =fNPassed for list, fBlockSize for bits
    UShort_t *fIndices;          ///<[fN]
    Int_t    fType;              ///<0 - bits, 1 - list
-   Bool_t   fPassing;           ///<1 - stores entries that belong to the list
+   bool     fPassing;           ///<1 - stores entries that belong to the list
                                 ///<0 - stores entries that don't belong to the list
    UShort_t fCurrent;           ///<! to fasten  Contains() in list mode
    Int_t    fLastIndexQueried;  ///<! to optimize GetEntry() in a loop
    Int_t    fLastIndexReturned; ///<! to optimize GetEntry() in a loop
 
-   void Transform(Bool_t dir, UShort_t *indexnew);
+   void Transform(bool dir, UShort_t *indexnew);
 
  public:
 
@@ -64,8 +64,8 @@ class TEntryListBlock:public TObject
    ~TEntryListBlock() override;
    TEntryListBlock &operator=(const TEntryListBlock &rhs);
 
-   Bool_t  Enter(Int_t entry);
-   Bool_t  Remove(Int_t entry);
+   bool    Enter(Int_t entry);
+   bool    Remove(Int_t entry);
    Int_t   Contains(Int_t entry);
    void    OptimizeStorage();
    Int_t   Merge(TEntryListBlock *block);

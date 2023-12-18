@@ -53,7 +53,7 @@ TSelectorDraw::TSelectorDraw()
    fVmin           = new Double_t[fValSize];
    fVmax           = new Double_t[fValSize];
    fNbins          = new Int_t[fValSize];
-   fVarMultiple    = new Bool_t[fValSize];
+   fVarMultiple    = new bool[fValSize];
    fVar            = new TTreeFormula*[fValSize];
    for (Int_t i = 0; i < fValSize; ++i) {
       fVal[i] = nullptr;
@@ -66,9 +66,9 @@ TSelectorDraw::TSelectorDraw()
    fDraw           = 0;
    fObject         = nullptr;
    fOldHistogram   = nullptr;
-   fObjEval        = kFALSE;
-   fSelectMultiple = kFALSE;
-   fCleanElist     = kFALSE;
+   fObjEval        = false;
+   fSelectMultiple = false;
+   fCleanElist     = false;
    fTreeElist      = nullptr;
    fAction         = 0;
    fNfill          = 0;
@@ -128,36 +128,36 @@ void TSelectorDraw::Begin(TTree *tree)
    TEntryList *enlist = nullptr;
    TEventList *evlist = nullptr;
    TString htitle;
-   Bool_t profile = kFALSE;
-   Bool_t optSame = kFALSE;
-   Bool_t optEnlist = kFALSE;
-   Bool_t optEnlistArray = kFALSE;
-   Bool_t optpara = kFALSE;
-   Bool_t optcandle = kFALSE;
-   Bool_t opt5d = kFALSE;
+   bool profile = false;
+   bool optSame = false;
+   bool optEnlist = false;
+   bool optEnlistArray = false;
+   bool optpara = false;
+   bool optcandle = false;
+   bool opt5d = false;
    if (opt.Contains("same")) {
-      optSame = kTRUE;
+      optSame = true;
       opt.ReplaceAll("same", "");
    }
    if (opt.Contains("entrylist")) {
-      optEnlist = kTRUE;
+      optEnlist = true;
       if (opt.Contains("entrylistarray")) {
-         optEnlistArray = kTRUE;
+         optEnlistArray = true;
          opt.ReplaceAll("entrylistarray", "");
       } else {
          opt.ReplaceAll("entrylist", "");
       }
    }
    if (opt.Contains("para")) {
-      optpara = kTRUE;
+      optpara = true;
       opt.ReplaceAll("para", "");
    }
    if (opt.Contains("candle")) {
-      optcandle = kTRUE;
+      optcandle = true;
       opt.ReplaceAll("candle", "");
    }
    if (opt.Contains("gl5d")) {
-      opt5d = kTRUE;
+      opt5d = true;
       opt.ReplaceAll("gl5d", "");
    }
    TCut realSelection(selection);
@@ -170,9 +170,9 @@ void TSelectorDraw::Begin(TTree *tree)
       //Calling GetEntryList function changes ownership and here
       //we want fTree to still delete this entry list
 
-      inElist->SetBit(kCanDelete, kTRUE);
+      inElist->SetBit(kCanDelete, true);
    }
-   fCleanElist = kFALSE;
+   fCleanElist = false;
    fTreeElist = inElist;
 
    fTreeElistArray = inElist ? dynamic_cast<TEntryListArray*>(fTreeElist) : nullptr;
@@ -192,8 +192,8 @@ void TSelectorDraw::Begin(TTree *tree)
    //   fOldHistogram     - pointer to hist hname
    //   elist     - pointer to selection list of hname
 
-   Bool_t canExtend = kTRUE;
-   if (optSame) canExtend = kFALSE;
+   bool canExtend = true;
+   if (optSame) canExtend = false;
 
    Int_t nbinsx = 0, nbinsy = 0, nbinsz = 0;
    Double_t xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
@@ -217,10 +217,10 @@ void TSelectorDraw::Begin(TTree *tree)
       hkeep  = 1;
       varexp = new char[i+1];
       varexp[0] = 0; //necessary if i=0
-      Bool_t hnameplus = kFALSE;
+      bool hnameplus = false;
       while (*hname == ' ') hname++;
       if (*hname == '+') {
-         hnameplus = kTRUE;
+         hnameplus = true;
          hname++;
          while (*hname == ' ') hname++; //skip ' '
       }
@@ -419,7 +419,7 @@ void TSelectorDraw::Begin(TTree *tree)
                      } else {
                         inElist = new TEntryList(*enlist);
                      }
-                     fCleanElist = kTRUE;
+                     fCleanElist = true;
                      fTree->SetEntryList(inElist);
                   }
                   enlist->Reset();
@@ -505,11 +505,11 @@ void TSelectorDraw::Begin(TTree *tree)
       Int_t olddim = fOldHistogram->GetDimension();
       Int_t mustdelete = 0;
       if (fOldHistogram->InheritsFrom(TProfile::Class())) {
-         profile = kTRUE;
+         profile = true;
          olddim = 2;
       }
       if (fOldHistogram->InheritsFrom(TProfile2D::Class())) {
-         profile = kTRUE;
+         profile = true;
          olddim = 3;
       }
       if (opt.Contains("prof") && fDimension > 1) {
@@ -563,7 +563,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fAction   = -1;
             fVmin[0] = xmin;
             fVmax[0] = xmax;
-            if (xmin < xmax) canExtend = kFALSE;
+            if (xmin < xmax) canExtend = false;
          }
       }
       if (fOldHistogram) {
@@ -625,7 +625,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fVmax[1] = xmax;
             fVmin[0] = ymin;
             fVmax[0] = ymax;
-            if (xmin < xmax && ymin < ymax) canExtend = kFALSE;
+            if (xmin < xmax && ymin < ymax) canExtend = false;
          }
       }
       if (profile || opt.Contains("prof")) {
@@ -638,7 +638,7 @@ void TSelectorDraw::Begin(TTree *tree)
                fAction = -4;
                fVmin[1] = xmin;
                fVmax[1] = xmax;
-               if (xmin < xmax) canExtend = kFALSE;
+               if (xmin < xmax) canExtend = false;
             }
             if (fAction == 2) {
                //we come here when option = "same prof"
@@ -706,13 +706,13 @@ void TSelectorDraw::Begin(TTree *tree)
          }
          fVar[0]->SetAxis(h2->GetYaxis());
          fVar[1]->SetAxis(h2->GetXaxis());
-         Bool_t graph = kFALSE;
+         bool graph = false;
          Int_t l = opt.Length();
-         if (l == 0 || optSame) graph = kTRUE;
-         if (opt.Contains("p")     || opt.Contains("*")    || opt.Contains("l"))    graph = kTRUE;
-         if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = kFALSE;
-         if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = kFALSE;
-         if (opt.Contains("box"))                                                   graph = kFALSE;
+         if (l == 0 || optSame) graph = true;
+         if (opt.Contains("p")     || opt.Contains("*")    || opt.Contains("l"))    graph = true;
+         if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = false;
+         if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = false;
+         if (opt.Contains("box"))                                                   graph = false;
          fObject = h2;
          if (graph) {
             fAction = 12;
@@ -775,7 +775,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fVmax[1] = ymax;
             fVmin[0] = zmin;
             fVmax[0] = zmax;
-            if (xmin < xmax && ymin < ymax && zmin < zmax) canExtend = kFALSE;
+            if (xmin < xmax && ymin < ymax && zmin < zmax) canExtend = false;
          }
       }
       if ((fDimension == 3) && (profile || opt.Contains("prof"))) {
@@ -790,7 +790,7 @@ void TSelectorDraw::Begin(TTree *tree)
                fVmax[2] = xmax;
                fVmin[1] = ymin;
                fVmax[1] = ymax;
-               if (xmin < xmax && ymin < ymax) canExtend = kFALSE;
+               if (xmin < xmax && ymin < ymax) canExtend = false;
             }
             if (opt.Contains("profs")) {
                hp = new TProfile2D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], "s");
@@ -909,13 +909,13 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    if (varexp) delete[] varexp;
    for (i = 0; i < fValSize; ++i)
-      fVarMultiple[i] = kFALSE;
-   fSelectMultiple = kFALSE;
+      fVarMultiple[i] = false;
+   fSelectMultiple = false;
    for (i = 0; i < fDimension; ++i) {
-      if (fVar[i] && fVar[i]->GetMultiplicity()) fVarMultiple[i] = kTRUE;
+      if (fVar[i] && fVar[i]->GetMultiplicity()) fVarMultiple[i] = true;
    }
 
-   if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = kTRUE;
+   if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = true;
 
    fForceRead = fTree->TestBit(TTree::kForceRead);
    fWeight  = fTree->GetWeight();
@@ -971,9 +971,9 @@ void TSelectorDraw::ClearFormula()
 ///
 /// in a selection all the C++ operators are authorized
 ///
-/// Return kFALSE if any of the variable is not compilable.
+/// Return false if any of the variable is not compilable.
 
-Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
+bool TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
 {
    Int_t i, nch, ncols;
 
@@ -981,15 +981,15 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    fDimension = 0;
    ClearFormula();
    fMultiplicity = 0;
-   fObjEval = kFALSE;
+   fObjEval = false;
 
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection", selection, fTree);
-      fSelect->SetQuickLoad(kTRUE);
+      fSelect->SetQuickLoad(true);
       if (!fSelect->GetNdim()) {
          delete fSelect;
          fSelect = nullptr;
-         return kFALSE;
+         return false;
       }
    }
 
@@ -1009,7 +1009,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
          if (fManager->GetMultiplicity() >= 1) fMultiplicity = fManager->GetMultiplicity();
       }
 
-      return kTRUE;
+      return true;
    }
 
    // otherwise select only the specified columns
@@ -1023,8 +1023,8 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    fTree->ResetBit(TTree::kForceRead);
    for (i = 0; i < ncols; ++i) {
       fVar[i] = new TTreeFormula(TString::Format("Var%i", i + 1), varnames[i].Data(), fTree);
-      fVar[i]->SetQuickLoad(kTRUE);
-      if(!fVar[i]->GetNdim()) { ClearFormula(); return kFALSE; }
+      fVar[i]->SetQuickLoad(true);
+      if(!fVar[i]->GetNdim()) { ClearFormula(); return false; }
       fManager->Add(fVar[i]);
    }
    fManager->Sync();
@@ -1037,10 +1037,10 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    if (ncols == 1) {
       TClass *cl = fVar[0]->EvalClass();
       if (cl) {
-         fObjEval = kTRUE;
+         fObjEval = true;
       }
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1103,7 +1103,7 @@ void TSelectorDraw::InitArrays(Int_t newsize)
       fNbins = new Int_t[fValSize];
       fVmin = new Double_t[fValSize];
       fVmax = new Double_t[fValSize];
-      fVarMultiple = new Bool_t[fValSize];
+      fVarMultiple = new bool[fValSize];
 
       for (Int_t i = 0; i < oldsize; ++i)
          delete [] fVal[i];
@@ -1126,21 +1126,21 @@ UInt_t TSelectorDraw::SplitNames(const TString &varexp, std::vector<TString> &na
 {
    names.clear();
 
-   Bool_t ternary = kFALSE;
+   bool ternary = false;
    Int_t prev = 0;
    for (Int_t i = 0; i < varexp.Length(); i++) {
       if (varexp[i] == ':'
           && !((i > 0 && varexp[i-1] == ':') || varexp[i+1] == ':')
          ) {
          if (ternary) {
-            ternary = kFALSE;
+            ternary = false;
          } else {
             names.push_back(varexp(prev, i - prev));
             prev = i + 1;
          }
       }
       if (varexp[i] == '?') {
-         ternary = kTRUE;
+         ternary = true;
       }
    }
    names.push_back(varexp(prev, varexp.Length() - prev));
@@ -1151,7 +1151,7 @@ UInt_t TSelectorDraw::SplitNames(const TString &varexp, std::vector<TString> &na
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called at the first entry of a new tree in a chain.
 
-Bool_t TSelectorDraw::Notify()
+bool TSelectorDraw::Notify()
 {
    if (fTree) fWeight  = fTree->GetWeight();
    if (fVar) {
@@ -1160,7 +1160,7 @@ Bool_t TSelectorDraw::Notify()
       }
    }
    if (fSelect) fSelect->UpdateFormulaLeaves();
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1224,7 +1224,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
 
    // Calculate the first values
    if (fSelect) {
-      // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0
+      // coverity[var_deref_model] fSelectMultiple==true => fSelect != 0
       fW[fNfill] = fWeight * fSelect->EvalInstance(0);
       if (!fW[fNfill] && !fSelectMultiple) return;
    } else fW[fNfill] = fWeight;
@@ -1253,7 +1253,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
       if (subList && !subList->Contains(i))
          continue;
       if (fSelectMultiple) {
-         // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0
+         // coverity[var_deref_model] fSelectMultiple==true => fSelect != 0
          ww = fWeight * fSelect->EvalInstance(i);
          if (ww == 0) continue;
          if (fNfill == nfill0) {
@@ -1403,7 +1403,7 @@ void TSelectorDraw::TakeAction()
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
       }
       TGraph *pm = new TGraph(fNfill, fVal[1], fVal[0]);
-      pm->SetEditable(kFALSE);
+      pm->SetEditable(false);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
@@ -1524,7 +1524,7 @@ void TSelectorDraw::TakeAction()
    //__________________________Parallel coordinates / candle chart_______________________
    else if (fAction == 6 || fAction == 7) {
       TakeEstimate();
-      Bool_t candle = (fAction == 7);
+      bool candle = (fAction == 7);
       // Using CINT to avoid a dependency in TParallelCoord
       if (!fOption.Contains("goff"))
          gROOT->ProcessLine(TString::Format("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%zx,0x%zx)",
@@ -1633,7 +1633,7 @@ void TSelectorDraw::TakeEstimate()
             // because h2 will be filled below and we do not want to show
             // the binned scatter-plot, the TGraph being better.
             TH1 *h2c = h2->DrawCopy(fOption.Data(),"");
-            if (h2c) h2c->SetStats(kFALSE);
+            if (h2c) h2c->SetStats(false);
          } else {
             // case like: T.Draw("y:x")
             // h2 is a temporary histogram (htemp). This histogram
@@ -1643,7 +1643,7 @@ void TSelectorDraw::TakeEstimate()
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill, fVal[1], fVal[0]);
-      pm->SetEditable(kFALSE);
+      pm->SetEditable(false);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
@@ -1681,10 +1681,10 @@ void TSelectorDraw::TakeEstimate()
    //__________________________3D scatter plot with option col_______________________
    } else if (fAction == 33) {
       TH2 *h2 = (TH2*)fObject;
-      Bool_t process2 = kFALSE;
+      bool process2 = false;
       if (h2->CanExtendAllAxes()) {
          if (vminOld[2] == DBL_MAX)
-            process2 = kTRUE;
+            process2 = true;
          for (i = 0; i < fValSize && i < 4; i++) {
             fVmin[i] = vminOld[i];
             fVmax[i] = vmaxOld[i];
@@ -1742,7 +1742,7 @@ void TSelectorDraw::TakeEstimate()
             // because h3 will be filled below and we do not want to show
             // the binned scatter-plot, the TGraph being better.
             TH1 *h3c = h3->DrawCopy(fOption.Data(),"");
-            if (h3c) h3c->SetStats(kFALSE);
+            if (h3c) h3c->SetStats(false);
          } else {
             // case like: T.Draw("y:x")
             // h3 is a temporary histogram (htemp). This histogram

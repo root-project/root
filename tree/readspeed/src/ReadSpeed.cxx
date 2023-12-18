@@ -180,7 +180,7 @@ Result ReadSpeed::EvalThroughputST(const Data &d)
       if (f == nullptr || f->IsZombie())
          throw std::runtime_error("Could not open file '" + fileName + '\'');
 
-      sw.Start(kFALSE);
+      sw.Start(false);
 
       const auto byteData = ReadTree(f.get(), d.fTreeNames[treeIdx], fileBranchNames[fileIdx]);
       uncompressedBytesRead += byteData.fUncompressedBytesRead;

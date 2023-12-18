@@ -58,8 +58,8 @@ TLeaf::TLeaf()
    , fLen(0)
    , fLenType(0)
    , fOffset(0)
-   , fIsRange(kFALSE)
-   , fIsUnsigned(kFALSE)
+   , fIsRange(false)
+   , fIsUnsigned(false)
    , fLeafCount(nullptr)
    , fBranch(nullptr)
    , fLeafCountValues(nullptr)
@@ -77,8 +77,8 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
    , fLen(0)
    , fLenType(4)
    , fOffset(0)
-   , fIsRange(kFALSE)
-   , fIsUnsigned(kFALSE)
+   , fIsRange(false)
+   , fIsUnsigned(false)
    , fLeafCount(nullptr)
    , fBranch(parent)
    , fLeafCountValues(nullptr)
@@ -426,14 +426,14 @@ Int_t TLeaf::GetLen() const
 /// and a decision is made whether or not we own the
 /// new value buffer.
 
-Int_t TLeaf::ResetAddress(void* addr, Bool_t calledFromDestructor)
+Int_t TLeaf::ResetAddress(void* addr, bool calledFromDestructor)
 {
    // The kNewValue bit records whether or not we own
    // the current value buffer or not.  If we own it,
    // then we are responsible for deleting it.
-   Bool_t deleteValue = kFALSE;
+   bool deleteValue = false;
    if (TestBit(kNewValue)) {
-      deleteValue = kTRUE;
+      deleteValue = true;
    }
    // If we are not being called from a destructor,
    // recalculate the value buffer size and decide

@@ -329,7 +329,7 @@ void TTreeProcessorMP::FixLists(std::vector<TObject*> &lists) {
    TIter nxo(oldlist);
    TObject *o = nullptr;
    while ((o = nxo())) { firstlist->Add(o); }
-   oldlist->SetOwner(kFALSE);
+   oldlist->SetOwner(false);
    lists.erase(lists.begin());
    lists.insert(lists.begin(), firstlist);
    delete oldlist;

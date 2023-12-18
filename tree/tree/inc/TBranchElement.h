@@ -85,9 +85,9 @@ protected:
    TStreamerInfo           *fInfo;          ///<! Pointer to StreamerInfo
    char                    *fObject;        ///<! Pointer to object at *fAddress
    TVirtualArray           *fOnfileObject;  ///<! Place holder for the onfile representation of data members.
-   Bool_t                   fInit : 1;      ///<! Initialization flag for branch assignment
-   Bool_t                   fInInitInfo : 1;///<! True during the 2nd part of InitInfo (cut recursion).
-   Bool_t                   fInitOffsets: 1;///<! Initialization flag to not endlessly recalculate offsets
+   bool                     fInit : 1;      ///<! Initialization flag for branch assignment
+   bool                     fInInitInfo : 1;///<! True during the 2nd part of InitInfo (cut recursion).
+   bool                     fInitOffsets: 1;///<! Initialization flag to not endlessly recalculate offsets
    TClassRef                fTargetClass;   ///<! Reference to the target in-memory class
    TClassRef                fCurrentClass;  ///<! Reference to current (transient) class definition
    TClassRef                fParentClass;   ///<! Reference to class definition in fParentName
@@ -114,7 +114,7 @@ protected:
    void                     BuildTitle(const char* name);
    virtual void             InitializeOffsets();
    virtual void             InitInfo();
-   Bool_t                   IsMissingCollection() const;
+   bool                     IsMissingCollection() const;
    TStreamerInfo           *FindOnfileInfo(TClass *valueClass, const TObjArray &branches) const;
    TClass                  *GetParentClass(); // Class referenced by fParentName
    TStreamerInfo           *GetInfoImp() const;
@@ -145,7 +145,7 @@ protected:
    void SetReadLeavesPtr();
    void SetReadActionSequence();
    void SetupAddressesImpl();
-   void SetAddressImpl(void *addr, Bool_t implied) override;
+   void SetAddressImpl(void *addr, bool implied) override;
 
    void FillLeavesImpl(TBuffer& b);
    void FillLeavesMakeClass(TBuffer& b);
@@ -194,7 +194,7 @@ public:
            const char      *GetIconName() const override;
            Int_t            GetID() const { return fID; }
            TStreamerInfo   *GetInfo() const;
-           Bool_t           GetMakeClass() const override;
+           bool             GetMakeClass() const override;
            char            *GetObject() const;
            TVirtualArray   *GetOnfileObject() const { return fOnfileObject; }
    virtual const char      *GetParentName() const { return fParentName.Data(); }
@@ -204,14 +204,14 @@ public:
            Int_t            GetStreamerType() const { return fStreamerType; }
    virtual TClass          *GetTargetClass() { return fTargetClass; }
    virtual const char      *GetTypeName() const;
-           Double_t         GetValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const { return GetTypedValue<Double_t>(i, len, subarr); }
-   template<typename T > T  GetTypedValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const;
+           Double_t         GetValue(Int_t i, Int_t len, bool subarr = false) const { return GetTypedValue<Double_t>(i, len, subarr); }
+   template<typename T > T  GetTypedValue(Int_t i, Int_t len, bool subarr = false) const;
    virtual void            *GetValuePointer() const;
            Int_t            GetClassVersion() { return fClassVersion; }
-           Bool_t           IsBranchFolder() const { return TestBit(kBranchFolder); }
-           Bool_t           IsFolder() const override;
-   virtual Bool_t           IsObjectOwner() const { return TestBit(kDeleteObject); }
-           Bool_t           Notify() override { if (fAddress) { ResetAddress(); } return true; }
+           bool             IsBranchFolder() const { return TestBit(kBranchFolder); }
+           bool             IsFolder() const override;
+   virtual bool             IsObjectOwner() const { return TestBit(kDeleteObject); }
+           bool             Notify() override { if (fAddress) { ResetAddress(); } return true; }
            void             Print(Option_t* option = "") const override;
            void             PrintValue(Int_t i) const;
            void             Reset(Option_t* option = "") override;
@@ -220,7 +220,7 @@ public:
    virtual void             ResetDeleteObject();
    virtual void             ResetInitInfo(bool recurse);
            void             SetAddress(void* addobj) override;
-           Bool_t           SetMakeClass(Bool_t decomposeObj = kTRUE) override;
+           bool             SetMakeClass(bool decomposeObj = true) override;
            void             SetObject(void *objadd) override;
            void             SetBasketSize(Int_t buffsize) override;
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }

@@ -26,7 +26,7 @@ ClassImp(TChainElement);
 /// Default constructor for a chain element.
 
 TChainElement::TChainElement() : TNamed(),fBaddress(nullptr),fBaddressType(0),
-   fBaddressIsPtr(kFALSE), fDecomposedObj(kFALSE), fCheckedType(kFALSE), fBranchPtr(nullptr), fLoadResult(0)
+   fBaddressIsPtr(false), fDecomposedObj(false), fCheckedType(false), fBranchPtr(nullptr), fLoadResult(0)
 {
    fNPackets   = 0;
    fPackets    = nullptr;
@@ -41,7 +41,7 @@ TChainElement::TChainElement() : TNamed(),fBaddress(nullptr),fBaddressType(0),
 
 TChainElement::TChainElement(const char *name, const char *title)
    :TNamed(name,title),fBaddress(nullptr),fBaddressType(0),
-    fBaddressIsPtr(kFALSE), fDecomposedObj(kFALSE), fCheckedType(kFALSE), fBranchPtr(nullptr), fLoadResult(0)
+    fBaddressIsPtr(false), fDecomposedObj(false), fCheckedType(false), fBranchPtr(nullptr), fLoadResult(0)
 {
    fNPackets   = 0;
    fPackets    = nullptr;
@@ -97,7 +97,7 @@ void TChainElement::SetPacketSize(Int_t size)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set/Reset the looked-up bit
 
-void TChainElement::SetLookedUp(Bool_t y)
+void TChainElement::SetLookedUp(bool y)
 {
    if (y)
       SetBit(kHasBeenLookedUp);

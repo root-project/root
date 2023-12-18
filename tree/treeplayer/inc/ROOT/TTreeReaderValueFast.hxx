@@ -240,26 +240,26 @@ class TTreeReaderValueFast<UInt_t> final : public ROOT::Experimental::Internal::
 };
 
 template <>
-class TTreeReaderValueFast<Bool_t> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
+class TTreeReaderValueFast<bool> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
 
    public:
 
       TTreeReaderValueFast(TTreeReaderFast& tr, const std::string &branchname) :
             TTreeReaderValueFastBase(&tr, branchname) {}
 
-      Bool_t* Get() {
-         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<Bool_t*>(fBuffer.GetCurrent()) + fEvtIndex));
+      bool* Get() {
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<bool*>(fBuffer.GetCurrent()) + fEvtIndex));
       }
-      Bool_t* operator->() { return Get(); }
-      Bool_t& operator*() { return *Get(); }
+      bool* operator->() { return Get(); }
+      bool& operator*() { return *Get(); }
 
    protected:
       const char *GetTypeName() override {return "unsigned integer";}
       const char *BranchTypeName() override {return "unsigned integer";}
-      UInt_t GetSize() override {return sizeof(Bool_t);}
-      Bool_t* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
+      UInt_t GetSize() override {return sizeof(bool);}
+      bool* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
-      Bool_t fTmp;
+      bool fTmp;
 };
 
 }  // Experimental

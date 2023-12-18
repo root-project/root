@@ -32,7 +32,7 @@ TLeafO::TLeafO(): TLeaf()
    fPointer = nullptr;
    fMinimum = false;
    fMaximum = false;
-   fLenType = sizeof(Bool_t);
+   fLenType = sizeof(bool);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ TLeafO::TLeafO(): TLeaf()
 TLeafO::TLeafO(TBranch *parent, const char *name, const char *type)
    : TLeaf(parent,name,type)
 {
-   fLenType = sizeof(Bool_t);
+   fLenType = sizeof(bool);
    fMinimum = false;
    fMaximum = false;
    fValue   = nullptr;
@@ -53,7 +53,7 @@ TLeafO::TLeafO(TBranch *parent, const char *name, const char *type)
 
 TLeafO::~TLeafO()
 {
-   if (ResetAddress(nullptr,kTRUE)) delete [] fValue;
+   if (ResetAddress(nullptr,true)) delete [] fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,16 +92,16 @@ const char *TLeafO::GetTypeName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafO::IncludeRange(TLeaf *input)
+bool TLeafO::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             this->SetMaximum( input->GetMaximum() );
         if (input->GetMinimum() < this->GetMinimum())
             this->SetMinimum( input->GetMinimum() );
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 
@@ -186,21 +186,21 @@ void TLeafO::SetAddress(void *add)
    }
    if (add) {
       if (TestBit(kIndirectAddress)) {
-         fPointer = (Bool_t**) add;
+         fPointer = (bool**) add;
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) ||
              ncountmax > fNdata || *fPointer == nullptr) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
-            *fPointer = new Bool_t[fNdata];
+            *fPointer = new bool[fNdata];
          }
          fValue = *fPointer;
       } else {
-         fValue = (Bool_t*)add;
+         fValue = (bool*)add;
       }
    } else {
-      fValue = new Bool_t[fNdata];
+      fValue = new bool[fNdata];
       fValue[0] = false;
    }
 }

@@ -37,7 +37,7 @@ protected:
    TTree        *fTree;        ///<! pointer to the TTree described by this element
    TFile        *fFile;        ///<! pointer to the file containing the friend TTree
    TString       fTreeName;    ///<  name of the friend TTree
-   Bool_t        fOwnFile;     ///<  true if file is managed by this class
+   bool          fOwnFile;     ///<  true if file is managed by this class
 
    TFriendElement(const TFriendElement&) = delete;
    TFriendElement& operator=(const TFriendElement&) = delete;
@@ -64,7 +64,7 @@ public:
    virtual const char *GetTreeName() const {return fTreeName.Data();}
    void        ls(Option_t *option="") const override;
            void        Reset() { fTree = nullptr; fFile = nullptr; }
-           Bool_t      IsUpdated() const { return TestBit(kUpdated); }
+           bool        IsUpdated() const { return TestBit(kUpdated); }
            void        ResetUpdated() { ResetBit(kUpdated); }
            void        MarkUpdated() { SetBit(kUpdated); }
    void        RecursiveRemove(TObject *obj) override;

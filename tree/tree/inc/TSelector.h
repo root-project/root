@@ -53,13 +53,13 @@ public:
    virtual void        Init(TTree *) { }
    virtual void        Begin(TTree *) { }
    virtual void        SlaveBegin(TTree *) { }
-           Bool_t      Notify() override { return kTRUE; }
+           bool        Notify() override { return true; }
            const char *GetOption() const override { return fOption.Data(); }
    virtual Long64_t    GetStatus() const { return fStatus; }
    virtual Int_t       GetEntry(Long64_t /*entry*/, Int_t /*getall*/ = 0) { return 0; }
-   virtual Bool_t      ProcessCut(Long64_t /*entry*/);
+   virtual bool        ProcessCut(Long64_t /*entry*/);
    virtual void        ProcessFill(Long64_t /*entry*/);
-   virtual Bool_t      Process(Long64_t /*entry*/);
+   virtual bool        Process(Long64_t /*entry*/);
    virtual void        ImportOutput(TList *output);
    virtual void        SetOption(const char *option) { fOption = option; }
    virtual void        SetObject(TObject *obj) { fObject = obj; }
@@ -74,7 +74,7 @@ public:
    virtual void        ResetAbort() { fAbort = kContinue; }
 
    static  TSelector  *GetSelector(const char *filename);
-   static  Bool_t      IsStandardDraw(const char *selec);
+   static  bool        IsStandardDraw(const char *selec);
 
    ClassDefOverride(TSelector,2)  //A utility class for tree and object processing
 };

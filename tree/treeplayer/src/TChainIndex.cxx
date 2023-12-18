@@ -132,9 +132,9 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add an index to this chain.
-/// if delaySort is kFALSE (default) check if the indices of different trees are in order.
+/// if delaySort is false (default) check if the indices of different trees are in order.
 
-void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
+void TChainIndex::Append(const TVirtualIndex *index, bool delaySort )
 {
    if (index) {
       const TTreeIndex *ti_index = dynamic_cast<const TTreeIndex*>(index);
@@ -337,7 +337,7 @@ TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *parent)
    if (!fMajorFormulaParent) {
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
-      fMajorFormulaParent->SetQuickLoad(kTRUE);
+      fMajorFormulaParent->SetQuickLoad(true);
    }
    if (fMajorFormulaParent->GetTree() != parent) {
       fMajorFormulaParent->SetTree(const_cast<TTree*>(parent));
@@ -356,7 +356,7 @@ TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *parent)
       // is a friend of the parent TTree.
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),const_cast<TTree*>(parent));
-      fMinorFormulaParent->SetQuickLoad(kTRUE);
+      fMinorFormulaParent->SetQuickLoad(true);
    }
    if (fMinorFormulaParent->GetTree() != parent) {
       fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
@@ -367,16 +367,16 @@ TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *parent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if index can be applied to the TTree
+/// Return true if index can be applied to the TTree
 
-Bool_t TChainIndex::IsValidFor(const TTree *parent)
+bool TChainIndex::IsValidFor(const TTree *parent)
 {
    auto *majorFormula = GetMajorFormulaParent(parent);
    auto *minorFormula = GetMinorFormulaParent(parent);
    if ((majorFormula == nullptr || majorFormula->GetNdim() == 0) ||
        (minorFormula == nullptr || minorFormula->GetNdim() == 0))
-         return kFALSE;
-   return kTRUE;
+         return false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -347,7 +347,7 @@ TTreeCache::~TTreeCache()
 ///  - 0 branch added or already included
 ///  - -1 on error
 
-Int_t TTreeCache::LearnBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCache::LearnBranch(TBranch *b, bool subbranches /*= false*/)
 {
    if (!fIsLearning) {
       return -1;
@@ -373,15 +373,15 @@ Int_t TTreeCache::LearnBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 ///  - 0 branch added or already included
 ///  - -1 on error
 
-Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCache::AddBranch(TBranch *b, bool subbranches /*= false*/)
 {
    // Reject branch that are not from the cached tree.
    if (!b || fTree->GetTree() != b->GetTree()) return -1;
 
    //Is branch already in the cache?
-   Bool_t isNew = kTRUE;
+   bool isNew = true;
    for (int i=0;i<fNbranches;i++) {
-      if (fBranches->UncheckedAt(i) == b) {isNew = kFALSE; break;}
+      if (fBranches->UncheckedAt(i) == b) {isNew = false; break;}
    }
    if (isNew) {
       fTree = b->GetTree();
@@ -443,21 +443,21 @@ Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 ///  - 0 branch added or already included
 ///  - -1 on error
 
-Int_t TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCache::AddBranch(const char *bname, bool subbranches /*= false*/)
 {
    TBranch *branch, *bcount;
    TLeaf *leaf, *leafcount;
 
    Int_t i;
    Int_t nleaves = (fTree->GetListOfLeaves())->GetEntriesFast();
-   TRegexp re(bname,kTRUE);
+   TRegexp re(bname,true);
    Int_t nb = 0;
    Int_t res = 0;
 
    // first pass, loop on all branches
    // for leafcount branches activate/deactivate in function of status
-   Bool_t all = kFALSE;
-   if (!strcmp(bname,"*")) all = kTRUE;
+   bool all = false;
+   if (!strcmp(bname,"*")) all = true;
    for (i=0;i<nleaves;i++)  {
       leaf = (TLeaf*)(fTree->GetListOfLeaves())->UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
@@ -538,7 +538,7 @@ Int_t TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 ///  - 0 branch dropped or not in cache
 ///  - -1 on error
 
-Int_t TTreeCache::DropBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCache::DropBranch(TBranch *b, bool subbranches /*= false*/)
 {
    if (!fIsLearning) {
       return -1;
@@ -583,21 +583,21 @@ Int_t TTreeCache::DropBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 ///  - 0 branch dropped or not in cache
 ///  - -1 on error
 
-Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCache::DropBranch(const char *bname, bool subbranches /*= false*/)
 {
    TBranch *branch, *bcount;
    TLeaf *leaf, *leafcount;
 
    Int_t i;
    Int_t nleaves = (fTree->GetListOfLeaves())->GetEntriesFast();
-   TRegexp re(bname,kTRUE);
+   TRegexp re(bname,true);
    Int_t nb = 0;
    Int_t res = 0;
 
    // first pass, loop on all branches
    // for leafcount branches activate/deactivate in function of status
-   Bool_t all = kFALSE;
-   if (!strcmp(bname,"*")) all = kTRUE;
+   bool all = false;
+   if (!strcmp(bname,"*")) all = true;
    for (i=0;i<nleaves;i++)  {
       leaf = (TLeaf*)(fTree->GetListOfLeaves())->UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
@@ -680,7 +680,7 @@ Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 /// The first time this is called on a TTreeCache object, the corresponding
 /// data structures will be allocated.  Subsequent enable / disables will
 /// simply turn the functionality on/off.
-void TTreeCache::SetOptimizeMisses(Bool_t opt)
+void TTreeCache::SetOptimizeMisses(bool opt)
 {
 
    if (opt && !fMissCache) {
@@ -787,7 +787,7 @@ TTreeCache::IOPos TTreeCache::FindBranchBasketPos(TBranch &b, Long64_t entry)
 ///   this IO operation.
 /// - If no corresponding branch could be found (or an error occurs), this
 ///   returns nullptr.
-TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
+TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, bool all)
 {
    if (R__unlikely((pos < 0) || (len < 0))) {
       return nullptr;
@@ -796,7 +796,7 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
    int count = all ? (fTree->GetListOfLeaves())->GetEntriesFast() : fMissCache->fBranches.size();
    fMissCache->fEntries.reserve(count);
    fMissCache->fEntries.clear();
-   Bool_t found_request = kFALSE;
+   bool found_request = false;
    TBranch *resultBranch = nullptr;
    Long64_t entry = fTree->GetReadEntry();
 
@@ -813,7 +813,7 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
          continue;
       }
       if (iopos.fPos == pos && iopos.fLen == len) {
-         found_request = kTRUE;
+         found_request = true;
          resultBranch = b;
          // Note that we continue to iterate; fills up the rest of the entries in the cache.
       }
@@ -860,13 +860,13 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
 ///
 /// Returns true if we were able to pull the data into the miss cache.
 ///
-Bool_t TTreeCache::ProcessMiss(Long64_t pos, int len)
+bool TTreeCache::ProcessMiss(Long64_t pos, int len)
 {
 
-   Bool_t firstMiss = kFALSE;
+   bool firstMiss = false;
    if (fFirstMiss == -1) {
       fFirstMiss = fEntryCurrent;
-      firstMiss = kTRUE;
+      firstMiss = true;
    }
    fLastMiss = fEntryCurrent;
    // The first time this is executed, we try to pull in as much data as we can.
@@ -874,14 +874,14 @@ Bool_t TTreeCache::ProcessMiss(Long64_t pos, int len)
    if (!b) {
       if (!firstMiss) {
          // TODO: this recalculates for *all* branches, throwing away the above work.
-         b = CalculateMissEntries(pos, len, kTRUE);
+         b = CalculateMissEntries(pos, len, true);
       }
       if (!b) {
          // printf("ProcessMiss: pos %ld does not appear to correspond to a buffer in this file.\n", pos);
          // We have gone through all the branches in this file and the requested basket
          // doesn't appear to be in any of them.  Likely a logic error / bug.
          fMissCache->fEntries.clear();
-         return kFALSE;
+         return false;
       }
    }
    // TODO: this should be a set.
@@ -908,7 +908,7 @@ Bool_t TTreeCache::ProcessMiss(Long64_t pos, int len)
    fFile->ReadBuffers(&(fMissCache->fData[0]), &(positions[0]), &(lengths[0]), fMissCache->fEntries.size());
    fFirstMiss = fLastMiss = fEntryCurrent;
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -918,14 +918,14 @@ Bool_t TTreeCache::ProcessMiss(Long64_t pos, int len)
 /// Returns true if the IO operation was successful and the contents of buf
 /// were populated with the requested data.
 ///
-Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
+bool TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
 {
 
    if (!fOptimizeMisses) {
-      return kFALSE;
+      return false;
    }
    if (R__unlikely((pos < 0) || (len < 0))) {
-      return kFALSE;
+      return false;
    }
 
    // printf("Checking the miss cache for offset=%ld, length=%d\n", pos, len);
@@ -937,13 +937,13 @@ Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
    if (iter != fMissCache->fEntries.end()) {
       if (len > iter->fIO.fLen) {
          ++fNMissReadMiss;
-         return kFALSE;
+         return false;
       }
       auto offset = iter->fIndex;
       memcpy(buf, &(fMissCache->fData[offset]), len);
       // printf("Returning data from pos=%ld in miss cache.\n", offset);
       ++fNMissReadOk;
-      return kTRUE;
+      return true;
    }
 
    // printf("Data not in miss cache.\n");
@@ -952,7 +952,7 @@ Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
    if (!ProcessMiss(pos, len)) {
       // printf("Unable to pull data into miss cache.\n");
       ++fNMissReadMiss;
-      return kFALSE;
+      return false;
    }
 
    // OK, we updated the cache with as much information as possible.  Search again for
@@ -964,13 +964,13 @@ Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
       // printf("Expecting data at offset %ld in miss cache.\n", offset);
       memcpy(buf, &(fMissCache->fData[offset]), len);
       ++fNMissReadOk;
-      return kTRUE;
+      return true;
    }
 
    // This must be a logic bug.  ProcessMiss should return false if (pos, len)
    // wasn't put into fEntries.
    ++fNMissReadMiss;
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -997,7 +997,7 @@ struct BasketRanges {
             fMax = max;
       }
 
-      Bool_t Contains(Long64_t entry) { return (fMin <= entry && entry <= fMax); }
+      bool Contains(Long64_t entry) { return (fMin <= entry && entry <= fMax); }
    };
 
    std::vector<Range> fRanges;
@@ -1088,14 +1088,14 @@ struct BasketRanges {
 
    // Returns true if at least one of the branch's range contains
    // the entry.
-   Bool_t Contains(Long64_t entry)
+   bool Contains(Long64_t entry)
    {
       for (const auto &r : fRanges) {
          if (r.fMin != -1 && r.fMax != -1)
             if (r.fMin <= entry && entry <= r.fMax)
-               return kTRUE;
+               return true;
       }
-      return kFALSE;
+      return false;
    }
 
    void Print()
@@ -1111,16 +1111,16 @@ struct BasketRanges {
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the cache buffer with the branches in the cache.
 
-Bool_t TTreeCache::FillBuffer()
+bool TTreeCache::FillBuffer()
 {
 
-   if (fNbranches <= 0) return kFALSE;
+   if (fNbranches <= 0) return false;
    TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();
    Long64_t fEntryCurrentMax = 0;
 
    if (entry != -1 && (entry < fEntryMin || fEntryMax < entry))
-      return kFALSE;
+      return false;
 
    if (fEnablePrefetching) { // Prefetching mode
       if (fIsLearning) { // Learning mode
@@ -1129,7 +1129,7 @@ Bool_t TTreeCache::FillBuffer()
             // phase. Doing so may trigger a recursive call to FillBuffer in
             // the process of filling both prefetching buffers
             StopLearningPhase();
-            fIsManual = kFALSE;
+            fIsManual = false;
          }
       }
       if (fIsLearning) { //  Learning mode
@@ -1141,16 +1141,16 @@ Bool_t TTreeCache::FillBuffer()
          fFirstEntry = entry;
       }
       else {
-         if (fFirstEntry == entry) return kFALSE;
+         if (fFirstEntry == entry) return false;
          // Set the read direction
          if (!fReadDirectionSet) {
             if (entry < fFirstEntry) {
-               fReverseRead = kTRUE;
-               fReadDirectionSet = kTRUE;
+               fReverseRead = true;
+               fReadDirectionSet = true;
             }
             else if (entry > fFirstEntry) {
-               fReverseRead =kFALSE;
-               fReadDirectionSet = kTRUE;
+               fReverseRead =false;
+               fReadDirectionSet = true;
             }
          }
 
@@ -1165,9 +1165,9 @@ Bool_t TTreeCache::FillBuffer()
             }
             else if (fEntryCurrent >= 0) {
                // We are still reading from the oldest buffer, no need to prefetch a new one
-               return kFALSE;
+               return false;
             }
-            if (entry < 0) return kFALSE;
+            if (entry < 0) return false;
             fFirstBuffer = !fFirstBuffer;
          }
          else {
@@ -1183,7 +1183,7 @@ Bool_t TTreeCache::FillBuffer()
                else {
                   // We are still reading from the oldest buffer,
                   // no need to prefetch a new one
-                  return kFALSE;
+                  return false;
                }
                fFirstBuffer = !fFirstBuffer;
             }
@@ -1193,7 +1193,7 @@ Bool_t TTreeCache::FillBuffer()
 
    // Set to true to enable all debug output without having to set gDebug
    // Replace this once we have a per module and/or per class debugging level/setting.
-   static constexpr bool showMore = kFALSE;
+   static constexpr bool showMore = false;
 
    static const auto PrintAllCacheInfo = [](TObjArray *branches) {
       for (Int_t i = 0; i < branches->GetEntries(); i++) {
@@ -1208,11 +1208,11 @@ Bool_t TTreeCache::FillBuffer()
    if (!fIsLearning && fEntryCurrent <= entry && entry < fEntryNext) {
       // Check if all the basket in the cache have already be used and
       // thus we can reuse the cache.
-      Bool_t allUsed = kTRUE;
+      bool allUsed = true;
       for (Int_t i = 0; i < fNbranches; ++i) {
          TBranch *b = (TBranch *)fBranches->UncheckedAt(i);
          if (!b->fCacheInfo.AllUsed()) {
-            allUsed = kFALSE;
+            allUsed = false;
             break;
          }
       }
@@ -1229,16 +1229,16 @@ Bool_t TTreeCache::FillBuffer()
    // no point in retrying.   Note that this will also return false
    // during the training phase (fEntryNext is then set intentional to
    // the end of the training phase).
-   if (fEntryCurrent <= entry && entry < fEntryNext) return kFALSE;
+   if (fEntryCurrent <= entry && entry < fEntryNext) return false;
 
    // Triggered by the user, not the learning phase
    if (entry == -1)
       entry = 0;
 
-   Bool_t resetBranchInfo = kFALSE;
+   bool resetBranchInfo = false;
    if (entry < fCurrentClusterStart || fNextClusterStart <= entry) {
       // We are moving on to another set of clusters.
-      resetBranchInfo = kTRUE;
+      resetBranchInfo = true;
       if (showMore || gDebug > 6)
          Info("FillBuffer", "*** Will reset the branch information about baskets");
    } else if (showMore || gDebug > 6) {
@@ -1256,7 +1256,7 @@ Bool_t TTreeCache::FillBuffer()
       // There is no overlap between the cluster we found [entryCurrent, entryNext[
       // and the authorized range [fEntryMin, fEntryMax]
       // so we have nothing to do
-      return kFALSE;
+      return false;
    }
 
    // If there is overlap between the found cluster and the authorized range
@@ -1275,7 +1275,7 @@ Bool_t TTreeCache::FillBuffer()
    if ( fEnablePrefetching ) {
       if ( entry == fEntryMax ) {
          // We are at the end, no need to do anything else
-         return kFALSE;
+         return false;
       }
    }
 
@@ -1338,7 +1338,7 @@ Bool_t TTreeCache::FillBuffer()
    struct collectionInfo {
       Int_t fClusterStart{-1}; // First basket belonging to the current cluster
       Int_t fCurrent{-1};       // Currently visited basket
-      Bool_t fLoadedOnce{kFALSE};
+      bool fLoadedOnce{false};
 
       void Rewind() { fCurrent = (fClusterStart >= 0) ? fClusterStart : 0; }
    };
@@ -1353,11 +1353,11 @@ Bool_t TTreeCache::FillBuffer()
       prevNtot = ntotCurrentBuf;
       Long64_t lowestMaxEntry = fEntryMax; // The lowest maximum entry in the TTreeCache for each branch for each pass.
 
-      Bool_t reachedEnd = kFALSE;
-      Bool_t skippedFirst = kFALSE;
-      Bool_t oncePerBranch = kFALSE;
+      bool reachedEnd = false;
+      bool skippedFirst = false;
+      bool oncePerBranch = false;
       Int_t nDistinctLoad = 0;
-      Bool_t progress = kTRUE;
+      bool progress = true;
       enum ENarrow {
          kFull = 0,
          kNarrow = 1
@@ -1384,7 +1384,7 @@ Bool_t TTreeCache::FillBuffer()
          if (showMore || gDebug > 7)
             Info("CollectBaskets", "Called with pass=%d narrow=%d maxCollectEntry=%lld", pass, narrow, maxCollectEntry);
 
-         Bool_t filled = kFALSE;
+         bool filled = false;
          for (Int_t i = 0; i < fNbranches; ++i) {
             TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
             if (b->GetDirectory()==nullptr || b->TestBit(TBranch::kDoNotProcess))
@@ -1548,7 +1548,7 @@ Bool_t TTreeCache::FillBuffer()
                            (ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, minEntry);
                      }
                      fEntryNext = minEntry;
-                     filled = kTRUE;
+                     filled = true;
                      break;
                   } else {
                      if (pass == kStart || !cursor[i].fLoadedOnce) {
@@ -1564,7 +1564,7 @@ Bool_t TTreeCache::FillBuffer()
                                                  "%d pass %d will restart at %lld",
                                    (ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, pass, fEntryNext);
                            }
-                           filled = kTRUE;
+                           filled = true;
                            break;
                         }
                      } else {
@@ -1578,7 +1578,7 @@ Bool_t TTreeCache::FillBuffer()
                                                  "%d pass %d will restart at %lld",
                                    (ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, pass, fEntryNext);
                            }
-                           filled = kTRUE;
+                           filled = true;
                            break;
                         }
                      }
@@ -1597,7 +1597,7 @@ Bool_t TTreeCache::FillBuffer()
                   Info("FillBuffer", "*** Registering branch %d basket %d %s", i, j, b->GetName());
 
                if (!cursor[i].fLoadedOnce) {
-                  cursor[i].fLoadedOnce = kTRUE;
+                  cursor[i].fLoadedOnce = true;
                   ++nDistinctLoad;
                }
                if (R__unlikely(perfStats)) {
@@ -1668,7 +1668,7 @@ Bool_t TTreeCache::FillBuffer()
       };
 
       // First collect all the basket containing the request entry.
-      bool full = kFALSE;
+      bool full = false;
 
       full = CollectBaskets(kStart, kNarrow, fEntryNext);
 
@@ -1678,7 +1678,7 @@ Bool_t TTreeCache::FillBuffer()
          full = CollectBaskets(kStart, kFull, std::min(maxReadEntry, fEntryNext));
       }
 
-      resetBranchInfo = kFALSE; // Make sure the 2nd cluster iteration does not erase the info.
+      resetBranchInfo = false; // Make sure the 2nd cluster iteration does not erase the info.
 
       // Then fill out to the end of the cluster.
       if (!full && !fReverseRead) {
@@ -1733,7 +1733,7 @@ Bool_t TTreeCache::FillBuffer()
       fEntryNext = clusterIter.GetNextEntry();
       if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
       fNextClusterStart = fEntryNext;
-   } while (kTRUE);
+   } while (true);
 
    if (showMore || gDebug > 6) {
       Info("FillBuffer", "Mem ranges");
@@ -1787,11 +1787,11 @@ Bool_t TTreeCache::FillBuffer()
       if (!fIsLearning && fFirstTime){
          // First time we add autoFlush entries , after fFillTimes * autoFlush
          // only in reverse prefetching mode
-         fFirstTime = kFALSE;
+         fFirstTime = false;
       }
    }
-   fIsLearning = kFALSE;
-   return kTRUE;
+   fIsLearning = false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1931,7 +1931,7 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
       return 1;
    }
 
-   static const auto recordMiss = [](TVirtualPerfStats *perfStats, TObjArray *branches, Bool_t bufferFilled,
+   static const auto recordMiss = [](TVirtualPerfStats *perfStats, TObjArray *branches, bool bufferFilled,
                                      Long64_t basketpos) {
       if (gDebug > 6)
          ::Info("TTreeCache::ReadBufferNormal", "Cache miss after an %s FillBuffer: pos=%lld",
@@ -1950,7 +1950,7 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
    };
 
    //not found in cache. Do we need to fill the cache?
-   Bool_t bufferFilled = FillBuffer();
+   bool bufferFilled = FillBuffer();
    if (bufferFilled) {
       Int_t res = TFileCacheRead::ReadBuffer(buf,pos,len);
 
@@ -2055,7 +2055,7 @@ void TTreeCache::ResetCache()
    TFileCacheRead::Prefetch(0,0);
 
    if (fEnablePrefetching) {
-      fFirstTime = kTRUE;
+      fFirstTime = true;
       TFileCacheRead::SecondPrefetch(0, 0);
    }
 }
@@ -2106,7 +2106,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 {
    // This is called by TTreePlayer::Process in an automatic way...
    // don't restart it if the user has specified the branches.
-   Bool_t needLearningStart = (fEntryMin != emin) && fIsLearning && !fIsManual;
+   bool needLearningStart = (fEntryMin != emin) && fIsLearning && !fIsManual;
 
    fEntryMin  = emin;
    fEntryMax  = emax;
@@ -2168,11 +2168,11 @@ void TTreeCache::SetLearnPrefill(TTreeCache::EPrefillType type /* = kNoPrefill *
 
 void TTreeCache::StartLearningPhase()
 {
-   fIsLearning = kTRUE;
-   fIsManual = kFALSE;
+   fIsLearning = true;
+   fIsManual = false;
    fNbranches  = 0;
    if (fBrNames) fBrNames->Delete();
-   fIsTransferred = kFALSE;
+   fIsTransferred = false;
    fEntryCurrent = -1;
 }
 
@@ -2188,9 +2188,9 @@ void TTreeCache::StopLearningPhase()
    if (fIsLearning) {
       // This will force FillBuffer to read the buffers.
       fEntryNext = -1;
-      fIsLearning = kFALSE;
+      fIsLearning = false;
    }
-   fIsManual = kTRUE;
+   fIsManual = true;
 
    auto perfStats = GetTree()->GetPerfStats();
    if (perfStats)
@@ -2198,9 +2198,9 @@ void TTreeCache::StopLearningPhase()
 
    //fill the buffers only once during learning
    if (fEnablePrefetching && !fOneTime) {
-      fIsLearning = kTRUE;
+      fIsLearning = true;
       FillBuffer();
-      fOneTime = kTRUE;
+      fOneTime = true;
    }
 }
 
@@ -2222,7 +2222,7 @@ void TTreeCache::UpdateBranches(TTree *tree)
       fEntryNext = fEntryMin + fgLearnEntries;
    } else {
       // We learnt from a previous file.
-      fIsLearning = kFALSE;
+      fIsLearning = false;
       fEntryNext = -1;
    }
    fNbranches = 0;
@@ -2265,7 +2265,7 @@ void TTreeCache::LearnPrefill()
    // Return early if we are out of the requested range.
    if (entry < fEntryMin || entry > fEntryMax) return;
 
-   fLearnPrefilling = kTRUE;
+   fLearnPrefilling = true;
 
 
    // Force only the learn entries to be cached by temporarily setting min/max
@@ -2295,13 +2295,13 @@ void TTreeCache::LearnPrefill()
    // Add all branches to be cached. This also sets fIsManual, stops learning,
    // and makes fEntryNext = -1 (which forces a cache fill, which is good)
    AddBranch("*");
-   fIsManual = kFALSE; // AddBranch sets fIsManual, so we reset it
+   fIsManual = false; // AddBranch sets fIsManual, so we reset it
 
    // Now, fill the buffer with the learning phase entry range
    FillBuffer();
 
    // Leave everything the way we found it
-   fIsLearning = kTRUE;
+   fIsLearning = true;
    DropBranch("*"); // This doesn't work unless we're already learning
 
    // Restore entry values
@@ -2312,5 +2312,5 @@ void TTreeCache::LearnPrefill()
    fCurrentClusterStart = currentClusterStartOld;
    fNextClusterStart = nextClusterStartOld;
 
-   fLearnPrefilling = kFALSE;
+   fLearnPrefilling = false;
 }
