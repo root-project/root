@@ -68,12 +68,12 @@ public:
       fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){}
 
    // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
    // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input; // return vector size 1 with first input
       return ret;
    }
@@ -132,7 +132,7 @@ public:
       model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
 
      if (fShapeY.empty()) {
