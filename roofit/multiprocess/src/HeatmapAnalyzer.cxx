@@ -10,15 +10,63 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooFit/MultiProcess/HeatmapAnalyzer.h"
+#include <RooFit/MultiProcess/HeatmapAnalyzer.h>
 
-#include "TSystemDirectory.h"
-#include "TList.h"
+#include <TSystemDirectory.h>
+#include <TList.h>
+
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 
 namespace RooFit {
 namespace MultiProcess {
+
+namespace Detail {
+
+struct HeatmapAnalyzerJsonData {
+   nlohmann::json gradients;
+   nlohmann::json metadata;
+   std::vector<nlohmann::json> durations;
+};
+
+} // namespace Detail
+
+namespace {
+
+void sortTaskNames(std::vector<std::string> &task_names)
+{
+   char const *digits = "0123456789";
+   std::vector<int> digit_vec;
+   std::vector<std::pair<int, std::string>> pair_vec;
+   for (auto &&el : task_names) {
+      std::size_t const n = el.find_first_of(digits);
+      pair_vec.push_back(std::make_pair(stoi(el.substr(n)), el));
+   }
+
+   std::sort(pair_vec.begin(), pair_vec.end());
+
+   for (size_t i = 0; i < task_names.size(); i++) {
+      task_names[i] = pair_vec[i].second;
+   }
+}
+
+std::string findTaskForDuration(nlohmann::json durations, int start_t, int end_t)
+{
+   for (auto &&el : durations.items()) {
+      if (el.key().find("eval_partition") != std::string::npos)
+         continue;
+
+      for (size_t idx = 0; idx < durations[el.key()].size(); idx += 2) {
+         if (durations[el.key()][idx] <= start_t && durations[el.key()][idx + 1] >= end_t) {
+            return el.key();
+         }
+      }
+   }
+   return "";
+}
+
+} // namespace
 
 /** \class HeatmapAnalyzer
  *
@@ -45,6 +93,7 @@ namespace MultiProcess {
 ///                     outputted by RooFit::MultiProcess::ProcessTimer.
 ///                     There can be other files in this directory as well.
 HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
+   : jsonData_{std::make_unique<Detail::HeatmapAnalyzerJsonData>()}
 {
    TSystemDirectory dir(logs_dir.c_str(), logs_dir.c_str());
    std::unique_ptr<TList> durationFiles{dir.GetListOfFiles()};
@@ -56,12 +105,12 @@ HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
       std::ifstream f(logs_dir + "/" + std::string(file->GetName()));
 
       if (std::string(file->GetName()).find("999") != std::string::npos)
-         gradients_ = json::parse(f);
+         jsonData_->gradients = nlohmann::json::parse(f);
       else
-         durations_.push_back(json::parse(f));
+         jsonData_->durations.push_back(nlohmann::json::parse(f));
    }
 
-   for (json &durations_json : durations_) {
+   for (nlohmann::json &durations_json : jsonData_->durations) {
       for (auto &&el : durations_json.items()) {
          if (el.key().find("eval_task") != std::string::npos &&
              std::find(tasks_names_.begin(), tasks_names_.end(), el.key()) == tasks_names_.end())
@@ -71,17 +120,19 @@ HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
                      eval_partitions_names_.end())
             eval_partitions_names_.push_back(el.key());
          else if (el.key().find("metadata") != std::string::npos) {
-            metadata_ = durations_json[el.key()];
+            jsonData_->metadata = durations_json[el.key()];
          }
       }
    }
 
-   for (json &durations_json : durations_) {
+   for (nlohmann::json &durations_json : jsonData_->durations) {
       durations_json.erase("metadata");
    }
 
    sortTaskNames(tasks_names_);
 }
+
+HeatmapAnalyzer::~HeatmapAnalyzer() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method is the main functionality in this class. It does the heavy
@@ -91,16 +142,16 @@ HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
 ///                              in the logs.
 std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
 {
-   int gradient_start_t = gradients_["master:gradient"][analyzed_gradient * 2 - 2];
-   int gradient_end_t = gradients_["master:gradient"][analyzed_gradient * 2 - 1];
+   int gradient_start_t = jsonData_->gradients["master:gradient"][analyzed_gradient * 2 - 2];
+   int gradient_end_t = jsonData_->gradients["master:gradient"][analyzed_gradient * 2 - 1];
 
-   std::unique_ptr<TH2I> total_matrix =
+   auto total_matrix =
       std::make_unique<TH2I>("heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
 
    // loop over all logfiles stored in durations_
-   for (json &durations_json : durations_) {
+   for (nlohmann::json &durations_json : jsonData_->durations) {
       // partial heatmap is the heatmap that will be filled in for the current durations logfile
-      std::unique_ptr<TH2I> partial_matrix =
+      auto partial_matrix =
          std::make_unique<TH2I>("partial_heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
 
       // remove unnecessary components (those that are out of range)
@@ -149,11 +200,11 @@ std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
    TAxis *y = total_matrix->GetYaxis();
    TAxis *x = total_matrix->GetXaxis();
    for (std::size_t i = 0; i != tasks_names_.size(); ++i) {
-      y->SetBinLabel(i + 1, (metadata_[0][i].get<std::string>()).c_str());
+      y->SetBinLabel(i + 1, jsonData_->metadata[0][i].get<std::string>().c_str());
       y->ChangeLabel(i + 1, 30, 0.01, -1, -1, -1, "");
    }
    for (std::size_t i = 0; i != eval_partitions_names_.size(); ++i) {
-      x->SetBinLabel(i + 1, (eval_partitions_names_[i]).c_str());
+      x->SetBinLabel(i + 1, eval_partitions_names_[i].c_str());
       x->ChangeLabel(i + 1, 30, -1, -1, -1, -1, "");
    }
    x->LabelsOption("v");
@@ -164,48 +215,20 @@ std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
 std::vector<std::string> const HeatmapAnalyzer::getTaskNames()
 {
    return tasks_names_;
-};
+}
 
 std::vector<std::string> const HeatmapAnalyzer::getPartitionNames()
 {
    return eval_partitions_names_;
-};
-
-json const HeatmapAnalyzer::getMetadata()
-{
-   return metadata_;
-};
-
-std::string HeatmapAnalyzer::findTaskForDuration(json durations, int start_t, int end_t)
-{
-   for (auto &&el : durations.items()) {
-      if (el.key().find("eval_partition") != std::string::npos)
-         continue;
-
-      for (size_t idx = 0; idx < durations[el.key()].size(); idx += 2) {
-         if (durations[el.key()][idx] <= start_t && durations[el.key()][idx + 1] >= end_t) {
-            return el.key();
-         }
-      }
-   }
-   return "";
 }
 
-void HeatmapAnalyzer::sortTaskNames(std::vector<std::string> &task_names)
+std::vector<std::string> const HeatmapAnalyzer::getMetadata()
 {
-   char const *digits = "0123456789";
-   std::vector<int> digit_vec;
-   std::vector<std::pair<int, std::string>> pair_vec;
-   for (auto &&el : task_names) {
-      std::size_t const n = el.find_first_of(digits);
-      pair_vec.push_back(std::make_pair(stoi(el.substr(n)), el));
+   std::vector<std::string> out;
+   for (auto const &item : jsonData_->metadata[0]) {
+      out.emplace_back(item.get<std::string>());
    }
-
-   std::sort(pair_vec.begin(), pair_vec.end());
-
-   for (size_t i = 0; i < task_names.size(); i++) {
-      task_names[i] = pair_vec[i].second;
-   }
+   return out;
 }
 
 } // namespace MultiProcess
