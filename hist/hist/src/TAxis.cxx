@@ -1100,7 +1100,7 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 ///  option = "+"  ticks drawn on the "positive side" (default)
 ///  option = "-"  ticks drawn on the "negative side"
 ///  option = "+-" ticks drawn on both sides
-///  option = "" ticks not drawn
+///  option = "" ticks will be drawn as whatever is defined as default. No bit is set internally.
 
 void TAxis::SetTicks(Option_t *option)
 {
