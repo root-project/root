@@ -13,17 +13,17 @@ let sessionKey = '';
  * @private */
 function HMAC(key, m, o) {
    const kbis = sha256(sessionKey + key),
-         ipad = 0x5c, opad = 0x36;
-   let ki = '', ko = '';
+         ipad = 0x5c, opad = 0x36,
+         ki = [], ko = [];
    for (let i = 0; i < kbis.length; ++i) {
-      const code = kbis.charCodeAt(i);
-      ki += String.fromCharCode(code ^ ipad);
-      ko += String.fromCharCode(code ^ opad);
+      const code = kbis[i];
+      ki.push(code ^ ipad);
+      ko.push(code ^ opad);
    }
 
-   const hash = (o === undefined) ? sha256(ko + m) : sha256_2(ko, new Uint8Array(m, o));
+   const hash = sha256_2(ko, (o === undefined) ? m : new Uint8Array(m, o));
 
-   return sha256(ki + hash);
+   return sha256_2(ki, hash, true);
 }
 
 /**
