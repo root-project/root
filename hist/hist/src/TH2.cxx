@@ -1227,7 +1227,7 @@ void TH2::GetStats(Double_t *stats) const
             if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
          }
       }
-      // check for labels axis . In that case corresponding statistics do not make sense and it is set to zero
+      // check for labels axis. In that case corresponding statistics do not make sense and it is set to zero
       Bool_t labelXaxis =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
       Bool_t labelYaxis =  ((const_cast<TAxis&>(fYaxis)).GetLabels() && fYaxis.CanExtend() );
 
