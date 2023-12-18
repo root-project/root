@@ -443,6 +443,7 @@ The ONNX parser supports now several new ONNX operators. The list of the current
 
 ## JavaScript ROOT
 
+- The default `TCanvas` and `TBrowser` is switched back to the traditional look. (`--web=off` is no longer needed)
 
 ## Tutorials
 
@@ -451,6 +452,12 @@ The ONNX parser supports now several new ONNX operators. The list of the current
 
 
 ## Build, Configuration and Testing Infrastructure
+
+- The traditional versioning convention of ROOT (e.g. 6.28/10) has been changed to standard semantic versioning (6.28.10), i.e. the slash is changed by a point. Please update any user script that relied on parsing the slash.
+
+- `mathmore` (and thus other features depending on it) is no longer enabled by default as it's not LGPL-compliant.
+  
+- System-wide `afterimage` and `nlohmann_json` packages are preferred over the `builtin` options in the binary releases.
 
 - If `-Droottest=ON` is specified, the ROOT build system used to clone a matching branch of the `roottest` repository.
 This logic has been improved and is now as follows:
