@@ -91,6 +91,7 @@ std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 static bool gWebWinMainThrdSet = true;
 static bool gWebWinLoopbackMode = true;
+static bool gWebWinUseSessionKey = false;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
@@ -130,7 +131,20 @@ void RWebWindowsManager::SetLoopbackMode(bool on)
       printf("\nWARNING!\n");
       printf("Disabling loopback mode may leads to security problem.\n");
       printf("See https://root.cern/about/security/ for more information.\n\n");
+      printf("Enabling session key to provide more security.\n");
+      printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
+      gWebWinUseSessionKey = true;
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable usage of session key
+/// If enabled, each packet send to or from server is signed with special hashsum
+/// This protects http server from different attacks to get access to server functionality
+
+void RWebWindowsManager::SetUseSessionKey(bool on)
+{
+   gWebWinUseSessionKey = on;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +168,7 @@ std::string RWebWindowsManager::GenerateKey(int keylen)
 RWebWindowsManager::RWebWindowsManager()
 {
    fSessionKey = GenerateKey(8);
+   fUseSessionKey = gWebWinUseSessionKey;
 
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
    if (fExternalProcessEvents)
@@ -592,7 +607,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 
       addr = fAddr + addr;
 
-      if (!key.empty() && !fSessionKey.empty() && win.IsRequireAuthKey())
+      if (!key.empty() && !fSessionKey.empty() && fUseSessionKey && win.IsRequireAuthKey())
          addr += "#"s + fSessionKey;
    }
 

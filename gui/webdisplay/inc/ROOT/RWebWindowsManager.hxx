@@ -41,6 +41,7 @@ private:
    std::unique_ptr<THttpServer> fServer;  ///<! central communication with the all used displays
    std::string fAddr;                     ///<! HTTP address of the server
    std::string fSessionKey;               ///<! secret session key used on client to code connections keys
+   bool fUseSessionKey{false};            ///<! is session key has to be used for data signing
    std::recursive_mutex fMutex;           ///<! main mutex, used for window creations
    unsigned fIdCnt{0};                    ///<! counter for identifiers
    bool fUseHttpThrd{false};              ///<! use special thread for THttpServer
@@ -98,6 +99,8 @@ public:
    static void AssignMainThrd();
 
    static void SetLoopbackMode(bool on = true);
+
+   static void SetUseSessionKey(bool on = false);
 };
 
 } // namespace ROOT
