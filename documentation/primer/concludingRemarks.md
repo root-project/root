@@ -4,9 +4,9 @@ This is the end of our guided tour for beginners through ROOT. There is
 still a lot coming to mind to be said, but by now you are experienced
 enough to use the ROOT documentation, most importantly the **[ROOT home
 page](http://root.cern.ch)** and the **[ROOT reference
-guide](http://root.cern.ch/drupal/content/reference-guide)** with the
+guide](https://root.cern/doc/master/)** with the
 documentation of all ROOT classes, or the **[ROOT users
-guide](http://root.cern.ch/drupal/content/users-guide)**.
+manual](https://root.cern/manual/)**.
 
 A very useful way for you to continue exploring ROOT is to study the
 examples in the sub-directory `tutorials/` of any ROOT installation.
