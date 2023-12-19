@@ -5,6 +5,7 @@
 #include "Math/Polynomial.h"
 #include <vector>
 #include <complex>
+#include <algorithm>
 
 using namespace ROOT::Math;
 using namespace std;
