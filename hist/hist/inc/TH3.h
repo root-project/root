@@ -329,7 +329,12 @@ public:
    TH3F(const TH3F &h3f);
    ~TH3F() override;
 
+           /// Increment bin content by 1.
+           /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin) override {++fArray[bin];}
+           /// Increment bin content by a weight w.
+           /// \warning The value of w is cast to `Float_t` before being added.
+           /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Float_t (w);}
            void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); }
@@ -370,7 +375,11 @@ public:
    TH3D(const TH3D &h3d);
    ~TH3D() override;
 
+           /// Increment bin content by 1.
+           /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin) override {++fArray[bin];}
+           /// Increment bin content by a weight w
+           /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Double_t (w);}
            void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); }
