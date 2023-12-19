@@ -310,7 +310,12 @@ public:
    TH2F(const TH2F &h2f);
    ~TH2F() override;
 
+           /// Increment bin content by 1.
+           /// Passing an out-of-range bin leads to undefined behavior
            void     AddBinContent(Int_t bin) override {++fArray[bin];}
+           /// Increment bin content by a weight w.
+           /// \warning The value of w is cast to `Float_t` before being added.
+           /// Passing an out-of-range bin leads to undefined behavior
            void     AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Float_t (w);}
            void     Copy(TObject &hnew) const override;
@@ -353,7 +358,11 @@ public:
    TH2D(const TH2D &h2d);
    ~TH2D() override;
 
+           /// Increment bin content by 1.
+           /// Passing an out-of-range bin leads to undefined behavior
            void     AddBinContent(Int_t bin) override {++fArray[bin];}
+           /// Increment bin content by a weight w
+           /// Passing an out-of-range bin leads to undefined behavior
            void     AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Double_t (w);}
            void     Copy(TObject &hnew) const override;
