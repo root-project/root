@@ -253,13 +253,15 @@ public:
       };
       struct RPageInfoExtended : RPageInfo {
          /// Index (in cluster) of the first element in page.
-         RClusterSize::ValueType fFirstInPage = 0;
+         ClusterSize_t::ValueType fFirstInPage = 0;
          /// Page number in the corresponding RPageRange.
          NTupleSize_t fPageNo = 0;
 
          RPageInfoExtended() = default;
-         RPageInfoExtended(const RPageInfo &pi, RClusterSize::ValueType i, NTupleSize_t n)
-            : RPageInfo(pi), fFirstInPage(i), fPageNo(n) {}
+         RPageInfoExtended(const RPageInfo &pi, ClusterSize_t::ValueType i, NTupleSize_t n)
+            : RPageInfo(pi), fFirstInPage(i), fPageNo(n)
+         {
+         }
       };
 
       RPageRange() = default;
@@ -276,7 +278,7 @@ public:
       }
 
       /// Find the page in the RPageRange that contains the given element. The element must exist.
-      RPageInfoExtended Find(RClusterSize::ValueType idxInCluster) const;
+      RPageInfoExtended Find(ClusterSize_t::ValueType idxInCluster) const;
 
       DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
