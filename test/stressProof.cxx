@@ -88,8 +88,7 @@
 // *     $ export GETPROOF_VALGRIND="valgrind=workers"                     * //
 // *                                                                       * //
 // * before running stressProof. The syntax is the same as for standard    * //
-// * PROOF valgrind runs. See                                              * //
-// *   http://root.cern.ch/drupal/content/running-proof-query-valgrind     * //
+// * PROOF valgrind runs.                                                  * //
 // *                                                                       * //
 // ************************************************************************* //
 
