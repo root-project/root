@@ -28,15 +28,6 @@ to be replaced by the proper DefaultErrorHandler()
 #include <cerrno>
 #include <string>
 
-const Int_t kUnset = -1;
-const Int_t kPrint = 0;
-const Int_t kInfo = 1000;
-const Int_t kWarning = 2000;
-const Int_t kError = 3000;
-const Int_t kBreak = 4000;
-const Int_t kSysError = 5000;
-const Int_t kFatal = 6000;
-
 Int_t  gErrorIgnoreLevel     = kUnset;
 Int_t  gErrorAbortLevel      = kSysError+1;
 Bool_t gPrintViaErrorHandler = kFALSE;

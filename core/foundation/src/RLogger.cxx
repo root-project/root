@@ -52,7 +52,7 @@ inline bool RLogHandlerDefault::Emit(const RLogEntry &entry)
    if (!entry.fLocation.fFuncName.empty())
       strm << " in " << entry.fLocation.fFuncName;
 
-   static const int errorLevelOld[] = {kFatal /*unset*/, kFatal, kError, kWarning, kInfo, kInfo /*debug*/};
+   static constexpr const int errorLevelOld[] = {kFatal /*unset*/, kFatal, kError, kWarning, kInfo, kInfo /*debug*/};
    (*::GetErrorHandler())(errorLevelOld[cappedLevel], entry.fLevel == ELogLevel::kFatal, strm.str().c_str(),
                           entry.fMessage.c_str());
    return true;
