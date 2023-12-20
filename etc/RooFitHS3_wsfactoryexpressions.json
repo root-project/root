@@ -51,6 +51,14 @@
             "sigma"
         ]
     },
+    "normal_dist": {
+        "class": "RooGaussian",
+        "arguments": [
+            "x",
+            "mean",
+            "sigma"
+        ]
+    },    
     "interpolation0d": {
         "class": "RooStats::HistFactory::FlexibleInterpVar",
         "arguments": [
