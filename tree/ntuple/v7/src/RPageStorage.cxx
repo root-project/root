@@ -541,7 +541,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitSealedPageV(
 
 std::uint64_t ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   auto nbytes = CommitClusterImpl(nEntries);
+   auto nbytes = CommitClusterImpl();
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
    auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);

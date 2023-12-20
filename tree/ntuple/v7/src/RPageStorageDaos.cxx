@@ -392,8 +392,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
    return locators;
 }
 
-std::uint64_t
-ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
+std::uint64_t ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl()
 {
    return std::exchange(fNBytesCurrentCluster, 0);
 }
