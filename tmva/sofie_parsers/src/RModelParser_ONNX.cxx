@@ -70,7 +70,11 @@ extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseErf;
 extern ParserFuncSignature ParseElu;
+<<<<<<< HEAD
 extern ParserFuncSignature ParseEyeLike;
+=======
+extern ParserFuncSignature ParseConstant;
+>>>>>>> ff629e2cc2 ([tmva][sofie] Add new operators Constant, ConstantOfShape and Split)
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -148,6 +152,8 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Erf", ParseErf);
    RegisterOperator("Elu", ParseElu);
    RegisterOperator("EyeLike", ParseEyeLike);
+   RegisterOperator("Constant", ParseConstant);
+   RegisterOperator("ConstantOfShape", ParseConstant);
 }
 
 // Destructor of the parser
@@ -176,6 +182,8 @@ std::vector<std::string> RModelParser_ONNX::GetRegisteredOperators()
 void RModelParser_ONNX::RegisterTensorType(const std::string &name, ETensorType type)
 {
    fTensorTypeMap[UTILITY::Clean_name(name)] = type;
+   if (fVerbose)
+      std::cout << "... registering tensor " << UTILITY::Clean_name(name) << " with type " << ConvertTypeToString(type) << std::endl;
 }
 
 bool RModelParser_ONNX::IsRegisteredTensorType(const std::string &name)
@@ -197,8 +205,17 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    int idx = nodes[i];
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
-   if (fVerbose)
-      std::cout << "Parsing an operator " << op_type << std::endl;
+   if (fVerbose) {
+      std::cout << "Parsing an operator " << op_type << " with inputs ";
+      for (int j = 0; j < nodeproto.input_size(); j++) {
+         std::cout << nodeproto.input(j) << " type  ";
+         if (IsRegisteredTensorType(nodeproto.input(j)))
+            std::cout << ConvertTypeToString(GetTensorType(nodeproto.input(j))) << " ";
+         else
+            std::cout << " not_reg ";
+      }
+      std::cout << std::endl;
+   }
 
    // try to fuse with following operator in case it is not last one
    if (i < nodes.size() - 1) {
