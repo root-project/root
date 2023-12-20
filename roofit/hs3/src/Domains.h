@@ -18,6 +18,7 @@
 #include <vector>
 
 class RooRealVar;
+class RooWorkspace;
 
 namespace RooFit {
 namespace Detail {
@@ -39,6 +40,8 @@ public:
    void readJSON(RooFit::Detail::JSONNode const &);
    void writeJSON(RooFit::Detail::JSONNode &) const;
 
+   void populate(RooWorkspace &ws) const;
+
 private:
    class ProductDomain {
    public:
@@ -47,6 +50,8 @@ private:
 
       void readJSON(RooFit::Detail::JSONNode const &);
       void writeJSON(RooFit::Detail::JSONNode &) const;
+
+      void populate(RooWorkspace &ws) const;
 
    private:
       struct ProductDomainElement {

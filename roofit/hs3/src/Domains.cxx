@@ -15,6 +15,7 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooNumber.h>
 #include <RooRealVar.h>
+#include <RooWorkspace.h>
 
 #include <RooFit/Detail/JSONInterface.h>
 
@@ -22,9 +23,18 @@ namespace RooFit {
 namespace JSONIO {
 namespace Detail {
 
+constexpr static auto defaultDomainName = "default_domain";
+
+void Domains::populate(RooWorkspace &ws) const
+{
+   auto found = _map.find(defaultDomainName);
+   if (found != _map.end()) {
+      found->second.populate(ws);
+   }
+}
 void Domains::readVariable(const char *name, double min, double max)
 {
-   _map["default_domain"].readVariable(name, min, max);
+   _map[defaultDomainName].readVariable(name, min, max);
 }
 void Domains::readVariable(RooRealVar const &var)
 {
@@ -32,12 +42,16 @@ void Domains::readVariable(RooRealVar const &var)
 }
 void Domains::writeVariable(RooRealVar &var) const
 {
-   _map.at("default_domain").writeVariable(var);
+   _map.at(defaultDomainName).writeVariable(var);
 }
 
 void Domains::readJSON(RooFit::Detail::JSONNode const &node)
 {
-   _map["default_domain"].readJSON(*RooJSONFactoryWSTool::findNamedChild(node, "default_domain"));
+   auto defaultDomain = RooJSONFactoryWSTool::findNamedChild(node, defaultDomainName);
+   if (!defaultDomain) {
+      RooJSONFactoryWSTool::error("\"domains\" do not contain \"" + std::string{defaultDomainName} + "\"");
+   }
+   _map[defaultDomainName].readJSON(*defaultDomain);
 }
 void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
 {
@@ -71,7 +85,9 @@ void Domains::ProductDomain::writeVariable(RooRealVar &var) const
 }
 void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
 {
-   // In the future, throw an exception if the type is not product domain
+   if (!node.has_child("type") || node["type"].val() != "product_domain") {
+      RooJSONFactoryWSTool::error("only domains of type \"product_domain\" are currently supported!");
+   }
    for (auto const &varNode : node["axes"].children()) {
       auto &elem = _map[RooJSONFactoryWSTool::name(varNode)];
 
@@ -99,6 +115,18 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
          varnode["min"] << elem.min;
       if (elem.hasMax)
          varnode["max"] << elem.max;
+   }
+}
+void Domains::ProductDomain::populate(RooWorkspace &ws) const
+{
+   for (auto const &item : _map) {
+      const auto &name = item.first;
+      if (!ws.var(name)) {
+         const auto &elem = item.second;
+         const double vMin = elem.hasMin ? elem.min : -RooNumber::infinity();
+         const double vMax = elem.hasMax ? elem.max : RooNumber::infinity();
+         ws.import(RooRealVar{name.c_str(), name.c_str(), vMin, vMax});
+      }
    }
 }
 
