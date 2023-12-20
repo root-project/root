@@ -188,8 +188,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitSealedPageVImpl(std::span<RPage
    return locators;
 }
 
-std::uint64_t
-ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
+std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl()
 {
    auto result = fNBytesCurrentCluster;
    fNBytesCurrentCluster = 0;
