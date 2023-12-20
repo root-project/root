@@ -543,7 +543,6 @@ std::uint64_t ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROO
 {
    auto nbytes = CommitClusterImpl();
 
-   R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
    auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
    RClusterDescriptorBuilder clusterBuilder;
    clusterBuilder.ClusterId(fDescriptorBuilder.GetDescriptor().GetNActiveClusters())
