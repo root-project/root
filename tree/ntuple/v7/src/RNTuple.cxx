@@ -342,7 +342,8 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
    for (auto &field : *fModel->GetFieldZero()) {
       field.CommitCluster();
    }
-   fNBytesCommitted += fSink->CommitCluster(fNEntries);
+   auto nEntriesInCluster = fNEntries - fLastCommitted;
+   fNBytesCommitted += fSink->CommitCluster(nEntriesInCluster);
    fNBytesFilled += fUnzippedClusterSize;
 
    // Cap the compression factor at 1000 to prevent overflow of fUnzippedClusterSizeEst

@@ -171,7 +171,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageV(std::span<RPage
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
 
-std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
 {
    WaitForAllTasks();
 
@@ -186,7 +186,7 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Expe
 
    for (auto &bufColumn : fBufferedColumns)
       bufColumn.DropBufferedPages();
-   return fInnerSink->CommitCluster(nEntries);
+   return fInnerSink->CommitCluster(nNewEntries);
 }
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroup()
