@@ -104,9 +104,6 @@ void ROOT::Experimental::RNTupleMerger::AddColumnsFromField(
 ////////////////////////////////////////////////////////////////////////////////
 void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource *> sources, Detail::RPageSink &destination)
 {
-   // Total entries written
-   std::uint64_t nEntries{0};
-
    // Append the sources to the destination one-by-one
    bool isFirstSource = true;
    for (const auto &source : sources) {
@@ -180,8 +177,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource *> s
          } // end of loop over columns
 
          // Commit the clusters
-         nEntries += cluster.GetNEntries();
-         destination.CommitCluster(nEntries);
+         destination.CommitCluster(cluster.GetNEntries());
 
          // Go to the next cluster
          clusterId = descriptor->FindNextClusterId(clusterId);
