@@ -111,9 +111,8 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfoExtended
-ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::Experimental::RClusterSize::ValueType idxInCluster) const
+ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ClusterSize_t::ValueType idxInCluster) const
 {
    // TODO(jblomer): binary search
    RPageInfo pageInfo;
@@ -531,7 +530,7 @@ ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t 
       return R__FAIL("column ID mismatch");
    if (fCluster.fPageRanges.count(physicalId) > 0)
       return R__FAIL("column ID conflict");
-   RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, RClusterSize(0)};
+   RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, ClusterSize_t{0}};
    columnRange.fCompressionSettings = compressionSettings;
    for (const auto &pi : pageRange.fPageInfos) {
       columnRange.fNElements += pi.fNElements;
