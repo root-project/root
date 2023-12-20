@@ -39,7 +39,6 @@ Access to TProof::Mgr for configuration is still possible as usual
    TProof::Mgr("my.server.url")->SetROOTVersion("v5-27-06_dbg")
 ~~~
 
-See doc: http://root.cern.ch/drupal/content/changing-default-root-version
 */
 
 

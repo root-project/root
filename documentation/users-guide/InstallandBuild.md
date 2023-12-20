@@ -11,7 +11,7 @@ the file LICENSE in the ROOT distribution.
 
 
 To install ROOT you will need to go to the ROOT website at:
-<http://root.cern.ch/drupal/content/downloading-root>
+<https://root.cern/install/>
 
 You have a choice to download the binaries or the source. The source is
 quicker to transfer since it is only 31 MB, but you will need to compile
@@ -46,7 +46,7 @@ for download - new, old and pro:
 
 
 The binaries are available for downloading from
-<http://root.cern.ch/drupal/content/downloading-root>. Once downloaded
+<https://root.cern/install/>. Once downloaded
 you need to unzip and de-tar the file. For example, if you have
 downloaded ROOT v5.30 for Linux-SLC5:
 

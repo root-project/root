@@ -11,9 +11,11 @@ platforms. Most notably Windows is not supported until at least 6.02.
 More platforms are expected to be available later; the lack of support
 stems from Cling and Clang/LLVM not being ported to these platforms yet.
 
-To aleviate the pain for Windows users who want to try ROOT 6 we provide [a recipe](http://root.cern.ch/drupal/content/running-root-6-unsupported-systems-using-cernvm) on how to run ROOT 6 in a VM on Windows.
+To aleviate the pain for Windows users who want to try ROOT 6 we provide
+a recipe on how to run ROOT 6 in a VM on Windows.
 
-Building ROOT also requires a C++11 compatible compiler, so one needs to either have installed gcc >= 4.8 or Clang >= 3.4. On most lecagy platforms these newer compilers are available via a special install. See [the build prerequisites](http://root.cern.ch/drupal/content/build-prerequisites) page.
+Building ROOT also requires a C++11 compatible compiler, so one needs to either have installed gcc >= 4.8 or Clang >= 3.4. On most lecagy platforms these newer compilers are available via a special install.
+See the [build prerequisites](https://root.cern/install/dependencies/) page.
 
 Despite that, an additional platform as been added: the [x32
 psAPI](https://sites.google.com/site/x32abi/), called linuxx32gcc. It is
@@ -36,7 +38,7 @@ side-by-side will be possible.
 ## Build System
 ROOT 6.00/00 can be built either using the classic "./configure;make" method or using CMake.
 The CMake system has been completed for this version and should be functionally equivalent
-to the classic one. The [detailed instructions](http://root.cern.ch/drupal/content/building-root-cmake) are available.
+to the classic one. The [detailed instructions](https://root.cern/install/build_from_source/) are available.
 In upcoming releases the classic method will slowly be deprecated in favor of the CMake one.
 
 ## Core Libraries

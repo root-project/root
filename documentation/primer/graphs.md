@@ -98,7 +98,7 @@ Let's go through the code, step by step to understand what is going on:
 
 -   Line *3*: This sets the palette colour code to a much nicer one than
     the default. Comment this line to give it a try.
-    [This article](https://root.cern.ch/drupal/content/rainbow-color-map)
+    [This article](https://root.cern/blog/rainbow-color-map/)
     gives more details about colour map choice.
 
 -   Line *7*: The instance of the random generator. You can then draw
@@ -157,4 +157,4 @@ ranges are automatically computed such as all the graphs will be visible.
 
 ![A set of graphs grouped in a multigraph.\label{f44}][f44]
 
-[^3] https://root.cern.ch/drupal/content/rainbow-color-map
+[^3] https://root.cern/blog/rainbow-color-map/

@@ -10,19 +10,16 @@ tree: two new methods TProof::SetPerfTree("&lt;file&gt;") and
 TProof::SavePerfTree("&lt;file&gt;", "&lt;queryref&gt;") allow set
 and/or save the information to a given file path. The perfomance tree
 settim=ngs are diabled after each query, so they need to be enabled
-each time. See also <a href="http://root.cern.ch/drupal/content/creating-and-saving-performance-tree">Creating
-and saving the performance tree</a>.</li>
+each time.</li>
     <li>Add support for a command line test run of 'proofserv'; this is
 useful to test that the environment is setup correctly.</li>
     <li>In TProofBench::DrawCPU, add possibility to extract of a couple
 of numbers supposed to give an idea of the computing specs of the
 cluster being benchmarked. These are the maximum rate for the standard
 CPU intensive task and the normalized, per worker, rate. Both are
-expressed in RNGPS (RaNdom Generation Per Second). See also <a href="http://root.cern.ch/drupal/content/proof-benchmark-framework-tproofbench#perfspecs">Getting
-the performance specs</a> .</li>
+expressed in RNGPS (RaNdom Generation Per Second).</li>
     <li>Add class TProofPerfAnalysis collecting a set of tools to
-analyse the performance tree. See&nbsp;<a href="http://root.cern.ch/drupal/content/analysing-performance-tree">Analysing
-the performance tree</a> .</li>
+analyse the performance tree.</li>
     <li>Add support for selector-by-object processing in PROOF. The
 selector object, created and configured locally by the user, is added
 to the input list and recuperated from there on the worker machines for
@@ -54,8 +51,7 @@ of TDrawFeedback to display the feedback. </li>
 functions are both called UploadFiles and differ in the first argument,
 which is used to pass the files to be uploaded. These can be given as a
 list (of TFileInfo or TObjString), a directory or specified in a text
-file. See&nbsp;<a href="http://root.cern.ch/drupal/content/uploading-data-files-proof-cluster">Uploading
-data files to a PROOF cluster</a> .</li>
+file.</li>
     <li>Add support for paralell dataset verification. This is
 implemented via a dedicated TSelector (TSelVerifyDataSet) which is run
 over the list of files in the dataset via TPacketizerFile. The file

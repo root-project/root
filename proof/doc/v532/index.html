@@ -10,8 +10,7 @@ available even when Xrootd is not.</span>
 <h4>New functionality</h4>
 <ul>
 <li>Creating PAR packages from ROOT data files: it is now possible to
-use TFile::MakeProject to create a PAR file to read the file. Details in
-<a href="http://root.cern.ch/drupal/content/creating-par-package-read-given-root-file">here</a>.</li>
+use TFile::MakeProject to create a PAR file to read the file.</li>
 <li>Add support for backend-dependent record formatting of PROOF monitoring.
 This is achieved by introducing a new layer, described by the abstract
 interface TProofMonSender, with the record format defined in the backend
@@ -21,9 +20,7 @@ are sent: 'summary' (derived from what was currently posted), 'dataset',
 with entries per dataset processed in the query, and 'files', with
 entries per file processed in the query. In SQL terms, each of this
 records corresponds to a different table. Sending of any of the three
-records can be toggled independently. See also the
-<a href="http://root.cern.ch/drupal/content/enabling-query-monitoring">web
-pages dedicated to monitoring</a>.</li>
+records can be toggled independently.</li>
 <li>In TProofMgr, add 'ping' functionality to test in non-blocking way if
 a PROOF service is listening at a given port of a given host.</li></ul>
 <h4>Improvements</h4>
@@ -86,6 +83,5 @@ revision of the socket cleanup policy.</li>
 messages to be displayed during setup, i.e. when the XrdClientConn
 instance is not yet defined.</li>
 <li>In XrdProofd, fix the behavior of the 'xpd.allowedusers' and
-'xpd.allowedgroups' directives
-(see the <a href="http://root.cern.ch/drupal/content/controlling-access">dedicated web entry</a>).</li>
+'xpd.allowedgroups' directives.</li>
 </ul>

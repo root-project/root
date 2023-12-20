@@ -237,7 +237,7 @@ void writeTutorials(THtml& html) {
    }
 
    fptop << "</ul>" << endl;
-   fptop << "<p><a href=\"http://root.cern.ch/drupal/content/downloading-root\">Download ROOT</a> and run the tutorials in $ROOTSYS/tutorials yourself!</p>" << endl;
+   fptop << "<p><a href=\"https://root.cern/install/\">Download ROOT</a> and run the tutorials in $ROOTSYS/tutorials yourself!</p>" << endl;
    writeTrailer(html, fptop);
 }
 

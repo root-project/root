@@ -3079,7 +3079,6 @@ Int_t TProofServ::SetupCommon()
       Info("SetupCommon", "data directory set to %s", fDataDir.Data());
 
    // Check and apply possible options
-   // (see http://root.cern.ch/drupal/content/configuration-reference-guide#datadir)
    TString dataDirOpts = gEnv->GetValue("ProofServ.DataDirOpts","");
    if (!dataDirOpts.IsNull()) {
       // Do they apply to this server type
