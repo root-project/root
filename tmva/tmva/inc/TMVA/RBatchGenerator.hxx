@@ -97,7 +97,7 @@ public:
 
       // Create tensor to load the chunk into
       fChunkTensor =
-         std::make_unique<TMVA::Experimental::RTensor<float>>((std::vector<std::size_t>){fChunkSize, fNumColumns});
+         std::make_unique<TMVA::Experimental::RTensor<float>>({fChunkSize, fNumColumns});
    }
 
    ~RBatchGenerator() { DeActivate(); }
