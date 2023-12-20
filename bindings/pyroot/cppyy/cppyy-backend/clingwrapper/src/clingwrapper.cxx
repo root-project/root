@@ -255,52 +255,52 @@ public:
         for (auto& name : stl_names)
             gSTLNames.insert(name);
 
-    // set opt level (default to 2 if not given; Cling itself defaults to 0)
-        int optLevel = 2;
-        if (getenv("CPPYY_OPT_LEVEL")) optLevel = atoi(getenv("CPPYY_OPT_LEVEL"));
-        if (optLevel != 0) {
-            std::ostringstream s;
-            s << "#pragma cling optimize " << optLevel;
-            gInterpreter->ProcessLine(s.str().c_str());
-        }
+//     // set opt level (default to 2 if not given; Cling itself defaults to 0)
+//         int optLevel = 2;
+//         if (getenv("CPPYY_OPT_LEVEL")) optLevel = atoi(getenv("CPPYY_OPT_LEVEL"));
+//         if (optLevel != 0) {
+//             std::ostringstream s;
+//             s << "#pragma cling optimize " << optLevel;
+//             gInterpreter->ProcessLine(s.str().c_str());
+//         }
 
-    // load frequently used headers
-        const char* code =
-               "#include <iostream>\n"
-               "#include <string>\n"
-               "#include <DllImport.h>\n"     // defines R__EXTERN
-               "#include <vector>\n"
-               "#include <utility>";
-        gInterpreter->ProcessLine(code);
+//     // load frequently used headers
+//         const char* code =
+//                "#include <iostream>\n"
+//                "#include <string>\n"
+//                "#include <DllImport.h>\n"     // defines R__EXTERN
+//                "#include <vector>\n"
+//                "#include <utility>";
+//         gInterpreter->ProcessLine(code);
 
-    // create helpers for comparing thingies
-        gInterpreter->Declare(
-            "namespace __cppyy_internal { template<class C1, class C2>"
-            " bool is_equal(const C1& c1, const C2& c2) { return (bool)(c1 == c2); } }");
-        gInterpreter->Declare(
-            "namespace __cppyy_internal { template<class C1, class C2>"
-            " bool is_not_equal(const C1& c1, const C2& c2) { return (bool)(c1 != c2); } }");
+//     // create helpers for comparing thingies
+//         gInterpreter->Declare(
+//             "namespace __cppyy_internal { template<class C1, class C2>"
+//             " bool is_equal(const C1& c1, const C2& c2) { return (bool)(c1 == c2); } }");
+//         gInterpreter->Declare(
+//             "namespace __cppyy_internal { template<class C1, class C2>"
+//             " bool is_not_equal(const C1& c1, const C2& c2) { return (bool)(c1 != c2); } }");
 
-    // retrieve all initial (ROOT) C++ names in the global scope to allow filtering later
-        if (!getenv("CPPYY_NO_ROOT_FILTER")) {
-            gROOT->GetListOfGlobals(true);             // force initialize
-            gROOT->GetListOfGlobalFunctions(true);     // id.
-            std::set<std::string> initial;
-            Cppyy::GetAllCppNames(GLOBAL_HANDLE, initial);
-            gInitialNames = initial;
+//     // retrieve all initial (ROOT) C++ names in the global scope to allow filtering later
+//         if (!getenv("CPPYY_NO_ROOT_FILTER")) {
+//             gROOT->GetListOfGlobals(true);             // force initialize
+//             gROOT->GetListOfGlobalFunctions(true);     // id.
+//             std::set<std::string> initial;
+//             Cppyy::GetAllCppNames(GLOBAL_HANDLE, initial);
+//             gInitialNames = initial;
 
-#ifndef WIN32
-            gRootSOs.insert("libCore.so ");
-            gRootSOs.insert("libRIO.so ");
-            gRootSOs.insert("libThread.so ");
-            gRootSOs.insert("libMathCore.so ");
-#else
-            gRootSOs.insert("libCore.dll ");
-            gRootSOs.insert("libRIO.dll ");
-            gRootSOs.insert("libThread.dll ");
-            gRootSOs.insert("libMathCore.dll ");
-#endif
-        }
+// #ifndef WIN32
+//             gRootSOs.insert("libCore.so ");
+//             gRootSOs.insert("libRIO.so ");
+//             gRootSOs.insert("libThread.so ");
+//             gRootSOs.insert("libMathCore.so ");
+// #else
+//             gRootSOs.insert("libCore.dll ");
+//             gRootSOs.insert("libRIO.dll ");
+//             gRootSOs.insert("libThread.dll ");
+//             gRootSOs.insert("libMathCore.dll ");
+// #endif
+//         }
 
     // start off with a reasonable size placeholder for wrappers
         gWrapperHolder.reserve(1024);
