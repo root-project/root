@@ -235,7 +235,7 @@ public:
    virtual void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) = 0;
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
-   virtual std::uint64_t CommitCluster(NTupleSize_t nEntries) = 0;
+   virtual std::uint64_t CommitCluster(NTupleSize_t nNewEntries) = 0;
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
