@@ -39,14 +39,15 @@
 
 class TVirtualMutex;
 
-R__EXTERN const Int_t kUnset;
-R__EXTERN const Int_t kPrint;
-R__EXTERN const Int_t kInfo;
-R__EXTERN const Int_t kWarning;
-R__EXTERN const Int_t kError;
-R__EXTERN const Int_t kBreak;
-R__EXTERN const Int_t kSysError;
-R__EXTERN const Int_t kFatal;
+constexpr Int_t kUnset    =  -1;
+constexpr Int_t kPrint    =   0;
+constexpr Int_t kInfo     =   1000;
+constexpr Int_t kWarning  =   2000;
+constexpr Int_t kError    =   3000;
+constexpr Int_t kBreak    =   4000;
+constexpr Int_t kSysError =   5000;
+constexpr Int_t kFatal    =   6000;
+
 
 // TROOT sets the error ignore level handler, the system error message handler, and the error abort handler on
 // construction such that the "Root.ErrorIgnoreLevel" environment variable is used for the ignore level
