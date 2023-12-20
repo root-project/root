@@ -93,7 +93,7 @@ tool.writedoc("hs3.tex")
 ~~~
 */
 
-constexpr auto hs3VersionTag = "0.1.90";
+constexpr auto hs3VersionTag = "0.2";
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -207,6 +207,9 @@ bool isValidName(const std::string &str)
  */
 void configureVariable(RooFit::JSONIO::Detail::Domains &domains, const JSONNode &p, RooRealVar &v)
 {
+   if (!p.has_child("name")) {
+      RooJSONFactoryWSTool::error("cannot instantiate variable without \"name\"!");
+   }
    if (auto n = p.find("value"))
       v.setVal(n->val_double());
    domains.writeVariable(v);
@@ -2072,6 +2075,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    if (auto domains = n.find("domains")) {
       _domains->readJSON(*domains);
    }
+   _domains->populate(_workspace);
 
    _rootnodeInput = &n;
 
