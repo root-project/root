@@ -296,7 +296,7 @@ protected:
    /// optimized implementation though.
    virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
    /// Returns the number of bytes written to storage (excluding metadata)
-   virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
+   virtual std::uint64_t CommitClusterImpl() = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
