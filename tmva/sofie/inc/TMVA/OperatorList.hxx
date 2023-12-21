@@ -31,3 +31,4 @@
 #include "TMVA/ROperator_Erf.hxx"
 #include "TMVA/ROperator_Elu.hxx"
 #include "TMVA/ROperator_Comparision.hxx"
+#include "TMVA/ROperator_EyeLike.hxx"

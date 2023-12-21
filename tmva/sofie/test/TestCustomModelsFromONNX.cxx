@@ -275,6 +275,9 @@
 #include "Greater_FromONNX.hxx"
 #include "input_models/references/Greater.ref.hxx"
 
+#include "EyeLike_FromONNX.hxx"
+#include "input_models/references/EyeLike.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -486,6 +489,31 @@ TEST(ONNX, Elu)
       EXPECT_EQ(output.size(), sizeof(Elu_ExpectedOutput::outputs) / sizeof(float));
 
       float *correct = Elu_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
+   TEST(ONNX, EyeLike)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input({
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0
+      });
+
+      TMVA_SOFIE_EyeLike::Session s("EyeLike_FromONNX.dat");
+      std::vector<float> output = s.infer(input.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(EyeLike_ExpectedOutput::output) / sizeof(float));
+
+      float *correct = EyeLike_ExpectedOutput::output;
 
       // Checking every output value, one by one
       for (size_t i = 0; i < output.size(); ++i) {
