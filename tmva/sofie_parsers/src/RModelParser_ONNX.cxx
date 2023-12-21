@@ -70,11 +70,9 @@ extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseErf;
 extern ParserFuncSignature ParseElu;
-<<<<<<< HEAD
 extern ParserFuncSignature ParseEyeLike;
-=======
 extern ParserFuncSignature ParseConstant;
->>>>>>> ff629e2cc2 ([tmva][sofie] Add new operators Constant, ConstantOfShape and Split)
+extern ParserFuncSignature ParseSplit;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -154,6 +152,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("EyeLike", ParseEyeLike);
    RegisterOperator("Constant", ParseConstant);
    RegisterOperator("ConstantOfShape", ParseConstant);
+   RegisterOperator("Split", ParseSplit);
 }
 
 // Destructor of the parser

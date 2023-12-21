@@ -32,3 +32,4 @@
 #include "TMVA/ROperator_Elu.hxx"
 #include "TMVA/ROperator_Comparision.hxx"
 #include "TMVA/ROperator_EyeLike.hxx"
+#include "TMVA/ROperator_Split.hxx"

@@ -278,6 +278,15 @@
 #include "EyeLike_FromONNX.hxx"
 #include "input_models/references/EyeLike.ref.hxx"
 
+#include "ConstantOfShape_FromONNX.hxx"
+#include "input_models/references/ConstantOfShape.ref.hxx"
+
+#include "Constant_FromONNX.hxx"
+#include "input_models/references/Constant.ref.hxx"
+
+#include "Split_FromONNX.hxx"
+#include "input_models/references/Split.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -542,6 +551,88 @@ TEST(ONNX, Cast)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Constant)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   // std::vector<float> input({
+   //    1,2,3,4
+   // });
+
+   TMVA_SOFIE_Constant::Session s("Constant_FromONNX.dat");
+
+   auto output = s.infer();
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Constant_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Constant_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
+TEST(ONNX, ConstantOfShape)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<int64_t> input({
+      1,2,3
+   });
+
+   TMVA_SOFIE_ConstantOfShape::Session s("ConstantOfShape_FromONNX.dat");
+
+   auto output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ConstantOfShape_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = ConstantOfShape_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Split)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      1,2,3,4,5,6
+   });
+   std::vector<int64_t> values({
+      2,4
+   });
+   TMVA_SOFIE_Split::Session s("Split_FromONNX.dat");
+
+   auto output = s.infer(input.data(), values.data());
+
+   // Checking output size
+   for(int i=0;i<output.size();i++){
+      EXPECT_EQ(output[i].size(), sizeof(Split_ExpectedOutput::output[i]) / sizeof(float));
+   }
+
+
+   float *correct1 = Split_ExpectedOutput::output[0];
+   float *correct2 = Split_ExpectedOutput::output[1];
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output[0].size(); ++i) {
+      EXPECT_LE(std::abs(output[0][i] - correct1[i]), TOLERANCE);
+   }
+   for (size_t i = 0; i < output[1].size(); ++i) {
+      EXPECT_LE(std::abs(output[1][i] - correct2[i]), TOLERANCE);
    }
 }
 
@@ -1178,12 +1269,12 @@ TEST(ONNX, Shape){
    std::vector<float> input({
       1, 2
    });
-   
+
    TMVA_SOFIE_Shape::Session s("Shape_FromONNX.dat");
    auto output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
-   
+
    int *correct = Shape_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
@@ -2593,14 +2684,14 @@ TEST(ONNX, Slice) {
    std::vector<float> input = Slice::input;
    TMVA_SOFIE_Slice::Session s("Slice.dat");
    std::vector<float> output(s.infer(input.data()));
-   
+
    EXPECT_EQ(output.size(), sizeof(Slice::output) / sizeof(float));
    float *correct = Slice::output;
 
    for (size_t i=0; i<output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-   
+
 }
 
 TEST(ONNX, Slice_Default_Axis) {
@@ -2609,14 +2700,14 @@ TEST(ONNX, Slice_Default_Axis) {
    std::vector<float> input = Slice_Default_Axis::input;
    TMVA_SOFIE_Slice_Default_Axis::Session s("Slice_Default_Axis.dat");
    std::vector<float> output(s.infer(input.data()));
-   
+
    EXPECT_EQ(output.size(), sizeof(Slice_Default_Axis::output) / sizeof(float));
    float *correct = Slice_Default_Axis::output;
 
    for (size_t i=0; i<output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-   
+
 }
 
 TEST(ONNX, Slice_Default_Steps) {
@@ -2625,14 +2716,14 @@ TEST(ONNX, Slice_Default_Steps) {
    std::vector<float> input = Slice_Default_Steps::input;
    TMVA_SOFIE_Slice_Default_Steps::Session s("Slice_Default_Steps.dat");
    std::vector<float> output(s.infer(input.data()));
-   
+
    EXPECT_EQ(output.size(), sizeof(Slice_Default_Steps::output) / sizeof(float));
    float *correct = Slice_Default_Steps::output;
 
    for (size_t i=0; i<output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-   
+
 }
 
 TEST(ONNX, Slice_Neg) {
@@ -2641,12 +2732,12 @@ TEST(ONNX, Slice_Neg) {
    std::vector<float> input = Slice_Neg::input;
    TMVA_SOFIE_Slice_Neg::Session s("Slice_Neg.dat");
    std::vector<float> output(s.infer(input.data()));
-   
+
    EXPECT_EQ(output.size(), sizeof(Slice_Neg::output) / sizeof(float));
    float *correct = Slice_Neg::output;
 
    for (size_t i=0; i<output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-   
+
 }

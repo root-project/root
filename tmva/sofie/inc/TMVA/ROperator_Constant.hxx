@@ -53,7 +53,8 @@ public:
       }
        // in case of standard constant the shape is provided as input
        if (ConvertShapeToLength(fShape) != fValues.size())
-         throw std::runtime_error("TMVA SOFIE Constant Op has invalid shape : " + ConvertShapeToString(fShape));
+         throw std::runtime_error("TMVA SOFIE Constant Op has invalid shape : " + ConvertShapeToString(fShape) +
+                                 " with " + std::to_string(fValues.size()) + " values");
 
       model.AddIntermediateTensor(fNY, ConvertStringToType(fAttrType), fShape);
    }
@@ -66,14 +67,14 @@ public:
       std::stringstream out;
       out << "\n//------ Constant\n";
 
-      out << SP << "fTensor_" << fNY << "[id] = {";
+      out << SP << "fTensor_" << fNY << " = {";
       for (size_t i = 0; i < fValues.size(); i++) {
          out << fValues[i];
          if (i < fValues.size()-1) out << ", ";
          if (i > 0 && i %10 == 0) out << "\n";
       }
 
-      out << SP << "}\n";
+      out << SP << "};\n";
       return out.str();
    }
 
