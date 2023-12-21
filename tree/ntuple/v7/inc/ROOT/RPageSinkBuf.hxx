@@ -18,6 +18,7 @@
 #ifndef ROOT7_RPageSinkBuf
 #define ROOT7_RPageSinkBuf
 
+#include <ROOT/RColumn.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RPageStorage.hxx>
 
@@ -72,6 +73,7 @@ private:
       {
          if (!fCol) {
             fCol = columnHandle;
+            fSink = columnHandle.fColumn->GetPageSink();
          }
          // Safety: Insertion at the end of a deque never invalidates references
          // to existing elements.
@@ -106,6 +108,9 @@ private:
 
    private:
       RPageStorage::ColumnHandle_t fCol;
+      /// When destructing RNTupleWriter, we first destruct the model and then the sink. This means the column might
+      /// have already gone when we still have drop buffered pages, so we need to store a pointer to the outer sink.
+      RPageSink *fSink;
       /// Using a deque guarantees that element iterators are never invalidated
       /// by appends to the end of the iterator by BufferPage.
       std::deque<RPageZipItem> fBufferedPages;
