@@ -61,7 +61,7 @@
 
 #include "xRooFitVersion.h"
 
-#include <signal.h>
+#include <csignal>
 
 BEGIN_XROOFIT_NAMESPACE;
 
@@ -70,7 +70,7 @@ std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::sDefaultFitConfig = nullptr;
 
 RooCmdArg xRooFit::ReuseNLL(bool flag)
 {
-   return RooCmdArg("ReuseNLL", flag, 0, 0, 0, 0, 0, 0, 0);
+   return RooCmdArg("ReuseNLL", flag, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
 }
 
 RooCmdArg xRooFit::Tolerance(double val)
@@ -204,7 +204,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                          cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
                          cClass != RooBifurGauss::Class()) {
                         TString className = (cClass) ? cClass->GetName() : "undefined";
-                        oocoutW((TObject *)0, Generation)
+                        oocoutW((TObject *)nullptr, Generation)
                            << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                            << " of type " << className << " is a non-supported type - result might be not correct "
                            << std::endl;
@@ -224,7 +224,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                         // Gamma(b, n+1, ...._ in this case n+1 is the server and we don;t have a direct dependency, but
                         // we want to set n to the b value so in case of the Gamma ignore this test
                         if (cClass != RooGamma::Class()) {
-                           oocoutE((TObject *)0, Generation)
+                           oocoutE((TObject *)nullptr, Generation)
                               << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                               << " has no direct dependence on global observable- cannot generate it " << std::endl;
                            continue;
@@ -236,48 +236,47 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                      // the mode of the Gamma is (k-1)*theta where theta is the inverse of the rate parameter.
                      // we assume that the global observable is defined as ngobs = k-1 and the theta parameter has the
                      // name theta otherwise we use other procedure which might be wrong
-                     RooAbsReal *thetaGamma = 0;
+                     RooAbsReal *thetaGamma = nullptr;
                      if (cClass == RooGamma::Class()) {
-                        RooFIter itc(thePdf->serverMIterator());
-                        for (RooAbsArg *a2 = itc.next(); a2 != 0; a2 = itc.next()) {
+                        for (RooAbsArg *a2 : thePdf->servers()) {
                            if (TString(a2->GetName()).Contains("theta")) {
                               thetaGamma = dynamic_cast<RooAbsReal *>(a2);
                               break;
                            }
                         }
-                        if (thetaGamma == 0) {
-                           oocoutI((TObject *)0, Generation)
+                        if (thetaGamma == nullptr) {
+                           oocoutI((TObject *)nullptr, Generation)
                               << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                               << " is a Gamma distribution and no server named theta is found. Assume that the Gamma "
                                  "scale is  1 "
                               << std::endl;
                         }
                      }
-                     RooFIter iter2(thePdf->serverMIterator());
-                     for (RooAbsArg *a2 = iter2.next(); a2 != 0; a2 = iter2.next()) {
+                     for (RooAbsArg *a2 : thePdf->servers()) {
                         RooAbsReal *rrv2 = dynamic_cast<RooAbsReal *>(a2);
                         if (rrv2 && !rrv2->dependsOn(*gob) &&
                             (!rrv2->isConstant() || !rrv2->InheritsFrom("RooConstVar"))) {
 
                            // found server not depending on the gob
                            if (foundServer) {
-                              oocoutE((TObject *)0, Generation)
+                              oocoutE((TObject *)nullptr, Generation)
                                  << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
                                  << " constraint term has more server depending on nuisance- cannot generate it "
                                  << std::endl;
                               foundServer = false;
                               break;
                            }
-                           if (thetaGamma && thetaGamma->getVal() > 0)
+                           if (thetaGamma && thetaGamma->getVal() > 0) {
                               rrv.setVal(rrv2->getVal() / thetaGamma->getVal());
-                           else
+                           } else {
                               rrv.setVal(rrv2->getVal());
+                           }
                            foundServer = true;
                         }
                      }
 
                      if (!foundServer) {
-                        oocoutE((TObject *)0, Generation)
+                        oocoutE((TObject *)nullptr, Generation)
                            << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global "
                               "observables will not be set to Asimov value "
                            << thePdf->GetName() << std::endl;
@@ -306,7 +305,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
 
          for (auto &c : s->indexCat()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 00)
-            std::string cLabel = c.first.c_str();
+            std::string cLabel = c.first;
 #else
             std::string cLabel = c->GetName();
 #endif
@@ -533,14 +532,17 @@ public:
       }
    };
    ProgressMonitor(RooAbsReal &f, int interval = 30)
-      : RooAbsReal(Form("progress_%s", f.GetName()), ""), fFunc("func", "func", this, f), fInterval(interval)
+      : RooAbsReal(Form("progress_%s", f.GetName()), ""),
+        oldHandlerr(signal(SIGINT, interruptHandler)),
+        fFunc("func", "func", this, f),
+        fInterval(interval)
    {
       s.Start();
-      oldHandlerr = signal(SIGINT, interruptHandler);
+
       me = this;
       vars.reset(std::unique_ptr<RooAbsCollection>(f.getVariables())->selectByAttrib("Constant", false));
    }
-   virtual ~ProgressMonitor()
+   ~ProgressMonitor() override
    {
       if (oldHandlerr) {
          signal(SIGINT, oldHandlerr);
@@ -548,11 +550,11 @@ public:
       if (me == this)
          me = nullptr;
    };
-   ProgressMonitor(const ProgressMonitor &other, const char *name = 0)
+   ProgressMonitor(const ProgressMonitor &other, const char *name = nullptr)
       : RooAbsReal(other, name), fFunc("func", this, other.fFunc), fInterval(other.fInterval)
    {
    }
-   virtual TObject *clone(const char *newname) const override { return new ProgressMonitor(*this, newname); }
+   TObject *clone(const char *newname) const override { return new ProgressMonitor(*this, newname); }
 
    double evaluate() const override
    {
@@ -637,10 +639,7 @@ xRooFit::StoredFitResult::StoredFitResult(RooFitResult *_fr) : TNamed(*_fr)
    fr.reset(_fr);
 }
 
-xRooFit::StoredFitResult::StoredFitResult(const std::shared_ptr<RooFitResult> &_fr) : TNamed(*_fr)
-{
-   fr = _fr;
-}
+xRooFit::StoredFitResult::StoredFitResult(const std::shared_ptr<RooFitResult> &_fr) : TNamed(*_fr), fr(_fr) {}
 
 std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                                                       const std::shared_ptr<ROOT::Fit::FitConfig> &_fitConfig,
@@ -664,10 +663,11 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       while (st.NextToken()) {
          TString parName = st;
          TString parVal = nll.getStringAttribute(parName);
-         if (parVal.IsFloat())
+         if (parVal.IsFloat()) {
             fUserPars.addClone(RooRealVar(parName, parName, parVal.Atof()));
-         else
+         } else {
             fUserPars.addClone(RooStringVar(parName, parName, parVal));
+         }
       }
    }
 
@@ -703,7 +703,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       if (auto nllDir = cacheDir->GetDirectory(nll.GetName()); nllDir) {
          if (auto keys = nllDir->GetListOfKeys(); keys) {
             for (auto &&k : *keys) {
-               auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+               auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
                if (cl->InheritsFrom("RooFitResult")) {
                   StoredFitResult *storedFr =
                      nllDir->GetList() ? dynamic_cast<StoredFitResult *>(nllDir->GetList()->FindObject(k->GetName()))
@@ -779,7 +779,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       result->setCovQual(-1);
       result->setMinNLL(_nll->getVal());
       result->setEDM(0);
-      result->setStatus(floatPars->getSize() == 0 ? 0 : 1);
+      result->setStatus(floatPars->empty() ? 0 : 1);
 
       std::vector<std::pair<std::string, int>> statusHistory;
       statusHistory.emplace_back(std::make_pair("EVAL", result->status()));
@@ -922,10 +922,11 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       TString minim = _minimizer.fitter()->Config().MinimizerType();
       TString algo = _minimizer.fitter()->Config().MinimizerAlgoType();
       if (minim == "Minuit2") {
-         if (strategy == -1)
+         if (strategy == -1) {
             sIdx = 0;
-         else
+         } else {
             sIdx = m_strategy.Index('0' + strategy);
+         }
          if (sIdx == -1) {
             Warning("minimize", "Strategy %d not specified in StrategySequence %s ... defaulting to start of sequence",
                     strategy, m_strategy.Data());
@@ -980,9 +981,10 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             break; // fit was good
 
          if (status == 4 && minim != "Minuit") {
-            if (printLevel >= -1)
+            if (printLevel >= -1) {
                Warning("fitTo", "%s Hit max function calls of %d", fitName.Data(),
                        _minimizer.fitter()->Config().MinimizerOptions().MaxFunctionCalls());
+            }
             if (autoMaxCalls) {
                if (printLevel >= -1)
                   Warning("fitTo", "will try doubling this");
@@ -997,12 +999,13 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          // NOTE: minuit2 seems to distort the tolerance in a weird way, so that tol becomes 100 times smaller than
          // specified Also note that if fits are failing because of edm over max, it can be a good idea to activate the
          // Offset option when building nll
-         if (printLevel >= -1)
+         if (printLevel >= -1) {
             Warning("fitTo", "%s %s%s Status=%d (edm=%f, tol=%f, strat=%d), tries=#%d...", fitName.Data(),
                     _minimizer.fitter()->Config().MinimizerType().c_str(),
                     _minimizer.fitter()->Config().MinimizerAlgoType().c_str(), status,
                     _minimizer.fitter()->Result().Edm(), _minimizer.fitter()->Config().MinimizerOptions().Tolerance(),
                     _minimizer.fitter()->Config().MinimizerOptions().Strategy(), tries);
+         }
 
          // decide what to do next based on strategy sequence
          if (sIdx == m_strategy.Length() - 1) {
@@ -1155,12 +1158,9 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       if (boundaryCheck) {
          // check if any of the parameters are at their limits (potentially a problem with fit)
          // or their errors go over their limits (just a warning)
-         RooFIter itr = floatPars->fwdIterator();
-         RooAbsArg *a = 0;
          int limit_status = 0;
          std::string listpars;
-         while ((a = itr.next())) {
-            RooRealVar *v = dynamic_cast<RooRealVar *>(a);
+         for (auto *v : dynamic_range_cast<RooRealVar *>(*floatPars)) {
             if (!v)
                continue;
             double vRange = v->getMax() - v->getMin();
@@ -1196,9 +1196,10 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             }
          }
          if (limit_status == 900) {
-            if (printLevel >= 0)
+            if (printLevel >= 0) {
                Warning("minimize", "BOUNDCHK: Parameters within %g%% limit in fit result: %s", boundaryCheck * 100,
                        listpars.c_str());
+            }
          } else if (limit_status > 0) {
             if (printLevel >= 0)
                Warning("minimize", "BOUNDCHK: Parameters near limit in fit result");
@@ -1362,7 +1363,8 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
       double val_pre =
          val_guess -
          10 * precision * sigma_guess; // this is just to set value st. guarantees will do at least one iteration
-      bool lastOverflow = false, lastUnderflow = false;
+      bool lastOverflow = false;
+      bool lastUnderflow = false;
       while (std::abs(val_pre - val_guess) > precision * sigma_guess) {
          val_pre = val_guess;
          if (val_guess > 0 && par->getMax() < val_guess)
@@ -1507,10 +1509,11 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
       if (p->hasClients())
          continue;
       flagCount += p->getAttribute("hypoTest");
-      if (p->getAttribute("hypoTest"))
+      if (p->getAttribute("hypoTest")) {
          topPdfs.push_front(p);
-      else
+      } else {
          topPdfs.push_back(p);
+      }
    }
    if (topPdfs.empty()) {
       Error("hypoTest", "Cannot find top-level pdf in workspace");
@@ -1605,11 +1608,12 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
          altVal = mu->getMin("physical");
          Info("hypoTest", "No altVal specified - using min of given physical range = %g", altVal);
       } else {
-         if (!std::isnan(altVal))
+         if (!std::isnan(altVal)) {
             Info("hypoTest", "alt hypo: %g - CLs activated", altVal);
-         else
+         } else {
             Info("hypoTest", "No altVal found - to specify setStringAttribute(\"altVal\",\"<value>\") on POI or set "
                              "the physical range");
+         }
       }
       bool doCLs = !std::isnan(altVal) && std::abs(mu->getMin("hypoPoints")) > altVal &&
                    std::abs(mu->getMax("hypoPoints")) > altVal;
@@ -1628,7 +1632,8 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
       std::vector<int> expSig = {-2, -1, 0, 1, 2};
       if (std::isnan(altVal))
          expSig.clear();
-      std::map<int, TGraphErrors> exp_pcls, exp_cls;
+      std::map<int, TGraphErrors> exp_pcls;
+      std::map<int, TGraphErrors> exp_cls;
       for (auto &s : expSig) {
          exp_pcls[s].SetNameTitle(TString::Format("exp%d_p%s", s, sCL),
                                   TString::Format("Expected (%d#sigma) p_{%s};%s", s, sCL, mu->GetTitle()));
@@ -1667,13 +1672,14 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
             exp_pcls[s].SetPoint(exp_pcls[s].GetN(), testVal,
                                  (doCLs) ? hp.pCLs_asymp(s).first : hp.pNull_asymp(s).first);
          }
-         if (doCLs)
+         if (doCLs) {
             Info("hypoTest", "%s=%g: %s=%g sigma_mu=%g %s=%g", mu->GetName(), testVal, obs_ts->GetName(),
                  obs_ts->GetPointY(obs_ts->GetN() - 1), hp.sigma_mu().first, obs_pcls->GetName(),
                  obs_pcls->GetPointY(obs_pcls->GetN() - 1));
-         else
+         } else {
             Info("hypoTest", "%s=%g: %s=%g %s=%g", mu->GetName(), testVal, obs_ts->GetName(),
                  obs_ts->GetPointY(obs_ts->GetN() - 1), obs_pcls->GetName(), obs_pcls->GetPointY(obs_pcls->GetN() - 1));
+         }
       };
 
       if (mu->getBins("hypoPoints") <= 0) {
@@ -1752,7 +1758,7 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
          band2->SetBit(kCanDelete);
          band2up->SetBit(kCanDelete);
          band2down->SetBit(kCanDelete);
-         auto ax = (TNamed *)band2->Clone(".axis");
+         auto ax = static_cast<TNamed *>(band2->Clone(".axis"));
          ax->SetTitle(TString::Format("Hypothesis Test;%s", mu->GetTitle()));
          ax->Draw("AF");
          band2->Draw("F");
