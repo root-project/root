@@ -931,17 +931,17 @@ void xRooNLLVar::xRooHypoSpace::Print(Option_t * /*opt*/) const
       if(auto asiPoint = const_cast<xRooHypoPoint &>(at(i)).asimov(true)) {
           std::cout << ",asimov.ufit:";
           auto asi_ufit = asiPoint->ufit(true);
-          if (!asi_ufit)
+          if (!asi_ufit) {
               std::cout << "-";
-          else {
+          } else {
               std::cout << asi_ufit->status();
               badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(asi_ufit->status()) == 0);
           }
           std::cout << ",asimov.cfit_null:";
           auto asi_cfit = asiPoint->cfit_null(true);
-          if (!asi_cfit)
+          if (!asi_cfit) {
               std::cout << "-";
-          else {
+          } else {
               std::cout << asi_cfit->status();
               badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(asi_cfit->status()) == 0);
           }
