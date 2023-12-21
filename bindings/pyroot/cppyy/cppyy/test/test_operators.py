@@ -1,4 +1,4 @@
-import py, os, sys
+import py
 from pytest import raises
 from .support import setup_make, pylong, maxvalue
 
@@ -170,7 +170,7 @@ class TestOPERATORS:
         assert d1 == b1
         assert not b1 == d2
         assert not d2 == b1
-        
+
     def test08_call_to_getsetitem_mapping(self):
         """Map () to []"""
 

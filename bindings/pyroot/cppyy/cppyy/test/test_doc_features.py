@@ -1,4 +1,4 @@
-import py, os, sys
+import py
 from pytest import raises
 from .support import setup_make
 
@@ -163,7 +163,7 @@ namespace Namespace {
 
         assert cppyy.gbl.gUint == 0
         raises(ValueError, setattr, cppyy.gbl, 'gUint', -1)
-        
+
     def test_casting(self):
         import cppyy
         from cppyy.gbl import Abstract, Concrete
@@ -293,9 +293,9 @@ namespace Namespace {
 
     def test_operator_overloads(self):
         import cppyy
-        
+
         pass
-        
+
     def test_pointers(self):
         import cppyy
 

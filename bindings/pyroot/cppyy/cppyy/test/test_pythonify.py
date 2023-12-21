@@ -1,4 +1,4 @@
-import py, os, sys
+import py
 from pytest import raises
 from .support import setup_make, pylong
 
@@ -99,7 +99,7 @@ class TestPYTHONIFY:
         instance = example01_class(-13)
         res = instance.addDataToDouble(16)
         assert round(res-3, 8) == 0.
-        instance.__destruct__() 
+        instance.__destruct__()
 
         instance = example01_class(42)
         assert example01_class.getCount() == 1
@@ -452,7 +452,7 @@ class TestPYTHONIFY:
             b = B(17, val=23, out_A=(78,))
 
         with raises(TypeError):
-            b = B(17, out_A=(78,)) 
+            b = B(17, out_A=(78,))
 
       # global function with keywords
         callme = cppyy.gbl.KeyWords.callme

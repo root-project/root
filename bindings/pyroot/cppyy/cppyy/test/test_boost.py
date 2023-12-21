@@ -1,4 +1,4 @@
-import py, os, sys
+import os
 from pytest import mark, raises
 from .support import setup_make
 
@@ -122,5 +122,3 @@ class TestBOOSTVARIANT:
         raises(Exception, boost.get['BV::B'], v[0])
         assert type(boost.get['BV::B'](v[1])) == cpp.BV.B
         assert type(boost.get['BV::C'](v[2])) == cpp.BV.C
-
-

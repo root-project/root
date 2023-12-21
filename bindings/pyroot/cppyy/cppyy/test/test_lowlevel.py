@@ -1,4 +1,4 @@
-import py, os, sys
+import py, sys
 from pytest import raises
 from .support import setup_make, pylong, pyunicode, IS_WINDOWS
 
