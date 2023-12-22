@@ -39,12 +39,22 @@ For the number of read requests, the page size does not matter
 because pages of the same column are written consecutively and therefore read in one go.
 
 Given the target size, writing works as follows:
-Pages are filled until the target size and then flushed.
-If a column has enough elements to fill at least half a page, there is a mechanism to prevent undersized tail pages:
-writing uses two page buffers in turns and flushes the previous buffer only once the next buffer is at least at 50%.
+In the beginning, the first page is filled until the target size.
+Afterwards there is a mechanism to prevent undersized tail pages:
+writing uses two page buffers in turns and flushes the previous buffer filled to its target size only once the next buffer is at least at 50%.
+Then writing continues until the target size, at which point writing switches back to the other page.
 If the cluster gets flushed with an undersized tail page,
 the small page is appended to the previous page before flushing.
-Therefore, tail pages sizes are between `[0.5 * target size .. 1.5 * target size]`.
+Therefore, tail pages sizes are between `[0.5 * target size .. 1.5 * target size]`
+(unless the column doesn't have enough elements to fill 50% of the first page).
+
+Concretely, writing will fill and flush two pages `A` and `B` as follows:
+1. Writing starts to fill page `A`.
+2. When page `A` reached its target size, writing switches to page `B` while the contents of page `A` are kept in memory.
+3. Once page `B` is at least at 50%, page `A` is flushed.
+4. When page `B` reaches its target size, writing switches to page `A`.
+5. Once page `A` is at least at 50%, page `B` is flushed.
+6. ... and so on, going back to 2.
 
 
 Notes
