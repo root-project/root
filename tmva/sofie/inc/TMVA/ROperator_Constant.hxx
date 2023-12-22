@@ -80,10 +80,12 @@ public:
          out << SP << "fTensor_" << fNY << " = {";
          for (size_t i = 0; i < fValues.size(); i++) {
             out << fValues[i];
-            if (i < fValues.size()-1) out << ", ";
-            if  (i > 0 && i %10 == 0) out << "\n";
+            if (i < fValues.size()-1) {
+               out << ", ";
+               if  (i > 0 && i %10 == 0) out << "\n";
+            }
          }
-         out << SP << "};\n";
+         out << "};\n";
       }
       // in case of Constant of Shape shape is given by input. fValues could be empty and all
       // vector is initialiazed with zero values

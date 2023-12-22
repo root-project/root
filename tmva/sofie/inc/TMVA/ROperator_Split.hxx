@@ -99,7 +99,7 @@ public:
          auto l = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapes[i]);
          auto outStride = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapes[i]);
          if (fAxis == 0) {
-            out << SP << "std::copy(tensor_" << fNX << " + " << i*l << ", tensor_" << fNX << " + " << (i*1)*l
+            out << SP << "std::copy(tensor_" << fNX << " + " << i*l << ", tensor_" << fNX << " + " << (i+1)*l
                << ", tensor_" << fNYs[i] << ");\n";
          }
          else {
