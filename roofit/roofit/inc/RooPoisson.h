@@ -18,7 +18,7 @@
 
 class RooPoisson : public RooAbsPdf {
 public:
-  RooPoisson() { _noRounding = false ;   } ;
+  RooPoisson() : _noRounding{false} {}
   // Original constructor without RooAbsReal::Ref for backwards compatibility.
   inline RooPoisson(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, bool noRounding=false)
       : RooPoisson{name, title, RooAbsReal::Ref{_x}, RooAbsReal::Ref{_mean}, noRounding} {}

@@ -54,6 +54,8 @@ public:
      double xmin, double xmax, double ymin, double ymax);
   ~RooPlot() override;
 
+  RooPlot(const RooPlot& other) = delete; // cannot be copied
+
   static RooPlot* frame(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins);
   static RooPlot* frameWithLabels(const RooAbsRealLValue &var);
 
@@ -207,8 +209,6 @@ public:
   void createInternalPlotVarClone();
 
 protected:
-
-  RooPlot(const RooPlot& other) = delete; // cannot be copied
 
   class DrawOpt {
     public:
