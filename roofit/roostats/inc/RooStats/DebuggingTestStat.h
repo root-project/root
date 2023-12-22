@@ -37,10 +37,10 @@ namespace RooStats {
   class DebuggingTestStat : public TestStatistic {
 
    public:
-     DebuggingTestStat() {
-       fTestStatistic = new RooRealVar("UniformTestStatistic","UniformTestStatistic",0,0,1);
-       fRand = new TRandom();
-     }
+     DebuggingTestStat() :
+       fTestStatistic{new RooRealVar("UniformTestStatistic","UniformTestStatistic",0,0,1)},
+       fRand{new TRandom()}
+     {}
 
      /// Main interface to evaluate the test statistic on a dataset
      double Evaluate(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/) override  {

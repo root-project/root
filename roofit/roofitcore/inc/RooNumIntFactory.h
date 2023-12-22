@@ -33,6 +33,8 @@ typedef void (*RooNumIntInitializerFunc)(RooNumIntFactory&) ;
 class RooNumIntFactory : public TObject {
 public:
 
+  RooNumIntFactory(const RooNumIntFactory& other) = delete;
+
   using Creator = std::function<std::unique_ptr<RooAbsIntegrator>(RooAbsFunc const& function, const RooNumIntConfig& config)>;
 
   static RooNumIntFactory& instance() ;
@@ -66,7 +68,6 @@ private:
   std::map<std::string,PluginInfo> _map;
 
   RooNumIntFactory() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see https://sft.its.cern.ch/jira/browse/ROOT-10300
-  RooNumIntFactory(const RooNumIntFactory& other) = delete;
 
   void init();
 

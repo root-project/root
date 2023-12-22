@@ -22,8 +22,11 @@
 #include <unordered_map>
 #include <string>
 
+// String name registry
 class RooNameReg : public TNamed {
 public:
+
+  RooNameReg(const RooNameReg& other) = delete;
 
   static RooNameReg& instance() ;
   const TNamed* constPtr(const char* stringPtr) ;
@@ -45,8 +48,6 @@ public:
 
 protected:
   RooNameReg();
-//  RooNameReg(Int_t hashSize = 31) ;
-  RooNameReg(const RooNameReg& other) = delete;
 
   friend class RooAbsArg;
   friend class RooAbsData;
@@ -54,8 +55,6 @@ protected:
 
   std::unordered_map<std::string,std::unique_ptr<TNamed>> _map;
   std::size_t _renameCounter = 0;
-
-//  ClassDefOverride(RooNameReg,1) // String name registry
 };
 
 #endif

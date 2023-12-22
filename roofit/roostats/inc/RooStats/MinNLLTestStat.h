@@ -21,8 +21,6 @@
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/TestStatistic.h"
 
-#include "RooStats/RooStatsUtils.h"
-
 #include "RooRealVar.h"
 #include "RooProfileLL.h"
 #include "RooMsgService.h"
@@ -47,15 +45,11 @@ Internally it operates by delegating to a MinNLLTestStat object.
   class MinNLLTestStat : public TestStatistic{
 
    public:
-     MinNLLTestStat() {
-        // Proof constructor. Do not use.
-        fProflts = nullptr;
-     }
-     MinNLLTestStat(RooAbsPdf& pdf) {
-        fProflts = new ProfileLikelihoodTestStat(pdf);
-     }
+     // Proof constructor. Do not use.
+     MinNLLTestStat() {}
+     MinNLLTestStat(RooAbsPdf& pdf) : fProflts{new ProfileLikelihoodTestStat(pdf)} {}
 
-     MinNLLTestStat(const MinNLLTestStat& rhs) : TestStatistic(rhs), fProflts(nullptr) {
+     MinNLLTestStat(const MinNLLTestStat& rhs) : TestStatistic(rhs) {
         RooAbsPdf * pdf = rhs.fProflts->GetPdf();
         if (pdf)  fProflts = new ProfileLikelihoodTestStat(*pdf);
      }
@@ -103,7 +97,7 @@ Internally it operates by delegating to a MinNLLTestStat object.
      const TString GetVarName() const override { return fProflts->GetVarName(); }
 
    private:
-     ProfileLikelihoodTestStat* fProflts;
+     ProfileLikelihoodTestStat* fProflts = nullptr;
 
    protected:
       ClassDefOverride(MinNLLTestStat,1)   // implements the minimum NLL as a test statistic to be used with several tools
