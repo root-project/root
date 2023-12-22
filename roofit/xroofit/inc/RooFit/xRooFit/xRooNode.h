@@ -151,12 +151,13 @@ public:
          : std::vector<std::shared_ptr<xRooNode>>::const_iterator(itr)
       {
       }
-      std::shared_ptr<xRooNode> const &operator*() const
+      const std::shared_ptr<xRooNode>& operator*() const
       {
-         auto &&out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
-         if (out->get() && out->empty())
+         const std::shared_ptr<xRooNode>& out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
+         if (out->get() && out->empty()) {
             out->browse();
-         return std::move(out);
+         }
+         return std::move(out); // move is wanted by cppcheck, which otherwise complains of returning a reference to a temporary
       }
       bool operator!=(xRooNodeIterator const &b) const
       {
