@@ -19,7 +19,7 @@ ParserFuncSignature ParseEyeLike = [](RModelParser_ONNX &parser, const onnx::Nod
 
    std::unique_ptr<ROperator> op;
 
-   int attr_dtype = static_cast<int>(ETensorType::FLOAT);
+   int attr_dtype = -1;
    int attr_k = 0;
 
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
@@ -29,19 +29,18 @@ ParserFuncSignature ParseEyeLike = [](RModelParser_ONNX &parser, const onnx::Nod
       if(attribute_name == "k"){
          attr_k = nodeproto.attribute(i).i();
       }
-
    }
+   if (attr_dtype < 0)
+      attr_dtype = static_cast<int>(input_type);
 
    std::string output_name = nodeproto.output(0);
-   switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_EyeLike<float>(attr_dtype, attr_k, input_name, output_name)); break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator EyeLike does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
-   }
+
+   op.reset(new ROperator_EyeLike(attr_dtype, attr_k, input_name, output_name));
+
+   ETensorType output_type = static_cast<ETensorType>(attr_dtype);
 
    if (!parser.IsRegisteredTensorType(output_name)) {
-      parser.RegisterTensorType(output_name, input_type);
+      parser.RegisterTensorType(output_name, output_type);
    }
 
    return op;

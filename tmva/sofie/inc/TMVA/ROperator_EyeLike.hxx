@@ -11,7 +11,6 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-template <typename T>
 class ROperator_EyeLike final : public ROperator
 {
 
@@ -42,6 +41,9 @@ public:
          throw std::runtime_error("TMVA SOFIE EyeLike Op Input Tensor is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
+      if (fShape.size() != 2)
+         throw std::runtime_error("TMVA SOFIE EyeLike Op Input Tensor is not of rank 2");
+
       if(fdtype){
         ETensorType extractedType = static_cast<ETensorType>(fdtype);
         model.AddIntermediateTensor(fNY, extractedType, fShape);
@@ -57,18 +59,20 @@ public:
       if (fShape.empty()){
          throw std::runtime_error("TMVA SOFIE Operator EyeLike called to Generate without being initialized first");
       }
+      auto length = ConvertShapeToLength(fShape);
+      auto stride = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShape);
       std::stringstream out;
-      int length = 1;
-      for(auto& i: fShape){
-         length *= i;
-      }
-         out << SP << "///--------EyeLike operator\n" << std::endl;
-         out << SP << "for (int i = 0; i < " << ConvertShapeToString(fShape) << "[0]; i++) {" << std::endl;
-         out << SP << SP << "for (int j = 0; j < " << ConvertShapeToString(fShape) << "[1]; j++) {" << std::endl;
-         out << SP << SP << SP << fNY << "[i * " << ConvertShapeToString(fShape) << "[1] + j] = (i + " << fk << " == j) ? 1.0 : 0.0;" << std::endl;
-         out << SP << SP << "}" << std::endl;
-         out << SP << "}" << std::endl;
-         return out.str();
+      out << SP << "///--------EyeLike operator\n" << std::endl;
+      // add a dummy statement to avoid warning for unused input
+      out << SP << "(void) tensor_" << fNX << ";\n";
+
+      out << SP << "fTensor_" << fNY << ".assign(" << length << ", 0);\n";
+      out << SP << "for (int i = 0; i < " << fShape[0] << "; i++) {\n";
+      out << SP << SP << "int j = i +" << fk << ";\n";
+      out << SP << SP << "if (j >= 0 && j < " << fShape[1] << ")\n";
+      out << SP << SP << SP << "tensor_" << fNY << "[i * " << fShape[1] << "+ j] = 1;\n";
+      out << SP << "}\n";
+      return out.str();
    }
 
 };
