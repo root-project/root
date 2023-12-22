@@ -114,7 +114,7 @@ public:
    }
    xRooNode(double value);
 
-   virtual ~xRooNode();
+   ~xRooNode() override;
 
    void SetName(const char *name) override;   // *MENU*
    void SetTitle(const char *title) override; // *MENU*
