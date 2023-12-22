@@ -1,5 +1,5 @@
 namespace ConstantOfShape_ExpectedOutput{
-	float outputs[] = {
-        5.0, 5.0, 5.0
+	int64_t outputs[] = {
+        5
 	};
 } // namespace ConstantOfShape_ExpectedOutput

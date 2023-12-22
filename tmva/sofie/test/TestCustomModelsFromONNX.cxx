@@ -581,25 +581,27 @@ TEST(ONNX, Constant)
 
 TEST(ONNX, ConstantOfShape)
 {
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+   //constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<int64_t> input({
-      1,2,3
-   });
+   // since we use batch size==1 input shape tensor will always be equal to 1
+   // in this test
+   std::vector<int64_t> input(1);
+
 
    TMVA_SOFIE_ConstantOfShape::Session s("ConstantOfShape_FromONNX.dat");
 
    auto output = s.infer(input.data());
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConstantOfShape_ExpectedOutput::outputs) / sizeof(float));
+   EXPECT_EQ(output.size(), sizeof(ConstantOfShape_ExpectedOutput::outputs) / sizeof(int64_t));
 
-   float *correct = ConstantOfShape_ExpectedOutput::outputs;
+   auto correct = ConstantOfShape_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      EXPECT_EQ(output[i] , correct[i]);
+      //EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
@@ -611,15 +613,13 @@ TEST(ONNX, Split)
    std::vector<float> input({
       1,2,3,4,5,6
    });
-   std::vector<int64_t> values({
-      2,4
-   });
+
    TMVA_SOFIE_Split::Session s("Split_FromONNX.dat");
 
-   auto output = s.infer(input.data(), values.data());
+   auto output = s.infer(input.data());
 
    // Checking output size
-   for(int i=0;i<output.size();i++){
+   for(unsigned int i=0; i < output.size(); i++){
       EXPECT_EQ(output[i].size(), sizeof(Split_ExpectedOutput::output[i]) / sizeof(float));
    }
 

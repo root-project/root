@@ -11,8 +11,10 @@ namespace SOFIE {
 ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    std::string input_name;
    auto ninputs = nodeproto.input_size();
+   bool isConstantOfShape = false;
    if (ninputs > 0) {  // case of ConstantOfShape
       input_name = nodeproto.input(0);
+      isConstantOfShape = true;
       if (!parser.IsRegisteredTensorType(input_name)) {
          throw std::runtime_error("TMVA::SOFIE ONNX Parser ConstantOfShape op has input tensor" + input_name +
                                   "  but its type is not yet registered");
@@ -60,7 +62,14 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
          break;
       }
       else {
-         throw std::runtime_error("Attribute " + attribute_name +  " in Constant op  is not supported!\n");
+         if (!isConstantOfShape)
+            throw std::runtime_error("Attribute " + attribute_name +  " in Constant op  is not supported!\n");
+         else {
+            // if attribute is not there use by default float type with zero values
+            std::vector<float> values(1);
+            std::vector<size_t> shape(1,1);
+            op.reset(new ROperator_Constant<float>("float",values,shape, input_name, output_name));
+         }
       }
       // else if (attribute_name == "value_int")
       //    attr_type = std::to_string( static_cast<int64_t>(nodeproto.attribute(i).i()) );
