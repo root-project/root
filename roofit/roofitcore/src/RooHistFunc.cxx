@@ -206,8 +206,7 @@ void RooHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::Data
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
     if (realObs) {
-      auto inputs = dataMap.at(realObs);
-      inputValues.push_back(std::move(inputs));
+      inputValues.push_back(dataMap.at(realObs));
     } else {
       inputValues.emplace_back();
     }
