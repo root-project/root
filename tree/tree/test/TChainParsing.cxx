@@ -9,7 +9,6 @@
 #include "TPluginManager.h"
 
 #include "ROOT/InternalTreeUtils.hxx"
-#include <ROOT/FoundationUtils.hxx>
 
 #include "gtest/gtest.h"
 
