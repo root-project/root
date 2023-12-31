@@ -1938,6 +1938,7 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(will_fail WILLFAIL)
   endif()
 
+  list(APPEND labels python)
   if(ARG_PYTHON_DEPS)
     list(APPEND labels python_runtime_deps)
   endif()
