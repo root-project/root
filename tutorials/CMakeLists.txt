@@ -66,7 +66,8 @@ endfunction()
 #---Tutorials disabled depending on the build components-------------
 
 if(NOT clad)
-  set(clad_veto fit/minuit2GausFit.C)
+  set(clad_veto fit/minuit2GausFit.C
+                fit/exampleFit3D.C)
 endif()
 
 # RBatchGenerator tutorials need Python 3.8+.
