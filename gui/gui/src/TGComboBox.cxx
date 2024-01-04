@@ -251,7 +251,7 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
 {
    fWidgetId  = id;
    fMsgWindow = p;
-   fSelEntry = 0;
+   fSelEntry = nullptr;
 
    fTextEntry = new TGTextEntry(this, text, id);
    fTextEntry->SetFrameDrawn(kFALSE);
@@ -648,10 +648,10 @@ void TGComboBox::SetEnabled(Bool_t on)
    fDDButton->SetEnabled(on);
    if (on) {
       SetFlags(kWidgetIsEnabled);
-      fSelEntry->SetBackgroundColor(GetBackground());
+      if (fSelEntry) fSelEntry->SetBackgroundColor(GetBackground());
    } else {
       ClearFlags(kWidgetIsEnabled);
-      fSelEntry->SetBackgroundColor(GetDefaultFrameBackground());
+      if (fSelEntry) fSelEntry->SetBackgroundColor(GetDefaultFrameBackground());
    }
    fClient->NeedRedraw(fSelEntry);
 }
