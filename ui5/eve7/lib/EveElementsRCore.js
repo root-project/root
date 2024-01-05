@@ -1136,7 +1136,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          if (boxset.instanced === true)
             return this.makeBoxSetInstanced(boxset, rnr_data);
          else
-            return this.makeFreeBoxset(boxset, rnr_data);
+            return this.makeFreeBoxSet(boxset, rnr_data);
       }
 
       makeFreeBoxSet(boxset, rnr_data)
