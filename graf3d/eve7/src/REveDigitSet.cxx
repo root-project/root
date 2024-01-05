@@ -417,9 +417,17 @@ void REveDigitSet::SetFrame(REveFrameBox* b)
 void REveDigitSet::SetPalette(REveRGBAPalette* p)
 {
    if (fPalette == p) return;
-   if (fPalette) fPalette->DecRefCount();
+   if (fPalette)
+   {
+       fPalette->DecRefCount();
+       fPalette->RemoveNiece(this);
+   }
    fPalette = p;
-   if (fPalette) fPalette->IncRefCount();
+   if (fPalette)
+   {
+       fPalette->IncRefCount();
+       fPalette->AddNiece(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,7 +459,19 @@ bool REveDigitSet::IsDigitVisible(const DigitBase_t *d) const
       return d->fValue ? true : false;
    } else {
       if (fPalette)
-         return d->fValue > fPalette->GetMinVal() && d->fValue < fPalette->GetMaxVal();
+      {
+         if (d->fValue <= fPalette->GetMinVal())
+         {
+            return (fPalette->GetUnderflowAction() != REveRGBAPalette::kLA_Cut);
+         }
+         else if (d->fValue >= fPalette->GetMaxVal())
+         {
+            return (fPalette->GetOverflowAction() != REveRGBAPalette::kLA_Cut);
+         }
+         else {
+            return (d->fValue > fPalette->GetMinVal() && d->fValue < fPalette->GetMaxVal());
+         }
+      }
       else {
          printf("Error REveDigitSet::IsDigitVisible() unhadled case\n");
          return true;
