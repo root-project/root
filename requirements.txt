@@ -6,7 +6,8 @@ jupyter
 pytest
 # nbconvert 7.3 has a bug that does not respect --output option
 # See https://github.com/jupyter/nbconvert/issues/1970
-nbconvert != 7.3.*
+# nbconvert 7.14 produces different output than earlier versions
+nbconvert != 7.3.*, < 7.14
 
 # Needed by tutorials (run as part of roottest)
 pandas
