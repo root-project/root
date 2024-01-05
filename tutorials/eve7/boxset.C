@@ -64,7 +64,6 @@ REveBoxSet* boxset_free(Int_t num=100)
    // Uncomment these two lines to get internal highlight / selection.
    q->SetPickable(1);
    q->SetAlwaysSecSelect(1);
-
    q->SetTooltipCBFoo(customTooltip);
 
    return q;
@@ -232,7 +231,7 @@ void boxset()
    enum EBoxDemo_t {ScaledRotated, Free, AxisAligned, Hexagon, FixedDimension, SingleColor};
    
    // EBoxDemo_t demo = ScaledRotated;
-   EBoxDemo_t demo = SingleColor;
+   EBoxDemo_t demo = AxisAligned;
 
    auto eveMng = REveManager::Create();
    REveBoxSet* b = nullptr;
@@ -263,6 +262,11 @@ void boxset()
 
 
    eveMng->GetEventScene()->AddElement(b);
+
+   // Add palette to scene to be streamed and edited in controller
+   if (b->GetPalette())
+    eveMng->GetEventScene()->AddElement(b->GetPalette());
+
    eveMng->Show();
 
    REveViewer* v = ROOT::Experimental::gEve->GetDefaultViewer();
