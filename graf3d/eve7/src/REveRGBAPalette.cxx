@@ -369,7 +369,6 @@ Int_t REveRGBAPalette::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["interpolate"] = fInterpolate;
    j["min"] = fMinVal;
    j["max"] = fMaxVal;
-   std::cout << "write ... " << j.dump(3) << "\n";
    return ret;
 }
 
