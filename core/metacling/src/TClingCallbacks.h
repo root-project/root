@@ -58,7 +58,7 @@ public:
    void Initialize();
 
    void SetAutoLoadingEnabled(bool val = true) { fIsAutoLoading = val; }
-   bool IsAutoLoadingEnabled() { return fIsAutoLoading; }
+   bool IsAutoLoadingEnabled() const { return fIsAutoLoading; }
 
    void SetAutoParsingSuspended(bool val = true) { fIsAutoParsingSuspended = val; }
    bool IsAutoParsingSuspended() { return fIsAutoParsingSuspended; }
