@@ -17,6 +17,7 @@
 #include <ROOT/RNTupleAnchor.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMerger.hxx>
+#include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
