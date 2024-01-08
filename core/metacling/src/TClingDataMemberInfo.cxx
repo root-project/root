@@ -352,8 +352,6 @@ Longptr_t TClingDataMemberInfo::Offset()
       //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
 
-      if (Longptr_t addr = reinterpret_cast<Longptr_t>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
-         return addr;
       // We can't reassign constexpr or const variables. We can compute the
       // initializer.
       if (VD->hasInit() && (VD->isConstexpr() || VD->getType().isConstQualified())) {
@@ -389,6 +387,10 @@ Longptr_t TClingDataMemberInfo::Offset()
             } // not integral type
          } // have an APValue
       } // have an initializing value
+
+      // Try the slow operation.
+      if (Longptr_t addr = reinterpret_cast<Longptr_t>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
+         return addr;
    }
    // FIXME: We have to explicitly check for not enum constant because the
    // implementation of getAddressOfGlobal relies on mangling the name and in
