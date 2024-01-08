@@ -330,8 +330,6 @@ jobs:
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           - image: fedora38
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
-          - image: fedora37
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
