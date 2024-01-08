@@ -354,8 +354,9 @@ Longptr_t TClingDataMemberInfo::Offset()
 
       if (Longptr_t addr = reinterpret_cast<Longptr_t>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
          return addr;
-      auto evalStmt = VD->ensureEvaluatedStmt();
-      if (evalStmt && evalStmt->Value) {
+      // We can't reassign constexpr or const variables. We can compute the
+      // initializer.
+      if (VD->hasInit() && (VD->isConstexpr() || VD->getType().isConstQualified())) {
          if (const APValue* val = VD->evaluateValue()) {
             if (VD->getType()->isIntegralType(C)) {
                return reinterpret_cast<Longptr_t>(val->getInt().getRawData());
