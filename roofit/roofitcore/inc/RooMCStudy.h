@@ -104,8 +104,8 @@ protected:
 
   void calcPulls() ;
 
-  RooAbsData*       _genSample ;       ///< Currently generated sample
-  RooAbsPdf*        _genModel ;        ///< Generator model
+  RooAbsData*       _genSample = nullptr;       ///< Currently generated sample
+  RooAbsPdf*        _genModel = nullptr;        ///< Generator model
   std::unique_ptr<RooAbsGenContext> _genContext;      ///< Generator context
   RooArgSet        _genInitParams;   ///< List of original generator parameters
   RooArgSet        _genParams;       ///< List of actual generator parameters
