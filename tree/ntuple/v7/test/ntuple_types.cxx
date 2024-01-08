@@ -39,6 +39,7 @@ TEST(RNTuple, EnumBasics)
 
    auto model = RNTupleModel::Create();
    auto ptrEnum = model->MakeField<CustomEnum>("e");
+   auto ptrVecEnum = model->MakeField<std::vector<CustomEnum>>("ve");
    model->MakeField<StructWithEnums>("swe");
 
    EXPECT_EQ(model->GetField("e")->GetType(), f->GetType());
@@ -47,6 +48,8 @@ TEST(RNTuple, EnumBasics)
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrEnum = kCustomEnumVal;
+      ptrVecEnum->emplace_back(kCustomEnumVal);
+      ptrVecEnum->emplace_back(kCustomEnumVal);
       writer->Fill();
    }
 
@@ -58,6 +61,9 @@ TEST(RNTuple, EnumBasics)
    EXPECT_EQ(42, ptrStructWithEnums->a);
    EXPECT_EQ(137, ptrStructWithEnums->b);
    EXPECT_EQ(kCustomEnumVal, ptrStructWithEnums->e);
+   EXPECT_EQ(2u, reader->GetModel()->GetDefaultEntry()->Get<std::vector<CustomEnum>>("ve")->size());
+   EXPECT_EQ(kCustomEnumVal, reader->GetModel()->GetDefaultEntry()->Get<std::vector<CustomEnum>>("ve")->at(0));
+   EXPECT_EQ(kCustomEnumVal, reader->GetModel()->GetDefaultEntry()->Get<std::vector<CustomEnum>>("ve")->at(1));
 }
 
 using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
