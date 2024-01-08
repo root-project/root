@@ -13,11 +13,10 @@
 /** \class ROOT::Experimental::XRooFit::xRooNode
 \ingroup xroofit
 
-The xRooNode class is designed to wrap over a TObject and provide functionality to aid with interacting with that object,
- particularly in the case where the object is a RooFit class instance.
-It is a smart pointer to the object, so you have access to all the methods of the object too.
+The xRooNode class is designed to wrap over a TObject and provide functionality to aid with interacting with that
+object, particularly in the case where the object is a RooFit class instance. It is a smart pointer to the object, so
+you have access to all the methods of the object too.
  */
-
 
 #include "RVersion.h"
 
@@ -95,7 +94,8 @@ auto GETLISTTREE(TGFileBrowser *b)
 {
    return b->GetListTree();
 }
-#define GETDMP(o, m) (*(void **)(((unsigned char *)o) + o->Class()->GetDataMemberOffset(#m)))
+#define GETDMP(o, m) \
+   *reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(o) + o->Class()->GetDataMemberOffset(#m))
 
 #endif
 
@@ -202,18 +202,19 @@ const T &_or_func(const T &a, const T &b)
 }
 
 xRooNode::xRooNode(const char *classname, const char *name, const char *title)
-   : xRooNode(name,
-              std::shared_ptr<TObject>(
-                 TClass::GetClass(classname) ? (TObject *)TClass::GetClass(classname)->New() : nullptr, [](TObject *o) {
-                    if (auto w = dynamic_cast<RooWorkspace *>(o); w) {
+   : xRooNode(name, std::shared_ptr<TObject>(TClass::GetClass(classname)
+                                                ? reinterpret_cast<TObject *>(TClass::GetClass(classname)->New())
+                                                : nullptr,
+                                             [](TObject *o) {
+                                                if (auto w = dynamic_cast<RooWorkspace *>(o); w) {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-                       w->_embeddedDataList.Delete();
+                                                   w->_embeddedDataList.Delete();
 #endif
-                       xRooNode(*w, std::make_shared<xRooNode>()).sterilize();
-                    }
-                    if (o)
-                       delete o;
-                 }))
+                                                   xRooNode(*w, std::make_shared<xRooNode>()).sterilize();
+                                                }
+                                                if (o)
+                                                   delete o;
+                                             }))
 {
    if (auto a = get<TNamed>(); a)
       a->SetName(name);
@@ -330,8 +331,9 @@ xRooNode::xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const
                s->setAttribute("obs");
                s->setAttribute("global");
             }
-         }
-         if (TString(k).EndsWith("_POI")) {
+         } else if (TString(k).EndsWith("_Observables")) {
+            const_cast<RooArgSet &>(v).setAttribAll("obs");
+         } else if (TString(k).EndsWith("_POI")) {
             for (auto &s : v) {
                s->setAttribute("poi");
                auto _v = dynamic_cast<RooRealVar *>(s);
@@ -469,6 +471,13 @@ void xRooNode::Checked(TObject *obj, bool val)
       if (auto fr = get<RooFitResult>(); fr) {
          if (auto _ws = ws(); _ws) {
             if (val) {
+               // ensure fit result is in genericObjects list ... if not, add a copy ...
+               if (!_ws->genobj(fr->GetName())) {
+                  _ws->import(*fr);
+                  if (auto wfr = dynamic_cast<RooFitResult *>(_ws->genobj(fr->GetName()))) {
+                     fr = wfr;
+                  }
+               }
                RooArgSet _allVars = _ws->allVars();
                _allVars = fr->floatParsFinal();
                _allVars = fr->constPars();
@@ -5729,7 +5738,7 @@ xRooNode xRooNode::datasets() const
          // only add datasets that have observables that cover all our observables
          RooArgSet _obs(obs().argList());
          //_obs.add(coords(true).argList(), true); // include coord observables too, and current xaxis if there's one -
-         //added in loop below
+         // added in loop below
 
          TString cut;
          RooArgSet cutobs;
@@ -6213,7 +6222,11 @@ xRooNode xRooNode::fitResult(const char *opt) const
                   auto cov = _fr->reducedCovarianceMatrix(*_pars);
                   // make the diagonals all the current error values
                   for (size_t i = 0; i < _pars->size(); i++) {
-                     cov(i, i) = pow(dynamic_cast<RooRealVar *>(_pars->at(i))->getError(), 2);
+                     if (auto v = dynamic_cast<RooRealVar *>(_pars->at(i))) {
+                        cov(i, i) = pow(v->getError(), 2);
+                     } else {
+                        cov(i, i) = 0;
+                     }
                   }
                   fr->setCovarianceMatrix(cov);
                }
@@ -6279,7 +6292,11 @@ xRooNode xRooNode::fitResult(const char *opt) const
    int i = 0;
    for (auto &p : fr->floatParsFinal()) {
       if (!prevCov || i >= prevCov->GetNcols()) {
-         cov(i, i) = pow(dynamic_cast<RooRealVar *>(p)->getError(), 2);
+         if (auto v = dynamic_cast<RooRealVar *>(p)) {
+            cov(i, i) = pow(v->getError(), 2);
+         } else {
+            cov(i, i) = 0;
+         }
       }
       i++;
    }
@@ -6975,9 +6992,7 @@ public:
 
       // Strip out parameters with zero error
       RooArgList fpf_stripped;
-      RooFIter fi = fr.floatParsFinal().fwdIterator();
-      RooRealVar *frv;
-      while ((frv = (RooRealVar *)fi.next())) {
+      for (auto *frv : static_range_cast<RooRealVar *>(fi.floatParsFinal())) {
          if (frv->getError() > 1e-20) {
             fpf_stripped.add(*frv);
          }
@@ -7006,8 +7021,8 @@ public:
       std::vector<double> plusVar, minusVar;
 
       // Create vector of plus,minus variations for each parameter
-      TMatrixDSym V(paramList.getSize() == fr.floatParsFinal().getSize() ? fr.covarianceMatrix()
-                                                                         : fr.reducedCovarianceMatrix(paramList));
+      TMatrixDSym V(paramList.size() == fr.floatParsFinal().size() ? fr.covarianceMatrix()
+                                                                   : fr.reducedCovarianceMatrix(paramList));
 
       for (Int_t ivar = 0; ivar < paramList.getSize(); ivar++) {
 
@@ -7732,8 +7747,10 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          } else {
             res = RooProduct("errorEval", "errorEval",
                              RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()))
-                     .getPropagatedError(*fr/*, normSet*/); // should be no need to pass a normSet to a non-pdf (but not verified this)
-                     // especially important not to pass in the case we are evaluated RooRealSumPdf as a function! otherwise error will be wrong
+                     .getPropagatedError(
+                        *fr /*, normSet*/); // should be no need to pass a normSet to a non-pdf (but not verified this)
+            // especially important not to pass in the case we are evaluated RooRealSumPdf as a function! otherwise
+            // error will be wrong
          }
          if (needBinWidth) {
             res *= h->GetBinWidth(i);
@@ -9433,14 +9450,20 @@ void xRooNode::Draw(Option_t *opt)
                   int binNum = mainHist->FindFixBin(ratioGraph->GetPointX(i));
                   double nom = mainHist->GetBinContent(binNum);
                   double nomerr = mainHist->GetBinError(binNum);
-                  ratioGraph->SetPointY(
-                     i, std::get<0>(auxFunctions[h->GetYaxis()->GetTitle()])(ratioGraph->GetPointY(i), nom, nomerr));
-                  ratioGraph->SetPointEYhigh(i, std::get<0>(auxFunctions[h->GetYaxis()->GetTitle()])(
-                                                   val + ratioGraph->GetErrorYhigh(i), nom, nomerr) -
-                                                   ratioGraph->GetPointY(i));
-                  ratioGraph->SetPointEYlow(i, ratioGraph->GetPointY(i) -
-                                                  std::get<0>(auxFunctions[h->GetYaxis()->GetTitle()])(
-                                                     val - ratioGraph->GetErrorYlow(i), nom, nomerr));
+                  double yval =
+                     std::get<0>(auxFunctions[h->GetYaxis()->GetTitle()])(ratioGraph->GetPointY(i), nom, nomerr);
+                  double yup = std::get<0>(auxFunctions[h->GetYaxis()->GetTitle()])(val + ratioGraph->GetErrorYhigh(i),
+                                                                                    nom, nomerr) -
+                               yval;
+                  double ydown = yval - std::get<0>(auxFunctions[h->GetYaxis()->GetTitle()])(
+                                           val - ratioGraph->GetErrorYlow(i), nom, nomerr);
+                  if (!std::isnan(yval)) {
+                     ratioGraph->SetPointY(i, yval);
+                     if (!std::isnan(yup))
+                        ratioGraph->SetPointEYhigh(i, yup);
+                     if (!std::isnan(ydown))
+                        ratioGraph->SetPointEYlow(i, ydown);
+                  }
                }
                // remove the zero points
                int i = 0;

@@ -57,7 +57,6 @@ Many more features are available in the xRooBrowser, and further documentation a
 
  */
 
-
 #include "xRooFit/xRooBrowser.h"
 #include "xRooFit/xRooNode.h"
 
@@ -72,7 +71,9 @@ Many more features are available in the xRooBrowser, and further documentation a
 #include "TGFileDialog.h"
 #include "TObjString.h"
 
-#define GETPOPUPMENU(b, m) ((TGPopupMenu *)(*(void **)(((unsigned char *)b) + b->Class()->GetDataMemberOffset(#m))))
+#define GETPOPUPMENU(b, m)          \
+   reinterpret_cast<TGPopupMenu *>( \
+      *reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(b) + b->Class()->GetDataMemberOffset(#m)))
 
 BEGIN_XROOFIT_NAMESPACE;
 
@@ -119,7 +120,8 @@ void xRooBrowser::HandleMenu(Int_t id)
    if (id == TRootBrowser::kOpenFile) {
       static TString dir(".");
       TGFileInfo fi;
-      static const char *openFileTypes[] = {"ROOT files", "*.root", "JSON files", "*.json", "All files", "*", 0, 0};
+      static const char *openFileTypes[] = {"ROOT files", "*.root", "JSON files", "*.json",
+                                            "All files",  "*",      nullptr,      nullptr};
       fi.fFileTypes = openFileTypes;
       fi.SetIniDir(dir);
       new TGFileDialog(gClient->GetDefaultRoot(), dynamic_cast<TRootBrowser *>(GetBrowserImp()), kFDOpen, &fi);
