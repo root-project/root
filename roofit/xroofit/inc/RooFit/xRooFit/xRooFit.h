@@ -116,6 +116,21 @@ public:
       ClassDef(StoredFitResult, 0)
    };
 
+   // can't use an enum class because pyROOT doesn't handle it
+   class TestStatistic {
+   public:
+      enum Type {
+         // basic likelihood ratio
+         tmu = -1,
+         // upper limit test statistics
+         qmu = -2,
+         qmutilde = -3,
+         // discovery test statistics
+         q0 = -4,
+         uncappedq0 = -5
+      };
+   };
+
    class Asymptotics {
 
    public:

@@ -379,6 +379,11 @@ public:
    xRooHypoSpace hypoSpace(int nPoints, double low, double high,
                            double alt_value = std::numeric_limits<double>::quiet_NaN(),
                            const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
+   xRooHypoSpace hypoSpace(const char *parName, xRooFit::TestStatistic::Type tsType, int nPoints = 0)
+   {
+      return hypoSpace(parName, int(tsType), nPoints, -std::numeric_limits<double>::infinity(),
+                       std::numeric_limits<double>::infinity());
+   }
 
    std::shared_ptr<RooArgSet> pars(bool stripGlobalObs = true) const;
 
