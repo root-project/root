@@ -459,7 +459,6 @@ TEST(RNTupleInspector, PageSizeDistribution)
       auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
 
       auto writeOptions = RNTupleWriteOptions();
-      // Test without compression and an extremely low page size for consistency's sake
       writeOptions.SetCompression(505);
       writeOptions.SetApproxUnzippedPageSize(64);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
@@ -472,16 +471,22 @@ TEST(RNTupleInspector, PageSizeDistribution)
       }
    }
 
+   auto ntuple = ROOT::Experimental::RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails);
+
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   inspector->PrintColumnTypeInfo();
+
    int intColId = inspector->GetColumnsByType(EColumnType::kSplitInt64)[0];
    auto intPageSizeHisto = inspector->GetPageSizeDistribution(intColId);
-   EXPECT_STREQ(Form("pageSizeHistCol%d", intColId), intPageSizeHisto->GetName());
+   EXPECT_STREQ("pageSizeHist", intPageSizeHisto->GetName());
    EXPECT_STREQ(Form("Page size distribution for column with ID %d", intColId), intPageSizeHisto->GetTitle());
    EXPECT_STREQ("Page size (B)", intPageSizeHisto->GetXaxis()->GetTitle());
    EXPECT_STREQ("N_{pages}", intPageSizeHisto->GetYaxis()->GetTitle());
    EXPECT_EQ(64, intPageSizeHisto->GetNbinsX());
    // Make sure that all page sizes are included in the histogram
-   EXPECT_EQ(inspector->GetColumnInspector(intColId).GetNPages(), intPageSizeHisto->Integral());
+   int nIntPages = inspector->GetColumnInspector(intColId).GetNPages();
+   EXPECT_EQ(nIntPages, intPageSizeHisto->Integral());
 
    auto floatPageSizeHisto = inspector->GetPageSizeDistribution(EColumnType::kSplitReal32, "floatPageSize",
                                                                 "Float page size distribution", 100);
@@ -496,6 +501,25 @@ TEST(RNTupleInspector, PageSizeDistribution)
       nFloatPages += inspector->GetColumnInspector(colId).GetNPages();
    }
    EXPECT_EQ(nFloatPages, floatPageSizeHisto->Integral());
+
+   auto multipleColsSizeHisto = inspector->GetPageSizeDistribution({0, 1, 2});
+   EXPECT_STREQ("pageSizeHist", multipleColsSizeHisto->GetName());
+   EXPECT_STREQ("Page size distribution", multipleColsSizeHisto->GetTitle());
+   int nPages = inspector->GetColumnInspector(0).GetNPages() + inspector->GetColumnInspector(1).GetNPages() +
+                inspector->GetColumnInspector(2).GetNPages();
+   EXPECT_EQ(nPages, multipleColsSizeHisto->Integral());
+
+   auto intFloatPageSizeHisto =
+      inspector->GetPageSizeDistribution({EColumnType::kSplitInt64, EColumnType::kSplitReal32});
+   EXPECT_STREQ("pageSizeHist", intFloatPageSizeHisto->GetName());
+   EXPECT_STREQ("Per-column type page size distribution", intFloatPageSizeHisto->GetTitle());
+   EXPECT_EQ(2, intFloatPageSizeHisto->GetNhists());
+
+   int stackIntegral = 0;
+   for (auto hist : TRangeDynCast<TH1D>(intFloatPageSizeHisto->GetHists())) {
+      stackIntegral += hist->Integral();
+   }
+   EXPECT_EQ(nIntPages + nFloatPages, stackIntegral);
 
    // Requesting a histogram for a column with a physical ID not present in the given RNTuple should throw
    EXPECT_THROW(inspector->GetPageSizeDistribution(inspector->GetDescriptor()->GetNPhysicalColumns() + 1),

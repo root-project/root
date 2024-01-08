@@ -22,6 +22,7 @@
 
 #include <TFile.h>
 #include <TH1D.h>
+#include <THStack.h>
 
 #include <cstdlib>
 #include <memory>
@@ -357,6 +358,37 @@ public:
    /// The x-axis will range from the smallest page size, to the largest (inclusive).
    std::unique_ptr<TH1D> GetPageSizeDistribution(EColumnType colType, std::string histName = "",
                                                  std::string histTitle = "", size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram containing the size distribution of the compressed pages for a collection columns.
+   ///
+   /// \param[in] colIds The physical IDs of the columns for which to get the page size distribution.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `TH1D` containing the (cumulative) page size distribution.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   std::unique_ptr<TH1D> GetPageSizeDistribution(const std::vector<DescriptorId_t> &colIds, std::string histName = "",
+                                                 std::string histTitle = "", size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram containing the size distribution of the compressed pages for all columns of a given list
+   /// of types.
+   ///
+   /// \param[in] colTypes The column types for which to get the size distribution, as defined by
+   /// ROOT::Experimental::EColumnType.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `THStack` containing the page size distribution. Options and examples for displaying can
+   /// be found in the `THStack` documentation.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   std::unique_ptr<THStack> GetPageSizeDistribution(const std::vector<EColumnType> &colTypes, std::string histName = "",
+                                                    std::string histTitle = "", size_t nBins = 64);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get storage information for a given (sub)field by ID.
