@@ -299,7 +299,7 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       high = p->getMax("scan");
       ::Info("xRooHypoSpace::scan", "Using %s range: %g - %g", p->GetName(), low, high);
    }
-   if(!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
+   if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
       p->setRange("scan", low, high);
    }
 
@@ -553,11 +553,11 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
    }
 
    std::string coordString;
-   for(auto a : axes()) {
-      coordString += TString::Format("%s=%g",a->GetName(),out.coords->getRealValue(a->GetName()));
+   for (auto a : axes()) {
+      coordString += TString::Format("%s=%g", a->GetName(), out.coords->getRealValue(a->GetName()));
       coordString += ",";
    }
-   coordString.erase(coordString.end()-1);
+   coordString.erase(coordString.end() - 1);
 
    ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
    return emplace_back(out);
@@ -928,23 +928,23 @@ void xRooNLLVar::xRooHypoSpace::Print(Option_t * /*opt*/) const
          std::cout << afit->status();
          badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(afit->status()) == 0);
       }
-      if(auto asiPoint = const_cast<xRooHypoPoint &>(at(i)).asimov(true)) {
-          std::cout << ",asimov.ufit:";
-          auto asi_ufit = asiPoint->ufit(true);
-          if (!asi_ufit) {
-              std::cout << "-";
-          } else {
-              std::cout << asi_ufit->status();
-              badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(asi_ufit->status()) == 0);
-          }
-          std::cout << ",asimov.cfit_null:";
-          auto asi_cfit = asiPoint->cfit_null(true);
-          if (!asi_cfit) {
-              std::cout << "-";
-          } else {
-              std::cout << asi_cfit->status();
-              badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(asi_cfit->status()) == 0);
-          }
+      if (auto asiPoint = const_cast<xRooHypoPoint &>(at(i)).asimov(true)) {
+         std::cout << ",asimov.ufit:";
+         auto asi_ufit = asiPoint->ufit(true);
+         if (!asi_ufit) {
+            std::cout << "-";
+         } else {
+            std::cout << asi_ufit->status();
+            badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(asi_ufit->status()) == 0);
+         }
+         std::cout << ",asimov.cfit_null:";
+         auto asi_cfit = asiPoint->cfit_null(true);
+         if (!asi_cfit) {
+            std::cout << "-";
+         } else {
+            std::cout << asi_cfit->status();
+            badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(asi_cfit->status()) == 0);
+         }
       }
       std::cout << "]";
       auto sigma_mu = const_cast<xRooHypoPoint &>(at(i)).sigma_mu(true);
@@ -1063,7 +1063,7 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
                   gPad->Clear();
                gra->DrawClone(expBand ? "AF" : "ALP")->SetBit(kCanDelete);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
-               if(auto pad = gROOT->GetSelectedPad()) {
+               if (auto pad = gROOT->GetSelectedPad()) {
                   pad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
                }
 #endif
@@ -1146,7 +1146,7 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
          gPad->Clear();
       out->DrawClone(expBand ? "AF" : "ALP")->SetBit(kCanDelete);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
-      if(auto pad = gROOT->GetSelectedPad()) {
+      if (auto pad = gROOT->GetSelectedPad()) {
          pad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
       }
 #endif
@@ -1405,12 +1405,12 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
       auto v = (axes().empty()) ? nullptr : dynamic_cast<RooRealVar *>(*axes().rbegin());
       if (!v)
          return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
-      double muMax = std::min(std::min(v->getMax("physical"), v->getMax()),v->getMax("scan"));
-      double muMin = std::max(std::max(v->getMin("physical"), v->getMin()),v->getMin("scan"));
+      double muMax = std::min(std::min(v->getMax("physical"), v->getMax()), v->getMax("scan"));
+      double muMin = std::max(std::max(v->getMin("physical"), v->getMin()), v->getMin("scan"));
       if (!gr || gr->GetN() < 1) {
          if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), muMin)).getVal(sOpt).first)) {
             // first point failed ... give up
-            Error("findlimit","Problem evaluating %s @ %s=%g",sOpt.Data(),v->GetName(), muMin);
+            Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
             return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
          }
          gr.reset();
@@ -1446,7 +1446,7 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
 
       if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
          // second point failed ... give up
-          Error("findlimit","Problem evaluating %s @ %s=%g",sOpt.Data(),v->GetName(), nextPoint);
+         Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
          return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
       }
       gr.reset();
@@ -1460,8 +1460,8 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
    }
 
    auto v = dynamic_cast<RooRealVar *>(*axes().rbegin());
-   double maxMu = std::min(std::min(v->getMax("physical"), v->getMax()),v->getMax("scan"));
-   double minMu = std::max(std::max(v->getMin("physical"), v->getMin()),v->getMin("scan"));
+   double maxMu = std::min(std::min(v->getMax("physical"), v->getMax()), v->getMax("scan"));
+   double minMu = std::max(std::max(v->getMin("physical"), v->getMin()), v->getMin("scan"));
 
    // static double MIN_LIMIT_UNCERT = 1e-4; // stop iterating once uncert gets this small
    if (lim.first > -std::numeric_limits<double>::infinity() && lim.first < std::numeric_limits<double>::infinity() &&
@@ -1490,7 +1490,7 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
          ::Info("xRooHypoSpace::findlimit", "Guessing %g based on rough sigma_mu = %g", nextPoint, rough_sigma_mu);
          //}
       }
-      nextPoint = std::min(nextPoint+nextPoint * relUncert * 0.99,maxMu); // ensure we step over location if possible
+      nextPoint = std::min(nextPoint + nextPoint * relUncert * 0.99, maxMu); // ensure we step over location if possible
 
       if (nextPoint > maxMu)
          return lim;
@@ -1511,11 +1511,11 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
    ::Info("xRooHypoSpace::findlimit", "%s -- Testing new point @ %s=%g (delta=%g)", sOpt.Data(), v->GetName(),
           nextPoint, lim.second);
    if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
-       if(maxTries==0) {
-           Warning("findlimit","Reached max number of point evaluations");
-       } else {
-           Error("findlimit","Problem evaluating %s @ %s=%g",sOpt.Data(),v->GetName(), nextPoint);
-       }
+      if (maxTries == 0) {
+         Warning("findlimit", "Reached max number of point evaluations");
+      } else {
+         Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
+      }
       return lim;
    }
    gr.reset();
