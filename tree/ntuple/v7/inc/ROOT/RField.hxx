@@ -741,6 +741,10 @@ protected:
 
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final
+   {
+      CallReadOn(*fSubFields[0], clusterIndex, to);
+   }
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
