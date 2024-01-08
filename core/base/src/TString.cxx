@@ -54,12 +54,6 @@ as a TString, construct a TString from it, eg:
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 
-// Definition of the TString static data member. Declaration (even with
-// initialization) in the class body *is not* definition according to C++
-// standard. The definition must be explicitly done in one TU for ODR use. See
-// https://en.cppreference.com/w/cpp/language/definition
-const Ssiz_t TString::kNPOS;
-
 #if defined(R__WIN32)
 #define strtoull _strtoui64
 #endif
