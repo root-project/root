@@ -401,8 +401,6 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
      delete[] newOrder ;
    }
 
-   coutP(Generation) << "RooMCStudy: now generating " << nEvt << " events" << endl ;
-
    // Actual generation of events
    if (nEvt>0) {
      _genSample = _genContext->generate(nEvt) ;
