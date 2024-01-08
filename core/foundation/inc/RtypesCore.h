@@ -97,31 +97,31 @@ typedef float          Size_t;      //Attribute size (float)
 
 //---- constants ---------------------------------------------------------------
 
-const Bool_t    kTRUE        = true;
-const Bool_t    kFALSE       = false;
+constexpr Bool_t kTRUE = true;
+constexpr Bool_t kFALSE = false;
 
-const Int_t     kMaxUChar    = 256;
-const Int_t     kMaxChar     = kMaxUChar >> 1;
-const Int_t     kMinChar     = -kMaxChar - 1;
+constexpr Int_t kMaxUChar = 256;
+constexpr Int_t kMaxChar = kMaxUChar >> 1;
+constexpr Int_t kMinChar = -kMaxChar - 1;
 
-const Int_t     kMaxUShort   = 65534;
-const Int_t     kMaxShort    = kMaxUShort >> 1;
-const Int_t     kMinShort    = -kMaxShort - 1;
+constexpr Int_t kMaxUShort = 65534;
+constexpr Int_t kMaxShort = kMaxUShort >> 1;
+constexpr Int_t kMinShort = -kMaxShort - 1;
 
-const UInt_t    kMaxUInt     = UInt_t(~0);
-const Int_t     kMaxInt      = Int_t(kMaxUInt >> 1);
-const Int_t     kMinInt      = -kMaxInt - 1;
+constexpr UInt_t kMaxUInt = UInt_t(~0);
+constexpr Int_t kMaxInt = Int_t(kMaxUInt >> 1);
+constexpr Int_t kMinInt = -kMaxInt - 1;
 
-const ULong_t   kMaxULong    = ULong_t(~0);
-const Long_t    kMaxLong     = Long_t(kMaxULong >> 1);
-const Long_t    kMinLong     = -kMaxLong - 1;
+constexpr ULong_t kMaxULong = ULong_t(~0);
+constexpr Long_t kMaxLong = Long_t(kMaxULong >> 1);
+constexpr Long_t kMinLong = -kMaxLong - 1;
 
-const ULong64_t kMaxULong64  = ULong64_t(~0LL);
-const Long64_t  kMaxLong64   = Long64_t(kMaxULong64 >> 1);
-const Long64_t  kMinLong64   = -kMaxLong64 - 1;
+constexpr ULong64_t kMaxULong64 = ULong64_t(~0LL);
+constexpr Long64_t kMaxLong64 = Long64_t(kMaxULong64 >> 1);
+constexpr Long64_t kMinLong64 = -kMaxLong64 - 1;
 
-const ULong_t   kBitsPerByte = 8;
-const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
+constexpr ULong_t kBitsPerByte = 8;
+constexpr Ssiz_t kNPOS = ~(Ssiz_t)0;
 
 //---- debug global ------------------------------------------------------------
 
