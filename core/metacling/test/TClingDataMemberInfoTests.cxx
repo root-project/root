@@ -220,3 +220,35 @@ protected:
    auto *dmInnerProtected = (TDataMember*)TClass::GetClass("DMLookup::Outer")->GetListOfDataMembers()->FindObject("InnerProtected");
    EXPECT_EQ(dmInnerProtected->Property(), kIsProtected | kIsClass);
 }
+
+TEST(TClingDataMemberInfo, Offset)
+{
+   gInterpreter->Declare("int ROOT_7459 = 42; ROOT_7459++;");
+   EXPECT_TRUE(43 == *(int*)gROOT->GetGlobal("ROOT_7459")->GetAddress());
+
+   gInterpreter->Declare("constexpr int var1 = 1;");
+   EXPECT_TRUE(1 == *(int*)gROOT->GetGlobal("var1")->GetAddress());
+
+   gInterpreter->Declare("static constexpr int var2 = -2;");
+   EXPECT_TRUE(-2 == *(int*)gROOT->GetGlobal("var2")->GetAddress());
+
+   gInterpreter->Declare("const float var3 = 3.1;");
+   EXPECT_FLOAT_EQ(3.1, *(float*)gROOT->GetGlobal("var3")->GetAddress());
+
+   gInterpreter->Declare("static const double var4 = 4.2;");
+   EXPECT_DOUBLE_EQ(4.2, *(double*)gROOT->GetGlobal("var4")->GetAddress());
+
+   // Make sure ROOT's Core constexpr constants work
+   EXPECT_EQ(3000, *(int*)gROOT->GetGlobal("kError")->GetAddress());
+
+#ifdef R__USE_CXXMODULES
+   // gGeoManager is defined in the Geom libraries and we want to make sure we
+   // do not load it when autoloading is off. We can only test this in modules
+   // mode because gGeoManager is not part of the PCH and non-modular ROOT has
+   // header parsing and autoloading coupled leading to redundant load of
+   // libGeom at gROOT->GetGlobal time.
+   TGlobal *GeoManagerInfo = gROOT->GetGlobal("gGeoManager");
+   TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+   EXPECT_TRUE(-1L == (ptrdiff_t)GeoManagerInfo->GetAddress());
+#endif // R__USE_CXXMODULES
+}
