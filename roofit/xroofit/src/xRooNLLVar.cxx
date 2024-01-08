@@ -2710,16 +2710,21 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
 
       auto out = hypoSpace(parName, pllType, alt_val);
 
-      if (tsType == xRooFit::TestStatistic::qmutilde) {
-         // TODO: things like the physical range and alt value can't be stored on the poi
-         // because if they change they will change for all hypoSpaces at once, so cannot have
-         // two hypoSpace with e.g. different physical ranges.
-         // the hypoSpace should make a copy of them at some point
-         for (auto p : out.poi()) {
+
+      // TODO: things like the physical range and alt value can't be stored on the poi
+      // because if they change they will change for all hypoSpaces at once, so cannot have
+      // two hypoSpace with e.g. different physical ranges.
+      // the hypoSpace should make a copy of them at some point
+      for (auto p : out.poi()) {
+         if (tsType == xRooFit::TestStatistic::qmutilde) {
             dynamic_cast<RooRealVar *>(p)->setRange("physical", 0, std::numeric_limits<double>::infinity());
             Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [0,inf]", p->GetName());
+         } else if(dynamic_cast<RooRealVar *>(p)->hasRange("physical")) {
+            dynamic_cast<RooRealVar *>(p)->removeRange("physical");
+            Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [-inf,inf] (i.e. removed range)", p->GetName());
          }
       }
+
 
       // ensure pll type is set explicitly if known at this point
       if (tsType == xRooFit::TestStatistic::qmutilde || tsType == xRooFit::TestStatistic::qmu) {
