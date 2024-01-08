@@ -479,17 +479,17 @@ TEST(RNTupleInspector, PageSizeDistribution)
    EXPECT_STREQ(Form("Page size distribution for column with ID %d", intColId), intPageSizeHisto->GetTitle());
    EXPECT_STREQ("Page size (B)", intPageSizeHisto->GetXaxis()->GetTitle());
    EXPECT_STREQ("N_{pages}", intPageSizeHisto->GetYaxis()->GetTitle());
-
+   EXPECT_EQ(64, intPageSizeHisto->GetNbinsX());
    // Make sure that all page sizes are included in the histogram
    EXPECT_EQ(inspector->GetColumnInspector(intColId).GetNPages(), intPageSizeHisto->Integral());
 
-   auto floatPageSizeHisto =
-      inspector->GetPageSizeDistribution(EColumnType::kSplitReal32, "floatPageSize", "Float page size distribution");
+   auto floatPageSizeHisto = inspector->GetPageSizeDistribution(EColumnType::kSplitReal32, "floatPageSize",
+                                                                "Float page size distribution", 100);
    EXPECT_STREQ("floatPageSize", floatPageSizeHisto->GetName());
    EXPECT_STREQ("Float page size distribution", floatPageSizeHisto->GetTitle());
    EXPECT_STREQ("Page size (B)", floatPageSizeHisto->GetXaxis()->GetTitle());
    EXPECT_STREQ("N_{pages}", floatPageSizeHisto->GetYaxis()->GetTitle());
-
+   EXPECT_EQ(100, floatPageSizeHisto->GetNbinsX());
    // Make sure that all page sizes are included in the histogram
    int nFloatPages = 0;
    for (const auto colId : inspector->GetColumnsByType(EColumnType::kSplitReal32)) {
