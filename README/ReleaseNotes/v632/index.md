@@ -214,4 +214,6 @@ Please use the higher-level functions `RooAbsPdf::createNLL()` and `RooAbsPdf::c
 
 ## Build, Configuration and Testing Infrastructure
 
-
+- The behavior that was toggled when passing the `-Dfail-on-missing=ON` option to CMake is now the default.
+  This means ROOT now fails to configure when any required package is missing. The big benefit of this is that ROOT features don't get dynamically disabled anymore based on your environment, making the build more deterministic.
+  For now, you can restore the old behavior by passing `-Dfail-on-missing=OFF` to CMake, but this flag will likely get deprecated in the future.
