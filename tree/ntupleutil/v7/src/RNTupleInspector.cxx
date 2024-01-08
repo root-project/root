@@ -307,55 +307,52 @@ std::unique_ptr<TH1D> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribut
                                                                                     std::string histName,
                                                                                     std::string histTitle, size_t nBins)
 {
-   auto hist = std::make_unique<TH1D>();
-
-   if (histName.empty())
-      histName = "pageSizeHistCol" + std::to_string(physicalColumnId);
-   hist->SetName(histName.c_str());
-
    if (histTitle.empty())
       histTitle = "Page size distribution for column with ID " + std::to_string(physicalColumnId);
-   hist->SetTitle(histTitle.c_str());
-   hist->SetXTitle("Page size (B)");
-   hist->SetYTitle("N_{pages}");
 
-   auto colInfo = GetColumnInspector(physicalColumnId);
-   auto histMinMax =
-      std::minmax_element(colInfo.GetCompressedPageSizes().begin(), colInfo.GetCompressedPageSizes().end());
-
-   hist->SetBins(nBins, *histMinMax.first,
-                 *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
-
-   for (const auto pageSize : colInfo.GetCompressedPageSizes()) {
-      hist->Fill(pageSize);
-   }
-
-   return hist;
+   return GetPageSizeDistribution(std::vector{physicalColumnId}, histName, histTitle, nBins);
 }
 
 std::unique_ptr<TH1D>
 ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental::EColumnType colType,
                                                               std::string histName, std::string histTitle, size_t nBins)
 {
+   if (histName.empty())
+      histName = "pageSizeHistCol" + Detail::RColumnElementBase::GetTypeName(colType);
+   if (histTitle.empty())
+      histTitle = "Page size distribution for columns with type " + Detail::RColumnElementBase::GetTypeName(colType);
+
+   auto perTypeHist = GetPageSizeDistribution(std::vector{colType}, histName, histTitle, nBins);
+
+   if (perTypeHist->GetNhists() < 1)
+      return std::make_unique<TH1D>(histName.c_str(), histTitle.c_str(), 64, 0, 0);
+
+   auto hist = std::unique_ptr<TH1D>(dynamic_cast<TH1D *>(perTypeHist->GetHists()->First()));
+
+   hist->SetName(histName.c_str());
+   hist->SetTitle(histTitle.c_str());
+   hist->SetXTitle("Page size (B)");
+   hist->SetYTitle("N_{pages}");
+   return hist;
+}
+
+std::unique_ptr<TH1D>
+ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(const std::vector<DescriptorId_t> &colIds,
+                                                              std::string histName, std::string histTitle, size_t nBins)
+{
    auto hist = std::make_unique<TH1D>();
 
    if (histName.empty())
-      histName = "pageSizeHistCol" + Detail::RColumnElementBase::GetTypeName(colType);
+      histName = "pageSizeHist";
    hist->SetName(histName.c_str());
-
    if (histTitle.empty())
-      histTitle = "Page size distribution for columns with type " + Detail::RColumnElementBase::GetTypeName(colType);
+      histTitle = "Page size distribution";
    hist->SetTitle(histTitle.c_str());
    hist->SetXTitle("Page size (B)");
    hist->SetYTitle("N_{pages}");
 
-   auto colIds = GetColumnsByType(colType);
-
-   if (colIds.empty())
-      return hist;
-
    std::vector<std::uint64_t> pageSizes;
-   std::for_each(colIds.begin(), colIds.end(), [this, &pageSizes](const auto colId) {
+   std::for_each(colIds.cbegin(), colIds.cend(), [this, &pageSizes](const auto colId) {
       auto colInfo = GetColumnInspector(colId);
       pageSizes.insert(pageSizes.end(), colInfo.GetCompressedPageSizes().begin(),
                        colInfo.GetCompressedPageSizes().end());
@@ -370,6 +367,56 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental
    }
 
    return hist;
+}
+
+std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(
+   const std::vector<ROOT::Experimental::EColumnType> &colTypes, std::string histName, std::string histTitle,
+   size_t nBins)
+{
+   if (histName.empty())
+      histName = "pageSizeHist";
+   if (histTitle.empty())
+      histTitle = "Per-column type page size distribution";
+
+   auto stackedHist = std::make_unique<THStack>(histName.c_str(), histTitle.c_str());
+
+   double histMin = std::numeric_limits<double>::max();
+   double histMax = 0;
+   std::map<EColumnType, std::vector<std::uint64_t>> pageSizes;
+
+   for (const auto colType : colTypes) {
+      auto colIds = GetColumnsByType(colType);
+
+      if (colIds.empty())
+         continue;
+
+      std::vector<std::uint64_t> pageSizesForColType;
+      std::for_each(colIds.cbegin(), colIds.cend(), [this, &pageSizesForColType](const auto colId) {
+         auto colInfo = GetColumnInspector(colId);
+         pageSizesForColType.insert(pageSizesForColType.end(), colInfo.GetCompressedPageSizes().begin(),
+                                    colInfo.GetCompressedPageSizes().end());
+      });
+      pageSizes.emplace(colType, pageSizesForColType);
+
+      auto histMinMax = std::minmax_element(pageSizesForColType.begin(), pageSizesForColType.end());
+      histMin = std::min(histMin, static_cast<double>(*histMinMax.first));
+      histMax = std::max(histMax, static_cast<double>(*histMinMax.second));
+   }
+
+   for (const auto &[colType, pageSizesForColType] : pageSizes) {
+      auto hist = std::make_unique<TH1D>(
+         TString::Format("pageSizeHistCol%s", Detail::RColumnElementBase::GetTypeName(colType).c_str()),
+         Detail::RColumnElementBase::GetTypeName(colType).c_str(), nBins, histMin,
+         histMax + ((histMax - histMin) / static_cast<double>(nBins)));
+
+      for (const auto pageSize : pageSizesForColType) {
+         hist->Fill(pageSize);
+      }
+
+      stackedHist->Add(hist.release());
+   }
+
+   return stackedHist;
 }
 
 //------------------------------------------------------------------------------
