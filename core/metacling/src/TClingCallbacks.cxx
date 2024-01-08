@@ -84,9 +84,12 @@ extern "C" {
 }
 
 class AutoloadLibraryMU : public llvm::orc::MaterializationUnit {
+   const TClingCallbacks &fCallbacks;
+   std::string fLibrary;
+   llvm::orc::SymbolNameVector fSymbols;
 public:
-   AutoloadLibraryMU(const std::string &Library, const llvm::orc::SymbolNameVector &Symbols)
-      : MaterializationUnit({getSymbolFlagsMap(Symbols), nullptr}), fLibrary(Library), fSymbols(Symbols)
+   AutoloadLibraryMU(const TClingCallbacks &cb, const std::string &Library, const llvm::orc::SymbolNameVector &Symbols)
+      : MaterializationUnit({getSymbolFlagsMap(Symbols), nullptr}), fCallbacks(cb), fLibrary(Library), fSymbols(Symbols)
    {
    }
 
@@ -94,6 +97,11 @@ public:
 
    void materialize(std::unique_ptr<llvm::orc::MaterializationResponsibility> R) override
    {
+      if (!fCallbacks.IsAutoLoadingEnabled()) {
+         R->failMaterialization();
+         return;
+      }
+
       llvm::orc::SymbolMap loadedSymbols;
       llvm::orc::SymbolNameSet failedSymbols;
       bool loadedLibrary = false;
@@ -152,19 +160,22 @@ private:
          map[symbolName] = llvm::JITSymbolFlags::Exported;
       return map;
    }
-
-   std::string fLibrary;
-   llvm::orc::SymbolNameVector fSymbols;
 };
 
 class AutoloadLibraryGenerator : public llvm::orc::DefinitionGenerator {
+   const TClingCallbacks &fCallbacks;
+   cling::Interpreter *fInterpreter;
 public:
-   AutoloadLibraryGenerator(cling::Interpreter *interp) : fInterpreter(interp) {}
+   AutoloadLibraryGenerator(cling::Interpreter *interp, const TClingCallbacks& cb)
+      : fCallbacks(cb), fInterpreter(interp) {}
 
    llvm::Error tryToGenerate(llvm::orc::LookupState &LS, llvm::orc::LookupKind K, llvm::orc::JITDylib &JD,
                              llvm::orc::JITDylibLookupFlags JDLookupFlags,
                              const llvm::orc::SymbolLookupSet &Symbols) override
    {
+      if (!fCallbacks.IsAutoLoadingEnabled())
+         llvm::Error::success();
+
       // If we get here, the symbols have not been found in the current process,
       // so no need to check that again. Instead search for the library that
       // provides the symbol and create one MaterializationUnit per library to
@@ -199,7 +210,7 @@ public:
       }
 
       for (auto &&KV : found) {
-         auto MU = std::make_unique<AutoloadLibraryMU>(KV.first, std::move(KV.second));
+         auto MU = std::make_unique<AutoloadLibraryMU>(fCallbacks, KV.first, std::move(KV.second));
          if (auto Err = JD.define(MU))
             return Err;
       }
@@ -210,9 +221,6 @@ public:
 
       return llvm::Error::success();
    }
-
-private:
-   cling::Interpreter *fInterpreter;
 };
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : InterpreterCallbacks(interp)
@@ -222,7 +230,7 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : 
       m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
       fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
 
-      interp->addGenerator(std::make_unique<AutoloadLibraryGenerator>(interp));
+      interp->addGenerator(std::make_unique<AutoloadLibraryGenerator>(interp, *this));
    }
 }
 
