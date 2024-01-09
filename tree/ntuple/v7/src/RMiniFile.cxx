@@ -1191,18 +1191,20 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Writ
    const std::string &objectName,
    const std::string &title)
 {
-   if (offset < 0)
-      offset = fFilePos;
+   if (offset > 0)
+      fKeyOffset = offset;
    RTFString strClass{className};
    RTFString strObject{objectName};
    RTFString strTitle{title};
 
-   RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, len, nbytes);
-   Write(&key, key.fKeyHeaderSize, offset);
+   RTFKey key(fKeyOffset, directoryOffset, strClass, strObject, strTitle, len, nbytes);
+   Write(&key, key.fKeyHeaderSize, fKeyOffset);
    Write(&strClass, strClass.GetSize());
    Write(&strObject, strObject.GetSize());
    Write(&strTitle, strTitle.GetSize());
    auto offsetData = fFilePos;
+   // The next key starts after the data.
+   fKeyOffset = offsetData + nbytes;
    if (buffer)
       Write(buffer, nbytes);
 
@@ -1364,8 +1366,9 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    std::uint64_t offset;
    if (fFileSimple) {
       if (fIsBare) {
-         offset = fFileSimple.fFilePos;
+         offset = fFileSimple.fKeyOffset;
          fFileSimple.Write(data, nbytes);
+         fFileSimple.fKeyOffset += nbytes;
       } else {
          offset = fFileSimple.WriteKey(data, nbytes, len, -1, 100, kBlobClassName);
       }
@@ -1410,6 +1413,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteBareFileSkeleton(int 
    RTFNTuple ntupleOnDisk;
    fFileSimple.fControlBlock->fSeekNTuple = fFileSimple.fFilePos;
    fFileSimple.Write(&ntupleOnDisk, ntupleOnDisk.GetSize());
+   fFileSimple.fKeyOffset = fFileSimple.fFilePos;
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
@@ -1418,7 +1422,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
    RTFString strStreamerInfo{"StreamerInfo"};
    RTFString strStreamerTitle{"Doubly linked list"};
 
-   fFileSimple.fControlBlock->fHeader.SetSeekInfo(fFileSimple.fFilePos);
+   fFileSimple.fControlBlock->fHeader.SetSeekInfo(fFileSimple.fKeyOffset);
    RTFKey keyStreamerInfo(
       fFileSimple.fControlBlock->fHeader.GetSeekInfo(), 100, strTList, strStreamerInfo, strStreamerTitle, 0);
    RTFStreamerInfoList streamerInfo;
@@ -1454,7 +1458,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
    RTFKey keyRNTuple(fFileSimple.fControlBlock->fSeekNTuple, 100, strRNTupleClass, strRNTupleName, strEmpty,
                      RTFNTuple().GetSize());
 
-   fFileSimple.fControlBlock->fFileRecord.SetSeekKeys(fFileSimple.fFilePos);
+   fFileSimple.fControlBlock->fFileRecord.SetSeekKeys(fFileSimple.fKeyOffset);
    RTFKeyList keyList{1};
    RTFKey keyKeyList(fFileSimple.fControlBlock->fFileRecord.GetSeekKeys(), 100, strEmpty, strFileName, strEmpty,
                      keyList.GetSize() + keyRNTuple.fKeyLen);
@@ -1469,11 +1473,12 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
    fFileSimple.fControlBlock->fFileRecord.fNBytesKeys =
       fFileSimple.fFilePos - fFileSimple.fControlBlock->fFileRecord.GetSeekKeys();
+   fFileSimple.fKeyOffset = fFileSimple.fFilePos;
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileFreeList()
 {
-   fFileSimple.fControlBlock->fHeader.SetSeekFree(fFileSimple.fFilePos);
+   fFileSimple.fControlBlock->fHeader.SetSeekFree(fFileSimple.fKeyOffset);
    RTFString strEmpty;
    RTFString strFileName{fFileName};
    RTFFreeEntry freeEntry;
@@ -1495,7 +1500,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileNTupleKey()
    RTFString strEmpty;
 
    RTFNTuple ntupleOnDisk(fNTupleAnchor);
-   fFileSimple.fControlBlock->fSeekNTuple = fFileSimple.fFilePos;
+   fFileSimple.fControlBlock->fSeekNTuple = fFileSimple.fKeyOffset;
    fFileSimple.WriteKey(&ntupleOnDisk, ntupleOnDisk.GetSize(), ntupleOnDisk.GetSize(),
                         fFileSimple.fControlBlock->fSeekNTuple, 100, "ROOT::Experimental::RNTuple", fNTupleName, "");
 }
@@ -1532,4 +1537,5 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
    RUInt32BE padding{0};
    for (int i = 0; i < 3; ++i)
       fFileSimple.Write(&padding, sizeof(padding));
+   fFileSimple.fKeyOffset = fFileSimple.fFilePos;
 }

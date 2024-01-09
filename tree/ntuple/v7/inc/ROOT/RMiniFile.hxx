@@ -102,6 +102,8 @@ private:
       FILE *fFile = nullptr;
       /// Keeps track of the seek offset
       std::uint64_t fFilePos = 0;
+      /// Keeps track of the next key offset
+      std::uint64_t fKeyOffset = 0;
       /// Keeps track of TFile control structures, which need to be updated on committing the data set
       std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
 
