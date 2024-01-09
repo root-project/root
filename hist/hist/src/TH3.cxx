@@ -2365,7 +2365,7 @@ TH1 *TH3::Project3D(Option_t *option) const
    TString opt = option;
    TString extra_name = option;
    Int_t underscore = extra_name.Last('_');
-   if (underscore>0) {
+   if (underscore > 0) {
       extra_name.Remove(underscore,extra_name.Length()-underscore);
       opt.Remove(0,underscore+1);
     }
@@ -2418,7 +2418,7 @@ TH1 *TH3::Project3D(Option_t *option) const
 
    TString name = GetName();
    TString title = GetTitle();
-   if (underscore>0) {
+   if (underscore > 0) {
       name  += "_";
       name  += extra_name;
    }
