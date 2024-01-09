@@ -124,7 +124,6 @@ public:
    };
 
 private:
-   std::unique_ptr<TFile> fSourceFile;
    std::unique_ptr<Detail::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
    int fCompressionSettings = -1;

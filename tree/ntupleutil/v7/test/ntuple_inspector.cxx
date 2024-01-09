@@ -43,11 +43,6 @@ TEST(RNTupleInspector, CreateFromString)
    EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
 
    EXPECT_THROW(RNTupleInspector::Create("nonexistent", fileGuard.GetPath()), ROOT::Experimental::RException);
-
-   ROOT::TestSupport::CheckDiagsRAII diag;
-   diag.requiredDiag(kError, "TFile::TFile", "nonexistent.root does not exist",
-                     /*matchFullMessage=*/false);
-   EXPECT_THROW(RNTupleInspector::Create("ntuple", "nonexistent.root"), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, CompressionSettings)

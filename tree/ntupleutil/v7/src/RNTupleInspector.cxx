@@ -163,19 +163,8 @@ ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *source
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::string_view sourceFileName)
 {
-   auto sourceFile = std::unique_ptr<TFile>(TFile::Open(std::string(sourceFileName).c_str()));
-   if (!sourceFile || sourceFile->IsZombie()) {
-      throw RException(R__FAIL("cannot open source file " + std::string(sourceFileName)));
-   }
-   auto ntuple = std::unique_ptr<ROOT::Experimental::RNTuple>(
-      sourceFile->Get<ROOT::Experimental::RNTuple>(std::string(ntupleName).c_str()));
-   if (!ntuple) {
-      throw RException(
-         R__FAIL("cannot read RNTuple " + std::string(ntupleName) + " from " + std::string(sourceFileName)));
-   }
-
-   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(ntuple->MakePageSource()));
-   inspector->fSourceFile = std::move(sourceFile);
+   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, sourceFileName);
+   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 
    inspector->CollectColumnInfo();
    inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());
