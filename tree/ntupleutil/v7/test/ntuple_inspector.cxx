@@ -130,15 +130,19 @@ TEST(RNTupleInspector, SizeCompressedInt)
       writeOptions.SetCompression(505);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
-      for (int32_t i = 0; i < 50; ++i) {
+      for (int32_t i = 0; i < 500; ++i) {
          *nFldInt = i;
          ntuple->Fill();
+
+         // Store the data in ten clusters to be able to test that the size is correctly computed in this way.
+         if (i % 50 == 49)
+            ntuple->CommitCluster();
       }
    }
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(sizeof(int32_t) * 50, inspector->GetUncompressedSize());
+   EXPECT_EQ(sizeof(int32_t) * 500, inspector->GetUncompressedSize());
    EXPECT_GT(inspector->GetCompressedSize(), 0);
    EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
