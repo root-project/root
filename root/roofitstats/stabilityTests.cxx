@@ -48,7 +48,7 @@ TEST(Stability, ROOT_10615) {
   ASSERT_NE(input_tree->GetEntries(), 0);
 
   RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::DataHandling, "dataset");
-  RooDataSet dataset("dataset", "dataset", input_tree, dt);
+  RooDataSet dataset("dataset", "dataset", dt, RooFit::Import(*input_tree));
   EXPECT_FALSE(hijack.str().empty());
 
   if (gSystem->Load("libMinuit2") < 0)
