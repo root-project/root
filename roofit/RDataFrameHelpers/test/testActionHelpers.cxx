@@ -111,7 +111,7 @@ TEST(RooAbsDataHelper, SkipEventsOutOfRange) {
   RooRealVar x{"x", "x", 0.0, -2.0, 2.0};
 
   // Create a RooDataset from the TTree, and one from the RDataFrame
-  RooDataSet dataSetTree{"dataSetTree", "dataSetTree", tree, x};
+  RooDataSet dataSetTree{"dataSetTree", "dataSetTree", x, RooFit::Import(*tree)};
   auto dataSetRDF = rdf.Book<double>(RooDataSetHelper("dataSetRDF", "dataSetRDF", RooArgSet(x)), {"x"});
 
   // Check if in the creation of the datasets, the entries outside the

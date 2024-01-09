@@ -457,7 +457,7 @@ public:
       // --------------------------------------------
 
       // Sample 2000 events in (dt,mixState,tagFlav) from bmix
-      std::unique_ptr<RooDataSet> data{bmix.generate(RooArgSet(dt, mixState, tagFlav), 2000)};
+      std::unique_ptr<RooDataSet> data{bmix.generate({dt, mixState, tagFlav}, 2000)};
 
       // S h o w   d t   d i s t r i b u t i o n   w i t h   c u s t o m   b i n n i n g
       // -------------------------------------------------------------------------------
@@ -1303,7 +1303,7 @@ public:
       // ---------------------------------------------------------------------------------
 
       // Generate 10000 events in x and y from model
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x, y), 10000)};
+      std::unique_ptr<RooDataSet> data{model.generate({x, y}, 10000)};
 
       // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
       RooPlot *xframe = x.frame();
@@ -1528,7 +1528,7 @@ public:
       // ---------------------------------------------------------------------------
 
       // Generate 10000 events in x and y from gaussxy
-      std::unique_ptr<RooDataSet> data{gaussxy.generate(RooArgSet(x, y), 10000)};
+      std::unique_ptr<RooDataSet> data{gaussxy.generate({x, y}, 10000)};
 
       // Plot x distribution of data and projection of gaussxy on x = Int(dy) gaussxy(x,y)
       RooPlot *xframe = x.frame(Title("X projection of gauss(x)*gauss(y)"));
@@ -1589,7 +1589,7 @@ public:
       // ---------------------------------------------------------------
 
       // Generate 1000 events in x and y from model
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x, y), 10000)};
+      std::unique_ptr<RooDataSet> data{model.generate({x, y}, 10000)};
 
       // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
       RooPlot *xframe = x.frame();
@@ -1738,7 +1738,7 @@ public:
       // ------------------------------------------------------------------
 
       // Specify external dataset with dterr values to use model_dm as conditional p.d.f.
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(dt, dterr), 10000)};
+      std::unique_ptr<RooDataSet> data{model.generate({dt, dterr}, 10000)};
 
       // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
       // ---------------------------------------------------------------------
@@ -1877,7 +1877,7 @@ public:
       RooBMixDecay bmix_gm1("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, RooBMixDecay::DoubleSided);
 
       // Generate BMixing data with above set of event errors
-      std::unique_ptr<RooDataSet> data{bmix_gm1.generate(RooArgSet(dt, tagFlav, mixState), 20000)};
+      std::unique_ptr<RooDataSet> data{bmix_gm1.generate({dt, tagFlav, mixState}, 20000)};
 
       // P l o t   f u l l   d e c a y   d i s t r i b u t i o n
       // ----------------------------------------------------------
@@ -1945,7 +1945,7 @@ public:
       RooRealVar fsig("fsig", "signal fraction", 0.1, 0., 1.);
       RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x, y, z), 20000)};
+      std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 20000)};
 
       // P r o j e c t   p d f   a n d   d a t a   o n   x
       // -------------------------------------------------
@@ -2014,7 +2014,7 @@ public:
       RooAddPdf model("model", "model", RooArgList(sig, bkg), f);
 
       // Sample 10000 events in (x,y) from the model
-      std::unique_ptr<RooDataSet> modelData{model.generate(RooArgSet(x, y), 10000)};
+      std::unique_ptr<RooDataSet> modelData{model.generate({x, y}, 10000)};
 
       // D e f i n e   s i g n a l   a n d   s i d e b a n d   r e g i o n s
       // -------------------------------------------------------------------
@@ -2289,7 +2289,7 @@ public:
       RooRealVar fsig("fsig", "signal fraction", 0.1, 0., 1.);
       RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x, y, z), 20000)};
+      std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 20000)};
 
       // P r o j e c t   p d f   a n d   d a t a   o n   x
       // -------------------------------------------------
@@ -2329,7 +2329,7 @@ public:
       // ---------------------------------------------------------------------------------------------
 
       // Generate large number of events for MC integration of pdf projection
-      std::unique_ptr<RooDataSet> mcprojData{model.generate(RooArgSet(x, y, z), 10000)};
+      std::unique_ptr<RooDataSet> mcprojData{model.generate({x, y, z}, 10000)};
 
       // Calculate LL ratio for each generated event and select MC events with llratio)0.7
       mcprojData->addColumn(llratio_func);
@@ -2586,7 +2586,7 @@ public:
 
       // Generate a dummy dataset
       RooRealVar x("x", "x", 0, 10);
-      std::unique_ptr<RooDataSet> data{RooPolynomial("p", "p", x).generate(RooArgSet(x, b0flav, tagCat), 10000)};
+      std::unique_ptr<RooDataSet> data{RooPolynomial("p", "p", x).generate({x, b0flav, tagCat}, 10000)};
 
       // P r i n t   t a b l e s   o f   c a t e g o r y   c o n t e n t s   o f   d a t a s e t s
       // ------------------------------------------------------------------------------------------
@@ -2745,7 +2745,7 @@ public:
       // Construct a dummy dataset with random values of tagCat and b0flav
       RooRealVar x("x", "x", 0, 10);
       RooPolynomial p("p", "p", x);
-      std::unique_ptr<RooDataSet> data{p.generate(RooArgSet(x, b0flav, tagCat), 10000)};
+      std::unique_ptr<RooDataSet> data{p.generate({x, b0flav, tagCat}, 10000)};
 
       // C r e a t e   a   c a t - > c a t   m  a p p i n g   c a t e g o r y
       // ---------------------------------------------------------------------
@@ -2843,8 +2843,8 @@ public:
       // ---------------------------------------------------------------
 
       // Generate 1000 events in x and y from model
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x), 100)};
-      std::unique_ptr<RooDataSet> data_ctl{model_ctl.generate(RooArgSet(x), 2000)};
+      std::unique_ptr<RooDataSet> data{model.generate({x}, 100)};
+      std::unique_ptr<RooDataSet> data_ctl{model_ctl.generate({x}, 2000)};
 
       // C r e a t e   i n d e x   c a t e g o r y   a n d   j o i n   s a m p l e s
       // ---------------------------------------------------------------------------
@@ -3640,7 +3640,7 @@ public:
       RooProdPdf model("model", "model", shapePdf, Conditional(effPdf, cut));
 
       // Generate some toy data from model
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x, cut), 10000)};
+      std::unique_ptr<RooDataSet> data{model.generate({x, cut}, 10000)};
 
       // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a
       // --------------------------------------------------------------------------
@@ -3721,7 +3721,7 @@ public:
       RooProdPdf model("model", "model", shapePdf, Conditional(effPdf, cut));
 
       // Generate some toy data from model
-      std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x, y, cut), 10000)};
+      std::unique_ptr<RooDataSet> data{model.generate({x, y, cut}, 10000)};
 
       // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a
       // --------------------------------------------------------------------------
@@ -3855,7 +3855,7 @@ public:
       RooRealSumPdf pdf("pdf", "pdf", RooArgList(ampl1, ampl2), RooArgList(f1, f2));
 
       // Generate some toy data from pdf
-      std::unique_ptr<RooDataSet> data{pdf.generate(RooArgSet(t, cosa), 10000)};
+      std::unique_ptr<RooDataSet> data{pdf.generate({t, cosa}, 10000)};
 
       // Fit pdf to toy data with only amplitude strength floating
       pdf.fitTo(*data);
@@ -4119,7 +4119,7 @@ public:
       RooRealVar y("y", "y", 0, 20);
       RooPolynomial py("py", "py", y, RooArgList(0.01, 0.01, -0.0004));
       RooProdPdf pxy("pxy", "pxy", RooArgSet(p, py));
-      std::unique_ptr<RooDataSet> data2{pxy.generate(RooArgSet(x, y), 1000)};
+      std::unique_ptr<RooDataSet> data2{pxy.generate({x, y}, 1000)};
 
       // C r e a t e   2 - D   k e r n e l   e s t i m a t i o n   p d f
       // ---------------------------------------------------------------
@@ -4192,7 +4192,7 @@ public:
       // ---------------------------------------------------
 
       // Generate some data
-      std::unique_ptr<RooDataSet> data{bmix.generate(RooArgSet(dt, mixState, tagFlav), 10000)};
+      std::unique_ptr<RooDataSet> data{bmix.generate({dt, mixState, tagFlav}, 10000)};
 
       // Plot B0 and B0bar tagged data separately
       // For all plots below B0 and B0 tagged data will look somewhat differently
@@ -4244,7 +4244,7 @@ public:
       // ---------------------------------------------------------------------------
 
       // Generate some data
-      std::unique_ptr<RooDataSet> data2{bcp.generate(RooArgSet(dt, tagFlav), 10000)};
+      std::unique_ptr<RooDataSet> data2{bcp.generate({dt, tagFlav}, 10000)};
 
       // Plot B0 and B0bar tagged data separately
       RooPlot *frame4 = dt.frame(Title("B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)"));
@@ -4261,7 +4261,7 @@ public:
       absLambda = 0.7;
 
       // Generate some data
-      std::unique_ptr<RooDataSet> data3{bcp.generate(RooArgSet(dt, tagFlav), 10000)};
+      std::unique_ptr<RooDataSet> data3{bcp.generate({dt, tagFlav}, 10000)};
 
       // Plot B0 and B0bar tagged data separately (sin2b = 0.7 plus direct CPV |l|=0.5)
       RooPlot *frame5 = dt.frame(Title("B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0bar)"));
@@ -4300,7 +4300,7 @@ public:
       // -------------------------------------------------------------------------------------
 
       // Generate some data
-      std::unique_ptr<RooDataSet> data4{bcpg.generate(RooArgSet(dt, tagFlav), 10000)};
+      std::unique_ptr<RooDataSet> data4{bcpg.generate({dt, tagFlav}, 10000)};
 
       // Plot B0 and B0bar tagged data separately
       RooPlot *frame6 = dt.frame(Title("B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)"));
