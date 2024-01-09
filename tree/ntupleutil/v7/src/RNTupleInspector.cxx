@@ -77,10 +77,9 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
             compressedPageSizes.emplace_back(page.fLocator.fBytesOnStorage);
             fUncompressedSize += page.fNElements * elemSize;
          }
-
-         fCompressedSize += std::accumulate(compressedPageSizes.begin(), compressedPageSizes.end(), 0);
       }
 
+      fCompressedSize += std::accumulate(compressedPageSizes.begin(), compressedPageSizes.end(), 0);
       fColumnInfo.emplace(colId, RColumnInspector(colDesc, compressedPageSizes, elemSize, nElems));
    }
 }
