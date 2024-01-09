@@ -149,6 +149,8 @@ protected:
 
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
+
+public:
    void WaitForAllTasks()
    {
       if (!fTaskScheduler)
@@ -156,7 +158,6 @@ protected:
       fTaskScheduler->Wait();
    }
 
-public:
    explicit RPageStorage(std::string_view name);
    RPageStorage(const RPageStorage &other) = delete;
    RPageStorage &operator=(const RPageStorage &other) = delete;
