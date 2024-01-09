@@ -1523,7 +1523,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          } else {
             RooRealVar w("weightVar", "weightVar", 1);
             _obs.add(w);
-            RooDataSet d(child.GetName(), child.GetTitle(), _obs, "weightVar");
+            RooDataSet d(child.GetName(), child.GetTitle(), _obs, RooFit::WeightVar("weightVar"));
             _ws->import(d);
             // seems have to set bits after importing, not before
             if (auto __d = _ws->data(child.GetName()))
