@@ -15,6 +15,8 @@ from ._numbadeclare import _NumbaDeclareDecorator
 
 from ._pythonization import pythonization
 
+# Brutal, but necessary for now
+from . import _rootcli as _rootexe
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
@@ -76,6 +78,9 @@ def _subimport(name):
 
 class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
+
+    # Brutal, but necessary for now
+    _rootcli = _rootexe
 
     def __init__(self, module, is_ipython):
         types.ModuleType.__init__(self, module.__name__)
