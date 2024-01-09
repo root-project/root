@@ -296,7 +296,7 @@ std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
 ///
 /// <table>
 /// <tr><th> %RooCmdArg <th> Effect
-/// <tr><td> Import(TTree*)              <td> Import contents of given TTree. Only branches of the TTree that have names
+/// <tr><td> Import(TTree&)   <td> Import contents of given TTree. Only branches of the TTree that have names
 ///                                corresponding to those of the RooAbsArgs that define the RooDataSet are
 ///                                imported.
 /// <tr><td> ImportFromFile(const char* fileName, const char* treeName) <td> Import tree with given name from file with given name.
