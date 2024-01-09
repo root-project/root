@@ -1,0 +1,20 @@
+[build-system]
+requires = ["cmake", "setuptools", "wheel"]
+
+[project]
+name = "root-cern"
+version = "0.1a3"
+
+requires-python = ">=3.8"
+authors = [
+  {name = "Vincenzo Eduardo Padulano", email="vincenzo.eduardo.padulano@cern.ch"}
+]
+maintainers = [
+  {name = "Vincenzo Eduardo Padulano", email = "vincenzo.eduardo.padulano@cern.ch"}
+]
+description = "An open-source data analysis framework used by high energy physics and others."
+readme = "README.md"
+license = {file = "LICENSE"}
+
+[project.scripts]
+root = "ROOT._rootcli:main"
