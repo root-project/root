@@ -55,23 +55,6 @@ For the future, perhaps this factory should be extended to include the efficienc
 ClassImp(RooStats::NumberCountingPdfFactory); ;
 
 
-using namespace RooStats;
-using namespace RooFit;
-using namespace std;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor
-
-NumberCountingPdfFactory::NumberCountingPdfFactory() {
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-NumberCountingPdfFactory::~NumberCountingPdfFactory(){
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This method produces a PDF for N channels with uncorrelated background
 /// uncertainty. It relates the signal in each channel to a master signal strength times the
@@ -79,16 +62,9 @@ NumberCountingPdfFactory::~NumberCountingPdfFactory(){
 ///
 /// For the future, perhaps this method should be extended to include the efficiency terms automatically.
 
-void NumberCountingPdfFactory::AddModel(double* sig,
-               Int_t nbins,
-               RooWorkspace* ws,
-               const char* pdfName, const char* muName) {
-
-
-
-   using namespace RooFit;
-   using std::vector;
-
+void RooStats::NumberCountingPdfFactory::AddModel(double *sig, Int_t nbins, RooWorkspace *ws, const char *pdfName,
+                                                  const char *muName)
+{
    TList likelihoodFactors;
 
    //  double MaxSigma = 8; // Needed to set ranges for variables.
@@ -154,12 +130,9 @@ void NumberCountingPdfFactory::AddModel(double* sig,
 /// Arguments are an array of expected signal, expected background, and relative
 /// background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
-void NumberCountingPdfFactory::AddExpData(double* sig,
-                 double* back,
-                 double* back_syst,
-                 Int_t nbins,
-                 RooWorkspace* ws, const char* dsName) {
-
+void RooStats::NumberCountingPdfFactory::AddExpData(double *sig, double *back, double *back_syst, Int_t nbins,
+                                                    RooWorkspace *ws, const char *dsName)
+{
    std::vector<double> mainMeas(nbins);
 
    // loop over channels
@@ -174,12 +147,9 @@ void NumberCountingPdfFactory::AddExpData(double* sig,
 /// ratio of background expected in the sideband to that expected in signal region,
 /// and the number of channels.
 
-void NumberCountingPdfFactory::AddExpDataWithSideband(double* sigExp,
-                                                      double* backExp,
-                                                      double* tau,
-                                                      Int_t nbins,
-                                                      RooWorkspace* ws, const char* dsName) {
-
+void RooStats::NumberCountingPdfFactory::AddExpDataWithSideband(double *sigExp, double *backExp, double *tau,
+                                                                Int_t nbins, RooWorkspace *ws, const char *dsName)
+{
    std::vector<double> mainMeas(nbins);
    std::vector<double> sideband(nbins);
    for(Int_t i=0; i<nbins; ++i){
@@ -194,22 +164,24 @@ void NumberCountingPdfFactory::AddExpDataWithSideband(double* sigExp,
 /// need to be careful here that the range of observable in the dataset is consistent with the one in the workspace
 /// don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
 
-RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName, double value) {
-   return SafeObservableCreation(ws, varName, value, 10.*value);
-
+RooRealVar *
+RooStats::NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace *ws, const char *varName, double value)
+{
+   return SafeObservableCreation(ws, varName, value, 10. * value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// need to be careful here that the range of observable in the dataset is consistent with the one in the workspace
 /// don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
 
-RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName,
-                          double value, double maximum) {
+RooRealVar *RooStats::NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace *ws, const char *varName,
+                                                                       double value, double maximum)
+{
    RooRealVar*   x = ws->var( varName );
    if( !x )
       x = new RooRealVar(varName, varName, value, 0, maximum );
    if( x->getMax() < value )
-      x->setMax( max(x->getMax(), 10*value ) );
+      x->setMax( std::max(x->getMax(), 10*value ) );
    x->setVal( value );
 
    return x;
@@ -220,15 +192,9 @@ RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, c
 /// Arguments are an array of results from a main measurement, a measured background,
 ///  and relative background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
-void NumberCountingPdfFactory::AddData(double* mainMeas,
-                                       double* back,
-                                       double* back_syst,
-                                       Int_t nbins,
-                                       RooWorkspace* ws, const char* dsName) {
-
-   using namespace RooFit;
-   using std::vector;
-
+void RooStats::NumberCountingPdfFactory::AddData(double *mainMeas, double *back, double *back_syst, Int_t nbins,
+                                                 RooWorkspace *ws, const char *dsName)
+{
    double MaxSigma = 8; // Needed to set ranges for variables.
 
    TList observablesCollection;
@@ -251,10 +217,10 @@ void NumberCountingPdfFactory::AddData(double* mainMeas,
 
       oocoutW(ws,ObjectHandling) << "NumberCountingPdfFactory: changed value of " << tau->GetName() << " to " << tau->getVal() <<
          " to be consistent with background and its uncertainty. " <<
-         " Also stored these values of tau into workspace with name . " << (string(tau->GetName())+string(dsName)).c_str() <<
-         " if you test with a different dataset, you should adjust tau appropriately.\n"<< endl;
+         " Also stored these values of tau into workspace with name . " << (std::string{tau->GetName()}+dsName).c_str() <<
+         " if you test with a different dataset, you should adjust tau appropriately.\n"<< std::endl;
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      ws->import(*(static_cast<RooRealVar*>(tau->clone( (string(tau->GetName())+string(dsName)).c_str() )) ) );
+      ws->import(*(static_cast<RooRealVar*>(tau->clone( (std::string{tau->GetName()}+dsName).c_str() )) ) );
       RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       // need to be careful
@@ -285,13 +251,11 @@ void NumberCountingPdfFactory::AddData(double* mainMeas,
    //  observableSet->Print();
    //  observableList->Print();
 
-   RooDataSet* data = new RooDataSet(dsName,"Number Counting Data", tree, *observableList); // one experiment
-   //  data->Scan();
-
+   RooDataSet data{dsName,"Number Counting Data", *observableList, RooFit::Import(*tree)}; // one experiment
 
    // import hypothetical data
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
-   ws->import(*data);
+   ws->import(data);
    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
 }
@@ -300,15 +264,9 @@ void NumberCountingPdfFactory::AddData(double* mainMeas,
 /// Arguments are an array of expected signal, expected background, and relative
 /// background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
-void NumberCountingPdfFactory::AddDataWithSideband(double* mainMeas,
-                                                   double* sideband,
-                                                   double* tauForTree,
-                                                   Int_t nbins,
-                                                   RooWorkspace* ws, const char* dsName) {
-
-   using namespace RooFit;
-   using std::vector;
-
+void RooStats::NumberCountingPdfFactory::AddDataWithSideband(double *mainMeas, double *sideband, double *tauForTree,
+                                                             Int_t nbins, RooWorkspace *ws, const char *dsName)
+{
    double MaxSigma = 8; // Needed to set ranges for variables.
 
    TList observablesCollection;
@@ -333,10 +291,10 @@ void NumberCountingPdfFactory::AddDataWithSideband(double* mainMeas,
 
       oocoutW(ws,ObjectHandling) << "NumberCountingPdfFactory: changed value of " << tau->GetName() << " to " << tau->getVal() <<
          " to be consistent with background and its uncertainty. " <<
-         " Also stored these values of tau into workspace with name . " << (string(tau->GetName())+string(dsName)).c_str() <<
-         " if you test with a different dataset, you should adjust tau appropriately.\n"<< endl;
+         " Also stored these values of tau into workspace with name . " << (std::string{tau->GetName()}+dsName).c_str() <<
+         " if you test with a different dataset, you should adjust tau appropriately.\n"<< std::endl;
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      ws->import(*(static_cast<RooRealVar*>(tau->clone( (string(tau->GetName())+string(dsName)).c_str() )) ) );
+      ws->import(*(static_cast<RooRealVar*>(tau->clone( (std::string{tau->GetName()}+dsName).c_str() )) ) );
       RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       // need to be careful
@@ -360,21 +318,13 @@ void NumberCountingPdfFactory::AddDataWithSideband(double* mainMeas,
 
    }
    tree->Fill();
-   //  tree->Print();
-   //  tree->Scan();
 
-   RooArgList* observableList = new RooArgList(observablesCollection);
+   RooArgList observableList{observablesCollection};
 
-   //  observableSet->Print();
-   //  observableList->Print();
-
-   RooDataSet* data = new RooDataSet(dsName,"Number Counting Data", tree, *observableList); // one experiment
-   //  data->Scan();
-
+   RooDataSet data{dsName,"Number Counting Data", observableList, RooFit::Import(*tree)}; // one experiment
 
    // import hypothetical data
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
-   ws->import(*data);
+   ws->import(data);
    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
-
 }

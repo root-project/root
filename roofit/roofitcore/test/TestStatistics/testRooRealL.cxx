@@ -48,7 +48,7 @@ TEST_P(RooRealL, getVal)
    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1,0.01,5.0])");
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
+   std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
 
    auto nominal_result = nll->getVal();
@@ -208,7 +208,7 @@ TEST_P(RooRealL, setVal)
    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1,0.01,5.0])");
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
+   std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
@@ -259,7 +259,7 @@ TEST_P(RealLVsMPFE, getVal)
    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1,0.01,5.0])");
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
+   std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
 
    std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data)};
 
@@ -295,7 +295,7 @@ TEST_P(RealLVsMPFE, minimize)
    RooRealVar *mu = w.var("mu");
    RooRealVar *sigma = w.var("sigma");
 
-   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
+   std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
    mu->setVal(-2.9);
 
    // If we don't set sigma constant, the fit is not stable as we start with mu

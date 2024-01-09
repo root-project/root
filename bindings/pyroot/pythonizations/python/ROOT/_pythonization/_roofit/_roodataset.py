@@ -85,7 +85,7 @@ class RooDataSet(object):
         if weight_name is None:
             dataset = ROOT.RooDataSet(name, title, variables)
         else:
-            dataset = ROOT.RooDataSet(name, title, variables, weight_name)
+            dataset = ROOT.RooDataSet(name, title, variables, WeightVar=weight_name)
 
         def log_warning(s):
             """Log a string to the RooFit message log for the WARNING level on

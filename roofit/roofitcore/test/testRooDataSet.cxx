@@ -3,22 +3,22 @@
 //          Jonas Rembser, CERN  04/2022
 
 #include <RooAbsPdf.h>
-#include <RooDataSet.h>
-#include <RooDataHist.h>
-#include <RooRealVar.h>
-#include <RooHelpers.h>
 #include <RooCategory.h>
-#include <RooWorkspace.h>
-#include <RooVectorDataStore.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooHelpers.h>
+#include <RooRealVar.h>
 #include <RooStringVar.h>
+#include <RooVectorDataStore.h>
+#include <RooWorkspace.h>
 
-#include <TFile.h>
-#include <TTree.h>
 #include <TChain.h>
-#include <TRandom3.h>
-#include <TH1F.h>
 #include <TCut.h>
+#include <TFile.h>
+#include <TH1F.h>
+#include <TRandom3.h>
 #include <TSystem.h>
+#include <TTree.h>
 
 #include <fstream>
 #include <memory>
@@ -54,7 +54,7 @@ TEST(RooDataSet, ImportFromTreeWithCut)
    RooRealVar x("x", "x", 0);
    RooRealVar y("y", "y", 0);
    RooRealVar z("z", "z", 0);
-   RooDataSet data("data", "data", &tree, RooArgSet(x, y, z), "x>y");
+   RooDataSet data("data", "data", {x, y, z}, RooFit::Import(tree), RooFit::Cut("x>y"));
 
    EXPECT_TRUE(hijack.str().empty()) << "Messages issued were: " << hijack.str();
    EXPECT_EQ(data.numEntries(), 1);
@@ -121,7 +121,7 @@ TEST(RooDataSet, BinnedClone)
    RooRealVar weight("weight", "weight", 1, 0, 100);
 
    {
-      RooDataSet data{"dataset", "dataset", &chain, RooArgSet(mes, weight), nullptr, weight.GetName()};
+      RooDataSet data{"dataset", "dataset", {mes, weight}, RooFit::Import(chain), RooFit::WeightVar(weight.GetName())};
       std::unique_ptr<RooDataHist> hist{data.binnedClone()};
 
       EXPECT_DOUBLE_EQ(hist->sumEntries(), sumW);
@@ -163,9 +163,8 @@ TEST(RooDataSet, ReducingData)
    RooRealVar track1_chi2("track1_chi2", "track1_chi2", -10., 90);
 
    // get the datasets
-   RooDataSet *data_unbinned =
-      new RooDataSet("mass_example", "mass example", &mytree, RooArgSet(mymass, track0_chi2, track1_chi2));
-   std::unique_ptr<RooDataHist> data(data_unbinned->binnedClone("data"));
+   RooDataSet data_unbinned{"mass_example", "mass example", {mymass, track0_chi2, track1_chi2}, RooFit::Import(mytree)};
+   std::unique_ptr<RooDataHist> data(data_unbinned.binnedClone("data"));
 
    for (int i = 0; i < 3; ++i) {
       // Check with root:
@@ -179,7 +178,7 @@ TEST(RooDataSet, ReducingData)
       ASSERT_EQ(test_hist.Integral(), drawnEvents);
 
       // For unbinned data, reducing should be equivalent to the tree.
-      std::unique_ptr<RooAbsData> data_unbinned_reduced{data_unbinned->reduce(RooFit::Cut(chi2_test_cut))};
+      std::unique_ptr<RooAbsData> data_unbinned_reduced{data_unbinned.reduce(RooFit::Cut(chi2_test_cut))};
       EXPECT_DOUBLE_EQ(data_unbinned_reduced->sumEntries(), test_hist.Integral());
       EXPECT_EQ(data_unbinned_reduced->numEntries(), test_hist.Integral());
 
@@ -265,15 +264,15 @@ TEST(RooDataSet, CrashAfterImportFromTree)
    auto output_file = std::make_unique<TFile>("test.root", "RECREATE", "output_file");
 
    ASSERT_TRUE(output_file->IsOpen());
-   auto data_set = std::make_unique<RooDataSet>("data_set", "data_set", tree, RooArgSet(*roovar));
+   RooDataSet dataset{"dataset", "dataset", {*roovar}, RooFit::Import(*tree)};
 
    // Would crash, since the TFile would be deleted by importing:
    ASSERT_TRUE(output_file->IsOpen());
 
-   EXPECT_EQ(data_set->sumEntries(), 2.);
-   EXPECT_EQ(data_set->numEntries(), 2);
-   EXPECT_EQ(static_cast<RooRealVar *>(data_set->get(0)->find("var"))->getVal(), 1.);
-   EXPECT_EQ(static_cast<RooRealVar *>(data_set->get(1)->find("var"))->getVal(), 2.);
+   EXPECT_EQ(dataset.sumEntries(), 2.);
+   EXPECT_EQ(dataset.numEntries(), 2);
+   EXPECT_EQ(static_cast<RooRealVar *>(dataset.get(0)->find("var"))->getVal(), 1.);
+   EXPECT_EQ(static_cast<RooRealVar *>(dataset.get(1)->find("var"))->getVal(), 2.);
 }
 
 // root-project/root#6951: Broken weights after reducing RooDataSet created with RooAbsPdf::generate()
