@@ -2871,7 +2871,7 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
    nullDetails.addClone(RooRealVar("seed", "Toy Seed", 0));
    nullDetails.addClone(RooRealVar("ts", "test statistic value", 0));
    nullDetails.addClone(RooRealVar("weight", "weight", 1));
-   auto nullToyDS = new RooDataSet("nullToys", "nullToys", nullDetails, "weight");
+   auto nullToyDS = new RooDataSet("nullToys", "nullToys", nullDetails, RooFit::WeightVar("weight"));
    nullToyDS->setGlobalObservables(nullMeta);
    if (!nullToys.empty()) {
 
@@ -2918,7 +2918,7 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
       altDetails.addClone(RooRealVar("seed", "Toy Seed", 0));
       altDetails.addClone(RooRealVar("ts", "test statistic value", 0));
       altDetails.addClone(RooRealVar("weight", "weight", 1));
-      auto altToyDS = new RooDataSet("altToys", "altToys", altDetails, "weight");
+      auto altToyDS = new RooDataSet("altToys", "altToys", altDetails, RooFit::WeightVar("weight"));
       altToyDS->setGlobalObservables(altMeta);
       for (auto &t : altToys) {
          values.push_back(std::get<1>(t));

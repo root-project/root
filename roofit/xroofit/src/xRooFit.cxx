@@ -300,8 +300,8 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
       if (auto s = dynamic_cast<RooSimultaneous *>(_pdf)) {
          // do subpdf's individually
          _obs->add(w);
-         _out.first.reset(new RooDataSet(
-            uuid, TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"), *_obs, "weightVar"));
+         _out.first = std::make_unique<RooDataSet>(
+            uuid, TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"), *_obs, RooFit::WeightVar("weightVar"));
 
          for (auto &c : s->indexCat()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 00)
@@ -356,7 +356,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
          _obs->add(w);
          RooArgSet _tmp;
          _tmp.add(w);
-         _out.first.reset(new RooDataSet("", "Toy", _tmp, "weightVar"));
+         _out.first = std::make_unique<RooDataSet>("", "Toy", _tmp, RooFit::WeightVar("weightVar"));
          _out.first->add(_tmp);
       } else {
          if (_pdf->canBeExtended()) {
