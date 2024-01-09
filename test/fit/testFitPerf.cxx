@@ -548,8 +548,7 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
       RooRealVar x("x","x",-100,100) ;
       RooRealVar y("y","y",-100,100);
 
-      RooDataSet data("unbindata","unbin dataset with x",tree,RooArgSet(x,y)) ;
-
+      RooDataSet data("unbindata","unbin dataset with x", {x,y}, RooFit::Import(*tree)) ;
 
       RooRealVar mean("mean","Mean of Gaussian",iniPar[0], -100,100) ;
       RooRealVar sigma("sigma","Width of Gaussian",iniPar[1], 0.01, 100) ;
@@ -625,8 +624,7 @@ int  FitUsingRooFit2(TTree * tree) {
          xvars.add( *x[j] );
       }
 
-
-      RooDataSet data("unbindata","unbin dataset with x",tree,xvars) ;
+      RooDataSet data("unbindata","unbin dataset with x",xvars, RooFit::Import(*tree));
 
       // create the gaussians
       for (int j = 0; j < N; ++j) {
@@ -651,9 +649,6 @@ int  FitUsingRooFit2(TTree * tree) {
 //             pdf[0] = g[0];
 
       }
-
-
-
 
 #ifdef DEBUG
       int level = 3;

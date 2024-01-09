@@ -205,9 +205,7 @@ int  FitUsingRooFit(TTree & tree, RooAbsPdf & pdf, RooArgSet & xvars) {
 
    for (int i = 0; i < nfit; ++i) {
 
-      RooDataSet data("unbindata","unbin dataset with x",&tree,xvars) ;
-
-
+      RooDataSet data("unbindata","unbin dataset with x", xvars, RooFit::Import(tree));
 
 #ifdef DEBUG
       int level = 2;

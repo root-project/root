@@ -35,7 +35,7 @@ void rf609_xychi2fit()
 
    RooRealVar x("x", "x", -11, 11);
    RooRealVar y("y", "y", -10, 200);
-   RooDataSet dxy("dxy", "dxy", RooArgSet(x, y), StoreError(RooArgSet(x, y)));
+   RooDataSet dxy("dxy", "dxy", {x, y}, StoreError({x, y}));
 
    // Fill an example dataset with X,err(X),Y,err(Y) values
    for (int i = 0; i <= 10; i++) {
@@ -48,7 +48,7 @@ void rf609_xychi2fit()
       y = x.getVal() * x.getVal() + 4 * fabs(gRandom->Gaus());
       y.setError(sqrt(y.getVal()));
 
-      dxy.add(RooArgSet(x, y));
+      dxy.add({x, y});
    }
 
    // P e r f o r m   c h i 2   f i t   t o   X + / - d x   a n d   Y + / - d Y   v a l u e s
