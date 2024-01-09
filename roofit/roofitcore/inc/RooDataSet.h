@@ -67,7 +67,7 @@ public:
   RooDataSet() ;
 
   RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName)
-     R__SUGGEST_ALTERNATIVE("Use RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName)).");
+     R__DEPRECATED(6,34, "Use RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName)).");
 
   // Universal constructor
   RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
@@ -83,9 +83,14 @@ public:
 
   // Constructor importing data from external ROOT Tree
   RooDataSet(RooStringView name, RooStringView title, TTree *tree, const RooArgSet& vars,
-             const char *cuts=nullptr, const char* wgtVarName=nullptr);
+             const char *cuts=nullptr, const char* wgtVarName=nullptr)
+#ifndef ROOFIT_BUILDS_ITSELF // need to guard because this is used in the implementation of other deprecated constructors
+     R__DEPRECATED(6,34, "Use RooDataSet(name, title, vars, Import(*tree), Cut(cuts), WeightVar(wgtVarName)).")
+#endif
+  ;
   RooDataSet(RooStringView name, RooStringView title, TTree *tree, const RooArgSet& vars,
-             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr) ;
+             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr)
+     R__DEPRECATED(6,34, "Use RooDataSet(name, title, vars, Import(*tree), Cut(cutVar), WeightVar(wgtVarName)).");
 
   RooDataSet(RooDataSet const & other, const char* newname=nullptr) ;
   TObject* Clone(const char* newname = "") const override {

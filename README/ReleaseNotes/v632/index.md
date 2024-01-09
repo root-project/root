@@ -41,6 +41,8 @@ The following people have contributed to this new version:
 ## Deprecation and Removal
 - The RooFit legacy iterators are deprecated and will be removed in ROOT 6.34 (see section "RooFit libraries")
 - Some memory-unsafe RooFit interfaces were removed
+- Some redundant **RooDataSet** constructors are deprecated and will be removed in ROOT 6.34.
+  Please use the RooDataSet constructors that take RooFit command arguments instead
 
 ## Core Libraries
 
