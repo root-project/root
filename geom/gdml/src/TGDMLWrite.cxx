@@ -1741,11 +1741,11 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated *geoShape)
       bool triangular = facet.GetNvert() == 3;
       TString ntype = (triangular) ? "triangular" : "quadrangular";
       childN = fGdmlE->NewChild(nullptr, nullptr, ntype.Data(), nullptr);
-      fGdmlE->NewAttr(childN, nullptr, "vertex1", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(0)));
-      fGdmlE->NewAttr(childN, nullptr, "vertex2", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(1)));
-      fGdmlE->NewAttr(childN, nullptr, "vertex3", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(2)));
+      fGdmlE->NewAttr(childN, nullptr, "vertex1", TString::Format("%s_%d", genname.Data(), facet[0]));
+      fGdmlE->NewAttr(childN, nullptr, "vertex2", TString::Format("%s_%d", genname.Data(), facet[1]));
+      fGdmlE->NewAttr(childN, nullptr, "vertex3", TString::Format("%s_%d", genname.Data(), facet[2]));
       if (!triangular)
-         fGdmlE->NewAttr(childN, nullptr, "vertex4", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(3)));
+         fGdmlE->NewAttr(childN, nullptr, "vertex4", TString::Format("%s_%d", genname.Data(), facet[3]));
       fGdmlE->NewAttr(childN, nullptr, "type", "ABSOLUTE");
       fGdmlE->AddChild(mainN, childN);
    }

@@ -29,7 +29,7 @@ class VUnplacedVolume;
 
 class TGeoVGShape : public TGeoBBox {
 private:
-   vecgeom::cxx::VPlacedVolume *fVGShape; // VecGeom placed solid
+   vecgeom::cxx::VPlacedVolume *fVGShape; //! VecGeom placed solid
    TGeoShape *fShape;                     // ROOT shape
 
    static vecgeom::cxx::VPlacedVolume *CreateVecGeomSolid(TGeoShape *shape);
@@ -105,6 +105,6 @@ public:
    TGeoShape *GetShape() const { return fShape; }
    vecgeom::cxx::VPlacedVolume *GetVGShape() const { return fVGShape; }
 
-   ClassDefOverride(TGeoVGShape, 0) // Adapter for a VecGeom shape
+   ClassDefOverride(TGeoVGShape, 1) // Adapter for a VecGeom shape
 };
 #endif
