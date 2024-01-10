@@ -196,12 +196,34 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    return serversToAdd;
 }
 
-void fillAnIntOKDepList(RooAbsReal const &function, RooArgSet const &intDepList, RooArgSet &anIntOKDepList)
+void fillAnIntOKDepList(RooAbsReal const &function, RooArgSet const &intDeps, RooArgSet &anIntOKDepList,
+                        const RooArgSet &allBranches)
 {
+   // If any of the branches in the computation graph of the function depend on
+   // the integrated variable, we can't do analytical integration. The only
+   // case where this would work is if the branch is an l-value with known
+   // Jacobian, but this case is already handled in step B) in the constructor
+   // by reexpressing the original integration variables in terms of
+   // higher-order l-values if possible.
+   RooArgSet filteredIntDeps;
+   for (RooAbsArg *intDep : intDeps) {
+      bool depOK = true;
+      for (RooAbsArg *branch : allBranches) {
+         // It's ok if the branch is the integration variable itself
+         if (intDep->namePtr() != branch->namePtr() && branch->dependsOnValue(*intDep)) {
+            depOK = false;
+         }
+         if (!depOK) break;
+      }
+      if (depOK) {
+         filteredIntDeps.add(*intDep);
+      }
+   }
+
    for (const auto arg : function.servers()) {
 
       // Dependent or parameter?
-      if (!arg->dependsOnValue(intDepList)) {
+      if (!arg->dependsOnValue(filteredIntDeps)) {
          continue;
       } else if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
          // Skip arg if it is neither value or shape server
@@ -214,7 +236,8 @@ void fillAnIntOKDepList(RooAbsReal const &function, RooArgSet const &intDepList,
       if (arg->isDerived()) {
          RooAbsRealLValue *realArgLV = dynamic_cast<RooAbsRealLValue *>(arg);
          RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue *>(arg);
-         if ((realArgLV && intDepList.find(realArgLV->GetName()) && (realArgLV->isJacobianOK(intDepList) != 0)) ||
+         if ((realArgLV && filteredIntDeps.find(realArgLV->GetName()) &&
+              (realArgLV->isJacobianOK(filteredIntDeps) != 0)) ||
              catArgLV) {
 
             // Derived LValue with valid jacobian
@@ -464,7 +487,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   auto serversToAdd = getValueAndShapeServers(function, depList, rangeName);
-  fillAnIntOKDepList(function, intDepList, anIntOKDepList);
+  fillAnIntOKDepList(function, intDepList, anIntOKDepList, branchListVD);
   // We will not add the servers just now, because it makes only sense to add
   // them once we have made sure that this integral is not operating in
   // pass-through mode. It will be done at the end of this constructor.
