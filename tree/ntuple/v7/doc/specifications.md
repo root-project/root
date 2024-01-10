@@ -41,6 +41,11 @@ Envelopes can reference other envelopes and pages by means of a **locator** or a
 for a file embedding, the locator consists of an offset and a size.
 The RNTuple format does _not_ establish a specific order of pages and envelopes.
 
+For the ROOT file embedding, pages and envelopes are stored in "invisible", non-indexed **RBlob** keys.
+The RNTuple format does _not_ establish a semantic mapping from objects to keys or vice versa.
+For example, one key may hold a single page or a number of pages of the same cluster.
+The only relevant means of finding objects is the locator information, consisting of an offset and a size.
+
 Every embedding must define an **anchor** that contains the format version supported by the writer,
 and envelope links (location, compressed and uncompressed size) of the header and footer envelopes.
 For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as an anchor.
