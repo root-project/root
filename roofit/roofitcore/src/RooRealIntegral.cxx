@@ -32,7 +32,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 
 #include <RooAbsCategoryLValue.h>
 #include <RooAbsRealLValue.h>
-#include <RooArgSet.h>
 #include <RooConstVar.h>
 #include <RooDouble.h>
 #include <RooExpensiveObjectCache.h>
@@ -326,9 +325,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
     if (!function.dependsOn(*arg)) {
       std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
-      _facList.add(*argClone) ;
-      addServer(*argClone,false,true) ;
-      _facListOwned.addOwned(std::move(argClone));
+      _facList.add(*argClone);
+      addOwnedComponents(std::move(argClone));
     }
   }
 
@@ -530,8 +528,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
         // Expand server in final dependents
         auto argDeps = std::unique_ptr<RooArgSet>(arg->getObservables(&intDepList));
 
-        if (!argDeps->empty()) {
-
           // Add final dependents, that are not forcibly integrated analytically,
           // to numerical integration list
           for (const auto dep : *argDeps) {
@@ -539,7 +535,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
               numIntDepList.add(*dep,true) ;
             }
           }
-        }
       }
     }
   }
@@ -758,9 +753,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
 
  for (const auto arg : other._facList) {
    std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
-   _facList.add(*argClone) ;
-   addServer(*argClone,false,true) ;
-   _facListOwned.addOwned(std::move(argClone));
+   _facList.addOwned(*argClone);
+   addOwnedComponents(std::move(argClone));
  }
 
  other._intList.snapshot(_saveInt) ;
@@ -930,7 +924,6 @@ double RooRealIntegral::evaluate() const
 
 
   // Multiply answer with integration ranges of factorized variables
-  if (!_facList.empty()) {
     for (const auto arg : _facList) {
       // Multiply by fit range for 'real' dependents
       if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
@@ -943,7 +936,6 @@ double RooRealIntegral::evaluate() const
         retVal *= argLV->numTypes() ;
       }
     }
-  }
 
 
   if (dologD(Tracing)) {
