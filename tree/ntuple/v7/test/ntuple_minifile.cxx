@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <TKey.h>
 #include <TTree.h>
 
 namespace {
@@ -113,6 +114,119 @@ TEST(MiniFile, Proper)
    EXPECT_EQ(footer, buf);
 }
 
+TEST(MiniFile, SimpleKeys)
+{
+   FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
+
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+
+   char blob1 = '1';
+   auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
+   writer->Commit();
+
+   // Manually check the written keys.
+   FILE *f = fopen(fileGuard.GetPath().c_str(), "rb");
+   fseek(f, 0, SEEK_END);
+   long size = ftell(f);
+   rewind(f);
+
+   std::unique_ptr<char[]> buffer(new char[size]);
+   ASSERT_EQ(fread(buffer.get(), 1, size, f), size);
+
+   Long64_t offset = 100;
+   std::unique_ptr<TKey> key;
+   auto readNextKey = [&]() {
+      if (offset >= size) {
+         return false;
+      }
+
+      char *keyBuffer = buffer.get() + offset;
+      key.reset(new TKey(offset, /*size=*/0, nullptr));
+      key->ReadKeyBuffer(keyBuffer);
+      offset = key->GetSeekKey() + key->GetNbytes();
+      return true;
+   };
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "TFile");
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob1);
+   EXPECT_EQ(buffer[offBlob1], blob1);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
+
+   ASSERT_TRUE(readNextKey());
+   // KeysList
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetName(), "StreamerInfo");
+
+   ASSERT_TRUE(readNextKey());
+   // FreeSegments
+
+   EXPECT_EQ(offset, size);
+}
+
+TEST(MiniFile, ProperKeys)
+{
+   FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
+
+   std::unique_ptr<TFile> file;
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), file));
+
+   char blob1 = '1';
+   auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
+   writer->Commit();
+
+   // Manually check the written keys.
+   FILE *f = fopen(fileGuard.GetPath().c_str(), "rb");
+   fseek(f, 0, SEEK_END);
+   long size = ftell(f);
+   rewind(f);
+
+   std::unique_ptr<char[]> buffer(new char[size]);
+   ASSERT_EQ(fread(buffer.get(), 1, size, f), size);
+
+   Long64_t offset = 100;
+   std::unique_ptr<TKey> key;
+   auto readNextKey = [&]() {
+      if (offset >= size) {
+         return false;
+      }
+
+      char *keyBuffer = buffer.get() + offset;
+      key.reset(new TKey(offset, /*size=*/0, nullptr));
+      key->ReadKeyBuffer(keyBuffer);
+      offset = key->GetSeekKey() + key->GetNbytes();
+      return true;
+   };
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "TFile");
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob1);
+   EXPECT_EQ(buffer[offBlob1], blob1);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
+
+   ASSERT_TRUE(readNextKey());
+   // KeysList
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetName(), "StreamerInfo");
+
+   ASSERT_TRUE(readNextKey());
+   // FreeSegments
+
+   EXPECT_EQ(offset, size);
+}
 
 TEST(MiniFile, Multi)
 {
