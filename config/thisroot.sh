@@ -179,7 +179,7 @@ getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
    fi
    # Determine full executable path.
    if [ "${trueExe#/}" = "$trueExe" ]; then
-      trueExe=$(if [ -n "${ZSH_VERSION-}" ]; then which -p "$trueExe"; else which "$trueExe"; fi)
+      trueExe=$(if [ -n "${ZSH_VERSION-}" ]; then builtin which -p "$trueExe"; else which "$trueExe"; fi)
    fi
    # If the executable is a symlink, resolve it to its *ultimate*
    # target.
