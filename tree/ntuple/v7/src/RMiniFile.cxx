@@ -234,6 +234,7 @@ struct RTFKey {
       fInfoLong.fSeekKey = seekKey;
       fInfoLong.fSeekPdir = seekPdir;
       fKeyHeaderSize = fKeyHeaderSize + sizeof(fInfoLong) - sizeof(fInfoShort);
+      fKeyLen = fKeyLen + sizeof(fInfoLong) - sizeof(fInfoShort);
       fNbytes = fNbytes + sizeof(fInfoLong) - sizeof(fInfoShort);
       fVersion = fVersion + 1000;
    }
