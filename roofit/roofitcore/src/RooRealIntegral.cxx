@@ -381,7 +381,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     if ((realArgLV && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
       exclLVBranches.add(*branch) ;
     }
-    if (dependsOnValue(*branch)) {
+    if (branch != &function && function.dependsOnValue(*branch)) {
       branchListVD.add(*branch) ;
     }
   }
