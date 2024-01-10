@@ -9,6 +9,7 @@ ROOT_ADD_GTEST(testTH2PolyBinError test_TH2Poly_BinError.cxx LIBRARIES Hist Matr
 ROOT_ADD_GTEST(testTH2PolyAdd test_TH2Poly_Add.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTHn THn.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH1 test_TH1.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testProject3Dname test_Project3D_name.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTFormula test_TFormula.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTKDE test_tkde.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTH1FindFirstBinAbove test_TH1_FindFirstBinAbove.cxx LIBRARIES Hist)

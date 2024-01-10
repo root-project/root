@@ -2362,7 +2362,15 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
 
 TH1 *TH3::Project3D(Option_t *option) const
 {
-   TString opt = option; opt.ToLower();
+   TString opt = option;
+   TString extra_name = option;
+   Int_t underscore = extra_name.Last('_');
+   if (underscore > 0) {
+      extra_name.Remove(underscore,extra_name.Length()-underscore);
+      opt.Remove(0,underscore+1);
+    }
+   opt.ToLower();
+
    Int_t pcase = 0;
    TString ptype;
    if (opt.Contains("x"))  { pcase = 1; ptype = "x"; }
@@ -2410,7 +2418,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
    TString name = GetName();
    TString title = GetTitle();
-   name  += "_";   name  += opt;  // opt may include a user defined name
+   if (underscore > 0) {
+      name  += "_";
+      name  += extra_name;
+   }
+   name  += "_";   name  += opt;
    title += " ";   title += ptype; title += " projection";
 
    switch (pcase) {
