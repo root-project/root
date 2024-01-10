@@ -143,8 +143,10 @@ TEST(RNTupleInspector, SizeCompressedInt)
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
    EXPECT_EQ(sizeof(int32_t) * 500, inspector->GetUncompressedSize());
-   EXPECT_GT(inspector->GetCompressedSize(), 0);
    EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   // Check the target size with a 5% tolerance to account for small fluctuations across different platforms.
+   std::uint64_t targetSize = 800;
+   EXPECT_NEAR(inspector->GetCompressedSize(), targetSize, targetSize * .05f);
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
@@ -159,20 +161,26 @@ TEST(RNTupleInspector, SizeCompressedComplex)
       writeOptions.SetCompression(505);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
-      for (int i = 0; i < 25; ++i) {
+      for (int i = 0; i < 100; ++i) {
          nFldObject->Init1();
          ntuple->Fill();
          nFldObject->Init2();
          ntuple->Fill();
          nFldObject->Init3();
          ntuple->Fill();
+
+         // Store the data in ten clusters to be able to test that the size is correctly computed in this way.
+         if (i % 10 == 9)
+            ntuple->CommitCluster();
       }
    }
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_GT(inspector->GetCompressedSize(), 0);
    EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   // Check the target size with a 5% tolerance to account for small fluctuations across different platforms.
+   std::uint64_t targetSize = 3210;
+   EXPECT_NEAR(inspector->GetCompressedSize(), targetSize, targetSize * .05f);
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
