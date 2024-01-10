@@ -386,3 +386,27 @@ TEST(RooRealIntegral, RooLinearVarModelIntegratedOverVariableClones)
    std::unique_ptr<RooAbsReal> integral2{gauss.createIntegral({yCopy}, {xCopy, yCopy})};
    EXPECT_TRUE(static_cast<RooRealIntegral &>(*integral2).numIntRealVars().empty());
 }
+
+// Make sure that RooFit realizes that Gaussian(x, mu, sigma(x)) needs to be
+// integrated analytically.
+// Covers GitHub issue #14320.
+TEST(RooRealIntegral, GaussianWithSigmaDependingOnX)
+{
+   RooWorkspace ws;
+   ws.factory("x[100., 1000.]");
+   ws.factory("expr::res('0.07 * x + 2.0',x)");
+   ws.factory("Gaussian::sig(x, 200., res)");
+
+   auto &x = *ws.var("x");
+   auto &model = *ws.pdf("sig");
+
+   std::unique_ptr<RooAbsReal> integ1{model.createIntegral(x)};
+   double val1 = integ1->getVal();
+
+   // Force numerical integration for the reference value.
+   model.forceNumInt(true);
+   std::unique_ptr<RooAbsReal> integ2{model.createIntegral(x)};
+   double val2 = integ2->getVal();
+
+   EXPECT_EQ(val1, val2);
+}
