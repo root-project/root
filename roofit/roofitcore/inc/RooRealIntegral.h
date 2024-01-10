@@ -23,7 +23,6 @@
 #include <RooRealProxy.h>
 #include <RooSetProxy.h>
 
-class RooAbsCategory;
 class RooAbsIntegrator;
 class RooNumIntConfig;
 
@@ -100,8 +99,6 @@ protected:
   // Evaluation and validation implementation
   double evaluate() const override ;
   bool isValidReal(double value, bool printError=false) const override ;
-  bool servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
-
 
   bool redirectServersHook(const RooAbsCollection& newServerList,
                  bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
@@ -143,6 +140,9 @@ protected:
 
   bool _cacheNum = false;           ///< Cache integral if numeric
   static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
+
+private:
+  void addNumIntDep(RooAbsArg const &arg);
 
   ClassDefOverride(RooRealIntegral,5) // Real-valued function representing an integral over a RooAbsReal object
 };
