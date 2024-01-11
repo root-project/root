@@ -103,6 +103,8 @@ if(root7)
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libNTupleStruct.dll
                                        ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)
   endif()
+
+  ROOT_ADD_GTEST(dataframe_unified_constructor dataframe_unified_constructor.cxx LIBRARIES ROOTDataFrame)
 endif()
 
 if(sqlite)
