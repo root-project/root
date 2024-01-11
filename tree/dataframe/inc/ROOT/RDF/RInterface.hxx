@@ -1023,7 +1023,14 @@ public:
                                          colListWithAliasesAndSizeBranches, options});
 
       ::TDirectory::TContext ctxt;
-      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, colListNoAliasesWithSizeBranches);
+
+      // The CreateLMFromTTree function by default opens the file passed as input
+      // to check for the presence of the TTree inside. But at this moment the
+      // filename we are using here corresponds to a file which does not exist yet,
+      // i.e. the output file of the Snapshot call. Thus, checkFile=false will
+      // prevent the function from trying to open a non-existent file.
+      auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
+         fullTreeName, filename, colListNoAliasesWithSizeBranches, /*checkFile*/ false));
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
          colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
@@ -2850,8 +2857,14 @@ private:
          std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
 
       ::TDirectory::TContext ctxt;
-      auto newRDF =
-         std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, /*defaultColumns=*/columnListWithoutSizeColumns);
+
+      // The CreateLMFromTTree function by default opens the file passed as input
+      // to check for the presence of the TTree inside. But at this moment the
+      // filename we are using here corresponds to a file which does not exist yet,
+      // i.e. the output file of the Snapshot call. Thus, checkFile=false will
+      // prevent the function from trying to open a non-existent file.
+      auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
+         fullTreeName, filename, /*defaultColumns=*/columnListWithoutSizeColumns, /*checkFile=*/false));
 
       // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
       // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column names.
