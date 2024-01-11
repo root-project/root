@@ -14,8 +14,11 @@
  *************************************************************************/
 
 #include "ROOT/RNTupleImporterCLI.hxx"
+#include "ROOT/RNTupleImporter.hxx"
 
 #include "TROOT.h"
+
+#include <iostream>
 
 using namespace ROOT::Experimental::RNTupleImporterCLI;
 

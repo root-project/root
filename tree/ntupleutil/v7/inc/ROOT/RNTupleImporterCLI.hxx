@@ -19,8 +19,9 @@
 #ifndef ROOT7_RNTupleImporterCLI
 #define ROOT7_RNTupleImporterCLI
 
-#include "ROOT/RNTupleImporter.hxx"
 #include "ROOT/RNTupleOptions.hxx"
+
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
