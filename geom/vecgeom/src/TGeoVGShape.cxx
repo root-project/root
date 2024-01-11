@@ -14,6 +14,7 @@ Bridge class for using a VecGeom solid as TGeoShape.
 */
 
 #include "TGeoVGShape.h"
+#include "TVirtualGeoConverter.h"
 
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/volumes/UnplacedVolume.h"
@@ -39,6 +40,7 @@ Bridge class for using a VecGeom solid as TGeoShape.
 #include "VecGeom/volumes/UnplacedCutTube.h"
 
 #include "TError.h"
+#include "TBuffer.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"
@@ -61,6 +63,7 @@ Bridge class for using a VecGeom solid as TGeoShape.
 #include "TGeoXtru.h"
 #include "TGeoTessellated.h"
 #include "TGeoHype.h"
+#include "TGeoShapeAssembly.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -371,14 +374,14 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
       for (auto i = 0; i < tsl->GetNfacets(); ++i) {
          auto const &facet = tsl->GetFacet(i);
          int nvert = facet.GetNvert();
-         auto const &v0 = facet.GetVertex(0);
-         auto const &v1 = facet.GetVertex(1);
-         auto const &v2 = facet.GetVertex(2);
+         auto const &v0 = tsl->GetVertex(facet[0]);
+         auto const &v1 = tsl->GetVertex(facet[1]);
+         auto const &v2 = tsl->GetVertex(facet[2]);
          if (nvert == 3) {
             vtsl->AddTriangularFacet(Vector3D(v0[0], v0[1], v0[2]), Vector3D(v1[0], v1[1], v1[2]),
                                      Vector3D(v2[0], v2[1], v2[2]));
          } else if (nvert == 4) {
-            auto const &v3 = facet.GetVertex(3);
+            auto const &v3 = tsl->GetVertex(facet[3]);
             vtsl->AddQuadrilateralFacet(Vector3D(v0[0], v0[1], v0[2]), Vector3D(v1[0], v1[1], v1[2]),
                                         Vector3D(v2[0], v2[1], v2[2]), Vector3D(v3[0], v3[1], v3[2]));
          } else {
@@ -386,6 +389,12 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
          }
       }
       vtsl->Close();
+   }
+
+   // ASSEMBLY
+   if (shape->IsA() == TGeoShapeAssembly::Class()) {
+      // Assemblies are handled by ROOT
+      return nullptr;
    }
 
    // New volumes should be implemented here...
@@ -470,4 +479,21 @@ void TGeoVGShape::InspectShape() const
 {
    fVGShape->GetUnplacedVolume()->Print();
    printf("\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TGeoVGShape.
+
+void TGeoVGShape::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TGeoVGShape::Class(), this);
+      if (!TVirtualGeoConverter::Instance()) {
+         Fatal("Streamer",
+               "This geometry contains solids converted to VecGeom and needs a VecGeom-enabled ROOT to read.");
+      }
+      fVGShape = CreateVecGeomSolid(fShape);
+   } else {
+      R__b.WriteClassBuffer(TGeoVGShape::Class(), this);
+   }
 }
