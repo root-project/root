@@ -35,6 +35,12 @@
 #include "ROOT/RSlotStack.hxx"
 #endif
 
+#ifdef R__HAS_ROOT7
+#include "ROOT/RNTuple.hxx"
+#include "ROOT/RPageStorage.hxx"
+#include "ROOT/RNTupleDS.hxx"
+#endif
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -1104,3 +1110,75 @@ void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange
 {
    fEmptyEntryRange = std::move(newRange);
 }
+
+/**
+ * \brief Helper function to open a file (or the first file from a glob).
+ * This function is used at construction time of an RDataFrame, to check the
+ * concrete type of the dataset stored inside the file.
+ */
+std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
+{
+   bool fileIsGlob = [&fileNameGlob]() {
+      const std::vector<std::string_view> wildcards = {"[", "]", "*", "?"}; // Wildcards accepted by TChain::Add
+      return std::any_of(wildcards.begin(), wildcards.end(),
+                         [&fileNameGlob](const auto &wc) { return fileNameGlob.find(wc) != std::string_view::npos; });
+   }();
+
+   // Open first file in case of glob, suppose all files in the glob use the same data format
+   std::string fileToOpen{fileIsGlob ? ROOT::Internal::TreeUtils::ExpandGlob(std::string{fileNameGlob})[0]
+                                     : fileNameGlob};
+
+   ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
+   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBAL_REGISTRATION")};
+   if (!inFile || inFile->IsZombie())
+      throw std::invalid_argument("RDataFrame: could not open file \"" + fileToOpen + "\".");
+
+   return inFile;
+}
+
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, std::string_view fileNameGlob,
+                                     const ROOT::RDF::ColumnNames_t &defaultColumns, bool checkFile)
+{
+   // Introduce the same behaviour as in CreateLMFromFile for consistency.
+   // Creating an RDataFrame with a non-existing file will throw early rather
+   // than wait for the start of the graph execution.
+   if (checkFile) {
+      OpenFileWithSanityChecks(fileNameGlob);
+   }
+   std::string datasetNameInt{datasetName};
+   std::string fileNameGlobInt{fileNameGlob};
+   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(datasetNameInt.c_str());
+   chain->Add(fileNameGlobInt.c_str());
+   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(chain), defaultColumns);
+   return lm;
+}
+
+#ifdef R__HAS_ROOT7
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string_view fileNameGlob,
+                                       const ROOT::RDF::ColumnNames_t &defaultColumns)
+{
+   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(datasetName, fileNameGlob);
+   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(std::move(pageSource));
+   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
+   return lm;
+}
+
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_view fileNameGlob,
+                                    const ROOT::RDF::ColumnNames_t &defaultColumns)
+{
+
+   auto inFile = OpenFileWithSanityChecks(fileNameGlob);
+
+   if (inFile->Get<TTree>(datasetName.data())) {
+      return CreateLMFromTTree(datasetName, fileNameGlob, defaultColumns, /*checkFile=*/false);
+   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+      return CreateLMFromRNTuple(datasetName, fileNameGlob, defaultColumns);
+   }
+
+   throw std::invalid_argument("RDataFrame: unsupported data format for dataset \"" + std::string(datasetName) +
+                               "\" in file \"" + inFile->GetName() + "\".");
+}
+#endif
