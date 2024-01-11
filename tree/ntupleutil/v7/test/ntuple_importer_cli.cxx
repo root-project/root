@@ -37,6 +37,28 @@ TEST(RNTupleImporterCLI, Basic)
       << "RNTuple should exist in the provided output file";
 }
 
+TEST(RNTupleImporterCLI, AppendToExistingFile)
+{
+   FileRaii inputFileGuard("test_ntuple_importer_cli_append.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(inputFileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t pt = 42;
+      tree->Branch("pt", &pt);
+      tree->Fill();
+      tree->Write();
+   }
+
+   const std::vector<std::string> args{
+      "ttree2rntuple", "-t", "tree", "-r", "ntuple", "-i", inputFileGuard.GetPath(), "-o", inputFileGuard.GetPath()};
+
+   const auto importerCfg = ParseArgs(args);
+
+   EXPECT_TRUE(importerCfg.fShouldRun) << "Arguments are valid and should have been correctly parsed.";
+   EXPECT_NO_THROW(RunImporter(importerCfg));
+   EXPECT_NO_THROW(RNTupleReader::Open("ntuple", inputFileGuard.GetPath()));
+}
+
 TEST(RNTupleImporterCLI, LongArgs)
 {
    const std::vector<std::string> args{"ttree2rntuple", "--ttree",          "tree", "--infile", "my_tree_file.root",
