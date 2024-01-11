@@ -58,6 +58,18 @@ def fill_main_tree_and_indexed_friend(mainfile, auxfile):
 class DataFrameConstructorTests(unittest.TestCase):
     """Check various functionalities of the HeadNode class"""
 
+    @classmethod
+    def setUpClass(cls):
+        """Create a dummy file to use for the RDataFrame constructor."""
+        cls.test_treename = "treename"
+        cls.test_filename = "file.root"
+
+        ROOT.RDataFrame(1).Define("x", "rdfentry_").Snapshot(cls.test_treename, cls.test_filename)
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.test_filename)
+
     def test_incorrect_args(self):
         """Constructor with incorrect arguments"""
         with self.assertRaises(TypeError):
@@ -66,7 +78,7 @@ class DataFrameConstructorTests(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             # Incorrect third argument in 3-argument case
-            create_dummy_headnode("treename", "file.root", "column1")
+            create_dummy_headnode(self.test_treename, self.test_filename, "column1")
 
         with self.assertRaises(TypeError):
             # No argument case
@@ -123,7 +135,7 @@ class DataFrameConstructorTests(unittest.TestCase):
             reqd_vec.push_back(elem)
 
         # RDataFrame constructor with 2nd argument as string
-        hn_1 = create_dummy_headnode("treename", "file.root")
+        hn_1 = create_dummy_headnode(self.test_treename, self.test_filename)
 
         # RDataFrame constructor with 2nd argument as Python list
         hn_2 = create_dummy_headnode("treename", rdf_2_files)
@@ -150,10 +162,10 @@ class DataFrameConstructorTests(unittest.TestCase):
             reqd_vec.push_back(elem)
 
         # RDataFrame constructor with 3rd argument as Python list
-        hn_1 = create_dummy_headnode("treename", "file.root", rdf_branches)
+        hn_1 = create_dummy_headnode(self.test_treename, self.test_filename, rdf_branches)
 
         # RDataFrame constructor with 3rd argument as ROOT CPP Vector
-        hn_2 = create_dummy_headnode("treename", "file.root", reqd_vec)
+        hn_2 = create_dummy_headnode(self.test_treename, self.test_filename, reqd_vec)
 
         for hn in (hn_1, hn_2):
             self.assertEqual(hn.maintreename, "treename")

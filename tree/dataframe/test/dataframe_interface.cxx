@@ -5,6 +5,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include <string_view>
 #include "ROOT/RTrivialDS.hxx"
+#include "ROOT/TestSupport.hxx"
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -18,13 +19,30 @@ using namespace ROOT::RDF;
 
 TEST(RDataFrameInterface, CreateFromCStrings)
 {
-   RDataFrame tdf("t", "file");
+   TString path_to_file{"file"};
+   // Cross-platform friendly way to generate full path to file. Modifies
+   // the TString argument in-place.
+   gSystem->PrependPathName(gSystem->pwd(), path_to_file);
+   TString expecteddiag;
+   expecteddiag.Form("file %s does not exist", path_to_file.Data());
+
+   // File does not exist, an exception is thrown at construction time.
+   ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(RDataFrame tdf("t", "file");), "TFile::TFile", expecteddiag.Data());
 }
 
 TEST(RDataFrameInterface, CreateFromStrings)
 {
    std::string t("t"), f("file");
-   RDataFrame tdf(t, f);
+
+   TString path_to_file{"file"};
+   // Cross-platform friendly way to generate full path to file. Modifies
+   // the TString argument in-place.
+   gSystem->PrependPathName(gSystem->pwd(), path_to_file);
+   TString expecteddiag;
+   expecteddiag.Form("file %s does not exist", path_to_file.Data());
+
+   // File does not exist, an exception is thrown at construction time.
+   ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(RDataFrame tdf(t, f);), "TFile::TFile", expecteddiag.Data());
 }
 
 TEST(RDataFrameInterface, CreateFromContainer)
