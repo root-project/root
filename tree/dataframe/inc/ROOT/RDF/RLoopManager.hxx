@@ -245,8 +245,41 @@ public:
    void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
 };
 
-} // ns RDF
-} // ns Detail
+/// \brief Create an RLoopManager that reads a TChain.
+/// \param[in] datasetName Name of the TChain
+/// \param[in] fileNameGlob File name (or glob) in which the TChain is stored.
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \return the RLoopManager instance.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+CreateLMFromTTree(std::string_view datasetName, std::string_view fileNameGlob,
+                  const std::vector<std::string> &defaultColumns, bool checkFile = true);
+
+#ifdef R__HAS_ROOT7
+/// \brief Create an RLoopManager that reads an RNTuple.
+/// \param[in] datasetName Name of the RNTuple
+/// \param[in] fileNameGlob File name (or glob) in which the RNTuple is stored.
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \return the RLoopManager instance.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromRNTuple(std::string_view datasetName,
+                                                                     std::string_view fileNameGlob,
+                                                                     const std::vector<std::string> &defaultColumns);
+
+/// \brief Create an RLoopManager opening a file and checking the data format of the dataset.
+/// \param[in] datasetName Name of the dataset in the file.
+/// \param[in] fileNameGlob File name (or glob) in which the dataset is stored.
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \throws std::invalid_argument if the file could not be opened.
+/// \return an RLoopManager of the appropriate data source.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromFile(std::string_view datasetName,
+                                                                  std::string_view fileNameGlob,
+                                                                  const std::vector<std::string> &defaultColumns);
+#endif
+
+} // namespace RDF
+} // namespace Detail
 } // namespace ROOT
 
 #endif

@@ -1562,15 +1562,17 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
 /// \see ROOT::RDF::RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultColumns)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
+#ifdef R__HAS_ROOT7
+RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
+   : RInterface(ROOT::Detail::RDF::CreateLMFromFile(treeName, fileNameGlob, defaultColumns))
 {
-   const std::string treeNameInt(treeName);
-   const std::string filenameglobInt(filenameglob);
-   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(treeNameInt);
-   chain->Add(filenameglobInt.c_str());
-   GetProxiedPtr()->SetTree(std::move(chain));
 }
+#else
+RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
+   : RInterface(ROOT::Detail::RDF::CreateLMFromTTree(treeName, fileNameGlob, defaultColumns))
+{
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
