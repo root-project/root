@@ -350,6 +350,17 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
 {
 }
 
+RLoopManager::RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches)
+   : fTree(std::move(tree)),
+     fDefaultColumns(defaultBranches),
+     fNSlots(RDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
+{
+}
+
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fEmptyEntryRange(0, nEmptyEntries),
      fNSlots(RDFInternal::GetNSlots()),
