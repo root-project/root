@@ -30,7 +30,7 @@ The following people have contributed to this new version:
  Lorenzo Moneta, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
- Vincenzo Padulano, CERN/EP-SFT,\
+ Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
@@ -175,6 +175,10 @@ Instantiating the following classes and even including their header files is dep
 * RooXYChi2Var
 
 Please use the higher-level functions `RooAbsPdf::createNLL()` and `RooAbsPdf::createChi2()` if you want to create objects that represent test statistics.
+
+## RDataFrame
+
+* The RDataFrame constructor that takes an input file name (or file glob) will now infer the format of the dataset, either TTree or RNTuple, that is stored in that input file. This automatic inference further contributes towards a zero-code-change experience when moving from processing a TTree to processing an RNTuple dataset while using an RDataFrame. It also introduces a backwards-incompatible behaviour, i.e. now the constructor needs to open one file in order to infer the dataset type. This means that if the file does not exist, the constructor will throw an exception. Previously, an exception would be thrown only at a JIT-ting time, before the start of the computations.
 
 ## 2D Graphics Libraries
 
