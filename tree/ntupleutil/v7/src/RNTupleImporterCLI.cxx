@@ -19,6 +19,7 @@
 
 using namespace ROOT::Experimental::RNTupleImporterCLI;
 
+namespace {
 const auto usageText = "Usage:\n"
                        " ttree2rntuple (--ttree|-t) name\n"
                        "               (--infile|-i) path\n"
@@ -72,6 +73,7 @@ const auto argUsageText =
    "    Whether to print schema information and progress.\n"
    "    If not specified, nothing will be printed except for a brief report about the source TTree and target "
    "RNTuple.\n";
+} // namespace
 
 ImporterConfig ROOT::Experimental::RNTupleImporterCLI::ParseArgs(const std::vector<std::string> &args)
 {
