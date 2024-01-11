@@ -895,3 +895,27 @@ TEST(RDataFrameUtils, RegexWithFriendsInJittedFilters)
    EXPECT_EQ(df.Filter("fr.x < 0 && x > 0").Count().GetValue(), 1);
    EXPECT_EQ(df.Filter("x > 0 && fr.x < 0").Count().GetValue(), 1);
 }
+
+TEST(RDataFrameInterface, PrintValueFromTree)
+{
+   TMemFile f("dataframe_PrintValueFromTree.root", "RECREATE");
+   TTree t("t", "t");
+   RDataFrame df(t);
+   auto printValue = cling::printValue(&df);
+   EXPECT_EQ(printValue, "A data frame built on top of the t dataset.");
+}
+
+TEST(RDataFrameInterface, PrintValueNoData)
+{
+   RDataFrame df(100);
+   auto printValue = cling::printValue(&df);
+   EXPECT_EQ(printValue, "An empty data frame that will create 100 entries\n");
+}
+
+TEST(RDataFrameInterface, PrintValueDataSource)
+{
+   std::unique_ptr<RDataSource> ds(new RTrivialDS(1));
+   RDataFrame df(std::move(ds));
+   auto printValue = cling::printValue(&df);
+   EXPECT_EQ(printValue, "A data frame associated to the data source \"trivial data source\"");
+}

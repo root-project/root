@@ -1777,11 +1777,22 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 namespace cling {
 //////////////////////////////////////////////////////////////////////////
 /// Print an RDataFrame at the prompt
-std::string printValue(ROOT::RDataFrame *tdf)
+std::string printValue(ROOT::RDataFrame *df)
 {
-   auto &df = *tdf->GetLoopManager();
-   auto *tree = df.GetTree();
-   auto defCols = df.GetDefaultColumnNames();
+   // The loop manager is never null, except when its construction failed.
+   // This can happen e.g. if the constructor of RLoopManager that expects
+   // a file name is used and that file doesn't exist. This point is usually
+   // not even reached in that situation, since the exception thrown by the
+   // constructor will also stop execution of the program. But it can still
+   // be reached at the prompt, if the user tries to print the RDataFrame
+   // variable after an incomplete initialization.
+   auto *lm = df->GetLoopManager();
+   if (!lm) {
+      throw std::runtime_error("Cannot print information about this RDataFrame, "
+                               "it was not properly created. It must be discarded.");
+   }
+   auto *tree = lm->GetTree();
+   auto defCols = lm->GetDefaultColumnNames();
 
    std::ostringstream ret;
    if (tree) {
@@ -1796,10 +1807,10 @@ std::string printValue(ROOT::RDataFrame *tdf)
             }
          }
       }
-   } else if (auto ds = tdf->fDataSource) {
+   } else if (auto ds = df->fDataSource) {
       ret << "A data frame associated to the data source \"" << cling::printValue(ds) << "\"";
    } else {
-      ret << "An empty data frame that will create " << df.GetNEmptyEntries() << " entries\n";
+      ret << "An empty data frame that will create " << lm->GetNEmptyEntries() << " entries\n";
    }
 
    return ret.str();
