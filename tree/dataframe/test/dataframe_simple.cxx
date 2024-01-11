@@ -873,13 +873,12 @@ TEST_P(RDFSimpleTests, ManyRangesPerWorker)
 // ROOT-9736
 TEST_P(RDFSimpleTests, NonExistingFile)
 {
-   ROOT::RDataFrame r("myTree", "nonexistingfile.root");
-
    TString expecteddiag;
    expecteddiag.Form("file %s/nonexistingfile.root does not exist", gSystem->pwd());
 
-   // We try to use the tree for jitting: an exception is thrown
-   ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(r.Filter("inventedVar > 0")), "TFile::TFile", expecteddiag.Data());
+   // File does not exist, an exception is thrown at construction time.
+   ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(ROOT::RDataFrame r("myTree", "nonexistingfile.root");), "TFile::TFile",
+                     expecteddiag.Data());
 }
 
 // ROOT-10549: check we throw if a file is unreadable
