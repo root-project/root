@@ -15,7 +15,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cpu.h"
-#include "TMVA/DNN/Architectures/Cpu/Blas.h"
+#include "Blas.h"
 
 namespace TMVA
 {

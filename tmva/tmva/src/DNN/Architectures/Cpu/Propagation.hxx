@@ -19,7 +19,7 @@
 
 
 #ifdef R__HAS_TMVACPU
-#include "TMVA/DNN/Architectures/Cpu/Blas.h"
+#include "Blas.h"
 #else
 #include "TMVA/DNN/Architectures/Reference.h"
 #endif
