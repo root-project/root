@@ -178,6 +178,7 @@ class RLoopManager : public RNodeBase {
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
+   RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
    RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
