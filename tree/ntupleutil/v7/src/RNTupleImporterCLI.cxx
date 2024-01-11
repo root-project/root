@@ -111,7 +111,20 @@ ImporterConfig ROOT::Experimental::RNTupleImporterCLI::ParseArgs(const std::vect
    for (size_t i = 1; i < args.size(); ++i) {
       const auto &arg = args[i];
 
-      if (arg == "--ttree" || arg == "-t") {
+      if (argState != EArgState::kNone) {
+         switch (argState) {
+         case EArgState::kTreeName: config.fTreeName = arg; break;
+         case EArgState::kTreePath: config.fTreePath = arg; break;
+         case EArgState::kNTuplePath: config.fNTuplePath = arg; break;
+         case EArgState::kNTupleName: config.fNTupleName = arg; break;
+         case EArgState::kCompression: config.fNTupleOpts.SetCompression(std::stoi(arg)); break;
+         case EArgState::kUnzippedPageSize: config.fNTupleOpts.SetApproxUnzippedPageSize(std::stol(arg)); break;
+         case EArgState::kZippedClusterSize: config.fNTupleOpts.SetApproxZippedClusterSize(std::stol(arg)); break;
+         case EArgState::kUnzippedClusterSize: config.fNTupleOpts.SetMaxUnzippedClusterSize(std::stol(arg)); break;
+         default: std::cerr << "Unrecognized option '" << arg << "'\n"; return {};
+         }
+         argState = EArgState::kNone;
+      } else if (arg == "--ttree" || arg == "-t") {
          argState = EArgState::kTreeName;
       } else if (arg == "--infile" || arg == "-i") {
          argState = EArgState::kTreePath;
@@ -129,23 +142,13 @@ ImporterConfig ROOT::Experimental::RNTupleImporterCLI::ParseArgs(const std::vect
          argState = EArgState::kUnzippedClusterSize;
       } else if (arg == "--convert-dots") {
          config.fConvertDots = true;
+         argState = EArgState::kNone;
       } else if (arg == "--verbose" || arg == "-v") {
          config.fVerbose = true;
-      } else if (arg[0] == '-') {
-         std::cerr << "Unrecognized option '" << arg << "'\n";
-         return {};
+         argState = EArgState::kNone;
       } else {
-         switch (argState) {
-         case EArgState::kTreeName: config.fTreeName = arg; break;
-         case EArgState::kTreePath: config.fTreePath = arg; break;
-         case EArgState::kNTuplePath: config.fNTuplePath = arg; break;
-         case EArgState::kNTupleName: config.fNTupleName = arg; break;
-         case EArgState::kCompression: config.fNTupleOpts.SetCompression(std::stoi(arg)); break;
-         case EArgState::kUnzippedPageSize: config.fNTupleOpts.SetApproxUnzippedPageSize(std::stol(arg)); break;
-         case EArgState::kZippedClusterSize: config.fNTupleOpts.SetApproxZippedClusterSize(std::stol(arg)); break;
-         case EArgState::kUnzippedClusterSize: config.fNTupleOpts.SetMaxUnzippedClusterSize(std::stol(arg)); break;
-         default: std::cerr << "Unrecognized option '" << arg << "'\n"; return {};
-         }
+         std::cerr << "Unrecognized argument '" << arg << "'\n";
+         return {};
       }
    }
 

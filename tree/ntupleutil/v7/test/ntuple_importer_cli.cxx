@@ -95,13 +95,32 @@ TEST(RNTupleImporterCLI, MissingNTuplePath)
    EXPECT_TRUE(!importerCfg.fShouldRun) << "Program running when missing --outfile argument.";
 }
 
-TEST(RNTupleImporterCLI, InvalidArgs)
+TEST(RNTupleImporterCLI, InvalidArgs1)
 {
    const std::vector<std::string> args{"ttree2rntuple", "--wrong"};
 
    const auto importerCfg = ParseArgs(args);
 
-   EXPECT_TRUE(!importerCfg.fShouldRun) << "Program running when not using any arguments.";
+   EXPECT_TRUE(!importerCfg.fShouldRun) << "Program running when using invalid arguments.";
+}
+
+TEST(RNTupleImporterCLI, InvalidArgs2)
+{
+   const std::vector<std::string> args{"ttree2rntuple", "wrong"};
+
+   const auto importerCfg = ParseArgs(args);
+
+   EXPECT_TRUE(!importerCfg.fShouldRun) << "Program running when using invalid arguments.";
+}
+
+TEST(RNTupleImporterCLI, OptionAsName)
+{
+   const std::vector<std::string> args{"ttree2rntuple", "-t", "-v", "-i", "in.root", "-o", "out.root"};
+
+   const auto importerCfg = ParseArgs(args);
+
+   EXPECT_EQ(importerCfg.fTreeName, "-v") << "Provided TTree name does not match expected name.";
+   EXPECT_FALSE(importerCfg.fVerbose) << "Verbosity should not be enabled.";
 }
 
 TEST(RNTupleImporterCLI, Name)
