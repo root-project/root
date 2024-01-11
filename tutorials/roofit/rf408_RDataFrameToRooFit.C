@@ -43,9 +43,9 @@ void rf408_RDataFrameToRooFit()
   // ------------------------
 
   // We create an RDataFrame with two columns filled with 2 million random numbers.
-  ROOT::RDataFrame d(2000000);
-  auto dd = d.Define("x", [](){ return gRandom->Uniform(-5.,  5.); })
-             .Define("y", [](){ return gRandom->Gaus(1., 3.); });
+  auto df = ROOT::RDataFrame{2000000}.Define("x", []() { return gRandom->Uniform(-5., 5.); }).Define("y", []() {
+     return gRandom->Gaus(1., 3.);
+  });
 
 
   // We create RooFit variables that will represent the dataset.
@@ -68,7 +68,16 @@ void rf408_RDataFrameToRooFit()
   // - the column names that RDataFrame should fill into the dataset
   //
   // NOTE: RDataFrame columns are matched to RooFit variables by position, *not by name*!
-  auto rooDataSet = dd.Book<double, double>(
+  //
+  // The returned object is not yet a RooDataSet, but an RResultPtr that will
+  // be lazy-evaluated once you call GetValue() on it. We will only evaluate
+  // the RResultPtr once all other RDataFrame related actions are declared.
+  // This way we trigger the event loop computation only once, which will
+  // improve the runtime significantly.
+  //
+  // To learn more about lazy actions, see:
+  //     https://root.cern/doc/master/classROOT_1_1RDataFrame.html#actions
+  ROOT::RDF::RResultPtr<RooDataSet> rooDataSetResult = df.Book<double, double>(
       RooDataSetHelper("dataset", // Name
           "Title of dataset",     // Title
           RooArgSet(x, y)         // Variables in this dataset
@@ -86,17 +95,21 @@ void rf408_RDataFrameToRooFit()
   };
 
   // Then, we move it into an RDataFrame action:
-  auto rooDataHist = dd.Book<double, double>(std::move(rdhMaker), {"x", "y"});
-
+  ROOT::RDF::RResultPtr<RooDataHist> rooDataHistResult = df.Book<double, double>(std::move(rdhMaker), {"x", "y"});
 
 
   // Run it and inspect the results
   // -------------------------------
 
+  // At this point, all RDF actions were defined (namely, the `Book`
+  // operations), so we can get values from the RResultPtr objects, triggering
+  // the event loop and getting the actual RooFit data objects.
+  RooDataSet const& rooDataSet = rooDataSetResult.GetValue();
+  RooDataHist const& rooDataHist = rooDataHistResult.GetValue();
+
   // Let's inspect the dataset / datahist.
-  // Note that the first time we touch one of those objects, the RDataFrame event loop will run.
-  printData(*rooDataSet);
-  printData(*rooDataHist);
+  printData(rooDataSet);
+  printData(rooDataHist);
 }
 
 int main() {
