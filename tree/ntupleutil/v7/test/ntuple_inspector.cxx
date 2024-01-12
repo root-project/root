@@ -494,11 +494,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
       }
    }
 
-   auto ntuple = ROOT::Experimental::RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails);
-
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
-   inspector->PrintColumnTypeInfo();
 
    int intColId = inspector->GetColumnsByType(EColumnType::kSplitInt64)[0];
    auto intPageSizeHisto = inspector->GetPageSizeDistribution(intColId);
@@ -533,16 +529,27 @@ TEST(RNTupleInspector, PageSizeDistribution)
    EXPECT_EQ(nPages, multipleColsSizeHisto->Integral());
 
    auto intFloatPageSizeHisto =
-      inspector->GetPageSizeDistribution({EColumnType::kSplitInt64, EColumnType::kSplitReal32});
-   EXPECT_STREQ("pageSizeHist", intFloatPageSizeHisto->GetName());
+      inspector->GetPageSizeDistribution({EColumnType::kSplitInt64, EColumnType::kSplitReal32}, "intFloatPageSize");
+   EXPECT_STREQ("intFloatPageSize", intFloatPageSizeHisto->GetName());
    EXPECT_STREQ("Per-column type page size distribution", intFloatPageSizeHisto->GetTitle());
    EXPECT_EQ(2, intFloatPageSizeHisto->GetNhists());
 
-   int stackIntegral = 0;
+   int intFloatIntegral = 0;
    for (auto hist : TRangeDynCast<TH1D>(intFloatPageSizeHisto->GetHists())) {
-      stackIntegral += hist->Integral();
+      intFloatIntegral += hist->Integral();
    }
-   EXPECT_EQ(nIntPages + nFloatPages, stackIntegral);
+   EXPECT_EQ(nIntPages + nFloatPages, intFloatIntegral);
+
+   auto allColsSizeHisto = inspector->GetPageSizeDistribution();
+   nPages = 0;
+   for (const auto &col : inspector->GetDescriptor()->GetColumnIterable()) {
+      nPages += inspector->GetColumnInspector(col.GetPhysicalId()).GetNPages();
+   }
+   int allColsIntegral = 0;
+   for (auto hist : TRangeDynCast<TH1D>(allColsSizeHisto->GetHists())) {
+      allColsIntegral += hist->Integral();
+   }
+   EXPECT_EQ(nPages, allColsIntegral);
 
    // Requesting a histogram for a column with a physical ID not present in the given RNTuple should throw
    EXPECT_THROW(inspector->GetPageSizeDistribution(inspector->GetDescriptor()->GetNPhysicalColumns() + 1),
