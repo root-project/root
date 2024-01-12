@@ -2057,13 +2057,13 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
   } else if (cl=="nll") {
 
     // nll::name[pdf,data]
-    RooNLLVar nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDATA(pargv[1].c_str())) ;
+    RooNLLVar nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDATA(pargv[1].c_str()), /*extended=*/false) ;
     if (ft.ws().import(nll,Silence())) ft.logError() ;
 
   } else if (cl=="chi2") {
 
     // chi2::name[pdf,data]
-    RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str())) ;
+    RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str()), /*extended=*/false, /*etype=*/RooAbsData::Auto);
     if (ft.ws().import(nll,Silence())) ft.logError() ;
 
 #endif
