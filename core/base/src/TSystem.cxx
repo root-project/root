@@ -1084,6 +1084,7 @@ const char *TSystem::PrependPathName(const char *, TString&)
 
 const char *TSystem::ExpandFileName(const char *fname)
 {
+   R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
    const int kBufSize = kMAXPATHLEN;
    TTHREAD_TLS_ARRAY(char, kBufSize, xname);
 
@@ -1102,6 +1103,7 @@ const char *TSystem::ExpandFileName(const char *fname)
 
 Bool_t TSystem::ExpandFileName(TString &fname)
 {
+   R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
    const int kBufSize = kMAXPATHLEN;
    char xname[kBufSize];
 
@@ -1532,6 +1534,7 @@ const char *TSystem::FindFile(const char *, TString&, EAccessMode)
 
 char *TSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 {
+   R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
    TString wfilString(wfil);
    FindFile(search, wfilString, mode);
    if (wfilString.IsNull())
@@ -2676,11 +2679,14 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
       ::Info("ACLiC", "%s", adddictdep.Data());
    }
 
-   Int_t depbuilt = !gSystem->Exec(touch);
-   if (depbuilt) depbuilt = !gSystem->Exec(builddep);
-   if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
-   if (depbuilt) depbuilt = !gSystem->Exec(addversiondep);
-
+   Int_t depbuilt;
+   {
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
+      depbuilt = !gSystem->Exec(touch);
+      if (depbuilt) depbuilt = !gSystem->Exec(builddep);
+      if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
+      if (depbuilt) depbuilt = !gSystem->Exec(addversiondep);
+   }
    if (!depbuilt) {
       ::Warning("ACLiC","Failed to generate the dependency file for %s",
                 library.Data());
@@ -2855,39 +2861,44 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (opt && strchr(opt,'-')!=nullptr);
 
    // if non-zero, build_loc indicates where to build the shared library.
+   const char *cwd = WorkingDirectory();
    TString build_loc = ExpandFileName(GetBuildDir());
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
    if (build_loc == ".") {
-      build_loc = WorkingDirectory();
+      build_loc = cwd;
    } else if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
-      AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
+      AssignAndDelete( build_loc , ConcatFileName( cwd, build_loc ) );
    }
 
    // Get the include directory list in the dir1:dir2:dir3 format
    // [Used for generating the .d file and to look for header files for
    // the linkdef file]
-   TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
-   incPath.Append(":").Prepend(" ");
-   if (gEnv) {
-      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
-      incPath.Append(fromConfig);
-   }
-   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
-   auto posISysRoot = incPath.Index(" -isysroot \"");
-   if (posISysRoot != kNPOS) {
-      auto posISysRootEnd = incPath.Index('"', posISysRoot + 12);
-      if (posISysRootEnd != kNPOS) {
-         // NOTE: should probably just skip isysroot for dependency analysis.
-         // (And will, in the future - once we rely on compiler-generated .d files.)
-         incPath.Insert(posISysRootEnd - 1, "/usr/include/");
-         incPath.Replace(posISysRoot, 12, ":\"");
+   TString incPath;
+   {
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
+      incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
+      incPath.Append(":").Prepend(" ");
+      if (gEnv) {
+         TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
+         incPath.Append(fromConfig);
       }
+      incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
+      auto posISysRoot = incPath.Index(" -isysroot \"");
+      if (posISysRoot != kNPOS) {
+         auto posISysRootEnd = incPath.Index('"', posISysRoot + 12);
+         if (posISysRootEnd != kNPOS) {
+            // NOTE: should probably just skip isysroot for dependency analysis.
+            // (And will, in the future - once we rely on compiler-generated .d files.)
+            incPath.Insert(posISysRootEnd - 1, "/usr/include/");
+            incPath.Replace(posISysRoot, 12, ":\"");
+         }
+      }
+      while ( incPath.Index(" :") != -1 ) {
+         incPath.ReplaceAll(" :",":");
+      }
+      incPath.Prepend(":.:");
+      incPath.Prepend(cwd);
    }
-   while ( incPath.Index(" :") != -1 ) {
-      incPath.ReplaceAll(" :",":");
-   }
-   incPath.Prepend(":.:");
-   incPath.Prepend(WorkingDirectory());
 
    // ======= Get the right file names for the dictionary and the shared library
    TString expFileName(filename);
@@ -2931,7 +2942,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend( file_location + ":" );
 
    Ssiz_t dot_pos = library.Last('.');
-   TString extension, libname_noext = library;
+   TString extension;
+   TString libname_noext = library;
    if (dot_pos >= 0) {
       libname_noext.Remove(dot_pos);
       extension = library(dot_pos+1, library.Length()-dot_pos-1);
@@ -2953,7 +2965,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       library = library_specified;
       ExpandPathName( library );
       if (! IsAbsoluteFileName(library) ) {
-         AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
+         AssignAndDelete( library , ConcatFileName( cwd, library ) );
       }
       library = TString(library) + "." + fSoExt;
    }
@@ -2996,15 +3008,15 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          AssignAndDelete( library, ConcatFileName( build_loc, library) );
       }
 
-      Bool_t canWriteBuild_loc = !gSystem->AccessPathName(build_loc,kWritePermission);
       TString build_loc_store( build_loc );
       if (!flatBuildDir) {
          AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
       }
-
+      // AccessPathName, mkdir, Chmod
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
       if (gSystem->AccessPathName(build_loc,kFileExists)) {
          mkdirFailed = (0 != mkdir(build_loc, true));
-         if (mkdirFailed && !canWriteBuild_loc) {
+         if (mkdirFailed && gSystem->AccessPathName(build_loc,kWritePermission)) {
             // The mkdir failed __and__ we can not write to the target directory,
             // let make sure the error message will be about the target directory
             build_loc = build_loc_store;
@@ -3017,18 +3029,23 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    library = gSystem->UnixPathName(library);
 
    // ======= Check if the library need to loaded or compiled
-   if (!gInterpreter->IsLibraryLoaded(library) && gInterpreter->IsLoaded(expFileName)) {
-      // the script has already been loaded in interpreted mode
-      // Let's warn the user and unload it.
+   {
+      // The next block may lock the interpreter up to three times. Lock it once
+      // here instead.
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
+      if (!gInterpreter->IsLibraryLoaded(library) && gInterpreter->IsLoaded(expFileName)) {
+         // the script has already been loaded in interpreted mode
+         // Let's warn the user and unload it.
 
-      if (withInfo) {
-         ::Info("ACLiC","script has already been loaded in interpreted mode");
-         ::Info("ACLiC","unloading %s and compiling it", filename);
-      }
+         if (withInfo) {
+            ::Info("ACLiC","script has already been loaded in interpreted mode");
+            ::Info("ACLiC","unloading %s and compiling it", filename);
+         }
 
-      if ( gInterpreter->UnloadFile( expFileName ) != 0 ) {
-         // We can not unload it.
-         return kFALSE;
+         if ( gInterpreter->UnloadFile( expFileName ) != 0 ) {
+            // We can not unload it.
+            return kFALSE;
+         }
       }
    }
 
@@ -3037,6 +3054,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    includes.Prepend(' ');
 
    {
+      R__LOCKGUARD(gGlobalMutex);
       // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
       TRegexp rel_inc(" -I[^\"/\\$%-][^:-]+");
       Int_t len,pos;
@@ -3044,7 +3062,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,3); // Remove ' -I'
-         AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
+         AssignAndDelete( sub, ConcatFileName( cwd, sub ) );
          sub.Prepend(" -I\"");
          sub.Chop(); // Remove trailing space (i.e between the -Is ...
          sub.Append("\" ");
@@ -3060,7 +3078,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,4); // Remove ' -I"'
-         AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
+         AssignAndDelete( sub, ConcatFileName( cwd, sub ) );
          sub.Prepend(" -I\"");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
@@ -3106,7 +3124,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
-   Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
+
+   Bool_t canWrite;
+   {
+      R__LOCKGUARD(gGlobalMutex);
+      canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
+   }
 
    Bool_t modified = kFALSE;
 
@@ -3129,7 +3152,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          modified  = kTRUE;
 
       } else {
-
+         R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
          if ( gSystem->GetPathInfo( depfilename, nullptr,(Long_t*) nullptr, nullptr, &file_time ) != 0 ) {
             if (!canWrite) {
                depdir = emergency_loc;
@@ -3141,7 +3164,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
 
       if (!modified) {
-
+         // Not sure here, got once a stack trace where the problem was at line 3212
+         // (the one with: modified |= ( lib_time <= filetime ); )
+         R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
          // We need to check the dependencies
          FILE * depfile = fopen(depfilename.Data(),"r");
          if (depfile==nullptr) {
@@ -3220,6 +3245,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
+   // The next call locks the interpreter mutex.
    if ( gInterpreter->IsLibraryLoaded(library)
         || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
       // The library has already been built and loaded.
@@ -3241,10 +3267,13 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             ::Info("ACLiC","%s has been modified and will be reloaded",
                    libname.Data());
          }
+         // The next call locks the interpreter mutex.
          if ( gInterpreter->UnloadFile( library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
          }
+         // fCompiled->Remove, GetPathInfo, fCompiled->Add, gSystem->Load
+         R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
          if (libinfo) {
             fCompiled->Remove(libinfo);
             delete libinfo;
@@ -3271,10 +3300,13 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (withInfo) {
             ::Info("ACLiC","it will be regenerated and reloaded!");
          }
+         // The next call locks the interpreter mutex.
          if ( gInterpreter->UnloadFile( library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
          }
+         // fCompiled->Remove, Unlink
+         R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
          if (libinfo) {
             fCompiled->Remove(libinfo);
             delete libinfo;
@@ -3340,7 +3372,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          };
          ForeachSharedLibDep(lib, LoadLibF);
       }
-      return !gSystem->Load(lib);
+      int res;
+      {
+         R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
+         res = gSystem->Load(lib);
+      }
+      return !res;
    };
 
    if (!recompile) {
@@ -3424,35 +3461,42 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
 
-   int i;
-   for (i = 0; i < 6; i++ ) {
-      char * name;
-      TString extra_linkdef = BaseName( libname_noext );
-      extra_linkdef.Append(GetLinkdefSuffix());
-      extra_linkdef.Append(extensions[i]);
-      name = Which(incPath,extra_linkdef);
-      if (name) {
-         if (verboseLevel>4 && withInfo) {
-            Info("ACLiC","including extra linkdef file: %s",name);
+   {
+      // BaseName, GetLinkedSuffix, Which
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
+      for (int i = 0; i < 6; i++ ) {
+         char * name;
+         TString extra_linkdef = BaseName( libname_noext );
+         extra_linkdef.Append(GetLinkdefSuffix());
+         extra_linkdef.Append(extensions[i]);
+         name = Which(incPath,extra_linkdef);
+         if (name) {
+            if (verboseLevel>4 && withInfo) {
+               Info("ACLiC","including extra linkdef file: %s",name);
+            }
+            linkdefFile << "#include \"" << name << "\"" << std::endl;
+            delete [] name;
          }
-         linkdefFile << "#include \"" << name << "\"" << std::endl;
-         delete [] name;
       }
    }
-
    if (verboseLevel>5 && withInfo) {
       Info("ACLiC","looking for header in: %s",incPath.Data());
    }
-   for (i = 0; i < 6; i++ ) {
-      char * name;
-      TString lookup = BaseName( libname_noext );
-      lookup.Append(extensions[i]);
-      name = Which(incPath,lookup);
-      if (name) {
-         linkdefFile << "#pragma link C++ defined_in "<<gSystem->UnixPathName(name)<<";"<< std::endl;
-         delete [] name;
+   {
+      // BaseName, Which
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
+      for (int i = 0; i < 6; i++ ) {
+         char * name;
+         TString lookup = BaseName( libname_noext );
+         lookup.Append(extensions[i]);
+         name = Which(incPath,lookup);
+         if (name) {
+            linkdefFile << "#pragma link C++ defined_in "<<gSystem->UnixPathName(name)<<";"<< std::endl;
+            delete [] name;
+         }
       }
    }
+
    linkdefFile << "#pragma link C++ defined_in \""<<filename_fullpath << "\";" << std::endl;
    linkdefFile << std::endl;
    linkdefFile << "#endif" << std::endl;
@@ -3475,6 +3519,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    std::ofstream mapfileStream( mapfilein, std::ios::out );
    {
+      // AccessPathName, AssignAndDelete, GetRootMapFiles
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
       TString name = ".rootmap";
       TString sname = "system.rootmap";
       TString file;
@@ -3494,7 +3540,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       mapfileStream << file << std::endl;
       mapfileStream << name << std::endl;
       if (gInterpreter->GetRootMapFiles()) {
-         for (i = 0; i < gInterpreter->GetRootMapFiles()->GetEntriesFast(); i++) {
+         for (int i = 0; i < gInterpreter->GetRootMapFiles()->GetEntriesFast(); i++) {
             mapfileStream << ((TNamed*)gInterpreter->GetRootMapFiles()->At(i))->GetTitle() << std::endl;
          }
       }
@@ -3565,6 +3611,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    ///\returns true on success.
    auto ExecAndReport = [](TString cmd) -> bool {
+      // Exec
+      R__LOCKGUARD(gGlobalMutex); // NEWLY_ADDED
       Int_t result = gSystem->Exec(cmd);
       if (result) {
          if (result == 139)
@@ -3626,13 +3674,14 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    // ======= Calculate the libraries for linking:
+
    TString linkLibraries;
    /*
-     this is intentionally disabled until it can become useful
-     if (gEnv) {
-        linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
-        linkLibraries.Prepend(" ");
-     }
+   this is intentionally disabled until it can become useful
+   if (gEnv) {
+      linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
+      linkLibraries.Prepend(" ");
+   }
    */
    TString linkLibrariesNoQuotes(GetLibraries("","SDL"));
    // We need to enclose the single paths in quotes to account for paths with spaces
@@ -3788,13 +3837,15 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          result = ExecAndReport(relink_cmd);
       }
 
-      TNamed *k = new TNamed(library,library);
-      Long_t lib_time;
-      gSystem->GetPathInfo( library, nullptr, (Long_t*)nullptr, nullptr, &lib_time );
-      k->SetUniqueID(lib_time);
-      if (!keep) k->SetBit(kMustCleanup);
-      fCompiled->Add(k);
-
+      {
+         R__LOCKGUARD(gGlobalMutex);
+         TNamed *k = new TNamed(library,library);
+         Long_t lib_time;
+         gSystem->GetPathInfo( library, nullptr, (Long_t*)nullptr, nullptr, &lib_time );
+         k->SetUniqueID(lib_time);
+         if (!keep) k->SetBit(kMustCleanup);
+         fCompiled->Add(k);
+      }
       if (needLoadMap) {
           gInterpreter->LoadLibraryMap(libmapfilename);
       }
@@ -3809,6 +3860,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             ::Info("ACLiC","testing for missing symbols:");
             if (verboseLevel>4)  ::Info("ACLiC", "%s", testcmd.Data());
          }
+         R__LOCKGUARD(gGlobalMutex);
          gSystem->Exec(testcmd);
          gSystem->Unlink( exec );
       }
@@ -3816,6 +3868,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    };
 
    if (verboseLevel<=5 && !internalDebug) {
+      R__LOCKGUARD(gGlobalMutex);
       gSystem->Unlink( dict );
       gSystem->Unlink( dicth );
       gSystem->Unlink( dictObj );
@@ -3826,6 +3879,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       gSystem->Unlink( exec );
    }
    if (verboseLevel>6) {
+      R__LOCKGUARD(gGlobalMutex);
       rcling.Prepend("echo ");
       cmd.Prepend("echo \" ").Append(" \" ");
       testcmd.Prepend("echo \" ").Append(" \" ");
