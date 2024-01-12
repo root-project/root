@@ -44,6 +44,7 @@ TEST(RNTupleCompat, FeatureFlag)
    writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
 
    writer->Commit();
+   // Call destructor to flush data to disk
    writer = nullptr;
 
    auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
