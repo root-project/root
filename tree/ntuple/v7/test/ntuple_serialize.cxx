@@ -364,7 +364,7 @@ TEST(RNTuple, SerializeLocator)
 TEST(RNTuple, SerializeEnvelopeLink)
 {
    RNTupleSerializer::REnvelopeLink link;
-   link.fUnzippedLength = 42;
+   link.fLength = 42;
    link.fLocator.fPosition = 137U;
    link.fLocator.fBytesOnStorage = 7;
 
@@ -380,7 +380,7 @@ TEST(RNTuple, SerializeEnvelopeLink)
 
    RNTupleSerializer::REnvelopeLink reconstructedLink;
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeEnvelopeLink(buffer, 20, reconstructedLink).Unwrap());
-   EXPECT_EQ(link.fUnzippedLength, reconstructedLink.fUnzippedLength);
+   EXPECT_EQ(link.fLength, reconstructedLink.fLength);
    EXPECT_EQ(link.fLocator, reconstructedLink.fLocator);
 }
 
@@ -426,7 +426,7 @@ TEST(RNTuple, SerializeClusterGroup)
    group.fMinEntry = 7;
    group.fEntrySpan = 84600;
    group.fNClusters = 42;
-   group.fPageListEnvelopeLink.fUnzippedLength = 42;
+   group.fPageListEnvelopeLink.fLength = 42;
    group.fPageListEnvelopeLink.fLocator.fPosition = 137U;
    group.fPageListEnvelopeLink.fLocator.fBytesOnStorage = 7;
 
@@ -444,7 +444,7 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(group.fMinEntry, reco.fMinEntry);
    EXPECT_EQ(group.fEntrySpan, reco.fEntrySpan);
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedLength, reco.fPageListEnvelopeLink.fUnzippedLength);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLength, reco.fPageListEnvelopeLink.fLength);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
              reco.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>());
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
@@ -463,7 +463,7 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(group.fMinEntry, reco.fMinEntry);
    EXPECT_EQ(group.fEntrySpan, reco.fEntrySpan);
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedLength, reco.fPageListEnvelopeLink.fUnzippedLength);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLength, reco.fPageListEnvelopeLink.fLength);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
              reco.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>());
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
