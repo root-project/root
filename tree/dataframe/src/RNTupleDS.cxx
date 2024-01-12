@@ -110,6 +110,45 @@ public:
    }
 };
 
+/**
+ * @brief An artificial field that provides the size of a fixed-size array
+ *
+ * This is the implementation of `R_rdf_sizeof_column` in case `column` contains
+ * fixed-size arrays on disk.
+ */
+class RArraySizeField final : public ROOT::Experimental::Detail::RFieldBase {
+private:
+   std::size_t fArrayLength;
+
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view) const final
+   {
+      return std::make_unique<RArraySizeField>(fArrayLength);
+   }
+   void GenerateColumnsImpl() final { assert(false && "RArraySizeField fields must only be used for reading"); }
+   void GenerateColumnsImpl(const ROOT::Experimental::RNTupleDescriptor &) final {}
+   void ReadGlobalImpl(NTupleSize_t /*globalIndex*/, void *to) final { *static_cast<std::size_t *>(to) = fArrayLength; }
+   void ReadInClusterImpl(const RClusterIndex & /*clusterIndex*/, void *to) final
+   {
+      *static_cast<std::size_t *>(to) = fArrayLength;
+   }
+
+public:
+   RArraySizeField(std::size_t arrayLength)
+      : ROOT::Experimental::Detail::RFieldBase("", "std::size_t", ENTupleStructure::kLeaf, false /* isSimple */),
+        fArrayLength(arrayLength)
+   {
+   }
+   RArraySizeField(const RArraySizeField &other) = delete;
+   RArraySizeField &operator=(const RArraySizeField &other) = delete;
+   RArraySizeField(RArraySizeField &&other) = default;
+   RArraySizeField &operator=(RArraySizeField &&other) = default;
+   ~RArraySizeField() final = default;
+
+   void GenerateValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
+   std::size_t GetValueSize() const final { return sizeof(std::size_t); }
+   std::size_t GetAlignment() const final { return alignof(std::size_t); }
+};
+
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
@@ -190,7 +229,7 @@ public:
 RNTupleDS::~RNTupleDS() = default;
 
 void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
-                         std::vector<DescriptorId_t> skeinIDs)
+                         std::vector<RNTupleDS::RFieldInfo> fieldInfos)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
    // using the following types and with a top-level field named "event" of type Event:
@@ -223,14 +262,18 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    // "R_rdf_sizeof_event.tracks.hits.y"  [RVec<unsigned int>]
 
    const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
+   const auto &nRepetitions = fieldDesc.GetNRepetitions();
+   if ((fieldDesc.GetStructure() == ENTupleStructure::kCollection) || (nRepetitions > 0)) {
+      // The field is a collection or a fixed-size array.
+      // We open a new collection scope with fieldID being the inner most collection. E.g. for "event.tracks.hits",
+      // fieldInfos would already contain the fieldID of "event.tracks"
+      fieldInfos.emplace_back(fieldId, nRepetitions);
+   }
+
    if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
       // Inner fields of collections are provided as projected collections of only that inner field,
       // E.g. we provide a projected collection RVec<RVec<float>> for "event.tracks.hits.x" in the example
       // above.
-
-      // We open a new collection scope with fieldID being the inner most collection. E.g. for "event.tracks.hits",
-      // skeinIDs would already contain the fieldID of "event.tracks"
-      skeinIDs.emplace_back(fieldId);
 
       if (fieldDesc.GetTypeName().empty()) {
          // Anonymous collection with one or several sub fields
@@ -241,21 +284,27 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          fProtoFields.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
-            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), skeinIDs);
+            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), fieldInfos);
          }
       } else {
          // ROOT::RVec with exactly one sub field
          const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
-         AddField(desc, colName, f.GetId(), skeinIDs);
+         AddField(desc, colName, f.GetId(), fieldInfos);
       }
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
       // collection as whole, so we are done.
+      return;
+
+   } else if (nRepetitions > 0) {
+      // Fixed-size array, same logic as ROOT::RVec.
+      const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
+      AddField(desc, colName, f.GetId(), fieldInfos);
       return;
    } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
       for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
-         AddField(desc, innerName, f.GetId(), skeinIDs);
+         AddField(desc, innerName, f.GetId(), fieldInfos);
       }
    }
 
@@ -271,18 +320,43 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    }
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
-   if (!skeinIDs.empty()) {
-      cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
-      cardinalityField->SetOnDiskId(skeinIDs.back());
+   if (!fieldInfos.empty()) {
+      const auto &info = fieldInfos.back();
+      if (info.fNRepetitions > 0) {
+         cardinalityField = std::make_unique<ROOT::Experimental::Internal::RArraySizeField>(info.fNRepetitions);
+      } else {
+         cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
+      }
+      cardinalityField->SetOnDiskId(info.fFieldId);
    }
 
-   for (auto i = skeinIDs.rbegin(); i != skeinIDs.rend(); ++i) {
-      valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
-      valueField->SetOnDiskId(*i);
+   for (auto i = fieldInfos.rbegin(); i != fieldInfos.rend(); ++i) {
+      const auto &fieldInfo = *i;
+
+      if (fieldInfo.fNRepetitions > 0) {
+         // Fixed-size array, read it as ROOT::RVec in memory
+         valueField =
+            std::make_unique<ROOT::Experimental::RArrayAsRVecField>("", std::move(valueField), fieldInfo.fNRepetitions);
+      } else {
+         // Actual ROOT::RVec
+         valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
+      }
+
+      valueField->SetOnDiskId(fieldInfo.fFieldId);
+
       // Skip the inner-most collection level to construct the cardinality column
-      if (i != skeinIDs.rbegin()) {
-         cardinalityField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(cardinalityField));
-         cardinalityField->SetOnDiskId(*i);
+      // It's taken care of by the `if (!fieldInfos.empty())` scope above
+      if (i != fieldInfos.rbegin()) {
+         if (fieldInfo.fNRepetitions > 0) {
+            // This collection level refers to a fixed-size array
+            cardinalityField = std::make_unique<ROOT::Experimental::RArrayAsRVecField>("", std::move(cardinalityField),
+                                                                                       fieldInfo.fNRepetitions);
+         } else {
+            // This collection level refers to an RVec
+            cardinalityField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(cardinalityField));
+         }
+
+         cardinalityField->SetOnDiskId(fieldInfo.fFieldId);
       }
    }
 
@@ -292,7 +366,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       fProtoFields.emplace_back(std::move(cardinalityField));
    }
 
-   skeinIDs.emplace_back(fieldId);
+   fieldInfos.emplace_back(fieldId, nRepetitions);
    fColumnNames.emplace_back(colName);
    fColumnTypes.emplace_back(valueField->GetType());
    fProtoFields.emplace_back(std::move(valueField));
@@ -303,7 +377,8 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource) : fPrincip
    fPrincipalSource->Attach();
    fPrincipalDescriptor = fPrincipalSource->GetSharedDescriptorGuard()->Clone();
 
-   AddField(*fPrincipalDescriptor, "", fPrincipalDescriptor->GetFieldZeroId(), std::vector<DescriptorId_t>());
+   AddField(*fPrincipalDescriptor, "", fPrincipalDescriptor->GetFieldZeroId(),
+            std::vector<ROOT::Experimental::RNTupleDS::RFieldInfo>());
 }
 
 RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames)
