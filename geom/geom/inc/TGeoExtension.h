@@ -12,8 +12,6 @@
 #ifndef ROOT_TGeoExtension
 #define ROOT_TGeoExtension
 
-#include <cassert>
-
 #include "TObject.h"
 
 class TGeoExtension : public TObject {
@@ -45,13 +43,7 @@ public:
       fRC++;
       return this;
    }
-   void Release() const override
-   {
-      assert(fRC > 0);
-      fRC--;
-      if (fRC == 0)
-         delete this;
-   }
+   void Release() const override;
 
    void SetUserObject(TObject *obj) { fUserObject = obj; }
    TObject *GetUserObject() const { return fUserObject; }

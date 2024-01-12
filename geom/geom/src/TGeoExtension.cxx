@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include "TGeoExtension.h"
-
 #include "Rtypes.h"
+#include <cassert>
 
 ClassImp(TGeoExtension);
 
@@ -64,3 +64,11 @@ since the producer code does not release the extension.
 One cannot call directly "delete ext" nor allocate an extension on the stack,
 since the destructor is protected. Use Release instead.
 */
+
+void TGeoRCExtension::Release() const
+{
+   assert(fRC > 0);
+   fRC--;
+   if (fRC == 0)
+      delete this;
+}
