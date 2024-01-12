@@ -4,6 +4,8 @@
 #include <TFile.h>
 #include <ROOT/TestSupport.hxx>
 
+#include "gmock/gmock.h"
+
 #include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
 
@@ -327,6 +329,27 @@ TEST(RNTupleInspector, ColumnsByType)
    }
 
    EXPECT_EQ(0U, inspector->GetColumnsByType(EColumnType::kSplitReal64).size());
+}
+
+TEST(RNTupleInspector, ColumnTypes)
+{
+   FileRaii fileGuard("test_ntuple_inspector_column_types.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt1 = model->MakeField<std::int64_t>("int1");
+      auto nFldInt2 = model->MakeField<std::int64_t>("int2");
+      auto nFldFloat = model->MakeField<float>("float");
+      auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   auto types = inspector->GetColumnTypes();
+   EXPECT_THAT(types, testing::UnorderedElementsAre(EColumnType::kSplitInt64, EColumnType::kSplitReal32,
+                                                    EColumnType::kSplitIndex64));
 }
 
 TEST(RNTupleInspector, PrintColumnTypeInfo)
