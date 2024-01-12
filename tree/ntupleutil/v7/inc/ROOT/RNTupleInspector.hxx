@@ -271,6 +271,12 @@ public:
    const std::vector<DescriptorId_t> GetColumnsByType(EColumnType colType);
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get all column types present in the RNTuple being inspected.
+   ///
+   /// \return A vector containing all column types present in the RNTuple.
+   const std::vector<EColumnType> GetColumnTypes();
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Print storage information per column type.
    ///
    /// \param[in] format Whether to print the information as a (markdown-parseable) table or in CSV format.

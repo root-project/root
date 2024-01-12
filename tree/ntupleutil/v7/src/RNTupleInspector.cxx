@@ -218,6 +218,17 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::Experimental::EColu
    return colIds;
 }
 
+const std::vector<ROOT::Experimental::EColumnType> ROOT::Experimental::RNTupleInspector::GetColumnTypes()
+{
+   std::set<EColumnType> colTypes;
+
+   for (const auto &[colId, colInfo] : fColumnInfo) {
+      colTypes.emplace(colInfo.GetType());
+   }
+
+   return std::vector(colTypes.begin(), colTypes.end());
+}
+
 void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorPrintFormat format, std::ostream &output)
 {
    struct ColumnTypeInfo {
