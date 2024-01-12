@@ -14,6 +14,7 @@
 
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/raw_os_ostream.h"
 
 #include <string>
 
@@ -40,6 +41,20 @@ public:
 
    void HandleDiagnostic(clang::DiagnosticsEngine::Level Level,
                          const clang::Diagnostic &Info) override;
+};
+
+/// \brief Uses `clang::TextDiagnosticPrinter` to format diagnostics, which
+///  are then passed to a user-provided output stream
+///
+class TClingRedirectDiagnosticPrinter : public clang::TextDiagnosticPrinter {
+private:
+   std::ostream &fOS_out;
+   llvm::raw_os_ostream fOS;
+
+public:
+   TClingRedirectDiagnosticPrinter(std::ostream &os, clang::DiagnosticOptions *DiagOpts, clang::LangOptions &LangOpts,
+                                   bool enableColors = false, unsigned int indent = 0);
+   ~TClingRedirectDiagnosticPrinter() override = default;
 };
 
 #endif // ROOT_TClingDiagnostics

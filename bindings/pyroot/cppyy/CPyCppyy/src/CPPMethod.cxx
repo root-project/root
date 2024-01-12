@@ -262,24 +262,24 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 
     if (!PyType_IsSubtype((PyTypeObject*)errtype, &CPPExcInstance_Type)) {
         if (details.empty()) {
-            PyErr_Format(errtype, "%s =>\n    %s: %s", CPyCppyy_PyText_AsString(doc),
-                 cname, msg ? CPyCppyy_PyText_AsString(msg) : "");
+           PyErr_Format(errtype, "Failed to call \"%s\" =>\n    %s: %s", CPyCppyy_PyText_AsString(doc), cname,
+                        msg ? CPyCppyy_PyText_AsString(msg) : "");
         } else if (msg) {
-            PyErr_Format(errtype, "%s =>\n    %s: %s (%s)",
-                CPyCppyy_PyText_AsString(doc), cname, CPyCppyy_PyText_AsString(msg),
-                details.c_str());
+           PyErr_Format(errtype, "Failed to call \"%s\" =>\n    %s: %s (%s)", CPyCppyy_PyText_AsString(doc), cname,
+                        CPyCppyy_PyText_AsString(msg), details.c_str());
         } else {
-            PyErr_Format(errtype, "%s =>\n    %s: %s",
-                CPyCppyy_PyText_AsString(doc), cname, details.c_str());
+           PyErr_Format(errtype, "Failed to call \"%s\" =>\n    %s: %s", CPyCppyy_PyText_AsString(doc), cname,
+                        details.c_str());
         }
     } else if (evalue) {
         Py_XDECREF(((CPPExcInstance*)evalue)->fTopMessage);
         if (msg) {
-            ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
-                "%s =>\n    %s: %s | ", CPyCppyy_PyText_AsString(doc), cname, CPyCppyy_PyText_AsString(msg));
+           ((CPPExcInstance *)evalue)->fTopMessage =
+              CPyCppyy_PyText_FromFormat("Failed to call \"%s\" =>\n    %s: %s | ", CPyCppyy_PyText_AsString(doc),
+                                         cname, CPyCppyy_PyText_AsString(msg));
         } else {
-            ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
-                 "%s =>\n    %s: ", CPyCppyy_PyText_AsString(doc), cname);
+           ((CPPExcInstance *)evalue)->fTopMessage =
+              CPyCppyy_PyText_FromFormat("Failed to call \"%s\" =>\n    %s: ", CPyCppyy_PyText_AsString(doc), cname);
         }
         PyErr_SetObject(errtype, evalue);
     }

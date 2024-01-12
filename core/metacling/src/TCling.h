@@ -188,6 +188,8 @@ private: // Data Members
 
 protected:
    Bool_t SetSuspendAutoParsing(Bool_t value) final;
+   std::unique_ptr<DiagnosticsRAII>
+   MakeRedirectDiagnosticsRAII(std::ostream &os, bool enableColors = false, unsigned int indent = 0) final;
 
 public: // Public Interface
 
