@@ -1112,6 +1112,9 @@ public:
 
    std::size_t GetValueSize() const final { return fValueSize; }
    std::size_t GetAlignment() const final;
+
+   std::vector<Detail::RFieldBase::RValue> SplitValue(const Detail::RFieldBase::RValue &value) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The generic field an std::bitset<N>. All compilers we care about store the bits in an array of unsigned long.
