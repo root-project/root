@@ -907,6 +907,7 @@ A cluster is a set of pages from a fixed set of columns that contain all the dat
 The data set is partitioned in clusters.
 Typically, a cluster comprises pages from all the available columns.
 If only a subset of the available columns are covered, it is called a **sharded cluster**.
+A typical cluster size is 50MB - 500MB.
 
 ### Indications of size
 
