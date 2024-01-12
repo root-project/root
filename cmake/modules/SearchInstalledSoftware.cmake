@@ -457,7 +457,7 @@ if(builtin_afterimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_VERBOSE_MAKEFILE=ON -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_VERBOSE_MAKEFILE=ON -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${astepbld}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${astepbld}/libAfterImage.lib <INSTALL_DIR>/lib/
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
@@ -489,7 +489,7 @@ if(builtin_afterimage)
     endif()
     if(builtin_freetype)
       set(_ttf_include --with-ttf-includes=-I${FREETYPE_INCLUDE_DIR})
-      set(_after_cflags "${_after_cflags} -DHAVE_FREETYPE_FREETYPE")
+      set(_after_cflags "${_after_cflags} -DHAVE_FREETYPE_FREETYPE -DPNG_ARM_NEON_OPT=0")
     endif()
     if(CMAKE_OSX_SYSROOT)
       set(_after_cflags "${_after_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")

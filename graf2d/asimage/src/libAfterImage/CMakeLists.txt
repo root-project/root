@@ -24,21 +24,26 @@ IF(MSVC)
 ENDIF()
 
 set(FREETYPE_INCLUDE_DIR "" CACHE PATH "Path to Freetype include dir")
+set(ZLIB_INCLUDE_DIR "" CACHE PATH "Path to zlib include dir")
 
 if(NOT EXISTS "${FREETYPE_INCLUDE_DIR}/ft2build.h")
   message(ERROR "Can't find ft2build.h in ${FREETYPE_INCLUDE_DIR}")
 endif()
 
-INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIR})
+if(NOT EXISTS "${ZLIB_INCLUDE_DIR}/zlib.h")
+  message(ERROR "Can't find zlib.h in ${ZLIB_INCLUDE_DIR}")
+endif()
+
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
 
 set (LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
 
 FILE(GLOB H_FILES "*.h")
 
 SET(SRC_FILES
-    libpng/png.c libpng/pngerror.c libpng/pngget.c libpng/pngmem.c libpng/pngpread.c libpng/pngread.c
-    libpng/pngrio.c libpng/pngrtran.c libpng/pngrutil.c libpng/pngset.c libpng/pngtrans.c libpng/pngwio.c
-    libpng/pngwrite.c libpng/pngwtran.c libpng/pngwutil.c
+    libpng/png.c libpng/pngmem.c libpng/pngrio.c libpng/pngset.c libpng/pngwio.c libpng/pngwutil.c
+    libpng/pngerror.c libpng/pngpread.c libpng/pngrtran.c libpng/pngtest.c libpng/pngwrite.c
+    libpng/pngget.c libpng/pngread.c libpng/pngrutil.c libpng/pngtrans.c libpng/pngwtran.c
     libjpeg/jcapimin.c libjpeg/jcapistd.c libjpeg/jccoefct.c libjpeg/jccolor.c libjpeg/jcdctmgr.c libjpeg/jchuff.c libjpeg/jcinit.c
     libjpeg/jcmainct.c libjpeg/jcmarker.c libjpeg/jcmaster.c libjpeg/jcomapi.c libjpeg/jcparam.c libjpeg/jcphuff.c libjpeg/jcprepct.c
     libjpeg/jcsample.c libjpeg/jctrans.c libjpeg/jdapimin.c libjpeg/jdapistd.c libjpeg/jdatadst.c libjpeg/jdatasrc.c libjpeg/jdcoefct.c
