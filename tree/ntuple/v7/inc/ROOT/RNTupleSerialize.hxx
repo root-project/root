@@ -68,7 +68,7 @@ public:
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
    struct REnvelopeLink {
-      std::uint64_t fUnzippedLength = 0;
+      std::uint64_t fLength = 0;
       RNTupleLocator fLocator;
    };
 
