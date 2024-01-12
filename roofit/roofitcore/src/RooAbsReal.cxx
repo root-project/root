@@ -75,11 +75,6 @@
 #include "TreeReadBuffer.h"
 #include "ValueChecking.h"
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include "RooChi2Var.h"
-#include "RooXYChi2Var.h"
-#endif
-
 #include "ROOT/StringUtils.hxx"
 #include "Compression.h"
 #include "Math/IFunction.h"
@@ -4195,7 +4190,6 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
   return chi2FitTo(data,l) ;
-
 }
 
 
@@ -4242,26 +4236,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const RooLinkedList &cmdList)
 {
-   // Select the pdf-specific commands
-   RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
-
-   // Pull arguments to be passed to chi2 construction from list
-   RooLinkedList fitCmdList(cmdList);
-
-   auto createChi2DataHistCmdArgs = "Range,RangeWithName,NumCPU,Optimize,IntegrateBins,ProjectedObservables,"
-                                    "AddCoefRange,SplitRange,DataError,Extended";
-   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataHistCmdArgs);
-
-   RooFit::FitHelpers::defineMinimizationOptions(pc);
-
-   // Process and check varargs
-   pc.process(fitCmdList);
-   if (!pc.ok(true)) {
-      return nullptr;
-   }
-
-   std::unique_ptr<RooAbsReal> chi2{createChi2(data, chi2CmdList)};
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::minimize(*this, *chi2, data, pc));
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::chi2FitTo(*this, data, cmdList));
 }
 
 
@@ -4302,58 +4277,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const Ro
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
 {
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   // Construct Chi2
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   std::string baseName = "chi2_" + std::string(GetName()) + "_" + data.GetName();
-
-   // Clear possible range attributes from previous fits.
-   removeStringAttribute("fitrange");
-
-   RooCmdConfig pc("RooChi2Var::RooChi2Var");
-   pc.defineInt("etype", "DataError", 0, (Int_t)RooDataHist::Auto);
-   pc.defineInt("extended", "Extended", 0, RooFit::FitHelpers::extendedFitDefault);
-   pc.defineInt("num_cpu", "NumCPU", 0, 1);
-   pc.defineInt("verbose", "Verbose", 0, 1);
-   pc.defineInt("split_range", "SplitRange", 0, 0);
-   pc.defineDouble("integrate_bins", "IntegrateBins", 0, -1);
-   pc.defineString("rangeName", "RangeWithName", 0, "", true);
-   pc.defineString("addCoefRange", "SumCoefRange", 0, "");
-   pc.allowUndefined();
-
-   pc.process(cmdList);
-   if (!pc.ok(true)) {
-      return nullptr;
-   }
-
-   bool extended = false;
-   if (auto pdf = dynamic_cast<RooAbsPdf const *>(this)) {
-      extended = pdf->interpretExtendedCmdArg(pc.getInt("extended"));
-   }
-
-   RooDataHist::ErrorType etype = static_cast<RooDataHist::ErrorType>(pc.getInt("etype"));
-
-   const char* rangeName = pc.getString("rangeName", nullptr, true);
-   const char *addCoefRangeName = pc.getString("addCoefRange", nullptr, true);
-
-   RooAbsTestStatistic::Configuration cfg;
-   cfg.rangeName = rangeName ? rangeName : "";
-   cfg.nCPU = pc.getInt("num_cpu");
-   cfg.interleave = RooFit::Interleave;
-   cfg.verbose = static_cast<bool>(pc.getInt("verbose"));
-   cfg.cloneInputData = false;
-   cfg.integrateOverBinsPrecision = pc.getDouble("integrate_bins");
-   cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
-   cfg.splitCutRange = static_cast<bool>(pc.getInt("split_range"));
-   auto chi2 = std::make_unique<RooChi2Var>(baseName.c_str(), baseName.c_str(), *this, data, extended, etype, cfg);
-
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
-
-   return RooFit::makeOwningPtr<RooAbsReal>(std::move(chi2));
-#else
-   throw std::runtime_error("createChi2() is not supported without the legacy evaluation backend");
-   return nullptr;
-#endif
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::createChi2(*this, data, cmdList));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4407,24 +4331,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const RooLinkedList &cmdList)
 {
-   // Select the pdf-specific commands
-   RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
-
-   // Pull arguments to be passed to chi2 construction from list
-   RooLinkedList fitCmdList(cmdList);
-   auto createChi2DataSetCmdArgs = "YVar,Integrate,RangeWithName,NumCPU,Verbose";
-   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataSetCmdArgs);
-
-   RooFit::FitHelpers::defineMinimizationOptions(pc);
-
-   // Process and check varargs
-   pc.process(fitCmdList);
-   if (!pc.ok(true)) {
-      return nullptr;
-   }
-
-   std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata, chi2CmdList)};
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::minimize(*this, *xychi2, xydata, pc));
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::chi2FitTo(*this, xydata, cmdList));
 }
 
 
@@ -4462,53 +4369,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const Roo
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const RooLinkedList &cmdList)
 {
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   // Select the pdf-specific commands
-   RooCmdConfig pc("RooAbsReal::createChi2(" + std::string(GetName()) + ")");
-
-   pc.defineInt("integrate", "Integrate", 0, 0);
-   pc.defineObject("yvar", "YVar", 0, nullptr);
-   pc.defineString("rangeName", "RangeWithName", 0, "", true);
-   pc.defineInt("numcpu", "NumCPU", 0, 1);
-   pc.defineInt("interleave", "NumCPU", 1, 0);
-   pc.defineInt("verbose", "Verbose", 0, 0);
-
-   // Process and check varargs
-   pc.process(cmdList);
-   if (!pc.ok(true)) {
-      return nullptr;
-   }
-
-   // Decode command line arguments
-   bool integrate = pc.getInt("integrate");
-   RooRealVar *yvar = static_cast<RooRealVar *>(pc.getObject("yvar"));
-   const char *rangeName = pc.getString("rangeName", nullptr, true);
-   Int_t numcpu = pc.getInt("numcpu");
-   Int_t numcpu_strategy = pc.getInt("interleave");
-   // strategy 3 works only for RooSimultaneous.
-   if (numcpu_strategy == 3 && !this->InheritsFrom("RooSimultaneous")) {
-      coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
-                             "falling back to default strategy = 0"
-                          << endl;
-      numcpu_strategy = 0;
-   }
-   RooFit::MPSplit interl = (RooFit::MPSplit)numcpu_strategy;
-   bool verbose = pc.getInt("verbose");
-
-   RooAbsTestStatistic::Configuration cfg;
-   cfg.rangeName = rangeName ? rangeName : "";
-   cfg.nCPU = numcpu;
-   cfg.interleave = interl;
-   cfg.verbose = verbose;
-   cfg.verbose = false;
-
-   std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
-
-   return RooFit::makeOwningPtr<RooAbsReal>(
-      std::make_unique<RooXYChi2Var>(name.c_str(), name.c_str(), *this, data, yvar, integrate, cfg));
-#else
-   throw std::runtime_error("createChi2() is not supported without the legacy evaluation backend");
-#endif
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::createChi2(*this, data, cmdList));
 }
 
 
