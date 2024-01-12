@@ -45,6 +45,7 @@ public:
    virtual void VisitField(const Detail::RFieldBase &field) = 0;
    virtual void VisitFieldZero(const RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
+   virtual void VisitArrayAsRVecField(const RArrayAsRVecField &field) { VisitField(field); }
    virtual void VisitAtomicField(const RAtomicField &field) { VisitField(field); }
    virtual void VisitBitsetField(const RBitsetField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
@@ -215,6 +216,7 @@ public:
 
    void VisitCardinalityField(const RCardinalityField &field) final;
    void VisitArrayField(const RArrayField &field) final;
+   void VisitArrayAsRVecField(const RArrayAsRVecField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitRecordField(const RRecordField &field) final;
    void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
