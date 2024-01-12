@@ -1068,7 +1068,7 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData &data, const Roo
 
 std::unique_ptr<RooFitResult> RooAbsPdf::fitToImpl(RooAbsData& data, const RooLinkedList& cmdList)
 {
-   return RooFit::FitHelpers::fitTo(*this, data, cmdList);
+   return RooFit::FitHelpers::fitTo(*this, data, cmdList, false);
 }
 
 

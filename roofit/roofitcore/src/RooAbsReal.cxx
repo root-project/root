@@ -4236,7 +4236,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const RooLinkedList &cmdList)
 {
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::chi2FitTo(*this, data, cmdList));
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, data, cmdList, true));
 }
 
 
@@ -4331,7 +4331,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const RooLinkedList &cmdList)
 {
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::chi2FitTo(*this, xydata, cmdList));
+   return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, xydata, cmdList, true));
 }
 
 
