@@ -21,6 +21,7 @@
 #include <string_view>
 #include <Rtypes.h> // Long64_t
 #include <TVirtualIndex.h>
+#include <TTree.h>
 
 #include <limits>
 #include <memory>
@@ -81,7 +82,7 @@ struct RFriendInfo {
                std::vector<std::unique_ptr<TVirtualIndex>> treeIndexInfos);
 
    void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "",
-                  Long64_t nEntries = std::numeric_limits<Long64_t>::max(), TVirtualIndex *indexInfo = nullptr);
+                  Long64_t nEntries = TTree::kMaxEntries, TVirtualIndex *indexInfo = nullptr);
 
    void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                   const std::string &alias = "", const std::vector<Long64_t> &nEntriesVec = {},
