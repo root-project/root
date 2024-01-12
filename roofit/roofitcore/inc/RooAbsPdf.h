@@ -348,7 +348,6 @@ private:
 
   friend class RooAbsReal;
   friend class RooChi2Var;
-  bool interpretExtendedCmdArg(int extendedCmdArg) const;
 
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };
