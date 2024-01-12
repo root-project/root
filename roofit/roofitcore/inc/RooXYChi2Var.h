@@ -43,7 +43,6 @@
 #endif
 
 #include "RooAbsOptTestStatistic.h"
-#include "RooCmdArg.h"
 #include "RooDataSet.h"
 #include "RooAbsPdf.h"
 #include "RooNumIntConfig.h"

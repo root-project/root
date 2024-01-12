@@ -48,65 +48,9 @@ In extended mode, a
 
 #include <algorithm>
 
-namespace {
-  template<class ...Args>
-  RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg(Args const& ... args) {
-    RooAbsTestStatistic::Configuration cfg;
-    cfg.rangeName = RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",args...);
-    cfg.addCoefRangeName = RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","AddCoefRange",0,"",args...);
-    cfg.nCPU = RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,args...);
-    cfg.interleave = RooFit::BulkPartition;
-    cfg.verbose = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,args...));
-    cfg.splitCutRange = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,args...));
-    cfg.cloneInputData = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,args...));
-    cfg.integrateOverBinsPrecision = RooCmdConfig::decodeDoubleOnTheFly("RooNLLVar::RooNLLVar", "IntegrateBins", 0, -1., {args...});
-    return cfg;
-  }
-}
-
 ClassImp(RooNLLVar)
 
 RooNLLVar::~RooNLLVar() {}
-
-RooArgSet RooNLLVar::_emptySet ;
-
-////////////////////////////////////////////////////////////////////////////////
-/// Construct likelihood from given p.d.f and (binned or unbinned dataset)
-///
-///  Argument                 | Description
-///  -------------------------|------------
-///  Extended()               | Include extended term in calculation
-///  NumCPU()                 | Activate parallel processing feature
-///  Range()                  | Fit only selected region
-///  SumCoefRange()           | Set the range in which to interpret the coefficients of RooAddPdf components
-///  SplitRange()             | Fit range is split by index category of simultaneous PDF
-///  ConditionalObservables() | Define conditional observables
-///  Verbose()                | Verbose output of GOF framework classes
-///  CloneData()              | Clone input dataset for internal use (default is true)
-///  BatchMode()              | Evaluate batches of data events (faster if PDFs support it)
-///  IntegrateBins() | Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
-RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& indata,
-           const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
-           const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,
-           const RooCmdArg& arg7, const RooCmdArg& arg8,const RooCmdArg& arg9) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,
-                         *RooCmdConfig::decodeSetOnTheFly(
-                             "RooNLLVar::RooNLLVar","ProjectedObservables",0,&_emptySet,
-                             arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-                         makeRooAbsTestStatisticCfg(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
-{
-  RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
-  pc.allowUndefined() ;
-  pc.defineInt("extended","Extended",0,false) ;
-  pc.defineInt("BatchMode", "BatchMode", 0, false);
-
-  pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
-  pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
-  pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
-
-  _extended = pc.getInt("extended") ;
-  _skipZeroWeights = true;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
