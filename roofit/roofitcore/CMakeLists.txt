@@ -250,7 +250,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
-    src/BatchModeHelpers.cxx
     src/Buffers.cxx
     src/ConstraintHelpers.cxx
     src/FitHelpers.cxx
