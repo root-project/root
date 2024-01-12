@@ -297,6 +297,9 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
    } catch (const RException &err) {
       R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
    }
+   // In most cases, CommitCluster() and CommitDataset() already waited for all tasks. Wait once more explicitly
+   // to avoid problems in case of errors because tasks hold on to the model, which is destructed before the sink.
+   fSink->WaitForAllTasks();
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
