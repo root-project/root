@@ -994,11 +994,6 @@ public:
 
 /// The type-erased field for a RVec<Type>
 class RRVecField : public Detail::RFieldBase {
-private:
-   /// Evaluate the constant returned by GetValueSize.
-   // (we separate evaluation from the getter to avoid repeating the computation).
-   std::size_t EvalValueSize() const;
-
 protected:
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
@@ -1072,6 +1067,51 @@ public:
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+/**
+\class ROOT::Experimental::RArrayAsRVecField
+\brief A field for fixed-size arrays that are represented as RVecs in memory.
+\ingroup ntuple
+This class is used only for reading. In particular, it helps exposing
+arbitrarily-nested std::array on-disk fields as RVecs for usage in RDataFrame.
+*/
+class RArrayAsRVecField final : public Detail::RFieldBase {
+private:
+   std::size_t fItemSize;    /// The size of a child field's item
+   std::size_t fArrayLength; /// The length of the arrays in this field
+   std::size_t fValueSize;   /// The size of a value of this field, i.e. an RVec
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void GenerateColumnsImpl() final { assert(false && "RArrayAsRVec fields must only be used for reading"); }
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
+   void GenerateValue(void *where) const final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
+
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
+
+public:
+   /**
+      Constructor of the field. the \p itemField argument represents the inner
+      item of the on-disk array, i.e. for an `std::array<float>` it is the `float`
+      field and not the `std::array` itself.
+   */
+   RArrayAsRVecField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField,
+                     std::size_t arrayLength);
+   RArrayAsRVecField(const RArrayAsRVecField &other) = delete;
+   RArrayAsRVecField &operator=(const RArrayAsRVecField &other) = delete;
+   RArrayAsRVecField(RArrayAsRVecField &&other) = default;
+   RArrayAsRVecField &operator=(RArrayAsRVecField &&other) = default;
+   ~RArrayAsRVecField() final = default;
+
+   using Detail::RFieldBase::GenerateValue;
+
+   std::size_t GetValueSize() const final { return fValueSize; }
+   std::size_t GetAlignment() const final;
 };
 
 /// The generic field an std::bitset<N>. All compilers we care about store the bits in an array of unsigned long.

@@ -10,6 +10,10 @@
 
 #include <gtest/gtest.h>
 
+#include "ClassWithArrays.h"
+
+#include <limits>
+
 using ROOT::Experimental::RNTupleDS;
 using ROOT::Experimental::RNTupleWriter;
 using ROOT::Experimental::RNTupleModel;

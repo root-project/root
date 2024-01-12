@@ -93,18 +93,25 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
 
+   /// \brief Holds useful information about fields added to the RNTupleDS
+   struct RFieldInfo {
+      DescriptorId_t fFieldId;
+      std::size_t fNRepetitions;
+      // Enable `std::vector::emplace_back` for this type
+      RFieldInfo(DescriptorId_t fieldId, std::size_t nRepetitions) : fFieldId(fieldId), fNRepetitions(nRepetitions) {}
+   };
+
    /// Provides the RDF column "colName" given the field identified by fieldID. For records and collections,
-   /// AddField recurses into the sub fields. The skeinIDs is the list of field IDs of the outer collections
-   /// of fieldId. For instance, if fieldId refers to an `std::vector<Jet>`, with
+   /// AddField recurses into the sub fields. The fieldInfos argument is a list of objects holding info
+   /// about the fields of the outer collection(s) (w.r.t. fieldId). For instance, if fieldId refers to an
+   /// `std::vector<Jet>`, with
    /// struct Jet {
    ///    float pt;
    ///    float eta;
    /// };
    /// AddField will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
-   void AddField(const RNTupleDescriptor &desc,
-                 std::string_view colName,
-                 DescriptorId_t fieldId,
-                 std::vector<DescriptorId_t> skeinIDs);
+   void AddField(const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
+                 std::vector<RFieldInfo> fieldInfos);
 
    /// Populates fNextRanges with the next set of entry ranges. Opens files from the chain as necessary
    /// and aligns ranges with cluster boundaries for scheduling the tail of files.
