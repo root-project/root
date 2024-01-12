@@ -62,13 +62,17 @@ class DataFrameConstructorTests(unittest.TestCase):
     def setUpClass(cls):
         """Create a dummy file to use for the RDataFrame constructor."""
         cls.test_treename = "treename"
-        cls.test_filename = "file.root"
+        cls.test_filenames = ["file0.root", "file1.root"]
 
-        ROOT.RDataFrame(1).Define("x", "rdfentry_").Snapshot(cls.test_treename, cls.test_filename)
+        for fname in cls.test_filenames:
+            with ROOT.TFile(fname, "RECREATE") as f:
+                t = ROOT.TTree(cls.test_treename, cls.test_treename)
+                f.WriteObject(t, cls.test_treename)
 
     @classmethod
     def tearDownClass(cls):
-        os.remove(cls.test_filename)
+        for fname in cls.test_filenames:
+            os.remove(fname)
 
     def test_incorrect_args(self):
         """Constructor with incorrect arguments"""
@@ -78,7 +82,8 @@ class DataFrameConstructorTests(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             # Incorrect third argument in 3-argument case
-            create_dummy_headnode(self.test_treename, self.test_filename, "column1")
+            create_dummy_headnode(self.test_treename,
+                                  self.test_filenames[0], "column1")
 
         with self.assertRaises(TypeError):
             # No argument case
@@ -127,7 +132,7 @@ class DataFrameConstructorTests(unittest.TestCase):
 
     def test_two_args(self):
         """Constructor with list of input files"""
-        rdf_2_files = ["file1.root", "file2.root"]
+        rdf_2_files = ["file0.root", "file1.root"]
 
         # Convert RDF files list to ROOT CPP vector
         reqd_vec = ROOT.std.vector("string")()
@@ -138,15 +143,15 @@ class DataFrameConstructorTests(unittest.TestCase):
         hn_1 = create_dummy_headnode(self.test_treename, self.test_filename)
 
         # RDataFrame constructor with 2nd argument as Python list
-        hn_2 = create_dummy_headnode("treename", rdf_2_files)
+        hn_2 = create_dummy_headnode(self.test_treename, rdf_2_files)
 
         # RDataFrame constructor with 2nd argument as ROOT CPP Vector
-        hn_3 = create_dummy_headnode("treename", reqd_vec)
+        hn_3 = create_dummy_headnode(self.test_treename, reqd_vec)
 
         for hn in (hn_1, hn_2, hn_3):
-            self.assertEqual(hn.maintreename, "treename")
+            self.assertEqual(hn.maintreename, self.test_treename)
 
-        self.assertListEqual(hn_1.inputfiles, ["file.root"])
+        self.assertListEqual(hn_1.inputfiles, self.test_filenames[:1])
         self.assertListEqual(hn_2.inputfiles, rdf_2_files)
         # hn_3 got file names as std::vector<std::string> but the TreeHeadNode
         # instance stores it as list[str]
@@ -162,14 +167,16 @@ class DataFrameConstructorTests(unittest.TestCase):
             reqd_vec.push_back(elem)
 
         # RDataFrame constructor with 3rd argument as Python list
-        hn_1 = create_dummy_headnode(self.test_treename, self.test_filename, rdf_branches)
+        hn_1 = create_dummy_headnode(
+            self.test_treename, self.test_filenames[0], rdf_branches)
 
         # RDataFrame constructor with 3rd argument as ROOT CPP Vector
-        hn_2 = create_dummy_headnode(self.test_treename, self.test_filename, reqd_vec)
+        hn_2 = create_dummy_headnode(
+            self.test_treename, self.test_filenames[0], reqd_vec)
 
         for hn in (hn_1, hn_2):
-            self.assertEqual(hn.maintreename, "treename")
-            self.assertListEqual(hn.inputfiles, ["file.root"])
+            self.assertEqual(hn.maintreename, self.test_treename)
+            self.assertListEqual(hn.inputfiles, self.test_filenames[:1])
 
         self.assertListEqual(hn_1.defaultbranches, rdf_branches)
         self.assertIsInstance(hn_2.defaultbranches, type(reqd_vec))
@@ -178,7 +185,7 @@ class DataFrameConstructorTests(unittest.TestCase):
     def test_three_args_with_multiple_files(self):
         """Constructor with TTree, list of input files and selected branches"""
         rdf_branches = ["branch1", "branch2"]
-        rdf_files = ["file1.root", "file2.root"]
+        rdf_files = self.test_filenames
 
         # Convert RDF files list to ROOT CPP Vector
         reqd_files_vec = ROOT.std.vector("string")()
@@ -192,22 +199,26 @@ class DataFrameConstructorTests(unittest.TestCase):
 
         # RDataFrame constructor with 2nd argument as Python List
         # and 3rd argument as Python List
-        hn_1 = create_dummy_headnode("treename", rdf_files, rdf_branches)
+        hn_1 = create_dummy_headnode(
+            self.test_treename, rdf_files, rdf_branches)
 
         # RDataFrame constructor with 2nd argument as Python List
         # and 3rd argument as ROOT CPP Vector
-        hn_2 = create_dummy_headnode("treename", rdf_files, reqd_branches_vec)
+        hn_2 = create_dummy_headnode(
+            self.test_treename, rdf_files, reqd_branches_vec)
 
         # RDataFrame constructor with 2nd argument as ROOT CPP Vector
         # and 3rd argument as Python List
-        hn_3 = create_dummy_headnode("treename", reqd_files_vec, rdf_branches)
+        hn_3 = create_dummy_headnode(
+            self.test_treename, reqd_files_vec, rdf_branches)
 
         # RDataFrame constructor with 2nd and 3rd arguments as ROOT
         # CPP Vectors
-        hn_4 = create_dummy_headnode("treename", reqd_files_vec, reqd_branches_vec)
+        hn_4 = create_dummy_headnode(
+            self.test_treename, reqd_files_vec, reqd_branches_vec)
 
         for hn in (hn_1, hn_2, hn_3, hn_4):
-            self.assertEqual(hn.maintreename, "treename")
+            self.assertEqual(hn.maintreename, self.test_treename)
             self.assertListEqual(hn.inputfiles, rdf_files)
             self.assertListEqual(list(hn.defaultbranches), rdf_branches)
 
@@ -238,7 +249,7 @@ class DataFrameConstructorTests(unittest.TestCase):
                 create_dummy_headnode(main_chain)
 
             self.assertEqual(str(context.exception),
-                            "Friend tree 'auxTree' has a TTreeIndex. This is not supported in distributed mode.")
+                             "Friend tree 'auxTree' has a TTreeIndex. This is not supported in distributed mode.")
 
             # Remove unnecessary .root files
             os.remove(main_file)
@@ -250,7 +261,8 @@ class NumEntriesTest(unittest.TestCase):
 
     def fill_tree(self, size):
         """Writes a TTree with one column of type 'double' with the given size to 'data.root'."""
-        ROOT.RDataFrame(size).Define("b1", "static_cast<double>(rdfentry_)").Snapshot("tree", "data.root")
+        ROOT.RDataFrame(size).Define(
+            "b1", "static_cast<double>(rdfentry_)").Snapshot("tree", "data.root")
 
     def test_num_entries_two_args_case(self):
         """

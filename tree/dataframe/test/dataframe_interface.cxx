@@ -45,15 +45,33 @@ TEST(RDataFrameInterface, CreateFromStrings)
    ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(RDataFrame tdf(t, f);), "TFile::TFile", expecteddiag.Data());
 }
 
+class TreeInFileRAII {
+private:
+   std::string fPath;
+   TFile fFile;
+
+public:
+   explicit TreeInFileRAII(const std::string &path) : fPath(path), fFile(path.c_str(), "recreate")
+   {
+      TTree t("t", "t");
+      fFile.WriteObject(&t, "t");
+      fFile.Close();
+   }
+   ~TreeInFileRAII() { std::remove(fPath.c_str()); }
+};
+
 TEST(RDataFrameInterface, CreateFromContainer)
 {
-   std::string t("t");
-   std::vector<std::string> f({"f1", "f2"});
-   RDataFrame tdf(t, f);
+   std::vector<std::string> fs({"f1", "f2"});
+   TreeInFileRAII f1("f1");
+   TreeInFileRAII f2("f2");
+   RDataFrame tdf("t", fs);
 }
 
 TEST(RDataFrameInterface, CreateFromInitList)
 {
+   TreeInFileRAII f1("f1");
+   TreeInFileRAII f2("f2");
    RDataFrame tdf("t", {"f1", "f2"});
 }
 
