@@ -1154,6 +1154,24 @@ ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, std::string_v
    return lm;
 }
 
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
+                                     const std::vector<std::string> &defaultColumns, bool checkFile)
+{
+   // Introduce the same behaviour as in CreateLMFromFile for consistency.
+   // Creating an RDataFrame with a non-existing file will throw early rather
+   // than wait for the start of the graph execution.
+   if (checkFile) {
+      OpenFileWithSanityChecks(fileNameGlobs[0]);
+   }
+   std::string treeNameInt(datasetName);
+   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(treeNameInt);
+   for (auto &f : fileNameGlobs)
+      chain->Add(f.c_str());
+   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(chain), defaultColumns);
+   return lm;
+}
+
 #ifdef R__HAS_ROOT7
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string_view fileNameGlob,
@@ -1161,6 +1179,15 @@ ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string
 {
    auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(datasetName, fileNameGlob);
    auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(std::move(pageSource));
+   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
+   return lm;
+}
+
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
+                                       const ROOT::RDF::ColumnNames_t &defaultColumns)
+{
+   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(datasetName, fileNameGlobs);
    auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
@@ -1176,6 +1203,23 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_vi
       return CreateLMFromTTree(datasetName, fileNameGlob, defaultColumns, /*checkFile=*/false);
    } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
       return CreateLMFromRNTuple(datasetName, fileNameGlob, defaultColumns);
+   }
+
+   throw std::invalid_argument("RDataFrame: unsupported data format for dataset \"" + std::string(datasetName) +
+                               "\" in file \"" + inFile->GetName() + "\".");
+}
+
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
+                                    const ROOT::RDF::ColumnNames_t &defaultColumns)
+{
+
+   auto inFile = OpenFileWithSanityChecks(fileNameGlobs[0]);
+
+   if (inFile->Get<TTree>(datasetName.data())) {
+      return CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns, /*checkFile=*/false);
+   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+      return CreateLMFromRNTuple(datasetName, fileNameGlobs, defaultColumns);
    }
 
    throw std::invalid_argument("RDataFrame: unsupported data format for dataset \"" + std::string(datasetName) +
