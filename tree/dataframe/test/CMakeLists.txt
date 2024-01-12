@@ -105,6 +105,10 @@ if(root7)
   endif()
 
   ROOT_ADD_GTEST(dataframe_unified_constructor dataframe_unified_constructor.cxx LIBRARIES ROOTDataFrame)
+
+  ROOT_GENERATE_DICTIONARY(ClassWithArraysDict ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithArrays.h
+                           MODULE datasource_ntuple LINKDEF ClassWithArraysLinkDef.h OPTIONS -inlineInputHeader
+                           DEPENDENCIES ROOTVecOps)
 endif()
 
 if(sqlite)
