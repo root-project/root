@@ -49,14 +49,12 @@
 
 class RooChi2Var : public RooAbsOptTestStatistic {
 public:
+  enum FuncMode { Function, Pdf, ExtendedPdf } ;
 
   // Constructors, assignment etc
-  RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& data,
-        const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={},
-        const RooCmdArg& arg4={}, const RooCmdArg& arg5={},const RooCmdArg& arg6={},
-        const RooCmdArg& arg7={}, const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
-
-  enum FuncMode { Function, Pdf, ExtendedPdf } ;
+  RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& data,
+             bool extended, RooDataHist::ErrorType etype,
+             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
 
   RooChi2Var(const RooChi2Var& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooChi2Var(*this,newname); }

@@ -51,11 +51,6 @@ class RooNLLVar : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
-       const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={},
-       const RooCmdArg& arg4={}, const RooCmdArg& arg5={},const RooCmdArg& arg6={},
-       const RooCmdArg& arg7={}, const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
-
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
             bool extended,
             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});

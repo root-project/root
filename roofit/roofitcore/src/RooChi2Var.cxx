@@ -64,99 +64,15 @@
 #include "RooRealVar.h"
 #include "RooAbsDataStore.h"
 
-
-using namespace std;
-
-namespace {
-  template<class ...Args>
-  RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg(Args const& ... args) {
-    RooAbsTestStatistic::Configuration cfg;
-    cfg.rangeName = RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","RangeWithName",0,"",args...);
-    cfg.nCPU = RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,args...);
-    cfg.interleave = RooFit::Interleave;
-    cfg.verbose = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,args...));
-    cfg.cloneInputData = false;
-    cfg.integrateOverBinsPrecision = RooCmdConfig::decodeDoubleOnTheFly("RooChi2Var::RooChi2Var", "IntegrateBins", 0, -1., {args...});
-    cfg.addCoefRangeName = RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","AddCoefRange",0,"",args...);
-    cfg.splitCutRange = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","SplitRange",0,0,args...));
-    return cfg;
-  }
-}
-
 ClassImp(RooChi2Var);
 
-RooArgSet RooChi2Var::_emptySet ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-///  RooChi2Var constructor. Optional arguments are:
-///  \param[in] name Name of the PDF
-///  \param[in] title Title for plotting etc.
-///  \param[in] func  Function
-///  \param[in] hdata Data histogram
-///  \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9 Optional arguments according to table below.
-///  <table>
-///  <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
-///  <tr><td>
-///  <tr><td> `DataError()`  <td>  Choose between:
-///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
-///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights,
-///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
-///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
-///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
-///    (e.g., the difference between the mean and the 16 % quantile).
-///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
-///    (e.g., the difference between the 84 % quantile and the mean).
-///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
-///  <tr><td>
-///  `Extended()` <td>  Use expected number of events of an extended p.d.f as normalization
-///  <tr><td>
-///  NumCPU()     <td> Activate parallel processing feature
-///  <tr><td>
-///  Range()      <td> Calculate \f$ \chi^2 \f$ only in selected region
-///  <tr><td>
-///  Verbose()    <td> Verbose output of GOF framework
-///  <tr><td>
-///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
-/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
-/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
-/// ```
-/// myVariable.setRange("range_pi0", 135, 210);
-/// myVariable.setRange("range_gamma", 50, 210);
-/// ```
-/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
-///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
-///
-/// </table>
-
-RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata,
-             const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
-             const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
-             const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
-  RooAbsOptTestStatistic(name,title,func,hdata,_emptySet,
-          makeRooAbsTestStatisticCfg(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
+RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataHist &data, bool extended,
+                       RooDataHist::ErrorType etype, RooAbsTestStatistic::Configuration const &cfg)
+   : RooAbsOptTestStatistic(name, title, func, data, RooArgSet{}, cfg),
+     _etype{etype == RooAbsData::Auto ? (data.isNonPoissonWeighted() ? RooAbsData::SumW2 : RooAbsData::Expected)
+                                      : etype},
+     _funcMode{dynamic_cast<RooAbsPdf *>(&func) ? (extended ? ExtendedPdf : Pdf) : Function}
 {
-  RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
-  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
-  pc.defineInt("extended","Extended",0,RooFit::FitHelpers::extendedFitDefault);
-  pc.allowUndefined() ;
-
-  pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
-  pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
-  pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
-
-  if (auto pdf = dynamic_cast<RooAbsPdf*>(&func)) {
-    _funcMode = pdf->interpretExtendedCmdArg(pc.getInt("extended")) ? ExtendedPdf : Pdf ;
-  } else {
-    _funcMode = Function ;
-  }
-  _etype = (RooDataHist::ErrorType) pc.getInt("etype") ;
-
-  if (_etype==RooAbsData::Auto) {
-    _etype = hdata.isNonPoissonWeighted()? RooAbsData::SumW2 : RooAbsData::Expected ;
-  }
-
 }
 
 
@@ -221,7 +137,7 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (0. == eInt * eInt) {
       coutE(Eval) << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i
-        << " has zero error" << endl ;
+        << " has zero error" << std::endl;
       return 0.;
     }
 
