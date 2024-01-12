@@ -302,6 +302,10 @@ void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RArrayField &
    PrintCollection(field);
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitArrayAsRVecField(const RArrayAsRVecField &field)
+{
+   PrintCollection(field);
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &field)
 {

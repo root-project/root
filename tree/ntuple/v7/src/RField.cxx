@@ -2634,6 +2634,22 @@ size_t ROOT::Experimental::RArrayAsRVecField::GetAlignment() const
    return EvalRVecAlignment(fSubFields[0]->GetAlignment());
 }
 
+std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
+ROOT::Experimental::RArrayAsRVecField::SplitValue(const ROOT::Experimental::Detail::RFieldBase::RValue &value) const
+{
+   auto arrayPtr = value.Get<unsigned char>();
+   std::vector<ROOT::Experimental::Detail::RFieldBase::RValue> result;
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      result.emplace_back(fSubFields[0]->BindValue(arrayPtr + (i * fItemSize)));
+   }
+   return result;
+}
+
+void ROOT::Experimental::RArrayAsRVecField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitArrayAsRVecField(*this);
+}
+
 // RArrayAsRVecField
 //------------------------------------------------------------------------------
 
