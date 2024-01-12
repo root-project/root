@@ -231,6 +231,76 @@ void SyncFieldIDs(const ROOT::Experimental::Detail::RFieldBase &from, ROOT::Expe
    }
 }
 
+std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT)
+{
+   // the size of an RVec<T> is the size of its 4 data-members + optional padding:
+   //
+   // data members:
+   // - void *fBegin
+   // - int32_t fSize
+   // - int32_t fCapacity
+   // - the char[] inline storage, which is aligned like T
+   //
+   // padding might be present:
+   // - between fCapacity and the char[] buffer aligned like T
+   // - after the char[] buffer
+
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+
+   // mimic the logic of RVecInlineStorageSize, but at runtime
+   const auto inlineStorageSz = [&] {
+#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
+      // hardware_destructive_interference_size is a C++17 feature but many compilers do not implement it yet
+      constexpr unsigned cacheLineSize = std::hardware_destructive_interference_size;
+#else
+      constexpr unsigned cacheLineSize = 64u;
+#endif
+      const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
+      constexpr unsigned maxInlineByteSize = 1024;
+      const unsigned nElements =
+         elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeOfT * 8 > maxInlineByteSize ? 0 : 8);
+      return nElements * sizeOfT;
+   }();
+
+   // compute padding between first 3 datamembers and inline buffer
+   // (there should be no padding between the first 3 data members)
+   auto paddingMiddle = dataMemberSz % alignOfT;
+   if (paddingMiddle != 0)
+      paddingMiddle = alignOfT - paddingMiddle;
+
+   // padding at the end of the object
+   auto paddingEnd = (dataMemberSz + paddingMiddle + inlineStorageSz) % alignOfRVecT;
+   if (paddingEnd != 0)
+      paddingEnd = alignOfRVecT - paddingEnd;
+
+   return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
+}
+
+std::size_t EvalRVecAlignment(std::size_t alignOfSubField)
+{
+   // the alignment of an RVec<T> is the largest among the alignments of its data members
+   // (including the inline buffer which has the same alignment as the RVec::value_type)
+   return std::max({alignof(void *), alignof(std::int32_t), alignOfSubField});
+}
+
+void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, std::int32_t *capacityPtr, bool dtorOnly)
+{
+   // figure out if we are in the small state, i.e. begin == &inlineBuffer
+   // there might be padding between fCapacity and the inline buffer, so we compute it here
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+   auto paddingMiddle = dataMemberSz % alignOfT;
+   if (paddingMiddle != 0)
+      paddingMiddle = alignOfT - paddingMiddle;
+   const bool isSmall = (reinterpret_cast<void *>(begin) == (beginPtr + dataMemberSz + paddingMiddle));
+
+   const bool owns = (*capacityPtr != -1);
+   if (!isSmall && owns)
+      free(begin);
+
+   if (!dtorOnly)
+      free(beginPtr);
+}
+
 } // anonymous namespace
 
 //------------------------------------------------------------------------------
@@ -2019,7 +2089,7 @@ ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::uniq
      fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
    Attach(std::move(itemField));
-   fValueSize = EvalValueSize(); // requires fSubFields to be populated
+   fValueSize = EvalRVecValueSize(fSubFields[0]->GetAlignment(), fSubFields[0]->GetValueSize(), GetAlignment());
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -2226,21 +2296,7 @@ void ROOT::Experimental::RRVecField::DestroyValue(void *objPtr, bool dtorOnly) c
       }
    }
 
-   // figure out if we are in the small state, i.e. begin == &inlineBuffer
-   // there might be padding between fCapacity and the inline buffer, so we compute it here
-   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
-   const auto alignOfT = fSubFields[0]->GetAlignment();
-   auto paddingMiddle = dataMemberSz % alignOfT;
-   if (paddingMiddle != 0)
-      paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = (reinterpret_cast<void *>(begin) == (beginPtr + dataMemberSz + paddingMiddle));
-
-   const bool owns = (*capacityPtr != -1);
-   if (!isSmall && owns)
-      free(begin);
-
-   if (!dtorOnly)
-      free(beginPtr);
+   DestroyRVecWithChecks(fSubFields[0]->GetAlignment(), beginPtr, begin, capacityPtr, dtorOnly);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -2257,54 +2313,6 @@ ROOT::Experimental::RRVecField::SplitValue(const RValue &value) const
    return result;
 }
 
-size_t ROOT::Experimental::RRVecField::EvalValueSize() const
-{
-   // the size of an RVec<T> is the size of its 4 data-members + optional padding:
-   //
-   // data members:
-   // - void *fBegin
-   // - int32_t fSize
-   // - int32_t fCapacity
-   // - the char[] inline storage, which is aligned like T
-   //
-   // padding might be present:
-   // - between fCapacity and the char[] buffer aligned like T
-   // - after the char[] buffer
-
-   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
-   const auto alignOfT = fSubFields[0]->GetAlignment();
-   const auto sizeOfT = fSubFields[0]->GetValueSize();
-
-   // mimic the logic of RVecInlineStorageSize, but at runtime
-   const auto inlineStorageSz = [&] {
-#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-      // hardware_destructive_interference_size is a C++17 feature but many compilers do not implement it yet
-      constexpr unsigned cacheLineSize = std::hardware_destructive_interference_size;
-#else
-      constexpr unsigned cacheLineSize = 64u;
-#endif
-      const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
-      constexpr unsigned maxInlineByteSize = 1024;
-      const unsigned nElements =
-         elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeOfT * 8 > maxInlineByteSize ? 0 : 8);
-      return nElements * sizeOfT;
-   }();
-
-   // compute padding between first 3 datamembers and inline buffer
-   // (there should be no padding between the first 3 data members)
-   auto paddingMiddle = dataMemberSz % alignOfT;
-   if (paddingMiddle != 0)
-      paddingMiddle = alignOfT - paddingMiddle;
-
-   // padding at the end of the object
-   const auto alignOfRVecT = GetAlignment();
-   auto paddingEnd = (dataMemberSz + paddingMiddle + inlineStorageSz) % alignOfRVecT;
-   if (paddingEnd != 0)
-      paddingEnd = alignOfRVecT - paddingEnd;
-
-   return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
-}
-
 size_t ROOT::Experimental::RRVecField::GetValueSize() const
 {
    return fValueSize;
@@ -2312,9 +2320,7 @@ size_t ROOT::Experimental::RRVecField::GetValueSize() const
 
 size_t ROOT::Experimental::RRVecField::GetAlignment() const
 {
-   // the alignment of an RVec<T> is the largest among the alignments of its data members
-   // (including the inline buffer which has the same alignment as the RVec::value_type)
-   return std::max({alignof(void *), alignof(std::int32_t), fSubFields[0]->GetAlignment()});
+   return EvalRVecAlignment(fSubFields[0]->GetAlignment());
 }
 
 void ROOT::Experimental::RRVecField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -2495,6 +2501,141 @@ void ROOT::Experimental::RArrayField::AcceptVisitor(Detail::RFieldVisitor &visit
 {
    visitor.VisitArrayField(*this);
 }
+
+//------------------------------------------------------------------------------
+// RArrayAsRVecField
+
+ROOT::Experimental::RArrayAsRVecField::RArrayAsRVecField(
+   std::string_view fieldName, std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField,
+   std::size_t arrayLength)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetType() + ">",
+                                            ENTupleStructure::kCollection, false /* isSimple */),
+     fItemSize(itemField->GetValueSize()),
+     fArrayLength(arrayLength)
+{
+   Attach(std::move(itemField));
+   fValueSize = EvalRVecValueSize(fSubFields[0]->GetAlignment(), fSubFields[0]->GetValueSize(), GetAlignment());
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RArrayAsRVecField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return std::make_unique<RArrayAsRVecField>(newName, std::move(newItemField), fArrayLength);
+}
+
+void ROOT::Experimental::RArrayAsRVecField::GenerateValue(void *where) const
+{
+   // initialize data members fBegin, fSize, fCapacity
+   void **beginPtr = new (where)(void *)(nullptr);
+   std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(0);
+   std::int32_t *capacityPtr = new (sizePtr + 1) std::int32_t(0);
+
+   // Create the RVec with the known fixed size, do it once here instead of
+   // every time the value is read in `Read*Impl` functions
+   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+
+   // Early return if the RVec has already been allocated.
+   if (*sizePtr == std::int32_t(fArrayLength))
+      return;
+
+   // Need to allocate the RVec if it is the first time the value is being created.
+   // See "semantics of reading non-trivial objects" in RNTuple's architecture.md for details
+   // on the element construction.
+   const bool owns = (*capacityPtr != -1); // RVec is adopting the memory
+   const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
+   const bool needsDestruct = owns && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible);
+
+   // Destroy old elements: useless work for trivial types, but in case the element type's constructor
+   // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
+   if (needsDestruct) {
+      for (std::int32_t i = 0; i < *sizePtr; ++i) {
+         CallDestroyValueOn(*fSubFields[0], begin + (i * fItemSize), true /* dtorOnly */);
+      }
+   }
+
+   // TODO: Isn't the RVec always owning in this case?
+   if (owns) {
+      // *beginPtr points to the array of item values (allocated in an earlier call by the following malloc())
+      free(*beginPtr);
+   }
+
+   *beginPtr = malloc(fArrayLength * fItemSize);
+   R__ASSERT(*beginPtr != nullptr);
+   // Re-assign begin pointer after allocation
+   begin = reinterpret_cast<char *>(*beginPtr);
+   // Size and capacity are equal since the field data type is std::array
+   *sizePtr = fArrayLength;
+   *capacityPtr = fArrayLength;
+
+   // Placement new for the array elements
+   if (needsConstruct) {
+      for (std::size_t i = 0; i < fArrayLength; ++i)
+         CallGenerateValueOn(*fSubFields[0], begin + (i * fItemSize));
+   }
+}
+
+void ROOT::Experimental::RArrayAsRVecField::DestroyValue(void *objPtr, bool dtorOnly) const
+{
+
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
+
+   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+      for (std::int32_t i = 0; i < *sizePtr; ++i) {
+         CallDestroyValueOn(*fSubFields[0], begin + i * fItemSize, true /* dtorOnly */);
+      }
+   }
+
+   DestroyRVecWithChecks(fSubFields[0]->GetAlignment(), beginPtr, begin, capacityPtr, dtorOnly);
+}
+
+void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to)
+{
+
+   auto [beginPtr, _, __] = GetRVecDataMembers(to);
+   auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+
+   if (fSubFields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubFields[0])->ReadV(globalIndex*fArrayLength, fArrayLength, rvecBeginPtr);
+      return;
+   }
+
+   // Read the new values into the collection elements
+   for (std::size_t i = 0; i < fArrayLength; ++i) {
+      CallReadOn(*fSubFields[0], globalIndex * fArrayLength + i, rvecBeginPtr + (i * fItemSize));
+   }
+}
+
+void ROOT::Experimental::RArrayAsRVecField::ReadInClusterImpl(const ROOT::Experimental::RClusterIndex &clusterIndex,
+                                                              void *to)
+{
+   auto [beginPtr, _, __] = GetRVecDataMembers(to);
+   auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+
+   const auto &clusterId = clusterIndex.GetClusterId();
+   const auto &clusterIndexIndex = clusterIndex.GetIndex();
+
+   if (fSubFields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubFields[0])
+         ->ReadV(RClusterIndex(clusterId, clusterIndexIndex * fArrayLength), fArrayLength, rvecBeginPtr);
+      return;
+   }
+
+   // Read the new values into the collection elements
+   for (std::size_t i = 0; i < fArrayLength; ++i) {
+      CallReadOn(*fSubFields[0], RClusterIndex(clusterId, clusterIndexIndex * fArrayLength + i),
+                 rvecBeginPtr + (i * fItemSize));
+   }
+}
+
+size_t ROOT::Experimental::RArrayAsRVecField::GetAlignment() const
+{
+   return EvalRVecAlignment(fSubFields[0]->GetAlignment());
+}
+
+// RArrayAsRVecField
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 
