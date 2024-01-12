@@ -115,6 +115,23 @@ TEST(RNtuplePrint, Vector)
    EXPECT_EQ(expected, os.str());
 }
 
+TEST(RNtuplePrint, ArrayAsRVec)
+{
+   std::stringstream os;
+   RPrepareVisitor prepVisitor;
+   ROOT::Experimental::RArrayAsRVecField testField("arrayasrvecfield",
+                                                   std::make_unique<ROOT::Experimental::RField<float>>("myfloat"), 0);
+   testField.AcceptVisitor(prepVisitor);
+   RPrintSchemaVisitor visitor(os, '$');
+   visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
+   visitor.SetNumFields(prepVisitor.GetNumFields());
+   testField.AcceptVisitor(visitor);
+   std::string expected{std::string("") +
+                        "$ Field 1       : arrayasrvecfield (ROOT::VecOps::RVec<float>)                 $\n" +
+                        "$   Field 1.1   : myfloat (float)                                              $\n"};
+   EXPECT_EQ(expected, os.str());
+}
+
 TEST(RNtuplePrint, VectorNested)
 {
    std::stringstream os;
