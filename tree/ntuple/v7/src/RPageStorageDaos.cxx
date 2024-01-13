@@ -474,7 +474,7 @@ void ROOT::Experimental::Detail::RPageSinkDaos::ReleasePage(RPage &page)
 ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
                                                              const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
-     fPagePool(std::make_shared<RPagePool>()),
+     fPagePool(std::make_shared<Internal::RPagePool>()),
      fURI(uri),
      fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {

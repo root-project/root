@@ -48,7 +48,6 @@ class RColumnElementBase;
 class RNTupleCompressor;
 class RNTupleDecompressor;
 struct RNTupleModelChangeset;
-class RPagePool;
 class RFieldBase;
 
 enum class EPageStorageType {
