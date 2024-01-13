@@ -9,7 +9,6 @@
 ################################################################################
 
 import abc
-import sys
 
 
 class MethodTemplateGetter(object):
@@ -75,13 +74,7 @@ class MethodTemplateGetter(object):
         return self._wrapper_class(bound_method, *self._extra_args)
 
 
-# Needed below to define an abstract base class
-if sys.version_info >= (3, 4):
-    ABC = abc.ABC
-else:
-    ABC = abc.ABCMeta('ABC', (), {})
-
-class MethodTemplateWrapper(ABC):
+class MethodTemplateWrapper(abc.ABC):
     '''
     Abstract base class that defines some common logic to properly pythonize
     method templates. More precisely, it provides an implementation of

@@ -127,7 +127,7 @@ endif()
 
 # SOFIE-GNN pythonizations
 if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND (PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.8))
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND (PYTHON_VERSION_STRING VERSION_GREATER_EQUAL 3.8))
         find_python_module(sonnet QUIET)
         find_python_module(graph_nets QUIET)
         if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
@@ -187,14 +187,11 @@ if (dataframe)
     # std::string_view in CPyCppyy
     ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
     if(NOT MSVC OR win_broken_tests)
-        if(NOT (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND NOT
-            (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
+        if(NOT DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3})
             # Test wrapping Python callables for use in C++ using numba
             ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
-            if(PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.7)
-                ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
-                ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
-            endif()
+            ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
+            ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
         endif()
     endif()
 endif()

@@ -10,7 +10,7 @@
 #Author: Omar Zapata, Lorenzo Moneta, Sergei Glayzer 22/08/2015
 #website:http://oproject.org
 
-include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS_Development_Main} ${NUMPY_INCLUDE_DIRS})
+include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
 
 ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
   HEADERS
@@ -32,7 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     src/RModelParser_PyTorch.cxx
     src/PyMethodBase.cxx
   LIBRARIES
-  ${PYTHON_LIBRARIES_Development_Main}
+  ${PYTHON_LIBRARIES}
   DEPENDENCIES
     Core
     Matrix
@@ -43,7 +43,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
 )
 
 if(APPLE)
-    target_link_options(PyMVA PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+    target_link_options(PyMVA PRIVATE ${PYTHON_LINK_OPTIONS})
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

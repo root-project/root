@@ -5,12 +5,7 @@
 
 
 from ROOT import TH1F, TMVA, TBufferJSON
-import sys
-if sys.version_info >= (3, 0):
-    from JsMVA import JPyInterface
-else:
-    import JPyInterface
-from JsMVA.Utils import xrange
+from JsMVA import JPyInterface
 import ROOT
 
 
@@ -73,17 +68,17 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
 # @param matrix the matrix
 def GetCorrelationMatrixInJSON(className, varNames, matrix):
     m = ROOT.TMatrixD(len(matrix), len(matrix))
-    for i in xrange(len(matrix)):
-        for j in xrange(len(matrix)):
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
             m[i][j] = matrix[i][j]
     th2 = ROOT.TH2D(m)
     th2.SetTitle("Correlation matrix ("+className+")")
-    for i in xrange(len(varNames)):
+    for i in range(len(varNames)):
         th2.GetXaxis().SetBinLabel(i+1, varNames[i])
         th2.GetYaxis().SetBinLabel(i+1, varNames[i])
     th2.Scale(100.0)
-    for i in xrange(len(matrix)):
-        for j in xrange(len(matrix)):
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
             th2.SetBinContent(i+1, j+1, int(th2.GetBinContent(i+1, j+1)))
     th2.SetStats(0)
     th2.SetMarkerSize(1.5)

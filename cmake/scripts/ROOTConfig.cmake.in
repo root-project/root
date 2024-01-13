@@ -74,7 +74,7 @@ set(ROOT_CXX_STANDARD @CMAKE_CXX_STANDARD@)
 @ROOT_CMAKE_DIR_SETUP@
 
 # Python version used to build ROOT
-set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING_Development_Main@)
+set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING@)
 
 #----------------------------------------------------------------------------
 # Include RootMacros.cmake to get ROOT's CMake macros

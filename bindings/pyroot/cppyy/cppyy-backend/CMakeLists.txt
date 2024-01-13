@@ -23,43 +23,39 @@ file(COPY ${cppyy_backendPySrcDir}
 
 file(RELATIVE_PATH PYTHONDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_PYTHONDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
 
-foreach(val RANGE ${how_many_pythons})
-  list(GET python_under_version_strings ${val} python_under_version_string)
-  list(GET python_executables ${val} python_executable)
+set(libname cppyy_backend${PYTHON_UNDER_VERSION_STRING})
 
-  set(libname cppyy_backend${python_under_version_string})
+add_library(${libname} SHARED clingwrapper/src/clingwrapper.cxx)
+if(MSVC)
+  set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+endif()
+# Set the suffix to '.so' and the prefix to 'lib'
+set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+target_link_libraries(${libname} Core ${CMAKE_DL_LIBS})
 
-  add_library(${libname} SHARED clingwrapper/src/clingwrapper.cxx)
-  if(MSVC)
-    set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  endif()
-  # Set the suffix to '.so' and the prefix to 'lib'
-  set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
-  target_link_libraries(${libname} Core ${CMAKE_DL_LIBS})
+# cppyy uses ROOT headers from binary directory
+add_dependencies(${libname} move_headers)
 
-  # cppyy uses ROOT headers from binary directory
-  add_dependencies(${libname} move_headers)
+set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
-  set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
+# Install library
+install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
+                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+if (NOT MSVC AND NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR)
+  # add a symlink to ${libname} in CMAKE_INSTALL_PYTHONDIR
+  set(LIB_FILE_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}${libname}.so)
+  install(CODE "file(CREATE_LINK ${PYTHONDIR_TO_LIBDIR}/${LIB_FILE_NAME}
+    \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_PYTHONDIR}/${LIB_FILE_NAME} SYMBOLIC)")
+endif()
 
-  # Install library
-  install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
-                             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
-                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-  if (NOT MSVC AND NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR)
-    # add a symlink to ${libname} in CMAKE_INSTALL_PYTHONDIR
-    set(LIB_FILE_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}${libname}.so)
-    install(CODE "file(CREATE_LINK ${PYTHONDIR_TO_LIBDIR}/${LIB_FILE_NAME}
-      \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_PYTHONDIR}/${LIB_FILE_NAME} SYMBOLIC)")
-  endif()
-
-  # Compile .py files
-  foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
-  endforeach()
+# Compile .py files
+foreach(py_source ${py_sources})
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
 endforeach()
+
 
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/cppyy_backend

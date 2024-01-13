@@ -17,14 +17,7 @@ from contextlib import contextmanager
 import os
 import sys
 from time import sleep
-
-# Support both Python2 and Python3 at the same time
-if sys.version_info.major > 2 :
-    _input = input
-    from itertools import zip_longest
-else:
-    _input = raw_input
-    from itertools import izip_longest as zip_longest
+from itertools import zip_longest
 
 def fileno(file_or_fd):
     """
@@ -686,10 +679,10 @@ def deleteRootObject(rootFile, pathSplit, interactive, recursive):
     else:
         if interactive:
             if pathSplit != []:
-                answer = _input(ASK_OBJECT_REMOVE \
+                answer = input(ASK_OBJECT_REMOVE \
                     .format("/".join(pathSplit),rootFile.GetName()))
             else:
-                answer = _input(ASK_FILE_REMOVE \
+                answer = input(ASK_FILE_REMOVE \
                     .format(rootFile.GetName()))
             remove = answer.lower() == 'y'
         else:
@@ -739,7 +732,7 @@ def _openBrowser(rootFile=None):
         except (KeyboardInterrupt, SystemExit):
             pass
     else:
-        _input("Press enter to exit.")
+        input("Press enter to exit.")
 
 def rootBrowse(fileName=None):
     if fileName:

@@ -9,24 +9,12 @@ import gc
 # Check whether these tests should be skipped
 skip = False
 skip_reason = ""
-if sys.version_info[:3] <= (2, 7, 5):
-    skip = True
-    skip_reason = "Python version <= 2.7.5"
-elif sys.version_info[0] == 2 and "ROOTTEST_IGNORE_NUMBA_PY2" in os.environ:
-    skip = True
-    skip_reason = "Running python2 and ROOTTEST_IGNORE_NUMBA_PY2 was set"
-elif sys.version_info[0] == 3 and "ROOTTEST_IGNORE_NUMBA_PY3" in os.environ:
+if "ROOTTEST_IGNORE_NUMBA_PY3" in os.environ:
     skip = True
     skip_reason = "Running python3 and ROOTTEST_IGNORE_NUMBA_PY3 was set"
 
 if not skip:
     import numba as nb
-
-
-# long does not exist anymore on Python 3, map it to int
-if sys.version_info[0] > 2:
-    long = int
-
 
 default_test_inputs = [-1.0, 0.0, 100.0]
 
@@ -61,10 +49,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         fn0 = ROOT.Numba.Declare(["float"], "float")(f1)
         ref = nb.cfunc("float32(float32)", nopython=True)(f2)
         gc.collect()
-        if sys.version_info.major == 2:
-            self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 1)
-        else:
-            self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 2)
+        self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 2)
 
     # Test optional name
     @unittest.skipIf(skip, skip_reason)
@@ -214,7 +199,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x1 = fn4(v)
             x2 = ROOT.Numba.fn4(v)
             self.assertEqual(x1, x2)
-            self.assertEqual(long, type(x2))
+            self.assertEqual(int, type(x2))
 
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_u(self):
@@ -228,9 +213,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x1 = fn5(v)
             x2 = ROOT.Numba.fn5(v)
             self.assertEqual(x1, x2)
-            # NOTE: cppyy does not return an Python int for unsigned int but a long.
-            # This could be fixed but as well should not have any impact.
-            self.assertEqual(type(x2), long)
+            self.assertEqual(type(x2), int)
 
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_k(self):
@@ -244,7 +227,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x1 = fn6(v)
             x2 = ROOT.Numba.fn6(v)
             self.assertEqual(x1, x2)
-            self.assertEqual(long, type(x2))
+            self.assertEqual(int, type(x2))
 
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_b(self):

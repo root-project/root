@@ -147,13 +147,6 @@ def get_defined_attributes(klass, consider_base_classes=False):
 
     return sorted([attr for attr in dir(klass) if is_defined(attr)])
 
-
-def is_staticmethod_py2(klass, func_name):
-    """Check if the function with name `func_name` of a class is a static method in Python 2."""
-
-    return type(getattr(klass, func_name)).__name__ == "function"
-
-
 def is_classmethod(klass, func):
     if hasattr(func, "__self__"):
         return func.__self__ == klass
@@ -172,20 +165,9 @@ def rebind_attribute(to_class, from_class, func_name):
     if is_classmethod(from_class, from_method):
         # the @classmethod case
         to_method = classmethod(from_method.__func__)
-    elif sys.version_info >= (3, 0):
+    else:
         # any other case in Python 3 is trivial
         to_method = from_method
-    elif isinstance(from_method, property):
-        # the @property case in Python 2
-        to_method = from_method
-    elif is_staticmethod_py2(from_class, func_name):
-        # the @staticmethod case in Python 2
-        to_method = staticmethod(from_method)
-    else:
-        # the instance method case in Python 2
-        import new
-
-        to_method = new.instancemethod(from_method.__func__, None, to_class)
 
     setattr(to_class, func_name, to_method)
 
@@ -225,10 +207,6 @@ def pythonize_roofit_class(klass, name):
             func_new = getattr(python_klass, func_name)
 
             import inspect
-            import sys
-
-            if sys.version_info < (3, 0):
-                func_new = func_new.__func__
 
             if func_new.__doc__ is None:
                 func_new.__doc__ = func_orig.__doc__
@@ -253,11 +231,6 @@ def pythonize_roofit_namespace(ns):
     for python_func in python_roofit_functions:
         func_name = python_func.__name__
         func_name_orig = "_" + func_name
-
-        if sys.version_info <= (3, 0):
-            # In Python 2 the RooFit is treated like a class and the global
-            # functions in the namespace must be static methods.
-            python_func = staticmethod(python_func)
 
         setattr(ns, func_name_orig, getattr(ns, func_name))
         setattr(ns, func_name, python_func)

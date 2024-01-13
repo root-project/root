@@ -365,15 +365,6 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
 
    // create and set (add progam name) the new command line
    argc += 1;
-#if PY_VERSION_HEX < 0x03000000
-   // This is a legacy implementation for Python 2
-   const char **argv2 = new const char *[argc];
-   for (int i = 1; i < argc; ++i)
-      argv2[i] = argv[i - 1];
-   argv2[0] = Py_GetProgramName();
-   PySys_SetArgv(argc, const_cast<char **>(argv2));
-   delete[] argv2;
-#else
    // This is a common block for Python 3. We prefer using objects to automatize memory management and not introduce
    // even more preprocessor branching for deletion at the end of the method.
    // FUTURE IMPROVEMENT ONCE OLD PYTHON VERSIONS ARE NOT SUPPORTED BY ROOT:
@@ -432,7 +423,6 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
    PyConfigHelperRAAI pych(argv2);
 
 #endif // of the else branch of PY_VERSION_HEX < 0x03080000
-#endif // PY_VERSION_HEX < 0x03000000
 
    // actual script execution
    PyObject *gbl = PyDict_Copy(gMainDict);

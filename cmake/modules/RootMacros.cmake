@@ -1746,7 +1746,7 @@ function(ROOT_ADD_TEST test)
   if(ARG_PYTHON_DEPS)
     foreach(python_dep ${ARG_PYTHON_DEPS})
       if(NOT TEST test-import-${python_dep})
-        add_test(NAME test-import-${python_dep} COMMAND ${PYTHON_EXECUTABLE_Development_Main} -c "import ${python_dep}")
+        add_test(NAME test-import-${python_dep} COMMAND ${PYTHON_EXECUTABLE} -c "import ${python_dep}")
         set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
       endif()
       list(APPEND fixtures "requires_${python_dep}")
@@ -1892,7 +1892,7 @@ function(ROOT_ADD_PYUNITTESTS name)
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1935,7 +1935,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   endif()
 
   ROOT_ADD_TEST(pyunittests-${good_name}
-              COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+              COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
@@ -1993,7 +1993,7 @@ function(find_python_module module)
       endif()
       # A module's location is usually a directory, but for binary modules
       # it's a .so file.
-      execute_process(COMMAND "${PYTHON_EXECUTABLE_Development_Main}" "-c"
+      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
          "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
          RESULT_VARIABLE _${module}_status
          OUTPUT_VARIABLE _${module}_location

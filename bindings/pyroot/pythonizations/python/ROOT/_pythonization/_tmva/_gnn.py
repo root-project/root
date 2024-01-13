@@ -14,9 +14,6 @@ from .. import pythonization
 import sys
 from cppyy import gbl as gbl_namespace
 
-if sys.version_info < (3, 8):
-    raise RuntimeError("GNN Pythonizations are only supported in Python3")
-
 
 def getActivationFunction(model):
     """

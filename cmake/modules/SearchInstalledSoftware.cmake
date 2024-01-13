@@ -1732,10 +1732,10 @@ if(tmva)
     find_package(CUDAToolkit REQUIRED)
   endif()
   if(tmva-pymva)
-    if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND)))
+    if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)))
       message(FATAL_ERROR "TMVA: numpy python package or Python development package not found and tmva-pymva component required"
                           " (python executable: ${PYTHON_EXECUTABLE})")
-    elseif(NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND))
+    elseif(NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND))
       message(STATUS "TMVA: Numpy or Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off tmva-pymva option")
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy or Python development package were not found (${tmva-pymva_description})" FORCE)
     endif()
@@ -1756,22 +1756,24 @@ endif(tmva)
 
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
-  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND))
-    message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
-                        " (python executable: ${PYTHON_EXECUTABLE})")
-  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND)
-    message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot option")
-    set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
+
+  if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
+                          " (python executable: ${PYTHON_EXECUTABLE})")
+    else()
+      message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot option")
+      set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found for ${PYTHON_EXECUTABLE}" FORCE)
+    endif()
   endif()
-  mark_as_advanced(FORCE pyroot2 pyroot3)
-  if(fail-on-missing AND pyroot2 AND NOT Python2_Interpreter_Development_FOUND)
-    message(FATAL_ERROR "PyROOT2: Python2 development package not found and pyroot2 component required"
-                        " (python2 executable: ${Python2_EXECUTABLE})")
+
+  if(Python3_Development_FOUND)
+    if(PYTHON_VERSION_STRING VERSION_LESS 3.8)
+      message(FATAL_ERROR "PyROOT: minimum Python version required is 3.8. The current Python version is ${PYTHON_VERSION_STRING}")
+    endif()
+    message(STATUS "PyROOT: development package found. Building for version ${PYTHON_VERSION_STRING}")
   endif()
-  if(fail-on-missing AND pyroot3 AND NOT Python3_Interpreter_Development_FOUND)
-    message(FATAL_ERROR "PyROOT3: Python3 development package not found and pyroot3 component required"
-                        " (python3 executable: ${Python3_EXECUTABLE})")
-  endif()
+
 endif()
 
 #---Check for PyROOT legacy---------------------------------------------------------------
@@ -1780,10 +1782,10 @@ if(pyroot_legacy)
     message(FATAL_ERROR "pyroot_legacy is ON but pyroot is OFF. Please reconfigure with -Dpyroot=ON")
   endif()
 
-  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND))
+  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND))
     message(FATAL_ERROR "PyROOT: Python development package not found and pyroot legacy component required"
                         " (python executable: ${PYTHON_EXECUTABLE})")
-  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND)
+  elseif(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)
     message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot_legacy option")
     set(pyroot_legacy OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
   endif()
