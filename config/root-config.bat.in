@@ -11,7 +11,7 @@ for %%u in (
    "Usage: root-config [--prefix] [--version] [--cflags] [--libs] [--glibs]"
    " [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--tutdir]"
    " [--has-<feature>] [--arch] [--platform] [--config] [--features] [--ncpu]"
-   " [--git-revision] [--python-version] [--python2-version] [--python3-version]"
+   " [--git-revision] [--python-version] [--python3-version]"
    " [--cc] [--cxx] [--cxxstandard] [--f77] [--ld ] [--help]"
 ) do set usage=!usage!%%~u^
 
@@ -127,9 +127,6 @@ for %%w in (%*) do (
    if "!arg!"=="--python-version" (
       set out=!out! @pythonvers@
    )
-   if "!arg!"=="--python2-version" (
-      set out=!$out! @python2vers@
-   )
    if "!arg!"=="--python3-version" (
       set out=!$out! @python3vers@
    )
@@ -235,7 +232,6 @@ echo   --has-^<feature^>       Test if ^<feature^> is compiled in
 echo   --version             Print the ROOT version
 echo   --git-revision        Print the ROOT git revision number
 echo   --python-version      Print the Python version used by ROOT
-echo   --python2-version     Print the Python2 version used by PyROOT
 echo   --python3-version     Print the Python3 version used by PyROOT
 echo   --ncpu                Print number of available (hyperthreaded) cores
 echo   --cc                  Print alternative C compiler specified when ROOT was built

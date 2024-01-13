@@ -11,10 +11,7 @@ from libROOTPythonizations import gROOT, CreateBufferFromAddress
 from cppyy.gbl import gSystem
 
 from ._application import PyROOTApplication
-_numba_pyversion = (2, 7, 5)
-if sys.version_info[:3] > _numba_pyversion:
-    # Python <= 2.7.5 cannot use exec in an inner function
-    from ._numbadeclare import _NumbaDeclareDecorator
+from ._numbadeclare import _NumbaDeclareDecorator
 
 from ._pythonization import pythonization
 
@@ -234,16 +231,12 @@ class ROOTFacade(types.ModuleType):
         """Execute the 'rootlogon.py' module found at the given 'file_path'"""
         # Could also have used execfile, but import is likely to give fewer surprises
         module_name = 'rootlogon'
-        if sys.version_info >= (3, 5):
-            import importlib.util
-            spec = importlib.util.spec_from_file_location(module_name, file_path)
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[module_name] = module
-            spec.loader.exec_module(module)
-        else:
-            import imp
-            imp.load_module(module_name, open(file_path, 'r'), file_path, ('.py', 'r', 1))
-            del imp
+
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
 
     def _run_rootlogon(self):
         # Run custom logon file (must be after creation of ROOT globals)
@@ -338,13 +331,11 @@ class ROOTFacade(types.ModuleType):
                 return MakeNumpyDataFrame(np_dict) 
 
             ns.FromNumpy = MakeNumpyDataFrameCopy
-            
-            if sys.version_info >= (3, 8):
-                try:
-                    # Inject Experimental.Distributed package into namespace RDF if available
-                    ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
-                except ImportError:
-                    pass
+            try:
+                # Inject Experimental.Distributed package into namespace RDF if available
+                ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
+            except ImportError:
+                pass
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF
@@ -371,12 +362,8 @@ class ROOTFacade(types.ModuleType):
         hasRDF = "dataframe" in gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                if sys.version_info >= (3, 8):
-                    from ._pythonization._tmva import inject_rbatchgenerator
-
-                    inject_rbatchgenerator(ns)
-
-
+                from ._pythonization._tmva import inject_rbatchgenerator
+                inject_rbatchgenerator(ns)
                 from libROOTPythonizations import AsRTensor
                 ns.Experimental.AsRTensor = AsRTensor
             except:
@@ -387,8 +374,6 @@ class ROOTFacade(types.ModuleType):
     # Create and overload Numba namespace
     @property
     def Numba(self):
-        if sys.version_info[:3] <= _numba_pyversion:
-            raise Exception('ROOT.Numba requires Python above version {}.{}.{}'.format(*_numba_pyversion))
         cppdef('namespace Numba {}')
         ns = self._fallback_getattr('Numba')
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
@@ -397,9 +382,6 @@ class ROOTFacade(types.ModuleType):
 
     @property
     def NumbaExt(self):
-        if sys.version_info < (3, 7):
-            raise Exception("NumbaExt requires Python 3.7 or higher")
-
         import numba
         if not hasattr(numba, 'version_info') or numba.version_info < (0, 54):
             raise Exception("NumbaExt requires Numba version 0.54 or higher")

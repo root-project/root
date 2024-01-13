@@ -20,12 +20,7 @@ def _check_type(idx, msg):
     # Parameters:
     # - idx: index whose type needs to be checked
     # - msg: message to show in case of type issue
-
-    # Python2 also allows long indices
-    if sys.version_info >= (3,0):
-        allowed_types = (int,)
-    else:
-        allowed_types = (int, long)
+    allowed_types = (int,)
 
     t = type(idx)
     if not t in allowed_types:

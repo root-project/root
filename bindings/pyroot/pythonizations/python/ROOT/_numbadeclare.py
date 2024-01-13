@@ -34,7 +34,7 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
         raise Exception('Failed to import cffi')
     import re, sys
 
-    if sys.version_info >= (3, 7) and hasattr(nb, 'version_info') and nb.version_info >= (0, 54):
+    if hasattr(nb, 'version_info') and nb.version_info >= (0, 54):
         import cppyy.numba_ext
 
     # Normalize input types by stripping ROOT and VecOps namespaces from input types
@@ -263,10 +263,9 @@ def pywrapper({SIGNATURE}):
         if 'RVec' in return_type:
             glob['dtype_r'] = get_numba_type(get_inner_type(return_type))
 
-        if sys.version_info[0] >= 3:
-            exec(pywrappercode, glob, locals()) in {}
-        else:
-            exec(pywrappercode) in glob, locals()
+        # Execute the pywrapper code and generate the wrapper function
+        # which calls the jitted C function
+        exec(pywrappercode, glob, locals()) in {}
 
         if not 'pywrapper' in locals():
             raise Exception('Failed to create Python wrapper function:\n{}'.format(pywrappercode))

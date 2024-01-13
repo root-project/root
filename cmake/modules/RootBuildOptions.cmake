@@ -152,7 +152,6 @@ ROOT_BUILD_OPTION(oracle OFF "Enable support for Oracle databases (requires Orac
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
 ROOT_BUILD_OPTION(proof ON "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
-ROOT_BUILD_OPTION(pyroot-python2 OFF "Enable Python 2 support in PyROOT (deprecated)")
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library (deprecated)")
 ROOT_BUILD_OPTION(pythia6 OFF "Enable support for Pythia 6.x [unlicensed] (deprecated)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
@@ -325,9 +324,8 @@ elseif(APPLE)
   set(x11_defvalue OFF)
 endif()
 
-# Pyroot requires python-dev package; force to OFF if it was not found
-# PYTHONLIBS_FOUND is used for cmake < 3.12
-if(NOT PYTHONLIBS_FOUND AND NOT Python3_Interpreter_Development_FOUND AND (NOT Python2_Interpreter_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7"))
+# Pyroot requires Python development package; force to OFF if it was not found
+if(NOT Python3_Development_FOUND)
   set(pyroot_defvalue OFF)
   set(pyroot_legacy_defvalue OFF)
   set(tmva-pymva_defvalue OFF)
@@ -410,14 +408,14 @@ endif()
 
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad gfal glite globus gsl_shared hdfs ios
-        jemalloc krb5 ldap memstat monalisa pyroot_legacy qt qtgsi rfio ruby sapdb srp table tcmalloc python vmc xproofd)
+        jemalloc krb5 ldap memstat monalisa pyroot_legacy qt qtgsi rfio ruby sapdb srp table tcmalloc python vmc xproofd pyroot-python2)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink pyroot-python2 minuit2)
+foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink minuit2)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
@@ -485,17 +483,6 @@ if(macos_native)
   endif()
 endif()
 
-# Print message saying with which versions of Python are used to build
-if(NOT Python3_Interpreter_Development_FOUND OR NOT Python2_Interpreter_Development_FOUND)
-  message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_STRING_Development_Main}")
-elseif(Python3_Interpreter_Development_FOUND AND Python2_Interpreter_Development_FOUND)
-  if(NOT pyroot_legacy)
-    # In new PyROOT, if we found two Python versions we build for both
-    message(STATUS "PyROOT will be built for versions ${PYTHON_VERSION_STRING_Development_Main} (Main) and ${PYTHON_VERSION_STRING_Development_Other}")
-  elseif(pyroot)
-    message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_STRING_Development_Main}")
-  endif()
-endif()
 
 #---distributed RDataFrame pyspark tests require both dataframe and pyroot----------------------------------
 if(test_distrdf_pyspark OR test_distrdf_dask)
@@ -506,9 +493,9 @@ if(test_distrdf_pyspark OR test_distrdf_dask)
     message(STATUS "    pyroot is set to ${pyroot} and dataframe is set to ${dataframe}")
     set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because either dataframe or pyroot were disabled" FORCE)
     set(test_distrdf_dask OFF CACHE BOOL "Disabled because either dataframe or pyroot were disabled" FORCE)
-  elseif(NOT PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.8)
+  elseif(NOT PYTHON_VERSION_STRING VERSION_GREATER_EQUAL 3.8)
     message(STATUS "Distributed RDataFrame requires Python 3.8 and above.")
-    message(STATUS "    The current Python version is ${PYTHON_VERSION_STRING_Development_Main}.")
+    message(STATUS "    The current Python version is ${PYTHON_VERSION_STRING}.")
     message(STATUS "    Setting options 'test_distrdf_*' to OFF.")
     set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because Python version is less than minimum required 3.8" FORCE)
     set(test_distrdf_dask OFF CACHE BOOL "Disabled because Python version is less than minimum required 3.8" FORCE)
