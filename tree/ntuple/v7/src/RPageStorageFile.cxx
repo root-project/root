@@ -51,7 +51,7 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
 {
    R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
-   fCompressor = std::make_unique<RNTupleCompressor>();
+   fCompressor = std::make_unique<Internal::RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkFile");
 }
 
@@ -91,7 +91,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & 
 {
    auto zipBuffer = std::make_unique<unsigned char[]>(length);
    auto szZipHeader = fCompressor->Zip(serializedHeader, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
+                                       Internal::RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
    fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
@@ -201,7 +201,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterGroupImpl(unsigned char 
 {
    auto bufPageListZip = std::make_unique<unsigned char[]>(length);
    auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
-                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
+                                         Internal::RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
 
    RNTupleLocator result;
    result.fBytesOnStorage = szPageListZip;
@@ -213,7 +213,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl(unsigned char 
 {
    auto bufFooterZip = std::make_unique<unsigned char[]>(length);
    auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
+                                       Internal::RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
    fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    fWriter->Commit();
 }
@@ -241,7 +241,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
      fPagePool(std::make_shared<Internal::RPagePool>()),
      fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
-   fDecompressor = std::make_unique<RNTupleDecompressor>();
+   fDecompressor = std::make_unique<Internal::RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceFile");
 }
 

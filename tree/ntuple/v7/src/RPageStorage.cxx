@@ -366,7 +366,7 @@ ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page, const RColumn
    auto zippedBytes = packedBytes;
 
    if ((compressionSetting != 0) || !element.IsMappable() || !allowAlias) {
-      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
+      zippedBytes = Internal::RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
       if (!isAdoptedBuffer)
          delete[] pageBuf;
       pageBuf = reinterpret_cast<unsigned char *>(buf);

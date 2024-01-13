@@ -1101,7 +1101,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    auto objNbytes = key.GetSize() - key.fKeyLen;
    ReadBuffer(ntuple, objNbytes, offset);
    if (objNbytes != key.fObjLen) {
-      ROOT::Experimental::Detail::RNTupleDecompressor decompressor;
+      RNTupleDecompressor decompressor;
       decompressor.Unzip(bufAnchor.get(), objNbytes, key.fObjLen);
    }
 
@@ -1464,7 +1464,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerLenFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerChecksum.fClassTag = 0x80000000 | classTagOffset;
-   Detail::RNTupleCompressor compressor;
+   RNTupleCompressor compressor;
    auto szStreamerInfo = compressor.Zip(&streamerInfo, streamerInfo.GetSize(), 1);
    fFileSimple.WriteKey(compressor.GetZipBuffer(), szStreamerInfo, streamerInfo.GetSize(),
                         fFileSimple.fControlBlock->fHeader.GetSeekInfo(), 100,

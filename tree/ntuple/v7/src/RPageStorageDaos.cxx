@@ -177,8 +177,7 @@ std::uint32_t ROOT::Experimental::Detail::RDaosNTupleAnchor::GetSize()
 }
 
 int ROOT::Experimental::Detail::RDaosContainerNTupleLocator::InitNTupleDescriptorBuilder(
-   ROOT::Experimental::Detail::RDaosContainer &cont, ROOT::Experimental::Detail::RNTupleDecompressor &decompressor,
-   RNTupleDescriptorBuilder &builder)
+   RDaosContainer &cont, Internal::RNTupleDecompressor &decompressor, RNTupleDescriptorBuilder &builder)
 {
    std::unique_ptr<unsigned char[]> buffer, zipBuffer;
    auto &anchor = fAnchor.emplace();
@@ -224,7 +223,7 @@ int ROOT::Experimental::Detail::RDaosContainerNTupleLocator::InitNTupleDescripto
 std::pair<ROOT::Experimental::Detail::RDaosContainerNTupleLocator, ROOT::Experimental::RNTupleDescriptorBuilder>
 ROOT::Experimental::Detail::RDaosContainerNTupleLocator::LocateNTuple(RDaosContainer &cont,
                                                                       const std::string &ntupleName,
-                                                                      RNTupleDecompressor &decompressor)
+                                                                      Internal::RNTupleDecompressor &decompressor)
 {
    auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName), RNTupleDescriptorBuilder());
 
@@ -249,7 +248,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntuple
 {
    R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
                                << "Do not store real data with this version of RNTuple!";
-   fCompressor = std::make_unique<RNTupleCompressor>();
+   fCompressor = std::make_unique<Internal::RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkDaos");
 }
 
@@ -274,13 +273,13 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CreateImpl(const RNTupleModel & 
    fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel, /*create =*/true);
    fDaosContainer->SetDefaultObjectClass(oclass);
 
-   RNTupleDecompressor decompressor;
+   Internal::RNTupleDecompressor decompressor;
    auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName, decompressor);
    fNTupleIndex = locator.GetIndex();
 
    auto zipBuffer = std::make_unique<unsigned char[]>(length);
    auto szZipHeader = fCompressor->Zip(serializedHeader, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
+                                       Internal::RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
    WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
@@ -403,7 +402,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char 
 {
    auto bufPageListZip = std::make_unique<unsigned char[]>(length);
    auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
-                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
+                                         Internal::RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
 
    auto offsetData = fClusterGroupId.fetch_add(1);
    fDaosContainer->WriteSingleAkey(
@@ -422,7 +421,7 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl(unsigned char 
 {
    auto bufFooterZip = std::make_unique<unsigned char[]>(length);
    auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
+                                       Internal::RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
    WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    WriteNTupleAnchor();
 }
@@ -478,7 +477,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view nt
      fURI(uri),
      fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
-   fDecompressor = std::make_unique<RNTupleDecompressor>();
+   fDecompressor = std::make_unique<Internal::RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceDaos");
 
    auto args = ParseDaosURI(uri);
