@@ -40,12 +40,14 @@ class RRawFile;
 namespace Experimental {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
+namespace Internal {
+class RPagePool;
+}
+
 namespace Detail {
 
 class RClusterPool;
 class RPageAllocatorHeap;
-class RPagePool;
-
 
 // clang-format off
 /**
@@ -114,7 +116,7 @@ private:
    };
 
    /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
+   std::shared_ptr<Internal::RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file

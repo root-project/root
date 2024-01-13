@@ -27,11 +27,11 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPagePool
+\class ROOT::Experimental::Internal::RPagePool
 \ingroup NTuple
 \brief A thread-safe cache of column pages.
 
@@ -51,9 +51,9 @@ private:
    ///   - random delete
    ///   - searching by page
    ///   - searching by tree index
-   std::vector<RPage> fPages;
+   std::vector<Detail::RPage> fPages;
    std::vector<std::int32_t> fReferences;
-   std::vector<RPageDeleter> fDeleters;
+   std::vector<Detail::RPageDeleter> fDeleters;
    std::mutex fLock;
 
 public:
@@ -64,20 +64,20 @@ public:
 
    /// Adds a new page to the pool together with the function to free its space. Upon registration,
    /// the page pool takes ownership of the page's memory. The new page has its reference counter set to 1.
-   void RegisterPage(const RPage &page, const RPageDeleter &deleter);
+   void RegisterPage(const Detail::RPage &page, const Detail::RPageDeleter &deleter);
    /// Like RegisterPage() but the reference counter is initialized to 0
-   void PreloadPage(const RPage &page, const RPageDeleter &deleter);
+   void PreloadPage(const Detail::RPage &page, const Detail::RPageDeleter &deleter);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
-   RPage GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
-   RPage GetPage(ColumnId_t columnId, const RClusterIndex &clusterIndex);
+   Detail::RPage GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
+   Detail::RPage GetPage(ColumnId_t columnId, const RClusterIndex &clusterIndex);
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
    /// during registration.
-   void ReturnPage(const RPage &page);
+   void ReturnPage(const Detail::RPage &page);
 };
 
-} // namespace Detail
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

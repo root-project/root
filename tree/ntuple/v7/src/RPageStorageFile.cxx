@@ -192,7 +192,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
                                                              const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
-     fPagePool(std::make_shared<RPagePool>()),
+     fPagePool(std::make_shared<Internal::RPagePool>()),
      fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
    fDecompressor = std::make_unique<RNTupleDecompressor>();
