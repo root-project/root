@@ -128,11 +128,11 @@ struct RDaosContainerNTupleLocator {
       return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
    }
 
-   int InitNTupleDescriptorBuilder(RDaosContainer &cont, RNTupleDecompressor &decompressor,
+   int InitNTupleDescriptorBuilder(RDaosContainer &cont, Internal::RNTupleDecompressor &decompressor,
                                    RNTupleDescriptorBuilder &builder);
 
    static std::pair<RDaosContainerNTupleLocator, RNTupleDescriptorBuilder>
-   LocateNTuple(RDaosContainer &cont, const std::string &ntupleName, RNTupleDecompressor &decompressor);
+   LocateNTuple(RDaosContainer &cont, const std::string &ntupleName, Internal::RNTupleDecompressor &decompressor);
 };
 
 // clang-format off

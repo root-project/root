@@ -41,12 +41,15 @@ namespace Experimental {
 class RNTupleModel;
 // TODO(jblomer): factory methods to create tree sinks and sources outside Detail namespace
 
+namespace Internal {
+class RNTupleCompressor;
+class RNTupleDecompressor;
+} // namespace Internal
+
 namespace Detail {
 
 class RColumn;
 class RColumnElementBase;
-class RNTupleCompressor;
-class RNTupleDecompressor;
 struct RNTupleModelChangeset;
 class RFieldBase;
 
@@ -186,7 +189,7 @@ protected:
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
-   std::unique_ptr<RNTupleCompressor> fCompressor;
+   std::unique_ptr<Internal::RNTupleCompressor> fCompressor;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
@@ -444,7 +447,7 @@ protected:
    /// Helper to unzip pages and header/footer; comprises a 16MB (kMAXZIPBUF) unzip buffer.
    /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
    /// leave it up to the derived class whether or not the decompressor gets constructed.
-   std::unique_ptr<RNTupleDecompressor> fDecompressor;
+   std::unique_ptr<Internal::RNTupleDecompressor> fDecompressor;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
    // Only called if a task scheduler is set. No-op be default.
