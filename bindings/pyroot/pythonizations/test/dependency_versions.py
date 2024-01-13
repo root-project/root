@@ -17,12 +17,10 @@ ignore.append('dask')
 ignore.append('distributed')
 ignore.append('dask-jobqueue')
 
-if sys.version_info[0] == 2 and 'ROOTTEST_IGNORE_NUMBA_PY2' in os.environ or \
-   sys.version_info[0] == 3 and 'ROOTTEST_IGNORE_NUMBA_PY3' in os.environ:
+if 'ROOTTEST_IGNORE_NUMBA_PY3' in os.environ:
     ignore += ['numba', 'cffi']
 
-if sys.version_info[0] == 2 and 'ROOTTEST_IGNORE_JUPYTER_PY2' in os.environ or \
-   sys.version_info[0] == 3 and 'ROOTTEST_IGNORE_JUPYTER_PY3' in os.environ:
+if 'ROOTTEST_IGNORE_JUPYTER_PY3' in os.environ:
     ignore += ['notebook', 'metakernel']
 
 

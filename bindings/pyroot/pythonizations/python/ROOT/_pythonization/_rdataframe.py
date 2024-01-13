@@ -417,11 +417,9 @@ def pythonize_rdataframe(klass):
                                       HistoProfileWrapper,
                                       model_class)
         setattr(klass, method_name, getter)
-    
-    # Pythonization for Filters only to be implemented in Python3
-    if sys.version_info >= (3, 7):
-        klass._OriginalFilter = klass.Filter
-        klass._OriginalDefine = klass.Define
-        from ._rdf_pyz import _PyFilter, _PyDefine
-        klass.Filter = _PyFilter
-        klass.Define = _PyDefine
+
+    klass._OriginalFilter = klass.Filter
+    klass._OriginalDefine = klass.Define
+    from ._rdf_pyz import _PyFilter, _PyDefine
+    klass.Filter = _PyFilter
+    klass.Define = _PyDefine

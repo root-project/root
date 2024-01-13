@@ -24,27 +24,26 @@ from ._crossvalidation import CrossValidation
 
 from ._rbdt import Compute, pythonize_rbdt
 
-if sys.version_info >= (3, 8):
-    from ._batchgenerator import (
-        CreateNumPyGenerators,
-        CreateTFDatasets,
-        CreatePyTorchGenerators,
-    )
+from ._batchgenerator import (
+    CreateNumPyGenerators,
+    CreateTFDatasets,
+    CreatePyTorchGenerators,
+)
 
-    python_batchgenerator_functions = [
-        CreateNumPyGenerators,
-        CreateTFDatasets,
-        CreatePyTorchGenerators,
-    ]
+python_batchgenerator_functions = [
+    CreateNumPyGenerators,
+    CreateTFDatasets,
+    CreatePyTorchGenerators,
+]
 
-    def inject_rbatchgenerator(ns):
-        for python_func in python_batchgenerator_functions:
-            func_name = python_func.__name__
-            setattr(ns.Experimental, func_name, python_func)
+def inject_rbatchgenerator(ns):
+    for python_func in python_batchgenerator_functions:
+        func_name = python_func.__name__
+        setattr(ns.Experimental, func_name, python_func)
 
-        return ns
+    return ns
 
-    from ._gnn import RModel_GNN, RModel_GraphIndependent
+from ._gnn import RModel_GNN, RModel_GraphIndependent
 
 hasRDF = "dataframe" in gROOT.GetConfigFeatures()
 if hasRDF:
@@ -96,12 +95,6 @@ def get_defined_attributes(klass, consider_base_classes=False):
     return sorted([attr for attr in dir(klass) if is_defined(attr)])
 
 
-def is_staticmethod_py2(klass, func_name):
-    """Check if the function with name `func_name` of a class is a static method in Python 2."""
-
-    return type(getattr(klass, func_name)).__name__ == "function"
-
-
 def is_classmethod(klass, func):
     if hasattr(func, "__self__"):
         return func.__self__ == klass
@@ -120,20 +113,9 @@ def rebind_attribute(to_class, from_class, func_name):
     if is_classmethod(from_class, from_method):
         # the @classmethod case
         to_method = classmethod(from_method.__func__)
-    elif sys.version_info >= (3, 0):
+    else:
         # any other case in Python 3 is trivial
         to_method = from_method
-    elif isinstance(from_method, property):
-        # the @property case in Python 2
-        to_method = from_method
-    elif is_staticmethod_py2(from_class, func_name):
-        # the @staticmethod case in Python 2
-        to_method = staticmethod(from_method)
-    else:
-        # the instance method case in Python 2
-        import new
-
-        to_method = new.instancemethod(from_method.__func__, None, to_class)
 
     setattr(to_class, func_name, to_method)
 
@@ -178,10 +160,6 @@ def pythonize_tmva(klass, name):
             func_new = getattr(python_klass, func_name)
 
             import inspect
-            import sys
-
-            if sys.version_info < (3, 0):
-                func_new = func_new.__func__
 
             if func_new.__doc__ is None:
                 func_new.__doc__ = func_orig.__doc__

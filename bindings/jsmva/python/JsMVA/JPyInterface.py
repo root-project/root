@@ -9,10 +9,7 @@ from IPython.core.display import display, HTML
 from string import Template
 import ROOT
 import sys
-if sys.version_info >= (3, 0):
-    from JsMVA import DataLoader, Factory
-else:
-    import DataLoader, Factory
+from JsMVA import DataLoader, Factory
 from JsMVA import OutputTransformer
 
 

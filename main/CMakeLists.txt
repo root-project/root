@@ -61,7 +61,7 @@ foreach(rawUtilName ${utils})
     # We need the .py only on Windows
     string(REPLACE ".py" "" utilName ${utilName})
   endif()
-  set(python ${PYTHON_EXECUTABLE_Development_Main})
+  set(python ${PYTHON_EXECUTABLE})
   configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
   install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
@@ -79,8 +79,8 @@ if(IS_ABSOLUTE ${runtimedir})
 else()
   set(absruntimedir \${CMAKE_INSTALL_PREFIX}/${runtimedir})
 endif()
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -O -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
+install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
+install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
 configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 

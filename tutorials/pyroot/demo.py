@@ -26,10 +26,8 @@ bar = ROOT.TControlBar( 'vertical', 'Demos', 10, 10 )
 
 # The callbacks to python work by having CLING call the python interpreter through
 # the "TPython" class. Note the use of "raw strings."
-if sys.version_info[0] > 2:
-    to_run = 'exec(open(\'{}\').read())'
-else:
-    to_run = 'execfile(\'{}\')'
+to_run = 'exec(open(\'{}\').read())'
+
 
 bar.AddButton( 'Help on Demos', r'TPython::Exec( "' + to_run.format('demoshelp.py') + '" );', 'Click Here For Help on Running the Demos' )
 bar.AddButton( 'browser',       r'TPython::Exec( "b = ROOT.TBrowser()" );',          'Start the ROOT browser' )
@@ -66,10 +64,6 @@ ROOT.gROOT.SaveContext()
 if __name__ == '__main__':
    rep = ''
    while not rep in [ 'q', 'Q' ]:
-      # Check if we are in Python 2 or 3
-      if sys.version_info[0] > 2:
-         rep = input( 'enter "q" to quit: ' )
-      else:
-         rep = raw_input( 'enter "q" to quit: ' )
+      rep = input( 'enter "q" to quit: ' )
       if 1 < len(rep):
          rep = rep[0]

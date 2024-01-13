@@ -144,12 +144,12 @@ def _check_target(target):
         list[string]: class name(s)/prefix(es) in `target`, with no repetitions.
     '''
 
-    if _is_string(target):
+    if isinstance(target, str):
         _check_no_namespace(target)
         target = [ target ]
     else:
         for name in target:
-            if _is_string(name):
+            if isinstance(name, str):
                 _check_no_namespace(name)
             else:
                 raise TypeError('Invalid type of "target" argument in '
@@ -159,22 +159,6 @@ def _check_target(target):
         target = list(set(target))
 
     return target
-
-def _is_string(o):
-    '''
-    Checks if object is a string.
-
-    Args:
-        o (any type): object to be checked.
-
-    Returns:
-        True if object is a string, False otherwise.
-    '''
-
-    if sys.version_info >= (3, 0):
-        return isinstance(o, str)
-    else:
-        return isinstance(o, basestring)
 
 def _check_no_namespace(target):
     '''
@@ -201,12 +185,7 @@ def _check_num_pars(f):
     Returns:
         int: number of positional parameters of `f`.
     '''
-
-    if sys.version_info >= (3, 0):
-        npars = len(inspect.getfullargspec(f).args)
-    else:
-        npars = len(inspect.getargspec(f).args)
-
+    npars = len(inspect.getfullargspec(f).args)
     if npars == 0 or npars > 2:
         raise TypeError('Pythonizor function {} has a wrong number of '
                         'parameters ({}). Allowed parameters are the class to '

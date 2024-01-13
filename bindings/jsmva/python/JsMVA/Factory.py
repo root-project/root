@@ -6,12 +6,7 @@
 
 import ROOT
 from ROOT import TMVA
-import sys
-if sys.version_info >= (3, 0):
-    from JsMVA import JPyInterface
-else:
-    import JPyInterface
-from JsMVA.Utils import xrange
+from JsMVA import JPyInterface
 from xml.etree.ElementTree import ElementTree
 import json
 from IPython.core.display import display, HTML, clear_output
@@ -685,12 +680,8 @@ def ChangeTrainAllMethods(fac):
 def ChangeCallOriginal__init__(*args,  **kwargs):
     hasColor = False
     args = list(args)
-    for arg_idx in xrange(len(args)):
-        # basestring==(str, unicode) in Python2, which translates to str in Python3
-        if sys.version_info >= (3, 0):
-            is_string = isinstance(args[arg_idx], str)
-        else:
-            is_string = isinstance(args[arg_idx], basestring)
+    for arg_idx in range(len(args)):
+        is_string = isinstance(args[arg_idx], str)
         if is_string and args[arg_idx].find(":")!=-1:
             if args[arg_idx].find("Color")!=-1:
                 hasColor = True
@@ -777,21 +768,21 @@ def CreateWeightHist(net, selectedLayers):
     n2 = int(weights["cols"])
     m = ROOT.TMatrixD(n1, n2+1)
     vec = weights["data"]
-    for i in xrange(n1):
-        for j in xrange(n2):
+    for i in range(n1):
+        for j in range(n2):
             m[i][j] = vec[j+n2*i]
     bvec = net["layers"][firstLayer]["Biases"]["data"]
     if n1!=len(bvec):
         print("Something wrong.. Number of bias weights not equal with the neuron number ("+str(n1)+"!="+str(len(bvec))+")")
         return
-    for i in xrange(n1):
+    for i in range(n1):
         m[i][n2] = bvec[i]
     th2 = ROOT.TH2D(m)
     th2.SetTitle("Weight map for DNN")
-    for i in xrange(n2):
+    for i in range(n2):
         th2.GetXaxis().SetBinLabel(i + 1, str(i))
     th2.GetXaxis().SetBinLabel(n2+1, "B")
-    for i in xrange(n1):
+    for i in range(n1):
         th2.GetYaxis().SetBinLabel(i + 1, str(i))
     th2.GetXaxis().SetTitle("Layer: "+str(firstLayer))
     th2.GetYaxis().SetTitle("Layer: "+str(firstLayer+1))
@@ -821,7 +812,7 @@ def DrawDNNWeights(fac, datasetName, methodName="DNN"):
     numOfLayers = len(net["layers"])
     options = []
     vals=[]
-    for layer in xrange(numOfLayers):
+    for layer in range(numOfLayers):
         options.append(str(layer)+"->"+str(layer+1))
         vals.append(layer)
     selectLayer=widgets.Dropdown(

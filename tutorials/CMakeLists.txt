@@ -71,7 +71,7 @@ endif()
 
 # RBatchGenerator tutorials need Python 3.8+.
 # Also, they don't work on Windows at the moment.
-if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8 OR
+if (PYTHON_VERSION_STRING VERSION_LESS 3.8 OR
     (MSVC AND NOT win_broken_tests))
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
@@ -626,7 +626,7 @@ ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAK
                 FAILREGEX "Error in" "error:" LABELS tutorial)
 # define Python GNN parsing tutorial needed to run before
 if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
-  ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${PYTHON_EXECUTABLE_Development_Main}
+  ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${PYTHON_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
 endif()
@@ -737,15 +737,12 @@ if(ROOT_pyroot_FOUND)
   endif()
 
   if(NOT dataframe
-     OR ${PYTHON_VERSION_STRING_Development_Main} VERSION_LESS_EQUAL 2.7.5
-     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2)
-     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3)
+     OR DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3}
      OR (MSVC AND NOT win_broken_tests))
     list(APPEND pyveto pyroot/pyroot004_NumbaDeclare.py)
   endif()
 
-  if((dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) OR
-     (dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
+  if(dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY3})
     list(APPEND pyveto dataframe/df026_AsNumpyArrays.py)
   endif()
 
@@ -760,7 +757,7 @@ if(ROOT_pyroot_FOUND)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
-    list(APPEND ROOT_environ PYSPARK_PYTHON=${PYTHON_EXECUTABLE_Development_Main})
+    list(APPEND ROOT_environ PYSPARK_PYTHON=${PYTHON_EXECUTABLE})
     if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
       # MacOS has changed rules about forking processes after 10.13
       # Running pyspark tests with XCode Python3 throws crashes with errors like:
@@ -890,7 +887,7 @@ if(ROOT_pyroot_FOUND)
     endforeach()
 
     ROOT_ADD_TEST(${tutorial_name}
-                COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${${tname}-depends}

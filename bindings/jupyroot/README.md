@@ -28,7 +28,7 @@ jupyter notebook
 Once the server is up, you can use ROOT with two kernels:
 
 1. ROOT C++: new kernel provided by ROOT
-2. Python 2 / 3: already provided by Jupyter
+2. Python: already provided by Jupyter
 
 ##  C++ ROOTbook
 ROOT offers a C++ kernel that transforms the notebook in a ROOT prompt.
@@ -45,7 +45,7 @@ c.Draw();
 ```
 
 ## Python ROOTbook
-If you prefer to use Python, you can create a new Python 2 / 3 kernel and
+If you prefer to use Python, you can create a new Python kernel and
 import the ROOT libraries:
 ```python
 import ROOT
