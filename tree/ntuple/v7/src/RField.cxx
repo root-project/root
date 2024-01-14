@@ -3055,12 +3055,10 @@ void ROOT::Experimental::RTupleField::DestroyValue(void *objPtr, bool dtorOnly) 
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RCollectionField::RCollectionField(
-   std::string_view name,
-   std::shared_ptr<RCollectionNTupleWriter> collectionNTuple,
-   std::unique_ptr<RNTupleModel> collectionModel)
-   : RFieldBase(name, "", ENTupleStructure::kCollection, true /* isSimple */)
-   , fCollectionNTuple(collectionNTuple)
+ROOT::Experimental::RCollectionField::RCollectionField(std::string_view name,
+                                                       std::shared_ptr<RCollectionNTupleWriter> collectionWriter,
+                                                       std::unique_ptr<RNTupleModel> collectionModel)
+   : RFieldBase(name, "", ENTupleStructure::kCollection, true /* isSimple */), fCollectionWriter(collectionWriter)
 {
    for (unsigned i = 0; i < collectionModel->GetFieldZero()->fSubFields.size(); ++i) {
       auto& subField = collectionModel->GetFieldZero()->fSubFields[i];
@@ -3093,7 +3091,7 @@ void ROOT::Experimental::RCollectionField::GenerateColumnsImpl(const RNTupleDesc
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 {
-   auto result = std::make_unique<RCollectionField>(newName, fCollectionNTuple, RNTupleModel::Create());
+   auto result = std::make_unique<RCollectionField>(newName, fCollectionWriter, RNTupleModel::Create());
    for (auto& f : fSubFields) {
       auto clone = f->Clone(f->GetName());
       result->Attach(std::move(clone));
@@ -3103,7 +3101,7 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 
 void ROOT::Experimental::RCollectionField::CommitClusterImpl()
 {
-   *fCollectionNTuple->GetOffsetPtr() = 0;
+   *fCollectionWriter->GetOffsetPtr() = 0;
 }
 
 //------------------------------------------------------------------------------
