@@ -171,7 +171,7 @@ public:
       }
       ~RValue() { DestroyIfOwning(); }
 
-      RValue GetNonOwningCopy() { return RValue(fField, fObjPtr, false); }
+      RValue GetNonOwningCopy() const { return RValue(fField, fObjPtr, false); }
 
       template <typename T>
       void *Release()
