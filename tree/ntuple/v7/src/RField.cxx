@@ -342,7 +342,7 @@ ROOT::Experimental::Detail::RFieldBase::~RFieldBase()
 std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() const
 {
    std::string result = GetName();
-   RFieldBase *parent = GetParent();
+   auto parent = GetParent();
    while (parent && !parent->GetName().empty()) {
       result = parent->GetName() + "." + result;
       parent = parent->GetParent();
