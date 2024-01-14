@@ -278,12 +278,17 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    if (!collectionModel) {
       throw RException(R__FAIL("null collectionModel"));
    }
-   auto collectionNTuple = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
-   auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
+
+   auto collectionWriter = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
+
+   auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
+   field->SetDescription(collectionModel->GetDescription());
+
    if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->BindValue(collectionNTuple->GetOffsetPtr()));
+      fDefaultEntry->AddValue(field->BindValue(collectionWriter->GetOffsetPtr()));
+
    fFieldZero->Attach(std::move(field));
-   return collectionNTuple;
+   return collectionWriter;
 }
 
 const ROOT::Experimental::Detail::RFieldBase *

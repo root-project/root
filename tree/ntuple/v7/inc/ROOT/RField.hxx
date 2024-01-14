@@ -59,7 +59,6 @@ namespace Experimental {
 class RCollectionField;
 class RCollectionNTupleWriter;
 class REntry;
-class RNTupleModel;
 
 namespace Internal {
 struct RFieldCallbackInjector;
@@ -1419,7 +1418,7 @@ protected:
 public:
    static std::string TypeName() { return ""; }
    RCollectionField(std::string_view name, std::shared_ptr<RCollectionNTupleWriter> collectionWriter,
-                    std::unique_ptr<RNTupleModel> collectionModel);
+                    std::unique_ptr<RFieldBase> collectionMotherField);
    RCollectionField(RCollectionField&& other) = default;
    RCollectionField& operator =(RCollectionField&& other) = default;
    ~RCollectionField() override = default;
