@@ -253,11 +253,7 @@ public:
       LoadEntry(index, *fModel->GetDefaultEntry());
    }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(NTupleSize_t index, REntry &entry) {
-      for (auto& value : entry) {
-         value.Read(index);
-      }
-   }
+   void LoadEntry(NTupleSize_t index, REntry &entry) { entry.Read(index); }
 
    /// Returns an iterator over the entry indices of the RNTuple.
    ///
@@ -412,10 +408,7 @@ public:
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
 
-      std::size_t bytesWritten = 0;
-      for (auto& value : entry) {
-         bytesWritten += value.Append();
-      }
+      const std::size_t bytesWritten = entry.Append();
       fUnzippedClusterSize += bytesWritten;
       fNEntries++;
       if ((fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst))
@@ -487,9 +480,7 @@ public:
 
    void Fill() { Fill(fDefaultEntry.get()); }
    void Fill(REntry *entry) {
-      for (auto &value : *entry) {
-         value.Append();
-      }
+      entry->Append();
       fOffset++;
    }
 
