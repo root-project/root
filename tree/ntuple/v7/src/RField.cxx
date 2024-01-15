@@ -658,6 +658,7 @@ std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail
 std::vector<const ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {
    std::vector<const RFieldBase *> result;
+   result.reserve(fSubFields.size());
    for (const auto &f : fSubFields) {
       result.emplace_back(f.get());
    }
