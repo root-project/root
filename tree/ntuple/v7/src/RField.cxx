@@ -3100,11 +3100,11 @@ void ROOT::Experimental::RCollectionField::GenerateColumnsImpl(const RNTupleDesc
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 {
-   auto mother = std::make_unique<RFieldZero>();
+   auto parent = std::make_unique<RFieldZero>();
    for (auto& f : fSubFields) {
-      mother->Attach(f->Clone(f->GetName()));
+      parent->Attach(f->Clone(f->GetName()));
    }
-   return std::make_unique<RCollectionField>(newName, fCollectionWriter, std::move(mother));
+   return std::make_unique<RCollectionField>(newName, fCollectionWriter, std::move(parent));
 }
 
 void ROOT::Experimental::RCollectionField::CommitClusterImpl()
