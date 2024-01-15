@@ -210,7 +210,7 @@ public:
    static std::unique_ptr<RNTupleModel> CreateBare();
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
-   /// corresponding tree value that is managed by a shared pointer.
+   /// corresponding value that is managed by a shared pointer.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
@@ -226,11 +226,11 @@ public:
    ///
    /// // The RNTuple is written to disk when the RNTupleWriter goes out of scope
    /// {
-   ///    auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "myFile.root");
+   ///    auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "myFile.root");
    ///    for (int i = 0; i < 100; i++) {
    ///       *pt = static_cast<float>(i);
    ///       *vec = {i, i+1, i+2};
-   ///       ntuple->Fill();
+   ///       writer->Fill();
    ///    }
    /// }
    /// ~~~
