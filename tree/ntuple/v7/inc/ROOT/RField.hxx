@@ -1418,7 +1418,7 @@ protected:
 public:
    static std::string TypeName() { return ""; }
    RCollectionField(std::string_view name, std::shared_ptr<RCollectionNTupleWriter> collectionWriter,
-                    std::unique_ptr<RFieldBase> collectionMotherField);
+                    std::unique_ptr<RFieldBase> collectionParent);
    RCollectionField(RCollectionField&& other) = default;
    RCollectionField& operator =(RCollectionField&& other) = default;
    ~RCollectionField() override = default;
