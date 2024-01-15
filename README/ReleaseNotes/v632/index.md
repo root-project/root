@@ -180,7 +180,7 @@ Please use the higher-level functions `RooAbsPdf::createNLL()` and `RooAbsPdf::c
 
 ## RDataFrame
 
-* The RDataFrame constructor that takes an input file name (or file glob) will now infer the format of the dataset, either TTree or RNTuple, that is stored in that input file. This automatic inference further contributes towards a zero-code-change experience when moving from processing a TTree to processing an RNTuple dataset while using an RDataFrame. It also introduces a backwards-incompatible behaviour, i.e. now the constructor needs to open one file in order to infer the dataset type. This means that if the file does not exist, the constructor will throw an exception. Previously, an exception would be thrown only at a JIT-ting time, before the start of the computations.
+* The RDataFrame constructors that take in input one or more file names (or globs thereof) will now infer the format of the dataset, either TTree or RNTuple, that is stored in the first input file. When multiple files are specified, it is assumed that all other files contain a coherent dataset of the same format and with the same schema, exactly as it used to happen with TChain. This automatic inference further contributes towards a zero-code-change experience when moving from processing a TTree to processing an RNTuple dataset while using an RDataFrame. It also introduces a backwards-incompatible behaviour, i.e. now the constructor needs to open one file in order to infer the dataset type. This means that if the file does not exist, the constructor will throw an exception. Previously, an exception would be thrown only at a JIT-ting time, before the start of the computations.
 
 ## 2D Graphics Libraries
 
