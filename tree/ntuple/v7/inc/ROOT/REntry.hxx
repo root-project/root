@@ -40,7 +40,10 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
+   friend class RCollectionNTupleWriter;
    friend class RNTupleModel;
+   friend class RNTupleReader;
+   friend class RNTupleWriter;
 
    /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
    std::uint64_t fModelId = 0;
@@ -66,8 +69,24 @@ class REntry {
       return ptr;
    }
 
+   void Read(NTupleSize_t index)
+   {
+      for (auto &v : fValues) {
+         v.Read(index);
+      }
+   }
+
+   std::size_t Append()
+   {
+      std::size_t bytesWritten = 0;
+      for (auto &v : fValues) {
+         bytesWritten += v.Append();
+      }
+      return bytesWritten;
+   }
+
 public:
-   using Iterator_t = decltype(fValues)::iterator;
+   using ConstIterator_t = decltype(fValues)::const_iterator;
 
    REntry(const REntry &other) = delete;
    REntry &operator=(const REntry &other) = delete;
@@ -101,8 +120,8 @@ public:
 
    std::uint64_t GetModelId() const { return fModelId; }
 
-   Iterator_t begin() { return fValues.begin(); }
-   Iterator_t end() { return fValues.end(); }
+   ConstIterator_t begin() const { return fValues.cbegin(); }
+   ConstIterator_t end() const { return fValues.cend(); }
 };
 
 } // namespace Experimental
