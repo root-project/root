@@ -70,8 +70,12 @@ struct RNTupleModelChangeset {
 \brief The RNTupleModel encapulates the schema of an ntuple.
 
 The ntuple model comprises a collection of hierarchically organized fields. From a model, "entries"
-can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
-that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
+can be extracted. For convenience, the model provides a default entry unless it is created as a "bare model".
+Models have a unique model identifier that faciliates checking whether entries are compatible with it
+(i.e.: have been extracted from that model).
+
+A model is subject to a state transition during its lifetime: it starts in a building state, in which fields can be
+added and modified.  Once the schema is finalized, the model gets frozen.  Only frozen models can create entries.
 */
 // clang-format on
 class RNTupleModel {
