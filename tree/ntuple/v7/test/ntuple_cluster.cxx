@@ -57,21 +57,21 @@ public:
    std::vector<ROOT::Experimental::Detail::RCluster::ColumnSet_t> fReqsColumns;
 
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
-      ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
+      ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
       for (unsigned i = 0; i <= 5; ++i) {
-         descBuilder.AddCluster(ROOT::Experimental::RClusterDescriptorBuilder()
+         descBuilder.AddCluster(ROOT::Experimental::Internal::RClusterDescriptorBuilder()
                                    .ClusterId(i)
                                    .FirstEntryIndex(i)
                                    .NEntries(1)
                                    .MoveDescriptor()
                                    .Unwrap());
       }
-      descBuilder.AddClusterGroup(ROOT::Experimental::RClusterGroupDescriptorBuilder()
-                                    .ClusterGroupId(0)
-                                    .MinEntry(0)
-                                    .EntrySpan(6)
-                                    .MoveDescriptor()
-                                    .Unwrap());
+      descBuilder.AddClusterGroup(ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder()
+                                     .ClusterGroupId(0)
+                                     .MinEntry(0)
+                                     .EntrySpan(6)
+                                     .MoveDescriptor()
+                                     .Unwrap());
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
    }
