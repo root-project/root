@@ -42,7 +42,6 @@ public:
 
    int operator[](int ivert) const { return fIvert[ivert]; }
    static int CompactFacet(Vertex_t *vert, int nvertices);
-   Vertex_t ComputeNormal(bool &degenerated) const;
    int GetNvert() const { return fNvert; }
 
    void Flip()
