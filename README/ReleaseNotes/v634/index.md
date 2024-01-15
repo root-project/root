@@ -96,6 +96,9 @@ The following people have contributed to this new version:
 
 ## Histogram Libraries
 
+### Upgrade TUnfold to version 17.9
+
+The [TUnfold package](https://www.desy.de/~sschmitt/tunfold.html) inside ROOT is upgraded from version 17.6 to version 17.9.
 
 ## Math Libraries
 
