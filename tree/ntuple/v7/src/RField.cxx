@@ -3057,7 +3057,7 @@ void ROOT::Experimental::RTupleField::DestroyValue(void *objPtr, bool dtorOnly) 
 
 ROOT::Experimental::RCollectionField::RCollectionField(std::string_view name,
                                                        std::shared_ptr<RCollectionNTupleWriter> collectionWriter,
-                                                       std::unique_ptr<RFieldBase> collectionParent)
+                                                       std::unique_ptr<RFieldZero> collectionParent)
    : RFieldBase(name, "", ENTupleStructure::kCollection, true /* isSimple */), fCollectionWriter(collectionWriter)
 {
    const std::size_t N = collectionParent->fSubFields.size();
