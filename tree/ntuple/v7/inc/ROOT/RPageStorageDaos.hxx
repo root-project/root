@@ -34,6 +34,9 @@ namespace ROOT {
 namespace Experimental {
 
 namespace Internal {
+using ntuple_index_t = std::uint32_t;
+class RDaosPool;
+class RDaosContainer;
 class RPagePool;
 enum EDaosLocatorFlags {
    // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
@@ -46,10 +49,6 @@ namespace Detail {
 class RCluster;
 class RClusterPool;
 class RPageAllocatorHeap;
-class RDaosPool;
-class RDaosContainer;
-
-using ntuple_index_t = std::uint32_t;
 
 // clang-format off
 /**
@@ -96,47 +95,6 @@ struct RDaosNTupleAnchor {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RDaosContainerNTupleLocator
-\ingroup NTuple
-\brief Helper structure concentrating the functionality required to locate an ntuple within a DAOS container.
-It includes a hashing function that converts the RNTuple's name into a 32-bit identifier; this value is used to index
-the subspace for the ntuple among all objects in the container. A zero-value hash value is reserved for storing any
-future metadata related to container-wide management; a zero-index ntuple is thus disallowed and remapped to "1".
-Once the index is computed, `InitNTupleDescriptorBuilder()` can be called to return a partially-filled builder with
-the ntuple's anchor, header and footer, lacking only pagelists. Upon that call, a copy of the anchor is stored in `fAnchor`.
-*/
-// clang-format on
-struct RDaosContainerNTupleLocator {
-   std::string fName{};
-   ntuple_index_t fIndex{};
-   std::optional<ROOT::Experimental::Detail::RDaosNTupleAnchor> fAnchor;
-   static const ntuple_index_t kReservedIndex = 0;
-
-   RDaosContainerNTupleLocator() = default;
-   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
-
-   bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
-   [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };
-   static ntuple_index_t Hash(const std::string &ntupleName)
-   {
-      // Convert string to numeric representation via `std::hash`.
-      uint64_t h = std::hash<std::string>{}(ntupleName);
-      // Fold the hash into 32-bit using `boost::hash_combine()` algorithm and magic number.
-      auto seed = static_cast<uint32_t>(h >> 32);
-      seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-      auto hash = static_cast<ntuple_index_t>(seed);
-      return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
-   }
-
-   int InitNTupleDescriptorBuilder(RDaosContainer &cont, Internal::RNTupleDecompressor &decompressor,
-                                   RNTupleDescriptorBuilder &builder);
-
-   static std::pair<RDaosContainerNTupleLocator, RNTupleDescriptorBuilder>
-   LocateNTuple(RDaosContainer &cont, const std::string &ntupleName, Internal::RNTupleDecompressor &decompressor);
-};
-
-// clang-format off
-/**
 \class ROOT::Experimental::Detail::RPageSinkDaos
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
@@ -153,7 +111,7 @@ private:
    /// ISO C++ ensures the correct destruction order, i.e., `~RDaosContainer` is invoked first
    /// (which calls `daos_cont_close()`; the destructor for the `std::shared_ptr<RDaosPool>` is invoked
    /// after (which calls `daos_pool_disconect()`).
-   std::unique_ptr<RDaosContainer> fDaosContainer;
+   std::unique_ptr<Internal::RDaosContainer> fDaosContainer;
    /// Page identifier for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
    std::atomic<std::uint64_t> fPageId{0};
    /// Cluster group counter for the next committed cluster pagelist; incremented in `CommitClusterGroupImpl()`
@@ -164,7 +122,7 @@ private:
    std::uint64_t fNBytesCurrentCluster{0};
 
    RDaosNTupleAnchor fNTupleAnchor;
-   ntuple_index_t fNTupleIndex{0};
+   Internal::ntuple_index_t fNTupleIndex{0};
    uint32_t fCageSizeLimit{};
 
 protected:
@@ -207,14 +165,14 @@ private:
       std::uint64_t fColumnOffset = 0;
    };
 
-   ntuple_index_t fNTupleIndex{0};
+   Internal::ntuple_index_t fNTupleIndex{0};
 
    /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
    std::shared_ptr<Internal::RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
-   std::unique_ptr<RDaosContainer> fDaosContainer;
+   std::unique_ptr<Internal::RDaosContainer> fDaosContainer;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// The cluster pool asynchronously preloads the next few clusters
