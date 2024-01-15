@@ -77,7 +77,7 @@ private:
    std::vector<std::unique_ptr<RPageSource>> fSources;
    RIdBiMap fIdBiMap;
 
-   RNTupleDescriptorBuilder fBuilder;
+   Internal::RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
 
    void AddVirtualField(const RNTupleDescriptor &originDesc, std::size_t originIdx, const RFieldDescriptor &originField,

@@ -271,7 +271,7 @@ private:
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
 
 protected:
-   RNTupleDescriptorBuilder fDescriptorBuilder;
+   Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {

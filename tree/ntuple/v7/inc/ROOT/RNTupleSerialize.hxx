@@ -31,12 +31,12 @@ namespace Experimental {
 
 enum class EColumnType;
 class RClusterDescriptor;
-class RClusterDescriptorBuilder;
 class RNTupleDescriptor;
-class RNTupleDescriptorBuilder;
-
 
 namespace Internal {
+
+class RClusterDescriptorBuilder;
+class RNTupleDescriptorBuilder;
 
 // clang-format off
 /**
