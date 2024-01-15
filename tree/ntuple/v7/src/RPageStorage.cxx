@@ -411,14 +411,16 @@ void ROOT::Experimental::Detail::RPagePersistentSink::UpdateSchema(const RNTuple
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto addField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
-      fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
+      fDescriptorBuilder.AddField(
+         Internal::RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
       f.ConnectPageSink(*this, firstEntry); // issues in turn one or several calls to `AddColumn()`
    };
    auto addProjectedField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
-      fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
+      fDescriptorBuilder.AddField(
+         Internal::RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
       auto sourceFieldId = changeset.fModel.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
@@ -469,7 +471,8 @@ void ROOT::Experimental::Detail::RPagePersistentSink::Create(RNTupleModel &model
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto &fieldZero = *model.GetFieldZero();
-   fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
+   fDescriptorBuilder.AddField(
+      Internal::RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
    model.GetProjectedFields().GetFieldZero()->SetOnDiskId(0);
 
@@ -544,7 +547,7 @@ ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROOT::Experimenta
 {
    auto nbytes = CommitClusterImpl();
 
-   RClusterDescriptorBuilder clusterBuilder;
+   Internal::RClusterDescriptorBuilder clusterBuilder;
    clusterBuilder.ClusterId(fDescriptorBuilder.GetDescriptor().GetNActiveClusters())
       .FirstEntryIndex(fPrevClusterNEntries)
       .NEntries(nNewEntries);
@@ -579,7 +582,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitClusterGroup()
 
    const auto clusterGroupId = descriptor.GetNClusterGroups();
    const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
-   RClusterGroupDescriptorBuilder cgBuilder;
+   Internal::RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
    if (fNextClusterInGroup == nClusters) {
       cgBuilder.MinEntry(0).EntrySpan(0).NClusters(0);

@@ -428,7 +428,7 @@ ROOT::Experimental::RNTupleDescriptor::AddClusterGroupDetails(DescriptorId_t clu
          return R__FAIL("invalid attempt to re-populate existing cluster");
       }
    }
-   auto cgBuilder = RClusterGroupDescriptorBuilder::FromSummary(iter->second);
+   auto cgBuilder = Internal::RClusterGroupDescriptorBuilder::FromSummary(iter->second);
    cgBuilder.AddClusters(clusterIds);
    iter->second = cgBuilder.MoveDescriptor().Unwrap();
    return RResult<void>::Success();
@@ -520,11 +520,9 @@ ROOT::Experimental::RClusterGroupDescriptor ROOT::Experimental::RClusterGroupDes
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t physicalId,
-                                                                 std::uint64_t firstElementIndex,
-                                                                 std::uint32_t compressionSettings,
-                                                                 const RClusterDescriptor::RPageRange &pageRange)
+ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitColumnRange(
+   DescriptorId_t physicalId, std::uint64_t firstElementIndex, std::uint32_t compressionSettings,
+   const RClusterDescriptor::RPageRange &pageRange)
 {
    if (physicalId != pageRange.fPhysicalColumnId)
       return R__FAIL("column ID mismatch");
@@ -540,8 +538,8 @@ ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t 
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RClusterDescriptorBuilder &
-ROOT::Experimental::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNTupleDescriptor &desc)
+ROOT::Experimental::Internal::RClusterDescriptorBuilder &
+ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNTupleDescriptor &desc)
 {
    /// Carries out a depth-first traversal of a field subtree rooted at `rootFieldId`.  For each field, `visitField` is
    /// called passing the field ID and the number of overall repetitions, taking into account the repetitions of each
@@ -594,7 +592,7 @@ ROOT::Experimental::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNT
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RClusterDescriptor>
-ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
+ROOT::Experimental::Internal::RClusterDescriptorBuilder::MoveDescriptor()
 {
    if (fCluster.fClusterId == kInvalidDescriptorId)
       return R__FAIL("unset cluster ID");
@@ -612,8 +610,9 @@ ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RClusterGroupDescriptorBuilder
-ROOT::Experimental::RClusterGroupDescriptorBuilder::FromSummary(const RClusterGroupDescriptor &clusterGroupDesc)
+ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder
+ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder::FromSummary(
+   const RClusterGroupDescriptor &clusterGroupDesc)
 {
    RClusterGroupDescriptorBuilder builder;
    builder.ClusterGroupId(clusterGroupDesc.GetId())
@@ -626,7 +625,7 @@ ROOT::Experimental::RClusterGroupDescriptorBuilder::FromSummary(const RClusterGr
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RClusterGroupDescriptor>
-ROOT::Experimental::RClusterGroupDescriptorBuilder::MoveDescriptor()
+ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder::MoveDescriptor()
 {
    if (fClusterGroup.fClusterGroupId == kInvalidDescriptorId)
       return R__FAIL("unset cluster group ID");
@@ -638,7 +637,7 @@ ROOT::Experimental::RClusterGroupDescriptorBuilder::MoveDescriptor()
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RResult<ROOT::Experimental::RColumnGroupDescriptor>
-ROOT::Experimental::RColumnGroupDescriptorBuilder::MoveDescriptor()
+ROOT::Experimental::Internal::RColumnGroupDescriptorBuilder::MoveDescriptor()
 {
    if (fColumnGroup.fColumnGroupId == kInvalidDescriptorId)
       return R__FAIL("unset column group ID");
@@ -650,14 +649,15 @@ ROOT::Experimental::RColumnGroupDescriptorBuilder::MoveDescriptor()
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::EnsureFieldExists(DescriptorId_t fieldId) const {
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(DescriptorId_t fieldId) const
+{
    if (fDescriptor.fFieldDescriptors.count(fieldId) == 0)
       return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist");
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
+ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
+{
    // Reuse field name validity check
    auto validName = Detail::RFieldBase::EnsureValidFieldName(fDescriptor.GetName());
    if (!validName) {
@@ -675,21 +675,21 @@ ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptorBuilder::MoveDescriptor()
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RNTupleDescriptorBuilder::MoveDescriptor()
 {
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
-                                                             const std::string_view description)
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
+                                                                       const std::string_view description)
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
 {
    if (flag % 64 == 0)
       throw RException(R__FAIL("invalid feature flag: " + std::to_string(flag)));
@@ -697,7 +697,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RColumnDescriptor>
-ROOT::Experimental::RColumnDescriptorBuilder::MakeDescriptor() const
+ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
 {
    if (fColumn.GetLogicalId() == kInvalidDescriptorId)
       return R__FAIL("invalid logical column id");
@@ -710,15 +710,16 @@ ROOT::Experimental::RColumnDescriptorBuilder::MakeDescriptor() const
    return fColumn.Clone();
 }
 
-ROOT::Experimental::RFieldDescriptorBuilder::RFieldDescriptorBuilder(
-   const RFieldDescriptor& fieldDesc) : fField(fieldDesc.Clone())
+ROOT::Experimental::Internal::RFieldDescriptorBuilder::RFieldDescriptorBuilder(const RFieldDescriptor &fieldDesc)
+   : fField(fieldDesc.Clone())
 {
    fField.fParentId = kInvalidDescriptorId;
    fField.fLinkIds = {};
 }
 
-ROOT::Experimental::RFieldDescriptorBuilder
-ROOT::Experimental::RFieldDescriptorBuilder::FromField(const Detail::RFieldBase& field) {
+ROOT::Experimental::Internal::RFieldDescriptorBuilder
+ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const Detail::RFieldBase &field)
+{
    RFieldDescriptorBuilder fieldDesc;
    fieldDesc.FieldVersion(field.GetFieldVersion())
       .TypeVersion(field.GetTypeVersion())
@@ -732,7 +733,8 @@ ROOT::Experimental::RFieldDescriptorBuilder::FromField(const Detail::RFieldBase&
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RFieldDescriptor>
-ROOT::Experimental::RFieldDescriptorBuilder::MakeDescriptor() const {
+ROOT::Experimental::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
+{
    if (fField.GetId() == kInvalidDescriptorId) {
       return R__FAIL("invalid field id");
    }
@@ -749,14 +751,15 @@ ROOT::Experimental::RFieldDescriptorBuilder::MakeDescriptor() const {
    return fField.Clone();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor &fieldDesc)
+{
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->AddFieldId(fieldDesc.GetId());
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
    auto fieldExists = RResult<void>::Success();
    if (!(fieldExists = EnsureFieldExists(fieldId)))
@@ -781,9 +784,11 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldI
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId,
-                                                             DescriptorId_t fieldId, const RColumnModel &model,
-                                                             std::uint32_t index, std::uint64_t firstElementIdx)
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId,
+                                                                       DescriptorId_t physicalId,
+                                                                       DescriptorId_t fieldId,
+                                                                       const RColumnModel &model, std::uint32_t index,
+                                                                       std::uint64_t firstElementIdx)
 {
    RColumnDescriptor c;
    c.fLogicalColumnId = logicalId;
@@ -799,9 +804,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logi
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(c));
 }
 
-
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
 {
    const auto fieldId = columnDesc.GetFieldId();
    const auto index = columnDesc.GetIndex();
@@ -832,7 +836,7 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptor &&clusterGroup)
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptor &&clusterGroup)
 {
    const auto id = clusterGroup.GetId();
    if (fDescriptor.fClusterGroupDescriptors.count(id) > 0)
@@ -843,7 +847,7 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescr
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::Reset()
 {
    fDescriptor.fName = "";
    fDescriptor.fDescription = "";
@@ -854,14 +858,14 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
    fDescriptor.fHeaderExtension.reset();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::BeginHeaderExtension()
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BeginHeaderExtension()
 {
    if (!fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension = std::make_unique<RNTupleDescriptor::RHeaderExtension>();
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
 {
    auto clusterId = clusterDesc.GetId();
    if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)

@@ -95,8 +95,8 @@ std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &de
    return pos - base;
 }
 
-RResult<std::uint32_t>
-DeserializeField(const void *buffer, std::uint64_t bufSize, ROOT::Experimental::RFieldDescriptorBuilder &fieldDesc)
+RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSize,
+                                        ROOT::Experimental::Internal::RFieldDescriptorBuilder &fieldDesc)
 {
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 
@@ -208,8 +208,8 @@ std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &d
    return pos - base;
 }
 
-RResult<std::uint32_t>
-DeserializeColumn(const void *buffer, std::uint64_t bufSize, ROOT::Experimental::RColumnDescriptorBuilder &columnDesc)
+RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSize,
+                                         ROOT::Experimental::Internal::RColumnDescriptorBuilder &columnDesc)
 {
    using EColumnType = ROOT::Experimental::EColumnType;
 

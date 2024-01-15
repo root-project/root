@@ -40,16 +40,22 @@
 namespace ROOT {
 namespace Experimental {
 
-class RFieldDescriptorBuilder;
 class RNTupleDescriptor;
-class RNTupleDescriptorBuilder;
 class RNTupleModel;
 
 namespace Detail {
 class RColumnElementBase;
 class RFieldBase;
-}
+} // namespace Detail
 
+namespace Internal {
+class RColumnDescriptorBuilder;
+class RColumnGroupDescriptorBuilder;
+class RClusterDescriptorBuilder;
+class RClusterGroupDescriptorBuilder;
+class RFieldDescriptorBuilder;
+class RNTupleDescriptorBuilder;
+} // namespace Internal
 
 // clang-format off
 /**
@@ -59,8 +65,8 @@ class RFieldBase;
 */
 // clang-format on
 class RFieldDescriptor {
-   friend class RNTupleDescriptorBuilder;
-   friend class RFieldDescriptorBuilder;
+   friend class Internal::RNTupleDescriptorBuilder;
+   friend class Internal::RFieldDescriptorBuilder;
 
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
@@ -122,8 +128,8 @@ public:
 */
 // clang-format on
 class RColumnDescriptor {
-   friend class RColumnDescriptorBuilder;
-   friend class RNTupleDescriptorBuilder;
+   friend class Internal::RColumnDescriptorBuilder;
+   friend class Internal::RNTupleDescriptorBuilder;
 
 private:
    /// The actual column identifier, which is the link to the corresponding field
@@ -172,7 +178,7 @@ is used to denote the column group of all the columns. Every ntuple has at least
 */
 // clang-format on
 class RColumnGroupDescriptor {
-   friend class RColumnGroupDescriptorBuilder;
+   friend class Internal::RColumnGroupDescriptorBuilder;
 
 private:
    DescriptorId_t fColumnGroupId = kInvalidDescriptorId;
@@ -210,7 +216,7 @@ for instance when describing friend ntuples.
 */
 // clang-format on
 class RClusterDescriptor {
-   friend class RClusterDescriptorBuilder;
+   friend class Internal::RClusterDescriptorBuilder;
 
 public:
    /// The window of element indexes of a particular column in a particular cluster
@@ -343,7 +349,7 @@ the order of page locations in the page list envelope that belongs to the cluste
 */
 // clang-format on
 class RClusterGroupDescriptor {
-   friend class RClusterGroupDescriptorBuilder;
+   friend class Internal::RClusterGroupDescriptorBuilder;
 
 private:
    DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
@@ -406,7 +412,7 @@ writte struct. This allows for forward and backward compatibility when the meta-
 */
 // clang-format on
 class RNTupleDescriptor {
-   friend class RNTupleDescriptorBuilder;
+   friend class Internal::RNTupleDescriptorBuilder;
 
 public:
    class RHeaderExtension;
@@ -454,7 +460,7 @@ public:
    */
    // clang-format on
    class RHeaderExtension {
-      friend class RNTupleDescriptorBuilder;
+      friend class Internal::RNTupleDescriptorBuilder;
 
    private:
       /// Contains the list of field IDs that are part of the header extension; the corresponding columns are
@@ -801,10 +807,11 @@ public:
    void PrintInfo(std::ostream &output) const;
 };
 
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RColumnDescriptorBuilder
+\class ROOT::Experimental::Internal::RColumnDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RColumnDescriptor
 
@@ -855,7 +862,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RFieldDescriptorBuilder
+\class ROOT::Experimental::Internal::RFieldDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RFieldDescriptor
 
@@ -937,7 +944,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RClusterDescriptorBuilder
+\class ROOT::Experimental::Internal::RClusterDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RClusterDescriptor
 
@@ -982,7 +989,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RClusterGroupDescriptorBuilder
+\class ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RClusterGroupDescriptor
 */
@@ -1037,7 +1044,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RColumnGroupDescriptorBuilder
+\class ROOT::Experimental::Internal::RColumnGroupDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RColumnGroupDescriptor
 */
@@ -1061,7 +1068,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptorBuilder
+\class ROOT::Experimental::Internal::RNTupleDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RNTupleDescriptor
 
@@ -1106,6 +1113,7 @@ public:
    void BeginHeaderExtension();
 };
 
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

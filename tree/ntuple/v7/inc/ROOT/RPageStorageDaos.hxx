@@ -178,7 +178,7 @@ private:
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
-   RNTupleDescriptorBuilder fDescriptorBuilder;
+   Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);

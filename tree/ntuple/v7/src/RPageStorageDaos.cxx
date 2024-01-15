@@ -153,7 +153,7 @@ struct RDaosContainerNTupleLocator {
 
    int InitNTupleDescriptorBuilder(ROOT::Experimental::Internal::RDaosContainer &cont,
                                    ROOT::Experimental::Internal::RNTupleDecompressor &decompressor,
-                                   ROOT::Experimental::RNTupleDescriptorBuilder &builder)
+                                   ROOT::Experimental::Internal::RNTupleDescriptorBuilder &builder)
    {
       std::unique_ptr<unsigned char[]> buffer, zipBuffer;
       auto &anchor = fAnchor.emplace();
@@ -198,12 +198,12 @@ struct RDaosContainerNTupleLocator {
       return 0;
    }
 
-   static std::pair<RDaosContainerNTupleLocator, ROOT::Experimental::RNTupleDescriptorBuilder>
+   static std::pair<RDaosContainerNTupleLocator, ROOT::Experimental::Internal::RNTupleDescriptorBuilder>
    LocateNTuple(ROOT::Experimental::Internal::RDaosContainer &cont, const std::string &ntupleName,
                 ROOT::Experimental::Internal::RNTupleDecompressor &decompressor)
    {
-      auto result =
-         std::make_pair(RDaosContainerNTupleLocator(ntupleName), ROOT::Experimental::RNTupleDescriptorBuilder());
+      auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName),
+                                   ROOT::Experimental::Internal::RNTupleDescriptorBuilder());
 
       auto &loc = result.first;
       auto &builder = result.second;

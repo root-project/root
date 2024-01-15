@@ -41,10 +41,11 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(const RNTup
                                                                      const std::string &virtualName)
 {
    auto virtualFieldId = fNextId++;
-   auto virtualField = RFieldDescriptorBuilder(originField)
-      .FieldId(virtualFieldId)
-      .FieldName(virtualName)
-      .MakeDescriptor().Unwrap();
+   auto virtualField = Internal::RFieldDescriptorBuilder(originField)
+                          .FieldId(virtualFieldId)
+                          .FieldName(virtualName)
+                          .MakeDescriptor()
+                          .Unwrap();
    fBuilder.AddField(virtualField);
    fBuilder.AddFieldLink(virtualParent, virtualFieldId);
    fIdBiMap.Insert({originIdx, originField.GetId()}, virtualFieldId);
@@ -64,11 +65,8 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(const RNTup
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFriends::AttachImpl()
 {
    fBuilder.SetNTuple(fNTupleName, "");
-   fBuilder.AddField(RFieldDescriptorBuilder()
-      .FieldId(0)
-      .Structure(ENTupleStructure::kRecord)
-      .MakeDescriptor()
-      .Unwrap());
+   fBuilder.AddField(
+      Internal::RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
 
    for (std::size_t i = 0; i < fSources.size(); ++i) {
       fSources[i]->Attach();
@@ -92,7 +90,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       AddVirtualField(descriptorGuard.GetRef(), i, descriptorGuard->GetFieldZero(), 0, descriptorGuard->GetName());
 
       for (const auto &cg : descriptorGuard->GetClusterGroupIterable()) {
-         auto clusterGroupBuilder = RClusterGroupDescriptorBuilder::FromSummary(cg);
+         auto clusterGroupBuilder = Internal::RClusterGroupDescriptorBuilder::FromSummary(cg);
          clusterGroupBuilder.ClusterGroupId(fNextId);
          fBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
          fIdBiMap.Insert({i, cg.GetId()}, fNextId);
@@ -100,7 +98,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       }
 
       for (const auto &c : descriptorGuard->GetClusterIterable()) {
-         RClusterDescriptorBuilder clusterBuilder;
+         Internal::RClusterDescriptorBuilder clusterBuilder;
          clusterBuilder.ClusterId(fNextId).FirstEntryIndex(c.GetFirstEntryIndex()).NEntries(c.GetNEntries());
          for (auto originColumnId : c.GetColumnIds()) {
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
