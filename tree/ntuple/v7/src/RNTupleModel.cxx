@@ -313,6 +313,13 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    return collectionWriter;
 }
 
+ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetFieldZero()
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get mutable zero field of unfrozen model"));
+   return *fFieldZero;
+}
+
 const ROOT::Experimental::Detail::RFieldBase &
 ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
