@@ -120,7 +120,7 @@ private:
    std::unique_ptr<RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
 
-   void ConnectModel(const RNTupleModel &model);
+   void ConnectModel(RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
    void InitPageSource();
 

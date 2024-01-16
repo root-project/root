@@ -81,7 +81,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<R
 
 void ROOT::Experimental::Detail::RPageSinkBuf::Create(RNTupleModel &model)
 {
-   auto &fieldZero = *model.GetFieldZero();
+   auto &fieldZero = RNTupleModel::RFieldProxy::GetFieldZeroOf(model);
    ConnectFields(fieldZero.GetSubFields(), 0U);
 
    fInnerModel = model.Clone();

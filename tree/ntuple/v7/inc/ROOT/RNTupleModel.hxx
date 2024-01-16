@@ -38,6 +38,7 @@ class RNTupleModel;
 class RNTupleWriter;
 
 namespace Detail {
+class RPageSinkBuf;
 
 // clang-format off
 /**
@@ -161,7 +162,7 @@ public:
       void AddField(const NameWithDescription_t &fieldNameDesc, T *fromWhere)
       {
          fOpenChangeset.fModel.AddField<T>(fieldNameDesc, fromWhere);
-         auto fieldZero = fOpenChangeset.fModel.GetFieldZero();
+         auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
          auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
                                 [&](const auto &f) { return f.GetName() == fieldNameDesc.fName; });
          R__ASSERT(it != fieldZero->end());
@@ -170,6 +171,23 @@ public:
 
       RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
                                       std::function<std::string(const std::string &)> mapping);
+   };
+
+   /// Provides mutable access to the field tree of the model. This is necessary to commit clusters during writing
+   /// and to set the on-disk field IDs when connecting a model to a page source or sink.
+   /// Attorney-Client limited friendship pattern.
+   class RFieldProxy {
+      friend class Detail::RPagePersistentSink;
+      friend class Detail::RPageSinkBuf;
+      friend class RNTupleReader;
+      friend class RNTupleWriter;
+
+      static RFieldZero &GetFieldZeroOf(RNTupleModel &model)
+      {
+         if (!model.IsFrozen())
+            throw RException(R__FAIL("invalid attempt use mutable fields of unfrozen model"));
+         return *model.fFieldZero;
+      }
    };
 
 private:
@@ -197,7 +215,10 @@ private:
    /// Throws an RException if fDefaultEntry is nullptr
    void EnsureNotBare() const;
 
-   RNTupleModel();
+   /// The field name can be a top-level field or a nested field. Returns nullptr if the field is not in the model.
+   Detail::RFieldBase *FindField(std::string_view fieldName) const;
+
+   RNTupleModel(std::unique_ptr<RFieldZero> fieldZero);
 
 public:
    RNTupleModel(const RNTupleModel&) = delete;
@@ -205,9 +226,10 @@ public:
    ~RNTupleModel() = default;
 
    std::unique_ptr<RNTupleModel> Clone() const;
-   static std::unique_ptr<RNTupleModel> Create();
+   static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<RFieldZero> fieldZero = std::make_unique<RFieldZero>());
    /// A bare model has no default entry
-   static std::unique_ptr<RNTupleModel> CreateBare();
+   static std::unique_ptr<RNTupleModel>
+   CreateBare(std::unique_ptr<RFieldZero> fieldZero = std::make_unique<RFieldZero>());
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
    /// corresponding value that is managed by a shared pointer.
@@ -322,7 +344,9 @@ public:
    std::unique_ptr<REntry> CreateBareEntry() const;
    REntry *GetDefaultEntry() const;
 
-   RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
+   Detail::RFieldBase::RBulk GenerateBulk(std::string_view fieldName);
+
+   const RFieldZero &GetFieldZero() const { return *fFieldZero; }
    const Detail::RFieldBase *GetField(std::string_view fieldName) const;
 
    std::string GetDescription() const { return fDescription; }
