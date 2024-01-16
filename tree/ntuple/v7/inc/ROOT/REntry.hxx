@@ -100,8 +100,8 @@ public:
    T *Get(std::string_view fieldName) const
    {
       for (auto& v : fValues) {
-         if (v.GetField()->GetName() == fieldName) {
-            R__ASSERT(v.GetField()->GetType() == RField<T>::TypeName());
+         if (v.GetField().GetName() == fieldName) {
+            R__ASSERT(v.GetField().GetType() == RField<T>::TypeName());
             return v.Get<T>();
          }
       }
@@ -111,7 +111,7 @@ public:
    void *GetRawPtr(std::string_view fieldName) const
    {
       for (auto& v : fValues) {
-         if (v.GetField()->GetName() == fieldName) {
+         if (v.GetField().GetName() == fieldName) {
             return v.GetRawPtr();
          }
       }
