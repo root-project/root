@@ -470,7 +470,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::Create(RNTupleModel &model
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   auto &fieldZero = RNTupleModel::RFieldProxy::GetFieldZeroOf(model);
+   auto &fieldZero = model.GetFieldZero();
    fDescriptorBuilder.AddField(
       Internal::RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);

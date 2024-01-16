@@ -173,23 +173,6 @@ public:
                                       std::function<std::string(const std::string &)> mapping);
    };
 
-   /// Provides mutable access to the field tree of the model. This is necessary to commit clusters during writing
-   /// and to set the on-disk field IDs when connecting a model to a page source or sink.
-   /// Attorney-Client limited friendship pattern.
-   class RFieldProxy {
-      friend class Detail::RPagePersistentSink;
-      friend class Detail::RPageSinkBuf;
-      friend class RNTupleReader;
-      friend class RNTupleWriter;
-
-      static RFieldZero &GetFieldZeroOf(RNTupleModel &model)
-      {
-         if (!model.IsFrozen())
-            throw RException(R__FAIL("invalid attempt use mutable fields of unfrozen model"));
-         return *model.fFieldZero;
-      }
-   };
-
 private:
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldZero> fFieldZero;
@@ -346,6 +329,9 @@ public:
 
    Detail::RFieldBase::RBulk GenerateBulk(std::string_view fieldName);
 
+   /// Non-const access to the root field is used to commit clusters during writing
+   /// and to set the on-disk field IDs when connecting a model to a page source or sink.
+   RFieldZero &GetFieldZero();
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
    const Detail::RFieldBase &GetField(std::string_view fieldName) const;
 

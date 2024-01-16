@@ -67,7 +67,7 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
-   auto &fieldZero = RNTupleModel::RFieldProxy::GetFieldZeroOf(model);
+   auto &fieldZero = model.GetFieldZero();
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
    fieldZero.SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
    for (auto &field : fieldZero) {
@@ -340,7 +340,7 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
    {
       throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
-   for (auto &field : RNTupleModel::RFieldProxy::GetFieldZeroOf(*fModel)) {
+   for (auto &field : fModel->GetFieldZero()) {
       field.CommitCluster();
    }
    auto nEntriesInCluster = fNEntries - fLastCommitted;

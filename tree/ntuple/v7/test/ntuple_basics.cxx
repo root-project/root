@@ -414,6 +414,7 @@ TEST(RNTupleModel, GetField)
    auto m = RNTupleModel::Create();
    m->MakeField<int>("x");
    m->MakeField<CustomStruct>("cs");
+   m->Freeze();
    EXPECT_EQ(m->GetField("x").GetName(), "x");
    EXPECT_EQ(m->GetField("x").GetType(), "std::int32_t");
    EXPECT_EQ(m->GetField("cs.v1").GetName(), "v1");
