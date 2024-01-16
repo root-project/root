@@ -613,6 +613,7 @@ string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
 string(REGEX MATCHALL "(-Wp,)?-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
 set(ROOT_COMPILER_FLAG_HINTS "#
 set(ROOT_DEFINITIONS \"${__defs}\")
+set(ROOT_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 set(ROOT_CXX_FLAGS \"${__cxxflags}\")
 set(ROOT_C_FLAGS \"${__cflags}\")
 set(ROOT_fortran_FLAGS \"${__fflags}\")
@@ -723,9 +724,11 @@ if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/ginclude/compiledata.h NEWLINE_STYLE UNIX)
 else()
+  # Needed by ACLIC, while in ROOT we are using everywhere C++ standard via CMake features that are requested to build target
+  set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
-        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
+        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
 endif()
