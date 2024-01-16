@@ -28,7 +28,7 @@ void ROOT::Experimental::REntry::CaptureValueUnsafe(std::string_view fieldName, 
    for (std::size_t i = 0; i < fValues.size(); ++i) {
       if (fValues[i].GetField().GetName() != fieldName)
          continue;
-      fValues[i].BindValue(where);
+      fValues[i].Bind(where);
       return;
    }
    throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
