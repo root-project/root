@@ -46,6 +46,17 @@ inline double bifurGaussEvaluate(double x, double mean, double sigmaL, double si
    return gaussianEvaluate(x, mean, sigmaR);
 }
 
+inline double efficiencyEvaluate(double effFuncVal, int catIndex, int sigCatIndex)
+{
+   // Truncate efficiency function in range 0.0-1.0
+   effFuncVal = std::clamp(effFuncVal, 0.0, 1.0);
+
+   if (catIndex == sigCatIndex)
+      return effFuncVal; // Accept case
+   else
+      return 1 - effFuncVal; // Reject case
+}
+
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
 template <bool pdfMode = false>
 inline double polynomialEvaluate(double const *coeffs, int nCoeffs, int lowestOrder, double x)
