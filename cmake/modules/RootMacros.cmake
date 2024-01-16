@@ -915,10 +915,6 @@ function(ROOT_LINKER_LIBRARY library)
     target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
   endif()
 
-  if(DEFINED CMAKE_CXX_STANDARD)
-    target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
-  endif()
-
   if(PROJECT_NAME STREQUAL "ROOT")
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
