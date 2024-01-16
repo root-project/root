@@ -327,8 +327,6 @@ public:
    std::unique_ptr<REntry> CreateBareEntry() const;
    REntry *GetDefaultEntry() const;
 
-   Detail::RFieldBase::RBulk GenerateBulk(std::string_view fieldName);
-
    /// Non-const access to the root field is used to commit clusters during writing
    /// and to set the on-disk field IDs when connecting a model to a page source or sink.
    RFieldZero &GetFieldZero();

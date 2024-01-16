@@ -14,20 +14,26 @@ TEST(RNTupleBulk, Simple)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   auto bulk = reader->GetModel()->GenerateBulk("int");
+   // TODO(jblomer): find a better way to expose the GenerateBulk method of the target field
+   std::unique_ptr<RFieldBase::RBulk> bulk;
+   for (auto &f : reader->GetModel()->GetFieldZero()) {
+      if (f.GetName() != "int")
+         continue;
+      bulk = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+   }
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, true);
-   auto intArr5 = static_cast<int *>(bulk.ReadBulk(RClusterIndex(0, 0), mask.get(), 5));
+   auto intArr5 = static_cast<int *>(bulk->ReadBulk(RClusterIndex(0, 0), mask.get(), 5));
    for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, intArr5[i]);
    }
 
-   auto intArr1 = static_cast<int *>(bulk.ReadBulk(RClusterIndex(0, 1), mask.get(), 1));
+   auto intArr1 = static_cast<int *>(bulk->ReadBulk(RClusterIndex(0, 1), mask.get(), 1));
    EXPECT_EQ(1, intArr1[0]);
    EXPECT_EQ(static_cast<int *>(intArr5) + 1, static_cast<int *>(intArr1));
 
-   auto intArr10 = static_cast<int *>(bulk.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto intArr10 = static_cast<int *>(bulk->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
    for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(i, intArr10[i]);
    }
@@ -47,27 +53,32 @@ TEST(RNTupleBulk, Complex)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   auto bulk = reader->GetModel()->GenerateBulk("S");
+   std::unique_ptr<RFieldBase::RBulk> bulk;
+   for (auto &f : reader->GetModel()->GetFieldZero()) {
+      if (f.GetName() != "S")
+         continue;
+      bulk = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+   }
    auto mask = std::make_unique<bool[]>(10);
    for (unsigned int i = 0; i < 10; ++i)
       mask[i] = (i % 2 == 0);
 
-   auto SArr5 = static_cast<CustomStruct *>(bulk.ReadBulk(RClusterIndex(0, 0), mask.get(), 5));
+   auto SArr5 = static_cast<CustomStruct *>(bulk->ReadBulk(RClusterIndex(0, 0), mask.get(), 5));
    for (int i = 0; i < 5; ++i) {
       EXPECT_FLOAT_EQ((i % 2 == 0) ? float(i) : 0.0, SArr5[i].a);
    }
 
-   auto SArr1 = static_cast<CustomStruct *>(bulk.ReadBulk(RClusterIndex(0, 1), mask.get() + 1, 1));
+   auto SArr1 = static_cast<CustomStruct *>(bulk->ReadBulk(RClusterIndex(0, 1), mask.get() + 1, 1));
    EXPECT_FLOAT_EQ(0.0, SArr1[0].a);
    EXPECT_EQ(static_cast<CustomStruct *>(SArr5) + 1, static_cast<CustomStruct *>(SArr1));
 
-   SArr1 = static_cast<CustomStruct *>(bulk.ReadBulk(RClusterIndex(0, 1), mask.get(), 1));
+   SArr1 = static_cast<CustomStruct *>(bulk->ReadBulk(RClusterIndex(0, 1), mask.get(), 1));
    EXPECT_FLOAT_EQ(1.0, SArr1[0].a);
    EXPECT_EQ(static_cast<CustomStruct *>(SArr5) + 1, static_cast<CustomStruct *>(SArr1));
 
    for (unsigned int i = 0; i < 10; ++i)
       mask[i] = !mask[i];
-   auto SArr10 = static_cast<CustomStruct *>(bulk.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto SArr10 = static_cast<CustomStruct *>(bulk->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
    for (int i = 0; i < 10; ++i) {
       EXPECT_FLOAT_EQ((i % 2 == 0) ? 0.0 : float(i), SArr10[i].a);
    }
@@ -95,14 +106,20 @@ TEST(RNTupleBulk, CardinalityField)
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
 
-   auto bulk32 = reader->GetModel()->GenerateBulk("card32");
-   auto bulk64 = reader->GetModel()->GenerateBulk("card64");
+   std::unique_ptr<RFieldBase::RBulk> bulk32;
+   std::unique_ptr<RFieldBase::RBulk> bulk64;
+   for (auto &f : reader->GetModel()->GetFieldZero()) {
+      if (f.GetName() == "card32")
+         bulk32 = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+      if (f.GetName() == "card64")
+         bulk64 = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+   }
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, false /* the cardinality field optimization should ignore the mask */);
 
-   auto card32Arr = static_cast<std::uint32_t *>(bulk32.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
-   auto card64Arr = static_cast<std::uint64_t *>(bulk64.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto card32Arr = static_cast<std::uint32_t *>(bulk32->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto card64Arr = static_cast<std::uint64_t *>(bulk64->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
    for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(i, card32Arr[i]);
       EXPECT_EQ(i, card64Arr[i]);
@@ -136,17 +153,25 @@ TEST(RNTupleBulk, RVec)
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
 
-   auto bulkI = reader->GetModel()->GenerateBulk("vint");
-   auto bulkS = reader->GetModel()->GenerateBulk("vs");
-   auto bulkVI = reader->GetModel()->GenerateBulk("vvint");
+   std::unique_ptr<RFieldBase::RBulk> bulkI;
+   std::unique_ptr<RFieldBase::RBulk> bulkS;
+   std::unique_ptr<RFieldBase::RBulk> bulkVI;
+   for (auto &f : reader->GetModel()->GetFieldZero()) {
+      if (f.GetName() == "vint")
+         bulkI = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+      if (f.GetName() == "vs")
+         bulkS = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+      if (f.GetName() == "vvint")
+         bulkVI = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+   }
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, true);
    mask[1] = false; // the RVec<simple type> field optimization should ignore the mask
 
-   auto iArr = static_cast<ROOT::RVecI *>(bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
-   auto sArr = static_cast<ROOT::RVec<CustomStruct> *>(bulkS.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
-   auto viArr = static_cast<ROOT::RVec<ROOT::RVecI> *>(bulkVI.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto iArr = static_cast<ROOT::RVecI *>(bulkI->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto sArr = static_cast<ROOT::RVec<CustomStruct> *>(bulkS->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto viArr = static_cast<ROOT::RVec<ROOT::RVecI> *>(bulkVI->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
    for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(i, iArr[i].size());
       EXPECT_EQ(i == 1 ? 0 : i, sArr[i].size());
