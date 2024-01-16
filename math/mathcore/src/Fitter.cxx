@@ -154,6 +154,7 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
    }
 
    fBinFit = chi2fit;
+   if (chi2fit) fFitType = static_cast<int>(ROOT::Math::FitMethodFunction::kLeastSquare);
    fDataSize = dataSize;
 
    // store external provided FCN without cloning it
