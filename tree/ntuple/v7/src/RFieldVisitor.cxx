@@ -136,7 +136,7 @@ void ROOT::Experimental::RPrintValueVisitor::PrintCollection(const Detail::RFiel
       options.fPrintSingleLine = true;
       options.fPrintName = false;
       RPrintValueVisitor elemVisitor(iValue->GetNonOwningCopy(), fOutput, 0 /* level */, options);
-      iValue->GetField()->AcceptVisitor(elemVisitor);
+      iValue->GetField().AcceptVisitor(elemVisitor);
 
       if (++iValue == elems.end())
          break;
@@ -316,7 +316,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
       RPrintValueVisitor visitor(iValue->GetNonOwningCopy(), fOutput, fLevel + 1, options);
-      iValue->GetField()->AcceptVisitor(visitor);
+      iValue->GetField().AcceptVisitor(visitor);
 
       if (++iValue == elems.end()) {
          if (!fPrintOptions.fPrintSingleLine)
@@ -346,7 +346,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
       RPrintValueVisitor visitor(iValue->GetNonOwningCopy(), fOutput, fLevel + 1, options);
-      iValue->GetField()->AcceptVisitor(visitor);
+      iValue->GetField().AcceptVisitor(visitor);
 
       if (++iValue == elems.end()) {
          if (!fPrintOptions.fPrintSingleLine)
@@ -374,7 +374,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitNullableField(const RNullableF
       options.fPrintSingleLine = true;
       options.fPrintName = false;
       RPrintValueVisitor visitor(elems[0].GetNonOwningCopy(), fOutput, fLevel, options);
-      elems[0].GetField()->AcceptVisitor(visitor);
+      elems[0].GetField().AcceptVisitor(visitor);
    }
 }
 
@@ -387,7 +387,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitEnumField(const REnumField &fi
    options.fPrintSingleLine = true;
    options.fPrintName = false;
    RPrintValueVisitor visitor(intValue.GetNonOwningCopy(), fOutput, fLevel, options);
-   intValue.GetField()->AcceptVisitor(visitor);
+   intValue.GetField().AcceptVisitor(visitor);
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitAtomicField(const RAtomicField &field)
@@ -399,7 +399,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitAtomicField(const RAtomicField
    options.fPrintSingleLine = true;
    options.fPrintName = false;
    RPrintValueVisitor visitor(itemValue.GetNonOwningCopy(), fOutput, fLevel, options);
-   itemValue.GetField()->AcceptVisitor(visitor);
+   itemValue.GetField().AcceptVisitor(visitor);
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitProxiedCollectionField(const RProxiedCollectionField &field)
