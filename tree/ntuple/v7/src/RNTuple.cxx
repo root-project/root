@@ -65,11 +65,12 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 
 //------------------------------------------------------------------------------
 
-void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model)
+void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
+   auto &fieldZero = RNTupleModel::RFieldProxy::GetFieldZeroOf(model);
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
-   model.GetFieldZero()->SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
-   for (auto &field : *model.GetFieldZero()) {
+   fieldZero.SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
+   for (auto &field : fieldZero) {
       // If the model has been created from the descritor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
@@ -200,7 +201,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       RPrintSchemaVisitor printVisitor(output);
 
       // Note that we do not need to connect the model, we are only looking at its tree of fields
-      fullModel->GetFieldZero()->AcceptVisitor(prepVisitor);
+      fullModel->GetFieldZero().AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
@@ -210,7 +211,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
-      fullModel->GetFieldZero()->AcceptVisitor(printVisitor);
+      fullModel->GetFieldZero().AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
@@ -339,7 +340,7 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
    {
       throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
-   for (auto &field : *fModel->GetFieldZero()) {
+   for (auto &field : RNTupleModel::RFieldProxy::GetFieldZeroOf(*fModel)) {
       field.CommitCluster();
    }
    auto nEntriesInCluster = fNEntries - fLastCommitted;

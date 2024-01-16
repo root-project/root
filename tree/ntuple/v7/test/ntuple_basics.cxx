@@ -9,6 +9,7 @@ TEST(RNTuple, ReconstructModel)
    auto fieldKlass = model->MakeField<CustomStruct>("klass");
    auto fieldArray = model->MakeField<std::array<double, 2>>("array");
    auto fieldVariant = model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
+   model->Freeze();
    {
       RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
       sink.Create(*model.get());
@@ -419,7 +420,7 @@ TEST(RNTupleModel, GetField)
    EXPECT_EQ(m->GetField("cs.v1")->GetType(), "std::vector<float>");
    EXPECT_EQ(m->GetField("nonexistent"), nullptr);
    EXPECT_EQ(m->GetField(""), nullptr);
-   EXPECT_EQ("", m->GetFieldZero()->GetQualifiedFieldName());
+   EXPECT_EQ("", m->GetFieldZero().GetQualifiedFieldName());
    EXPECT_EQ("x", m->GetField("x")->GetQualifiedFieldName());
    EXPECT_EQ("cs", m->GetField("cs")->GetQualifiedFieldName());
    EXPECT_EQ("cs.v1", m->GetField("cs.v1")->GetQualifiedFieldName());
