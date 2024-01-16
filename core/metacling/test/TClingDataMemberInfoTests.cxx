@@ -223,19 +223,19 @@ protected:
 
 TEST(TClingDataMemberInfo, Offset)
 {
-   gInterpreter->Declare("int ROOT_7459 = 42; ROOT_7459++;");
+   gInterpreter->ProcessLine("int ROOT_7459 = 42; ROOT_7459++;");
    EXPECT_TRUE(43 == *(int*)gROOT->GetGlobal("ROOT_7459")->GetAddress());
 
-   gInterpreter->Declare("constexpr int var1 = 1;");
+   gInterpreter->ProcessLine("constexpr int var1 = 1;");
    EXPECT_TRUE(1 == *(int*)gROOT->GetGlobal("var1")->GetAddress());
 
-   gInterpreter->Declare("static constexpr int var2 = -2;");
+   gInterpreter->ProcessLine("static constexpr int var2 = -2;");
    EXPECT_TRUE(-2 == *(int*)gROOT->GetGlobal("var2")->GetAddress());
 
-   gInterpreter->Declare("const float var3 = 3.1;");
+   gInterpreter->ProcessLine("const float var3 = 3.1;");
    EXPECT_FLOAT_EQ(3.1, *(float*)gROOT->GetGlobal("var3")->GetAddress());
 
-   gInterpreter->Declare("static const double var4 = 4.2;");
+   gInterpreter->ProcessLine("static const double var4 = 4.2;");
    EXPECT_DOUBLE_EQ(4.2, *(double*)gROOT->GetGlobal("var4")->GetAddress());
 
    // Make sure ROOT's Core constexpr constants work
