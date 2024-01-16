@@ -185,7 +185,7 @@ public:
       std::size_t Append() { return fField->Append(fObjPtr); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
       void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
-      void BindValue(void *objPtr)
+      void Bind(void *objPtr)
       {
          DestroyIfOwning();
          fObjPtr = objPtr;
