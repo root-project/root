@@ -127,6 +127,8 @@ void combinedFit()
    ROOT::Fit::FitResult result = fitter.Result();
    result.Print(std::cout);
 
+   std::cout << "Combined fit Chi2 = " << result.Chi2() << std::endl;
+
    TCanvas *c1 = new TCanvas("Simfit", "Simultaneous fit of two histograms", 10, 10, 700, 700);
    c1->Divide(1, 2);
    c1->cd(1);
