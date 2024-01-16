@@ -12,7 +12,7 @@ for %%u in (
    " [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--tutdir]"
    " [--has-<feature>] [--arch] [--platform] [--config] [--features] [--ncpu]"
    " [--git-revision] [--python-version] [--python2-version] [--python3-version]"
-   " [--cc] [--cxx] [--f77] [--ld ] [--help]"
+   " [--cc] [--cxx] [--cxxstandard] [--f77] [--ld ] [--help]"
 ) do set usage=!usage!%%~u^
 
 
@@ -132,6 +132,9 @@ for %%w in (%*) do (
    )
    if "!arg!"=="--python3-version" (
       set out=!$out! @python3vers@
+   )
+   if "!arg!"=="--cxxstandard" (
+      set out=!out! @CMAKE_CXX_STANDARD@
    )
    if "!arg!"=="--cflags" (
       set out=!out! !cxxflags! -I!incdir!
