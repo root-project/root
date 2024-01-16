@@ -149,7 +149,7 @@ output_transform.OutputGenerated()
 fileOut = ROOT.TFile.Open("graph_data.root","RECREATE")
 tree = ROOT.TTree("gdata","GNN data")
 #need to store each element since annot store RTensor
-#node_data = TMVA.Experimental.RTensor['float']([1,node_size])
+
 node_data = ROOT.std.vector['float'](num_max_nodes*node_size)
 edge_data = ROOT.std.vector['float'](num_max_edges*edge_size)
 global_data = ROOT.std.vector['float'](global_size)
@@ -157,13 +157,11 @@ receivers =  ROOT.std.vector['int'](num_max_edges)
 senders = ROOT.std.vector['int'](num_max_edges)
 outgnn = ROOT.std.vector['float'](3)
 
-#input_data = ROOT.TMVA.Experimental.SOFIE.GNN_Data()
-tree.Branch("node_data", "std::vector<float>" , ROOT.std.addressof(node_data))
-tree.Branch("edge_data", "std::vector<float>" ,  ROOT.std.addressof(edge_data))
-tree.Branch("global_data", "std::vector<float>" ,  ROOT.std.addressof(global_data))
-tree.Branch("receivers", "std::vector<int>" ,  ROOT.std.addressof(receivers))
-tree.Branch("senders", "std::vector<int>" ,  ROOT.std.addressof(senders))
-#tree.Branch("gnn_output","std::vector<float>", ROOT.std.addressof(outgnn))
+tree.Branch("node_data", "std::vector<float>" , node_data)
+tree.Branch("edge_data", "std::vector<float>" ,  edge_data)
+tree.Branch("global_data", "std::vector<float>" ,  global_data)
+tree.Branch("receivers", "std::vector<int>" ,  receivers)
+tree.Branch("senders", "std::vector<int>" ,  senders)
 
 
 print("\n\nSaving data in a ROOT File:")
