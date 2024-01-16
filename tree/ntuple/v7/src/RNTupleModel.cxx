@@ -120,7 +120,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Clone(const RNTupleModel *ne
    for (const auto &[k, v] : fFieldMap) {
       for (const auto &f : *clone->GetFieldZero()) {
          if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
-            clone->fFieldMap[&f] = clone->fModel->GetField(v->GetQualifiedFieldName());
+            clone->fFieldMap[&f] = clone->fModel->FindField(v->GetQualifiedFieldName());
             break;
          }
       }
@@ -272,12 +272,12 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<Detail::RFie
    auto fieldName = field->GetName();
 
    RProjectedFields::FieldMap_t fieldMap;
-   auto sourceField = GetField(mapping(fieldName));
+   auto sourceField = FindField(mapping(fieldName));
    if (!sourceField)
       return R__FAIL("no such field: " + mapping(fieldName));
    fieldMap[field.get()] = sourceField;
    for (const auto &subField : *field) {
-      sourceField = GetField(mapping(subField.GetQualifiedFieldName()));
+      sourceField = FindField(mapping(subField.GetQualifiedFieldName()));
       if (!sourceField)
          return R__FAIL("no such field: " + mapping(fieldName));
       fieldMap[&subField] = sourceField;
@@ -313,26 +313,14 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    return collectionWriter;
 }
 
-const ROOT::Experimental::Detail::RFieldBase *
+const ROOT::Experimental::Detail::RFieldBase &
 ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
-   if (fieldName.empty())
-      return nullptr;
+   auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("invalid field: " + std::string(fieldName)));
 
-   auto *field = static_cast<ROOT::Experimental::Detail::RFieldBase *>(fFieldZero.get());
-   for (auto subfieldName : ROOT::Split(fieldName, ".")) {
-      const auto subfields = field->GetSubFields();
-      auto it =
-         std::find_if(subfields.begin(), subfields.end(), [&](const auto *f) { return f->GetName() == subfieldName; });
-      if (it != subfields.end()) {
-         field = *it;
-      } else {
-         field = nullptr;
-         break;
-      }
-   }
-
-   return field;
+   return *f;
 }
 
 ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
