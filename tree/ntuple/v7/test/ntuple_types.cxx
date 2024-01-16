@@ -42,7 +42,7 @@ TEST(RNTuple, EnumBasics)
    auto ptrVecEnum = model->MakeField<std::vector<CustomEnum>>("ve");
    model->MakeField<StructWithEnums>("swe");
 
-   EXPECT_EQ(model->GetField("e")->GetType(), f->GetType());
+   EXPECT_EQ(model->GetField("e").GetType(), f->GetType());
 
    FileRaii fileGuard("test_ntuple_enum_basics.root");
    {
@@ -981,8 +981,8 @@ TEST(RNTuple, Bitset)
    auto model = RNTupleModel::Create();
 
    auto f1 = model->MakeField<std::bitset<66>>("f1");
-   EXPECT_EQ(std::string("std::bitset<66>"), model->GetField("f1")->GetType());
-   EXPECT_EQ(sizeof(std::bitset<66>), model->GetField("f1")->GetValueSize());
+   EXPECT_EQ(std::string("std::bitset<66>"), model->GetField("f1").GetType());
+   EXPECT_EQ(sizeof(std::bitset<66>), model->GetField("f1").GetValueSize());
    auto f2 = model->MakeField<std::bitset<8>>("f2", "10101010");
 
    {
@@ -997,7 +997,7 @@ TEST(RNTuple, Bitset)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel()->GetField("f1")->GetType());
+   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel()->GetField("f1").GetType());
    auto bs1 = reader->GetModel()->GetDefaultEntry()->Get<std::bitset<66>>("f1");
    auto bs2 = reader->GetModel()->GetDefaultEntry()->Get<std::bitset<8>>("f2");
    reader->LoadEntry(0);
@@ -1049,32 +1049,32 @@ TYPED_TEST(UniquePtr, Basics)
       AddUniquePtrField<std::unique_ptr<std::string>, typename TestFixture::Tag_t>(*model, "PPString");
       AddUniquePtrField<std::array<char, 2>, typename TestFixture::Tag_t>(*model, "PArray");
 
-      EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool")->GetType());
-      EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct")->GetType());
-      EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor")->GetType());
-      EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString")->GetType());
-      EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray")->GetType());
+      EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool").GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct").GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor").GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString").GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray").GetType());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
 
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PBool")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PCustomStruct")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PArray")).IsDense());
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PIOConstructor"))->IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PPString"))->IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PBool")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PCustomStruct")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PIOConstructor")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PPString")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PArray")).IsSparse());
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PIOConstructor"))->IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PPString"))->IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PBool")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PCustomStruct")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PIOConstructor")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PPString")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PArray")).IsDense());
       }
 
       auto pBool = writer->GetModel()->Get<std::unique_ptr<bool>>("PBool");
@@ -1113,11 +1113,11 @@ TYPED_TEST(UniquePtr, Basics)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto model = reader->GetModel();
-   EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool")->GetType());
-   EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct")->GetType());
-   EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor")->GetType());
-   EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString")->GetType());
-   EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray")->GetType());
+   EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool").GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct").GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor").GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString").GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray").GetType());
 
    auto entry = reader->GetModel()->GetDefaultEntry();
    auto pBool = entry->Get<std::unique_ptr<bool>>("PBool");
@@ -1328,10 +1328,10 @@ TEST(RNTuple, Double32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kReal32, reader->GetModel()->GetField("d1")->GetColumnRepresentative()[0]);
-   EXPECT_EQ("", reader->GetModel()->GetField("d1")->GetTypeAlias());
-   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel()->GetField("d2")->GetColumnRepresentative()[0]);
-   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("d2")->GetTypeAlias());
+   EXPECT_EQ(EColumnType::kReal32, reader->GetModel()->GetField("d1").GetColumnRepresentative()[0]);
+   EXPECT_EQ("", reader->GetModel()->GetField("d1").GetTypeAlias());
+   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel()->GetField("d2").GetColumnRepresentative()[0]);
+   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("d2").GetTypeAlias());
    auto d1 = reader->GetModel()->GetDefaultEntry()->Get<double>("d1");
    auto d2 = reader->GetModel()->GetDefaultEntry()->Get<double>("d2");
    reader->LoadEntry(0);
@@ -1385,8 +1385,8 @@ TEST(RNTuple, Double32Extended)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto obj = reader->GetModel()->GetDefaultEntry()->Get<LowPrecisionFloats>("obj");
-   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj")->GetSubFields()[1]->GetTypeAlias());
-   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj")->GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
+   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj").GetSubFields()[1]->GetTypeAlias());
+   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
    EXPECT_DOUBLE_EQ(0.0, obj->a);
    EXPECT_DOUBLE_EQ(1.0, obj->b);
    EXPECT_DOUBLE_EQ(2.0, obj->c[0]);
@@ -1556,8 +1556,8 @@ TEST(RNTuple, TClassTemplateBased)
 
    auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
 
-   auto fieldObject = reader->GetModel()->GetField("klass");
-   EXPECT_EQ("EdmWrapper<CustomStruct>", fieldObject->GetType());
+   const auto &fieldObject = reader->GetModel()->GetField("klass");
+   EXPECT_EQ("EdmWrapper<CustomStruct>", fieldObject.GetType());
    auto object = reader->GetModel()->GetDefaultEntry()->Get<EdmWrapper<CustomStruct>>("klass");
    reader->LoadEntry(0);
    EXPECT_TRUE(object->fIsPresent);

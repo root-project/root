@@ -347,7 +347,7 @@ public:
    Detail::RFieldBase::RBulk GenerateBulk(std::string_view fieldName);
 
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
-   const Detail::RFieldBase *GetField(std::string_view fieldName) const;
+   const Detail::RFieldBase &GetField(std::string_view fieldName) const;
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
