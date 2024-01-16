@@ -747,6 +747,10 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    bool is_longpoll = arg.GetFileName() && ("root.longpoll"s == arg.GetFileName()),
         is_remote = arg.GetTopName() && ("remote"s == arg.GetTopName());
 
+   // do not allow longpoll requests for loopback device
+   if (is_longpoll && is_remote && RWebWindowsManager::IsLoopbackMode())
+      return false;
+
    if (arg.IsMethod("WS_CONNECT")) {
 
       TUrl url;

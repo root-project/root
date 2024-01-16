@@ -99,6 +99,7 @@ public:
    static void AssignMainThrd();
 
    static void SetLoopbackMode(bool on = true);
+   static bool IsLoopbackMode();
 
    static void SetUseSessionKey(bool on = false);
 };
