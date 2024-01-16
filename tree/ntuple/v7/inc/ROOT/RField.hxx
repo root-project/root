@@ -185,6 +185,12 @@ public:
       std::size_t Append() { return fField->Append(fObjPtr); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
       void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
+      void BindValue(void *objPtr)
+      {
+         DestroyIfOwning();
+         fObjPtr = objPtr;
+         fIsOwning = false;
+      }
 
       template <typename T>
       T *Get() const
@@ -192,7 +198,7 @@ public:
          return static_cast<T *>(fObjPtr);
       }
       void *GetRawPtr() const { return fObjPtr; }
-      RFieldBase *GetField() const { return fField; }
+      const RFieldBase &GetField() const { return *fField; }
    }; // class RValue
 
    /// Similar to RValue but manages an array of consecutive values. Bulks have to come from the same cluster.
