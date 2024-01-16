@@ -191,27 +191,29 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
 }
 
-ROOT::Experimental::RNTupleModel::RNTupleModel()
-  : fFieldZero(std::make_unique<RFieldZero>())
+ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero))
 {}
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::RNTupleModel::CreateBare(std::unique_ptr<RFieldZero> fieldZero)
 {
-   auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel());
+   auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel(std::move(fieldZero)));
    model->fProjectedFields = std::make_unique<RProjectedFields>(model.get());
    return model;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::RNTupleModel::Create(std::unique_ptr<RFieldZero> fieldZero)
 {
-   auto model = CreateBare();
+   auto model = CreateBare(std::move(fieldZero));
    model->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
    return model;
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Clone() const
 {
-   auto cloneModel = std::unique_ptr<RNTupleModel>(new RNTupleModel());
+   auto cloneModel = std::unique_ptr<RNTupleModel>(
+      new RNTupleModel(std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()))));
    auto cloneFieldZero = fFieldZero->Clone("");
    cloneModel->fModelId = fModelId;
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
@@ -227,6 +229,26 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    return cloneModel;
 }
 
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::FindField(std::string_view fieldName) const
+{
+   if (fieldName.empty())
+      return nullptr;
+
+   auto *field = static_cast<ROOT::Experimental::Detail::RFieldBase *>(fFieldZero.get());
+   for (auto subfieldName : ROOT::Split(fieldName, ".")) {
+      const auto subfields = field->GetSubFields();
+      auto it =
+         std::find_if(subfields.begin(), subfields.end(), [&](const auto *f) { return f->GetName() == subfieldName; });
+      if (it != subfields.end()) {
+         field = *it;
+      } else {
+         field = nullptr;
+         break;
+      }
+   }
+
+   return field;
+}
 
 void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
@@ -343,6 +365,18 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
       entry->AddValue(f->BindValue(nullptr));
    }
    return entry;
+}
+
+ROOT::Experimental::Detail::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::GenerateBulk(std::string_view fieldName)
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
+
+   auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+
+   return f->GenerateBulk();
 }
 
 void ROOT::Experimental::RNTupleModel::Unfreeze()
