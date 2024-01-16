@@ -138,6 +138,14 @@ void RWebWindowsManager::SetLoopbackMode(bool on)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if loopback mode used by THttpServer for web widgets
+
+bool RWebWindowsManager::IsLoopbackMode()
+{
+   return gWebWinLoopbackMode;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Enable or disable usage of session key
 /// If enabled, each packet send to or from server is signed with special hashsum
 /// This protects http server from different attacks to get access to server functionality
