@@ -55,9 +55,9 @@ void MakeTimeData(int n, int ntime, int ndim )
    auto f1 = new TF1("f1", "gaus");
    auto f2 = new TF1("f2", "gaus");
 
+   TFile f(fname, "RECREATE");
    TTree sgn("sgn", "sgn");
    TTree bkg("bkg", "bkg");
-   TFile f(fname, "RECREATE");
 
    std::vector<std::vector<float>> x1(ntime);
    std::vector<std::vector<float>> x2(ntime);
