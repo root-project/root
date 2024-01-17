@@ -19,10 +19,10 @@
 \class RooConvCoefVar
 \ingroup Roofitcore
 
-RooConvCoefVar is an auxilary class that represents the coefficient
+RooConvCoefVar is an auxiliary class that represents the coefficient
 of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object
 to be able to interface these coefficient terms with the generic
-RooRealIntegral integration mechanism
+RooRealIntegral integration mechanism.
 **/
 
 #include "RooAbsAnaConvPdf.h"
@@ -31,12 +31,11 @@ RooRealIntegral integration mechanism
 using namespace std;
 
 ClassImp(RooConvCoefVar);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constuctor given a RooAbsAnaConvPdf a coefficient index and a set with the
-/// convoluted observable(s)
+/// Constructor given a RooAbsAnaConvPdf a coefficient index and a set with the
+/// convoluted observable(s).
 
 RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input,
                 Int_t coefIdx, const RooArgSet* varList) :

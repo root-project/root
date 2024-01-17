@@ -199,7 +199,7 @@ namespace RooStats {
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataSet.  You own the returned RooDataSet*
-      virtual RooDataSet* GetChainAsDataSet(RooArgSet* whichVars = nullptr)
+      virtual RooFit::OwningPtr<RooDataSet> GetChainAsDataSet(RooArgSet* whichVars = nullptr)
       { return fChain->GetAsDataSet(whichVars); }
 
       /// Get the markov chain on which this interval is based
@@ -209,7 +209,7 @@ namespace RooStats {
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataHist.  You own the returned RooDataHist*
-      virtual RooDataHist* GetChainAsDataHist(RooArgSet* whichVars = nullptr)
+      virtual RooFit::OwningPtr<RooDataHist> GetChainAsDataHist(RooArgSet* whichVars = nullptr)
       { return fChain->GetAsDataHist(whichVars); }
 
       /// Get a clone of the markov chain on which this interval is based

@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /** @file BidirMMapPipe.cxx
  *
  * implementation of BidirMMapPipe, a class which forks off a child process
@@ -6,11 +8,12 @@
  * @author Manuel Schiller <manuel.schiller@nikhef.nl>
  * @date 2013-07-07
  */
+
 #ifndef _WIN32
 
 #include "BidirMMapPipe.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include <map>
 #include <cerrno>
@@ -24,7 +27,7 @@
 
 #include <poll.h>
 #include <fcntl.h>
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -62,7 +65,7 @@ namespace BidirMMapPipe_impl {
             /// constructor taking error code, hint on operation (msg)
             BidirMMapPipeException(const char* msg, int err);
             /// return a destcription of what went wrong
-            virtual const char* what() const noexcept { return m_buf; }
+            const char* what() const noexcept override { return m_buf; }
     };
 
     BidirMMapPipeException::BidirMMapPipeException(const char* msg, int err)
@@ -114,7 +117,7 @@ namespace BidirMMapPipe_impl {
             unsigned short m_pos;       ///< index of next byte in payload area
             /// copy construction forbidden
             Page(const Page&) {}
-            /// assigment forbidden
+            /// assignment forbidden
             Page& operator=(const Page&) = delete;
         public:
             /// constructor
@@ -181,7 +184,7 @@ namespace BidirMMapPipe_impl {
 
     Page* Page::next() const
     {
-        if (!m_next) return 0;
+        if (!m_next) return nullptr;
         char* ptmp = reinterpret_cast<char*>(const_cast<Page*>(this));
         ptmp += std::ptrdiff_t(m_next) * PageChunk::pagesize();
         return reinterpret_cast<Page*>(ptmp);
@@ -415,7 +418,7 @@ namespace BidirMMapPipe_impl {
 #undef MYANONFLAG
 #endif
 #ifdef MYANONFLAG
-            void* retVal = ::mmap(0, len, PROT_READ | PROT_WRITE,
+            void* retVal = ::mmap(nullptr, len, PROT_READ | PROT_WRITE,
                     MYANONFLAG | MAP_SHARED, -1, 0);
             if (MAP_FAILED == retVal) {
                 if (Anonymous == s_mmapworks) throw Exception("mmap", errno);
@@ -440,7 +443,7 @@ namespace BidirMMapPipe_impl {
             int fd = ::open("/dev/zero", O_RDWR);
             if (-1 == fd)
                 throw Exception("open /dev/zero", errno);
-            void* retVal = ::mmap(0, len,
+            void* retVal = ::mmap(nullptr, len,
                     PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
             if (MAP_FAILED == retVal) {
                 int errsv = errno;
@@ -461,7 +464,8 @@ namespace BidirMMapPipe_impl {
             return retVal;
         }
         if (FileBacked == s_mmapworks || Unknown == s_mmapworks) {
-            std::string name = RooFit::tmpPath() + "BidirMMapPipe-XXXXXX";
+            std::string tmpPath = gSystem->TempDirectory();
+            std::string name = tmpPath + "/roofit_BidirMMapPipe-XXXXXX";
             int fd;
             // open temp file
             if (-1 == (fd = ::mkstemp(const_cast<char*>(name.c_str())))) throw Exception("mkstemp", errno);
@@ -484,7 +488,7 @@ namespace BidirMMapPipe_impl {
                 throw Exception("write", errsv);
             }
             // do mmap
-            void* retVal = ::mmap(0, len,
+            void* retVal = ::mmap(nullptr, len,
                     PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
             if (MAP_FAILED == retVal) {
                 int errsv = errno;
@@ -526,7 +530,7 @@ namespace BidirMMapPipe_impl {
         }
         // should never get here
         assert(false);
-        return 0;
+        return nullptr;
     }
 
     void PageChunk::domunmap(void* addr, unsigned len)
@@ -564,11 +568,11 @@ namespace BidirMMapPipe_impl {
             if (p1 != p0) ::mprotect(p0, p1 - p0, PROT_NONE);
             if (p2 != p3) ::mprotect(p2, p3 - p2, PROT_NONE);
         }
-        m_parent = 0;
+        m_parent = nullptr;
         m_freelist.clear();
         m_nUsedGrp = 1;
-        p.m_pimpl->m_parent = 0;
-        m_begin = m_end = 0;
+        p.m_pimpl->m_parent = nullptr;
+        m_begin = m_end = nullptr;
         // commit suicide
         delete this;
     }
@@ -712,7 +716,7 @@ namespace BidirMMapPipe_impl {
 // static BidirMMapPipe members
 pthread_mutex_t BidirMMapPipe::s_openpipesmutex = PTHREAD_MUTEX_INITIALIZER;
 std::list<BidirMMapPipe*> BidirMMapPipe::s_openpipes;
-BidirMMapPipe_impl::PagePool* BidirMMapPipe::s_pagepool = 0;
+BidirMMapPipe_impl::PagePool* BidirMMapPipe::s_pagepool = nullptr;
 unsigned BidirMMapPipe::s_pagepoolrefcnt = 0;
 int BidirMMapPipe::s_debugflag = 0;
 
@@ -743,12 +747,12 @@ BidirMMapPipe::BidirMMapPipe(const BidirMMapPipe&) :
     { BidirMMapPipe_impl::Pages p; p.swap(m_pages); }
     if (!s_pagepoolrefcnt) {
         delete s_pagepool;
-        s_pagepool = 0;
+        s_pagepool = nullptr;
     }
 }
 
 BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
-    m_pages(pagepool().pop()), m_busylist(0), m_freelist(0), m_dirtylist(0),
+    m_pages(pagepool().pop()), m_busylist(nullptr), m_freelist(nullptr), m_dirtylist(nullptr),
     m_inpipe(-1), m_outpipe(-1), m_flags(failbit), m_childPid(0),
     m_parentPid(::getpid())
 
@@ -772,7 +776,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
         // build free lists
         for (unsigned i = 1; i < TotPages; ++i)
             m_pages[i - 1]->setNext(m_pages[i]);
-        m_pages[PagesPerEnd - 1]->setNext(0);
+        m_pages[PagesPerEnd - 1]->setNext(nullptr);
         if (!useSocketpair) {
             // create pipes
             if (0 != ::pipe(&fds[0])) throw Exception("pipe", errno);
@@ -823,12 +827,12 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
                 pagepool().zap(m_pages);
                 s_pagepoolrefcnt = 0;
                 delete s_pagepool;
-                s_pagepool = 0;
+                s_pagepool = nullptr;
                 s_openpipes.push_front(this);
                 pthread_mutex_unlock(&s_openpipesmutex);
                 // ok, put our pages on freelist
                 m_freelist = m_pages[PagesPerEnd];
-                // handshare with other end (to make sure it's alive)...
+                // handshake with other end (to make sure it's alive)...
                 c = 'C'; // ...hild
                 if (1 != xferraw(m_outpipe, &c, 1, ::write))
                     throw Exception("handshake: xferraw write", EPIPE);
@@ -864,7 +868,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
                 pthread_mutex_unlock(&s_openpipesmutex);
                 // ok, put our pages on freelist
                 m_freelist = m_pages[0u];
-                // handshare with other end (to make sure it's alive)...
+                // handshake with other end (to make sure it's alive)...
                 c = 'P'; // ...arent
                 if (1 != xferraw(m_outpipe, &c, 1, ::write))
                     throw Exception("handshake: xferraw write", EPIPE);
@@ -901,7 +905,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
         }
         if (!--s_pagepoolrefcnt) {
             delete s_pagepool;
-            s_pagepool = 0;
+            s_pagepool = nullptr;
         }
         throw;
     }
@@ -966,12 +970,12 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
         { BidirMMapPipe_impl::Pages p; p.swap(m_pages); }
         if (!--s_pagepoolrefcnt) {
             delete s_pagepool;
-            s_pagepool = 0;
+            s_pagepool = nullptr;
         }
     } catch (std::exception&) {
         if (!force) throw;
     }
-    m_busylist = m_freelist = m_dirtylist = 0;
+    m_busylist = m_freelist = m_dirtylist = nullptr;
     // wait for child process
     int retVal = 0;
     if (isParent()) {
@@ -1067,7 +1071,7 @@ unsigned BidirMMapPipe::recvpages()
 {
     unsigned char pg;
     unsigned retVal = 0;
-    Page *plisthead = 0, *plisttail = 0;
+    Page *plisthead = nullptr, *plisttail = nullptr;
     if (1 == xferraw(m_inpipe, &pg, 1, ::read)) {
         plisthead = plisttail = m_pages[pg];
         // ok, have number of pages
@@ -1079,7 +1083,7 @@ unsigned BidirMMapPipe::recvpages()
                 if (sizeof(Page) == xferraw(m_inpipe, p, sizeof(Page),
                             ::read)) {
                     plisttail = p->next();
-                    if (!p->size()) continue;
+                    if (p->empty()) continue;
                     // break in case of read error
                     if (p->size() != xferraw(m_inpipe, p->begin(), p->size(),
                                 ::read)) break;
@@ -1137,13 +1141,13 @@ void BidirMMapPipe::feedPageLists(Page* plist)
     // ok, might have to send free pages to other end, and (if we do have to
     // send something to the other end) while we're at it, send any dirty
     // pages which are completely full, too
-    Page *sendlisthead = 0, *sendlisttail = 0;
+    Page *sendlisthead = nullptr, *sendlisttail = nullptr;
     // loop over plist
     while (plist) {
         Page* p = plist;
         plist = p->next();
-        p->setNext(0);
-        if (p->size()) {
+        p->setNext(nullptr);
+        if (!p->empty()) {
             // busy page...
             p->pos() = 0;
             // put at end of busy list
@@ -1178,7 +1182,7 @@ void BidirMMapPipe::feedPageLists(Page* plist)
             // move head of dirty list
             m_dirtylist = p->next();
             // queue for sending
-            p->setNext(0);
+            p->setNext(nullptr);
             sendlisttail->setNext(p);
             sendlisttail = p;
         }
@@ -1230,7 +1234,7 @@ void BidirMMapPipe::markPageDirty(Page* p)
     assert(p == m_freelist);
     // remove from freelist
     m_freelist = p->next();
-    p->setNext(0);
+    p->setNext(nullptr);
     // append to dirty list
     Page* dl = m_dirtylist;
     while (dl && dl->next()) dl = dl->next();
@@ -1245,7 +1249,7 @@ BidirMMapPipe::Page* BidirMMapPipe::busypage()
     Page* p;
     // if there are no busy pages, try to get them from the other end,
     // block if we have to...
-    while (!(p = m_busylist)) if (!recvpages()) return 0;
+    while (!(p = m_busylist)) if (!recvpages()) return nullptr;
     return p;
 }
 
@@ -1258,7 +1262,7 @@ BidirMMapPipe::Page* BidirMMapPipe::dirtypage()
     if (p) while (p->next()) p = p->next();
     if (!p || p->full()) {
         // need to append free page, so get one
-        while (!(p = m_freelist)) if (!recvpages()) return 0;
+        while (!(p = m_freelist)) if (!recvpages()) return nullptr;
         markPageDirty(p);
     }
     return p;
@@ -1271,13 +1275,13 @@ void BidirMMapPipe::doFlush(bool forcePartialPages)
 {
     assert(!(m_flags & failbit));
     // build a list of pages to flush
-    Page *flushlisthead = 0, *flushlisttail = 0;
+    Page *flushlisthead = nullptr, *flushlisttail = nullptr;
     while (m_dirtylist) {
         Page* p = m_dirtylist;
         if (!forcePartialPages && !p->full()) break;
         // remove dirty page from dirty list
         m_dirtylist = p->next();
-        p->setNext(0);
+        p->setNext(nullptr);
         // and send it to other end
         if (!flushlisthead) flushlisthead = p;
         if (flushlisttail) flushlisttail->setNext(p);
@@ -1300,7 +1304,7 @@ void BidirMMapPipe::purge()
     for (Page* p = m_busylist; p; p = p->next()) p->size() = 0;
     // put them on the free list
     if (m_busylist) feedPageLists(m_busylist);
-    m_busylist = m_dirtylist = 0;
+    m_busylist = m_dirtylist = nullptr;
 }
 
 BidirMMapPipe::size_type BidirMMapPipe::bytesReadableNonBlocking()
@@ -1384,7 +1388,7 @@ BidirMMapPipe::size_type BidirMMapPipe::read(void* addr, size_type sz)
             if (p->size() == p->pos()) {
                 // if no unread data remains, page is free
                 m_busylist = p->next();
-                p->setNext(0);
+                p->setNext(nullptr);
                 p->size() = 0;
                 feedPageLists(p);
             }
@@ -1998,3 +2002,5 @@ childcloses:
 #endif // _WIN32
 
 // vim: ft=cpp:sw=4:tw=78:et
+
+/// \endcond

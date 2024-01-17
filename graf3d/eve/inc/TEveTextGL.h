@@ -30,14 +30,14 @@ protected:
 
 public:
    TEveTextGL();
-   virtual ~TEveTextGL() {}
+   ~TEveTextGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   ClassDef(TEveTextGL, 0); // GL renderer class for TEveText.
+   ClassDefOverride(TEveTextGL, 0); // GL renderer class for TEveText.
 };
 
 #endif

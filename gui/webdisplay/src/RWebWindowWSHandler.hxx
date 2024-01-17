@@ -24,7 +24,6 @@
 using namespace std::string_literals;
 
 namespace ROOT {
-namespace Experimental {
 
 /// just wrapper to deliver websockets call-backs to the RWebWindow class
 
@@ -90,6 +89,10 @@ protected:
       int credits = gEnv->GetValue("WebGui.ConnCredits", 10);
       if ((credits > 0) && (credits != 10))
          more_args.append("credits: "s + std::to_string(credits) + ","s);
+      if ((fWindow.GetWidth() > 0) && (fWindow.GetHeight() > 0))
+         more_args.append("winW:"s + std::to_string(fWindow.GetWidth()) + ",winH:"s + std::to_string(fWindow.GetHeight()) + ","s);
+      if ((fWindow.GetX() >= 0) && (fWindow.GetY() >= 0))
+         more_args.append("winX:"s + std::to_string(fWindow.GetX()) + ",winY:"s + std::to_string(fWindow.GetY()) + ","s);
       auto user_args = fWindow.GetUserArgs();
       if (!user_args.empty())
          more_args.append("user_args: "s + user_args + ","s);
@@ -110,7 +113,7 @@ public:
    {
    }
 
-   virtual ~RWebWindowWSHandler() = default;
+   ~RWebWindowWSHandler() override = default;
 
    /// returns content of default web-page
    /// THttpWSHandler interface
@@ -124,9 +127,7 @@ public:
    Bool_t ProcessWS(THttpCallArg *arg) override
    {
       if (!arg || IsDisabled()) return kFALSE;
-      auto res = fWindow.ProcessWS(*arg);
-      fWindow.CheckThreadAssign();
-      return res;
+      return fWindow.ProcessWS(*arg);
    }
 
    /// Allow processing of WS actions in arbitrary thread
@@ -141,7 +142,6 @@ public:
    static int GetBoolEnv(const std::string &name, int dfl = -1);
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

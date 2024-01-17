@@ -403,7 +403,9 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get type of data member, e,g.: "class TDirectory*" -> "TDirectory".
+/// Get the decayed type name of this data member, removing `const` and `volatile` qualifiers, and pointers `*` and
+/// references `&`.  This function resolves typedefs in the type name. E.g., let `Foo_t` be a typedef to `class
+/// TDirectory`; assuming `this` is a member of type `const Foo_t*`, this function will return `TDirectory`.
 
 const char *TDataMember::GetTypeName() const
 {
@@ -412,7 +414,11 @@ const char *TDataMember::GetTypeName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get full type description of data member, e,g.: "class TDirectory*".
+/// Get the concrete type name of this data member, including `const` and `volatile` qualifiers.  This function does not
+/// resolve any typedef in the type name. E.g., let `Foo_t` be a typedef to `class TDirectory`; assuming `this` is a
+/// member of type `const Foo_t*`, this function will return `const Foo_t*`.
+///
+/// For the desugared type name, see TDataMember::GetTrueTypeName().
 
 const char *TDataMember::GetFullTypeName() const
 {
@@ -422,7 +428,9 @@ const char *TDataMember::GetFullTypeName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get full type description of data member, e,g.: "class TDirectory*".
+/// Get the desugared type name of this data member, including `const` and `volatile` qualifiers.  This function
+/// resolves typedefs in the type name. E.g., let `Foo_t` be a typedef to `class TDirectory`; assuming `this` is a
+/// member of type `const Foo_t*`, this function will return `const TDirectory*`.
 
 const char *TDataMember::GetTrueTypeName() const
 {
@@ -886,8 +894,8 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
          TString settername;
          settername.Form( "Set%s", dataname+1);
          if (strstr(settername, "Is")) settername.Form( "Set%s", dataname+3);
-         if (GetClass()->GetMethod(settername, "1"))
-            fValueSetter = new TMethodCall(cl, settername, "1");
+         if (GetClass()->GetMethod(settername, "0"))
+            fValueSetter = new TMethodCall(cl, settername, "0");
          if (!fValueSetter)
             if (GetClass()->GetMethod(settername, "true"))
                fValueSetter = new TMethodCall(cl, settername, "true");

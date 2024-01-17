@@ -32,7 +32,7 @@ protected:
 public:
    TImageDump();
    TImageDump(const char *filename, Int_t type = -111);
-   virtual ~TImageDump();
+   ~TImageDump() override;
 
    void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
    void  CellArrayFill(Int_t r, Int_t g, Int_t b) override;

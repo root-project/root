@@ -28,11 +28,15 @@ class RDFDescription {
 
    std::string fBriefDescription;
    std::string fFullDescription;
+   unsigned int fFileCount;
 
 public:
    RDFDescription(const std::string &briefDescription, const std::string &fullDescription);
+   RDFDescription(const std::string &briefDescription, const std::string &fullDescription, unsigned int filecount);
 
    std::string AsString(bool shortFormat = false) const;
+
+   unsigned int GetNFiles() const { return fFileCount; }
 
    void Print(bool shortFormat = false) const;
 

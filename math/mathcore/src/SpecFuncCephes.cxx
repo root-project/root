@@ -432,7 +432,7 @@ double beta(double z, double w)
 
 
 /*---------------------------------------------------------------------------*/
-/* inplementation of the incomplete beta function */
+/* implementation of the incomplete beta function */
 /**
  * DESCRIPTION:
  *

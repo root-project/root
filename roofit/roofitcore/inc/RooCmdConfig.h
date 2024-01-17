@@ -18,6 +18,7 @@
 #define ROO_CMD_CONFIG
 
 #include <RooCmdArg.h>
+#include <RooStringView.h>
 
 #include <TList.h>
 #include <TObjString.h>
@@ -31,7 +32,7 @@ class RooArgSet;
 class RooCmdConfig : public TObject {
 public:
 
-  RooCmdConfig(const char* methodName);
+  RooCmdConfig(RooStringView methodName);
   RooCmdConfig(const RooCmdConfig& other) ;
 
   /// If flag is true verbose messaging is activated
@@ -52,11 +53,11 @@ public:
   void defineMutex(const char* head, Args_t && ... tail);
   void defineMutex(const char*) {} // to end the recursion of defineMutex()
 
-  bool defineInt(const char* name, const char* argName, Int_t intNum, Int_t defValue=0) ;
-  bool defineDouble(const char* name, const char* argName, Int_t doubleNum, double defValue=0.0) ;
-  bool defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="",bool appendMode=false) ;
-  bool defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=nullptr, bool isArray=false) ;
-  bool defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=nullptr) ;
+  bool defineInt(const char* name, const char* argName, int intNum, int defValue=0) ;
+  bool defineDouble(const char* name, const char* argName, int doubleNum, double defValue=0.0) ;
+  bool defineString(const char* name, const char* argName, int stringNum, const char* defValue="",bool appendMode=false) ;
+  bool defineObject(const char* name, const char* argName, int setNum, const TObject* obj=nullptr, bool isArray=false) ;
+  bool defineSet(const char* name, const char* argName, int setNum, const RooArgSet* set=nullptr) ;
 
   bool process(const RooCmdArg& arg) ;
   template<class... Args_t>
@@ -65,12 +66,12 @@ public:
   template<typename It_t>
   bool process(It_t begin, It_t end);
 
-  Int_t getInt(const char* name, Int_t defaultValue=0) ;
-  double getDouble(const char* name, double defaultValue=0.0) ;
-  const char* getString(const char* name, const char* defaultValue="",bool convEmptyToNull=false) ;
-  TObject* getObject(const char* name, TObject* obj=nullptr) ;
-  RooArgSet* getSet(const char* name, RooArgSet* set=nullptr) ;
-  const RooLinkedList& getObjectList(const char* name) ;
+  int getInt(const char* name, int defaultValue=0) const;
+  double getDouble(const char* name, double defaultValue=0.0) const;
+  const char* getString(const char* name, const char* defaultValue="",bool convEmptyToNull=false) const;
+  TObject* getObject(const char* name, TObject* obj=nullptr) const;
+  RooArgSet* getSet(const char* name, RooArgSet* set=nullptr) const;
+  const RooLinkedList& getObjectList(const char* name) const;
 
   bool ok(bool verbose) const ;
 
@@ -84,20 +85,20 @@ public:
 
 
   template<class ...Args_t>
-  static Int_t decodeIntOnTheFly(
-          const char* callerID, const char* cmdArgName, Int_t intIdx, Int_t defVal, Args_t && ...args);
+  static int decodeIntOnTheFly(
+          const char* callerID, const char* cmdArgName, int intIdx, int defVal, Args_t && ...args);
 
   template<class ...Args_t>
   static std::string decodeStringOnTheFly(
-          const char* callerID, const char* cmdArgName, Int_t intIdx, const char* defVal, Args_t && ...args);
+          const char* callerID, const char* cmdArgName, int intIdx, const char* defVal, Args_t && ...args);
 
   template<class ...Args_t>
   static TObject* decodeObjOnTheFly(
-          const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, Args_t && ...args);
+          const char* callerID, const char* cmdArgName, int objIdx, TObject* defVal, Args_t && ...args);
 
   template<class ...Args_t>
   static RooArgSet* decodeSetOnTheFly(
-          const char* callerID, const char* cmdArgName, Int_t objIdx, RooArgSet* defVal, Args_t && ...args);
+          const char* callerID, const char* cmdArgName, int objIdx, RooArgSet* defVal, Args_t && ...args);
 
   static double decodeDoubleOnTheFly(const char* callerID, const char* cmdArgName, int idx, double defVal,
       std::initializer_list<std::reference_wrapper<const RooCmdArg>> args);
@@ -113,7 +114,7 @@ protected:
     int num;
   };
 
-  TString _name ;
+  std::string _name;
 
   bool _verbose = false;
   bool _error = false;
@@ -185,8 +186,8 @@ bool RooCmdConfig::process(It_t begin, It_t end) {
 /// For use in base member initializers in constructors
 
 template<class ...Args_t>
-Int_t RooCmdConfig::decodeIntOnTheFly(
-        const char* callerID, const char* cmdArgName, Int_t intIdx, Int_t defVal, Args_t && ...args)
+int RooCmdConfig::decodeIntOnTheFly(
+        const char* callerID, const char* cmdArgName, int intIdx, int defVal, Args_t && ...args)
 {
   RooCmdConfig pc(callerID) ;
   pc.allowUndefined() ;
@@ -202,7 +203,7 @@ Int_t RooCmdConfig::decodeIntOnTheFly(
 
 template<class ...Args_t>
 std::string RooCmdConfig::decodeStringOnTheFly(
-        const char* callerID, const char* cmdArgName, Int_t strIdx, const char* defVal, Args_t && ...args)
+        const char* callerID, const char* cmdArgName, int strIdx, const char* defVal, Args_t && ...args)
 {
   RooCmdConfig pc(callerID) ;
   pc.allowUndefined() ;
@@ -220,7 +221,7 @@ std::string RooCmdConfig::decodeStringOnTheFly(
 
 template<class ...Args_t>
 TObject* RooCmdConfig::decodeObjOnTheFly(
-        const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, Args_t && ...args)
+        const char* callerID, const char* cmdArgName, int objIdx, TObject* defVal, Args_t && ...args)
 {
   RooCmdConfig pc(callerID) ;
   pc.allowUndefined() ;
@@ -232,7 +233,7 @@ TObject* RooCmdConfig::decodeObjOnTheFly(
 
 template<class ...Args_t>
 RooArgSet* RooCmdConfig::decodeSetOnTheFly(
-        const char* callerID, const char* cmdArgName, Int_t objIdx, RooArgSet* defVal, Args_t && ...args)
+        const char* callerID, const char* cmdArgName, int objIdx, RooArgSet* defVal, Args_t && ...args)
 {
   RooCmdConfig pc(callerID) ;
   pc.allowUndefined() ;

@@ -43,7 +43,7 @@ ClassImp(RooAbsMCStudyModule);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : TNamed(name,title), _mcs(0)
+RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : TNamed(name,title), _mcs(nullptr)
 {
 }
 

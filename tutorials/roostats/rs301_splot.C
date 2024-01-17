@@ -173,7 +173,7 @@ void AddData(RooWorkspace &ws)
 
    // make the toy data
    std::cout << "make data set and import to workspace" << std::endl;
-   RooDataSet *data = model->generate(RooArgSet(*invMass, *isolation));
+   std::unique_ptr<RooDataSet> data{model->generate({*invMass, *isolation})};
 
    // import data into workspace
    ws.import(*data, Rename("data"));

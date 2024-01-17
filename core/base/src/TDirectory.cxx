@@ -96,7 +96,9 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
 
 TDirectory::~TDirectory()
 {
-   if (!gROOT) {
+   // Use gROOTLocal to avoid triggering undesired initialization of gROOT.
+   // For example in compiled C++ programs that don't use it directly.
+   if (!ROOT::Internal::gROOTLocal) {
       delete fList;
       return; //when called by TROOT destructor
    }
@@ -1200,7 +1202,8 @@ void TDirectory::pwd() const
 
 void TDirectory::RecursiveRemove(TObject *obj)
 {
-   fList->RecursiveRemove(obj);
+   if (fList)
+      fList->RecursiveRemove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1232,8 +1235,10 @@ void TDirectory::rmdir(const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save object in filename,
-/// if filename is 0 or "", a file with "objectname.root" is created.
+/// if filename is `nullptr` or "", a file with "<objectname>.root" is created.
 /// The name of the key is the object name.
+/// By default new file will be created. Using option "a", one can append object
+/// to the existing ROOT file.
 /// If the operation is successful, it returns the number of bytes written to the file
 /// otherwise it returns 0.
 /// By default a message is printed. Use option "q" to not print the message.
@@ -1244,29 +1249,30 @@ void TDirectory::rmdir(const char *name)
 
 Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
 {
+   // option can contain single letter args: "a" for append, "q" for quiet in any combinations
+
    if (!obj) return 0;
    Int_t nbytes = 0;
-   TString fname = filename;
-   if (!filename || !filename[0]) {
-      fname.Form("%s.root",obj->GetName());
-   }
-   TString cmd;
+   TString fname, opt = option, cmd;
+   if (filename && *filename)
+      fname = filename;
+   else
+      fname.Form("%s.root", obj->GetName());
+   opt.ToLower();
+
    if (fname.Index(".json") > 0) {
-      cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, \"%s\");", fname.Data(), TString::LLtoa((Longptr_t)obj, 10).Data(), (option ? option : ""));
+      cmd.Form("TBufferJSON::ExportToFile(\"%s\", (TObject *) 0x%zx, \"%s\");", fname.Data(), (size_t) obj, (option ? option : ""));
       nbytes = gROOT->ProcessLine(cmd);
    } else {
-      cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
+      cmd.Form("TFile::Open(\"%s\",\"%s\");", fname.Data(), opt.Contains("a") ? "update" : "recreate");
       TContext ctxt; // The TFile::Open will change the current directory.
       TDirectory *local = (TDirectory*)gROOT->ProcessLine(cmd);
       if (!local) return 0;
       nbytes = obj->Write();
       delete local;
    }
-   TString opt(option);
-   opt.ToLower();
-   if (!opt.Contains("q")) {
-      if (!gSystem->AccessPathName(fname.Data())) obj->Info("SaveAs", "ROOT file %s has been created", fname.Data());
-   }
+   if (!opt.Contains("q") && !gSystem->AccessPathName(fname.Data()))
+      obj->Info("SaveAs", "ROOT file %s has been created", fname.Data());
    return nbytes;
 }
 
@@ -1281,24 +1287,6 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
 void TDirectory::SetName(const char* newname)
 {
    TNamed::SetName(newname);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Encode the name and cycle into buffer like: "aap;2".
-/// @note if `cycle` is 9999, its value will not appear in the output and `name` will be used verbatim.
-
-void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
-{
-   if (cycle == 9999)
-      strcpy(buffer, name);
-   else {
-      // sizeof(buffer) is unknown, this interface is broken.
-      // It's now also deprecated. Until it's removed, silence sprintf warning
-      // on macOS / Xcode / clang by using an equivalently bad snprintf without
-      // knowledge of sizeof(buffer):
-      size_t unsafeSize = strlen(name) + std::to_string(cycle).length() + 1;
-      snprintf(buffer, unsafeSize, "%s;%d", name, cycle);
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

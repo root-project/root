@@ -43,29 +43,28 @@ TGeoOverlap::TGeoOverlap()
    fVolume2 = 0;
    fMatrix1 = 0;
    fMatrix2 = 0;
-   fMarker  = 0;
+   fMarker = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a named overlap belonging to volume VOL and having the size OVLP.
 
-TGeoOverlap::TGeoOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2,
-                         const TGeoMatrix *matrix1, const TGeoMatrix *matrix2,
-                         Bool_t isovlp, Double_t ovlp)
-            :TNamed("",name)
+TGeoOverlap::TGeoOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, const TGeoMatrix *matrix1,
+                         const TGeoMatrix *matrix2, Bool_t isovlp, Double_t ovlp)
+   : TNamed("", name)
 {
    fOverlap = ovlp;
-   fVolume1  = vol1;
-   fVolume2  = vol2;
+   fVolume1 = vol1;
+   fVolume2 = vol2;
    fMatrix1 = new TGeoHMatrix();
    *fMatrix1 = matrix1;
    fMatrix2 = new TGeoHMatrix();
    *fMatrix2 = matrix2;
-   fMarker  = new TPolyMarker3D();
+   fMarker = new TPolyMarker3D();
    fMarker->SetMarkerColor(2);
    SetIsOverlap(isovlp);
    fMarker->SetMarkerStyle(6);
-//   fMarker->SetMarkerSize(0.5);
+   //   fMarker->SetMarkerSize(0.5);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,9 +72,12 @@ TGeoOverlap::TGeoOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2,
 
 TGeoOverlap::~TGeoOverlap()
 {
-   if (fMarker) delete fMarker;
-   if (fMatrix1) delete fMatrix1;
-   if (fMatrix2) delete fMatrix2;
+   if (fMarker)
+      delete fMarker;
+   if (fMatrix1)
+      delete fMatrix1;
+   if (fMatrix2)
+      delete fMatrix2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +85,8 @@ TGeoOverlap::~TGeoOverlap()
 
 void TGeoOverlap::Browse(TBrowser *b)
 {
-   if (!b) return;
+   if (!b)
+      return;
    Draw();
 }
 
@@ -96,17 +99,19 @@ void TGeoOverlap::Browse(TBrowser *b)
 Int_t TGeoOverlap::Compare(const TObject *obj) const
 {
    TGeoOverlap *other = 0;
-   other = (TGeoOverlap*)obj;
+   other = (TGeoOverlap *)obj;
    if (!other) {
       Error("Compare", "other object is not TGeoOverlap");
       return 0;
    }
    if (IsExtrusion()) {
-      if (other->IsExtrusion()) return (fOverlap<=other->GetOverlap())?1:-1;
+      if (other->IsExtrusion())
+         return (fOverlap <= other->GetOverlap()) ? 1 : -1;
       return -1;
    } else {
-      if (other->IsExtrusion()) return 1;
-      return (fOverlap<=other->GetOverlap())?1:-1;
+      if (other->IsExtrusion())
+         return 1;
+      return (fOverlap <= other->GetOverlap()) ? 1 : -1;
    }
 }
 
@@ -163,7 +168,7 @@ void TGeoOverlap::Print(Option_t *) const
 
 void TGeoOverlap::PrintInfo() const
 {
-   printf(" = Overlap %s: %s ovlp=%g\n", GetName(), GetTitle(),fOverlap);
+   printf(" = Overlap %s: %s ovlp=%g\n", GetName(), GetTitle(), fOverlap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +176,7 @@ void TGeoOverlap::PrintInfo() const
 
 void TGeoOverlap::SetNextPoint(Double_t x, Double_t y, Double_t z)
 {
-   fMarker->SetNextPoint(x,y,z);
+   fMarker->SetNextPoint(x, y, z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +187,7 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
    Draw();
    // Select bounding box of the second volume (may extrude first)
    TPolyMarker3D *marker = 0;
-   TGeoBBox *box = (TGeoBBox*)fVolume2->GetShape();
+   TGeoBBox *box = (TGeoBBox *)fVolume2->GetShape();
    Double_t dx = box->GetDX();
    Double_t dy = box->GetDY();
    Double_t dz = box->GetDZ();
@@ -193,13 +198,13 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
    Int_t itry = 0;
    Int_t iovlp = 0;
    while (ipoint < npoints) {
-   // Shoot randomly in the bounding box.
-      pt[0] = orig[0] - dx + 2.*dx*gRandom->Rndm();
-      pt[1] = orig[1] - dy + 2.*dy*gRandom->Rndm();
-      pt[2] = orig[2] - dz + 2.*dz*gRandom->Rndm();
+      // Shoot randomly in the bounding box.
+      pt[0] = orig[0] - dx + 2. * dx * gRandom->Rndm();
+      pt[1] = orig[1] - dy + 2. * dy * gRandom->Rndm();
+      pt[2] = orig[2] - dz + 2. * dz * gRandom->Rndm();
       if (!fVolume2->Contains(pt)) {
          itry++;
-         if (itry>10000 && !ipoint) {
+         if (itry > 10000 && !ipoint) {
             Error("SampleOverlap", "No point inside volume!!! - aborting");
             break;
          }
@@ -210,8 +215,10 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
       fMatrix2->LocalToMaster(pt, master);
       fMatrix1->MasterToLocal(master, pt);
       Bool_t in = fVolume1->Contains(pt);
-      if (IsOverlap() && !in) continue;
-      if (!IsOverlap() && in) continue;
+      if (IsOverlap() && !in)
+         continue;
+      if (!IsOverlap() && in)
+         continue;
       // The point is in the overlapping region.
       iovlp++;
       if (!marker) {
@@ -220,15 +227,15 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
       }
       marker->SetNextPoint(master[0], master[1], master[2]);
    }
-   if (!iovlp) return;
+   if (!iovlp)
+      return;
    marker->Draw("SAME");
    gPad->Modified();
    gPad->Update();
    Double_t capacity = fVolume1->GetShape()->Capacity();
-   capacity *= Double_t(iovlp)/Double_t(npoints);
-   Double_t err = 1./TMath::Sqrt(Double_t(iovlp));
-   Info("SampleOverlap", "#Overlap %s has %g +/- %g [cm3]",
-         GetName(), capacity, err*capacity);
+   capacity *= Double_t(iovlp) / Double_t(npoints);
+   Double_t err = 1. / TMath::Sqrt(Double_t(iovlp));
+   Info("SampleOverlap", "#Overlap %s has %g +/- %g [cm3]", GetName(), capacity, err * capacity);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,22 +254,20 @@ void TGeoOverlap::Validate() const
 {
    Double_t point[3];
    Double_t local[3];
-   Double_t safe1,safe2;
+   Double_t safe1, safe2;
    Int_t npoints = fMarker->GetN();
-   for (Int_t i=0; i<npoints; i++) {
+   for (Int_t i = 0; i < npoints; i++) {
       fMarker->GetPoint(i, point[0], point[1], point[2]);
       if (IsExtrusion()) {
-         fMatrix1->MasterToLocal(point,local);
+         fMatrix1->MasterToLocal(point, local);
          safe1 = fVolume1->GetShape()->Safety(local, kFALSE);
          printf("point %d: safe1=%f\n", i, safe1);
       } else {
-         fMatrix1->MasterToLocal(point,local);
+         fMatrix1->MasterToLocal(point, local);
          safe1 = fVolume1->GetShape()->Safety(local, kTRUE);
-         fMatrix2->MasterToLocal(point,local);
+         fMatrix2->MasterToLocal(point, local);
          safe2 = fVolume2->GetShape()->Safety(local, kTRUE);
-         printf("point %d: safe1=%f safe2=%f\n", i, safe1,safe2);
+         printf("point %d: safe1=%f safe2=%f\n", i, safe1, safe2);
       }
    }
 }
-
-

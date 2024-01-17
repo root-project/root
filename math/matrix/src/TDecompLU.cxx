@@ -46,7 +46,7 @@ TDecompLU::TDecompLU()
 {
    fSign = 0.0;
    fNIndex = 0;
-   fIndex = 0;
+   fIndex = nullptr;
    fImplicitPivot = 0;
 }
 
@@ -115,7 +115,7 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 {
    fNIndex = 0;
-   fIndex  = 0;
+   fIndex  = nullptr;
    *this = another;
 }
 
@@ -844,12 +844,12 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
 
    // Solve the equation inv(A)*L = inv(U) for inv(A).
 
-   Double_t workd[kWorkMax];
+   Double_t workD[kWorkMax];
    Double_t *allocatedD = nullptr;
-   Double_t *pWorkd = workd;
+   Double_t *pWorkD = workD;
    if (n > kWorkMax) {
       allocatedD = new Double_t[n];
-      pWorkd = allocatedD;
+      pWorkD = allocatedD;
    }
 
    for (j = n-1; j >= 0; j--) {
@@ -857,7 +857,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
       // Copy current column j of L to WORK and replace with zeros.
       for (Int_t i = j+1; i < n; i++) {
          const Int_t off_i = i*n;
-         pWorkd[i] = pLU[off_i+j];
+         pWorkD[i] = pLU[off_i+j];
          pLU[off_i+j] = 0.0;
       }
 
@@ -869,7 +869,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
 
          for (Int_t irow = 0; irow < n; irow++) {
             Double_t sum = 0.;
-            const Double_t *sp = pWorkd+j+1; // Source vector ptr
+            const Double_t *sp = pWorkD+j+1; // Source vector ptr
             for (Int_t icol = 0; icol < n-1-j ; icol++)
                sum += *mp++ * *sp++;
             *tp = -sum + *tp;

@@ -103,16 +103,16 @@ private:
 
 public:
    TFileNode(const char *name);
-   ~TFileNode() { delete fFiles; delete fActFiles; }
+   ~TFileNode() override { delete fFiles; delete fActFiles; }
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
    void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
    void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; R__ASSERT(fSlaveCnt >= 0); }
    Int_t       GetSlaveCnt() const {return fMySlaveCnt + fSlaveCnt;}
    Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
-   Bool_t      IsSortable() const { return kTRUE; }
+   Bool_t      IsSortable() const override { return kTRUE; }
 
-   const char *GetName() const { return fNodeName.Data(); }
+   const char *GetName() const override { return fNodeName.Data(); }
 
    void Add(TDSetElement *elem)
    {
@@ -156,7 +156,7 @@ public:
       if (fActFileNext == 0) fActFileNext = fActFiles->First();
    }
 
-   Int_t Compare(const TObject *other) const
+   Int_t Compare(const TObject *other) const override
    {
       // Must return -1 if this is smaller than obj, 0 if objects are equal
       // and 1 if this is larger than obj.
@@ -177,7 +177,7 @@ public:
       }
    }
 
-   void Print(Option_t *) const
+   void Print(Option_t *) const override
    {
       std::cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName
            << "\tMySlaveCount " << fMySlaveCnt
@@ -216,10 +216,10 @@ private:
    TFileNode     *fFileNode;     // corresponding node or 0
    TFileStat     *fCurFile;      // file currently being processed
    TDSetElement  *fCurElem;      // TDSetElement currently being processed
-   TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
+   TProofProgressStatus *AddProcessed(TProofProgressStatus *st) override;
 public:
    TSlaveStat(TSlave *slave);
-   ~TSlaveStat();
+   ~TSlaveStat() override;
 
    TFileNode  *GetFileNode() const { return fFileNode; }
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -16,18 +16,23 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
 endif()
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
   message(FATAL_ERROR
     " ROOT must be built out-of-source.\n"
     " Please see README/INSTALL for more information.")
 endif()
 
-set(policy_new CMP0072 CMP0077)
+set(policy_new CMP0072 CMP0076 CMP0077 CMP0079)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
   endif()
 endforeach()
+
+# ignore JAVA_ROOT when find_package(Java 1.8 ...) called
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
+  cmake_policy(SET CMP0144 OLD)
+endif()
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   cmake_policy(SET CMP0135 OLD)
@@ -69,61 +74,9 @@ set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 
 #---Set the ROOT version--------------------------------------------------------------------
-find_package(Git)
-if(Git_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
-                  OUTPUT_VARIABLE GIT_DESCRIBE_ALL
-                  RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
-                  ERROR_QUIET
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-else()
-  set(GIT_DESCRIBE_ERRCODE "NoGit")
-endif()
+include(cmake/modules/SetROOTVersion.cmake)
 
-function(SET_VERSION_FROM_FILE)
-  file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
-  string(STRIP ${versionstr} versionstr)
-  string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
-  string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
-  string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
-  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}" PARENT_SCOPE)
-  set(ROOT_MAJOR_VERSION "${ROOT_MAJOR_VERSION}" PARENT_SCOPE)
-  set(ROOT_MINOR_VERSION "${ROOT_MINOR_VERSION}" PARENT_SCOPE)
-  set(ROOT_PATCH_VERSION "${ROOT_PATCH_VERSION}" PARENT_SCOPE)
-endfunction()
-
-if(GIT_DESCRIBE_ERRCODE)
-  SET_VERSION_FROM_FILE()
-else()
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
-                  OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
-                  ERROR_QUIET
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
-  string(REGEX REPLACE "^v([0-9]+)-([0-9]+)-(.*)" "\\1.\\2.\\3" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
-
-  if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
-    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
-    # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
-    # tag might end on "-rc1" or similar; parse version number in front.
-    string(REGEX REPLACE "^tags/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "^tags/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "^tags/v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALL})
-  elseif("${GIT_DESCRIBE_ALL}" MATCHES "/v[0-9]+-[0-9]+.*-patches$")
-    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
-    # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
-    string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
-    set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
-  else()
-    # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
-    # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
-    SET_VERSION_FROM_FILE()
-    set(ROOT_FULL_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
-  endif()
-  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
-  message(STATUS "Detected ROOT_VERSION ${ROOT_VERSION}")
-endif()
+message(STATUS "Building ROOT version ${ROOT_FULL_VERSION}")
 
 #---Try to download a file to check internet connection-----------------------------------------
 message(STATUS "Checking internet connectivity")
@@ -167,6 +120,99 @@ include(RootBuildOptions)
 include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
+
+# relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
+#                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
+# Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
+# current head name.
+function(relatedrepo_GetClosestMatch)
+  cmake_parse_arguments(_ "" "REPO_NAME;ORIGIN_PREFIX;UPSTREAM_PREFIX;FETCHURL_VARIABLE;FETCHREF_VARIABLE" "" ${ARGN})
+
+  set(${__FETCHURL_VARIABLE} ${__UPSTREAM_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
+
+  if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+    set(${__FETCHREF_VARIABLE} v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION} PARENT_SCOPE)
+    return()
+  endif()
+
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
+                  rev-parse --abbrev-ref HEAD
+                  OUTPUT_VARIABLE current_head OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(${__FETCHREF_VARIABLE} ${current_head} PARENT_SCOPE)
+
+  # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
+  # upstream as the fork repository may be out-of-sync
+  string(REGEX MATCH "^(master|latest-stable|v[0-9]+-[0-9]+-[0-9]+(-patches)?)$" known_head ${current_head})
+  if(NOT "${known_head}" STREQUAL "")
+    if("${current_head}" STREQUAL "latest-stable")
+      # Resolve the 'latest-stable' branch to the latest merged head/tag
+      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
+                      for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\)
+                      OUTPUT_VARIABLE current_head OUTPUT_STRIP_TRAILING_WHITESPACE)
+      set(${__FETCHREF_VARIABLE} ${current_head} PARENT_SCOPE)
+    endif()
+    return()
+  endif()
+
+  # Otherwise, try to use a branch that matches `current_head` in the fork repository
+  execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
+                  ${__ORIGIN_PREFIX}/${__REPO_NAME} ${current_head} OUTPUT_VARIABLE matching_refs)
+  if(NOT "${matching_refs}" STREQUAL "")
+    set(${__FETCHURL_VARIABLE} ${__ORIGIN_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
+    return()
+  endif()
+
+  # Finally, try upstream using the closest head/tag below the parent commit of the current head
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
+                  describe --all --abbrev=0 HEAD^
+                  OUTPUT_VARIABLE closest_ref ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REGEX REPLACE "^(heads|tags)/" "" candidate_head "${closest_ref}")
+  execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
+                  ${__UPSTREAM_PREFIX}/${__REPO_NAME} "${candidate_head}" OUTPUT_VARIABLE matching_refs)
+  if(NOT "${matching_refs}" STREQUAL "")
+    set(${__FETCHREF_VARIABLE} ${candidate_head} PARENT_SCOPE)
+    return()
+  endif()
+  set(${__FETCHREF_VARIABLE} "" PARENT_SCOPE)
+endfunction()
+
+# relaterepo_Checkout(REPO_NAME <repo> FETCHURL <url> FETCHREF <ref>
+#                     [FORCE] [REPO_DIR_VARIABLE <repo_dir>])
+# Clone/fetch and checkout the specified `ref` from the given repository at `url`.  If a local clone of the
+# repository is found, refuse to update it unless the `FORCE` option is in place.
+function(relatedrepo_Checkout)
+  cmake_parse_arguments(_ "FORCE" "REPO_NAME;FETCHURL;FETCHREF;REPO_DIR_VARIABLE" "" ${ARGN})
+
+  # Check whether the repository exists in the source directory or its parent
+  get_filename_component(source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+  if(IS_DIRECTORY ${source_dir}/${__REPO_NAME})
+    set(repo_dir ${source_dir}/${__REPO_NAME})
+  elseif(IS_DIRECTORY ${source_dir}/../${__REPO_NAME})
+    set(repo_dir ${source_dir}/../${__REPO_NAME})
+  endif()
+
+  if(NOT DEFINED repo_dir)
+    message(STATUS "Cloning ${__REPO_NAME} from '${__FETCHURL}' (${__FETCHREF})")
+    if(NOT "${__FETCHREF}" STREQUAL "")
+      string(PREPEND __FETCHREF "-b")
+    endif()
+    execute_process(COMMAND ${GIT_EXECUTABLE} clone ${__FETCHREF} ${__FETCHURL}
+                    WORKING_DIRECTORY ${source_dir})
+    set(repo_dir ${source_dir}/${__REPO_NAME})
+  else()
+    message(STATUS "Found ${__REPO_NAME}: ${repo_dir}")
+    if(${__FORCE})
+      message(STATUS "Updating ${__REPO_NAME} from '${__FETCHURL}' (${__FETCHREF})")
+      execute_process(COMMAND ${GIT_EXECUTABLE} fetch -fu ${__FETCHURL} ${__FETCHREF}:${__FETCHREF}
+                      WORKING_DIRECTORY ${repo_dir})
+      execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${__FETCHREF}
+                      WORKING_DIRECTORY ${repo_dir})
+    endif()
+  endif()
+  if(DEFINED __REPO_DIR_VARIABLE)
+    set(${__REPO_DIR_VARIABLE} ${repo_dir} PARENT_SCOPE)
+  endif()
+endfunction()
 
 #---Enable asserts------------------------------------------------------------------------------
 if(asserts)
@@ -370,7 +416,6 @@ add_subdirectory (net)
 add_subdirectory (graf2d)
 add_subdirectory (graf3d)
 add_subdirectory (gui)
-add_subdirectory (proof)
 add_subdirectory (html)
 add_subdirectory (montecarlo)
 add_subdirectory (geom)
@@ -379,6 +424,9 @@ add_subdirectory (misc)
 add_subdirectory (main)
 add_subdirectory (bindings)
 add_subdirectory (sql)
+if(proof)
+  add_subdirectory(proof)
+endif()
 if(tmva)
   add_subdirectory(tmva)
 endif()
@@ -521,14 +569,25 @@ endif()
 if(runtime_cxxmodules)
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
-  add_custom_command(OUTPUT ${library_output_dir}/modules.idx
-                     COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                     COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
-                             ROOTIGNOREPREFIX=1 ROOT_HIST=0
-                             $<TARGET_FILE:root.exe> -l -q -b
-                     WORKING_DIRECTORY ${library_output_dir}
-                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
-                             ${modules_idx_deps})
+  if(WIN32)
+    add_custom_command(OUTPUT ${library_output_dir}/modules.idx
+                       COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
+                       COMMAND set PATH=${library_output_dir} &&
+                               set ROOTIGNOREPREFIX=1 && set ROOT_HIST=0 &&
+                               $<TARGET_FILE:root.exe> -l -q -b
+                       WORKING_DIRECTORY ${library_output_dir}
+                       DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
+                               ${modules_idx_deps})
+  else()
+    add_custom_command(OUTPUT ${library_output_dir}/modules.idx
+                       COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
+                       COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
+                               ROOTIGNOREPREFIX=1 ROOT_HIST=0
+                               $<TARGET_FILE:root.exe> -l -q -b
+                       WORKING_DIRECTORY ${library_output_dir}
+                       DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
+                               ${modules_idx_deps})
+  endif()
   add_custom_target(modules_idx ALL DEPENDS ${library_output_dir}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
@@ -566,7 +625,7 @@ add_custom_target(version COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build
 endif()
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------
@@ -620,6 +679,9 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
     cmake/modules/RootMacros.cmake
     cmake/modules/RootTestDriver.cmake
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+  install(FILES
+    "cmake/modules/FindVdt.cmake"
+    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/modules")
 endif()
 
 #---Add configuration files for kernel and jupyter----------------------------------------------
@@ -649,86 +711,48 @@ endif()
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
   include(RootCTest)
+  set(upstreamprefix https://github.com/root-project)
 
   if(roottest)
-    #---Is the roottest source directory around?
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+    find_package(Git REQUIRED)
+    # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
+    # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
+    # value is used instead.
+    if(DEFINED ENV{GITHUB_PR_ORIGIN})
+      set(originurl $ENV{GITHUB_PR_ORIGIN})
     else()
-      # Need to break into two steps in case the source dir is a symlink
-      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
-      set(roottestdir ${_source_dir}/../roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
+                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
     endif()
-
-    if(IS_DIRECTORY ${roottestdir})
-      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
-      add_subdirectory(${roottestdir} roottest)
-    else()
-      message("-- Could not find roottest directory! Cloning from the repository...")
-
-      find_package(Git REQUIRED)
-
-      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-        execute_process(COMMAND ${GIT_EXECUTABLE} for-each-ref --points-at=HEAD --count=1 --format=%\(refname:short\)
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                        OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
-      else()
-        set(GIT_BRANCH v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION})
-      endif()
-
-      # Resolve the `latest-stable` branch to the latest merged head/tag
-      if("${GIT_BRANCH}" STREQUAL "latest-stable")
-        execute_process(COMMAND ${GIT_EXECUTABLE} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\)
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                        OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
-      endif()
-
-      execute_process(COMMAND
-        ${GIT_EXECUTABLE} ls-remote --heads --tags
-        https://github.com/root-project/roottest.git ${GIT_BRANCH}
-        OUTPUT_VARIABLE ROOTTEST_GIT_BRANCH)
-
-      if(NOT "${ROOTTEST_GIT_BRANCH}" STREQUAL "")
-        set(ROOTTEST_GIT_BRANCH -b ${GIT_BRANCH})
-      endif()
-
-      execute_process(COMMAND
-        ${GIT_EXECUTABLE} clone ${ROOTTEST_GIT_BRANCH}
-        https://github.com/root-project/roottest.git
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-      if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-        message(FATAL_ERROR "Error cloning roottest")
-      endif()
-
-      add_subdirectory(roottest)
+    string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
+    relatedrepo_GetClosestMatch(REPO_NAME roottest
+                                ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
+                                FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
+    # Use `-Droottest_force_checkout=ON` to force fetch and checkout in an existing repository
+    if(roottest_force_checkout)
+       set(roottest_opts FORCE)
     endif()
+    relatedrepo_Checkout(REPO_NAME roottest FETCHURL ${roottest_url} FETCHREF "${roottest_ref}"
+                         REPO_DIR_VARIABLE roottest_dir ${roottest_opts})
+    if(NOT IS_DIRECTORY ${roottest_dir})
+      message(FATAL_ERROR "Expected roottest at '${roottest_dir}' (not a directory?)")
+    endif()
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
+    add_subdirectory(${roottest_dir} roottest)
   endif()
 
   if(rootbench)
     find_package(Git REQUIRED)
-    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
-    #---Is the rootbench source directory around?
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-      set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-    else()
-      # Need to break into two steps in case the source dir is a symlink
-      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
-      set(rootbenchdir ${_source_dir}/../rootbench)
+    if(rootbench_force_checkout)
+       set(rootbench_opts FORCE)
     endif()
-
-    if(IS_DIRECTORY ${rootbenchdir})
-      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
-      add_subdirectory(${rootbenchdir} rootbench)
-    else()
-      message("-- Could not find rootbench directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
-                      https://github.com/root-project/rootbench.git
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-      add_subdirectory(rootbench)
+    relatedrepo_Checkout(REPO_NAME rootbench FETCHURL ${upstreamprefix} FETCHREF master
+                         REPO_DIR_VARIABLE rootbench_dir ${rootbench_opts})
+    if(NOT IS_DIRECTORY ${rootbench_dir})
+      message(FATAL_ERROR "Expected rootbench at '${rootbench_dir}' (not a directory?)")
     endif()
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
+    add_subdirectory(${rootbench_dir} rootbench)
   endif()
 endif()
 

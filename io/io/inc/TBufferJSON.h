@@ -49,7 +49,7 @@ public:
    };
 
    TBufferJSON(TBuffer::EMode mode = TBuffer::kWrite);
-   virtual ~TBufferJSON();
+   ~TBufferJSON() override;
 
    void SetCompact(int level);
    void SetTypenameTag(const char *tag = "_typename");
@@ -299,19 +299,19 @@ protected:
    void JsonPushValue();
 
    template <typename T>
-   R__ALWAYS_INLINE void JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname);
+   void JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname);
 
    template <typename T>
-   R__ALWAYS_INLINE void JsonReadBasic(T &value);
+   void JsonReadBasic(T &value);
 
    template <typename T>
-   R__ALWAYS_INLINE Int_t JsonReadArray(T *value);
+   Int_t JsonReadArray(T *value);
 
    template <typename T>
-   R__ALWAYS_INLINE void JsonReadFastArray(T *arr, Int_t arrsize, bool asstring = false);
+   void JsonReadFastArray(T *arr, Int_t arrsize, bool asstring = false);
 
    template <typename T>
-   R__ALWAYS_INLINE void JsonWriteFastArray(const T *arr, Int_t arrsize, const char *typname,
+   void JsonWriteFastArray(const T *arr, Int_t arrsize, const char *typname,
                                             void (TBufferJSON::*method)(const T *, Int_t, const char *));
 
    TString fOutBuffer;                 ///<!  main output buffer for json code

@@ -22,7 +22,7 @@
 
 #include <map>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 using namespace std::string_literals;
 
@@ -142,6 +142,11 @@ public:
 
       gROOT->GetListOfCanvases()->Remove(fCanvas.get());
 
+      if ((fCanvas->GetCanvasID() == -1) && (fCanvas->GetCanvasImp() == fWebCanvas)) {
+         fCanvas->SetCanvasImp(nullptr);
+         delete fWebCanvas;
+      }
+
       fCanvas->Close();
    }
 
@@ -175,6 +180,8 @@ public:
       std::unique_ptr<Browsable::RHolder> obj = elem->GetObject();
       if (!obj)
          return false;
+
+      Browsable::RProvider::ExtendProgressHandle(elem.get(), obj.get());
 
       std::string drawopt = opt;
 
@@ -211,7 +218,7 @@ public:
       if (Browsable::RProvider::Draw6(pad, obj, drawopt)) {
          fObjects.emplace(pad, std::move(obj));
          pad->Modified();
-         fCanvas->Update();
+         fCanvas->UpdateAsync();
          return true;
       }
 
@@ -221,7 +228,7 @@ public:
    void CheckModified() override
    {
       if (fCanvas->IsModified())
-         fCanvas->Update();
+         fCanvas->UpdateAsync();
    }
 
 };

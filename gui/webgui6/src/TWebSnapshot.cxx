@@ -43,21 +43,21 @@ void TWebSnapshot::SetSnapshot(Int_t kind, TObject *snapshot, Bool_t owner)
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Use pointer to assign object id - TString::Hash
 
-void TWebSnapshot::SetObjectIDAsPtr(void *ptr)
+void TWebSnapshot::SetObjectIDAsPtr(void *ptr, const std::string &suffix)
 {
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
-   SetObjectID(std::to_string(hash));
+   SetObjectID(std::to_string(hash) + suffix);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Create new entry in list of primitives
 
-TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt)
+TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt, const std::string &suffix)
 {
    fPrimitives.emplace_back(std::make_unique<TWebSnapshot>());
    if (obj) {
       if (IsSetObjectIds())
-         fPrimitives.back()->SetObjectIDAsPtr(obj);
+         fPrimitives.back()->SetObjectIDAsPtr(obj, suffix);
       fPrimitives.back()->SetOption(opt);
    }
    return *(fPrimitives.back());
@@ -68,7 +68,7 @@ TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt
 
 TPadWebSnapshot &TPadWebSnapshot::NewSubPad()
 {
-   auto res = new TPadWebSnapshot(IsReadOnly(), IsSetObjectIds());
+   auto res = new TPadWebSnapshot(IsReadOnly(), IsSetObjectIds(), IsBatchMode());
    fPrimitives.emplace_back(res);
    return *res;
 }

@@ -31,21 +31,23 @@ public:
 
   RooChebychev(const RooChebychev& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooChebychev(*this, newname); }
-  inline ~RooChebychev() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
-private:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  private:
   RooRealProxy _x;
   RooListProxy _coefList ;
-  mutable TNamed* _refRangeName ;
+  mutable TNamed* _refRangeName = nullptr;
 
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   double evalAnaInt(const double a, const double b) const;

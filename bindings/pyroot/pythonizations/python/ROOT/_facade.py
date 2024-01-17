@@ -327,14 +327,18 @@ class ROOTFacade(types.ModuleType):
         try:
             # Inject FromNumpy function
             from libROOTPythonizations import MakeNumpyDataFrame
-            def DeprecatedMakeNumpy(*args, **kwargs):
-                import warnings
-                warnings.warn("MakeNumpyDataFrame is deprecated since v6.28 and will be removed in v6.30."\
-                              "Please use FromNumpy instead.", FutureWarning)
-                return MakeNumpyDataFrame(*args, **kwargs)
-            ns.MakeNumpyDataFrame = DeprecatedMakeNumpy
-            ns.FromNumpy = MakeNumpyDataFrame
 
+            # Make a copy of the arrays that have strides to make sure we read the correct values
+            # TODO a cleaner fix 
+            def MakeNumpyDataFrameCopy(np_dict):  
+                import numpy  
+                for key in np_dict.keys():
+                    if (np_dict[key].__array_interface__['strides']) is not None:
+                        np_dict[key] = numpy.copy(np_dict[key])
+                return MakeNumpyDataFrame(np_dict) 
+
+            ns.FromNumpy = MakeNumpyDataFrameCopy
+            
             if sys.version_info >= (3, 8):
                 try:
                     # Inject Experimental.Distributed package into namespace RDF if available
@@ -364,9 +368,15 @@ class ROOTFacade(types.ModuleType):
         #this line is needed to import the pythonizations in _tmva directory
         from ._pythonization import _tmva
         ns = self._fallback_getattr('TMVA')
-        hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
+        hasRDF = "dataframe" in gROOT.GetConfigFeatures()
         if hasRDF:
             try:
+                if sys.version_info >= (3, 8):
+                    from ._pythonization._tmva import inject_rbatchgenerator
+
+                    inject_rbatchgenerator(ns)
+
+
                 from libROOTPythonizations import AsRTensor
                 ns.Experimental.AsRTensor = AsRTensor
             except:
@@ -384,6 +394,20 @@ class ROOTFacade(types.ModuleType):
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
         del type(self).Numba
         return ns
+
+    @property
+    def NumbaExt(self):
+        if sys.version_info < (3, 7):
+            raise Exception("NumbaExt requires Python 3.7 or higher")
+
+        import numba
+        if not hasattr(numba, 'version_info') or numba.version_info < (0, 54):
+            raise Exception("NumbaExt requires Numba version 0.54 or higher")
+
+        import cppyy.numba_ext
+
+        # Return something as it is a property function
+        return self
 
     # Get TPyDispatcher for programming GUI callbacks
     @property

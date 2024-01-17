@@ -52,12 +52,12 @@ public:
             Double_t px, Double_t py, Double_t pz,
             Double_t etot, Double_t vx, Double_t vy, Double_t vz,
             Double_t time, Double_t timend, const char *type = "");
-   virtual ~TPrimary();
-   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   ~TPrimary() override;
+           Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;
+           void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual const TAttParticle  *GetParticle() const;
-   virtual const char   *GetName() const;
-   virtual const char   *GetTitle() const;
+           const char   *GetName() const override;
+           const char   *GetTitle() const override;
    virtual Int_t         GetFirstMother() const { return fFirstMother; }
    virtual Int_t         GetSecondMother() const { return fSecondMother; }
    virtual Int_t         GetGeneration() const { return fGeneration; }
@@ -71,11 +71,11 @@ public:
    virtual Double_t      GetTime() const { return fTime; }
    virtual Double_t      GetTimeEnd() const { return fTimeEnd; }
    virtual const char   *GetType() const { return fType.Data(); }
-   virtual void          Paint(Option_t *option = "");
-   virtual void          Print(Option_t *option = "") const;
-   virtual void          Sizeof3D() const;
+           void          Paint(Option_t *option = "") override;
+           void          Print(Option_t *option = "") const override;
+           void          Sizeof3D() const override;
 
-   ClassDef(TPrimary,1)  //TPrimary vertex particle information
+   ClassDefOverride(TPrimary,1); //TPrimary vertex particle information
 };
 
 #endif

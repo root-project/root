@@ -64,19 +64,11 @@ enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration
     Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16, IO=1<<17 };
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
-/// For setting the batch mode flag with the BatchMode() command argument to
-/// RooAbsPdf::fitTo()
-enum class BatchModeOption { Off, Cpu, Cuda, Old };
-
 /// For setting the offset mode with the Offset() command argument to
 /// RooAbsPdf::fitTo()
 enum class OffsetMode { None, Initial, Bin };
 
 namespace Experimental {
-
-/// Get a handle on the default BatchMode option that is used when creating
-/// likelihoods. \note Experimental, the interface might change in the future.
-std::string& defaultBatchMode();
 
 /// Configuration options for parallel minimization with multiprocessing library
 RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
@@ -173,7 +165,7 @@ RooCmdArg Import(const char* state, RooAbsData& data) ;
 RooCmdArg Import(const std::map<std::string,RooDataSet*>& ) ;
 template<class DataPtr_t>
 RooCmdArg Import(std::map<std::string,DataPtr_t> const& map) {
-    RooCmdArg container("ImportDataSliceMany",0,0,0,0,0,0,0,0) ;
+    RooCmdArg container("ImportDataSliceMany",0,0,0,0,nullptr,nullptr,nullptr,nullptr) ;
     for (auto const& item : map) {
       container.addArg(Import(item.first.c_str(), *item.second)) ;
     }
@@ -195,11 +187,10 @@ RooCmdArg OwnLinked() ;
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
 RooCmdArg OutputFile(const char* fileName) ;
-RooCmdArg Format(const char* format, Int_t sigDigit) ;
-RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-                 const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
+RooCmdArg Format(const char* what, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                 const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                 const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+                 const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 
 // RooAbsRealLValue::frame arguments
@@ -232,18 +223,46 @@ RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
 RooCmdArg TimingAnalysis(bool timingAnalysis) ;
 
-RooCmdArg BatchMode(std::string const& batchMode="cpu");
-// The const char * overload is necessary, otherwise the compiler will cast a
-// C-Style string to a bool and choose the BatchMode(bool) overload if one
-// calls for example BatchMode("off").
-inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
-inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
+//RooCmdArg BatchMode(std::string const& batchMode="cpu");
+//// The const char * overload is necessary, otherwise the compiler will cast a
+//// C-Style string to a bool and choose the BatchMode(bool) overload if one
+//// calls for example BatchMode("off").
+//inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
+//inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
 
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
 RooCmdArg Optimize(Int_t flag=2) ;
+
+class EvalBackend : public RooCmdArg {
+public:
+   enum class Value { Legacy, Cpu, Cuda, Codegen, CodegenNoGrad };
+
+   EvalBackend(Value value);
+
+   EvalBackend(std::string const &name);
+
+   static EvalBackend Legacy();
+   static EvalBackend Cpu();
+   static EvalBackend Cuda();
+   static EvalBackend Codegen();
+   static EvalBackend CodegenNoGrad();
+
+   Value value() const { return static_cast<Value>(getInt(0)); }
+
+   bool operator==(EvalBackend const &other) const { return value() == other.value(); }
+
+   bool operator!=(EvalBackend const &other) const { return value() != other.value(); }
+
+   std::string name() const;
+
+   static Value &defaultValue();
+private:
+   static Value toValue(std::string const& name);
+   static std::string toName(Value value);
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooCmdArg to declare conditional observables.
@@ -332,8 +351,8 @@ RooCmdArg Asimov(bool flag=true) ;
 /** @} */
 
 // RooAbsRealLValue::createHistogram arguments
-RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
-RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
+RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;
+RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;
 RooCmdArg AxisLabel(const char* name) ;
 RooCmdArg Scaling(bool flag) ;
 
@@ -353,15 +372,15 @@ RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 // RooMCStudy::ctor arguments
 RooCmdArg Silence(bool flag=true) ;
 RooCmdArg FitModel(RooAbsPdf& pdf) ;
-RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
-                     const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                     const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2={},
+                     const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                     const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 RooCmdArg Binned(bool flag=true) ;
 
 // RooMCStudy::plot* arguments
-RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
-                const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2={},
+                const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 RooCmdArg FrameBins(Int_t nbins) ;
 RooCmdArg FrameRange(double xlo, double xhi) ;
 RooCmdArg FitGauss(bool flag=true) ;
@@ -411,9 +430,9 @@ RooCmdArg ScanNoCdf() ;
 
 // Generic container arguments (to be able to supply more command line arguments)
 RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
-         const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-         const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-         const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
+         const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+         const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+         const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
 
 RooConstVar& RooConst(double val) ;
 
@@ -426,14 +445,27 @@ namespace Detail {
 
 // Function to pack an arbitrary number of RooCmdArgs into a RooLinkedList. Implementation detail of many high-level RooFit functions.
 template <typename... Args>
-inline std::unique_ptr<RooLinkedList> createCmdList(Args &&... args)
+inline std::unique_ptr<RooLinkedList> createCmdList(RooCmdArg const* arg1, Args &&...args)
 {
-  auto cmdList = std::make_unique<RooLinkedList>();
-  for (auto * arg : {args...}) {
-    cmdList->Add(const_cast<RooCmdArg*>(arg));
-    //cmdList->Add(new RooCmdArg{arg});
-  }
-  return cmdList;
+   auto cmdList = std::make_unique<RooLinkedList>();
+   for (auto &arg : {arg1, static_cast<RooCmdArg const *>(args)...}) {
+      cmdList->Add(const_cast<RooCmdArg *>(arg));
+   }
+   return cmdList;
+}
+
+inline std::unique_ptr<RooLinkedList> createCmdList()
+{
+   return std::make_unique<RooLinkedList>();
+}
+
+inline std::unique_ptr<RooLinkedList> createCmdList(RooLinkedList const *cmdList)
+{
+   auto cmdListCopy = std::make_unique<RooLinkedList>();
+   for (auto *arg : *cmdList) {
+      cmdListCopy->Add(arg);
+   }
+   return cmdListCopy;
 }
 
 } // namespace Detail

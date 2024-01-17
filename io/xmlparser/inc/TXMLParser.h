@@ -44,7 +44,7 @@ protected:
 
 public:
    TXMLParser();
-   virtual ~TXMLParser();
+   ~TXMLParser() override;
 
    void                SetValidate(Bool_t val = kTRUE);
    Bool_t              GetValidate() const { return fValidate; }

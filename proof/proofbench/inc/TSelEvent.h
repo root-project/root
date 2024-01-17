@@ -121,7 +121,7 @@ public :
    TH1F* GetPtHist(){return fPtHist;}
    TH1F* GetNTracksHist(){return fNTracksHist;}
 
-   ClassDef(TSelEvent,0) //PROOF selector for I/O-intensive benchmark test
+   ClassDefOverride(TSelEvent,0) //PROOF selector for I/O-intensive benchmark test
 };
 
 #endif

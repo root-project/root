@@ -103,7 +103,7 @@ struct GoFTStress {
 
       ROOT::Math::GoFTest* goft = new ROOT::Math::GoFTest( smpSize1, smp1, smpSize2, smp2 );
 
-      Double_t A2 = goft->AndersonDarling2SamplesTest("t"); // standartized A2_akN
+      Double_t A2 = goft->AndersonDarling2SamplesTest("t"); // standardized A2_akN
    //     Double_t pvalueAD = goft->AndersonDarling2SamplesTest();
       Double_t pvalueAD = (*goft)(ROOT::Math::GoFTest::kAD2s);
 
@@ -115,7 +115,7 @@ struct GoFTStress {
 
       Int_t result = PrintResultAD2Samples(nsmps, A2, expectedA2_akN, sigmaN, zScore, pvalueAD);
 
-   //     Double_t Dn = goft->KolmogorovSmirnov2SamplesTest("t"); // standartized A2_akN
+   //     Double_t Dn = goft->KolmogorovSmirnov2SamplesTest("t"); // standardized A2_akN
       Double_t Dn = (*goft)(ROOT::Math::GoFTest::kKS2s, "t");
       Double_t pvalueKS = goft->KolmogorovSmirnov2SamplesTest();
 
@@ -141,7 +141,7 @@ struct GoFTStress {
 
       ROOT::Math::GoFTest* goft = new ROOT::Math::GoFTest( smpSize, smp1, smpSize, smp2 );
 
-   //     Double_t A2 = goft->AndersonDarling2SamplesTest("t"); // standartized A2_akN
+   //     Double_t A2 = goft->AndersonDarling2SamplesTest("t"); // standardized A2_akN
       Double_t A2 = (*goft)(ROOT::Math::GoFTest::kAD2s, "t");
       Double_t pvalueAD = goft->AndersonDarling2SamplesTest();
 
@@ -153,7 +153,7 @@ struct GoFTStress {
 
       Int_t result = PrintResultAD2Samples(nsmps, A2, expectedA2_akN, sigmaN, zScore, pvalueAD);
 
-      Double_t Dn = goft->KolmogorovSmirnov2SamplesTest("t"); // standartized A2_akN
+      Double_t Dn = goft->KolmogorovSmirnov2SamplesTest("t"); // standardized A2_akN
    //     Double_t pvalueKS = goft->KolmogorovSmirnov2SamplesTest();
       Double_t pvalueKS = (*goft)(ROOT::Math::GoFTest::kKS2s);
 
@@ -551,7 +551,7 @@ Int_t RunTests(Int_t argc, Char_t* argv[]) {
    return result;
 }
 
-Int_t stressGoFTest(Int_t argc = 1 , Char_t* argv[] = 0) {
+Int_t stressGoFTest(Int_t argc = 1 , Char_t* argv[] = nullptr) {
    return RunTests(argc, argv);
 }
 

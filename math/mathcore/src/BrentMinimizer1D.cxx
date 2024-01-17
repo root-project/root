@@ -2,22 +2,11 @@
 // Author: David Gonzalez Maline 2/2008
  /**********************************************************************
   *                                                                    *
-  * Copyright (c) 2004 Maline,  CERN/PH-SFT                            *
+  * Copyright (c) 2006  CERN                                           *
+  * All rights reserved.                                               *
   *                                                                    *
-  * This library is free software; you can redistribute it and/or      *
-  * modify it under the terms of the GNU General Public License        *
-  * as published by the Free Software Foundation; either version 2     *
-  * of the License, or (at your option) any later version.             *
-  *                                                                    *
-  * This library is distributed in the hope that it will be useful,    *
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU   *
-  * General Public License for more details.                           *
-  *                                                                    *
-  * You should have received a copy of the GNU General Public License  *
-  * along with this library (see file COPYING); if not, write          *
-  * to the Free Software Foundation, Inc., 59 Temple Place, Suite      *
-  * 330, Boston, MA 02111-1307 USA, or contact the author.             *
+  * For the licensing terms see $ROOTSYS/LICENSE.                      *
+  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
   *                                                                    *
   **********************************************************************/
 
@@ -38,11 +27,11 @@ namespace ROOT {
 namespace Math {
 
 static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the minimum
-static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
+static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeted
 
 
    BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(),
-                                         fFunction(0),
+                                         fFunction(nullptr),
                                          fLogScan(false), fNIter(0),
                                          fNpx(0), fStatus(-1),
                                          fXMin(0), fXMax(0), fXMinimum(0)
@@ -89,7 +78,7 @@ bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
 // Find minimum position iterating until convergence specified by the
 // absolute and relative tolerance or the maximum number of iteration
 // is reached.
-// repet search (Bracketing + Brent) until max number of search is reached (default is 10)
+// repeat search (Bracketing + Brent) until max number of search is reached (default is 10)
 // maxITer refers to the iterations inside the Brent algorithm
 
    if (!fFunction) {

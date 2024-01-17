@@ -125,10 +125,10 @@ public:
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TH1Editor();
+   ~TH1Editor() override;
 
-   virtual Bool_t AcceptModel(TObject* model);
-   virtual void   SetModel(TObject* obj);
+   Bool_t AcceptModel(TObject* model) override;
+   void   SetModel(TObject* obj) override;
 
    virtual void DoTitle(const char *text);
    virtual void DoAddMarker(Bool_t on);
@@ -162,10 +162,10 @@ public:
    virtual void DoCancel();
    virtual void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    Int_t* Dividers(Int_t n);
-   virtual void RecursiveRemove(TObject* obj);
+   void RecursiveRemove(TObject* obj) override;
 
 
-   ClassDef(TH1Editor,0)  // TH1 editor
+   ClassDefOverride(TH1Editor,0)  // TH1 editor
 };
 
 #endif

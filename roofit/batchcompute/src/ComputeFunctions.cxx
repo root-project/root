@@ -309,11 +309,39 @@ __rooglobal__ void computeDstD0BG(BatchesHandle batches)
          batches._output[i] = 0;
 }
 
+__rooglobal__ void computeExpPoly(BatchesHandle batches)
+{
+   int lowestOrder = batches.extraArg(0);
+   int nTerms = batches.extraArg(1);
+   auto x = batches[0];
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = 0.0;
+      double xTmp = std::pow(x[i], lowestOrder);
+      for (int k = 0; k < nTerms; ++k) {
+         batches._output[i] += batches[k + 1][i] * xTmp;
+         xTmp *= x[i];
+      }
+      batches._output[i] = std::exp(batches._output[i]);
+   }
+}
+
 __rooglobal__ void computeExponential(BatchesHandle batches)
 {
-   Batch x = batches[0], c = batches[1];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   Batch x = batches[0];
+   Batch c = batches[1];
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       batches._output[i] = fast_exp(x[i] * c[i]);
+   }
+}
+
+__rooglobal__ void computeExponentialNeg(BatchesHandle batches)
+{
+   Batch x = batches[0];
+   Batch c = batches[1];
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = fast_exp(-x[i] * c[i]);
+   }
 }
 
 __rooglobal__ void computeGamma(BatchesHandle batches)
@@ -515,10 +543,25 @@ __rooglobal__ void computeLandau(BatchesHandle batches)
 __rooglobal__ void computeLognormal(BatchesHandle batches)
 {
    Batch X = batches[0], M0 = batches[1], K = batches[2];
-   const double rootOf2pi = 2.506628274631000502415765284811;
+   constexpr double rootOf2pi = 2.506628274631000502415765284811;
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       double lnxOverM0 = fast_log(X[i] / M0[i]);
       double lnk = fast_log(K[i]);
+      if (lnk < 0)
+         lnk = -lnk;
+      double arg = lnxOverM0 / lnk;
+      arg *= -0.5 * arg;
+      batches._output[i] = fast_exp(arg) / (X[i] * lnk * rootOf2pi);
+   }
+}
+
+__rooglobal__ void computeLognormalStandard(BatchesHandle batches)
+{
+   Batch X = batches[0], M0 = batches[1], K = batches[2];
+   constexpr double rootOf2pi = 2.506628274631000502415765284811;
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double lnxOverM0 = fast_log(X[i]) - M0[i];
+      double lnk = K[i];
       if (lnk < 0)
          lnk = -lnk;
       double arg = lnxOverM0 / lnk;
@@ -589,7 +632,7 @@ __rooglobal__ void computeNovosibirsk(BatchesHandle batches)
       batches._output[i] -= 2.0 / xi / xi * asinh * asinh;
    }
 
-   // faster if you exponentiate in a seperate loop (dark magic!)
+   // faster if you exponentiate in a separate loop (dark magic!)
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = fast_exp(batches._output[i]);
 }
@@ -636,6 +679,19 @@ __rooglobal__ void computePolynomial(BatchesHandle batches)
    for (int k = nCoef - 2; k >= 0; k--) {
       for (size_t i = BEGIN; i < nEvents; i += STEP) {
          batches._output[i] = batches[k][i] + x[i] * batches._output[i];
+      }
+   }
+}
+
+__rooglobal__ void computePower(BatchesHandle batches)
+{
+   const int nCoef = batches.extraArg(0);
+   Batch x = batches[0];
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = 0.0;
+      for (int k = 0; k < nCoef; ++k) {
+         batches._output[i] += batches[2 * k + 1][i] * std::pow(x[i], batches[2 * k + 2][i]);
       }
    }
 }
@@ -798,7 +854,9 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeChiSquare,
            computeDeltaFunction,
            computeDstD0BG,
+           computeExpPoly,
            computeExponential,
+           computeExponentialNeg,
            computeGamma,
            computeGaussModelExpBasis,
            computeGaussian,
@@ -806,11 +864,13 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeJohnson,
            computeLandau,
            computeLognormal,
+           computeLognormalStandard,
            computeNegativeLogarithms,
            computeNormalizedPdf,
            computeNovosibirsk,
            computePoisson,
            computePolynomial,
+           computePower,
            computeProdPdf,
            computeRatio,
            computeTruthModelExpBasis,

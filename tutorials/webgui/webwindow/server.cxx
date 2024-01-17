@@ -10,7 +10,7 @@
 
 #include <ROOT/RWebWindow.hxx>
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> window;
+std::shared_ptr<ROOT::RWebWindow> window;
 
 int counter{0};
 
@@ -38,7 +38,7 @@ void ProcessData(unsigned connid, const std::string &arg)
 void server()
 {
    // create window
-   window = ROOT::Experimental::RWebWindow::Create();
+   window = ROOT::RWebWindow::Create();
 
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix

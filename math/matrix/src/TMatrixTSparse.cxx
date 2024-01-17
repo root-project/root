@@ -17,7 +17,7 @@
  Template class of a general sparse matrix in the Harwell-Boeing
  format
 
- Besides the usual shape/size decsriptors of a matrix like fNrows,
+ Besides the usual shape/size descriptors of a matrix like fNrows,
  fRowLwb,fNcols and fColLwb, we also store a row index, fRowIndex and
  column index, fColIndex only for those elements unequal zero:
 
@@ -44,7 +44,7 @@
 ~~~
 
  When checking whether sparse matrices are compatible (like in an
- assigment !), not only the shape parameters are compared but also
+ assignment !), not only the shape parameters are compared but also
  the sparse structure through fRowIndex and fColIndex .
 
  Several methods exist to fill a sparse matrix with data entries.
@@ -355,8 +355,8 @@ void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb
          memset(fColIndex,0,this->fNelems*sizeof(Int_t));
       }
    } else {
-      fElements = 0;
-      fColIndex = 0;
+      fElements = nullptr;
+      fColIndex = nullptr;
    }
 }
 
@@ -1185,7 +1185,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    R__ASSERT(row[irowmin] >= this->fRowLwb && row[irowmax] <= this->fRowLwb+this->fNrows-1);
    R__ASSERT(col[icolmin] >= this->fColLwb && col[icolmax] <= this->fColLwb+this->fNcols-1);
 
-   if (row[irowmin] < this->fRowLwb || row[irowmax] > this->fRowLwb+this->fNrows-1) {
+   if (row[irowmin] <  this->fRowLwb|| row[irowmax] > this->fRowLwb+this->fNrows-1) {
       Error("SetMatrixArray","Inconsistency between row index and its range");
       if (row[irowmin] < this->fRowLwb) {
          Info("SetMatrixArray","row index lower bound adjusted to %d",row[irowmin]);
@@ -1218,15 +1218,15 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
       if (*ep++ != 0.0) nr_nonzeros++;
 
    if (nr_nonzeros != this->fNelems) {
-      if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
-      if (fElements) { delete [] fElements; fElements = 0; }
+      if (fColIndex) { delete [] fColIndex; fColIndex = nullptr; }
+      if (fElements) { delete [] fElements; fElements = nullptr; }
       this->fNelems = nr_nonzeros;
       if (this->fNelems > 0) {
          fColIndex = new Int_t[nr_nonzeros];
          fElements = new Element[nr_nonzeros];
       } else {
-         fColIndex = 0;
-         fElements = 0;
+         fColIndex = nullptr;
+         fElements = nullptr;
       }
    }
 
@@ -1237,7 +1237,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    Int_t ielem = 0;
    nr_nonzeros = 0;
    for (Int_t irow = 1; irow < this->fNrows+1; irow++) {
-      if (ielem < nr && row[ielem] < irow) {
+      if (ielem < nr && row[ielem] - this->fRowLwb < irow) {
          while (ielem < nr) {
             if (data[ielem] != 0.0) {
                fColIndex[nr_nonzeros] = col[ielem]-this->fColLwb;
@@ -2043,8 +2043,8 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::Zero()
 {
    R__ASSERT(this->IsValid());
 
-   if (fElements) { delete [] fElements; fElements = 0; }
-   if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
+   if (fElements) { delete [] fElements; fElements = nullptr; }
+   if (fColIndex) { delete [] fColIndex; fColIndex = nullptr; }
    this->fNelems = 0;
    memset(this->GetRowIndexArray(),0,this->fNrowIndex*sizeof(Int_t));
 

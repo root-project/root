@@ -1,0 +1,2 @@
+builtin_nlohmannjson=ON
+builtin_vdt=On

@@ -23,8 +23,8 @@ Bool_t finished;
 void *handle(void *ptr)
 {
    long nr = (long) ptr;
-   Long64_t nfills = 25000000;
-   int upd = 50000;
+   Long64_t nfills = 250;
+   int upd = 50;
 
    char name[32];
    sprintf(name,"hpx%ld",nr);
@@ -46,7 +46,7 @@ void *handle(void *ptr)
             TThread::UnLock();
          }
          if (c[nr]) c[nr]->Modified();
-         gSystem->Sleep(10);
+         gSystem->Sleep(4);
       }
    }
    return 0;
@@ -136,7 +136,7 @@ void threadsh1()
             c[i]->Update();
          }
       }
-      gSystem->Sleep(100);
+      gSystem->Sleep(10);
       gSystem->ProcessEvents();
    }
 

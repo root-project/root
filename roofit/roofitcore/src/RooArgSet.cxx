@@ -37,10 +37,10 @@
 /// ownership status. Arguments supplied in the constructor are always added
 /// as unowned elements.
 ///
-/// 
+///
 /// Uniquely identifying RooArgSet objects
 /// ---------------------------------------
-/// 
+///
 /// \warning Before v6.28, it was ensured that no RooArgSet objects on the heap
 /// were located at an address that had already been used for a RooArgSet before.
 /// With v6.28, this is not guaranteed anymore. Hence, if your code uses pointer
@@ -121,7 +121,7 @@ void* RooArgSet::operator new (size_t bytes)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Overloaded new operator with placement does not guarante that all
+/// Overloaded new operator with placement does not guarantee that all
 /// RooArgSets allocated with new have a unique address, but uses the global
 /// operator.
 
@@ -435,7 +435,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
   bool inSection(section?false:true) ;
 
   bool reprocessToken = false ;
-  while (1) {
+  while (true) {
 
     if (is.eof() || is.fail() || parser.atEOF()) {
       break ;
@@ -467,7 +467,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
       }
       coutI(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): processing include file "
           << filename << endl ;
-      if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return true ;
+      if (readFromStream(incfs,compact,flagReadAtt,inSection?nullptr:section,verbose)) return true ;
       continue ;
     }
 
@@ -638,7 +638,7 @@ bool RooArgSet::isInRange(const char* rangeSpec)
       return true ;
     }
 
-    token = strtok(0,",") ;
+    token = strtok(nullptr,",") ;
   }
 
   return false ;

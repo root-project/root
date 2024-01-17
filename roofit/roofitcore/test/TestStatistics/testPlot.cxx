@@ -10,16 +10,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooWorkspace.h>
-#include <RooPlot.h>
-#include <RooDataSet.h>
-#include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooAbsPdf.h>
-#include <RooRealVar.h>
-#include <RooFit/TestStatistics/RooRealL.h>
+#include <RooDataSet.h>
 #include <RooFit/MultiProcess/Config.h>
+#include <RooFit/TestStatistics/RooRealL.h>
+#include <RooFit/TestStatistics/buildLikelihood.h>
+#include <RooHelpers.h>
 #include <RooMinimizer.h>
+#include <RooPlot.h>
+#include <RooRealVar.h>
 #include <RooUnitTest.h>
+#include <RooWorkspace.h>
 
 #include <TFile.h>
 
@@ -85,10 +86,6 @@ public:
       // Minimize
       m.migrad();
 
-      // To reset the fitter. Otherwise, the fitter will point to a functor
-      // that points to the likelihood that will be deleted before.
-      m.cleanup();
-
       // C o n v e r t  t o  R o o R e a l L  a n d  p l o t
       // ---------------------------------------------------
       RooPlot *xframe = w.var("mu")->frame(-1, 10);
@@ -106,6 +103,8 @@ TEST(TestStatisticsPlot, RooRealL)
    // Run the RooUnitTest and assert that it succeeds with gtest
 
    RooUnitTest::setMemDir(gDirectory);
+
+   gErrorIgnoreLevel = kWarning;
 
    TFile fref("TestStatistics_ref.root");
 

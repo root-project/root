@@ -39,7 +39,6 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "RooTrace.h"
 #include "RooRealVarSharedProperties.h"
 #include "RooUniformBinning.h"
-#include "RunContext.h"
 #include "RooSentinel.h"
 
 #include "TTree.h"
@@ -69,7 +68,7 @@ RooRealVar::SharedPropertiesMap* RooRealVar::sharedPropList()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely deletes the shared properties list on exit to avoid problems
+/// Explicitly deletes the shared properties list on exit to avoid problems
 /// with the initialization order. Meant to be only used internally in RooFit
 /// by RooSentinel.
 
@@ -79,6 +78,24 @@ void RooRealVar::cleanup()
     delete sharedPropList();
     staticSharedPropListCleanedUp = true;
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RooRealVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   if(!isConstant()) {
+      ctx.addResult(this, GetName());
+   }
+   // Just return a formatted version of the const value.
+   // Formats to the maximum precision.
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   std::stringstream ss;
+   ss.precision(max_precision);
+   // Just use toString to make sure we do not output 'inf'.
+   // This is really ugly for large numbers...
+   ss << std::fixed << RooNumber::toString(_value);
+   ctx.addResult(this, ss.str());
 }
 
 /// Return a dummy object to use when properties are not initialised.
@@ -161,7 +178,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
     setRange(minValue,maxValue) ;
 
     double clipValue ;
-    inRange(value,0,&clipValue) ;
+    inRange(value,nullptr,&clipValue) ;
     _value = clipValue ;
 
     TRACE_CREATE
@@ -200,7 +217,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 
 RooRealVar::~RooRealVar()
 {
-  // We should not forget to explicitely call deleteSharedProperties() in the
+  // We should not forget to explicitly call deleteSharedProperties() in the
   // destructor, because this is where the expired weak_ptrs in the
   // _sharedPropList get erased.
   deleteSharedProperties();
@@ -219,42 +236,13 @@ double RooRealVar::getValV(const RooArgSet*) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve data column of this variable.
-/// \param inputData Struct with data arrays.
-/// 1. Check if `inputData` has a column of data registered for this variable (checks the pointer).
-/// 2. If not, check if there's an object with the same name, and use this object's values.
-/// 3. If there is no such object, return a batch of size one with the current value of the variable.
-/// For cases 2. and 3., the data column in `inputData` is associated to this object, so the next call can return it immediately.
-RooSpan<const double> RooRealVar::getValues(RooBatchCompute::RunContext& inputData, const RooArgSet*) const {
-  auto item = inputData.spans.find(this);
-  if (item != inputData.spans.end()) {
-    return item->second;
-  }
-
-  for (const auto& var_span : inputData.spans) {
-    auto var = var_span.first;
-    if (var == RooFit::Detail::DataKey{this}) {
-      // A variable with the same name exists in the input data. Use their values as ours.
-      inputData.spans[this] = var_span.second;
-      return var_span.second;
-    }
-  }
-
-  auto output = inputData.makeBatch(this, 1);
-  output[0] = _value;
-
-  return output;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set value of variable to 'value'. If 'value' is outside
 /// range of object, clip value into range
 
 void RooRealVar::setVal(double value)
 {
   double clipValue ;
-  inRange(value,0,&clipValue) ;
+  inRange(value,nullptr,&clipValue) ;
 
   if (clipValue != _value) {
     setValueDirty() ;
@@ -330,7 +318,7 @@ const RooAbsBinning& RooRealVar::getBinning(const char* name, bool verbose, bool
 RooAbsBinning& RooRealVar::getBinning(const char* name, bool verbose, bool createOnTheFly)
 {
   // Return default (normalization) binning and range if no name is specified
-  if (name==0) {
+  if (name==nullptr) {
     return *_binning ;
   }
 
@@ -474,7 +462,7 @@ void RooRealVar::setMin(const char* name, double value)
   // Clip current value in window if it fell out
   if (!name) {
     double clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
+    if (!inRange(_value,nullptr,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -504,7 +492,7 @@ void RooRealVar::setMax(const char* name, double value)
   // Clip current value in window if it fell out
   if (!name) {
     double clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
+    if (!inRange(_value,nullptr,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -590,7 +578,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
     removeAsymError() ;
 
     bool reprocessToken = false ;
-    while(1) {
+    while(true) {
       if (parser.atEOL() || parser.atEOF()) break ;
 
       if (!reprocessToken) {
@@ -644,7 +632,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
             parser.readInteger(plotBins,true) ||
        parser.expectToken(")",true)) break ;
 //    setPlotRange(plotMin,plotMax) ;
-   coutW(Eval) << "RooRealVar::readFromStrem(" << GetName()
+   coutW(Eval) << "RooRealVar::readFromStream(" << GetName()
         << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
 
       } else if (!token.CompareTo("F")) {
@@ -856,7 +844,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
   RooCmdArg tmp(formatArg) ;
   tmp.setProcessRecArgs(true) ;
 
-  RooCmdConfig pc(Form("RooRealVar::format(%s)",GetName())) ;
+  RooCmdConfig pc("RooRealVar::format(" + std::string(GetName()) + ")");
   pc.defineString("what","FormatArgs",0,"") ;
   pc.defineInt("autop","FormatArgs::AutoPrecision",0,2) ;
   pc.defineInt("fixedp","FormatArgs::FixedPrecision",0,2) ;
@@ -870,7 +858,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
   // Process & check varargs
   pc.process(tmp) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Extract values from named arguments

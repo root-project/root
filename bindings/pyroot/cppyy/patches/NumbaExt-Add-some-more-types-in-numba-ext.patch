@@ -1,0 +1,31 @@
+From 9fcfb0d87aa63bdb735baf60ade4856fc90bdb46 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Mon, 5 Sep 2022 15:35:54 +0200
+Subject: [PATCH 31/34] [PyROOT] Add some more types in numba ext
+
+---
+ bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
+index bffa0e933f..d20c3e9c9d 100644
+--- a/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
++++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
+@@ -51,10 +51,12 @@ _cpp2numba = {
+     'uint64_t'               : nb_types.uint64,
+     'long'                   : nb_types.long_,
+     'unsigned long'          : nb_types.ulong,
+-    'long long'              : nb_types.longlong,
++    'Long64_t'               : nb_types.longlong,   # Note: placed above long long as the last value is used in numba2cpp
++    'long long'              : nb_types.longlong,   # this value will be used in numba2cpp
+     'unsigned long long'     : nb_types.ulonglong,
+     'float'                  : nb_types.float32,
+-    'double'                 : nb_types.float64,
++    'long double'            : nb_types.float64,    # Note: see Long64_t
++    'double'                 : nb_types.float64,    # this value will be used in numba2cpp
+ }
+ 
+ def cpp2numba(val):
+-- 
+2.39.0
+

@@ -39,6 +39,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <numeric>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -502,7 +503,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
 
       // Initializing loop variables
       Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
-      char * token = NULL ;
+      char * token = nullptr ;
       TString token_str = "" ;
       Int_t token_idx = 0 ;
       Double_t * value = new Double_t [2] ; //x,y buffers
@@ -511,13 +512,13 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       // Looping
       char *rest;
       while (std::getline(infile, line, '\n')) {
-         if (line != "") {
+         if (!line.empty()) {
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
             //token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, rest);
             token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, &rest);
-            while (token != NULL && value_idx < 2) {
+            while (token != nullptr && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
                   token_str.ReplaceAll("\t", "") ;
@@ -529,7 +530,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = R__STRTOK_R(NULL, option, &rest); // next token
+               token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 2) {
@@ -540,7 +541,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
             }
          }
          isLineToBeSkipped = kFALSE ;
-         token = NULL ;
+         token = nullptr ;
          token_idx = 0 ;
          value_idx = 0 ;
       }
@@ -1204,7 +1205,7 @@ TObject *TGraph::FindObject(const TObject *obj) const
 TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
 {
    Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph, option, fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kGraph, option, fitOption);
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(rxmin, rxmax);
    ROOT::Math::MinimizerOptions minOption;
@@ -1482,29 +1483,18 @@ TH1F *TGraph::GetHistogram() const
       fHistogram->GetXaxis()->CenterTitle(historg->GetXaxis()->GetCenterTitle());
       fHistogram->GetXaxis()->RotateTitle(historg->GetXaxis()->GetRotateTitle());
       fHistogram->GetXaxis()->SetNoExponent(historg->GetXaxis()->GetNoExponent());
-      fHistogram->GetXaxis()->SetNdivisions(historg->GetXaxis()->GetNdivisions());
-      fHistogram->GetXaxis()->SetLabelFont(historg->GetXaxis()->GetLabelFont());
-      fHistogram->GetXaxis()->SetLabelOffset(historg->GetXaxis()->GetLabelOffset());
-      fHistogram->GetXaxis()->SetLabelSize(historg->GetXaxis()->GetLabelSize());
-      fHistogram->GetXaxis()->SetTitleSize(historg->GetXaxis()->GetTitleSize());
-      fHistogram->GetXaxis()->SetTitleOffset(historg->GetXaxis()->GetTitleOffset());
-      fHistogram->GetXaxis()->SetTitleFont(historg->GetXaxis()->GetTitleFont());
       fHistogram->GetXaxis()->SetTimeDisplay(historg->GetXaxis()->GetTimeDisplay());
       fHistogram->GetXaxis()->SetTimeFormat(historg->GetXaxis()->GetTimeFormat());
+      historg->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
 
       fHistogram->GetYaxis()->SetTitle(historg->GetYaxis()->GetTitle());
       fHistogram->GetYaxis()->CenterTitle(historg->GetYaxis()->GetCenterTitle());
       fHistogram->GetYaxis()->RotateTitle(historg->GetYaxis()->GetRotateTitle());
       fHistogram->GetYaxis()->SetNoExponent(historg->GetYaxis()->GetNoExponent());
-      fHistogram->GetYaxis()->SetNdivisions(historg->GetYaxis()->GetNdivisions());
-      fHistogram->GetYaxis()->SetLabelFont(historg->GetYaxis()->GetLabelFont());
-      fHistogram->GetYaxis()->SetLabelOffset(historg->GetYaxis()->GetLabelOffset());
-      fHistogram->GetYaxis()->SetLabelSize(historg->GetYaxis()->GetLabelSize());
-      fHistogram->GetYaxis()->SetTitleSize(historg->GetYaxis()->GetTitleSize());
-      fHistogram->GetYaxis()->SetTitleOffset(historg->GetYaxis()->GetTitleOffset());
-      fHistogram->GetYaxis()->SetTitleFont(historg->GetYaxis()->GetTitleFont());
       fHistogram->GetYaxis()->SetTimeDisplay(historg->GetYaxis()->GetTimeDisplay());
       fHistogram->GetYaxis()->SetTimeFormat(historg->GetYaxis()->GetTimeFormat());
+      historg->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
+
       delete historg;
    }
    return fHistogram;
@@ -2466,36 +2456,31 @@ Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 ///   graph->Sort(&CompareErrors, kFALSE);
 /// ~~~
 
-void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
-                  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */)
+void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph *, Int_t, Int_t) /*=TGraph::CompareX()*/,
+                  Bool_t ascending /*=kTRUE*/, Int_t low /*=0*/, Int_t high /*=-1111*/)
 {
-
    // set the bit in case of an ascending =sort in X
-   if (greaterfunc == TGraph::CompareX && ascending  && low == 0 && high == -1111)
+   if (greaterfunc == TGraph::CompareX && ascending && low == 0 && high == -1111)
       SetBit(TGraph::kIsSortedX);
 
-   if (high == -1111) high = GetN() - 1;
-   //  Termination condition
-   if (high <= low) return;
+   if (high == -1111)
+      high = fNpoints - 1;
 
-   int left, right;
-   left = low; // low is the pivot element
-   right = high;
-   while (left < right) {
-      // move left while item < pivot
-      while (left <= high && greaterfunc(this, left, low) != ascending)
-         left++;
-      // move right while item > pivot
-      while (right > low && greaterfunc(this, right, low) == ascending)
-         right--;
-      if (left < right && left < high && right > low)
-         SwapPoints(left, right);
-   }
-   // right is final position for the pivot
-   if (right > low)
-      SwapPoints(low, right);
-   Sort(greaterfunc, ascending, low, right - 1);
-   Sort(greaterfunc, ascending, right + 1, high);
+   // Create a vector to store the indices of the graph data points.
+   // We use std::vector<Int_t> instead of std::vector<ULong64_t> to match the input type
+   // required by the comparison operator's signature provided as `greaterfunc`
+   std::vector<Int_t> sorting_indices(fNpoints);
+   std::iota(sorting_indices.begin(), sorting_indices.end(), 0);
+
+   // Sort the indices using the provided comparison function
+   // We use std::stable_sort here because the libc++ implementation of std::sort
+   // is not standard-compliant until LLVM 14 which caused errors on the mac nodes
+   // of our CI, related issue: https://github.com/llvm/llvm-project/issues/21211
+   std::stable_sort(sorting_indices.begin() + low, sorting_indices.begin() + high + 1,
+             [&](const auto &left, const auto &right) { return greaterfunc(this, left, right) != ascending; });
+
+   Int_t numSortedPoints = high - low + 1;
+   UpdateArrays(sorting_indices, numSortedPoints, low);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2572,6 +2557,25 @@ void TGraph::SwapPoints(Int_t pos1, Int_t pos2)
 {
    SwapValues(fX, pos1, pos2);
    SwapValues(fY, pos1, pos2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update the fX and fY arrays with the sorted values.
+
+void TGraph::UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low)
+{
+   std::vector<Double_t> fXSorted(numSortedPoints);
+   std::vector<Double_t> fYSorted(numSortedPoints);
+
+   // Fill the sorted X and Y values based on the sorted indices
+   std::generate(fXSorted.begin(), fXSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fX[sorting_indices[begin++]]; });
+   std::generate(fYSorted.begin(), fYSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fY[sorting_indices[begin++]]; });
+
+   // Copy the sorted X and Y values back to the original arrays
+   std::copy(fXSorted.begin(), fXSorted.end(), fX + low);
+   std::copy(fYSorted.begin(), fYSorted.end(), fY + low);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

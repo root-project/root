@@ -39,20 +39,21 @@ TEST(RooDataSet, ImportFromTreeWithCut)
    RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::InputArguments);
 
    TTree tree("tree", "tree");
-   double thex, they;
-   tree.Branch("x", &thex);
-   tree.Branch("y", &they);
-   tree.Branch("z", &they);
-   thex = -0.337;
-   they = 1.;
+   double theXVal;
+   double theYVal;
+   tree.Branch("x", &theXVal);
+   tree.Branch("y", &theYVal);
+   tree.Branch("z", &theYVal);
+   theXVal = -0.337;
+   theYVal = 1.;
    tree.Fill();
 
-   thex = 0.337;
-   they = 1.;
+   theXVal = 0.337;
+   theYVal = 1.;
    tree.Fill();
 
-   thex = 1.337;
-   they = 1.;
+   theXVal = 1.337;
+   theYVal = 1.;
    tree.Fill();
 
    RooRealVar x("x", "x", 0);
@@ -74,11 +75,11 @@ TEST(RooDataSet, ImportLongBranchNames)
 {
 
    TTree tree("theTree", "theTree");
-   double doub = 0.;
-   tree.Branch("HLT_mu6_mu4_bBmumux_BsmumuPhi_delayed_L1BPH_2M8_MU6MU4_BPH_0DR15_MU6MU4", &doub);
-   doub = 2.;
+   double myDouble = 0.;
+   tree.Branch("HLT_mu6_mu4_bBmumux_BsmumuPhi_delayed_L1BPH_2M8_MU6MU4_BPH_0DR15_MU6MU4", &myDouble);
+   myDouble = 2.;
    tree.Fill();
-   doub = 4.;
+   myDouble = 4.;
    tree.Fill();
 
    RooRealVar *v =
@@ -124,7 +125,7 @@ TEST(RooDataSet, BinnedClone)
    RooRealVar weight("weight", "weight", 1, 0, 100);
 
    {
-      RooDataSet data{"dataset", "dataset", &chain, RooArgSet(mes, weight), 0, weight.GetName()};
+      RooDataSet data{"dataset", "dataset", &chain, RooArgSet(mes, weight), nullptr, weight.GetName()};
       std::unique_ptr<RooDataHist> hist{data.binnedClone()};
 
       EXPECT_DOUBLE_EQ(hist->sumEntries(), sumW);
@@ -180,16 +181,14 @@ TEST(RooDataSet, ReducingData)
       ASSERT_EQ(test_hist.Integral(), drawnEvents);
 
       // For unbinned data, reducing should be equivalent to the tree.
-      std::unique_ptr<RooDataSet> data_unbinned_reduced(
-         static_cast<RooDataSet *>(data_unbinned->reduce(RooFit::Cut(chi2_test_cut))));
+      std::unique_ptr<RooAbsData> data_unbinned_reduced{data_unbinned->reduce(RooFit::Cut(chi2_test_cut))};
       EXPECT_DOUBLE_EQ(data_unbinned_reduced->sumEntries(), test_hist.Integral());
       EXPECT_EQ(data_unbinned_reduced->numEntries(), test_hist.Integral());
 
       // When using binned data, reducing and expecting the ame number of entries as in the unbinned case is not
       // possible, since information is lost if entries to the left and right of the cut end up in the same bin.
       // Therefore, can only test <=
-      std::unique_ptr<RooDataHist> reduced_binned_data(
-         static_cast<RooDataHist *>(data->reduce(RooFit::Cut(chi2_test_cut))));
+      std::unique_ptr<RooAbsData> reduced_binned_data{data->reduce(RooFit::Cut(chi2_test_cut))};
       if (floor(chi2cutval) == chi2cutval)
          EXPECT_FLOAT_EQ(reduced_binned_data->sumEntries(), test_hist.Integral());
       else

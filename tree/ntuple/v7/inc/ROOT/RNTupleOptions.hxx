@@ -47,6 +47,7 @@ All page sink classes need to support the common options.
 */
 // clang-format on
 class RNTupleWriteOptions {
+protected:
    int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
    ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
    /// Approximation of the target compressed cluster size
@@ -60,8 +61,16 @@ class RNTupleWriteOptions {
    /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
    std::size_t fApproxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
+   /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
+   /// but it can result in smaller file sizes for data sets with many collections and lz4 or no compression.
+   bool fHasSmallClusters = false;
 
 public:
+   /// A maximum size of 512MB still allows for a vector of bool to be stored in a small cluster.  This is the
+   /// worst case wrt. the maximum required size of the index column.  A 32bit index column can address 512MB
+   /// of 1-bit (on disk size) bools.
+   static constexpr std::uint64_t kMaxSmallClusterSize = 512 * 1024 * 1024;
+
    virtual ~RNTupleWriteOptions() = default;
    virtual std::unique_ptr<RNTupleWriteOptions> Clone() const;
 
@@ -85,6 +94,9 @@ public:
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
+
+   bool GetHasSmallClusters() const { return fHasSmallClusters; }
+   void SetHasSmallClusters(bool val) { fHasSmallClusters = val; }
 };
 
 // clang-format off
@@ -95,7 +107,11 @@ public:
 */
 // clang-format on
 class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
-  std::string fObjectClass{"SX"};
+   std::string fObjectClass{"SX"};
+   /// The maximum cage size is set to the equivalent of 16 uncompressed pages - 1MiB by default. Empirically, such a
+   /// cage size yields acceptable results in throughput and page granularity for most use cases. A `fMaxCageSize` of 0
+   /// disables the caging mechanism.
+   uint32_t fMaxCageSize = 16 * RNTupleWriteOptions::fApproxUnzippedPageSize;
 
 public:
    ~RNTupleWriteOptionsDaos() override = default;
@@ -107,6 +123,12 @@ public:
    /// `OC_xxx` constant defined in `daos_obj_class.h` may be used here without
    /// the OC_ prefix.
    void SetObjectClass(const std::string &val) { fObjectClass = val; }
+
+   uint32_t GetMaxCageSize() const { return fMaxCageSize; }
+   /// Set the upper bound for page concatenation into cages, in bytes. It is assumed
+   /// that cage size will be no smaller than the approximate uncompressed page size.
+   /// To disable page concatenation, set this value to 0.
+   void SetMaxCageSize(uint32_t cageSz) { fMaxCageSize = cageSz; }
 };
 
 // clang-format off

@@ -103,8 +103,8 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, bool s
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
 
-  // Check that PROOF initialization actually succeeeded
-  if (p==0) {
+  // Check that PROOF initialization actually succeeded
+  if (p==nullptr) {
     coutE(Generation) << "RooStudyManager::runProof(" << GetName() << ") ERROR initializing proof, aborting" << endl ;
     return ;
   }
@@ -181,7 +181,7 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
     // Write uuencoded ROOT file (base64) in driver script
     gSystem->Exec(Form("cat study_data_%s.root | uuencode -m study_data_%s.root >> study_driver_%s.sh",studyName,studyName,studyName)) ;
 
-    // Write remainder of deriver script
+    // Write remainder of driver script
     ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
     bdr2 << "EOR" << endl
     << "fi" << endl

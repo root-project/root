@@ -25,76 +25,46 @@ so that they can contain data for every kind of compute function.
 
 #include <RooBatchComputeTypes.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace RooBatchCompute {
 
-#ifdef __CUDACC__
-// In the CPU case we use std::vector instead of fixed size arrays to pass
-// around data, so no maximum size variables are necessary.
-constexpr std::size_t maxParams = 8;
-constexpr std::size_t maxExtraArgs = 16;
-#endif // #ifdef __CUDACC__
 constexpr std::size_t bufferSize = 64;
 
 namespace RF_ARCH {
 
 class Batch {
-private:
-   double _scalar = 0;
+public:
    const double *__restrict _array = nullptr;
    bool _isVector = false;
 
-public:
    Batch() = default;
-   inline Batch(InputArr array, bool isVector) : _scalar{array[0]}, _array{array}, _isVector{isVector} {}
+   inline Batch(InputArr array, bool isVector) : _array{array}, _isVector{isVector} {}
 
    __roodevice__ constexpr bool isItVector() const { return _isVector; }
-   inline void set(double scalar, InputArr array, bool isVector)
+   inline void set(InputArr array, bool isVector)
    {
-      _scalar = scalar;
       _array = array;
       _isVector = isVector;
    }
    inline void advance(std::size_t _nEvents) { _array += _isVector * _nEvents; }
 #ifdef __CUDACC__
-   __roodevice__ constexpr double operator[](std::size_t i) const noexcept { return _isVector ? _array[i] : _scalar; }
+   __roodevice__ constexpr double operator[](std::size_t i) const noexcept { return _isVector ? _array[i] : _array[0]; }
 #else
    constexpr double operator[](std::size_t i) const noexcept { return _array[i]; }
 #endif // #ifdef __CUDACC__
-};     // end class Batch
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Batches {
-private:
-#ifdef __CUDACC__
-   // In the GPU case, we used fixed-size buffers to pass around input arrays by value.
-   Batch _arrays[maxParams];
-   double _extraArgs[maxExtraArgs];
-#else
-   std::vector<Batch> _arrays;
-   double *const _extraArgs = nullptr;
-#endif // #ifdef __CUDACC__
+public:
+   Batch *_arrays = nullptr;
+   double *_extraArgs = nullptr;
    std::size_t _nEvents = 0;
    std::size_t _nBatches = 0;
    std::size_t _nExtraArgs = 0;
-
-public:
    RestrictArr _output = nullptr;
-
-   Batches(RestrictArr output, std::size_t nEvents, const VarVector &vars, ArgVector &extraArgs,
-           double *buffer = nullptr);
-
-#ifdef __CUDACC__
-#else
-   // As we don't pass around Batches by value in the CPU case, delete copying
-   // and moving so it's not done accidentally.
-   Batches(const Batches &) = delete;
-   Batches &operator=(const Batches &) = delete;
-   Batches(Batches &&) = delete;
-   Batches &operator=(Batches &&) = delete;
-#endif // #ifdef __CUDACC__
 
    __roodevice__ std::size_t getNEvents() const { return _nEvents; }
    __roodevice__ std::size_t getNExtraArgs() const { return _nExtraArgs; }
@@ -108,15 +78,12 @@ public:
          _arrays[i].advance(nEvents);
       _output += nEvents;
    }
-}; // end class Batches
+};
 
-#ifdef __CUDACC__
-// In the GPU case, we have to pass the Batches object to the compute functions by value.
-using BatchesHandle = Batches;
-#else
+// Defines the actual argument type of the compute function.
 using BatchesHandle = Batches &;
-#endif // #ifdef __CUDACC__
 
 } // End namespace RF_ARCH
 } // end namespace RooBatchCompute
+
 #endif // #ifdef ROOFIT_BATCHCOMPUTE_BATCHES_H

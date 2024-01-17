@@ -80,6 +80,7 @@ public:
          if (fData)
           StackAllocatorHolder::Get().Deallocate(fData);
          fSize = v.size();
+         fNRow = v.Nrow();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
       }
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
@@ -99,7 +100,7 @@ public:
    }
 
    template <class A, class B, class T>
-   LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, A, T>, ABObj<sym, B, T>>, T> &sum) : fSize(0), fNRow(0), fData(0)
+   LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, A, T>, ABObj<sym, B, T>>, T> &sum) : fSize(0), fNRow(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class B, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, A, T>,
       //     ABObj<sym, B, T> > >& sum)"<<std::endl; recursive construction
@@ -150,7 +151,7 @@ public:
    LASymMatrix(
       const ABObj<sym, ABSum<ABObj<sym, MatrixInverse<sym, ABObj<sym, LASymMatrix, T>, T>, T>, ABObj<sym, A, T>>, T>
          &sum)
-      : fSize(0), fNRow(0), fData(0)
+      : fSize(0), fNRow(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, MatrixInverse<sym,
       //     ABObj<sym, LASymMatrix, T>, T>, T>, ABObj<sym, A, T> >, T>& sum)"<<std::endl;
@@ -302,7 +303,7 @@ public:
    {
       // std::cout<<"template<class A, class T> LASymMatrix& operator=(const ABObj<sym, ABObj<sym, A, T>, T>&
       // something)"<<std::endl;
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && fData == nullptr) {
          (*this) = something.Obj();
          (*this) *= something.f();
       } else {
@@ -322,7 +323,7 @@ public:
       // std::cout<<"template<class A, class B, class T> LASymMatrix& operator=(const ABObj<sym, ABSum<ABObj<sym, A, T>,
       // ABObj<sym, B, T> >,T>& sum)"<<std::endl;
       // recursive construction
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && fData == nullptr) {
          (*this) = sum.Obj().A();
          (*this) += sum.Obj().B();
          (*this) *= sum.f();
@@ -342,7 +343,7 @@ public:
       // std::cout<<"template<class A, class T> LASymMatrix& operator=(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix,
       // T>, ABObj<sym, A, T> >,T>& sum)"<<std::endl;
 
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && fData == nullptr) {
          // std::cout<<"fSize == 0 && fData == 0"<<std::endl;
          (*this) = sum.Obj().B();
          (*this) += sum.Obj().A();
@@ -362,7 +363,7 @@ public:
    template <class T>
    LASymMatrix &operator=(const ABObj<sym, MatrixInverse<sym, ABObj<sym, LASymMatrix, T>, T>, T> &inv)
    {
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && fData == nullptr) {
          fSize = inv.Obj().Obj().Obj().size();
          fNRow = inv.Obj().Obj().Obj().Nrow();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);

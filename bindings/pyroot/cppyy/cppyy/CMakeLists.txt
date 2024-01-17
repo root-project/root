@@ -14,6 +14,9 @@ set(py_sources
   cppyy/_version.py
   cppyy/interactive.py
   cppyy/ll.py
+  cppyy/numba_ext.py
+  cppyy/reflex.py
+  cppyy/types.py
 )
 
 set(cppyyPySrcDir python/cppyy)

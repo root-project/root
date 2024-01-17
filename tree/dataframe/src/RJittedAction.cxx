@@ -153,3 +153,9 @@ std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::MakeVariedActio
    assert(fConcreteAction != nullptr);
    return fConcreteAction->MakeVariedAction(std::move(results));
 }
+
+std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::CloneAction(void *newResult)
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->CloneAction(newResult);
+}

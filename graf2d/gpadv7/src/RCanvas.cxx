@@ -20,6 +20,7 @@
 
 #include "TList.h"
 #include "TROOT.h"
+#include "TString.h"
 
 namespace {
 
@@ -76,6 +77,8 @@ bool ROOT::Experimental::RCanvas::IsModified() const
 
 void ROOT::Experimental::RCanvas::Update(bool async, CanvasCallback_t callback)
 {
+   fUpdated = true;
+
    if (fPainter)
       fPainter->CanvasUpdated(fModified, async, callback);
 }
@@ -111,11 +114,11 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 
 void ROOT::Experimental::RCanvas::Show(const std::string &where)
 {
+   fShown = true;
+
    // Do not display canvas in batch mode
    if (gROOT->IsWebDisplayBatch())
       return;
-
-   fShown = true;
 
    if (fPainter) {
       bool isany = (fPainter->NumDisplays() > 0);
@@ -178,6 +181,18 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
 }
 
 //////////////////////////////////////////////////////////////////////////
+/// Return unique identifier for the canvas
+/// Used in iPython display
+
+std::string ROOT::Experimental::RCanvas::GetUID() const
+{
+   const void *ptr = this;
+   auto hash = TString::Hash(&ptr, sizeof(void*));
+   TString fmt = TString::Format("rcanv_%x", hash);
+   return fmt.Data();
+}
+
+//////////////////////////////////////////////////////////////////////////
 /// Create JSON data for the canvas
 /// Can be used of offline display with JSROOT
 
@@ -204,6 +219,15 @@ void ROOT::Experimental::RCanvas::Remove()
       if (held[indx].get() == this)
          held.erase(held.begin() + indx);
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
+
+void ROOT::Experimental::RCanvas::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   if (fPainter)
+      fPainter->SetClearOnClose(handle);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -323,3 +347,4 @@ std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeA
 
    return nullptr; // no need for any reply
 }
+

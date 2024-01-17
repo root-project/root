@@ -19,9 +19,13 @@
 #include <ROOT/RResultHandle.hxx> // users of RunGraphs might rely on this transitive include
 #include <ROOT/TypeTraits.hxx>
 
+#include <array>
+#include <chrono>
 #include <fstream>
 #include <functional>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <type_traits>
 #include <utility> // std::index_sequence
 #include <vector>
@@ -67,7 +71,7 @@ auto PassAsVec(F &&f) -> PassAsVecHelper<std::make_index_sequence<N>, T, F>
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
 
-// clag-format off
+// clang-format off
 /// Given a callable with signature bool(T1, T2, ...) return a callable with same signature that returns the negated result
 ///
 /// The callable must have one single non-template definition of operator(). This is a limitation with respect to
@@ -159,6 +163,7 @@ RNode AsRNode(NodeType node)
 // clang-format off
 /// Trigger the event loop of multiple RDataFrames concurrently
 /// \param[in] handles A vector of RResultHandles
+/// \return The number of distinct computation graphs that have been processed
 ///
 /// This function triggers the event loop of all computation graphs which relate to the
 /// given RResultHandles. The advantage compared to running the event loop implicitly by accessing the
@@ -177,7 +182,7 @@ RNode AsRNode(NodeType node)
 /// ROOT::RDF::RunGraphs({r1, r2});
 /// ~~~
 // clang-format on
-void RunGraphs(std::vector<RResultHandle> handles);
+unsigned int RunGraphs(std::vector<RResultHandle> handles);
 
 namespace Experimental {
 
@@ -229,10 +234,23 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
    if (nVariations > 0) {
       // clone the result once for each variation
       variedResults.reserve(nVariations);
-      for (auto i = 0u; i < nVariations; ++i)
+      for (auto i = 0u; i < nVariations; ++i){
          // implicitly assuming that T is copiable: this should be the case
          // for all result types in use, as they are copied for each slot
          variedResults.emplace_back(new T{*resPtr.fObjPtr});
+
+         // Check if the result's type T inherits from TNamed
+         if constexpr (std::is_base_of<TNamed, T>::value) {
+            // Get the current variation name
+            std::string variationName = variations[i];
+            // Replace the colon with an underscore
+            std::replace(variationName.begin(), variationName.end(), ':', '_'); 
+            // Get a pointer to the corresponding varied result
+            auto &variedResult = variedResults.back();
+            // Set the varied result's name to NOMINALNAME_VARIATIONAME
+            variedResult->SetName((std::string(variedResult->GetName()) + "_" + variationName).c_str());
+         }
+      }
 
       std::vector<void *> typeErasedResults;
       typeErasedResults.reserve(variedResults.size());
@@ -248,6 +266,162 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
                                         *resPtr.fLoopManager, std::move(nominalAction), std::move(variedAction));
 }
 
+using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
+SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
+
+void AddProgressBar(ROOT::RDF::RNode df);
+void AddProgressBar(ROOT::RDataFrame df);
+
+class ProgressBarAction;
+
+/// RDF progress helper.
+/// This class provides callback functions to the RDataFrame. The event statistics
+/// (including elapsed time, currently processed file, currently processed events, the rate of event processing
+/// and an estimated remaining time (per file being processed))
+/// are recorded and printed in the terminal every m events and every n seconds.
+/// ProgressHelper::operator()(unsigned int, T&) is thread safe, and can be used as a callback in MT mode.
+/// ProgressBar should be added after creating the dataframe object (df):
+/// ~~~{.cpp}
+/// ROOT::RDataFrame df("tree", "file.root");
+/// ROOT::RDF::Experimental::AddProgressBar(df);
+/// ~~~
+/// alternatively RDataFrame can be cast to an RNode first giving it more flexibility.
+/// For example, it can be called at any computational node, such as Filter or Define, not only the head node,
+/// with no change to the ProgressBar function itself:
+/// ~~~{.cpp}
+/// ROOT::RDataFrame df("tree", "file.root");
+/// auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
+/// ROOT::RDF::Experimental::AddProgressBar(df_1);
+/// ~~~
+class ProgressHelper {
+private:
+   double EvtPerSec() const;
+   std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
+   void PrintStats(std::ostream &stream, std::size_t currentEventCount, std::chrono::seconds totalElapsedSeconds) const;
+   void PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
+   void PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const;
+
+   std::chrono::time_point<std::chrono::system_clock> fBeginTime = std::chrono::system_clock::now();
+   std::chrono::time_point<std::chrono::system_clock> fLastPrintTime = fBeginTime;
+   std::chrono::seconds fPrintInterval{1};
+
+   std::atomic<std::size_t> fProcessedEvents{0};
+   std::size_t fLastProcessedEvents{0};
+   std::size_t fIncrement;
+
+   mutable std::mutex fSampleNameToEventEntriesMutex;
+   std::map<std::string, ULong64_t> fSampleNameToEventEntries; // Filename, events in the file
+
+   std::array<double, 20> fEventsPerSecondStatistics;
+   std::size_t fEventsPerSecondStatisticsIndex{0};
+
+   unsigned int fBarWidth;
+   unsigned int fTotalFiles;
+
+   std::mutex fPrintMutex;
+   bool fIsTTY;
+   bool fUseShellColours;
+
+   std::shared_ptr<TTree> fTree{nullptr};
+
+public:
+   /// Create a progress helper.
+   /// \param increment RDF callbacks are called every `n` events. Pass this `n` here.
+   /// \param totalFiles read total number of files in the RDF.
+   /// \param progressBarWidth Number of characters the progress bar will occupy.
+   /// \param printInterval Update every stats every `n` seconds.
+   /// \param useColors Use shell colour codes to colour the output. Automatically disabled when
+   /// we are not writing to a tty.
+   ProgressHelper(std::size_t increment, unsigned int totalFiles = 1, unsigned int progressBarWidth = 40,
+                  unsigned int printInterval = 1, bool useColors = true);
+
+   ~ProgressHelper() = default;
+
+   friend class ProgressBarAction;
+
+   /// Register a new sample for completion statistics.
+   /// \see ROOT::RDF::RInterface::DefinePerSample().
+   /// The *id.AsString()* refers to the name of the currently processed file.
+   /// The idea is to populate the  event entries in the *fSampleNameToEventEntries* map
+   /// by selecting the greater of the two values:
+   /// *id.EntryRange().second* which is the upper event entry range of the processed sample
+   /// and the current value of the event entries in the *fSampleNameToEventEntries* map.
+   /// In the single threaded case, the two numbers are the same as the entry range corresponds
+   /// to the number of events in an individual file (each sample is simply a single file).
+   /// In the multithreaded case, the idea is to accumulate the higher event entry value until
+   /// the total number of events in a given file is reached.
+   void registerNewSample(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &id)
+   {
+      std::lock_guard<std::mutex> lock(fSampleNameToEventEntriesMutex);
+      fSampleNameToEventEntries[id.AsString()] =
+         std::max(id.EntryRange().second, fSampleNameToEventEntries[id.AsString()]);
+   }
+
+   /// Thread-safe callback for RDataFrame.
+   /// It will record elapsed times and event statistics, and print a progress bar every n seconds (set by the
+   /// fPrintInterval). \param slot Ignored. \param value Ignored.
+   template <typename T>
+   void operator()(unsigned int /*slot*/, T &value)
+   {
+      operator()(value);
+   }
+   // clang-format off
+   /// Thread-safe callback for RDataFrame.
+   /// It will record elapsed times and event statistics, and print a progress bar every n seconds (set by the fPrintInterval).
+   /// \param value Ignored.
+   // clang-format on
+   template <typename T>
+   void operator()(T & /*value*/)
+   {
+      using namespace std::chrono;
+      // ***************************************************
+      // Warning: Here, everything needs to be thread safe:
+      // ***************************************************
+      fProcessedEvents += fIncrement;
+
+      // We only print every n seconds.
+      if (duration_cast<seconds>(system_clock::now() - fLastPrintTime) < fPrintInterval) {
+         return;
+      }
+
+      // ***************************************************
+      // Protected by lock from here:
+      // ***************************************************
+      if (!fPrintMutex.try_lock())
+         return;
+      std::lock_guard<std::mutex> lockGuard(fPrintMutex, std::adopt_lock);
+
+      std::size_t eventCount;
+      seconds elapsedSeconds;
+      std::tie(eventCount, elapsedSeconds) = RecordEvtCountAndTime();
+
+      if (fIsTTY)
+         std::cout << "\r";
+
+      PrintProgressBar(std::cout, eventCount);
+      PrintStats(std::cout, eventCount, elapsedSeconds);
+
+      if (fIsTTY)
+         std::cout << std::flush;
+      else
+         std::cout << std::endl;
+   }
+
+   std::size_t ComputeNEventsSoFar() const
+   {
+      std::unique_lock<std::mutex> lock(fSampleNameToEventEntriesMutex);
+      std::size_t result = 0;
+      for (const auto &item : fSampleNameToEventEntries)
+         result += item.second;
+      return result;
+   }
+
+   unsigned int ComputeCurrentFileIdx() const
+   {
+      std::unique_lock<std::mutex> lock(fSampleNameToEventEntriesMutex);
+      return fSampleNameToEventEntries.size();
+   }
+};
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT

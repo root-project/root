@@ -235,7 +235,7 @@ Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
    Double_t rsign = (findmax) ? -1. : 1.;
    TF3 & function = const_cast<TF3&>(*this); // needed since EvalPar is not const
    Double_t xxmin = 0, yymin = 0, zzmin = 0, ttmin = 0;
-   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) || !TMath::Finite(x[2]) ) ) ){
+   if (x == nullptr || ( (x!= nullptr) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) || !TMath::Finite(x[2]) ) ) ){
       Double_t dx = (fXmax - fXmin)/fNpx;
       Double_t dy = (fYmax - fYmin)/fNpy;
       Double_t dz = (fZmax - fZmin)/fNpz;
@@ -414,35 +414,34 @@ void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF3::GetSave(const Double_t *xx)
 {
-   //if (fNsave <= 0) return 0;
-   if (fSave.empty()) return 0;
-   Int_t np = fSave.size() - 9;
-   Double_t xmin = Double_t(fSave[np+0]);
-   Double_t xmax = Double_t(fSave[np+1]);
-   Double_t ymin = Double_t(fSave[np+2]);
-   Double_t ymax = Double_t(fSave[np+3]);
-   Double_t zmin = Double_t(fSave[np+4]);
-   Double_t zmax = Double_t(fSave[np+5]);
-   Int_t npx     = Int_t(fSave[np+6]);
-   Int_t npy     = Int_t(fSave[np+7]);
-   Int_t npz     = Int_t(fSave[np+8]);
-   Double_t x    = Double_t(xx[0]);
+   if (fSave.size() < 9) return 0;
+   Int_t nsave = fSave.size() - 9;
+   Double_t xmin = fSave[nsave+0];
+   Double_t xmax = fSave[nsave+1];
+   Double_t ymin = fSave[nsave+2];
+   Double_t ymax = fSave[nsave+3];
+   Double_t zmin = fSave[nsave+4];
+   Double_t zmax = fSave[nsave+5];
+   Int_t npx     = Int_t(fSave[nsave+6]);
+   Int_t npy     = Int_t(fSave[nsave+7]);
+   Int_t npz     = Int_t(fSave[nsave+8]);
+   Double_t x    = xx[0];
    Double_t dx   = (xmax-xmin)/npx;
    if (x < xmin || x > xmax) return 0;
    if (dx <= 0) return 0;
-   Double_t y    = Double_t(xx[1]);
+   Double_t y    = xx[1];
    Double_t dy   = (ymax-ymin)/npy;
    if (y < ymin || y > ymax) return 0;
    if (dy <= 0) return 0;
-   Double_t z    = Double_t(xx[2]);
+   Double_t z    = xx[2];
    Double_t dz   = (zmax-zmin)/npz;
    if (z < zmin || z > zmax) return 0;
    if (dz <= 0) return 0;
 
    //we make a trilinear interpolation using the 8 points surrounding x,y,z
-   Int_t ibin    = Int_t((x-xmin)/dx);
-   Int_t jbin    = Int_t((y-ymin)/dy);
-   Int_t kbin    = Int_t((z-zmin)/dz);
+   Int_t ibin    = TMath::Min(npx-1, Int_t((x-xmin)/dx));
+   Int_t jbin    = TMath::Min(npy-1, Int_t((y-ymin)/dy));
+   Int_t kbin    = TMath::Min(npz-1, Int_t((z-zmin)/dz));
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t zlow = zmin + kbin*dz;
@@ -508,7 +507,7 @@ TH1* TF3::CreateHistogram()
    TH1* h = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                          ,fNpy,fYmin,fYmax
                          ,fNpz,fZmin,fZmax);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
    return h;
 }
 
@@ -526,7 +525,7 @@ void TF3::Paint(Option_t *option)
       fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                                                       ,fNpy,fYmin,fYmax
                                                       ,fNpz,fZmin,fZmax);
-      fHistogram->SetDirectory(0);
+      fHistogram->SetDirectory(nullptr);
    }
 
    fHistogram->GetPainter(option)->ProcessMessage("SetF3",this);
@@ -552,41 +551,43 @@ void TF3::SetClippingBoxOff()
 void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
 {
    if (!fSave.empty()) fSave.clear();
-   Int_t nsave = (fNpx+1)*(fNpy+1)*(fNpz+1);
-   Int_t fNsave = nsave+9;
-   assert(fNsave > 9);
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
-   Int_t i,j,k,l=0;
+   Int_t npx = fNpx, npy = fNpy, npz = fNpz;
+   if ((npx < 2) || (npy < 2) || (npz < 2))
+      return;
+
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
    Double_t dz = (zmax-zmin)/fNpz;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNpx;
-      xmin = fXmin +0.5*dx;
-      xmax = fXmax -0.5*dx;
+      npx--;
+      xmin = fXmin + 0.5*dx;
+      xmax = fXmax - 0.5*dx;
    }
    if (dy <= 0) {
       dy = (fYmax-fYmin)/fNpy;
-      ymin = fYmin +0.5*dy;
-      ymax = fYmax -0.5*dy;
+      npy--;
+      ymin = fYmin + 0.5*dy;
+      ymax = fYmax - 0.5*dy;
    }
    if (dz <= 0) {
       dz = (fZmax-fZmin)/fNpz;
-      zmin = fZmin +0.5*dz;
-      zmax = fZmax -0.5*dz;
+      npz--;
+      zmin = fZmin + 0.5*dz;
+      zmax = fZmax - 0.5*dz;
    }
+   Int_t nsave = (npx + 1)*(npy + 1)*(npz + 1);
+   fSave.resize(nsave + 9);
    Double_t xv[3];
    Double_t *pp = GetParameters();
    InitArgs(xv,pp);
-   for (k=0;k<=fNpz;k++) {
+   for (Int_t k = 0, l = 0; k <= npz; k++) {
       xv[2]    = zmin + dz*k;
-      for (j=0;j<=fNpy;j++) {
+      for (Int_t j = 0; j <= npy; j++) {
          xv[1]    = ymin + dy*j;
-         for (i=0;i<=fNpx;i++) {
+         for (Int_t i = 0; i <= npx; i++) {
             xv[0]    = xmin + dx*i;
-            fSave[l] = EvalPar(xv,pp);
-            l++;
+            fSave[l++] = EvalPar(xv, pp);
          }
       }
    }
@@ -596,9 +597,9 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
    fSave[nsave+3] = ymax;
    fSave[nsave+4] = zmin;
    fSave[nsave+5] = zmax;
-   fSave[nsave+6] = fNpx;
-   fSave[nsave+7] = fNpy;
-   fSave[nsave+8] = fNpz;
+   fSave[nsave+6] = npx;
+   fSave[nsave+7] = npy;
+   fSave[nsave+8] = npz;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,6 +608,7 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
+   TString f3Name(GetName());
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF3::Class())) {
       out<<"   ";
@@ -614,37 +616,47 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<"   TF3 *";
    }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
+      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
    } else {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
+      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
    if (GetFillColor() != 0) {
       if (TColor::SaveColor(out, GetFillColor()))
-         out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetFillColor(ci);" << std::endl;
       else
-         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
       if (TColor::SaveColor(out, GetLineColor()))
-         out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetLineColor(ci);" << std::endl;
       else
-         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
-   if (GetNpz() != 100) {
-      out<<"   "<<GetName()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
-   }
-   if (GetChisquare() != 0) {
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
-   }
+
+   if (GetNpx() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+   if (GetNpy() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpy("<<GetNpy()<<");"<<std::endl;
+   if (GetNpz() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
+
+   if (GetChisquare() != 0)
+      out<<"   "<<f3Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+
    Double_t parmin, parmax;
    for (Int_t i=0;i<GetNpar();i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
-   out<<"   "<<GetName()<<"->Draw("
+
+   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f3Name.Data(), "->GetXaxis()");
+   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f3Name.Data(), "->GetYaxis()");
+   if (GetZaxis()) GetZaxis()->SaveAttributes(out, f3Name.Data(), "->GetZaxis()");
+
+   out<<"   "<<f3Name.Data()<<"->Draw("
       <<quote<<option<<quote<<");"<<std::endl;
 }
 

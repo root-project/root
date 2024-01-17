@@ -56,7 +56,7 @@ void rf607_fitresult()
    RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // F i t   p d f   t o   d a t a ,   s a v e   f i t r e s u l t
    // -------------------------------------------------------------

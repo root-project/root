@@ -19,8 +19,7 @@
 \class RooBinnedGenContext
 \ingroup Roofitcore
 
-RooBinnedGenContext is an efficient implementation of the
-generator context specific for binned pdfs.
+Efficient implementation of the generator context specific for binned pdfs.
 **/
 
 #include "Riostream.h"
@@ -37,7 +36,6 @@ generator context specific for binned pdfs.
 using namespace std;
 
 ClassImp(RooBinnedGenContext);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +53,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   ccxcoutI(Generation) << endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF
-  RooArgSet(model).snapshot(_pdfSet, true) ;
+  RooArgSet(model).snapshot(_pdfSet, true);
   _pdf = (RooAbsPdf*) _pdfSet.find(model.GetName()) ;
   _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
@@ -91,9 +89,9 @@ void RooBinnedGenContext::attach(const RooArgSet& args)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// One-time initialization of generator contex. Attach theEvent
+/// One-time initialization of generator context. Attach theEvent
 /// to internal p.d.f clone and forward initialization call to
-/// the component generators
+/// the component generators.
 
 void RooBinnedGenContext::initGenerator(const RooArgSet &theEvent)
 {
@@ -123,7 +121,7 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
     if (!_pdf->canBeExtended()) {
       coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName()
              << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
-      return 0 ;
+      return nullptr ;
     } else {
       // Don't round in expectedData mode
       if (_expectedData || extended) {

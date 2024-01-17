@@ -167,7 +167,7 @@ void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
    // First vertex.
    {
       TGCompositeFrame *vf = new TGCompositeFrame
-         (fRefsCont, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+         (fRefsCont, 145, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
       vf->AddFrame(new TGLabel(vf, "FirstVertex"),
                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
       vf->AddFrame(new TGHorizontal3DLine(vf),
@@ -188,7 +188,7 @@ void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
    // Break-points of projected tracks
    {
       TGCompositeFrame *vf = new TGCompositeFrame
-         (fRefsCont, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+         (fRefsCont, 145, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
       vf->AddFrame(new TGLabel(vf, "BreakPoints"),
                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
       vf->AddFrame(new TGHorizontal3DLine(vf),
@@ -440,7 +440,7 @@ TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
    TGVerticalFrame* refsFrame = CreateEditorTabSubFrame("Refs");
    {
       TGCompositeFrame *cf = new TGCompositeFrame
-         (refsFrame, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+         (refsFrame, 145, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
       cf->AddFrame(new TGLabel(cf, "PathMarks"),
                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
       cf->AddFrame(new TGHorizontal3DLine(cf),

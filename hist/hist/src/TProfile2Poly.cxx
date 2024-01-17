@@ -153,9 +153,9 @@ TProfile2Poly::TProfile2Poly(const char *name, const char *title, Int_t nX, Doub
 
 TProfile2PolyBin *TProfile2Poly::CreateBin(TObject *poly)
 {
-   if (!poly) return 0;
+   if (!poly) return nullptr;
 
-   if (fBins == 0) {
+   if (fBins == nullptr) {
       fBins = new TList();
       fBins->SetOwner();
    }
@@ -245,7 +245,7 @@ Long64_t TProfile2Poly::Merge(TCollection *in)
 
 Long64_t TProfile2Poly::Merge(const std::vector<TProfile2Poly *> &list)
 {
-   if (list.size() == 0) {
+   if (list.empty()) {
       std::cout << "[FAIL] TProfile2Poly::Merge: No objects to be merged " << std::endl;
       return -1;
    }

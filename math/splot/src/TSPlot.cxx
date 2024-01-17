@@ -233,7 +233,7 @@ for signal reproduces correctly the PDF even where the latter vanishes,
 although the error bars remain sizeable. This results from the almost
 complete cancellation between positive and negative weights: the sum of
 weights is close to zero while the sum of weights squared is not. The
-occurence of negative weights occurs through the appearance of the
+occurrence of negative weights occurs through the appearance of the
 covariance matrix, and its negative components, in the definition of
 Eq. (2).
 
@@ -287,16 +287,16 @@ The results above can be obtained by running the tutorial TestSPlot.C
 /// default constructor (used by I/O only)
 
 TSPlot::TSPlot() :
- fTree(0),
- fTreename(0),
- fVarexp(0),
- fSelection(0)
+ fTree(nullptr),
+ fTreename(nullptr),
+ fVarexp(nullptr),
+ fSelection(nullptr)
 {
    fNx = 0;
    fNy=0;
    fNevents = 0;
    fNSpecies=0;
-   fNumbersOfEvents=0;
+   fNumbersOfEvents=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -308,9 +308,9 @@ TSPlot::TSPlot() :
 ///  - tree: input data
 
 TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
- fTreename(0),
- fVarexp(0),
- fSelection(0)
+ fTreename(nullptr),
+ fVarexp(nullptr),
+ fSelection(nullptr)
 
 {
    fNx = nx;
@@ -323,7 +323,7 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
    fYpdf.ResizeTo(fNevents, fNSpecies*fNy);
    fSWeights.ResizeTo(fNevents, fNSpecies*(fNy+1));
    fTree = tree;
-   fNumbersOfEvents = 0;
+   fNumbersOfEvents = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -348,26 +348,26 @@ void TSPlot::Browse(TBrowser *b)
 {
    if (!fSWeightsHists.IsEmpty()) {
       TIter next(&fSWeightsHists);
-      TH1D* h = 0;
+      TH1D* h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
 
    if (!fYpdfHists.IsEmpty()) {
       TIter next(&fYpdfHists);
-      TH1D* h = 0;
+      TH1D* h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
    if (!fYvarHists.IsEmpty()) {
       TIter next(&fYvarHists);
-      TH1D* h = 0;
+      TH1D* h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
    if (!fXvarHists.IsEmpty()) {
       TIter next(&fXvarHists);
-      TH1D* h = 0;
+      TH1D* h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
@@ -416,7 +416,7 @@ void TSPlot::MakeSPlot(Option_t *option)
    }
 
 
-   TVirtualFitter *minuit = TVirtualFitter::Fitter(0, 2);
+   TVirtualFitter *minuit = TVirtualFitter::Fitter(nullptr, 2);
    fPdfTot.ResizeTo(fNevents, fNSpecies);
 
    //now let's do it, excluding different yvars
@@ -1013,7 +1013,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 
 void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t /*iflag*/)
 {
-   Double_t lik;
+   Double_t likelihood;
    Int_t i, ispecies;
 
    TVirtualFitter *fitter = TVirtualFitter::GetFitter();
@@ -1022,11 +1022,11 @@ void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t /*iflag*/)
    Int_t nes = pdftot->GetNcols();
    f=0;
    for (i=0; i<nev; i++){
-      lik=0;
+      likelihood=0;
       for (ispecies=0; ispecies<nes; ispecies++)
-         lik+=x[ispecies]*(*pdftot)(i, ispecies);
-      if (lik<0) lik=1;
-      f+=TMath::Log(lik);
+         likelihood+=x[ispecies]*(*pdftot)(i, ispecies);
+      if (likelihood<0) likelihood=1;
+      f+=TMath::Log(likelihood);
    }
    //extended likelihood, equivalent to chi2
    Double_t ntot=0;

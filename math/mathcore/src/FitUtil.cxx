@@ -246,7 +246,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
    bool useExpErrors = (fitOpt.fExpErrors);
-   bool isWeighted = data.IsWeighted();
+   bool isWeighted = fitOpt.fExpErrors && !fitOpt.fErrors1 && data.IsWeighted();  //used in case of Person weighted chi2 fits
 #ifdef DEBUG
    std::cout << "\n\nFit data size = " << n << std::endl;
    std::cout << "evaluate chi2 using function " << &func << "  " << p << std::endl;
@@ -264,7 +264,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
       igType = ROOT::Math::IntegrationOneDim::kGAUSS;
    }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval( func, 0, useBinIntegral, igType);
+   IntegralEvaluator<> igEval( func, nullptr, useBinIntegral, igType);
 #else
    IntegralEvaluator<> igEval( func, p, useBinIntegral, igType);
 #endif
@@ -337,23 +337,22 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
       // expected errors
       if (useExpErrors) {
          double invWeight  = 1.0;
+         // case of weighted Pearson chi2 fit
          if (isWeighted) {
-            // we need first to check if a weight factor needs to be applied
-            // weight = sumw2/sumw = error**2/content
-            //invWeight = y * invError * invError;
-            // we use always the global weight and not the observed one in the bin
-            // for empty bins use global weight (if it is weighted data.SumError2() is not zero)
-            invWeight = data.SumOfContent()/ data.SumOfError2();
-            //if (invError > 0) invWeight = y * invError * invError;
+            // in case of requested a weighted Pearson fit (option "PW") a weight factor needs to be applied
+            // the bin inverse weight is estimated from bin error and bin content
+            if (y != 0)
+               invWeight = y * invError * invError;
+            else
+               // when y is 0 we use a global weight estimated form all histogram (correct if scaling the histogram)
+               // note that if the data is weighted data.SumOfError2 will not be equal to zero
+               invWeight = data.SumOfContent()/ data.SumOfError2();
          }
-
-         //  if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
-         // compute expected error  as f(x) / weight
+         // compute expected error  as f(x) or f(x) / weight (if weighted fit)
          double invError2 = (fval > 0) ? invWeight / fval : 0.0;
          invError = std::sqrt(invError2);
          //std::cout << "using Pearson chi2 " << x[0] << "  " << 1./invError2 << "  " << fval << std::endl;
       }
-
 
 #ifdef DEBUG
       std::cout << x[0] << "  " << y << "  " << 1./invError << " params : ";
@@ -409,7 +408,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Available choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
 
   // reset the number of fitting data points
@@ -464,7 +463,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 
 
       double ey = 0;
-      const double * ex = 0;
+      const double * ex = nullptr;
       if (!data.HaveAsymErrors() )
          ex = data.GetPointError(i, ey);
       else {
@@ -561,7 +560,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 
    unsigned int ndim = data.NDim();
    double binVolume = 1.0;
-   const double * x2 = 0;
+   const double * x2 = nullptr;
    if (useBinVolume || useBinIntegral) x2 = data.BinUpEdge(i);
 
    std::vector<double> xc;
@@ -591,19 +590,20 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 
    // expected errors
    if (useExpErrors) {
-      // we need first to check if a weight factor needs to be applied
-      // weight = sumw2/sumw = error**2/content
-      // NOTE: assume histogram is not weighted
-      // don't know how to do with bins with weight = 0
-      //double invWeight = y * invError * invError;
-      // if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+      // check if a weight factor needs to be applied
+      // for bins with y = 0 use as weight the global of the full histogram
+      double invWeight = 1.0;
+      if (data.IsWeighted() && !fitOpt.fErrors1 ) { // case of weighted Pearson chi2 fit
+         invWeight = y * invError * invError;
+         if (y == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+      }
       // compute expected error  as f(x) / weight
-      double invError2 = (fval > 0) ? 1.0 / fval : 0.0;
+      double invError2 = (fval > 0) ? invWeight / fval : 0.0;
       invError = std::sqrt(invError2);
    }
 
 
-   double resval =   ( y -fval )* invError;
+   double resval =   ( y -fval ) * invError;
 
    // avoid infinities or nan in  resval
    resval = CorrectValue(resval);
@@ -692,7 +692,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    const IGradModelFunction &func = *fg;
 
 #ifdef DEBUG
-   std::cout << "\n\nFit data size = " << n << std::endl;
+   std::cout << "\n\nFit data size = " << nPoints << std::endl;
    std::cout << "evaluate chi2 using function gradient " << &func << "  " << p << std::endl;
 #endif
 
@@ -899,7 +899,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    double fval = func ( x, p );
    double logPdf = ROOT::Math::Util::EvalLog(fval);
    //return
-   if (g == 0) return logPdf;
+   if (g == nullptr) return logPdf;
 
    const IGradModelFunction * gfunc = (hasGrad) ?
       dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
@@ -1094,7 +1094,7 @@ double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, 
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Available choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
 
   if (extended) {
@@ -1118,7 +1118,7 @@ double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, 
          } else {
             // use (-inf +inf)
             data.Range().GetRange(&xmin[0],&xmax[0]);
-            // check if funcition is zero at +- inf
+            // check if function is zero at +- inf
             if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
                MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
                return 0;
@@ -1266,7 +1266,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    }
 #endif
    else {
-      Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+      Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Available choices:\n "
                                              "ROOT::EExecutionPolicy::kSequential (default)\n "
                                              "ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
    }
@@ -1303,7 +1303,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
 
    IntegralEvaluator<> igEval( func, p, useBinIntegral);
-   const double * x2 = 0;
+   const double * x2 = nullptr;
    // calculate the bin volume
    double binVolume = 1;
    std::vector<double> xc;
@@ -1439,7 +1439,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    // for binned likelihood fits
    // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
    // add as well constant term for saturated model to make it like a Chi2/2
-   // by default is etended. If extended is false the fit is not extended and
+   // by default is extended. If extended is false the fit is not extended and
    // the global poisson term is removed (i.e is a binomial fit)
    // (remember that in this case one needs to have a function with a fixed normalization
    // like in a non extended unbinned fit)
@@ -1488,7 +1488,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       igType = ROOT::Math::IntegrationOneDim::kGAUSS;
    }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval(func, 0, useBinIntegral, igType);
+   IntegralEvaluator<> igEval(func, nullptr, useBinIntegral, igType);
 #else
    IntegralEvaluator<> igEval(func, p, useBinIntegral, igType);
 #endif
@@ -1587,7 +1587,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 
       } else {
          // standard case no weights or iWeight=1
-         // this is needed for Poisson likelihood (which are extened and not for multinomial)
+         // this is needed for Poisson likelihood (which are extended and not for multinomial)
          // the formula below  include constant term due to likelihood of saturated model (f(x) = y)
          // (same formula as in Baker-Cousins paper, page 439 except a factor of 2
          if (extended) nloglike = fval - y;
@@ -1636,7 +1636,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("FitUtil::EvaluatePoissonLogL",
-            "Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+            "Execution policy unknown. Available choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
    }
 
 #ifdef DEBUG
@@ -1818,7 +1818,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    // }
    else {
       Error("FitUtil::EvaluatePoissonLogLGradient",
-            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+            "Execution policy unknown. Available choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
 #ifndef R__USE_IMT

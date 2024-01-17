@@ -29,17 +29,17 @@ protected:
 
 public:
    TEveTriangleSetGL();
-   virtual ~TEveTriangleSetGL();
+   ~TEveTriangleSetGL() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
-   ClassDef(TEveTriangleSetGL, 0); // GL-renderer for TEveTriangleSet class.
+   ClassDefOverride(TEveTriangleSetGL, 0); // GL-renderer for TEveTriangleSet class.
 };
 
 #endif

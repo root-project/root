@@ -46,7 +46,7 @@ public:
    TPolyLine3D(Int_t n, Double_t const* x, Double_t const* y, Double_t const* z, Option_t *option="");
    TPolyLine3D(const TPolyLine3D &polylin);
    TPolyLine3D& operator=(const TPolyLine3D &polylin);
-   virtual ~TPolyLine3D();
+   ~TPolyLine3D() override;
 
    void              Copy(TObject &polyline) const override;
    Int_t             DistancetoPrimitive(Int_t px, Int_t py) override;

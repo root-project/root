@@ -208,12 +208,12 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
       indexsizetimes[i] = ( ( ( (TObjString*)(*arraytimes)[i] ) -> GetString() ).Tokenize("+") ) -> GetEntries();
       while (k < indexsizetimes[i])
       {
-         isacoeff[k+j-1] = 0;
+         isacoeff[k+j-1] = false;
          k++;
       }
       j = j+indexsizetimes[i];
-      if (j==nofobj)    isacoeff[j-1] = 0;    //the last one is never a coeff
-      else              isacoeff[j-1] = 1;
+      if (j==nofobj)    isacoeff[j-1] = false;    //the last one is never a coeff
+      else              isacoeff[j-1] = true;
       k = 1;
    }
 
@@ -272,12 +272,12 @@ TF1NormSum &TF1NormSum::operator=(const TF1NormSum &rhs)
 double TF1NormSum::operator()(const Double_t *x, const Double_t *p)
 {
    // first refresh the parameters
-   if (p != 0)
+   if (p != nullptr)
       SetParameters(p);
 
    Double_t sum = 0.;
    for (unsigned int n=0; n<fNOfFunctions; n++)
-      sum += fCoeffs[n]*(fFunctions[n] -> EvalPar(x,0));
+      sum += fCoeffs[n]*(fFunctions[n] -> EvalPar(x,nullptr));
 
    // normalize by a scale parameter (typically the bin width)
    return fScale * sum;

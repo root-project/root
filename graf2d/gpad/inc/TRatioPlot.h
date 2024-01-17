@@ -156,7 +156,7 @@ protected:
 public:
 
    TRatioPlot();
-   virtual ~TRatioPlot();
+   ~TRatioPlot() override;
    TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois");
 
    TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois");

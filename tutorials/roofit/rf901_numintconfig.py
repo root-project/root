@@ -38,7 +38,7 @@ ROOT.RooAbsReal.defaultIntegratorConfig().setEpsRel(1e-6)
 # ------------------------------------------------------------------
 
 x = ROOT.RooRealVar("x", "x", -10, 10)
-landau = ROOT.RooLandau("landau", "landau", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.1))
+landau = ROOT.RooLandau("landau", "landau", x, 0.0, 0.1)
 
 # Disable analytic integration from demonstration purposes
 landau.forceNumInt(True)
@@ -85,7 +85,7 @@ print(" [3] int_dx landau(x) = ", val3)
 if not integratorGKNotExisting:
     ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
-    # Adjusting parameters of a speficic technique
+    # Adjusting parameters of a specific technique
     # ---------------------------------------------------------------------------------------
 
     # Adjust maximum number of steps of ROOT.RooIntegrator1D in the global

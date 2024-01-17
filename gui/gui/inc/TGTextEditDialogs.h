@@ -60,7 +60,7 @@ public:
    TGSearchDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
                   TGSearchType *sstruct = nullptr, Int_t *ret_code = nullptr,
                   UInt_t options = kVerticalFrame);
-   virtual ~TGSearchDialog();
+   ~TGSearchDialog() override;
 
    void   CloseWindow() override;
    Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
@@ -96,7 +96,7 @@ public:
    TGPrintDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
                  char **printerName = nullptr, char **printProg = nullptr, Int_t *ret_code = nullptr,
                  UInt_t options = kVerticalFrame);
-   virtual ~TGPrintDialog();
+   ~TGPrintDialog() override;
 
    void   CloseWindow() override;
    virtual void   GetPrinters();
@@ -121,7 +121,7 @@ protected:
 public:
    TGGotoDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
                 Long_t *ret_code = nullptr, UInt_t options = kVerticalFrame);
-   virtual ~TGGotoDialog();
+   ~TGGotoDialog() override;
 
    void   CloseWindow() override;
    Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;

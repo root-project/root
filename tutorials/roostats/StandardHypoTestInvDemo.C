@@ -128,10 +128,10 @@ public:
    HypoTestInverterResult *RunInverter(RooWorkspace *w, const char *modelSBName, const char *modelBName,
                                        const char *dataName, int type, int testStatType, bool useCLs, int npoints,
                                        double poimin, double poimax, int ntoys, bool useNumberCounting = false,
-                                       const char *nuisPriorName = 0);
+                                       const char *nuisPriorName = nullptr);
 
    void AnalyzeResult(HypoTestInverterResult *r, int calculatorType, int testStatType, bool useCLs, int npoints,
-                      const char *fileNameBase = 0);
+                      const char *fileNameBase = nullptr);
 
    void SetParameter(const char *name, const char *value);
    void SetParameter(const char *name, bool value);
@@ -263,11 +263,11 @@ void RooStats::HypoTestInvTool::SetParameter(const char *name, const char *value
    return;
 }
 
-void StandardHypoTestInvDemo(const char *infile = 0, const char *wsName = "combined",
+void StandardHypoTestInvDemo(const char *infile = nullptr, const char *wsName = "combined",
                              const char *modelSBName = "ModelConfig", const char *modelBName = "",
                              const char *dataName = "obsData", int calculatorType = 0, int testStatType = 0,
                              bool useCLs = true, int npoints = 6, double poimin = 0, double poimax = 5,
-                             int ntoys = 1000, bool useNumberCounting = false, const char *nuisPriorName = 0)
+                             int ntoys = 1000, bool useNumberCounting = false, const char *nuisPriorName = nullptr)
 {
    /*
 
@@ -321,10 +321,6 @@ void StandardHypoTestInvDemo(const char *infile = 0, const char *wsName = "combi
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -376,9 +372,9 @@ void StandardHypoTestInvDemo(const char *infile = 0, const char *wsName = "combi
       RooStats::UseNLLOffset(true);
 
    RooWorkspace *w = dynamic_cast<RooWorkspace *>(file->Get(wsName));
-   HypoTestInverterResult *r = 0;
+   HypoTestInverterResult *r = nullptr;
    std::cout << w << "\t" << filename << std::endl;
-   if (w != NULL) {
+   if (w != nullptr) {
       r = calc.RunInverter(w, modelSBName, modelBName, dataName, calculatorType, testStatType, useCLs, npoints, poimin,
                            poimax, ntoys, useNumberCounting, nuisPriorName);
       if (!r) {
@@ -444,7 +440,7 @@ void RooStats::HypoTestInvTool::AnalyzeResult(HypoTestInverterResult *r, int cal
    }
 
    // write result in a file
-   if (r != NULL && mWriteResult) {
+   if (r != nullptr && mWriteResult) {
 
       // write to a file the results
       const char *calcType = (calculatorType == 0) ? "Freq" : (calculatorType == 1) ? "Hybr" : "Asym";
@@ -453,7 +449,7 @@ void RooStats::HypoTestInvTool::AnalyzeResult(HypoTestInverterResult *r, int cal
       if (mResultFileName.IsNull()) {
          mResultFileName = TString::Format("%s_%s_%s_ts%d_", calcType, limitType, scanType, testStatType);
          // strip the / from the filename
-         if (mMassValue.size() > 0) {
+         if (!mMassValue.empty()) {
             mResultFileName += mMassValue.c_str();
             mResultFileName += "_";
          }
@@ -465,7 +461,7 @@ void RooStats::HypoTestInvTool::AnalyzeResult(HypoTestInverterResult *r, int cal
 
       // get (if existing) rebuilt UL distribution
       TString uldistFile = "RULDist.root";
-      TObject *ulDist = 0;
+      TObject *ulDist = nullptr;
       bool existULDist = !gSystem->AccessPathName(uldistFile);
       if (existULDist) {
          TFile *fileULDist = TFile::Open(uldistFile);
@@ -545,7 +541,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
    RooAbsData *data = w->data(dataName);
    if (!data) {
       Error("StandardHypoTestDemo", "Not existing data %s", dataName);
-      return 0;
+      return nullptr;
    } else
       std::cout << "Using data set " << dataName << std::endl;
 
@@ -561,20 +557,20 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
 
    if (!sbModel) {
       Error("StandardHypoTestDemo", "Not existing ModelConfig %s", modelSBName);
-      return 0;
+      return nullptr;
    }
    // check the model
    if (!sbModel->GetPdf()) {
       Error("StandardHypoTestDemo", "Model %s has no pdf ", modelSBName);
-      return 0;
+      return nullptr;
    }
    if (!sbModel->GetParametersOfInterest()) {
       Error("StandardHypoTestDemo", "Model %s has no poi ", modelSBName);
-      return 0;
+      return nullptr;
    }
    if (!sbModel->GetObservables()) {
       Error("StandardHypoTestInvDemo", "Model %s has no observables ", modelSBName);
-      return 0;
+      return nullptr;
    }
    if (!sbModel->GetSnapshot()) {
       Info("StandardHypoTestInvDemo", "Model %s has no snapshot  - make one using model poi", modelSBName);
@@ -604,7 +600,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       bModel->SetName(TString(modelSBName) + TString("_with_poi_0"));
       RooRealVar *var = dynamic_cast<RooRealVar *>(bModel->GetParametersOfInterest()->first());
       if (!var)
-         return 0;
+         return nullptr;
       double oldval = var->getVal();
       var->setVal(0);
       bModel->SetSnapshot(RooArgSet(*var));
@@ -621,7 +617,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
             var->setVal(oldval);
          } else {
             Error("StandardHypoTestInvDemo", "Model %s has no valid poi", modelBName);
-            return 0;
+            return nullptr;
          }
       }
    }
@@ -666,7 +662,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       doFit = false; // case of Asymptoticcalculator with nominal Asimov
    double poihat = 0;
 
-   if (mMinimizerType.size() == 0)
+   if (mMinimizerType.empty())
       mMinimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
    else
       ROOT::Math::MinimizerOptions::SetDefaultMinimizer(mMinimizerType.c_str());
@@ -778,7 +774,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
    AsymptoticCalculator::SetPrintLevel(mPrintLevel);
 
    // create the HypoTest calculator class
-   HypoTestCalculatorGeneric *hc = 0;
+   HypoTestCalculatorGeneric *hc = nullptr;
    if (type == 0)
       hc = new FrequentistCalculator(*data, *bModel, *sbModel);
    else if (type == 1)
@@ -795,11 +791,11 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       Error("StandardHypoTestInvDemo", "Invalid - calculator type = %d supported values are only :\n\t\t\t 0 "
                                        "(Frequentist) , 1 (Hybrid) , 2 (Asymptotic) ",
             type);
-      return 0;
+      return nullptr;
    }
 
    // set the test statistic
-   TestStatistic *testStat = 0;
+   TestStatistic *testStat = nullptr;
    if (testStatType == 0)
       testStat = &slrts;
    if (testStatType == 1 || testStatType == 11)
@@ -811,11 +807,11 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
    if (testStatType == 6)
       testStat = &nevtts;
 
-   if (testStat == 0) {
+   if (testStat == nullptr) {
       Error("StandardHypoTestInvDemo", "Invalid - test statistic type = %d supported values are only :\n\t\t\t 0 (SLR) "
                                        ", 1 (Tevatron) , 2 (PLR), 3 (PLR1), 4(MLE)",
             testStatType);
-      return 0;
+      return nullptr;
    }
 
    ToyMCSampler *toymcs = (ToyMCSampler *)hc->GetTestStatSampler();
@@ -881,7 +877,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
          toymcs->SetUseMultiGen(false);
          ToyMCSampler::SetAlwaysUseMultiGen(false);
 
-         RooAbsPdf *nuisPdf = 0;
+         RooAbsPdf *nuisPdf = nullptr;
          if (nuisPriorName)
             nuisPdf = w->pdf(nuisPriorName);
          // use prior defined first in bModel (then in SbModel)
@@ -902,7 +898,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
             } else {
                Error("StandardHypoTestInvDemo", "Cannot run Hybrid calculator because no prior on the nuisance "
                                                 "parameter is specified or can be derived");
-               return 0;
+               return nullptr;
             }
          }
          assert(nuisPdf);
@@ -1012,7 +1008,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       std::cout << "StandardHypoTestInvDemo: Initial parameters used for rebuilding: ";
       RooStats::PrintListContent(*allParams, std::cout);
 
-      calc.SetCloseProof(1);
+      calc.SetCloseProof(true);
       tw.Start();
       SamplingDistribution *limDist = calc.GetUpperLimitDistribution(true, mNToyToRebuild);
       std::cout << "Time to rebuild distributions " << std::endl;

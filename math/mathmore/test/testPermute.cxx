@@ -39,7 +39,7 @@ using namespace std;
 
 void initArray(Int_t n, vector<Int_t>& array)
 {
-   TRandom2 r( time( 0 ) );
+   TRandom2 r( time( nullptr ) );
    for ( Int_t i = 0; i < n; i++) {
       array[i] = r.Integer( maxint );
    }
@@ -163,8 +163,8 @@ int testPermute()
 
    if ( showGraphics )
    {
-      TCanvas* c1 = new TCanvas("c1", "Comparision of Permutation Time", 600, 400);
-      TH2F* hpx = new TH2F("hpx", "Comparision of Permutation Time", arraysize, minsize, maxsize, arraysize, tM[0],tS[arraysize-1]);
+      TCanvas* c1 = new TCanvas("c1", "Comparison of Permutation Time", 600, 400);
+      TH2F* hpx = new TH2F("hpx", "Comparison of Permutation Time", arraysize, minsize, maxsize, arraysize, tM[0],tS[arraysize-1]);
       hpx->SetStats(kFALSE);
       hpx->Draw();
 
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
 
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return status;

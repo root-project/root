@@ -27,7 +27,7 @@ protected:
 public:
    TPaveStats();
    TPaveStats(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
-   virtual ~TPaveStats();
+   ~TPaveStats() override;
    TBox            *AddBox(Double_t , Double_t , Double_t , Double_t) override {return nullptr;}
    TLine           *AddLine(Double_t , Double_t , Double_t, Double_t) override {return nullptr;}
    void             DeleteText() override {}

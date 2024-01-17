@@ -58,7 +58,7 @@ Class which takes the results of a multiclass classification
 TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi, TString resultsName  )
    : Results( dsi, resultsName  ),
      IFitterTarget(),
-     fLogger( new MsgLogger(Form("ResultsMultiClass%s",resultsName.Data()) , kINFO) ),
+     fLogger( new MsgLogger(TString::Format("ResultsMultiClass%s",resultsName.Data()).Data() , kINFO) ),
      fClassToOptimize(0),
      fAchievableEff(dsi->GetNClasses()),
      fAchievablePur(dsi->GetNClasses()),
@@ -256,8 +256,8 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
    for (size_t iClass = 0; iClass < numClasses; ++iClass) {
 
       TString className = dsi->GetClassInfo(iClass)->GetName();
-      TString name = Form("%s_rejBvsS_%s", prefix.Data(), className.Data());
-      TString title = Form("%s_%s", prefix.Data(), className.Data());
+      TString name = TString::Format("%s_rejBvsS_%s", prefix.Data(), className.Data());
+      TString title = TString::Format("%s_%s", prefix.Data(), className.Data());
 
       // Histograms are already generated, skip.
       if ( DoesExist(name) ) {
@@ -337,8 +337,8 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
          // Style ROC Curve
          TString iClassName = dsi->GetClassInfo(iClass)->GetName();
          TString jClassName = dsi->GetClassInfo(jClass)->GetName();
-         TString name = Form("%s_1v1rejBvsS_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
-         TString title = Form("%s_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
+         TString name = TString::Format("%s_1v1rejBvsS_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
+         TString title = TString::Format("%s_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
          rocGraph->SetName(name);
          rocGraph->SetTitle(title);
 
@@ -365,10 +365,10 @@ void  TMVA::ResultsMulticlass::CreateMulticlassHistos( TString prefix, Int_t nbi
    for (UInt_t iCls = 0; iCls < dsi->GetNClasses(); iCls++) {
       histos.push_back(std::vector<TH1F*>(0));
       for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
-         TString name(Form("%s_%s_prob_for_%s",prefix.Data(),
+         TString name = TString::Format("%s_%s_prob_for_%s",prefix.Data(),
                            dsi->GetClassInfo( jCls )->GetName(),
-                           dsi->GetClassInfo( iCls )->GetName()));
-         
+                           dsi->GetClassInfo( iCls )->GetName());
+
          // Histograms are already generated, skip.
          if ( DoesExist(name) ) {
             return;
@@ -400,9 +400,9 @@ void  TMVA::ResultsMulticlass::CreateMulticlassHistos( TString prefix, Int_t nbi
    for (UInt_t iCls = 0; iCls < dsi->GetNClasses(); iCls++) {
    histos_highbin.push_back(std::vector<TH1F*>(0));
    for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
-   TString name(Form("%s_%s_prob_for_%s_HIGHBIN",prefix.Data(),
+   TString name = TString::Format("%s_%s_prob_for_%s_HIGHBIN",prefix.Data(),
    dsi->GetClassInfo( jCls )->GetName().Data(),
-   dsi->GetClassInfo( iCls )->GetName().Data()));
+   dsi->GetClassInfo( iCls )->GetName().Data());
    histos_highbin.at(iCls).push_back(new TH1F(name,name,nbins_high,xmin,xmax));
    }
    }

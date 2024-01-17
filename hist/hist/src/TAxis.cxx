@@ -58,7 +58,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fLabels  = nullptr;
    fModLabs = nullptr;
    fBits2   = 0;
-   fTimeDisplay = 0;
+   fTimeDisplay = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,13 +299,13 @@ Int_t TAxis::FindBin(Double_t x)
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
@@ -609,6 +609,26 @@ const char *TAxis::GetTimeFormatOnly() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the time offset in GMT.
+
+UInt_t TAxis::GetTimeOffset() {
+
+  Int_t idF = fTimeFormat.Index("%F")+2;
+  if (idF<2) {
+    Warning("GetGMTimeOffset","Time format is not set!");
+    return 0;
+  }
+  TString stime=fTimeFormat(idF,19);
+  if (stime.Length() != 19) {
+    Warning("GetGMTimeOffset","Bad time format!");
+    return 0;
+  }
+
+  TDatime datime(stime.Data());
+  return datime.Convert(kTRUE);  // Convert to unix gmt time
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the ticks option (see SetTicks)
 
 const char *TAxis::GetTicks() const
@@ -749,7 +769,21 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
    if (TestBit(kNoExponent)) {
       out<<"   "<<name<<subname<<"->SetNoExponent();"<<std::endl;
    }
-
+   if (fModLabs) {
+      TIter next(fModLabs);
+      while (auto ml = (TAxisModLab*)next()) {
+         if (ml->GetLabNum() == 0)
+            out<<"   "<<name<<subname<<"->ChangeLabelByValue("<<ml->GetLabValue()<<",";
+         else
+            out<<"   "<<name<<subname<<"->ChangeLabel("<<ml->GetLabNum()<<",";
+         out<<ml->GetAngle()<<","
+            <<ml->GetSize()<<","
+            <<ml->GetAlign()<<","
+            <<ml->GetColor()<<","
+            <<ml->GetFont()<<","
+            <<quote<<ml->GetText()<<quote<<");"<<std::endl;
+      }
+   }
    TAttAxis::SaveAttributes(out,name,subname);
 }
 
@@ -837,7 +871,7 @@ void TAxis::SetDefaults()
    strlcpy(name,GetName(),2);
    name[1] = 0;
    TAttAxis::ResetAttAxis(name);
-   fTimeDisplay = 0;
+   fTimeDisplay = false;
    SetTimeFormat();
 }
 
@@ -882,6 +916,27 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Search for axis modifier by index or value
+
+TAxisModLab *TAxis::FindModLab(Int_t num, Double_t v, Double_t eps) const
+{
+   if (!fModLabs)
+      return nullptr;
+
+   TIter next(fModLabs);
+   while (auto ml = (TAxisModLab*)next()) {
+      if (ml->GetLabNum() != num)
+         continue;
+
+      if ((num != 0) || (TMath::Abs(v - ml->GetLabValue()) <= eps))
+         return ml;
+   }
+
+   return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Define new text attributes for the label number "labNum". It allows to do a
 /// fine tuning of the labels. All the attributes can be changed, even the
 /// label text itself.
@@ -903,28 +958,72 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 ///  - To retrieve the number of axis labels use TAxis::GetNlabels.
 
 void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
-                               Int_t labAlign, Int_t labColor, Int_t labFont,
-                               TString labText)
+                        Int_t labAlign, Int_t labColor, Int_t labFont,
+                        const TString &labText)
 {
-   if (!fModLabs) fModLabs = new TList();
-
    // Reset the list of modified labels.
    if (labNum == 0) {
-      delete fModLabs;
-      fModLabs  = 0;
+      SafeDelete(fModLabs);
       return;
    }
 
-   TAxisModLab *ml = new TAxisModLab();
-   ml->SetLabNum(labNum);
+   if (!fModLabs) fModLabs = new TList();
+
+   TAxisModLab *ml = FindModLab(labNum);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabNum(labNum);
+      fModLabs->Add(ml);
+   }
+
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
    ml->SetAlign(labAlign);
    ml->SetColor(labColor);
    ml->SetFont(labFont);
    ml->SetText(labText);
+}
 
-   fModLabs->Add((TObject*)ml);
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label value "labValue". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed, even the
+/// label text itself.
+///
+/// \param[in] labValue  Axis value to be changed
+/// \param[in] labAngle  New angle value
+/// \param[in] labSize   New size (0 erase the label)
+/// \param[in] labAlign  New alignment value
+/// \param[in] labColor  New label color
+/// \param[in] labFont   New label font
+/// \param[in] labText   New label text
+///
+///  #### Notes:
+///
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
+///  - To retrieve the number of axis labels use TAxis::GetNlabels.
+
+void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t labSize,
+                             Int_t labAlign, Int_t labColor, Int_t labFont,
+                             const TString &labText)
+{
+   if (!fModLabs) fModLabs = new TList();
+
+   TAxisModLab *ml = FindModLab(0, labValue, 0.);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabValue(labValue);
+      fModLabs->Add(ml);
+   }
+
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
 }
 
 
@@ -960,11 +1059,11 @@ void TAxis::SetRange(Int_t first, Int_t last)
    ) {
       fFirst = 1;
       fLast = fNbins;
-      SetBit(kAxisRange, 0);
+      SetBit(kAxisRange, false);
    } else {
       fFirst = std::max(first, 0);
       fLast = std::min(last, nCells);
-      SetBit(kAxisRange, 1);
+      SetBit(kAxisRange, true);
    }
 
 }
@@ -1125,7 +1224,7 @@ void TAxis::Streamer(TBuffer &R__b)
          Float_t xmin,xmax;
          R__b >> xmin; fXmin = xmin;
          R__b >> xmax; fXmax = xmax;
-         Float_t *xbins = 0;
+         Float_t *xbins = nullptr;
          Int_t n = R__b.ReadArray(xbins);
          fXbins.Set(n);
          for (Int_t i=0;i<n;i++) fXbins.fArray[i] = xbins[i];
@@ -1142,7 +1241,7 @@ void TAxis::Streamer(TBuffer &R__b)
          if (fFirst < 0 || fFirst > fNbins) fFirst = 0;
          if (fLast  < 0 || fLast  > fNbins) fLast  = 0;
          if (fLast  < fFirst) { fFirst = 0; fLast = 0;}
-         if (fFirst ==0 && fLast == 0) SetBit(kAxisRange,0);
+         if (fFirst ==0 && fLast == 0) SetBit(kAxisRange,false);
       }
       if (R__v > 3) {
          R__b >> fTimeDisplay;

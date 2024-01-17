@@ -19,7 +19,7 @@
 \class RooAbsStudy
 \ingroup Roofitcore
 
-RooAbsStudy is an abstract base class for RooStudyManager modules
+Abstract base class for RooStudyManager modules
 
 **/
 
@@ -33,27 +33,23 @@ RooAbsStudy is an abstract base class for RooStudyManager modules
 using namespace std ;
 
 ClassImp(RooAbsStudy);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(0), _summaryData(0), _detailData(0), _ownDetailData(true)
-{
-}
-
-
+RooAbsStudy::RooAbsStudy(const char *name, const char *title) : TNamed(name, title) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsStudy::RooAbsStudy(const RooAbsStudy& other) : TNamed(other), _storeDetails(other._storeDetails), _summaryData(other._summaryData),
-                       _detailData(0), _ownDetailData(other._ownDetailData)
+RooAbsStudy::RooAbsStudy(const RooAbsStudy &other)
+   : TNamed(other),
+     _storeDetails(other._storeDetails),
+     _summaryData(other._summaryData),
+     _ownDetailData(other._ownDetailData)
 {
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -79,9 +75,9 @@ void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSe
     return ;
   }
 
-  string name = Form("%s_summary_data",GetName()) ;
-  string title = Form("%s Summary Data",GetTitle()) ;
-  _summaryData = new RooDataSet(name.c_str(),title.c_str(),allVars,RooFit::StoreError(varsWithError),RooFit::StoreAsymError(varsWithAsymError)) ;
+  std::string name = std::string(GetName()) + "_summary_data";
+  std::string title = std::string(GetTitle()) + " Summary Data";
+  _summaryData = new RooDataSet(name,title,allVars,RooFit::StoreError(varsWithError),RooFit::StoreAsymError(varsWithAsymError)) ;
 }
 
 

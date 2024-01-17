@@ -48,7 +48,7 @@ public:
                  Int_t id = -1, TGString *path = nullptr, GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame, Pixel_t back = GetWhitePixel());
-   virtual ~TGTreeLBEntry();
+   ~TGTreeLBEntry() override;
 
    const TGString  *GetText() const { return fText; }
    const TGPicture *GetPicture() const { return fPic; }

@@ -88,12 +88,12 @@ public:
     ///
     /// TDavixFile supports several options :
     ///
-    ///  - GRID_MODE=yes    : enable the grid authentication and CA support
-    ///  - CA_CHECK=no      : remove all the certificate authority check, this option can create a security vulnerability
-    ///  - S3_SECKEY=string : Amazon S3 secret token
-    ///  - S3_ACCKEY=string : Amazon S3 access token
-    ///  - S3_REGION=string : Amazon S3 region. Optional, if provided, davix will use v4 signatures.
-    ///  - S3_TOKEN=string  : Amazon STS temporary credentials token.
+    ///  - GRID_MODE=yes   : enable the grid authentication and CA support
+    ///  - CA_CHECK=no     : remove all the certificate authority check, this option can create a security vulnerability
+    ///  - S3SECKEY=string : Amazon S3 secret token
+    ///  - S3ACCKEY=string : Amazon S3 access token
+    ///  - S3REGION=string : Amazon S3 region. Optional, if provided, davix will use v4 signatures.
+    ///  - S3TOKEN=string  : Amazon STS temporary credentials token.
     ///
     /// Several parameters can be used if separated with whitespace
 

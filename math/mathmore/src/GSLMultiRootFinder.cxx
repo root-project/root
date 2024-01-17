@@ -53,7 +53,7 @@ namespace Math {
    double gDefaultAbsTolerance = 1.E-6;
    double gDefaultRelTolerance = 1.E-10;
 
-// impelmentation of static methods
+// implementation of static methods
 void GSLMultiRootFinder::SetDefaultTolerance(double abstol, double reltol ) {
    // set default tolerance
       gDefaultAbsTolerance = abstol;
@@ -67,7 +67,7 @@ void GSLMultiRootFinder::SetDefaultMaxIterations(int maxiter) {
 GSLMultiRootFinder::GSLMultiRootFinder(EType type) :
    fIter(0), fStatus(-1), fPrintLevel(0),
    fType(type), fUseDerivAlgo(false),
-   fSolver(0)
+   fSolver(nullptr)
 {
    // constructor for non derivative type
    fFunctions.reserve(2);
@@ -76,7 +76,7 @@ GSLMultiRootFinder::GSLMultiRootFinder(EType type) :
 GSLMultiRootFinder::GSLMultiRootFinder(EDerivType type) :
    fIter(0), fStatus(-1), fPrintLevel(0),
    fType(type), fUseDerivAlgo(true),
-   fSolver(0)
+   fSolver(nullptr)
 {
    // constructor for non derivative type
    fFunctions.reserve(2);
@@ -85,7 +85,7 @@ GSLMultiRootFinder::GSLMultiRootFinder(EDerivType type) :
 GSLMultiRootFinder::GSLMultiRootFinder(const char * name) :
    fIter(0), fStatus(-1), fPrintLevel(0),
    fType(0), fUseDerivAlgo(false),
-   fSolver(0)
+   fSolver(nullptr)
 {
    // constructor for a string
    fFunctions.reserve(2);
@@ -130,8 +130,8 @@ int GSLMultiRootFinder::AddFunction(const ROOT::Math::IMultiGenFunction & func) 
 void GSLMultiRootFinder::ClearFunctions() {
    // clear the function list
    for (unsigned int i = 0; i < fFunctions.size(); ++i) {
-      if (fFunctions[i] != 0 ) delete fFunctions[i];
-      fFunctions[i] = 0;
+      if (fFunctions[i] != nullptr ) delete fFunctions[i];
+      fFunctions[i] = nullptr;
    }
    fFunctions.clear();
 }
@@ -140,25 +140,25 @@ void GSLMultiRootFinder::Clear() {
    // clear the function list and the solver
    ClearFunctions();
    if (fSolver) Clear();
-   fSolver = 0;
+   fSolver = nullptr;
 }
 
 
 const double * GSLMultiRootFinder::X() const {
    // return x
-   return (fSolver != 0) ? fSolver->X() : 0;
+   return (fSolver != nullptr) ? fSolver->X() : nullptr;
 }
 const double * GSLMultiRootFinder::Dx() const {
    // return x
-   return (fSolver != 0) ? fSolver->Dx() : 0;
+   return (fSolver != nullptr) ? fSolver->Dx() : nullptr;
 }
 const double * GSLMultiRootFinder::FVal() const {
    // return x
-   return (fSolver != 0) ? fSolver->FVal() : 0;
+   return (fSolver != nullptr) ? fSolver->FVal() : nullptr;
 }
 const char * GSLMultiRootFinder::Name() const {
    // get GSL name
-   return (fSolver != 0) ? fSolver->Name().c_str() : "";
+   return (fSolver != nullptr) ? fSolver->Name().c_str() : "";
 }
 
 // bool GSLMultiRootFinder::AddFunction( const ROOT::Math::IMultiGenFunction & func) {
@@ -195,7 +195,7 @@ const char * GSLMultiRootFinder::Name() const {
       default:
          return gsl_multiroot_fsolver_hybrids;
       }
-   return 0;
+   return nullptr;
 }
 
 const gsl_multiroot_fdfsolver_type * GetGSLDerivType(GSLMultiRootFinder::EDerivType type) {
@@ -213,11 +213,11 @@ const gsl_multiroot_fdfsolver_type * GetGSLDerivType(GSLMultiRootFinder::EDerivT
    default:
       return gsl_multiroot_fdfsolver_hybridsj;
    }
-   return 0; // cannot happen
+   return nullptr; // cannot happen
 }
 
 std::pair<bool,int> GSLMultiRootFinder::GetType(const char * name) {
-   if (name == 0) return std::make_pair<bool,int>(false, -1);
+   if (name == nullptr) return std::make_pair<bool,int>(false, -1);
    std::string aname = name;
    std::transform(aname.begin(), aname.end(), aname.begin(), (int(*)(int)) tolower );
 
@@ -238,7 +238,7 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
    fIter = 0;
    // create the solvers - delete previous existing solver
    if (fSolver) delete fSolver;
-   fSolver = 0;
+   fSolver = nullptr;
 
    if (fFunctions.size() == 0) {
       MATH_ERROR_MSG("GSLMultiRootFinder::Solve","Function list is empty");
@@ -257,7 +257,7 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
 
 
    // first set initial values and function
-   assert(fSolver != 0);
+   assert(fSolver != nullptr);
    bool ret = fSolver->InitSolver( fFunctions, x);
    if (!ret) {
       MATH_ERROR_MSG("GSLMultiRootFinder::Solve","Error initializing the solver");
@@ -286,7 +286,7 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
       }
       // act in case of error
       if (status == GSL_EBADFUNC) {
-         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","The iteration encountered a singolar point due to a bad function value");
+         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","The iteration encountered a singular point due to a bad function value");
          fStatus = status;
          break;
       }
@@ -296,7 +296,7 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
          break;
       }
       if (status != GSL_SUCCESS) {
-         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","Uknown iteration error - exit");
+         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","Unknown iteration error - exit");
          fStatus = status;
          break;
       }

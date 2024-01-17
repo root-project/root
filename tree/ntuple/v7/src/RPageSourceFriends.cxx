@@ -53,8 +53,9 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(const RNTup
       AddVirtualField(originDesc, originIdx, f, virtualFieldId, f.GetFieldName());
 
    for (const auto &c: originDesc.GetColumnIterable(originField)) {
-      fBuilder.AddColumn(fNextId, virtualFieldId, c.GetModel(), c.GetIndex());
-      fIdBiMap.Insert({originIdx, c.GetId()}, fNextId);
+      auto physicalId = c.IsAliasColumn() ? fIdBiMap.GetVirtualId({originIdx, c.GetPhysicalId()}) : fNextId;
+      fBuilder.AddColumn(fNextId, physicalId, virtualFieldId, c.GetModel(), c.GetIndex());
+      fIdBiMap.Insert({originIdx, c.GetLogicalId()}, fNextId);
       fNextId++;
    }
 }
@@ -96,7 +97,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
 
             auto pageRange = c.GetPageRange(originColumnId).Clone();
-            pageRange.fColumnId = virtualColumnId;
+            pageRange.fPhysicalColumnId = virtualColumnId;
 
             auto firstElementIndex = c.GetColumnRange(originColumnId).fFirstElementIndex;
             auto compressionSettings = c.GetColumnRange(originColumnId).fCompressionSettings;
@@ -135,8 +136,8 @@ ROOT::Experimental::Detail::RPageSourceFriends::AddColumn(DescriptorId_t fieldId
 void ROOT::Experimental::Detail::RPageSourceFriends::DropColumn(ColumnHandle_t columnHandle)
 {
    RPageSource::DropColumn(columnHandle);
-   auto originColumnId = fIdBiMap.GetOriginId(columnHandle.fId);
-   columnHandle.fId = originColumnId.fId;
+   auto originColumnId = fIdBiMap.GetOriginId(columnHandle.fPhysicalId);
+   columnHandle.fPhysicalId = originColumnId.fId;
    fSources[originColumnId.fSourceIdx]->DropColumn(columnHandle);
 }
 
@@ -145,9 +146,9 @@ ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
    ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
-   auto virtualColumnId = columnHandle.fId;
+   auto virtualColumnId = columnHandle.fPhysicalId;
    auto originColumnId = fIdBiMap.GetOriginId(virtualColumnId);
-   columnHandle.fId = originColumnId.fId;
+   columnHandle.fPhysicalId = originColumnId.fId;
 
    auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, globalIndex);
 
@@ -162,12 +163,12 @@ ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
    ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex)
 {
-   auto virtualColumnId = columnHandle.fId;
+   auto virtualColumnId = columnHandle.fPhysicalId;
    auto originColumnId = fIdBiMap.GetOriginId(virtualColumnId);
    RClusterIndex originClusterIndex(
       fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId,
       clusterIndex.GetIndex());
-   columnHandle.fId = originColumnId.fId;
+   columnHandle.fPhysicalId = originColumnId.fId;
 
    auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, originClusterIndex);
 
@@ -175,16 +176,16 @@ ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
    return page;
 }
 
-
-void ROOT::Experimental::Detail::RPageSourceFriends::LoadSealedPage(
-   DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage)
+void ROOT::Experimental::Detail::RPageSourceFriends::LoadSealedPage(DescriptorId_t physicalColumnId,
+                                                                    const RClusterIndex &clusterIndex,
+                                                                    RSealedPage &sealedPage)
 {
-   auto originColumnId = fIdBiMap.GetOriginId(columnId);
+   auto originColumnId = fIdBiMap.GetOriginId(physicalColumnId);
    RClusterIndex originClusterIndex(
       fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId,
       clusterIndex.GetIndex());
 
-   fSources[originColumnId.fSourceIdx]->LoadSealedPage(columnId, originClusterIndex, sealedPage);
+   fSources[originColumnId.fSourceIdx]->LoadSealedPage(physicalColumnId, originClusterIndex, sealedPage);
 }
 
 

@@ -18,7 +18,7 @@
 \class RooCategory
 \ingroup Roofitcore
 
-RooCategory is an object to represent discrete states.
+Object to represent discrete states.
 States have names and index numbers, and the index numbers can be written into datasets and
 used in calculations.
 A category is "fundamental", i.e., its value doesn't depend on the value of other objects.
@@ -507,7 +507,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
 
 
 /// In current versions of the class, a map with ranges can be shared between instances.
-/// If an instance with the same name alreday uses the same map, the instances will start sharing.
+/// If an instance with the same name already uses the same map, the instances will start sharing.
 /// Otherwise, this instance will be registered, and future copies being read will share with this
 /// one.
 void RooCategory::installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap) {

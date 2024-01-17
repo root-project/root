@@ -3,8 +3,11 @@
 
 /**********************************************************************
  *                                                                    *
- * Copyright (c) 2006  LCG ROOT Math Team, CERN/PH-SFT                *
+ * Copyright (c) 2006  CERN                                           *
+ * All rights reserved.                                               *
  *                                                                    *
+ * For the licensing terms see $ROOTSYS/LICENSE.                      *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.          *
  *                                                                    *
  **********************************************************************/
 
@@ -300,8 +303,8 @@ namespace ROOT {
             Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
           */
          virtual T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const = 0;
-         virtual T DoEvalPar(const T *x, const double *p) const override = 0;
-         virtual T DoEval(const T *x) const override
+         T DoEvalPar(const T *x, const double *p) const override = 0;
+         T DoEval(const T *x) const override
          {
             return DoEvalPar(x, Parameters());
          }

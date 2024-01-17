@@ -3,7 +3,7 @@
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,13 +18,13 @@
 class RootWebView : public QWebEngineView {
    Q_OBJECT
 protected:
-   unsigned fWidth, fHeight;
-   int fX, fY;
+   unsigned fWidth{0}, fHeight{0};
+   int fX{0}, fY{0};
 
-   virtual void closeEvent(QCloseEvent *);
+   void closeEvent(QCloseEvent *) override;
 
-   virtual void dropEvent(QDropEvent* event);
-   virtual void dragEnterEvent( QDragEnterEvent *e );
+   void dropEvent(QDropEvent *) override;
+   void dragEnterEvent(QDragEnterEvent *) override;
 
 public slots:
    void onLoadStarted();
@@ -39,7 +39,7 @@ public:
    RootWebView(QWidget *parent = nullptr, unsigned width = 0, unsigned height = 0, int x = -1, int y = -1);
    virtual ~RootWebView() = default;
 
-   virtual QSize  sizeHint() const;
+   QSize  sizeHint() const override;
 };
 
 #endif

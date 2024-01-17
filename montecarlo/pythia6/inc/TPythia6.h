@@ -121,7 +121,7 @@ protected:
 public:
    // ****** constructors and destructor
    TPythia6();
-   virtual ~TPythia6();
+   ~TPythia6() override;
 
    static TPythia6 *Instance();
 
@@ -293,12 +293,12 @@ public:
 
    // ****** TPYTHIA routines
 
-   void             GenerateEvent();
+   void             GenerateEvent() override;
 
    void             Initialize(const char *frame, const char *beam, const char *target, float win);
 
-   Int_t            ImportParticles(TClonesArray *particles, Option_t *option="");
-   TObjArray       *ImportParticles(Option_t *option="");
+   Int_t            ImportParticles(TClonesArray *particles, Option_t *option="") override;
+   TObjArray       *ImportParticles(Option_t *option="") override;
 
    void             OpenFortranFile(int lun, char* name);
    void             CloseFortranFile(int lun);
@@ -324,7 +324,7 @@ public:
    void             Pyupda(int mupda, int lun);
    void             SetupTest();
 
-   ClassDef(TPythia6,0)  //Interface to Pythia6.1 Event Generator
+   ClassDefOverride(TPythia6,0)  //Interface to Pythia6.1 Event Generator
 };
 
 #endif

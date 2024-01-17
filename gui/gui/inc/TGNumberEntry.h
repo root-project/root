@@ -171,7 +171,7 @@ public:
                  EAttribute attr = kNEAAnyNumber,
                  ELimit limits = kNELNoLimits,
                  Double_t min = 0, Double_t max = 1);
-   virtual ~TGNumberEntry();
+   ~TGNumberEntry() override;
 
    virtual void SetNumber(Double_t val, Bool_t emit = kTRUE) {
       // Set the numeric value (floating point representation)

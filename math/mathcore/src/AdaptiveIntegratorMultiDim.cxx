@@ -25,7 +25,7 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double rel
    fError(0), fRelError(0),
    fNEval(0),
    fStatus(-1),
-   fFun(0)
+   fFun(nullptr)
 {
    // constructor - without passing a function
    if (fAbsTol < 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
@@ -47,7 +47,7 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction 
    fStatus(-1),
    fFun(&f)
 {
-   // constructur passing a multi-dimensional function interface
+   // constructor passing a multi-dimensional function interface
    // constructor - without passing a function
    if (fAbsTol < 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
    if (fRelTol < 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
@@ -96,7 +96,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    double relerr; //an estimation of the relative accuracy of the result
 
 
-   double ctr[15], wth[15], wthl[15], z[15];
+   double ctr[15], width[15], widthl[15], z[15];
 
    static const double xl2 = 0.358568582800318073;//lambda_2
    static const double xl4 = 0.948683298050513796;//lambda_4
@@ -164,7 +164,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    if (minpts < 1)      minpts = irlcls;
    if (maxpts < minpts) maxpts = 10*minpts;
 
-   // The original agorithm expected a working space array WK of length IWK
+   // The original algorithm expected a working space array WK of length IWK
    // with IWK Length ( >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2).
    // Here, this array is allocated dynamically
 
@@ -174,7 +174,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    unsigned int j;
    for (j=0; j<n; j++) {
       ctr[j] = (xmax[j] + xmin[j])*0.5;//center of a hypercube
-      wth[j] = (xmax[j] - xmin[j])*0.5;//its width
+      width[j] = (xmax[j] - xmin[j])*0.5;//its width
    }
 
    double rgnvol, sum1, sum2, sum3, sum4, sum5, difmax, f2, f3, dif, aresult;
@@ -187,7 +187,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
 L20:
    rgnvol = twondm;//=2^n
    for (j=0; j<n; j++) {
-      rgnvol *= wth[j]; //region volume
+      rgnvol *= width[j]; //region volume
       z[j]    = ctr[j]; //temporary node
    }
    sum1 = (*fFun)((const double*)z);//EvalPar(z,fParams); //evaluate function
@@ -198,17 +198,17 @@ L20:
 
    //loop over coordinates
    for (j=0; j<n; j++) {
-      z[j]    = ctr[j] - xl2*wth[j];
+      z[j]    = ctr[j] - xl2*width[j];
       if (absValue) f2 = std::abs((*fFun)(z));
       else          f2 = (*fFun)(z);
-      z[j]    = ctr[j] + xl2*wth[j];
+      z[j]    = ctr[j] + xl2*width[j];
       if (absValue) f2 += std::abs((*fFun)(z));
       else          f2 += (*fFun)(z);
-      wthl[j] = xl4*wth[j];
-      z[j]    = ctr[j] - wthl[j];
+      widthl[j] = xl4*width[j];
+      z[j]    = ctr[j] - widthl[j];
       if (absValue) f3 = std::abs((*fFun)(z));
       else          f3 = (*fFun)(z);
-      z[j]    = ctr[j] + wthl[j];
+      z[j]    = ctr[j] + widthl[j];
       if (absValue) f3 += std::abs((*fFun)(z));
       else          f3 += (*fFun)(z);
       sum2   += f2;//sum func eval with different weights separately
@@ -227,11 +227,11 @@ L20:
       j1 = j-1;
       for (k=j;k<n;k++) {
          for (l=0;l<2;l++) {
-            wthl[j1] = -wthl[j1];
-            z[j1]    = ctr[j1] + wthl[j1];
+            widthl[j1] = -widthl[j1];
+            z[j1]    = ctr[j1] + widthl[j1];
             for (m=0;m<2;m++) {
-               wthl[k] = -wthl[k];
-               z[k]    = ctr[k] + wthl[k];
+               widthl[k] = -widthl[k];
+               z[k]    = ctr[k] + widthl[k];
                if (absValue) sum4 += std::abs((*fFun)(z));
                else            sum4 += (*fFun)(z);
             }
@@ -244,16 +244,16 @@ L20:
    sum5 = 0;
 
    for (j=0;j<n;j++) {
-      wthl[j] = -xl5*wth[j];
-      z[j] = ctr[j] + wthl[j];
+      widthl[j] = -xl5*width[j];
+      z[j] = ctr[j] + widthl[j];
    }
 L90: //sum over end nodes ~gray codes
    if (absValue) sum5 += std::abs((*fFun)(z));
    else          sum5 += (*fFun)(z);
    for (j=0;j<n;j++) {
-      wthl[j] = -wthl[j];
-      z[j] = ctr[j] + wthl[j];
-      if (wthl[j] > 0) goto L90;
+      widthl[j] = -widthl[j];
+      z[j] = ctr[j] + widthl[j];
+      if (widthl[j] > 0) goto L90;
    }
 
    rgncmp  = rgnvol*(wpn1[n-2]*sum1+wp2*sum2+wpn3[n-2]*sum3+wp4*sum4);
@@ -307,11 +307,11 @@ L160: //to divide or not
    for (j=0;j<n;j++) {
       isbtmp = isbrgn-2*j-4;
       wk[isbtmp]   = ctr[j];
-      wk[isbtmp-1] = wth[j];
+      wk[isbtmp-1] = width[j];
    }
-   if (ldv) {//divison along chosen coordinate
+   if (ldv) { // division along chosen coordinate
       ldv = kFALSE;
-      ctr[idvax0-1] += 2*wth[idvax0-1];
+      ctr[idvax0-1] += 2*width[idvax0-1];
       isbrgs += irgnst;//updating the number of nodes/regions(?)
       isbrgn  = isbrgs;
       goto L20;
@@ -359,7 +359,7 @@ L160: //to divide or not
       for (j=0;j<n;j++) {
          isbtmp = isbrgn-2*j-4;
          ctr[j] = wk[isbtmp];
-         wth[j] = wk[isbtmp-1];
+         width[j] = wk[isbtmp-1];
       }
       if (idvax0 < 1) {
          // Can happen for overflows / degenerate floats.
@@ -367,8 +367,8 @@ L160: //to divide or not
          MATH_ERROR_MSG("AdaptiveIntegratorMultiDim::DoIntegral()", "Logic error: idvax0 < 1!");
          //::Error("AdaptiveIntegratorMultiDim::DoIntegral()", "Logic error: idvax0 < 1!");
       }
-      wth[idvax0-1]  = 0.5*wth[idvax0-1];
-      ctr[idvax0-1] -= wth[idvax0-1];
+      width[idvax0-1]  = 0.5*width[idvax0-1];
+      ctr[idvax0-1] -= width[idvax0-1];
       goto L20;
    }
    nfnevl = ifncls;       //number of function evaluations performed.

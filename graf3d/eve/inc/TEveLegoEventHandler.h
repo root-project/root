@@ -31,15 +31,15 @@ protected:
    Float_t  fTransTheta; // transition theta in radians
    Float_t  fTheta;
 
-   virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
+   Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2) override;
 
 public:
    TEveCaloLego*  fLego;
 
    TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLego* lego = nullptr);
-   virtual ~TEveLegoEventHandler() {}
+   ~TEveLegoEventHandler() override {}
 
-   virtual Bool_t HandleKey(Event_t *event);
+   Bool_t HandleKey(Event_t *event) override;
 
    Float_t GetTransTheta() {return fTransTheta;}
    void    SetTransTheta(Float_t h) {fTransTheta=h;}
@@ -47,7 +47,7 @@ public:
    TEveCaloLego* GetLego() { return fLego; }
    void          SetLego( TEveCaloLego* x) { fLego = x; }
 
-   ClassDef(TEveLegoEventHandler, 0); // A GL event handler class. Switches perspective or orthographic camera.
+   ClassDefOverride(TEveLegoEventHandler, 0); // A GL event handler class. Switches perspective or orthographic camera.
 };
 
 #endif

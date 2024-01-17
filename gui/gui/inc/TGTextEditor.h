@@ -61,7 +61,7 @@ public:
                 UInt_t w = 900, UInt_t h = 600);
    TGTextEditor(TMacro *macro, const TGWindow *p = nullptr, UInt_t w = 0,
                 UInt_t h = 0);
-   virtual ~TGTextEditor();
+   ~TGTextEditor() override;
 
    void           ClearText();
    Bool_t         LoadBuffer(const char *buf) { return fTextEdit->LoadBuffer(buf); }

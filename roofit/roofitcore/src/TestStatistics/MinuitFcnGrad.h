@@ -23,84 +23,72 @@
 #include <Fit/ParameterSettings.h>
 #include "Math/IFunction.h" // ROOT::Math::IMultiGradFunction
 
-// forward declaration
-class RooAbsReal;
 class RooMinimizer;
 
 namespace RooFit {
 namespace TestStatistics {
 
-class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
+class MinuitFcnGrad : public RooAbsMinimizerFcn {
 public:
-   MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
+   MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &absL, RooMinimizer *context,
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                  LikelihoodGradientMode likelihoodGradientMode);
-
-   inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
 
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
    bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    // used inside Minuit:
-   inline bool returnsInMinuit2ParameterSpace() const override { return gradient->usesMinuitInternalValues(); }
+   inline bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
 
    inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
    {
-      likelihood->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-      if (likelihood != likelihood_in_gradient) {
-         likelihood_in_gradient->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-      }
+      applyToLikelihood([&](auto &l) { l.constOptimizeTestStatistic(opcode, doAlsoTrackingOpt); });
    }
 
-   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return _multiGenFcn.get(); }
 
-private:
-   /// IMultiGradFunction override necessary for Minuit
-   double DoEval(const double *x) const override;
+   double operator()(const double *x) const;
 
-public:
    /// IMultiGradFunction overrides necessary for Minuit
-   void Gradient(const double *x, double *grad) const override;
+   void Gradient(const double *x, double *grad) const;
    void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                               double *previous_gstep) const override;
+                               double *previous_gstep) const;
 
-   /// Part of IMultiGradFunction interface, used widely both in Minuit and in RooFit.
-   inline unsigned int NDim() const override { return _nDim; }
+   inline std::string getFunctionName() const override { return _likelihood->GetName(); }
 
-   inline std::string getFunctionName() const override { return likelihood->GetName(); }
-
-   inline std::string getFunctionTitle() const override { return likelihood->GetTitle(); }
+   inline std::string getFunctionTitle() const override { return _likelihood->GetTitle(); }
 
    inline void setOffsetting(bool flag) override
    {
-      likelihood->enableOffsetting(flag);
-      if (likelihood != likelihood_in_gradient) {
-         likelihood_in_gradient->enableOffsetting(flag);
-      }
+      applyToLikelihood([&](auto &l) { l.enableOffsetting(flag); });
    }
 
 private:
-   /// This override should not be used in this class, so it throws.
-   double DoDerivative(const double *x, unsigned int icoord) const override;
-
    bool syncParameterValuesFromMinuitCalls(const double *x, bool minuit_internal) const;
 
+   template <class Func>
+   void applyToLikelihood(Func &&func) const
+   {
+      func(*_likelihood);
+      if (_likelihoodInGradient && _likelihood != _likelihoodInGradient) {
+         func(*_likelihoodInGradient);
+      }
+   }
+
    // members
-   std::shared_ptr<LikelihoodWrapper> likelihood;
-   std::shared_ptr<LikelihoodWrapper> likelihood_in_gradient;
-   std::shared_ptr<LikelihoodGradientWrapper> gradient;
-   mutable bool calculating_gradient_ = false;
+   std::unique_ptr<LikelihoodWrapper> _likelihood;
+   std::unique_ptr<LikelihoodWrapper> _likelihoodInGradient;
+   std::unique_ptr<LikelihoodGradientWrapper> _gradient;
+   mutable bool _calculatingGradient = false;
 
-public:
-   mutable std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean;
+   mutable std::shared_ptr<WrapperCalculationCleanFlags> _calculationIsClean;
 
-private:
-   mutable std::vector<double> minuit_internal_x_;
-   mutable std::vector<double> minuit_external_x_;
+   mutable std::vector<double> _minuitInternalX;
+   mutable std::vector<double> _minuitExternalX;
 
-public:
-   mutable bool minuit_internal_roofit_x_mismatch_ = false;
+   std::unique_ptr<ROOT::Math::IMultiGradFunction> _multiGenFcn;
+
+   mutable bool _minuitInternalRooFitXMismatch = false;
 };
 
 } // namespace TestStatistics

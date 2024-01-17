@@ -59,11 +59,11 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
      SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
 
-     SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -single_module -Wl,-dead_strip_dylibs")
-     SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -single_module -Wl,-dead_strip_dylibs")
+     SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -Wl,-dead_strip_dylibs")
+     SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -Wl,-dead_strip_dylibs")
 
-     set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -bind_at_load -m64")
-     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -bind_at_load -m64")
+     set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -m64")
+     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -m64")
 
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
@@ -74,11 +74,11 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
 
      SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
 
-     SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -single_module -Wl,-dead_strip_dylibs")
-     SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -single_module -Wl,-dead_strip_dylibs")
+     SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -Wl,-dead_strip_dylibs")
+     SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -Wl,-dead_strip_dylibs")
 
-     set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -bind_at_load -m64")
-     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -bind_at_load -m64")
+     set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -m64")
+     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -m64")
 
      if(asan)
        # See also core/sanitizer/README.md for what's happening.
@@ -109,4 +109,19 @@ if(CMAKE_GENERATOR MATCHES Xcode)
     set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${_conf} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_conf} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
   endforeach()
+endif()
+
+#---Avoid using a x86_64 Ninja executable with on a arm64 MacOS
+#---This issue leads to the external being build for x86_64 instead of arm64
+execute_process(COMMAND lipo -archs ${CMAKE_MAKE_PROGRAM} OUTPUT_VARIABLE _NINJA_ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(CMAKE_GENERATOR MATCHES Ninja)
+
+  set( _NINJA_ARCH_LIST ${_NINJA_ARCH} )
+  separate_arguments(_NINJA_ARCH_LIST) # This replace space with semi-colons
+  if (NOT "${CMAKE_HOST_SYSTEM_PROCESSOR}" IN_LIST _NINJA_ARCH_LIST)
+    message(FATAL_ERROR
+            " ${CMAKE_MAKE_PROGRAM} does not support ${CMAKE_HOST_SYSTEM_PROCESSOR}.\n"
+            " It only supports ${_NINJA_ARCH_LIST}.\n"
+            " Downloading the latest version of Ninja might solve the problem.\n")
+  endif()
 endif()

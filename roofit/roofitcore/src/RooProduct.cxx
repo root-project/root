@@ -216,7 +216,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange));
-  if (cache!=0) {
+  if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code;
   }
@@ -242,7 +242,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   cache = new CacheElem();
 
   for (ProdMap::const_iterator i = map->begin();i!=map->end();++i) {
-    RooAbsReal *term(0);
+    RooAbsReal *term(nullptr);
     if (i->second->getSize()>1) { // create a RooProd for this subexpression
       const char *name = makeFPName("SUBPROD_",*i->second);
       auto ownedTerm = std::make_unique<RooProduct>(name,name,*i->second);
@@ -253,7 +253,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       assert(i->second->getSize()==1);
       term = static_cast<RooAbsReal*>(i->second->at(0));
     }
-    assert(term!=0);
+    assert(term!=nullptr);
     if (i->first->empty()) { // check whether we need to integrate over this term or not...
       cache->_prodList.add(*term);
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding simple factor " << term->GetName() << endl;
@@ -304,7 +304,7 @@ double RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
+  if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
     RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1);
@@ -312,7 +312,7 @@ double RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
-  assert(cache!=0);
+  assert(cache!=nullptr);
 
   return calculate(cache->_prodList);
 }
@@ -375,7 +375,7 @@ double RooProduct::evaluate() const
 }
 
 
-void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProduct::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   for (unsigned int i = 0; i < nEvents; ++i) {
     output[i] = 1.;
@@ -415,7 +415,7 @@ std::list<double>* RooProduct::binBoundaries(RooAbsRealLValue& obs, double xlo, 
     }
   }
 
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -451,7 +451,7 @@ std::list<double>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, double xl
     }
   }
 
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -492,9 +492,19 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-
+void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::string result;
+   // Build a (node1 * node2 * node3 * ...) like expression.
+   result = '(';
+   for (RooAbsArg* item : _compRSet) {
+      result += ctx.getResult(*item) + "*";
+   }
+   result.back() = ')';
+   ctx.addResult(this, result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
@@ -524,7 +534,7 @@ void RooProduct::ioStreamerPass2() {
   RooAbsReal::ioStreamerPass2(); // call the baseclass method
 
   if(numProxies() < 2) {
-    throw std::runtime_error("RooProduct::ioStreamerPass2(): the number of proxies in the proxy list should be at leat 2!");
+    throw std::runtime_error("RooProduct::ioStreamerPass2(): the number of proxies in the proxy list should be at least 2!");
   }
 
   // If the proxy data members are evolved by schema evolution, the proxy list

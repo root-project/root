@@ -20,12 +20,13 @@ div.contents {
 
 .pyrootbox {
   border: 1px solid #879ecb;
-  background-color: #f9fafc;
+  background-color: var(--blockquote-background-color);
   padding: 15px;
 }
 
 .legacybox {
   border: 3px solid #879ecb;
   background-color: #fdf06b;
+  color: #000000;
   padding: 15px;
 }

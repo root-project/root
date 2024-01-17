@@ -48,7 +48,7 @@ public:
    TBranchObject();
    TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
    TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
-   virtual ~TBranchObject();
+   ~TBranchObject() override;
 
            void        Browse(TBrowser *b) override;
            const char* GetClassName() const override { return fClassName.Data(); };

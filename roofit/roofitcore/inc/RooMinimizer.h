@@ -44,7 +44,11 @@ class RooMinimizer : public TObject {
 public:
    /// Config argument to RooMinimizer ctor
    struct Config {
+
       Config() {}
+
+      bool useGradient = true; // Use the gradient provided by the RooAbsReal, if there is one.
+
       double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
       int printEvalErrors = 10;    // RooAbsMinimizerFcn config
       int doEEWall = 1;            // RooAbsMinimizerFcn config
@@ -80,7 +84,7 @@ public:
    enum PrintLevel { None = -1, Reduced = 0, Normal = 1, ExtraForProblem = 2, Maximum = 3 };
 
    // Setters on _theFitter
-   void setStrategy(int strat);
+   void setStrategy(int istrat);
    void setErrorLevel(double level);
    void setEps(double eps);
    void setMaxIterations(int n);
@@ -134,7 +138,13 @@ public:
 
    void saveStatus(const char *label, int status)
    {
-      _statusHistory.push_back(std::pair<std::string, int>(label, status));
+      _statusHistory.emplace_back(label, status);
+   }
+
+   /// Clears the Minuit status history.
+   void clearStatusHistory()
+   {
+      _statusHistory.clear();
    }
 
    int evalCounter() const;
@@ -151,6 +161,7 @@ public:
 
 private:
    friend class RooAbsMinimizerFcn;
+   friend class RooMinimizerFcn;
 
    std::unique_ptr<RooAbsReal::EvalErrorContext> makeEvalErrorContext() const;
 

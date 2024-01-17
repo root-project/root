@@ -19,7 +19,7 @@
 \class RooAbsCollection
 \ingroup Roofitcore
 
-RooAbsCollection is an abstract container object that can hold
+Abstract container object that can hold
 multiple RooAbsArg objects.  Collections are ordered and can
 contain multiple objects of the same name, (but a derived
 implementation can enforce unique names). The storage of objects is
@@ -31,7 +31,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "TClass.h"
 #include "TRegexp.h"
 #include "RooStreamParser.h"
-#include "RooFormula.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooStringVar.h"
@@ -42,8 +41,9 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include "strlcpy.h"
+#include "RooFitImplHelpers.h"
 
+#include <strlcpy.h>
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -66,7 +66,7 @@ namespace Detail {
  */
 struct HashAssistedFind {
 
-  /// Inititalise empty hash map for fast finding by name.
+  /// Initialise empty hash map for fast finding by name.
   template<typename It_t>
   HashAssistedFind(It_t first, It_t last) :
     currentRooNameRegCounter{ RooNameReg::instance().renameCounter() },
@@ -253,71 +253,8 @@ RooAbsCollection* RooAbsCollection::snapshot(bool deepCopy) const
 
 bool RooAbsCollection::snapshot(RooAbsCollection& output, bool deepCopy) const
 {
-  // Copy contents
-  output.reserve(_list.size());
-  for (auto orig : _list) {
-    output.add(*static_cast<RooAbsArg*>(orig->Clone()));
-  }
-
-  // Add external dependents
-  bool error(false) ;
-  if (deepCopy) {
-    // Recursively add clones of all servers
-    // Can only do index access because collection might reallocate when growing
-    for (Storage_t::size_type i = 0; i < output._list.size(); ++i) {
-      const auto var = output._list[i];
-      error |= output.addServerClonesToList(*var);
-    }
-  }
-
-  // Handle eventual error conditions
-  if (error) {
-    coutE(ObjectHandling) << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << std::endl;
-    output._ownCont = true ;
-    return true ;
-  }
-
-
-
-   // Redirect all server connections to internal list members
-  for (auto var : output) {
-    var->redirectServers(output,deepCopy);
-  }
-
-
-  // Transfer ownership of contents to list
-  output._ownCont = true ;
-  return false ;
+  return RooHelpers::Detail::snapshotImpl(*this, output, deepCopy, nullptr);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add clones of servers of given argument to end of list
-
-bool RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
-{
-  bool ret(false) ;
-
-  // This can be a very heavy operation if existing elements depend on many others,
-  // so make sure that we have the hash map available for faster finding.
-  if (var.servers().size() > 20 || _list.size() > 30)
-    useHashMapForFind(true);
-
-  for (const auto server : var.servers()) {
-    RooAbsArg* tmp = find(*server) ;
-
-    if (!tmp) {
-      auto* serverClone = static_cast<RooAbsArg*>(server->Clone());
-      serverClone->setAttribute("SnapShot_ExtRefClone") ;
-      insert(serverClone);
-      ret |= addServerClonesToList(*server) ;
-    }
-  }
-
-  return ret ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -354,10 +291,10 @@ void RooAbsCollection::assign(const RooAbsCollection& other) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the value of any argument in our set that also appears in the other set.
-/// \param[in] other Collection holding the arguments to syncronize values with.
+/// \param[in] other Collection holding the arguments to synchronize values with.
 /// \param[in] forceIfSizeOne If set to true and both our collection
 ///                and the other collection have a size of one, the arguments are
-///                always syncronized without checking if they have the same name.
+///                always synchronized without checking if they have the same name.
 
 RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, bool forceIfSizeOne)
 {
@@ -643,7 +580,7 @@ bool RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   // is var2's name already in this list?
   if (dynamic_cast<RooArgSet*>(this)) {
     RooAbsArg *other = find(var2);
-    if(other != 0 && other != &var1) {
+    if(other != nullptr && other != &var1) {
       coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name
       << "\" with already existing \"" << var2.GetName() << "\"" << std::endl;
       return false;
@@ -656,7 +593,7 @@ bool RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
   *var1It = const_cast<RooAbsArg*>(&var2); //FIXME try to get rid of const_cast
 
-  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2)==0) {
+  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2)==nullptr) {
     _allRRV=false ;
   }
 
@@ -753,7 +690,7 @@ bool RooAbsCollection::remove(const RooAbsCollection& list, bool /*silent*/, boo
       _hashAssistedFind->erase(var);
     }
   }
-  
+
   if (matchByNameOnly && _ownCont) {
     std::set<const RooAbsArg*> toBeDeleted(markedItems.begin(), markedItems.end());
     for (auto arg : toBeDeleted) {
@@ -802,7 +739,7 @@ void RooAbsCollection::setAttribAll(const Text_t* name, bool value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a subset of the current collection, consisting only of those
-/// elements with the specified attribute set. The caller is responsibe
+/// elements with the specified attribute set. The caller is responsible
 /// for deleting the returned collection
 
 RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, bool value) const
@@ -887,7 +824,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, bool verb
    sel->add(*arg) ;
       }
     }
-    wcExpr = strtok(0,",") ;
+    wcExpr = strtok(nullptr,",") ;
   }
 
   return sel ;
@@ -1008,7 +945,7 @@ double RooAbsCollection::getRealValue(const char* name, double defVal, bool verb
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set value of a RooAbsRealLValye stored in set with given name to newVal
+/// Set value of a RooAbsRealLValue stored in set with given name to newVal
 /// No error messages are printed unless the verbose flag is set
 
 bool RooAbsCollection::setRealValue(const char* name, double newVal, bool verbose)
@@ -1209,7 +1146,7 @@ void RooAbsCollection::printClassName(std::ostream& os) const
 /// Define default RooPrinable print options for given Print() flag string
 /// For inline printing only show value of objects, for default print show
 /// name,class name value and extras of each object. In verbose mode
-/// also add object adress, argument and title
+/// also add object address, argument and title
 
 Int_t RooAbsCollection::defaultPrintContents(Option_t* opt) const
 {
@@ -1345,7 +1282,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
   pc.defineString("outputFile","OutputFile",0,"") ;
   pc.defineString("format","Format",0,"NEYVU") ;
   pc.defineInt("sigDigit","Format",0,1) ;
-  pc.defineObject("siblings","Sibling",0,0,true) ;
+  pc.defineObject("siblings","Sibling",0,nullptr,true) ;
   pc.defineInt("dummy","FormatArgs",0,0) ;
   pc.defineMutex("Format","FormatArgs") ;
 
@@ -1368,7 +1305,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       auto* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(ofs,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
+      printLatex(ofs,pc.getInt("ncol"),nullptr,0,pc.getObjectList("siblings"),formatCmd) ;
     } else {
       printLatex(ofs,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1376,7 +1313,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       auto* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(std::cout,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
+      printLatex(std::cout,pc.getInt("ncol"),nullptr,0,pc.getObjectList("siblings"),formatCmd) ;
     } else {
       printLatex(std::cout,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1423,7 +1360,7 @@ void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* opt
   RooLinkedList listListRRV ;
 
   // Make list of RRV-only components
-  RooArgList* prevList = 0 ;
+  RooArgList* prevList = nullptr ;
   for(auto * col : static_range_cast<RooAbsCollection*>(listList)) {
     RooArgList* list = new RooArgList ;
     for (auto* arg : *col) {
@@ -1500,7 +1437,7 @@ bool RooAbsCollection::allInRange(const char* rangeSpec) const
   // Parse rangeSpec specification
   std::vector<std::string> cutVec ;
   if (rangeSpec && strlen(rangeSpec)>0) {
-    if (strchr(rangeSpec,',')==0) {
+    if (strchr(rangeSpec,',')==nullptr) {
       cutVec.push_back(rangeSpec) ;
     } else {
       const size_t bufSize = strlen(rangeSpec)+1;
@@ -1509,7 +1446,7 @@ bool RooAbsCollection::allInRange(const char* rangeSpec) const
       const char* oneRange = strtok(buf.data(),",") ;
       while(oneRange) {
    cutVec.push_back(oneRange) ;
-   oneRange = strtok(0,",") ;
+   oneRange = strtok(nullptr,",") ;
       }
     }
   }
@@ -1611,7 +1548,7 @@ std::unique_ptr<RooAbsCollection::LegacyIterator_t> RooAbsCollection::makeLegacy
 void RooAbsCollection::insert(RooAbsArg* item) {
   _list.push_back(item);
 
-  if (_allRRV && dynamic_cast<const RooRealVar*>(item)==0) {
+  if (_allRRV && dynamic_cast<const RooRealVar*>(item)==nullptr) {
     _allRRV= false;
   }
 

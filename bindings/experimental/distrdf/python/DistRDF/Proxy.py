@@ -108,11 +108,11 @@ class Proxy(ABC):
         self.proxied_node.has_user_references = False
 
 
-class VariationsProxy(Proxy):
+class ResultMapProxy(Proxy):
     """
-    Instances of VariationsProxy act as futures of the result produced
+    Instances of ResultMapProxy act as futures of the result produced
     by a call to DistRDF.VariationsFor. The aim is to mimic the functionality of
-    ROOT::RDF::Experimental::RResultMap.
+    ROOT::RDF::Experimental::RResultMap to provide the same API usage.
     """
 
     def __init__(self, node: Node):
@@ -124,7 +124,7 @@ class VariationsProxy(Proxy):
         The __getattr__ of the Proxy base class is an abstract method. This
         class has no attributes to present to the user.
         """
-        raise AttributeError(f"'VariationsProxy' object has no attribute '{attr}'")
+        raise AttributeError(f"'ResultMapProxy' object has no attribute '{attr}'")
 
     def __getitem__(self, key: str):
         """
@@ -161,12 +161,11 @@ class VariationsProxy(Proxy):
             return self._keys
 
 
-class ActionProxy(Proxy):
+class ResultPtrProxy(Proxy):
     """
-    Instances of ActionProxy act as futures of the result produced
-    by some action node. They implement a lazy synchronization
-    mechanism, i.e., when they are accessed for the first time,
-    they trigger the execution of the whole RDataFrame graph.
+    Instances of ResultPtrProxy act as futures of the result produced
+    by some action node. The aim is to mimic the functionality of
+    ROOT::RDF::RResultPtr to provide the same API usage.
     """
 
     def __getattr__(self, attr):
@@ -197,20 +196,21 @@ class ActionProxy(Proxy):
         """
         return getattr(self.GetValue(), self._cur_attr)(*args, **kwargs)
 
-    def create_variations(self) -> VariationsProxy:
+    def create_variations(self) -> ResultMapProxy:
         """
         Creates a node responsible to signal the creation of variations in the
         distributed computation graph, returning a specialized proxy to that
         node. This function is usually called from DistRDF.VariationsFor.
         """
-        return VariationsProxy(_create_new_node(self.proxied_node, Operation.create_op("VariationsFor")))
+        return ResultMapProxy(_create_new_node(self.proxied_node, Operation.create_op("VariationsFor")))
 
 
-class TransformationProxy(Proxy):
+class NodeProxy(Proxy):
     """
     A proxy object to an non-action node. It implements acces to attributes
     and methods of the proxied node. It is also in charge of the creation of
-    a new operation node in the graph.
+    a new operation node in the graph. The aim is to mimic the functionality of
+    ROOT::RDF::RNode to provide the same API usage.
     """
 
     def __getattr__(self, attr):
@@ -254,14 +254,14 @@ class TransformationProxy(Proxy):
 
 
 @singledispatch
-def get_proxy_for(operation: Operation.Transformation, node: Node) -> TransformationProxy:
+def get_proxy_for(operation: Operation.Transformation, node: Node) -> NodeProxy:
     """"Returns appropriate proxy for the input node"""
-    return TransformationProxy(node)
+    return NodeProxy(node)
 
 
 @get_proxy_for.register
-def _(operation: Operation.Action, node: Node) -> ActionProxy:
-    return ActionProxy(node)
+def _(operation: Operation.Action, node: Node) -> ResultPtrProxy:
+    return ResultPtrProxy(node)
 
 
 @get_proxy_for.register
@@ -271,7 +271,7 @@ def _(operation: Operation.InstantAction, node: Node) -> Any:
 
 
 @get_proxy_for.register
-def _(operation: Operation.Snapshot, node: Node) -> Union[ActionProxy, Any]:
+def _(operation: Operation.Snapshot, node: Node) -> Union[ResultPtrProxy, Any]:
     if len(operation.args) == 4:
         # An RSnapshotOptions instance was passed as fourth argument
         if operation.args[3].fLazy:
@@ -281,7 +281,7 @@ def _(operation: Operation.Snapshot, node: Node) -> Union[ActionProxy, Any]:
 
 
 @get_proxy_for.register
-def _(operation: Operation.AsNumpy, node: Node) -> Union[ActionProxy, Any]:
+def _(operation: Operation.AsNumpy, node: Node) -> Union[ResultPtrProxy, Any]:
     if operation.kwargs.get("lazy", False):
         return get_proxy_for.dispatch(Operation.Action)(operation, node)
 

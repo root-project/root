@@ -199,18 +199,18 @@ private:
    void          SetFile();
    const char   *ScanList();
    void          SetParentTree(TGListTreeItem *item);
-   void          DoError(int level, const char *location, const char *fmt, va_list va) const;
+   void          DoError(int level, const char *location, const char *fmt, va_list va) const override;
 
 public:
    TTreeViewer(const char* treeName = nullptr);
    TTreeViewer(const TTree *tree);
-   virtual       ~TTreeViewer();
+         ~TTreeViewer() override;
 
    void          AppendTree(TTree *tree);
    void          ActivateButtons(Bool_t first, Bool_t previous,
                                  Bool_t next , Bool_t last);
-   virtual void  CloseWindow();
-   virtual void  Delete(Option_t *) { }                          // *MENU*
+   void  CloseWindow() override;
+   void  Delete(Option_t *) override { }                          // *MENU*
    void          DoRefresh();
    void          EditExpression();
    void          Empty();
@@ -222,18 +222,18 @@ public:
    TList        *ExpressionList();
    const char   *GetGrOpt();
    TTree        *GetTree() {return fTree;}
-   Bool_t        HandleTimer(TTimer *timer);
+   Bool_t        HandleTimer(TTimer *timer) override;
    Bool_t        IsCutEnabled() {return fEnableCut;}
    Bool_t        IsScanRedirected();
    Int_t         MakeSelector(const char* selector = nullptr);         // *MENU*
-   void          Message(const char* msg);
+   void          Message(const char* msg) override;
    void          NewExpression();                                // *MENU*
    void          PrintEntries();
    Long64_t      Process(const char* filename, Option_t *option="", Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0); // *MENU*
-   Bool_t        ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t        ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*
-   void          SaveSource(const char* filename="", Option_t *option="");            // *MENU*
+   void          SaveSource(const char* filename="", Option_t *option="") override;            // *MENU*
    void          SetHistogramTitle(const char *title);
    void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
    void          SetCurrentRecord(Long64_t entry);
@@ -251,7 +251,7 @@ public:
    void          UpdateCombo();
    void          UpdateRecord(const char *name="new name");      // *MENU*
 
-   ClassDef(TTreeViewer,0)  // A GUI oriented tree viewer
+   ClassDefOverride(TTreeViewer,0)  // A GUI oriented tree viewer
 };
 
 #endif

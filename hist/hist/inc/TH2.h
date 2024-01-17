@@ -69,7 +69,7 @@ private:
    using TH1::IntegralAndError;
 
 public:
-   virtual ~TH2();
+   ~TH2() override;
            Int_t    BufferEmpty(Int_t action=0) override;
            void     Copy(TObject &hnew) const override;
            Int_t    Fill(Double_t x, Double_t y) override;
@@ -121,6 +121,7 @@ public:
            void     SetBinContent(Int_t binx, Int_t biny, Int_t, Double_t content) override { SetBinContent(GetBin(binx, biny), content); }
    virtual void     SetShowProjectionX(Int_t nbins=1);  // *MENU*
    virtual void     SetShowProjectionY(Int_t nbins=1);  // *MENU*
+   virtual void     SetShowProjectionXY(Int_t nbinsY=1, Int_t nbinsX=1);  // *MENU*
            TH1     *ShowBackground(Int_t niter=20, Option_t *option="same") override;
            Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05) override; // *MENU*
            void     Smooth(Int_t ntimes=1, Option_t *option="") override; // *MENU*
@@ -146,7 +147,7 @@ public:
    TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                           ,Int_t nbinsy,const Float_t  *ybins);
    TH2C(const TH2C &h2c);
-   virtual ~TH2C();
+   ~TH2C() override;
 
            void     AddBinContent(Int_t bin) override;
            void     AddBinContent(Int_t bin, Double_t w) override;
@@ -187,7 +188,7 @@ public:
    TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                           ,Int_t nbinsy,const Float_t  *ybins);
    TH2S(const TH2S &h2s);
-   virtual ~TH2S();
+   ~TH2S() override;
 
            void     AddBinContent(Int_t bin) override;
            void     AddBinContent(Int_t bin, Double_t w) override;
@@ -228,7 +229,7 @@ public:
    TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                           ,Int_t nbinsy,const Float_t  *ybins);
    TH2I(const TH2I &h2i);
-   virtual ~TH2I();
+   ~TH2I() override;
 
            void     AddBinContent(Int_t bin) override;
            void     AddBinContent(Int_t bin, Double_t w) override;
@@ -270,7 +271,7 @@ public:
                                           ,Int_t nbinsy,const Float_t  *ybins);
    TH2F(const TMatrixFBase &m);
    TH2F(const TH2F &h2f);
-   virtual ~TH2F();
+   ~TH2F() override;
 
            void     AddBinContent(Int_t bin) override {++fArray[bin];}
            void     AddBinContent(Int_t bin, Double_t w) override
@@ -313,7 +314,7 @@ public:
                                           ,Int_t nbinsy,const Float_t  *ybins);
    TH2D(const TMatrixDBase &m);
    TH2D(const TH2D &h2d);
-   virtual ~TH2D();
+   ~TH2D() override;
 
            void     AddBinContent(Int_t bin) override {++fArray[bin];}
            void     AddBinContent(Int_t bin, Double_t w) override

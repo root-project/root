@@ -15,18 +15,17 @@ class TF3 ;
 
 class RooTFnPdfBinding : public RooAbsPdf {
 public:
-  RooTFnPdfBinding() : _func(nullptr) {}
+  RooTFnPdfBinding() = default;
   RooTFnPdfBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
   RooTFnPdfBinding(const RooTFnPdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooTFnPdfBinding(*this,newname); }
-  inline ~RooTFnPdfBinding() override { }
 
   void printArgs(std::ostream& os) const override ;
 
 protected:
 
   RooListProxy _list ;
-  TF1* _func ;
+  TF1* _func = nullptr;
 
   double evaluate() const override ;
 

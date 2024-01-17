@@ -38,7 +38,6 @@ public:
   RooBukinPdf(const RooBukinPdf& other,const char* name=nullptr) ;
 
   TObject* clone(const char* newname) const override { return new RooBukinPdf(*this,newname);   }
-  inline ~RooBukinPdf() override { }
 
 protected:
   RooRealProxy x;
@@ -48,7 +47,7 @@ protected:
   RooRealProxy rho1;
   RooRealProxy rho2;
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:

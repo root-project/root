@@ -19,7 +19,7 @@
 \class RooRandomizeParamMCSModule
 \ingroup Roofitcore
 
-RooRandomizeParamMCSModule is an add-on modules to RooMCStudy that
+Add-on module to RooMCStudy that
 allows you to randomize input generation parameters. Randomized generation
 parameters can be sampled from a uniform or Gaussian distribution.
 For every randomized parameter, an extra variable is added to
@@ -47,15 +47,13 @@ number of expected events of an extended p.d.f
 using namespace std ;
 
 ClassImp(RooRandomizeParamMCSModule);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
 RooRandomizeParamMCSModule::RooRandomizeParamMCSModule() :
-  RooAbsMCStudyModule("RooRandomizeParamMCSModule","RooRandomizeParamMCSModule"), _data(0)
+  RooAbsMCStudyModule("RooRandomizeParamMCSModule","RooRandomizeParamMCSModule"), _data(nullptr)
 {
 }
 
@@ -68,7 +66,7 @@ RooRandomizeParamMCSModule::RooRandomizeParamMCSModule(const RooRandomizeParamMC
   RooAbsMCStudyModule(other),
   _unifParams(other._unifParams),
   _gausParams(other._gausParams),
-  _data(0)
+  _data(nullptr)
 {
 }
 

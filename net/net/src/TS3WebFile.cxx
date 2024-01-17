@@ -10,53 +10,55 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TS3WebFile                                                           //
-//                                                                      //
-// A TS3WebFile is a TWebFile which retrieves the file contents from a  //
-// web server implementing the REST API of the Amazon S3 protocol. This //
-// class is meant to be as generic as possible to be used with files    //
-// hosted not only by Amazon S3 servers but also by other providers     //
-// implementing the core of the S3 protocol.                            //
-//                                                                      //
-// The S3 protocol works on top of HTTPS (and HTTP) and imposes that    //
-// each HTTP request be signed using a specific convention: the request //
-// must include an 'Authorization' header which contains the signature  //
-// of a concatenation of selected request fields. For signing the       //
-// request, an 'Access Key Id' and a 'Secret Access Key' need to be     //
-// known. These keys are used by the S3 servers to identify the client  //
-// and to authenticate the request as genuine.                          //
-//                                                                      //
-// As an end user, you must know the Access Key and Secret Access Key   //
-// in order to access each S3 file. They are provided to you by your S3 //
-// service provider. Those two keys can be provided to ROOT when        //
-// initializing an object of this class by two means:                   //
-// a) by using the environmental variables S3_ACCESS_KEY and            //
-//    S3_SECRET_KEY, or                                                 //
-// b) by specifying them when opening each file.                        //
-//                                                                      //
-// You can use AWS temporary security credentials (temporary access key //
-// and secret access key), but you must also give the associated        //
-// session token. The token may be set in the S3_SESSION_TOKEN          //
-// environmental variable, or on open in the TOKEN option.              //
-//                                                                      //
-// The first method is convenient if all the S3 files you want to       //
-// access are hosted by a single provider. The second one is more       //
-// flexible as it allows you to specify which credentials to use        //
-// on a per-file basis. See the documentation of the constructor of     //
-// this class for details on the syntax.                                //
-//                                                                      //
-// For generating and signing the HTTP request, this class uses         //
-// TS3HTTPRequest.                                                      //
-//                                                                      //
-// For more information on the details of S3 protocol please refer to:  //
-// "Amazon Simple Storage Service Developer Guide":                     //
-// http://docs.amazonwebservices.com/AmazonS3/latest/dev/Welcome.html   //
-//                                                                      //
-// "Amazon Simple Storage Service REST API Reference"                   //
-//  http://docs.amazonwebservices.com/AmazonS3/latest/API/APIRest.html  //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TS3WebFile.cxx
+\class TS3WebFile
+\ingroup IO
+
+A TS3WebFile is a TWebFile which retrieves the file contents from a
+web server implementing the REST API of the Amazon S3 protocol. This
+class is meant to be as generic as possible to be used with files
+hosted not only by Amazon S3 servers but also by other providers
+implementing the core of the S3 protocol.
+
+The S3 protocol works on top of HTTPS (and HTTP) and imposes that
+each HTTP request be signed using a specific convention: the request
+must include an 'Authorization' header which contains the signature
+of a concatenation of selected request fields. For signing the
+request, an 'Access Key Id' and a 'Secret Access Key' need to be
+known. These keys are used by the S3 servers to identify the client
+and to authenticate the request as genuine.
+
+As an end user, you must know the Access Key and Secret Access Key
+in order to access each S3 file. They are provided to you by your S3
+service provider. Those two keys can be provided to ROOT when
+initializing an object of this class by two means:
+a. by using the environmental variables S3_ACCESS_KEY and 
+   S3_SECRET_KEY, or
+b. by specifying them when opening each file.
+
+You can use AWS temporary security credentials (temporary access key
+and secret access key), but you must also give the associated
+session token. The token may be set in the S3_SESSION_TOKEN
+environmental variable, or on open in the TOKEN option.
+
+The first method is convenient if all the S3 files you want to
+access are hosted by a single provider. The second one is more
+flexible as it allows you to specify which credentials to use
+on a per-file basis. See the documentation of the constructor of
+this class for details on the syntax.
+
+For generating and signing the HTTP request, this class uses
+TS3HTTPRequest.
+
+For more information on the details of S3 protocol please refer to:
+"Amazon Simple Storage Service Developer Guide":
+http://docs.amazonwebservices.com/AmazonS3/latest/dev/Welcome.html
+
+"Amazon Simple Storage Service REST API Reference"
+ http://docs.amazonwebservices.com/AmazonS3/latest/API/APIRest.html
+
+**/
 
 #include "TS3WebFile.h"
 #include "TROOT.h"

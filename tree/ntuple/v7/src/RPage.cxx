@@ -14,3 +14,19 @@
  *************************************************************************/
 
 #include <ROOT/RPage.hxx>
+
+namespace ROOT {
+namespace Experimental {
+
+namespace Detail {
+
+const void *RPage::GetPageZeroBuffer()
+{
+   static const auto pageZero = std::make_unique<unsigned char[]>(kPageZeroSize);
+   return pageZero.get();
+}
+
+} // namespace Detail
+
+} // namespace Experimental
+} // namespace ROOT

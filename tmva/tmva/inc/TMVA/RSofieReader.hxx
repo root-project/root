@@ -46,9 +46,16 @@ class RSofieReader  {
 
 
 public:
+   /// Dummy constructor which needs model loading  afterwards
+   RSofieReader() {}
    /// Create TMVA model from ONNX file
    /// print level can be 0 (minimal) 1 with info , 2 with all ONNX parsing info
-    RSofieReader(const std::string &path, std::vector<std::vector<size_t>> inputShape = {}, int verbose = 0)
+   RSofieReader(const std::string &path, std::vector<std::vector<size_t>> inputShapes = {}, int verbose = 0)
+   {
+      Load(path, inputShapes, verbose);
+   }
+
+   void Load(const std::string &path, std::vector<std::vector<size_t>> inputShapes = {}, int verbose = 0)
    {
 
       enum EModelType {kONNX, kKeras, kPt, kROOT, kNotDef}; // type of model
@@ -113,22 +120,22 @@ public:
          if (gSystem->Load("libPyMVA") < 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since libPyMVA is missing");
          }
-         if (inputShape.size() == 0) {
+         if (inputShapes.size() == 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since the input tensor shape is missing and is needed by the PyTorch parser");
          }
-         std::string inputShapeStr = "{";
-         for (unsigned int i = 0; i < inputShape.size(); i++) {
-            inputShapeStr += "{ ";
-            for (unsigned int j = 0; j < inputShape[i].size(); j++) {
-               inputShapeStr += ROOT::Math::Util::ToString(inputShape[i][j]);
-               if (j < inputShape[i].size()-1) inputShapeStr += ", ";
+         std::string inputShapesStr = "{";
+         for (unsigned int i = 0; i < inputShapes.size(); i++) {
+            inputShapesStr += "{ ";
+            for (unsigned int j = 0; j < inputShapes[i].size(); j++) {
+               inputShapesStr += ROOT::Math::Util::ToString(inputShapes[i][j]);
+               if (j < inputShapes[i].size()-1) inputShapesStr += ", ";
             }
-            inputShapeStr += "}";
-            if (i < inputShape.size()-1) inputShapeStr += ", ";
+            inputShapesStr += "}";
+            if (i < inputShapes.size()-1) inputShapesStr += ", ";
          }
-         inputShapeStr += "}";
+         inputShapesStr += "}";
          parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyTorch::Parse(\"" + path + "\", "
-                    + inputShapeStr + "); \n";
+                    + inputShapesStr + "); \n";
       }
       else if (type == kROOT) {
          // use  parser from ROOT
@@ -142,26 +149,52 @@ public:
       }
 
       int batchSize = 1;
-      if (inputShape.size() > 0 && inputShape[0].size() > 0) {
-         batchSize = inputShape[0][0];
+      if (inputShapes.size() > 0 && inputShapes[0].size() > 0) {
+         batchSize = inputShapes[0][0];
          if (batchSize < 1) batchSize = 1;
       }
       if (verbose) std::cout << "generating the code with batch size = " << batchSize << " ...\n";
+
       parserCode += "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
                    + ROOT::Math::Util::ToString(batchSize) + "); \n";
+
+      // add custom operators if needed
+      if (fCustomOperators.size() > 0) {
+         if (verbose) {
+            parserCode += "model.PrintRequiredInputTensors();\n";
+            parserCode += "model.PrintIntermediateTensors();\n";
+            parserCode += "model.PrintOutputTensors();\n";
+         }
+         for (auto & op : fCustomOperators) {
+            parserCode += "{ auto p = new TMVA::Experimental::SOFIE::ROperator_Custom<float>(\""
+                      + op.fOpName + "\"," + op.fInputNames + "," + op.fOutputNames + "," + op.fOutputShapes + ",\"" + op.fFileName + "\");\n";
+            parserCode += "std::unique_ptr<TMVA::Experimental::SOFIE::ROperator> op(p);\n";
+            parserCode += "model.AddOperator(std::move(op));\n}\n";
+         }
+         parserCode += "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
+                   + ROOT::Math::Util::ToString(batchSize) + "); \n";
+      }
       if (verbose > 1)
          parserCode += "model.PrintGenerated(); \n";
       parserCode += "model.OutputGenerated();\n";
 
+      parserCode += "int nInputs = model.GetInputTensorNames().size();\n";
+
+      // need information on number of inputs (assume output is 1)
+
       //end of parsing code, close the scope and return 1 to indicate a success
-      parserCode += "return 1;\n }\n";
+      parserCode += "return nInputs;\n}\n";
 
       if (verbose) std::cout << "//ParserCode being executed:\n" << parserCode << std::endl;
 
       auto iret = gROOT->ProcessLine(parserCode.c_str());
-      if (iret != 1) {
+      if (iret <= 0) {
          std::string msg = "RSofieReader: error processing the parser code: \n" + parserCode;
          throw std::runtime_error(msg);
+      }
+      fNInputs = iret;
+      if (fNInputs > 3) {
+         throw std::runtime_error("RSofieReader does not yet support model with > 3 inputs");
       }
 
       // compile now the generated code and create Session class
@@ -193,14 +226,22 @@ public:
          throw std::runtime_error(msg);
       }
 
-      fSessionPtr = (void*) gInterpreter->Calc(sessionName.c_str());
+      fSessionPtr = (void *) gInterpreter->Calc(sessionName.c_str());
 
       // define a function to be called for inference
       std::stringstream ifuncCode;
       std::string funcName = "SofieInference_" + uidName;
-      ifuncCode << "std::vector<float> " + funcName + "( void * ptr, float * data) {\n";
+      ifuncCode << "std::vector<float> " + funcName + "( void * ptr";
+      for (int i = 0; i < fNInputs; i++)
+         ifuncCode << ", float * data" << i;
+      ifuncCode << ") {\n";
       ifuncCode << "   " << sessionClassName << " * s = " << "(" << sessionClassName << "*) (ptr);\n";
-      ifuncCode << "   return s->infer(data);\n";
+      ifuncCode << "   return s->infer(";
+      for (int i = 0; i < fNInputs; i++) {
+         if (i>0) ifuncCode << ",";
+         ifuncCode << "data" << i;
+      }
+      ifuncCode << ");\n";
       ifuncCode << "}\n";
 
       if (verbose) std::cout << "//Inference function code using global session instance\n"
@@ -211,13 +252,47 @@ public:
          std::string msg = "RSofieReader: error compiling inference function\n" + ifuncCode.str();
          throw std::runtime_error(msg);
       }
-      auto fptr = gInterpreter->Calc(funcName.c_str());
-      fFuncPtr = reinterpret_cast<std::vector<float> (*)(void *, const float *)>(fptr);
+      fFuncPtr = (void *) gInterpreter->Calc(funcName.c_str());
+      //fFuncPtr = reinterpret_cast<std::vector<float> (*)(void *, const float *)>(fptr);
       fInitialized = true;
    }
 
+   // Add custum operator
+    void AddCustomOperator(const std::string &opName, const std::string &inputNames, const std::string & outputNames,
+      const std::string & outputShapes, const std::string & fileName) {
+         if (fInitialized)  std::cout << "WARNING: Model is already loaded and initialised. It must be done after adding the custom operators" << std::endl;
+         fCustomOperators.push_back( {fileName, opName,inputNames, outputNames,outputShapes});
+      }
+
+   // implementations for different outputs
+   std::vector<float> DoCompute(const std::vector<float> & x1) {
+      if (fNInputs != 1) {
+         std::string msg = "Wrong number of inputs - model requires " + std::to_string(fNInputs);
+         throw std::runtime_error(msg);
+      }
+      auto fptr = reinterpret_cast<std::vector<float> (*)(void *, const float *)>(fFuncPtr);
+      return fptr(fSessionPtr, x1.data());
+   }
+   std::vector<float> DoCompute(const std::vector<float> & x1, const std::vector<float> & x2) {
+      if (fNInputs != 2) {
+         std::string msg = "Wrong number of inputs - model requires " + std::to_string(fNInputs);
+         throw std::runtime_error(msg);
+      }
+      auto fptr = reinterpret_cast<std::vector<float> (*)(void *, const float *, const float *)>(fFuncPtr);
+      return fptr(fSessionPtr, x1.data(),x2.data());
+   }
+   std::vector<float> DoCompute(const std::vector<float> & x1, const std::vector<float> & x2, const std::vector<float> & x3) {
+      if (fNInputs != 3) {
+         std::string msg = "Wrong number of inputs - model requires " + std::to_string(fNInputs);
+         throw std::runtime_error(msg);
+      }
+      auto fptr = reinterpret_cast<std::vector<float> (*)(void *, const float *, const float *, const float *)>(fFuncPtr);
+      return fptr(fSessionPtr, x1.data(),x2.data(),x3.data());
+   }
+
    /// Compute model prediction on vector
-   std::vector<float> Compute(const std::vector<float> &x)
+   template<typename... T>
+   std::vector<float> Compute(T... x)
    {
       if(!fInitialized) {
          return std::vector<float>();
@@ -227,13 +302,24 @@ public:
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
       // Evaluate TMVA model (need to add support for multiple outputs)
-      auto result =  fFuncPtr(fSessionPtr, x.data());
-      return result;
+      return DoCompute(x...);
 
+   }
+   std::vector<float> Compute(const std::vector<float> &x) {
+      if(!fInitialized) {
+         return std::vector<float>();
+      }
+
+      // Take lock to protect model evaluation
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+      // Evaluate TMVA model (need to add support for multiple outputs)
+      return DoCompute(x);
    }
    /// Compute model prediction on input RTensor
    /// The shape of the input tensor should be {nevents, nfeatures}
    /// and the return shape will be {nevents, noutputs}
+   /// support for now only a single input
    RTensor<float> Compute(RTensor<float> &x)
    {
       if(!fInitialized) {
@@ -241,14 +327,15 @@ public:
       }
       const auto nrows = x.GetShape()[0];
       const auto rowsize = x.GetStrides()[0];
-      auto result = fFuncPtr(fSessionPtr, x.GetData());
+      auto fptr = reinterpret_cast<std::vector<float> (*)(void *, const float *)>(fFuncPtr);
+      auto result = fptr(fSessionPtr, x.GetData());
 
       RTensor<float> y({nrows, result.size()}, MemoryLayout::ColumnMajor);
       std::copy(result.begin(),result.end(), y.GetData());
       //const bool layout = x.GetMemoryLayout() == MemoryLayout::ColumnMajor ? false : true;
       // assume column major layout
       for (size_t i = 1; i < nrows; i++) {
-         result = fFuncPtr(fSessionPtr, x.GetData() + i*rowsize);
+         result = fptr(fSessionPtr, x.GetData() + i*rowsize);
          std::copy(result.begin(),result.end(), y.GetData() + i*result.size());
       }
       return y;
@@ -257,8 +344,19 @@ public:
 private:
 
    bool fInitialized = false;
+   int fNInputs = 0;
    void * fSessionPtr = nullptr;
-   std::function<std::vector<float> (void *, const float *)> fFuncPtr;
+   void * fFuncPtr = nullptr;
+
+   // data to insert custom operators
+   struct CustomOperatorData {
+      std::string fFileName; // code implementing the custom operator
+      std::string fOpName; // operator name
+      std::string fInputNames;  // input tensor names (convert as string as {"n1", "n2"})
+      std::string fOutputNames;  // output tensor names converted as trind
+      std::string fOutputShapes; // output shapes
+   };
+   std::vector<CustomOperatorData> fCustomOperators;
 
 };
 

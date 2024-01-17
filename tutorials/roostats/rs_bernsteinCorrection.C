@@ -66,7 +66,7 @@ void rs_bernsteinCorrection()
    RooGaussian wide("wide", "", x, RooConst(0.), RooConst(2.));
    RooAddPdf reality("reality", "", RooArgList(narrow, wide), RooConst(0.8));
 
-   RooDataSet *data = reality.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{reality.generate(x, 1000)};
 
    // nominal model
    RooRealVar sigma("sigma", "", 1., 0, 10);

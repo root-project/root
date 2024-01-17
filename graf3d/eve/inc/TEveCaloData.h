@@ -118,10 +118,10 @@ public:
       Float_t fValue;
 
       CellData_t() : CellGeom_t(), fValue(0) {}
-      virtual ~CellData_t() {}
+      ~CellData_t() override {}
 
       Float_t Value(Bool_t) const;
-      virtual void Dump() const;
+      void Dump() const override;
    };
 
 
@@ -172,14 +172,14 @@ protected:
 
 public:
    TEveCaloData(const char* n="TEveCalData", const char* t="");
-   virtual ~TEveCaloData() {}
+   ~TEveCaloData() override {}
 
-   virtual void UnSelected();
-   virtual void UnHighlighted();
+   void UnSelected() override;
+   void UnHighlighted() override;
 
-   virtual TString GetHighlightTooltip();
+   TString GetHighlightTooltip() override;
 
-   virtual void    FillImpliedSelectedSet(Set_t& impSelSet);
+   void    FillImpliedSelectedSet(Set_t& impSelSet) override;
 
    virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
                                Float_t phi,    Float_t phiRng,
@@ -230,7 +230,7 @@ public:
    static  Float_t EtaToTheta(Float_t eta);
 
 
-   ClassDef(TEveCaloData, 0); // Manages calorimeter event data.
+   ClassDefOverride(TEveCaloData, 0); // Manages calorimeter event data.
 };
 
 /**************************************************************************/
@@ -263,7 +263,7 @@ protected:
 
 public:
    TEveCaloDataVec(Int_t nslices);
-   virtual ~TEveCaloDataVec();
+   ~TEveCaloDataVec() override;
 
    Int_t AddSlice();
    Int_t AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax);
@@ -274,21 +274,21 @@ public:
    std::vector<Float_t>&  GetSliceVals(Int_t slice) { return fSliceVec[slice]; }
    std::vector<TEveCaloData::CellGeom_t>& GetCellGeom() { return fGeomVec; }
 
-   virtual void GetCellList(Float_t etaMin, Float_t etaMax,
+   void GetCellList(Float_t etaMin, Float_t etaMax,
                             Float_t phi,    Float_t phiRng,
-                            vCellId_t &out) const;
+                            vCellId_t &out) const override;
 
-   virtual void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const;
+   void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const override;
 
-   virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
-   virtual void GetEtaLimits(Double_t &min, Double_t &max) const { min=fEtaMin, max=fEtaMax;}
-   virtual void GetPhiLimits(Double_t &min, Double_t &max) const { min=fPhiMin; max=fPhiMax;}
+   void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const override;
+   void GetEtaLimits(Double_t &min, Double_t &max) const override { min=fEtaMin, max=fEtaMax;}
+   void GetPhiLimits(Double_t &min, Double_t &max) const override { min=fPhiMin; max=fPhiMax;}
 
 
-   virtual void  DataChanged();
+   void  DataChanged() override;
    void          SetAxisFromBins(Double_t epsX=0.001, Double_t epsY=0.001);
 
-   ClassDef(TEveCaloDataVec, 0); // Manages calorimeter event data.
+   ClassDefOverride(TEveCaloDataVec, 0); // Manages calorimeter event data.
 };
 
 /**************************************************************************/
@@ -305,20 +305,20 @@ protected:
 
 public:
    TEveCaloDataHist();
-   virtual ~TEveCaloDataHist();
+   ~TEveCaloDataHist() override;
 
-   virtual void GetCellList( Float_t etaMin, Float_t etaMax,
-                             Float_t phi, Float_t phiRng, vCellId_t &out) const;
+   void GetCellList( Float_t etaMin, Float_t etaMax,
+                             Float_t phi, Float_t phiRng, vCellId_t &out) const override;
 
-   virtual void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const;
+   void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const override;
 
-   virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
+   void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const override;
 
-   virtual void GetEtaLimits(Double_t &min, Double_t &max) const;
-   virtual void GetPhiLimits(Double_t &min, Double_t &max) const;
+   void GetEtaLimits(Double_t &min, Double_t &max) const override;
+   void GetPhiLimits(Double_t &min, Double_t &max) const override;
 
 
-   virtual void DataChanged();
+   void DataChanged() override;
 
    THStack* GetStack() { return fHStack; }
 
@@ -326,7 +326,7 @@ public:
 
    Int_t   AddHistogram(TH2F* hist);
 
-   ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.
+   ClassDefOverride(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.
 };
 
 #endif

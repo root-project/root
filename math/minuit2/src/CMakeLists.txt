@@ -71,6 +71,7 @@ set(MINUIT2_HEADERS
     MnLineSearch.h
     MnMachinePrecision.h
     MnMatrix.h
+    MnMatrixfwd.h
     MnMigrad.h
     MnMinimize.h
     MnMinos.h

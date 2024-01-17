@@ -6,6 +6,7 @@
 
 set(headers
     inc/CPyCppyy/API.h
+    inc/CPyCppyy/Reflex.h
     inc/CPyCppyy/PyResult.h
     inc/CPyCppyy/CommonDefs.h
     inc/CPyCppyy/PyException.h

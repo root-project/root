@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <iostream>
+#include <memory>
 #include "strlcpy.h"
 #include "snprintf.h"
 #include "TROOT.h"
@@ -90,7 +91,7 @@ public:
             fFormula->SetParameters(from.GetParameters());
       } else {
          // case of a function pointers
-         fParams.reset(new TF1Parameters(fNpar));
+         fParams = std::make_unique<TF1Parameters>(fNpar);
          fName = from.GetName();
          fTitle = from.GetTitle();
          // need to set parameter values
@@ -177,7 +178,7 @@ public:
 
    double operator()(const double *x) const
    {
-      return - fFunction->EvalPar(x, (Double_t *)0);
+      return - fFunction->EvalPar(x, (Double_t *)nullptr);
    }
 };
 
@@ -209,7 +210,7 @@ public:
    {
       // use evaluation with stored parameters (i.e. pass zero)
       fX[0] = x;
-      Double_t fval = fFunc->EvalPar(fX, 0);
+      Double_t fval = fFunc->EvalPar(fX, nullptr);
       if (fAbsVal && fval < 0)  return -fval;
       return fval;
    }
@@ -217,13 +218,13 @@ public:
    Double_t EvalFirstMom(Double_t x)
    {
       fX[0] = x;
-      return fX[0] * TMath::Abs(fFunc->EvalPar(fX, 0));
+      return fX[0] * TMath::Abs(fFunc->EvalPar(fX, nullptr));
    }
    // evaluate (x - x0) ^n * f(x)
    Double_t EvalNMom(Double_t x) const
    {
       fX[0] = x;
-      return TMath::Power(fX[0] - fX0, fN) * TMath::Abs(fFunc->EvalPar(fX, 0));
+      return TMath::Power(fX[0] - fX0, fN) * TMath::Abs(fFunc->EvalPar(fX, nullptr));
    }
 
    TF1 *fFunc;
@@ -479,7 +480,7 @@ See also the tutorial __math/exampleFunctor.C__ for a running example.
 */
 ////////////////////////////////////////////////////////////////////////////
 
-TF1 *TF1::fgCurrent = 0;
+TF1 *TF1::fgCurrent = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,7 +724,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
       return;
    }
 
-   fMethodCall = std::unique_ptr<TMethodCall>(new TMethodCall());
+   fMethodCall = std::make_unique<TMethodCall>();
    fMethodCall->InitWithPrototype(fName, "Double_t*,Double_t*");
 
    if (! fMethodCall->IsValid()) {
@@ -1028,11 +1029,11 @@ void TF1::Copy(TObject &obj) const
    ((TF1 &)obj).fParMax    = fParMax;
    ((TF1 &)obj).fParent    = fParent;
    ((TF1 &)obj).fSave      = fSave;
-   ((TF1 &)obj).fHistogram = 0;
-   ((TF1 &)obj).fMethodCall = 0;
+   ((TF1 &)obj).fHistogram = nullptr;
+   ((TF1 &)obj).fMethodCall = nullptr;
    ((TF1 &)obj).fNormalized = fNormalized;
    ((TF1 &)obj).fNormIntegral = fNormIntegral;
-   ((TF1 &)obj).fFormula   = 0;
+   ((TF1 &)obj).fFormula   = nullptr;
 
    if (fFormula) assert(fFormula->GetNpar() == fNpar);
 
@@ -1069,7 +1070,7 @@ TObject* TF1::Clone(const char* newname) const
 
    if (fHistogram) {
       obj->fHistogram = (TH1*)fHistogram->Clone();
-      obj->fHistogram->SetDirectory(0);
+      obj->fHistogram->SetDirectory(nullptr);
    }
 
    return obj;
@@ -1619,7 +1620,7 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
       xmax = fXmax;
    }
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx();
+   if (!logx && gPad != nullptr) logx = gPad->GetLogx();
 
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
@@ -1660,7 +1661,7 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
       xmax = fXmax;
    }
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx();
+   if (!logx && gPad != nullptr) logx = gPad->GetLogx();
 
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
@@ -1701,7 +1702,7 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
       xmax = fXmax;
    }
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx();
+   if (!logx && gPad != nullptr) logx = gPad->GetLogx();
 
    ROOT::Math::BrentMinimizer1D bm;
    ROOT::Math::WrappedFunction<const TF1 &> wf1(*this);
@@ -1723,7 +1724,7 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
 
 Double_t TF1::GetMinMaxNDim(Double_t *x , bool findmax, Double_t epsilon, Int_t maxiter) const
 {
-   R__ASSERT(x != 0);
+   R__ASSERT(x != nullptr);
 
    int ndim = GetNdim();
    if (ndim == 0) {
@@ -1736,7 +1737,7 @@ Double_t TF1::GetMinMaxNDim(Double_t *x , bool findmax, Double_t epsilon, Int_t 
    const char *minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
    ROOT::Math::Minimizer *min = ROOT::Math::Factory::CreateMinimizer(minimName, minimAlgo);
 
-   if (min == 0) {
+   if (min == nullptr) {
       Error("GetMinimumNDim", "Error creating minimizer %s", minimName);
       return 0;
    }
@@ -1759,7 +1760,7 @@ Double_t TF1::GetMinMaxNDim(Double_t *x , bool findmax, Double_t epsilon, Int_t 
    std::vector<double> rmax(ndim);
    GetRange(&rmin[0], &rmax[0]);
    for (int i = 0; i < ndim; ++i) {
-      const char *xname =  0;
+      const char *xname =  nullptr;
       double stepSize = 0.1;
       // use range for step size or give some value depending on x if range is not defined
       if (rmax[i] > rmin[i])
@@ -1868,7 +1869,7 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
       xmax = fXmax;
    }
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx();
+   if (!logx && gPad != nullptr) logx = gPad->GetLogx();
 
    GFunc g(this, fy);
    ROOT::Math::WrappedFunction<GFunc> wf1(g);
@@ -2191,7 +2192,7 @@ Bool_t TF1::ComputeCdfTable(Option_t * option) {
 Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be built
-   if (fIntegral.size() == 0) {
+   if (fIntegral.empty()) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();
    }
@@ -2244,7 +2245,7 @@ Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 Double_t TF1::GetRandom(Double_t xmin, Double_t xmax, TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be built
-   if (fIntegral.size() == 0) {
+   if (fIntegral.empty()) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();
    }
@@ -2342,17 +2343,17 @@ void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF1::GetSave(const Double_t *xx)
 {
-   if (fSave.size() == 0) return 0;
+   if (fSave.empty()) return 0;
    //if (fSave == 0) return 0;
-   int fNsave = fSave.size();
+   int nsave = fSave.size();
    Double_t x    = Double_t(xx[0]);
    Double_t y, dx, xmin, xmax, xlow, xup, ylow, yup;
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
       //if parent is a histogram the function had been saved at the center of the bins
       //we make a linear interpolation between the saved values
-      xmin = fSave[fNsave - 3];
-      xmax = fSave[fNsave - 2];
-      if (fSave[fNsave - 1] == xmax) {
+      xmin = fSave[nsave - 3];
+      xmax = fSave[nsave - 2];
+      if (fSave[nsave - 1] == xmax) {
          TH1 *h = (TH1 *)fParent;
          TAxis *xaxis = h->GetXaxis();
          Int_t bin1  = xaxis->FindBin(xmin);
@@ -2374,16 +2375,16 @@ Double_t TF1::GetSave(const Double_t *xx)
          return y;
       }
    }
-   Int_t np = fNsave - 3;
-   xmin = Double_t(fSave[np + 1]);
-   xmax = Double_t(fSave[np + 2]);
+   Int_t np = nsave - 3;
+   xmin = fSave[np + 1];
+   xmax = fSave[np + 2];
    dx   = (xmax - xmin) / np;
    if (x < xmin || x > xmax) return 0;
    // return a Nan in case of x=nan, otherwise will crash later
    if (TMath::IsNaN(x)) return x;
    if (dx <= 0) return 0;
 
-   Int_t bin     = Int_t((x - xmin) / dx);
+   Int_t bin = TMath::Min(np - 1, Int_t((x - xmin) / dx));
    xlow = xmin + bin * dx;
    xup  = xlow + dx;
    ylow = fSave[bin];
@@ -2399,7 +2400,7 @@ Double_t TF1::GetSave(const Double_t *xx)
 TAxis *TF1::GetXaxis() const
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -2410,7 +2411,7 @@ TAxis *TF1::GetXaxis() const
 TAxis *TF1::GetYaxis() const
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -2421,7 +2422,7 @@ TAxis *TF1::GetYaxis() const
 TAxis *TF1::GetZaxis() const
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetZaxis();
 }
 
@@ -2509,7 +2510,8 @@ void TF1::InitStandardFunctions()
       f1 = new TF1("expo", "expo", -1, 1);
       f1->SetParameters(1, 1);
       for (Int_t i = 0; i < 10; i++) {
-         f1 = new TF1(Form("pol%d", i), Form("pol%d", i), -1, 1);
+         auto f1name = TString::Format("pol%d", i);
+         f1 = new TF1(f1name.Data(), f1name.Data(), -1, 1);
          f1->SetParameters(1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
          // create also chebyshev polynomial
          // (note polynomial object will not be deleted)
@@ -2619,7 +2621,7 @@ Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
 Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t epsabs, Double_t &error)
 {
    //Double_t *parameters = GetParameters();
-   TF1_EvalWrapper wf1(this, 0, fgAbsValue);
+   TF1_EvalWrapper wf1(this, nullptr, fgAbsValue);
    Double_t result = 0;
    Int_t status = 0;
    if (epsrel <= 0) epsrel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
@@ -2948,21 +2950,19 @@ void TF1::Print(Option_t *option) const
 /// histogram is painted.
 /// The painted histogram can be retrieved calling afterwards the method TF1::GetHistogram()
 
-void TF1::Paint(Option_t *choptin)
+void TF1::Paint(Option_t *option)
 {
    fgCurrent = this;
 
-   char option[32];
-   strlcpy(option,choptin,32);
-
-   TString opt = option;
+   TString opt0 = option, opt = option, optSAME;
    opt.ToLower();
 
-   Bool_t optSAME = kFALSE;
-   if (opt.Contains("same")) {
-      opt.ReplaceAll("same","");
-      optSAME = kTRUE;
-   }
+   if (opt.Contains("sames"))
+      optSAME = "sames";
+   else if (opt.Contains("same"))
+      optSAME = "same";
+   if (optSAME.Length())
+      opt.ReplaceAll(optSAME, "");
    opt.ReplaceAll(' ', "");
 
    Double_t xmin = fXmin, xmax = fXmax, pmin = fXmin, pmax = fXmax;
@@ -2970,24 +2970,23 @@ void TF1::Paint(Option_t *choptin)
       pmin = gPad->PadtoX(gPad->GetUxmin());
       pmax = gPad->PadtoX(gPad->GetUxmax());
    }
-   if (optSAME) {
-      if (xmax < pmin) return;  // Completely outside.
+   if (optSAME.Length()) {
+      // Completely outside
+      if (xmax < pmin) return;
       if (xmin > pmax) return;
-      if (xmin < pmin) xmin = pmin;
-      if (xmax > pmax) xmax = pmax;
    }
 
    // create an histogram using the function content (re-use it if already existing)
    fHistogram = DoCreateHistogram(xmin, xmax, kFALSE);
 
-   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
-   char *l2 = strstr(option,"PLC"); // Automatic Line Color
-   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
-   if (l1 || l2 || l3) {
+   auto is_pfc = opt0.Index("PFC"); // Automatic Fill Color
+   auto is_plc = opt0.Index("PLC"); // Automatic Line Color
+   auto is_pmc = opt0.Index("PMC"); // Automatic Marker Color
+   if (is_pfc != kNPOS || is_plc != kNPOS || is_pmc != kNPOS) {
       Int_t i = gPad->NextPaletteColor();
-      if (l1) {memcpy(l1,"   ",3); fHistogram->SetFillColor(i);}
-      if (l2) {memcpy(l2,"   ",3); fHistogram->SetLineColor(i);}
-      if (l3) {memcpy(l3,"   ",3); fHistogram->SetMarkerColor(i);}
+      if (is_pfc != kNPOS) { opt0.Replace(is_pfc, 3, " "); fHistogram->SetFillColor(i); }
+      if (is_plc != kNPOS) { opt0.Replace(is_plc, 3, " "); fHistogram->SetLineColor(i); }
+      if (is_pmc != kNPOS) { opt0.Replace(is_pmc, 3, " "); fHistogram->SetMarkerColor(i); }
    }
 
    // set the optimal minimum and maximum
@@ -3005,12 +3004,12 @@ void TF1::Paint(Option_t *choptin)
          // function oscillate around a constant value
          if (minimum == -1111) {
             Double_t hmin;
-            if (optSAME && gPad) hmin = gPad->GetUymin();
+            if (optSAME.Length() && gPad) hmin = gPad->GetUymin();
             else         hmin = fHistogram->GetMinimum();
             if (hmin > 0) {
                Double_t hmax;
                Double_t hminpos = hmin;
-               if (optSAME && gPad) hmax = gPad->GetUymax();
+               if (optSAME.Length() && gPad) hmax = gPad->GetUymax();
                else         hmax = fHistogram->GetMaximum();
                hmin -= 0.05 * (hmax - hmin);
                if (hmin < 0) hmin = 0;
@@ -3030,14 +3029,13 @@ void TF1::Paint(Option_t *choptin)
       fHistogram->SetMaximum(maximum);
    }
 
-
    // Draw the histogram.
    if (!gPad) return;
    if (opt.Length() == 0) {
-      if (optSAME) fHistogram->Paint("lfsame");
-      else         fHistogram->Paint("lf");
+      optSAME.Prepend("lf");
+      fHistogram->Paint(optSAME.Data());
    } else {
-      fHistogram->Paint(option);
+      fHistogram->Paint(opt0.Data());
    }
 }
 
@@ -3052,7 +3050,7 @@ TH1   *TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
    Int_t i;
    Double_t xv[1];
 
-   TH1 *histogram = 0;
+   TH1 *histogram = nullptr;
 
 
    //  Create a temporary histogram and fill each channel with the function value
@@ -3111,7 +3109,7 @@ TH1   *TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
       }
       if (fMinimum != -1111) histogram->SetMinimum(fMinimum);
       if (fMaximum != -1111) histogram->SetMaximum(fMaximum);
-      histogram->SetDirectory(0);
+      histogram->SetDirectory(nullptr);
    }
    R__ASSERT(histogram);
 
@@ -3162,6 +3160,9 @@ void TF1::ReleaseParameter(Int_t ipar)
 
 void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Double_t)
 {
+   if (!fSave.empty())
+      fSave.clear();
+
    Double_t *parameters = GetParameters();
    //if (fSave != 0) {delete [] fSave; fSave = 0;}
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
@@ -3170,9 +3171,8 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
          TH1 *h = (TH1 *)fParent;
          Int_t bin1 = h->GetXaxis()->FindBin(xmin);
          Int_t bin2 = h->GetXaxis()->FindBin(xmax);
-         int fNsave = bin2 - bin1 + 4;
-         //fSave  = new Double_t[fNsave];
-         fSave.resize(fNsave);
+         int nsave = bin2 - bin1 + 4;
+         fSave.resize(nsave);
          Double_t xv[1];
 
          InitArgs(xv, parameters);
@@ -3180,33 +3180,35 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
             xv[0]    = h->GetXaxis()->GetBinCenter(i);
             fSave[i - bin1] = EvalPar(xv, parameters);
          }
-         fSave[fNsave - 3] = xmin;
-         fSave[fNsave - 2] = xmax;
-         fSave[fNsave - 1] = xmax;
+         fSave[nsave - 3] = xmin;
+         fSave[nsave - 2] = xmax;
+         fSave[nsave - 1] = xmax;
          return;
       }
    }
-   int fNsave = fNpx + 3;
-   if (fNsave <= 3) {
+
+   Int_t npx = fNpx;
+   if (npx <= 0)
       return;
-   }
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
+
    Double_t dx = (xmax - xmin) / fNpx;
    if (dx <= 0) {
       dx = (fXmax - fXmin) / fNpx;
-      fNsave--;
+      npx--;
       xmin = fXmin + 0.5 * dx;
       xmax = fXmax - 0.5 * dx;
    }
+   if (npx <= 0)
+      return;
+   fSave.resize(npx + 3);
    Double_t xv[1];
    InitArgs(xv, parameters);
-   for (Int_t i = 0; i <= fNpx; i++) {
+   for (Int_t i = 0; i <= npx; i++) {
       xv[0]    = xmin + dx * i;
       fSave[i] = EvalPar(xv, parameters);
    }
-   fSave[fNpx + 1] = xmin;
-   fSave[fNpx + 2] = xmax;
+   fSave[npx + 1] = xmin;
+   fSave[npx + 2] = xmax;
 }
 
 
@@ -3265,7 +3267,7 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    static Int_t f1Number = 0;
    TString f1Name(GetName());
    const char *l = strstr(option, "#");
-   if (l != 0) {
+   if (l != nullptr) {
       sscanf(&l[1], "%d", &f1Number);
    } else {
       ++f1Number;
@@ -3357,7 +3359,7 @@ void TF1::SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar)
       Warning("SetFitResult", "Empty Fit result - nothing is set in TF1");
       return;
    }
-   if (indpar == 0 && npar != (int) result.NPar()) {
+   if (indpar == nullptr && npar != (int) result.NPar()) {
       Error("SetFitResult", "Invalid Fit result passed - number of parameter is %d , different than TF1::GetNpar() = %d", npar, result.NPar());
       return;
    }
@@ -3371,7 +3373,7 @@ void TF1::SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar)
 
 
    for (Int_t i = 0; i < npar; ++i) {
-      Int_t ipar = (indpar != 0) ? indpar[i] : i;
+      Int_t ipar = (indpar != nullptr) ? indpar[i] : i;
       if (ipar < 0) continue;
       GetParameters()[i] = result.Parameter(ipar);
       // in case errors are not present do not set them
@@ -3533,7 +3535,7 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
 
 void TF1::SetSavedPoint(Int_t point, Double_t value)
 {
-   if (fSave.size() == 0) {
+   if (fSave.empty()) {
       fSave.resize(fNpx + 3);
    }
    if (point < 0 || point >= int(fSave.size())) return;
@@ -3611,7 +3613,7 @@ void TF1::Streamer(TBuffer &b)
 void TF1::Update()
 {
    delete fHistogram;
-   fHistogram = 0;
+   fHistogram = nullptr;
    if (!fIntegral.empty()) {
       fIntegral.clear();
       fAlpha.clear();

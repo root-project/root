@@ -71,6 +71,8 @@ protected:
    void PaintTriangles_old(Option_t *option);
    void PaintTriangles_new(Option_t *option);
 
+   void GetGraph2dProperties();
+
 public:
 
    TGraph2DPainter();

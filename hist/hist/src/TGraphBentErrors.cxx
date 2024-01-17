@@ -303,7 +303,7 @@ void TGraphBentErrors::CopyAndRelease(Double_t **newarrays,
 Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
                                     Int_t ibegin, Int_t iend, Int_t obegin)
 {
-   if (TGraph::CopyPoints(arrays ? arrays+8 : 0, ibegin, iend, obegin)) {
+   if (TGraph::CopyPoints(arrays ? arrays+8 : nullptr, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin)*sizeof(Double_t);
       if (arrays) {
          memmove(&arrays[0][obegin], &fEXlow[ibegin], n);
@@ -647,4 +647,53 @@ void TGraphBentErrors::SwapPoints(Int_t pos1, Int_t pos2)
    SwapValues(fEYhighd, pos1, pos2);
 
    TGraph::SwapPoints(pos1, pos2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update the fX, fY, fEXlow, fEXhigh, fEXlowd, fEXhighd, fEYlow, fEYhigh, fEYlowd,  
+/// and fEYhighd arrays with the sorted values.
+
+void TGraphBentErrors::UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low)
+{
+   std::vector<Double_t> fEXlowSorted(numSortedPoints);
+   std::vector<Double_t> fEXhighSorted(numSortedPoints);
+   std::vector<Double_t> fEXlowdSorted(numSortedPoints);
+   std::vector<Double_t> fEXhighdSorted(numSortedPoints);
+
+   std::vector<Double_t> fEYlowSorted(numSortedPoints);
+   std::vector<Double_t> fEYhighSorted(numSortedPoints);
+   std::vector<Double_t> fEYlowdSorted(numSortedPoints);
+   std::vector<Double_t> fEYhighdSorted(numSortedPoints);
+
+   // Fill the sorted X and Y error values based on the sorted indices
+   std::generate(fEXlowSorted.begin(), fEXlowSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEXlow[sorting_indices[begin++]]; });
+   std::generate(fEXhighSorted.begin(), fEXhighSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEXhigh[sorting_indices[begin++]]; });
+   std::generate(fEXlowdSorted.begin(), fEXlowdSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEXlowd[sorting_indices[begin++]]; });
+   std::generate(fEXhighdSorted.begin(), fEXhighdSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEXhighd[sorting_indices[begin++]]; });
+
+   std::generate(fEYlowSorted.begin(), fEYlowSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEYlow[sorting_indices[begin++]]; });
+   std::generate(fEYhighSorted.begin(), fEYhighSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEYhigh[sorting_indices[begin++]]; });
+   std::generate(fEYlowdSorted.begin(), fEYlowdSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEYlowd[sorting_indices[begin++]]; });
+   std::generate(fEYhighdSorted.begin(), fEYhighdSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEYhighd[sorting_indices[begin++]]; });
+
+   // Copy the sorted X and Y error values back to the original arrays
+   std::copy(fEXlowSorted.begin(), fEXlowSorted.end(), fEXlow + low);
+   std::copy(fEXhighSorted.begin(), fEXhighSorted.end(), fEXhigh + low);
+   std::copy(fEXlowdSorted.begin(), fEXlowdSorted.end(), fEXlowd + low);
+   std::copy(fEXhighdSorted.begin(), fEXhighdSorted.end(), fEXhighd + low);
+
+   std::copy(fEYlowSorted.begin(), fEYlowSorted.end(), fEYlow + low);
+   std::copy(fEYhighSorted.begin(), fEYhighSorted.end(), fEYhigh + low);
+   std::copy(fEYlowdSorted.begin(), fEYlowdSorted.end(), fEYlowd + low);
+   std::copy(fEYhighdSorted.begin(), fEYhighdSorted.end(), fEYhighd + low);
+
+   TGraph::UpdateArrays(sorting_indices, numSortedPoints, low);
 }

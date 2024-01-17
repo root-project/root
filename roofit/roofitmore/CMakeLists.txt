@@ -13,6 +13,11 @@ if(mathmore)
   set(ROOT_MATHMORE_LIBRARY MathMore)
 endif()
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   HEADERS
     RooFitMoreLib.h
@@ -50,7 +55,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     RIO
     MathCore
     Foam
+  BUILTINS
+    GSL
+  ${EXTRA_DICT_OPTS}
 )
+
+target_include_directories(RooFitMore SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
+target_link_libraries(RooFitMore PRIVATE ${GSL_LIBRARIES})
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:

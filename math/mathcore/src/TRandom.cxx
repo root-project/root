@@ -19,7 +19,7 @@ This is the base class for the ROOT Random number generators.
 This class defines the ROOT Random number interface and it should not be instantiated directly but used via its derived
 classes. The generator provided in TRandom itself is a LCG (Linear Congruential Generator), the <a
 href="https://www.gnu.org/software/gsl/manual/html_node/Unix-random-number-generators.html">BSD `rand` generator</a>,
-that it should not be used because its period is only 2**31, i.e. approximatly 2 billion events, that can be generated
+that it should not be used because its period is only 2**31, i.e. approximately 2 billion events, that can be generated
 in just few seconds.
 
 To generate random numbers, one should use the derived class, which  are :
@@ -45,7 +45,7 @@ than the generator with N=240. However, it has the same seeding capabilities, wi
 times less than TRandomMixMax240 and comparable to TRandom3).
 - ::TRandomMixMax256 : A variant of the MIXMAX generators, based on a state of N=256, and described in the
         <a  href="http://arxiv.org/abs/1403.5355">2015 paper</a>. This implementation has been modified with respect to
-the paper, by skipping 2 internal interations, to provide improved random properties.
+the paper, by skipping 2 internal iterations, to provide improved random properties.
 - ::TRandomMT64 :  Generator based on a the Mersenne-Twister generator with 64 bits,
   using the implementation provided by the standard library ( <a
 href="http://www.cplusplus.com/reference/random/mt19937_64/">std::mt19937_64</a> )
@@ -107,7 +107,7 @@ package. You need in this case to initialize UNURAN to the function you would li
 The techniques of using directly a TF1,2 or 3 function is powerful and
 can be used to generate numbers in the defined range of the function.
 Getting a number from a TF1,2,3 function is also quite fast.
-UNURAN is a  powerful and flexible tool which containes various methods for
+UNURAN is a  powerful and flexible tool which contains various methods for
 generate random numbers for continuous distributions of one and multi-dimension.
 It requires some set-up (initialization) phase and can be very fast when the distribution
 parameters are not changed for every call.
@@ -194,7 +194,7 @@ TRandom::TRandom(UInt_t seed): TNamed("Random","Default Random number generator"
 
 TRandom::~TRandom()
 {
-   if (gRandom == this) gRandom = 0;
+   if (gRandom == this) gRandom = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -541,7 +541,7 @@ void TRandom::ReadRandom(const char *filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Machine independent random number generator.
-///  Based on the BSD Unix (Rand) Linear congrential generator.
+///  Based on the BSD Unix (Rand) Linear congruential generator.
 ///  Produces uniformly-distributed floating points between 0 and 1.
 ///  Identical sequence on all machines of >= 32 bits.
 ///  Periodicity = 2**31, generates a number in (0,1).
@@ -635,7 +635,7 @@ void TRandom::SetSeed(ULong_t seed)
 ///  TRandom* rngSaved = static_cast<TRandom*>(gRandom->Clone());
 ///  // now both rngSaved and gRandom will produce the same sequence of numbers
 ///  for (int i = 0; i < 10; ++i )
-///     std::cout << "genrated number from gRandom : " << gRandom->Rndm() << "  from saved generator " <<
+///     std::cout << "generated number from gRandom : " << gRandom->Rndm() << "  from saved generator " <<
 ///     rngSaved->Rndm() << std::endl;
 /// ```
 UInt_t TRandom::GetSeed() const

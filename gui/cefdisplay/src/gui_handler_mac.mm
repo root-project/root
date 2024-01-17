@@ -3,7 +3,7 @@
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,7 +22,6 @@ bool GuiHandler::PlatformInit()
    return false; // MAC not yet support ozone and headless mode
 }
 
-
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
    NSView *view = (NSView *)browser->GetHost()->GetWindowHandle();
@@ -30,4 +29,9 @@ void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefStr
    std::string titleStr(title);
    NSString *str = [NSString stringWithUTF8String:titleStr.c_str()];
    [window setTitle:str];
+}
+
+bool GuiHandler::PlatformResize(CefRefPtr<CefBrowser>, int, int)
+{
+   return false;
 }

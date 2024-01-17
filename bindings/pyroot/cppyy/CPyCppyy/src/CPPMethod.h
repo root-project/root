@@ -25,16 +25,22 @@ public:
 public:
     virtual PyObject* GetSignature(bool show_formalargs = true);
     virtual PyObject* GetPrototype(bool show_formalargs = true);
+    virtual PyObject* Reflex(Cppyy::Reflex::RequestId_t request,
+                             Cppyy::Reflex::FormatId_t = Cppyy::Reflex::OPTIMAL);
     virtual int       GetPriority();
     virtual bool IsGreedy();
 
     virtual int       GetMaxArgs();
     virtual PyObject* GetCoVarNames();
     virtual PyObject* GetArgDefault(int iarg);
+    virtual bool      IsConst();
+
     virtual PyObject* GetScopeProxy();
     virtual Cppyy::TCppFuncAddr_t GetFunctionAddress();
 
     virtual PyCallable* Clone() { return new CPPMethod(*this); }
+
+    virtual int       GetArgMatchScore(PyObject* args_tuple);
 
 public:
     virtual PyObject* Call(

@@ -51,7 +51,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
   DEPENDENCIES
     RIO
     Thread
-    Graf
 )
 
 if(ssl)

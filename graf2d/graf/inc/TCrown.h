@@ -23,7 +23,7 @@ public:
    TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,
           Double_t phimin=0,Double_t phimax=360);
    TCrown(const TCrown &crown);
-   virtual ~TCrown();
+   ~TCrown() override;
 
    void   Copy(TObject &crown) const override;
    Int_t   DistancetoPrimitive(Int_t px, Int_t py) override;

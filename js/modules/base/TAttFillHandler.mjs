@@ -38,7 +38,7 @@ class TAttFillHandler {
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }
 
-      let was_changed = this.changed; // preserve changed state
+      const was_changed = this.changed; // preserve changed state
       this.change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
       this.changed = was_changed;
    }
@@ -63,17 +63,22 @@ class TAttFillHandler {
      * @desc If empty, alternative color will be provided
      * @param {string} [altern] - alternative color which returned when fill color not exists
      * @private */
-   getFillColorAlt(altern) { return this.color && (this.color != 'none') ? this.color : altern; }
+   getFillColorAlt(altern) { return this.color && (this.color !== 'none') ? this.color : altern; }
 
    /** @summary Returns true if color not specified or fill style not specified */
    empty() {
-      let fill = this.getFillColor();
-      return !fill || (fill == 'none');
+      const fill = this.getFillColor();
+      return !fill || (fill === 'none');
+   }
+
+   /** @summary Set usage flag of attribute */
+   setUsed(flag) {
+      this.used = flag;
    }
 
    /** @summary Returns true if fill attributes has real color */
    hasColor() {
-      return this.color && (this.color != 'none');
+      return this.color && (this.color !== 'none');
    }
 
    /** @summary Set solid fill color as fill pattern
@@ -93,7 +98,7 @@ class TAttFillHandler {
      * @param {string} [solid_color] - when specified, checks if fill color matches */
    isSolid(solid_color) {
       if (this.pattern !== 1001) return false;
-      return !solid_color || (solid_color == this.color);
+      return !solid_color || (solid_color === this.color);
    }
 
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets
@@ -126,12 +131,12 @@ class TAttFillHandler {
          delete this.antialias;
       }
 
-      if ((this.pattern == 1000) && (this.colorindx === 0)) {
+      if ((this.pattern === 1000) && (this.colorindx === 0)) {
          this.pattern_url = 'white';
          return true;
       }
 
-      if (this.pattern == 1000)
+      if (this.pattern === 1000)
          this.pattern = 1001;
 
       if (this.pattern < 1001) {
@@ -148,10 +153,9 @@ class TAttFillHandler {
 
       if (color_as_svg) {
          this.color = color;
-         if (color != 'none') indx = d3_color(color).hex().slice(1); // fictional index produced from color code
-      } else {
+         if (color !== 'none') indx = d3_color(color).hex().slice(1); // fictional index produced from color code
+      } else
          this.color = painter ? painter.getColor(indx) : getColor(indx);
-      }
 
       if (!isStr(this.color)) this.color = 'none';
 
@@ -163,21 +167,10 @@ class TAttFillHandler {
          return true;
       }
 
-      if (!svg || svg.empty() || (this.pattern < 3000) || (this.color == 'none')) return false;
+      if (!svg || svg.empty() || (this.pattern < 3000) || (this.color === 'none')) return false;
 
       let id = `pat_${this.pattern}_${indx}`,
-         defs = svg.select('.canvas_defs');
-
-      if (defs.empty())
-         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
-
-      this.pattern_url = `url(#${id})`;
-      this.antialias = false;
-
-      if (!defs.select('.' + id).empty())
-         return true;
-
-      let lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
+          lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
 
       switch (this.pattern) {
          case 3001: w = h = 2; fills = 'M0,0h1v1h-1zM1,1h1v1h-1z'; break;
@@ -213,37 +206,45 @@ class TAttFillHandler {
          case 3023: w = h = 8; fills = 'M4,0h4v4zM8,4v4h-4z'; fills2 = 'M4,0L0,4L4,8L8,4Z'; break;
          case 3024: w = h = 16; fills = 'M0,8v8h2v-8zM8,0v8h2v-8M4,14v2h12v-2z'; fills2 = 'M0,2h8v6h4v-6h4v12h-12v-6h-4z'; break;
          case 3025: w = h = 18; fills = 'M5,13v-8h8ZM18,0v18h-18l5,-5h8v-8Z'; break;
-         default:
+         default: {
             if ((this.pattern > 3025) && (this.pattern < 3100)) {
                // same as 3002, see TGX11.cxx, line 2234
                w = 4; h = 2; fills = 'M1,0h1v1h-1zM3,1h1v1h-1z'; break;
             }
 
-            let code = this.pattern % 1000,
-                k = code % 10,
-                j = ((code - k) % 100) / 10,
-                i = (code - j * 10 - k) / 100;
+            const code = this.pattern % 1000,
+                  k = code % 10,
+                  j = ((code - k) % 100) / 10,
+                  i = (code - j * 10 - k) / 100;
             if (!i) break;
 
-            let hatches_spacing = Math.round(Math.max(0.5, gStyle.fHatchesSpacing)*2) * 6,
-                sz = i * hatches_spacing, pos, step, x1, x2, y1, y2, max;  // axis distance between lines
+            // use flexible hatches only possible when single pattern is used,
+            // otherwise it is not possible to adjust pattern dimension that both hatches match with each other
+            const use_new = (j === k) || (j === 0) || (j === 5) || (j === 9) || (k === 0) || (k === 5) || (k === 9),
+                  pp = painter?.getPadPainter(),
+                  scale_size = pp ? Math.max(pp.getPadWidth(), pp.getPadHeight()) : 600,
+                  spacing_original = Math.max(0.1, gStyle.fHatchesSpacing * scale_size * 0.001),
+                  hatches_spacing = Math.max(1, Math.round(spacing_original)) * 6,
+                  sz = i * hatches_spacing; // axis distance between lines
+
+            id += use_new ? `_hn${Math.round(spacing_original*100)}` : `_ho${hatches_spacing}`;
 
             w = h = 6 * sz; // we use at least 6 steps
 
-            const produce = (dy, swap) => {
-               pos = []; step = sz; y1 = 0; max = h;
+            const produce_old = (dy, swap) => {
+               const pos = [];
+               let step = sz, y1 = 0, max = h, y2, x1, x2;
 
                // reduce step for smaller angles to keep normal distance approx same
                if (Math.abs(dy) < 3)
                   step = Math.round(sz / 12 * 9);
-               if (dy == 0) {
+               if (dy === 0) {
                   step = Math.round(sz / 12 * 8);
                   y1 = step / 2;
-               } else if (dy > 0) {
+               } else if (dy > 0)
                   max -= step;
-               } else {
+               else
                   y1 = step;
-               }
 
                while (y1 <= max) {
                   y2 = y1 + dy * step;
@@ -255,64 +256,143 @@ class TAttFillHandler {
                      x2 = Math.round((h - y1) / (y2 - y1) * w);
                      pos.push(0, y1, x2, h);
                      pos.push(w, h - y1, w - x2, 0);
-                  } else {
+                  } else
                      pos.push(0, y1, w, y2);
-                  }
                   y1 += step;
                }
                for (let k = 0; k < pos.length; k += 4) {
-                  if (swap) { x1 = pos[k+1]; y1 = pos[k]; x2 = pos[k+3]; y2 = pos[k+2]; }
-                       else { x1 = pos[k]; y1 = pos[k+1]; x2 = pos[k+2]; y2 = pos[k+3]; }
-                   lines += `M${x1},${y1}`;
-                   if (y2 == y1)
-                      lines += `h${x2-x1}`;
-                   else if (x2 == x1)
-                      lines += `v${y2-y1}`;
-                   else
-                      lines += `L${x2},${y2}`;
+                  if (swap) {
+                     x1 = pos[k+1];
+                     y1 = pos[k];
+                     x2 = pos[k+3];
+                     y2 = pos[k+2];
+                  } else {
+                     x1 = pos[k];
+                     y1 = pos[k+1];
+                     x2 = pos[k+2];
+                     y2 = pos[k+3];
+                  }
+                  lines += `M${x1},${y1}`;
+                  if (y2 === y1)
+                     lines += `h${x2-x1}`;
+                  else if (x2 === x1)
+                     lines += `v${y2-y1}`;
+                  else
+                     lines += `L${x2},${y2}`;
                }
-            };
+            },
+
+            produce_new = (_aa, _bb, angle, swapx) => {
+               if ((angle === 0) || (angle === 90)) {
+                  const dy = i*spacing_original*3,
+                        nsteps = Math.round(h / dy),
+                        dyreal = h / nsteps;
+                  let yy = dyreal/2;
+
+                  while (yy < h) {
+                     if (angle === 0)
+                        lines += `M0,${Math.round(yy)}h${w}`;
+                     else
+                        lines += `M${Math.round(yy)},0v${h}`;
+                     yy += dyreal;
+                  }
+
+                  return;
+               }
+
+               const a = angle/180*Math.PI,
+                     dy = i*spacing_original*3/Math.cos(a),
+                     hside = Math.tan(a) * w,
+                     hside_steps = Math.round(hside / dy),
+                     dyreal = hside / hside_steps,
+                     nsteps = Math.floor(h / dyreal);
+
+               h = Math.round(nsteps * dyreal);
+
+               let yy = nsteps * dyreal;
+
+               while (Math.abs(yy-h) < 0.1) yy -= dyreal;
+
+               while (yy + hside > 0) {
+                  let x1 = 0, y1 = yy, x2 = w, y2 = yy + hside;
+
+                  if (y1 < -0.00001) {
+                     // cut at the begin
+                     x1 = -y1 / hside * w;
+                     y1 = 0;
+                  } else if (y2 > h) {
+                     // cut at the end
+                     x2 = (h - y1) / hside * w;
+                     y2 = h;
+                  }
+
+                  if (swapx) {
+                     x1 = w - x1;
+                     x2 = w - x2;
+                  }
+
+                  lines += `M${Math.round(x1)},${Math.round(y1)}L${Math.round(x2)},${Math.round(y2)}`;
+                  yy -= dyreal;
+               }
+            },
+
+            func = use_new ? produce_new : produce_old;
+
+            let horiz = false, vertical = false;
 
             switch (j) {
-               case 0: produce(0); break;
-               case 1: produce(1); break;
-               case 2: produce(2); break;
-               case 3: produce(3); break;
-               case 4: produce(6); break;
-               case 6: produce(3, true); break;
-               case 7: produce(2, true); break;
-               case 8: produce(1, true); break;
-               case 9: produce(0, true); break;
+               case 0: horiz = true; break;
+               case 1: func(1, false, 10); break;
+               case 2: func(2, false, 20); break;
+               case 3: func(3, false, 30); break;
+               case 4: func(6, false, 45); break;
+               case 6: func(3, true, 60); break;
+               case 7: func(2, true, 70); break;
+               case 8: func(1, true, 80); break;
+               case 9: vertical = true; break;
             }
 
             switch (k) {
-               case 0: if (j) produce(0); break;
-               case 1: produce(-1); break;
-               case 2: produce(-2); break;
-               case 3: produce(-3); break;
-               case 4: produce(-6); break;
-               case 6: produce(-3, true); break;
-               case 7: produce(-2, true); break;
-               case 8: produce(-1, true); break;
-               case 9: if (j != 9) produce(0, true); break;
+               case 0: horiz = true; break;
+               case 1: func(-1, false, 10, true); break;
+               case 2: func(-2, false, 20, true); break;
+               case 3: func(-3, false, 30, true); break;
+               case 4: func(-6, false, 45, true); break;
+               case 6: func(-3, true, 60, true); break;
+               case 7: func(-2, true, 70, true); break;
+               case 8: func(-1, true, 80, true); break;
+               case 9: vertical = true; break;
             }
 
+            if (horiz) func(0, false, 0);
+            if (vertical) func(0, true, 90);
+
             break;
+         }
       }
 
       if (!fills && !lines) return false;
 
-      let patt = defs.append('svg:pattern')
-                     .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
-                     .attr('width', w).attr('height', h);
+      this.pattern_url = `url(#${id})`;
+      this.antialias = false;
 
-      if (fills2) {
-         let col = d3_rgb(this.color);
-         col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
-         patt.append('svg:path').attr('d', fills2).style('fill', col);
+      let defs = svg.selectChild('.canvas_defs');
+      if (defs.empty())
+         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+
+      if (defs.selectChild('.' + id).empty()) {
+         const patt = defs.append('svg:pattern')
+                          .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
+                          .attr('width', w).attr('height', h);
+
+         if (fills2) {
+            const col = d3_rgb(this.color);
+            col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
+            patt.append('svg:path').attr('d', fills2).style('fill', col);
+         }
+         if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
+         if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth || 1).style('fill', lfill);
       }
-      if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
-      if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth).style('fill', lfill);
 
       return true;
    }
@@ -334,7 +414,7 @@ class TAttFillHandler {
      * @private */
    saveToStyle(name_color, name_pattern) {
       if (name_color) {
-         let indx = this.colorindx ?? findColor(this.color);
+         const indx = this.colorindx ?? findColor(this.color);
          if (indx >= 0) gStyle[name_color] = indx;
       }
       if (name_pattern)
@@ -344,4 +424,3 @@ class TAttFillHandler {
 } // class TAttFillHandler
 
 export { TAttFillHandler };
-

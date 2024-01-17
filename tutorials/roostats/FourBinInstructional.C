@@ -212,7 +212,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    // generate toy data assuming current value of the parameters
    // import into workspace.
    // add Verbose() to see how it's being generated
-   RooDataSet *data = wspace->pdf("model")->generate(*wspace->set("obs"), 1);
+   std::unique_ptr<RooDataSet> data{wspace->pdf("model")->generate(*wspace->set("obs"), 1)};
    //  data->Print("v");
    wspace->import(*data);
 
@@ -320,7 +320,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    }
 
    // ----------------------------------
-   // querry intervals
+   // query intervals
    cout << "Profile Likelihood interval on s = [" << plInt->LowerLimit(*wspace->var("s")) << ", "
         << plInt->UpperLimit(*wspace->var("s")) << "]" << endl;
    // Profile Likelihood interval on s = [12.1902, 88.6871]

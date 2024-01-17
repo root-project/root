@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace ROOT {
 namespace Experimental {
@@ -40,6 +41,8 @@ with the page pool and allocated/freed by the page storage.
 // clang-format on
 class RPage {
 public:
+   static constexpr size_t kPageZeroSize = 64 * 1024;
+
    /**
     * Stores information about the cluster in which this page resides.
     */
@@ -59,10 +62,10 @@ public:
 private:
    ColumnId_t fColumnId;
    void *fBuffer;
-   ClusterSize_t::ValueType fElementSize;
-   ClusterSize_t::ValueType fNElements;
+   std::uint32_t fElementSize;
+   std::uint32_t fNElements;
    /// The capacity of the page in number of elements
-   ClusterSize_t::ValueType fMaxElements;
+   std::uint32_t fMaxElements;
    NTupleSize_t fRangeFirst;
    RClusterInfo fClusterInfo;
 
@@ -78,10 +81,10 @@ public:
 
    ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
-   ClusterSize_t::ValueType GetNBytes() const { return fElementSize * fNElements; }
-   ClusterSize_t::ValueType GetElementSize() const { return fElementSize; }
-   ClusterSize_t::ValueType GetNElements() const { return fNElements; }
-   ClusterSize_t::ValueType GetMaxElements() const { return fMaxElements; }
+   std::uint32_t GetNBytes() const { return fElementSize * fNElements; }
+   std::uint32_t GetElementSize() const { return fElementSize; }
+   std::uint32_t GetNElements() const { return fNElements; }
+   std::uint32_t GetMaxElements() const { return fMaxElements; }
    NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
    NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
    ClusterSize_t::ValueType GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
@@ -127,7 +130,18 @@ public:
       fClusterInfo = RClusterInfo(clusterId, fClusterInfo.GetIndexOffset());
    }
 
+   /// Make a 'zero' page for column `columnId` (that is comprised of 0x00 bytes only). The caller is responsible for
+   /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
+   static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
+   {
+      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), elementSize,
+                   /*maxElements=*/(kPageZeroSize / elementSize)};
+   }
+   /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
+   static const void *GetPageZeroBuffer();
+
    bool IsNull() const { return fBuffer == nullptr; }
+   bool IsPageZero() const { return fBuffer == GetPageZeroBuffer(); }
    bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }

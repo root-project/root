@@ -19,6 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 #include "RConfigure.h"
+#include "ROOT/RVersion.hxx"
 
 #include "XrdProofdPlatform.h"
 
@@ -34,27 +35,29 @@
 // Tracing
 #include "XrdProofdTrace.h"
 
+#include <fstream>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor: validates 'dir', gets the version and defines the tag.
 
 XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
-                 const char *incdir, const char *libdir, const char *datadir)
+                 const char *incdir, const char *libdir, const char *datadir,
+                 const char *etcdir)
 {
    XPDLOC(SMGR, "XrdROOT")
 
    fStatus = -1;
    fSrvProtVers = -1;
-   fRelease = "";
-   fGitCommit = "";
-   fVersionCode = -1;
-   fVrsMajor = -1;
-   fVrsMinor = -1;
-   fVrsPatch = -1;
+   fRelease = ROOT_RELEASE;
+   fVersionCode = ROOT_VERSION_CODE;
+   fVrsMajor = ROOT_VERSION_MAJOR;
+   fVrsMinor = ROOT_VERSION_MINOR;
+   fVrsPatch = ROOT_VERSION_PATCH;
 
    // 'dir' must make sense
-   if (!dir || strlen(dir) <= 0)
+   if (!dir || !dir[0])
       return;
-   if (tag && strlen(tag) > 0) {
+   if (tag && tag[0]) {
       fExport = tag;
       fExport += " "; fExport += dir;
    } else
@@ -63,13 +66,24 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
    if (CheckDir(dir) != 0) return;
    fDir = dir;
 
-   // Include dir
-   fIncDir = incdir;
-   if (!incdir || strlen(incdir) <= 0) {
-      fIncDir = fDir;
-      fIncDir += "/include";
-   }
-   if (CheckDir(fIncDir.c_str()) != 0) return;
+   auto setDir = [&](XrdOucString &target, const char *src, const char *subdir) -> bool {
+      target = src;
+      if (!src || !src[0]) {
+         target = fDir + subdir;
+      }
+      return CheckDir(target.c_str()) == 0;
+   };
+
+   if (!setDir(fIncDir, incdir, "/include"))
+      return;
+   if (!setDir(fLibDir, libdir, "/lib"))
+      return;
+   if (!setDir(fBinDir, bindir, "/bin"))
+      return;
+   if (!setDir(fDataDir, datadir, ""))
+      return;
+   if (!setDir(fEtcDir, etcdir, "/etc"))
+      return;
 
    // Parse version info
    if (ParseROOTVersionInfo() == -1) {
@@ -79,29 +93,6 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
 
    // Default tag is the version
    fTag = (!tag || strlen(tag) <= 0) ? fRelease : tag;
-
-   // Lib dir
-   fLibDir = libdir;
-   if (!libdir || strlen(libdir) <= 0) {
-      fLibDir = fDir;
-      fLibDir += "/lib";
-   }
-   if (CheckDir(fLibDir.c_str()) != 0) return;
-
-   // Bin dir
-   fBinDir = bindir;
-   if (!bindir || strlen(bindir) <= 0) {
-      fBinDir = fDir;
-      fBinDir += "/bin";
-   }
-   if (CheckDir(fBinDir.c_str()) != 0) return;
-
-   // Data dir
-   fDataDir = datadir;
-   if (!datadir || strlen(datadir) <= 0) {
-      fDataDir = fDir;
-   }
-   if (CheckDir(fDataDir.c_str()) != 0) return;
 
    // The application to be run
    fPrgmSrv = fBinDir;
@@ -172,95 +163,35 @@ int XrdROOT::ParseROOTVersionInfo()
 {
    XPDLOC(SMGR, "ParseROOTVersionInfo")
 
-   int rc = -1;
-
-   XrdOucString versfile = fIncDir;
-   versfile += "/RVersion.h";
-
-   // Open file
-   FILE *fv = fopen(versfile.c_str(), "r");
-   if (!fv) {
-      TRACE(XERR, "unable to open "<<versfile);
-      return rc;
-   }
-
-   // Reset the related variables
-   fRelease = "";
-   fGitCommit = "";
-   fVersionCode = -1;
-   fVrsMajor = -1;
-   fVrsMinor = -1;
-   fVrsPatch = -1;
-
-   // Read the file
-   char *pv = 0;
-   XrdOucString tkn, sline;
-   char line[1024];
-   while (fgets(line, sizeof(line), fv)) {
-      if (fRelease.length() <= 0 && (pv = (char *) strstr(line, "ROOT_RELEASE"))) {
-         if (line[strlen(line)-1] == '\n')
-            line[strlen(line)-1] = 0;
-         pv += strlen("ROOT_RELEASE") + 1;
-         fRelease = pv;
-         fRelease.replace("\"","");
-      } else if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
-         if (line[strlen(line)-1] == '\n')
-            line[strlen(line)-1] = 0;
-         pv += strlen("ROOT_GIT_COMMIT") + 1;
-         fGitCommit = pv;
-         fGitCommit.replace("\"","");
-      } else if ((pv = (char *) strstr(line, "ROOT_VERSION_CODE"))) {
-         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
-         pv += strlen("ROOT_VERSION_CODE");
-         while (pv[0] == ' ') pv++;
-         fVersionCode = atoi(pv);
-      }
-   }
-
-   // Close the file
-   fclose(fv);
-
    // Version code must be there
    if (fVersionCode < 0) {
-      TRACE(XERR, "incomplete info found in "<<versfile<<": version code missing or bad: "<<fVersionCode);
-      return rc;
+      TRACE(XERR, "incomplete info found: version code missing or bad: " << fVersionCode);
+      return -1;
    }
 
    // Release tag must be there and in the right format
    if (fRelease.length() <= 0 ||
-       XrdROOT::ParseReleaseString(fRelease.c_str(), fVrsMajor, fVrsMinor, fVrsPatch) < 0) {
-      TRACE(XERR, "incomplete info found in "<<versfile<<": release tag missing or bad: "<<fRelease);
-      return rc;
+      XrdROOT::ParseReleaseString(fRelease.c_str(), fVrsMajor, fVrsMinor, fVrsPatch) < 0) {
+      TRACE(XERR, "incomplete info found: release tag missing or bad: " << fRelease);
+      return -1;
    }
 
-   // Retrieve GIT commit string from dedicated file if the case
-   if (fGitCommit.length() <= 0) {
-
-      XrdOucString gitcommit = fIncDir;
-      gitcommit += "/RGitCommit.h";
-
-      // Open file
-      if ((fv = fopen(gitcommit.c_str(), "r"))) {
-
-         // Read the file
-         pv = 0;
-         while (fgets(line, sizeof(line), fv)) {
-            if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
-               if (line[strlen(line)-1] == '\n')
-                  line[strlen(line)-1] = 0;
-               pv += strlen("ROOT_GIT_COMMIT") + 1;
-               fGitCommit = pv;
-               fGitCommit.replace("\"","");
-               if (fGitCommit.length() > 0) break;
-            }
-         }
-
-         // Close the file
-         fclose(fv);
-
+   std::ifstream gitinfo(fEtcDir + "/gitinfo.txt");
+   if (!gitinfo) {
+      if (ROOT_VERSION_PATCH % 2 == 0) {
+         // A release.
+         fGitCommit = "v" + std::to_string(ROOT_VERSION_MAJOR)
+            + "-" + std::to_string(ROOT_VERSION_MINOR)
+            + "-" + std::to_string(ROOT_VERSION_PATCH);
       } else {
-         TRACE(REQ, "file "<<gitcommit<<" not found");
+         TRACE(XERR, "incomplete info found: not a ROOT release and no " << fEtcDir + "/gitinfo.txt");
+         return -1;
       }
+   } else {
+      std::string gitcommit;
+      std::getline(gitinfo, gitcommit); // "heads/master"
+      std::getline(gitinfo, gitcommit); // "v6-29-01-2644-g2b3dd4f1bf"
+      fGitCommit = gitcommit;
    }
 
    // Done
@@ -384,7 +315,7 @@ int XrdROOTMgr::Config(bool rcf)
    } else {
       // Check the ROOT dirs
       if (fROOT.size() <= 0) {
-         XrdOucString dir, bd, ld, id, dd;
+         XrdOucString dir, bd, ed, ld, id, dd;
 #ifdef R__HAVE_CONFIG
          if (getenv("ROOTIGNOREPREFIX"))
 #endif
@@ -393,6 +324,7 @@ int XrdROOTMgr::Config(bool rcf)
          else {
             dir = ROOTPREFIX;
             bd = ROOTBINDIR;
+            ed = ROOTETCDIR;
             ld = ROOTLIBDIR;
             id = ROOTINCDIR;
             dd = ROOTDATADIR;
@@ -401,7 +333,7 @@ int XrdROOTMgr::Config(bool rcf)
          // None defined: use ROOTSYS as default, if any; otherwise we fail
          if (dir.length() > 0) {
             XrdROOT *rootc = new XrdROOT(dir.c_str(), "",
-                                         bd.c_str(), id.c_str(), ld.c_str(), dd.c_str());
+                                         bd.c_str(), id.c_str(), ld.c_str(), dd.c_str(), ed.c_str());
             if (Validate(rootc, fMgr->Sched()) == 0) {
                XPDFORM(msg, "ROOT dist: '%s' validated", rootc->Export());
                fROOT.push_back(rootc);

@@ -19,7 +19,7 @@
 \class RooHistPdf
 \ingroup Roofitcore
 
-RooHistPdf implements a probablity density function sampled from a
+RooHistPdf implements a propability density function sampled from a
 multidimensional histogram. The histogram distribution is explicitly
 normalized by RooHistPdf and can have an arbitrary number of real or
 discrete dimensions.
@@ -27,14 +27,16 @@ discrete dimensions.
 
 #include "Riostream.h"
 
-#include "RooHistPdf.h"
+#include "RooCategory.h"
+#include "RooCurve.h"
 #include "RooDataHist.h"
+#include "RooFitImplHelpers.h"
+#include "RooGlobalFunc.h"
+#include "RooHistPdf.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "RooCategory.h"
+#include "RooUniformBinning.h"
 #include "RooWorkspace.h"
-#include "RooGlobalFunc.h"
-#include "RooHelpers.h"
 
 #include "TError.h"
 #include "TBuffer.h"
@@ -194,11 +196,11 @@ RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
    return _dataHist;
 }
 
-void RooHistPdf::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
   // For interpolation and histograms of higher dimension, use base function
   if(_pdfObsList.size() > 1) {
-      RooAbsReal::computeBatch(nullptr, output, nEvents, dataMap);
+      RooAbsReal::computeBatch(output, nEvents, dataMap);
       return;
   }
 
@@ -222,7 +224,7 @@ double RooHistPdf::evaluate() const
     if (harg != parg) {
       parg->syncCache() ;
       harg->copyCache(parg,true) ;
-      if (!harg->inRange(0)) {
+      if (!harg->inRange(nullptr)) {
         return 0 ;
       }
     }
@@ -233,6 +235,25 @@ double RooHistPdf::evaluate() const
   return std::max(ret, 0.0);
 }
 
+void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
+                                      RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize)
+{
+   if (intOrder != 0) {
+      ooccoutE(klass, InputArguments) << "RooHistPdf::weight(" << klass->GetName()
+                                      << ") ERROR: Code Squashing currently only supports non-interpolation cases."
+                                      << std::endl;
+      return;
+   }
+
+   std::string const &idxName = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
+   std::string const &weightName = dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize);
+   ctx.addResult(klass, weightName + "[" + idxName + "]");
+}
+
+void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _pdfObsList, !_unitNorm);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the total volume spanned by the observables of the RooHistPdf
@@ -261,6 +282,7 @@ double RooHistPdf::totVolume() const
 }
 
 namespace {
+
 bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
 {
   const RooAbsRealLValue *_x = dynamic_cast<const RooAbsRealLValue*>(&x);
@@ -276,15 +298,34 @@ bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
   }
   return (_x->getMin(range) == _y->getMin() && _x->getMax(range) == _y->getMax());
 }
+
+bool okayForAnalytical(RooAbsArg const& obs, RooArgSet const& allVars)
+{
+   auto lobs = dynamic_cast<RooAbsRealLValue const*>(&obs);
+   if(lobs == nullptr) return false;
+
+   bool isOkayForAnalyticalInt = false;
+
+   for(RooAbsArg *var : allVars) {
+      if(obs.dependsOn(*var)) {
+         if(!lobs->isJacobianOK(*var)) return false;
+         isOkayForAnalyticalInt = true;
+      }
+   }
+
+   return isOkayForAnalyticalInt;
 }
+
+} // namespace
 
 
 Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
                                         RooArgSet& analVars,
                                         const char* rangeName,
                                         RooArgSet const& histObsList,
-                                        RooSetProxy const& pdfObsList,
-                                        Int_t intOrder) {
+                                        RooArgSet const& pdfObsList,
+                                        Int_t intOrder)
+{
   // First make list of pdf observables to histogram observables
   // and select only those for which the integral is over the full range
 
@@ -294,7 +335,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
     const auto pa = pdfObsList[n];
     const auto ha = histObsList[n];
 
-    if (allVars.find(*pa)) {
+    if (okayForAnalytical(*pa, allVars)) {
       code |= 2 << n;
       analVars.add(*pa);
       if (fullRange(*pa, *ha, rangeName)) {
@@ -323,7 +364,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
 double RooHistPdf::analyticalIntegral(Int_t code,
                                         const char* rangeName,
                                         RooArgSet const& histObsList,
-                                        RooSetProxy const& pdfObsList,
+                                        RooArgSet const& pdfObsList,
                                         RooDataHist& dataHist,
                                         bool histFuncMode) {
   // Simplest scenario, full-range integration over all dependents
@@ -359,6 +400,24 @@ double RooHistPdf::analyticalIntegral(Int_t code,
   return ret ;
 }
 
+std::string RooHistPdf::rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
+                                                     const RooArgSet &obs, bool histFuncMode)
+{
+   if (((2 << obs.size()) - 1) != code) {
+      oocoutE(klass, InputArguments)
+         << "RooHistPdf::integral(" << klass->GetName()
+         << ") ERROR: AD currently only supports integrating over all histogram observables." << std::endl;
+      return "";
+   }
+   return std::to_string(dataHist->sum(histFuncMode));
+}
+
+std::string RooHistPdf::buildCallToAnalyticIntegral(int code, const char * /*rangeName */,
+                                                    RooFit::Detail::CodeSquashContext & /* ctx */) const
+{
+   return rooHistIntegralTranslateImpl(code, this, _dataHist, _pdfObsList, false);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine integration scenario. If no interpolation is used,
 /// RooHistPdf can perform all integrals over its dependents
@@ -380,6 +439,30 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 double RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
     return analyticalIntegral(code, rangeName, _histObsList, _pdfObsList, *_dataHist, false);
+}
+
+
+bool RooHistPdf::forceAnalyticalInt(RooArgSet const& pdfObsList, const RooAbsArg& dep)
+{
+   bool isOkayForAnalyticalInt = false;
+
+   for (RooAbsArg * obs : pdfObsList) {
+      if(obs->dependsOn(dep)) {
+         // If the observable doesn't depend linearly on the integration
+         // variable we will not do analytical integration.
+         auto lvalue = dynamic_cast<RooAbsRealLValue const*>(obs);
+         if(!(lvalue && lvalue->isJacobianOK(dep))) return false;
+         isOkayForAnalyticalInt = true;
+      }
+   }
+
+   return isOkayForAnalyticalInt;
+}
+
+
+bool RooHistPdf::forceAnalyticalInt(const RooAbsArg& dep) const
+{
+   return forceAnalyticalInt(_pdfObsList, dep);
 }
 
 
@@ -429,26 +512,11 @@ std::list<double>* RooHistPdf::plotSamplingHint(RooDataHist const& dataHist,
   // Retrieve position of all bin boundaries
 
   const RooAbsBinning* binning = lval->getBinningPtr(nullptr);
-  std::span<double> boundaries{binning->array(), static_cast<std::size_t>(binning->numBoundaries())};
+  std::span<const double> boundaries{binning->array(), static_cast<std::size_t>(binning->numBoundaries())};
 
-  auto hint = new std::list<double> ;
-
-  const double delta = (xhi-xlo)*1e-8 ;
-
-  // Sample points right next to the plot limits
-  hint->push_back(xlo + delta);
-  hint->push_back(xhi - delta);
-
-  // Sample points very close to the left and right of the bin boundaries that
-  // are strictly in between the plot limits.
-  for (const double x : boundaries) {
-    if (x - xlo > delta && xhi - x > delta) {
-      hint->push_back(x - delta);
-      hint->push_back(x + delta);
-    }
-  }
-
-  return hint ;
+  // Use the helper function from RooCurve to make sure to get sampling hints
+  // that work with the RooFitPlotting.
+  return RooCurve::plotSamplingHintForBinBoundaries(boundaries, xlo, xhi);
 }
 
 
@@ -467,7 +535,7 @@ std::list<double>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
@@ -570,7 +638,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
      coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
      return true ;
    }
-   _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.c_str()) ;
+   _dataHist = (RooDataHist*) ws.embeddedData(uniqueName) ;
       }
 
     } else {
@@ -582,7 +650,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
    coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
    return true ;
       }
-      _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName.c_str()));
+      _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName));
 
     }
     return false ;
@@ -611,4 +679,3 @@ void RooHistPdf::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(RooHistPdf::Class(),this);
    }
 }
-

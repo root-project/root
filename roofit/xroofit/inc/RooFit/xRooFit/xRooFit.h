@@ -9,7 +9,6 @@
  * with or without modification, are permitted according to the terms
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
-
 #include "Config.h"
 
 // when not using the namespace will use the once pragma.
@@ -18,9 +17,17 @@
 #ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if !defined(XROOFIT_XROOFIT_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
+#if (!defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H)) || \
+   (defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H_XROOFIT))
 #ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROOFIT_H
+#else
+#define XROOFIT_XROOFIT_H_XROOFIT
+// even with using pragma once, need include guard otherwise cannot include this header
+// as part of an interpreted file ... the other headers in xRooFit are similarly affected
+// however for now users of xRooFit should only need to include the main xRooFit header to use it all
+// in future we should try removing the pragma once altogether (undef XROOFIT_USE_PRAGMA_ONCE)
+// and see if it has negative consequences anywhere
 #endif
 
 /**
@@ -39,12 +46,13 @@ class RooWorkspace;
 #include "Fit/FitConfig.h"
 
 #include "RooCmdArg.h"
+#include "TNamed.h"
 
 class TCanvas;
 
 #include <memory>
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 class xRooNLLVar;
 
@@ -53,6 +61,12 @@ class xRooFit {
 public:
    // Extra options for NLL creation:
    static RooCmdArg ReuseNLL(bool flag); // if should try to reuse the NLL object when it changes dataset
+   static RooCmdArg Tolerance(double value);
+   static RooCmdArg StrategySequence(const char *stratSeq); // control minimization strategy sequence
+   static constexpr double OBS = std::numeric_limits<double>::quiet_NaN();
+
+   // Helper function for matching precision of a value and its error
+   static std::pair<double, double> matchPrecision(const std::pair<double, double> &in);
 
    // Static methods that work with the 'first class' object types:
    //    Pdfs: RooAbsPdf
@@ -62,7 +76,7 @@ public:
 
    // fit result flags in its constPars list which are global observables with the "global" attribute
    static std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>>
-   generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> &fr, bool expected = false, int seed = 0);
+   generateFrom(RooAbsPdf &pdf, const RooFitResult &fr, bool expected = false, int seed = 0);
    static std::shared_ptr<const RooFitResult>
    fitTo(RooAbsPdf &pdf, const std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> &data,
          const RooLinkedList &nllOpts, const ROOT::Fit::FitConfig &fitConf);
@@ -81,11 +95,26 @@ public:
 
    static std::shared_ptr<ROOT::Fit::FitConfig> createFitConfig(); // obtain instance of default fit configuration
    static std::shared_ptr<RooLinkedList> createNLLOptions();       // obtain instance of default nll options
+   static std::shared_ptr<RooLinkedList> defaultNLLOptions();      // access default NLL options for modifications
+   static std::shared_ptr<ROOT::Fit::FitConfig> defaultFitConfig();
 
-   static std::shared_ptr<const RooFitResult>
-   minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &fitConfig = nullptr);
+   static std::shared_ptr<const RooFitResult> minimize(RooAbsReal &nll,
+                                                       const std::shared_ptr<ROOT::Fit::FitConfig> &fitConfig = nullptr,
+                                                       const std::shared_ptr<RooLinkedList> &nllOpts = nullptr);
    static int minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parName = "",
                     const std::shared_ptr<ROOT::Fit::FitConfig> &_fitConfig = nullptr);
+
+   // this class is used to store a shared_ptr in a TDirectory's List, so that retrieval of cached fits
+   // can share the fit result (and avoid re-reading from disk as well)
+   class StoredFitResult : public TNamed {
+   public:
+      StoredFitResult(RooFitResult *_fr);
+      StoredFitResult(const std::shared_ptr<RooFitResult> &_fr);
+
+   public:
+      std::shared_ptr<RooFitResult> fr; //!
+      ClassDef(StoredFitResult, 0)
+   };
 
    class Asymptotics {
 
@@ -129,30 +158,30 @@ public:
       }
 
       // inverse of PValue function
-      static Double_t k(const IncompatFunc &compatRegions, double pValue, double poiVal, double poiPrimeVal,
-                        double sigma_mu = 0, double mu_low = -std::numeric_limits<double>::infinity(),
-                        double mu_high = std::numeric_limits<double>::infinity());
+      static double k(const IncompatFunc &compatRegions, double pValue, double poiVal, double poiPrimeVal,
+                      double sigma_mu = 0, double mu_low = -std::numeric_limits<double>::infinity(),
+                      double mu_high = std::numeric_limits<double>::infinity());
 
-      static Double_t k(const PLLType &pllType, double pValue, double mu, double mu_prime, double sigma_mu = 0,
-                        double mu_low = -std::numeric_limits<double>::infinity(),
-                        double mu_high = std::numeric_limits<double>::infinity())
+      static double k(const PLLType &pllType, double pValue, double mu, double mu_prime, double sigma_mu = 0,
+                      double mu_low = -std::numeric_limits<double>::infinity(),
+                      double mu_high = std::numeric_limits<double>::infinity())
       {
          return k(IncompatibilityFunction(pllType, mu), pValue, mu, mu_prime, sigma_mu, mu_low, mu_high);
       }
 
       // Recommend sigma_mu = |mu - mu_prime|/sqrt(pll_mu(asimov_mu_prime))
-      static Double_t PValue(const IncompatFunc &compatRegions, double k, double mu, double mu_prime,
-                             double sigma_mu = 0, double mu_low = -std::numeric_limits<double>::infinity(),
-                             double mu_high = std::numeric_limits<double>::infinity());
+      static double PValue(const IncompatFunc &compatRegions, double k, double mu, double mu_prime, double sigma_mu = 0,
+                           double mu_low = -std::numeric_limits<double>::infinity(),
+                           double mu_high = std::numeric_limits<double>::infinity());
 
-      static Double_t PValue(const PLLType &pllType, double k, double mu, double mu_prime, double sigma_mu = 0,
-                             double mu_low = -std::numeric_limits<double>::infinity(),
-                             double mu_high = std::numeric_limits<double>::infinity())
+      static double PValue(const PLLType &pllType, double k, double mu, double mu_prime, double sigma_mu = 0,
+                           double mu_low = -std::numeric_limits<double>::infinity(),
+                           double mu_high = std::numeric_limits<double>::infinity())
       {
          return PValue(IncompatibilityFunction(pllType, mu), k, mu, mu_prime, sigma_mu, mu_low, mu_high);
       }
 
-      static Double_t Phi_m(double mu, double mu_prime, double a, double sigma, const IncompatFunc &compatRegions);
+      static double Phi_m(double mu, double mu_prime, double a, double sigma, const IncompatFunc &compatRegions);
 
       static int CompatFactor(const IncompatFunc &func, double mu_hat);
 
@@ -165,6 +194,9 @@ public:
       // return is x-axis value with potentially an error on that value if input pVals had errors
       // static RooRealVar FindLimit(TGraph *pVals, double target_pVal = 0.05);
    };
+
+   static std::shared_ptr<RooLinkedList> sDefaultNLLOptions;
+   static std::shared_ptr<ROOT::Fit::FitConfig> sDefaultFitConfig;
 
    // Run hypothesis test(s) on the given pdf
    // Uses hypoPoint binning on model parameters to determine points to scan
@@ -179,7 +211,7 @@ public:
                             const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
 };
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;
 
 #include "xRooHypoSpace.h"
 #include "xRooNLLVar.h"

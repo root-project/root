@@ -50,7 +50,7 @@ ClassImp(RooSimSplitGenContext);
 /// generation of events to the appropriate component generator context
 
 RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const RooArgSet &vars, bool verbose, bool autoBinned, const char* binnedTag) :
-  RooAbsGenContext(model,vars,0,0,verbose), _pdf(&model)
+  RooAbsGenContext(model,vars,nullptr,nullptr,verbose), _pdf(&model)
 {
   // Determine if we are requested to generate the index category
   RooAbsCategoryLValue const& idxCat = model.indexCat();
@@ -94,7 +94,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
     // Create generator context for this PDF
     std::unique_ptr<RooArgSet> compVars{pdf->getObservables(pdfVars)};
-    RooAbsGenContext* cx = pdf->autoGenContext(*compVars,0,0,verbose,autoBinned,binnedTag) ;
+    RooAbsGenContext* cx = pdf->autoGenContext(*compVars,nullptr,nullptr,verbose,autoBinned,binnedTag) ;
 
     const auto state = idxCat.lookupIndex(proxy->name());
 
@@ -112,13 +112,11 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   }
 
   // Clone the index category
-  _idxCatSet = (RooArgSet*) RooArgSet(model.indexCat()).snapshot(true) ;
-  if (!_idxCatSet) {
+  if(RooArgSet(model.indexCat()).snapshot(_idxCatSet, true)) {
     oocoutE(_pdf,Generation) << "RooSimSplitGenContext::RooSimSplitGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
     throw std::string("RooSimSplitGenContext::RooSimSplitGenContext() Couldn't deep-clone index category, abort") ;
   }
-
-  _idxCat = static_cast<RooAbsCategoryLValue*>(_idxCatSet->find(model.indexCat().GetName()));
+  _idxCat = static_cast<RooAbsCategoryLValue*>(_idxCatSet.find(model.indexCat().GetName()));
 }
 
 
@@ -129,7 +127,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 RooSimSplitGenContext::~RooSimSplitGenContext()
 {
   delete[] _fracThresh ;
-  delete _idxCatSet ;
   for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     delete (*iter) ;
   }
@@ -181,7 +178,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
-    return 0;
+    return nullptr;
   }
 
 

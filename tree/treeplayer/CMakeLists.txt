@@ -21,6 +21,11 @@ if(imt)
   list(APPEND TREEPLAYER_EXTRA_DEPENDENCIES Imt)
 endif()
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
   HEADERS
     ROOT/TTreeReaderFast.hxx
@@ -97,6 +102,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
     MathCore
     RIO
     Tree
+  ${EXTRA_DICT_OPTS}
 )
 
 if(NOT MSVC)

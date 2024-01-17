@@ -189,9 +189,9 @@ void TUnfoldBinningXML::WriteDTD(const char *file) {
 
 TUnfoldBinningXML *TUnfoldBinningXML::ImportXML
 (const TXMLDocument *document,const char *name) {
-   TUnfoldBinningXML *r=0;
+   TUnfoldBinningXML *r=nullptr;
    TXMLNode *root=document->GetRootNode();
-   TXMLNode *binningNode=0;
+   TXMLNode *binningNode=nullptr;
    if(root && (!TString(root->GetNodeName()).CompareTo("TUnfoldBinning")) &&
       (root->GetNodeType()==TXMLNode::kXMLElementNode)) {
       // loop over all "BinningNode" entities
@@ -231,11 +231,11 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXML
 
 TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
 (TXMLNode *node) {
-   const char *name=0;
+   const char *name=nullptr;
    Double_t factor=1.0;
-   TUnfoldBinningXML *r=0;
+   TUnfoldBinningXML *r=nullptr;
    Int_t nBins=0;
-   const char *binNames=0;
+   const char *binNames=nullptr;
    TIter i1 = node->GetAttributes()->MakeIterator();
    TXMLAttr *attr;
    // extract name and global factor
@@ -275,7 +275,7 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
                if(binName->GetNodeType()==TXMLNode::kXMLElementNode &&
                   !TString(binName->GetNodeName()).CompareTo("BinLabel")) {
                   TIter i3 = binName->GetAttributes()->MakeIterator();
-                  const char *binLabelName=0;
+                  const char *binLabelName=nullptr;
                   Int_t index=0;
                   while((attr=(TXMLAttr *)i3.Next())) {
                      TString attName(attr->GetName());
@@ -315,7 +315,7 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
       r->AddAxisXML(node);
 
       // import per-bin normalisation factors if there are any
-      TVectorD *perBinFactors=0;
+      TVectorD *perBinFactors=nullptr;
       for(TXMLNode *child=node->GetChildren();child;
           child=child->GetNextNode()) {
          // unconnected bins: children are of type "Bins"
@@ -350,7 +350,7 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
                             " TUnfoldBinning=%s expected %d found %d",
                             r->GetName(),length,nread);
                delete perBinFactors;
-               perBinFactors=0;
+               perBinFactors=nullptr;
             }
          }
       }
@@ -380,7 +380,7 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
 /// find axis if there is one
 
 void TUnfoldBinningXML::AddAxisXML(TXMLNode *node) {
-   TXMLNode *axis=0;
+   TXMLNode *axis=nullptr;
    for(TXMLNode *child=node->GetChildren();child;
        child=child->GetNextNode()) {
       if(child->GetNodeType()==TXMLNode::kXMLElementNode) {
@@ -389,7 +389,7 @@ void TUnfoldBinningXML::AddAxisXML(TXMLNode *node) {
       }
    }
    if(axis) {
-      const char *axisName=0;
+      const char *axisName=nullptr;
       TArrayD binEdges(1);
       TIter i1 = axis->GetAttributes()->MakeIterator();
       TXMLAttr *attr;

@@ -20,7 +20,7 @@
 #include "TBranchBrowsable.h"
 #include "TLeaf.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 using namespace std::string_literals;
 

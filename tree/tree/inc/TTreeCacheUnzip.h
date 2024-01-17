@@ -118,7 +118,7 @@ private:
 public:
    TTreeCacheUnzip();
    TTreeCacheUnzip(TTree *tree, Int_t buffersize=0);
-   virtual ~TTreeCacheUnzip();
+   ~TTreeCacheUnzip() override;
 
    Int_t               AddBranch(TBranch *b, Bool_t subbranches = kFALSE) override;
    Int_t               AddBranch(const char *branch, Bool_t subbranches = kFALSE) override;

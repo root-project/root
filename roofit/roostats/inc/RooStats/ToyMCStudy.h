@@ -43,8 +43,6 @@ class ToyMCStudy: public RooAbsStudy {
 
       RooAbsStudy* clone(const char* /*newname*/="") const override { return new ToyMCStudy(*this) ; }
 
-      ~ToyMCStudy() override {}
-
       // RooAbsStudy interfaces
       bool initialize(void) override;
       bool execute(void) override;
@@ -82,10 +80,6 @@ class ToyMCPayload : public TNamed {
       {
          fDataSet = sd;
       }
-
-      ~ToyMCPayload() override {
-      }
-
 
       RooDataSet* GetSamplingDistributions()
       {

@@ -19,8 +19,7 @@
 \class RooAdaptiveIntegratorND
 \ingroup Roofitcore
 
-RooAdaptiveIntegratorND implements an adaptive one-dimensional
-numerical integration algorithm.
+Adaptive one-dimensional numerical integration algorithm.
 **/
 
 
@@ -28,15 +27,16 @@ numerical integration algorithm.
 
 #include "TClass.h"
 #include "RooAdaptiveIntegratorND.h"
+#include "RooFunctor.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooMsgService.h"
 #include "RooNumIntFactory.h"
-#include "RooMultiGenFunction.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
+#include "Math/Functor.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 
@@ -57,25 +57,15 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar maxEvalND("maxEvalND","Max number of function evaluations for >3-dim integrals",10000000) ;
   RooRealVar maxWarn("maxWarn","Max number of warnings on precision not reached that is printed",5) ;
 
-  fact.storeProtoIntegrator(new RooAdaptiveIntegratorND(),RooArgSet(maxEval2D,maxEval3D,maxEvalND,maxWarn)) ;
-}
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooAdaptiveIntegratorND>(function, config);
+   };
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default ctor
-
-RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
-{
-  _epsRel = 1e-7 ;
-  _epsAbs = 1e-7 ;
-  _nmax = 10000 ;
-  _func = 0 ;
-  _integrator = 0 ;
-  _nError = 0 ;
-  _nWarn = 0 ;
-  _useIntegrandLimits = true ;
-  _intName = "(none)" ;
+   fact.registerPlugin("RooAdaptiveIntegratorND", creator, {maxEval2D,maxEval3D,maxEvalND,maxWarn},
+                     /*canIntegrate1D=*/false,
+                     /*canIntegrate2D=*/true,
+                     /*canIntegrateND=*/true,
+                     /*canIntegrateOpenEnded=*/false);
 }
 
 
@@ -89,7 +79,8 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   RooAbsIntegrator(function)
 {
 
-  _func = new RooMultiGenFunction(function) ;
+  _rooFunctor = std::make_unique<RooFunctor>(function);
+  _func = std::make_unique<ROOT::Math::Functor>(*_rooFunctor, static_cast<unsigned int>(_rooFunctor->nObs()));
   _nWarn = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")) ;
   switch (_func->NDim()) {
   case 1: throw string(Form("RooAdaptiveIntegratorND::ctor ERROR dimension of function must be at least 2")) ;
@@ -111,27 +102,12 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual constructor with given function and configuration. Needed by RooNumIntFactory
-
-RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  RooAbsIntegrator* ret = new RooAdaptiveIntegratorND(function,config) ;
-
-  return ret ;
-}
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 {
   delete _integrator ;
-  delete _func ;
   if (_nError>_nWarn) {
     coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName
            << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;

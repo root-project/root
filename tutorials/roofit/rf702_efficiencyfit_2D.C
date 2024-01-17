@@ -68,7 +68,7 @@ void rf702_efficiencyfit_2D(bool flat = false)
    RooProdPdf model("model", "model", shapePdf, Conditional(effPdf, cut));
 
    // Generate some toy data from model
-   RooDataSet *data = model.generate(RooArgSet(x, y, cut), 10000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, cut}, 10000)};
 
    // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a
    // --------------------------------------------------------------------------

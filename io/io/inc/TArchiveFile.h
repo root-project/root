@@ -40,7 +40,7 @@ protected:
 public:
    TArchiveFile() : fArchiveName(""), fMemberName(""), fMemberIndex(-1), fFile(nullptr), fMembers(nullptr), fCurMember(nullptr) { }
    TArchiveFile(const char *archive, const char *member, TFile *file);
-   virtual ~TArchiveFile();
+   ~TArchiveFile() override;
 
    virtual Int_t   OpenArchive() = 0;
    virtual Int_t   SetCurrentMember() = 0;
@@ -81,7 +81,7 @@ public:
    TArchiveMember(const char *name);
    TArchiveMember(const TArchiveMember &member);
    TArchiveMember &operator=(const TArchiveMember &rhs);
-   virtual ~TArchiveMember() { }
+   ~TArchiveMember() override { }
 
    const char *GetName() const override { return fName; }
    const char *GetComment() const { return fComment; }

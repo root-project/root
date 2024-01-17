@@ -136,14 +136,15 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    pdf_->recursiveRedirectServers(*origParams);
 
    // Store normalization set
-   normSet_.reset((RooArgSet *)indata.get()->snapshot(false));
+   normSet_ = std::make_unique<RooArgSet>();
+   indata.get()->snapshot(*normSet_, false);
 
    // Expand list of observables with any observables used in parameterized ranges
    for (const auto realDep : *_funcObsSet) {
       auto realDepRLV = dynamic_cast<RooAbsRealLValue *>(realDep);
       if (realDepRLV && realDepRLV->isDerived()) {
          RooArgSet tmp2;
-         realDepRLV->leafNodeServerList(&tmp2, 0, true);
+         realDepRLV->leafNodeServerList(&tmp2, nullptr, true);
          _funcObsSet->add(tmp2, true);
       }
    }
@@ -192,7 +193,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    // TODO
 
    // Jonas R.: The following code is commented out, because the functionality
-   // to mask out-ot-range entries with `RooDataHist::cacheValidEntries` has
+   // to mask out-of-range entries with `RooDataHist::cacheValidEntries` has
    // been removed from the RooDataHist. If you want to implement ranged fits
    // properly, please create a RooDataHist for the requested range with
    // `RooDataHist::reduce`.

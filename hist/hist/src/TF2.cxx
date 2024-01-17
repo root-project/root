@@ -339,7 +339,7 @@ Double_t TF2::GetContourLevel(Int_t level) const
 {
    if (level <0 || level >= fContour.fN) return 0;
    if (fContour.fArray[0] != -9999) return fContour.fArray[level];
-   if (fHistogram == 0) return 0;
+   if (fHistogram == nullptr) return 0;
    return fHistogram->GetContourLevel(level);
 }
 
@@ -368,7 +368,7 @@ Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
    Double_t rsign = (findmax) ? -1. : 1.;
    TF2 & function = const_cast<TF2&>(*this); // needed since EvalPar is not const
    Double_t xxmin = 0, yymin = 0, zzmin = 0;
-   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) ) ) ){
+   if (x == nullptr || ( (x!= nullptr) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) ) ) ){
       Double_t dx = (fXmax - fXmin)/fNpx;
       Double_t dy = (fYmax - fYmin)/fNpy;
       xxmin = fXmin;
@@ -622,16 +622,14 @@ void TF2::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF2::GetSave(const Double_t *xx)
 {
-   //if (fNsave <= 0) return 0;
-   if (fSave.empty()) return 0;
-   Int_t fNsave = fSave.size();
-   Int_t np = fNsave - 6;
-   Double_t xmin = Double_t(fSave[np+0]);
-   Double_t xmax = Double_t(fSave[np+1]);
-   Double_t ymin = Double_t(fSave[np+2]);
-   Double_t ymax = Double_t(fSave[np+3]);
-   Int_t npx     = Int_t(fSave[np+4]);
-   Int_t npy     = Int_t(fSave[np+5]);
+   if (fSave.size() < 6) return 0;
+   Int_t nsave = fSave.size() - 6;
+   Double_t xmin = fSave[nsave+0];
+   Double_t xmax = fSave[nsave+1];
+   Double_t ymin = fSave[nsave+2];
+   Double_t ymax = fSave[nsave+3];
+   Int_t npx     = Int_t(fSave[nsave+4]);
+   Int_t npy     = Int_t(fSave[nsave+5]);
    Double_t x    = Double_t(xx[0]);
    Double_t dx   = (xmax-xmin)/npx;
    if (x < xmin || x > xmax) return 0;
@@ -642,8 +640,8 @@ Double_t TF2::GetSave(const Double_t *xx)
    if (dy <= 0) return 0;
 
    //we make a bilinear interpolation using the 4 points surrounding x,y
-   Int_t ibin    = Int_t((x-xmin)/dx);
-   Int_t jbin    = Int_t((y-ymin)/dy);
+   Int_t ibin    = TMath::Min(npx-1, Int_t((x-xmin)/dx));
+   Int_t jbin    = TMath::Min(npy-1, Int_t((y-ymin)/dy));
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t t    = (x-xlow)/dx;
@@ -658,7 +656,7 @@ Double_t TF2::GetSave(const Double_t *xx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Integral of a 2d function in range [ax,bx],[ay,by]
-/// with desired relative accuracy (default value of eps is 1.e-9)
+/// with desired relative accuracy (defined by eps)
 
 Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel)
 {
@@ -705,7 +703,7 @@ TH1* TF2::CreateHistogram()
 
    Double_t *parameters = GetParameters();
    TH2F* h = new TH2F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax,fNpy,fYmin,fYmax);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
 
    InitArgs(xv,parameters);
    dx = (fXmax - fXmin)/Double_t(fNpx);
@@ -721,7 +719,7 @@ TH1* TF2::CreateHistogram()
    h->Fill(fXmin-1,fYmin-1,0);  //This call to force fNentries non zero
 
    Double_t *levels = fContour.GetArray();
-   if (levels && levels[0] == -9999) levels = 0;
+   if (levels && levels[0] == -9999) levels = nullptr;
    h->SetMinimum(fMinimum);
    h->SetMaximum(fMaximum);
    h->SetContour(fContour.fN, levels);
@@ -733,7 +731,7 @@ TH1* TF2::CreateHistogram()
    h->SetMarkerColor(GetMarkerColor());
    h->SetMarkerStyle(GetMarkerStyle());
    h->SetMarkerSize(GetMarkerSize());
-   h->SetStats(0);
+   h->SetStats(false);
 
    return h;
 }
@@ -754,7 +752,7 @@ void TF2::Paint(Option_t *option)
    if (!fHistogram) {
       fHistogram = new TH2F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax,fNpy,fYmin,fYmax);
       if (!fHistogram) return;
-      fHistogram->SetDirectory(0);
+      fHistogram->SetDirectory(nullptr);
    }
    InitArgs(xv,parameters);
    dx = (fXmax - fXmin)/Double_t(fNpx);
@@ -771,7 +769,7 @@ void TF2::Paint(Option_t *option)
 
 //- Copy Function attributes to histogram attributes
    Double_t *levels = fContour.GetArray();
-   if (levels && levels[0] == -9999) levels = 0;
+   if (levels && levels[0] == -9999) levels = nullptr;
    fHistogram->SetMinimum(fMinimum);
    fHistogram->SetMaximum(fMaximum);
    fHistogram->SetContour(fContour.fN, levels);
@@ -783,7 +781,7 @@ void TF2::Paint(Option_t *option)
    fHistogram->SetMarkerColor(GetMarkerColor());
    fHistogram->SetMarkerStyle(GetMarkerStyle());
    fHistogram->SetMarkerSize(GetMarkerSize());
-   fHistogram->SetStats(0);
+   fHistogram->SetStats(false);
 
 //-  Draw the histogram
    if (!gPad) return;
@@ -797,43 +795,44 @@ void TF2::Paint(Option_t *option)
 
 void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t, Double_t)
 {
-   if (!fSave.empty()) fSave.clear();
-   //if (fSave != 0) {delete [] fSave; fSave = 0;}
-   Int_t nsave = (fNpx+1)*(fNpy+1);
-   Int_t fNsave = nsave+6;
-   if (fNsave <= 6) {fNsave=0; return;}
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
-   Int_t i,j,k=0;
+   if (!fSave.empty())
+      fSave.clear();
+   Int_t npx = fNpx, npy = fNpy;
+   if ((npx < 2) || (npy < 2))
+      return;
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNpx;
-      xmin = fXmin +0.5*dx;
-      xmax = fXmax -0.5*dx;
+      npx--;
+      xmin = fXmin + 0.5*dx;
+      xmax = fXmax - 0.5*dx;
    }
    if (dy <= 0) {
       dy = (fYmax-fYmin)/fNpy;
-      ymin = fYmin +0.5*dy;
-      ymax = fYmax -0.5*dy;
+      npy--;
+      ymin = fYmin + 0.5*dy;
+      ymax = fYmax - 0.5*dy;
    }
+
+   Int_t nsave = (npx + 1) * (npy + 1);
+   fSave.resize(nsave + 6);
    Double_t xv[2];
    Double_t *parameters = GetParameters();
-   InitArgs(xv,parameters);
-   for (j=0;j<=fNpy;j++) {
+   InitArgs(xv, parameters);
+   for (Int_t j = 0, k = 0; j <= npy; j++) {
       xv[1]    = ymin + dy*j;
-      for (i=0;i<=fNpx;i++) {
+      for (Int_t i = 0; i <= npx; i++) {
          xv[0]    = xmin + dx*i;
-         fSave[k] = EvalPar(xv,parameters);
-         k++;
+         fSave[k++] = EvalPar(xv, parameters);
       }
    }
    fSave[nsave+0] = xmin;
    fSave[nsave+1] = xmax;
    fSave[nsave+2] = ymin;
    fSave[nsave+3] = ymax;
-   fSave[nsave+4] = fNpx;
-   fSave[nsave+5] = fNpy;
+   fSave[nsave+4] = npx;
+   fSave[nsave+5] = npy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -842,6 +841,7 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
+   TString f2Name(GetName());
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF2::Class())) {
       out<<"   ";
@@ -849,28 +849,35 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<"   TF2 *";
    }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<std::endl;
+      out<<f2Name.Data()<<" = new TF2("<<quote<<f2Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<std::endl;
    } else {
-      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<std::endl;
+      out<<f2Name.Data()<<" = new TF2("<<quote<<f2Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
-   SaveFillAttributes(out, GetName(), 0, 1001);
-   SaveMarkerAttributes(out, GetName(), 1, 1, 1);
-   SaveLineAttributes(out, GetName(), 1, 1, 4);
+   SaveFillAttributes(out, f2Name.Data(), 0, 1001);
+   SaveMarkerAttributes(out, f2Name.Data(), 1, 1, 1);
+   SaveLineAttributes(out, f2Name.Data(), 1, 1, 4);
 
-   if (GetNpx() != 100)
-      out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+   if (GetNpx() != 30)
+      out<<"   "<<f2Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+   if (GetNpy() != 30)
+      out<<"   "<<f2Name.Data()<<"->SetNpy("<<GetNpy()<<");"<<std::endl;
+
    if (GetChisquare() != 0)
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
 
    Double_t parmin, parmax;
    for (Int_t i=0;i<GetNpar();i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
-   out<<"   "<<GetName()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   out<<"   "<<f2Name.Data()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
+
+   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f2Name.Data(), "->GetXaxis()");
+   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f2Name.Data(), "->GetYaxis()");
+   if (GetZaxis()) GetZaxis()->SaveAttributes(out, f2Name.Data(), "->GetZaxis()");
 }
 
 
@@ -969,7 +976,7 @@ void TF2::Streamer(TBuffer &R__b)
       R__b >> fNpy;
       R__b >> nlevels;
       if (R__v < 3) {
-         Float_t *contour = 0;
+         Float_t *contour = nullptr;
          Int_t n = R__b.ReadArray(contour);
          fContour.Set(n);
          for (Int_t i=0;i<n;i++) fContour.fArray[i] = contour[i];

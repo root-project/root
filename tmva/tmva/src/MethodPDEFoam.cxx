@@ -369,7 +369,7 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
    // the range
    TH1F **range_h = new TH1F*[kDim];
    for (UInt_t dim=0; dim<kDim; dim++) {
-      range_h[dim]  = new TH1F(Form("range%i", dim), "range", rangehistbins, xmin[dim], xmax[dim]);
+      range_h[dim]  = new TH1F(TString::Format("range%i", dim), "range", rangehistbins, xmin[dim], xmax[dim]);
    }
 
    // fill all testing events into histos
@@ -557,7 +557,7 @@ void TMVA::MethodPDEFoam::TrainMultiClassification()
 {
    for (UInt_t iClass=0; iClass<DataInfo().GetNClasses(); ++iClass) {
 
-      fFoam.push_back( InitFoam(Form("MultiClassFoam%u",iClass), kMultiClass, iClass) );
+      fFoam.push_back( InitFoam(TString::Format("MultiClassFoam%u",iClass), kMultiClass, iClass) );
 
       Log() << kVERBOSE << "Filling binary search tree of multiclass foam "
             << iClass << " with events" << Endl;
@@ -1430,7 +1430,7 @@ void TMVA::MethodPDEFoam::ReadFoamsFromFile()
          else {
             // load multiclass foams
             for (UInt_t iClass=0; iClass<DataInfo().GetNClasses(); ++iClass) {
-               fFoam.push_back(ReadClonedFoamFromFile(rootFile, Form("MultiClassFoam%u",iClass)));
+               fFoam.push_back(ReadClonedFoamFromFile(rootFile, TString::Format("MultiClassFoam%u",iClass)));
             }
          }
       }

@@ -125,11 +125,11 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
    DoReset();
    RooAbsPdf * pdf = GetPdf();
    RooAbsData* data = GetData();
-   if (!data || !pdf ) return 0;
+   if (!data || !pdf ) return nullptr;
 
    // get all non-const parameters
    std::unique_ptr<RooArgSet> constrainedParams{pdf->getParameters(*data)};
-   if (!constrainedParams) return 0;
+   if (!constrainedParams) return nullptr;
    RemoveConstantParameters(&*constrainedParams);
 
    const auto& config = GetGlobalRooStatsConfig();
@@ -148,7 +148,7 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
 
    // print fit result
    if (fFitResult) {
-      fFitResult->printStream( oocoutI(nullptr,Minimization), fFitResult->defaultPrintContents(0), fFitResult->defaultPrintStyle(0) );
+      fFitResult->printStream( oocoutI(nullptr,Minimization), fFitResult->defaultPrintContents(nullptr), fFitResult->defaultPrintStyle(nullptr) );
 
       if (fFitResult->status() != 0)
          oocoutW(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed - status = " << fFitResult->status() << std::endl;
@@ -184,7 +184,7 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
    int status = -1;
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
       status = minim.minimize(minimType,minimAlgo);
-      if (status%1000 == 0) {  // ignore erros from Improve
+      if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
          cout << "    ----> Doing a re-scan first" << endl;
@@ -237,7 +237,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
       return nullptr;
    }
 
-   RooAbsReal* profile = nll->createProfile(fPOI);
+   std::unique_ptr<RooAbsReal> profile{nll->createProfile(fPOI)};
    profile->addOwnedComponents(std::move(nll)) ;  // to avoid memory leak
 
    // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
@@ -272,7 +272,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    }
    // fPOI contains the parameter of interest of the PL object
    // and bestPOI contains a snapshot with the best fit values
-   LikelihoodInterval* interval = new LikelihoodInterval(name, profile, &fPOI, bestPOI);
+   LikelihoodInterval* interval = new LikelihoodInterval(name, profile.release(), &fPOI, bestPOI);
    interval->SetConfidenceLevel(1.-fSize);
    return interval;
 }
@@ -294,9 +294,9 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    RooAbsData* data = GetData();
 
 
-   if (!data || !pdf) return 0;
+   if (!data || !pdf) return nullptr;
 
-   if (fNullParams.empty()) return 0;
+   if (fNullParams.empty()) return nullptr;
 
    // make a clone and ordered list since a vector will be associated to keep parameter values
    // clone the list since first fit will changes the fNullParams values
@@ -358,7 +358,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       // print fit result
       if (fit2) {
          nLLatCondMLE = fit2->minNll();
-         fit2->printStream( oocoutI(nullptr,Minimization), fit2->defaultPrintContents(0), fit2->defaultPrintStyle(0) );
+         fit2->printStream( oocoutI(nullptr,Minimization), fit2->defaultPrintContents(nullptr), fit2->defaultPrintStyle(nullptr) );
 
          if (fit2->status() != 0)
             oocoutW(nullptr,Minimization) << "ProfileLikelihoodCalcultor::GetHypotest -  Conditional fit failed - status = " << fit2->status() << std::endl;

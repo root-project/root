@@ -25,7 +25,7 @@ and the outer two pieces, if required are calculated using a 1/x transform
 **/
 
 #include "RooImproperIntegrator1D.h"
-#include "RooIntegrator1D.h"
+#include "RooRombergIntegrator.h"
 #include "RooInvTransform.h"
 #include "RooNumber.h"
 #include "RooNumIntFactory.h"
@@ -33,7 +33,7 @@ and the outer two pieces, if required are calculated using a 1/x transform
 #include "RooMsgService.h"
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 #include "TClass.h"
 
 
@@ -44,20 +44,18 @@ ClassImp(RooImproperIntegrator1D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Register RooImproperIntegrator1D, its parameters and capabilities with RooNumIntFactory
 
-void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
+void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
 {
-  RooImproperIntegrator1D* proto = new RooImproperIntegrator1D() ;
-  fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
-}
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooImproperIntegrator1D>(function, config);
+   };
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooImproperIntegrator1D::RooImproperIntegrator1D() :
-  _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(true)
-{
+   fact.registerPlugin("RooImproperIntegrator1D", creator, {},
+                     /*canIntegrate1D=*/true,
+                     /*canIntegrate2D=*/false,
+                     /*canIntegrateND=*/false,
+                     /*canIntegrateOpenEnded=*/true,
+                     /*depName=*/"RooIntegrator1D");
 }
 
 
@@ -107,16 +105,6 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, dou
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return clone of integrator with given function and configuration. Needed by RooNumIntFactory.
-
-RooAbsIntegrator* RooImproperIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooImproperIntegrator1D(function,config) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Initialize the integrator, construct and initialize subintegrators
 
 void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
@@ -139,10 +127,10 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
   // associated to this integrator, but with a different summation rule.
   auto makeIntegrator1D = [&](RooAbsFunc const& func,
                               double xmin, double xmax,
-                              RooIntegrator1D::SummationRule rule) {
+                              RooRombergIntegrator::SummationRule rule) {
       RooNumIntConfig newConfig{_config}; // copy default configuration
       newConfig.getConfigSection("RooIntegrator1D").setCatIndex("sumRule", rule);
-      return std::make_unique<RooIntegrator1D>(func, xmin, xmax, newConfig);
+      return std::make_unique<RooRombergIntegrator>(func, xmin, xmax, newConfig);
   };
 
   // partition the integration range into subranges that can each be
@@ -150,33 +138,33 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
   switch(_case= limitsCase()) {
   case ClosedBothEnds:
     // both limits are finite: use the plain trapezoid integrator
-    _integrator1 = std::make_unique<RooIntegrator1D>(*function,_xmin,_xmax,_config);
+    _integrator1 = std::make_unique<RooRombergIntegrator>(*function,_xmin,_xmax,_config);
     break;
   case OpenBothEnds:
     // both limits are infinite: integrate over (-1,+1) using
     // the plain trapezoid integrator...
-    _integrator1 = makeIntegrator1D(*function,-1,+1,RooIntegrator1D::Trapezoid);
+    _integrator1 = makeIntegrator1D(*function,-1,+1,RooRombergIntegrator::Trapezoid);
     // ...and integrate the infinite tails using the midpoint integrator
-    _integrator2 = makeIntegrator1D(*_function,-1,0,RooIntegrator1D::Midpoint);
-    _integrator3 = makeIntegrator1D(*_function,0,+1,RooIntegrator1D::Midpoint);
+    _integrator2 = makeIntegrator1D(*_function,-1,0,RooRombergIntegrator::Midpoint);
+    _integrator3 = makeIntegrator1D(*_function,0,+1,RooRombergIntegrator::Midpoint);
     break;
   case OpenBelowSpansZero:
     // xmax >= 0 so integrate from (-inf,-1) and (-1,xmax)
-    _integrator1 = makeIntegrator1D(*_function,-1,0,RooIntegrator1D::Midpoint);
-    _integrator2 = makeIntegrator1D(*function,-1,_xmax,RooIntegrator1D::Trapezoid);
+    _integrator1 = makeIntegrator1D(*_function,-1,0,RooRombergIntegrator::Midpoint);
+    _integrator2 = makeIntegrator1D(*function,-1,_xmax,RooRombergIntegrator::Trapezoid);
     break;
   case OpenBelow:
     // xmax < 0 so integrate from (-inf,xmax)
-    _integrator1 = makeIntegrator1D(*_function,1/_xmax,0,RooIntegrator1D::Midpoint);
+    _integrator1 = makeIntegrator1D(*_function,1/_xmax,0,RooRombergIntegrator::Midpoint);
     break;
   case OpenAboveSpansZero:
     // xmin <= 0 so integrate from (xmin,+1) and (+1,+inf)
-    _integrator1 = makeIntegrator1D(*_function,0,+1,RooIntegrator1D::Midpoint);
-    _integrator2 = makeIntegrator1D(*function,_xmin,+1,RooIntegrator1D::Trapezoid);
+    _integrator1 = makeIntegrator1D(*_function,0,+1,RooRombergIntegrator::Midpoint);
+    _integrator2 = makeIntegrator1D(*function,_xmin,+1,RooRombergIntegrator::Trapezoid);
     break;
   case OpenAbove:
     // xmin > 0 so integrate from (xmin,+inf)
-    _integrator1 = makeIntegrator1D(*_function,0,1/_xmin,RooIntegrator1D::Midpoint);
+    _integrator1 = makeIntegrator1D(*_function,0,1/_xmin,RooRombergIntegrator::Midpoint);
     break;
   case Invalid:
   default:
@@ -193,7 +181,7 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 bool RooImproperIntegrator1D::setLimits(double *xmin, double *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE(nullptr,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << std::endl;
+    oocoutE(nullptr,Integration) << "RooImproperIntegrator1D::setLimits: cannot override integrand's limits" << std::endl;
     return false;
   }
 
@@ -258,7 +246,7 @@ bool RooImproperIntegrator1D::checkLimits() const
 RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 {
   // Analyze the specified limits to determine which case applies.
-  if(0 == integrand() || !integrand()->isValid()) return Invalid;
+  if(nullptr == integrand() || !integrand()->isValid()) return Invalid;
 
   if (_useIntegrandLimits) {
     _xmin= integrand()->getMinLimit(0);

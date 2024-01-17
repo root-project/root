@@ -231,13 +231,13 @@ void ModelConfig::SetSnapshot(const RooArgSet &set)
       return;
 
    fSnapshotName = GetName();
-   if (fSnapshotName.size() > 0)
+   if (!fSnapshotName.empty())
       fSnapshotName += "_";
    fSnapshotName += set.GetName();
-   if (fSnapshotName.size() > 0)
+   if (!fSnapshotName.empty())
       fSnapshotName += "_";
    fSnapshotName += "snapshot";
-   GetWS()->saveSnapshot(fSnapshotName.c_str(), set, true); // import also the given parameter values
+   GetWS()->saveSnapshot(fSnapshotName, set, true); // import also the given parameter values
    DefineSetInWS(fSnapshotName.c_str(), set);
 }
 
@@ -248,22 +248,22 @@ void ModelConfig::SetSnapshot(const RooArgSet &set)
 const RooArgSet *ModelConfig::GetSnapshot() const
 {
    if (!GetWS())
-      return 0;
+      return nullptr;
    if (!fSnapshotName.length())
-      return 0;
+      return nullptr;
    // calling loadSnapshot will also copy the current parameter values in the workspaces
    // since we do not want to change the model parameters - we restore the previous ones
-   if (!GetWS()->set(fSnapshotName.c_str()))
-      return 0;
-   RooArgSet snapshotVars(*GetWS()->set(fSnapshotName.c_str()));
+   if (!GetWS()->set(fSnapshotName))
+      return nullptr;
+   RooArgSet snapshotVars(*GetWS()->set(fSnapshotName));
    if (snapshotVars.empty())
-      return 0;
+      return nullptr;
    // make my snapshot which will contain a copy of the snapshot variables
    RooArgSet tempSnapshot;
    snapshotVars.snapshot(tempSnapshot);
    // load snapshot value from the workspace
    if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())))
-      return 0;
+      return nullptr;
    // by doing this snapshotVars will have the snapshot values - make the snapshot to return
    const RooArgSet *modelSnapshot = dynamic_cast<const RooArgSet *>(snapshotVars.snapshot());
    // restore now the variables of snapshot in ws to their original values
@@ -429,29 +429,36 @@ finalizeCmdList(ModelConfig const &modelConfig, RooLinkedList const &cmdList, st
 
 } // namespace
 
-/// Wrapper around RooAbsPdf::createNLL(RooAbsData&, const RooLinkedList&), where
-/// the pdf and some configuration options are retrieved from the ModelConfig.
-///
-/// The options taken from the ModelConfig are:
-///
-///   * ConditionalObservables()
-///   * GlobalObservables()
-///   * ExternalConstraints()
-///
-/// Except for the options above, you can still pass all the other command
-/// arguments supported by RooAbsPdf::createNLL().
-std::unique_ptr<RooAbsReal> ModelConfig::createNLL(RooAbsData &data, const RooLinkedList &cmdList) const
+/** @fn RooStats::ModelConfig::createNLL()
+ *
+ * Wrapper around RooAbsPdf::createNLL(), where
+ * the pdf and some configuration options are retrieved from the ModelConfig.
+ *
+ * The options taken from the ModelConfig are:
+ *
+ *   * ConditionalObservables()
+ *   * GlobalObservables()
+ *   * ExternalConstraints()
+ *
+ * Except for the options above, you can still pass all the other command
+ * arguments supported by RooAbsPdf::createNLL().
+ */
+
+std::unique_ptr<RooAbsReal> ModelConfig::createNLLImpl(RooAbsData &data, const RooLinkedList &cmdList) const
 {
    std::vector<RooCmdArg> cmdArgs;
    auto finalCmdList = finalizeCmdList(*this, cmdList, cmdArgs);
    return std::unique_ptr<RooAbsReal>{GetPdf()->createNLL(data, *finalCmdList)};
 }
 
-/// Wrapper around RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&), where
-/// the pdf and some configuration options are retrieved from the ModelConfig.
-///
-/// Sett ModelConfig::createNLL() for more information.
-std::unique_ptr<RooFitResult> ModelConfig::fitTo(RooAbsData &data, const RooLinkedList &cmdList)
+/** @fn RooStats::ModelConfig::fitTo()
+ *
+ * Wrapper around RooAbsPdf::fitTo(), where
+ * the pdf and some configuration options are retrieved from the ModelConfig.
+ *
+ * See ModelConfig::createNLL() for more information.
+ */
+std::unique_ptr<RooFitResult> ModelConfig::fitToImpl(RooAbsData &data, const RooLinkedList &cmdList)
 {
    std::vector<RooCmdArg> cmdArgs;
    auto finalCmdList = finalizeCmdList(*this, cmdList, cmdArgs);

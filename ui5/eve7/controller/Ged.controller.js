@@ -307,6 +307,12 @@ sap.ui.define([
          this.makeNumberSetter(el.fLineWidth, "LineWidth");
       },
 
+      buildREveViewerSetter: function(el)
+      {
+         this.makeBoolSetter(Boolean(el.AxesType), "ShowAxes", "SetAxesType");
+         this.makeBoolSetter(el.BlackBg, "BlackBackground");
+      },
+
       buildREveDataCollectionSetter : function(el)
       {
          this.makeBoolSetter(el.fRnrSelf, "RnrSelf");

@@ -113,7 +113,7 @@ if (dataframe)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
     endif()
     if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
-        if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+        if(NOT MSVC OR llvm13_broken_tests)
             ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
         endif()
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
@@ -125,8 +125,19 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_rdfdescription rdfdescription.py)
 endif()
 
+# SOFIE-GNN pythonizations
+if (tmva)
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND (PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.8))
+        find_python_module(sonnet QUIET)
+        find_python_module(graph_nets QUIET)
+        if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
+            ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
+        endif()
+    endif()
+endif()
+
 # RTensor pythonizations
-if (dataframe AND tmva)
+if (tmva AND dataframe)
     if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
     endif()
@@ -149,7 +160,6 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
 
   # RooWorkspace pythonizations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
 
@@ -162,6 +172,9 @@ if(roofit)
     # Other pythonizations that fail on Windows for unknown reasons
     ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
     ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
+
+    # RooWorkspace pythonization that fails on Windows
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
   endif()
 
   # NumPy compatibility

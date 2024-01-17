@@ -93,7 +93,7 @@ fitters and doesn't require to set the initial values of parameters.
 ### 2.Setting the formula
 
 #### 2.1 The linear formula syntax:
-     -Additive parts are separated by 2 plus signes "++"
+     -Additive parts are separated by 2 plus signs "++"
       --for example "1 ++ x" - for fitting a straight line
      -All standard functions, undrestood by TFormula, can be used
       as additive parts
@@ -249,10 +249,10 @@ TVirtualFitter(),
    fY2Temp    =0;
    fNfixed    =0;
    fIsSet     =kFALSE;
-   fFormula   =0;
-   fFixedParams=0;
+   fFormula   =nullptr;
+   fFixedParams=nullptr;
    fSpecial   =0;
-   fInputFunction=0;
+   fInputFunction=nullptr;
    fStoreData =kTRUE;
    fRobust    =kFALSE;
    fNfunctions = 0;
@@ -273,12 +273,12 @@ TLinearFitter::TLinearFitter(Int_t ndim) :
    fY2      =0;
    fY2Temp  =0;
    fNfixed  =0;
-   fFixedParams=0;
-   fFormula =0;
+   fFixedParams=nullptr;
+   fFormula =nullptr;
    fIsSet   =kFALSE;
    fChisquare=0;
    fSpecial  =0;
-   fInputFunction=0;
+   fInputFunction=nullptr;
    fStoreData=kTRUE;
    fRobust = kFALSE;
    fNfunctions = 0;
@@ -301,10 +301,10 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
    fChisquare=0;
    fY2=0;
    fNfixed=0;
-   fFixedParams=0;
+   fFixedParams=nullptr;
    fSpecial=0;
-   fInputFunction=0;
-   fFormula = 0;
+   fInputFunction=nullptr;
+   fFormula = nullptr;
    TString option=opt;
    option.ToUpper();
    if (option.Contains("D"))
@@ -341,9 +341,9 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
    fChisquare=0;
    fY2=0;
    fNfixed=0;
-   fFixedParams=0;
+   fFixedParams=nullptr;
    fSpecial=0;
-   fFormula = 0;
+   fFormula = nullptr;
    TString option=opt;
    option.ToUpper();
    if (option.Contains("D"))
@@ -352,7 +352,7 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
       fStoreData=kFALSE;
    fIsSet=kTRUE;
    fRobust=kFALSE;
-   fInputFunction=0;
+   fInputFunction=nullptr;
 
    SetFormula(function);
 }
@@ -388,14 +388,14 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    fNdim(tlf.fNdim),
    fNfixed(tlf.fNfixed),
    fSpecial(tlf.fSpecial),
-   fFormula(0),
+   fFormula(nullptr),
    fIsSet(tlf.fIsSet),
    fStoreData(tlf.fStoreData),
    fChisquare(tlf.fChisquare),
    fH(tlf.fH),
    fRobust(tlf.fRobust),
    fFitsample(tlf.fFitsample),
-   fFixedParams(0)
+   fFixedParams(nullptr)
 {
    // make a deep  copy of managed objects
    // fFormula, fFixedParams and fFunctions
@@ -420,13 +420,13 @@ TLinearFitter::~TLinearFitter()
 {
    if (fFormula) {
       delete [] fFormula;
-      fFormula = 0;
+      fFormula = nullptr;
    }
    if (fFixedParams) {
       delete [] fFixedParams;
-      fFixedParams = 0;
+      fFixedParams = nullptr;
    }
-   fInputFunction = 0;
+   fInputFunction = nullptr;
 
    //fFunctions.Delete();
    fFunctions.Clear();
@@ -467,7 +467,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fY2Temp = tlf.fY2Temp;
       for(Int_t i = 0; i < 1000; i++) fVal[i] = tlf.fVal[i];
 
-      if(fInputFunction) { delete fInputFunction; fInputFunction = 0; }
+      if(fInputFunction) { delete fInputFunction; fInputFunction = nullptr; }
       if(tlf.fInputFunction) fInputFunction = new TFormula(*tlf.fInputFunction);
 
       fNpoints=tlf.fNpoints;
@@ -477,7 +477,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
 
-      if(fFormula) { delete [] fFormula; fFormula = 0; }
+      if(fFormula) { delete [] fFormula; fFormula = nullptr; }
       if (tlf.fFormula) {
          fFormula = new char[fFormulaSize+1];
          strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
@@ -491,7 +491,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fRobust=tlf.fRobust;
       fFitsample=tlf.fFitsample;
 
-      if(fFixedParams) { delete [] fFixedParams; fFixedParams = 0; }
+      if(fFixedParams) { delete [] fFixedParams; fFixedParams = nullptr; }
       if ( tlf.fFixedParams && fNfixed > 0 ) {
          fFixedParams=new Bool_t[fNfixed];
          for(Int_t i=0; i< fNfixed; ++i)
@@ -504,7 +504,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Add another linear fitter to this linear fitter. Points and Design matrices
-///are added, but the previos fitting results (if any) are deleted.
+///are added, but the previous fitting results (if any) are deleted.
 ///Fitters must have same formulas (this is not checked). Fixed parameters are not changed
 
 void TLinearFitter::Add(TLinearFitter *tlf)
@@ -757,7 +757,7 @@ void TLinearFitter::Clear(Option_t * /*option*/)
    fAtbTemp2.Clear();
    fAtbTemp3.Clear();
    fFunctions.Clear();
-   fInputFunction=0;
+   fInputFunction=nullptr;
    fY.Clear();
    fX.Clear();
    fE.Clear();
@@ -767,10 +767,10 @@ void TLinearFitter::Clear(Option_t * /*option*/)
    fFormulaSize=0;
    fNdim=0;
    if (fFormula) delete [] fFormula;
-   fFormula=0;
+   fFormula=nullptr;
    fIsSet=0;
    if (fFixedParams) delete [] fFixedParams;
-   fFixedParams=0;
+   fFixedParams=nullptr;
 
    fChisquare=0;
    fY2=0;
@@ -1374,7 +1374,7 @@ Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t
    if (fInputFunction)
       strcpy(name, fInputFunction->GetParName(ipar));
    else
-      name = 0;
+      name = nullptr;
    return 1;
 }
 
@@ -1400,7 +1400,7 @@ const char *TLinearFitter::GetParName(Int_t ipar) const
 {
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParError", "illegal value of parameter");
-      return 0;
+      return nullptr;
    }
    if (fInputFunction)
       return fInputFunction->GetParName(ipar);
@@ -1456,7 +1456,7 @@ Int_t TLinearFitter::Merge(TCollection *list)
 {
    if (!list) return -1;
    TIter next(list);
-   TLinearFitter *lfit = 0;
+   TLinearFitter *lfit = nullptr;
    while ((lfit = (TLinearFitter*)next())) {
       if (!lfit->InheritsFrom(TLinearFitter::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",lfit->ClassName(),this->ClassName());
@@ -1548,7 +1548,7 @@ void TLinearFitter::SetFormula(const char *formula)
    //in case of a hyperplane:
    char *fstring;
    fstring = (char *)strstr(fFormula, "hyp");
-   if (fstring!=0){
+   if (fstring!=nullptr){
       // isHyper = kTRUE;
       fstring+=3;
       sscanf(fstring, "%d", &size);

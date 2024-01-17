@@ -35,7 +35,7 @@ class RDataFrame(object):
 
         self._headnode = headnode
 
-        self._headproxy = Proxy.TransformationProxy(self._headnode)
+        self._headproxy = Proxy.NodeProxy(self._headnode)
 
     def __dir__(self) -> List[str]:
         opdir: List[str] = [

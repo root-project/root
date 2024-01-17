@@ -11,6 +11,7 @@ ROOT_ADD_GTEST(dataframe_friends dataframe_friends.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_colnames dataframe_colnames.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_cache dataframe_cache.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_callbacks dataframe_callbacks.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_cloning dataframe_cloning.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_histomodels dataframe_histomodels.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_interface dataframe_interface.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_nodes dataframe_nodes.cxx LIBRARIES ROOTDataFrame)
@@ -31,7 +32,7 @@ ROOT_ADD_GTEST(dataframe_redefine dataframe_redefine.cxx LIBRARIES ROOTDataFrame
 ROOT_ADD_GTEST(dataframe_definepersample dataframe_definepersample.cxx LIBRARIES ROOTDataFrame)
 
 if(NOT MSVC OR win_broken_tests)
-  ROOT_ADD_GTEST(dataframe_simple dataframe_simple.cxx LIBRARIES ROOTDataFrame)
+  ROOT_ADD_GTEST(dataframe_simple dataframe_simple.cxx LIBRARIES ROOTDataFrame GenVector)
   target_include_directories(dataframe_simple PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   ROOT_GENERATE_DICTIONARY(DataFrameSimpleDict ${CMAKE_CURRENT_SOURCE_DIR}/MaxSlotHelper.h ${CMAKE_CURRENT_SOURCE_DIR}/SimpleFiller.h MODULE dataframe_simple
                            LINKDEF DataFrameSimpleLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES ROOTDataFrame Hist)
@@ -71,6 +72,7 @@ configure_file(RCsvDS_test_empty.csv . COPYONLY)
 configure_file(RCsvDS_test_win.csv . COPYONLY)
 configure_file(RCsvDS_test_NaNs.csv . COPYONLY)
 configure_file(spec.json . COPYONLY)
+configure_file(spec_ordering_samples_withFriends.json . COPYONLY)
 ROOT_ADD_GTEST(datasource_csv datasource_csv.cxx LIBRARIES ROOTDataFrame)
 if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
   set_source_files_properties(dataframe_vary.cxx COMPILE_FLAGS "-bigobj")
@@ -88,6 +90,19 @@ endif()
 
 if(root7)
   ROOT_ADD_GTEST(datasource_ntuple datasource_ntuple.cxx LIBRARIES ROOTDataFrame)
+
+  ROOT_STANDARD_LIBRARY_PACKAGE(NTupleStruct
+                                NO_INSTALL_HEADERS
+                                HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/NTupleStruct.hxx
+                                SOURCES NTupleStruct.cxx
+                                LINKDEF NTupleStructLinkDef.h
+                                DEPENDENCIES RIO)
+  configure_file(NTupleStruct.hxx . COPYONLY)
+  if(MSVC)
+    add_custom_command(TARGET NTupleStruct POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libNTupleStruct.dll
+                                       ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)
+  endif()
 endif()
 
 if(sqlite)
@@ -101,8 +116,8 @@ if(pyroot)
   if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
     ROOT_ADD_PYUNITTEST(dataframe_misc dataframe_misc.py)
     ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe_histograms.py)
-    ROOT_ADD_PYUNITTEST(dataframe_cache dataframe_cache.py ENVIRONMENT LEGACY_PYROOT=${pyroot_legacy})
-    ROOT_ADD_PYUNITTEST(dataframe_datasetspec dataframe_datasetspec.py ENVIRONMENT LEGACY_PYROOT=${pyroot_legacy})
+    ROOT_ADD_PYUNITTEST(dataframe_cache dataframe_cache.py ENVIRONMENT LEGACY_PYROOT="off")
+    ROOT_ADD_PYUNITTEST(dataframe_datasetspec dataframe_datasetspec.py ENVIRONMENT LEGACY_PYROOT="off")
   endif()
   if(NOT MSVC OR win_broken_tests)
     ROOT_ADD_PYUNITTEST(dataframe_merge_results dataframe_merge_results.py)

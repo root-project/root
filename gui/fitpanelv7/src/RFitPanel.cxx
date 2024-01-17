@@ -98,10 +98,10 @@ RFitPanel::~RFitPanel()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns RWebWindow instance, used to display FitPanel
 
-std::shared_ptr<RWebWindow> RFitPanel::GetWindow()
+std::shared_ptr<ROOT::RWebWindow> RFitPanel::GetWindow()
 {
    if (!fWindow) {
-      fWindow = RWebWindow::Create();
+      fWindow = ROOT::RWebWindow::Create();
 
       fWindow->SetPanelName("rootui5.fitpanel.view.FitPanel");
 
@@ -767,10 +767,7 @@ bool RFitPanel::DoFit()
       copy->Draw("same");
    }
 
-   if (pad) {
-      pad->Modified();
-      pad->Update();
-   }
+   DoPadUpdate(pad);
 
    std::string funcname = f1->GetName();
    if ((funcname.compare(0,4,"prev") == 0) && (funcname.find("-") > 4))
@@ -968,8 +965,29 @@ bool RFitPanel::DoDraw()
 
    drawobj->Draw(drawopt.c_str());
 
-   pad->Modified();
-   pad->Update();
+   DoPadUpdate(pad);
 
    return true;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Mark pad modified and do update
+/// For web canvas set async mode first to avoid blocking here
+
+void RFitPanel::DoPadUpdate(TPad *pad)
+{
+   if (!pad) return;
+
+   pad->Modified();
+   pad->UpdateAsync();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
+
+void RFitPanel::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   GetWindow()->SetClearOnClose(handle);
 }

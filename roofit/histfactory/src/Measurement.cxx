@@ -287,7 +287,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
   cxcoutPHF << "Printing XML Files for measurement: " << GetName() << std::endl;
 
   std::string XMLName = std::string(GetName()) + ".xml";
-  if( directory != "" ) XMLName = directory + "/" + XMLName;
+  if( !directory.empty() ) XMLName = directory + "/" + XMLName;
 
   ofstream xml( XMLName.c_str() );
 
@@ -370,7 +370,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
   xml << "</POI>  " << std::endl;
 
   // Set the Constant Parameters
-  if(fConstantParams.size()) {
+  if(!fConstantParams.empty()) {
     xml << "    <ParamSetting Const=\"True\">";
     for( unsigned int i = 0; i < fConstantParams.size(); ++i ) {
       if (i==0) xml << fConstantParams.at(i);
@@ -443,7 +443,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
 void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
 {
 
-  // Create a tempory measurement
+  // Create a temporary measurement
   // (This is the one that is actually written)
   RooStats::HistFactory::Measurement outMeas( *this );
 
@@ -618,8 +618,8 @@ std::string RooStats::HistFactory::Measurement::GetDirPath( TDirectory* dir )
 
   std::string path = dir->GetPath();
 
-  if( path.find(":") != std::string::npos ) {
-    size_t index = path.find(":");
+  if( path.find(':') != std::string::npos ) {
+    size_t index = path.find(':');
     path.replace( 0, index+1, "" );
   }
 

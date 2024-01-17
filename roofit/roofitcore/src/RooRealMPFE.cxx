@@ -19,7 +19,7 @@
 \class RooRealMPFE
 \ingroup Roofitcore
 
-RooRealMPFE is the multi-processor front-end for parallel calculation
+Multi-processor front-end for parallel calculation
 of RooAbsReal objects. Each RooRealMPFE forks a process that calculates
 the value of the proxies RooAbsReal object. The (re)calculation of
 the proxied object is started asynchronously with the calculate() option.
@@ -68,7 +68,7 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 class RooRealMPFE ;
 
 // RooMPSentinel is a singleton class that keeps track of all
-// parellel execution processes for goodness-of-fit calculations.
+// parallel execution processes for goodness-of-fit calculations.
 // The primary task of RooMPSentinel is to terminate all server processes
 // when the main ROOT process is exiting.
 struct RooMPSentinel {
@@ -110,8 +110,8 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, b
   _verboseServer(false),
   _inlineMode(calcInline),
   _remoteEvalErrorLoggingState(RooAbsReal::PrintErrors),
-  _pipe(0),
-  _updateMaster(0),
+  _pipe(nullptr),
+  _updateMaster(nullptr),
   _retrieveDispatched(false), _evalCarry(0.)
 {
 #ifdef _WIN32
@@ -139,8 +139,8 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _inlineMode(other._inlineMode),
   _forceCalc(other._forceCalc),
   _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
-  _pipe(0),
-  _updateMaster(0),
+  _pipe(nullptr),
+  _updateMaster(nullptr),
   _retrieveDispatched(false), _evalCarry(other._evalCarry)
 {
   initVars() ;
@@ -228,7 +228,7 @@ void RooRealMPFE::initialize()
     delete _pipe;
     _exit(0) ;
   } else {
-    // Client process - fork successul
+    // Client process - fork successful
     if (_verboseClient) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
    GetName() << ") successfully forked server process " <<
        _pipe->pidOtherEnd() << endl ;
@@ -325,7 +325,7 @@ void RooRealMPFE::serverLoop()
        objidstr = oss2.str();
      }
      std::map<const RooAbsArg*,pair<string,list<EvalError> > >::const_iterator iter = evalErrorIter();
-     const RooAbsArg* ptr = 0;
+     const RooAbsArg* ptr = nullptr;
      for (int i = 0; i < numEvalErrorItems(); ++i) {
        list<EvalError>::const_iterator iter2 = iter->second.second.begin();
        for (; iter->second.second.end() != iter2; ++iter2) {
@@ -336,7 +336,7 @@ void RooRealMPFE::serverLoop()
        }
      }
      // let other end know that we're done with the list of errors
-     ptr = 0;
+     ptr = nullptr;
      *_pipe << ptr;
      // Clear error list on local side
      clearEvalErrorLog();
@@ -519,7 +519,7 @@ void RooRealMPFE::calculate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If value needs recalculation and calculation has not beed started
+/// If value needs recalculation and calculation has not been started
 /// with a call to calculate() start it now. This function blocks
 /// until remote process has finished calculation and returns
 /// remote value
@@ -529,7 +529,7 @@ double RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is dirty, caling calculate and evaluate" << endl ;
+    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is dirty, calling calculate and evaluate" << endl ;
     calculate() ;
     _value = evaluate() ;
   } else if (_calcInProgress) {
@@ -564,7 +564,7 @@ double RooRealMPFE::evaluate() const
     int msg;
     double value;
 
-    // If current error loggin state is not the same as remote state
+    // If current error logging state is not the same as remote state
     // update the remote state
     if (evalErrorLoggingMode() != _remoteEvalErrorLoggingState) {
       msg = LogEvalError ;
@@ -601,8 +601,8 @@ double RooRealMPFE::evaluate() const
               << ") IPC fromServer> NumErrors " << numError << endl ;
     if (numError) {
       // Retrieve remote errors and feed into local error queue
-      char *msgbuf1 = 0, *msgbuf2 = 0, *msgbuf3 = 0;
-      RooAbsArg *ptr = 0;
+      char *msgbuf1 = nullptr, *msgbuf2 = nullptr, *msgbuf3 = nullptr;
+      RooAbsArg *ptr = nullptr;
       while (true) {
    *_pipe >> ptr;
    if (!ptr) break;
@@ -659,7 +659,7 @@ void RooRealMPFE::standby()
     }
     // Close pipes
     delete _pipe;
-    _pipe = 0;
+    _pipe = nullptr;
 
     // Revert to initialize state
     _state = Initialize;

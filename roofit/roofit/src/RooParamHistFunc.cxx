@@ -23,8 +23,8 @@
 #include "RooParamHistFunc.h"
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
-#include "RooHelpers.h"
-#include <math.h>
+#include "RooFitImplHelpers.h"
+#include <cmath>
 #include "TMath.h"
 
 
@@ -127,6 +127,21 @@ double RooParamHistFunc::evaluate() const
   return  ret ;
 }
 
+void RooParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::string const &idx = _dh.calculateTreeIndexForCodeSquash(this, ctx, _x);
+   std::string arrName = ctx.buildArg(_p);
+   std::string result = arrName + "[" + idx + "]";
+   if (_relParam) {
+      // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
+      // be binned uniformly.
+      std::string const &weightName = _dh.declWeightArrayForCodeSquash(this, ctx, false);
+      std::string nominalVal = weightName + "[" + idx + "] * " + std::to_string(_dh.binVolume(0));
+      result += " * " + nominalVal;
+   }
+   ctx.addResult(this, result);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 double RooParamHistFunc::getActual(Int_t ibin)
@@ -167,7 +182,7 @@ list<double>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double x
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
@@ -204,7 +219,7 @@ std::list<double>* RooParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
@@ -231,9 +246,8 @@ Int_t RooParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
                   const RooArgSet* /*normSet*/, const char* /*rangeName*/) const
 {
   // Simplest scenario, integrate over all dependents
-  RooAbsCollection *allVarsCommon = allVars.selectCommon(_x) ;
-  bool intAllObs = (allVarsCommon->getSize()==_x.getSize()) ;
-  delete allVarsCommon ;
+  std::unique_ptr<RooAbsCollection> allVarsCommon{allVars.selectCommon(_x)};
+  bool intAllObs = (allVarsCommon->size()==_x.size()) ;
   if (intAllObs && matchArgs(allVars,analVars,_x)) {
     return 1 ;
   }

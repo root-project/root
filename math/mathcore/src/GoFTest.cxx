@@ -37,7 +37,7 @@ namespace ROOT {
 namespace Math {
 
    struct CDFWrapper : public IGenFunction {
-      // wrapper around a cdf funciton to re-scale for the range
+      // wrapper around a cdf function to re-scale for the range
       Double_t fXmin; // lower range for x
       Double_t fXmax; // lower range for x
       Double_t fNorm; // normalization
@@ -134,14 +134,14 @@ namespace Math {
    : fDist(kUndefined),
      fSamples(std::vector<std::vector<Double_t> >(2)),
      fTestSampleFromH0(kFALSE) {
-      Bool_t badSampleArg = sample1 == 0 || sample1Size == 0;
+      Bool_t badSampleArg = sample1 == nullptr || sample1Size == 0;
       if (badSampleArg) {
          std::string msg = "'sample1";
          msg += !sample1Size ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
-      badSampleArg = sample2 == 0 || sample2Size == 0;
+      badSampleArg = sample2 == nullptr || sample2Size == 0;
       if (badSampleArg) {
          std::string msg = "'sample2";
          msg += !sample2Size ? "Size' cannot be zero" : "' cannot be zero-length";
@@ -161,7 +161,7 @@ namespace Math {
    : fDist(dist),
      fSamples(std::vector<std::vector<Double_t> >(1)),
      fTestSampleFromH0(kTRUE) {
-      Bool_t badSampleArg = sample == 0 || sampleSize == 0;
+      Bool_t badSampleArg = sample == nullptr || sampleSize == 0;
       if (badSampleArg) {
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
@@ -241,7 +241,7 @@ namespace Math {
    }
 
    void GoFTest::SetCDF() { // Setting parameter-free distributions
-      IGenFunction* cdf = 0;
+      IGenFunction* cdf = nullptr;
       switch (fDist) {
       case kLogNormal:
          LogSample();
@@ -277,14 +277,14 @@ namespace Math {
 
    void GoFTest::Instantiate(const Double_t* sample, size_t sampleSize) {
       // initialization function for the template constructors
-      Bool_t badSampleArg = sample == 0 || sampleSize == 0;
+      Bool_t badSampleArg = sample == nullptr || sampleSize == 0;
       if (badSampleArg) {
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
-      fCDF.reset((IGenFunction*)0);
+      fCDF.reset((IGenFunction*)nullptr);
       fDist = kUserDefined;
       fSamples = std::vector<std::vector<Double_t> >(1);
       fTestSampleFromH0 = kTRUE;
@@ -448,7 +448,7 @@ namespace Math {
       //auto it = std::lower_bound(ts2.begin(), ts2.end(), tx ); 
       int i1 = std::distance(ts2.begin(),  std::lower_bound(ts2.begin(), ts2.end(), tx ) ) - 1; 
       int i2 = i1+1;
-      // if tx is before min of tabluated data
+      // if tx is before min of tabulated data
       if (i1 < 0) { 
          i1 = 0;
          i2 = 1;
@@ -570,7 +570,7 @@ void adkTestStat(double *adk, const std::vector<std::vector<double> > & samples,
 
    /* samples is a two-dimensional double array with length k;
       it stores an array of k pointers to double arrays which are
-      the k samples beeing compared */
+      the k samples being compared */
 // double **samples;
 
    /* dynamically allocate memory */
@@ -693,7 +693,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
             sum_result += h[j] *  TMath::Power(N * F[i][j]- fSamples[i].size() * H[j], 2) / (H[j] * (N - H[j]) - N * h[j] / 4.0);
             ++j;
          }
-         std::cout << "time for sum_resut"; 
+         std::cout << "time for sum_result"; 
          w.Print(); 
          std::cout << "sum_result " << sum_result << std::endl;
          A2 += 1.0 / fSamples[i].size() * sum_result;
@@ -731,7 +731,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       for (unsigned int k = 0; k < ns.size(); ++k) ns[k] = fSamples[k].size();
       Double_t sigmaN = GetSigmaN(ns, N);
       A2 -= fSamples.size() - 1;
-      A2 /= sigmaN; // standartized test statistic
+      A2 /= sigmaN; // standardized test statistic
 
       pvalue = PValueADKSamples(2,A2); 
       testStat = A2;
@@ -744,7 +744,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
    A binned data set can be seen as many identical observation happening at the center of the bin
    In this way it is trivial to apply the formula (6) in the paper of W. Scholz, M. Stephens, "K-Sample Anderson-Darling Tests"
    to the case of histograms. See also http://arxiv.org/pdf/0804.0380v1.pdf paragraph  3.3.5
-   It is importat that empty bins are not present 
+   It is important that empty bins are not present 
 */
    void GoFTest::AndersonDarling2SamplesTest(const ROOT::Fit::BinData &data1, const ROOT::Fit::BinData & data2, Double_t& pvalue, Double_t& testStat)  {
       pvalue = -1;
@@ -839,7 +839,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
 
       Double_t sigmaN = GetSigmaN(ns,nall);
       A2 -= 1;
-      A2 /= sigmaN; // standartized test statistic
+      A2 /= sigmaN; // standardized test statistic
 
       //std::cout << " sigmaN " << sigmaN << " new A2 " << A2;
 
@@ -905,7 +905,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       std::vector<Double_t> b(nb);
       std::copy(fSamples[0].begin(), fSamples[0].end(), a.begin());
       std::copy(fSamples[1].begin(), fSamples[1].end(), b.begin());
-      pvalue = TMath::KolmogorovTest(na, a.data(), nb, b.data(), 0);
+      pvalue = TMath::KolmogorovTest(na, a.data(), nb, b.data(), nullptr);
       testStat = TMath::KolmogorovTest(na, a.data(), nb, b.data(), "M");
    }
 

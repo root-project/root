@@ -34,11 +34,11 @@ void httpaccess()
    // create histograms
    TH1D *hpx = new TH1D("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);
-   hpx->SetDirectory(0);
+   hpx->SetDirectory(nullptr);
    TH2D *hpxpy = new TH2D("hpxpy","py vs px",40,-4,4,40,-4,4);
-   hpxpy->SetDirectory(0);
+   hpxpy->SetDirectory(nullptr);
 
-   if (gSystem->AccessPathName("auth.txt")!=0) {
+   if (gSystem->AccessPathName("auth.txt") != 0) {
       printf("Please start macro from directory where auth.txt file is available\n");
       printf("It required to supply authentication information for the http server\n");
       return;
@@ -46,6 +46,11 @@ void httpaccess()
 
    // start http server
    THttpServer* serv = new THttpServer("http:8080?auth_file=auth.txt&auth_domain=root");
+
+   // start http server and allows CORS access to local files
+   // first copy hsimple.root file to current directory
+   // THttpServer* serv = new THttpServer("http:8080?auth_file=auth.txt&auth_domain=root&cred_cors&cors=https://root.cern");
+   // And finally file can be opened via url: https://root.cern/js/dev/?with_credentials&file=http://localhost:8080/currentdir/hsimple.root
 
    // or start FastCGI server, where host server (like Apache or lighttpd) should enable own authentication
    // for apache one should add correspondent module and authentication for fastcgi location

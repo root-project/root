@@ -19,7 +19,7 @@
 \class RooAbsCache
 \ingroup Roofitcore
 
-RooAbsCache is the abstract base class for data members of RooAbsArgs
+Abstract base class for data members of RooAbsArgs
 that cache other (composite) RooAbsArg expressions. The RooAbsCache
 interface defines the interaction between the owning RooAbsArg object
 and the cache data member to communicate server redirects, operation
@@ -33,7 +33,6 @@ mode changes and constant term optimization management calls.
 using namespace std;
 
 ClassImp(RooAbsCache);
-   ;
 
 
 ////////////////////////////////////////////////////////////////////////////////

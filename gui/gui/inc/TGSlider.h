@@ -63,7 +63,7 @@ public:
             UInt_t options = kChildFrame,
             Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGSlider() {}
+   ~TGSlider() override {}
 
    Bool_t HandleButton(Event_t *event) override = 0;
    Bool_t HandleConfigureNotify(Event_t* event) override = 0;
@@ -101,7 +101,7 @@ public:
              UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
              UInt_t options = kVerticalFrame,
              Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGVSlider();
+   ~TGVSlider() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleConfigureNotify(Event_t* event) override;
@@ -128,7 +128,7 @@ public:
              UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGHSlider();
+   ~TGHSlider() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleConfigureNotify(Event_t* event) override;

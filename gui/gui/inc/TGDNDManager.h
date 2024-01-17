@@ -34,7 +34,7 @@ protected:
 public:
    TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
                 UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
-   virtual ~TGDragWindow();
+   ~TGDragWindow() override;
 
    TGDimension GetDefaultSize() const override { return TGDimension(fPw, fPh); }
 
@@ -69,7 +69,7 @@ private:
 public:
    TDNDData(Atom_t dt = kNone, void *d = nullptr, Int_t len = 0, Atom_t act = kNone) :
       fDataType(dt), fAction(act), fData(d), fDataLength(len) {}
-   ~TDNDData() {}
+   ~TDNDData() override {}
 
    Atom_t    fDataType;       ///< Data type description
    Atom_t    fAction;         ///< Action description
@@ -148,7 +148,7 @@ protected:
 
 public:
    TGDNDManager(TGFrame *toplevel, Atom_t *typelist);
-   virtual ~TGDNDManager();
+   ~TGDNDManager() override;
 
    Bool_t         HandleClientMessage(Event_t *event);
    Bool_t         HandleSelectionRequest(Event_t *event);

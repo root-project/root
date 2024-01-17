@@ -236,7 +236,7 @@ TPrincipal::TPrincipal()
     fStoreData(kFALSE)
 {
    fTrace              = 0;
-   fHistograms         = 0;
+   fHistograms         = nullptr;
    fIsNormalised       = kFALSE;
    fNumberOfDataPoints = 0;
    fNumberOfVariables  = 0;
@@ -267,7 +267,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
    SetName("principal");
 
    fTrace              = 0;
-   fHistograms         = 0;
+   fHistograms         = nullptr;
    fIsNormalised       = kFALSE;
    fNumberOfDataPoints = 0;
    fNumberOfVariables  = nVariables;
@@ -464,7 +464,7 @@ void TPrincipal::Browse(TBrowser *b)
 {
    if (fHistograms) {
       TIter next(fHistograms);
-      TH1* h = 0;
+      TH1* h = nullptr;
       while ((h = (TH1*)next()))
          b->Add(h,h->GetName());
    }
@@ -513,10 +513,10 @@ void TPrincipal::Clear(Option_t *opt)
 const Double_t *TPrincipal::GetRow(Int_t row)
 {
    if (row >= fNumberOfDataPoints)
-      return 0;
+      return nullptr;
 
    if (!fStoreData)
-      return 0;
+      return nullptr;
 
    Int_t index   = row  * fNumberOfVariables;
    return &fUserData(index);
@@ -622,22 +622,22 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       fHistograms = new TList;
 
    // Don't create the histograms if they are already in the TList.
-   if (makeX && fHistograms->FindObject(Form("%s_x000",name)))
+   if (makeX && fHistograms->FindObject(TString::Format("%s_x000",name)))
       makeX = kFALSE;
-   if (makeD && fHistograms->FindObject(Form("%s_d000",name)))
+   if (makeD && fHistograms->FindObject(TString::Format("%s_d000",name)))
       makeD = kFALSE;
-   if (makeP && fHistograms->FindObject(Form("%s_p000",name)))
+   if (makeP && fHistograms->FindObject(TString::Format("%s_p000",name)))
       makeP = kFALSE;
-   if (makeE && fHistograms->FindObject(Form("%s_e",name)))
+   if (makeE && fHistograms->FindObject(TString::Format("%s_e",name)))
       makeE = kFALSE;
-   if (makeS && fHistograms->FindObject(Form("%s_s",name)))
+   if (makeS && fHistograms->FindObject(TString::Format("%s_s",name)))
       makeS = kFALSE;
 
-   TH1F **hX  = 0;
-   TH2F **hD  = 0;
-   TH1F **hP  = 0;
-   TH1F *hE   = 0;
-   TH1F *hS   = 0;
+   TH1F **hX  = nullptr;
+   TH2F **hD  = nullptr;
+   TH1F **hP  = nullptr;
+   TH1F *hE   = nullptr;
+   TH1F *hS   = nullptr;
 
    // Initialize the arrays of histograms needed
    if (makeX)
@@ -650,15 +650,15 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       hP = new TH1F * [fNumberOfVariables];
 
    if (makeE){
-      hE = new TH1F(Form("%s_e",name), "Eigenvalues of Covariance matrix",
-         fNumberOfVariables,0,fNumberOfVariables);
+      hE = new TH1F(TString::Format("%s_e",name), "Eigenvalues of Covariance matrix",
+                    fNumberOfVariables,0,fNumberOfVariables);
       hE->SetXTitle("Eigenvalue");
       fHistograms->Add(hE);
    }
 
    if (makeS) {
-      hS = new TH1F(Form("%s_s",name),"E_{N}",
-         fNumberOfVariables-1,1,fNumberOfVariables);
+      hS = new TH1F(TString::Format("%s_s",name),"E_{N}",
+                    fNumberOfVariables-1,1,fNumberOfVariables);
       hS->SetXTitle("N");
       hS->SetYTitle("#sum_{i=1}^{M} (x_{i} - x'_{N,i})^{2}");
       fHistograms->Add(hS);
@@ -671,10 +671,10 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          // histogram.
          Double_t xlowb  = fMeanValues(i) - 4 * fSigmas(i);
          Double_t xhighb = fMeanValues(i) + 4 * fSigmas(i);
-         Int_t    xbins  = fNumberOfDataPoints/100;
-         hX[i]           = new TH1F(Form("%s_x%03d", name, i),
-            Form("Pattern space, variable %d", i),
-            xbins,xlowb,xhighb);
+         Int_t    xbins  = (fNumberOfDataPoints > 0 && fNumberOfDataPoints < 100 ? 1 : fNumberOfDataPoints/100);
+         hX[i]           = new TH1F(TString::Format("%s_x%03d", name, i),
+                                    TString::Format("Pattern space, variable %d", i),
+                                    xbins,xlowb,xhighb);
          hX[i]->SetXTitle(Form("x_{%d}",i));
          fHistograms->Add(hX[i]);
       }
@@ -683,15 +683,12 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          // The upper limit below is arbitrary!!!
          Double_t dlowb  = 0;
          Double_t dhighb = 20;
-         Int_t    dbins  = fNumberOfDataPoints/100;
-         hD[i]           = new TH2F(Form("%s_d%03d", name, i),
-            Form("Distance from pattern to "
-            "feature space, variable %d", i),
-            dbins,dlowb,dhighb,
-            fNumberOfVariables-1,
-            1,
-            fNumberOfVariables);
-         hD[i]->SetXTitle(Form("|x_{%d} - x'_{%d,N}|/#sigma_{%d}",i,i,i));
+         Int_t    dbins  = (fNumberOfDataPoints > 0 && fNumberOfDataPoints < 100 ? 1 : fNumberOfDataPoints/100);
+         hD[i]           = new TH2F(TString::Format("%s_d%03d", name, i),
+                                    TString::Format("Distance from pattern to feature space, variable %d", i),
+                                    dbins,dlowb,dhighb,
+                                    fNumberOfVariables-1, 1, fNumberOfVariables);
+         hD[i]->SetXTitle(TString::Format("|x_{%d} - x'_{%d,N}|/#sigma_{%d}",i,i,i));
          hD[i]->SetYTitle("N");
          fHistograms->Add(hD[i]);
       }
@@ -704,10 +701,10 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          Double_t plowb   = -10 * TMath::Sqrt(et);
          Double_t phighb  = -plowb;
          Int_t    pbins   = 100;
-         hP[i]            = new TH1F(Form("%s_p%03d", name, i),
-            Form("Feature space, variable %d", i),
-            pbins,plowb,phighb);
-         hP[i]->SetXTitle(Form("p_{%d}",i));
+         hP[i]            = new TH1F(TString::Format("%s_p%03d", name, i),
+                                     TString::Format("Feature space, variable %d", i),
+                                     pbins,plowb,phighb);
+         hP[i]->SetXTitle(TString::Format("p_{%d}",i));
          fHistograms->Add(hP[i]);
       }
 
@@ -726,7 +723,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       return;
    }
 
-   Double_t *x = 0;
+   Double_t *x = nullptr;
    Double_t *p = new Double_t[fNumberOfVariables];
    Double_t *d = new Double_t[fNumberOfVariables];
    for (i = 0; i < fNumberOfDataPoints; i++) {
@@ -862,7 +859,7 @@ void TPrincipal::MakeNormalised()
 void TPrincipal::MakeMethods(const char *classname, Option_t *opt)
 {
 
-   MakeRealCode(Form("%sPCA.cxx", classname), classname, opt);
+   MakeRealCode(TString::Format("%sPCA.cxx", classname), classname, opt);
 }
 
 
@@ -897,9 +894,11 @@ void TPrincipal::MakePrincipals()
 void TPrincipal::MakeRealCode(const char *filename, const char *classname,
                               Option_t *)
 {
-   Bool_t  isMethod = (classname[0] == '\0' ? kFALSE : kTRUE);
-   const char *prefix   = (isMethod ? Form("%s::", classname) : "");
-   const char *cv_qual  = (isMethod ? "" : "static ");
+   Bool_t  isMethod = classname[0] == '\0' ? kFALSE : kTRUE;
+   TString prefix;
+   const char *cv_qual  = isMethod ? "" : "static ";
+   if (isMethod)
+      prefix.Form("%s::", classname);
 
    std::ofstream outFile(filename,std::ios::out|std::ios::trunc);
    if (!outFile) {
@@ -1201,7 +1200,7 @@ void TPrincipal::Test(Option_t *)
    if (!fStoreData)
       return;
 
-   TH1 *pca_s = 0;
+   TH1 *pca_s = nullptr;
    if (fHistograms) pca_s = (TH1*)fHistograms->FindObject("pca_s");
    if (!pca_s) {
       Warning("Test", "Couldn't get histogram of square residuals");

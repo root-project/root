@@ -136,6 +136,8 @@ protected:
 
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
+   virtual Bool_t CallProduceImage(const std::string &kind, const std::string &path, const std::string &options, std::string &res);
+
    void
    ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = nullptr, TCollection *keys_lst = nullptr);
 
@@ -220,7 +222,7 @@ public:
 
    const char *GetItemField(const char *fullname, const char *name);
 
-   void SetCurrentCallArg(THttpCallArg *arg);
+   THttpCallArg *SetCurrentCallArg(THttpCallArg *arg);
 
    /** Method scans normal objects, registered in ROOT */
    void ScanHierarchy(const char *topname, const char *path, TRootSnifferStore *store, Bool_t only_fields = kFALSE);

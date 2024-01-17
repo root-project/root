@@ -8,6 +8,8 @@
  *                                                                    *
  **********************************************************************/
 
+#include <memory>
+
 #include "TF1Convolution.h"
 #include "TROOT.h"
 #include "TObject.h"
@@ -76,14 +78,14 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
          Error("InitializeDataMembers","function1 %s is not of dimension 1 ",function1->GetName());
       //TF1 * fnew1 = (TF1*) function1->IsA()->New();
       // since function1 is a TF1 (cannot be a derived class) we can instantiate it directly
-      fFunction1 = std::unique_ptr<TF1> (new TF1());
+      fFunction1 = std::make_unique<TF1> ();
       function1->Copy(*fFunction1);
    }
    if (function2) {
        if (function2->GetNdim() != 1)
          Error("InitializeDataMembers","function2 %s is not of dimension 1 ",function2->GetName());
       //TF1 * fnew2 = (TF1*) function2->IsA()->New();
-      fFunction2 = std::unique_ptr<TF1>(new TF1());
+      fFunction2 = std::make_unique<TF1>();
       function2->Copy(*fFunction2);
    }
    if (fFunction1.get() == nullptr|| fFunction2.get() == nullptr)
@@ -213,12 +215,12 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
    TF1* f2 = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(formula2));
    // if function do not exists try using TFormula
    if (!f1) {
-      fFunction1 = std::unique_ptr<TF1>(new TF1("f_conv_1", formula1));
+      fFunction1 = std::make_unique<TF1>("f_conv_1", formula1);
       if (!fFunction1->GetFormula()->IsValid() )
          Error("TF1Convolution","Invalid formula for : %s",formula1.Data() );
    }
    if (!f2) {
-      fFunction2 = std::unique_ptr<TF1>(new TF1("f_conv_1", formula2));
+      fFunction2 = std::make_unique<TF1>("f_conv_1", formula2);
       if (!fFunction2->GetFormula()->IsValid() )
          Error("TF1Convolution","Invalid formula for : %s",formula2.Data() );
    }
@@ -303,7 +305,7 @@ void TF1Convolution::MakeFFTConv()
 
    // fill a graph with the result of the convolution
    if (!fGraphConv)
-      fGraphConv = std::unique_ptr<TGraph>(new TGraph(fNofPoints));
+      fGraphConv = std::make_unique<TGraph>(fNofPoints);
 
    for (int i=0;i<fNofPoints;i++)
    {
@@ -364,7 +366,7 @@ Double_t TF1Convolution::EvalNumConv(Double_t t)
 
 Double_t TF1Convolution::operator()(const Double_t *x, const Double_t *p)
 {
-   if (p!=0)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
+   if (p!=nullptr)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
 
    Double_t result = 0.;
    if (fFlagFFT)

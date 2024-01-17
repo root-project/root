@@ -1,4 +1,4 @@
-import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse, isFunc, isStr } from './core.mjs';
+import { decodeUrl, settings, constants, gStyle, internals, browser, findFunction, parse, isFunc, isStr, isObject } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
 import { readSettings, readStyle } from './gui/utils.mjs';
@@ -7,17 +7,16 @@ import { readSettings, readStyle } from './gui/utils.mjs';
 /** @summary Read style and settings from URL
   * @private */
 function readStyleFromURL(url) {
-
    // first try to read settings from coockies
    readSettings();
    readStyle();
 
-   let d = decodeUrl(url);
+   const d = decodeUrl(url);
 
    function get_bool(name, field) {
       if (d.has(name)) {
-         let val = d.get(name);
-         settings[field] = (val != '0') && (val != 'false') && (val != 'off');
+         const val = d.get(name);
+         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -26,7 +25,8 @@ function readStyleFromURL(url) {
       let optimize = d.get('optimize');
       if (optimize) {
          optimize = parseInt(optimize);
-         if (Number.isInteger(optimize)) settings.OptimizeDraw = optimize;
+         if (Number.isInteger(optimize))
+            settings.OptimizeDraw = optimize;
       }
    }
 
@@ -46,39 +46,40 @@ function readStyleFromURL(url) {
    if (d.has('prefer_saved_points'))
       settings.PreferSavedPoints = true;
 
+   if (d.has('with_credentials'))
+      settings.WithCredentials = true;
+
    let inter = d.get('interactive');
    if (inter === 'nomenu')
       settings.ContextMenu = false;
    else if (inter !== undefined) {
-      if (!inter || (inter == '1'))
+      if (!inter || (inter === '1'))
          inter = '111111';
-      else if (inter == '0')
+      else if (inter === '0')
          inter = '000000';
       if (inter.length === 6) {
-         switch(inter[0]) {
+         switch (inter[0]) {
             case '0': settings.ToolBar = false; break;
             case '1': settings.ToolBar = 'popup'; break;
             case '2': settings.ToolBar = true; break;
          }
          inter = inter.slice(1);
       }
-      if (inter.length == 5) {
+      if (inter.length === 5) {
          settings.Tooltip = parseInt(inter[0]);
-         settings.ContextMenu = (inter[1] != '0');
-         settings.Zooming = (inter[2] != '0');
-         settings.MoveResize = (inter[3] != '0');
-         settings.DragAndDrop = (inter[4] != '0');
+         settings.ContextMenu = (inter[1] !== '0');
+         settings.Zooming = (inter[2] !== '0');
+         settings.MoveResize = (inter[3] !== '0');
+         settings.DragAndDrop = (inter[4] !== '0');
       }
    }
 
    get_bool('tooltip', 'Tooltip');
 
-   if (d.has('bootstrap') || d.has('bs'))
-      settings.Bootstrap = true;
-
-   let mathjax = d.get('mathjax', null), latex = d.get('latex', null);
-
-   if ((mathjax !== null) && (mathjax != '0') && (latex === null)) latex = 'math';
+   const mathjax = d.get('mathjax', null);
+   let latex = d.get('latex', null);
+   if ((mathjax !== null) && (mathjax !== '0') && (latex === null))
+      latex = 'math';
    if (latex !== null)
       settings.Latex = constants.Latex.fromString(latex);
 
@@ -88,7 +89,8 @@ function readStyleFromURL(url) {
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
    if (d.has('toolbar')) {
-      let toolbar = d.get('toolbar', ''), val = null;
+      const toolbar = d.get('toolbar', '');
+      let val = null;
       if (toolbar.indexOf('popup') >= 0) val = 'popup';
       if (toolbar.indexOf('left') >= 0) { settings.ToolBarSide = 'left'; val = 'popup'; }
       if (toolbar.indexOf('right') >= 0) { settings.ToolBarSide = 'right'; val = 'popup'; }
@@ -104,11 +106,11 @@ function readStyleFromURL(url) {
       settings.DragGraphs = false;
 
    if (d.has('palette')) {
-      let palette = parseInt(d.get('palette'));
+      const palette = parseInt(d.get('palette'));
       if (Number.isInteger(palette) && (palette > 0) && (palette < 113)) settings.Palette = palette;
    }
 
-   let render3d = d.get('render3d'), embed3d = d.get('embed3d'), geosegm = d.get('geosegm');
+   const render3d = d.get('render3d'), embed3d = d.get('embed3d'), geosegm = d.get('geosegm');
    if (render3d) settings.Render3D = constants.Render3D.fromString(render3d);
    if (embed3d) settings.Embed3D = constants.Embed3D.fromString(embed3d);
    if (geosegm) settings.GeoGradPerSegm = Math.max(2, parseInt(geosegm));
@@ -118,10 +120,10 @@ function readStyleFromURL(url) {
 
    function get_int_style(name, field, dflt) {
       if (!d.has(name)) return;
-      let val = d.get(name);
-      if (!val || (val == 'true') || (val == 'on'))
+      const val = d.get(name);
+      if (!val || (val === 'true') || (val === 'on'))
          gStyle[field] = dflt;
-      else if ((val == 'false') || (val == 'off'))
+      else if ((val === 'false') || (val === 'off'))
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
@@ -145,22 +147,22 @@ function readStyleFromURL(url) {
   * @param {String} gui_kind - either 'online', 'nobrowser', 'draw'
   * @return {Promise} with {@link HierarchyPainter} instance
   * @example
-  * import { buildGUI } from '/path_to_jsroot/modules/gui.mjs';
+  * import { buildGUI } from 'https://root.cern/js/latest/modules/gui.mjs';
   * buildGUI('guiDiv'); */
 async function buildGUI(gui_element, gui_kind = '') {
-   let myDiv = isStr(gui_element) ? d3_select('#' + gui_element) : d3_select(gui_element);
+   const myDiv = d3_select(isStr(gui_element) ? `#${gui_element}` : gui_element);
    if (myDiv.empty())
       return Promise.reject(Error('no div for gui found'));
 
    myDiv.html(''); // clear element
 
-   let d = decodeUrl(), online = (gui_kind == 'online'), nobrowser = false, drawing = false;
+   const d = decodeUrl();
+   let online = (gui_kind === 'online'), nobrowser = false, drawing = false;
 
-   if (gui_kind == 'draw') {
+   if (gui_kind === 'draw')
       online = drawing = nobrowser = true;
-   } else if ((gui_kind == 'nobrowser') || d.has('nobrowser') || (myDiv.attr('nobrowser') && myDiv.attr('nobrowser') !== 'false')) {
+   else if ((gui_kind === 'nobrowser') || d.has('nobrowser') || (myDiv.attr('nobrowser') && myDiv.attr('nobrowser') !== 'false'))
       nobrowser = true;
-   }
 
    if (myDiv.attr('ignoreurl') === 'true')
       settings.IgnoreUrlOptions = true;
@@ -171,20 +173,19 @@ async function buildGUI(gui_element, gui_kind = '') {
       let guisize = d.get('divsize');
       if (guisize) {
          guisize = guisize.split('x');
-         if (guisize.length != 2) guisize = null;
+         if (guisize.length !== 2) guisize = null;
       }
 
-      if (guisize) {
-         myDiv.style('position','relative').style('width', guisize[0] + 'px').style('height', guisize[1] + 'px');
-      } else {
-         d3_select('html').style('height','100%');
-         d3_select('body').style('min-height','100%').style('margin',0).style('overflow','hidden');
-         myDiv.style('position','absolute').style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
+      if (guisize)
+         myDiv.style('position', 'relative').style('width', guisize[0] + 'px').style('height', guisize[1] + 'px');
+      else {
+         d3_select('html').style('height', '100%');
+         d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
       }
    }
 
-   let hpainter = new HierarchyPainter('root', null);
-
+   const hpainter = new HierarchyPainter('root', null);
    if (online) hpainter.is_online = drawing ? 'draw' : 'online';
    if (drawing) hpainter.exclude_browser = true;
    hpainter.start_without_browser = nobrowser;
@@ -194,12 +195,13 @@ async function buildGUI(gui_element, gui_kind = '') {
          return hpainter.initializeBrowser();
       if (!drawing)
          return;
-      let obj = null, func = internals.getCachedObject || findFunction('GetCachedObject');
-      if (isFunc(func))
-         obj = parse(func());
-      if (obj) hpainter._cached_draw_object = obj;
+      const func = internals.getCachedObject || findFunction('GetCachedObject'),
+            obj = isFunc(func) ? parse(func()) : undefined;
+      if (isObject(obj))
+         hpainter._cached_draw_object = obj;
       let opt = d.get('opt', '');
-      if (d.has('websocket')) opt+=';websocket';
+      if (d.has('websocket'))
+         opt += ';websocket';
       return hpainter.display('', opt);
    }).then(() => hpainter);
 }

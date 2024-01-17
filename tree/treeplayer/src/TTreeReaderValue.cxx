@@ -19,6 +19,7 @@
 #include "TBranchObject.h"
 #include "TBranchProxyDirector.h"
 #include "TClassEdit.h"
+#include "TEnum.h"
 #include "TFriendElement.h"
 #include "TFriendProxy.h"
 #include "TLeaf.h"
@@ -54,8 +55,8 @@ ClassImp(ROOT::Internal::TTreeReaderValueBase);
 ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
                                                  const char* branchname /*= 0*/,
                                                  TDictionary* dict /*= 0*/):
-   fHaveLeaf(0),
-   fHaveStaticClassOffsets(0),
+   fHaveLeaf(false),
+   fHaveStaticClassOffsets(false),
    fReadStatus(kReadNothingYet),
    fBranchName(branchname),
    fTreeReader(reader),
@@ -375,7 +376,7 @@ TBranch *ROOT::Internal::TTreeReaderValueBase::SearchBranchWithCompositeName(TLe
 
          if (found){
             fStaticClassOffsets = offsets;
-            fHaveStaticClassOffsets = 1;
+            fHaveStaticClassOffsets = true;
 
             if (fDict != finalDataType && fDict != elementClass){
                errMsg = "Wrong data type ";
@@ -502,7 +503,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       if (branch && branch->IsA() == TBranchElement::Class() && branchFromFullName){
         branch = branchFromFullName;
         fStaticClassOffsets = {};
-        fHaveStaticClassOffsets = 0;
+        fHaveStaticClassOffsets = false;
       }
    }
 
@@ -533,7 +534,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
          // We reset the state, we continue
          fSetupStatus = kSetupInternalError;
          fStaticClassOffsets = {};
-         fHaveStaticClassOffsets = 0;
+         fHaveStaticClassOffsets = false;
       }
    }
 
@@ -557,6 +558,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       if (fDict != branchActualType && !inheritance) {
          TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
          TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
+         TEnum *dictenum = dynamic_cast<TEnum*>(fDict);
+         TEnum *actualenum = dynamic_cast<TEnum*>(branchActualType);
          bool complainAboutMismatch = true;
          if (dictdt && actualdt) {
             if (dictdt->GetType() > 0 && dictdt->GetType() == actualdt->GetType()) {
@@ -568,6 +571,10 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
                // we need to identify them manually here (ROOT-8731).
                complainAboutMismatch = false;
             }
+         } else if ( (dictdt || dictenum) && (actualdt || actualenum) ) {
+            if ((dictdt && dictdt->GetType() == kInt_t && actualenum)
+                ||(actualdt && actualdt->GetType() == kInt_t && dictenum))
+               complainAboutMismatch = false;
          }
          if (complainAboutMismatch) {
             Error(errPrefix,

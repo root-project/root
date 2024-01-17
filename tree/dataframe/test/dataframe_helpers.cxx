@@ -463,13 +463,16 @@ TEST(RDFHelpers, GraphRunTimeErrors)
    const std::vector<double> xx = {-0.22}; // smaller size
    const std::vector<double> yy = {1., 2.9};
 
-   auto df =
-      RDataFrame(1).Define("xx", [&] { return xx; }).Define("yy", [&] { return yy; }).Define("x", [] { return .5; });
+   auto GetRDF = [&] {return RDataFrame(1)
+         .Define("yy", [&] { return yy; })
+         .Define("xx", [&] { return xx; })
+         .Define("x", [] { return .5; });
+   };
 
-   auto gr1 = df.Graph<std::vector<double>, std::vector<double>>("xx", "yy"); // still no error since lazy action
-   auto gr2 = df.Graph<double, std::vector<double>>("x", "yy");               // still no error since lazy action
-
+   auto gr1 = GetRDF().Graph<std::vector<double>, std::vector<double>>("xx", "yy"); // still no error since lazy action
    EXPECT_THROW(gr1.GetValue(), std::runtime_error);
+
+   auto gr2 = GetRDF().Graph<double, std::vector<double>>("x", "yy"); // still no error since lazy action
    EXPECT_THROW(gr2.GetValue(), std::runtime_error);
 }
 
@@ -557,20 +560,23 @@ TEST(RDFHelpers, GraphAsymmErrorsRunTimeErrors)
    const Ds eyl = {.8, .7};
    const Ds eyh = {.6, .5};
 
-   auto df = RDataFrame(1)
-                .Define("xx", [&] { return xx; })
-                .Define("yy", [&] { return yy; })
-                .Define("exl", [&] { return exl; })
-                .Define("exh", [&] { return exh; })
-                .Define("eyl", [&] { return eyl; })
-                .Define("eyh", [&] { return eyh; })
-                .Define("x", [] { return 3.14; }); // scalar
+   auto GetRDF = [&] {
+      return RDataFrame(1)
+         .Define("xx", [&] { return xx; })
+         .Define("yy", [&] { return yy; })
+         .Define("exl", [&] { return exl; })
+         .Define("exh", [&] { return exh; })
+         .Define("eyl", [&] { return eyl; })
+         .Define("eyh", [&] { return eyh; })
+         .Define("x", [] { return 3.14; }); // scalar
+   };
 
    // still no error since lazy action
-   auto gr1 = df.GraphAsymmErrors<Ds, Ds, Ds, Ds, Ds, Ds>("xx", "yy", "exl", "exh", "eyl", "eyh");
-   auto gr2 = df.GraphAsymmErrors<Ds, Ds, Ds, Ds, Ds, Ds>("x", "yy", "exl", "exh", "eyl", "eyh");
-
+   auto gr1 = GetRDF().GraphAsymmErrors<Ds, Ds, Ds, Ds, Ds, Ds>("xx", "yy", "exl", "exh", "eyl", "eyh");
    EXPECT_THROW(gr1.GetValue(), std::runtime_error);
+
+   // still no error since lazy action
+   auto gr2 = GetRDF().GraphAsymmErrors<Ds, Ds, Ds, Ds, Ds, Ds>("x", "yy", "exl", "exh", "eyl", "eyh");
    EXPECT_THROW(gr2.GetValue(), std::runtime_error);
 }
 
@@ -682,3 +688,107 @@ TEST(RunGraphs, AlreadyRun)
    ROOT_EXPECT_WARNING(ROOT::RDF::RunGraphs({r1, r2, r3, r4}), "RunGraphs",
                        "Got 4 handles from which 2 link to results which are already ready.");
 }
+
+int ret42 () {return 42;}
+int ret1 () {return 1;}
+
+TEST(RDFHelpers, ProgressHelper_Existence_ST)
+{
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   auto d_write_1 = ROOT::RDataFrame(10000).Define("x", ret42).Snapshot<int>("tree", "fh1.root", {"x"});
+   auto d_write_2 = ROOT::RDataFrame(10000).Define("y", ret1).Snapshot<int>("tree", "fh2.root", {"y"});
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root", "fh2.root"});
+   ROOT::RDF::Experimental::AddProgressBar(d);
+   d.Count().GetValue();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_FALSE(strCout.str().empty());
+}
+
+// A test for #10484
+class SimpleActionHelper : public ROOT::Detail::RDF::RActionImpl<SimpleActionHelper> {
+public:
+   using Result_t = int;
+
+private:
+   std::shared_ptr<Result_t> fValue;
+   int &fTestVal;
+
+public:
+   static constexpr int fgRefVal = 42;
+   SimpleActionHelper(int &testVal) : fValue(new int), fTestVal(testVal) {}
+   SimpleActionHelper(SimpleActionHelper &&) = default;
+   SimpleActionHelper(const SimpleActionHelper &) = delete;
+   std::shared_ptr<int> GetResultPtr() const { return fValue; }
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+   template <typename... ColumnTypes>
+   void Exec(unsigned int, ColumnTypes...)
+   {
+   }
+   void Finalize() { fTestVal = SimpleActionHelper::fgRefVal; }
+   std::string GetActionName() { return "SimpleAction"; }
+};
+
+TEST(RDFHelpers, Cleanup_After_Exception)
+{
+   auto exceptionThrower = [](ULong64_t ievt) {
+      if (ievt == 4) {
+         throw std::invalid_argument("Time to throw.");
+      }
+      return int(0);
+   };
+
+   int testVal = 123;
+   SimpleActionHelper helper(testVal);
+   auto rdf = ROOT::RDataFrame(8).Define("dummy", exceptionThrower, {"rdfentry_"});
+   auto valRes = rdf.Book<int>(std::move(helper), {"dummy"});
+   EXPECT_THROW(valRes.GetValue(), std::invalid_argument)
+      << "An exception should have been thrown during the event loop.";
+   EXPECT_EQ(SimpleActionHelper::fgRefVal, testVal)
+      << "The Finalize method should have changed the value of testVal during the post-exception cleanup." << std::endl;
+}
+
+// The code below is a unit test for a function called `ProgressHelper_Existence_MT` in the `RDFHelpers` class.
+
+#ifdef R__USE_IMT
+
+TEST(RDFHelpers, ProgressHelper_Existence_MT)
+{
+   // Redirect cout.
+   ROOT::EnableImplicitMT();
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   auto d_write_1 = ROOT::RDataFrame(10000).Define("x", ret42).Snapshot<int>("tree", "fh1.root", {"x"});
+   auto d_write_2 = ROOT::RDataFrame(10000).Define("y", ret1).Snapshot<int>("tree", "fh2.root", {"y"});
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root", "fh2.root"});
+   ROOT::RDF::Experimental::AddProgressBar(d);
+   d.Count().GetValue();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_FALSE(strCout.str().empty());
+}
+
+TEST(RDFHelpers, ProgressHelper_existence_singleTTreeInput)
+{
+   // Redirect cout.
+   ROOT::EnableImplicitMT();
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   auto d_write_1 = ROOT::RDataFrame(10000).Define("x", ret42).Snapshot<int>("tree", "fh1.root", {"x"});
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root"});
+   ROOT::RDF::Experimental::AddProgressBar(d);
+   d.Count().GetValue();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_FALSE(strCout.str().empty());
+}
+#endif // R__USE_IMT

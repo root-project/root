@@ -88,7 +88,7 @@ private:
 
 public:
    TGResourcePool(TGClient *client);
-   virtual ~TGResourcePool();
+   ~TGResourcePool() override;
 
    TGGCPool       *GetGCPool() const { return fGCPool; }
    TGFontPool     *GetFontPool() const { return fFontPool; }

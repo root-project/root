@@ -1,0 +1,25 @@
+From 83a9bc678e6bf51d25f683a3abf6d7137ba56c72 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Mon, 5 Sep 2022 14:22:26 +0200
+Subject: [PATCH 30/34] [PyROOT] Add missing coma in types.py
+
+---
+ bindings/pyroot/cppyy/cppyy/python/cppyy/types.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/types.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/types.py
+index b4f0e74c1d..eb6e32be0f 100644
+--- a/bindings/pyroot/cppyy/cppyy/python/cppyy/types.py
++++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/types.py
+@@ -17,7 +17,7 @@ except ImportError:
+         'DataMember',
+         'Instance',
+         'Function',
+-        'Method'
++        'Method',
+         'Scope',
+         'InstanceArray',
+         'Template'
+-- 
+2.39.0
+

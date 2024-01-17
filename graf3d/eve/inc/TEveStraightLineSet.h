@@ -85,9 +85,9 @@ protected:
 
 public:
    TEveStraightLineSet(const char* n="StraightLineSet", const char* t="");
-   virtual ~TEveStraightLineSet() {}
+   ~TEveStraightLineSet() override {}
 
-   virtual void SetLineColor(Color_t col) { SetMainColor(col); }
+   void SetLineColor(Color_t col) override { SetMainColor(col); }
 
    Line_t*   AddLine(Float_t x1, Float_t y1, Float_t z1, Float_t x2, Float_t y2, Float_t z2);
    Line_t*   AddLine(const TEveVector& p1, const TEveVector& p2);
@@ -109,15 +109,15 @@ public:
    virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
    virtual void SetDepthTest(Bool_t x)  { fDepthTest   = x; }
 
-   virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(std::ostream& out, const TString& var);
+   void CopyVizParams(const TEveElement* el) override;
+   void WriteVizParams(std::ostream& out, const TString& var) override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
-   virtual void ComputeBBox();
-   virtual void Paint(Option_t* option="");
+   void ComputeBBox() override;
+   void Paint(Option_t* option="") override;
 
-   ClassDef(TEveStraightLineSet, 0); // Set of straight lines with optional markers along the lines.
+   ClassDefOverride(TEveStraightLineSet, 0); // Set of straight lines with optional markers along the lines.
 };
 
 
@@ -131,17 +131,17 @@ private:
    TEveStraightLineSetProjected& operator=(const TEveStraightLineSetProjected&); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    TEveStraightLineSetProjected();
-   virtual ~TEveStraightLineSetProjected() {}
+   ~TEveStraightLineSetProjected() override {}
 
-   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
+   void UpdateProjection() override;
+   TEveElement* GetProjectedAsElement() override { return this; }
 
-   ClassDef(TEveStraightLineSetProjected, 0); // Projected copy of a TEveStraightLineSet.
+   ClassDefOverride(TEveStraightLineSetProjected, 0); // Projected copy of a TEveStraightLineSet.
 };
 
 #endif

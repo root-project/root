@@ -113,7 +113,7 @@ public:
                     fFinalized(kFALSE), fArchived(kFALSE), fPrepTime(0.),
                     fInitTime(0.), fProcTime(0.), fMergeTime(0.),
                     fRecvTime(-1), fTermTime(0.), fNumWrks(-1), fNumMergers(-1) { }
-   virtual ~TQueryResult();
+   ~TQueryResult() override;
 
    void           Browse(TBrowser *b = nullptr) override;
 

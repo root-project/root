@@ -35,7 +35,7 @@ public:
    TCut(const char *title);
    TCut(const char *name, const char *title);
    TCut(const TCut &cut);
-   virtual ~TCut();
+   ~TCut() override;
 
    // Assignment
    TCut&    operator=(const char *rhs);
@@ -76,7 +76,7 @@ public:
    // Type conversion
    operator const char*() const { return GetTitle(); }
 
-   ClassDef(TCut,1)  //A specialized string object used for TTree selections
+   ClassDefOverride(TCut,1)  //A specialized string object used for TTree selections
 };
 
 // Declarations.

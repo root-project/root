@@ -19,14 +19,14 @@ class TWebControlBar : public TControlBarImp {
 
 protected:
 
-   std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
+   std::shared_ptr<ROOT::RWebWindow> fWindow; ///!< configured display
 
    void SendInitMsg(unsigned connid);
    Bool_t ProcessData(unsigned connid, const std::string &arg);
 
 public:
    TWebControlBar(TControlBar *bar, const char *title, Int_t x, Int_t y);
-   virtual ~TWebControlBar() = default;
+   ~TWebControlBar() override = default;
 
    void Create() override { }
    void Hide() override;

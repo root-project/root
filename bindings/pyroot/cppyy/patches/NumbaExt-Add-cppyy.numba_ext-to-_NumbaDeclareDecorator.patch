@@ -1,0 +1,26 @@
+From 0ed13baae29a2d7386b80d33a9aab8dbcdb1f996 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Tue, 20 Jun 2023 14:28:12 +0200
+Subject: [PATCH] [PyROOT] Add cppyy.numba_ext to _NumbaDeclareDecorator
+
+---
+ bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py b/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py
+index d9629a360e..77511ce3b4 100644
+--- a/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py
++++ b/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py
+@@ -34,6 +34,9 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
+         raise Exception('Failed to import cffi')
+     import re, sys
+ 
++    if sys.version_info >= (3, 7) and hasattr(nb, 'version_info') and nb.version_info >= (0, 54):
++        import cppyy.numba_ext
++
+     # Normalize input types by stripping ROOT and VecOps namespaces from input types
+     def normalize_typename(t):
+         '''
+-- 
+2.40.1
+

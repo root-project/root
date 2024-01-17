@@ -19,7 +19,7 @@
 \class RooTrace
 \ingroup Roofitcore
 
-Class RooTrace controls the memory tracing hooks in all RooFit
+Controls the memory tracing hooks in all RooFit
 objects. When tracing is active, a table of live RooFit objects
 is kept that can be queried at any time. In verbose mode, messages
 are printed in addition at the construction and destruction of
@@ -81,7 +81,7 @@ functions:
 \endcode
 
 However, as ROOT is not build with this by default, the RooTrace is not tested
-and there is no gurantee that this works.
+and there is no guarantee that this works.
 **/
 
 #include "RooTrace.h"
@@ -98,14 +98,14 @@ using namespace std;
 ClassImp(RooTrace);
 ;
 
-RooTrace* RooTrace::_instance=0 ;
+RooTrace* RooTrace::_instance=nullptr ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooTrace& RooTrace::instance()
 {
-  if (_instance==0) _instance = new RooTrace() ;
+  if (_instance==nullptr) _instance = new RooTrace() ;
   return *_instance ;
 }
 
@@ -353,7 +353,7 @@ void RooTrace::printObjectCounts3()
 
 void RooTrace::callgrind_zero()
 {
-  ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_zero()" << endl ;
+  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_zero()" << endl ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,5 +365,5 @@ void RooTrace::callgrind_zero()
 
 void RooTrace::callgrind_dump()
 {
-  ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_dump()" << endl ;
+  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_dump()" << endl ;
 }

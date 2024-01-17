@@ -21,6 +21,11 @@ import inspect
 def clean_cpp_signature(sig):
     """Clean everything from the C++ signature that prohibits doxygen from automatically creating the correct link."""
 
+    # If the signature doesn't include the function parameters or they are
+    # empty, we are done.
+    if not "(" in sig or "()" in sig:
+        return sig
+
     def strip_defaults_from_param_sig(param_sig):
         # strip default parameter values
         split_was_at_equal_sign = [False]
@@ -121,7 +126,7 @@ def print_roofit_pythonization_page():
         return funcs_have_doc
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
-    print("\defgroup RoofitPythonizations Roofit pythonizations")
+    print("\defgroup RoofitPythonizations RooFit Pythonizations")
     print("\ingroup Roofitmain")
     for python_klass in _roofit.python_classes:
         if python_klass.__doc__ is None and not member_funcs_have_doc(python_klass):

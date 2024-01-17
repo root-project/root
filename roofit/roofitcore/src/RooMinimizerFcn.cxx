@@ -28,6 +28,7 @@
 #include "RooMinimizer.h"
 #include "RooNaNPacker.h"
 
+#include "Math/Functor.h"
 #include "TMatrixDSym.h"
 
 #include <fstream>
@@ -49,21 +50,16 @@ RooArgSet getParameters(RooAbsReal const &funct)
 
 } // namespace
 
+// use reference wrapper for the Functor, such that the functor points to this RooMinimizerFcn by reference.
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
    : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
 {
-}
-
-RooMinimizerFcn::RooMinimizerFcn(const RooMinimizerFcn &other)
-   : RooAbsMinimizerFcn(other), ROOT::Math::IBaseFunctionMultiDim(other), _funct(other._funct)
-{
-}
-
-RooMinimizerFcn::~RooMinimizerFcn() {}
-
-ROOT::Math::IBaseFunctionMultiDim *RooMinimizerFcn::Clone() const
-{
-   return new RooMinimizerFcn(*this);
+   if (context->_cfg.useGradient && funct->hasGradient()) {
+      _multiGenFcn = std::make_unique<ROOT::Math::GradFunctor>(this, &RooMinimizerFcn::operator(),
+                                                               &RooMinimizerFcn::evaluateGradient, getNDim());
+   } else {
+      _multiGenFcn = std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim());
+   }
 }
 
 void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
@@ -72,9 +68,8 @@ void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, 
 }
 
 /// Evaluate function given the parameters in `x`.
-double RooMinimizerFcn::DoEval(const double *x) const
+double RooMinimizerFcn::operator()(const double *x) const
 {
-
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < _nDim; index++) {
       if (_logfile)
@@ -119,6 +114,26 @@ double RooMinimizerFcn::DoEval(const double *x) const
    finishDoEval();
 
    return fvalue;
+}
+
+void RooMinimizerFcn::evaluateGradient(const double *x, double *out) const
+{
+   // Set the parameter values for this iteration
+   for (unsigned index = 0; index < _nDim; index++) {
+      if (_logfile)
+         (*_logfile) << x[index] << " ";
+      SetPdfParamVal(index, x[index]);
+   }
+
+   _funct->gradient(out);
+
+   // Optional logging
+   if (cfg().verbose) {
+      std::cout << "\n    gradient = ";
+      for (std::size_t i = 0; i < getNDim(); ++i) {
+         std::cout << out[i] << ", ";
+      }
+   }
 }
 
 std::string RooMinimizerFcn::getFunctionName() const

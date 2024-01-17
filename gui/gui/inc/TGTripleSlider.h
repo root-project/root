@@ -38,7 +38,7 @@ public:
                    Bool_t constrained = kTRUE,
                    Bool_t relative = kFALSE);
 
-   virtual ~TGTripleVSlider();
+   ~TGTripleVSlider() override;
 
    virtual void      PointerPositionChanged() { Emit("PointerPositionChanged()"); } //*SIGNAL*
    virtual void      DrawPointer();
@@ -91,7 +91,7 @@ public:
                    Bool_t constrained = kTRUE,
                    Bool_t relative = kFALSE);
 
-   virtual ~TGTripleHSlider();
+   ~TGTripleHSlider() override;
 
    virtual void      PointerPositionChanged() { Emit("PointerPositionChanged()"); } //*SIGNAL*
    virtual void      DrawPointer();

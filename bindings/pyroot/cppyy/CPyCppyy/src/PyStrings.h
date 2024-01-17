@@ -11,6 +11,7 @@ namespace PyStrings {
     extern PyObject* gBases;
     extern PyObject* gBase;
     extern PyObject* gCppName;
+    extern PyObject* gCastCpp;
     extern PyObject* gDeref;
     extern PyObject* gPreInc;
     extern PyObject* gPostInc;
@@ -20,6 +21,7 @@ namespace PyStrings {
     extern PyObject* gFollow;
     extern PyObject* gGetItem;
     extern PyObject* gGetNoCheck;
+    extern PyObject* gSetItem;
     extern PyObject* gInit;
     extern PyObject* gIter;
     extern PyObject* gLen;

@@ -5,7 +5,6 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFormulaVar.h>
-#include <RooGenProdProj.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
@@ -18,12 +17,9 @@
 
 #include <ROOT/StringUtils.hxx>
 
-#include <gtest/gtest.h>
+#include "../src/RooGenProdProj.h"
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "gtest_wrapper.h"
 
 #include <memory>
 
@@ -230,7 +226,7 @@ TEST(RooRealIntegral, UseCloneAsIntegrationVariable2)
 /// factors. Covers GitHub #11476 and JIRA issue ROOT-9436.
 ///
 /// Disabled for now because the fix to the bug that is covered by this unit
-/// test caused a severe performance problem and was reverted. The performace
+/// test caused a severe performance problem and was reverted. The performance
 /// regression is covered by another unit test in this file, called
 /// "ProjectConditional".
 TEST(RooRealIntegral, DISABLED_Issue11476)

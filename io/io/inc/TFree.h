@@ -33,7 +33,7 @@ protected:
 public:
    TFree();
    TFree(TList *lfree, Long64_t first, Long64_t last);
-   virtual ~TFree();
+   ~TFree() override;
            TFree    *AddFree(TList *lfree, Long64_t first, Long64_t last);
    virtual void      FillBuffer(char *&buffer);
            TFree    *GetBestFree(TList *lfree, Int_t nbytes);

@@ -64,7 +64,7 @@ public:
    TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
                                      Double_t tmin, Double_t tmax);
    TGraphPolargram(const char* name="");
-   virtual ~TGraphPolargram();
+   ~TGraphPolargram() override;
 
    Color_t  GetPolarColorLabel() { return fPolarLabelColor;}
    Color_t  GetRadialColorLabel() { return fRadialLabelColor;}

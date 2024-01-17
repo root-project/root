@@ -1,5 +1,5 @@
 // test of multidimentional Integration
-// Calculates an intergal of a function
+// Calculates an integral of a function
 // in 2,3,..., 8 dimensions
 // by using adaptive Genz Malik cubature
 // and MonteCarlo methods:
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
    }
 
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
 
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
@@ -379,7 +379,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return status;

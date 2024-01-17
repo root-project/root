@@ -16,13 +16,37 @@ from cppyy.gbl import gSystem
 
 from .. import pythonization
 
+from libROOTPythonizations import gROOT
+
 from ._factory import Factory
 from ._dataloader import DataLoader
 from ._crossvalidation import CrossValidation
 
 from ._rbdt import Compute, pythonize_rbdt
 
-hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
+if sys.version_info >= (3, 8):
+    from ._batchgenerator import (
+        CreateNumPyGenerators,
+        CreateTFDatasets,
+        CreatePyTorchGenerators,
+    )
+
+    python_batchgenerator_functions = [
+        CreateNumPyGenerators,
+        CreateTFDatasets,
+        CreatePyTorchGenerators,
+    ]
+
+    def inject_rbatchgenerator(ns):
+        for python_func in python_batchgenerator_functions:
+            func_name = python_func.__name__
+            setattr(ns.Experimental, func_name, python_func)
+
+        return ns
+
+    from ._gnn import RModel_GNN, RModel_GraphIndependent
+
+hasRDF = "dataframe" in gROOT.GetConfigFeatures()
 if hasRDF:
     from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor
 

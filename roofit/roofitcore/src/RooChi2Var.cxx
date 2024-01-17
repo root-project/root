@@ -51,6 +51,8 @@
  */
 
 #include "RooChi2Var.h"
+
+#include "FitHelpers.h"
 #include "RooDataHist.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
@@ -67,7 +69,7 @@ using namespace std;
 
 namespace {
   template<class ...Args>
-  RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfgForFunc(Args const& ... args) {
+  RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg(Args const& ... args) {
     RooAbsTestStatistic::Configuration cfg;
     cfg.rangeName = RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","RangeWithName",0,"",args...);
     cfg.nCPU = RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,args...);
@@ -75,12 +77,6 @@ namespace {
     cfg.verbose = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,args...));
     cfg.cloneInputData = false;
     cfg.integrateOverBinsPrecision = RooCmdConfig::decodeDoubleOnTheFly("RooChi2Var::RooChi2Var", "IntegrateBins", 0, -1., {args...});
-    return cfg;
-  }
-
-  template<class ...Args>
-  RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfgForPdf(Args const& ... args) {
-    auto cfg = makeRooAbsTestStatisticCfgForFunc(args...);
     cfg.addCoefRangeName = RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","AddCoefRange",0,"",args...);
     cfg.splitCutRange = static_cast<bool>(RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","SplitRange",0,0,args...));
     return cfg;
@@ -88,7 +84,6 @@ namespace {
 }
 
 ClassImp(RooChi2Var);
-;
 
 RooArgSet RooChi2Var::_emptySet ;
 
@@ -140,19 +135,19 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
              const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
              const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
   RooAbsOptTestStatistic(name,title,func,hdata,_emptySet,
-          makeRooAbsTestStatisticCfgForFunc(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
+          makeRooAbsTestStatisticCfg(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
-  pc.defineInt("extended","Extended",0,false) ;
+  pc.defineInt("extended","Extended",0,RooFit::FitHelpers::extendedFitDefault);
   pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
-  if (func.IsA()->InheritsFrom(RooAbsPdf::Class())) {
-    _funcMode = pc.getInt("extended") ? ExtendedPdf : Pdf ;
+  if (auto pdf = dynamic_cast<RooAbsPdf*>(&func)) {
+    _funcMode = pdf->interpretExtendedCmdArg(pc.getInt("extended")) ? ExtendedPdf : Pdf ;
   } else {
     _funcMode = Function ;
   }
@@ -162,61 +157,6 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
     _etype = hdata.isNonPoissonWeighted()? RooAbsData::SumW2 : RooAbsData::Expected ;
   }
 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-///  RooChi2Var constructor. Optional arguments taken
-///
-///  \param[in] name Name of the PDF
-///  \param[in] title Title for plotting etc.
-///  \param[in] pdf  PDF to fit
-///  \param[in] hdata Data histogram
-///  \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9 Optional arguments according to table below.
-///  <table>
-///  <tr><th> Argument  <th> Effect
-///  <tr><td>
-///  Extended()   <td> Include extended term in calculation
-///  <tr><td>
-///  DataError()  <td> Choose between Poisson errors and Sum-of-weights errors
-///  <tr><td>
-///  NumCPU()     <td> Activate parallel processing feature
-///  <tr><td>
-///  Range()      <td> Fit only selected region
-///  <tr><td>
-///  SumCoefRange() <td> Set the range in which to interpret the coefficients of RooAddPdf components
-///  <tr><td>
-///  SplitRange() <td> Fit range is split by index category of simultaneous PDF
-///  <tr><td>
-///  ConditionalObservables() <td> Define projected observables
-///  <tr><td>
-///  Verbose()    <td> Verbose output of GOF framework
-///  <tr><td>
-///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision.
-
-RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& hdata,
-             const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
-             const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
-             const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
-  RooAbsOptTestStatistic(name,title,pdf,hdata,
-                         *RooCmdConfig::decodeSetOnTheFly("RooChi2Var::RooChi2Var","ProjectedObservables",0,&_emptySet,
-                                 arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-                         makeRooAbsTestStatisticCfgForPdf(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
-{
-  RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
-  pc.defineInt("extended","Extended",0,false) ;
-  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
-  pc.allowUndefined() ;
-
-  pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
-  pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
-  pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
-
-  _funcMode = pc.getInt("extended") ? ExtendedPdf : Pdf ;
-  _etype = (RooDataHist::ErrorType) pc.getInt("etype") ;
-  if (_etype==RooAbsData::Auto) {
-    _etype = hdata.isNonPoissonWeighted()? RooAbsData::SumW2 : RooAbsData::Expected ;
-  }
 }
 
 
@@ -240,11 +180,7 @@ RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) :
 
 double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-
   double result(0), carry(0);
-
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, false) ;
-
 
   // Determine normalization factor depending on type of input function
   double normFactor(1) ;

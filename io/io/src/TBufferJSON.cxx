@@ -359,7 +359,7 @@ public:
 
    TJSONStackObj() = default;
 
-   ~TJSONStackObj()
+   ~TJSONStackObj() override
    {
       if (fIsElemOwner)
          delete fElem;
@@ -1196,7 +1196,7 @@ TJSONStackObj *TBufferJSON::JsonStartObjectWrite(const TClass *obj_class, TStrea
          AppendOutput(fTypeVersionTag.Data());
          AppendOutput("\"");
          AppendOutput(fSemicolon.Data());
-         AppendOutput(Form("%d", (int)(info ? info->GetClassVersion() : obj_class->GetClassVersion())));
+         AppendOutput(TString::Format("%d", (int)(info ? info->GetClassVersion() : obj_class->GetClassVersion())));
       }
    } else {
       stack->fMemberCnt = 0; // exclude typename
@@ -1367,9 +1367,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          Long64_t refid = GetObjectTag(obj);
          if (refid > 0) {
             // old-style refs, coded into string like "$ref12"
-            // AppendOutput(Form("\"$ref:%u\"", iter->second));
+            // AppendOutput(TString::Format("\"$ref:%u\"", iter->second));
             // new-style refs, coded into extra object {"$ref":12}, auto-detected by JSROOT 4.8 and higher
-            AppendOutput(Form("{\"$ref\":%u}", (unsigned)(refid - 1)));
+            AppendOutput(TString::Format("{\"$ref\":%u}", (unsigned)(refid - 1)));
             goto post_process;
          }
          MapObject(obj, cl, fJsonrCnt + 1); // +1 used
@@ -2635,7 +2635,7 @@ Int_t TBufferJSON::ReadArray(Double_t *&d)
 /// Read static array from JSON - not used
 
 template <typename T>
-R__ALWAYS_INLINE Int_t TBufferJSON::JsonReadArray(T *value)
+Int_t TBufferJSON::JsonReadArray(T *value)
 {
    Info("ReadArray", "Not implemented");
    return value ? 1 : 0;
@@ -2749,7 +2749,7 @@ Int_t TBufferJSON::ReadStaticArray(Double_t *d)
 /// Template method to read array from the JSON
 
 template <typename T>
-R__ALWAYS_INLINE void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool asstring)
+void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool asstring)
 {
    if (!arr || (arrsize <= 0))
       return;
@@ -3031,7 +3031,7 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 }
 
 template <typename T>
-R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname)
+void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname)
 {
    bool is_base64 = Stack()->fBase64 || (fArrayCompact == kBase64);
 
@@ -3254,7 +3254,7 @@ void TBufferJSON::WriteArray(const Double_t *d, Int_t n)
 /// either JsonWriteArrayCompress<T>() or JsonWriteConstChar()
 
 template <typename T>
-R__ALWAYS_INLINE void TBufferJSON::JsonWriteFastArray(const T *arr, Int_t arrsize, const char *typname,
+void TBufferJSON::JsonWriteFastArray(const T *arr, Int_t arrsize, const char *typname,
                                                       void (TBufferJSON::*method)(const T *, Int_t, const char *))
 {
    JsonPushValue();
@@ -3545,7 +3545,7 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
 /// Template function to read basic value from JSON
 
 template <typename T>
-R__ALWAYS_INLINE void TBufferJSON::JsonReadBasic(T &value)
+void TBufferJSON::JsonReadBasic(T &value)
 {
    value = Stack()->GetStlNode()->get<T>();
 }

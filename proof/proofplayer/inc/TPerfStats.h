@@ -57,13 +57,13 @@ public:
    Bool_t                        fIsOk;
 
    TPerfEvent(TTimeStamp *offset = 0);
-   virtual ~TPerfEvent() {}
+   ~TPerfEvent() override {}
 
-   Bool_t   IsSortable() const { return kTRUE; }
-   Int_t    Compare(const TObject *obj) const;
-   void     Print(Option_t *option="") const;
+   Bool_t   IsSortable() const override { return kTRUE; }
+   Int_t    Compare(const TObject *obj) const override;
+   void     Print(Option_t *option="") const override;
 
-   ClassDef(TPerfEvent,3) // Class holding TProof Event Info
+   ClassDefOverride(TPerfEvent,3) // Class holding TProof Event Info
 };
 
 
@@ -111,38 +111,38 @@ private:
    TPerfStats(TList *input, TList *output);
    void WriteQueryLog();
 
-   void SetFile(TFile *) {}
+   void SetFile(TFile *) override {}
 
 public:
-   virtual ~TPerfStats();
+   ~TPerfStats() override;
 
-   void SimpleEvent(EEventType type);
+   void SimpleEvent(EEventType type) override;
    void PacketEvent(const char *slave, const char *slavename, const char *filename,
                     Long64_t eventsprocessed, Double_t latency,
-                    Double_t proctime, Double_t cputime, Long64_t bytesRead);
+                    Double_t proctime, Double_t cputime, Long64_t bytesRead) override;
    void FileEvent(const char *slave, const char *slavename, const char *nodename, const char *filename,
-                  Bool_t isStart);
+                  Bool_t isStart) override;
 
-   void FileOpenEvent(TFile *file, const char *filename, Double_t start);
-   void FileReadEvent(TFile *file, Int_t len, Double_t start);
-   void UnzipEvent(TObject *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen);
+   void FileOpenEvent(TFile *file, const char *filename, Double_t start) override;
+   void FileReadEvent(TFile *file, Int_t len, Double_t start) override;
+   void UnzipEvent(TObject *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen) override;
    void RateEvent(Double_t proctime, Double_t deltatime,
-                  Long64_t eventsprocessed, Long64_t bytesRead);
-   void SetBytesRead(Long64_t num);
-   Long64_t GetBytesRead() const;
-   void SetNumEvents(Long64_t num) { fNumEvents = num; }
-   Long64_t GetNumEvents() const { return fNumEvents; }
+                  Long64_t eventsprocessed, Long64_t bytesRead) override;
+   void SetBytesRead(Long64_t num) override;
+   Long64_t GetBytesRead() const override;
+   void SetNumEvents(Long64_t num) override { fNumEvents = num; }
+   Long64_t GetNumEvents() const override { return fNumEvents; }
 
-   void        PrintBasketInfo(Option_t * = "") const {}
-   void        SetLoaded(TBranch *, size_t) {}
-   void        SetLoaded(size_t, size_t) {}
-   void        SetLoadedMiss(TBranch *, size_t) {}
-   void        SetLoadedMiss(size_t, size_t) {}
-   void        SetMissed(TBranch *, size_t) {}
-   void        SetMissed(size_t, size_t) {}
-   void        SetUsed(TBranch *, size_t) {}
-   void        SetUsed(size_t, size_t) {}
-   void        UpdateBranchIndices(TObjArray *) {}
+   void        PrintBasketInfo(Option_t * = "") const override {}
+   void        SetLoaded(TBranch *, size_t) override {}
+   void        SetLoaded(size_t, size_t) override {}
+   void        SetLoadedMiss(TBranch *, size_t) override {}
+   void        SetLoadedMiss(size_t, size_t) override {}
+   void        SetMissed(TBranch *, size_t) override {}
+   void        SetMissed(size_t, size_t) override {}
+   void        SetUsed(TBranch *, size_t) override {}
+   void        SetUsed(size_t, size_t) override {}
+   void        UpdateBranchIndices(TObjArray *) override {}
 
    static void Start(TList *input, TList *output);
    static void Stop();
@@ -150,7 +150,7 @@ public:
    static void SetMemValues();
    static void GetMemValues(Long_t &vmax, Long_t &rmax);
 
-   ClassDef(TPerfStats,0)  // Class for collecting PROOF statistics
+   ClassDefOverride(TPerfStats,0)  // Class for collecting PROOF statistics
 };
 
 

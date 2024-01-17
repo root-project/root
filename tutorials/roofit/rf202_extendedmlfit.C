@@ -64,7 +64,7 @@ void rf202_extendedmlfit()
 
    // Generate a data sample of expected number events in x from model
    // = model.expectedEvents() = nsig+nbkg
-   RooDataSet *data = model.generate(x);
+   std::unique_ptr<RooDataSet> data{model.generate(x)};
 
    // Fit model to data, extended ML term automatically included
    model.fitTo(*data, PrintLevel(-1));

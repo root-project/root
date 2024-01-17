@@ -22,7 +22,7 @@ from tensorflow.keras.optimizers import SGD
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
+output = TFile.Open('TMVA_Regression_Keras.root', 'RECREATE')
 factory = TMVA.Factory('TMVARegression', output,
         '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
@@ -41,8 +41,9 @@ for branch in tree.GetListOfBranches():
 dataloader.AddTarget('fvalue')
 
 dataloader.AddRegressionTree(tree, 1.0)
+#use only 1000 events since evaluation is very slow (especially on MacOS). Increase it to get meaningful results
 dataloader.PrepareTrainingAndTestTree(TCut(''),
-        'nTrain_Regression=4000:SplitMode=Random:NormMode=NumEvents:!V')
+        'nTrain_Regression=1000:SplitMode=Random:NormMode=NumEvents:!V')
 
 # Generate model
 

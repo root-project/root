@@ -48,14 +48,12 @@ public:
 
    ~RooJSONFactoryWSTool();
 
-   static std::ostream &log(int level);
-
    static std::string name(const RooFit::Detail::JSONNode &n);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
 
-   static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll);
+   static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
@@ -118,15 +116,16 @@ public:
    template <class Obj_t, typename... Args_t>
    Obj_t &wsEmplace(RooStringView name, Args_t &&...args)
    {
-      return wsImport(Obj_t(name, name, std::forward<Args_t>(args)...));
+      return wsImport(Obj_t(name.c_str(), name.c_str(), std::forward<Args_t>(args)...));
    }
 
-   static void error(const char *s);
-   inline static void error(const std::string &s) { error(s.c_str()); }
+   [[noreturn]] static void error(const char *s);
+   [[noreturn]] inline static void error(const std::string &s) { error(s.c_str()); }
+   static std::ostream &warning(const std::string &s);
 
-   static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
+   static RooArgSet readAxes(const RooFit::Detail::JSONNode &node);
    static std::unique_ptr<RooDataHist>
-   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList const &varlist);
+   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgSet const &vars);
 
    bool importJSON(std::string const &filename);
    bool importYML(std::string const &filename);
@@ -178,9 +177,20 @@ public:
 
    static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
-   static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
+   void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
+
+   RooFit::Detail::JSONNode &createAdHoc(const std::string &toplevel, const std::string &name);
+   RooAbsReal *importTransformed(const std::string &name, const std::string &tag, const std::string &operation_name,
+                                 const std::string &formula);
+   std::string exportTransformed(const RooAbsReal *original, const std::string &tag, const std::string &operation_name,
+                                 const std::string &formula);
+
+   void setAttribute(const std::string &obj, const std::string &attrib);
+   bool hasAttribute(const std::string &obj, const std::string &attrib);
+   std::string getStringAttribute(const std::string &obj, const std::string &attrib);
+   void setStringAttribute(const std::string &obj, const std::string &attrib, const std::string &value);
 
 private:
    template <class T>

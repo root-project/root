@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooFitResult.h"
@@ -33,7 +32,7 @@ void rf203_ranges()
 
    // Construct gaussx(x,mx,1)
    RooRealVar mx("mx", "mx", 0, -10, 10);
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
+   RooGaussian gx("gx", "gx", x, mx, 1.0);
 
    // Construct px = 1 (flat in x)
    RooPolynomial px("px", "px", x);
@@ -43,7 +42,7 @@ void rf203_ranges()
    RooAddPdf model("model", "model", RooArgList(gx, px), f);
 
    // Generated 10000 events in (x,y) from pdf model
-   RooDataSet *modelData = model.generate(x, 10000);
+   std::unique_ptr<RooDataSet> modelData{model.generate(x, 10000)};
 
    // F i t   f u l l   r a n g e
    // ---------------------------

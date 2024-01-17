@@ -23,10 +23,6 @@ class RooDataWeightedAverage : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooDataWeightedAverage() {
-    // Default constructor
-  } ;
-
   RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& real, RooAbsData& data, const RooArgSet& projDeps,
                          RooAbsTestStatistic::Configuration const& cfg, bool showProgress=false) ;
 
@@ -52,6 +48,13 @@ protected:
   double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
   ClassDefOverride(RooDataWeightedAverage,0) // Optimized calculator of data weighted average of a RooAbsReal
+
+// Undocumented preprocessor define such that the implementation in
+// RooDataWeightedAverage.cxx can suppress the deprecation warning.
+#ifndef __ROOFIT_SUPPRESS_ROODATAWEIGHTEDAVERAGE_DEPRECATION_WARNING
+} R__DEPRECATED(6, 32, "RooDataWeightedAverage is an implementation detail of RooFit that will be removed from the public user interface.");
+#else
 };
+#endif
 
 #endif

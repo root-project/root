@@ -25,12 +25,12 @@ public:
    TGeoRegionCut() {}
    TGeoRegionCut(const char *name, Double_t cut) : TNamed(name, ""), fCut(cut) {}
 
-   virtual ~TGeoRegionCut() {}
+   ~TGeoRegionCut() override {}
 
    Double_t GetCut() const { return fCut; }
    void SetCut(Double_t cut) { fCut = cut; }
 
-   ClassDef(TGeoRegionCut, 1) // A region cut
+   ClassDefOverride(TGeoRegionCut, 1) // A region cut
 };
 
 class TGeoRegion : public TNamed {
@@ -43,7 +43,7 @@ public:
    TGeoRegion(const char *name, const char *title = "") : TNamed(name, title) {}
    TGeoRegion(const TGeoRegion &other);
    TGeoRegion &operator=(const TGeoRegion &other);
-   virtual ~TGeoRegion();
+   ~TGeoRegion() override;
 
    // Volume accessors
    void AddVolume(TGeoVolume *vol) { fVolumes.Add(vol); }
@@ -57,9 +57,9 @@ public:
    int GetNcuts() const { return fCuts.GetEntriesFast(); }
    TGeoRegionCut *GetCut(int i) const { return (TGeoRegionCut *)fCuts.At(i); }
 
-   virtual void Print(Option_t *option = "") const; // *MENU*
+   void Print(Option_t *option = "") const override; // *MENU*
 
-   ClassDef(TGeoRegion, 1) // Region wrapper class
+   ClassDefOverride(TGeoRegion, 1) // Region wrapper class
 };
 
 #endif

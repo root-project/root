@@ -1,0 +1,5 @@
+builtin_nlohmannjson=ON
+builtin_vdt=On
+pythia8=Off
+tmva-pymva=Off
+test_distrdf_pyspark=OFF

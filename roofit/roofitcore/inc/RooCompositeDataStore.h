@@ -110,7 +110,7 @@ public:
     (void)first; (void)len;
     return {};
   }
-  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
+  std::span<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
 
  protected:

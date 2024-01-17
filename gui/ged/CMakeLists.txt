@@ -8,6 +8,11 @@
 # CMakeLists.txt file for building ROOT gui/ged package
 ############################################################################
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Ged
   HEADERS
     HelpSMText.h
@@ -74,4 +79,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Ged
     Gui
     Tree
     TreePlayer
+  ${EXTRA_DICT_OPTS}
 )

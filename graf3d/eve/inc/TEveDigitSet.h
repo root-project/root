@@ -84,9 +84,9 @@ protected:
 
 public:
    TEveDigitSet(const char* n="TEveDigitSet", const char* t="");
-   virtual ~TEveDigitSet();
+   ~TEveDigitSet() override;
 
-   virtual TObject* GetObject(const TEveException&) const
+   TObject* GetObject(const TEveException&) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    void   UseSingleColor();
@@ -94,12 +94,12 @@ public:
    Bool_t GetAntiFlick() const   { return fAntiFlick; }
    void   SetAntiFlick(Bool_t f) { fAntiFlick = f; }
 
-   virtual void SetMainColor(Color_t color);
+   void SetMainColor(Color_t color) override;
 
-   virtual void UnSelected();
-   virtual void UnHighlighted();
+   void UnSelected() override;
+   void UnHighlighted() override;
 
-   virtual TString GetHighlightTooltip();
+   TString GetHighlightTooltip() override;
 
    // Implemented in sub-classes:
    // virtual void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
@@ -136,7 +136,7 @@ public:
    // Implemented in subclasses:
    // virtual void ComputeBBox();
 
-   virtual void Paint(Option_t* option="");
+   void Paint(Option_t* option="") override;
 
    virtual void DigitSelected(Int_t idx);
    virtual void SecSelected(TEveDigitSet* qs, Int_t idx); // *SIGNAL*
@@ -178,7 +178,7 @@ public:
    TooltipCB_foo GetTooltipCBFoo()          const { return fTooltipCBFoo; }
    void          SetTooltipCBFoo(TooltipCB_foo f) { fTooltipCBFoo = f; }
 
-   ClassDef(TEveDigitSet, 0); // Base-class for storage of digit collections; provides transformation matrix (TEveTrans), signal to color mapping (TEveRGBAPalette) and visual grouping (TEveFrameBox).
+   ClassDefOverride(TEveDigitSet, 0); // Base-class for storage of digit collections; provides transformation matrix (TEveTrans), signal to color mapping (TEveRGBAPalette) and visual grouping (TEveFrameBox).
 };
 
 #endif

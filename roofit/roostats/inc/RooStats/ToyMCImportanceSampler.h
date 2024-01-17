@@ -105,7 +105,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
             return;
          }
 
-         if( p == nullptr && fNullDensities.size() >= 1 ) p = fNullDensities[0];
+         if( p == nullptr && !fNullDensities.empty() ) p = fNullDensities[0];
          if( s == nullptr ) s = fParametersForTestStat.get();
          if( s ) s = (const RooArgSet*)s->snapshot();
 

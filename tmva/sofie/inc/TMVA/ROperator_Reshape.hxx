@@ -150,7 +150,6 @@ public:
          throw std::runtime_error("TMVA Reshape Op Input Tensor " + fNData + "  is not found in model");
       }
       fShapeInput = model.GetTensorShape(fNData);
-
       // check if optional shape tensor exist
       if (!fNShape.empty()) {
          if (model.CheckIfTensorAlreadyExist(fNShape)) {
@@ -193,9 +192,6 @@ public:
                                   ConvertShapeToString(fShapeOutput) + " and input is " +
                                   ConvertShapeToString(fShapeInput));
       }
-      for (auto &i : fShapeOutput) {
-         length *= i;
-      }
       std::stringstream out;
       std::string opName = "Reshape";
       if (fOpMode == Flatten)
@@ -206,8 +202,8 @@ public:
          opName = "Unsquueze";
 
       out << SP << "///--------" << opName << " operator\n" << std::endl;
-      out << SP << "std::copy( fTensor_" << fNData << ".begin(), fTensor_" << fNData << ".end(), fTensor_" << fNOutput
-          << ".begin() );\n";
+      out << SP << "std::copy( tensor_" << fNData << ", tensor_" << fNData << " + " << length << ", " << "tensor_" << fNOutput
+          << ");\n";
       return out.str();
    }
 };

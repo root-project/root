@@ -28,12 +28,9 @@ public:
 
   RooChiSquarePdf(const RooChiSquarePdf& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooChiSquarePdf(*this, newname); }
-  inline ~RooChiSquarePdf() override { }
-
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
-
 
 private:
 
@@ -41,7 +38,7 @@ private:
   RooRealProxy _ndof;
 
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooChiSquarePdf,1) // Chi Square distribution (eg. the PDF )

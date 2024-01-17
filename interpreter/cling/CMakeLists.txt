@@ -1,16 +1,17 @@
-cmake_minimum_required(VERSION 3.4.3)
+if(WIN32)
+  # We need cmake to support exporting of symbols not only from libraries but
+  # from executables too. This way cling can find symbols from its own
+  # executable during runtime.
+  cmake_minimum_required(VERSION 3.6.2)
+else(WIN32)
+  # support of earlier cmake versions will be removed soon
+  cmake_minimum_required(VERSION 3.5)
+endif(WIN32)
 
 # If we are not building as a part of LLVM, build Cling as an
 # standalone project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   project(Cling)
-
-  if(WIN32)
-    # We need cmake to support exporting of symbols not only from libraries but
-    # from executables too. This way cling can find symbols from its own
-    # executable during runtime.
-    cmake_minimum_required(VERSION 3.6.2)
-  endif(WIN32)
 
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
@@ -22,8 +23,7 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
       "--bindir"
       "--libdir"
       "--includedir"
-      "--prefix"
-      "--src-root")
+      "--prefix")
     execute_process(
       COMMAND ${CONFIG_COMMAND}
       RESULT_VARIABLE HAD_ERROR
@@ -47,7 +47,6 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   list(GET CONFIG_OUTPUT 2 LIBRARY_DIR)
   list(GET CONFIG_OUTPUT 3 INCLUDE_DIR)
   list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
-  list(GET CONFIG_OUTPUT 5 MAIN_SRC_DIR)
 
   if(NOT MSVC_IDE)
     set(LLVM_ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}
@@ -60,7 +59,6 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   set(LLVM_LIBRARY_DIR ${LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
   set(LLVM_MAIN_INCLUDE_DIR ${INCLUDE_DIR} CACHE PATH "Path to llvm/include")
   set(LLVM_BINARY_DIR ${LLVM_OBJ_ROOT} CACHE PATH "Path to LLVM build tree")
-  set(LLVM_MAIN_SRC_DIR ${MAIN_SRC_DIR} CACHE PATH "Path to LLVM source tree")
 
   find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
     NO_DEFAULT_PATH)
@@ -184,8 +182,13 @@ else()
     include(${LLVMCONFIG_FILE})
   endif()
   if (NOT CLANG_INCLUDE_DIRS)
-    set (CLANG_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/tools/clang/include"
-      "${CMAKE_BINARY_DIR}/tools/clang/include")
+    set (CLANG_INCLUDE_DIRS "${LLVM_MAIN_SRC_DIR}/tools/clang/include")
+    if (NOT EXISTS ${CLANG_INCLUDE_DIRS})
+      # Otherwise assume the monorepo layout.
+      set (CLANG_INCLUDE_DIRS ${LLVM_MAIN_SRC_DIR}/../clang/include )
+    endif()
+    set (CLANG_INCLUDE_DIRS "${CLANG_INCLUDE_DIRS}"
+      "${LLVM_BINARY_DIR}/tools/clang/include")
   endif()
 endif()
 

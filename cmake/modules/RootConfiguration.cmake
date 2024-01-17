@@ -75,11 +75,6 @@ if(IS_ABSOLUTE ${CMAKE_INSTALL_DATADIR})
 else()
   set(datadir ${prefix}/${CMAKE_INSTALL_DATADIR})
 endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_ELISPDIR})
-  set(elispdir ${CMAKE_INSTALL_ELISPDIR})
-else()
-  set(elispdir ${prefix}/${CMAKE_INSTALL_ELISPDIR})
-endif()
 if(IS_ABSOLUTE ${CMAKE_INSTALL_FONTDIR})
   set(ttffontdir ${CMAKE_INSTALL_FONTDIR})
 else()
@@ -225,11 +220,6 @@ set(gfallibdir ${GFAL_LIBRARY_DIR})
 set(gfallib ${GFAL_LIBRARY})
 set(gfalincdir ${GFAL_INCLUDE_DIR})
 
-set(buildalien ${value${alien}})
-set(alienlibdir ${ALIEN_LIBRARY_DIR})
-set(alienlib ${ALIEN_LIBRARY})
-set(alienincdir ${ALIEN_INCLUDE_DIR})
-
 set(buildarrow ${value${arrow}})
 set(arrowlibdir ${ARROW_LIBRARY_DIR})
 set(arrowlib ${ARROW_LIBRARY})
@@ -311,7 +301,6 @@ set(gslflags)
 set(shadowpw ${value${shadowpw}})
 set(buildmathmore ${value${mathmore}})
 set(buildroofit ${value${roofit}})
-set(buildminuit2 ${value${minuit2}})
 set(buildunuran ${value${unuran}})
 set(buildgdml ${value${gdml}})
 set(buildhttp ${value${http}})
@@ -374,11 +363,6 @@ if(CMAKE_USE_PTHREADS_INIT)
   set(haspthread define)
 else()
   set(haspthread undef)
-endif()
-if(cuda)
-  set(hascuda define)
-else()
-  set(hascuda undef)
 endif()
 if(x11)
   set(hasxft define)
@@ -504,11 +488,6 @@ if (uring)
 else()
   set(hasuring undef)
 endif()
-if (roofit_multiprocess)
-  set(hasroofit_multiprocess define)
-else()
-  set(hasroofit_multiprocess undef)
-endif()
 
 # clear cache to allow reconfiguring
 # with a different CMAKE_CXX_STANDARD
@@ -526,7 +505,6 @@ CHECK_CXX_SOURCE_COMPILES("#include <string_view>
 if(found_stdstringview)
   set(hasstdstringview define)
   if(cuda)
-    if(CUDA_NVCC_EXECUTABLE)
       if (WIN32)
         set(PLATFORM_NULL_FILE "nul")
       else()
@@ -535,13 +513,12 @@ if(found_stdstringview)
       execute_process(
         COMMAND "echo"
           "-e" "#include <string_view>\nint main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}"
-        COMMAND "${CUDA_NVCC_EXECUTABLE}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "${PLATFORM_NULL_FILE}" "-x" "c++" "-"
+        COMMAND "${CMAKE_CUDA_COMPILER}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "${PLATFORM_NULL_FILE}" "-x" "c++" "-"
         RESULT_VARIABLE nvcc_compiled_string_view)
       unset(PLATFORM_NULL_FILE CACHE)
       if (nvcc_compiled_string_view EQUAL "0")
         set(cudahasstdstringview define)
       endif()
-    endif()
   endif()
 else()
   set(hasstdstringview undef)
@@ -651,8 +628,11 @@ else()
    set(hashardwareinterferencesize undef)
 endif()
 
+set(root_canvas_class "TRootCanvas")
+
 if(root7 AND webgui)
-   set(root_browser_class "ROOT::Experimental::RWebBrowserImp")
+#   set(root_browser_class "ROOT::RWebBrowserImp")
+   set(root_browser_class "TRootBrowser")
 else()
    set(root_browser_class "TRootBrowser")
 endif()
@@ -726,7 +706,7 @@ if (cxxmodules)
 endif()
 
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
-string(REGEX MATCHALL "-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
+string(REGEX MATCHALL "(-Wp,)?-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
 set(ROOT_COMPILER_FLAG_HINTS "#
 set(ROOT_DEFINITIONS \"${__defs}\")
 set(ROOT_CXX_FLAGS \"${__cxxflags}\")
@@ -752,6 +732,10 @@ set(ROOT_BINDIR ${CMAKE_BINARY_DIR}/bin)
 set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 set(ROOT_BINARY_DIR ${ROOT_BINDIR})
+")
+set(ROOT_CMAKE_DIR_SETUP "
+# ROOT configured for use from the build tree - absolute paths are used.
+set(ROOT_CMAKE_DIR ${CMAKE_SOURCE_DIR}/cmake)
 ")
 
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
@@ -791,6 +775,10 @@ get_filename_component(ROOT_BINDIR \"\${_ROOT_BINDIR}\" REALPATH)
 set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" REALPATH)
+")
+set(ROOT_CMAKE_DIR_SETUP "
+## ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_CMAKE_DIR \"\${_thisdir}\" REALPATH)
 ")
 
 # used by ROOTConfig.cmake from the build directory
@@ -850,7 +838,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRE
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
 if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
   configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY NEWLINE_STYLE UNIX)
@@ -922,8 +909,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
-install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
 if(NOT gnuinstall)
   install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp

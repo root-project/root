@@ -158,7 +158,7 @@ protected:
 public:
    TDocParser(TClassDocOutput& docOutput, TClass* cl);
    TDocParser(TDocOutput& docOutput);
-   virtual       ~TDocParser();
+         ~TDocParser() override;
 
    static void   AnchorFromLine(const TString& line, TString& anchor);
    void          Convert(std::ostream& out, std::istream& in, const char* relpath,
@@ -184,7 +184,7 @@ public:
    virtual void  Parse(std::ostream& out);
    static Bool_t Strip(TString& s);
 
-   ClassDef(TDocParser,0); // parser for reference documentation
+   ClassDefOverride(TDocParser,0); // parser for reference documentation
 };
 
 #endif // ROOT_TDocParser

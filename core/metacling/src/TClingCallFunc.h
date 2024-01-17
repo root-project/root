@@ -114,22 +114,10 @@ private:
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
 
-   // Implemented in source file.
-   template <typename T>
-   void execWithLL(void* address, cling::Value* val);
-   template <typename T>
-   void execWithULL(void* address, cling::Value* val);
-   template <class T>
-   ExecWithRetFunc_t InitRetAndExecIntegral(clang::QualType QT, cling::Value &ret);
-
-   ExecWithRetFunc_t InitRetAndExecBuiltin(clang::QualType QT, const clang::BuiltinType *BT, cling::Value &ret);
-   ExecWithRetFunc_t InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret);
-   ExecWithRetFunc_t InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret);
-
    void exec(void* address, void* ret);
 
    void exec_with_valref_return(void* address,
-                                cling::Value* ret);
+                                cling::Value& ret);
    void EvaluateArgList(const std::string& ArgList);
 
    size_t CalculateMinRequiredArguments();
@@ -199,6 +187,7 @@ public:
    int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
 
    const clang::FunctionDecl *GetDecl() {
+      R__LOCKGUARD_CLING(gInterpreterMutex);
       if (!fDecl)
          fDecl = fMethod->GetTargetFunctionDecl();
       return fDecl;
@@ -212,12 +201,10 @@ public:
       return fMethod->GetDecl();
    }
    void ResetArg();
-   void SetArg(long arg);
-   void SetArg(unsigned long arg);
-   void SetArg(float arg);
-   void SetArg(double arg);
-   void SetArg(long long arg);
-   void SetArg(unsigned long long arg);
+   template<typename T, std::enable_if_t<std::is_fundamental<T>::value, bool> = true>
+   void SetArg(T arg) {
+      fArgVals.push_back(cling::Value::Create(*fInterp, arg));
+   }
    void SetArgArray(Longptr_t* argArr, int narg);
    void SetArgs(const char* args);
    void SetFunc(const TClingClassInfo* info, const char* method,

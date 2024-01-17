@@ -14,7 +14,7 @@
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/util.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include <csignal> // sigprocmask etc
 
@@ -65,7 +65,8 @@ Messenger::Messenger(const ProcessManager &process_manager)
    sigemptyset(&ppoll_sigmask);
 
    auto makeAddrPrefix = [](pid_t pid) -> std::string {
-      return "ipc://" + RooFit::tmpPath() + std::to_string(pid) + "_roofitMP";
+      std::string tmpPath = gSystem->TempDirectory();
+      return "ipc://" + tmpPath + "/roofit_" + std::to_string(pid) + "_roofitMP";
    };
 
    // high water mark for master-queue sending, which can be quite a busy channel, especially at the start of a run
@@ -214,10 +215,10 @@ Messenger::~Messenger()
 {
    if (close_MQ_on_destruct_) {
       try {
-         mq_push_.reset(nullptr);
-         mq_pull_.reset(nullptr);
-         mw_pub_.reset(nullptr);
-         wm_pull_.reset(nullptr);
+         mq_push_.reset();
+         mq_pull_.reset();
+         mw_pub_.reset();
+         wm_pull_.reset();
          // remove bound files
          for (const auto &address : bound_ipc_addresses_) {
             // no need to check return value, they are only zero byte /tmp files, the OS should eventually clean them up
@@ -229,17 +230,17 @@ Messenger::~Messenger()
       }
    }
    if (close_this_QW_on_destruct_) {
-      this_worker_qw_push_.reset(nullptr);
-      this_worker_qw_pull_.reset(nullptr);
-      mw_sub_.reset(nullptr);
-      wm_push_.reset(nullptr);
+      this_worker_qw_push_.reset();
+      this_worker_qw_pull_.reset();
+      mw_sub_.reset();
+      wm_push_.reset();
    }
    if (close_QW_container_on_destruct_) {
       for (auto &socket : qw_push_) {
-         socket.reset(nullptr);
+         socket.reset();
       }
       for (auto &socket : qw_pull_) {
-         socket.reset(nullptr);
+         socket.reset();
       }
    }
    // Dev note: do not call zmqSvc()::close_context from here! The Messenger

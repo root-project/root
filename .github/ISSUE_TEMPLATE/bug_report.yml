@@ -1,0 +1,61 @@
+name: Bug Report
+description: Create a report to get an issue fixed.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for taking the time to fill out this bug report! Note that since v6.28/06 you can also prefill this template using `root -q -e '.gh bug'`
+  - type: checkboxes
+    id: check-duplicates
+    attributes:
+      label: Check duplicate issues.
+      description: Please search in [GitHub](https://github.com/root-project/root/issues?q=is%3Aissue) AND [Jira](<https://sft.its.cern.ch/jira/issues/?jql=project %3D ROOT>) for existing reports of your issue.
+      options:
+        - label: Checked for duplicates
+    validations:
+      required: true
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Description
+      description: A description of what the behavior is as opposed to the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: to-reproduce
+    attributes:
+      label: Reproducer
+      description: |
+        Step-by-step instructions to reproduce the issue.
+        - If possible, as a self-contained piece of code
+        - Don't forget to attach any required input files
+        - Please specify how to run your code, e.g. `root myMacro.C`, ...
+    validations:
+      required: true
+  - type: textarea
+    id: root-version
+    attributes:
+      label: ROOT version
+      description: On Linux/MacOS, `root -b -q | xclip -sel clip`. On Windows, `root -b -q | clip.exe`
+    validations:
+      required: true
+  - type: input
+    id: root-install-how
+    attributes:
+      label: Installation method
+      placeholder: Package manager (which?), pre-built binary, build from source, ...
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      placeholder: Windows, MacOS, Linux (which distribution?)
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+    validations:
+      required: false

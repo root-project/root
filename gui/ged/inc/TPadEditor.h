@@ -50,10 +50,10 @@ public:
               Int_t width = 140, Int_t height = 30,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TPadEditor();
+   ~TPadEditor() override;
 
-   virtual void   SetModel(TObject* obj);
-   virtual void   ActivateBaseClassEditors(TClass* cl);
+   void   SetModel(TObject* obj) override;
+   void   ActivateBaseClassEditors(TClass* cl) override;
 
    virtual void   DoEditable(Bool_t on);
    virtual void   DoCrosshair(Bool_t on);
@@ -68,7 +68,7 @@ public:
    virtual void   DoBorderMode();
    virtual void   DoBorderSize(Int_t size);
 
-   ClassDef(TPadEditor,0)  //editor of TPad objects
+   ClassDefOverride(TPadEditor,0)  //editor of TPad objects
 };
 
 #endif

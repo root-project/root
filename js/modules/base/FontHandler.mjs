@@ -3,16 +3,14 @@ const root_fonts = ['Arial', 'iTimes New Roman',
       'oArial', 'bArial', 'boArial', 'Courier New',
       'oCourier New', 'bCourier New', 'boCourier New',
       'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol',
-      'Verdana', 'iVerdana', 'bVerdana', 'biVerdana'];
-
-
+      'Verdana', 'iVerdana', 'bVerdana', 'biVerdana'],
 // taken from symbols.html, counted only for letters and digits
-const root_fonts_aver_width = [0.5778,0.5314,
+root_fonts_aver_width = [0.5778, 0.5314,
       0.5809, 0.5540, 0.5778,
-      0.5783,0.6034,0.6030,0.6003,
-      0.6004,0.6003,0.6005,
-      0.5521,0.5521,0.5664,0.5314,
-      0.5664,0.5495,0.5748,0.5578];
+      0.5783, 0.6034, 0.6030, 0.6003,
+      0.6004, 0.6003, 0.6005,
+      0.5521, 0.5521, 0.5664, 0.5314,
+      0.5664, 0.5495, 0.5748, 0.5578];
 
 /**
  * @summary Helper class for font handling
@@ -36,9 +34,8 @@ class FontHandler {
       this.scale = scale;
 
       if (fontIndex !== null) {
-
-         let indx = Math.floor(fontIndex / 10),
-             fontName = root_fonts[indx] || 'Arial';
+         const indx = Math.floor(fontIndex / 10);
+         let fontName = root_fonts[indx] || 'Arial';
 
          while (fontName) {
             if (fontName[0] === 'b')
@@ -61,24 +58,24 @@ class FontHandler {
          this.aver_width = this.weight ? 0.58 : 0.55;
       }
 
-      if ((this.name == 'Symbol') || (this.name == 'Wingdings')) {
+      if ((this.name === 'Symbol') || (this.name === 'Wingdings')) {
          this.isSymbol = this.name;
-         this.name = "Times New Roman";
-      } else {
+         this.name = 'Times New Roman';
+      } else
          this.isSymbol = '';
-      }
 
       this.func = this.setFont.bind(this);
    }
 
    /** @summary Assigns font-related attributes */
    setFont(selection, arg) {
-      selection.attr("font-family", this.name);
-      if (arg != 'without-size')
-         selection.attr("font-size", this.size)
-                  .attr("xml:space", "preserve");
-      selection.attr("font-weight", this.weight || null);
-      selection.attr("font-style", this.style || null);
+      selection.attr('font-family', this.name);
+      if (arg !== 'without-size') {
+         selection.attr('font-size', this.size)
+                  .attr('xml:space', 'preserve');
+      }
+      selection.attr('font-weight', this.weight || null);
+      selection.attr('font-style', this.style || null);
    }
 
    /** @summary Set font size (optional) */
@@ -106,26 +103,26 @@ class FontHandler {
 
    /** @summary Clears all font-related attributes */
    clearFont(selection) {
-      selection.attr("font-family", null)
-               .attr("font-size", null)
-               .attr("xml:space", null)
-               .attr("font-weight", null)
-               .attr("font-style", null);
+      selection.attr('font-family', null)
+               .attr('font-size', null)
+               .attr('xml:space', null)
+               .attr('font-weight', null)
+               .attr('font-style', null);
    }
 
    /** @summary Returns true in case of monospace font
      * @private */
    isMonospace() {
-      let n = this.name.toLowerCase();
-      return (n.indexOf("courier") == 0) || (n == "monospace") || (n == "monaco");
+      const n = this.name.toLowerCase();
+      return (n.indexOf('courier') === 0) || (n === 'monospace') || (n === 'monaco');
    }
 
-   /** @summary Return full font declaration which can be set as font property like "12pt Arial bold"
+   /** @summary Return full font declaration which can be set as font property like '12pt Arial bold'
      * @private */
    getFontHtml() {
-      let res = Math.round(this.size) + "pt " + this.name;
-      if (this.weight) res += " " + this.weight;
-      if (this.style) res += " " + this.style;
+      let res = Math.round(this.size) + 'pt ' + this.name;
+      if (this.weight) res += ' ' + this.weight;
+      if (this.style) res += ' ' + this.style;
       return res;
    }
 

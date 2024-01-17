@@ -55,7 +55,7 @@ class DistTest {
 public:
    DistTest(TF1 * f) :
       fCdf(f),
-      fHref(0)
+      fHref(nullptr)
    {
       // generate reference histo for distribution using cdf
 
@@ -71,8 +71,8 @@ public:
 
    int testUnuran(TUnuran & unr) {
 
-      assert(fHref != 0);
-      assert(fCdf != 0);
+      assert(fHref != nullptr);
+      assert(fCdf != nullptr);
 
       // test first the time
       TStopwatch w;
@@ -85,19 +85,19 @@ public:
       double time = w.CpuTime()*1.E9/sampleSize;
 
 
-      TH1D htmp("htmp","gaussian generated cdf",100,0,1.);
+      TH1D hTmp("hTmp","gaussian generated cdf",100,0,1.);
       // test quality (use cdf to avoid zero bins)
       int n2 = sampleSize/100;
       double x;
       for (int i = 0; i<n2; ++i) {
          x =  unr.Sample();
-         htmp.Fill( fCdf->Eval(x) );
+         hTmp.Fill( fCdf->Eval(x) );
       }
-      double prob = fHref->Chi2Test(&htmp,"UU");
+      double prob = fHref->Chi2Test(&hTmp,"UU");
       std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
       if (prob < 1E-06) {
          std::cout << "Chi2 Test failed ! " << std::endl;
-         fHref->Chi2Test(&htmp,"UUP"); // print all chi2 test info
+         fHref->Chi2Test(&hTmp,"UUP"); // print all chi2 test info
          return 1;
       }
       return 0;
@@ -105,8 +105,8 @@ public:
 
    int testGetRandom(TF1 * f) {
 
-      assert(fHref != 0);
-      assert(fCdf != 0);
+      assert(fHref != nullptr);
+      assert(fCdf != nullptr);
 
       // test first the time
 
@@ -120,18 +120,18 @@ public:
       double time = w.CpuTime()*1.E9/sampleSize;
 
 
-      TH1D htmp("htmp","gaussian generated cdf",100,0,1.);
+      TH1D hTmp("hTmp","gaussian generated cdf",100,0,1.);
       // test quality (use cdf to avoid zero bins)
       int n2 = sampleSize/100;
       for (int i = 0; i<n2; ++i) {
          double x =  f->GetRandom();
-         htmp.Fill( fCdf->Eval(x) );
+         hTmp.Fill( fCdf->Eval(x) );
       }
-      double prob = fHref->Chi2Test(&htmp,"UU");
+      double prob = fHref->Chi2Test(&hTmp,"UU");
       std::cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
       if (prob < 1E-06) {
          std::cout << "Chi2 Test failed ! " << std::endl;
-         fHref->Chi2Test(&htmp,"UUP"); // print all chi2 test info
+         fHref->Chi2Test(&hTmp,"UUP"); // print all chi2 test info
          return 2;
       }
       return 0;
@@ -169,10 +169,14 @@ int unuranDistr() {
 
 
    TF1 * f = new TF1("n",norm,-10,10,1);
-   f->SetParameters(par);
+   // Using `f->SetParameters(par)` gives a compiler warning, because
+   // internally, this does `std::copy(par, par + npars, ...)`.
+   // The `par + npars` gives an out-of-bounds warning, because par is a
+   // C-style array with compile-time size.
+   f->SetParameter(0, par[0]);
 
    TF1 * fc = new TF1("c",cdf,0,1,1);
-   fc->SetParameters(par);
+   fc->SetParameter(0, par[0]);
 
 
    // tester class
@@ -304,7 +308,7 @@ int unuranDistr() {
    // remove the domain
    dist.SetDomain(0,0);
    //f->SetRange(1,-1);
-   f->SetRange(-10,10); // set verly low and large values is enough
+   f->SetRange(-10,10); // set very low and large values is enough
    // show now some plots
    ret = unr.Init(dist,"auto");
    if (!ret) {
@@ -364,9 +368,9 @@ int unuranDistr() {
    h1u->Chi2Test(h2u,"UUP");
 
    if (iret != 0)
-      std::cerr <<"\n\nUnuRan Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
+      std::cerr <<"\n\nUnuRan Continuous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
    else
-      std::cerr << "\n\nUnuRan  Continous Distribution Test:\t OK\n" << std::endl;
+      std::cerr << "\n\nUnuRan Continuous Distribution Test:\t OK\n" << std::endl;
    return iret;
 
 

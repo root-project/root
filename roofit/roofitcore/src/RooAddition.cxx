@@ -33,11 +33,14 @@ in the two sets.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"
-#include "RooNLLVar.h"
 #include "RooNLLVarNew.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooNLLVar.h"
+#include "RooChi2Var.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -169,7 +172,7 @@ double RooAddition::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAddition::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
@@ -180,10 +183,49 @@ void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEve
     pdfs.push_back(dataMap.at(arg));
     coefs.push_back(1.0);
   }
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // If the number of elements to sum is less than 3, just build a sum expression.
+   // else build a loop to sum over the values.
+   unsigned int eleSize = _set.size();
+   std::string result;
+   if (eleSize > 3) {
+      std::string className = GetName();
+      std::string varName = "elements" + className;
+      std::string sumName = "sum" + className;
+      std::string code = "";
+      std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
+      int idx = 0;
+      for (RooAbsArg *it : _set) {
+         decl += ctx.getResult(*it) + ",";
+         ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
+         idx++;
+      }
+      decl.back() = '}';
+      code += decl + ";\n";
+
+      ctx.addToGlobalScope("double " + sumName + " = 0;\n");
+      std::string iterator = "i_" + className;
+      code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
+              "++) {\n" + sumName + " += " + varName + "[" + iterator + "];\n}\n";
+      result = sumName;
+      ctx.addResult(this, result);
+
+      ctx.addToCodeBody(this, code);
+   }
+
+   result = "(";
+   for (RooAbsArg *it : _set) {
+      result += ctx.getResult(*it) + '+';
+   }
+   result.back() = ')';
+   ctx.addResult(this, result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the default error level for MINUIT error analysis
@@ -196,17 +238,22 @@ void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEve
 
 double RooAddition::defaultErrorLevel() const
 {
-  RooAbsReal* nllArg(0) ;
-  RooAbsReal* chi2Arg(0) ;
+  RooAbsReal* nllArg(nullptr) ;
+  RooAbsReal* chi2Arg(nullptr) ;
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<ROOT::Experimental::RooNLLVarNew*>(arg)) {
+    if (dynamic_cast<RooNLLVarNew*>(arg)) {
+      nllArg = (RooAbsReal*)arg ;
+    }
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+    if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
       chi2Arg = (RooAbsReal*)arg ;
     }
+#endif
   }
 
   if (nllArg && !chi2Arg) {
@@ -246,7 +293,7 @@ bool RooAddition::setData(RooAbsData& data, bool cloneData)
 
 void RooAddition::printMetaArgs(std::ostream& os) const
 {
-  // We can use the implementation of RooRealSumPdf with an empy coefficient list.
+  // We can use the implementation of RooRealSumPdf with an empty coefficient list.
   static const RooArgList coefs{};
   RooRealSumPdf::printMetaArgs(_set, coefs, os);
 }
@@ -261,7 +308,7 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
-  if (cache!=0) {
+  if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code+1;
   }
@@ -283,7 +330,7 @@ double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
+  if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
     RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1);
@@ -292,7 +339,7 @@ double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
-  assert(cache!=0);
+  assert(cache!=nullptr);
 
   // loop over cache, and sum...
   double result(0);

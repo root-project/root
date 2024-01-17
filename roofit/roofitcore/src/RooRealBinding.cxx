@@ -30,7 +30,6 @@ of its servers and present it as a simple array oriented interface.
 #include "RooAbsRealLValue.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
-#include "RunContext.h"
 
 #include <cassert>
 
@@ -182,81 +181,6 @@ double RooRealBinding::operator()(const double xvector[]) const
   _ncall++ ;
   loadValues(xvector);
   return _xvecValid ? _func->getVal(_nset) : 0. ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate the bound object at all locations indicated by the data in `coordinates`.
-/// If `_clipInvalid` is set, the function is set to zero at all points in the arguments
-/// that are not within the range of the observables.
-/// \param coordinates Vector of spans that contain the points where the function should be evaluated.
-/// The ordinal position in the vector corresponds to the ordinal position in the set of
-/// {observables, parameters} that were passed to the constructor.
-/// The spans can either have a size of `n`, in which case a batch of `n` results is returned, or they can have
-/// a size of 1. In the latter case, the value in the span is broadcast to all `n` events.
-/// \return Batch of function values for each coordinate given in the input spans. If a parameter is invalid, i.e.,
-/// out of its range, an empty span is returned. If an observable is invalid, the function value is 0.
-RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double>> coordinates) const {
-  assert(isValid());
-  _ncall += coordinates.front().size();
-
-  bool parametersValid = true;
-
-  // Use _evalData to hold on to memory between integration calls
-  if (!_evalData) {
-    _evalData = std::make_unique<RooBatchCompute::RunContext>();
-  } else {
-    _evalData->clear();
-  }
-  _evalData->rangeName = RooNameReg::str(_rangeName);
-
-  for (unsigned int dim=0; dim < coordinates.size(); ++dim) {
-    const RooSpan<const double>& values = coordinates[dim];
-    RooAbsRealLValue& var = *_vars[dim];
-    _evalData->spans[&var] = values;
-    if (_clipInvalid && values.size() == 1) {
-      // The argument is a parameter of the function. Check it
-      // here, so we can do early stopping if it's invalid.
-      parametersValid &= var.isValidReal(values[0]);
-      assert(values.size() == 1);
-    }
-  }
-
-  if (!parametersValid)
-    return {};
-
-  auto results = getValuesOfBoundFunction(*_evalData);
-
-  if (_clipInvalid) {
-    RooSpan<double> resultsWritable(_evalData->getWritableBatch(_func));
-    assert(results.data() == resultsWritable.data());
-    assert(results.size() == resultsWritable.size());
-
-    // Run through all events, and check if the given coordinates are valid:
-    for (std::size_t coord=0; coord < coordinates.size(); ++coord) {
-      if (coordinates[coord].size() == 1)
-        continue; // We checked all parameters above
-
-      for (std::size_t evt=0; evt < coordinates[coord].size(); ++evt) {
-        if (!_vars[coord]->isValidReal(coordinates[coord][evt]))
-          resultsWritable[evt] = 0.;
-      }
-    }
-  }
-
-  return results;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate the bound object at all locations indicated by the data in `evalData`.
-/// \see RooAbsReal::getValues().
-/// \param[in,out] evalData Struct with spans pointing to the data to be used for evaluation.
-/// The spans can either have a size of `n`, in which case a batch of `n` results is returned, or they can have
-/// a size of 1. In the latter case, the value in the span is broadcast to all `n` events.
-/// \return Batch of function values for each coordinate given in the input spans.
-RooSpan<const double> RooRealBinding::getValuesOfBoundFunction(RooBatchCompute::RunContext& evalData) const {
-  return _func->getValues(evalData, _nset);
 }
 
 

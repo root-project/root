@@ -74,7 +74,7 @@ int mp104_processH1()
    // In a second run we use sel
    gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
    auto hListSel = pool.Process(files, *sel, "h42");
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
 
    // Check the output
    if (checkH1(hListSel) < 0)

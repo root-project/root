@@ -130,15 +130,20 @@ class RLoopManager : public RNodeBase {
    /// Samples need to survive throughout the whole event loop, hence stored as an attribute
    std::vector<ROOT::RDF::Experimental::RSample> fSamples;
 
-   std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
+   /// Friends of the fTree. Only used if we constructed fTree ourselves.
+   std::vector<std::unique_ptr<TChain>> fFriends;
    const ColumnNames_t fDefaultColumns;
-   const ULong64_t fNEmptyEntries{0};
+   /// Range of entries created when no data source is specified.
+   std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
-   std::vector<RDFInternal::RCallback> fCallbacks;         ///< Registered callbacks
-   /// Registered callbacks to invoke just once before running the loop
+   /// Registered callbacks to be executed every N events.
+   /// The registration happens via the RegisterCallback method.
+   std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
+   /// Registered callbacks to invoke just once before running the loop.
+   /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
    /// Registered callbacks to call at the beginning of each "data block".
    /// The key is the pointer of the corresponding node in the computation graph (a RDefinePerSample or a RAction).
@@ -186,7 +191,7 @@ public:
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;
    ::TDirectory *GetDirectory() const;
-   ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
+   ULong64_t GetNEmptyEntries() const { return fEmptyEntryRange.second - fEmptyEntryRange.first; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
    void Register(RDFInternal::RActionBase *actionPtr);
    void Deregister(RDFInternal::RActionBase *actionPtr);
@@ -234,6 +239,9 @@ public:
    const ColumnNames_t &GetBranchNames();
 
    void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
+
+   void SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange);
+   void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
 };
 
 } // ns RDF

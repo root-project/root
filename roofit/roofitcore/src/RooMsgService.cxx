@@ -167,7 +167,7 @@ RooWorkspace* RooMsgService::debugWorkspace()
 /// <tr><td> ObjectName(const char*)   <td> Restrict stream to messages from object with given name
 /// <tr><td> ClassName(const char*)    <td> Restrict stream to messages from objects with given class name
 /// <tr><td> BaseClassName(const char*)<td> Restrict stream to messages from objects with given base class name
-/// <tr><td> LabelName(const chat*)    <td> Restrict stream to messages from objects setAtrribute(const char*) tag with given name
+/// <tr><td> LabelName(const chat*)    <td> Restrict stream to messages from objects setAttribute(const char*) tag with given name
 /// <tr><th> Output redirection options <th>
 /// <tr><td> OutputFile(const char*)  <td> Send output to file with given name. Multiple streams can write to same file.
 /// <tr><td> OutputStream(ostream&)   <td> Send output to given C++ stream. Multiple message streams can write to same c++ stream
@@ -185,7 +185,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooMsgService::addReportingStream(%s)",GetName())) ;
+  RooCmdConfig pc("RooMsgService::addReportingStream(" + std::string(GetName()) + ")") ;
   pc.defineInt("prefix","Prefix",0,true) ;
   pc.defineInt("color","Color",0,static_cast<Int_t>(kBlack)) ;
   pc.defineInt("topic","Topic",0,0xFFFFF) ;
@@ -194,7 +194,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   pc.defineString("baseClassName","BaseClassName",0,"") ;
   pc.defineString("tagName","LabelName",0,"") ;
   pc.defineString("outFile","OutputFile",0,"") ;
-  pc.defineObject("outStream","OutputStream",0,0) ;
+  pc.defineObject("outStream","OutputStream",0,nullptr) ;
   pc.defineMutex("OutputFile","OutputStream") ;
 
   // Process & check varargs
@@ -233,7 +233,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   newStream.tagName = (tagName ? tagName : "" ) ;
   newStream.color = color ;
   newStream.prefix = prefix ;
-  newStream.universal = (newStream.objectName=="" && newStream.className=="" && newStream.baseClassName=="" && newStream.tagName=="") ;
+  newStream.universal = (newStream.objectName.empty() && newStream.className.empty() && newStream.baseClassName.empty() && newStream.tagName.empty()) ;
 
   // Update debug stream count
   if (level==DEBUG) {
@@ -246,7 +246,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
     // To given non-owned stream
     newStream.os = os ;
 
-  } else if (string(outFile).size()>0) {
+  } else if (!string(outFile).empty()) {
 
     // See if we already opened the file
     ostream* os2 = _files["outFile"].get();
@@ -370,55 +370,6 @@ void RooMsgService::restoreState()
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
-
-bool RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  return (activeStream(self,topic,level)>=0) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
-
-bool RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  return (activeStream(self,topic,level)>=0) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find appropriate logging stream for message from given object with given topic and message level
-
-Int_t RooMsgService::activeStream(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  if (level<_globMinLevel) return -1 ;
-  for (UInt_t i=0 ; i<_streams.size() ; i++) {
-    if (_streams[i].match(level,topic,self)) {
-      return i ;
-    }
-  }
-  return -1 ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find appropriate logging stream for message from given object with given topic and message level
-
-Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  if (level<_globMinLevel) return -1 ;
-  for (UInt_t i=0 ; i<_streams.size() ; i++) {
-    if (_streams[i].match(level,topic,self)) {
-      return i ;
-    }
-  }
-  return -1 ;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine if message from given object at given level on given topic is logged
 
@@ -431,10 +382,10 @@ bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic
   if (universal) return true ;
 
   if (!obj) return false;
-  if (objectName.size()>0 && objectName != obj->GetName()) return false ;
-  if (className.size()>0 && className != obj->ClassName()) return false ;
-  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
-  if (tagName.size()>0 && !obj->getAttribute(tagName.c_str())) return false ;
+  if (!objectName.empty() && objectName != obj->GetName()) return false ;
+  if (!className.empty() && className != obj->ClassName()) return false ;
+  if (!baseClassName.empty() && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
+  if (!tagName.empty() && !obj->getAttribute(tagName.c_str())) return false ;
 
   return true ;
 }
@@ -452,9 +403,9 @@ bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic
   if (universal) return true ;
 
   if (!obj) return false;
-  if (objectName.size()>0 && objectName != obj->GetName()) return false ;
-  if (className.size()>0 && className != obj->ClassName()) return false ;
-  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
+  if (!objectName.empty() && objectName != obj->GetName()) return false ;
+  if (!className.empty() && className != obj->ClassName()) return false ;
+  if (!baseClassName.empty() && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
 
   return true ;
 }
@@ -565,16 +516,16 @@ void RooMsgService::Print(Option_t *options) const
     }
 
 
-    if (_streams[i].objectName.size()>0) {
+    if (!_streams[i].objectName.empty()) {
       cout << " ObjectName = " << _streams[i].objectName ;
     }
-    if (_streams[i].className.size()>0) {
+    if (!_streams[i].className.empty()) {
       cout << " ClassName = " << _streams[i].className ;
     }
-    if (_streams[i].baseClassName.size()>0) {
+    if (!_streams[i].baseClassName.empty()) {
       cout << " BaseClassName = " << _streams[i].baseClassName ;
     }
-    if (_streams[i].tagName.size()>0) {
+    if (!_streams[i].tagName.empty()) {
       cout << " TagLabel = " << _streams[i].tagName ;
     }
 

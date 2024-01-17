@@ -96,7 +96,7 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
   //
   // convVar  :  convolution variable (on which both pdf and resmodel should depend)
   // pdf      :  input 'physics' pdf
-  // resmodel :  input 'resultion' pdf
+  // resmodel :  input 'resolution' pdf
   //
   // output is pdf(x) (X) resmodel(x) = Int [ pdf(x') resmodel (x-x') ] dx'
   //

@@ -104,13 +104,13 @@ namespace RooStats {
          assert(dynamic_cast<RooAbsPdf*>(*iter));
          FactorizePdf(observables, static_cast<RooAbsPdf&>(**iter), obsTerms, constraints);
       } else if (auto sim = dynamic_cast<RooSimultaneous *>(&pdf)) {  //|| dynamic_cast<RooSimultaneousOpt>(&pdf)) {
-         assert(sim != 0);
+         assert(sim != nullptr);
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().clone(sim->indexCat().GetName());
-         for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
+         for (int ic = 0, nc = cat->numBins((const char *)nullptr); ic < nc; ++ic) {
             cat->setBin(ic);
             RooAbsPdf* catPdf = sim->getPdf(cat->getCurrentLabel());
             // it is possible that a pdf is not defined for every category
-            if (catPdf != 0) FactorizePdf(observables, *catPdf, obsTerms, constraints);
+            if (catPdf != nullptr) FactorizePdf(observables, *catPdf, obsTerms, constraints);
          }
          delete cat;
       } else if (pdf.dependsOn(observables)) {
@@ -138,7 +138,7 @@ namespace RooStats {
       FactorizePdf(observables, pdf, obsTerms, constraints);
       if(constraints.empty()) {
          oocoutW(nullptr, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
-         return 0;
+         return nullptr;
       }
       return new RooProdPdf(name,"", constraints);
    }
@@ -147,7 +147,7 @@ namespace RooStats {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
       if (!model.GetPdf() || !model.GetObservables() ) {
          oocoutE(nullptr, InputArguments) << "RooStatsUtils::MakeNuisancePdf - invalid input model: missing pdf and/or observables" << endl;
-         return 0;
+         return nullptr;
       }
       return MakeNuisancePdf(*model.GetPdf(), *model.GetObservables(), name);
    }
@@ -239,7 +239,7 @@ namespace RooStats {
          double fInval;
          TTree *fTree;
 
-         BranchStore(const vector <TString> &params = vector <TString>(), double _inval = -999.) : fTree(0) {
+         BranchStore(const vector <TString> &params = vector <TString>(), double _inval = -999.) : fTree(nullptr) {
             fInval = _inval;
             for(unsigned int i = 0;i<params.size();i++)
                fVarVals[params[i]] = _inval;

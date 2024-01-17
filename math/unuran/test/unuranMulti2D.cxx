@@ -99,7 +99,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    return 0;
 }
 
-int testGetRandom(TF2 * f, TH1 * h1, const TH2 * href = 0) {
+int testGetRandom(TF2 * f, TH1 * h1, const TH2 * href = nullptr) {
 
 
    // test first the time
@@ -117,7 +117,7 @@ int testGetRandom(TF2 * f, TH1 * h1, const TH2 * href = 0) {
    double time = w.CpuTime()*1.E9/n;
 
 
-   if (href != 0) {
+   if (href != nullptr) {
       double prob = href->Chi2Test(h1,"UU");
       std::cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
       if (prob < 1E-06) {
@@ -274,9 +274,9 @@ int unuranMulti2D() {
 //#endif
 
    if (iret != 0)
-      std::cerr <<"\n\nUnuRan 2D Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
+      std::cerr <<"\n\nUnuRan 2D Continuous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
    else
-      std::cerr << "\n\nUnuRan 2D Continous Distribution Test:\t OK\n" << std::endl;
+      std::cerr << "\n\nUnuRan 2D Continuous Distribution Test:\t OK\n" << std::endl;
 
    return iret;
 

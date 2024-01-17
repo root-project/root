@@ -9,7 +9,7 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp};
+enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog };
 
 template <typename T, EBasicUnaryOperator Op>
 struct UnaryOpTraits {
@@ -37,6 +37,12 @@ template <typename T>
 struct UnaryOpTraits<T, EBasicUnaryOperator::kExp> {
    static std::string Name() { return "Exp"; }
    static std::string Op(const std::string &X) { return "std::exp(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kLog> {
+   static std::string Name() { return "Log"; }
+   static std::string Op(const std::string &X) { return "std::log(" + X + ")"; }
 };
 
 template <typename T, EBasicUnaryOperator Op>

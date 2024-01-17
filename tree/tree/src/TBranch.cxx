@@ -146,7 +146,7 @@ TBranch::TBranch()
 ///     assumed of type F by default. The list of currently supported
 ///     types is given below:
 ///        - `C` : a character string terminated by the 0 character
-///        - `B` : an 8 bit signed integer (`Char_t`)
+///        - `B` : an 8 bit signed integer (`Char_t`); Treated as a character when in an array.
 ///        - `b` : an 8 bit unsigned integer (`UChar_t`)
 ///        - `S` : a 16 bit signed integer (`Short_t`)
 ///        - `s` : a 16 bit unsigned integer (`UShort_t`)
@@ -1434,25 +1434,41 @@ Bool_t TBranch::SupportsBulkRead() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read as many events as possible into the given buffer, using zero-copy
-/// mechanisms.
+/// \brief Read a basket of events into the given buffer with byte swapping.
 ///
-/// Returns -1 in case of a failure.  On success, returns a (non-zero) number of
-/// events of the type held by this branch currently in the buffer.
+/// \return On success, the number of events of the type held by this branch
+///         that have been read into the buffer. -1 on failure.
 ///
-/// On success, the caller should be able to access the contents of buf as
+/// On success, the caller should be able to access the contents of buf as they
+/// are with:
 ///
+/// ~~~{.cpp}
 /// static_cast<T*>(buf.GetCurrent())
+/// ~~~
 ///
-/// where T is the type stored on this branch.  The array's length is the return
-/// value of this function.
+/// where T is the type stored on this branch.
 ///
-/// NOTES:
-/// - This interface is meant to be used by higher-level, type-safe wrappers, not
-///   by end-users.
-/// - This only returns events
+/// When `count_buf` points to a valid TBuffer and the branch has a branch count,
+/// `count_buf` will be filled (via a call to GetEntriesSerialized) with the data
+/// from the branchCount.  After deserialization those value can be used to calculate
+/// the number of elements corresponding to each entries.
 ///
-
+/// For each entry the number of elements is the multiplication of
+/// 
+/// ~~~{.cpp}
+/// TLeaf *leaf = static_cast<TLeaf*>(branch->GetListOfLeaves()->At(0));
+/// auto len = leaf->GetLen();
+/// ~~~
+///
+/// and the value in the BranchCount corresponding to that entry (can be obtained
+/// from `branch->GetBranchCount()`).
+///
+/// \note This interface is not meant to be exposed to end users, but rather it should
+///       be wrapped by higher-level interfaces.
+///
+/// \note See TBranch::GetEntriesSerialized() for an alternative that does not
+///       perform byte swapping (useful to save one pass over data in some cases).
+///
 Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 {
    // TODO: eventually support multiple leaves.
@@ -1530,10 +1546,48 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
    return N;
 }
 
-// TODO: Template this and the call above; only difference is the TLeaf function (ReadBasketFast vs
-// ReadBasketSerialized
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Read a basket of events into the given buffer without byte swapping.
+///
+/// \return On success, the number of events of the type held by this branch
+///         that have been read into the buffer. -1 on failure.
+///
+/// On success, the caller still need to deserialize the content.  For example for
+/// a scalar branch and `N` the return value (i.e. number of entries)
+///
+/// ~~~{.cpp}
+/// rawdata = static_cast<char*>(buf.GetCurrent());
+/// for (std::size_t i = 0u; i < N; ++i, ++target)
+///     frombuf(rawdata, target); // `frombuf` also advances the `rawdata` pointer
+/// ~~~
+///
+/// where target is a pointer or array to the type stored on this branch.
+///
+/// When `count_buf` points to a valid TBuffer and the branch has a branch count,
+/// `count_buf` will be filled (via a call to GetEntriesSerialized()) with the data
+/// from the branchCount.  After deserialization those value can be used to calculate
+/// the number of elements corresponding to each entries.
+///
+/// For each entry the number of elements is the multiplication of
+///
+/// ~~~{.cpp}
+/// TLeaf *leaf = dynamic_cast<TLeaf*>(branch->GetListOfLeaves()->At(0));
+/// auto len = leaf->GetLen();
+/// ~~~
+///
+/// and the value in the BranchCount corresponding to that entry (can be obtained
+/// from `branch->GetBranchCount()`).
+///
+/// \note This interface is not meant to be exposed to end users, but rather it should
+///       be wrapped by higher-level interfaces.
+///
+/// \note See TBranch::GetBulkEntries() for an alternative that also performs byte swapping.
+///
 Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_buf)
 {
+   // TODO: Template this and TBranch::GetBulkEntries; only difference is the TLeaf function (ReadBasketFast vs
+   // ReadBasketSerialized
+
    // TODO: eventually support multiple leaves.
    if (R__unlikely(fNleaves != 1)) { return -1; }
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
@@ -3159,7 +3213,7 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBr
    // Note: captures `basket`, `where`, and `this` by value; modifies the TBranch and basket,
    // as we make a copy of the pointer.  We cannot capture `basket` by reference as the pointer
    // itself might be modified after `WriteBasketImpl` exits.
-   auto doUpdates = [=]() {
+   auto doUpdates = [this, basket, where]() {
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
       if (nout < 0)
          Error("WriteBasketImpl", "basket's WriteBuffer failed.");

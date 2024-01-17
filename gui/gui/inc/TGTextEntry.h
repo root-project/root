@@ -91,7 +91,7 @@ public:
    TGTextEntry(const TGWindow *parent = nullptr, const char *text = nullptr, Int_t id = -1);
    TGTextEntry(const TString &contents, const TGWindow *parent, Int_t id = -1);
 
-   virtual ~TGTextEntry();
+   ~TGTextEntry() override;
 
             TGDimension GetDefaultSize() const override;
    virtual  void        SetDefaultSize(UInt_t w, UInt_t h);

@@ -53,6 +53,10 @@ using namespace std;
 
 ClassImp(RooExtendPdf);
 
+RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
+                    RooAbsReal& norm, const char* rangeName)
+    : RooExtendPdf{name, title, pdf, RooAbsReal::Ref{norm}, rangeName} {}
+
 /// Constructor. The ExtendPdf behaves identical to the supplied input pdf,
 /// but adds an extended likelihood term. expectedEvents() will return
 /// `norm` if `rangeName` remains empty. If `rangeName` is not empty,
@@ -65,7 +69,7 @@ ClassImp(RooExtendPdf);
 /// \param[in] rangeName  If given, the number of events denoted by `norm` is interpreted as
 /// the number of events in this range only
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-            RooAbsReal& norm, const char* rangeName) :
+            RooAbsReal::Ref norm, const char* rangeName) :
   RooAbsPdf(name,title),
   _pdf("pdf", "PDF", this, pdf),
   _n("n","Normalization",this,norm),
@@ -115,11 +119,7 @@ double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
   // Optionally multiply with fractional normalization
   if (_rangeName) {
 
-    double fracInt;
-    {
-      GlobalSelectComponentRAII globalSelComp(true);
-      fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal();
-    }
+    double fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal();
 
 
     if ( fracInt == 0. || _n == 0.) {
@@ -171,4 +171,11 @@ std::unique_ptr<RooAbsReal> RooExtendPdf::createExpectedEventsFunc(const RooArgS
       out->addOwnedComponents(std::move(pdfExpectedEvents));
    }
    return out;
+}
+
+
+void RooExtendPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Use the result of the underlying pdf.
+   ctx.addResult(this, ctx.getResult(_pdf));
 }

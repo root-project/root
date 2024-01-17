@@ -38,7 +38,7 @@ protected:
 
 public:
    REveGeoShapeExtract(const char *n = "REveGeoShapeExtract", const char *t = nullptr);
-   ~REveGeoShapeExtract();
+   ~REveGeoShapeExtract() override;
 
    Bool_t HasElements();
    void   AddElement(REveGeoShapeExtract* gse);
@@ -63,7 +63,7 @@ public:
    TGeoShape* GetShape()       { return fShape;    }
    TList*     GetElements()    { return fElements; }
 
-   ClassDef(REveGeoShapeExtract, 1); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
+   ClassDefOverride(REveGeoShapeExtract, 1); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
 };
 
 } // namespace Experimental

@@ -23,7 +23,7 @@ RooRangeBoolean
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooRangeBoolean.h"
 #include "RooAbsReal.h"
@@ -79,7 +79,7 @@ RooRangeBoolean::~RooRangeBoolean()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return 1 if x is in range, zero otherwis
+/// Return 1 if x is in range, zero otherwise.
 
 double RooRangeBoolean::evaluate() const
 {
@@ -97,7 +97,7 @@ double RooRangeBoolean::evaluate() const
 std::list<double>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, double /*xlo*/, double /*xhi*/) const
 {
   if (string(obs.GetName())!=_x.arg().GetName()) {
-    return 0 ;
+    return nullptr ;
   }
 
   list<double>* hint = new list<double> ;

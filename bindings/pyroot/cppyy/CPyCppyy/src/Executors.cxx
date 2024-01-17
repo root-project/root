@@ -743,6 +743,21 @@ PyObject* CPyCppyy::PyObjectExecutor::Execute(
     return (PyObject*)GILCallR(method, self, ctxt);
 }
 
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::FunctionPointerExecutor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+// execute <method> with argument <self, ctxt>, return std::function from func ptr
+
+// A function pointer in clang is represented by a Type, not a FunctionDecl and it's
+// not possible to get the latter from the former: the backend will need to support
+// both. Since that is far in the future, we'll use a std::function instead.
+    void* address = (void*)GILCallR(method, self, ctxt);
+    if (address)
+        return Utility::FuncPtr2StdFunction(fRetType, fSignature, address);
+    PyErr_SetString(PyExc_TypeError, "can not convert null function pointer");
+    return nullptr;
+}
 
 //- factories ----------------------------------------------------------------
 CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
@@ -820,6 +835,15 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
                 result = new InstancePtrRefExecutor(klass);
         } else
             result = new InstancePtrExecutor(klass);
+    } else if (resolvedType.find("(*)") != std::string::npos ||
+               (resolvedType.find("::*)") != std::string::npos)) {
+    // this is a function pointer
+    // TODO: find better way of finding the type
+        auto pos1 = resolvedType.find('(');
+        auto pos2 = resolvedType.find("*)");
+        auto pos3 = resolvedType.rfind(')');
+        result = new FunctionPointerExecutor(
+            resolvedType.substr(0, pos1), resolvedType.substr(pos2+2, pos3-pos2-1));
     } else {
     // unknown: void* may work ("user knows best"), void will fail on use of return value
         h = (cpd == "") ? gExecFactories.find("void") : gExecFactories.find("void*");

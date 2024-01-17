@@ -45,7 +45,7 @@ protected:
 
 public:
    TEveTransSubEditor(TGWindow* p);
-   virtual ~TEveTransSubEditor() {}
+   ~TEveTransSubEditor() override {}
 
    void SetModel(TEveTrans* t);
    void SetTransFromData();
@@ -61,7 +61,7 @@ public:
    TEveGTriVecValuator*  GetRotValuator(){ return fRot;}
    TEveGTriVecValuator*  GetScaleValuator(){ return fScale;}
 
-   ClassDef(TEveTransSubEditor, 0); // Sub-editor for TEveTrans class.
+   ClassDefOverride(TEveTransSubEditor, 0); // Sub-editor for TEveTrans class.
 };
 
 
@@ -77,11 +77,11 @@ protected:
 
 public:
    TEveTransEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTransEditor() {}
+   ~TEveTransEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
-   ClassDef(TEveTransEditor, 0); // Editor for TEveTrans class.
+   ClassDefOverride(TEveTransEditor, 0); // Editor for TEveTrans class.
 };
 
 #endif

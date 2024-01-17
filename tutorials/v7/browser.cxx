@@ -19,16 +19,13 @@
 R__LOAD_LIBRARY(libROOTBrowserv7)
 
 #include <ROOT/RBrowser.hxx>
-#include <ROOT/RDirectory.hxx>
-
-using namespace ROOT::Experimental;
 
 void browser()
 {
    // create browser
-   auto br = std::make_shared<RBrowser>();
+   auto br = std::make_shared<ROOT::RBrowser>();
 
-   // add to global list - avoid auto deletion
-   RDirectory::Heap().Add("browser", br);
+   // clear when connection to client closed
+   br->ClearOnClose(br);
 }
 

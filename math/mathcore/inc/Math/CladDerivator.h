@@ -19,420 +19,229 @@
 #define CLAD_DERIVATOR
 
 #ifndef __CLING__
-  #error "This file must not be included by compiled programs."
+#error "This file must not be included by compiled programs."
 #endif //__CLING__
 
 #include <plugins/include/clad/Differentiator/Differentiator.h>
 #include "TMath.h"
-
+namespace clad {
 namespace custom_derivatives {
-  template <typename T>
-  T Abs_darg0(T d) {
-    return (d < 0) ? -1 : 1;
-  }
-
-  template <typename T>
-  T Abs_darg0_darg0(T d) {
-    return 0;
-  }
-
-  template <typename T>
-  Double_t ACos_darg0(T d) {
-    return -1./TMath::Sqrt(1 - d * d);
-  }
-
-  template <typename T>
-  Double_t ACos_darg0_darg0(T d) {
-    return - d / (TMath::Sqrt(1 - d * d) * (1 - d * d));
-  }
-
-  template <typename T>
-  Double_t ACosH_darg0(T d) {
-    return 1. / TMath::Sqrt(d * d - 1);
-  }
-
-  template <typename T>
-  Double_t ACosH_darg0_darg0(T d) {
-    return - d / (TMath::Sqrt(d * d - 1) * (d * d - 1) * TMath::Sqrt(d * d + 1) * (d * d + 1));
-  }
-
-  template <typename T>
-  Double_t ASin_darg0(T d) {
-    return 1. / TMath::Sqrt(1 - d * d);
-  }
-
-  template <typename T>
-  Double_t ASin_darg0_darg0(T d) {
-    return d / (TMath::Sqrt(1 - d * d) * (1 - d * d));
-  }
-
-  template <typename T>
-  Double_t ASinH_darg0(T d) {
-    return 1. / TMath::Sqrt(d * d + 1);
-  }
-
-  template <typename T>
-  Double_t ASinH_darg0_darg0(T d) {
-    return -d / (TMath::Sqrt(d * d + 1) * (d * d + 1));
-  }
-
-  template <typename T>
-  Double_t ATan_darg0(T d) {
-    return 1. / (d * d + 1);
-  }
-
-  template <typename T>
-  Double_t ATan_darg0_darg0(T d) {
-    return -2. * d / ((d * d + 1) * (d * d + 1));
-  }
-
-  template <typename T>
-  Double_t ATanH_darg0(T d) {
-    return 1. / (1 - d * d);
-  }
-
-  template <typename T>
-  Double_t ATanH_darg0_darg0(T d) {
-    return 2. * d / ((1 - d * d) * (1 - d * d));
-  }
-
-  template <typename T>
-  T Cos_darg0(T d) {
-    return -TMath::Sin(d);
-  }
-
-  template <typename T>
-  T Cos_darg0_darg0(T d) {
-    return -TMath::Cos(d);
-  }
-
-  template <typename T>
-  T CosH_darg0(T d) {
-    return TMath::SinH(d);
-  }
-
-
-  template <typename T>
-  T CosH_darg0_darg0(T d) {
-    return TMath::CosH(d);
-  }
-
-  template <typename T>
-  Double_t Erf_darg0(T d) {
-    return 2 * TMath::Exp(-d * d) / TMath::Sqrt(TMath::Pi());
-  }
-
-  template <typename T>
-  Double_t Erf_darg0_darg0(T d) {
-    return -4 * TMath::Exp(-d * d) * d / TMath::Sqrt(TMath::Pi());
-  }
-
-  template <typename T>
-  Double_t Erfc_darg0(T d) { 
-    return -Erf_darg0(d);
-  }
-
-  template <typename T>
-  Double_t Erfc_darg0_darg0(T d) {
-    return -Erf_darg0_darg0(d);
-  }
-
-  template <typename T>
-  Double_t Exp_darg0(T d) {
-    return TMath::Exp(d);
-  }
-
-  template <typename T>
-  Double_t Exp_darg0_darg0(T d) {
-    return TMath::Exp(d);
-  }
-
-  template <typename T>
-  T Hypot_darg0(T x, T y) {
-    return x / TMath::Hypot(x, y);
-  }
-
-  template <typename T>
-  T Hypot_darg0_darg0(T x, T y) {
-    return y * y / (TMath::Hypot(x, y) * (x * x + y * y));
-  }
-
-  template <typename T>
-  T Hypot_darg0_darg1(T x, T y) {
-    return x * y / (TMath::Hypot(x, y) * (x * x + y * y));
-  }
-
-  template <typename T>
-  T Hypot_darg1(T x, T y) {
-    return y / TMath::Hypot(x, y);
-  }
-
-  template <typename T>
-  T Hypot_darg1_darg0(T x, T y) {
-    return x * y / (TMath::Hypot(x, y) * (x * x + y * y));
-  }
-
-  template <typename T>
-  T Hypot_darg1_darg1(T x, T y) {
-    return x * x / (TMath::Hypot(x, y) * (x * x + y * y));
-  }
-    
-  template <typename T>
-  void Hypot_grad(T x, T y, T* result) {
-    T h = TMath::Hypot(x, y);
-    result[0] += x / h;
-    result[1] += y / h;
-  }
-
-  template <typename T>
-  void Hypot_darg0_grad(T x, T y, T* result) {
-    T h = y / (TMath::Hypot(x, y) * (x * x + y * y));
-    result[0] += y * h;
-    result[1] += x * h;
-  }
-
-  template <typename T>
-  void Hypot_darg1_grad(T x, T y, T* result) {
-    T h = x / (TMath::Hypot(x, y) * (x * x + y * y));
-    result[0] += y * h;
-    result[1] += x * h;
-  }
-
-  template <typename T>
-  Double_t Log_darg0(T d) {
-    return 1. / d;
-  }
-
-  template <typename T>
-  Double_t Log_darg0_darg0(T d) {
-    return -1. / (d * d);
-  }
-
-  template <typename T>
-  Double_t Log10_darg0(T d) {
-    return Log_darg0(d) / TMath::Ln10();
-  } 
-
-  template <typename T>
-  Double_t Log10_darg0_darg0(T d) {
-    return Log_darg0_darg0(d) / TMath::Ln10();
-  }
-
-  template <typename T>
-  Double_t Log2_darg0(T d) {
-    return Log_darg0(d) / TMath::Log(2);
-  } 
-
-  template <typename T>
-  Double_t Log2_darg0_darg0(T d) {
-    return Log_darg0_darg0(d) / TMath::Log(2);
-  }
-
-  template <typename T>
-  T Max_darg0(T a, T b) {
-    return (a >= b) ? 1 : 0;
-  }
-
-  template <typename T>
-  T Max_darg0_darg0(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  T Max_darg0_darg1(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  T Max_darg1(T a, T b) {
-    return (a >= b) ? 0 : 1;
-  }
-
-  template <typename T>
-  T Max_darg1_darg0(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  T Max_darg1_darg1(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  void Max_grad(T a, T b, T* result) {
-    if (a >= b)
-      result[0] += 1;
-    else
-      result[1] += 1;
-  }
-
-  template <typename T>
-  void Max_darg0_grad(T a, T b, T* result) {
-    return;
-  }
-
-  template <typename T>
-  void Max_darg1_grad(T a, T b, T* result) {
-    return;
-  }
-
-  template <typename T>
-  T Min_darg0(T a, T b) {
-    return (a <= b) ? 1 : 0;
-  }
-
-  template <typename T>
-  T Min_darg0_darg0(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  T Min_darg0_darg1(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  T Min_darg1(T a, T b) {
-    return (a <= b) ? 0 : 1;
-  }
-
-  template <typename T>
-  T Min_darg1_darg0(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  T Min_darg1_darg1(T a, T b) {
-    return 0;
-  }
-
-  template <typename T>
-  void Min_grad(T a, T b, T* result) {
-    if (a <= b)
-      result[0] += 1;
-    else
-      result[1] += 1;
-  }
-
-  template <typename T>
-  void Min_darg0_grad(T a, T b, T* result) {
-    return;
-  }
-
-  template <typename T>
-  void Min_darg1_grad(T a, T b, T* result) {
-    return;
-  }
-
-  template <typename T>
-  T Power_darg0(T x, T y) {
-    return y * TMath::Power(x, y - 1);
-  }
-
-  template <typename T>
-  T Power_darg0_darg0(T x, T y) {
-    return y * (y - 1) * TMath::Power(x, y - 2);
-  }
-
-  template <typename T>
-  Double_t Power_darg0_darg1(T x, T y) {
-    return TMath::Power(x, y - 1) * (y * TMath::Log(x) + 1);
-  }
-
-  template <typename T>
-  Double_t Power_darg1(T x, T y) {
-    return TMath::Power(x, y) * TMath::Log(x);
-  }
-
-  template <typename T>
-  Double_t Power_darg1_darg0(T x, T y) {
-    return TMath::Power(x, y - 1) * (y * TMath::Log(x) + 1);
-  }
-
-  template <typename T>
-  Double_t Power_darg1_darg1(T x, T y) {
-    return TMath::Power(x, y) * TMath::Sq(TMath::Log(x));
-  }
-
-  template <typename T>
-  Double_t Power_grad(T x, T y, Double_t* result) {
-    T t = TMath::Power(x, y - 1);
-    result[0] += y * t;
-    result[1] += x * t * TMath::Log(x);
-  }
-
-  template <typename T>
-  Double_t Power_darg0_grad(T x, T y, Double_t* result) {
-    T t = TMath::Power(x, y - 2);
-    result[0] += y * (y - 1) * t;
-    result[1] += x * t * (y * TMath::Log(x) + 1);
-  }
-
-  template <typename T>
-  Double_t Power_darg1_grad(T x, T y, Double_t* result) {
-    T t = TMath::Power(x, y - 1);
-    result[0] += t * (y * TMath::Log(x) + 1);
-    result[1] += x * t * TMath::Sq(TMath::Log(x));
-  }
-
-  template <typename T>
-  Double_t Sin_darg0(T d) {
-    return TMath::Cos(d);
-  }
-
-  template <typename T>
-  Double_t Sin_darg0_darg0(T d) {
-    return -TMath::Sin(d);
-  }
-
-  template <typename T>
-  Double_t SinH_darg0(T d) {
-    return TMath::CosH(d);
-  }
-
-  template <typename T>
-  Double_t SinH_darg0_darg0(T d) {
-    return TMath::SinH(d);
-  }
-
-  template <typename T>
-  T Sq_darg0(T d) {
-    return 2 * d;
-  }
-
-  template <typename T>
-  T Sq_darg0_darg0(T d) {
-    return 2;
-  }
-
-  template <typename T>
-  Double_t Sqrt_darg0(T d) {
-    return 0.5 / TMath::Sqrt(d);
-  }
-
-  template <typename T>
-  Double_t Sqrt_darg0_darg0(T d) {
-    return 0.25 / (TMath::Sqrt(d) * d);
-  }
-
-  template <typename T>
-  Double_t Tan_darg0(T d) {
-    return 1./ TMath::Sq(TMath::Cos(d));
-  }
-
-  template <typename T>
-  Double_t Tan_darg0_darg0(T d) {
-    return 2. * TMath::Sin(d) / (TMath::Cos(d) * TMath::Cos(d) * TMath::Cos(d));
-  }
-
-  template <typename T>
-  Double_t TanH_darg0(T d) {
-    return 1./ TMath::Sq(TMath::CosH(d));
-  }
-
-  template <typename T>
-  Double_t TanH_darg0_darg0(T d) {
-    return -2. * TMath::SinH(d) / (TMath::CosH(d) * TMath::CosH(d) * TMath::CosH(d));
-  }
+namespace TMath {
+template <typename T>
+ValueAndPushforward<T, T> Abs_pushforward(T x, T d_x)
+{
+   return {::TMath::Abs(x), ((x < 0) ? -1 : 1) * d_x};
 }
+
+template <typename T>
+ValueAndPushforward<T, T> ACos_pushforward(T x, T d_x)
+{
+   return {::TMath::ACos(x), (-1. / ::TMath::Sqrt(1 - x * x)) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> ACosH_pushforward(T x, T d_x)
+{
+   return {::TMath::ACosH(x), (1. / ::TMath::Sqrt(x * x - 1)) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> ASin_pushforward(T x, T d_x)
+{
+   return {::TMath::ASin(x), (1. / ::TMath::Sqrt(1 - x * x)) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> ASinH_pushforward(T x, T d_x)
+{
+   return {::TMath::ASinH(x), (1. / ::TMath::Sqrt(x * x + 1)) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> ATan_pushforward(T x, T d_x)
+{
+   return {::TMath::ATan(x), (1. / (x * x + 1)) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> ATanH_pushforward(T x, T d_x)
+{
+   return {::TMath::ATanH(x), (1. / (1 - x * x)) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Cos_pushforward(T x, T d_x)
+{
+   return {::TMath::Cos(x), -::TMath::Sin(x) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> CosH_pushforward(T x, T d_x)
+{
+   return {::TMath::CosH(x), ::TMath::SinH(x) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Erf_pushforward(T x, T d_x)
+{
+   return {::TMath::Erf(x), (2 * ::TMath::Exp(-x * x) / ::TMath::Sqrt(::TMath::Pi())) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Erfc_pushforward(T x, T d_x)
+{
+   return {::TMath::Erfc(x), -Erf_pushforward(x, d_x).pushforward};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Exp_pushforward(T x, T d_x)
+{
+   return {::TMath::Exp(x), ::TMath::Exp(x) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Hypot_pushforward(T x, T y, T d_x, T d_y)
+{
+   return {::TMath::Hypot(x, y), x / ::TMath::Hypot(x, y) * d_x + y / ::TMath::Hypot(x, y) * d_y};
+}
+
+template <typename T, typename U>
+void Hypot_pullback(T x, T y, U p, clad::array_ref<T> d_x, clad::array_ref<T> d_y)
+{
+   T h = ::TMath::Hypot(x, y);
+   *d_x += x / h * p;
+   *d_y += y / h * p;
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Log_pushforward(T x, T d_x)
+{
+   return {::TMath::Log(x), (1. / x) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Log10_pushforward(T x, T d_x)
+{
+   return {::TMath::Log10(x), (1.0 / (x * ::TMath::Ln10())) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Log2_pushforward(T x, T d_x)
+{
+   return {::TMath::Log2(x), (1.0 / (x * ::TMath::Log(2.0))) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Max_pushforward(T x, T y, T d_x, T d_y)
+{
+   T derivative = 0;
+   if (x >= y)
+      derivative = d_x;
+   else
+      derivative = d_y;
+   return {::TMath::Max(x, y), derivative};
+}
+
+template <typename T, typename U>
+void Max_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
+{
+   if (a >= b)
+      *d_a += p;
+   else
+      *d_b += p;
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Min_pushforward(T x, T y, T d_x, T d_y)
+{
+   T derivative = 0;
+   if (x <= y)
+      derivative = d_x;
+   else
+      derivative = d_y;
+   return {::TMath::Min(x, y), derivative};
+}
+
+template <typename T, typename U>
+void Min_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
+{
+   if (a <= b)
+      *d_a += p;
+   else
+      *d_b += p;
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
+{
+   T pushforward = y * ::TMath::Power(x, y - 1) * d_x;
+   if (d_y) {
+      pushforward += (::TMath::Power(x, y) * ::TMath::Log(x)) * d_y;
+   }
+   return {::TMath::Power(x, y), pushforward};
+}
+
+template <typename T, typename U>
+void Power_pullback(T x, T y, U p, clad::array_ref<T> d_x, clad::array_ref<T> d_y)
+{
+   auto t = pow_pushforward(x, y, 1, 0);
+   *d_x += t.pushforward * p;
+   t = pow_pushforward(x, y, 0, 1);
+   *d_y += t.pushforward * p;
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Sin_pushforward(T x, T d_x)
+{
+   return {::TMath::Sin(x), ::TMath::Cos(x) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> SinH_pushforward(T x, T d_x)
+{
+   return {::TMath::SinH(x), ::TMath::CosH(x) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Sq_pushforward(T x, T d_x)
+{
+   return {::TMath::Sq(x), 2 * x * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Sqrt_pushforward(T x, T d_x)
+{
+   return {::TMath::Sqrt(x), (0.5 / ::TMath::Sqrt(x)) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> Tan_pushforward(T x, T d_x)
+{
+   return {::TMath::Tan(x), (1. / ::TMath::Sq(::TMath::Cos(x))) * d_x};
+}
+
+template <typename T>
+ValueAndPushforward<T, T> TanH_pushforward(T x, T d_x)
+{
+   return {::TMath::TanH(x), (1. / ::TMath::Sq(::TMath::CosH(x))) * d_x};
+}
+
+#ifdef WIN32
+// Additional custom derivatives that can be removed
+// after Issue #12108 in ROOT is resolved
+// constexpr is removed
+ValueAndPushforward<Double_t, Double_t> Pi_pushforward()
+{
+   return {3.1415926535897931, 0.};
+}
+// constexpr is removed
+ValueAndPushforward<Double_t, Double_t> Ln10_pushforward()
+{
+   return {2.3025850929940459, 0.};
+}
+#endif
+} // namespace TMath
+} // namespace custom_derivatives
+} // namespace clad
+
 #endif // CLAD_DERIVATOR

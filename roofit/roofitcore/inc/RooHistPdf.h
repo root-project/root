@@ -65,6 +65,8 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override;
+
   void setCdfBoundaries(bool flag) {
     // Set use of special boundary conditions for c.d.f.s
     _cdfBoundaries = flag ;
@@ -92,10 +94,13 @@ public:
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   bool isBinnedDistribution(const RooArgSet&) const override { return _intOrder==0 ; }
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-protected:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  protected:
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   bool importWorkspaceHook(RooWorkspace& ws) override ;
@@ -119,17 +124,19 @@ private:
 
   friend class RooHistFunc;
 
+  static bool forceAnalyticalInt(RooArgSet const& pdfObsList, RooAbsArg const& dep);
+
   static Int_t getAnalyticalIntegral(RooArgSet& allVars,
                                      RooArgSet& analVars,
                                      const char* rangeName,
                                      RooArgSet const& histObsList,
-                                     RooSetProxy const& pdfObsList,
+                                     RooArgSet const& pdfObsList,
                                      Int_t intOrder) ;
 
   static double analyticalIntegral(Int_t code,
                                    const char* rangeName,
                                    RooArgSet const& histObsList,
-                                   RooSetProxy const& pdfObsList,
+                                   RooArgSet const& pdfObsList,
                                    RooDataHist& dataHist,
                                    bool histFuncMode) ;
 
@@ -140,6 +147,12 @@ private:
                                              RooAbsRealLValue& obs,
                                              double xlo,
                                              double xhi);
+
+  static void rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
+                                   RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize);
+
+  static std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
+                                                  const RooArgSet &obs, bool histFuncMode);
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };

@@ -126,9 +126,9 @@ bool gUseFumiliFunction = false;
 
 // initialize the static instances
 
-ROOT::Math::FitMethodFunction * TFumiliMinimizer::fgFunc = 0;
-ROOT::Math::FitMethodGradFunction * TFumiliMinimizer::fgGradFunc = 0;
-TFumili * TFumiliMinimizer::fgFumili = 0;
+ROOT::Math::FitMethodFunction * TFumiliMinimizer::fgFunc = nullptr;
+ROOT::Math::FitMethodGradFunction * TFumiliMinimizer::fgGradFunc = nullptr;
+TFumili * TFumiliMinimizer::fgFumili = nullptr;
 
 
 ClassImp(TFumiliMinimizer);
@@ -139,7 +139,7 @@ TFumiliMinimizer::TFumiliMinimizer(int  ) :
    fNFree(0),
    fMinVal(0),
    fEdm(-1),
-   fFumili(0)
+   fFumili(nullptr)
 {
    // Constructor for TFumiliMinimier class
 
@@ -188,6 +188,27 @@ void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    fDim = func.NDim();
    fFumili->SetParNumber(fDim);
 
+   if(func.HasGradient()) {
+      // In this case the function derivatives are provided
+      // by the user via this interface and there not calculated by Fumili.
+
+      fDim = func.NDim();
+      fFumili->SetParNumber(fDim);
+
+      // for Fumili the fit method function interface is required
+      const ROOT::Math::FitMethodGradFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
+      if (!fcnfunc) {
+         Error("SetFunction","Wrong Fit method function type used for Fumili");
+         return;
+      }
+      // assign to the static pointer (NO Thread safety here)
+      fgFunc = nullptr;
+      fgGradFunc = const_cast<ROOT::Math::FitMethodGradFunction  *>(fcnfunc);
+      fFumili->SetFCN(&TFumiliMinimizer::Fcn);
+
+      return;
+   }
+
    // for Fumili the fit method function interface is required
    const ROOT::Math::FitMethodFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
    if (!fcnfunc) {
@@ -196,7 +217,7 @@ void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    }
    // assign to the static pointer (NO Thread safety here)
    fgFunc = const_cast<ROOT::Math::FitMethodFunction *>(fcnfunc);
-   fgGradFunc = 0;
+   fgGradFunc = nullptr;
    fFumili->SetFCN(&TFumiliMinimizer::Fcn);
 
 #ifdef USE_FUMILI_FUNCTION
@@ -207,27 +228,6 @@ void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
          fgFunc = new FumiliFunction<ROOT::Fit::Chi2FCN<ROOT::Math::FitMethodFunction::BaseFunction> >(fFumili,fcnfunc);
    }
 #endif
-
-}
-
-void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func) {
-   // Set the objective function to be minimized, by passing a function object implement the
-   // multi-dim gradient Function interface. In this case the function derivatives are provided
-   // by the user via this interface and there not calculated by Fumili.
-
-   fDim = func.NDim();
-   fFumili->SetParNumber(fDim);
-
-   // for Fumili the fit method function interface is required
-   const ROOT::Math::FitMethodGradFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
-   if (!fcnfunc) {
-      Error("SetFunction","Wrong Fit method function type used for Fumili");
-      return;
-   }
-   // assign to the static pointer (NO Thread safety here)
-   fgFunc = 0;
-   fgGradFunc = const_cast<ROOT::Math::FitMethodGradFunction  *>(fcnfunc);
-   fFumili->SetFCN(&TFumiliMinimizer::Fcn);
 
 }
 
@@ -313,7 +313,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
             fval = fgFunc->DataElement( x, i, &gf[0]);
          }
          else {
-            if (fgFunc != 0)
+            if (fgFunc != nullptr)
                fval = fgFunc->DataElement(x, i, gf.data(), h.data()  );
             else
                fval = fgGradFunc->DataElement(x, i, gf.data(), h.data());
@@ -347,7 +347,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
          }
          else {
             // calculate data element and gradient
-            if (fgFunc != 0)
+            if (fgFunc != nullptr)
                fval = fgFunc->DataElement(x, i, &gf[0], h.data());
             else
                fval = fgGradFunc->DataElement(x, i, &gf[0], h.data());
@@ -374,7 +374,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
             fval = fgFunc->DataElement(x, i, &gf[0]);
          } else {
             // calculate data element and gradient
-            if (fgFunc != 0)
+            if (fgFunc != nullptr)
                fval = fgFunc->DataElement(x, i, &gf[0]);
             else
                fval = fgGradFunc->DataElement(x, i, &gf[0]);
@@ -394,12 +394,12 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
       Error("EvaluateFCN", " type of fit method is not supported, it must be chi2 or log-likelihood");
    }
 
-   // now TFumili excludes fixed prameter in second-derivative matrix
+   // now TFumili excludes fixed parameter in second-derivative matrix
    // ned to get them using the static instance of TFumili
    double * zmatrix = fgFumili->GetZ();
    double * pl0 = fgFumili->GetPL0(); // parameter limits
-   assert(zmatrix != 0);
-   assert(pl0 != 0);
+   assert(zmatrix != nullptr);
+   assert(pl0 != nullptr);
    unsigned int k = 0;
    unsigned int l = 0;
    for (unsigned int i = 0; i < npar; ++i) {
@@ -427,7 +427,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
 
 bool TFumiliMinimizer::SetVariable(unsigned int ivar, const std::string & name, double val, double step) {
    // set a free variable.
-   if (fFumili == 0) {
+   if (fFumili == nullptr) {
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
       return false;
    }
@@ -445,7 +445,7 @@ bool TFumiliMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
 
 bool TFumiliMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower, double upper) {
    // set a limited variable.
-   if (fFumili == 0) {
+   if (fFumili == nullptr) {
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
       return false;
    }
@@ -472,7 +472,7 @@ bool Fumili2Minimizer::SetLowerLimitedVariable(unsigned int ivar , const std::st
 
 bool TFumiliMinimizer::SetFixedVariable(unsigned int ivar, const std::string & name, double val) {
    // set a fixed variable.
-   if (fFumili == 0) {
+   if (fFumili == nullptr) {
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
       return false;
    }
@@ -494,7 +494,7 @@ bool TFumiliMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
 
 bool TFumiliMinimizer::SetVariableValue(unsigned int ivar, double val) {
    // set the variable value
-   if (fFumili == 0) {
+   if (fFumili == nullptr) {
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
       return false;
    }
@@ -521,10 +521,10 @@ bool TFumiliMinimizer::SetVariableValue(unsigned int ivar, double val) {
 bool TFumiliMinimizer::Minimize() {
    // perform the minimization using the algorithm chosen previously by the user
    // By default Migrad is used.
-   // Return true if the found minimum is valid and update internal chached values of
+   // Return true if the found minimum is valid and update internal cached values of
    // minimum values, errors and covariance matrix.
 
-   if (fFumili == 0) {
+   if (fFumili == nullptr) {
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
       return false;
    }

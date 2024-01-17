@@ -4,7 +4,7 @@
 // Author: Vassil Vassilev   9/02/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -101,15 +101,17 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    ASTContext &C = interp.getCI()->getASTContext();
    clang::Expr::EvalResult evalRes;
    if (E->EvaluateAsInt(evalRes, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
+      // FIXME: Find the right type or make sure we have an interface to update
+      // the clang::Type in the cling::Value
       APSInt res = evalRes.Val.getInt();
       // IntTy or maybe better E->getType()?
       V = cling::Value(C.IntTy, interp);
       // We must use the correct signedness otherwise the zero extension
       // fails if the actual type is strictly less than long long.
       if (res.isSigned())
-        V.getLL() = res.getSExtValue();
+        V.setLongLong(res.getSExtValue());
       else
-        V.getULL() = res.getZExtValue();
+        V.setULongLong(res.getZExtValue());
       return;
    }
    // TODO: Build a wrapper around the expression to avoid decompilation and
@@ -121,7 +123,7 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    Policy.AnonymousTagLocations = false;
    string buf;
    raw_string_ostream out(buf);
-   E->printPretty(out, /*Helper=*/0, Policy, /*Indentation=*/0);
+   E->printPretty(out, /*Helper=*/nullptr, Policy, /*Indentation=*/0);
    out << ';'; // no value printing
    out.flush();
    // Evaluate() will set V to invalid if evaluation fails.
@@ -501,7 +503,7 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
    //  instantiate and codegen this function.
    //
    bool needInstantiation = false;
-   const FunctionDecl *Definition = 0;
+   const FunctionDecl *Definition = nullptr;
    if (!FD->isDefined(Definition)) {
       FunctionDecl::TemplatedKind TK = FD->getTemplatedKind();
       switch (TK) {
@@ -997,7 +999,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    string wrapper_name;
    string wrapper;
 
-   if (get_wrapper_code(wrapper_name, wrapper) == 0) return 0;
+   if (get_wrapper_code(wrapper_name, wrapper) == 0) return nullptr;
 
    //fprintf(stderr, "%s\n", wrapper.c_str());
    //
@@ -1389,384 +1391,88 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    return (tcling_callfunc_dtor_Wrapper_t)F;
 }
 
-class ValHolder {
-public:
-   union {
-      long double ldbl;
-      double dbl;
-      float flt;
-      //__uint128_t ui128;
-      //__int128_t i128;
-      unsigned long long ull;
-      long long ll;
-      unsigned long ul;
-      long l;
-      unsigned int ui;
-      int i;
-      unsigned short us;
-      short s;
-      //char32_t c32;
-      //char16_t c16;
-      //unsigned wchar_t uwc; - non-standard
-      wchar_t wc;
-      unsigned char uc;
-      signed char sc;
-      char c;
-      bool b;
-      void *vp;
-   } u;
-};
-
 void TClingCallFunc::exec(void *address, void *ret)
 {
-   SmallVector<ValHolder, 8> vh_ary;
    SmallVector<void *, 8> vp_ary;
-
-   unsigned num_args = fArgVals.size();
+   const unsigned num_args = fArgVals.size();
    {
       R__LOCKGUARD_CLING(gInterpreterMutex);
-
       const FunctionDecl *FD = GetDecl();
+
+      // FIXME: Consider the implicit this which is sometimes not passed.
+      if (num_args < GetMinRequiredArguments()) {
+         ::Error("TClingCallFunc::exec",
+                 "Not enough arguments provided for %s (%d instead of the minimum %d)",
+                 fMethod->Name(),
+                 num_args, (int)GetMinRequiredArguments());
+         return;
+      } else if (!isa<CXXMethodDecl>(FD) && num_args > FD->getNumParams()) {
+         ::Error("TClingCallFunc::exec",
+                 "Too many arguments provided for %s (%d instead of the minimum %d)",
+                 fMethod->Name(),
+                 num_args, (int)GetMinRequiredArguments());
+         return;
+      }
+      if (auto CXXMD = dyn_cast<CXXMethodDecl>(FD))
+         if (!address && CXXMD && !CXXMD->isStatic() && !isa<CXXConstructorDecl>(FD)) {
+            ::Error("TClingCallFunc::exec",
+                    "The method %s is called without an object.",
+                    fMethod->Name());
+            return;
+         }
+
 
       //
       //  Convert the arguments from cling::Value to their
       //  actual type and store them in a holder for passing to the
       //  wrapper function by pointer to value.
       //
-      unsigned num_params = FD->getNumParams();
-
-      if (num_args < GetMinRequiredArguments()) {
-         ::Error("TClingCallFunc::exec",
-               "Not enough arguments provided for %s (%d instead of the minimum %d)",
-               fMethod->Name(),
-               num_args, (int)GetMinRequiredArguments());
-         return;
-      }
-      if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
-          && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
-          && !dyn_cast<CXXConstructorDecl>(FD)) {
-         ::Error("TClingCallFunc::exec",
-               "The method %s is called without an object.",
-               fMethod->Name());
-         return;
-      }
-      vh_ary.reserve(num_args);
       vp_ary.reserve(num_args);
-      for (unsigned i = 0U; i < num_args; ++i) {
-         QualType Ty;
-         if (i < num_params) {
-            const ParmVarDecl *PVD = FD->getParamDecl(i);
-            Ty = PVD->getType();
-         } else {
-            Ty = fArgVals[i].getType();
-         }
-         QualType QT = Ty.getCanonicalType();
-         if (const BuiltinType *BT = dyn_cast<BuiltinType>(QT.getTypePtr())) {
-            ValHolder vh;
-            switch (BT->getKind()) {
-               //  Unsigned Types
-            case BuiltinType::Bool: vh.u.b = fArgVals[i].simplisticCastAs<bool>();
-               break;
-            case BuiltinType::Char_U: vh.u.c = fArgVals[i].simplisticCastAs<char>();
-               break;
-            case BuiltinType::UChar: vh.u.uc = fArgVals[i].simplisticCastAs<unsigned char>();
-               break;
-            case BuiltinType::WChar_U: vh.u.wc = fArgVals[i].simplisticCastAs<wchar_t>();
-               break;
-            case BuiltinType::Char16: //vh.u.c16 = fArgVals[i].simplisticCastAs<char16_t>();
-               break;
-            case BuiltinType::Char32: //vh.u.c32 = fArgVals[i].simplisticCastAs<char32_t>();
-               break;
-            case BuiltinType::UShort: vh.u.us = fArgVals[i].simplisticCastAs<unsigned short>();
-               break;
-            case BuiltinType::UInt: vh.u.ui = fArgVals[i].simplisticCastAs<unsigned int>();
-               break;
-            case BuiltinType::ULong: vh.u.ul = fArgVals[i].simplisticCastAs<unsigned long>();
-               break;
-            case BuiltinType::ULongLong: vh.u.ull = fArgVals[i].simplisticCastAs<unsigned long long>();
-               break;
-               //  Signed Types
-            case BuiltinType::Char_S: vh.u.c = fArgVals[i].simplisticCastAs<char>();
-               break;
-            case BuiltinType::SChar: vh.u.sc = fArgVals[i].simplisticCastAs<signed char>();
-               break;
-            case BuiltinType::WChar_S: vh.u.wc = fArgVals[i].simplisticCastAs<wchar_t>();
-               break;
-            case BuiltinType::Short: vh.u.s = fArgVals[i].simplisticCastAs<short>();
-               break;
-            case BuiltinType::Int: vh.u.i = fArgVals[i].simplisticCastAs<int>();
-               break;
-            case BuiltinType::Long: vh.u.l = fArgVals[i].simplisticCastAs<long>();
-               break;
-            case BuiltinType::LongLong: vh.u.ll = fArgVals[i].simplisticCastAs<long long>();
-               break;
-            case BuiltinType::Float: vh.u.flt = fArgVals[i].simplisticCastAs<float>();
-               break;
-            case BuiltinType::Double: vh.u.dbl = fArgVals[i].simplisticCastAs<double>();
-               break;
-            case BuiltinType::LongDouble: vh.u.ldbl = fArgVals[i].simplisticCastAs<long double>();
-               break;
-            case BuiltinType::NullPtr: vh.u.vp = fArgVals[i].getPtr();
-               break;
-            default:
-               // Thee should be no others.  This is here in case
-               // this changes in the future.
-               ::Error("TClingCallFunc::exec(void*)",
-                       "Unhandled builtin type '%s'",
-                       BT->getTypeClassName());
-                  QT->dump();
-               return;
-            }
-            vh_ary.push_back(vh);
-            vp_ary.push_back(&vh_ary.back());
-         } else if (QT->isReferenceType() || QT->isRecordType()) {
+      for (unsigned i = 0; i < num_args; ++i) {
+         QualType QT;
+         // Check if we provided a this parameter.
+         // FIXME: Currently we do not provide consistently the this pointer at
+         // index 0 of the call arguments passed to the wrapper.
+         // In C++ we can still call member functions which do not use it. Eg:
+         // struct S {int Print() { return printf("a");} }; auto r1 = ((S*)0)->Print();
+         // This works just fine even though it might be UB...
+         bool implicitThisPassed = i == 0 && isa<CXXMethodDecl>(FD) && num_args - FD->getNumParams() == 1;
+         if (implicitThisPassed)
+           QT = cast<CXXMethodDecl>(FD)->getThisType();
+         else
+           QT = FD->getParamDecl(i)->getType();
+         QT = QT.getCanonicalType();
+         if (QT->isReferenceType() || QT->isRecordType()) {
             // the argument is already a pointer value (points to the same thing
             // as the reference or pointing to object passed by value.
-            vp_ary.push_back((void *) fArgVals[i].simplisticCastAs<unsigned long long>());
-         } else if (QT->isPointerType() || QT->isArrayType() || QT->isMemberPointerType()) {
-            ValHolder vh;
-            vh.u.vp = (void *) fArgVals[i].simplisticCastAs<unsigned long long>();
-            vh_ary.push_back(vh);
-            vp_ary.push_back(&vh_ary.back());
-         } else if (QT->isEnumeralType()) {
-            // FIXME: Handle isScopedEnumeralType ()
-            // FIXME:We may need to worry about the underlying type of the enum
-            ValHolder vh;
-            vh.u.i = fArgVals[i].simplisticCastAs<int>();
-            vh_ary.push_back(vh);
-            vp_ary.push_back(&vh_ary.back());
-         } else {
-            ::Error("TClingCallFunc::exec(void*)",
-                    "Invalid type '%s'", QT->getTypeClassName());
-            QT->dump();
-            return;
-         }
+            vp_ary.push_back(fArgVals[i].getPtr());
+         } else
+            vp_ary.push_back(fArgVals[i].getPtrAddress());
       }
    } // End of scope holding the lock
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
-template <typename T>
-void TClingCallFunc::execWithLL(void *address, cling::Value *val)
+void TClingCallFunc::exec_with_valref_return(void *address, cling::Value &ret)
 {
-   T ret; // leave uninit for valgrind's sake!
-   exec(address, &ret);
-   val->getLL() = ret;
-}
+   const FunctionDecl *FD = GetDecl();
 
-template <typename T>
-void TClingCallFunc::execWithULL(void *address, cling::Value *val)
-{
-   T ret; // leave uninit for valgrind's sake!
-   exec(address, &ret);
-   val->getULL() = ret;
-}
-
-// Handle integral types.
-template <class T>
-TClingCallFunc::ExecWithRetFunc_t TClingCallFunc::InitRetAndExecIntegral(QualType QT, cling::Value &ret)
-{
-   ret = cling::Value::Create<T>(QT.getAsOpaquePtr(), *fInterp);
-   static_assert(std::is_integral<T>::value, "Must be called with integral T");
-   if (std::is_signed<T>::value)
-      return [this](void* address, cling::Value& ret) { execWithLL<T>(address, &ret); };
-   else
-      return [this](void* address, cling::Value& ret) { execWithULL<T>(address, &ret); };
-}
-
-// Handle builtin types.
-TClingCallFunc::ExecWithRetFunc_t
-TClingCallFunc::InitRetAndExecBuiltin(QualType QT, const clang::BuiltinType *BT, cling::Value &ret) {
-   switch (BT->getKind()) {
-      case BuiltinType::Void: {
-         ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, 0); };
-         break;
-      }
-
-         //
-         //  Unsigned Types
-         //
-      case BuiltinType::Bool:
-         return InitRetAndExecIntegral<bool>(QT, ret);
-         break;
-      case BuiltinType::Char_U: // char on targets where it is unsigned
-      case BuiltinType::UChar:
-         return InitRetAndExecIntegral<char>(QT, ret);
-         break;
-      case BuiltinType::WChar_U:
-         return InitRetAndExecIntegral<wchar_t>(QT, ret);
-         break;
-      case BuiltinType::Char16:
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'char16_t'!");
-         return {};
-         break;
-      case BuiltinType::Char32:
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'char32_t'!");
-         return {};
-         break;
-      case BuiltinType::UShort:
-         return InitRetAndExecIntegral<unsigned short>(QT, ret);
-         break;
-      case BuiltinType::UInt:
-         return InitRetAndExecIntegral<unsigned int>(QT, ret);
-         break;
-      case BuiltinType::ULong:
-         return InitRetAndExecIntegral<unsigned long>(QT, ret);
-         break;
-      case BuiltinType::ULongLong:
-         return InitRetAndExecIntegral<unsigned long long>(QT, ret);
-         break;
-      case BuiltinType::UInt128: {
-            ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-                  "Invalid type '__uint128_t'!");
-            return {};
-         }
-         break;
-
-         //
-         //  Signed Types
-         //
-      case BuiltinType::Char_S: // char on targets where it is signed
-      case BuiltinType::SChar:
-         return InitRetAndExecIntegral<signed char>(QT, ret);
-         break;
-      case BuiltinType::WChar_S:
-         // wchar_t on targets where it is signed.
-         // The standard doesn't allow to specify signednedd of wchar_t
-         // thus this maps simply to wchar_t.
-         return InitRetAndExecIntegral<wchar_t>(QT, ret);
-         break;
-      case BuiltinType::Short:
-         return InitRetAndExecIntegral<short>(QT, ret);
-         break;
-      case BuiltinType::Int:
-         return InitRetAndExecIntegral<int>(QT, ret);
-         break;
-      case BuiltinType::Long:
-         return InitRetAndExecIntegral<long>(QT, ret);
-         break;
-      case BuiltinType::LongLong:
-         return InitRetAndExecIntegral<long long>(QT, ret);
-         break;
-      case BuiltinType::Int128:
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type '__int128_t'!");
-         return {};
-         break;
-      case BuiltinType::Half:
-         // half in OpenCL, __fp16 in ARM NEON
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'Half'!");
-         return {};
-         break;
-      case BuiltinType::Float: {
-         ret = cling::Value::Create<float>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
-         break;
-      }
-      case BuiltinType::Double: {
-         ret = cling::Value::Create<double>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getDouble()); };
-         break;
-      }
-      case BuiltinType::LongDouble: {
-         ret = cling::Value::Create<long double>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getLongDouble()); };
-         break;
-      }
-         //
-         //  Language-Specific Types
-         //
-      case BuiltinType::NullPtr:
-         // C++11 nullptr
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'nullptr'!");
-         return {};
-         break;
-      default:
-         break;
-   }
-   return {};
-}
-
-
-TClingCallFunc::ExecWithRetFunc_t
-TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
-   if (QT->isReferenceType()) {
-      ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   } else if (QT->isMemberPointerType()) {
-      const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-      if (MPT && MPT->isMemberDataPointer()) {
-         // A member data pointer is a actually a struct with one
-         // member of ptrdiff_t, the offset from the base of the object
-         // storage to the storage for the designated data member.
-         // But that's not relevant: we use it as a non-builtin, allocated
-         // type.
-         ret = cling::Value(QT, *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
-      }
-      // We are a function member pointer.
-      ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   } else if (QT->isPointerType() || QT->isArrayType()) {
-      // Note: ArrayType is an illegal function return value type.
-      ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   } else if (QT->isRecordType()) {
-      ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
-   } else if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
-      // Note: We may need to worry about the underlying type
-      //       of the enum here.
-      (void) ET;
-      ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { execWithLL<int>(address, &ret); };
-   } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
-      return InitRetAndExecBuiltin(QT, BT, ret);
-   }
-   ::Error("TClingCallFunc::exec_with_valref_return",
-         "Unrecognized return type!");
-   QT->dump();
-   return {};
-}
-
-TClingCallFunc::ExecWithRetFunc_t
-TClingCallFunc::InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret) {
+   QualType QT;
    if (llvm::isa<CXXConstructorDecl>(FD)) {
-      ASTContext &Context = FD->getASTContext();
-      const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
-      QualType ClassTy(TD->getTypeForDecl(), 0);
-      QualType QT = Context.getLValueReferenceType(ClassTy);
-      ret = cling::Value(QT, *fInterp);
-      // Store the new()'ed address in getPtr()
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
+     R__LOCKGUARD_CLING(gInterpreterMutex);
+     ASTContext &Context = FD->getASTContext();
+     const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
+     QualType ClassTy(TD->getTypeForDecl(), 0);
+     QT = Context.getLValueReferenceType(ClassTy);
+     ret = cling::Value(QT, *fInterp);
    } else {
-      QualType QT = FD->getReturnType().getCanonicalType();
-      return InitRetAndExecNoCtor(QT, ret);
-   }
-}
+     QT = FD->getReturnType().getCanonicalType();
+     ret = cling::Value(QT, *fInterp);
 
-void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
-{
-   if (!ret) {
-      exec(address, 0);
-      return;
+     if (QT->isRecordType() || QT->isMemberDataPointerType())
+       return exec(address, ret.getPtr());
    }
-   std::function<void(void*, cling::Value&)> execFunc;
-
-   /* Release lock during user function execution*/
-   {
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      execFunc = InitRetAndExec(GetDecl(), *ret);
-   }
-
-   if (execFunc)
-      execFunc(address, *ret);
-   return;
+   exec(address, ret.getPtrAddress());
 }
 
 void TClingCallFunc::EvaluateArgList(const string &ArgList)
@@ -1801,12 +1507,12 @@ void TClingCallFunc::Exec(void *address, TInterpreterValue *interpVal/*=0*/)
             "Called with no wrapper, not implemented!");
       return;
    }
-   if (!interpVal) {
-      exec(address, 0);
+   if (!interpVal || !interpVal->GetValAddr()) {
+      exec(address, nullptr);
       return;
    }
    cling::Value *val = reinterpret_cast<cling::Value *>(interpVal->GetValAddr());
-   exec_with_valref_return(address, val);
+   exec_with_valref_return(address, *val);
 }
 
 template <typename T>
@@ -1819,14 +1525,15 @@ T TClingCallFunc::ExecT(void *address)
       return 0;
    }
    cling::Value ret;
-   exec_with_valref_return(address, &ret);
+   exec_with_valref_return(address, ret);
    if (ret.isVoid()) {
       return 0;
    }
 
    if (ret.needsManagedAllocation())
       ((TCling *)gCling)->RegisterTemporary(ret);
-   return ret.simplisticCastAs<T>();
+
+   return ret.castAs<T>();
 }
 
 Longptr_t TClingCallFunc::ExecInt(void *address)
@@ -1900,7 +1607,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
             "Called with no wrapper, not implemented!");
       return nullptr;
    }
-   void *obj = 0;
+   void *obj = nullptr;
    (*wrapper)(&obj, address, nary);
    return obj;
 }
@@ -1913,7 +1620,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       return;
    }
 
-   tcling_callfunc_dtor_Wrapper_t wrapper = 0;
+   tcling_callfunc_dtor_Wrapper_t wrapper = nullptr;
    {
       R__LOCKGUARD_CLING(gInterpreterMutex);
       const Decl *D = info->GetDecl();
@@ -1941,7 +1648,7 @@ TClingCallFunc::FactoryMethod() const
 void TClingCallFunc::Init()
 {
    fMethod.reset();
-   fWrapper = 0;
+   fWrapper = nullptr;
    fDecl = nullptr;
    fMinRequiredArguments = -1;
    ResetArg();
@@ -1962,7 +1669,7 @@ void TClingCallFunc::Init(std::unique_ptr<TClingMethodInfo> minfo)
 void *TClingCallFunc::InterfaceMethod()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    if (!fWrapper) {
       const Decl *decl = GetFunctionOrShadowDecl();
@@ -2017,48 +1724,6 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
 void TClingCallFunc::ResetArg()
 {
    fArgVals.clear();
-}
-
-void TClingCallFunc::SetArg(unsigned long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.UnsignedLongTy, *fInterp));
-   fArgVals.back().getLL() = param;
-}
-
-void TClingCallFunc::SetArg(long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.LongTy, *fInterp));
-   fArgVals.back().getLL() = param;
-}
-
-void TClingCallFunc::SetArg(float param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.FloatTy, *fInterp));
-   fArgVals.back().getFloat() = param;
-}
-
-void TClingCallFunc::SetArg(double param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.DoubleTy, *fInterp));
-   fArgVals.back().getDouble() = param;
-}
-
-void TClingCallFunc::SetArg(long long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.LongLongTy, *fInterp));
-   fArgVals.back().getLL() = param;
-}
-
-void TClingCallFunc::SetArg(unsigned long long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, *fInterp));
-   fArgVals.back().getULL() = param;
 }
 
 void TClingCallFunc::SetArgArray(Longptr_t *paramArr, int nparam)

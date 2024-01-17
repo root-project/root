@@ -123,23 +123,23 @@ private:
 
 public:
    TEveCaloLegoGL();
-   virtual ~TEveCaloLegoGL();
+   ~TEveCaloLegoGL() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt = nullptr);
+   Bool_t SetModel(TObject* obj, const Option_t* opt = nullptr) override;
 
-   virtual void   SetBBox();
+   void   SetBBox() override;
 
-   virtual void   DLCacheDrop();
-   virtual void   DLCachePurge();
+   void   DLCacheDrop() override;
+   void   DLCachePurge() override;
 
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
-   virtual void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const override;
 
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual Bool_t AlwaysSecondarySelect()   const { return kTRUE; }
-   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   Bool_t SupportsSecondarySelect() const override { return kTRUE; }
+   Bool_t AlwaysSecondarySelect()   const override { return kTRUE; }
+   void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec) override;
 
-   ClassDef(TEveCaloLegoGL, 0); // GL renderer class for TEveCaloLego.
+   ClassDefOverride(TEveCaloLegoGL, 0); // GL renderer class for TEveCaloLego.
 };
 
 //______________________________________________________________________________

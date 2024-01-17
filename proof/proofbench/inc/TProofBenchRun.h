@@ -40,7 +40,7 @@ public:
 
    TProofBenchRun(TProof *proof = 0, const char *sel = 0);
 
-   virtual ~TProofBenchRun();
+   ~TProofBenchRun() override;
 
    virtual const char *GetSelName() { return fSelName; }
    virtual const char *GetParList() { return fParList; }
@@ -55,9 +55,9 @@ public:
                     Int_t step = -1, Int_t ntries = -1, Int_t debug = -1,
                     Int_t draw = -1) = 0;
 
-   virtual void Print(Option_t *option = "") const=0;
+   void Print(Option_t *option = "") const override =0;
 
-   ClassDef(TProofBenchRun, 0)   //Abstract base class for PROOF benchmark run
+   ClassDefOverride(TProofBenchRun, 0)   //Abstract base class for PROOF benchmark run
 };
 
 #endif

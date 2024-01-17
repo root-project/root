@@ -1,14 +1,29 @@
 # Library which powers fast batch computations in Roofit.
+
+if(cuda)
+  set(CudaDependencies RooFitCuda)
+endif()
+
 ROOT_LINKER_LIBRARY(RooBatchCompute
     src/Initialisation.cxx
   DEPENDENCIES
     Core
     MathCore
     Imt
+    ${CudaDependencies}
 )
 
+if(cuda)
+  target_compile_definitions(RooBatchCompute PUBLIC ROOFIT_CUDA)
+endif()
+
+target_include_directories(RooBatchCompute INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+
 if(vdt OR builtin_vdt)
-  target_include_directories(RooBatchCompute PRIVATE ${VDT_INCLUDE_DIRS} INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIRS}>)
+  target_link_libraries(RooBatchCompute PUBLIC VDT::VDT)
+endif()
+if(builtin_vdt)
+  add_dependencies(RooBatchCompute VDT)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -57,5 +72,3 @@ if (cuda)
   ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  src/RooBatchCompute.cu src/ComputeFunctions.cu TYPE SHARED DEPENDENCIES RooBatchCompute)
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -DRF_ARCH=CUDA -lineinfo --expt-relaxed-constexpr)
 endif()
-
-ROOT_INSTALL_HEADERS()

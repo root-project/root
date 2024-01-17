@@ -47,7 +47,7 @@ static ROOT::Math::IMultiGenFunction *&GetGlobalFuncPtr() {
    TTHREAD_TLS(ROOT::Math::IMultiGenFunction *) fgFunc = nullptr;
    return fgFunc;
 }
-TMinuit * TMinuitMinimizer::fgMinuit = 0;
+TMinuit * TMinuitMinimizer::fgMinuit = nullptr;
 bool TMinuitMinimizer::fgUsed = false;
 bool TMinuitMinimizer::fgUseStaticMinuit = true;   // default case use static Minuit instance
 
@@ -59,7 +59,7 @@ TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type, unsigned i
    fMinosRun(false),
    fDim(ndim),
    fType(type),
-   fMinuit(0)
+   fMinuit(nullptr)
 {
    // Constructor for TMinuitMinimier class via an enumeration specifying the minimization
    // algorithm type. Supported types are : kMigrad, kSimplex, kCombined (a combined
@@ -74,7 +74,7 @@ TMinuitMinimizer::TMinuitMinimizer(const char *  type, unsigned int ndim ) :
    fUsed(false),
    fMinosRun(false),
    fDim(ndim),
-   fMinuit(0)
+   fMinuit(nullptr)
 {
    // constructor from a char * for the algorithm type, used by the plug-in manager
    // The names supported (case unsensitive) are:
@@ -103,7 +103,7 @@ TMinuitMinimizer::~TMinuitMinimizer()
    // Destructor implementation.
    if (fMinuit && !fgUseStaticMinuit) {
       delete fMinuit;
-      fgMinuit = 0;
+      fgMinuit = nullptr;
    }
 }
 
@@ -131,7 +131,7 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
 
    // when called a second time check dimension - create only if needed
    // initialize the minuit instance - recreating a new one if needed
-   if (fMinuit ==0 ||  dim > fMinuit->fMaxpar) {
+   if (fMinuit ==nullptr ||  dim > fMinuit->fMaxpar) {
 
       // case not using the global instance - recreate it all the time
       if (fgUseStaticMinuit) {
@@ -145,9 +145,9 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
          if (fgMinuit != gMinuit) {
             // if object exists in gROOT remove it to avoid a memory leak
             if (fgMinuit ) {
-               if (gROOT->GetListOfSpecials()->FindObject(fgMinuit) == 0) {
+               if (gROOT->GetListOfSpecials()->FindObject(fgMinuit) == nullptr) {
                   // case 1: object does not exists in gROOT - means it has been deleted
-                  fgMinuit = 0;
+                  fgMinuit = nullptr;
                }
                else {
                   // case 2: object exists - but gMinuit points to something else
@@ -156,7 +156,7 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
                }
             }
             else {
-               // case 3: avoid reusing existing one - mantain fgMinuit to zero
+               // case 3: avoid reusing existing one - maintain fgMinuit to zero
                // otherwise we will get a double delete if user deletes externally gMinuit
                // in this case we will loose gMinuit instance
 //                fgMinuit = gMinuit;
@@ -165,7 +165,7 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
          }
 
          // check if need to create a new TMinuit instance
-         if (fgMinuit == 0) {
+         if (fgMinuit == nullptr) {
             fgUsed = false;
             fgMinuit =  new TMinuit(dim);
          }
@@ -208,6 +208,7 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    // calculated by Minuit
    // Here a TMinuit instance is created since only at this point we know the number of parameters
 
+   const bool hasGrad = func.HasGradient();
 
    fDim = func.NDim();
 
@@ -216,35 +217,21 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
 
    // assign to the static pointer (NO Thread safety here)
    GetGlobalFuncPtr() = const_cast<ROOT::Math::IMultiGenFunction *>(&func);
-   fMinuit->SetFCN(&TMinuitMinimizer::Fcn);
+   fMinuit->SetFCN(hasGrad ? &TMinuitMinimizer::FcnGrad : &TMinuitMinimizer::Fcn);
 
-   // switch off gradient calculations
    double arglist[1];
    int ierr = 0;
-   fMinuit->mnexcm("SET NOGrad",arglist,0,ierr);
-}
 
-void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func) {
-   // Set the objective function to be minimized, by passing a function object implement the
-   // multi-dim gradient Function interface. In this case the function derivatives are provided
-   // by the user via this interface and there not calculated by Minuit.
-
-   fDim = func.NDim();
-
-   // create TMinuit if needed
-   InitTMinuit(fDim);
-
-   // assign to the static pointer (NO Thread safety here)
-   GetGlobalFuncPtr() = const_cast<ROOT::Math::IMultiGradFunction *>(&func);
-   fMinuit->SetFCN(&TMinuitMinimizer::FcnGrad);
-
-   // set gradient
-   // by default do not check gradient calculation
-   // it cannot be done here, check can be done only after having defined the parameters
-   double arglist[1];
-   int ierr = 0;
-   arglist[0] = 1;
-   fMinuit->mnexcm("SET GRAD",arglist,1,ierr);
+   if(hasGrad) {
+      // set gradient
+      // by default do not check gradient calculation
+      // it cannot be done here, check can be done only after having defined the parameters
+      arglist[0] = 1;
+      fMinuit->mnexcm("SET GRAD",arglist,1,ierr);
+   } else {
+      // switch off gradient calculations
+      fMinuit->mnexcm("SET NOGrad",arglist,0,ierr);
+   }
 }
 
 void TMinuitMinimizer::Fcn( int &, double * , double & f, double * x , int /* iflag */) {
@@ -259,7 +246,7 @@ void TMinuitMinimizer::FcnGrad( int &, double * g, double & f, double * x , int 
    // provided gradient.
    ROOT::Math::IMultiGradFunction * gFunc = dynamic_cast<ROOT::Math::IMultiGradFunction *> ( GetGlobalFuncPtr());
 
-   assert(gFunc != 0);
+   assert(gFunc != nullptr);
    f = gFunc->operator()(x);
 
    // calculates also derivatives
@@ -315,7 +302,7 @@ bool TMinuitMinimizer::SetUpperLimitedVariable(unsigned int  ivar , const std::s
 
 bool TMinuitMinimizer::CheckMinuitInstance() const {
    // check instance of fMinuit
-   if (fMinuit == 0) {
+   if (fMinuit == nullptr) {
       Error("TMinuitMinimizer::CheckMinuitInstance","Invalid TMinuit pointer. Need to call first SetFunction");
       return false;
    }
@@ -466,13 +453,13 @@ int TMinuitMinimizer::VariableIndex(const std::string & ) const {
 bool TMinuitMinimizer::Minimize() {
    // perform the minimization using the algorithm chosen previously by the user
    // By default Migrad is used.
-   // Return true if the found minimum is valid and update internal chached values of
+   // Return true if the found minimum is valid and update internal cached values of
    // minimum values, errors and covariance matrix.
    // Status of minimizer is set to:
    // migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
 
 
-   if (fMinuit == 0) {
+   if (fMinuit == nullptr) {
       Error("TMinuitMinimizer::Minimize","invalid TMinuit pointer. Need to call first SetFunction and SetVariable");
       return false;
    }
@@ -614,7 +601,7 @@ void TMinuitMinimizer::RetrieveParams() {
    // retrieve from TMinuit minimum parameter values
    // and errors
 
-   assert(fMinuit != 0);
+   assert(fMinuit != nullptr);
 
    // get parameter values
    if (fParams.size() != fDim) fParams.resize( fDim);
@@ -628,7 +615,7 @@ void TMinuitMinimizer::RetrieveErrorMatrix() {
    // get covariance error matrix from TMinuit
    // when some parameters are fixed filled the corresponding rows and column with zero's
 
-   assert(fMinuit != 0);
+   assert(fMinuit != nullptr);
 
    unsigned int nfree = NFree();
 
@@ -663,7 +650,7 @@ void TMinuitMinimizer::RetrieveErrorMatrix() {
 
 unsigned int TMinuitMinimizer::NCalls() const {
    // return total number of function calls
-   if (fMinuit == 0) return 0;
+   if (fMinuit == nullptr) return 0;
    return fMinuit->fNfcn;
 }
 
@@ -772,7 +759,7 @@ double TMinuitMinimizer::GlobalCC(unsigned int i) const {
 bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & errUp, int ) {
    // Perform Minos analysis for the given parameter  i
 
-   if (fMinuit == 0) {
+   if (fMinuit == nullptr) {
       Error("TMinuitMinimizer::GetMinosError","invalid TMinuit pointer. Need to call first SetFunction and SetVariable");
       return false;
    }
@@ -868,7 +855,7 @@ void TMinuitMinimizer::DoReleaseFixParameter(int ivar) {
    // check if a parameter is defined and in case it was fixed released
    // TMinuit is not able to release free parameters by redefining them
    // so we need to force the release
-   if (fMinuit == 0) return;
+   if (fMinuit == nullptr) return;
    if (fMinuit->GetNumFixedPars() == 0) return;
    // check if parameter has already been defined
    if (int(ivar) >= fMinuit->GetNumPars() ) return;
@@ -887,7 +874,7 @@ void TMinuitMinimizer::DoReleaseFixParameter(int ivar) {
 
 void TMinuitMinimizer::PrintResults() {
    // print-out results using classic Minuit format (mnprin)
-   if (fMinuit == 0) return;
+   if (fMinuit == nullptr) return;
 
    // print minimizer result
    if (PrintLevel() > 2)
@@ -910,7 +897,7 @@ void TMinuitMinimizer::SuppressMinuitWarnings(bool nowarn) {
 bool TMinuitMinimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoints, double * x, double * y) {
    // contour plot for parameter i and j
    // need a valid FunctionMinimum otherwise exits
-   if (fMinuit == 0) {
+   if (fMinuit == nullptr) {
       Error("TMinuitMinimizer::Contour"," invalid TMinuit instance");
       return false;
    }
@@ -964,7 +951,7 @@ bool TMinuitMinimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    // (force in that case to use errors)
 
    // scan is not implemented for TMinuit, the way to return the array is only via the graph
-   if (fMinuit == 0) {
+   if (fMinuit == nullptr) {
       Error("TMinuitMinimizer::Scan"," invalid TMinuit instance");
       return false;
    }
@@ -1030,7 +1017,7 @@ bool TMinuitMinimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
 bool TMinuitMinimizer::Hesse() {
    // perform calculation of Hessian
 
-   if (fMinuit == 0) {
+   if (fMinuit == nullptr) {
       Error("TMinuitMinimizer::Hesse","invalid TMinuit pointer. Need to call first SetFunction and SetVariable");
       return false;
    }
@@ -1075,7 +1062,7 @@ bool TMinuitMinimizer::Hesse() {
 bool TMinuitMinimizer::SetDebug(bool on) {
    // set debug mode
 
-   if (fMinuit == 0) {
+   if (fMinuit == nullptr) {
       Error("TMinuitMinimizer::SetDebug","invalid TMinuit pointer. Need to call first SetFunction and SetVariable");
       return false;
    }

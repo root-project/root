@@ -18,6 +18,7 @@
 #include "TBranchObject.h"
 #include "TBranchProxyDirector.h"
 #include "TClassEdit.h"
+#include "TEnum.h"
 #include "TFriendElement.h"
 #include "TFriendProxy.h"
 #include "TLeaf.h"
@@ -40,7 +41,7 @@ namespace {
    // Reader interface for clones arrays
    class TClonesReader: public TVirtualCollectionReader {
    public:
-      ~TClonesReader() {}
+      ~TClonesReader() override {}
       TClonesArray* GetCA(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()){
             fReadStatus = TTreeReaderValueBase::kReadError;
@@ -50,14 +51,14 @@ namespace {
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
          return (TClonesArray*) proxy->GetWhere();
       }
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TClonesArray *myClonesArray = GetCA(proxy);
          if (myClonesArray){
             return myClonesArray->GetEntries();
          }
          else return 0;
       }
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          TClonesArray *myClonesArray = GetCA(proxy);
          if (myClonesArray){
             return myClonesArray->UncheckedAt(idx);
@@ -69,7 +70,7 @@ namespace {
    // Reader interface for STL
    class TSTLReader final: public TVirtualCollectionReader {
    public:
-      ~TSTLReader() {}
+      ~TSTLReader() override {}
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()) {
             fReadStatus = TTreeReaderValueBase::kReadError;
@@ -84,13 +85,13 @@ namespace {
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          if (myCollectionProxy->HasPointers()){
@@ -122,7 +123,7 @@ namespace {
          return fLocalCollection;
       }
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          /// In the case of std::vector<bool> `PushProxy` also creates a temporary bool variable the address of which
@@ -132,7 +133,7 @@ namespace {
          return myCollectionProxy->Size();
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          // Here we do not use a RAII but we empty the proxy to then fill it.
@@ -156,7 +157,7 @@ namespace {
       Int_t fBasicTypeSize;
    public:
       TObjectArrayReader() : fBasicTypeSize(-1) { }
-      ~TObjectArrayReader() {}
+      ~TObjectArrayReader() override {}
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()){
             fReadStatus = TTreeReaderValueBase::kReadError;
@@ -166,12 +167,12 @@ namespace {
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          if (!proxy->Read()) return 0;
 
          Int_t objectSize;
@@ -302,12 +303,12 @@ namespace {
    public:
       TArrayFixedSizeReader(Int_t sizeArg) : fSize(sizeArg) {}
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) { return fSize; }
+      size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) override { return fSize; }
    };
 
    class TBasicTypeArrayReader final: public TVirtualCollectionReader {
    public:
-      ~TBasicTypeArrayReader() {}
+      ~TBasicTypeArrayReader() override {}
 
       TVirtualCollectionProxy* GetCP (ROOT::Detail::TBranchProxy *proxy) {
          if (!proxy->Read()){
@@ -319,13 +320,13 @@ namespace {
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy){
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override{
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx){
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override{
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return (Byte_t*)myCollectionProxy->At(idx) + proxy->GetOffset();
@@ -338,7 +339,7 @@ namespace {
    public:
       TBasicTypeClonesReader(Int_t offsetArg) : fOffset(offsetArg) {}
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx){
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override{
          TClonesArray *myClonesArray = GetCA(proxy);
          if (!myClonesArray) return 0;
          return (Byte_t*)myClonesArray->At(idx) + fOffset;
@@ -352,12 +353,12 @@ namespace {
    public:
       TLeafReader(TTreeReaderValueBase *valueReaderArg) : fValueReader(valueReaderArg), fElementSize(-1) {}
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){
+      size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) override{
          TLeaf *myLeaf = fValueReader->GetLeaf();
          return myLeaf ? myLeaf->GetLen() : 0; // Error will be printed by GetLeaf
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* /*proxy*/, size_t idx){
+      void* At(ROOT::Detail::TBranchProxy* /*proxy*/, size_t idx) override{
          ProxyRead();
          void *address = fValueReader->GetAddress();
          if (fElementSize == -1){
@@ -539,6 +540,12 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             return false;
          auto left_datatype = dynamic_cast<TDataType *>(left);
          auto right_datatype = dynamic_cast<TDataType *>(right);
+         auto left_enum = dynamic_cast<TEnum*>(left);
+         auto right_enum = dynamic_cast<TEnum*>(right);
+
+         if ((left_datatype && left_datatype->GetType() == kInt_t && right_enum)
+            || (right_datatype && right_datatype->GetType() == kInt_t && left_enum))
+            return true;
          if (!left_datatype || !right_datatype)
             return false;
          auto l = left_datatype->GetType();
@@ -713,7 +720,10 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
             else if (branchElement->GetType() == TBranchElement::kClonesMemberNode){
                fImpl = std::make_unique<TBasicTypeClonesReader>(element->GetOffset());
             }
-            else {
+            else if (fDict->IsA() == TEnum::Class()) {
+               fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
+               ((TObjectArrayReader*)fImpl.get())->SetBasicTypeSize(sizeof(Int_t));
+            } else {
                fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
                ((TObjectArrayReader*)fImpl.get())->SetBasicTypeSize(((TDataType*)fDict)->Size());
             }

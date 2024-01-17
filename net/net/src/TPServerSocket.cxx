@@ -22,7 +22,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TPServerSocket.h"
-#include "TPSocket.h"
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
@@ -93,7 +92,7 @@ TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 /// In case of error 0 is returned and in case non-blocking I/O is
 /// enabled and no connections are available -1 is returned.
 
-TSocket *TPServerSocket::Accept(UChar_t Opt)
+TPSocket *TPServerSocket::Accept(UChar_t Opt)
 {
    TSocket  *setupSocket = 0;
    TSocket  **pSockets;

@@ -24,6 +24,7 @@
 #include "RConfigure.h"
 #include <functional>
 #include <cassert>
+#include <memory>
 #include <string>
 #include <vector>
 #include "TFormula.h"
@@ -710,7 +711,7 @@ public:
 
 private:
    template <class T>
-   T EvalParTempl(const T *data, const Double_t *params = 0);
+   T EvalParTempl(const T *data, const Double_t *params = nullptr);
 
 #ifdef R__HAS_VECCORE
    inline double EvalParVec(const Double_t *data, const Double_t *params);
@@ -728,7 +729,7 @@ namespace ROOT {
          using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
          f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
          f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func)));
-         f->fParams.reset(new TF1Parameters(f->fNpar));
+         f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
       }
 
       template<class Func>
@@ -737,7 +738,7 @@ namespace ROOT {
          using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
          f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
          f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func)));
-         f->fParams.reset(new TF1Parameters(f->fNpar));
+         f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
       }
 
       /// TF1 building from a string
@@ -747,7 +748,7 @@ namespace ROOT {
          static void Build(TF1 *f, const char *formula)
          {
             f->fType = TF1::EFType::kFormula;
-            f->fFormula.reset(new TFormula("tf1lambda", formula, f->fNdim, f->fNpar, false));
+            f->fFormula = std::make_unique<TFormula>("tf1lambda", formula, f->fNdim, f->fNpar, false);
             TString formulaExpression(formula);
             Ssiz_t first = formulaExpression.Index("return") + 7;
             Ssiz_t last  = formulaExpression.Last(';');
@@ -845,14 +846,14 @@ void TF1::SetFunction(Func f)
 {
    // set function from a generic C++ callable object
    fType = EFType::kPtrScalarFreeFcn;
-   fFunctor.reset(new TF1::TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f)));
+   fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctor(f));
 }
 template <class PtrObj, typename MemFn>
 void TF1::SetFunction(PtrObj &p, MemFn memFn)
 {
    // set from a pointer to a member function
    fType = EFType::kPtrScalarFreeFcn;
-   fFunctor.reset(new TF1::TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)));
+   fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctor(p, memFn));
 }
 
 template <class T>

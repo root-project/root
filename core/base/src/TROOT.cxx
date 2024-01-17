@@ -68,10 +68,9 @@ of a main program creating an interactive version is shown below:
 
 #include <ROOT/RConfig.hxx>
 #include <ROOT/TErrorDefaultHandler.hxx>
+#include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
-#include "RVersion.h"
-#include "RGitCommit.h"
 #include <string>
 #include <map>
 #include <cstdlib>
@@ -192,13 +191,20 @@ static Int_t IVERSQ()
 
 static Int_t IDATQQ(const char *date)
 {
+   if (!date) {
+      Error("TSystem::IDATQQ", "nullptr date string, expected e.g. 'Dec 21 2022'");
+      return -1;
+   }
+
    static const char *months[] = {"Jan","Feb","Mar","Apr","May",
                                   "Jun","Jul","Aug","Sep","Oct",
                                   "Nov","Dec"};
-
    char  sm[12];
    Int_t yy, mm=0, dd;
-   sscanf(date, "%s %d %d", sm, &dd, &yy);
+   if (sscanf(date, "%s %d %d", sm, &dd, &yy) != 3) {
+      Error("TSystem::IDATQQ", "Cannot parse date string '%s', expected e.g. 'Dec 21 2022'", date);
+      return -1;
+   }
    for (int i = 0; i < 12; i++)
       if (!strncmp(sm, months[i], 3)) {
          mm = i+1;
@@ -521,6 +527,10 @@ namespace Internal {
    /// a hint for ROOT: it will try to satisfy the request if the execution
    /// scenario allows it. For example, if ROOT is configured to use an external
    /// scheduler, setting a value for 'numthreads' might not have any effect.
+   /// The maximum number of threads can be influenced by the environment
+   /// variable `ROOT_MAX_THREADS`: `export ROOT_MAX_THREADS=2` will try to set
+   /// the maximum number of active threads to 2, if the scheduling library
+   /// (such as tbb) "permits".
    ///
    /// \note Use `DisableImplicitMT()` to disable multi-threading (some locks will remain in place as
    /// described in EnableThreadSafety()). `EnableImplicitMT(1)` creates a thread-pool of size 1.
@@ -2379,15 +2389,8 @@ Longptr_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 
 void TROOT::ReadGitInfo()
 {
-#ifdef ROOT_GIT_COMMIT
-   fGitCommit = ROOT_GIT_COMMIT;
-#endif
-#ifdef ROOT_GIT_BRANCH
-   fGitBranch = ROOT_GIT_BRANCH;
-#endif
-
-   TString gitinfo = "gitinfo.txt";
-   char *filename = gSystem->ConcatFileName(TROOT::GetEtcDir(), gitinfo);
+   TString filename = "gitinfo.txt";
+   gSystem->PrependPathName(TROOT::GetEtcDir(), filename);
 
    FILE *fp = fopen(filename, "r");
    if (fp) {
@@ -2395,15 +2398,16 @@ void TROOT::ReadGitInfo()
       // read branch name
       s.Gets(fp);
       fGitBranch = s;
-      // read commit SHA1
+      // read commit hash
       s.Gets(fp);
       fGitCommit = s;
       // read date/time make was run
       s.Gets(fp);
       fGitDate = s;
       fclose(fp);
+   } else {
+      Error("ReadGitInfo()", "Cannot determine git info: etc/gitinfo.txt not found!");
    }
-   delete [] filename;
 }
 
 Bool_t &GetReadingObject() {
@@ -2802,9 +2806,13 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    }
 
    if (fIsWebDisplay) {
+      // restore browser classes configured at the moment when gROOT->SetWebDisplay() was called for the first time
+      // This is necessary when SetWebDisplay() called several times and therefore current settings may differ
+      gEnv->SetValue("Canvas.Name", "TWebCanvas");
       gEnv->SetValue("Browser.Name", brName);
       gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
    } else {
+      gEnv->SetValue("Canvas.Name", "TRootCanvas");
       gEnv->SetValue("Browser.Name", "TRootBrowser");
       gEnv->SetValue("TreeViewer.Name", trName);
    }
@@ -2955,6 +2963,17 @@ const TString& TROOT::GetLibDir() {
       const static TString rootlibdir = ROOTLIBDIR;
       return rootlibdir;
    }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the shared libraries directory in the installation. Static utility function.
+
+const TString& TROOT::GetSharedLibDir() {
+#if defined(R__WIN32)
+   return TROOT::GetBinDir();
+#else
+   return TROOT::GetLibDir();
 #endif
 }
 

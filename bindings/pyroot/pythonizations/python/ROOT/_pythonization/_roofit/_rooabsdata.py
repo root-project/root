@@ -30,10 +30,10 @@ class RooAbsData(object):
 
     @cpp_signature(
         "RooPlot *RooAbsData::plotOn(RooPlot* frame,"
-        "			  const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-        "			  const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "			  const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "			  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+        "			  const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "			  const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "			  const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "			  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;"
     )
     def plotOn(self, *args, **kwargs):
         r"""The RooAbsData::plotOn() function is pythonized with the command argument pythonization.
@@ -45,10 +45,10 @@ class RooAbsData(object):
 
     @cpp_signature(
         "TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,"
-        "                       const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-        "                       const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "                       const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "                       const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+        "                       const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "                       const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "                       const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "                       const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;"
     )
     def createHistogram(self, *args, **kwargs):
         r"""The RooAbsData::createHistogram() function is pythonized with the command argument pythonization.
@@ -59,10 +59,10 @@ class RooAbsData(object):
         return self._createHistogram(*args, **kwargs)
 
     @cpp_signature(
-        "RooAbsData *RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2=RooCmdArg(),"
-        "                   const RooCmdArg& arg3=RooCmdArg(),const RooCmdArg& arg4=RooCmdArg(),"
-        "                   const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-        "                   const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;"
+        "RooAbsData *RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2={},"
+        "                   const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+        "                   const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+        "                   const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;"
     )
     def reduce(self, *args, **kwargs):
         r"""The RooAbsData::reduce() function is pythonized with the command argument pythonization.
@@ -74,10 +74,10 @@ class RooAbsData(object):
 
     @cpp_signature(
         "RooPlot *RooAbsData::statOn(RooPlot* frame,"
-        "                          const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-        "                          const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "                          const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "                          const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
+        "                          const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "                          const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "                          const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "                          const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def statOn(self, *args, **kwargs):
         r"""The RooAbsData::statOn() function is pythonized with the command argument pythonization.

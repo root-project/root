@@ -92,7 +92,7 @@ public:
        @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
    */
-   void SetFunction( GSLFuncPointer f, void * p = 0);
+   void SetFunction( GSLFuncPointer f, void * p = nullptr);
 
    /**
        Computes the numerical derivative at a point x using an adaptive central

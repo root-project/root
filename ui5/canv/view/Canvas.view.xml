@@ -1,5 +1,11 @@
-<mvc:View height="100%" class="sapUiSizeCompact" controllerName="rootui5.canv.controller.Canvas"
-   xmlns:mvc="sap.ui.core.mvc" xmlns:l="sap.ui.layout" xmlns="sap.m">
+<mvc:View
+   height="100%"
+   class="sapUiSizeCompact"
+   controllerName="rootui5.canv.controller.Canvas"
+   async="true"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:l="sap.ui.layout"
+   xmlns="sap.m">
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">
       <customHeader>
@@ -27,7 +33,7 @@
                               <MenuItem text="Canvas.C" enabled="{/isRoot6}" tooltip="Produces C output on server side"/>
                            </items>
                         </MenuItem>
-                        <MenuItem text="Save as ..." icon="sap-icon://save" enabled="false"/>
+                        <MenuItem text="Save as ..." icon="sap-icon://save" enabled="true"/>
                         <MenuItem text="Interrupt" startsSection="true" icon="sap-icon://stop" enabled="{/Standalone}" tooltip="Interrupts current event loop"/>
                         <MenuItem text="Reload" icon="sap-icon://refresh" enabled="{/Standalone}" visible="{/Standalone}" tooltip="Fully reload canvas"/>
                         <MenuItem text="Quit ROOT" icon="sap-icon://log" enabled="{/Standalone}" tooltip="Quit ROOT session"/>
@@ -41,6 +47,15 @@
                      <items>
                         <MenuItem text="Style" enabled="false"/>
                         <MenuItem text="Divide" enabled="{/isRoot6}"/>
+                        <MenuItem text="Resize" enabled="{/canResize}">
+                           <items>
+                              <MenuItem text="700 x 500" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="500 x 500" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="1200 x 800" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="900 x 900" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="1600 x 1200" tooltip="Resize draw canvas area"/>
+                           </items>
+                        </MenuItem>
                         <MenuItem text="Clear pad" startsSection="true"/>
                         <MenuItem text="Clear canvas"/>
                      </items>
@@ -67,7 +82,8 @@
                <menu>
                   <Menu itemSelected="onOptionsMenuAction">
                      <items>
-                        <MenuItem text="Interrupt"/>
+                        <MenuItem text="Auto resize" icon="{/AutoResizeIcon}" tooltip="Canvas automatically resized with web browser"/>
+                        <MenuItem text="Highlight gPad" icon="{/HighlightPadIcon}" enabled="{/isRoot6}" tooltip="Highlight active pad in the canvas"/>
                      </items>
                   </Menu>
                </menu>
@@ -76,8 +92,8 @@
                <menu>
                   <Menu itemSelected="onToolsMenuAction">
                      <items>
-                        <MenuItem text="Fit panel" enabled="false" />
-                        <MenuItem text="Browser" enabled="false" />
+                        <MenuItem text="Fit panel" enabled="{/isRoot6}"/>
+                        <MenuItem text="Start browser"/>
                      </items>
                   </Menu>
                </menu>
@@ -100,9 +116,10 @@
       </subHeader>
       <content>
          <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
-            <mvc:XMLView id="MainPanel" width="100%"
-               height="100%" viewName="rootui5.canv.view.CanvasPanel">
-            </mvc:XMLView>
+            <l:Splitter orientation="Vertical" id="BottomAreaSplitter">
+               <mvc:XMLView id="MainPanel" width="100%" height="100%" viewName="rootui5.canv.view.CanvasPanel">
+               </mvc:XMLView>
+            </l:Splitter>
          </l:Splitter>
       </content>
       <footer>

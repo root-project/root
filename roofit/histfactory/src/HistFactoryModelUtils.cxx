@@ -84,7 +84,7 @@ namespace HistFactory{
       } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
          std::unique_ptr<RooAbsCategoryLValue> cat{static_cast<RooAbsCategoryLValue *>(sim->indexCat().Clone())};
-         for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
+         for (int ic = 0, nc = cat->numBins((const char *)nullptr); ic < nc; ++ic) {
             cat->setBin(ic);
             FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getCurrentLabel()), obsTerms, constraints);
          }

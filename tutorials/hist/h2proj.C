@@ -1,4 +1,4 @@
-// \file
+/// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
 /// This example demonstrates how to display a histogram and its two projections.

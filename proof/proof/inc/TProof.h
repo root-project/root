@@ -177,8 +177,8 @@ public:
                       fTotal(tot), fProcessed(proc), fBytesRead(bytes),
                       fInitTime(initt), fProcTime(proct), fEvtRateI(evts), fMBRateI(mbs),
                       fActWorkers(actw), fTotSessions(tsess), fEffSessions(esess) { }
-   virtual ~TProofProgressInfo() { }
-   ClassDef(TProofProgressInfo, 1); // Progress information
+   ~TProofProgressInfo() override { }
+   ClassDefOverride(TProofProgressInfo, 1); // Progress information
 };
 
 // PROOF Interrupt signal handler
@@ -191,7 +191,7 @@ private:
 public:
    TProofInterruptHandler(TProof *p)
       : TSignalHandler(kSigInterrupt, kFALSE), fProof(p) { }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 // Input handler for messages from TProofServ
@@ -204,8 +204,8 @@ private:
    TProofInputHandler& operator=(const TProofInputHandler&); // Not implemented
 public:
    TProofInputHandler(TProof *p, TSocket *s);
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 };
 
 // Slaves info class
@@ -228,19 +228,19 @@ public:
 
    const char *GetDataDir() const { return fDataDir; }
    const char *GetMsd() const { return fMsd; }
-   const char *GetName() const { return fHostName; }
+   const char *GetName() const override { return fHostName; }
    const char *GetOrdinal() const { return fOrdinal; }
    SysInfo_t   GetSysInfo() const { return fSysInfo; }
    void        SetStatus(ESlaveStatus stat) { fStatus = stat; }
    void        SetSysInfo(SysInfo_t si);
    void        SetOrdinal(const char *ord) { fOrdinal = ord; }
 
-   Int_t  Compare(const TObject *obj) const;
-   Bool_t IsSortable() const { return kTRUE; }
-   void   Print(Option_t *option="") const;
-   Bool_t IsEqual(const TObject* obj) const;
+   Int_t  Compare(const TObject *obj) const override;
+   Bool_t IsSortable() const override { return kTRUE; }
+   void   Print(Option_t *option="") const override;
+   Bool_t IsEqual(const TObject* obj) const override;
 
-   ClassDef(TSlaveInfo,4) //basic info on workers
+   ClassDefOverride(TSlaveInfo,4) //basic info on workers
 };
 
 // Merger info class
@@ -266,7 +266,7 @@ public:
    TMergerInfo(TSlave *t, Int_t port, Int_t forHowManyWorkers) :
                fMerger(t), fPort(port), fMergedObjects(0), fWorkersToMerge(forHowManyWorkers),
                fMergedWorkers(0), fWorkers(0), fIsActive(kTRUE) { }
-   virtual ~TMergerInfo();
+   ~TMergerInfo() override;
 
    void        AddWorker(TSlave *sl);
    TList      *GetWorkers() { return fWorkers; }
@@ -287,7 +287,7 @@ public:
    void Deactivate() { fIsActive = kFALSE; }
    Bool_t      IsActive() { return fIsActive; }
 
-   ClassDef(TMergerInfo,0)          // Basic info on merger, i.e. worker serving as merger
+   ClassDefOverride(TMergerInfo,0)          // Basic info on merger, i.e. worker serving as merger
 };
 
 // Small auxiliary class for merging progress notification
@@ -775,7 +775,7 @@ public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
           const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
           const char *alias = 0, TProofMgr *mgr = 0);
-   virtual ~TProof();
+   ~TProof() override;
 
    void        cd(Int_t id = -1);
 
@@ -834,7 +834,7 @@ public:
    void        DisableGoAsyn();
    void        GoAsynchronous();
    void        StopProcess(Bool_t abort, Int_t timeout = -1);
-   void        Browse(TBrowser *b);
+   void        Browse(TBrowser *b) override;
 
    virtual Int_t Echo(const TObject *obj);
    virtual Int_t Echo(const char *str);
@@ -843,7 +843,7 @@ public:
    void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
 
    void        Close(Option_t *option="");
-   virtual void Print(Option_t *option="") const;
+   void Print(Option_t *option="") const override;
 
    //-- cache and package management
    virtual void  ShowCache(Bool_t all = kFALSE);
@@ -932,7 +932,7 @@ public:
 
    Bool_t      IsLite() const { return (fServType == TProofMgr::kProofLite) ? kTRUE : kFALSE; }
    Bool_t      IsProofd() const { return (fServType == TProofMgr::kProofd) ? kTRUE : kFALSE; }
-   Bool_t      IsFolder() const { return kTRUE; }
+   Bool_t      IsFolder() const override { return kTRUE; }
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return fValid; }
    Bool_t      IsTty() const { return fTty; }
@@ -1070,7 +1070,7 @@ public:
    static Int_t         GetParameter(TCollection *c, const char *par, Long64_t &value);
    static Int_t         GetParameter(TCollection *c, const char *par, Double_t &value);
 
-   ClassDef(TProof,0)  //PROOF control class
+   ClassDefOverride(TProof,0)  //PROOF control class
 };
 
 // Global object with default PROOF session

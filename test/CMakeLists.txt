@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -9,7 +9,7 @@
 # using the ROOT libraries on all supported platforms.
 #
 # Author: Pere Mato, 25/10/2010
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(test)
 
@@ -29,6 +29,7 @@ endif()
 if(DEFINED ROOT_SOURCE_DIR)
   # Testing using the binary tree
   set(ROOT_root_CMD ${ROOT_BINDIR}/root.exe)
+  include_directories(${ROOT_SOURCE_DIR}/tutorials)
 else()
   # Testing using an installation (assuming access to ROOT CMake modules)
   include_directories(${ROOT_INCLUDE_DIRS})
@@ -58,7 +59,7 @@ if(MSVC)
     add_custom_command(TARGET Event POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Event.pcm
                                      ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Event.pcm)
-  endif()                                                           
+  endif()
 endif()
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
@@ -134,7 +135,7 @@ ROOT_ADD_TEST(test-bench COMMAND bench -s LABELS longtest)
 #--stressShapes------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
 ROOT_ADD_TEST(test-stressshapes COMMAND stressShapes -b FAILREGEX "FAILED|Error in")
-if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+if(NOT MSVC OR llvm13_broken_tests)
   ROOT_ADD_TEST(test-stressshapes-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressShapes.cxx
                 FAILREGEX "FAILED|Error in")
 endif()
@@ -165,7 +166,7 @@ if(ROOT_opengl_FOUND)
   endif()
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
   ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
-  if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+  if(NOT MSVC OR llvm13_broken_tests)
     ROOT_ADD_TEST(test-stressgraphics-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressgraphics )
   endif()
@@ -174,7 +175,7 @@ endif()
 #--stressHistogram------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED|Error in" LABELS longtest)
-if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+if(NOT MSVC OR llvm13_broken_tests)
   ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stresshistogram )
 endif()
@@ -197,22 +198,6 @@ ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
 ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
-
-#--stressTMVA--------------------------------------------------------------------------------------
-if(CUDA_FOUND)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
-endif()
-
-if(BLAS_FOUND AND imt)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
-endif()
-
-if(ROOT_tmva_FOUND)
-  ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
-  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
-  ROOT_ADD_TEST(test-stresstmva-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressTMVA.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stresstmva TIMEOUT 1800)
-endif()
 
 #--stressMathMore----------------------------------------------------------------------------------
 if(ROOT_mathmore_FOUND)
@@ -240,55 +225,7 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
               FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
 
 if(ROOT_roofit_FOUND)
-  #--stressRooFit----------------------------------------------------------------------------------
-  if(ROOT_mathmore_FOUND)
-    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
-  else()
-    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
-  endif()  
-  configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit -b off FAILREGEX "FAILED|Error in")
-  ROOT_ADD_TEST(test-stressroofit-batchmode-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in")
-  if(CUDA_FOUND)
-    ROOT_ADD_TEST(test-stressroofit-batchmode-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
-  endif()
-  ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit LABELS longtest)
-
-  # Test that the user can still include RooMath.h themselves from the
-  # interpreter. We test this case explicitely, because RooMath.h was moved
-  # from roofit/roofitcore to roofit/batchcompute, which can cause redefinition
-  # problems.
-  ROOT_ADD_TEST(test-roofit-includingRooMath COMMAND ${ROOT_root_CMD} -b -q -l -e "#include\ <RooMath.h>")
-
   add_subdirectory(fit)
-
-  #--stressRooStats----------------------------------------------------------------------------------
-  ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
-  configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressroostats-batchmode-cpu COMMAND stressRooStats -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
-  if(CUDA_FOUND)
-    ROOT_ADD_TEST(test-stressroostats-batchmode-cuda COMMAND stressRooStats -b cuda FAILREGEX "FAILED|Error in" LABELS longtest)
-  endif()
-  if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
-    ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
-                  FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
-  endif()
-  if (ROOT_minuit2_FOUND)
-    ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2  FAILREGEX "FAILED|Error in" LABELS longtest)
-  endif()
-endif()
-
-#--stressHistFactory--------------------------------------------------------------------------------
-if(ROOT_roofit_FOUND AND GSL_FOUND AND ROOT_xml_FOUND)
-  ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
-  if(NOT MSVC)
-    configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
-    configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
-    ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory FAILREGEX "FAILED|Error in" LABELS longtest)
-    ROOT_ADD_TEST(test-stressHistFactory-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistFactory.cxx FAILREGEX "FAILED|Error in" DEPENDS test-stressHistFactory)
-  endif()
 endif()
 
 #--stressFit---------------------------------------------------------------------------------
@@ -302,7 +239,7 @@ if(ROOT_unuran_FOUND)
   ROOT_EXECUTABLE(stressHistoFit stressHistoFit.cxx LIBRARIES MathCore Matrix Unuran Tree Gpad)
   ROOT_ADD_TEST(test-stresshistofit COMMAND stressHistoFit FAILREGEX "FAILED|Error in" LABELS longtest)
   if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-    if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+    if(NOT MSVC OR llvm13_broken_tests)
       ROOT_ADD_TEST(test-stresshistofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistoFit.cxx
                     FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit )
     endif()
@@ -312,7 +249,7 @@ endif()
 #--stressEntryList---------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressEntryList stressEntryList.cxx LIBRARIES MathCore Tree Hist)
 ROOT_ADD_TEST(test-stressentrylist COMMAND stressEntryList -b FAILREGEX "FAILED|Error in")
-if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+if(NOT MSVC OR llvm13_broken_tests)
   ROOT_ADD_TEST(test-stressentrylist-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressEntryList.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressentrylist)
 endif()
@@ -444,6 +381,7 @@ if (NOT cxxmodules)
     ROOT_ADD_TEST(test-periodic-build
       COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
         --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     )
   else()
     ROOT_ADD_TEST(test-periodic-build
@@ -451,6 +389,7 @@ if (NOT cxxmodules)
         env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
         ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
         --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     )
   endif()
 endif()

@@ -29,12 +29,13 @@
 #include "TEnv.h"
 #include "TExec.h"
 #include "TSocket.h"
+#include "TThread.h"
 
 #include <thread>
 #include <chrono>
 #include <iostream>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 ///////////////////////////////////////////////////////////////
 /// Parse boolean gEnv variable which should be "yes" or "no"
@@ -58,7 +59,7 @@ int RWebWindowWSHandler::GetBoolEnv(const std::string &name, int dflt)
 }
 
 
-/** \class ROOT::Experimental::RWebWindowsManager
+/** \class ROOT::RWebWindowsManager
 \ingroup webdisplay
 
 Central instance to create and show web-based windows like Canvas or FitPanel.
@@ -122,11 +123,8 @@ void RWebWindowsManager::AssignMainThrd()
 RWebWindowsManager::RWebWindowsManager()
 {
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
-   if (fExternalProcessEvents) {
-      gWebWinMainThrdSet = false;
-      fAssgnExec = std::make_unique<TExec>("init_threadid", "ROOT::Experimental::RWebWindowsManager::AssignMainThrd();");
-      TTimer::SingleShot(0, "TExec",  fAssgnExec.get(), "Exec()");
-   }
+   if (fExternalProcessEvents)
+      RWebWindowsManager::AssignMainThrd();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -138,20 +136,6 @@ RWebWindowsManager::~RWebWindowsManager()
    if (gApplication && fServer && !fServer->IsTerminated()) {
       gApplication->Disconnect("Terminate(Int_t)", fServer.get(), "SetTerminate()");
       fServer->SetTerminate();
-   }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Assign thread id for window
-/// Required in case of external process events
-
-void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
-{
-   if (fExternalProcessEvents && gWebWinMainThrdSet) {
-      win.fUseServerThreads = false;
-      win.fProcessMT = false;
-      win.fCallbacksThrdIdSet = true;
-      win.fCallbacksThrdId = gWebWinMainThrd;
    }
 }
 
@@ -347,7 +331,8 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
-   bool assign_loopback = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpLoopback", 1) == 1;
+   // always use loopback
+   bool assign_loopback = true; // RWebWindowWSHandler::GetBoolEnv("WebGui.HttpLoopback", 1) == 1;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
@@ -360,6 +345,9 @@ bool RWebWindowsManager::CreateServer(bool with_http)
 
    if (use_unix_socket)
       fcgi_port = http_port = -1;
+
+   if (assign_loopback)
+      fcgi_port = -1;
 
    int ntry = 100;
 
@@ -425,7 +413,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             }
          }
 
-         engine.Append(TString::Format("thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
+         engine.Append(TString::Format("webgui&thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
 
          if (http_maxage >= 0)
             engine.Append(TString::Format("&max_age=%d", http_maxage));
@@ -498,10 +486,12 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
    }
 
    if (fExternalProcessEvents) {
-      if (gWebWinMainThrdSet)
-         AssignWindowThreadId(*win.get());
-      else
-         win->UseServerThreads(); // let run window until thread is obtained
+      // special mode when window communication performed in THttpServer::ProcessRequests
+      // used only with python which create special thread - but is has to be ignored!!!
+      // therefore use main thread id to detect callbacks which are invoked only from that main thread
+      win->fUseProcessEvents = true;
+      win->fCallbacksThrdIdSet = gWebWinMainThrdSet;
+      win->fCallbacksThrdId = gWebWinMainThrd;
    } else if (IsUseHttpThread())
       win->UseServerThreads();
 
@@ -605,8 +595,12 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
 
    // catch window showing, used by the RBrowser to embed some of ROOT widgets
    if (fShowCallback)
-      if (fShowCallback(win, user_args))
+      if (fShowCallback(win, user_args)) {
+         // add dummy handle to pending connections, widget (like TWebCanvas) may wait until connection established
+         auto handle = std::make_unique<RWebDisplayHandle>("");
+         win.AddDisplayHandle(false, "", handle);
          return 0;
+      }
 
    // place here while involves conn mutex
    auto token = win.GetConnToken();
@@ -636,6 +630,10 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       args.SetWidth(win.GetWidth());
    if (args.GetHeight() <= 0)
       args.SetHeight(win.GetHeight());
+   if (args.GetX() < 0)
+      args.SetX(win.GetX());
+   if (args.GetY() < 0)
+      args.SetY(win.GetY());
 
    bool normal_http = !args.IsLocalDisplay();
    if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))

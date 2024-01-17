@@ -56,7 +56,7 @@ void rs302_JeffreysPriorDemo()
    w.factory("mu[100,1,200]");
    w.factory("ExtendPdf::p(u,mu)");
 
-   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
+   std::unique_ptr<RooDataHist> asimov{w.pdf("p")->generateBinned(*w.var("x"), ExpectedData())};
 
    std::unique_ptr<RooFitResult> res{w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE))};
 
@@ -96,7 +96,7 @@ void TestJeffreysGaussMean()
    w.var("sigma")->setConstant();
    w.var("n")->setConstant();
 
-   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
+   std::unique_ptr<RooDataHist> asimov{w.pdf("p")->generateBinned(*w.var("x"), ExpectedData())};
 
    std::unique_ptr<RooFitResult> res{w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE))};
 
@@ -146,7 +146,7 @@ void TestJeffreysGaussSigma()
    w.var("n")->setConstant();
    w.var("x")->setBins(301);
 
-   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
+   std::unique_ptr<RooDataHist> asimov{w.pdf("p")->generateBinned(*w.var("x"), ExpectedData())};
 
    std::unique_ptr<RooFitResult> res{w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE))};
 
@@ -194,7 +194,7 @@ void TestJeffreysGaussMeanAndSigma()
    w.var("n")->setConstant();
    w.var("x")->setBins(301);
 
-   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
+   std::unique_ptr<RooDataHist> asimov{w.pdf("p")->generateBinned(*w.var("x"), ExpectedData())};
 
    std::unique_ptr<RooFitResult> res{w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE))};
 

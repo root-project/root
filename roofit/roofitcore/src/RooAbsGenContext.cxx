@@ -19,7 +19,7 @@
 \class RooAbsGenContext
 \ingroup Roofitcore
 
-RooAbsGenContext is the abstract base class for generator contexts of
+Abstract base class for generator contexts of
 RooAbsPdf objects. A generator context is an object that controls
 the generation of events from a given p.d.f in one or more sessions.
 This class defines the common interface for all such contexts and organizes
@@ -51,8 +51,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   TNamed(model),
   _prototype(prototype),
   _isValid(true),
-  _verbose(verbose),
-  _genData(0)
+  _verbose(verbose)
 {
   // Check PDF dependents
   if (model.recursiveCheckObservables(&vars)) {
@@ -66,7 +65,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
   // Analyze the prototype dataset, if one is specified
   _nextProtoIndex= 0;
-  if(0 != _prototype) {
+  if(nullptr != _prototype) {
     for (RooAbsArg const* proto : *_prototype->get()) {
       // is this variable being generated or taken from the prototype?
       if(!_theEvent.contains(*proto)) {
@@ -133,7 +132,7 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
-    return 0;
+    return nullptr;
   }
 
   // Calculate the expected number of events if necessary
@@ -145,14 +144,14 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
       if (_extendMode == RooAbsPdf::CanNotBeExtended) {
    coutE(Generation) << ClassName() << "::" << GetName()
         << ":generate: PDF not extendable: cannot calculate expected number of events" << endl;
-   return 0;
+   return nullptr;
       }
       nEvents= _expectedEvents;
     }
     if(nEvents <= 0) {
       coutE(Generation) << ClassName() << "::" << GetName()
          << ":generate: cannot calculate expected number of events" << endl;
-      return 0;
+      return nullptr;
     }
     coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
             << nEvents << " events" << endl;
@@ -180,7 +179,7 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
       // ok= false;
     }
     // coverity[DEADCODE]
-    if(!ok) return 0;
+    if(!ok) return nullptr;
   }
 
   if (_verbose) Print("v") ;
@@ -203,20 +202,20 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
   while(_genData->numEntries()<nEvents) {
 
     // first, load values from the prototype dataset, if one was provided
-    if(0 != _prototype) {
+    if(nullptr != _prototype) {
       if(_nextProtoIndex >= _prototype->numEntries()) _nextProtoIndex= 0;
 
       Int_t actualProtoIdx = !_protoOrder.empty() ? _protoOrder[_nextProtoIndex] : _nextProtoIndex ;
 
       const RooArgSet *subEvent= _prototype->get(actualProtoIdx);
       _nextProtoIndex++;
-      if(0 != subEvent) {
+      if(nullptr != subEvent) {
         _theEvent.assign(*subEvent);
       }
       else {
    coutE(Generation) << ClassName() << "::" << GetName() << ":generate: cannot load event "
            << actualProtoIdx << " from prototype dataset" << endl;
-   return 0;
+   return nullptr;
       }
     }
 
@@ -233,7 +232,7 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
   }
 
   RooDataSet* output = _genData ;
-  _genData = 0 ;
+  _genData = nullptr ;
   output->setDirtyProp(true) ;
 
   return output;
@@ -341,12 +340,12 @@ void RooAbsGenContext::resampleData(double& ratio)
 
   Int_t nOrig = _genData->numEntries() ;
   Int_t nTarg = Int_t(nOrig*ratio+0.5) ;
-  RooDataSet* trimmedData = (RooDataSet*) _genData->reduce(RooFit::EventRange(0,nTarg)) ;
+  std::unique_ptr<RooAbsData> trimmedData{_genData->reduce(RooFit::EventRange(0,nTarg))};
 
   cxcoutD(Generation) << "RooGenContext::resampleData*( existing production trimmed from " << nOrig << " to " << trimmedData->numEntries() << " events" << endl ;
 
   delete _genData ;
-  _genData = trimmedData ;
+  _genData = static_cast<RooDataSet*>(trimmedData.release());
 
   if (_prototype) {
     // Push back proto index by trimmed amount to force recycling of the

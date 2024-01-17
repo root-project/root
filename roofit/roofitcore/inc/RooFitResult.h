@@ -173,7 +173,6 @@ public:
 
 protected:
 
-  friend class RooMinuit ;
   void fillCorrMatrix() ;
   void fillLegacyCorrMatrix() const ;
   void fillPrefitCorrMatrix();

@@ -177,7 +177,7 @@ int TwoHistoFit2D(bool global = true) {
   }
 
   TVirtualFitter::SetDefaultFitter("Minuit");
-  TVirtualFitter * minuit = TVirtualFitter::Fitter(0,10);
+  TVirtualFitter * minuit = TVirtualFitter::Fitter(nullptr,10);
   for (int i = 0; i < 10; ++i) {
     minuit->SetParameter(i, func->GetParName(i), func->GetParameter(i), 0.01, 0,0);
   }

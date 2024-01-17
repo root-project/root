@@ -27,8 +27,8 @@
 //=============================================================================
 using namespace std;
 //=============================================================================
-const size_t g_sleeptime = 1; // in secs.
-const size_t g_multTasks = 50;
+const size_t g_sleeptime = 10000000; // in nanosecs.
+const size_t g_multTasks = 32;
 //=============================================================================
 
 // define a custom parameters type for task objects
@@ -40,7 +40,7 @@ class TTestTask: public TThreadPoolTaskImp<TTestTask, EProc>
 public:
    bool runTask(EProc /*_param*/) {
       m_tid = TThread::SelfId();
-      TThread::Sleep(g_sleeptime, 0L);
+      TThread::Sleep(0L, g_sleeptime);
       return true;
    }
    unsigned long threadID() const {
@@ -52,7 +52,7 @@ private:
 };
 
 //=============================================================================
-void threadPool(size_t _numThreads = 10, bool _needDbg = false)
+void threadPool(size_t _numThreads = 4, bool _needDbg = false)
 {
    cout << "ThreadPool: starting..." << endl;
    // number of tasks to process

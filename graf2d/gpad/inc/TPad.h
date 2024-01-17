@@ -163,7 +163,7 @@ public:
    TPad(const char *name, const char *title, Double_t xlow,
         Double_t ylow, Double_t xup, Double_t yup,
         Color_t color=-1, Short_t bordersize=-1, Short_t bordermode=-2);
-   virtual ~TPad();
+   ~TPad() override;
    void              AbsCoordinates(Bool_t set) override { fAbsCoord = set; }
    Double_t          AbsPixeltoX(Int_t px) override { return fAbsPixeltoXk + px*fPixeltoX; }
    Double_t          AbsPixeltoY(Int_t py) override { return fAbsPixeltoYk + py*fPixeltoY; }
@@ -267,11 +267,12 @@ public:
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE) override;
    Bool_t            HasFixedAspectRatio() const override { return fFixedAspectRatio; }
    Bool_t            IsBatch() const override;
-   virtual Bool_t    IsEditable() const override { return fEditable; }
+   Bool_t            IsEditable() const override { return fEditable; }
    Bool_t            IsFolder() const override { return kTRUE; }
    Bool_t            IsModified() const override { return fModified; }
    Bool_t            IsRetained() const override;
    Bool_t            IsVertical() const override { return !TestBit(kHori); }
+   Bool_t            IsWeb() const override;
    void              ls(Option_t *option="") const override;
    void              Modified(Bool_t flag=1) override;  // *SIGNAL*
    Bool_t            OpaqueMoving() const override;
@@ -363,6 +364,8 @@ public:
 
    void              ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true) override;
    void              Update() override;
+   void              UpdateAsync() override;
+
    Int_t             UtoAbsPixel(Double_t u) const override { return Int_t(fUtoAbsPixelk + u*fUtoPixel); }
    Int_t             VtoAbsPixel(Double_t v) const override { return Int_t(fVtoAbsPixelk + v*fVtoPixel); }
    Int_t             UtoPixel(Double_t u) const override;

@@ -13,6 +13,9 @@
 
 #include <gtest/gtest.h>
 
+// These tests are disabled if the legacy backend is not available, because
+// then we don't have any reference to compare to.
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 // GitHub issue 9118: Problem running weighted binned fit in batch mode
 TEST(SumW2Error, BatchMode)
 {
@@ -44,23 +47,27 @@ TEST(SumW2Error, BatchMode)
    std::unique_ptr<RooDataHist> dataHist{dataSet->binnedClone()};
    std::unique_ptr<RooDataHist> dataHistWeighted{dataSetWeighted.binnedClone()};
 
-   auto fit = [&](RooAbsData &data, bool sumw2, bool batchmode, std::string const &minimizer, int printLevel = -1) {
+   using namespace RooFit;
+
+   auto fit = [&](RooAbsData &data, bool sumw2, EvalBackend evalBackend, std::string const &minimizer,
+                  int printLevel = -1) {
       params.assign(initialParams);
 
-      using namespace RooFit;
-      return std::unique_ptr<RooFitResult>{model.fitTo(data, Save(), SumW2Error(sumw2), Strategy(1),
-                                                       BatchMode(batchmode), Minimizer(minimizer.c_str()),
-                                                       PrintLevel(printLevel))};
+      return std::unique_ptr<RooFitResult>{model.fitTo(data, Save(), SumW2Error(sumw2), Strategy(1), evalBackend,
+                                                       Minimizer(minimizer.c_str()), PrintLevel(printLevel))};
    };
 
+   auto scalar = EvalBackend::Legacy();
+   auto batchMode = EvalBackend::Cpu();
+
    // Compare batch mode vs. scalar mode for non-SumW2 fits on UNWEIGHTED datasets
-   EXPECT_TRUE(fit(*dataSet, 0, 0, "Minuit")->isIdentical(*fit(*dataSet, 0, 1, "Minuit")))
+   EXPECT_TRUE(fit(*dataSet, 0, scalar, "Minuit")->isIdentical(*fit(*dataSet, 0, batchMode, "Minuit")))
       << " different results for Minuit fit to RooDataSet without SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 0, 0, "Minuit")->isIdentical(*fit(*dataHist, 0, 1, "Minuit")))
+   EXPECT_TRUE(fit(*dataHist, 0, scalar, "Minuit")->isIdentical(*fit(*dataHist, 0, batchMode, "Minuit")))
       << " different results for Minuit fit to RooDataHist without SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataSet, 0, 0, "Minuit2")->isIdentical(*fit(*dataSet, 0, 1, "Minuit2")))
+   EXPECT_TRUE(fit(*dataSet, 0, scalar, "Minuit2")->isIdentical(*fit(*dataSet, 0, batchMode, "Minuit2")))
       << " different results for Minuit2 fit to RooDataSet without SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 0, 0, "Minuit2")->isIdentical(*fit(*dataHist, 0, 1, "Minuit2")))
+   EXPECT_TRUE(fit(*dataHist, 0, scalar, "Minuit2")->isIdentical(*fit(*dataHist, 0, batchMode, "Minuit2")))
       << " different results for Minuit2 fit to RooDataHist without SumW2Error correction.";
 
    // We can't compare the covariance matrix in these next cases, because it is
@@ -69,23 +76,27 @@ TEST(SumW2Error, BatchMode)
    // covariance matrix.
 
    // Compare batch mode vs. scalar mode for SumW2 fits on UNWEIGHTED datasets
-   EXPECT_TRUE(fit(*dataSet, 1, 0, "Minuit")->isIdenticalNoCov(*fit(*dataSet, 1, 1, "Minuit")))
+   EXPECT_TRUE(fit(*dataSet, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(*dataSet, 1, batchMode, "Minuit")))
       << " different results for Minuit fit to RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 1, 0, "Minuit")->isIdenticalNoCov(*fit(*dataHist, 1, 1, "Minuit")))
+   EXPECT_TRUE(fit(*dataHist, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(*dataHist, 1, batchMode, "Minuit")))
       << " different results for Minuit fit to RooDataHist with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataSet, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(*dataSet, 1, 1, "Minuit2")))
+   EXPECT_TRUE(fit(*dataSet, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(*dataSet, 1, batchMode, "Minuit2")))
       << " different results for Minuit2 fit to RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(*dataHist, 1, 1, "Minuit2")))
+   EXPECT_TRUE(fit(*dataHist, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(*dataHist, 1, batchMode, "Minuit2")))
       << " different results for Minuit2 fit to RooDataHist with SumW2Error correction.";
 
    // Compare batch mode vs. scalar mode for SumW2 fits on WEIGHTED datasets
-   EXPECT_TRUE(fit(dataSetWeighted, 1, 0, "Minuit")->isIdenticalNoCov(*fit(dataSetWeighted, 1, 1, "Minuit")))
+   EXPECT_TRUE(
+      fit(dataSetWeighted, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(dataSetWeighted, 1, batchMode, "Minuit")))
       << " different results for Minuit fit to weighted RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHistWeighted, 1, 0, "Minuit")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, 1, "Minuit")))
+   EXPECT_TRUE(
+      fit(*dataHistWeighted, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, batchMode, "Minuit")))
       << " different results for Minuit fit to weighted RooDataHist with SumW2Error correction.";
-   EXPECT_TRUE(fit(dataSetWeighted, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(dataSetWeighted, 1, 1, "Minuit2")))
+   EXPECT_TRUE(
+      fit(dataSetWeighted, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(dataSetWeighted, 1, batchMode, "Minuit2")))
       << " different results for Minuit2 fit to weighted RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHistWeighted, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, 1, "Minuit2")))
+   EXPECT_TRUE(
+      fit(*dataHistWeighted, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, batchMode, "Minuit2")))
       << " different results for Minuit2 fit to weighted RooDataHist with SumW2Error correction.";
 }
 
@@ -131,19 +142,19 @@ TEST(SumW2Error, ExtendedFit)
    shp->getParameters(dataNoWeights->get(), params);
    params.snapshot(initialParams);
 
-   auto doFit = [&](bool batchMode, bool sumW2Error, const char *range) {
+   auto doFit = [&](RooFit::EvalBackend evalBackend, bool sumW2Error, const char *range) {
       params.assign(initialParams);
       return std::unique_ptr<RooFitResult>{shp->fitTo(datahist, Extended(), Range(range), Save(),
-                                                      SumW2Error(sumW2Error), Strategy(1), PrintLevel(-1),
-                                                      BatchMode(batchMode), Minimizer("Minuit2", "migrad"))};
+                                                      SumW2Error(sumW2Error), Strategy(1), PrintLevel(-1), evalBackend,
+                                                      Minimizer("Minuit2", "migrad"))};
    };
 
    // compare batch mode and scalar mode fit results for full range
    {
-      auto yy = doFit(true, true, nullptr);
-      auto yn = doFit(true, false, nullptr);
-      auto ny = doFit(false, true, nullptr);
-      auto nn = doFit(false, false, nullptr);
+      auto yy = doFit(EvalBackend::Cpu(), true, nullptr);
+      auto yn = doFit(EvalBackend::Cpu(), false, nullptr);
+      auto ny = doFit(EvalBackend::Legacy(), true, nullptr);
+      auto nn = doFit(EvalBackend::Legacy(), false, nullptr);
 
       EXPECT_TRUE(yy->isIdenticalNoCov(*ny)) << "different results for extended fit with SumW2Error in BatchMode";
       EXPECT_TRUE(yn->isIdenticalNoCov(*nn)) << "different results for extended fit without SumW2Error in BatchMode";
@@ -151,10 +162,10 @@ TEST(SumW2Error, ExtendedFit)
 
    // compare batch mode and scalar mode fit results for subrange
    {
-      auto yy = doFit(true, true, "subrange");
-      auto yn = doFit(true, false, "subrange");
-      auto ny = doFit(false, true, "subrange");
-      auto nn = doFit(false, false, "subrange");
+      auto yy = doFit(EvalBackend::Cpu(), true, "subrange");
+      auto yn = doFit(EvalBackend::Cpu(), false, "subrange");
+      auto ny = doFit(EvalBackend::Legacy(), true, "subrange");
+      auto nn = doFit(EvalBackend::Legacy(), false, "subrange");
 
       EXPECT_TRUE(yy->isIdenticalNoCov(*ny))
          << "different results for extended fit in subrange with SumW2Error in BatchMode";
@@ -162,3 +173,4 @@ TEST(SumW2Error, ExtendedFit)
          << "different results for extended fit in subrange without SumW2Error in BatchMode";
    }
 }
+#endif

@@ -26,22 +26,23 @@ In extended mode, a
 
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 
-#include "RooAbsData.h"
-#include "RooAbsPdf.h"
-#include "RooAbsDataStore.h"
-#include "RooNLLVar.h" // RooNLLVar::ComputeScalar
-#include "RooChangeTracker.h"
-#include "RooNaNPacker.h"
-#include "../RooFitDriver.h"
+#include <RooAbsData.h>
+#include <RooAbsPdf.h>
+#include <RooAbsDataStore.h>
+#include <RooChangeTracker.h>
+#include <RooNaNPacker.h>
+#include <RooFit/Evaluator.h>
+
+#include "../RooFit/BatchModeDataHelpers.h"
 
 namespace RooFit {
 namespace TestStatistics {
 
 namespace {
 
-RooAbsL::ClonePdfData clonePdfData(RooAbsPdf &pdf, RooAbsData &data, RooFit::BatchModeOption batchMode)
+RooAbsL::ClonePdfData clonePdfData(RooAbsPdf &pdf, RooAbsData &data, RooFit::EvalBackend evalBackend)
 {
-   if (batchMode == RooFit::BatchModeOption::Off) {
+   if (evalBackend.value() == RooFit::EvalBackend::Value::Legacy) {
       return {&pdf, &data};
    }
    // For the evaluation with the BatchMode, the pdf needs to be "compiled" for
@@ -52,15 +53,21 @@ RooAbsL::ClonePdfData clonePdfData(RooAbsPdf &pdf, RooAbsData &data, RooFit::Bat
 } // namespace
 
 RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
-                           RooFit::BatchModeOption batchMode)
-   : RooAbsL(clonePdfData(*pdf, *data, batchMode), data->numEntries(), 1, extended)
+                           RooFit::EvalBackend evalBackend)
+   : RooAbsL(clonePdfData(*pdf, *data, evalBackend), data->numEntries(), 1, extended)
 {
    std::unique_ptr<RooArgSet> params(pdf->getParameters(data));
    paramTracker_ = std::make_unique<RooChangeTracker>("chtracker", "change tracker", *params, true);
 
-   if (batchMode != RooFit::BatchModeOption::Off) {
-      driver_ = std::make_unique<ROOT::Experimental::RooFitDriver>(*pdf_, batchMode);
-      driver_->setData(*data_, "");
+   if (evalBackend.value() != RooFit::EvalBackend::Value::Legacy) {
+      evaluator_ = std::make_unique<RooFit::Evaluator>(*pdf_, evalBackend.value() == RooFit::EvalBackend::Value::Cuda);
+      std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+      auto dataSpans =
+         RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, /*skipZeroWeights=*/true,
+                                                    /*takeGlobalObservablesFromData=*/false, _vectorBuffers);
+      for (auto const &item : dataSpans) {
+         evaluator_->setInput(item.first->GetName(), item.second, false);
+      }
    }
 }
 
@@ -70,7 +77,7 @@ RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
      _first(other._first),
      lastSection_(other.lastSection_),
      cachedResult_(other.cachedResult_),
-     driver_(other.driver_)
+     evaluator_(other.evaluator_)
 {
    paramTracker_ = std::make_unique<RooChangeTracker>(*other.paramTracker_);
 }
@@ -92,9 +99,51 @@ bool RooUnbinnedL::setApplyWeightSquared(bool flag)
 
 namespace {
 
-// For now, almost exact copy of RooNLLVar::computeScalarFunc.
-RooNLLVar::ComputeResult computeBatchFunc(std::span<const double> probas, RooAbsData *dataClone, bool weightSq,
-                                          std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent)
+using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
+
+// Copy of RooNLLVar::computeScalarFunc.
+ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet, bool weightSq,
+                                std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent,
+                                RooAbsPdf const *offsetPdf = nullptr)
+{
+   ROOT::Math::KahanSum<double> kahanWeight;
+   ROOT::Math::KahanSum<double> kahanProb;
+   RooNaNPacker packedNaN(0.f);
+
+   for (auto i = firstEvent; i < lastEvent; i += stepSize) {
+      dataClone->get(i);
+
+      double weight = dataClone->weight(); // FIXME
+
+      if (0. == weight * weight)
+         continue;
+      if (weightSq)
+         weight = dataClone->weightSquared();
+
+      double logProba = pdfClone->getLogVal(normSet);
+
+      if (offsetPdf) {
+         logProba -= offsetPdf->getLogVal(normSet);
+      }
+
+      const double term = -weight * logProba;
+
+      kahanWeight.Add(weight);
+      kahanProb.Add(term);
+      packedNaN.accumulate(term);
+   }
+
+   if (packedNaN.getPayload() != 0.) {
+      // Some events with evaluation errors. Return "badness" of errors.
+      return {ROOT::Math::KahanSum<double>{packedNaN.getNaNWithPayload()}, kahanWeight.Sum()};
+   }
+
+   return {kahanProb, kahanWeight.Sum()};
+}
+
+// For now, almost exact copy of computeScalarFunc.
+ComputeResult computeBatchFunc(std::span<const double> probas, RooAbsData *dataClone, bool weightSq,
+                               std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent)
 {
    ROOT::Math::KahanSum<double> kahanWeight;
    ROOT::Math::KahanSum<double> kahanProb;
@@ -145,19 +194,20 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    double sumWeight;
 
    // Do not reevaluate likelihood if parameters nor event range have changed
-   if (!paramTracker_->hasChanged(true) && events == lastSection_ && (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0)) return cachedResult_;
+   if (!paramTracker_->hasChanged(true) && events == lastSection_ &&
+       (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0))
+      return cachedResult_;
 
-   if (driver_) {
+   if (evaluator_) {
       // Here, we have a memory allocation that should be avoided when this
       // code needs to be optimized.
-      std::vector<double> probas = driver_->getValues();
+      std::span<const double> probas = evaluator_->run();
       std::tie(result, sumWeight) =
          computeBatchFunc(probas, data_.get(), apply_weight_squared, 1, events.begin(N_events_), events.end(N_events_));
    } else {
       data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
-      std::tie(result, sumWeight) =
-         RooNLLVar::computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared, 1,
-                                      events.begin(N_events_), events.end(N_events_));
+      std::tie(result, sumWeight) = computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared, 1,
+                                                      events.begin(N_events_), events.end(N_events_));
    }
 
    // include the extended maximum likelihood term, if requested
@@ -173,7 +223,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
 
    // At the end of the first full calculation, wire the caches. This doesn't
    // need to be done in BatchMode with the RooFit driver.
-   if (_first && !driver_) {
+   if (_first && !evaluator_) {
       _first = false;
       pdf_->wireAllCaches();
    }

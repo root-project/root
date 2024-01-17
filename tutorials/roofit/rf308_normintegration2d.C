@@ -13,7 +13,6 @@
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAbsReal.h"
 #include "RooPlot.h"
@@ -32,8 +31,8 @@ void rf308_normintegration2d()
    RooRealVar y("y", "y", -10, 10);
 
    // Create pdf gaussx(x,-2,3), gaussy(y,2,2)
-   RooGaussian gx("gx", "gx", x, RooConst(-2), RooConst(3));
-   RooGaussian gy("gy", "gy", y, RooConst(+2), RooConst(2));
+   RooGaussian gx("gx", "gx", x, -2.0, 3.0);
+   RooGaussian gy("gy", "gy", y, +2.0, 2.0);
 
    // Create gxy = gx(x)*gy(y)
    RooProdPdf gxy("gxy", "gxy", RooArgSet(gx, gy));

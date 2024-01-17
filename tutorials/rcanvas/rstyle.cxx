@@ -15,7 +15,6 @@
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RText.hxx"
 #include "ROOT/RLine.hxx"
-#include "ROOT/RDirectory.hxx"
 #include <string>
 
 using namespace ROOT::Experimental;
@@ -51,5 +50,5 @@ void rstyle()
    canvas->Show();
 
    // after leaving function scope style will be destroyed, one has to preserve it
-   RDirectory::Heap().Add("rstyle", style);
+   canvas->ClearOnClose(style);
 }

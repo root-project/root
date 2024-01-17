@@ -49,9 +49,7 @@ ClassImp(RooBinning);
 /// Constructor for an initially empty binning defining the range [xlo,xhi]
 
 RooBinning::RooBinning(double xlo, double xhi, const char* name) :
-  RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
-  _array(0), _blo(0)
+  RooAbsBinning(name)
 {
   setRange(xlo,xhi);
 }
@@ -60,9 +58,7 @@ RooBinning::RooBinning(double xlo, double xhi, const char* name) :
 /// Constructor for a uniform binning in 'nbins' bins in the range [xlo,xhi]
 
 RooBinning::RooBinning(Int_t nbins, double xlo, double xhi, const char* name) :
-  RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
-  _array(0), _blo(0)
+  RooAbsBinning(name)
 {
   _boundaries.reserve(1 + nbins);
   setRange(xlo, xhi);
@@ -74,9 +70,7 @@ RooBinning::RooBinning(Int_t nbins, double xlo, double xhi, const char* name) :
 /// array 'boundaries'
 
 RooBinning::RooBinning(Int_t nbins, const double* boundaries, const char* name) :
-  RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
-  _array(0), _blo(0)
+  RooAbsBinning(name)
 {
   // Variable bin size constructor
   _boundaries.reserve(1 + nbins);
@@ -90,7 +84,7 @@ RooBinning::RooBinning(Int_t nbins, const double* boundaries, const char* name) 
 RooBinning::RooBinning(const RooBinning& other, const char* name) :
   RooAbsBinning(name), _xlo(other._xlo), _xhi(other._xhi),
   _ownBoundLo(other._ownBoundLo), _ownBoundHi(other._ownBoundHi),
-  _nbins(other._nbins), _boundaries(other._boundaries), _array(0),
+  _nbins(other._nbins), _boundaries(other._boundaries),
   _blo(other._blo)
 {
 }
@@ -191,17 +185,6 @@ void RooBinning::binNumbers(double const * x, int * bins, std::size_t n, int coe
     bins[i] += coef * (std::max(0, std::min(_nbins, rawBinNumberImpl(x[i], _boundaries) - _blo)));
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return sequential bin number that contains value x where bin
-/// zero is the first bin that is defined, regardless if that bin
-/// is outside the current defined range
-
-Int_t RooBinning::rawBinNumber(double x) const
-{
-  return rawBinNumberImpl(x, _boundaries);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value of the nearest boundary to x

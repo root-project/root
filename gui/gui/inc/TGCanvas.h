@@ -82,7 +82,7 @@ public:
    TGContainer(TGCanvas *p,UInt_t options = kSunkenFrame,
                Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGContainer();
+   ~TGContainer() override;
 
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void ClearViewPort();
@@ -211,7 +211,7 @@ public:
    TGCanvas(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
             UInt_t options = kSunkenFrame | kDoubleBorder,
             Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGCanvas();
+   ~TGCanvas() override;
 
    TGFrame      *GetContainer() const { return fVport->GetContainer(); }
    TGViewPort   *GetViewPort() const { return fVport; }

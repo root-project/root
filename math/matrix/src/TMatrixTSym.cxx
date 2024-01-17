@@ -217,7 +217,7 @@ void TMatrixTSym<Element>::Delete_m(Int_t size,Element *&m)
    if (m) {
       if (size > this->kSizeMax)
          delete [] m;
-      m = 0;
+      m = nullptr;
    }
 }
 
@@ -228,7 +228,7 @@ void TMatrixTSym<Element>::Delete_m(Int_t size,Element *&m)
 template<class Element>
 Element* TMatrixTSym<Element>::New_m(Int_t size)
 {
-   if (size == 0) return 0;
+   if (size == 0) return nullptr;
    else {
       if ( size <= this->kSizeMax )
          return fDataStack;
@@ -281,7 +281,7 @@ void TMatrixTSym<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,In
    this->fRowLwb  = 0;
    this->fColLwb  = 0;
    this->fNelems  = 0;
-   fElements      = 0;
+   fElements      = nullptr;
 
    if (no_rows < 0 || no_cols < 0)
    {
@@ -302,7 +302,7 @@ void TMatrixTSym<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,In
       if (init)
          memset(fElements,0,this->fNelems*sizeof(Element));
    } else
-     fElements = 0;
+     fElements = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -882,7 +882,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
       R__ASSERT(this->IsValid());
 
       Element *elements_new = GetMatrixArray();
-      // new memory should be initialized but be careful ot to wipe out the stack
+      // new memory should be initialized but be careful not to wipe out the stack
       // storage. Initialize all when old or new storage was on the heap
       if (this->fNelems > this->kSizeMax || nelems_old > this->kSizeMax)
          memset(elements_new,0,this->fNelems*sizeof(Element));

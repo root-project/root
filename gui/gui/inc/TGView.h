@@ -61,7 +61,7 @@ public:
           UInt_t sboptions = 0,
           Pixel_t back = GetWhitePixel());
 
-   virtual ~TGView();
+   ~TGView() override;
 
    TGViewFrame   *GetCanvas() const { return fCanvas; }
 

@@ -1284,7 +1284,12 @@ void TPad::Draw(Option_t *option)
       if (oldMother != fMother || fPixmapID == -1) ResizePad();
    }
 
-   Paint();
+   if (fCanvas && fCanvas->IsWeb()) {
+      Modified();
+      fCanvas->UpdateAsync();
+   } else {
+      Paint();
+   }
 
    if (gPad->IsRetained() && gPad != this && fMother)
       if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);
@@ -1581,7 +1586,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 
    if (this != gPad) {
       Warning("DrawFrame", "Must be called for the current pad only");
-      return gPad->DrawFrame(xmin,ymin,xmax,ymax,title);
+      if (gPad) return gPad->DrawFrame(xmin,ymin,xmax,ymax,title);
    }
 
    cd();
@@ -2267,7 +2272,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    static Int_t axisNumber;
    static Double_t ratio1, ratio2;
    static Int_t px1old, py1old, px2old, py2old;
-   Int_t bin1, bin2, first, last;
+   Int_t nbd, inc, bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
    static std::unique_ptr<TBox> zoombox;
@@ -2403,8 +2408,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    break;
 
    case kWheelUp:
-      bin1 = axis->GetFirst()+1;
-      bin2 = axis->GetLast()-1;
+      nbd  = (axis->GetLast()-axis->GetFirst());
+      inc  = TMath::Max(nbd/100,1);
+      bin1 = axis->GetFirst()+inc;
+      bin2 = axis->GetLast()-inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
@@ -2415,8 +2422,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    break;
 
    case kWheelDown:
-      bin1 = axis->GetFirst()-1;
-      bin2 = axis->GetLast()+1;
+      nbd  = (axis->GetLast()-axis->GetFirst());
+      inc  = TMath::Max(nbd/100,1);
+      bin1 = axis->GetFirst()-inc;
+      bin2 = axis->GetLast()+inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
@@ -2762,6 +2771,13 @@ Bool_t TPad::IsRetained() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Is web ?
+Bool_t TPad::IsWeb() const
+{
+   return fCanvas ? fCanvas->IsWeb() : kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Is pad moving in opaque mode ?
 
 Bool_t TPad::OpaqueMoving() const
@@ -2823,6 +2839,18 @@ void TPad::SetSelected(TObject *obj)
 void TPad::Update()
 {
    if (fCanvas) fCanvas->Update();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Asynchronous pad update.
+/// In case of web-based canvas triggers update of the canvas on the client side,
+/// but does not wait that real update is completed. Avoids blocking of caller thread.
+/// Have to be used if called from other web-based widget to avoid logical dead-locks.
+/// In case of normal canvas just canvas->Update() is performed.
+
+void TPad::UpdateAsync()
+{
+   if (fCanvas) fCanvas->UpdateAsync();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5178,7 +5206,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (strstr(opt,"Preview"))
       gSystem->Exec(TString::Format("epstool --quiet -t6p %s %s", psname.Data(), psname.Data()).Data());
    if (strstr(opt,"EmbedFonts")) {
-      gSystem->Exec(TString::Format("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dUseCIEColor -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
+      gSystem->Exec(TString::Format("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
                           psname.Data()).Data());
       gSystem->Rename("pdf_temp.pdf", psname.Data());
    }
@@ -5691,22 +5719,31 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitives in this pad on the C++ source file out.
 
-void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 {
    TContext ctxt(this, kFALSE); // not interactive
 
    char quote = '"';
-   char lcname[100];
-   const char *cname = GetName();
-   size_t nch = strlen(cname);
-   if (nch < sizeof(lcname)) {
-      strlcpy(lcname, cname, sizeof(lcname));
-      for(size_t k = 0; k < nch; k++)
-         if (lcname[k] == ' ')
-            lcname[k] = 0;
-      if (lcname[0] != 0)
-         cname = lcname;
-      else if (this == gPad->GetCanvas())
+
+   TString padName = GetName();
+
+   // check for space in the pad name
+   auto p = padName.Index(" ");
+   if (p != kNPOS) padName.Resize(p);
+
+   TString opt = option;
+   if (!opt.Contains("toplevel")) {
+      static Int_t pcounter = 0;
+      padName += TString::Format("__%d", pcounter++);
+      padName = gInterpreter->MapCppName(padName);
+   }
+
+   const char *pname = padName.Data();
+   const char *cname = padName.Data();
+
+   if (padName.Length() == 0) {
+      pname = "unnamed";
+      if (this == gPad->GetCanvas())
          cname = "c1";
       else
          cname = "pad";
@@ -5717,8 +5754,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out <<"  "<<std::endl;
       out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
 
-      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-      <<quote
+      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
@@ -5854,9 +5890,14 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
          if (!strcmp(obj->GetName(),"Graph"))
             ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
+      if (obj->InheritsFrom(TPad::Class())) {
+         if (opt.Contains("toplevel"))
+            out<<"   "<<pname<<"->cd();"<<std::endl;
+         else
+            out<<"   "<<cname<<"->cd();"<<std::endl;
+      }
    }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
-   out<<"   "<<GetMother()->GetName()<<"->cd();"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6566,9 +6607,12 @@ void TPad::Streamer(TBuffer &b)
 
          //Set the kCanDelete bit in all objects in the pad such that when the pad
          //is deleted all objects in the pad are deleted too.
+         //Also set must cleanup bit which normally set for all primitives add to pad,
+         // but may be reset in IO like TH1::Streamer does
          TIter next(fPrimitives);
          while ((obj = next())) {
             obj->SetBit(kCanDelete);
+            obj->SetBit(kMustCleanup);
          }
 
          fModified = kTRUE;

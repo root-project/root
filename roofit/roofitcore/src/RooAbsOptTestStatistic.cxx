@@ -35,62 +35,38 @@ Support for calculation in partitions is needed to allow multi-core
 parallelized calculation of test statistics.
 **/
 
+#include "RooAbsOptTestStatistic.h"
+
 #include "Riostream.h"
 #include "TClass.h"
-#include <string.h>
+#include <cstring>
 
-
-#include "RooAbsOptTestStatistic.h"
-#include "RooMsgService.h"
-#include "RooAbsPdf.h"
 #include "RooAbsData.h"
-#include "RooDataHist.h"
-#include "RooArgSet.h"
-#include "RooRealVar.h"
-#include "RooErrorHandler.h"
-#include "RooGlobalFunc.h"
-#include "RooBinning.h"
 #include "RooAbsDataStore.h"
-#include "RooCategory.h"
-#include "RooDataSet.h"
-#include "RooProdPdf.h"
+#include "RooAbsPdf.h"
 #include "RooAddPdf.h"
+#include "RooArgSet.h"
+#include "RooBinSamplingPdf.h"
+#include "RooBinning.h"
+#include "RooCategory.h"
+#include "RooDataHist.h"
+#include "RooDataSet.h"
+#include "RooErrorHandler.h"
+#include "RooFitImplHelpers.h"
+#include "RooGlobalFunc.h"
+#include "RooMsgService.h"
+#include "RooProdPdf.h"
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
+#include "RooRealVar.h"
 #include "RooTrace.h"
 #include "RooVectorDataStore.h"
-#include "RooBinSamplingPdf.h"
 
 #include "ROOT/StringUtils.hxx"
 
 using namespace std;
 
 ClassImp(RooAbsOptTestStatistic);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default Constructor
-
-RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
-{
-  // Initialize all non-persisted data members
-
-  _funcObsSet = 0 ;
-  _funcCloneSet = 0 ;
-  _funcClone = 0 ;
-
-  _normSet = 0 ;
-  _projDeps = 0 ;
-
-  _origFunc = 0 ;
-  _origData = 0 ;
-
-  _ownData = true ;
-  _sealed = false ;
-  _optimized = false ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,62 +94,42 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 /// - cloneInputData Not used. Data is always cloned.
 /// - integrateOverBinsPrecision If > 0, PDF in binned fits are integrated over the bins. This sets the precision. If = 0,
 ///   only unbinned PDFs fit to RooDataHist are integrated. If < 0, PDFs are never integrated.
-RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real,
-                                               RooAbsData& indata, const RooArgSet& projDeps,
-                                               RooAbsTestStatistic::Configuration const& cfg) :
-  RooAbsTestStatistic(name,title,real,indata,projDeps,cfg),
-  _projDeps(0),
-  _sealed(false),
-  _optimized(false),
-  _integrateBinsPrecision(cfg.integrateOverBinsPrecision)
+RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal &real,
+                                               RooAbsData &indata, const RooArgSet &projDeps,
+                                               RooAbsTestStatistic::Configuration const &cfg)
+   : RooAbsTestStatistic(name, title, real, indata, projDeps, cfg),
+     _integrateBinsPrecision(cfg.integrateOverBinsPrecision)
 {
-  // Don't do a thing in master mode
+   // Don't do a thing in master mode
+   if (operMode() != Slave) {
+      return;
+   }
 
-  if (operMode()!=Slave) {
-    _funcObsSet = 0 ;
-    _funcCloneSet = 0 ;
-    _funcClone = 0 ;
-    _normSet = 0 ;
-    _projDeps = 0 ;
-    _origFunc = 0 ;
-    _origData = 0 ;
-    _ownData = false ;
-    _sealed = false ;
-    return ;
-  }
-
-  _origFunc = 0 ; //other._origFunc ;
-  _origData = 0 ; // other._origData ;
-
-  initSlave(real, indata, projDeps, _rangeName.c_str(), _addCoefRangeName.c_str()) ;
+   initSlave(real, indata, projDeps, _rangeName.c_str(), _addCoefRangeName.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) :
-  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice), _optimized(false),
-  _integrateBinsPrecision(other._integrateBinsPrecision)
+RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic &other, const char *name)
+   : RooAbsTestStatistic(other, name),
+     _sealed(other._sealed),
+     _sealNotice(other._sealNotice),
+     _skipZeroWeights(other._skipZeroWeights),
+     _integrateBinsPrecision(other._integrateBinsPrecision)
 {
-  // Don't do a thing in master mode
-  if (operMode()!=Slave) {
+   // Don't do a thing in master mode
+   if (operMode() != Slave) {
 
-    _funcObsSet = 0 ;
-    _funcCloneSet = 0 ;
-    _funcClone = 0 ;
-    _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;
-    _projDeps = 0 ;
-    _origFunc = 0 ;
-    _origData = 0 ;
-    _ownData = false ;
-    return ;
-  }
+      if (other._normSet) {
+         _normSet = new RooArgSet;
+         other._normSet->snapshot(*_normSet);
+      }
+      return;
+   }
 
-  _origFunc = 0 ; //other._origFunc ;
-  _origData = 0 ; // other._origData ;
-  _projDeps = 0 ;
-
-  initSlave(*other._funcClone,*other._dataClone,other._projDeps?*other._projDeps:RooArgSet(),other._rangeName.c_str(),other._addCoefRangeName.c_str()) ;
+   initSlave(*other._funcClone, *other._dataClone, other._projDeps ? *other._projDeps : RooArgSet(),
+             other._rangeName.c_str(), other._addCoefRangeName.c_str());
 }
 
 
@@ -188,7 +144,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Clone FUNC
   _funcClone = RooHelpers::cloneTreeWithSameParameters(real, indata.get()).release();
-  _funcCloneSet = 0 ;
+  _funcCloneSet = nullptr ;
 
   // Attach FUNC to data set
   _funcObsSet = std::unique_ptr<RooArgSet>{_funcClone->getObservables(indata)}.release();
@@ -220,7 +176,8 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   }
 
   // Store normalization set
-  _normSet = (RooArgSet*) indata.get()->snapshot(false) ;
+  _normSet = new RooArgSet;
+  indata.get()->snapshot(*_normSet, false);
 
   // Expand list of observables with any observables used in parameterized ranges.
   // This NEEDS to be a counting loop since we are inserting during the loop.
@@ -228,7 +185,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     auto realDepRLV = dynamic_cast<const RooAbsRealLValue*>((*_funcObsSet)[i]);
     if (realDepRLV && realDepRLV->isDerived()) {
       RooArgSet tmp2;
-      realDepRLV->leafNodeServerList(&tmp2, 0, true);
+      realDepRLV->leafNodeServerList(&tmp2, nullptr, true);
       _funcObsSet->add(tmp2,true);
     }
   }
@@ -269,7 +226,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
-    _dataClone = indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName)) ;
+    _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
     //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
   } else {
     _dataClone = (RooAbsData*) indata.Clone() ;
@@ -343,15 +300,16 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Remove projected dependents from normalization set
   if (projDeps.getSize()>0) {
 
-    _projDeps = (RooArgSet*) projDeps.snapshot(false) ;
+    _projDeps = new RooArgSet;
+    projDeps.snapshot(*_projDeps, false) ;
 
     //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,true,true) ;
 
     // Mark all projected dependents as such
-    RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
-    projDataDeps->setAttribAll("projectedDependent") ;
-    delete projDataDeps ;
+    RooArgSet projDataDeps;
+    _funcObsSet->selectCommon(*_projDeps, projDataDeps);
+    projDataDeps.setAttribAll("projectedDependent") ;
   }
 
 
@@ -626,7 +584,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
     _funcClone->findConstantNodes(*_dataClone->get(),_cachedNodes) ;
 
     // Cache constant nodes with dataset - also cache entries corresponding to zero-weights in data when using BinnedLikelihood
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet,!_funcClone->getAttribute("BinnedLikelihood")) ;
+    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
 
     // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
     for (auto cacheArg : _cachedNodes) {
@@ -708,7 +666,7 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
     _dataClone = nullptr ;
   }
 
-  if (!cloneData && _rangeName.size()>0) {
+  if (!cloneData && !_rangeName.empty()) {
     coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
           << "ignoring request to _not_ clone the input dataset" << endl ;
     cloneData = true ;
@@ -717,9 +675,9 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
   if (cloneData) {
     // Cloning input dataset
     if (_rangeName.empty()) {
-      _dataClone = (RooAbsData*) indata.reduce(*indata.get()) ;
+      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(*indata.get())}.release();
     } else {
-      _dataClone = ((RooAbsData&)indata).reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str())) ;
+      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str()))}.release();
     }
     _ownData = true ;
 
@@ -737,8 +695,8 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
   _data = _dataClone ;
 
   // ReCache constant nodes with dataset
-  if (_cachedNodes.getSize()>0) {
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet) ;
+  if (!_cachedNodes.empty()) {
+    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
   }
 
   // Adjust internal event count
@@ -815,3 +773,8 @@ const char* RooAbsOptTestStatistic::cacheUniqueSuffix() const {
    return Form("_%lx", _dataClone->uniqueId().value()) ;
 }
 
+
+void RooAbsOptTestStatistic::runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
+{
+   _dataClone->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, _skipZeroWeights);
+}

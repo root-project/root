@@ -51,7 +51,7 @@ protected:
 
 public:
    TColorWheel();
-   virtual ~TColorWheel();
+   ~TColorWheel() override;
    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
    void Draw(Option_t *option = "") override;
    TCanvas *GetCanvas() const { return fCanvas; }

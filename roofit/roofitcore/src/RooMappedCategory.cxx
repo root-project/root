@@ -81,7 +81,7 @@ class RooMappedCategoryCache : public RooAbsCache {
 
 RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut, Int_t defOutIdx) :
   RooAbsCategory(name, title), _inputCat("input","Input category",this,inputCat),
-  _mapcache(0)
+  _mapcache(nullptr)
 {
   // Constructor with input category and name of default output state, which is assigned
   // to all input category states that do not follow any mapping rule.
@@ -95,7 +95,7 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
 
 RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
   RooAbsCategory(other,name), _inputCat("input",this,other._inputCat), _mapArray(other._mapArray),
-  _mapcache(0)
+  _mapcache(nullptr)
 {
   _defCat = lookupIndex(other.lookupName(other._defCat));
 }
@@ -208,7 +208,7 @@ bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*ve
      TString defCatName(lookupName(_defCat));
      _mapArray.clear() ;
      delete _mapcache;
-     _mapcache = 0;
+     _mapcache = nullptr;
      clearTypes() ;
      _defCat = defineState(defCatName.Data()).second;
 
@@ -222,7 +222,7 @@ bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*ve
      bool readToken(true) ;
 
     // Loop over definition sequences
-     while(1) {
+     while(true) {
        if (readToken) token=parser.readToken() ;
        if (token.IsNull()) break ;
        readToken=true ;
@@ -231,7 +231,7 @@ bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*ve
        if (parser.expectToken(":",true)) return true ;
 
        // Loop over list of sources for this destination
-       while(1) {
+       while(true) {
          srcKey = parser.readToken() ;
          token = parser.readToken() ;
 

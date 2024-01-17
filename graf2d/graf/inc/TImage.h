@@ -105,7 +105,7 @@ public:
             { TNamed::operator=(img); TAttImage::operator=(img); return *this; }
    TImage(UInt_t /*w*/, UInt_t /*h*/) : TNamed(), TAttImage() { }
 
-   virtual ~TImage() { }
+   ~TImage() override { }
 
    // Cloning
            TObject *Clone(const char *) const override { return nullptr; }

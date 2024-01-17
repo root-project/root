@@ -663,7 +663,7 @@ void THStack::ls(Option_t *option) const
 
 Long64_t THStack::Merge(TCollection* li, TFileMergeInfo * /* info */)
 {
-   if (li==0 || li->GetEntries()==0) {
+   if (li==nullptr || li->GetEntries()==0) {
       return fHists->GetEntries();
    }
    TIter next(li);
@@ -864,7 +864,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
             fHistogram = new TH1F(GetName(),GetTitle(),xaxis->GetNbins(),xmin, xmax);
          }
       }
-      fHistogram->SetStats(0);
+      fHistogram->SetStats(false);
       TH1::AddDirectory(add);
    } else {
       fHistogram->SetTitle(GetTitle());

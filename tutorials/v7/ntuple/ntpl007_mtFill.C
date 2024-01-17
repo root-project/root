@@ -23,7 +23,10 @@ R__LOAD_LIBRARY(ROOTNTuple)
 
 #include <TCanvas.h>
 #include <TH1F.h>
+#include <TH2F.h>
 #include <TRandom.h>
+#include <TRandom3.h>
+#include <TStyle.h>
 #include <TSystem.h>
 
 #include <atomic>

@@ -37,8 +37,8 @@ TGraphTime::TGraphTime(): TNamed()
    fXmax      = 1;
    fYmin      = 0;
    fYmax      = 1;
-   fSteps     = 0;
-   fFrame     = 0;
+   fSteps     = nullptr;
+   fFrame     = nullptr;
 }
 
 
@@ -62,7 +62,7 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
    fFrame     = new TH1D("frame","",100,fXmin,fXmax);
    fFrame->SetMinimum(ymin);
    fFrame->SetMaximum(ymax);
-   fFrame->SetStats(0);
+   fFrame->SetStats(false);
 }
 
 
@@ -73,7 +73,7 @@ TGraphTime::~TGraphTime()
 {
    if (!fSteps) return;
    fSteps->Delete();
-   delete fSteps; fSteps=0;
+   delete fSteps; fSteps=nullptr;
 }
 
 
@@ -92,7 +92,7 @@ TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
    fFrame     = new TH1D("frame","",100,fXmin,fXmax);
    fFrame->SetMinimum(fYmin);
    fFrame->SetMaximum(fYmax);
-   fFrame->SetStats(0);
+   fFrame->SetStats(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@ void TGraphTime::Paint(Option_t *option)
    TString opt = option;
    opt.ToLower();
    TObject *frame = gPad->GetPrimitive("frame");
-   TList *list = 0;
+   TList *list = nullptr;
    TObjLink *lnk;
 
    for (Int_t s=0;s<fNsteps;s++) {
@@ -191,9 +191,9 @@ void TGraphTime::SaveAnimatedGif(const char *filename) const
          }
          gPad->Update();
          if (filename && strlen(filename) > 0)
-            gPad->Print(Form("%s+", filename));
+            gPad->Print(TString::Format("%s+", filename));
          else
-            gPad->Print(Form("%s+", GetName()));
+            gPad->Print(TString::Format("%s+", GetName()));
          if (fSleepTime > 0)
             gSystem->Sleep(fSleepTime);
       }

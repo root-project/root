@@ -39,7 +39,7 @@ End_Macro
 TF12::TF12(): TF1()
 {
    fCase = 0;
-   fF2   = 0;
+   fF2   = nullptr;
    fXY   = 0;
 }
 
@@ -191,8 +191,8 @@ void TF12::SetXY(Double_t xy)
 {
    fXY = xy;
    if (!fF2) return;
-   if (fCase == 0) SetTitle(Form("%s (y=%g)",fF2->GetTitle(),xy));
-   else            SetTitle(Form("%s (x=%g)",fF2->GetTitle(),xy));
+   if (fCase == 0) SetTitle(TString::Format("%s (y=%g)",fF2->GetTitle(),xy));
+   else            SetTitle(TString::Format("%s (x=%g)",fF2->GetTitle(),xy));
    if (fHistogram) fHistogram->SetTitle(GetTitle());
    if (gPad) gPad->Modified();
 }

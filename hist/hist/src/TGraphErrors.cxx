@@ -317,7 +317,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
       // Looping
       char *rest;
       while (std::getline(infile, line, '\n')) {
-         if (line != "") {
+         if (!line.empty()) {
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
@@ -524,7 +524,7 @@ void TGraphErrors::CopyAndRelease(Double_t **newarrays,
 Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
                                 Int_t obegin)
 {
-   if (TGraph::CopyPoints(arrays ? arrays + 2 : 0, ibegin, iend, obegin)) {
+   if (TGraph::CopyPoints(arrays ? arrays + 2 : nullptr, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin) * sizeof(Double_t);
       if (arrays) {
          memmove(&arrays[0][obegin], &fEX[ibegin], n);
@@ -842,7 +842,6 @@ void TGraphErrors::Streamer(TBuffer &b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Swap points.
 
@@ -851,4 +850,25 @@ void TGraphErrors::SwapPoints(Int_t pos1, Int_t pos2)
    SwapValues(fEX, pos1, pos2);
    SwapValues(fEY, pos1, pos2);
    TGraph::SwapPoints(pos1, pos2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update the fX, fY, fEX, and fEY arrays with the sorted values.
+
+void TGraphErrors::UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low)
+{
+   std::vector<Double_t> fEXSorted(numSortedPoints);
+   std::vector<Double_t> fEYSorted(numSortedPoints);
+
+   // Fill the sorted X and Y error values based on the sorted indices
+   std::generate(fEXSorted.begin(), fEXSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEX[sorting_indices[begin++]]; });
+   std::generate(fEYSorted.begin(), fEYSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fEY[sorting_indices[begin++]]; });
+
+   // Copy the sorted X and Y error values back to the original arrays
+   std::copy(fEXSorted.begin(), fEXSorted.end(), fEX + low);
+   std::copy(fEYSorted.begin(), fEYSorted.end(), fEY + low);
+
+   TGraph::UpdateArrays(sorting_indices, numSortedPoints, low);
 }

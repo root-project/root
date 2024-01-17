@@ -43,8 +43,8 @@ For integrands with integrable singularities the Wynn epsilon rule
 can be selected to speed up the convergence of these integrals.
 **/
 
-#include <assert.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdlib>
 #include "TClass.h"
 #include "Riostream.h"
 #include "RooAdaptiveGaussKronrodIntegrator1D.h"
@@ -52,7 +52,6 @@ can be selected to speed up the convergence of these integrals.
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooNumIntFactory.h"
-#include "RooIntegratorBinding.h"
 #include "TMath.h"
 #include "RooMsgService.h"
 
@@ -131,6 +130,8 @@ gsl_integration_qagiu (gsl_function * f,
 
 //-------------------------------------------------------------------
 
+/// \cond ROOFIT_INTERNAL
+
 // register integrator class
 // create a derived class in order to call the protected method of the
 // RoodaptiveGaussKronrodIntegrator1D
@@ -147,6 +148,8 @@ struct Roo_internal_AGKInteg1D : public RooAdaptiveGaussKronrodIntegrator1D {
 struct Roo_reg_AGKInteg1D {
    Roo_reg_AGKInteg1D() { Roo_internal_AGKInteg1D::registerIntegrator(); }
 };
+
+/// \endcond
 
 static Roo_reg_AGKInteg1D instance;
 } // namespace RooFit_internal
@@ -165,7 +168,17 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
      method.defineType("51Points", 5);
      method.defineType("61Points", 6);
      method.setIndex(2);
-     fact.storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(), RooArgSet(maxSeg, method));
+
+     auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+        return std::make_unique<RooAdaptiveGaussKronrodIntegrator1D>(function, config);
+     };
+
+     fact.registerPlugin("RooAdaptiveGaussKronrodIntegrator1D", creator, {maxSeg, method},
+                       /*canIntegrate1D=*/true,
+                       /*canIntegrate2D=*/false,
+                       /*canIntegrateND=*/false,
+                       /*canIntegrateOpenEnded=*/true);
+
      oocoutI(nullptr,Integration)  << "RooAdaptiveGaussKronrodIntegrator1D has been registered " << std::endl;
 }
 
@@ -210,17 +223,6 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _useIntegrandLimits= false;
   _valid= initialize();
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual constructor
-
-RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooAdaptiveGaussKronrodIntegrator1D(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +277,7 @@ bool RooAdaptiveGaussKronrodIntegrator1D::setLimits(double* xmin, double* xmax)
 bool RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
+    assert(nullptr != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
     _xmax= integrand()->getMaxLimit(0);
   }
@@ -829,7 +831,7 @@ qag (const gsl_function * f,
 
   if (epsabs <= 0 && (epsrel < 50 * GSL_DBL_EPSILON || epsrel < 0.5e-28))
     {
-      GSL_ERROR ("tolerance cannot be acheived with given epsabs and epsrel",
+      GSL_ERROR ("tolerance cannot be acheieved with given epsabs and epsrel",
                  GSL_EBADTOL);
     }
 
@@ -1548,55 +1550,55 @@ gsl_integration_workspace_alloc (const size_t n)
   if (n == 0)
     {
       GSL_ERROR_VAL ("workspace length n must be positive integer",
-                        GSL_EDOM, 0);
+                        GSL_EDOM, nullptr);
     }
 
   w = (gsl_integration_workspace *)
     malloc (sizeof (gsl_integration_workspace));
 
-  if (w == 0)
+  if (w == nullptr)
     {
       GSL_ERROR_VAL ("failed to allocate space for workspace struct",
-                        GSL_ENOMEM, 0);
+                        GSL_ENOMEM, nullptr);
     }
 
   w->alist = (double *) malloc (n * sizeof (double));
 
-  if (w->alist == 0)
+  if (w->alist == nullptr)
     {
       free (w);         /* exception in constructor, avoid memory leak */
 
       GSL_ERROR_VAL ("failed to allocate space for alist ranges",
-                        GSL_ENOMEM, 0);
+                        GSL_ENOMEM, nullptr);
     }
 
   w->blist = (double *) malloc (n * sizeof (double));
 
-  if (w->blist == 0)
+  if (w->blist == nullptr)
     {
       free (w->alist);
       free (w);         /* exception in constructor, avoid memory leak */
 
       GSL_ERROR_VAL ("failed to allocate space for blist ranges",
-                        GSL_ENOMEM, 0);
+                        GSL_ENOMEM, nullptr);
     }
 
   w->rlist = (double *) malloc (n * sizeof (double));
 
-  if (w->rlist == 0)
+  if (w->rlist == nullptr)
     {
       free (w->blist);
       free (w->alist);
       free (w);         /* exception in constructor, avoid memory leak */
 
       GSL_ERROR_VAL ("failed to allocate space for rlist ranges",
-                        GSL_ENOMEM, 0);
+                        GSL_ENOMEM, nullptr);
     }
 
 
   w->elist = (double *) malloc (n * sizeof (double));
 
-  if (w->elist == 0)
+  if (w->elist == nullptr)
     {
       free (w->rlist);
       free (w->blist);
@@ -1604,12 +1606,12 @@ gsl_integration_workspace_alloc (const size_t n)
       free (w);         /* exception in constructor, avoid memory leak */
 
       GSL_ERROR_VAL ("failed to allocate space for elist ranges",
-                        GSL_ENOMEM, 0);
+                        GSL_ENOMEM, nullptr);
     }
 
   w->order = (size_t *) malloc (n * sizeof (size_t));
 
-  if (w->order == 0)
+  if (w->order == nullptr)
     {
       free (w->elist);
       free (w->rlist);
@@ -1618,12 +1620,12 @@ gsl_integration_workspace_alloc (const size_t n)
       free (w);         /* exception in constructor, avoid memory leak */
 
       GSL_ERROR_VAL ("failed to allocate space for order ranges",
-                        GSL_ENOMEM, 0);
+                        GSL_ENOMEM, nullptr);
     }
 
   w->level = (size_t *) malloc (n * sizeof (size_t));
 
-  if (w->level == 0)
+  if (w->level == nullptr)
     {
       free (w->order);
       free (w->elist);
@@ -1633,7 +1635,7 @@ gsl_integration_workspace_alloc (const size_t n)
       free (w);         /* exception in constructor, avoid memory leak */
 
       GSL_ERROR_VAL ("failed to allocate space for order ranges",
-                        GSL_ENOMEM, 0);
+                        GSL_ENOMEM, nullptr);
     }
 
   w->size = 0 ;
@@ -2170,7 +2172,7 @@ qags (const gsl_function * f,
 
   if (epsabs <= 0 && (epsrel < 50 * GSL_DBL_EPSILON || epsrel < 0.5e-28))
     {
-      GSL_ERROR ("tolerance cannot be acheived with given epsabs and epsrel",
+      GSL_ERROR ("tolerance cannot be achieved with given epsabs and epsrel",
                  GSL_EBADTOL);
     }
 

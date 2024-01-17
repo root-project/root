@@ -1,7 +1,7 @@
 {
     "misc": {
         "ROOT_internal": {
-            "combined_datas": {
+            "combined_datasets": {
                 "observed" : {
                     "index_cat": "channelCat",
                     "indices": [0],
@@ -133,5 +133,8 @@
             "contents": [122, 112],
             "type": "binned"
         }
-    ]
+    ],
+    "metadata": {
+        "hs3_version" : "0.1.90"
+    }
 }

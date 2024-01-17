@@ -16,17 +16,18 @@
 #ifndef ROO_ABS_ARG
 #define ROO_ABS_ARG
 
-#include "TNamed.h"
-#include "TObjArray.h"
-#include "TRefArray.h"
-#include "RooPrintable.h"
-#include "RooSTLRefCountList.h"
-#include "RooAbsCache.h"
-#include "RooNameReg.h"
-#include "RooLinkedListIter.h"
+#include <RooAbsCache.h>
 #include <RooFit/Config.h>
 #include <RooFit/Detail/NormalizationHelpers.h>
+#include <RooLinkedListIter.h>
+#include <RooNameReg.h>
+#include <RooPrintable.h>
+#include <RooSTLRefCountList.h>
 #include <RooStringView.h>
+
+#include <TNamed.h>
+#include <TObjArray.h>
+#include <TRefArray.h>
 
 #include <deque>
 #include <iostream>
@@ -52,6 +53,11 @@ using RooSetProxy = RooCollectionProxy<RooArgSet>;
 using RooListProxy = RooCollectionProxy<RooArgList>;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
+namespace RooFit {
+namespace Detail {
+class CodeSquashContext;
+}
+}
 
 class RooRefArray : public TObjArray {
  public:
@@ -60,7 +66,6 @@ class RooRefArray : public TObjArray {
   RooRefArray(const RooRefArray& other) : TObjArray(other) {
   }
   RooRefArray& operator=(const RooRefArray& other) = default;
-  ~RooRefArray() override {} ;
  protected:
   ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;
@@ -94,7 +99,6 @@ public:
   virtual bool isDerived() const {
     return true ;
   }
-  bool isCloneOf(const RooAbsArg& other) const ;
 
   /// Check whether this object depends on values from an element in the `serverList`.
   ///
@@ -251,7 +255,7 @@ public:
   /// Create a fundamental-type object that stores our type of value. The
   /// created object will have a valid value, but not necessarily the same
   /// as our value. The caller is responsible for deleting the returned object.
-  virtual RooAbsArg *createFundamental(const char* newname=nullptr) const = 0;
+  virtual RooFit::OwningPtr<RooAbsArg> createFundamental(const char* newname=nullptr) const = 0;
 
   /// Is this argument an l-value, i.e., can it appear on the left-hand side
   /// of an assignment expression? LValues are also special since they can
@@ -359,7 +363,6 @@ public:
   inline bool isConstant() const {
     return _isConstant ; //getAttribute("Constant") ;
   }
-  RooLinkedList getCloningAncestors() const ;
 
   // Sorting
   Int_t Compare(const TObject* other) const override ;
@@ -377,7 +380,7 @@ public:
     return true ;
   }
   virtual bool hasRange(const char*) const {
-    // Has this argument a defined range (dummy interface always returns flase)
+    // Has this argument a defined range (dummy interface always returns false)
     return false ;
   }
 
@@ -527,7 +530,7 @@ public:
   //   * passing an initializer list
   // Before, there was only an overload taking a RooArg set, which caused an
   // implicit creation of a RooArgSet when a RooArgList was passed. This needs
-  // to be avoided, because if the passed RooArgList is owning the argumnets,
+  // to be avoided, because if the passed RooArgList is owning the arguments,
   // this information will be lost with the copy. The solution is to have one
   // overload that takes a general RooAbsCollection, and one overload for
   // RooArgList that is invoked in the case of passing an initializer list.
@@ -578,6 +581,8 @@ public:
   virtual std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const;
 
   virtual bool isCategory() const { return false; }
+
+  virtual void translate(RooFit::Detail::CodeSquashContext &ctx) const;
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
@@ -689,7 +694,7 @@ private:
   // Debug stuff
   static bool _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
   static bool _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
-  bool _deleteWatch ; //! Delete watch flag
+  bool _deleteWatch = false; //! Delete watch flag
 
   bool inhibitDirty() const ;
 
@@ -705,32 +710,32 @@ private:
  protected:
 
 
-  mutable bool _valueDirty ;  // Flag set if value needs recalculating because input values modified
-  mutable bool _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
+  mutable bool _valueDirty = true;  // Flag set if value needs recalculating because input values modified
+  mutable bool _shapeDirty = true;  // Flag set if value needs recalculating because input shapes modified
 
-  mutable OperMode _operMode ; // Dirty state propagation mode
+  mutable OperMode _operMode = Auto; // Dirty state propagation mode
   mutable bool _fast = false; // Allow fast access mode in getVal() and proxies
 
   // Owned components
-  RooArgSet* _ownedComponents ; //! Set of owned component
+  RooArgSet* _ownedComponents = nullptr; //! Set of owned component
 
-  mutable bool _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
+  mutable bool _prohibitServerRedirect = false; //! Prohibit server redirects -- Debugging tool
 
   mutable RooExpensiveObjectCache* _eocache{nullptr}; //! Pointer to global cache manager for any expensive components created by this object
 
-  mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
-  bool _isConstant ; //! Cached isConstant status
+  mutable const TNamed * _namePtr = nullptr; //! De-duplicated name pointer. This will be equal for all objects with the same name.
+  bool _isConstant = false; //! Cached isConstant status
 
-  mutable bool _localNoInhibitDirty ; //! Prevent 'AlwaysDirty' mode for this node
+  mutable bool _localNoInhibitDirty = false; //! Prevent 'AlwaysDirty' mode for this node
 
 /*   RooArgSet _leafNodeCache ; //! Cached leaf nodes */
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */
 
-  mutable RooWorkspace *_myws; //! In which workspace do I live, if any
+  mutable RooWorkspace *_myws = nullptr; //! In which workspace do I live, if any
 
   std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
-  /// \cond Internal
+  /// \cond ROOFIT_INTERNAL
   // Legacy streamers need the following statics:
   friend class RooFitResult;
 

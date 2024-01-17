@@ -92,15 +92,15 @@ public:
                      Long64_t nevents=1000000, Int_t ntries=2, Int_t start=1,
                      Int_t stop=-1, Int_t step=1, Int_t draw=0, Int_t debug=0);
 
-   virtual ~TProofBenchRunCPU();
+   ~TProofBenchRunCPU() override;
 
    void Run(Long64_t nevents, Int_t start, Int_t stop, Int_t step, Int_t ntries,
-            Int_t debug, Int_t draw);
-   void Run(const char *, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) { }
+            Int_t debug, Int_t draw) override;
+   void Run(const char *, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) override { }
 
    void DrawPerfPlots();
 
-   void Print(Option_t* option="") const;
+   void Print(Option_t* option="") const override;
 
    void SetHistType(TPBHistType *histtype);
    void SetNHists(Int_t nhists) { fNHists = nhists; }
@@ -126,11 +126,11 @@ public:
    TDirectory* GetDirProofBench() const { return fDirProofBench; }
    TList* GetListPerfPlots() const { return fListPerfPlots; }
    TCanvas* GetCanvas() const { return fCanvas; }
-   const char* GetName() const { return fName; }
+   const char* GetName() const override { return fName; }
 
    TString GetNameStem() const;
 
-   ClassDef(TProofBenchRunCPU,0)     //CPU-intensive PROOF benchmark
+   ClassDefOverride(TProofBenchRunCPU,0)     //CPU-intensive PROOF benchmark
 };
 
 #endif

@@ -39,9 +39,9 @@ public:
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAttMarkerEditor();
+   ~TAttMarkerEditor() override;
 
-   virtual void     SetModel(TObject* obj);
+   void     SetModel(TObject* obj) override;
    virtual void     DoMarkerColor(Pixel_t color);
    virtual void     DoMarkerAlphaColor(ULongptr_t p);
    virtual void     DoMarkerSize();
@@ -51,7 +51,7 @@ public:
    virtual void     DoLiveAlpha(Int_t a);
    virtual void     GetCurAlpha();
 
-   ClassDef(TAttMarkerEditor,0)  // GUI for editing marker attributes
+   ClassDefOverride(TAttMarkerEditor,0)  // GUI for editing marker attributes
 };
 
 #endif

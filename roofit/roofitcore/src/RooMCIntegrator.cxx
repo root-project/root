@@ -36,7 +36,7 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 #include "RooCategory.h"
 #include "RooMsgService.h"
 
-#include <math.h>
+#include <cmath>
 
 
 
@@ -76,26 +76,21 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar nIntPerDim("nIntPerDim","Number of integration samples (per dimension)",5000) ;
 
   // Create prototype integrator
-  RooMCIntegrator* proto = new RooMCIntegrator() ;
+  auto creator = [](const RooAbsFunc& function, const RooNumIntConfig& config) {
+    return std::make_unique<RooMCIntegrator>(function,config);
+  };
 
   // Register prototype and default config with factory
-  fact.storeProtoIntegrator(proto,RooArgSet(samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim)) ;
+  std::string name = "RooMCIntegrator";
+  fact.registerPlugin(name, creator, {samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim},
+                    /*canIntegrate1D=*/true,
+                    /*canIntegrate2D=*/true,
+                    /*canIntegrateND=*/true,
+                    /*canIntegrateOpenEnded=*/false);
 
   // Make this method the default for all N>2-dim integrals
-  RooNumIntConfig::defaultConfig().methodND().setLabel(proto->ClassName()) ;
+  RooNumIntConfig::defaultConfig().methodND().setLabel(name) ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-///
-/// coverity[UNINIT_CTOR]
-
- RooMCIntegrator::RooMCIntegrator()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,18 +133,6 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.print(std::cout);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return clone of this generator operating on given function with given configuration
-/// Needed to support RooNumIntFactory
-
-RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooMCIntegrator(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,11 +216,11 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
    bins= boxes/box_per_bin;
    if(bins > RooGrid::maxBins) bins= RooGrid::maxBins;
    boxes = box_per_bin * bins;
-   oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
+   oocxcoutD((TObject*)nullptr,Integration) << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
                 << box_per_bin << " boxes/bin" << endl;
       }
       else {
-   oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
+   oocxcoutD((TObject*)nullptr,Integration) << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
                 << boxes << " boxes" << endl;
       }
     }
@@ -353,11 +336,11 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
       cum_int += (intgrl - cum_int) / (it + 1.0);
       cum_sig = 0.0;
     }
-    oocxcoutD((TObject*)0,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
+    oocxcoutD((TObject*)nullptr,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
                  << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
                  << ")" << endl;
     // print the grid after the final iteration
-    if (oodologD((TObject*)0,Integration)) {
+    if (oodologD((TObject*)nullptr,Integration)) {
       if(it + 1 == iterations) _grid.print(std::cout, true);
     }
     _grid.refine(_alpha);

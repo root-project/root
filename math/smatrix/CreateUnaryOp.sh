@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Script to generate unary operators for SVector and SMatrix class.
 # The operator is applied for each element:

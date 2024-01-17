@@ -22,7 +22,6 @@
 #include <list>
 #include "RooAbsRealLValue.h"
 #include "RooRealProxy.h"
-#include "RooFormula.h"
 #include "RooLinTransBinning.h"
 
 class RooArgSet ;

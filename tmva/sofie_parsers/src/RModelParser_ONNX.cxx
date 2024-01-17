@@ -20,6 +20,7 @@ extern ParserFuncSignature ParseSqrt;
 extern ParserFuncSignature ParseReciprocal;
 extern ParserFuncSignature ParseNeg;
 extern ParserFuncSignature ParseExp;
+extern ParserFuncSignature ParseLog;
 // Binary operators
 extern ParserFuncSignature ParseAdd;
 extern ParserFuncSignature ParseSub;
@@ -58,8 +59,10 @@ extern ParserFuncSignature ParseConcat;
 extern ParserFuncSignature ParseCast;
 extern ParserFuncSignature ParseExpand;
 extern ParserFuncSignature ParseShape;
+extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
+extern ParserFuncSignature ParseErf;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -79,6 +82,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Reciprocal", ParseReciprocal);
    RegisterOperator("Neg", ParseNeg);
    RegisterOperator("Exp", ParseExp);
+   RegisterOperator("Log", ParseLog);
    // Binary operators
    RegisterOperator("Add", ParseAdd);
    RegisterOperator("Sub", ParseSub);
@@ -123,9 +127,11 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Softmax", ParseSoftmax);
    RegisterOperator("Tanh", ParseTanh);
    RegisterOperator("Transpose", ParseTranspose);
+   RegisterOperator("MatMul", ParseMatMul);
    RegisterOperator("LayerNormalization", ParseLayerNormalization);
    RegisterOperator("Expand", ParseExpand);
    RegisterOperator("Gather", ParseGather);
+   RegisterOperator("Erf", ParseErf);
 }
 
 // Destructor of the parser
@@ -182,6 +188,9 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
       int idx2 = (nodes.size() > i + 1) ? nodes[i + 1] : (int)i + 1;
       if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
          return ParseFuseMatMulAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+      }
+      else if(graphproto.node(idx2).op_type() != "Add"){
+         return ParseMatMul(*this, graphproto.node(idx));
       }
    } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
       // Fuse Conv or ConvTranspose without bias and Add

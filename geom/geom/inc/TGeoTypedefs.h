@@ -17,8 +17,8 @@
 
 namespace Tessellated {
 
-  using Vertex_t    = ROOT::Geom::Vertex_t;
-  using VertexVec_t = std::vector<Vertex_t>;
+using Vertex_t = ROOT::Geom::Vertex_t;
+using VertexVec_t = std::vector<Vertex_t>;
 
 } // namespace Tessellated
 

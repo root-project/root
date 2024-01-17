@@ -40,9 +40,9 @@ protected:
 
 public:
    TEveGeoShape(const char* name="TEveGeoShape", const char* title=nullptr);
-   virtual ~TEveGeoShape();
+   ~TEveGeoShape() override;
 
-   virtual TObject* GetObject(const TEveException&) const
+   TObject* GetObject(const TEveException&) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    Int_t       GetNSegments()  const { return fNSegments; }
@@ -50,8 +50,8 @@ public:
    void        SetNSegments(Int_t s);
    void        SetShape(TGeoShape* s);
 
-   virtual void ComputeBBox();
-   virtual void Paint(Option_t* option="");
+   void ComputeBBox() override;
+   void Paint(Option_t* option="") override;
 
    void Save(const char* file, const char* name="Extract");
    void SaveExtract(const char* file, const char* name);
@@ -61,12 +61,12 @@ public:
 
    // GeoProjectable
    virtual TBuffer3D*   MakeBuffer3D();
-   virtual TClass*      ProjectedClass(const TEveProjection* p) const;
+   TClass*      ProjectedClass(const TEveProjection* p) const override;
 
    static TGeoManager*  GetGeoMangeur();
    static TGeoHMatrix*  GetGeoHMatrixIdentity();
 
-   ClassDef(TEveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
+   ClassDefOverride(TEveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
 
 //------------------------------------------------------------------------------
@@ -81,19 +81,19 @@ private:
 protected:
    TBuffer3D   *fBuff;
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    TEveGeoShapeProjected();
-   virtual ~TEveGeoShapeProjected();
+   ~TEveGeoShapeProjected() override;
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   void SetProjection(TEveProjectionManager* proj, TEveProjectable* model) override;
+   void UpdateProjection() override;
+   TEveElement* GetProjectedAsElement() override { return this; }
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
-   ClassDef(TEveGeoShapeProjected, 0);
+   ClassDefOverride(TEveGeoShapeProjected, 0);
 };
 
 #endif

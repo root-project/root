@@ -31,6 +31,11 @@ if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
     ROOT/RCsvDS.hxx
@@ -57,6 +62,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RSampleInfo.hxx
     ROOT/RDF/RDefineBase.hxx
     ROOT/RDF/RDefine.hxx
+    ROOT/RDF/RDefinePerSample.hxx
     ROOT/RDF/RDefineReader.hxx
     ROOT/RDF/RDSColumnReader.hxx
     ROOT/RDF/RColumnReaderBase.hxx
@@ -107,6 +113,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFHelpers.cxx
     src/RFilterBase.cxx
     src/RInterfaceBase.cxx
+    src/RInterface.cxx
     src/RJittedAction.cxx
     src/RJittedDefine.cxx
     src/RJittedFilter.cxx
@@ -115,6 +122,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RMetaData.cxx
     src/RRangeBase.cxx
     src/RSample.cxx
+    src/RResultPtr.cxx
     src/RVariationBase.cxx
     src/RVariationsDescription.cxx
     src/RRootDS.cxx
@@ -130,6 +138,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     RIO
     ROOTVecOps
     ${RDATAFRAME_EXTRA_DEPS}
+  ${EXTRA_DICT_OPTS}
 )
 
 if(arrow)
@@ -155,7 +164,7 @@ endif()
 if(builtin_nlohmannjson)
   target_include_directories(ROOTDataFrame PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
 else()
-  target_link_libraries(ROOTDataFrame PUBLIC nlohmann_json::nlohmann_json)
+  target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

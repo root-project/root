@@ -35,7 +35,7 @@ protected:
 
 public:
    TEveGeoShapeExtract(const char* n="TEveGeoShapeExtract", const char* t=nullptr);
-   ~TEveGeoShapeExtract();
+   ~TEveGeoShapeExtract() override;
 
    Bool_t HasElements();
    void   AddElement(TEveGeoShapeExtract* gse);
@@ -60,7 +60,7 @@ public:
    TGeoShape* GetShape()       { return fShape;    }
    TList*     GetElements()    { return fElements; }
 
-   ClassDef(TEveGeoShapeExtract, 2); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
+   ClassDefOverride(TEveGeoShapeExtract, 2); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
 };
 
 #endif

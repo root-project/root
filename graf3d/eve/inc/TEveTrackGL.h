@@ -32,15 +32,15 @@ protected:
 
 public:
    TEveTrackGL();
-   virtual ~TEveTrackGL() {}
+   ~TEveTrackGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
+   Bool_t SupportsSecondarySelect() const override { return kTRUE; }
+   void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec) override;
 
-   ClassDef(TEveTrackGL, 0); // GL-renderer for TEveTrack class.
+   ClassDefOverride(TEveTrackGL, 0); // GL-renderer for TEveTrack class.
 };
 
 #endif

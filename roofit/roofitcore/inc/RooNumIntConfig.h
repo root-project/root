@@ -59,7 +59,8 @@ public:
 
   static RooNumIntConfig& defaultConfig() ;
 
-  bool addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& defaultConfig) ;
+  bool addConfigSection(std::string const &name, const RooArgSet &inDefaultConfig, bool canIntegrate1D,
+                        bool canIntegrate2D, bool canIntegrateND, bool canIntegrateOpenEnded);
   const RooArgSet& getConfigSection(const char* name) const ;
   RooArgSet& getConfigSection(const char* name) ;
 

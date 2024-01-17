@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 
-RooFracRemainder calculates the remainder fraction of a sum of RooAbsReal
+Calculates the remainder fraction of a sum of RooAbsReal
 fraction, i.e (1 - sum_i a_i). This class is used by RooSimWSTool to
 as specialization of the remainder fraction term of a parameter with
 a constrained split
@@ -28,7 +28,7 @@ a constrained split
 
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooFracRemainder.h"
 #include "RooAbsReal.h"

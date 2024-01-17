@@ -1,0 +1,26 @@
+From f0838c5d8d3edd9c7b1063212ac7839c615a9b67 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Mon, 5 Sep 2022 00:52:49 +0200
+Subject: [PATCH 22/34] [PyROOT] Add numba_ext reflex & types to CMakeList
+
+---
+ bindings/pyroot/cppyy/cppyy/CMakeLists.txt | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/CMakeLists.txt b/bindings/pyroot/cppyy/cppyy/CMakeLists.txt
+index 5fd7050af9..1a6559abb1 100644
+--- a/bindings/pyroot/cppyy/cppyy/CMakeLists.txt
++++ b/bindings/pyroot/cppyy/cppyy/CMakeLists.txt
+@@ -14,6 +14,9 @@ set(py_sources
+   cppyy/_version.py
+   cppyy/interactive.py
+   cppyy/ll.py
++  cppyy/numba_ext.py
++  cppyy/reflex.py
++  cppyy/types.py
+ )
+ 
+ set(cppyyPySrcDir python/cppyy)
+-- 
+2.39.0
+

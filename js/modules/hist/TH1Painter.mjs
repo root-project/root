@@ -12,46 +12,45 @@ class TH1Painter extends TH1Painter2D {
 
    /** @summary draw TH1 object in 3D mode */
    draw3D(reason) {
-
       this.mode3d = true;
 
-      let main = this.getFramePainter(), // who makes axis drawing
-          is_main = this.isMainPainter(), // is main histogram
-          histo = this.getHisto(),
-          pr = Promise.resolve(true),
-          zmult = 1 + 2*gStyle.fHistTopMargin;
+      const main = this.getFramePainter(), // who makes axis drawing
+            is_main = this.isMainPainter(), // is main histogram
+            histo = this.getHisto(),
+            zmult = 1 + 2*gStyle.fHistTopMargin;
+      let pr = Promise.resolve(true);
 
-      if (reason == 'resize')  {
-
+      if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
-
       } else {
-
          this.deleteAttr();
 
          this.scanContent(true); // may be required for axis drawings
 
          if (is_main) {
             assignFrame3DMethods(main);
-            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
                main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1, draw: this.options.Axis !== -1 });
+               main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1,
+                  draw: (this.options.Axis !== -1), drawany: this.options.isCartesian() });
             });
          }
 
-         if (main.mode3d)
+         if (main.mode3d) {
             pr = pr.then(() => {
                drawBinsLego(this);
                main.render3D();
                this.updateStatWebCanvas();
                main.addKeysHandler();
             });
+         }
       }
 
-      if (is_main)
+      if (is_main) {
          pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14))))
                 .then(() => this.drawHistTitle());
+      }
 
       return pr.then(() => this);
    }

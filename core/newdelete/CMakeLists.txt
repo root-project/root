@@ -8,6 +8,10 @@
 # CMakeLists.txt file for building ROOT core/newdelete package
 ############################################################################
 
+if(WIN32)
+  return()
+endif()
+
 ROOT_LINKER_LIBRARY(New
   src/NewDelete.cxx
   DEPENDENCIES

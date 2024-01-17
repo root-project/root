@@ -23,11 +23,6 @@ ROOT_LINKER_LIBRARY(Imt
     TBB
 )
 
-target_include_directories(Clib PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_BINARY_DIR}/ginclude
-)
-
 target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 
 if(imt)

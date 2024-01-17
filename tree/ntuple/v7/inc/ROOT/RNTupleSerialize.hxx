@@ -1,6 +1,7 @@
 /// \file ROOT/RNTupleSerialize.hxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
+/// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2021-08-02
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -59,11 +60,11 @@ public:
    static constexpr std::uint32_t kReleaseCandidateTag    = 1;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
-   static constexpr std::uint16_t kFlagAliasField      = 0x02;
 
    static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
    static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
    static constexpr std::uint32_t kFlagNonNegativeColumn = 0x04;
+   static constexpr std::uint32_t kFlagDeferredColumn    = 0x08;
 
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
@@ -85,59 +86,85 @@ public:
    };
 
    /// The serialization context is used for the piecewise serialization of a descriptor.  During header serialization,
-   /// the mapping of in-memory field and column IDs to physical IDs is built so that it can be used for the
+   /// the mapping of in-memory field and column IDs to on-disk IDs is built so that it can be used for the
    /// footer serialization in a second step.
    class RContext {
    private:
       std::uint32_t fHeaderSize = 0;
       std::uint32_t fHeaderCrc32 = 0;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysFieldIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysColumnIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysClusterIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysClusterGroupIDs;
-      std::vector<DescriptorId_t> fPhys2MemFieldIDs;
-      std::vector<DescriptorId_t> fPhys2MemColumnIDs;
-      std::vector<DescriptorId_t> fPhys2MemClusterIDs;
-      std::vector<DescriptorId_t> fPhys2MemClusterGroupIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskFieldIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskColumnIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterGroupIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemFieldIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemColumnIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemClusterIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemClusterGroupIDs;
+      std::size_t fHeaderExtensionOffset = -1U;
 
    public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
       std::uint32_t GetHeaderSize() const { return fHeaderSize; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
+      /// Map an in-memory field ID to its on-disk counterpart. It is allowed to call this function multiple times for
+      /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
-         auto physId = fPhys2MemFieldIDs.size();
-         fMem2PhysFieldIDs[memId] = physId;
-         fPhys2MemFieldIDs.push_back(memId);
-         return physId;
+         auto onDiskId = fOnDisk2MemFieldIDs.size();
+         const auto &p = fMem2OnDiskFieldIDs.try_emplace(memId, onDiskId);
+         if (p.second)
+            fOnDisk2MemFieldIDs.push_back(memId);
+         return (*p.first).second;
       }
+      /// Map an in-memory column ID to its on-disk counterpart. It is allowed to call this function multiple times for
+      /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
       DescriptorId_t MapColumnId(DescriptorId_t memId) {
-         auto physId = fPhys2MemColumnIDs.size();
-         fMem2PhysColumnIDs[memId] = physId;
-         fPhys2MemColumnIDs.push_back(memId);
-         return physId;
+         auto onDiskId = fOnDisk2MemColumnIDs.size();
+         const auto &p = fMem2OnDiskColumnIDs.try_emplace(memId, onDiskId);
+         if (p.second)
+            fOnDisk2MemColumnIDs.push_back(memId);
+         return (*p.first).second;
       }
       DescriptorId_t MapClusterId(DescriptorId_t memId) {
-         auto physId = fPhys2MemClusterIDs.size();
-         fMem2PhysClusterIDs[memId] = physId;
-         fPhys2MemClusterIDs.push_back(memId);
-         return physId;
+         auto onDiskId = fOnDisk2MemClusterIDs.size();
+         fMem2OnDiskClusterIDs[memId] = onDiskId;
+         fOnDisk2MemClusterIDs.push_back(memId);
+         return onDiskId;
       }
       DescriptorId_t MapClusterGroupId(DescriptorId_t memId)
       {
-         auto physId = fPhys2MemClusterGroupIDs.size();
-         fMem2PhysClusterGroupIDs[memId] = physId;
-         fPhys2MemClusterGroupIDs.push_back(memId);
-         return physId;
+         auto onDiskId = fOnDisk2MemClusterGroupIDs.size();
+         fMem2OnDiskClusterGroupIDs[memId] = onDiskId;
+         fOnDisk2MemClusterGroupIDs.push_back(memId);
+         return onDiskId;
       }
-      DescriptorId_t GetPhysFieldId(DescriptorId_t memId) const { return fMem2PhysFieldIDs.at(memId); }
-      DescriptorId_t GetPhysColumnId(DescriptorId_t memId) const { return fMem2PhysColumnIDs.at(memId); }
-      DescriptorId_t GetPhysClusterId(DescriptorId_t memId) const { return fMem2PhysClusterIDs.at(memId); }
-      DescriptorId_t GetPhysClusterGroupId(DescriptorId_t memId) const { return fMem2PhysClusterGroupIDs.at(memId); }
-      DescriptorId_t GetMemFieldId(DescriptorId_t physId) const { return fPhys2MemFieldIDs[physId]; }
-      DescriptorId_t GetMemColumnId(DescriptorId_t physId) const { return fPhys2MemColumnIDs[physId]; }
-      DescriptorId_t GetMemClusterId(DescriptorId_t physId) const { return fPhys2MemClusterIDs[physId]; }
-      DescriptorId_t GetMemClusterGroupId(DescriptorId_t physId) const { return fPhys2MemClusterGroupIDs[physId]; }
+      /// Map in-memory field and column IDs to their on-disk counterparts. This function is unconditionally called
+      /// during header serialization.  This function must be manually called after an incremental schema update as page
+      /// list serialization requires all columns to be mapped.
+      void MapSchema(const RNTupleDescriptor &desc, bool forHeaderExtension);
+
+      DescriptorId_t GetOnDiskFieldId(DescriptorId_t memId) const { return fMem2OnDiskFieldIDs.at(memId); }
+      DescriptorId_t GetOnDiskColumnId(DescriptorId_t memId) const { return fMem2OnDiskColumnIDs.at(memId); }
+      DescriptorId_t GetOnDiskClusterId(DescriptorId_t memId) const { return fMem2OnDiskClusterIDs.at(memId); }
+      DescriptorId_t GetOnDiskClusterGroupId(DescriptorId_t memId) const
+      {
+         return fMem2OnDiskClusterGroupIDs.at(memId);
+      }
+      DescriptorId_t GetMemFieldId(DescriptorId_t onDiskId) const { return fOnDisk2MemFieldIDs[onDiskId]; }
+      DescriptorId_t GetMemColumnId(DescriptorId_t onDiskId) const { return fOnDisk2MemColumnIDs[onDiskId]; }
+      DescriptorId_t GetMemClusterId(DescriptorId_t onDiskId) const { return fOnDisk2MemClusterIDs[onDiskId]; }
+      DescriptorId_t GetMemClusterGroupId(DescriptorId_t onDiskId) const
+      {
+         return fOnDisk2MemClusterGroupIDs[onDiskId];
+      }
+
+      /// Return a vector containing the in-memory field ID for each on-disk counterpart, in order, i.e. the `i`-th
+      /// value corresponds to the in-memory field ID for `i`-th on-disk ID
+      const std::vector<DescriptorId_t> &GetOnDiskFieldList() const { return fOnDisk2MemFieldIDs; }
+      /// Mark the first on-disk field ID that is part of the schema extension
+      void BeginHeaderExtension() { fHeaderExtensionOffset = fOnDisk2MemFieldIDs.size(); }
+      /// Return the offset of the first element in `fOnDisk2MemFieldIDs` that is part of the schema extension
+      std::size_t GetHeaderExtensionOffset() const { return fHeaderExtensionOffset; }
    };
 
    /// Writes a CRC32 checksum of the byte range given by data and length.
@@ -206,6 +233,13 @@ public:
                                                            RClusterSummary &clusterSummary);
    static RResult<std::uint32_t> DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
                                                          RClusterGroup &clusterGroup);
+
+   /// Serialize the schema description in `desc` into `buffer`. If `forHeaderExtension` is true, serialize only the
+   /// fields and columns tagged as part of the header extension (see `RNTupleDescriptorBuilder::BeginHeaderExtension`).
+   static std::uint32_t SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc, const RContext &context,
+                                                   bool forHeaderExtension = false);
+   static RResult<std::uint32_t>
+   DeserializeSchemaDescription(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
 
    static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
    static std::uint32_t SerializePageListV1(void *buffer,

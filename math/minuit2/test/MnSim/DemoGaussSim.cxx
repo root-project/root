@@ -224,7 +224,7 @@ int main()
    }
 
    {
-      // demostrate MINOS Error analysis with limits
+      // demonstrate MINOS Error analysis with limits
 
       // create Minuit parameters with names
       MnUserParameters upar;

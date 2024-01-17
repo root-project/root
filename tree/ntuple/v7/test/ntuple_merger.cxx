@@ -29,8 +29,7 @@ TEST(RPageStorage, ReadSealedPages)
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), options));
       ntuple.Fill();
       ntuple.CommitCluster();
       for (unsigned i = 0; i < 100000; ++i) {
@@ -42,7 +41,7 @@ TEST(RPageStorage, ReadSealedPages)
    RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
    auto columnId =
-      source.GetSharedDescriptorGuard()->FindColumnId(source.GetSharedDescriptorGuard()->FindFieldId("pt"), 0);
+      source.GetSharedDescriptorGuard()->FindPhysicalColumnId(source.GetSharedDescriptorGuard()->FindFieldId("pt"), 0);
 
    // Check first cluster consisting of a single entry
    RClusterIndex index(source.GetSharedDescriptorGuard()->FindClusterId(columnId, 0), 0);

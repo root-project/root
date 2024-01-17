@@ -1,5 +1,5 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs, isFunc, isStr } from '../core.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument } from '../core.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -11,7 +11,10 @@ import { settings, internals, isNodeJs, isFunc, isStr } from '../core.mjs';
   * With node.js can use 'width' and 'height' attributes when provided in element
   * @private */
 function getElementRect(elem, sizearg) {
-   if (isNodeJs() && (sizearg != 'bbox'))
+   if (!elem || elem.empty())
+      return { x: 0, y: 0, width: 0, height: 0 };
+
+   if ((isNodeJs() && (sizearg !== 'bbox')) || elem.property('_batch_mode'))
       return { x: 0, y: 0, width: parseInt(elem.attr('width')), height: parseInt(elem.attr('height')) };
 
    const styleValue = name => {
@@ -22,10 +25,10 @@ function getElementRect(elem, sizearg) {
    };
 
    let rect = elem.node().getBoundingClientRect();
-   if ((sizearg == 'bbox') && (parseFloat(rect.width) > 0))
+   if ((sizearg === 'bbox') && (parseFloat(rect.width) > 0))
       rect = elem.node().getBBox();
 
-   let res = { x: 0, y: 0, width: parseInt(rect.width), height: parseInt(rect.height) };
+   const res = { x: 0, y: 0, width: parseInt(rect.width), height: parseInt(rect.height) };
    if (rect.left !== undefined) {
       res.x = parseInt(rect.left);
       res.y = parseInt(rect.top);
@@ -34,7 +37,7 @@ function getElementRect(elem, sizearg) {
       res.y = parseInt(rect.y);
    }
 
-   if ((sizearg === undefined) || (sizearg == 'nopadding')) {
+   if ((sizearg === undefined) || (sizearg === 'nopadding')) {
       // this is size exclude padding area
       res.width -= styleValue('padding-left') + styleValue('padding-right');
       res.height -= styleValue('padding-top') + styleValue('padding-bottom');
@@ -47,8 +50,10 @@ function getElementRect(elem, sizearg) {
 /** @summary Calculate absolute position of provided element in canvas
   * @private */
 function getAbsPosInCanvas(sel, pos) {
-   while (pos && !sel.empty() && !sel.classed('root_canvas')) {
-      let cl = sel.attr('class');
+   if (!pos) return pos;
+
+   while (!sel.empty() && !sel.classed('root_canvas')) {
+      const cl = sel.attr('class');
       if (cl && ((cl.indexOf('root_frame') >= 0) || (cl.indexOf('__root_pad_') >= 0))) {
          pos.x += sel.property('draw_x') || 0;
          pos.y += sel.property('draw_y') || 0;
@@ -69,24 +74,23 @@ function floatToString(value, fmt, ret_fmt) {
    if (!fmt) fmt = '6.4g';
 
    fmt = fmt.trim();
-   let len = fmt.length;
+   const len = fmt.length;
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
-   let last = fmt[len-1];
-   fmt = fmt.slice(0,len-1);
+   const last = fmt[len-1];
+   fmt = fmt.slice(0, len-1);
    let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
    if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
    let significance = false;
-   if ((last == 'e') || (last == 'E')) { isexp = true; } else
-   if (last == 'Q') { isexp = true; significance = true; } else
-   if ((last == 'f') || (last == 'F')) { isexp = false; } else
-   if (last == 'W') { isexp = false; significance = true; } else
-   if ((last == 'g') || (last == 'G')) {
-      let se = floatToString(value, fmt+'Q', true),
-          sg = floatToString(value, fmt+'W', true);
-
+   if ((last === 'e') || (last === 'E')) isexp = true; else
+   if (last === 'Q') { isexp = true; significance = true; } else
+   if ((last === 'f') || (last === 'F')) isexp = false; else
+   if (last === 'W') { isexp = false; significance = true; } else
+   if ((last === 'g') || (last === 'G')) {
+      const se = floatToString(value, fmt+'Q', true);
+      let sg = floatToString(value, fmt+'W', true);
       if (se[0].length < sg[0].length) sg = se;
       return ret_fmt ? sg : sg[0];
    } else {
@@ -99,27 +103,25 @@ function floatToString(value, fmt, ret_fmt) {
       if (significance) prec--;
       if (prec < 0) prec = 0;
 
-      let se = value.toExponential(prec);
-
-      return ret_fmt ? [se, '5.'+prec+'e'] : se;
+      const se = value.toExponential(prec);
+      return ret_fmt ? [se, `5.${prec}e`] : se;
    }
 
    let sg = value.toFixed(prec);
 
    if (significance) {
-
-      // when using fixed representation, one could get 0.0
-      if (value && (Number(sg) === 0.) && (prec > 0)) {
+      // when using fixed representation, one could get 0
+      if (value && (Number(sg) === 0) && (prec > 0)) {
          prec = 20; sg = value.toFixed(prec);
       }
 
       let l = 0;
-      while ((l<sg.length) && (sg[l] == '0' || sg[l] == '-' || sg[l] == '.')) l++;
+      while ((l < sg.length) && (sg[l] === '0' || sg[l] === '-' || sg[l] === '.')) l++;
 
       let diff = sg.length - l - prec;
-      if (sg.indexOf('.')>l) diff--;
+      if (sg.indexOf('.') > l) diff--;
 
-      if (diff != 0) {
+      if (diff !== 0) {
          prec -= diff;
          if (prec < 0)
             prec = 0;
@@ -145,7 +147,7 @@ class DrawOptions {
    /** @summary Returns true if remaining options are empty or contain only seperators symbols. */
    empty() {
       if (this.opt.length === 0) return true;
-      return this.opt.replace(/[ ;_,]/g, '').length == 0;
+      return this.opt.replace(/[ ;_,]/g, '').length === 0;
    }
 
    /** @summary Returns remaining part of the draw options. */
@@ -153,7 +155,7 @@ class DrawOptions {
 
    /** @summary Checks if given option exists */
    check(name, postpart) {
-      let pos = this.opt.indexOf(name);
+      const pos = this.opt.indexOf(name);
       if (pos < 0) return false;
       this.opt = this.opt.slice(0, pos) + this.opt.slice(pos + name.length);
       this.part = '';
@@ -170,9 +172,17 @@ class DrawOptions {
 
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {
+      let mult = 1;
+      const last = this.part ? this.part[this.part.length - 1] : '';
+      if (last === 'K')
+         mult = 1e3;
+      else if (last === 'M')
+         mult = 1e6;
+      else if (last === 'G')
+         mult = 1e9;
       let val = this.part.replace(/^\D+/g, '');
       val = val ? parseInt(val, 10) : Number.NaN;
-      return !Number.isInteger(val) ? (dflt || 0) : val + (offset || 0);
+      return !Number.isInteger(val) ? (dflt || 0) : mult*val + (offset || 0);
    }
 
    /** @summary Returns remaining part of found option as float. */
@@ -181,15 +191,18 @@ class DrawOptions {
       val = val ? parseFloat(val) : Number.NaN;
       return !Number.isFinite(val) ? (dflt || 0) : val + (offset || 0);
    }
+
 } // class DrawOptions
 
 
 /** @summary Simple random generator with controlled seed
   * @private */
 class TRandom {
+
    constructor(i) {
       if (i !== undefined) this.seed(i);
    }
+
    /** @summary Seed simple random generator */
    seed(i) {
       i = Math.abs(i);
@@ -200,6 +213,7 @@ class TRandom {
       this.m_w = Math.round(i);
       this.m_z = 987654321;
    }
+
    /** @summary Produce random value between 0 and 1 */
    random() {
       if (this.m_z === undefined) return Math.random();
@@ -209,103 +223,104 @@ class TRandom {
       result /= 4294967296;
       return result + 0.5;
    }
+
 } // class TRandom
 
 
-/** @summary Function used to provide svg:path for the smoothed curves.
-  * @desc reuse code from d3.js. Used in TH1, TF1 and TGraph painters
-  * @param {string} kind  should contain 'bezier' or 'line'.
-  * If first symbol 'L', then it used to continue drawing
+/** @summary Build smooth SVG curve uzing Bezier
+  * @desc Reuse code from https://stackoverflow.com/questions/62855310
   * @private */
-function buildSvgPath(kind, bins, height, ndig) {
+function buildSvgCurve(p, args) {
+   if (!args)
+      args = {};
+   if (!args.line)
+      args.calc = true;
+   else if (args.ndig === undefined)
+      args.ndig = 0;
 
-   const smooth = kind.indexOf('bezier') >= 0;
+   let npnts = p.length;
+   if (npnts < 3) args.line = true;
 
-   if (ndig === undefined) ndig = smooth ? 2 : 0;
-   if (height === undefined) height = 0;
+   args.t = args.t ?? 0.2;
 
-   const jsroot_d3_svg_lineSlope = (p0, p1) => (p1.gry - p0.gry) / (p1.grx - p0.grx),
-         jsroot_d3_svg_lineFiniteDifferences = points => {
-      let i = 0, j = points.length - 1, m = [], p0 = points[0], p1 = points[1], d = m[0] = jsroot_d3_svg_lineSlope(p0, p1);
-      while (++i < j) {
-         p0 = p1; p1 = points[i + 1];
-         m[i] = (d + (d = jsroot_d3_svg_lineSlope(p0, p1))) / 2;
+   if ((args.ndig === undefined) || args.height) {
+      args.maxy = p[0].gry;
+      args.mindiff = 100;
+      for (let i = 1; i < npnts; i++) {
+         args.maxy = Math.max(args.maxy, p[i].gry);
+         args.mindiff = Math.min(args.mindiff, Math.abs(p[i].grx - p[i-1].grx), Math.abs(p[i].gry - p[i-1].gry));
       }
-      m[i] = d;
-      return m;
-   }, jsroot_d3_svg_lineMonotoneTangents = points => {
-      let d, a, b, s, m = jsroot_d3_svg_lineFiniteDifferences(points), i = -1, j = points.length - 1;
-      while (++i < j) {
-         d = jsroot_d3_svg_lineSlope(points[i], points[i + 1]);
-         if (Math.abs(d) < 1e-6) {
-            m[i] = m[i + 1] = 0;
-         } else {
-            a = m[i] / d;
-            b = m[i + 1] / d;
-            s = a * a + b * b;
-            if (s > 9) {
-               s = d * 3 / Math.sqrt(s);
-               m[i] = s * a;
-               m[i + 1] = s * b;
-            }
-         }
-      }
-      i = -1;
-      while (++i <= j) {
-         s = (points[Math.min(j, i + 1)].grx - points[Math.max(0, i - 1)].grx) / (6 * (1 + m[i] * m[i]));
-         points[i].dgrx = s || 0;
-         points[i].dgry = m[i] * s || 0;
-      }
+      if (args.ndig === undefined)
+         args.ndig = args.mindiff > 20 ? 0 : (args.mindiff > 5 ? 1 : 2);
+   }
+
+   const end_point = (pnt1, pnt2, sign) => {
+      const len = Math.sqrt((pnt2.gry - pnt1.gry)**2 + (pnt2.grx - pnt1.grx)**2) * args.t,
+            a2 = Math.atan2(pnt2.dgry, pnt2.dgrx),
+            a1 = Math.atan2(sign*(pnt2.gry - pnt1.gry), sign*(pnt2.grx - pnt1.grx));
+
+      pnt1.dgrx = len * Math.cos(2*a1 - a2);
+      pnt1.dgry = len * Math.sin(2*a1 - a2);
+   }, conv = val => {
+      if (!args.ndig || (Math.round(val) === val))
+         return val.toFixed(0);
+      let s = val.toFixed(args.ndig), p = s.length-1;
+      while (s[p] === '0') p--;
+      if (s[p] === '.') p--;
+      s = s.slice(0, p+1);
+      return (s === '-0') ? '0' : s;
    };
 
-   let res = { path: '', close: '' }, bin = bins[0], maxy = Math.max(bin.gry, height + 5),
-      currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy, npnts = bins.length;
-
-   const conv = val => {
-      let vvv = Math.round(val);
-      if ((ndig == 0) || (vvv === val)) return vvv.toString();
-      let str = val.toFixed(ndig);
-      while ((str[str.length - 1] == '0') && (str.lastIndexOf('.') < str.length - 1))
-         str = str.slice(0, str.length - 1);
-      if (str[str.length - 1] == '.')
-         str = str.slice(0, str.length - 1);
-      if (str == '-0') str = '0';
-      return str;
-   };
-
-   res.path = ((kind[0] == 'L') ? 'L' : 'M') + conv(bin.grx) + ',' + conv(bin.gry);
-
-   // just calculate all deltas, can be used to build exclusion
-   if (smooth || kind.indexOf('calc') >= 0)
-      jsroot_d3_svg_lineMonotoneTangents(bins);
-
-   if (smooth) {
-      // build smoothed curve
-      res.path += `C${conv(bin.grx+bin.dgrx)},${conv(bin.gry+bin.dgry)},`;
-      for (let n = 1; n < npnts; ++n) {
-         let prev = bin;
-         bin = bins[n];
-         if (n > 1) res.path += 'S';
-         res.path += `${conv(bin.grx - bin.dgrx)},${conv(bin.gry - bin.dgry)},${conv(bin.grx)},${conv(bin.gry)}`;
-         maxy = Math.max(maxy, prev.gry);
+   if (args.calc) {
+      for (let i = 1; i < npnts - 1; i++) {
+         p[i].dgrx = (p[i+1].grx - p[i-1].grx) * args.t;
+         p[i].dgry = (p[i+1].gry - p[i-1].gry) * args.t;
       }
+
+      if (npnts > 2) {
+         end_point(p[0], p[1], 1);
+         end_point(p[npnts - 1], p[npnts - 2], -1);
+      } else if (p.length === 2) {
+         p[0].dgrx = (p[1].grx - p[0].grx) * args.t;
+         p[0].dgry = (p[1].gry - p[0].gry) * args.t;
+         p[1].dgrx = -p[0].dgrx;
+         p[1].dgry = -p[0].dgry;
+      }
+   }
+
+   let path = `${args.cmd ?? 'M'}${conv(p[0].grx)},${conv(p[0].gry)}`;
+
+   if (!args.line) {
+      let i0 = 1;
+      if (args.qubic) {
+         npnts--; i0++;
+         path += `Q${conv(p[1].grx-p[1].dgrx)},${conv(p[1].gry-p[1].dgry)},${conv(p[1].grx)},${conv(p[1].gry)}`;
+      }
+      path += `C${conv(p[i0-1].grx+p[i0-1].dgrx)},${conv(p[i0-1].gry+p[i0-1].dgry)},${conv(p[i0].grx-p[i0].dgrx)},${conv(p[i0].gry-p[i0].dgry)},${conv(p[i0].grx)},${conv(p[i0].gry)}`;
+
+      // continue with simpler points
+      for (let i = i0 + 1; i < npnts; i++)
+         path += `S${conv(p[i].grx-p[i].dgrx)},${conv(p[i].gry-p[i].dgry)},${conv(p[i].grx)},${conv(p[i].gry)}`;
+
+      if (args.qubic)
+         path += `Q${conv(p[npnts].grx-p[npnts].dgrx)},${conv(p[npnts].gry-p[npnts].dgry)},${conv(p[npnts].grx)},${conv(p[npnts].gry)}`;
    } else if (npnts < 10000) {
       // build simple curve
 
-      let acc_x = 0, acc_y = 0;
+      let acc_x = 0, acc_y = 0, currx = Math.round(p[0].grx), curry = Math.round(p[0].gry);
 
       const flush = () => {
-         if (acc_x) { res.path += 'h' + acc_x; acc_x = 0; }
-         if (acc_y) { res.path += 'v' + acc_y; acc_y = 0; }
+         if (acc_x) { path += 'h' + acc_x; acc_x = 0; }
+         if (acc_y) { path += 'v' + acc_y; acc_y = 0; }
       };
 
       for (let n = 1; n < npnts; ++n) {
-         bin = bins[n];
-         dx = Math.round(bin.grx) - currx;
-         dy = Math.round(bin.gry) - curry;
+         const bin = p[n],
+               dx = Math.round(bin.grx) - currx,
+               dy = Math.round(bin.gry) - curry;
          if (dx && dy) {
             flush();
-            res.path += `l${dx},${dy}`;
+            path += `l${dx},${dy}`;
          } else if (!dx && dy) {
             if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
             acc_y += dy;
@@ -314,20 +329,19 @@ function buildSvgPath(kind, bins, height, ndig) {
             acc_x += dx;
          }
          currx += dx; curry += dy;
-         maxy = Math.max(maxy, curry);
       }
 
       flush();
-
    } else {
       // build line with trying optimize many vertical moves
-      let lastx, lasty, cminy = curry, cmaxy = curry, prevy = curry;
+      let currx = Math.round(p[0].grx), curry = Math.round(p[0].gry),
+          cminy = curry, cmaxy = curry, prevy = curry;
+
       for (let n = 1; n < npnts; ++n) {
-         bin = bins[n];
-         lastx = Math.round(bin.grx);
-         lasty = Math.round(bin.gry);
-         maxy = Math.max(maxy, lasty);
-         dx = lastx - currx;
+         const bin = p[n],
+               lastx = Math.round(bin.grx),
+               lasty = Math.round(bin.gry),
+               dx = lastx - currx;
          if (dx === 0) {
             // if X not change, just remember amplitude and
             cminy = Math.min(cminy, lasty);
@@ -337,51 +351,51 @@ function buildSvgPath(kind, bins, height, ndig) {
          }
 
          if (cminy !== cmaxy) {
-            if (cminy != curry) res.path += 'v' + (cminy - curry);
-            res.path += 'v' + (cmaxy - cminy);
-            if (cmaxy != prevy) res.path += 'v' + (prevy - cmaxy);
+            if (cminy !== curry)
+               path += `v${cminy-curry}`;
+            path += `v${cmaxy-cminy}`;
+            if (cmaxy !== prevy)
+               path += `v${prevy-cmaxy}`;
             curry = prevy;
          }
-         dy = lasty - curry;
+         const dy = lasty - curry;
          if (dy)
-            res.path += `l${dx},${dy}`;
+            path += `l${dx},${dy}`;
          else
-            res.path += 'h' + dx;
+            path += `h${dx}`;
          currx = lastx; curry = lasty;
          prevy = cminy = cmaxy = lasty;
       }
 
-      if (cminy != cmaxy) {
-         if (cminy != curry) res.path += 'v' + (cminy - curry);
-         res.path += 'v' + (cmaxy - cminy);
-         if (cmaxy != prevy) res.path += 'v' + (prevy - cmaxy);
+      if (cminy !== cmaxy) {
+         if (cminy !== curry)
+            path += `v${cminy-curry}`;
+         path += `v${cmaxy-cminy}`;
+         if (cmaxy !== prevy)
+            path += `v${prevy-cmaxy}`;
       }
    }
 
-   if (height > 0)
-      res.close = `L${conv(bin.grx)},${conv(maxy)}h${conv(bins[0].grx - bin.grx)}Z`;
+   if (args.height)
+      args.close = `L${conv(p[p.length-1].grx)},${conv(Math.max(args.maxy, args.height))}H${conv(p[0].grx)}Z`;
 
-   return res;
+   return path;
 }
 
 /** @summary Compress SVG code, produced from drawing
   * @desc removes extra info or empty elements
   * @private */
 function compressSVG(svg) {
-
-   svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, 'url(#$1)')        // decode all URL
-            .replace(/ class=\"\w*\"/g, '')                                // remove all classes
-            .replace(/ pad=\"\w*\"/g, '')                                  // remove all pad ids
-            .replace(/ title=\"\"/g, '')                                   // remove all empty titles
-            .replace(/<g objname=\"\w*\" objtype=\"\w*\"/g, '<g')          // remove object ids
-            .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, '')  // remove all empty groups with transform
-            .replace(/<g><\/g>/g, '');                                     // remove all empty groups
+   svg = svg.replace(/url\(&quot;#(\w+)&quot;\)/g, 'url(#$1)')         // decode all URL
+            .replace(/ class="\w*"/g, '')                              // remove all classes
+            .replace(/ pad="\w*"/g, '')                                // remove all pad ids
+            .replace(/ title=""/g, '')                                 // remove all empty titles
+            .replace(/<g objname="\w*" objtype="\w*"/g, '<g')          // remove object ids
+            .replace(/<g transform="translate\(\d+,\d+\)"><\/g>/g, '') // remove all empty groups with transform
+            .replace(/<g><\/g>/g, '');                                 // remove all empty groups
 
    // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
-   svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, '')
-
-   if (svg.indexOf('xlink:href') < 0)
-      svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, '');
+   svg = svg.replace(/<svg x="0" y="0" overflow="hidden" width="\d+" height="\d+" viewBox="0 0 \d+ \d+"><\/svg>/g, '');
 
    return svg;
 }
@@ -422,32 +436,32 @@ class BasePainter {
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
      * @return {object} d3.select object for main element for drawing */
    selectDom(is_direct) {
-
       if (!this.divid) return d3_select(null);
 
       let res = this._selected_main;
       if (!res) {
          if (isStr(this.divid)) {
             let id = this.divid;
-            if (id[0] != '#') id = '#' + id;
+            if (id[0] !== '#') id = '#' + id;
             res = d3_select(id);
             if (!res.empty()) this.divid = res.node();
-         } else {
+         } else
             res = d3_select(this.divid);
-         }
          this._selected_main = res;
       }
 
       if (!res || res.empty() || (is_direct === 'origin')) return res;
 
-      let use_enlarge = res.property('use_enlarge'),
-          layout = res.property('layout') || 'simple',
-          layout_selector = (layout == 'simple') ? '' : res.property('layout_selector');
+      const use_enlarge = res.property('use_enlarge'),
+            layout = res.property('layout') || 'simple',
+            layout_selector = (layout === 'simple') ? '' : res.property('layout_selector');
 
-      if (layout_selector) res = res.select(layout_selector);
+      if (layout_selector)
+         res = res.select(layout_selector);
 
       // one could redirect here
-      if (!is_direct && !res.empty() && use_enlarge) res = d3_select('#jsroot_enlarge_div');
+      if (!is_direct && !res.empty() && use_enlarge)
+         res = d3_select(getDocument().getElementById('jsroot_enlarge_div'));
 
       return res;
    }
@@ -455,11 +469,11 @@ class BasePainter {
    /** @summary Access/change top painter
      * @private */
    _accessTopPainter(on) {
-      let chld = this.selectDom().node()?.firstChild;
+      const chld = this.selectDom().node()?.firstChild;
       if (!chld) return null;
-      if (on === true) {
+      if (on === true)
          chld.painter = this;
-      } else if (on === false)
+      else if (on === false)
          delete chld.painter;
       return chld.painter;
    }
@@ -487,7 +501,7 @@ class BasePainter {
      * @desc Removes all visible elements and all internal data */
    cleanup(keep_origin) {
       this.clearTopPainter();
-      let origin = this.selectDom('origin');
+      const origin = this.selectDom('origin');
       if (!origin.empty() && !keep_origin) origin.html('');
       this.divid = null;
       delete this._selected_main;
@@ -511,23 +525,21 @@ class BasePainter {
      * @return size of area when main div is drawn
      * @private */
    testMainResize(check_level, new_size, height_factor) {
+      const enlarge = this.enlargeMain('state'),
+            origin = this.selectDom('origin'),
+            main = this.selectDom(),
+            lmt = 5; // minimal size
 
-      let enlarge = this.enlargeMain('state'),
-          main_origin = this.selectDom('origin'),
-          main = this.selectDom(),
-          lmt = 5; // minimal size
-
-      if (enlarge !== 'on') {
-         if (new_size && new_size.width && new_size.height)
-            main_origin.style('width', new_size.width + 'px')
+      if ((enlarge !== 'on') && new_size?.width && new_size?.height) {
+         origin.style('width', new_size.width + 'px')
                .style('height', new_size.height + 'px');
       }
 
-      let rect_origin = getElementRect(main_origin, true),
-          can_resize = main_origin.attr('can_resize'),
-          do_resize = false;
+      const rect_origin = getElementRect(origin, true),
+            can_resize = origin.attr('can_resize');
+      let do_resize = false;
 
-      if (can_resize == 'height')
+      if (can_resize === 'height')
          if (height_factor && Math.abs(rect_origin.width * height_factor - rect_origin.height) > 0.1 * rect_origin.width) do_resize = true;
 
       if (((rect_origin.height <= lmt) || (rect_origin.width <= lmt)) &&
@@ -538,33 +550,30 @@ class BasePainter {
 
          if (rect_origin.width > lmt) {
             height_factor = height_factor || 0.66;
-            main_origin.style('height', Math.round(rect_origin.width * height_factor) + 'px');
-         } else if (can_resize !== 'height') {
-            main_origin.style('width', '200px').style('height', '100px');
-         }
+            origin.style('height', Math.round(rect_origin.width * height_factor) + 'px');
+         } else if (can_resize !== 'height')
+            origin.style('width', '200px').style('height', '100px');
       }
 
-      let rect = getElementRect(main),
-          old_h = main.property('_jsroot_height'),
-          old_w = main.property('_jsroot_width');
+      const rect = getElementRect(main),
+            old_h = main.property('_jsroot_height'),
+            old_w = main.property('_jsroot_width');
 
       rect.changed = false;
 
       if (old_h && old_w && (old_h > 0) && (old_w > 0)) {
          if ((old_h !== rect.height) || (old_w !== rect.width))
-            rect.changed = (check_level > 1) || (rect.width / old_w < 0.9) || (rect.width / old_w > 1.1) ||
-                           (rect.height / old_h < 0.9) || (rect.height / old_h > 1.1);
-      } else {
+            rect.changed = (check_level > 1) || (rect.width / old_w < 0.99) || (rect.width / old_w > 1.01) || (rect.height / old_h < 0.99) || (rect.height / old_h > 1.01);
+      } else
          rect.changed = true;
-      }
 
       if (rect.changed)
          main.property('_jsroot_height', rect.height).property('_jsroot_width', rect.width);
 
       // after change enlarge state always mark main element as resized
-      if (main_origin.property('did_enlarge')) {
+      if (origin.property('did_enlarge')) {
          rect.changed = true;
-         main_origin.property('did_enlarge', false);
+         origin.property('did_enlarge', false);
       }
 
       return rect;
@@ -581,41 +590,42 @@ class BasePainter {
      * if action not specified, just return possibility to enlarge main div
      * @protected */
    enlargeMain(action, skip_warning) {
-
-      let main = this.selectDom(true),
-          origin = this.selectDom('origin');
+      const main = this.selectDom(true),
+            origin = this.selectDom('origin'),
+            doc = getDocument();
 
       if (main.empty() || !settings.CanEnlarge || (origin.property('can_enlarge') === false)) return false;
 
       if ((action === undefined) || (action === 'verify')) return true;
 
-      let state = origin.property('use_enlarge') ? 'on' : 'off';
+      const state = origin.property('use_enlarge') ? 'on' : 'off';
 
       if (action === 'state') return state;
 
       if (action === 'toggle') action = (state === 'off');
 
-      let enlarge = d3_select('#jsroot_enlarge_div');
+      let enlarge = d3_select(doc.getElementById('jsroot_enlarge_div'));
 
       if ((action === true) && (state !== 'on')) {
          if (!enlarge.empty()) return false;
 
-         enlarge = d3_select(document.body)
+         enlarge = d3_select(doc.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; right: 1px; top: 1px; bottom: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
-         let rect1 = getElementRect(main),
-             rect2 = getElementRect(enlarge);
+         const rect1 = getElementRect(main),
+               rect2 = getElementRect(enlarge);
 
          // if new enlarge area not big enough, do not do it
-         if ((rect2.width <= rect1.width) || (rect2.height <= rect1.height))
+         if ((rect2.width <= rect1.width) || (rect2.height <= rect1.height)) {
             if (rect2.width * rect2.height < rect1.width * rect1.height) {
                if (!skip_warning)
                   console.log(`Enlarged area ${rect2.width} x ${rect2.height} smaller then original drawing ${rect1.width} x ${rect1.height}`);
                enlarge.remove();
                return false;
             }
+         }
 
          while (main.node().childNodes.length > 0)
             enlarge.node().appendChild(main.node().firstChild);
@@ -625,7 +635,6 @@ class BasePainter {
          return true;
       }
       if ((action === false) && (state !== 'off')) {
-
          while (enlarge.node() && enlarge.node().childNodes.length > 0)
             main.node().appendChild(enlarge.node().firstChild);
 
@@ -665,20 +674,105 @@ class BasePainter {
 
 /** @summary Load and initialize JSDOM from nodes
   * @return {Promise} with d3 selection for d3_body
-   * @private */
+  * @private */
 async function _loadJSDOM() {
    return import('jsdom').then(handle => {
-
       if (!internals.nodejs_window) {
          internals.nodejs_window = (new handle.JSDOM('<!DOCTYPE html>hello')).window;
          internals.nodejs_document = internals.nodejs_window.document; // used with three.js
-         internals.nodejs_body = d3_select(internals.nodejs_document).select('body'); //get d3 handle for body
+         internals.nodejs_body = d3_select(internals.nodejs_document).select('body'); // get d3 handle for body
       }
 
       return { JSDOM: handle.JSDOM, doc: internals.nodejs_document, body: internals.nodejs_body };
    });
 }
 
+/** @summary Return translate string for transform attribute of some svg element
+  * @return string or null if x and y are zeros
+  * @private */
+function makeTranslate(g, x, y) {
+   if (!isObject(g)) {
+      y = x; x = g; g = null;
+   }
+   const res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   return g ? g.attr('transform', res) : res;
+}
+
+
+/** @summary Configure special style used for highlight or dragging elements
+  * @private */
+function addHighlightStyle(elem, drag) {
+   if (drag) {
+      elem.style('stroke', 'steelblue')
+          .style('fill-opacity', '0.1');
+   } else {
+      elem.style('stroke', '#4572A7')
+          .style('fill', '#4572A7')
+          .style('opacity', '0');
+   }
+}
+
+/** @summary Create image based on SVG
+  * @param {string} svg - svg code of the image
+  * @param {string} [image_format] - image format like 'png' or 'jpeg'
+  * @param {boolean} [as_buffer] - return Buffer object for image
+  * @return {Promise} with produced image in base64 form or as Buffer (or canvas when no image_format specified)
+  * @private */
+async function svgToImage(svg, image_format, as_buffer) {
+   if (image_format === 'svg')
+      return svg;
+
+   if (!isNodeJs()) {
+      // required with df104.py/df105.py example with RCanvas
+      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+      svg = encodeURIComponent(doctype + svg);
+      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+          const c = String.fromCharCode('0x'+p1);
+          return c === '%' ? '%25' : c;
+      });
+      svg = decodeURIComponent(svg);
+   }
+
+   const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
+
+   if (isNodeJs()) {
+      return import('canvas').then(async handle => {
+         return handle.default.loadImage(img_src).then(img => {
+            const canvas = handle.default.createCanvas(img.width, img.height);
+
+            canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
+
+            if (as_buffer) return canvas.toBuffer('image/' + image_format);
+
+            return image_format ? canvas.toDataURL('image/' + image_format) : canvas;
+         });
+      });
+   }
+
+   return new Promise(resolveFunc => {
+      const image = document.createElement('img');
+
+      image.onload = function() {
+         const canvas = document.createElement('canvas');
+         canvas.width = image.width;
+         canvas.height = image.height;
+
+         canvas.getContext('2d').drawImage(image, 0, 0);
+
+         if (as_buffer && image_format)
+            canvas.toBlob(blob => blob.arrayBuffer().then(resolveFunc), 'image/' + image_format);
+         else
+            resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
+      };
+      image.onerror = function(arg) {
+         console.log(`IMAGE ERROR ${arg}`);
+         resolveFunc(null);
+      };
+
+      image.src = img_src;
+   });
+}
+
 export { getElementRect, getAbsPosInCanvas,
-         DrawOptions, TRandom, floatToString, buildSvgPath, compressSVG,
-         BasePainter, _loadJSDOM };
+         DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
+         BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

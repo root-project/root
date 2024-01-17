@@ -286,7 +286,7 @@ int testPoint3D() {
    // test operator ==
    ok+= compare( p1 == pscale2, static_cast<double>(true), "== Point");
 
-   //RhoEtaPhiPoint q1 = p1;  ! constructor yet not working in CINT
+   //RhoEtaPhiPoint q1 = p1;  ! constructor yet not working in CLING
    RhoEtaPhiPoint q1; q1 = p1;
    q1.SetCoordinates(p1.Rho(),2.0, p1.Phi() );
 
@@ -500,7 +500,7 @@ int testRotation() {
    // initiate rotation with some non -trivial angles to test all matrix
    EulerAngles r1( pi/2.,pi/4., pi/3 );
    Rotation3D  r2(r1);
-   // only operator= is in CINT for the other rotations
+   // only operator= is in CLING for the other rotations
    Quaternion  r3; r3 = r2;
    AxisAngle   r4; r4 = r3;
    RotationZYX r5; r5 = r2;

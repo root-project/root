@@ -32,7 +32,7 @@ public:
    TGApplication(const char *appClassName,
                  Int_t *argc, char **argv,
                  void *options = nullptr, Int_t numOptions = 0);
-   virtual ~TGApplication();
+   ~TGApplication() override;
 
    void GetOptions(Int_t *argc, char **argv) override;
 

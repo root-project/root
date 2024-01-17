@@ -22,20 +22,14 @@
 #include <vector>
 #include <utility>
 
-class RooRealSumPdf ;
-namespace RooBatchCompute {
-struct RunContext;
-}
-
 class RooNLLVar : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooNLLVar();
   RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
-       const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
-       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-       const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
+       const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={},
+       const RooCmdArg& arg4={}, const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+       const RooCmdArg& arg7={}, const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
             bool extended,
@@ -57,23 +51,15 @@ public:
 
   double defaultErrorLevel() const override { return 0.5 ; }
 
-  void batchMode(bool on = true) {
-    _batchEvaluations = on;
-  }
-
-  void enableBinOffsetting(bool on = true) {
-    _doBinOffset = on;
-  }
+  void enableBinOffsetting(bool on = true);
 
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
 
-  static RooNLLVar::ComputeResult computeBatchedFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
-                                                     std::unique_ptr<RooBatchCompute::RunContext> &evalData,
-                                                 RooArgSet *normSet, bool weightSq, std::size_t stepSize,
-                                                 std::size_t firstEvent, std::size_t lastEvent);
   static RooNLLVar::ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet,
                                                 bool weightSq, std::size_t stepSize, std::size_t firstEvent,
-                                                std::size_t lastEvent, bool doBinOffset=false);
+                                                std::size_t lastEvent, RooAbsPdf const* offsetPdf = nullptr);
+
+  bool setDataSlave(RooAbsData& data, bool cloneData=true, bool ownNewDataAnyway=false) override;
 
 protected:
 
@@ -83,19 +69,17 @@ protected:
   static RooArgSet _emptySet ; // Supports named argument constructor
 
 private:
-  ComputeResult computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
   ComputeResult computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
 
   bool _extended{false};
-  bool _batchEvaluations{false};
   bool _doBinOffset{false};
   bool _weightSq{false}; ///< Apply weights squared?
   mutable bool _first{true}; ///<!
   ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; ///<!
 
   mutable std::vector<double> _binw ; ///<!
-  mutable RooRealSumPdf* _binnedPdf{nullptr}; ///<!
-  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///<! Struct to store function evaluation workspaces.
+  mutable RooAbsPdf* _binnedPdf{nullptr}; ///<!
+  std::unique_ptr<RooAbsPdf> _offsetPdf; ///<! An optional per-bin likelihood offset
 
   ClassDefOverride(RooNLLVar,0) // Function representing (extended) -log(L) of p.d.f and dataset
 };

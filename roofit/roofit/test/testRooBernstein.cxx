@@ -58,7 +58,7 @@ void IntegrationChecker(double a0, double a1, double a2, double a3)
   EXPECT_LT(std::abs(int_full->getVal() - int_range1->getVal() - int_range2->getVal() - int_range3->getVal()), 1e-10);
   EXPECT_LT(std::abs(numInt_full->getVal() - numInt_range1->getVal() - numInt_range2->getVal() - numInt_range3->getVal()), 1e-10);
 
-  // comparision with polynomial
+  // Comparison with polynomial
   double accAnaVsNum = 1.;
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range1->getVal())

@@ -19,16 +19,16 @@
 #include "TROOT.h"
 #include <string>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
-RLogChannel &ROOT::Experimental::WebGUILog()
+ROOT::Experimental::RLogChannel &ROOT::WebGUILog()
 {
-   static RLogChannel sLog("ROOT.WebGUI");
+   static ROOT::Experimental::RLogChannel sLog("ROOT.WebGUI");
    return sLog;
 }
 
 
-/** \class ROOT::Experimental::RWebDisplayArgs
+/** \class ROOT::RWebDisplayArgs
 \ingroup webdisplay
 
 Holds different arguments for starting browser with RWebDisplayHandle::Display() method
@@ -79,9 +79,9 @@ RWebDisplayArgs::RWebDisplayArgs(int width, int height, int x, int y, const std:
 /// Constructor.
 /// Let specify master window and channel (if reserved already)
 
-RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel)
+RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, unsigned conndid, int channel)
 {
-   SetMasterWindow(master, channel);
+   SetMasterWindow(master, conndid, channel);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -265,12 +265,13 @@ std::string RWebDisplayArgs::GetBrowserName() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-/// Assign window and channel id where other window will be embed
+/// Assign window, connection and channel id where other window will be embed
 
-void RWebDisplayArgs::SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel)
+void RWebDisplayArgs::SetMasterWindow(std::shared_ptr<RWebWindow> master, unsigned connid, int channel)
 {
    SetBrowserKind(kEmbedded);
    fMaster = master;
+   fMasterConnection = connid;
    fMasterChannel = channel;
 }
 
@@ -338,7 +339,7 @@ std::string RWebDisplayArgs::GetCustomExec() const
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Returns string which can be used as argument in RWebWindow::Show() method
-/// to display web window in provided QWidget.
+/// to display web window in provided Qt5 QWidget.
 ///
 /// After RWebWindow is displayed created QWebEngineView can be found with the command:
 ///

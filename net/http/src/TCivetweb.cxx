@@ -22,6 +22,7 @@
 #include "THttpWSEngine.h"
 #include "TUrl.h"
 #include "TSystem.h"
+#include "TError.h"
 
 //////////////////////////////////////////////////////////////////////////
 /// TCivetwebWSEngine
@@ -38,7 +39,7 @@ protected:
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
 
-   virtual ~TCivetwebWSEngine() = default;
+   ~TCivetwebWSEngine() override = default;
 
    UInt_t GetId() const override { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 
@@ -75,6 +76,24 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
+/// Check if engine has enough threads to process connect to new websocket handle
+
+Bool_t CheckEngineThreads(TCivetweb *engine, const char *uri, Bool_t longpoll)
+{
+   Int_t num_avail = engine->GetNumAvailableThreads();
+   if (longpoll) num_avail++;
+
+   if ((num_avail <= 0.1 * engine->GetNumThreads()) || (num_avail <= 2)) {
+      const char *cfg = engine->IsWebGui() ? "WebGui.HttpThreads parameter in rootrc" : "thrds=N parameter in config URL";
+      const char *place = longpoll ? "TCivetweb::LongpollHandler" : "TCivetweb::WebSocketHandler";
+      ::Error(place, "Only %d threads are available, reject connection request for %s. Increase %s, now it is %d", num_avail, uri, cfg, engine->GetNumThreads());
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 int websocket_connect_handler(const struct mg_connection *conn, void *)
 {
@@ -95,6 +114,9 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CONNECT");
 
+   if (!CheckEngineThreads(engine, arg->GetPathName(), kFALSE))
+      return 1;
+
    Bool_t execres = serv->ExecuteWS(arg, kTRUE, kTRUE);
 
    return execres && !arg->Is404() ? 0 : 1;
@@ -112,6 +134,8 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    THttpServer *serv = engine->GetServer();
    if (!serv)
       return;
+
+   engine->ChangeNumActiveThrerads(1);
 
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
@@ -149,6 +173,8 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    arg->SetMethod("WS_CLOSE");
 
    serv->ExecuteWS(arg, kTRUE, kFALSE); // do not wait for result of execution
+
+   engine->ChangeNumActiveThrerads(-1);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -245,6 +271,37 @@ static int log_message_handler(const struct mg_connection *conn, const char *mes
    return 0;
 }
 
+struct TEngineHolder {
+   TCivetweb *fEngine;
+   TEngineHolder(TCivetweb *engine)
+   {
+      fEngine = engine;
+      fEngine->ChangeNumActiveThrerads(1);
+   }
+   ~TEngineHolder()
+   {
+      fEngine->ChangeNumActiveThrerads(-1);
+   }
+};
+
+//////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE in case of longpoll connection request - or at least looks like that
+
+Bool_t IsBadLongPollConnect(TCivetweb *engine, const std::shared_ptr<THttpCallArg> &arg)
+{
+   if (strcmp(arg->GetFileName(), "root.longpoll") != 0)
+      return kFALSE;
+
+   const char *q = arg->GetQuery();
+   if (!q || !*q)
+      return kFALSE;
+
+   if ((strstr(q, "raw_connect") != q) && (strstr(q, "txt_connect") != q))
+      return kFALSE;
+
+   return !CheckEngineThreads(engine, arg->GetPathName(), kTRUE);
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 static int begin_request_handler(struct mg_connection *conn, void *)
@@ -257,6 +314,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    THttpServer *serv = engine->GetServer();
    if (!serv)
       return 0;
+
+   TEngineHolder thrd_cnt_holder(engine);
 
    auto arg = std::make_shared<THttpCallArg>();
 
@@ -334,6 +393,9 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 
          arg->SetContent(cont);
 
+      } else if (IsBadLongPollConnect(engine, arg)) {
+         execres = kFALSE;
+         arg->Set404();
       } else {
          execres = serv->ExecuteHttp(arg);
       }
@@ -476,6 +538,26 @@ Int_t TCivetweb::ProcessLog(const char *message)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns number of actively used threads
+
+Int_t TCivetweb::GetNumAvailableThreads()
+{
+   std::lock_guard<std::mutex> guard(fMutex);
+   return fNumThreads - fNumActiveThreads;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of actively used threads
+
+Int_t TCivetweb::ChangeNumActiveThrerads(int cnt)
+{
+   std::lock_guard<std::mutex> guard(fMutex);
+   fNumActiveThreads += cnt;
+   return fNumActiveThreads;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates embedded civetweb server
 ///
 /// @param args string with civetweb server configuration
@@ -513,7 +595,7 @@ Bool_t TCivetweb::Create(const char *args)
    // fCallbacks.begin_request = begin_request_handler;
    fCallbacks.log_message = log_message_handler;
    TString sport = IsSecured() ? "8480s" : "8080",
-           num_threads = "10",
+           num_threads,
            websocket_timeout = "300000",
            dir_listening = "no",
            auth_file,
@@ -547,6 +629,8 @@ Bool_t TCivetweb::Create(const char *args)
          if (url.IsValid()) {
             url.ParseOptions();
 
+            fWebGui = url.HasOption("webgui");
+
             const char *top = url.GetValueFromOptions("top");
             if (top)
                fTopName = top;
@@ -557,7 +641,7 @@ Bool_t TCivetweb::Create(const char *args)
 
             Int_t thrds = url.GetIntValueFromOptions("thrds");
             if (thrds > 0)
-               num_threads.Form("%d", thrds);
+               fNumThreads = thrds;
 
             const char *afile = url.GetValueFromOptions("auth_file");
             if (afile)
@@ -609,6 +693,11 @@ Bool_t TCivetweb::Create(const char *args)
                GetServer()->SetCors(cors && *cors ? cors : "*");
             }
 
+            if (GetServer() && url.HasOption("cred_cors")) {
+               const char *cred = url.GetValueFromOptions("cred_cors");
+               GetServer()->SetCorsCredentials(cred && *cred ? cred : "true");
+            }
+
             if (url.HasOption("nocache"))
                fMaxAge = 0;
 
@@ -620,7 +709,9 @@ Bool_t TCivetweb::Create(const char *args)
       }
    }
 
-   const char *options[25];
+   num_threads.Form("%d", fNumThreads);
+
+   const char *options[30];
    int op = 0;
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
@@ -660,6 +751,23 @@ Bool_t TCivetweb::Create(const char *args)
    if (max_age.Length() > 0) {
       options[op++] = "static_file_max_age";
       options[op++] = max_age.Data();
+   }
+
+   if (GetServer() && GetServer()->IsCors()) {
+      // also used for the file transfer
+      options[op++] = "access_control_allow_origin";
+      options[op++] = GetServer()->GetCors();
+   }
+
+   if (GetServer() && GetServer()->IsCorsCredentials()) {
+      options[op++] = "access_control_allow_credentials";
+      options[op++] = GetServer()->GetCorsCredentials();
+      // enables partial files reading with credentials
+      // can be enabled after nect civetweb upgrade
+      // options[op++] = "access_control_expose_headers";
+      // options[op++] = "Accept-Ranges";
+      // options[op++] = "access_control_allow_methods";
+      // options[op++] = "GET, HEAD, OPTIONS";
    }
 
    options[op++] = "enable_directory_listing";

@@ -25,7 +25,6 @@ public:
   RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, bool paramRelative=true) ;
   RooParamHistFunc(const RooParamHistFunc& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooParamHistFunc(*this,newname); }
-  inline ~RooParamHistFunc() override { }
 
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
@@ -42,6 +41,8 @@ public:
   double getNominalError(Int_t ibin) const ;
 
   const RooArgList& paramList() const { return _p ; }
+
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
  protected:
 

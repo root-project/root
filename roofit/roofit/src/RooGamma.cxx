@@ -86,12 +86,18 @@ double RooGamma::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Gamma PDF.
-void RooGamma::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+
+void RooGamma::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Gamma, output, nEvents,
-          {dataMap.at(x), dataMap.at(gamma), dataMap.at(beta), dataMap.at(mu)});
+   ctx.addResult(this, ctx.buildCall("TMath::GammaDist", x, gamma, mu, beta));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Gamma PDF.
+void RooGamma::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+{
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Gamma, output, nEvents,
+                            {dataMap.at(x), dataMap.at(gamma), dataMap.at(beta), dataMap.at(mu)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,13 +110,21 @@ Int_t RooGamma::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooGamma::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooGamma::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
 {
-  R__ASSERT(code==1) ;
+   // integral of the Gamma distribution via ROOT::Math
+   return ROOT::Math::gamma_cdf(x.max(rangeName), gamma, beta, mu) -
+          ROOT::Math::gamma_cdf(x.min(rangeName), gamma, beta, mu);
+}
 
- //integral of the Gamma distribution via ROOT::Math
-  double integral = ROOT::Math::gamma_cdf(x.max(rangeName), gamma, beta, mu) - ROOT::Math::gamma_cdf(x.min(rangeName), gamma, beta, mu);
-  return integral ;
+////////////////////////////////////////////////////////////////////////////////
+
+std::string RooGamma::buildCallToAnalyticIntegral(Int_t /*code*/, const char *rangeName,
+                                                  RooFit::Detail::CodeSquashContext &ctx) const
+{
+   const std::string a = ctx.buildCall("ROOT::Math::gamma_cdf", x.max(rangeName), gamma, beta, mu);
+   const std::string b = ctx.buildCall("ROOT::Math::gamma_cdf", x.min(rangeName), gamma, beta, mu);
+   return a + " - " + b;
 }
 
 namespace {

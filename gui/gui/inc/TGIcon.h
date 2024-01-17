@@ -39,7 +39,7 @@ public:
 
    TGIcon(const TGWindow *p = nullptr, const char *image = nullptr);
 
-   virtual ~TGIcon();
+   ~TGIcon() override;
 
    virtual void Reset();         //*MENU*
    const TGPicture *GetPicture() const { return fPic; }

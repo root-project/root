@@ -23,27 +23,25 @@
 
 
 // declare the extra versions of GetValue() plus templated implementation
-#define DECLARE_GETVAL \
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0)               \
-       { return GetValueImpl<Double_t>(leaf, instance); }                    \
-   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t instance = 0)         \
-       { return GetValueImpl<Long64_t>(leaf, instance); }                    \
-   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t instance = 0) \
-       { return GetValueImpl<LongDouble_t>(leaf, instance); }                \
+#define DECLARE_GETVAL(VIRTUAL, OVERRIDE) \
+   VIRTUAL Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) OVERRIDE               \
+       { return GetValueImpl<Double_t>(leaf, instance); }                             \
+   VIRTUAL Long64_t  GetValueLong64(TLeaf *leaf, Int_t instance = 0) OVERRIDE         \
+       { return GetValueImpl<Long64_t>(leaf, instance); }                             \
+   VIRTUAL LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t instance = 0) OVERRIDE \
+       { return GetValueImpl<LongDouble_t>(leaf, instance); }                         \
    template<typename T> T  GetValueImpl(TLeaf *leaf, Int_t instance = 0)   // no semicolon
 
 
 // declare the extra versions of ReadValue() plus templated implementation
-#define DECLARE_READVAL \
-   virtual Double_t ReadValue(char *where, Int_t instance = 0)               \
-       { return ReadValueImpl<Double_t>(where, instance); }                  \
-   virtual Long64_t ReadValueLong64(char *where, Int_t instance = 0)         \
-       { return ReadValueImpl<Long64_t>(where, instance); }                  \
-   virtual LongDouble_t ReadValueLongDouble(char *where, Int_t instance = 0) \
-       { return ReadValueImpl<LongDouble_t>(where, instance); }              \
+#define DECLARE_READVAL(VIRTUAL, OVERRIDE) \
+   VIRTUAL Double_t ReadValue(char *where, Int_t instance = 0) OVERRIDE               \
+       { return ReadValueImpl<Double_t>(where, instance); }                           \
+   VIRTUAL Long64_t ReadValueLong64(char *where, Int_t instance = 0) OVERRIDE         \
+       { return ReadValueImpl<Long64_t>(where, instance); }                           \
+   VIRTUAL LongDouble_t ReadValueLongDouble(char *where, Int_t instance = 0) OVERRIDE \
+       { return ReadValueImpl<LongDouble_t>(where, instance); }                       \
    template<typename T> T  ReadValueImpl(char *where, Int_t instance = 0)  // no semicolon
-
-
 
 
 class TFormLeafInfo : public TObject {
@@ -53,7 +51,7 @@ public:
                  TStreamerElement* element = nullptr);
    TFormLeafInfo(const TFormLeafInfo& orig);
    virtual TFormLeafInfo* DeepCopy() const;
-   virtual ~TFormLeafInfo();
+   ~TFormLeafInfo() override;
 
    void Swap(TFormLeafInfo &other);
    TFormLeafInfo &operator=(const TFormLeafInfo &orig);
@@ -115,8 +113,8 @@ public:
 
    virtual Bool_t    Update();
 
-   DECLARE_GETVAL;
-   DECLARE_READVAL;
+   DECLARE_GETVAL(virtual,);
+   DECLARE_READVAL(virtual,);
 
    template <typename T> struct ReadValueHelper {
       static T Exec(TFormLeafInfo *leaf, char *where, Int_t instance) {
@@ -166,15 +164,15 @@ public:
    TFormLeafInfoDirect(TBranchElement * from);
    // The implicit default constructor's implementation is correct.
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   DECLARE_GETVAL;
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(char *thisobj, Int_t instance = 0);
+   DECLARE_GETVAL( , override);
+   void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(char *thisobj, Int_t instance = 0) override;
 
-   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/= 0);
-   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
-   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
+   Double_t  ReadValue(char * /*where*/, Int_t /*instance*/= 0) override;
+   Long64_t  ReadValueLong64(char *where, Int_t i= 0) override { return ReadValue(where, i); }
+   LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) override { return ReadValue(where, i); }
 
 };
 
@@ -189,14 +187,14 @@ public:
    TFormLeafInfoNumerical(EDataType kind);
    TFormLeafInfoNumerical(const TFormLeafInfoNumerical& orig);
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
    void Swap(TFormLeafInfoNumerical &other);
    TFormLeafInfoNumerical &operator=(const TFormLeafInfoNumerical &orig);
 
-   virtual ~TFormLeafInfoNumerical();
+   ~TFormLeafInfoNumerical() override;
 
-   virtual Bool_t    IsString() const;
-   virtual Bool_t    Update();
+   Bool_t    IsString() const override;
+   Bool_t    Update() override;
 };
 
 // TFormLeafInfoCollectionObject
@@ -212,19 +210,19 @@ public:
    void Swap(TFormLeafInfoCollectionObject &other);
    TFormLeafInfoCollectionObject &operator=(const TFormLeafInfoCollectionObject &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const {
+   TFormLeafInfo* DeepCopy() const override {
       return new TFormLeafInfoCollectionObject(*this);
    }
 
-   DECLARE_GETVAL;
-   virtual Int_t     GetCounterValue(TLeaf* leaf);
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
-   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
-   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
-   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
+   DECLARE_GETVAL( , override);
+   Int_t     GetCounterValue(TLeaf* leaf) override;
+   Double_t  ReadValue(char *where, Int_t instance = 0) override;
+   Long64_t  ReadValueLong64(char *where, Int_t i= 0) override { return ReadValue(where, i); }
+   LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) override { return ReadValue(where, i); }
+   void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetValuePointer(char  *thisobj, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0) override;
 };
 
 // TFormLeafInfoClones is a small helper class to implement reading a data
@@ -243,18 +241,18 @@ public:
    void Swap(TFormLeafInfoClones &other);
    TFormLeafInfoClones &operator=(const TFormLeafInfoClones &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const {
+   TFormLeafInfo* DeepCopy() const override {
       return new TFormLeafInfoClones(*this);
    }
 
-   DECLARE_GETVAL;
-   DECLARE_READVAL;
-   virtual Int_t     GetCounterValue(TLeaf* leaf);
-   virtual Int_t     ReadCounterValue(char *where);
-   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
+   DECLARE_GETVAL( , override);
+   DECLARE_READVAL( , override);
+   Int_t     GetCounterValue(TLeaf* leaf) override;
+   Int_t     ReadCounterValue(char *where) override;
+   void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetValuePointer(char  *thisobj, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0) override;
 };
 
 // TFormLeafInfoCollection is a small helper class to implement reading a data member
@@ -282,25 +280,25 @@ public:
    TFormLeafInfoCollection();
    TFormLeafInfoCollection(const TFormLeafInfoCollection& orig);
 
-   ~TFormLeafInfoCollection();
+   ~TFormLeafInfoCollection() override;
 
    void Swap(TFormLeafInfoCollection &other);
    TFormLeafInfoCollection &operator=(const TFormLeafInfoCollection &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   virtual Bool_t    Update();
+   Bool_t    Update() override;
 
-   DECLARE_GETVAL;
-   DECLARE_READVAL;
-   virtual Int_t     GetCounterValue(TLeaf* leaf);
-   virtual Int_t     ReadCounterValue(char* where);
+   DECLARE_GETVAL( , override);
+   DECLARE_READVAL( , override);
+   Int_t     GetCounterValue(TLeaf* leaf) override;
+   Int_t     ReadCounterValue(char* where) override;
    virtual Int_t     GetCounterValue(TLeaf* leaf, Int_t instance);
-   virtual Bool_t    HasCounter() const;
-   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
+   Bool_t    HasCounter() const override;
+   void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetValuePointer(char  *thisobj, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0) override;
 };
 
 // TFormLeafInfoCollectionSize is used to return the size of a collection
@@ -315,22 +313,22 @@ public:
    TFormLeafInfoCollectionSize();
    TFormLeafInfoCollectionSize(const TFormLeafInfoCollectionSize& orig);
 
-   ~TFormLeafInfoCollectionSize();
+   ~TFormLeafInfoCollectionSize() override;
 
    void Swap(TFormLeafInfoCollectionSize &other);
    TFormLeafInfoCollectionSize &operator=(const TFormLeafInfoCollectionSize &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   virtual Bool_t    Update();
+   Bool_t    Update() override;
 
-   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetValuePointer(char  *from, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer( char *from, Int_t instance = 0);
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
-   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
-   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
+   void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetValuePointer(char  *from, Int_t instance = 0) override;
+   void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   void     *GetLocalValuePointer( char *from, Int_t instance = 0) override;
+   Double_t  ReadValue(char *where, Int_t instance = 0) override;
+   Long64_t  ReadValueLong64(char *where, Int_t i= 0) override { return ReadValue(where, i); }
+   LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) override { return ReadValue(where, i); }
 };
 
 // TFormLeafInfoPointer is a small helper class to implement reading a data
@@ -342,10 +340,10 @@ public:
                         TStreamerElement* element = nullptr);
    // The default copy constructor is the right implementation.
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   DECLARE_GETVAL;
-   DECLARE_READVAL;
+   DECLARE_GETVAL( , override);
+   DECLARE_READVAL( , override);
 };
 
 // TFormLeafInfoMethod is a small helper class to implement executing a method
@@ -367,20 +365,20 @@ public:
 
    TFormLeafInfoMethod(TClass* classptr = nullptr, TMethodCall *method = nullptr);
    TFormLeafInfoMethod(const TFormLeafInfoMethod& orig);
-   ~TFormLeafInfoMethod();
+   ~TFormLeafInfoMethod() override;
 
    void Swap(TFormLeafInfoMethod &other);
    TFormLeafInfoMethod &operator=(const TFormLeafInfoMethod &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   DECLARE_READVAL;
-   virtual TClass*  GetClass() const;
-   virtual void    *GetLocalValuePointer( TLeaf *from, Int_t instance = 0);
-   virtual void    *GetLocalValuePointer(char *from, Int_t instance = 0);
-   virtual Bool_t   IsInteger() const;
-   virtual Bool_t   IsString() const;
-   virtual Bool_t   Update();
+   DECLARE_READVAL( , override);
+   TClass*  GetClass() const override;
+   void    *GetLocalValuePointer( TLeaf *from, Int_t instance = 0) override;
+   void    *GetLocalValuePointer(char *from, Int_t instance = 0) override;
+   Bool_t   IsInteger() const override;
+   Bool_t   IsString() const override;
+   Bool_t   Update() override;
 };
 
 // TFormLeafInfoMultiVarDim is a small helper class to implement reading a
@@ -408,32 +406,32 @@ public:
                             TStreamerElement* element, TFormLeafInfo* parent);
    TFormLeafInfoMultiVarDim();
    TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig);
-   ~TFormLeafInfoMultiVarDim();
+   ~TFormLeafInfoMultiVarDim() override;
 
    void Swap(TFormLeafInfoMultiVarDim &other);
    TFormLeafInfoMultiVarDim &operator=(const TFormLeafInfoMultiVarDim &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
    /* The proper indexing and unwinding of index is done by prior leafinfo in the chain. */
    //virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
    //   return TFormLeafInfo::ReadValue(where,instance);
    //}
 
-   virtual void     LoadSizes(TBranch* branch);
-   virtual Int_t    GetPrimaryIndex();
-   virtual void     SetPrimaryIndex(Int_t index);
-   virtual void     SetSecondaryIndex(Int_t index);
-   virtual void     SetSize(Int_t index, Int_t val);
-   virtual Int_t    GetSize(Int_t index);
-   virtual Int_t    GetSumOfSizes();
-   virtual Double_t GetValue(TLeaf * /*leaf*/, Int_t /*instance*/ = 0);
-   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
-   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
-   virtual Int_t    GetVarDim();
-   virtual Int_t    GetVirtVarDim();
-   virtual Bool_t   Update();
-   virtual void     UpdateSizes(TArrayI *garr);
+   void     LoadSizes(TBranch* branch) override;
+   Int_t    GetPrimaryIndex() override;
+   void     SetPrimaryIndex(Int_t index) override;
+   void     SetSecondaryIndex(Int_t index) override;
+   void     SetSize(Int_t index, Int_t val) override;
+   Int_t    GetSize(Int_t index) override;
+   Int_t    GetSumOfSizes() override;
+   Double_t GetValue(TLeaf * /*leaf*/, Int_t /*instance*/ = 0) override;
+   Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) override { return GetValue(leaf, i); }
+   LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) override { return GetValue(leaf, i); }
+   Int_t    GetVarDim() override;
+   Int_t    GetVirtVarDim() override;
+   Bool_t   Update() override;
+   void     UpdateSizes(TArrayI *garr) override;
 };
 
 // TFormLeafInfoMultiVarDimDirect is a small helper class to implement reading
@@ -444,12 +442,12 @@ class TFormLeafInfoMultiVarDimDirect : public TFormLeafInfoMultiVarDim {
 public:
    // The default constructor are the correct implementation.
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   DECLARE_GETVAL;
-   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0);
-   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
-   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
+   DECLARE_GETVAL( , override);
+   Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0) override;
+   Long64_t  ReadValueLong64(char *where, Int_t i= 0) override { return ReadValue(where, i); }
+   LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) override { return ReadValue(where, i); }
 };
 
 // TFormLeafInfoMultiVarDimCollection is a small helper class to implement reading
@@ -464,14 +462,14 @@ public:
       TStreamerElement* element, TFormLeafInfo* parent);
    // The default copy constructor is the right implementation.
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   virtual Int_t GetArrayLength() { return 0; }
-   virtual void      LoadSizes(TBranch* branch);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
-   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
-   DECLARE_READVAL;
+   Int_t GetArrayLength() override { return 0; }
+   void      LoadSizes(TBranch* branch) override;
+   Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) override;
+   Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) override { return GetValue(leaf, i); }
+   LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) override { return GetValue(leaf, i); }
+   DECLARE_READVAL( , override);
 };
 
 // TFormLeafInfoMultiVarDimClones is a small helper class to implement reading
@@ -486,14 +484,14 @@ public:
       TStreamerElement* element, TFormLeafInfo* parent);
    // The default copy constructor is the right implementation.
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   virtual Int_t GetArrayLength() { return 0; }
-   virtual void      LoadSizes(TBranch* branch);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
-   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
-   DECLARE_READVAL;
+   Int_t GetArrayLength() override { return 0; }
+   void      LoadSizes(TBranch* branch) override;
+   Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) override;
+   Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) override { return GetValue(leaf, i); }
+   LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) override { return GetValue(leaf, i); }
+   DECLARE_READVAL( , override);
 };
 
 // TFormLeafInfoCast is a small helper class to implement casting an object to
@@ -508,17 +506,17 @@ public:
 
    TFormLeafInfoCast(TClass* classptr = nullptr, TClass* casted = nullptr);
    TFormLeafInfoCast(const TFormLeafInfoCast& orig);
-   virtual ~TFormLeafInfoCast();
+   ~TFormLeafInfoCast() override;
 
    void Swap(TFormLeafInfoCast &other);
    TFormLeafInfoCast &operator=(const TFormLeafInfoCast &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
-   DECLARE_READVAL;
+   DECLARE_READVAL( , override);
    // Currently only implemented in TFormLeafInfoCast
-   virtual Int_t GetNdata();
-   virtual Bool_t    Update();
+   Int_t GetNdata() override;
+   Bool_t    Update() override;
 };
 
 // TFormLeafInfoTTree is a small helper class to implement reading
@@ -536,15 +534,15 @@ public:
    void Swap(TFormLeafInfoTTree &other);
    TFormLeafInfoTTree &operator=(const TFormLeafInfoTTree &orig);
 
-   virtual TFormLeafInfo* DeepCopy() const;
+   TFormLeafInfo* DeepCopy() const override;
 
    using TFormLeafInfo::GetLocalValuePointer;
    using TFormLeafInfo::GetValue;
 
-   DECLARE_GETVAL;
-   DECLARE_READVAL;
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual Bool_t    Update();
+   DECLARE_GETVAL( , override);
+   DECLARE_READVAL( , override);
+   void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) override;
+   Bool_t    Update() override;
 };
 
 

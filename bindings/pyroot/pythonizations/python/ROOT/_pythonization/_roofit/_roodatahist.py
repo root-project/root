@@ -108,7 +108,7 @@ class RooDataHist(object):
             elif isinstance(var, ROOT.RooAbsCategory):
                 out.append(True)
             else:
-                raise TypeError("Vaiables in RooDataHist should either be RooAbsReal or RooAbsCategory.")
+                raise TypeError("Variables in RooDataHist should either be RooAbsReal or RooAbsCategory.")
 
         return out
 
@@ -132,7 +132,7 @@ class RooDataHist(object):
     def from_numpy(hist_weights, variables, bins=None, ranges=None, weights_squared_sum=None, name=None, title=None):
         r"""Create a RooDataHist from numpy arrays.
 
-        Note: The argument stucture was inspired by numpy.histogramdd.
+        Note: The argument structure was inspired by numpy.histogramdd.
 
         Args:
             hist_weights (numpy.ndarray): The multidimensional histogram bin
@@ -208,7 +208,7 @@ class RooDataHist(object):
         if weights_squared_sum is None:
             if not np.allclose(hist_weights, hist_weights.round()):
                 raise ValueError(
-                    "Your input histogram has non-integer weights! You must also provide weights_squared_sum to privide the complete information to RooDataHist.from_numpy()."
+                    "Your input histogram has non-integer weights! You must also provide weights_squared_sum to provide the complete information to RooDataHist.from_numpy()."
                 )
         else:
             if len(datahist) != len(weights_squared_sum):
@@ -228,7 +228,7 @@ class RooDataHist(object):
     def to_numpy(self):
         r"""Converts the weights and bin edges of a RooDataHist to numpy arrays.
 
-        Note: The output stucture was inspired by numpy.histogramdd.
+        Note: The output structure was inspired by numpy.histogramdd.
 
         Returns:
             weight (numpy.ndarray): The weights for each histrogram bin.

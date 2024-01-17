@@ -26,6 +26,11 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
                            const RooArgSet *nset, const RooArgSet *iset, RooArgSet const &refCoefNormSet,
                            std::string const &refCoefNormRange, int verboseEval)
 {
+   // Projection integrals are always over all pdf components. Overriding the
+   // global component selection temporarily makes all RooRealIntegrals created
+   // during that time always include all components.
+   RooAbsReal::GlobalSelectComponentRAII compRAII(true);
+
    // We put the normRange into a std::string to not have to deal with
    // nullptr vs. "" ambiguities
    const std::string normRange = addPdf.normRange() ? addPdf.normRange() : "";
@@ -39,6 +44,15 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
    addPdf.getObservables(nset, fullDepList);
    if (iset) {
       fullDepList.remove(*iset, true, true);
+   }
+
+   // Reduce iset/nset to actual dependents of this PDF
+   RooArgSet nset2;
+   addPdf.getObservables(nset, nset2);
+
+   if (nset2.empty() && !refCoefNormSet.empty()) {
+      // Evaluating RooAddPdf without normalization, but have reference normalization for coefficient definition
+      nset2.add(refCoefNormSet);
    }
 
    bool hasPdfWithCustomRange = false;
@@ -74,7 +88,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
       }
 
       if (!normRange.empty()) {
-         auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(*nset, *nset, normRange.c_str()));
+         auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(nset2, nset2, normRange.c_str()));
          if (snorm) {
             auto oldSnorm = std::move(snorm);
             snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm.get());
@@ -99,21 +113,6 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
    // If no projections required stop here
    if (refCoefNormSet.empty() && !projectCoefsForRangeReasons) {
       return;
-   }
-
-   // Reduce iset/nset to actual dependents of this PDF
-   RooArgSet nset2;
-   if (nset)
-      addPdf.getObservables(nset, nset2);
-   oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "(" << addPdf.GetName()
-                               << ")::getPC nset = " << (nset ? *nset : RooArgSet()) << " nset2 = " << nset2
-                               << std::endl;
-
-   if (nset2.empty() && !refCoefNormSet.empty()) {
-      // cout << "WVE: evaluating RooAddPdf without normalization, but have reference normalization for coefficient
-      // definition" << std::endl ;
-
-      nset2.add(refCoefNormSet);
    }
 
    if (!nset2.equals(refCoefNormSet) || projectCoefsForRangeReasons) {
@@ -289,13 +288,9 @@ void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, std::vector<doub
 
    // Adjust coefficients for given projection
    double coefSum(0);
-   {
-      RooAbsReal::GlobalSelectComponentRAII compRAII(true);
-
-      for (std::size_t i = 0; i < pdfList.size(); i++) {
-         coefCache[i] *= cache.projVal(i) / cache.projSuppNormVal(i) * cache.rangeProjScaleFactor(i);
-         coefSum += coefCache[i];
-      }
+   for (std::size_t i = 0; i < pdfList.size(); i++) {
+      coefCache[i] *= cache.projVal(i) / cache.projSuppNormVal(i) * cache.rangeProjScaleFactor(i);
+      coefSum += coefCache[i];
    }
 
    if ((RooMsgService::_debugCount > 0) &&

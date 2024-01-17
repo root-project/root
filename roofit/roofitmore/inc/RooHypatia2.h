@@ -30,7 +30,6 @@ public:
          RooAbsReal& sigma, RooAbsReal& mu, RooAbsReal& a, RooAbsReal& n, RooAbsReal& a2, RooAbsReal& n2);
   RooHypatia2(const RooHypatia2& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
-  inline ~RooHypatia2() override { }
 
   /* Analytical integrals need testing.
 
@@ -53,7 +52,7 @@ private:
   RooRealProxy _n2;
 
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
   /// \cond CLASS_DEF_DOXY
   ClassDefOverride(RooHypatia2, 1);

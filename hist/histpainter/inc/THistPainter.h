@@ -65,6 +65,7 @@ protected:
    TCutG                *fCuts[kMaxCuts];         ///< Pointers to graphical cuts
    TList                *fStack;                  ///< Pointer to stack of histograms (if any)
    Int_t                 fShowProjection;         ///< True if a projection must be drawn
+   Int_t                 fShowProjection2;        ///< True if a second projection must be drawn (when calling SetShowProjectionXY on a TH2)
    TString               fShowOption;             ///< Option to draw the projection
    Int_t                 fXHighlightBin;          ///< X highlight bin
    Int_t                 fYHighlightBin;          ///< Y highlight bin
@@ -139,12 +140,14 @@ public:
    static  Int_t      ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
+   static  Int_t      ProjectMollweide2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    virtual void       RecalculateRange();
    void       RecursiveRemove(TObject *) override {}
    void       SetHighlight() override;
    void       SetHistogram(TH1 *h) override;
    void       SetStack(TList *stack) override {fStack = stack;}
    void       SetShowProjection(const char *option,Int_t nbins) override;
+   void       SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbinsX) override;
    virtual void       ShowProjectionX(Int_t px, Int_t py);
    virtual void       ShowProjectionY(Int_t px, Int_t py);
    virtual void       ShowProjection3(Int_t px, Int_t py);

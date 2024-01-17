@@ -137,7 +137,7 @@ namespace FitUtil {
         }
      }
 
-     void SetFunction(const ParamFunc &func, const double *p = 0,
+     void SetFunction(const ParamFunc &func, const double *p = nullptr,
                       ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT)
      {
         // set the integrand function and create required wrapper
@@ -229,20 +229,23 @@ namespace FitUtil {
 #ifdef R__HAS_VECCORE
      inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const
      {
-        if (fDim == 1) {
-           ROOT::Double_v xx;
-           vecCore::Load<ROOT::Double_v>(xx, x);
-           const double *p0 = p;
-           auto res = (*f)(&xx, (const double *)p0);
-           return vecCore::Get<ROOT::Double_v>(res, 0);
-        } else {
-           std::vector<ROOT::Double_v> xx(fDim);
-           for (unsigned int i = 0; i < fDim; ++i) {
-              vecCore::Load<ROOT::Double_v>(xx[i], x + i);
+        // Figure out the size of the SIMD vectors.
+        constexpr static int vecSize = sizeof(ROOT::Double_v) / sizeof(double);
+        double xBuffer[vecSize];
+        ROOT::Double_v xx[fDim];
+        for (unsigned int i = 0; i < fDim; ++i) {
+           // The Load() function reads multiple values from the pointed-to
+           // memory into xx. This is why we have to copy the input values from
+           // the x array into a zero-padded buffer to read from. Otherwise,
+           // Load() would access the x array out of bounds.
+           *xBuffer = x[i];
+           for(int j = 1; j < vecSize; ++j) {
+              xBuffer[j] = 0.0;
            }
-           auto res = (*f)(xx.data(), p);
-           return vecCore::Get<ROOT::Double_v>(res, 0);
+           vecCore::Load<ROOT::Double_v>(xx[i], xBuffer);
         }
+        auto res = (*f)(xx, p);
+        return vecCore::Get<ROOT::Double_v>(res, 0);
      }
 #endif
 

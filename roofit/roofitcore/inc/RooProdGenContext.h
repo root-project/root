@@ -58,7 +58,7 @@ protected:
   bool _ccdRefresh ;
   double * _ccdTable ;
   const RooProdPdf *_pdf ;       ///<  Original PDF
-  std::list<RooAbsGenContext*>  _gcList ; ///<  List of component generator contexts
+  std::list<std::unique_ptr<RooAbsGenContext>>  _gcList ; ///<  List of component generator contexts
   RooArgSet _ownedMultiProds ;   ///<  Owned auxiliary multi-term product PDFs
 
   ClassDefOverride(RooProdGenContext,0) // Context for efficient generation of a dataset from a RooProdPdf

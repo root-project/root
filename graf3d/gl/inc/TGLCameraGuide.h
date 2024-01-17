@@ -31,21 +31,21 @@ protected:
 public:
    TGLCameraGuide(Float_t x, Float_t y, Float_t s,
                   ERole role=kUser, EState state=kActive);
-   virtual ~TGLCameraGuide() {}
+   ~TGLCameraGuide() override {}
 
    void SetX(Float_t x) { fXPos = x; }
    void SetY(Float_t y) { fYPos = y; }
    void SetXY(Float_t x, Float_t y) { fXPos = x; fYPos = y; }
    void SetSize(Float_t s) { fSize = s; }
 
-   virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
-   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event);
-   virtual void   MouseLeave();
+   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
+   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
+                         Event_t* event) override;
+   void   MouseLeave() override;
 
-   virtual void Render(TGLRnrCtx& rnrCtx);
+   void Render(TGLRnrCtx& rnrCtx) override;
 
-   ClassDef(TGLCameraGuide, 0); // Short description.
+   ClassDefOverride(TGLCameraGuide, 0); // Short description.
 };
 
 #endif

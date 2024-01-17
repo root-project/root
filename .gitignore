@@ -16,7 +16,7 @@ project.xcworkspace
 
 # CLion
 .idea/*
-cmake-build-*/
+cmake-build*/
 
 # QtCreator
 CMakeLists.txt.user
@@ -43,3 +43,6 @@ compile_commands.json
 documentation/doxygen/*.eps
 documentation/doxygen/*.pcm
 documentation/doxygen/*.jpg
+
+# Pycache
+.github/workflows/root-ci-config/__pycache__

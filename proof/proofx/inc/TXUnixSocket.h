@@ -47,7 +47,7 @@ public:
    // Try reconnection after error
    Int_t Reconnect();
 
-   ClassDef(TXUnixSocket, 0) //Connection class for Xrd PROOF using UNIX sockets
+   ClassDefOverride(TXUnixSocket, 0) //Connection class for Xrd PROOF using UNIX sockets
 };
 
 #endif

@@ -1521,7 +1521,7 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
    Double_t x1, x2, y1, y2, z1, z2, dd, di;
    Double_t dt, dy;
    Double_t tt, uu, ww, yy, yy1, yy2, yy1d, yy2d;
-   Double_t *tn = 0;
+   Double_t *tn = nullptr;
    const Double_t kEpsil = 1.e-6;
    /* Parameter adjustments */
    --r2;
@@ -3418,6 +3418,10 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t, Int_t nx, Int_t ny, const 
                xyz[i*3 + 1] = ab;
             } else if (Hoption.Proj == 4) {
                THistPainter::ProjectParabolic2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
+               xyz[i*3 + 0] = al;
+               xyz[i*3 + 1] = ab;
+            } else if (Hoption.Proj == 5) {
+               THistPainter::ProjectMollweide2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
                xyz[i*3 + 0] = al;
                xyz[i*3 + 1] = ab;
             }

@@ -23,7 +23,7 @@ public:
    TFrame();
    TFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2);
    TFrame(const TFrame &frame);
-   virtual ~TFrame();
+   ~TFrame() override;
    void  Copy(TObject &frame) const override;
    void  Draw(Option_t *option="") override;
    void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;

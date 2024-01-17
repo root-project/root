@@ -42,14 +42,14 @@ TConfidenceLevel::TConfidenceLevel()
    fBtot = 0;
    fDtot = 0;
    fTSD  = 0;
-   fTSB  = 0;
-   fTSS  = 0;
-   fLRS  = 0;
-   fLRB  = 0;
+   fTSB  = nullptr;
+   fTSS  = nullptr;
+   fLRS  = nullptr;
+   fLRB  = nullptr;
    fNMC  = 0;
    fNNMC = 0;
-   fISS  = 0;
-   fISB  = 0;
+   fISS  = nullptr;
+   fISB  = nullptr;
    fMCL3S = fgMCL3S1S;
    fMCL5S = fgMCL5S1S;
 }
@@ -66,10 +66,10 @@ TConfidenceLevel::TConfidenceLevel(Int_t mc, bool onesided)
    fBtot = 0;
    fDtot = 0;
    fTSD  = 0;
-   fTSB  = 0;
-   fTSS  = 0;
-   fLRS  = 0;
-   fLRB  = 0;
+   fTSB  = nullptr;
+   fTSS  = nullptr;
+   fLRS  = nullptr;
+   fLRB  = nullptr;
    fNMC  = mc;
    fNNMC = mc;
    fISS  = new Int_t[mc];
@@ -437,7 +437,7 @@ void  TConfidenceLevel::Draw(const Option_t*)
 void  TConfidenceLevel::SetTSB(Double_t * in)
 {
    fTSB = in;
-   TMath::Sort(fNNMC, fTSB, fISB, 0);
+   TMath::Sort(fNNMC, fTSB, fISB, false);
 }
 
 
@@ -447,5 +447,5 @@ void  TConfidenceLevel::SetTSB(Double_t * in)
 void  TConfidenceLevel::SetTSS(Double_t * in)
 {
    fTSS = in;
-   TMath::Sort(fNNMC, fTSS, fISS, 0);
+   TMath::Sort(fNNMC, fTSS, fISS, false);
 }

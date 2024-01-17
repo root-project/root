@@ -56,7 +56,7 @@ automatic PDF optimization.
 #include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
@@ -107,7 +107,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
    if (nll_real != nullptr) {
       if (_cfg.parallelize != 0) { // new test statistic with multiprocessing library with
                                    // parallel likelihood or parallel gradient
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
          if (!_cfg.enableParallelGradient) {
             // Note that this is necessary because there is currently no serial-mode LikelihoodGradientWrapper.
             // We intend to repurpose RooGradMinimizerFcn to build such a LikelihoodGradientSerial class.
@@ -223,7 +223,7 @@ void RooMinimizer::setMaxIterations(int n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change maximum number of likelihood function calss from MINUIT
+/// Change maximum number of likelihood function class from MINUIT
 /// (RooMinimizer default 500 * #%parameters)
 
 void RooMinimizer::setMaxFunctionCalls(int n)
@@ -298,7 +298,7 @@ ROOT::Fit::Fitter const *RooMinimizer::fitter() const
 
 bool RooMinimizer::fitFcn() const
 {
-   return _fcn->fit(*_theFitter);
+   return _theFitter->FitFCN(*_fcn->getMultiGenFcn());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,18 +311,19 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   if (_cfg.timingAnalysis) 
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+   if (_cfg.timingAnalysis) {
+#ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else
       throw std::logic_error("ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
                              "please recompile with -Droofit_multiprocess=ON for logging with the "
                              "ProcessTimer.");
 #endif
+   }
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    setMinimizerType(type);
-   _theFitter->Config().SetMinimizer(type, alg);
+   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), alg);
 
    profileStart();
    {
@@ -456,7 +457,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
          }
 
          if (paramInd.size()) {
-            // set the parameter indeces
+            // set the parameter indices
             _theFitter->Config().SetMinosErrors(paramInd);
 
             _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
@@ -612,13 +613,9 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
    fitRes->setConstParList(saveConstList);
    fitRes->setInitParList(saveFloatInitList);
 
-   // The fitter often clones the function. We therefore have to ask it for its copy.
-   const auto fitFcn = dynamic_cast<const RooAbsMinimizerFcn *>(_theFitter->GetFCN());
    double removeOffset = 0.;
-   if (fitFcn) {
-      fitRes->setNumInvalidNLL(fitFcn->GetNumInvalidNLL());
-      removeOffset = -fitFcn->getOffset();
-   }
+   fitRes->setNumInvalidNLL(_fcn->GetNumInvalidNLL());
+   removeOffset = -_fcn->getOffset();
 
    fitRes->setStatus(_status);
    fitRes->setCovQual(_theFitter->GetMinimizer()->CovMatrixStatus());
@@ -666,7 +663,8 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
                                double n5, double n6, unsigned int npoints)
 {
    RooArgList *params = _fcn->GetFloatParamList();
-   std::unique_ptr<RooArgList> paramSave{static_cast<RooArgList *>(params->snapshot())};
+   RooArgList paramSave;
+   params->snapshot(paramSave);
 
    // Verify that both variables are floating parameters of PDF
    int index1 = _fcn->GetFloatParamList()->index(&var1);
@@ -740,7 +738,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    _theFitter->GetMinimizer()->SetErrorDef(errdef);
 
    // restore parameter values
-   params->assign(*paramSave);
+   params->assign(paramSave);
 
    return frame;
 }
@@ -750,7 +748,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
 void RooMinimizer::addParamsToProcessTimer()
 {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
    // parameter indices for use in timing heat matrix
    std::vector<std::string> parameter_names;
    for (auto &&parameter : *_fcn->GetFloatParamList()) {
@@ -960,7 +958,7 @@ double &RooMinimizer::maxFCN()
 
 int RooMinimizer::Config::getDefaultWorkers()
 {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
    return RooFit::MultiProcess::Config::getDefaultNWorkers();
 #else
    return 0;

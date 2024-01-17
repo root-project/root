@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooCategory.h"
 #include "RooThresholdCategory.h"
 #include "RooBinningCategory.h"
@@ -32,10 +31,10 @@ void rf405_realtocatfuncs()
 
    // Define a dummy PDF in x
    RooRealVar x("x", "x", 0, 10);
-   RooArgusBG a("a", "argus(x)", x, RooConst(10), RooConst(-1));
+   RooArgusBG a("a", "argus(x)", x, 10.0, -1.0);
 
    // Generate a dummy dataset
-   RooDataSet *data = a.generate(x, 10000);
+   std::unique_ptr<RooDataSet> data{a.generate(x, 10000)};
 
    // C r e a t e   a   t h r e s h o l d   r e a l - > c a t   f u n c t i o n
    // --------------------------------------------------------------------------

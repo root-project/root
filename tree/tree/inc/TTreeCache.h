@@ -128,7 +128,7 @@ public:
 
    TTreeCache();
    TTreeCache(TTree *tree, Int_t buffersize=0);
-   virtual ~TTreeCache();
+   ~TTreeCache() override;
    Int_t                AddBranch(TBranch *b, Bool_t subgbranches = kFALSE) override;
    Int_t                AddBranch(const char *branch, Bool_t subbranches = kFALSE) override;
    virtual Int_t        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);

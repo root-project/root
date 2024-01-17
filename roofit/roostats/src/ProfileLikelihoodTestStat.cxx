@@ -56,7 +56,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
        if( fDetailedOutputEnabled && fDetailedOutput ) {
           delete fDetailedOutput;
-          fDetailedOutput = 0;
+          fDetailedOutput = nullptr;
        }
        if( fDetailedOutputEnabled && !fDetailedOutput ) {
           fDetailedOutput = new RooArgSet();
@@ -130,7 +130,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        double uncondML = 0;
        double fit_favored_mu = 0;
        int statusD = 0;
-       RooArgSet * detOutput = 0;
+       RooArgSet * detOutput = nullptr;
        if (type != 2) {
           // minimize and count eval errors
           fNll->clearEvalErrorLog();
@@ -307,7 +307,7 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
    int status;
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
       status = minim.minimize(minimizer,algorithm);
-      if (status%1000 == 0) {  // ignore erros from Improve
+      if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
          cout << "    ----> Doing a re-scan first" << endl;

@@ -34,14 +34,6 @@ extern "C" {
 }
 #endif
 
-#ifdef __sun
-#   ifndef _REENTRANT
-#      if __SUNPRO_CC > 0x420
-#         define GLOBAL_ERRNO
-#      endif
-#   endif
-#endif
-
 #include "rpderr.h"
 #include "rpdp.h"
 
@@ -56,22 +48,14 @@ extern bool gSysLog;
 
 int GetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   return ::errno;
-#else
    return errno;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ResetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   ::errno = 0;
-#else
    errno = 0;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

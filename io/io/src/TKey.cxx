@@ -736,16 +736,24 @@ void TKey::Print(Option_t *) const
 /// one must use a dynamic_cast.
 ///
 /// #### Example1: simplified case
-///     class MyClass : public TObject, public AnotherClass
+/// ~~~{.cpp}
+/// class MyClass : public TObject, public AnotherClass
+/// ~~~
 /// then on return, one get away with using:
-///     MyClass *obj = (MyClass*)key->ReadObj();
+/// ~~~{.cpp}
+/// MyClass *obj = (MyClass*)key->ReadObj();
+/// ~~~
 ///
 /// #### Example2: Usual case (recommended unless performance is critical)
-///     MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
+/// ~~~{.cpp}
+/// MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
+/// ~~~
 /// which support also the more complex inheritance like:
-///     class MyClass : public AnotherClass, public TObject
+/// ~~~{.cpp}
+/// class MyClass : public AnotherClass, public TObject
+/// ~~~
 ///
-/// Of course, dynamic_cast<> can also be used in the example 1.
+/// Of course, `dynamic_cast<>` can also be used in the example 1.
 
 TObject *TKey::ReadObj()
 {

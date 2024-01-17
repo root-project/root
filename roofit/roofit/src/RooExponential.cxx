@@ -30,65 +30,123 @@ range and values of the arguments.
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 
+#include <RooFit/Detail/AnalyticalIntegrals.h>
 
+#include <algorithm>
 #include <cmath>
-
-using namespace std;
 
 ClassImp(RooExponential);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooExponential::RooExponential(const char *name, const char *title,
-                RooAbsReal& _x, RooAbsReal& _c) :
-  RooAbsPdf(name, title),
-  x("x","Dependent",this,_x),
-  c("c","Exponent",this,_c)
+RooExponential::RooExponential(const char *name, const char *title, RooAbsReal &variable, RooAbsReal &coefficient,
+                               bool negateCoefficient)
+   : RooAbsPdf{name, title},
+     x{"x", "Dependent", this, variable},
+     c{"c", "Exponent", this, coefficient},
+     _negateCoefficient{negateCoefficient}
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooExponential::RooExponential(const RooExponential& other, const char* name) :
-  RooAbsPdf(other, name), x("x",this,other.x), c("c",this,other.c)
+RooExponential::RooExponential(const RooExponential &other, const char *name)
+   : RooAbsPdf{other, name}, x{"x", this, other.x}, c{"c", this, other.c}, _negateCoefficient{other._negateCoefficient}
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooExponential::evaluate() const{
-  return exp(c*x);
+double RooExponential::evaluate() const
+{
+   double coef = c;
+   if (_negateCoefficient) {
+      coef = -coef;
+   }
+   return std::exp(coef * x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Exponential distribution.
-void RooExponential::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooExponential::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Exponential, output, nEvents, {dataMap.at(x),dataMap.at(c)});
+   auto computer = _negateCoefficient ? RooBatchCompute::ExponentialNeg : RooBatchCompute::Exponential;
+   RooBatchCompute::compute(dataMap.config(this), computer, output, nEvents, {dataMap.at(x), dataMap.at(c)});
 }
 
-
-Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+Int_t RooExponential::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-  if (matchArgs(allVars,analVars,x)) return 1;
-  if (matchArgs(allVars,analVars,c)) return 2;
-  return 0 ;
+   if (matchArgs(allVars, analVars, x))
+      return 1;
+   if (matchArgs(allVars, analVars, c))
+      return 2;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooExponential::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooExponential::analyticalIntegral(Int_t code, const char *rangeName) const
 {
-  assert(code == 1 || code ==2);
+   assert(code == 1 || code == 2);
 
-  auto& constant  = code == 1 ? c : x;
-  auto& integrand = code == 1 ? x : c;
+   bool isOverX = code == 1;
 
-  if (constant == 0.0) {
-    return integrand.max(rangeName) - integrand.min(rangeName);
-  }
+   double coef = c;
+   if (_negateCoefficient) {
+      coef = -coef;
+   }
 
-  return (exp(constant*integrand.max(rangeName)) - exp(constant*integrand.min(rangeName)))
-      / constant;
+   double constant = isOverX ? coef : x;
+   auto &integrand = isOverX ? x : c;
+
+   double min = integrand.min(rangeName);
+   double max = integrand.max(rangeName);
+
+   if (!isOverX && _negateCoefficient) {
+      std::swap(min, max);
+      min = -min;
+      max = -max;
+   }
+
+   return RooFit::Detail::AnalyticalIntegrals::exponentialIntegral(min, max, constant);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RooExponential::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Build a call to the stateless exponential defined later.
+   std::string coef;
+   if (_negateCoefficient) {
+      coef += "-";
+   }
+   coef += ctx.getResult(c);
+   ctx.addResult(this, "std::exp(" + coef + " * " + ctx.getResult(x) + ")");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string RooExponential::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
+                                                        RooFit::Detail::CodeSquashContext &ctx) const
+{
+   bool isOverX = code == 1;
+
+   std::string constant;
+   if (_negateCoefficient && isOverX) {
+      constant += "-";
+   }
+   constant += ctx.getResult(isOverX ? c : x);
+
+   auto &integrand = isOverX ? x : c;
+
+   double min = integrand.min(rangeName);
+   double max = integrand.max(rangeName);
+
+   if (!isOverX && _negateCoefficient) {
+      std::swap(min, max);
+      min = -min;
+      max = -max;
+   }
+
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::exponentialIntegral", min, max, constant);
 }

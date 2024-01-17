@@ -486,6 +486,12 @@ TEST(RNTuple, SerializeHeader)
       .MakeDescriptor()
       .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(24)
+                       .FieldName("ptAlias")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
       .FieldId(137)
       .FieldName("jet")
       .Structure(ENTupleStructure::kRecord)
@@ -498,11 +504,13 @@ TEST(RNTuple, SerializeHeader)
       .MakeDescriptor()
       .Unwrap());
    builder.AddFieldLink(0, 42);
+   builder.AddFieldLink(0, 24);
    builder.AddFieldLink(0, 137);
    builder.AddFieldLink(137, 13);
-   builder.AddColumn(23, 42, RColumnModel(EColumnType::kReal32, false), 0);
-   builder.AddColumn(17, 137, RColumnModel(EColumnType::kIndex, true), 0);
-   builder.AddColumn(40, 137, RColumnModel(EColumnType::kByte, true), 1);
+   builder.AddColumn(23, 23, 42, RColumnModel(EColumnType::kReal32, false), 0);
+   builder.AddColumn(100, 23, 24, RColumnModel(EColumnType::kReal32, false), 0);
+   builder.AddColumn(17, 17, 137, RColumnModel(EColumnType::kIndex32, true), 0);
+   builder.AddColumn(40, 40, 137, RColumnModel(EColumnType::kByte, true), 1);
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, desc);
@@ -511,6 +519,13 @@ TEST(RNTuple, SerializeHeader)
    context = RNTupleSerializer::SerializeHeaderV1(buffer.get(), desc);
 
    RNTupleSerializer::DeserializeHeaderV1(buffer.get(), context.GetHeaderSize(), builder);
+
+   desc = builder.MoveDescriptor();
+   auto ptAliasFieldId = desc.FindFieldId("ptAlias");
+   auto colId = desc.FindLogicalColumnId(ptAliasFieldId, 0);
+   EXPECT_TRUE(desc.GetColumnDescriptor(colId).IsAliasColumn());
+   auto ptFieldId = desc.FindFieldId("pt");
+   EXPECT_EQ(desc.FindLogicalColumnId(ptFieldId, 0), desc.GetColumnDescriptor(colId).GetPhysicalId());
 }
 
 
@@ -531,13 +546,13 @@ TEST(RNTuple, SerializeFooter)
       .MakeDescriptor()
       .Unwrap());
    builder.AddFieldLink(0, 42);
-   builder.AddColumn(17, 42, RColumnModel(EColumnType::kIndex, true), 0);
+   builder.AddColumn(17, 17, 42, RColumnModel(EColumnType::kIndex32, true), 0);
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    RClusterDescriptorBuilder clusterBuilder(84, 0, 100);
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   pageRange.fColumnId = 17;
+   pageRange.fPhysicalColumnId = 17;
    pageInfo.fNElements = 100;
    pageInfo.fLocator.fPosition = 7000U;
    pageRange.fPageInfos.emplace_back(pageInfo);
@@ -607,4 +622,109 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(1u, pageRange.fPageInfos.size());
    EXPECT_EQ(100u, pageRange.fPageInfos[0].fNElements);
    EXPECT_EQ(7000u, pageRange.fPageInfos[0].fLocator.GetPosition<std::uint64_t>());
+}
+
+TEST(RNTuple, SerializeFooterXHeader)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetNTuple("ntpl", "");
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(42)
+                       .FieldName("field")
+                       .TypeName("int32_t")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 42);
+   builder.AddColumn(17, 17, 42, RColumnModel(EColumnType::kInt32, true), 0);
+
+   auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, builder.GetDescriptor());
+   EXPECT_GT(context.GetHeaderSize(), 0);
+   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeaderV1(bufHeader.get(), builder.GetDescriptor());
+
+   builder.BeginHeaderExtension();
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(43)
+                       .FieldName("struct")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(44)
+                       .FieldName("f")
+                       .TypeName("float")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(45)
+                       .FieldName("i64")
+                       .TypeName("int64_t")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 43);
+   builder.AddFieldLink(43, 44);
+   builder.AddFieldLink(0, 45);
+   builder.AddColumn(18, 18, 44, RColumnModel(EColumnType::kReal32, true), 0, /*firstElementIdx=*/4200);
+   builder.AddColumn(19, 19, 45, RColumnModel(EColumnType::kInt64, true), 0, /*firstElementIdx=*/10000);
+
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(46)
+                       .FieldName("projected")
+                       .TypeName("float")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 46);
+   builder.AddColumn(20, 18, 46, RColumnModel(EColumnType::kReal32, true), 0);
+
+   // Make sure late-added fields and the corresponding columns get an on-disk ID
+   context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
+
+   auto desc = builder.MoveDescriptor();
+   auto sizeFooter = RNTupleSerializer::SerializeFooterV1(nullptr, desc, context);
+   EXPECT_GT(sizeFooter, 0);
+   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooterV1(bufFooter.get(), desc, context));
+
+   RNTupleSerializer::DeserializeHeaderV1(bufHeader.get(), context.GetHeaderSize(), builder);
+   RNTupleSerializer::DeserializeFooterV1(bufFooter.get(), sizeFooter, builder);
+
+   desc = builder.MoveDescriptor();
+
+   EXPECT_EQ(6u, desc.GetNFields());
+   EXPECT_EQ(4u, desc.GetNLogicalColumns());
+   EXPECT_EQ(3u, desc.GetNPhysicalColumns());
+   auto xHeader = desc.GetHeaderExtension();
+   EXPECT_TRUE(xHeader != nullptr);
+   EXPECT_EQ(4u, xHeader->GetNFields());
+   EXPECT_EQ(3u, xHeader->GetNLogicalColumns());
+   EXPECT_EQ(2u, xHeader->GetNPhysicalColumns());
+   auto fldIdStruct = desc.FindFieldId("struct");
+   auto fldIdF = desc.FindFieldId("f", fldIdStruct);
+   auto fldIdI64 = desc.FindFieldId("i64");
+   EXPECT_EQ(1, fldIdStruct);
+   EXPECT_EQ(2, fldIdF);
+   EXPECT_EQ(3, fldIdI64);
+   EXPECT_EQ(4, desc.FindFieldId("projected"));
+
+   unsigned int counter = 0;
+   for (const auto &c : desc.GetColumnIterable(fldIdF)) {
+      EXPECT_EQ(c.GetFirstElementIndex(), 4200U);
+      counter++;
+   }
+   EXPECT_EQ(1U, counter);
+   for (const auto &c : desc.GetColumnIterable(fldIdI64)) {
+      EXPECT_EQ(c.GetFirstElementIndex(), 10000U);
+      counter++;
+   }
+   EXPECT_EQ(2U, counter);
 }

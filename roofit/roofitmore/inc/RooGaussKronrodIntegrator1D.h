@@ -25,22 +25,14 @@ class RooGaussKronrodIntegrator1D : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooGaussKronrodIntegrator1D() {}
   RooGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooGaussKronrodIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config) ;
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
-
   bool checkLimits() const override;
   double integral(const double *yvec=nullptr) override ;
 
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
-
-  bool canIntegrate1D() const override { return true ; }
-  bool canIntegrate2D() const override { return false ; }
-  bool canIntegrateND() const override { return false ; }
-  bool canIntegrateOpenEnded() const override { return true ; }
 
 protected:
 

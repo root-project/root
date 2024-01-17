@@ -91,7 +91,7 @@ GSLMinimizer::GSLMinimizer( const char *  type) :    BasicMinimizer()
 
 
 GSLMinimizer::~GSLMinimizer () {
-   assert(fGSLMultiMin != 0);
+   assert(fGSLMultiMin != nullptr);
    delete fGSLMultiMin;
 }
 
@@ -111,7 +111,7 @@ void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
 
 unsigned int GSLMinimizer::NCalls() const {
    // return number of function calls
-   // if original function does not support gradient it is wrapped in MultiNumGradFuction
+   // if original function does not support gradient it is wrapped in MultiNumGradFunction
    // and we have NCalls available
    const ROOT::Math::MultiNumGradFunction * fnumgrad = dynamic_cast<const ROOT::Math::MultiNumGradFunction *>(ObjFunction());
    if (fnumgrad) return fnumgrad->NCalls();
@@ -126,9 +126,9 @@ unsigned int GSLMinimizer::NCalls() const {
 bool GSLMinimizer::Minimize() {
    // set initial parameters of the minimizer
 
-   if (fGSLMultiMin == 0) return false;
+   if (fGSLMultiMin == nullptr) return false;
    const ROOT::Math::IMultiGradFunction * function = GradObjFunction();
-   if (function == 0) {
+   if (function == nullptr) {
       MATH_ERROR_MSG("GSLMinimizer::Minimize","Function has not been set");
       return false;
    }
@@ -158,7 +158,7 @@ bool GSLMinimizer::Minimize() {
     // in case all parameters are free - just evaluate the function
    if (NFree() == 0) {
       MATH_INFO_MSG("GSLMinimizer::Minimize","There are no free parameter - just compute the function value");
-      double fval = (*function)((double*)0);   // no need to pass parameters or used transformed function
+      double fval = (*function)((double*)nullptr);   // no need to pass parameters or used transformed function
       SetFinalValues(&startValues[0]);
       SetMinValue(fval);
       fStatus = 0;
@@ -235,7 +235,7 @@ bool GSLMinimizer::Minimize() {
 
    // save state with values and function value
    double * x = fGSLMultiMin->X();
-   if (x == 0) return false;
+   if (x == nullptr) return false;
    SetFinalValues(x, trFunc.get());
 
    double minVal =  fGSLMultiMin->Minimum();

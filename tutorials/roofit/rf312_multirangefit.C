@@ -12,7 +12,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooPolynomial.h"
@@ -36,8 +35,8 @@ void rf312_multirangefit()
    RooRealVar mx("mx", "mx", 1, -10, 10);
    RooRealVar my("my", "my", 1, -10, 10);
 
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
-   RooGaussian gy("gy", "gy", y, my, RooConst(1));
+   RooGaussian gx("gx", "gx", x, mx, 1.0);
+   RooGaussian gy("gy", "gy", y, my, 1.0);
 
    RooProdPdf sig("sig", "sig", gx, gy);
 
@@ -51,7 +50,7 @@ void rf312_multirangefit()
    RooAddPdf model("model", "model", RooArgList(sig, bkg), f);
 
    // Sample 10000 events in (x,y) from the model
-   RooDataSet *modelData = model.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> modelData{model.generate({x, y}, 10000)};
 
    // D e f i n e   s i g n a l   a n d   s i d e b a n d   r e g i o n s
    // -------------------------------------------------------------------

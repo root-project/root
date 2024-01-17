@@ -1,9 +1,8 @@
-import { settings, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
+import { settings, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
 import { getRootColors } from '../base/colors.mjs';
-
 
 /** @summary Display progress message in the left bottom corner.
   * @desc Previous message will be overwritten
@@ -12,14 +11,15 @@ import { getRootColors } from '../base/colors.mjs';
   * @param {number} tmout - optional timeout in milliseconds, after message will disappear
   * @private */
 function showProgress(msg, tmout) {
-   if (isBatchMode() || (typeof document === 'undefined')) return;
-   let id = 'jsroot_progressbox',
-       box = d3_select('#' + id);
+   if (isBatchMode() || (typeof document === 'undefined'))
+      return;
+   const id = 'jsroot_progressbox';
+   let box = d3_select('#' + id);
 
    if (!settings.ProgressBox)
       return box.remove();
 
-   if ((arguments.length == 0) || !msg) {
+   if ((arguments.length === 0) || !msg) {
       if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
       return;
    }
@@ -33,13 +33,14 @@ function showProgress(msg, tmout) {
 
    box.property('with_timeout', false);
 
-   if (isStr(msg)) {
+   if (isStr(msg))
       box.select('p').html(msg);
-   } else {
+    else {
       box.html('');
       box.node().appendChild(msg);
    }
-   injectStyle('#jsroot_progressbox p { font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px; }', box.node());
+
+   box.select('p').attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
       box.property('with_timeout', true);
@@ -57,10 +58,11 @@ function closeCurrentWindow() {
    window.open('', '_self').close();
 }
 
-
+/** @summary Tries to open ui5
+  * @private */
 function tryOpenOpenUI(sources, args) {
-   if (!sources || (sources.length == 0)) {
-      if (args.rejectFunc) {
+   if (!sources || (sources.length === 0)) {
+      if (isFunc(args.rejectFunc)) {
          args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
       }
@@ -70,21 +72,22 @@ function tryOpenOpenUI(sources, args) {
    // where to take openui5 sources
    let src = sources.shift();
 
-   if ((src.indexOf('roothandler') == 0) && (src.indexOf('://') < 0))
-      src = src.replace(/\:\//g, '://');
+   if ((src.indexOf('roothandler') === 0) && (src.indexOf('://') < 0))
+      src = src.replace(/:\//g, '://');
 
-   let element = document.createElement('script');
+   const element = document.createElement('script');
    element.setAttribute('type', 'text/javascript');
    element.setAttribute('id', 'sap-ui-bootstrap');
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
 
    // this is location of openui5 scripts when working with THttpServer or when scripts are installed inside JSROOT
-   element.setAttribute('src', src + 'resources/sap-ui-core.js'); // latest openui5 version
+   element.setAttribute('src', src + (args.ui5dbg ? 'resources/sap-ui-core-dbg.js' : 'resources/sap-ui-core.js')); // latest openui5 version
 
    element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
 
    element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
+   element.setAttribute('data-sap-ui-async', 'true');
    // element.setAttribute('data-sap-ui-bindingSyntax', 'complex');
 
    element.setAttribute('data-sap-ui-preload', 'async'); // '' to disable Component-preload.js
@@ -96,37 +99,38 @@ function tryOpenOpenUI(sources, args) {
       element.parentNode.removeChild(element);
       // and try next
       tryOpenOpenUI(sources, args);
-   }
+   };
 
    element.onload = function() {
       console.log(`Load openui5 from ${src}`);
-   }
+   };
 
    document.head.appendChild(element);
 }
 
 
-// return Promise let loader wait before dependent source will be invoked
-
+/** @summary load openui5
+  * @return {Promise} for loading ready
+  * @private */
 async function loadOpenui5(args) {
    // very simple - openui5 was loaded before and will be used as is
-   if (typeof sap == 'object')
-      return sap;
+   if (typeof globalThis.sap === 'object')
+      return globalThis.sap;
 
    if (!args) args = {};
 
    let rootui5sys = source_dir.replace(/jsrootsys/g, 'rootui5sys');
 
-   if (rootui5sys == source_dir) {
+   if (rootui5sys === source_dir) {
       // if jsrootsys location not detected, try to guess it
-      if (window.location.port && (window.location.pathname.indexOf('/win') >= 0) && (!args.openui5src || args.openui5src == 'nojsroot' || args.openui5src == 'jsroot'))
+      if (window.location.port && (window.location.pathname.indexOf('/win') >= 0) && (!args.openui5src || args.openui5src === 'nojsroot' || args.openui5src === 'jsroot'))
          rootui5sys = window.location.origin + window.location.pathname + '../rootui5sys/';
       else
          rootui5sys = undefined;
    }
 
-   let openui5_sources = [],
-       openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
+   const openui5_sources = [];
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -137,18 +141,20 @@ async function loadOpenui5(args) {
          case 'jsroot': openui5_sources.push(openui5_root); openui5_root = ''; break;
          default: openui5_sources.push(args.openui5src); break;
       }
-   }
+   } else if (args.ui5dbg)
+      openui5_root = ''; // exclude ROOT version in debug mode
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0)) openui5_sources.push(openui5_root);
-   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0)) openui5_sources.push(openui5_dflt);
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
+      openui5_sources.push(openui5_root);
+   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
+      openui5_sources.push(openui5_dflt);
 
    return new Promise((resolve, reject) => {
-
       args.resolveFunc = resolve;
       args.rejectFunc = reject;
 
       globalThis.completeUI5Loading = function() {
-         sap.ui.loader.config({
+         globalThis.sap.ui.loader.config({
             paths: {
                jsroot: source_dir,
                rootui5: rootui5sys
@@ -156,15 +162,18 @@ async function loadOpenui5(args) {
          });
 
          if (args.resolveFunc) {
-            args.resolveFunc(sap);
+            args.resolveFunc(globalThis.sap);
             args.resolveFunc = null;
          }
       };
 
       tryOpenOpenUI(openui5_sources, args);
    });
-
 }
+
+/* eslint-disable key-spacing */
+/* eslint-disable comma-spacing */
+/* eslint-disable object-curly-spacing */
 
 // some icons taken from http://uxrepo.com/
 const ToolbarIcons = {
@@ -185,7 +194,7 @@ const ToolbarIcons = {
    circle: { path: 'M256,256 m-150,0 a150,150 0 1,0 300,0 a150,150 0 1,0 -300,0' },
    three_circles: { path: 'M256,85 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,255 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,425 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0 ' },
    diamand: { path: 'M256,0L384,256L256,511L128,256z' },
-   rect: { path: 'M80,80h352v352h-352z' },
+   rect: { path: 'M90,90h352v352h-352z' },
    cross: { path: 'M80,40l176,176l176,-176l40,40l-176,176l176,176l-40,40l-176,-176l-176,176l-40,-40l176,-176l-176,-176z' },
    vrgoggles: { size: '245.82 141.73', path: 'M175.56,111.37c-22.52,0-40.77-18.84-40.77-42.07S153,27.24,175.56,27.24s40.77,18.84,40.77,42.07S198.08,111.37,175.56,111.37ZM26.84,69.31c0-23.23,18.25-42.07,40.77-42.07s40.77,18.84,40.77,42.07-18.26,42.07-40.77,42.07S26.84,92.54,26.84,69.31ZM27.27,0C11.54,0,0,12.34,0,28.58V110.9c0,16.24,11.54,30.83,27.27,30.83H99.57c2.17,0,4.19-1.83,5.4-3.7L116.47,118a8,8,0,0,1,12.52-.18l11.51,20.34c1.2,1.86,3.22,3.61,5.39,3.61h72.29c15.74,0,27.63-14.6,27.63-30.83V28.58C245.82,12.34,233.93,0,218.19,0H27.27Z' },
    th2colorz: { recs: [{ x: 128, y: 486, w: 256, h: 26, f: 'rgb(38,62,168)' }, { y: 461, f: 'rgb(22,82,205)' }, { y: 435, f: 'rgb(16,100,220)' }, { y: 410, f: 'rgb(18,114,217)' }, { y: 384, f: 'rgb(20,129,214)' }, { y: 358, f: 'rgb(14,143,209)' }, { y: 333, f: 'rgb(9,157,204)' }, { y: 307, f: 'rgb(13,167,195)' }, { y: 282, f: 'rgb(30,175,179)' }, { y: 256, f: 'rgb(46,183,164)' }, { y: 230, f: 'rgb(82,186,146)' }, { y: 205, f: 'rgb(116,189,129)' }, { y: 179, f: 'rgb(149,190,113)' }, { y: 154, f: 'rgb(179,189,101)' }, { y: 128, f: 'rgb(209,187,89)' }, { y: 102, f: 'rgb(226,192,75)' }, { y: 77, f: 'rgb(244,198,59)' }, { y: 51, f: 'rgb(253,210,43)' }, { y: 26, f: 'rgb(251,230,29)' }, { y: 0, f: 'rgb(249,249,15)' }] },
@@ -197,27 +206,43 @@ const ToolbarIcons = {
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
 
-   createSVG(group, btn, size, title) {
-      injectStyle('.jsroot_svg_toolbar_btn { fill: steelblue; cursor: pointer; opacity: 0.3; } .jsroot_svg_toolbar_btn:hover { opacity: 1.0; }', group.node());
-
-      let svg = group.append('svg:svg')
-                     .attr('class', 'jsroot_svg_toolbar_btn')
+   createSVG(group, btn, size, title, arg) {
+      const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
+          opacity0 = (arg === 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
+          svg = group.append('svg:svg')
                      .attr('width', size + 'px')
                      .attr('height', size + 'px')
                      .attr('viewBox', '0 0 512 512')
-                     .style('overflow', 'hidden');
+                     .style('overflow', 'hidden')
+                     .style('cursor', 'pointer')
+                     .style('fill', use_dark ? 'rgba(255, 224, 160)' : 'steelblue')
+                     .style('opacity', opacity0)
+                     .property('opacity0', opacity0)
+                     .property('opacity1', use_dark ? 1 : 0.8)
+                     .on('mouseenter', function() {
+                        const elem = d3_select(this);
+                        elem.style('opacity', elem.property('opacity1'));
+                        const func = elem.node()._mouseenter;
+                        if (isFunc(func)) func();
+                     })
+                     .on('mouseleave', function() {
+                        const elem = d3_select(this);
+                        elem.style('opacity', elem.property('opacity0'));
+                        const func = elem.node()._mouseleave;
+                        if (isFunc(func)) func();
+                     });
 
       if ('recs' in btn) {
-         let rec = {};
+         const rec = {};
          for (let n = 0; n < btn.recs.length; ++n) {
             Object.assign(rec, btn.recs[n]);
             svg.append('rect').attr('x', rec.x).attr('y', rec.y)
                .attr('width', rec.w).attr('height', rec.h)
                .style('fill', rec.f);
          }
-      } else {
+      } else
          svg.append('svg:path').attr('d', btn.path);
-      }
+
 
       //  special rect to correctly get mouse events for whole button area
       svg.append('svg:rect').attr('x', 0).attr('y', 0).attr('width', 512).attr('height', 512)
@@ -227,7 +252,7 @@ const ToolbarIcons = {
       return svg;
    }
 
-} // ToolbarIcons
+}; // ToolbarIcons
 
 
 /** @summary Register handle to react on window resize
@@ -238,11 +263,9 @@ const ToolbarIcons = {
   * @param {number} [delay] - one could specify delay after which resize event will be handled
   * @protected */
 function registerForResize(handle, delay) {
+   if (!handle || isBatchMode() || (typeof window === 'undefined') || (typeof document === 'undefined')) return;
 
-   if (!handle || isBatchMode() || (typeof window == 'undefined')) return;
-
-   let myInterval = null, myDelay = delay ? delay : 300;
-
+   let myInterval = null, myDelay = delay || 300;
    if (myDelay < 20) myDelay = 20;
 
    function ResizeTimer() {
@@ -251,17 +274,16 @@ function registerForResize(handle, delay) {
       document.body.style.cursor = 'wait';
       if (isFunc(handle))
          handle();
-      else if (isFunc(handle?.checkResize)) {
+      else if (isFunc(handle?.checkResize))
          handle.checkResize();
-      } else {
-         let node = new BasePainter(handle).selectDom();
+      else {
+         const node = new BasePainter(handle).selectDom();
          if (!node.empty()) {
-            let mdi = node.property('mdi');
-            if (isFunc(mdi?.checkMDIResize)) {
+            const mdi = node.property('mdi');
+            if (isFunc(mdi?.checkMDIResize))
                mdi.checkMDIResize();
-            } else {
+             else
                resize(node.node());
-            }
          }
       }
       document.body.style.cursor = 'auto';
@@ -273,24 +295,20 @@ function registerForResize(handle, delay) {
    });
 }
 
+/** @summary Detect mouse right button
+  * @private */
 function detectRightButton(event) {
-   if ('buttons' in event) return event.buttons === 2;
-   if ('which' in event) return event.which === 3;
-   if ('button' in event) return event.button === 2;
-   return false;
+   return (event?.buttons === 2) || (event?.button === 2);
 }
 
 /** @summary Add move handlers for drawn element
   * @private */
-function addMoveHandler(painter, enabled) {
-
-   if (enabled === undefined) enabled = true;
-
-   if (!settings.MoveResize || isBatchMode() || !painter.draw_g) return;
+function addMoveHandler(painter, enabled = true) {
+   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
 
    if (!enabled) {
       if (painter.draw_g.property('assigned_move')) {
-         let drag_move = d3_drag().subject(Object);
+         const drag_move = d3_drag().subject(Object);
          drag_move.on('start', null).on('drag', null).on('end', null);
          painter.draw_g
                .style('cursor', null)
@@ -302,8 +320,8 @@ function addMoveHandler(painter, enabled) {
 
    if (painter.draw_g.property('assigned_move')) return;
 
-   let drag_move = d3_drag().subject(Object),
-      not_changed = true, move_disabled = false;
+   const drag_move = d3_drag().subject(Object);
+   let not_changed = true, move_disabled = false;
 
    drag_move
       .on('start', function(evnt) {
@@ -312,7 +330,7 @@ function addMoveHandler(painter, enabled) {
          if (detectRightButton(evnt.sourceEvent)) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
-         let pos = d3_pointer(evnt, this.draw_g.node());
+         const pos = d3_pointer(evnt, this.draw_g.node());
          not_changed = true;
          if (this.moveStart)
             this.moveStart(pos[0], pos[1]);
@@ -329,7 +347,14 @@ function addMoveHandler(painter, enabled) {
          evnt.sourceEvent.stopPropagation();
          if (this.moveEnd)
             this.moveEnd(not_changed);
-         this.getPadPainter()?.selectObjectPainter(this);
+
+         let arg = null;
+         if (not_changed) {
+            // if not changed - provide click position
+            const pos = d3_pointer(evnt, this.draw_g.node());
+            arg = { x: pos[0], y: pos[1], dbl: false };
+         }
+         this.getPadPainter()?.selectObjectPainter(this, arg);
       }.bind(painter));
 
    painter.draw_g
@@ -345,18 +370,18 @@ function injectStyle(code, node, tag) {
    if (isBatchMode() || !code || (typeof document === 'undefined'))
       return true;
 
-   let styles = (node || document).getElementsByTagName('style');
+   const styles = (node || document).getElementsByTagName('style');
    for (let n = 0; n < styles.length; ++n) {
-      if (tag && styles[n].getAttribute('tag') == tag) {
+      if (tag && styles[n].getAttribute('tag') === tag) {
          styles[n].innerHTML = code;
          return true;
       }
 
-      if (styles[n].innerHTML == code)
+      if (styles[n].innerHTML === code)
          return true;
    }
 
-   let element = document.createElement('style');
+   const element = document.createElement('style');
    if (tag) element.setAttribute('tag', tag);
    element.innerHTML = code;
    (node || document.head).appendChild(element);
@@ -368,42 +393,48 @@ function injectStyle(code, node, tag) {
 function selectgStyle(name) {
    gStyle.fName = name;
    switch (name) {
-      case 'Modern': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
-         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
+      case 'Modern': Object.assign(gStyle, { fFrameBorderMode: 0, fFrameFillColor: 0,
+         fCanvasBorderMode: 0, fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
          fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
          fOptStat: 1111, fStatY: 0.935,
-         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
-      case 'Plain': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
-         fPadColor: 0, fCanvasColor: 0,
-         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
-      case 'Bold': Object.assign(gStyle, {
-         fCanvasColor: 10, fCanvasBorderMode: 0,
+         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 });
+         break;
+      case 'Plain': Object.assign(gStyle, { fFrameBorderMode: 0,
+         fCanvasBorderMode: 0, fPadBorderMode: 0, fPadColor: 0, fCanvasColor: 0,
+         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 });
+         break;
+      case 'Bold': Object.assign(gStyle, { fCanvasColor: 10, fCanvasBorderMode: 0,
          fFrameLineWidth: 3, fFrameFillColor: 10,
          fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
-         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 }); break;
+         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 });
+         break;
    }
 }
 
+/** @summary Save object as a cookie
+  * @private */
 function saveCookie(obj, expires, name) {
-   let arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-       d = new Date();
+   const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
+         d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+   if (typeof document !== 'undefined')
+      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
+/** @summary Read cookie with specified name
+  * @private */
 function readCookie(name) {
-   if (typeof document == 'undefined') return null;
-   let decodedCookie = decodeURIComponent(document.cookie),
-       ca = decodedCookie.split(';');
+   if (typeof document === 'undefined')
+      return null;
+   const decodedCookie = decodeURIComponent(document.cookie),
+         ca = decodedCookie.split(';');
    name += '=';
-   for(let i = 0; i < ca.length; i++) {
+   for (let i = 0; i < ca.length; i++) {
       let c = ca[i];
-      while (c.charAt(0) == ' ')
+      while (c.charAt(0) === ' ')
         c = c.substring(1);
-      if (c.indexOf(name) == 0) {
-         let s = JSON.parse(atob_func(c.substring(name.length, c.length)));
+      if (c.indexOf(name) === 0) {
+         const s = JSON.parse(atob_func(c.substring(name.length, c.length)));
 
          return isObject(s) ? s : null;
       }
@@ -424,7 +455,7 @@ function saveSettings(expires = 365, name = 'jsroot_settings') {
   * @param {String} name - cookie parameter name
   * @private */
 function readSettings(only_check = false, name = 'jsroot_settings') {
-   let s = readCookie(name);
+   const s = readCookie(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(settings, s);
@@ -444,7 +475,7 @@ function saveStyle(expires = 365, name = 'jsroot_style') {
   * @param {String} name - cookie parameter name
   * @private */
 function readStyle(only_check = false, name = 'jsroot_style') {
-   let s = readCookie(name);
+   const s = readCookie(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(gStyle, s);
@@ -453,7 +484,6 @@ function readStyle(only_check = false, name = 'jsroot_style') {
 
 let _saveFileFunc = null;
 
-
 /** @summary Returns image file content as it should be stored on the disc
   * @desc Replaces all kind of base64 coding
   * @private */
@@ -461,13 +491,13 @@ let _saveFileFunc = null;
 function getBinFileContent(content) {
    const svg_prefix = 'data:image/svg+xml;charset=utf-8,';
 
-   if (content.indexOf(svg_prefix) == 0)
+   if (content.indexOf(svg_prefix) === 0)
       return decodeURIComponent(content.slice(svg_prefix.length));
 
-   if (content.indexOf('data:image/') == 0) {
-      let p = content.indexOf('base64,');
+   if (content.indexOf('data:image/') === 0) {
+      const p = content.indexOf('base64,');
       if (p > 0) {
-         let base64 = content.slice(p + 7);
+         const base64 = content.slice(p + 7);
          return atob_func(base64);
       }
    }
@@ -485,8 +515,8 @@ async function saveFile(filename, content) {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
       });
-   } else if (typeof document == 'object') {
-      let a = document.createElement('a');
+   } else if (typeof document !== 'undefined') {
+      const a = document.createElement('a');
       a.download = filename;
       a.href = content;
       document.body.appendChild(a);
@@ -510,15 +540,16 @@ function setSaveFile(func) {
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
   * @private */
 function getColorExec(col, method) {
-   let id = -1, arr = getRootColors();
+   const arr = getRootColors();
+   let id = -1;
    if (isStr(col)) {
-      if (!col || (col == 'none')) {
+      if (!col || (col === 'none'))
          id = 0;
-      } else {
+       else {
          for (let k = 1; k < arr.length; ++k)
-            if (arr[k] == col) { id = k; break; }
+            if (arr[k] === col) { id = k; break; }
       }
-      if ((id < 0) && (col.indexOf('rgb') == 0))
+      if ((id < 0) && (col.indexOf('rgb') === 0))
          id = 9999;
    } else if (Number.isInteger(col) && arr[col]) {
       id = col;
@@ -529,13 +560,12 @@ function getColorExec(col, method) {
 
    // for higher color numbers ensure that such color exists
    if (id >= 50) {
-      let c = d3_color(col);
+      const c = d3_color(col);
       id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
     }
 
    return `exec:${method}(${id})`;
 }
-
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,

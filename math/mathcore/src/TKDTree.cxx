@@ -100,7 +100,7 @@ in the 2 subtrees as close as possible. The following section gives more details
 ### 3. Using TKDTree
 
 #### 3a. Creating the tree and setting the data
-    The interface of the TKDTree, that allows to set input data, has been developped to simplify using it
+    The interface of the TKDTree, that allows to set input data, has been developed to simplify using it
     together with TTree::Draw() functions. That's why the data has to be provided column-wise. For example:
 
 \code{.cpp}
@@ -178,7 +178,7 @@ that axis to divide the remaining points approximately in half. The exact algori
 the division point is described in the next section. The sequence of divisions is
 recorded in the following arrays:
 ~~~~
-fAxix[fNNodes]  - Division axis (0,1,2,3 ...)
+fAxis[fNNodes]  - Division axis (0,1,2,3 ...)
 fValue[fNNodes] - Division value
 ~~~~
 
@@ -256,7 +256,7 @@ The nodes are arranged in the order described in section 3a.
 
 
 - **Note**: the storage of the TKDTree in a file which include also the contained data is not
-      supported. One must store the data separatly in a file (e.g. using a TTree) and then
+      supported. One must store the data separately in a file (e.g. using a TTree) and then
       re-creating the TKDTree from the data, after having read them from the file
 
 @ingroup Random
@@ -276,12 +276,12 @@ TKDTree<Index, Value>::TKDTree() :
    ,fNDimm(0)
    ,fNPoints(0)
    ,fBucketSize(0)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
-   ,fData(0x0)
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
+   ,fAxis(nullptr)
+   ,fValue(nullptr)
+   ,fRange(nullptr)
+   ,fData(nullptr)
+   ,fBoundaries(nullptr)
+   ,fIndPoints(nullptr)
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
@@ -298,12 +298,12 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
    ,fNDimm(2*ndim)
    ,fNPoints(npoints)
    ,fBucketSize(bsize)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
-   ,fData(0x0)
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
+   ,fAxis(nullptr)
+   ,fValue(nullptr)
+   ,fRange(nullptr)
+   ,fData(nullptr)
+   ,fBoundaries(nullptr)
+   ,fIndPoints(nullptr)
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
@@ -319,7 +319,7 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a kd-tree from the provided data array. This function only sets the data,
 /// call Build() to build the tree!!!
-/// Parameteres:
+/// Parameters:
 /// - npoints - total number of points. Adding points after the tree is built is not supported
 /// - ndim    - number of dimensions
 /// - bsize   - maximal number of points in the terminal nodes
@@ -350,12 +350,12 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **
    ,fNDimm(2*ndim)
    ,fNPoints(npoints)
    ,fBucketSize(bsize)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
+   ,fAxis(nullptr)
+   ,fValue(nullptr)
+   ,fRange(nullptr)
    ,fData(data) //Columnwise!!!!!
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
+   ,fBoundaries(nullptr)
+   ,fIndPoints(nullptr)
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
@@ -405,7 +405,7 @@ TKDTree<Index, Value>::~TKDTree()
 ///
 ///
 /// The tree is divided recursively. See class description, section 4b for the details
-/// of the division alogrithm
+/// of the division algorithm
 
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::Build()
@@ -813,7 +813,7 @@ Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
 {
    if (!IsTerminal(node)){
       printf("GetPointsIndexes() only for terminal nodes, use GetNodePointsIndexes() instead\n");
-      return 0;
+      return nullptr;
    }
    Int_t offset = (node >= fCrossNode) ? (node-fCrossNode)*fBucketSize : fOffset+(node-fNNodes)*fBucketSize;
    return &fIndPoints[offset];
@@ -1042,7 +1042,7 @@ void TKDTree<Index, Value>::MakeBoundaries(Value *range)
 
 
    // loop
-   Value *tbounds = 0x0, *cbounds = 0x0;
+   Value *tbounds = nullptr, *cbounds = nullptr;
    Int_t cn;
    for(int inode=fNNodes-1; inode>=0; inode--){
       tbounds = &fBoundaries[inode*fNDimm];

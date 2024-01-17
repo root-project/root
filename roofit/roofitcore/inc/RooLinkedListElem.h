@@ -22,17 +22,19 @@ class TObject ;
 class RooLinkedListElem ;
 class TBuffer ;
 
+/// \cond ROOFIT_INTERNAL
+
 namespace RooLinkedListImplDetails {
     class Chunk;
     class Pool;
 }
 
+/// \endcond
+
 class RooLinkedListElem {
 public:
   // Initial element ctor
-  RooLinkedListElem() :
-    _prev(nullptr), _next(nullptr), _arg(nullptr), _refCount(0) {
-  }
+  RooLinkedListElem() = default;
 
   void init(TObject* arg, RooLinkedListElem* after=nullptr) {
    _arg = arg ;
@@ -55,10 +57,8 @@ public:
    _next = nullptr ;
  }
 
-  RooLinkedListElem(TObject* arg) :
-    // Constructor with payload
-    _prev(nullptr), _next(nullptr), _arg(arg), _refCount(1) {
-  }
+  /// Constructor with payload.
+  RooLinkedListElem(TObject *arg) : _arg(arg), _refCount(1) {}
 
   RooLinkedListElem(TObject* arg, RooLinkedListElem* after) :
     // Constructor with payload and next chain element
@@ -86,10 +86,10 @@ protected:
   friend class RooLinkedListImplDetails::Chunk;
   friend class RooLinkedListIterImpl ;
   friend class RooFIterForLinkedList ;
-  RooLinkedListElem* _prev ; ///< Link to previous element in list
-  RooLinkedListElem* _next ; ///< Link to next element in list
-  TObject*   _arg ;          ///< Link to contents
-  Int_t      _refCount ;     ///<! Reference count
+  RooLinkedListElem* _prev = nullptr; ///< Link to previous element in list
+  RooLinkedListElem* _next = nullptr; ///< Link to next element in list
+  TObject*   _arg = nullptr;          ///< Link to contents
+  Int_t      _refCount = 0;           ///<! Reference count
 
 protected:
 

@@ -24,7 +24,7 @@ namespace HistFactory {
    TH1 * HistRef::CopyObject(const TH1 * h) {
       // implementation of method copying the contained pointer
       // (just use Clone)
-      if (!h) return 0;
+      if (!h) return nullptr;
       return static_cast<TH1*>(h->Clone());
    }
 }

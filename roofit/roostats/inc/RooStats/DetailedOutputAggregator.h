@@ -43,7 +43,7 @@ namespace RooStats {
 
       const RooArgList* GetAsArgList() const {
          // Returns this set of detailed output.
-         // Note that the ownership of the returned list is not transfered
+         // Note that the ownership of the returned list is not transferred
          // It is managed by the DetailedOutputAggregator class
          return fBuiltSet;
       }

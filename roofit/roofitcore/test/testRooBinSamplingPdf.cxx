@@ -11,12 +11,7 @@
 #include <RooRandom.h>
 #include <RooRealVar.h>
 
-#include <gtest/gtest.h>
-
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "gtest_wrapper.h"
 
 #include <memory>
 
@@ -98,8 +93,8 @@ TEST(RooBinSamplingPdf, CheckConsistentNormalization)
 
    RooArgSet normSet{x};
 
-   RooGenericPdf gaus1("guas1", "gaus1", "std::exp(-0.5*(x - mean1)^2/width^2)", {x, mean1, width});
-   RooGenericPdf gaus2("guas2", "gaus2", "std::exp(-0.5*(x - mean2)^2/width^2)", {x, mean2, width});
+   RooGenericPdf gaus1("gauss1", "gauss1", "std::exp(-0.5*(x - mean1)^2/width^2)", {x, mean1, width});
+   RooGenericPdf gaus2("gauss2", "gauss2", "std::exp(-0.5*(x - mean2)^2/width^2)", {x, mean2, width});
    RooAddPdf pdf{"pdf", "pdf", {gaus1, gaus2}, {f}};
    pdf.fixCoefNormalization(normSet);
 

@@ -17,7 +17,7 @@
 \class RooEffGenContext
 \ingroup Roofitcore
 
-RooEffGenContext is a specialized generator context for p.d.fs represented
+Specialized generator context for p.d.fs represented
 by class RooEffProd, which are p.d.fs multiplied with an efficiency function.
 This generator context generates events from such products by first
 generating events from a dedicated generator context of the input p.d.f.
@@ -43,10 +43,10 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf,
    : RooAbsGenContext(model, vars, prototype, auxProto, verbose), _maxEff(0.)
 {
    RooArgSet x(eff, eff.GetName());
-   _cloneSet = static_cast<RooArgSet*>(x.snapshot(true));
-   _eff = dynamic_cast<RooAbsReal *>(_cloneSet->find(eff.GetName()));
+   x.snapshot(_cloneSet, true);
+   _eff = dynamic_cast<RooAbsReal *>(_cloneSet.find(eff.GetName()));
    _generator = pdf.genContext(vars, prototype, auxProto, verbose);
-   _vars = static_cast<RooArgSet*>(vars.snapshot(true));
+   vars.snapshot(_vars, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,8 +55,6 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf,
 RooEffGenContext::~RooEffGenContext()
 {
    delete _generator;
-   delete _cloneSet;
-   delete _vars;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +66,7 @@ void RooEffGenContext::initGenerator(const RooArgSet &theEvent)
    _generator->initGenerator(theEvent);
 
    // Check if PDF supports maximum finding
-   Int_t code = _eff->getMaxVal(*_vars);
+   Int_t code = _eff->getMaxVal(_vars);
    if (!code) {
       _maxEff = 1.;
    } else {
@@ -86,7 +84,7 @@ void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
    while (true) {
       _generator->generateEvent(theEvent, remaining);
       double val = _eff->getVal();
-      if (val > _maxEff && !_eff->getMaxVal(*_vars)) {
+      if (val > _maxEff && !_eff->getMaxVal(_vars)) {
          coutE(Generation) << ClassName() << "::" << GetName()
                            << ":generateEvent: value of efficiency is larger than assumed maximum of 1." << std::endl;
          continue;

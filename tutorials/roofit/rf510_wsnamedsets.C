@@ -40,7 +40,7 @@ void rf510_wsnamedsets()
    RooAbsPdf *model = w->pdf("model");
 
    // Generate data from pdf in given observables
-   RooDataSet *data = model->generate(*w->set("observables"), 1000);
+   std::unique_ptr<RooDataSet> data{model->generate(*w->set("observables"), 1000)};
 
    // Fit model to data
    model->fitTo(*data, PrintLevel(-1));
@@ -128,7 +128,7 @@ void fillWorkspace(RooWorkspace &w)
 
    // Do a dummy fit to a (supposedly) reference dataset here and store the results
    // of that fit into a snapshot
-   RooDataSet *refData = model.generate(x, 10000);
+   std::unique_ptr<RooDataSet> refData{model.generate(x, 10000)};
    model.fitTo(*refData, PrintLevel(-1));
 
    // The true flag imports the values of the objects in (*params) into the workspace

@@ -16,16 +16,15 @@ TEST(RNTupleShow, Empty)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
    std::string fString{"{}\n"};
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
+   ntuple2->Show(1, os1);
    std::string fString1{"{}\n"};
    EXPECT_EQ(fString1, os1.str());
 }
-
 
 TEST(RNTupleShow, BasicTypes)
 {
@@ -42,6 +41,8 @@ TEST(RNTupleShow, BasicTypes)
       auto fieldstring = model->MakeField<std::string>("string");
       auto fieldbool = model->MakeField<bool>("boolean");
       auto fieldchar = model->MakeField<uint8_t>("uint8");
+      auto fieldbitset = model->MakeField<std::bitset<65>>("bitset");
+      auto fielduniqueptr = model->MakeField<std::unique_ptr<std::string>>("pstring");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
 
       *fieldPt = 5.0f;
@@ -52,6 +53,8 @@ TEST(RNTupleShow, BasicTypes)
       *fieldstring = "TestString";
       *fieldbool = true;
       *fieldchar = 97;
+      *fieldbitset = std::bitset<65>("10000000000000000000000000000010000000000000000000000000000010010");
+      *fielduniqueptr = std::make_unique<std::string>("abc");
       ntuple->Fill();
 
       *fieldPt = 8.5f;
@@ -62,13 +65,16 @@ TEST(RNTupleShow, BasicTypes)
       *fieldstring = "TestString2";
       *fieldbool = false;
       *fieldchar = 98;
+      fieldbitset->flip();
+      fielduniqueptr->reset();
       ntuple->Fill();
    }
 
    auto ntuple2 = RNTupleReader::Open(ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
+   ntuple2->Show(0, os);
+   // clang-format off
    std::string fString{ std::string("")
       + "{\n"
       + "  \"pt\": 5,\n"
@@ -78,12 +84,16 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint64\": 44444444444,\n"
       + "  \"string\": \"TestString\",\n"
       + "  \"boolean\": true,\n"
-      + "  \"uint8\": 97\n"
+      + "  \"uint8\": 97,\n"
+      + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\",\n"
+      + "  \"pstring\": \"abc\"\n"
       + "}\n" };
+   // clang-format on
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os1);
+   ntuple2->Show(1, os1);
+   // clang-format off
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"pt\": 8.5,\n"
@@ -93,12 +103,15 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint64\": 2299994967294,\n"
       + "  \"string\": \"TestString2\",\n"
       + "  \"boolean\": false,\n"
-      + "  \"uint8\": 98\n"
+      + "  \"uint8\": 98,\n"
+      + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\",\n"
+      + "  \"pstring\": null\n"
       + "}\n" };
+   // clang-format on
    EXPECT_EQ(fString1, os1.str());
 
    // TODO(jblomer): this should fail to an exception instead
-   EXPECT_DEATH(ntuple2->Show(2, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON), ".*");
+   EXPECT_DEATH(ntuple2->Show(2), ".*");
 }
 
 TEST(RNTupleShow, Vectors)
@@ -115,7 +128,8 @@ TEST(RNTupleShow, Vectors)
 
       *fieldIntVec = std::vector<int>{4, 5, 6};
       *fieldFloatVecVec = std::vector<std::vector<float>>{std::vector<float>{0.1, 0.2}, std::vector<float>{1.1, 1.2}};
-      *fieldBoolVecVec = std::vector<std::vector<bool>>{std::vector<bool>{false, true, false}, std::vector<bool>{false, true}, std::vector<bool>{true, false, false }};
+      *fieldBoolVecVec = std::vector<std::vector<bool>>{
+         std::vector<bool>{false, true, false}, std::vector<bool>{false, true}, std::vector<bool>{true, false, false}};
       ntuple->Fill();
 
       fieldIntVec->emplace_back(7);
@@ -130,23 +144,27 @@ TEST(RNTupleShow, Vectors)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
+   // clang-format off
    std::string fString{ std::string("")
       + "{\n"
       + "  \"intVec\": [4, 5, 6],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
       + "  \"booleanVecVec\": [[false, true, false], [false, true], [true, false, false]]\n"
       + "}\n" };
+   // clang-format on
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
+   ntuple2->Show(1, os1);
+   // clang-format off
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"intVec\": [4, 5, 6, 7],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.2, 2.3]],\n"
       + "  \"booleanVecVec\": [[false, true, false], [false, true], [true, false, false], [false, true]]\n"
       + "}\n" };
+   // clang-format on
    EXPECT_EQ(fString1, os1.str());
 }
 
@@ -167,18 +185,22 @@ TEST(RNTupleShow, Arrays)
 
       *Intarrayfield = {1, 3};
       *Floatarrayfield = {3.5f, 4.6f, 5.7f};
-      *Vecarrayfield = {std::vector<double>{1, 2}, std::vector<double>{4, 5}, std::vector<double>{7, 8, 9}, std::vector<double>{11} };
+      *Vecarrayfield = {std::vector<double>{1, 2}, std::vector<double>{4, 5}, std::vector<double>{7, 8, 9},
+                        std::vector<double>{11}};
       *StringArray = {"First", "Second"};
-      *arrayOfArray = { std::array<bool,2>{ true, false }, std::array<bool,2>{ false, true }, std::array<bool,2>{ false, false } };
-      *arrayVecfield = { std::array<float, 2>{ 0, 1 }, std::array<float, 2>{ 2, 3 }, std::array<float, 2>{ 4, 5 } };
+      *arrayOfArray = {std::array<bool, 2>{true, false}, std::array<bool, 2>{false, true},
+                       std::array<bool, 2>{false, false}};
+      *arrayVecfield = {std::array<float, 2>{0, 1}, std::array<float, 2>{2, 3}, std::array<float, 2>{4, 5}};
       ntuple->Fill();
 
       *Intarrayfield = {2, 5};
       *Floatarrayfield = {2.3f, 5.7f, 11.13f};
-      *Vecarrayfield = {std::vector<double>{17, 19}, std::vector<double>{23, 29}, std::vector<double>{31, 37, 41}, std::vector<double>{43} };
+      *Vecarrayfield = {std::vector<double>{17, 19}, std::vector<double>{23, 29}, std::vector<double>{31, 37, 41},
+                        std::vector<double>{43}};
       *StringArray = {"Third", "Fourth"};
-      *arrayOfArray = { std::array<bool,2>{ true, true }, std::array<bool,2>{ false, true }, std::array<bool,2>{ true, true } };
-      *arrayVecfield = { std::array<float, 2>{ 6, 7 }, std::array<float, 2>{ 8, 9 } };
+      *arrayOfArray = {std::array<bool, 2>{true, true}, std::array<bool, 2>{false, true},
+                       std::array<bool, 2>{true, true}};
+      *arrayVecfield = {std::array<float, 2>{6, 7}, std::array<float, 2>{8, 9}};
       ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
@@ -191,7 +213,8 @@ TEST(RNTupleShow, Arrays)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
+   // clang-format off
    std::string fString{ std::string("")
       + "{\n"
       + "  \"IntArray\": [1, 3],\n"
@@ -201,10 +224,12 @@ TEST(RNTupleShow, Arrays)
       + "  \"ArrayOfArray\": [[true, false], [false, true], [false, false]],\n"
       + "  \"VecOfArray\": [[0, 1], [2, 3], [4, 5]]\n"
       + "}\n"};
+   // clang-format on
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
+   ntuple2->Show(1, os1);
+   // clang-format off
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"IntArray\": [2, 5],\n"
@@ -214,6 +239,7 @@ TEST(RNTupleShow, Arrays)
       + "  \"ArrayOfArray\": [[true, true], [false, true], [true, true]],\n"
       + "  \"VecOfArray\": [[6, 7], [8, 9]]\n"
       + "}\n"};
+   // clang-format on
    EXPECT_EQ(fString1, os1.str());
 }
 
@@ -230,16 +256,21 @@ TEST(RNTupleShow, Objects)
       auto derivedAfield = model->MakeField<DerivedA>("DerivedA");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
 
-      *customStructfield = CustomStruct{4.1f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example1String"};
+      *customStructfield =
+         CustomStruct{4.1f, std::vector<float>{0.1f, 0.2f, 0.3f},
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example1String"};
       *customStructVec = {
-         CustomStruct{4.2f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example2String"},
-         CustomStruct{4.3f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "Example3String"},
-         CustomStruct{4.4f, std::vector<float>{0.1f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example4String"}
-      };
+         CustomStruct{4.2f, std::vector<float>{0.1f, 0.2f, 0.3f},
+                      std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example2String"},
+         CustomStruct{4.3f, std::vector<float>{0.1f, 0.2f, 0.3f},
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "Example3String"},
+         CustomStruct{4.4f, std::vector<float>{0.1f, 0.3f},
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example4String"}};
       *customStructArray = {
-      CustomStruct{4.5f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "AnotherString1"},
-      CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2"}
-      };
+         CustomStruct{4.5f, std::vector<float>{0.1f, 0.2f, 0.3f},
+                      std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "AnotherString1"},
+         CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f},
+                      std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2"}};
       *derivedAfield = {};
       ntuple->Fill();
    }
@@ -251,7 +282,8 @@ TEST(RNTupleShow, Objects)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
+   // clang-format off
    std::string fString{ std::string("")
       + "{\n"
       + "  \"CustomStruct\": {\n"
@@ -279,9 +311,9 @@ TEST(RNTupleShow, Objects)
       + "    \"a_s\": \"\"\n"
       + "  }\n"
       + "}\n" };
+   // clang-format on
    EXPECT_EQ(fString, os.str());
 }
-
 
 TEST(RNTupleShow, Collections)
 {
@@ -302,19 +334,22 @@ TEST(RNTupleShow, Collections)
       *float_field = 20.0;
       collection->Fill();
       ntuple->Fill();
-    }
+   }
 
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
    std::ostringstream osData;
-   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, osData);
+   ntuple->Show(0, osData);
+   // clang-format off
    std::string outputData{ std::string("")
       + "{\n"
       + "  \"collection\": [{\"myInt\": 0, \"myFloat\": 10}, {\"myInt\": 1, \"myFloat\": 20}]\n"
       + "}\n" };
+   // clang-format on
    EXPECT_EQ(outputData, osData.str());
 
    std::ostringstream osFields;
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   // clang-format off
    std::string outputFields{ std::string("")
       + "************************************ NTUPLE ************************************\n"
       + "* N-Tuple : Collections                                                        *\n"
@@ -325,6 +360,7 @@ TEST(RNTupleShow, Collections)
       + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
       + "*     Field 1.1.2   : myFloat (float)                                          *\n"
       + "********************************************************************************\n" };
+   // clang-format on
    EXPECT_EQ(outputFields, osFields.str());
 }
 
@@ -357,19 +393,31 @@ TEST(RNTupleShow, RVec)
    auto r = RNTupleReader::Open(std::move(modelRead), ntupleName, rootFileName);
 
    std::ostringstream os;
-   r->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
-   std::string expected =
-      "{\n  \"intVec\": [1, 2, 3],\n  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n  \"customStructVec\": [{\"a\": 0, "
-      "\"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n}\n";
-   EXPECT_EQ(os.str(), expected);
+   r->Show(0, os);
+   // clang-format off
+   std::string expected1{std::string("")
+      + "{\n"
+      + "  \"intVec\": [1, 2, 3],\n"
+      + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n"
+      + "}\n"};
+   // clang-format on
+   EXPECT_EQ(os.str(), expected1);
 
    std::ostringstream os2;
-   r->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os2);
-   expected =
-      "{\n  \"intVec\": [1, 2, 3, 4],\n  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n  "
-      "\"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], "
-      "[5]], \"s\": \"foo\"}, {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n}\n";
-   EXPECT_EQ(os2.str(), expected);
+   r->Show(1, os2);
+   // clang-format off
+   std::string expected2{std::string("")
+      + "{\n"
+      + "  \"intVec\": [1, 2, 3, 4],\n"
+      + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"},"
+      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n"
+      + "}\n"};
+   // clang-format on
+   EXPECT_EQ(os2.str(), expected2);
 }
 
 TEST(RNTupleShow, RVecTypeErased)
@@ -412,22 +460,30 @@ TEST(RNTupleShow, RVecTypeErased)
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
-   std::string fString{std::string("") + "{\n" + "  \"intVec\": [1, 2, 3],\n" +
-                       "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n" +
-                       "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": "
-                       "[2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n" +
-                       "}\n"};
+   ntuple->Show(0, os);
+   // clang-format off
+   std::string fString{std::string("")
+      + "{\n"
+      + "  \"intVec\": [1, 2, 3],\n"
+      + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n"
+      + "}\n"};
+   // clang-format on
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple->Show(1, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os1);
-   std::string fString1{
-      std::string("") + "{\n" + "  \"intVec\": [1, 2, 3, 4],\n" +
-      "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n" +
-      "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": [2, 3], \"v2\": "
-      "[[4], [5]], \"s\": \"foo\"}, {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n" +
-      "}\n"};
+   ntuple->Show(1, os1);
+   // clang-format off
+   std::string fString1{std::string("")
+      + "{\n"
+      + "  \"intVec\": [1, 2, 3, 4],\n"
+      + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"},"
+      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n"
+      + "}\n"};
+   // clang-format off
    EXPECT_EQ(fString1, os1.str());
 }
 
@@ -458,8 +514,52 @@ TEST(RNTupleShow, CollectionProxy)
       EXPECT_EQ(1U, ntuple->GetNEntries());
 
       std::ostringstream os;
-      ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
-      std::string expected{"{\n  \"proxyF\": [42, 24],\n  \"vecProxyF\": [[1, 2], [1, 2]]\n}\n"};
+      ntuple->Show(0, os);
+      // clang-format off
+      std::string expected{std::string("")
+         + "{\n"
+         + "  \"proxyF\": [42, 24],\n"
+         + "  \"vecProxyF\": [[1, 2], [1, 2]]\n"
+         + "}\n"};
+      // clang-format on
       EXPECT_EQ(os.str(), expected);
    }
+}
+
+TEST(RNTupleShow, Enum)
+{
+
+   FileRaii fileGuard("test_ntuple_show_enum.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrEnum = model->MakeField<CustomEnum>("enum");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = kCustomEnumVal;
+      writer->Fill();
+      *ptrEnum = static_cast<CustomEnum>(137);
+      writer->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2U, ntuple->GetNEntries());
+
+   std::ostringstream os0;
+   ntuple->Show(0, os0);
+   // clang-format off
+   std::string expected{std::string("")
+      + "{\n"
+      + "  \"enum\": 7\n"
+      + "}\n"};
+   // clang-format on
+   EXPECT_EQ(os0.str(), expected);
+
+   std::ostringstream os1;
+   ntuple->Show(1, os1);
+   // clang-format off
+   expected = std::string("")
+      + "{\n"
+      + "  \"enum\": 137\n"
+      + "}\n";
+   // clang-format on
+   EXPECT_EQ(os1.str(), expected);
 }

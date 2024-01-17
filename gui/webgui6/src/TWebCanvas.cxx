@@ -1,7 +1,7 @@
 // Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -29,12 +29,21 @@
 #include "TObjArray.h"
 #include "TArrayI.h"
 #include "TList.h"
+#include "TF1.h"
+#include "TF2.h"
 #include "TH1.h"
+#include "TH2.h"
+#include "TH1K.h"
+#include "TH2.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
+#include "TGaxis.h"
+#include "TScatter.h"
+#include "TCutG.h"
 #include "TBufferJSON.h"
 #include "TBase64.h"
 #include "TAtt3D.h"
@@ -42,6 +51,7 @@
 #include "TExec.h"
 #include "TVirtualX.h"
 #include "TMath.h"
+#include "TTimer.h"
 
 #include <cstdio>
 #include <cstring>
@@ -50,11 +60,58 @@
 #include <memory>
 #include <sstream>
 
+class TWebCanvasTimer : public TTimer {
+   TWebCanvas &fCanv;
+   Bool_t fProcessing{kFALSE};
+   Bool_t fSlow{kFALSE};
+   Int_t fSlowCnt{0};
+public:
+   TWebCanvasTimer(TWebCanvas &canv) : TTimer(10, kTRUE), fCanv(canv) {}
+
+   Bool_t IsSlow() const { return fSlow; }
+   void SetSlow(Bool_t slow = kTRUE)
+   {
+      fSlow = slow;
+      fSlowCnt = 0;
+      SetTime(slow ? 1000 : 10);
+   }
+
+   /// used to send control messages to clients
+   void Timeout() override
+   {
+      if (fProcessing || fCanv.fProcessingData) return;
+      fProcessing = kTRUE;
+      Bool_t res = fCanv.CheckDataToSend();
+      fProcessing = kFALSE;
+      if (res) {
+         fSlowCnt = 0;
+      } else if (++fSlowCnt > 10 && !IsSlow()) {
+         SetSlow(kTRUE);
+      }
+   }
+};
+
+
 /** \class TWebCanvas
 \ingroup webgui6
 
-Basic TCanvasImp ABI implementation for Web-based GUI
-Provides painting of main ROOT6 classes in web browsers
+Basic TCanvasImp ABI implementation for Web-based Graphics
+Provides painting of main ROOT classes in web browsers using [JSROOT](https://root.cern/js/)
+
+Following settings parameters can be useful for TWebCanvas:
+
+     WebGui.FullCanvas:       1     read-only mode (0), full-functional canvas (1) (default - 1)
+     WebGui.StyleDelivery:    1     provide gStyle object to JSROOT client (default - 1)
+     WebGui.PaletteDelivery:  1     provide color palette to JSROOT client (default - 1)
+     WebGui.TF1UseSave:       0     used saved values for function drawing (1) or calculate function on the client side (0) (default - 0)
+
+TWebCanvas is used by default in interactive ROOT session. To use web-based canvas in batch mode for image
+generation, one should explicitly specify `--web` option when starting ROOT:
+
+    [shell] root -b --web tutorials/hsimple.root -e 'hpxpy->Draw("colz"); c1->SaveAs("image.png");'
+
+If for any reasons TWebCanvas does not provide required functionality, one always can disable it.
+Either by specifying `root --web=off` when starting ROOT or by setting `Canvas.Name: TRootCanvas` in rootrc file.
 
 */
 
@@ -66,11 +123,29 @@ using namespace std::string_literals;
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly)
    : TCanvasImp(c, name, x, y, width, height)
 {
+   fTimer = new TWebCanvasTimer(*this);
+
    fReadOnly = readonly;
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 1);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
+   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 1) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
+
+   fWebConn.emplace_back(0); // add special connection which only used to perform updates
+
+   fTimer->TurnOn();
+
+   // fAsyncMode = kTRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
+TWebCanvas::~TWebCanvas()
+{
+   delete fTimer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,6 +181,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
    } supported_classes[] = {{"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
+                            {"TScatter"},
                             {"TFrame"},
                             {"THStack"},
                             {"TMultiGraph"},
@@ -117,12 +193,14 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TBox", false, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TWbox"}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false, true}, // can be handler via TWebPainter, disable for large number of primitives (like in greyscale.C)
+                            {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TText"},
                             {"TLatex"},
+                            {"TAnnotation"},
                             {"TMathText"},
                             {"TMarker"},
                             {"TPolyMarker"},
-                            // {"TPolyLine", false, true}, // can be handled via TWebPainter, simplify colors handling
+                            {"TPolyLine", true, true}, // can be handled via TWebPainter, simplify colors handling
                             {"TPolyMarker3D"},
                             {"TPolyLine3D"},
                             {"TGraphTime"},
@@ -204,9 +282,10 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    auto *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
 
    TView *view = nullptr;
-   auto savepad = gPad;
 
-   pad->cd();
+   TVirtualPad::TContext ctxt;
+
+   gPad = pad;
 
    if (obj->InheritsFrom(TAtt3D::Class()) && !pad->GetView()) {
       pad->GetViewer3D("pad");
@@ -238,8 +317,8 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
       painter->SetPainting(nullptr);
 
    gVirtualPS = saveps;
-   if (savepad)
-      savepad->cd();
+
+   fPadsStatus[pad]._has_specials = true;
 
    // if there are master PS, do not create separate entries
    if (!masterps && !ps.IsEmptyPainting())
@@ -321,6 +400,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    }
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
    paddata.SetWithoutPrimitives(!process_primitives);
+   paddata.SetHasExecs(pad->GetListOfExecs()); // if pad execs are there provide more events from client
 
    // check style changes every time when creating canvas snapshot
    if (resfunc && (GetStyleDelivery() > 0)) {
@@ -348,7 +428,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    TObject *obj = nullptr;
    TFrame *frame = nullptr;
    TPaveText *title = nullptr;
-   bool need_frame = false, has_histo = false;
+   bool need_frame = false, has_histo = false, need_palette = false;
    std::string need_title;
 
    while (process_primitives && ((obj = iter()) != nullptr)) {
@@ -368,20 +448,36 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             TVirtualPad::TContext ctxt(kFALSE);
             mg->GetHistogram(); // force creation of histogram without any drawings
             has_histo = true;
+            if (strlen(obj->GetTitle()) > 0)
+               need_title = obj->GetTitle();
          }
       } else if (obj->InheritsFrom(TFrame::Class())) {
-         frame = static_cast<TFrame *>(obj);
+         if (!frame)
+            frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
          has_histo = true;
-         if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && (strlen(obj->GetTitle()) > 0))
+         if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && !opt.Contains("AXIS") && !opt.Contains("AXIG") && (strlen(obj->GetTitle()) > 0))
             need_title = obj->GetTitle();
+         if (obj->InheritsFrom(TH2::Class()) && (opt.Contains("COLZ") || opt.Contains("LEGO2Z") || opt.Contains("LEGO4Z") || opt.Contains("SURF2Z")))
+            need_palette = true;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          if (opt.Contains("A")) {
             need_frame = true;
             if (!has_histo && (strlen(obj->GetTitle()) > 0))
                need_title = obj->GetTitle();
          }
+      } else if (obj->InheritsFrom(TGraph2D::Class())) {
+         if (!has_histo && (strlen(obj->GetTitle()) > 0))
+            need_title = obj->GetTitle();
+      } else if (obj->InheritsFrom(TScatter::Class())) {
+         need_frame = need_palette = true;
+         if (strlen(obj->GetTitle()) > 0)
+            need_title = obj->GetTitle();
+      } else if (obj->InheritsFrom(TF1::Class())) {
+         need_frame = !obj->InheritsFrom(TF2::Class());
+         if (!has_histo && (strlen(obj->GetTitle()) > 0))
+            need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TPaveText::Class())) {
          if (strcmp(obj->GetName(), "title") == 0)
             title = static_cast<TPaveText *>(obj);
@@ -389,6 +485,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    }
 
    if (need_frame && !frame && primitives && CanCreateObject("TFrame")) {
+      if (!IsReadOnly() && need_palette && (pad->GetRightMargin() < 0.12) && (pad->GetRightMargin() == gStyle->GetPadRightMargin()))
+         pad->SetRightMargin(0.12);
+
       frame = pad->GetFrame();
       if(frame)
          primitives->AddFirst(frame);
@@ -421,6 +520,18 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       masterps.CreatePainting(); // create for next operations
    };
 
+   auto check_save_tf1 = [&](TObject *fobj, bool ignore_nodraw = false) {
+      if (!paddata.IsBatchMode() && !fTF1UseSave)
+         return;
+      if (!ignore_nodraw && fobj->TestBit(TF1::kNotDraw))
+         return;
+
+      auto f1 = static_cast<TF1 *>(fobj);
+      Double_t xmin = 0., ymin = 0., zmin = 0., xmax = 0., ymax = 0., zmax = 0.;
+      f1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
+      f1->Save(xmin, xmax, ymin, ymax, zmin, zmax);
+   };
+
    iter.Reset();
 
    bool first_obj = true;
@@ -434,10 +545,34 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (!process_primitives) {
          continue;
+      } else if (obj->InheritsFrom(TH1K::Class())) {
+         flush_master();
+         TH1K *hist = (TH1K *)obj;
+
+         Int_t nbins = hist->GetXaxis()->GetNbins();
+
+         TH1D *h1 = new TH1D("__dummy_name__", hist->GetTitle(), nbins, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
+         h1->SetDirectory(nullptr);
+         h1->SetName(hist->GetName());
+         hist->TAttLine::Copy(*h1);
+         hist->TAttFill::Copy(*h1);
+         hist->TAttMarker::Copy(*h1);
+         for (Int_t n = 1; n <= nbins; ++n)
+             h1->SetBinContent(n, hist->GetBinContent(n));
+
+         TIter fiter(hist->GetListOfFunctions());
+         while (auto fobj = fiter())
+            h1->GetListOfFunctions()->Add(fobj->Clone());
+
+         TString hopt = iter.GetOption();
+         if (title && first_obj) hopt.Append(";;use_pad_title");
+
+         paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
+
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
-         TH1 *hist = (TH1 *)obj;
+         TH1 *hist = static_cast<TH1 *>(obj);
          TIter fiter(hist->GetListOfFunctions());
          TObject *fobj = nullptr;
          TPaveStats *stats = nullptr;
@@ -446,13 +581,19 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          hist->BufferEmpty();
 
          while ((fobj = fiter()) != nullptr) {
-           if (fobj->InheritsFrom(TPaveStats::Class()))
+            if (fobj->InheritsFrom(TPaveStats::Class()))
                stats = dynamic_cast<TPaveStats *> (fobj);
-           else if (fobj->InheritsFrom("TPaletteAxis"))
-              palette = fobj;
+            else if (fobj->InheritsFrom("TPaletteAxis"))
+               palette = fobj;
+            else if (fobj->InheritsFrom(TF1::Class()))
+               check_save_tf1(fobj);
          }
 
-         if (!stats && first_obj && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
+         TString hopt = iter.GetOption();
+         TString o = hopt;
+         o.ToUpper();
+
+         if (!stats && (first_obj || o.Contains("SAMES")) && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
             stats = new TPaveStats(
                            gStyle->GetStatX() - gStyle->GetStatW(),
                            gStyle->GetStatY() - gStyle->GetStatH(),
@@ -482,10 +623,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
              hist->GetListOfFunctions()->Add(stats);
          }
 
-         TString hopt = iter.GetOption();
-
          if (!palette && CanCreateObject("TPaletteAxis") && (hist->GetDimension() > 1) &&
-             (hopt.Index("colz", 0, TString::kIgnoreCase) != kNPOS)) {
+              (o.Contains("COLZ") || o.Contains("LEGO2Z") || o.Contains("LEGO4Z") || o.Contains("SURF2Z"))) {
             std::stringstream exec;
             exec << "new TPaletteAxis(0,0,0,0, (TH1*)" << std::hex << std::showbase << (size_t)hist << ");";
             palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
@@ -501,6 +640,20 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
+         if (hist->GetDimension() == 2) {
+            TString opt = iter.GetOption();
+            auto p1 = opt.Index("["), p2 = opt.Index("]");
+            if ((p1 != kNPOS) && (p2 != kNPOS) && p2 > p1 + 1) {
+               TString cutname = opt(p1 + 1, p2 - p1 - 1);
+               TObject *cutg = primitives->FindObject(cutname.Data());
+               if (!cutg || (cutg->IsA() != TCutG::Class())) {
+                  cutg = gROOT->GetListOfSpecials()->FindObject(cutname.Data());
+                  if (cutg && cutg->IsA() == TCutG::Class())
+                     paddata.NewPrimitive(cutg, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, cutg);
+               }
+            }
+         }
+
          // do not extract objects from list of functions - stats and func need to be handled together with hist
          //
          // fiter.Reset();
@@ -513,27 +666,114 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TGraph::Class())) {
          flush_master();
 
-         TGraph *gr = (TGraph *)obj;
+         TGraph *gr = static_cast<TGraph *>(obj);
          auto funcs = gr->GetListOfFunctions();
 
          TIter fiter(funcs);
-         TObject *fobj = nullptr;
          TPaveStats *stats = nullptr;
 
-         while ((fobj = fiter()) != nullptr) {
+         while (auto fobj = fiter()) {
            if (fobj->InheritsFrom(TPaveStats::Class()))
                stats = dynamic_cast<TPaveStats *> (fobj);
+           else if (fobj->InheritsFrom(TF1::Class()))
+              check_save_tf1(fobj);
          }
 
+         TString gropt = iter.GetOption();
+
          // ensure histogram exists on server to draw it properly on clients side
-         if (!IsReadOnly() && first_obj)
+         if (!IsReadOnly() && (first_obj || gropt.Index("A", 0, TString::kIgnoreCase) != kNPOS ||
+               (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS) || (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS)))
             gr->GetHistogram();
 
-         TString gropt = iter.GetOption();
          if (title && first_obj) gropt.Append(";;use_pad_title");
          if (stats) gropt.Append(";;use_pad_stats");
 
          paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         fiter.Reset();
+         while (auto fobj = fiter())
+            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
+
+         if (funcs)
+            fPrimitivesLists.Add(funcs);
+         first_obj = false;
+      } else if (obj->InheritsFrom(TGraph2D::Class())) {
+         flush_master();
+
+         TGraph2D *gr2d = static_cast<TGraph2D *>(obj);
+
+         // ensure correct range of histogram
+         if (!IsReadOnly() && first_obj) {
+            TString gropt = iter.GetOption();
+            gropt.ToUpper();
+            Bool_t zscale = gropt.Contains("TRI1") || gropt.Contains("TRI2") || gropt.Contains("COL");
+            Bool_t real_draw = gropt.Contains("TRI") || gropt.Contains("LINE") || gropt.Contains("ERR") || gropt.Contains("P0");
+
+            TString hopt = !real_draw ? iter.GetOption() : (zscale ? "lego2z" : "lego2");
+            if (title) hopt.Append(";;use_pad_title");
+
+            // if gr2d not draw - let create histogram with correspondent content
+            auto hist = gr2d->GetHistogram(real_draw ? "empty" : "");
+
+            paddata.NewPrimitive(gr2d, hopt.Data(), "#hist").SetSnapshot(TWebSnapshot::kObject, hist);
+         }
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+         first_obj = false;
+      } else if (obj->InheritsFrom(TMultiGraph::Class())) {
+         flush_master();
+
+         TMultiGraph *mgr = static_cast<TMultiGraph *>(obj);
+         auto funcs = mgr->GetListOfFunctions();
+
+         TIter fiter(funcs);
+         while (auto fobj = fiter()) {
+            if (fobj->InheritsFrom(TF1::Class()))
+               check_save_tf1(fobj);
+         }
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         fiter.Reset();
+         while (auto fobj = fiter())
+            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
+
+         if (funcs)
+            fPrimitivesLists.Add(funcs);
+
+         first_obj = false;
+      } else if (obj->InheritsFrom(TScatter::Class())) {
+         flush_master();
+
+         TScatter *scatter = (TScatter *)obj;
+         auto funcs = scatter->GetGraph()->GetListOfFunctions();
+
+         TIter fiter(funcs);
+         TObject *fobj = nullptr, *palette = nullptr;
+
+         while ((fobj = fiter()) != nullptr) {
+            if (fobj->InheritsFrom("TPaletteAxis"))
+               palette = fobj;
+         }
+
+         // ensure histogram exists on server to draw it properly on clients side
+         if (!IsReadOnly() && first_obj)
+            scatter->GetHistogram();
+
+         if (!palette && CanCreateObject("TPaletteAxis")) {
+            std::stringstream exec;
+            exec << "new TPaletteAxis(0,0,0,0,0,0);";
+            palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
+            if (palette)
+               funcs->AddFirst(palette);
+         }
+
+         TString scopt = iter.GetOption();
+         if (title && first_obj) scopt.Append(";;use_pad_title");
+         if (palette) scopt.Append(";;use_pad_palette");
+
+         paddata.NewPrimitive(obj, scopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          fiter.Reset();
          while ((fobj = fiter()) != nullptr)
@@ -541,13 +781,47 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          if (funcs)
             fPrimitivesLists.Add(funcs);
+
          first_obj = false;
+      } else if (obj->InheritsFrom(TF1::Class())) {
+         flush_master();
+         auto f1 = static_cast<TF1 *> (obj);
+
+         TString f1opt = iter.GetOption();
+
+         check_save_tf1(obj, true);
+         // if (fTF1UseSave)
+         //   f1opt.Append(";force_saved");
+
+         if (first_obj) {
+            auto hist = f1->GetHistogram();
+            paddata.NewPrimitive(hist, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, hist);
+            f1opt.Append(";webcanv_hist");
+         }
+
+         paddata.NewPrimitive(f1, f1opt.Data()).SetSnapshot(TWebSnapshot::kObject, f1);
+
+         first_obj = false;
+
+      } else if (obj->InheritsFrom(TGaxis::Class())) {
+         flush_master();
+         auto gaxis = static_cast<TGaxis *> (obj);
+         auto func = gaxis->GetFunction();
+         if (func)
+            paddata.NewPrimitive(func, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, func);
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+      } else if (obj->InheritsFrom(TFrame::Class())) {
+         flush_master();
+         if (frame && (obj == frame)) {
+            paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+            frame = nullptr; // add frame only once
+         }
       } else if (IsJSSupportedClass(obj, usemaster)) {
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
          CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
-         pad_status._has_specials = true;
       }
    }
 
@@ -615,20 +889,37 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Add message to send queue for specified connection
+/// Add control message for specified connection
+/// Same control message can be overwritten many time before it really sends to the client
 /// If connid == 0, message will be add to all connections
-/// Return kFALSE if queue is full or connection is not exists
+/// After ctrl message is add to the output, short timer is activated and message send afterwards
 
-Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
+void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value)
 {
-   Bool_t res = false;
+   Bool_t new_ctrl = kFALSE;
+
    for (auto &conn : fWebConn) {
-      if ((conn.fConnId == connid) || (connid == 0)) {
-         conn.fSend.emplace(msg);
-         res = kTRUE;
+      if (conn.match(connid)) {
+         conn.fCtrl[key] = value;
+         new_ctrl = kTRUE;
       }
    }
-   return res;
+
+   if (new_ctrl && fTimer->IsSlow())
+      fTimer->SetSlow(kFALSE);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add message to send queue for specified connection
+/// If connid == 0, message will be add to all connections
+
+void TWebCanvas::AddSendQueue(unsigned connid, const std::string &msg)
+{
+   for (auto &conn : fWebConn) {
+      if (conn.match(connid))
+         conn.fSend.emplace(msg);
+   }
 }
 
 
@@ -636,62 +927,86 @@ Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
 /// Check if any data should be send to client
 /// If connid != 0, only selected connection will be checked
 
-void TWebCanvas::CheckDataToSend(unsigned connid)
+Bool_t TWebCanvas::CheckDataToSend(unsigned connid)
 {
-   if (!Canvas() || !fWindow)
-      return;
+   if (!Canvas())
+      return kFALSE;
+
+   bool isMoreData = false, isAnySend = false;
 
    for (auto &conn : fWebConn) {
-      if (connid && (conn.fConnId != connid))
-         continue;
 
-      // check if direct data sending is possible
-      if (!fWindow->CanSend(conn.fConnId, true))
-         continue;
+      bool isConnData = !conn.fCtrl.empty() || !conn.fSend.empty() ||
+                        ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion));
 
-      std::string buf;
+      while ((conn.is_batch() && !connid) || (conn.match(connid) && fWindow && fWindow->CanSend(conn.fConnId, true))) {
+         // check if any control messages still there to keep timer running
 
-      if ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion)) {
+         std::string buf;
 
-         buf = "SNAP6:"s + std::to_string(fCanvVersion) + ":"s;
+         if (!conn.fCtrl.empty()) {
+            buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+            conn.fCtrl.clear();
+         } else if (!conn.fSend.empty()) {
+            std::swap(buf, conn.fSend.front());
+            conn.fSend.pop();
+         } else if ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion)) {
 
-         TCanvasWebSnapshot holder(IsReadOnly());
+            buf = "SNAP6:"s + std::to_string(fCanvVersion) + ":"s;
 
-         // scripts send only when canvas drawn for the first time
-         if (!conn.fSendVersion)
-            holder.SetScripts(fCustomScripts);
+            TCanvasWebSnapshot holder(IsReadOnly(), true, false); // readonly, set ids, batchmode
 
-         holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
+            holder.SetFixedSize(fFixedSize); // set fixed size flag
 
-         CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf, &conn, this](TPadWebSnapshot *snap) {
-            auto json = TBufferJSON::ToJSON(snap, fJsonComp);
-            auto hash = json.Hash();
-            if (conn.fLastSendHash && (conn.fLastSendHash == hash) && conn.fSendVersion) {
-               // prevent looping when same data send many times
-               buf.clear();
-            } else {
-               buf.append(json.Data());
-               conn.fLastSendHash = hash;
-            }
-         });
+            // scripts send only when canvas drawn for the first time
+            if (!conn.fSendVersion)
+               holder.SetScripts(fCustomScripts);
 
-         conn.fCheckedVersion = fCanvVersion;
+            holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
 
-         conn.fSendVersion = fCanvVersion;
+            CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf, &conn, this](TPadWebSnapshot *snap) {
+               if (conn.is_batch()) {
+                  // for batch connection only calling of CreatePadSnapshot is important
+                  buf.clear();
+                  return;
+               }
 
-         if (buf.empty())
-            conn.fDrawVersion = fCanvVersion;
+               auto json = TBufferJSON::ToJSON(snap, fJsonComp);
+               auto hash = json.Hash();
+               if (conn.fLastSendHash && (conn.fLastSendHash == hash) && conn.fSendVersion) {
+                  // prevent looping when same data send many times
+                  buf.clear();
+               } else {
+                  buf.append(json.Data());
+                  conn.fLastSendHash = hash;
+               }
+            });
 
-      } else if (!conn.fSend.empty()) {
+            conn.fCheckedVersion = fCanvVersion;
 
-         std::swap(buf, conn.fSend.front());
-         conn.fSend.pop();
+            conn.fSendVersion = fCanvVersion;
 
+            if (buf.empty())
+               conn.fDrawVersion = fCanvVersion;
+         } else {
+            isConnData = false;
+            break;
+         }
+
+         if (!buf.empty() && !conn.is_batch()) {
+            fWindow->Send(conn.fConnId, buf);
+            isAnySend = true;
+         }
       }
 
-      if (!buf.empty())
-         fWindow->Send(conn.fConnId, buf);
+      if (isConnData)
+         isMoreData = true;
    }
+
+   if (fTimer->IsSlow() && isMoreData)
+      fTimer->SetSlow(kFALSE);
+
+   return isAnySend;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -705,10 +1020,10 @@ void TWebCanvas::Close()
 /// Show canvas in specified place.
 /// If parameter args not specified, default ROOT web display will be used
 
-void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
+void TWebCanvas::ShowWebWindow(const ROOT::RWebDisplayArgs &args)
 {
    if (!fWindow) {
-      fWindow = ROOT::Experimental::RWebWindow::Create();
+      fWindow = ROOT::RWebWindow::Create();
 
       fWindow->SetConnLimit(0); // configure connections limit
 
@@ -723,7 +1038,7 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
          // data
          [this](unsigned connid, const std::string &arg) {
             ProcessData(connid, arg);
-            CheckDataToSend(connid);
+            CheckDataToSend();
          },
          // disconnect
          [this](unsigned connid) {
@@ -738,14 +1053,13 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
          });
    }
 
-   auto w = Canvas()->GetWw(), h = Canvas()->GetWh();
+   auto w = Canvas()->GetWindowWidth(), h = Canvas()->GetWindowHeight();
+   if ((w > 0) && (w < 50000) && (h > 0) && (h < 30000))
+      fWindow->SetGeometry(w, h);
 
-   if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
-      fWindow->SetGeometry(w + 6, h + 22);
-
-   if ((args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt5) ||
-       (args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt6) ||
-       (args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kCEF))
+   if ((args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt5) ||
+       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt6) ||
+       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kCEF))
       SetLongerPolling(kTRUE);
 
    fWindow->Show(args);
@@ -759,8 +1073,11 @@ void TWebCanvas::Show()
    if (gROOT->IsWebDisplayBatch())
       return;
 
-   ROOT::Experimental::RWebDisplayArgs args;
+   ROOT::RWebDisplayArgs args;
    args.SetWidgetKind("TCanvas");
+   args.SetSize(Canvas()->GetWindowWidth(), Canvas()->GetWindowHeight());
+   args.SetPos(Canvas()->GetWindowTopX(), Canvas()->GetWindowTopY());
+
    ShowWebWindow(args);
 }
 
@@ -769,8 +1086,7 @@ void TWebCanvas::Show()
 
 void TWebCanvas::ShowCmd(const std::string &arg, Bool_t show)
 {
-   if (AddToSendQueue(0, "SHOW:"s + arg + (show ? ":1"s : ":0"s)))
-      CheckDataToSend();
+   AddCtrlMsg(0, arg, show ? "1"s : "0"s);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -782,8 +1098,7 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
 
    UInt_t hash = TString::Hash(&obj, sizeof(obj));
 
-   if (AddToSendQueue(0, "EDIT:"s + std::to_string(hash)))
-      CheckDataToSend();
+   AddCtrlMsg(0, "edit"s, std::to_string(hash));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -816,6 +1131,66 @@ Bool_t TWebCanvas::HasStatusBar() const
 Bool_t TWebCanvas::HasToolTips() const
 {
    return (fClientBits & TCanvas::kShowToolTips) != 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window position of web canvas
+
+void TWebCanvas::SetWindowPosition(Int_t x, Int_t y)
+{
+   AddCtrlMsg(0, "x"s, std::to_string(x));
+   AddCtrlMsg(0, "y"s, std::to_string(y));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window size of web canvas
+
+void TWebCanvas::SetWindowSize(UInt_t w, UInt_t h)
+{
+   AddCtrlMsg(0, "w"s, std::to_string(w));
+   AddCtrlMsg(0, "h"s, std::to_string(h));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window title of web canvas
+
+void TWebCanvas::SetWindowTitle(const char *newTitle)
+{
+   AddCtrlMsg(0, "title"s, newTitle);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set canvas size of web canvas
+
+void TWebCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
+{
+   fFixedSize = kTRUE;
+   AddCtrlMsg(0, "cw"s, std::to_string(cw));
+   AddCtrlMsg(0, "ch"s, std::to_string(ch));
+   if ((cw > 0) && (ch > 0)) {
+      Canvas()->fCw = cw;
+      Canvas()->fCh = ch;
+   } else {
+      // temporary value, will be reported back from client
+      Canvas()->fCw = Canvas()->fWindowWidth;
+      Canvas()->fCh = Canvas()->fWindowHeight;
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Iconify browser window
+
+void TWebCanvas::Iconify()
+{
+   AddCtrlMsg(0, "winstate"s, "iconify"s);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Raise browser window
+
+void TWebCanvas::RaiseWindow()
+{
+   AddCtrlMsg(0, "winstate"s, "raise"s);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -859,6 +1234,13 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          AssignStatusBits(r.bits);
          Canvas()->fCw = r.cw;
          Canvas()->fCh = r.ch;
+         if (r.w.size() == 4) {
+            fWindowGeometry = r.w;
+            Canvas()->fWindowTopX = fWindowGeometry[0];
+            Canvas()->fWindowTopY = fWindowGeometry[1];
+            Canvas()->fWindowWidth = fWindowGeometry[2];
+            Canvas()->fWindowHeight = fWindowGeometry[3];
+         }
       }
 
       if (r.active && (pad != gPad)) gPad = pad;
@@ -1003,7 +1385,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hmin == hmax)
             hmin = hmax = -1111;
 
-         if (!hist_holder) {
+         if (!hist_holder || (hist_holder->IsA() == TScatter::Class())) {
             hist->SetMinimum(hmin);
             hist->SetMaximum(hmax);
          } else {
@@ -1091,6 +1473,36 @@ void TWebCanvas::ProcessExecs(TPad *pad, TExec *extra)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Execute one or several methods for selected object
+/// String can be separated by ";;" to let execute several methods at once
+void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
+{
+   std::string buf = lines;
+
+   Int_t indx = 0;
+
+   while (obj && !buf.empty()) {
+      std::string sub = buf;
+      auto pos = buf.find(";;");
+      if (pos == std::string::npos) {
+         sub = buf;
+         buf.clear();
+      } else {
+         sub = buf.substr(0,pos);
+         buf = buf.substr(pos+2);
+      }
+      if (sub.empty()) continue;
+
+      std::stringstream exec;
+      exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
+      if (indx < 3 || gDebug > 0)
+         Info("ProcessLinesForObject", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+      gROOT->ProcessLine(exec.str().c_str());
+      indx++;
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Handle data from web browser
 /// Returns kFALSE if message was not processed
 
@@ -1100,13 +1512,15 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       return kTRUE;
 
    // try to identify connection for given WS request
-   unsigned indx = 0;
-   for (auto &c : fWebConn) {
-      if (c.fConnId == connid) break;
-      indx++;
+   unsigned indx = 0; // first connection is batch and excluded
+   while(++indx < fWebConn.size()) {
+      if (fWebConn[indx].fConnId == connid)
+         break;
    }
    if (indx >= fWebConn.size())
       return kTRUE;
+
+   Bool_t is_main_connection = indx == 1; // first connection allow to make changes
 
    struct FlagGuard {
       Bool_t &flag;
@@ -1138,11 +1552,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          fWebConn[indx].fDrawVersion = std::stoll(cdata);
       } else {
          fWebConn[indx].fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
-         if ((indx == 0) && !IsReadOnly())
-            if (DecodePadOptions(separ+1, false)) {
+         if (is_main_connection && !IsReadOnly())
+            if (DecodePadOptions(separ+1, false))
                CheckCanvasModified();
-               CheckDataToSend();
-            }
       }
 
    } else if (arg == "RELOAD") {
@@ -1181,21 +1593,18 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
-      if ((indx == 0) && !IsReadOnly())
-         if (DecodePadOptions(arg.substr(9), true)) {
-
+      if (is_main_connection && !IsReadOnly())
+         if (DecodePadOptions(arg.substr(9), true))
             CheckCanvasModified();
-            CheckDataToSend();
-         }
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
-      if (indx == 0) {
+      if (is_main_connection) {
          AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
    } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
-      if (indx == 0) {
+      if (is_main_connection) {
          auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
          if (!arr || (arr->size() != 4)) {
             Error("ProcessData", "Wrong arguments count %d in highlight message", (int)(arr ? arr->size() : -1));
@@ -1210,6 +1619,31 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             }
          }
       }
+   } else if (ROOT::RWebWindow::IsFileDialogMessage(arg)) {
+
+      ROOT::RWebWindow::EmbedFileDialog(fWindow, connid, arg);
+
+   } else if (arg == "FITPANEL"s) {
+
+      TH1 *hist = nullptr;
+      TIter iter(Canvas()->GetListOfPrimitives());
+      while (auto obj = iter()) {
+         hist = dynamic_cast<TH1 *>(obj);
+         if (hist) break;
+      }
+
+      TString cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
+                                    "panel->AssignCanvas(\"%s\");"
+                                    "panel->AssignHistogram((TH1 *)0x%zx);"
+                                    "panel->Show();"
+                                    "panel->ClearOnClose(panel);", Canvas()->GetName(), (size_t) hist);
+
+      gROOT->ProcessLine(cmd.Data());
+
+   } else if (arg == "START_BROWSER"s) {
+
+      gROOT->ProcessLine("new TBrowser;");
+
    } else if (IsReadOnly()) {
 
       // all following messages are not allowed in readonly mode
@@ -1250,7 +1684,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       std::string buf = "MENU:";
       buf.append(TBufferJSON::ToJSON(&items, 103).Data());
 
-      AddToSendQueue(connid, buf);
+      AddSendQueue(connid, buf);
 
    } else if (arg.compare(0, 8, "PRIMIT6:") == 0) {
 
@@ -1326,25 +1760,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
         TPad *objpad = nullptr;
 
         TObject *obj = FindPrimitive(sid, 1, nullptr, &lnk, &objpad);
+
         if (obj && !buf.empty()) {
 
-           while (!buf.empty()) {
-              std::string sub = buf;
-              pos = buf.find(";;");
-              if (pos == std::string::npos) {
-                 sub = buf;
-                 buf.clear();
-              } else {
-                 sub = buf.substr(0,pos);
-                 buf = buf.substr(pos+2);
-              }
-              if (sub.empty()) continue;
-
-              std::stringstream exec;
-              exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
-              Info("ProcessData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
-              gROOT->ProcessLine(exec.str().c_str());
-           }
+           ProcessLinesForObject(obj, buf);
 
            if (objpad)
               objpad->Modified();
@@ -1390,7 +1809,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             std::string send = reply;
             send.append(":");
             send.append(TBufferJSON::ToJSON(resobj, 23).Data());
-            AddToSendQueue(connid, send);
+            AddSendQueue(connid, send);
             if (reply[0] == 'D')
                delete resobj; // delete object if first symbol in reply is D
          }
@@ -1404,9 +1823,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       if (pad) {
          pad->Clear();
          pad->Modified();
-         PerformUpdate();
+         CheckCanvasModified();
       } else {
-         printf("Not found pad with id %s\n", snapid.c_str());
+         Error("ProcessData", "Not found pad with id %s to clear\n", snapid.c_str());
       }
    } else if (arg.compare(0, 7, "DIVIDE:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
@@ -1434,7 +1853,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             else
                pad->Divide(n1, n2);
             pad->cd(1);
-            PerformUpdate();
+            CheckCanvasModified();
          }
       }
 
@@ -1446,7 +1865,37 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (objlnk)
             objlnk->SetOption(arr->at(1).c_str());
       }
-
+   } else if (arg.compare(0, 8, "RESIZED:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(8));
+      if (arr && arr->size() == 7) {
+         // set members directly to avoid redrawing of the client again
+         Canvas()->fCw = arr->at(4);
+         Canvas()->fCh = arr->at(5);
+         fFixedSize = arr->at(6) > 0;
+         arr->resize(4);
+         fWindowGeometry = *arr;
+         Canvas()->fWindowTopX = fWindowGeometry[0];
+         Canvas()->fWindowTopY = fWindowGeometry[1];
+         Canvas()->fWindowWidth = fWindowGeometry[2];
+         Canvas()->fWindowHeight = fWindowGeometry[3];
+      }
+   } else if (arg.compare(0, 7, "POPOBJ:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      if (arr && arr->size() == 2) {
+         TPad *pad = dynamic_cast<TPad *>(FindPrimitive(arr->at(0)));
+         TObject *obj = FindPrimitive(arr->at(1), 0, pad);
+         if (pad && obj && (obj != pad->GetListOfPrimitives()->Last())) {
+            TIter next(pad->GetListOfPrimitives());
+            while (auto o = next())
+               if (obj == o) {
+                  TString opt = next.GetOption();
+                  pad->GetListOfPrimitives()->Remove(obj);
+                  pad->GetListOfPrimitives()->AddLast(obj, opt.Data());
+                  pad->Modified();
+                  break;
+               }
+         }
+      }
    } else if (arg == "INTERRUPT"s) {
       gROOT->SetInterrupt();
    } else {
@@ -1483,8 +1932,9 @@ void TWebCanvas::CheckPadModified(TPad *pad)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Check if any pad on the canvas was modified
 /// If yes, increment version of correspondent pad
+/// Returns true when canvas really modified
 
-void TWebCanvas::CheckCanvasModified(bool force_modified)
+Bool_t TWebCanvas::CheckCanvasModified(bool force_modified)
 {
    // clear temporary flags
    for (auto &entry : fPadsStatus) {
@@ -1513,6 +1963,8 @@ void TWebCanvas::CheckCanvasModified(bool force_modified)
          if (entry.second._modified)
             entry.second.fVersion = fCanvVersion;
    }
+
+   return is_any_modified;
 }
 
 
@@ -1521,10 +1973,17 @@ void TWebCanvas::CheckCanvasModified(bool force_modified)
 
 UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
-   x = 0;
-   y = 0;
-   w = Canvas()->GetWw() + 4;
-   h = Canvas()->GetWh() + 28;
+   if (fWindowGeometry.size() == 4) {
+      x = fWindowGeometry[0];
+      y = fWindowGeometry[1];
+      w = fWindowGeometry[2];
+      h = fWindowGeometry[3];
+   } else {
+      x = Canvas()->fWindowTopX;
+      y = Canvas()->fWindowTopY;
+      w = Canvas()->fWindowWidth;
+      h = Canvas()->fWindowHeight;
+   }
    return 0;
 }
 
@@ -1534,16 +1993,13 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 /// scan all primitives in the TCanvas and subpads and convert them into
 /// the structure which will be delivered to JSROOT client
 
-Bool_t TWebCanvas::PerformUpdate()
+Bool_t TWebCanvas::PerformUpdate(Bool_t async)
 {
-   if (!fWindow)
-      return kTRUE;
-
    CheckCanvasModified();
 
    CheckDataToSend();
 
-   if (!fProcessingData && !IsAsyncMode())
+   if (!fProcessingData && !IsAsyncMode() && !async)
       WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
@@ -1554,12 +2010,14 @@ Bool_t TWebCanvas::PerformUpdate()
 
 void TWebCanvas::ForceUpdate()
 {
-   if (!fWindow)
-      return;
-
    CheckCanvasModified(true);
 
-   CheckDataToSend();
+   if (!fWindow) {
+      TCanvasWebSnapshot holder(IsReadOnly(), false, true); // readonly, set ids, batchmode
+      CreatePadSnapshot(holder, Canvas(), 0, nullptr);
+   } else {
+      CheckDataToSend();
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1586,7 +2044,7 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
          return kFALSE; // wait ~1 min if no new connection established
       }
 
-      if ((fWebConn.size() > 0) && (fWebConn.front().fDrawVersion >= ver)) {
+      if ((fWebConn.size() > 1) && (fWebConn[1].fDrawVersion >= ver)) {
          if (gDebug > 2)
             Info("WaitWhenCanvasPainted", "ver %ld got painted", (long)ver);
          return kTRUE;
@@ -1603,7 +2061,11 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
    return kFALSE;
 }
 
-TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression)
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create JSON painting output for given pad
+/// Produce JSON can be used for offline drawing with JSROOT
+
+TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression, Bool_t batchmode)
 {
    TString res;
    if (!pad)
@@ -1611,11 +2073,11 @@ TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression)
 
    TCanvas *c = dynamic_cast<TCanvas *>(pad);
    if (c) {
-      res = CreateCanvasJSON(c, json_compression);
+      res = CreateCanvasJSON(c, json_compression, batchmode);
    } else {
-      auto imp = std::make_unique<TWebCanvas>(pad->GetCanvas(), pad->GetName(), 0, 0, 1000, 500);
+      auto imp = std::make_unique<TWebCanvas>(pad->GetCanvas(), pad->GetName(), 0, 0, pad->GetWw(), pad->GetWh(), kTRUE);
 
-      TPadWebSnapshot holder(true, false); // readonly, no ids
+      TPadWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
       imp->CreatePadSnapshot(holder, pad, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ToJSON(snap, json_compression);
@@ -1629,7 +2091,7 @@ TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression)
 /// Create JSON painting output for given canvas
 /// Produce JSON can be used for offline drawing with JSROOT
 
-TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
+TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression, Bool_t batchmode)
 {
    TString res;
 
@@ -1637,9 +2099,9 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
       return res;
 
    {
-      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
+      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, c->GetWw(), c->GetWh(), kTRUE);
 
-      TCanvasWebSnapshot holder(true, false); // readonly, no ids
+      TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ToJSON(snap, json_compression);
@@ -1651,19 +2113,25 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create JSON painting output for given canvas and store into the file
-/// See TBufferJSON::ExportToFile() method for more details
+/// See TBufferJSON::ExportToFile() method for more details about option
+/// If option string starts with symbol 'b', JSON for batch mode will be generated
 
 Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *option)
 {
    Int_t res = 0;
+   Bool_t batchmode = kFALSE;
+   if (option && *option == 'b') {
+      batchmode = kTRUE;
+      ++option;
+   }
 
    if (!c)
       return res;
 
    {
-      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
+      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, c->GetWw(), c->GetWh(), kTRUE);
 
-      TCanvasWebSnapshot holder(true, false); // readonly, no ids
+      TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, filename, option](TPadWebSnapshot *snap) {
          res = TBufferJSON::ExportToFile(filename, snap, option);
@@ -1682,12 +2150,77 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
    if (!pad)
       return false;
 
-   auto json = TWebCanvas::CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression);
+   auto json = CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE);
    if (!json.Length())
       return false;
 
-   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width ? width : pad->GetWw(), height ? height : pad->GetWh());
+   if (!width && !height) {
+      if ((pad->GetCanvas() == pad) || (pad->IsA() == TCanvas::Class())) {
+         width = pad->GetWw();
+         height = pad->GetWh();
+      } else {
+         width = (Int_t) (pad->GetAbsWNDC() * pad->GetCanvas()->GetWw());
+         height = (Int_t) (pad->GetAbsHNDC() * pad->GetCanvas()->GetWh());
+      }
+   }
+
+   return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create images for several pads using batch (headless) capability of Chrome or Firefox browsers
+/// Supported png, jpeg, svg, pdf, webp formats
+/// One can include %d qualifier which will be replaced by image index using printf functionality.
+/// If for pdf format %d qualifier not specified, all images will be stored in single PDF file.
+/// For all other formats %d qualifier will be add before extension automatically
+
+bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width, Int_t height)
+{
+   if (pads.empty())
+      return false;
+
+   std::vector<std::string> jsons;
+   std::vector<Int_t> widths, heights;
+
+   bool isMultiPdf = (strstr(filename, ".pdf") || strstr(filename, ".PDF")) && strstr(filename, "%");
+   bool is_multipdf_ok = true;
+
+   for (unsigned n = 0; n < pads.size(); ++n) {
+      auto pad = pads[n];
+
+      auto json = CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE);
+      if (!json.Length())
+         continue;
+
+      Int_t w = width, h = height;
+
+      if (!w && !h) {
+         if ((pad->GetCanvas() == pad) || (pad->IsA() == TCanvas::Class())) {
+            w = pad->GetWw();
+            h = pad->GetWh();
+         } else {
+            w = (Int_t) (pad->GetAbsWNDC() * pad->GetCanvas()->GetWw());
+            h = (Int_t) (pad->GetAbsHNDC() * pad->GetCanvas()->GetWh());
+         }
+      }
+
+      if (isMultiPdf) {
+         TString pdfname = TString::Format(filename, (int)n);
+         if (!ROOT::RWebDisplayHandle::ProduceImage(pdfname.Data(), json.Data(), w, h))
+            is_multipdf_ok = false;
+      } else {
+         jsons.emplace_back(json.Data());
+         widths.emplace_back(w);
+         heights.emplace_back(h);
+      }
+   }
+
+   if (isMultiPdf)
+      return is_multipdf_ok;
+
+   return ROOT::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Process data for single primitive
@@ -1729,7 +2262,9 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
       modified = true;
    }
 
-   if (item.fcust.compare("frame") == 0) {
+   if (item.fcust.compare(0,10,"auto_exec:") == 0) {
+      ProcessLinesForObject(obj, item.fcust.substr(10));
+   } else if (item.fcust.compare("frame") == 0) {
       if (obj && obj->InheritsFrom(TFrame::Class())) {
          TFrame *frame = static_cast<TFrame *>(obj);
          if (item.fopt.size() >= 4) {
@@ -1740,7 +2275,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
             modified = true;
          }
       }
-   } else if (item.fcust.compare("pave") == 0) {
+   } else if (item.fcust.compare(0,4,"pave") == 0) {
       if (obj && obj->InheritsFrom(TPave::Class())) {
          TPave *pave = static_cast<TPave *>(obj);
          if ((item.fopt.size() >= 4) && objpad) {
@@ -1757,6 +2292,24 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
 
             pave->ConvertNDCtoPad();
          }
+         if ((item.fcust.length() > 4) && pave->InheritsFrom(TPaveStats::Class())) {
+            // add text lines for statsbox
+            auto stats = static_cast<TPaveStats *>(pave);
+            stats->Clear();
+            size_t pos_start = 6, pos_end;
+            while ((pos_end = item.fcust.find(";;", pos_start)) != std::string::npos) {
+               stats->AddText(item.fcust.substr(pos_start, pos_end - pos_start).c_str());
+               pos_start = pos_end + 2;
+            }
+            stats->AddText(item.fcust.substr(pos_start).c_str());
+         }
+      }
+   } else if (item.fcust.compare(0,9,"func_fail") == 0) {
+      if (!fTF1UseSave) {
+         fTF1UseSave = kTRUE;
+         modified = true;
+      } else {
+         Error("ProcessObjectOptions", "Client fails to calculate function %s cl %s but it should not try!", obj ? obj->GetName() : "---", obj ? obj->ClassName() : "---");
       }
    }
 
@@ -1811,8 +2364,11 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
 
       TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
       TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
+      TGraph2D *gr2d = obj->InheritsFrom(TGraph2D::Class()) ? static_cast<TGraph2D *>(obj) : nullptr;
+      TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
       TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
       THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
+      TF1 *f1 = obj->InheritsFrom(TF1::Class()) ? static_cast<TF1 *>(obj) : nullptr;
 
       if (search_hist) {
          if (objlnk)
@@ -1822,10 +2378,16 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             return h1;
          if (gr)
             return getHistogram(gr);
+         if (gr2d)
+            return getHistogram(gr2d);
+         if (scatter)
+            return getHistogram(scatter);
          if (mg && opt.Contains("A"))
             return getHistogram(mg);
          if (hs)
             return getHistogram(hs);
+         if (f1)
+            return getHistogram(f1);
 
          if (objlnk)
             *objlnk = nullptr;
@@ -1837,13 +2399,19 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (objpad)
             *objpad = pad;
 
-         if (kind.find("hist") == 0) {
+         if (kind.compare(0, 4, "hist") == 0) {
             if (gr)
                obj = h1 = getHistogram(gr);
             else if (mg)
                obj = h1 = getHistogram(mg);
             else if (hs)
                obj = h1 = getHistogram(hs);
+            else if (scatter)
+               obj = h1 = getHistogram(scatter);
+            else if (f1)
+               obj = h1 = getHistogram(f1);
+            else if (gr2d)
+               obj = h1 = getHistogram(gr2d);
 
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
@@ -1857,10 +2425,15 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (h1 && (kind == "z"))
             return h1->GetZaxis();
 
-         if ((h1 || gr) && !kind.empty() && (kind.compare(0,5,"func_") == 0)) {
+         if ((h1 || gr || scatter) && !kind.empty() && (kind.compare(0,5,"func_") == 0)) {
             auto funcname = kind.substr(5);
-            TCollection *col = h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions();
+            TCollection *col = h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions());
             return col ? col->FindObject(funcname.c_str()) : nullptr;
+         }
+
+         if ((h1 || gr) && !kind.empty() && (kind.compare(0,5,"indx_") == 0)) {
+            auto col = h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions();
+            return col ? col->At(std::stoi(kind.substr(5))) : nullptr;
          }
 
          if (!kind.empty() && (kind.compare(0,7,"member_") == 0)) {
@@ -1878,10 +2451,18 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          return obj;
       }
 
-      if (h1 || gr) {
-         TIter fiter(h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions());
-         TObject *fobj = nullptr;
-         while ((fobj = fiter()) != nullptr)
+      if (h1 || gr || mg || scatter) {
+         TList *funcs = nullptr;
+         if (h1)
+            funcs = h1->GetListOfFunctions();
+         else if (gr)
+            funcs = gr->GetListOfFunctions();
+         else if (mg)
+            funcs = mg->GetListOfFunctions();
+         else if (scatter && scatter->GetGraph())
+            funcs = scatter->GetGraph()->GetListOfFunctions();
+         TIter fiter(funcs);
+         while (auto fobj = fiter())
             if (TString::Hash(&fobj, sizeof(fobj)) == id) {
                if (objpad)
                   *objpad = pad;
@@ -1907,6 +2488,17 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 {
    Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
-   return new TWebCanvas(c, name, x, y, width, height, readonly);
+   auto imp = new TWebCanvas(c, name, x, y, width, height, readonly);
+
+   c->fWindowTopX = x;
+   c->fWindowTopY = y;
+   c->fWindowWidth = width;
+   c->fWindowHeight = height;
+   if (!gROOT->IsBatch() && (height > 25))
+      height -= 25;
+   c->fCw = width;
+   c->fCh = height;
+
+   return imp;
 }
 

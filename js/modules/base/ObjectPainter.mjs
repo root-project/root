@@ -1,10 +1,12 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { settings, constants, internals, isNodeJs, getPromise, BIT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
+import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
+         prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
-import { getElementRect, BasePainter } from './BasePainter.mjs';
+import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
+import { TAttTextHandler } from './TAttTextHandler.mjs';
 import { FontHandler } from './FontHandler.mjs';
 import { getRootColors } from './colors.mjs';
 
@@ -48,9 +50,11 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Returns pad name where object is drawn */
-   getPadName() {
-      return this.pad_name || '';
-   }
+   getPadName() { return this.pad_name || ''; }
+
+   /** @summary Indicates that drawing runs in batch mode
+     * @private */
+   isBatchMode() { return isBatchMode() ? true : (this.getCanvPainter()?.isBatchMode() ?? false); }
 
    /** @summary Assign snapid to the painter
     * @desc Identifier used to communicate with server side and identifies object on the server
@@ -61,13 +65,12 @@ class ObjectPainter extends BasePainter {
      * @desc Remove object drawing and (in case of main painter) also main HTML components
      * @protected */
    cleanup() {
-
       this.removeG();
 
       let keep_origin = true;
 
       if (this.isMainPainter()) {
-         let pp = this.getPadPainter();
+         const pp = this.getPadPainter();
          if (!pp || (pp.normal_canvas === false))
             keep_origin = false;
       }
@@ -97,8 +100,11 @@ class ObjectPainter extends BasePainter {
    /** @summary Returns drawn object */
    getObject() { return this.draw_object; }
 
+   /** @summary Returns drawn object name */
+   getObjectName() { return this.getObject()?.fName ?? ''; }
+
    /** @summary Returns drawn object class name */
-   getClassName() { return this.getObject()?._typename || ''; }
+   getClassName() { return this.getObject()?._typename ?? ''; }
 
    /** @summary Checks if drawn object matches with provided typename
      * @param {string|object} arg - typename (or object with _typename member)
@@ -116,10 +122,10 @@ class ObjectPainter extends BasePainter {
    setItemName(name, opt, hpainter) {
       super.setItemName(name, opt, hpainter);
       if (this.no_default_title || !name) return;
-      let can = this.getCanvSvg();
+      const can = this.getCanvSvg();
       if (!can.empty()) can.select('title').text(name);
                    else this.selectDom().attr('title', name);
-      let cp = this.getCanvPainter();
+      const cp = this.getCanvPainter();
       if (cp && ((cp === this) || (this.isMainPainter() && (cp === this.getPadPainter()))))
          cp.drawItemNameOnCanvas(name);
    }
@@ -129,28 +135,31 @@ class ObjectPainter extends BasePainter {
    storeDrawOpt(original) {
       if (!this.options) return;
       if (!original) original = '';
-      let pp = original.indexOf(';;');
+      const pp = original.indexOf(';;');
       if (pp >= 0) original = original.slice(0, pp);
       this.options.original = original;
       this.options_store = Object.assign({}, this.options);
    }
 
    /** @summary Return actual draw options as string
+     * @param ignore_pad - do not include pad settings into histogram draw options
      * @desc if options are not modified - returns original string which was specified for object draw */
-   getDrawOpt() {
+   getDrawOpt(ignore_pad) {
       if (!this.options) return '';
 
       if (isFunc(this.options.asString)) {
-         let changed = false, pp = this.getPadPainter();
-         if (!this.options_store || pp?._interactively_changed) {
-            changed  = true;
-         } else {
-            for (let k in this.options)
+         let changed = false;
+         const pp = this.getPadPainter();
+         if (!this.options_store || pp?._interactively_changed)
+            changed = true;
+         else {
+            for (const k in this.options) {
                if (this.options[k] !== this.options_store[k])
                   changed = true;
+               }
          }
-         if (changed)
-            return this.options.asString(this.isMainPainter(), pp?.getRootPad());
+         if (changed && isFunc(this.options.asString))
+            return this.options.asString(this.isMainPainter(), ignore_pad ? null : pp?.getRootPad());
       }
 
       return this.options.original || ''; // nothing better, return original draw option
@@ -159,14 +168,13 @@ class ObjectPainter extends BasePainter {
    /** @summary Returns array with supported draw options as configured in draw.mjs
      * @desc works via pad painter and only when module was loaded */
    getSupportedDrawOptions() {
-      let pp = this.getPadPainter(),
-          obj = this.getObject();
+      const pp = this.getPadPainter(),
+            cl = this.getClassName();
 
-      if (!obj?._typename || !pp?.getObjectDrawSettings)
+      if (!cl || !isFunc(pp?.getObjectDrawSettings))
          return [];
 
-      let sett = pp.getObjectDrawSettings('ROOT.' + obj._typename, 'nosame');
-      return sett?.opts;
+      return pp.getObjectDrawSettings(prROOT + cl, 'nosame')?.opts;
    }
 
    /** @summary Central place to update objects drawing
@@ -179,11 +187,12 @@ class ObjectPainter extends BasePainter {
       * only way to control how object can be update while requested from the server
       * @protected */
    redrawObject(obj, opt) {
-      if (!this.updateObject(obj,opt)) return false;
-      let current = document.body.style.cursor;
+      if (!this.updateObject(obj, opt)) return false;
+      const doc = getDocument(),
+            current = doc.body.style.cursor;
       document.body.style.cursor = 'wait';
-      let res = this.redrawPad();
-      document.body.style.cursor = current;
+      const res = this.redrawPad();
+      doc.body.style.cursor = current;
       return res || true;
    }
 
@@ -203,11 +212,8 @@ class ObjectPainter extends BasePainter {
      * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    getObjectHint() {
-      let res = this.getItemName(), obj = this.getObject();
-      if (!res) res = obj && obj.fName ? obj.fName : '';
-      if (!res) res = this.getClassName();
-      if (res.length > 20) res = res.slice(0, 17) + '...';
-      return res;
+      const hint = this.getItemName() || this.getObjectName() || this.getClassName() || '';
+      return (hint.length <= 20) ? hint : hint.slice(0, 17) + '...';
    }
 
    /** @summary returns color from current list of colors
@@ -229,7 +235,7 @@ class ObjectPainter extends BasePainter {
    addColor(color) {
       if (!this.root_colors)
          this.root_colors = this.getCanvPainter()?.root_colors || getRootColors();
-      let indx = this.root_colors.indexOf(color);
+      const indx = this.root_colors.indexOf(color);
       if (indx >= 0) return indx;
       this.root_colors.push(color);
       return this.root_colors.length - 1;
@@ -239,8 +245,8 @@ class ObjectPainter extends BasePainter {
      * @desc If available, checks in canvas painter
      * @private */
    isTooltipAllowed() {
-      let src = this.getCanvPainter() || this;
-      return src.tooltip_allowed ? true : false;
+      const src = this.getCanvPainter() || this;
+      return src.tooltip_allowed;
    }
 
    /** @summary change tooltip allowed flag
@@ -248,29 +254,23 @@ class ObjectPainter extends BasePainter {
      * @private */
    setTooltipAllowed(on) {
       if (on === undefined) on = true;
-      let src = this.getCanvPainter() || this;
-      src.tooltip_allowed = (on == 'toggle') ? !src.tooltip_allowed : on;
+      const src = this.getCanvPainter() || this;
+      src.tooltip_allowed = (on === 'toggle') ? !src.tooltip_allowed : on;
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated.
      * @desc Redirects to {@link TPadPainter#checkCanvasResize}
      * @private */
    checkResize(arg) {
-      let p = this.getCanvPainter();
-      if (!p) return false;
-      // only canvas should be checked
-      p.checkCanvasResize(arg);
-      return true;
+      return this.getCanvPainter()?.checkCanvasResize(arg);
    }
 
    /** @summary removes <g> element with object drawing
      * @desc generic method to delete all graphical elements, associated with the painter
      * @protected */
    removeG() {
-      if (this.draw_g) {
-         this.draw_g.remove();
-         delete this.draw_g;
-      }
+      this.draw_g?.remove();
+      delete this.draw_g;
    }
 
    /** @summary Returns created <g> element used for object drawing
@@ -284,20 +284,18 @@ class ObjectPainter extends BasePainter {
      * @param {boolean|string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise in the pad
      * @protected */
    createG(frame_layer) {
-
       let layer;
 
       if (frame_layer) {
-         let frame = this.getFrameSvg();
+         const frame = this.getFrameSvg();
          if (frame.empty()) {
             console.error('Not found frame to create g element inside');
             return frame;
          }
          if (!isStr(frame_layer)) frame_layer = 'main_layer';
-         layer = frame.select('.' + frame_layer);
-      } else {
+         layer = frame.selectChild('.' + frame_layer);
+      } else
          layer = this.getLayerSvg('primitives_layer');
-      }
 
       if (this.draw_g && this.draw_g.node().parentNode !== layer.node()) {
          console.log('g element changes its layer!!');
@@ -325,6 +323,19 @@ class ObjectPainter extends BasePainter {
       return this.draw_g;
    }
 
+   /** @summary Bring draw element to the front */
+   bringToFront(check_online) {
+      if (!this.draw_g) return;
+      const prnt = this.draw_g.node().parentNode;
+      prnt?.appendChild(this.draw_g.node());
+
+      if (!check_online || !this.snapid) return;
+      const pp = this.getPadPainter();
+      if (!pp?.snapid) return;
+
+      this.getCanvPainter()?.sendWebsocket('POPOBJ:'+JSON.stringify([pp.snapid.toString(), this.snapid.toString()]));
+   }
+
    /** @summary Canvas main svg element
      * @return {object} d3 selection with canvas svg
      * @protected */
@@ -341,8 +352,8 @@ class ObjectPainter extends BasePainter {
       let c = this.getCanvSvg();
       if (!pad_name || c.empty()) return c;
 
-      let cp = c.property('pad_painter');
-      if (cp && cp.pads_cache && cp.pads_cache[pad_name])
+      const cp = c.property('pad_painter');
+      if (cp?.pads_cache && cp.pads_cache[pad_name])
          return d3_select(cp.pads_cache[pad_name]);
 
       c = c.select('.primitives_layer .__root_pad_' + pad_name);
@@ -353,6 +364,34 @@ class ObjectPainter extends BasePainter {
       return c;
    }
 
+   /** @summary Assign unique identifier for the painter
+     * @private */
+   getUniqueId() {
+      if (this._unique_painter_id === undefined)
+         this._unique_painter_id = internals.id_counter++; // assign unique identifier
+      return this._unique_painter_id;
+   }
+
+   /** @summary Assign secondary id
+     * @private */
+   setSecondaryId(main) {
+      this._main_painter_id = main.getUniqueId();
+   }
+
+   /** @summary Check if this is secondary painter
+     * @private */
+   isSecondaryPainter(main) {
+      return this._main_painter_id === main.getUniqueId();
+   }
+
+   /** @summary Provides identifier on server for requested sublement */
+   getSnapId(subelem) {
+      if (!this.snapid)
+         return '';
+
+      return this.snapid.toString() + (subelem ? '#'+subelem : '');
+   }
+
    /** @summary Method selects immediate layer under canvas/pad main element
      * @param {string} name - layer name, exits 'primitives_layer', 'btns_layer', 'info_layer'
      * @param {string} [pad_name] - pad name; current pad name  used by default
@@ -361,19 +400,12 @@ class ObjectPainter extends BasePainter {
       let svg = this.getPadSvg(pad_name);
       if (svg.empty()) return svg;
 
-      if (name.indexOf('prim#') == 0) {
-         svg = svg.select('.primitives_layer');
+      if (name.indexOf('prim#') === 0) {
+         svg = svg.selectChild('.primitives_layer');
          name = name.slice(5);
       }
 
-      let node = svg.node().firstChild;
-      while (node) {
-         let elem = d3_select(node);
-         if (elem.classed(name)) return elem;
-         node = node.nextSibling;
-      }
-
-      return d3_select(null);
+      return svg.selectChild('.' + name);
    }
 
    /** @summary Method selects current pad name
@@ -381,9 +413,9 @@ class ObjectPainter extends BasePainter {
      * @return {string} previous selected pad or actual pad when new_name not specified
      * @private */
    selectCurrentPad(new_name) {
-      let svg = this.getCanvSvg();
+      const svg = this.getCanvSvg();
       if (svg.empty()) return '';
-      let curr = svg.property('current_pad');
+      const curr = svg.property('current_pad');
       if (new_name !== undefined) svg.property('current_pad', new_name);
       return curr;
    }
@@ -392,14 +424,14 @@ class ObjectPainter extends BasePainter {
      * @param {string} [pad_name] pad name or use current pad by default
      * @protected */
    getPadPainter(pad_name) {
-      let elem = this.getPadSvg(isStr(pad_name) ? pad_name : undefined);
+      const elem = this.getPadSvg(isStr(pad_name) ? pad_name : undefined);
       return elem.empty() ? null : elem.property('pad_painter');
    }
 
    /** @summary returns canvas painter
      * @protected */
    getCanvPainter() {
-      let elem = this.getCanvSvg();
+      const elem = this.getCanvSvg();
       return elem.empty() ? null : elem.property('pad_painter');
    }
 
@@ -410,19 +442,19 @@ class ObjectPainter extends BasePainter {
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
      * @protected */
    getAxisToSvgFunc(isndc, nornd) {
-      let func = { isndc, nornd },
-          use_frame = this.draw_g && this.draw_g.property('in_frame');
+      const func = { isndc, nornd },
+            use_frame = this.draw_g?.property('in_frame');
       if (use_frame) func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
          if (nornd) {
-            func.x = function(x) { return this.main.grx(x); }
-            func.y = function(y) { return this.main.gry(y); }
+            func.x = function(x) { return this.main.grx(x); };
+            func.y = function(y) { return this.main.gry(y); };
          } else {
-            func.x = function(x) { return Math.round(this.main.grx(x)); }
-            func.y = function(y) { return Math.round(this.main.gry(y)); }
+            func.x = function(x) { return Math.round(this.main.grx(x)); };
+            func.y = function(y) { return Math.round(this.main.gry(y)); };
          }
       } else if (!use_frame) {
-         let pp = this.getPadPainter();
+         const pp = this.getPadPainter();
          if (!isndc) func.pad = pp?.getRootPad(true); // need for NDC conversion
          func.padw = pp?.getPadWidth() ?? 10;
          func.x = function(value) {
@@ -433,7 +465,7 @@ class ObjectPainter extends BasePainter {
             }
             value *= this.padw;
             return this.nornd ? value : Math.round(value);
-         }
+         };
          func.padh = pp?.getPadHeight() ?? 10;
          func.y = function(value) {
             if (this.pad) {
@@ -443,12 +475,11 @@ class ObjectPainter extends BasePainter {
             }
             value = (1 - value) * this.padh;
             return this.nornd ? value : Math.round(value);
-         }
+         };
       } else {
          console.error(`Problem to create functor for ${this.getClassName()}`);
          func.x = () => 0;
          func.y = () => 0;
-
       }
       return func;
    }
@@ -462,7 +493,7 @@ class ObjectPainter extends BasePainter {
      * @return {number} value of requested coordiantes
      * @protected */
    axisToSvg(axis, value, ndc, noround) {
-      let func = this.getAxisToSvgFunc(ndc, noround);
+      const func = this.getAxisToSvgFunc(ndc, noround);
       return func[axis](value);
    }
 
@@ -474,19 +505,17 @@ class ObjectPainter extends BasePainter {
      * @return {number} value of requested coordiantes
      * @protected */
    svgToAxis(axis, coord, ndc) {
-      let use_frame = this.draw_g && this.draw_g.property('in_frame');
+      const use_frame = this.draw_g?.property('in_frame');
 
-      if (use_frame) {
-         let main = this.getFramePainter();
-         return main?.revertAxis(axis, coord) ?? 0;
-      }
+      if (use_frame)
+         return this.getFramePainter()?.revertAxis(axis, coord) ?? 0;
 
-      let pp = this.getPadPainter(),
-          value = !pp ? 0 : ((axis == 'y') ? (1 - coord / pp.getPadHeight()) : coord / pp.getPadWidth()),
-          pad = (ndc || !pp) ? null : pp.getRootPad(true);
+      const pp = this.getPadPainter(),
+            pad = (ndc || !pp) ? null : pp.getRootPad(true);
+      let value = !pp ? 0 : ((axis === 'y') ? (1 - coord / pp.getPadHeight()) : coord / pp.getPadWidth());
 
       if (pad) {
-         if (axis == 'y') {
+         if (axis === 'y') {
             value = pad.fY1 + value * (pad.fY2 - pad.fY1);
             if (pad.fLogy) value = Math.pow(10, value);
          } else {
@@ -501,11 +530,11 @@ class ObjectPainter extends BasePainter {
    /** @summary Returns svg element for the frame in current pad
      * @protected */
    getFrameSvg(pad_name) {
-      let layer = this.getLayerSvg('primitives_layer', pad_name);
+      const layer = this.getLayerSvg('primitives_layer', pad_name);
       if (layer.empty()) return layer;
       let node = layer.node().firstChild;
       while (node) {
-         let elem = d3_select(node);
+         const elem = d3_select(node);
          if (elem.classed('root_frame')) return elem;
          node = node.nextSibling;
       }
@@ -527,7 +556,7 @@ class ObjectPainter extends BasePainter {
    getMainPainter(not_store) {
       let res = this._main_painter;
       if (!res) {
-         let pp = this.getPadPainter();
+         const pp = this.getPadPainter();
          res = pp ? pp.getMainPainter() : this.getTopPainter();
          if (!res) res = null;
          if (!not_store)
@@ -545,10 +574,10 @@ class ObjectPainter extends BasePainter {
      * Should not be used by pad/canvas painters, but rather by objects which are drawing axis
      * @protected */
    setAsMainPainter(force) {
-      let pp = this.getPadPainter();
+      const pp = this.getPadPainter();
       if (!pp)
-         this.setTopPainter(); //fallback on BasePainter method
-       else
+         this.setTopPainter(); // fallback on BasePainter method
+      else
          pp.setMainPainter(this, force);
    }
 
@@ -558,7 +587,7 @@ class ObjectPainter extends BasePainter {
      * @protected */
    addToPadPrimitives(pad_name) {
       if (pad_name !== undefined) this.setPadName(pad_name);
-      let pp = this.getPadPainter(pad_name); // important - pad_name must be here, otherwise PadPainter class confuses itself
+      const pp = this.getPadPainter(pad_name); // important - pad_name must be here, otherwise PadPainter class confuses itself
 
       if (!pp || (pp === this)) return false;
 
@@ -574,11 +603,10 @@ class ObjectPainter extends BasePainter {
    /** @summary Remove painter from pad list of painters
      * @protected */
    removeFromPadPrimitives() {
-      let pp = this.getPadPainter();
-
+      const pp = this.getPadPainter();
       if (!pp || (pp === this)) return false;
 
-      let k = pp.painters.indexOf(this);
+      const k = pp.painters.indexOf(this);
       if (k >= 0) pp.painters.splice(k, 1);
       return true;
    }
@@ -636,6 +664,29 @@ class ObjectPainter extends BasePainter {
       return handler;
    }
 
+   /** @summary Creates text attributes object.
+     * @param {object} args - either TAttText or see constructor arguments of {@link TAttTextHandler}
+     * @protected */
+   createAttText(args) {
+      if (!isObject(args))
+         args = { std: true };
+      else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextSize !== undefined)
+         args = { attr: args, std: false };
+
+      if (args.std === undefined) args.std = true;
+      if (args.painter === undefined) args.painter = this;
+
+      let handler = args.std ? this.textatt : null;
+
+      if (!handler)
+         handler = new TAttTextHandler(args);
+      else if (!handler.changed || args.force)
+         handler.setArgs(args);
+
+      if (args.std) this.textatt = handler;
+      return handler;
+   }
+
    /** @summary Creates fill attributes object.
      * @desc Method dedicated to create fill attributes, bound to canvas SVG
      * otherwise newly created patters will not be usable in the canvas
@@ -677,11 +728,11 @@ class ObjectPainter extends BasePainter {
      * @private */
    forEachPainter(userfunc, kind) {
       // iterate over all painters from pad list
-      let pp = this.getPadPainter();
-      if (pp) {
+      const pp = this.getPadPainter();
+      if (pp)
          pp.forEachPainterInPad(userfunc, kind);
-      } else {
-         let painter = this.getTopPainter();
+      else {
+         const painter = this.getTopPainter();
          if (painter && (kind !== 'pads')) userfunc(painter);
       }
    }
@@ -691,19 +742,18 @@ class ObjectPainter extends BasePainter {
      * @return {Promise} when completed
      * @private */
    async interactiveRedraw(arg, info, subelem) {
-
       let reason, res;
-      if (isStr(info) && (info.indexOf('exec:') != 0))
+      if (isStr(info) && (info.indexOf('exec:') !== 0))
          reason = info;
 
-      if (arg == 'pad')
+      if (arg === 'pad')
          res = this.redrawPad(reason);
       else if (arg !== false)
          res = this.redraw(reason);
 
       return getPromise(res).then(() => {
          // inform GED that something changes
-         let canp = this.getCanvPainter();
+         const canp = this.getCanvPainter();
 
          if (isFunc(canp?.producePadEvent))
             canp.producePadEvent('redraw', this.getPadPainter(), this, null, subelem);
@@ -721,15 +771,13 @@ class ObjectPainter extends BasePainter {
      * @return {Promise} when pad redraw completed
      * @protected */
    async redrawPad(reason) {
-      let pp = this.getPadPainter();
-      return pp ? pp.redrawPad(reason) : false;
+      return this.getPadPainter()?.redrawPad(reason) ?? false;
    }
 
    /** @summary execute selected menu command, either locally or remotely
      * @private */
    executeMenuCommand(method) {
-
-      if (method.fName == 'Inspect')
+      if (method.fName === 'Inspect')
          // primitve inspector, keep it here
          return this.showInspector();
 
@@ -745,7 +793,7 @@ class ObjectPainter extends BasePainter {
    submitCanvExec(exec, snapid) {
       if (!exec || !isStr(exec)) return;
 
-      let canp = this.getCanvPainter();
+      const canp = this.getCanvPainter();
       if (isFunc(canp?.submitExec))
          canp.submitExec(this, exec, snapid);
    }
@@ -760,25 +808,32 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Show object in inspector for provided object
      * @protected */
-   showInspector() {
+   showInspector(/* opt */) {
       return false;
    }
 
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      let title = this.getObjectHint();
-      if (this.getObject() && ('_typename' in this.getObject()))
-         title = this.getObject()._typename + '::' + title;
+      const name = this.getObjectName();
+      let cl = this.getClassName();
+      const p = cl.lastIndexOf('::');
+      if (p > 0) cl = cl.slice(p+2);
+      const title = (cl && name) ? `${cl}:${name}` : (cl || name || 'object');
 
-      menu.add('header:' + title);
+      menu.add(`header:${title}`);
+
+      const size0 = menu.size();
+
+      if (isFunc(this.fillContextMenuItems))
+         this.fillContextMenuItems(menu);
+
+      if ((menu.size() > size0) && this.showInspector('check'))
+         menu.add('Inspect', this.showInspector);
 
       menu.addAttributesMenu(this);
 
-      if ((menu.size() > 0) && this.showInspector('check'))
-         menu.add('Inspect', this.showInspector);
-
-      return menu.size() > 0;
+      return menu.size() > size0;
    }
 
    /** @summary shows objects status
@@ -795,7 +850,7 @@ class ObjectPainter extends BasePainter {
       if (this.enlargeMain('state') === 'on') return false;
 
       if ((name === undefined) && (title === undefined)) {
-         let obj = this.getObject();
+         const obj = this.getObject();
          if (!obj) return;
          name = this.getItemName() || obj.fName;
          title = obj.fTitle || obj._typename;
@@ -823,22 +878,20 @@ class ObjectPainter extends BasePainter {
      * @param {number} [max_font_size] - maximal font size, used when text can be scaled
      * @protected */
    startTextDrawing(font_face, font_size, draw_g, max_font_size) {
-
       if (!draw_g) draw_g = this.draw_g;
       if (!draw_g || draw_g.empty()) return;
 
-      let font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size),
-          pp = this.getPadPainter();
+      const font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size);
 
       draw_g.call(font.func);
 
       draw_g.property('draw_text_completed', false) // indicate that draw operations submitted
-            .property('all_args',[]) // array of all submitted args, makes easier to analyze them
+            .property('all_args', []) // array of all submitted args, makes easier to analyze them
             .property('text_font', font)
-            .property('text_factor', 0.)
+            .property('text_factor', 0)
             .property('max_text_width', 0) // keep maximal text width, use it later
             .property('max_font_size', max_font_size)
-            .property('_fast_drawing', pp?._fast_drawing || false);
+            .property('_fast_drawing', this.getPadPainter()?._fast_drawing ?? false);
 
       if (draw_g.property('_fast_drawing'))
          draw_g.property('_font_too_small', (max_font_size && (max_font_size < 5)) || (font.size < 4));
@@ -859,7 +912,6 @@ class ObjectPainter extends BasePainter {
    /** @summary Analyze if all text draw operations are completed
      * @private */
    _checkAllTextDrawing(draw_g, resolveFunc, try_optimize) {
-
       let all_args = draw_g.property('all_args'), missing = 0;
       if (!all_args) {
          console.log('Text drawing is finished - why calling _checkAllTextDrawing?????');
@@ -879,10 +931,10 @@ class ObjectPainter extends BasePainter {
       draw_g.property('all_args', null); // clear all_args property
 
       // adjust font size (if there are normal text)
-      let f = draw_g.property('text_factor'),
-          font = draw_g.property('text_font'),
-          max_sz = draw_g.property('max_font_size'),
-          font_size = font.size, any_text = false, only_text = true;
+      const f = draw_g.property('text_factor'),
+            font = draw_g.property('text_font'),
+            max_sz = draw_g.property('max_font_size');
+      let font_size = font.size, any_text = false, only_text = true;
 
       if ((f > 0) && ((f < 0.9) || (f > 1)))
          font.size = Math.max(1, Math.floor(font.size / f));
@@ -890,20 +942,19 @@ class ObjectPainter extends BasePainter {
       if (max_sz && (font.size > max_sz))
          font.size = max_sz;
 
-      if (font.size != font_size) {
+      if (font.size !== font_size) {
          draw_g.call(font.func);
          font_size = font.size;
       }
 
       all_args.forEach(arg => {
          if (arg.mj_node && arg.applyAttributesToMathJax) {
-            let svg = arg.mj_node.select('svg'); // MathJax svg
+            const svg = arg.mj_node.select('svg'); // MathJax svg
             arg.applyAttributesToMathJax(this, arg.mj_node, svg, arg, font_size, f);
             delete arg.mj_node; // remove reference
             only_text = false;
-         } else if (arg.txt_g) {
+         } else if (arg.txt_g)
             only_text = false;
-         }
       });
 
       if (!resolveFunc) {
@@ -913,7 +964,7 @@ class ObjectPainter extends BasePainter {
          delete draw_g.node().try_optimize;
       }
 
-      let optimize_arr = (try_optimize && only_text) ? [] : null;
+      const optimize_arr = (try_optimize && only_text) ? [] : null;
 
       // now process text and latex drawings
       all_args.forEach(arg => {
@@ -927,9 +978,8 @@ class ObjectPainter extends BasePainter {
             txt = arg.txt_g;
             delete arg.txt_g;
             is_txt = false;
-         } else {
+         } else
             return;
-         }
 
          txt.attr('visibility', null);
 
@@ -937,23 +987,22 @@ class ObjectPainter extends BasePainter {
 
          if (arg.width) {
             // adjust x position when scale into specified rectangle
-            if (arg.align[0] == 'middle')
+            if (arg.align[0] === 'middle')
                arg.x += arg.width / 2;
-             else if (arg.align[0] == 'end')
+             else if (arg.align[0] === 'end')
                 arg.x += arg.width;
          }
 
          if (arg.height) {
             if (arg.align[1].indexOf('bottom') === 0)
                arg.y += arg.height;
-            else if (arg.align[1] == 'middle')
+            else if (arg.align[1] === 'middle')
                arg.y += arg.height / 2;
          }
 
-         arg.dx = arg.dy = 0;
+         let dx = 0, dy = 0;
 
          if (is_txt) {
-
             // handle simple text drawing
 
             if (isNodeJs()) {
@@ -965,52 +1014,47 @@ class ObjectPainter extends BasePainter {
 
             if (arg.plain) {
                txt.attr('text-anchor', arg.align[0]);
-               if (arg.align[1] == 'top')
+               if (arg.align[1] === 'top')
                   txt.attr('dy', '.8em');
-               else if (arg.align[1] == 'middle') {
-                  if (isNodeJs()) txt.attr('dy', '.4em'); else txt.attr('dominant-baseline', 'middle');
+               else if (arg.align[1] === 'middle') {
+                  if (isNodeJs()) txt.attr('dy', '.4em');
+                             else txt.attr('dominant-baseline', 'middle');
                }
             } else {
                txt.attr('text-anchor', 'start');
-               arg.dx = ((arg.align[0] == 'middle') ? -0.5 : ((arg.align[0] == 'end') ? -1 : 0)) * arg.box.width;
-               arg.dy = ((arg.align[1] == 'top') ? (arg.top_shift || 1) : (arg.align[1] == 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
+               dx = ((arg.align[0] === 'middle') ? -0.5 : ((arg.align[0] === 'end') ? -1 : 0)) * arg.box.width;
+               dy = ((arg.align[1] === 'top') ? (arg.top_shift || 1) : (arg.align[1] === 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
             }
-
          } else if (arg.text_rect) {
-
             // handle latext drawing
-            let box = arg.text_rect;
+            const box = arg.text_rect;
 
             scale = (f > 0) && (Math.abs(1-f) > 0.01) ? 1/f : 1;
 
-            arg.dx = ((arg.align[0] == 'middle') ? -0.5 : ((arg.align[0] == 'end') ? -1 : 0)) * box.width * scale;
+            dx = ((arg.align[0] === 'middle') ? -0.5 : ((arg.align[0] === 'end') ? -1 : 0)) * box.width * scale;
 
-            if (arg.align[1] == 'top')
-               arg.dy = -box.y1*scale;
-            else if (arg.align[1] == 'bottom')
-               arg.dy = -box.y2*scale;
-            else if (arg.align[1] == 'middle')
-               arg.dy = -0.5*(box.y1 + box.y2)*scale;
-         } else {
+            if (arg.align[1] === 'top')
+               dy = -box.y1*scale;
+            else if (arg.align[1] === 'bottom')
+               dy = -box.y2*scale;
+            else if (arg.align[1] === 'middle')
+               dy = -0.5*(box.y1 + box.y2)*scale;
+         } else
             console.error('text rect not calcualted - please check code');
-         }
 
-         if (!arg.rotate) { arg.x += arg.dx; arg.y += arg.dy; arg.dx = arg.dy = 0; }
+         if (!arg.rotate) { arg.x += dx; arg.y += dy; dx = dy = 0; }
 
          // use translate and then rotate to avoid complex sign calculations
-         let trans = '';
-         if (arg.y)
-            trans = `translate(${Math.round(arg.x)},${Math.round(arg.y)})`;
-         else if (arg.x)
-            trans = `translate(${Math.round(arg.x)})`;
+         let trans = makeTranslate(Math.round(arg.x), Math.round(arg.y)) || '';
+         const dtrans = makeTranslate(Math.round(dx), Math.round(dy)),
+               append = arg => { if (trans) trans += ' '; trans += arg; };
+
          if (arg.rotate)
-            trans += ` rotate(${Math.round(arg.rotate)})`;
+            append(`rotate(${Math.round(arg.rotate)})`);
          if (scale !== 1)
-            trans += ` scale(${scale.toFixed(3)})`;
-         if (arg.dy)
-            trans += ` translate(${Math.round(arg.dx)},${Math.round(arg.dy)})`;
-         else if (arg.dx)
-            trans += ` translate(${Math.round(arg.dx)})`;
+            append(`scale(${scale.toFixed(3)})`);
+         if (dtrans)
+            append(dtrans);
          if (trans) txt.attr('transform', trans);
       });
 
@@ -1019,11 +1063,11 @@ class ObjectPainter extends BasePainter {
       if (!any_text)
          font.clearFont(draw_g);
 
-      if ((optimize_arr !== null) && (optimize_arr.length > 1))
+      if ((optimize_arr !== null) && (optimize_arr.length > 1)) {
          ['fill', 'text-anchor'].forEach(name => {
             let first = optimize_arr[0].attr(name);
             optimize_arr.forEach(txt_node => {
-               let value = txt_node.attr(name);
+               const value = txt_node.attr(name);
                if (!value || (value !== first)) first = undefined;
             });
             if (first) {
@@ -1031,6 +1075,7 @@ class ObjectPainter extends BasePainter {
                optimize_arr.forEach(txt_node => { txt_node.attr(name, null); });
             }
          });
+      }
 
       // if specified, call resolve function
       if (resolveFunc) resolveFunc(this); // IMPORTANT - return painter, may use in draw methods
@@ -1040,15 +1085,16 @@ class ObjectPainter extends BasePainter {
      * @private */
    _postprocessDrawText(arg, txt_node) {
       // complete rectangle with very rougth size estimations
-      arg.box = !isNodeJs() && !settings.ApproxTextSize && !arg.fast ? getElementRect(txt_node, 'bbox') :
-               (arg.text_rect || { height: arg.font_size * 1.2, width: arg.text.length * arg.font_size * arg.font.aver_width });
+      arg.box = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
+                 ? getElementRect(txt_node, 'bbox')
+                 : (arg.text_rect || { height: arg.font_size * 1.2, width: arg.text.length * arg.font_size * arg.font.aver_width });
 
       txt_node.attr('visibility', 'hidden'); // hide elements until text drawing is finished
 
       if (arg.box.width > arg.draw_g.property('max_text_width'))
          arg.draw_g.property('max_text_width', arg.box.width);
       if (arg.scale)
-         this.scaleTextDrawing(Math.max(1.05 * arg.box.width / arg.width, 1. * arg.box.height / arg.height), arg.draw_g);
+         this.scaleTextDrawing(Math.max(1.05 * arg.box.width / arg.width, arg.box.height / arg.height), arg.draw_g);
 
       arg.result_width = arg.box.width;
       arg.result_height = arg.box.height;
@@ -1069,6 +1115,7 @@ class ObjectPainter extends BasePainter {
      * @param {number} [arg.y = 0] - y position
      * @param {number} [arg.width] - when specified, adjust font size in the specified box
      * @param {number} [arg.height] - when specified, adjust font size in the specified box
+     * @param {boolean} [arg.scale = true] - scale into draw box when width and height parameters are specified
      * @param {number} [arg.latex] - 0 - plain text, 1 - normal TLatex, 2 - math
      * @param {string} [arg.color=black] - text color
      * @param {number} [arg.rotate] - rotaion angle
@@ -1077,14 +1124,13 @@ class ObjectPainter extends BasePainter {
      * @param {function} [arg.post_process] - optional function called when specified text is drawn
      * @protected */
    drawText(arg) {
-
       if (!arg.text)
          arg.text = '';
 
       arg.draw_g = arg.draw_g || this.draw_g;
       if (!arg.draw_g || arg.draw_g.empty()) return;
 
-      let font = arg.draw_g.property('text_font');
+      const font = arg.draw_g.property('text_font');
       arg.font = font; // use in latex conversion
 
       if (font) {
@@ -1097,27 +1143,27 @@ class ObjectPainter extends BasePainter {
 
       if (isStr(arg.align)) {
          align = arg.align.split(';');
-         if (align.length == 1) align.push('middle');
-      } else if (typeof arg.align == 'number') {
+         if (align.length === 1) align.push('middle');
+      } else if (typeof arg.align === 'number') {
          if ((arg.align / 10) >= 3)
             align[0] = 'end';
          else if ((arg.align / 10) >= 2)
             align[0] = 'middle';
-         if ((arg.align % 10) == 0)
+         if ((arg.align % 10) === 0)
             align[1] = 'bottom';
-         else if ((arg.align % 10) == 1)
+         else if ((arg.align % 10) === 1)
             align[1] = 'bottom-base';
-         else if ((arg.align % 10) == 3)
+         else if ((arg.align % 10) === 3)
             align[1] = 'top';
-      } else if (isObject(arg.align) && (arg.align.length == 2)) {
+      } else if (isObject(arg.align) && (arg.align.length === 2))
          align = arg.align;
-      }
 
       if (arg.latex === undefined) arg.latex = 1; //  latex 0-text, 1-latex, 2-math
       arg.align = align;
       arg.x = arg.x || 0;
       arg.y = arg.y || 0;
-      arg.scale = arg.width && arg.height && !arg.font_size;
+      if (arg.scale !== false)
+         arg.scale = arg.width && arg.height && !arg.font_size;
       arg.width = arg.width || 0;
       arg.height = arg.height || 0;
 
@@ -1138,15 +1184,16 @@ class ObjectPainter extends BasePainter {
       arg.draw_g.property('all_args').push(arg);
       arg.ready = false; // indicates if drawing is ready for post-processing
 
-      let use_mathjax = (arg.latex == 2);
+      let use_mathjax = (arg.latex === 2);
+      const cl = constants.Latex;
 
-      if (arg.latex === 1)
-         use_mathjax = (settings.Latex == constants.Latex.AlwaysMathJax) ||
-                       ((settings.Latex == constants.Latex.MathJax) && arg.text.match(/[#{\\]/g)) ||
+      if (arg.latex === 1) {
+         use_mathjax = (settings.Latex === cl.AlwaysMathJax) ||
+                       ((settings.Latex === cl.MathJax) && arg.text.match(/[#{\\]/g)) ||
                        arg.text.match(/[\\]/g);
+      }
 
       if (!use_mathjax || arg.nomathjax) {
-
          arg.txt_node = arg.draw_g.append('svg:text');
 
          if (arg.color) arg.txt_node.attr('fill', arg.color);
@@ -1154,9 +1201,9 @@ class ObjectPainter extends BasePainter {
          if (arg.font_size) arg.txt_node.attr('font-size', arg.font_size);
                        else arg.font_size = font.size;
 
-         arg.plain = !arg.latex || (settings.Latex == constants.Latex.Off) || (settings.Latex == constants.Latex.Symbols);
+         arg.plain = !arg.latex || (settings.Latex === cl.Off) || (settings.Latex === cl.Symbols);
 
-         arg.simple_latex = arg.latex && (settings.Latex == constants.Latex.Symbols);
+         arg.simple_latex = arg.latex && (settings.Latex === cl.Symbols);
 
          if (!arg.plain || arg.simple_latex || (arg.font && arg.font.isSymbol)) {
             if (arg.simple_latex || isPlainText(arg.text) || arg.plain) {
@@ -1218,7 +1265,6 @@ class ObjectPainter extends BasePainter {
      * Function should return promise with menu when items are filled
      * @param {function} fillmenu_func - function to fill custom context menu for oabject */
    configureUserContextMenu(fillmenu_func) {
-
       if (!fillmenu_func || !isFunc(fillmenu_func))
          delete this._userContextMenuFunc;
       else
@@ -1228,89 +1274,87 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill object menu in web canvas
      * @private */
    async fillObjectExecMenu(menu, kind) {
-
-      if (this._userContextMenuFunc)
+      if (isFunc(this._userContextMenuFunc))
          return this._userContextMenuFunc(menu, kind);
 
-      let canvp = this.getCanvPainter();
+      const canvp = this.getCanvPainter();
 
       if (!this.snapid || !canvp || canvp?._readonly || !canvp?._websocket)
          return menu;
 
       function DoExecMenu(arg) {
-         let execp = this.exec_painter || this,
-            cp = execp.getCanvPainter(),
-            item = execp.args_menu_items[parseInt(arg)];
+         const execp = menu.exec_painter || this,
+               cp = execp.getCanvPainter(),
+               item = menu.exec_items[parseInt(arg)];
 
-         if (!item || !item.fName) return;
+         if (!item?.fName) return;
 
          // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
-         if (item.fExec == 'Show:Editor') {
+         if (item.fExec === 'Show:Editor') {
             if (isFunc(cp?.activateGed))
                cp.activateGed(execp);
             return;
          }
 
          if (isFunc(cp?.executeObjectMethod))
-            if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
+            if (cp.executeObjectMethod(execp, item, item.$execid)) return;
+
+         item.fClassName = execp.getClassName();
+         if ((item.$execid.indexOf('#x') > 0) || (item.$execid.indexOf('#y') > 0) || (item.$execid.indexOf('#z') > 0))
+            item.fClassName = clTAxis;
 
          if (execp.executeMenuCommand(item)) return;
 
-         if (!execp.args_menu_id) return;
+         if (!item.$execid) return;
 
-          if (!item.fArgs)
-             if (cp?.v7canvas)
-                return cp.submitExec(execp, item.fExec, kind);
-             else
-                return execp.submitCanvExec(item.fExec, execp.args_menu_id);
+         if (!item.fArgs) {
+            if (cp?.v7canvas)
+               return cp.submitExec(execp, item.fExec, kind);
+            else
+               return execp.submitCanvExec(item.fExec, item.$execid);
+         }
 
-         item.fClassName = execp.getClassName();
-         if ((execp.args_menu_id.indexOf('#x') > 0) || (execp.args_menu_id.indexOf('#y') > 0) || (execp.args_menu_id.indexOf('#z') > 0))
-            item.fClassName = clTAxis;
+         menu.showMethodArgsDialog(item).then(args => {
+            if (!args) return;
+            if (execp.executeMenuCommand(item, args)) return;
 
-          menu.showMethodArgsDialog(item).then(args => {
-             if (!args) return;
-             if (execp.executeMenuCommand(item, args)) return;
-
-             let exec = item.fExec.slice(0, item.fExec.length-1) + args + ')';
-             if (cp?.v7canvas)
-                cp.submitExec(execp, exec, kind);
-             else if (cp)
-                cp.sendWebsocket(`OBJEXEC:${execp.args_menu_id}:${exec}`);
+            const exec = item.fExec.slice(0, item.fExec.length-1) + args + ')';
+            if (cp?.v7canvas)
+               cp.submitExec(execp, exec, kind);
+            else
+               cp?.sendWebsocket(`OBJEXEC:${item.$execid}:${exec}`);
          });
       }
 
       const DoFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
-
          // avoid multiple call of the callback after timeout
-         if (this._got_menu) return;
-         this._got_menu = true;
+         if (menu._got_menu) return;
+         menu._got_menu = true;
 
          if (reply && (_reqid !== reply.fId))
             console.error(`missmatch between request ${_reqid} and reply ${reply.fId} identifiers`);
 
-         let items = reply ? reply.fItems : null;
+         menu.exec_items = reply?.fItems;
 
-         if (items && items.length) {
+         if (menu.exec_items?.length) {
             if (_menu.size() > 0)
                _menu.add('separator');
 
-            this.args_menu_items = items;
-            this.args_menu_id = reply.fId;
-
             let lastclname;
 
-            for (let n = 0; n < items.length; ++n) {
-               let item = items[n];
+            for (let n = 0; n < menu.exec_items.length; ++n) {
+               const item = menu.exec_items[n];
+               item.$execid = reply.fId;
+               item.$menu = menu;
 
-               if (item.fClassName && lastclname && (lastclname != item.fClassName)) {
+               if (item.fClassName && lastclname && (lastclname !== item.fClassName)) {
                   _menu.add('endsub:');
                   lastclname = '';
                }
-               if (lastclname != item.fClassName) {
+               if (lastclname !== item.fClassName) {
                   lastclname = item.fClassName;
-                  let p = lastclname.lastIndexOf('::'),
-                      shortname = (p > 0) ? lastclname.slice(p+2) : lastclname;
+                  const p = lastclname.lastIndexOf('::'),
+                        shortname = (p > 0) ? lastclname.slice(p+2) : lastclname;
 
                   _menu.add('sub:' + shortname.replace(/[<>]/g, '_'));
                }
@@ -1325,23 +1369,28 @@ class ObjectPainter extends BasePainter {
          }
 
          _resolveFunc(_menu);
-      };
+      },
+      reqid = this.getSnapId(kind);
 
-      let reqid = this.snapid;
-      if (kind) reqid += '#' + kind; // use # to separate object id from member specifier like 'x' or 'z'
-
-      this._got_menu = false;
+      menu._got_menu = false;
 
       // if menu painter differs from this, remember it for further usage
       if (menu.painter)
-         menu.painter.exec_painter = (menu.painter !== this) ? this : undefined;
+         menu.exec_painter = (menu.painter !== this) ? this : undefined;
 
       return new Promise(resolveFunc => {
+         let did_resolve = false;
+
+         function handleResolve(res) {
+            if (did_resolve) return;
+            did_resolve = true;
+            resolveFunc(res);
+         }
 
          // set timeout to avoid menu hanging
-         setTimeout(() => DoFillMenu(menu, reqid, resolveFunc), 2000);
+         setTimeout(() => DoFillMenu(menu, reqid, handleResolve), 2000);
 
-         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, resolveFunc, lst));
+         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, handleResolve, lst));
       });
    }
 
@@ -1367,7 +1416,7 @@ class ObjectPainter extends BasePainter {
       * If handler function returns true, default handling of click will be disabled
       * @param {function} handler - function called when mouse click is done */
    configureUserClickHandler(handler) {
-      let fp = this.getFramePainter();
+      const fp = this.getFramePainter();
       if (isFunc(fp?.configureUserClickHandler))
          fp.configureUserClickHandler(handler);
    }
@@ -1378,7 +1427,7 @@ class ObjectPainter extends BasePainter {
      * If handler function returns true, default handling of dblclick (unzoom) will be disabled
      * @param {function} handler - function called when mouse double click is done */
    configureUserDblclickHandler(handler) {
-      let fp = this.getFramePainter();
+      const fp = this.getFramePainter();
       if (isFunc(fp?.configureUserDblclickHandler))
          fp.configureUserDblclickHandler(handler);
    }
@@ -1393,7 +1442,6 @@ class ObjectPainter extends BasePainter {
      * @param {object} data - tooltip data
      * @private */
    provideUserTooltip(data) {
-
       if (!this.hasUserTooltip()) return;
 
       if (this._user_tooltip_timeout <= 0)
@@ -1407,20 +1455,18 @@ class ObjectPainter extends BasePainter {
       if (!data)
          return this._user_tooltip_handler(data);
 
-      let d = data;
-
       // only after timeout user function will be called
       this._user_tooltip_handle = setTimeout(() => {
          delete this._user_tooltip_handle;
-         if (this._user_tooltip_handler) this._user_tooltip_handler(d);
+         if (this._user_tooltip_handler) this._user_tooltip_handler(data);
       }, this._user_tooltip_timeout);
    }
 
    /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+     * @param kind - 'X', 'Y', 'XY' or ''
      * @private */
    async provideSpecialDrawArea(kind) {
-      if (kind == this._special_draw_area)
+      if (kind === this._special_draw_area)
          return true;
 
       return this.getCanvPainter().toggleProjection(kind).then(() => {
@@ -1429,13 +1475,15 @@ class ObjectPainter extends BasePainter {
       });
    }
 
-   /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+   /** @summary Draw in special projection areas
+     * @param obj - object to draw
+     * @param opt - draw option
+     * @param kind - '', 'X', 'Y'
      * @private */
-   async drawInSpecialArea(obj, opt) {
-      let canp = this.getCanvPainter();
+   async drawInSpecialArea(obj, opt, kind) {
+      const canp = this.getCanvPainter();
       if (this._special_draw_area && isFunc(canp?.drawProjection))
-         return canp.drawProjection(this._special_draw_area, obj, opt);
+         return canp.drawProjection(kind || this._special_draw_area, obj, opt);
 
       return false;
    }
@@ -1446,20 +1494,20 @@ class ObjectPainter extends BasePainter {
    getToolTip(evnt) {
       if ((evnt?.clientX === undefined) || (evnt?.clientY === undefined)) return null;
 
-      let frame = this.getFrameSvg();
+      const frame = this.getFrameSvg();
       if (frame.empty()) return null;
-      let layer = frame.select('.main_layer');
+      const layer = frame.selectChild('.main_layer');
       if (layer.empty()) return null;
 
-      let pos = d3_pointer(evnt, layer.node()),
-          pnt = { touch: false, x: pos[0], y: pos[1] };
+      const pos = d3_pointer(evnt, layer.node()),
+            pnt = { touch: false, x: pos[0], y: pos[1] };
 
       if (isFunc(this.extractToolTip))
          return this.extractToolTip(pnt);
 
       pnt.disabled = true;
 
-      let res = isFunc(this.processTooltipEvent) ? this.processTooltipEvent(pnt) : null;
+      const res = isFunc(this.processTooltipEvent) ? this.processTooltipEvent(pnt) : null;
 
       return res?.user_info || res;
    }
@@ -1469,31 +1517,30 @@ class ObjectPainter extends BasePainter {
 
 /** @summary Generic text drawing
   * @private */
-function drawRawText(dom, txt /*, opt*/) {
-
-   let painter = new BasePainter(dom);
+function drawRawText(dom, txt /* , opt */) {
+   const painter = new BasePainter(dom);
    painter.txt = txt;
 
    painter.redrawObject = function(obj) {
       this.txt = obj;
       this.drawText();
       return true;
-   }
+   };
 
    painter.drawText = async function() {
-      let txt = (this.txt._typename && (this.txt._typename == clTObjString)) ? this.txt.fString : this.txt.value;
+      let txt = (this.txt._typename === clTObjString) ? this.txt.fString : this.txt.value;
       if (!isStr(txt)) txt = '<undefined>';
 
-      let mathjax = this.txt.mathjax || (settings.Latex == constants.Latex.AlwaysMathJax);
+      const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax);
 
       if (!mathjax && !('as_is' in this.txt)) {
-         let arr = txt.split('\n'); txt = '';
+         const arr = txt.split('\n'); txt = '';
          for (let i = 0; i < arr.length; ++i)
             txt += `<pre style='margin:0'>${arr[i]}</pre>`;
       }
 
-      let frame = this.selectDom(),
-          main = frame.select('div');
+      const frame = this.selectDom();
+      let main = frame.select('div');
       if (main.empty())
          main = frame.append('div').attr('style', 'max-width:100%;max-height:100%;overflow:auto');
       main.html(txt);
@@ -1505,7 +1552,7 @@ function drawRawText(dom, txt /*, opt*/) {
          typesetMathjax(frame.node());
 
       return this;
-   }
+   };
 
    return painter.drawText();
 }
@@ -1529,10 +1576,8 @@ function getElementMainPainter(dom) {
   * @param {string|object} dom - id of top div element or directly DOMElement
   * @return {string} produced JSON string */
 function drawingJSON(dom) {
-   let canp = getElementCanvPainter(dom);
-   return canp ? canp.produceJSON() : '';
+   return getElementCanvPainter(dom)?.produceJSON() || '';
 }
-
 
 let $active_pp = null;
 
@@ -1544,16 +1589,11 @@ let $active_pp = null;
   * @private */
 function selectActivePad(args) {
    if (args.active) {
-      let fp = $active_pp ? $active_pp.getFramePainter() : null;
-      if (fp) fp.setFrameActive(false);
-
+      $active_pp?.getFramePainter()?.setFrameActive(false);
       $active_pp = args.pp;
-
-      fp = $active_pp ? $active_pp.getFramePainter() : null;
-      if (fp) fp.setFrameActive(true);
-   } else if ($active_pp === args.pp) {
+      $active_pp?.getFramePainter()?.setFrameActive(true);
+   } else if ($active_pp === args.pp)
       $active_pp = null;
-   }
 }
 
 /** @summary Returns current active pad
@@ -1571,6 +1611,7 @@ function getActivePad() {
   * the element even after minimal resize
   * Or one just supply object with exact sizes like { width:300, height:200, force:true };
   * @example
+  * import { resize } from 'https://root.cern/js/latest/modules/base/ObjectPainter.mjs';
   * resize('drawing', { width: 500, height: 200 });
   * resize(document.querySelector('#drawing'), true); */
 function resize(dom, arg) {
@@ -1591,10 +1632,11 @@ function resize(dom, arg) {
   * @param {string|object} dom - id or DOM element
   * @public
   * @example
+  * import { cleanup } from 'https://root.cern/js/latest/modules/base/ObjectPainter.mjs';
   * cleanup('drawing');
   * cleanup(document.querySelector('#drawing')); */
 function cleanup(dom) {
-   let dummy = new ObjectPainter(dom), lst = [];
+   const dummy = new ObjectPainter(dom), lst = [];
    dummy.forEachPainter(p => { if (lst.indexOf(p) < 0) lst.push(p); });
    lst.forEach(p => p.cleanup());
    dummy.selectDom().html('');
@@ -1623,4 +1665,4 @@ const EAxisBits = {
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText, EAxisBits  };
+         ObjectPainter, drawRawText, EAxisBits };

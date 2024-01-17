@@ -33,9 +33,9 @@ class TELTU : public TTUBE {
 public:
    TELTU();
    TELTU(const char *name, const char *title, const char *material, Float_t rx, Float_t ry,Float_t dz);
-   virtual ~TELTU();
+   ~TELTU() override;
 
-   ClassDef(TELTU,1)  //ELTU shape
+   ClassDefOverride(TELTU,1)  //ELTU shape
 };
 
 #endif

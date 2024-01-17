@@ -18,7 +18,6 @@
 
 #include "Rtypes.h"
 
-#include "RooNormSetCache.h"
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"

@@ -44,6 +44,7 @@
 #include <functional>
 
 #ifdef USE_ROOT_ERROR
+#include "TError.h"
 #include "TROOT.h"
 #include "TMinuit2TraceObject.h"
 #endif
@@ -83,13 +84,13 @@ void RestoreGlobalPrintLevel(int) {}
 #endif
 
 Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type)
-   : Minimizer(), fDim(0), fMinimizer(0), fMinuitFCN(0), fMinimum(0)
+   : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // Default constructor implementation depending on minimizer type
    SetMinimizerType(type);
 }
 
-Minuit2Minimizer::Minuit2Minimizer(const char *type) : Minimizer(), fDim(0), fMinimizer(0), fMinuitFCN(0), fMinimum(0)
+Minuit2Minimizer::Minuit2Minimizer(const char *type) : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // constructor from a string
 
@@ -172,7 +173,7 @@ void Minuit2Minimizer::Clear()
    // clear also the function minimum
    if (fMinimum)
       delete fMinimum;
-   fMinimum = 0;
+   fMinimum = nullptr;
 }
 
 // set variables
@@ -381,37 +382,30 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
    if (fMinuitFCN)
       delete fMinuitFCN;
    fDim = func.NDim();
+   const bool hasGrad = func.HasGradient();
    if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>(func, ErrorDef());
+      fMinuitFCN = hasGrad ? static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>(dynamic_cast<ROOT::Math::IMultiGradFunction const&>(func), ErrorDef()))
+                           : static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>(func, ErrorDef()));
    } else {
-      // for Fumili the fit method function interface is required
-      const ROOT::Math::FitMethodFunction *fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
-      if (!fcnfunc) {
-         MnPrint print("Minuit2Minimizer", PrintLevel());
-         print.Error("Wrong Fit method function for Fumili");
-         return;
+      if(hasGrad) {
+         // for Fumili the fit method function interface is required
+         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
+         if (!fcnfunc) {
+            MnPrint print("Minuit2Minimizer", PrintLevel());
+            print.Error("Wrong Fit method function for Fumili");
+            return;
+         }
+         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>(*fcnfunc, fDim, ErrorDef());
+      } else {
+         // for Fumili the fit method function interface is required
+         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
+         if (!fcnfunc) {
+            MnPrint print("Minuit2Minimizer", PrintLevel());
+            print.Error("Wrong Fit method function for Fumili");
+            return;
+         }
+         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>(*fcnfunc, fDim, ErrorDef());
       }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>(*fcnfunc, fDim, ErrorDef());
-   }
-}
-
-void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGradFunction &func)
-{
-   // set function to be minimized
-   fDim = func.NDim();
-   if (fMinuitFCN)
-      delete fMinuitFCN;
-   if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>(func, ErrorDef());
-   } else {
-      // for Fumili the fit method function interface is required
-      const ROOT::Math::FitMethodGradFunction *fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
-      if (!fcnfunc) {
-         MnPrint print("Minuit2Minimizer", PrintLevel());
-         print.Error("Wrong Fit method function for Fumili");
-         return;
-      }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>(*fcnfunc, fDim, ErrorDef());
    }
 }
 
@@ -423,6 +417,38 @@ void Minuit2Minimizer::SetHessianFunction(std::function<bool(const std::vector<d
    if (!fcn) return;
    fcn->SetHessianFunction(hfunc);
 }
+
+namespace {
+
+ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::Math::MinimizerOptions const &options)
+{
+   ROOT::Minuit2::MnStrategy st{strategyLevel};
+   // set strategy and add extra options if needed
+   const ROOT::Math::IOptions *minuit2Opt = options.ExtraOptions();
+   if (!minuit2Opt) {
+      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   }
+   if (!minuit2Opt) {
+      return st;
+   }
+   auto customize = [&minuit2Opt](const char *name, auto val) {
+      minuit2Opt->GetValue(name, val);
+      return val;
+   };
+   // set extra  options
+   st.SetGradientNCycles(customize("GradientNCycles", int(st.GradientNCycles())));
+   st.SetHessianNCycles(customize("HessianNCycles", int(st.HessianNCycles())));
+   st.SetHessianGradientNCycles(customize("HessianGradientNCycles", int(st.HessianGradientNCycles())));
+
+   st.SetGradientTolerance(customize("GradientTolerance", st.GradientTolerance()));
+   st.SetGradientStepTolerance(customize("GradientStepTolerance", st.GradientStepTolerance()));
+   st.SetHessianStepTolerance(customize("HessianStepTolerance", st.HessianStepTolerance()));
+   st.SetHessianG2Tolerance(customize("HessianG2Tolerance", st.HessianG2Tolerance()));
+
+   return st;
+}
+
+} // namespace
 
 bool Minuit2Minimizer::Minimize()
 {
@@ -436,12 +462,12 @@ bool Minuit2Minimizer::Minimize()
       return false;
    }
 
-   assert(GetMinimizer() != 0);
+   assert(GetMinimizer() != nullptr);
 
    // delete result of previous minimization
    if (fMinimum)
       delete fMinimum;
-   fMinimum = 0;
+   fMinimum = nullptr;
 
    const int maxfcn = MaxFunctionCalls();
    const double tol = Tolerance();
@@ -450,7 +476,7 @@ bool Minuit2Minimizer::Minimize()
 
    const int printLevel = PrintLevel();
    if (PrintLevel() >= 1) {
-      // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
+      // print the real number of maxfcn used (defined in ModularFunctionMinimizer)
       int maxfcn_used = maxfcn;
       if (maxfcn_used == 0) {
          int nvar = fState.VariableParameters();
@@ -471,38 +497,13 @@ bool Minuit2Minimizer::Minimize()
    if (Precision() > 0)
       fState.SetPrecision(Precision());
 
-   // set strategy and add extra options if needed
-   ROOT::Minuit2::MnStrategy strategy(strategyLevel);
-   ROOT::Math::IOptions *minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   // add extra options if needed
+   const ROOT::Math::IOptions *minuit2Opt = fOptions.ExtraOptions();
+   if (!minuit2Opt) {
+      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   }
    if (minuit2Opt) {
       // set extra  options
-      int nGradCycles = strategy.GradientNCycles();
-      int nHessCycles = strategy.HessianNCycles();
-      int nHessGradCycles = strategy.HessianGradientNCycles();
-
-      double gradTol = strategy.GradientTolerance();
-      double gradStepTol = strategy.GradientStepTolerance();
-      double hessStepTol = strategy.HessianStepTolerance();
-      double hessG2Tol = strategy.HessianG2Tolerance();
-
-      minuit2Opt->GetValue("GradientNCycles", nGradCycles);
-      minuit2Opt->GetValue("HessianNCycles", nHessCycles);
-      minuit2Opt->GetValue("HessianGradientNCycles", nHessGradCycles);
-
-      minuit2Opt->GetValue("GradientTolerance", gradTol);
-      minuit2Opt->GetValue("GradientStepTolerance", gradStepTol);
-      minuit2Opt->GetValue("HessianStepTolerance", hessStepTol);
-      minuit2Opt->GetValue("HessianG2Tolerance", hessG2Tol);
-
-      strategy.SetGradientNCycles(nGradCycles);
-      strategy.SetHessianNCycles(nHessCycles);
-      strategy.SetHessianGradientNCycles(nHessGradCycles);
-
-      strategy.SetGradientTolerance(gradTol);
-      strategy.SetGradientStepTolerance(gradStepTol);
-      strategy.SetHessianStepTolerance(hessStepTol);
-      strategy.SetHessianG2Tolerance(hessStepTol);
-
       int storageLevel = 1;
       bool ret = minuit2Opt->GetValue("StorageLevel", storageLevel);
       if (ret)
@@ -516,7 +517,7 @@ bool Minuit2Minimizer::Minimize()
 
    // set a minimizer tracer object (default for printlevel=10, from gROOT for printLevel=11)
    // use some special print levels
-   MnTraceObject *traceObj = 0;
+   MnTraceObject *traceObj = nullptr;
 #ifdef USE_ROOT_ERROR
    if (printLevel == 10 && gROOT) {
       TObject *obj = gROOT->FindObject("Minuit2TraceObject");
@@ -546,8 +547,10 @@ bool Minuit2Minimizer::Minimize()
       SetTraceObject(*traceObj);
    }
 
+   const ROOT::Minuit2::MnStrategy strategy = customizedStrategy(strategyLevel, fOptions);
+
    const ROOT::Minuit2::FCNGradientBase *gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>(fMinuitFCN);
-   if (gradFCN != 0) {
+   if (gradFCN != nullptr) {
       // use gradient
       // SetPrintLevel(3);
       ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*gradFCN, fState, strategy, maxfcn, tol);
@@ -557,7 +560,10 @@ bool Minuit2Minimizer::Minimize()
       fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
    }
 
-   // check if Hesse needs to be run
+   // check if Hesse needs to be run. We do it when is requested (IsValidError() == true , set by SetParabError(true) in fitConfig)
+   // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
+   // AND when we have a valid minimum,
+   // AND  when the the current covariance matrix is estimated using the iterative approximation (Dcovar != 0 , i.e. Hesse has not computed  before)
    if (fMinimum->IsValid() && IsValidError() && fMinimum->State().Error().Dcovar() != 0) {
       // run Hesse (Hesse will add results in the last state of fMinimum
       ROOT::Minuit2::MnHesse hesse(strategy);
@@ -709,7 +715,7 @@ const double *Minuit2Minimizer::Errors() const
    // return error at minimum (set to zero for fixed and constant params)
    const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
    if (paramsObj.size() == 0)
-      return 0;
+      return nullptr;
    assert(fDim == paramsObj.size());
    // be careful for multiple calls of this function. I will redo an allocation here
    // only when size of vectors has changed (e.g. after a new minimization)
@@ -863,7 +869,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double &errLow, double &err
    //       GetMinimizer()->Minimize(*GetFCN(),fState, ROOT::Minuit2::MnStrategy(strategy), MaxFunctionCalls(),
    //       Tolerance());
    //    fState = min.UserState();
-   if (fMinimum == 0) {
+   if (fMinimum == nullptr) {
       print.Error("Failed - no function minimum existing");
       return false;
    }
@@ -1034,7 +1040,7 @@ int Minuit2Minimizer::RunMinosError(unsigned int i, double &errLow, double &errU
 
    int mstatus = 0;
    if (lowerInvalid || upperInvalid) {
-      // set status accroding to bit
+      // set status according to bit
       // bit 1:  lower invalid Minos errors
       // bit 2:  upper invalid Minos error
       // bit 3:   invalid because max FCN
@@ -1142,7 +1148,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
 
    MnPrint print("Minuit2Minimizer::Contour", PrintLevel());
 
-   if (fMinimum == 0) {
+   if (fMinimum == nullptr) {
       print.Error("No function minimum existing; must minimize function before");
       return false;
    }
@@ -1205,7 +1211,6 @@ bool Minuit2Minimizer::Hesse()
       return false;
    }
 
-   const int strategy = Strategy();
    const int maxfcn = MaxFunctionCalls();
    print.Info("Using max-calls", maxfcn);
 
@@ -1217,7 +1222,7 @@ bool Minuit2Minimizer::Hesse()
    if (Precision() > 0)
       fState.SetPrecision(Precision());
 
-   ROOT::Minuit2::MnHesse hesse(strategy);
+   ROOT::Minuit2::MnHesse hesse(customizedStrategy(Strategy(), fOptions));
 
    // case when function minimum exists
    if (fMinimum) {
@@ -1257,6 +1262,8 @@ bool Minuit2Minimizer::Hesse()
       covStatusType = "full but made positive defined";
    if (covStatus == 3)
       covStatusType = "accurate";
+   if (covStatus == 0)
+      covStatusType = "full but not positive defined";
 
    if (!fState.HasCovariance()) {
       // if false means error is not valid and this is due to a failure in Hesse
@@ -1314,17 +1321,15 @@ int Minuit2Minimizer::CovMatrixStatus() const
 void Minuit2Minimizer::SetTraceObject(MnTraceObject &obj)
 {
    // set trace object
-   if (!fMinimizer)
-      return;
-   fMinimizer->Builder().SetTraceObject(obj);
+   if (fMinimizer)
+      fMinimizer->Builder().SetTraceObject(obj);
 }
 
 void Minuit2Minimizer::SetStorageLevel(int level)
 {
    // set storage level
-   if (!fMinimizer)
-      return;
-   fMinimizer->Builder().SetStorageLevel(level);
+   if (fMinimizer)
+      fMinimizer->Builder().SetStorageLevel(level);
 }
 
 } // end namespace Minuit2

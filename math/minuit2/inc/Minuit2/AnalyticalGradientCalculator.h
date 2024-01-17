@@ -39,7 +39,7 @@ public:
    bool Hessian(const MinimumParameters &, MnAlgebraicSymMatrix &) const override;
 
    /// compute second derivatives (diagonal of Hessian)
-   virtual bool G2(const MinimumParameters &, MnAlgebraicVector &) const;
+   bool G2(const MinimumParameters &, MnAlgebraicVector &) const override;
 
    virtual bool CheckGradient() const;
 

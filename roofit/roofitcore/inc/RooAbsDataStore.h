@@ -76,7 +76,7 @@ public:
     throw std::logic_error("getCategoryBatches() not implemented in RooAbsDataStore.");
     return {};
   }
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const = 0;
+  virtual std::span<const double> getWeightBatch(std::size_t first, std::size_t len) const = 0;
 
   // Change observable name
   virtual bool changeObservableName(const char* from, const char* to) =0 ;

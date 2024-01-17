@@ -35,15 +35,15 @@ protected:
 
 public:
    TGLPlot3D();
-   virtual ~TGLPlot3D();
+   ~TGLPlot3D() override;
 
-   virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
+   Bool_t KeepDuringSmartRefresh() const override { return kFALSE; }
 
    static TGLPlot3D* CreatePlot(TH3 *h, TPolyMarker3D *pm);
    static TGLPlot3D* CreatePlot(TObject* obj, const Option_t* opt, TVirtualPad* pad);
    static TGLPlot3D* CreatePlot(TObject* obj, const Option_t* opt, Bool_t logx, Bool_t logy, Bool_t logz);
 
-   ClassDef(TGLPlot3D, 0); // Short description.
+   ClassDefOverride(TGLPlot3D, 0); // Short description.
 };
 
 #endif

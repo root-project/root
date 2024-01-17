@@ -47,16 +47,16 @@ protected:
    Float_t faZ;      // Coeff along Oz
 
    virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
-   virtual void    SetPoints(Double_t *points) const;
+   void    SetPoints(Double_t *points) const override;
 
 public:
    TSPHE();
    TSPHE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t themin,
          Float_t themax, Float_t phimin, Float_t phimax);
    TSPHE(const char *name, const char *title, const char *material, Float_t rmax);
-   virtual ~TSPHE();
-   virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
+   ~TSPHE() override;
+   Int_t   DistancetoPrimitive(Int_t px, Int_t py) override;
+   const TBuffer3D &GetBuffer3D(Int_t reqSections) const override;
    virtual Float_t GetRmin() const {return fRmin;}
    virtual Float_t GetRmax() const {return fRmax;}
    virtual Float_t GetThemin() const {return fThemin;}
@@ -68,9 +68,9 @@ public:
    virtual void    SetAspectRatio(Float_t factor=1.0){ fAspectRatio = factor; MakeTableOfCoSin();}
    virtual void    SetEllipse(const Float_t *factors);
    virtual void    SetNumberOfDivisions (Int_t p);
-   virtual void    Sizeof3D() const;
+   void    Sizeof3D() const override;
 
-   ClassDef(TSPHE,3)  //SPHE shape
+   ClassDefOverride(TSPHE,3)  //SPHE shape
 };
 
 #endif

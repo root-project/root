@@ -57,7 +57,7 @@ protected:
 
 public:
    TGLScenePad(TVirtualPad* pad);
-   virtual ~TGLScenePad() {}
+   ~TGLScenePad() override {}
 
    TVirtualPad* GetPad() const { return fPad; }
    void SetPad(TVirtualPad* p) { fPad = p; }
@@ -75,27 +75,27 @@ public:
 
    // TVirtualViewer3D interface
 
-   virtual Bool_t CanLoopOnPrimitives() const { return kTRUE; }
-   virtual void   PadPaint(TVirtualPad* pad);
-   virtual void   ObjectPaint(TObject* obj, Option_t* opt="");
+   Bool_t CanLoopOnPrimitives() const override { return kTRUE; }
+   void   PadPaint(TVirtualPad* pad) override;
+   void   ObjectPaint(TObject* obj, Option_t* opt="") override;
 
    // For now handled by viewer
-   virtual Int_t  DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/) { return 9999; }
-   virtual void   ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/) {}
+   Int_t  DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/) override { return 9999; }
+   void   ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/) override {}
 
-   virtual Bool_t PreferLocalFrame() const { return kTRUE; }
+   Bool_t PreferLocalFrame() const override { return kTRUE; }
 
-   virtual void   BeginScene();
-   virtual Bool_t BuildingScene() const { return CurrentLock() == kModifyLock; }
-   virtual void   EndScene();
+   void   BeginScene() override;
+   Bool_t BuildingScene() const override { return CurrentLock() == kModifyLock; }
+   void   EndScene() override;
 
-   virtual Int_t  AddObject(const TBuffer3D& buffer, Bool_t* addChildren = nullptr);
-   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = nullptr);
-   virtual Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = nullptr);
-   virtual void   CloseComposite();
-   virtual void   AddCompositeOp(UInt_t operation);
+   Int_t  AddObject(const TBuffer3D& buffer, Bool_t* addChildren = nullptr) override;
+   Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = nullptr) override;
+   Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = nullptr) override;
+   void   CloseComposite() override;
+   void   AddCompositeOp(UInt_t operation) override;
 
-   ClassDef(TGLScenePad, 0); // GL-scene filled via TPad-TVirtualViewer interface.
+   ClassDefOverride(TGLScenePad, 0); // GL-scene filled via TPad-TVirtualViewer interface.
 };
 
 #endif

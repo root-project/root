@@ -67,6 +67,16 @@ if(tmva)
         ROOT/_pythonization/_tmva/_utils.py)
 endif()
 
+if(PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.8 AND dataframe)
+list(APPEND PYROOT_EXTRA_PY3_SOURCE
+     ROOT/_pythonization/_tmva/_batchgenerator.py)
+endif()
+
+if(tmva)
+    list(APPEND PYROOT_EXTRA_PY3_SOURCE
+        ROOT/_pythonization/_tmva/_gnn.py)
+endif()
+
 list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
@@ -82,6 +92,7 @@ set(py2_py3_sources
   ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_pyz_utils.py
   ROOT/_pythonization/_rvec.py
+  ROOT/_pythonization/_runtime_error.py
   ROOT/_pythonization/_stl_vector.py
   ROOT/_pythonization/_tarray.py
   ROOT/_pythonization/_tclass.py

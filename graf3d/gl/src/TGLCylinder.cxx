@@ -63,7 +63,7 @@ public:
                Double_t phi1, Double_t phi2, const TGLVector3 &l = gLowNormalDefault,
                const TGLVector3 &h = gHighNormalDefault);
 
-   void Draw() const;
+   void Draw() const override;
 };
 
 //four quad strips:
@@ -79,7 +79,7 @@ public:
    TubeMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
             const TGLVector3 &l = gLowNormalDefault, const TGLVector3 &h = gHighNormalDefault);
 
-   void Draw() const;
+   void Draw() const override;
 };
 
 //One quad mesh and 2 triangle funs
@@ -93,7 +93,7 @@ public:
    TCylinderMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz,
                  const TGLVector3 &l = gLowNormalDefault, const TGLVector3 &h = gHighNormalDefault);
 
-   void Draw() const;
+   void Draw() const override;
 };
 
 //One quad mesh and 2 triangle fans
@@ -107,7 +107,7 @@ private:
 public:
    TCylinderSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz, Double_t phi1, Double_t phi2,
                     const TGLVector3 &l = gLowNormalDefault, const TGLVector3 &h = gHighNormalDefault);
-   void Draw() const;
+   void Draw() const override;
 };
 
 TGLMesh::TGLMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,

@@ -54,7 +54,7 @@ protected:
 
 public:
    TGColorPalette(const TGWindow *p = nullptr, Int_t cols = 8, Int_t rows = 8, Int_t id = -1);
-   virtual ~TGColorPalette();
+   ~TGColorPalette() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;
@@ -117,7 +117,7 @@ protected:
 
 public:
    TGColorPick(const TGWindow *p = nullptr, Int_t w = 1, Int_t h = 1, Int_t id = -1);
-   virtual ~TGColorPick();
+   ~TGColorPick() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;
@@ -171,7 +171,7 @@ protected:
 public:
    TGColorDialog(const TGWindow *p = nullptr, const TGWindow *m = nullptr, Int_t *retc = nullptr,
                  Pixel_t *color = nullptr, Bool_t wait = kTRUE);
-   virtual ~TGColorDialog();
+   ~TGColorDialog() override;
 
    TGColorPalette *GetPalette() const { return fPalette; }
    TGColorPalette *GetCustomPalette() const { return fCpalette; }

@@ -629,20 +629,21 @@ bool LinkdefReader::ProcessOperators(std::string &pattern)
 class LinkdefReaderPragmaHandler : public clang::PragmaHandler {
 protected:
    LinkdefReader &fOwner;
-   clang::SourceManager &fSourceManager;
 public:
-   LinkdefReaderPragmaHandler(const char *which, LinkdefReader &owner, clang::SourceManager &sm) :
+   LinkdefReaderPragmaHandler(const char *which, LinkdefReader &owner) :
       // This handler only cares about "#pragma link"
-      clang::PragmaHandler(which), fOwner(owner), fSourceManager(sm) {
+      clang::PragmaHandler(which), fOwner(owner) {
    }
 
-   void Error(const char *message, const clang::Token &tok, bool source = true) {
+   void Error(const char *message, const clang::Token &tok,
+              const clang::Preprocessor& PP, bool source = true) {
 
       std::cerr << message << " at ";
-      tok.getLocation().dump(fSourceManager);
+      const clang::SourceManager &SM = PP.getSourceManager();
+      tok.getLocation().dump(SM);
       if (source) {
          std::cerr << ":";
-         std::cerr << fSourceManager.getCharacterData(tok.getLocation());
+         std::cerr << SM.getCharacterData(tok.getLocation());
       }
       std::cerr << '\n';
    }
@@ -666,14 +667,14 @@ public:
 
       PP.Lex(tok);
       if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::equal)) {
-         Error("Error: the 'options' keyword must be followed by an '='", tok);
+         Error("Error: the 'options' keyword must be followed by an '='", tok, PP);
          return false;
       }
 
       PP.Lex(tok);
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) {
          if (!tok.getIdentifierInfo()) {
-            Error("Error: Malformed version option.", tok);
+            Error("Error: Malformed version option.", tok, PP);
          } else if (tok.getIdentifierInfo()->getName() == "nomap") {
             // For rlibmap rather than rootcling
             // so ignore
@@ -687,19 +688,19 @@ public:
             clang::Token start = tok;
             PP.Lex(tok);
             if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::l_paren)) {
-               Error("Error: missing left parenthesis after version.", start);
+               Error("Error: missing left parenthesis after version.", start, PP);
                return false;
             }
             PP.Lex(tok);
             clang::Token number = tok;
             if (tok.isNot(clang::tok::eod)) PP.Lex(tok);
             if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::r_paren)) {
-               Error("Error: missing right parenthesis after version.", start);
+               Error("Error: missing right parenthesis after version.", start, PP);
                return false;
             }
             if (!number.isLiteral()) {
                std::cerr << "Error: Malformed version option, the value is not a non-negative number!";
-               Error("", tok);
+               Error("", tok, PP);
             }
             std::string verStr(number.getLiteralData(), number.getLength());
             bool noDigit       = false;
@@ -708,11 +709,11 @@ public:
 
             if (noDigit) {
                std::cerr << "Error: Malformed version option! \"" << verStr << "\" is not a non-negative number!";
-               Error("", start);
+               Error("", start, PP);
             } else
                options.fVersionNumber = atoi(verStr.c_str());
          } else {
-            Error("Warning: ignoring unknown #pragma link option=", tok);
+            Error("Warning: ignoring unknown #pragma link option=", tok, PP);
          }
          PP.Lex(tok);
          if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::comma)) {
@@ -728,9 +729,9 @@ public:
 
 class PragmaExtraInclude : public LinkdefReaderPragmaHandler {
 public:
-   PragmaExtraInclude(LinkdefReader &owner, clang::SourceManager &sm) :
+   PragmaExtraInclude(LinkdefReader &owner) :
       // This handler only cares about "#pragma link"
-      LinkdefReaderPragmaHandler("extra_include", owner, sm) {
+      LinkdefReaderPragmaHandler("extra_include", owner) {
    }
 
    void HandlePragma(clang::Preprocessor &PP,
@@ -749,10 +750,11 @@ public:
       //         return;
       //      }
       if (tok.is(clang::tok::eod)) {
-         Error("Warning - lonely pragma statement: ", tok);
+         Error("Warning - lonely pragma statement: ", tok, PP);
          return;
       }
-      const char *start = fSourceManager.getCharacterData(tok.getLocation());
+      const clang::SourceManager &SM = PP.getSourceManager();
+      const char *start = SM.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) {
@@ -760,16 +762,16 @@ public:
          PP.Lex(tok);
       }
       if (tok.isNot(clang::tok::semi)) {
-         Error("Error: missing ; at end of rule", tok, false);
+         Error("Error: missing ; at end of rule", tok, PP, false);
          return;
       }
       if (end.is(clang::tok::unknown)) {
-         Error("Error: Unknown token!", tok);
+         Error("Error: Unknown token!", tok, PP);
       } else {
-         llvm::StringRef include(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
+         llvm::StringRef include(start, SM.getCharacterData(end.getLocation()) - start + end.getLength());
 
          if (!fOwner.AddInclude(include.str())) {
-            Error("", tok);
+            Error("", tok, PP);
          }
       }
    }
@@ -777,9 +779,9 @@ public:
 
 class PragmaIoReadInclude : public LinkdefReaderPragmaHandler {
 public:
-   PragmaIoReadInclude(LinkdefReader &owner, clang::SourceManager &sm) :
+   PragmaIoReadInclude(LinkdefReader &owner) :
       // This handler only cares about "#pragma link"
-      LinkdefReaderPragmaHandler("read", owner, sm) {
+      LinkdefReaderPragmaHandler("read", owner) {
    }
 
    void HandlePragma(clang::Preprocessor &PP,
@@ -798,10 +800,11 @@ public:
       //         return;
       //      }
       if (tok.is(clang::tok::eod)) {
-         Error("Warning - lonely pragma statement: ", tok);
+         Error("Warning - lonely pragma statement: ", tok, PP);
          return;
       }
-      const char *start = fSourceManager.getCharacterData(tok.getLocation());
+      const clang::SourceManager& SM = PP.getSourceManager();
+      const char *start = SM.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) {
@@ -810,13 +813,13 @@ public:
       }
       // Pragma read rule do not need to end in a semi colon
       // if (tok.isNot(clang::tok::semi)) {
-      //    Error("Error: missing ; at end of rule",tok);
+      //    Error("Error: missing ; at end of rule",tok, PP);
       //    return;
       // }
       if (end.is(clang::tok::unknown)) {
-         Error("Error: unknown token", tok);
+         Error("Error: unknown token", tok, PP);
       } else {
-         llvm::StringRef rule_text(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
+         llvm::StringRef rule_text(start, SM.getCharacterData(end.getLocation()) - start + end.getLength());
 
          std::string error_string;
          ROOT::ProcessReadPragma(rule_text.str().c_str(), error_string);
@@ -836,9 +839,9 @@ class PragmaLinkCollector : public LinkdefReaderPragmaHandler {
    //  #pragma link [spec] options=... class classname[+-!]
    //
 public:
-   PragmaLinkCollector(LinkdefReader &owner, clang::SourceManager &sm) :
+   PragmaLinkCollector(LinkdefReader &owner) :
       // This handler only cares about "#pragma link"
-      LinkdefReaderPragmaHandler("link", owner, sm) {
+      LinkdefReaderPragmaHandler("link", owner) {
    }
 
    void HandlePragma(clang::Preprocessor &PP,
@@ -857,7 +860,7 @@ public:
 //         return;
 //      }
       if (tok.is(clang::tok::eod)) {
-         Error("Warning - lonely pragma statement: ", tok);
+         Error("Warning - lonely pragma statement: ", tok, PP);
          return;
       }
       bool linkOn;
@@ -868,27 +871,27 @@ public:
             linkOn = true;
             PP.Lex(tok);
             if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::plusplus)) {
-               Error("Error ++ expected after '#pragma link C' at ", tok);
+               Error("Error ++ expected after '#pragma link C' at ", tok, PP);
                return;
             }
          } else {
-            Error("Error #pragma link should be followed by off or C", tok);
+            Error("Error #pragma link should be followed by off or C", tok, PP);
             return;
          }
       } else {
-         Error("Error bad #pragma format. ", tok);
+         Error("Error bad #pragma format. ", tok, PP);
          return;
       }
 
       PP.Lex(tok);
       if (tok.is(clang::tok::eod)) {
-         Error("Error no arguments after #pragma link C++/off: ", tok);
+         Error("Error no arguments after #pragma link C++/off: ", tok, PP);
          return;
       }
       auto identifier = tok.getIdentifierInfo();
       if (identifier == nullptr) {
-        if (linkOn) Error("Error #pragma link C++ should be followed by identifier", tok);
-        else Error("Error #pragma link off should be followed by identifier", tok);
+        if (linkOn) Error("Error #pragma link C++ should be followed by identifier", tok, PP);
+        else Error("Error #pragma link off should be followed by identifier", tok, PP);
         return;
       }
 
@@ -904,7 +907,8 @@ public:
       }
 
       PP.LexUnexpandedToken(tok);
-      const char *start = fSourceManager.getCharacterData(tok.getLocation());
+      const clang::SourceManager &SM = PP.getSourceManager();
+      const char *start = SM.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) {
@@ -915,19 +919,19 @@ public:
       }
 
       if (tok.isNot(clang::tok::semi)) {
-         Error("Error: missing ; at end of rule", tok, false);
+         Error("Error: missing ; at end of rule", tok, PP, false);
          return;
       }
 
       if (end.is(clang::tok::unknown)) {
          if (!fOwner.AddRule(type.data(), "", linkOn, false, options.get())) {
-            Error(type.data(), tok, false);
+            Error(type.data(), tok, PP, false);
          }
       } else {
-         llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
+         llvm::StringRef identifier(start, SM.getCharacterData(end.getLocation()) - start + end.getLength());
 
          if (!fOwner.AddRule(type.str(), identifier.str(), linkOn, false, options.get())) {
-            Error(type.data(), tok, false);
+            Error(type.data(), tok, PP, false);
          }
       }
 //      do {
@@ -941,9 +945,9 @@ public:
 
 class PragmaCreateCollector : public LinkdefReaderPragmaHandler {
 public:
-   PragmaCreateCollector(LinkdefReader &owner, clang::SourceManager &sm) :
+   PragmaCreateCollector(LinkdefReader &owner) :
       // This handler only cares about "#pragma create"
-      LinkdefReaderPragmaHandler("create", owner, sm) {
+      LinkdefReaderPragmaHandler("create", owner) {
    }
 
    void HandlePragma(clang::Preprocessor &PP,
@@ -962,16 +966,17 @@ public:
       //         return;
       //      }
       if (tok.is(clang::tok::eod)) {
-         Error("Warning - lonely pragma statement: ", tok);
+         Error("Warning - lonely pragma statement: ", tok, PP);
          return;
       }
       if ((tok.getIdentifierInfo()->getName() != "TClass")) {
-         Error("Error: currently only supporting TClass after '#pragma create':", tok);
+         Error("Error: currently only supporting TClass after '#pragma create':", tok, PP);
          return;
       }
 
       PP.Lex(tok);
-      const char *start = fSourceManager.getCharacterData(tok.getLocation());
+      const clang::SourceManager &SM = PP.getSourceManager();
+      const char *start = SM.getCharacterData(tok.getLocation());
       clang::Token end = tok;
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) {
          end = tok;
@@ -979,14 +984,14 @@ public:
       }
 
       if (tok.isNot(clang::tok::semi)) {
-         Error("Error: missing ; at end of rule", tok, false);
+         Error("Error: missing ; at end of rule", tok, PP, false);
          return;
       }
 
-      llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
+      llvm::StringRef identifier(start, SM.getCharacterData(end.getLocation()) - start + end.getLength());
 
       if (!fOwner.AddRule("class", identifier.str(), true, true)) {
-         Error("", tok);
+         Error("", tok, PP);
       }
 
 //      do {
@@ -1019,10 +1024,11 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    clang::DiagnosticConsumer &DClient = pragmaCI->getDiagnosticClient();
    DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
 
-   PragmaLinkCollector pragmaLinkCollector(*this, pragmaCI->getASTContext().getSourceManager());
-   PragmaCreateCollector pragmaCreateCollector(*this, pragmaCI->getASTContext().getSourceManager());
-   PragmaExtraInclude pragmaExtraInclude(*this, pragmaCI->getASTContext().getSourceManager());
-   PragmaIoReadInclude pragmaIoReadInclude(*this, pragmaCI->getASTContext().getSourceManager());
+   // FIXME: Reduce the code duplication across these collector classes.
+   PragmaLinkCollector pragmaLinkCollector(*this);
+   PragmaCreateCollector pragmaCreateCollector(*this);
+   PragmaExtraInclude pragmaExtraInclude(*this);
+   PragmaIoReadInclude pragmaIoReadInclude(*this);
 
    PP.AddPragmaHandler(&pragmaLinkCollector);
    PP.AddPragmaHandler(&pragmaCreateCollector);

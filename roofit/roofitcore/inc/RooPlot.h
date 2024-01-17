@@ -20,7 +20,7 @@
 #include "TNamed.h"
 
 #include <memory>
-#include <float.h>
+#include <cfloat>
 
 class TH1 ;
 
@@ -108,7 +108,7 @@ public:
 
   // container management
   const char* nameOf(Int_t idx) const ;
-  TObject *findObject(const char *name, const TClass* clas=nullptr) const;
+  TObject *findObject(const char *name, const TClass* tClass=nullptr) const;
   TObject* getObject(Int_t idx) const ;
   Stat_t numItems() const {return _items.size();}
 
@@ -229,7 +229,7 @@ protected:
 
   void updateYAxis(double ymin, double ymax, const char *label= "");
   void updateFitRangeNorm(const TH1* hist);
-  void updateFitRangeNorm(const RooPlotable* rp, bool refeshNorm=false);
+  void updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm=false);
 
   TH1* _hist = nullptr;      ///< Histogram that we uses as basis for drawing the content
   Items _items;  ///< A list of the items we contain.

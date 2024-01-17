@@ -39,17 +39,17 @@ protected:
    TTVLVEntry *fItem;       // pointer to associated item
 public:
    TGItemContext();
-   virtual     ~TGItemContext() { }
+       ~TGItemContext() override { }
    void         Associate(TTVLVEntry *item) { fItem = item; }
-   virtual void Delete(Option_t *) { }           // *MENU*
-   void         Draw(Option_t *option="");       // *MENU*
+   void Delete(Option_t *) override { }           // *MENU*
+   void         Draw(Option_t *option="") override;       // *MENU*
    void         EditExpression();                // *MENU*
    void         Empty();                         // *MENU*
    void         RemoveItem();                    // *MENU*
    void         Scan();                          // *MENU*
    void         SetExpression(const char *name="", const char *alias="-empty-", Bool_t cut=kFALSE); // *MENU*
 
-   ClassDef(TGItemContext, 0)  // Context menu for TTVLVEntry
+   ClassDefOverride(TGItemContext, 0)  // Context menu for TTVLVEntry
 };
 
 
@@ -71,7 +71,7 @@ public:
    TTVLVEntry(const TGWindow *p,
               const TGPicture *bigpic, const TGPicture *smallpic,
               TGString *name, TGString **subnames, EListViewMode ViewMode);
-   virtual ~TTVLVEntry();
+   ~TTVLVEntry() override;
    const char     *ConvertAliases();
    void            CopyItem(TTVLVEntry *dest);
    const char     *GetAlias() {return fAlias.Data();}
@@ -80,7 +80,7 @@ public:
    const char     *GetConvName() {return fConvName;}
    const char     *GetTrueName() {return fTrueName.Data();}
    TGToolTip      *GetTip() {return fTip;}
-   virtual Bool_t  HandleCrossing(Event_t *event);
+   Bool_t  HandleCrossing(Event_t *event) override;
    Bool_t          HasAlias();
    Bool_t          IsCut() {return fIsCut;}
    void            PrependTilde();
@@ -93,7 +93,7 @@ public:
    void            SetSmallPic(const TGPicture *spic);
    void            Empty();
 
-   ClassDef(TTVLVEntry,0)  // Item that goes into the tree list view widget
+   ClassDefOverride(TTVLVEntry,0)  // Item that goes into the tree list view widget
 };
 
 
@@ -120,7 +120,7 @@ private:
 
 public:
    TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options=kSunkenFrame);
-   virtual ~TTVLVContainer();
+   ~TTVLVContainer() override;
    virtual void AddThisItem(TTVLVEntry *item)
                   { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); }
    const char    *Cut();
@@ -131,15 +131,15 @@ public:
    const char    *Ey();
    const char    *Ez();
    TTreeViewer   *GetViewer() {return fViewer;}
-   void           SetListView(TGListView *lv) {fListView = lv;}
+   void           SetListView(TGListView *lv) override {fListView = lv;}
    void           SetViewer(TTreeViewer *viewer) {fViewer = viewer;}
    void           RemoveNonStatic();
    const char    *ScanList();
    void           SelectItem(const char* name);
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
 
-   ClassDef(TTVLVContainer,0)  // A dragging-capable LVContainer
+   ClassDefOverride(TTVLVContainer,0)  // A dragging-capable LVContainer
 };
 
 
@@ -176,20 +176,20 @@ protected:
 
 public:
    TGSelectBox(const TGWindow *p, const TGWindow *main, UInt_t w = 10, UInt_t h = 10);
-   virtual ~TGSelectBox();
-   virtual void   CloseWindow();
+   ~TGSelectBox() override;
+   void   CloseWindow() override;
    TTVLVEntry    *EditedEntry() {return fEntry;}
    void           GrabPointer();
    void           SetLabel(const char* title);
    void           SetEntry(TTVLVEntry *entry);
    void           SaveText();
    void           InsertText(const char* text);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    Bool_t         ValidateAlias();
 
    static TGSelectBox *GetInstance();
 
-   ClassDef(TGSelectBox,0)  // TreeView dialog widget
+   ClassDefOverride(TGSelectBox,0)  // TreeView dialog widget
 };
 
 #endif

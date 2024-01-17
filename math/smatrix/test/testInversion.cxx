@@ -40,7 +40,7 @@ namespace test {
 
    public:
 
-      Timer(const std::string & s = "") : fName(s), fTime(0)
+      Timer(const std::string & s = "") : fName(s), fTime(nullptr)
       {
          fWatch.Start();
       }
@@ -100,7 +100,7 @@ void printMatrix<TMatrixTSym<double> >(const TMatrixTSym<double> & m ) {
 template<class M>
 void genMatrix(M  & m ) {
    TRandom & r = *gRandom;
-   // generate first diagonal elemets
+   // generate first diagonal elements
    for (int i = 0; i < N; ++i) {
       double maxVal = i*10000/(N-1) + 1;  // max condition is 10^4
       m(i,i) = r.Uniform(0, maxVal);

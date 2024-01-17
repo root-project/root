@@ -52,7 +52,7 @@ void rf101_basics()
    // -----------------------------
 
    // Generate a dataset of 1000 events in x from gauss
-   RooDataSet *data = gauss.generate(x, 10000);
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 10000)};
 
    // Make a second plot frame in x and draw both the
    // data and the pdf in the frame
@@ -71,8 +71,7 @@ void rf101_basics()
    sigma.Print();
 
    // Draw all frames on a canvas
-   TCanvas *c = new TCanvas("rf101_basics", "rf101_basics", 800, 400);
-   c->Divide(2);
+   TCanvas *c = new TCanvas("rf101_basics", "rf101_basics", 800, 400); c->Divide(2);
    c->cd(1);
    gPad->SetLeftMargin(0.15);
    xframe->GetYaxis()->SetTitleOffset(1.6);

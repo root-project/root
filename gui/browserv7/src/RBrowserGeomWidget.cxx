@@ -19,7 +19,7 @@
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 using namespace std::string_literals;
 

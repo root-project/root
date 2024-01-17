@@ -40,16 +40,16 @@ public:
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) ;
 
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
-           const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
-             const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-             const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-             const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;
+           const RooCmdArg& arg1            , const RooCmdArg& arg2={},
+             const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+             const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+             const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
   RooProdPdf(const char* name, const char* title,
-             const RooCmdArg& arg1,             const RooCmdArg& arg2=RooCmdArg(),
-             const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-             const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-             const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;
+             const RooCmdArg& arg1,             const RooCmdArg& arg2={},
+             const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+             const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+             const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
   RooProdPdf(const RooProdPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooProdPdf(*this,newname) ; }
@@ -161,7 +161,7 @@ private:
   std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   std::unique_ptr<RooAbsReal> specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   double calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
-  void calculateBatch(const RooProdPdf::CacheElem& cache, cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
+  void calculateBatch(RooAbsArg const* caller, const RooProdPdf::CacheElem &cache, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
 
   friend class RooProdGenContext ;

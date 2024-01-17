@@ -196,7 +196,7 @@ public:
    //this will be an unsafe view. Method exists for backwards compatibility only
    TCpuMatrix<AFloat> GetMatrix() const
    {
-      size_t ndims = 0;
+      [[maybe_unused]] size_t ndims = 0;
       auto& shape = this->GetShape();
       //check if squeezable but do not actually squeeze
       for (auto& shape_i : shape){

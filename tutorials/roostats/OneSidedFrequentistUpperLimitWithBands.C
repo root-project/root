@@ -71,7 +71,7 @@
 /// and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
 /// would be ~1.35 once the cross-section is far enough away from 0 that it is essentially
 /// unaffected by the boundary.  As one reaches the last points in the scan, the
-/// theshold starts to get artificially high.  This is because the range of the parameter in
+/// threshold starts to get artificially high.  This is because the range of the parameter in
 /// the fit is the same as the range in the scan.  In the future, these should be independently
 /// controlled, but they are not now.  As a result the ~50% of pseudo-experiments that have an
 /// upward fluctuation end up with muhat = muMax.  Because of this, the upper range of the
@@ -150,10 +150,6 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -341,16 +337,16 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       w->loadSnapshot("paramsToGenerateData");
       //    poiAndNuisance->Print("v");
 
-      RooDataSet *toyData = 0;
+      std::unique_ptr<RooDataSet> toyData;
       // now generate a toy dataset
       if (!mc->GetPdf()->canBeExtended()) {
          if (data->numEntries() == 1)
-            toyData = mc->GetPdf()->generate(*mc->GetObservables(), 1);
+            toyData = std::unique_ptr<RooDataSet>{mc->GetPdf()->generate(*mc->GetObservables(), 1)};
          else
             cout << "Not sure what to do about this model" << endl;
       } else {
          //      cout << "generating extended dataset"<<endl;
-         toyData = mc->GetPdf()->generate(*mc->GetObservables(), Extended());
+         toyData = std::unique_ptr<RooDataSet>{mc->GetPdf()->generate(*mc->GetObservables(), Extended())};
       }
 
       // generate global observables
@@ -359,12 +355,10 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
 
       RooSimultaneous *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
       if (!simPdf) {
-         RooDataSet *one = mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1);
+         std::unique_ptr<RooDataSet> one{mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1)};
          const RooArgSet *values = one->get();
          std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
          allVars->assign(*values);
-         delete values;
-         delete one;
       } else {
 
          // try fix for sim pdf
@@ -428,7 +422,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
          tmpPoint->Print("v");
          cout << "from hist " << histOfThresholds->GetBinCenter(i+1) <<endl;
          double arMax = histOfThresholds->GetBinContent(i+1);
-         // cout << " threhold from Hist = aMax " << arMax<<endl;
+         // cout << " threshold from Hist = aMax " << arMax<<endl;
          // double arMax2 = belt->GetAcceptanceRegionMax(*tmpPoint);
          // cout << "from scan arMax2 = "<< arMax2 << endl; // not the same due to TH1F not TH1D
          // cout << "scan - hist" << arMax2-arMax << endl;
@@ -453,8 +447,6 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
 
       // for few events, data is often the same, and UL is often the same
       //    cout << "thisUL = " << thisUL<<endl;
-
-      delete toyData;
    }
    histOfUL->Draw();
    c1->SaveAs("one-sided_upper_limit_output.pdf");

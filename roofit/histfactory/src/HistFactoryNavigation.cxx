@@ -324,7 +324,7 @@ namespace RooStats {
    std::string channel_name = fChannelNameVec.at(i_chan);
 
    // If we pass a channel string, we only print that one channel
-   if( channel_to_print != "" && channel_name != channel_to_print) continue;
+   if( !channel_to_print.empty() && channel_name != channel_to_print) continue;
 
    std::unique_ptr<TH1> data_hist{GetDataHist(data, channel_name, channel_name+"_tmp")};
    std::cout << std::setw(_label_print_width) << channel_name + " (data)";
@@ -455,7 +455,7 @@ namespace RooStats {
       // (Could be optimized, it uses an intermediate histogram for now...)
 
       // Get the histogram, fetch the bin content, and return
-      std::unique_ptr<TH1> channel_hist_tmp{GetChannelHist(channel, (channel+"_tmp").c_str())};
+      std::unique_ptr<TH1> channel_hist_tmp{GetChannelHist(channel, channel+"_tmp")};
       return channel_hist_tmp->GetBinContent(bin);
     }
 
@@ -467,7 +467,7 @@ namespace RooStats {
       //  Could be optimized, it uses an intermediate histogram for now...)
 
       // Get the histogram, fetch the bin content, and return
-      std::unique_ptr<TH1> sample_hist_tmp{GetSampleHist(channel, sample,  (channel+"_tmp").c_str())};
+      std::unique_ptr<TH1> sample_hist_tmp{GetSampleHist(channel, sample,  channel+"_tmp")};
       return sample_hist_tmp->GetBinContent(bin);
     }
 
@@ -488,7 +488,7 @@ namespace RooStats {
 
 
     RooAbsReal* HistFactoryNavigation::SampleFunction(const std::string& channel, const std::string& sample){
-      // Return the function object pointer cooresponding
+      // Return the function object pointer corresponding
       // to a particular sample in a particular channel
 
       std::map< std::string, std::map< std::string, RooAbsReal*> >::iterator channel_itr;
@@ -535,7 +535,7 @@ namespace RooStats {
       RooArgList observable_list( *GetObservableSet(channel) );
 
       std::string name = hist_name;
-      if(hist_name=="") name = channel + "_" + sample + "_hist";
+      if(hist_name.empty()) name = channel + "_" + sample + "_hist";
 
       RooAbsReal* sample_function = SampleFunction(channel, sample);
 
@@ -582,7 +582,7 @@ namespace RooStats {
    total_hist->Add(sample_hist.get());
       }
 
-      if(hist_name=="") total_hist->SetName(hist_name.c_str());
+      if(hist_name.empty()) total_hist->SetName(hist_name.c_str());
       else total_hist->SetName( (channel + "_hist").c_str() );
 
       return total_hist;
@@ -644,7 +644,7 @@ namespace RooStats {
    RooSimultaneous* simPdf = (RooSimultaneous*) fModel;
    RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
 
-   dataset_list.reset(data->split(*channelCat));
+   dataset_list = std::unique_ptr<TList>{data->split(*channelCat)};
 
    data = dynamic_cast<RooDataSet*>( dataset_list->FindObject(channel.c_str()) );
 
@@ -749,11 +749,6 @@ namespace RooStats {
       //RooAbsPdf* modelPdf = mc->GetPdf();
       //RooArgSet* observables = mc->GetObservables();
 
-      // Create vectors to hold the channel pdf's
-      // as well as the set of observables for each channel
-      //std::map< std::string, RooAbsPdf* >  channelPdfMap;
-      //std::map< std::string, RooArgSet* >  channelObservMap;
-
       // Check if it is a simultaneous pdf or not
       // (if it's an individual channel, it won't be, if it's
       // combined, it's simultaneous)
@@ -840,8 +835,8 @@ namespace RooStats {
       size_t index = SampleName.find("L_x_");
       SampleName.replace( index, 4, "" );
     }
-    if( SampleName.find(ChannelName.c_str()) != std::string::npos ) {
-      size_t index = SampleName.find(ChannelName.c_str());
+    if( SampleName.find(ChannelName) != std::string::npos ) {
+      size_t index = SampleName.find(ChannelName);
       SampleName = SampleName.substr(0, index-1);
     }
 
@@ -953,7 +948,7 @@ namespace RooStats {
       // Find its value
       double sigma = 0.0;
 
-      if( ConstraintType == "" ) {
+      if( ConstraintType.empty() ) {
    std::cout << "Error: Constraint type is an empty string."
         << " This simply should not be." << std::endl;
    throw hf_exc();
@@ -1109,12 +1104,7 @@ namespace RooStats {
         RooFit::MsgLevel levelBefore = RooMsgService::instance().globalKillBelow();
         RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
         std::unique_ptr<TH1> hist;
-        try {
-          hist.reset(MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp"));
-        } catch(...) {
-        RooMsgService::instance().setGlobalKillBelow(levelBefore);
-        throw;
-        }
+        hist.reset(MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp"));
         RooMsgService::instance().setGlobalKillBelow(levelBefore);
 
         // Print the hist

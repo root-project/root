@@ -105,13 +105,13 @@ public:
    TFITSHDU(const char *filepath_with_filter);
    TFITSHDU(const char *filepath, Int_t extension_number);
    TFITSHDU(const char *filepath, const char *extension_name);
-   ~TFITSHDU();
+   ~TFITSHDU() override;
 
    //Metadata access methods
    Int_t              GetRecordNumber() const { return fNRecords; }
    struct HDURecord  *GetRecord(const char *keyword);
    TString&           GetKeywordValue(const char *keyword);
-   void               Print(const Option_t *opt="") const;
+   void               Print(const Option_t *opt="") const override;
 
    //Image readers
    TH1               *ReadAsHistogram();
@@ -137,12 +137,12 @@ public:
    TArrayD           *GetTabVarLengthVectorCell(Int_t rownum, const char *colname);
 
    //Misc
-   void               Draw(Option_t *opt="");
+   void               Draw(Option_t *opt="") override;
    Bool_t             Change(const char *filter);
    Bool_t             Change(Int_t extension_number);
 
 
-   ClassDef(TFITSHDU,0)  // Class interfacing FITS HDUs
+   ClassDefOverride(TFITSHDU,0)  // Class interfacing FITS HDUs
 };
 
 

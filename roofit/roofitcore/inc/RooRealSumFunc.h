@@ -60,6 +60,8 @@ public:
 
    std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
    mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 

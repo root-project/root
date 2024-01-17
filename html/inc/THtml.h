@@ -44,12 +44,12 @@ public:
    class THelperBase: public TObject {
    public:
       THelperBase(): fHtml(0) {}
-      virtual ~THelperBase();
+      ~THelperBase() override;
       void    SetOwner(THtml* html);
       THtml*  GetOwner() const { return fHtml; }
    private:
       THtml*  fHtml; // object owning the helper
-      ClassDef(THelperBase, 0); // a helper object's base class
+      ClassDefOverride(THelperBase, 0); // a helper object's base class
    };
 
    class TFileSysEntry;
@@ -61,7 +61,7 @@ public:
    class TModuleDefinition: public THelperBase {
    public:
       virtual bool GetModule(TClass* cl, TFileSysEntry* fse, TString& out_modulename) const;
-      ClassDef(TModuleDefinition, 0); // helper class to determine a class's module
+      ClassDefOverride(TModuleDefinition, 0); // helper class to determine a class's module
    };
 
    //______________________________________________________________
@@ -82,7 +82,7 @@ public:
       void SplitClassIntoDirFile(const TString& clname, TString& dir, TString& filename) const;
       void NormalizePath(TString& path) const;
       void ExpandSearchPath(TString& path) const;
-      ClassDef(TFileDefinition, 0); // helper class to determine a class's source files
+      ClassDefOverride(TFileDefinition, 0); // helper class to determine a class's source files
    };
 
    //______________________________________________________________
@@ -96,7 +96,7 @@ public:
       virtual bool GetFileNameFromInclude(const char* included, TString& out_fsname) const;
       virtual bool GetDocDir(const TString& module, TString& doc_dir) const;
    protected:
-      ClassDef(TPathDefinition, 0); // helper class to determine directory layouts
+      ClassDefOverride(TPathDefinition, 0); // helper class to determine directory layouts
    };
 
    class TFileSysDir;
@@ -107,13 +107,13 @@ public:
    public:
       TFileSysEntry(const char* name, TFileSysDir* parent):
          fName(name), fParent(parent), fLevel(parent ? parent->GetLevel() + 1 : 0) {}
-      ~TFileSysEntry()
+      ~TFileSysEntry() override
       {
          // Required since we overload TObject::Hash.
          ROOT::CallRecursiveRemoveIfNeeded(*this);
       }
-      const char* GetName() const { return fName; }
-      virtual ULong_t Hash() const { return fName.Hash(); }
+      const char* GetName() const override { return fName; }
+      ULong_t Hash() const override { return fName.Hash(); }
       virtual void GetFullName(TString& fullname, Bool_t asIncluded) const {
          if (fParent) {
             fParent->GetFullName(fullname, asIncluded);
@@ -130,7 +130,7 @@ public:
       TString      fName; // name of the element
       TFileSysDir* fParent; // parent directory
       Int_t        fLevel; // level of directory
-      ClassDef(TFileSysEntry, 0); // an entry of the local file system
+      ClassDefOverride(TFileSysEntry, 0); // an entry of the local file system
    };
 
    //______________________________________________________________
@@ -148,7 +148,7 @@ public:
    protected:
       TList fFiles;
       TList fDirs;
-      ClassDef(TFileSysDir, 0); // an directory of the local file system
+      ClassDefOverride(TFileSysDir, 0); // an directory of the local file system
    };
 
    //______________________________________________________________
@@ -158,7 +158,7 @@ public:
    public:
       TFileSysRoot(const char* name, TFileSysDB* parent):
          TFileSysDir(name, parent) {}
-      void GetFullName(TString& fullname, Bool_t asIncluded) const {
+      void GetFullName(TString& fullname, Bool_t asIncluded) const override {
          // prepend directory part of THtml::GetInputPath() only
          // if !asIncluded
          fullname = "";
@@ -166,7 +166,7 @@ public:
             fullname += fName;
       }
 
-      ClassDef(TFileSysRoot, 0); // an root directory of the local file system
+      ClassDefOverride(TFileSysRoot, 0); // an root directory of the local file system
    };
 
    //______________________________________________________________
@@ -190,7 +190,7 @@ public:
       THashTable fEntries; // hash map of all filenames without paths
       TString  fIgnorePath; // regexp of path to ignore while building entry tree
       Int_t    fMaxLevel; // maximum level of directory nesting
-      ClassDef(TFileSysDB, 0); // instance of file system data
+      ClassDefOverride(TFileSysDB, 0); // instance of file system data
    };
 
 
@@ -239,7 +239,7 @@ public:
    };
 
    THtml();
-   virtual      ~THtml();
+   ~THtml() override;
 
    static void   LoadAllLibs();
 
@@ -423,7 +423,7 @@ protected:
    mutable TFileSysDB    *fLocalFiles; // files found locally for a given source path
    Bool_t  fBatch; // Whether to enable GUI output
 
-   ClassDef(THtml,0)  //Convert class(es) into HTML file(s)
+   ClassDefOverride(THtml,0)  //Convert class(es) into HTML file(s)
 };
 
 R__EXTERN THtml *gHtml;

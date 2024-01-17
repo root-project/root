@@ -262,7 +262,7 @@ public:
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
-   template <typename T, std::enable_if_t<IsDataContainer<T>::value || std::is_same<T, std::string>::value, int> = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       auto &thisBuf = fBuffers[slot];
@@ -338,18 +338,6 @@ public:
       return BufferedFillHelper(result, fNSlots);
    }
 };
-
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-extern template void
-BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
@@ -1650,6 +1638,24 @@ public:
    {
       return [this](unsigned int, const RSampleInfo &) mutable { fBranchAddressesNeedReset = true; };
    }
+
+   /**
+    * @brief Create a new SnapshotHelper with a different output file name
+    *
+    * @param newName A type-erased string with the output file name
+    * @return SnapshotHelper
+    *
+    * This MakeNew implementation is tied to the cloning feature of actions
+    * of the computation graph. In particular, cloning a Snapshot node usually
+    * also involves changing the name of the output file, otherwise the cloned
+    * Snapshot would overwrite the same file.
+    */
+   SnapshotHelper MakeNew(void *newName)
+   {
+      const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+      return SnapshotHelper{
+         finalName, fDirName, fTreeName, fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
+   }
 };
 
 /// Helper object for a multi-thread Snapshot action
@@ -1764,6 +1770,7 @@ public:
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
                         0};
       (void)expander; // avoid unused parameter warnings (gcc 12.1)
+      (void)slot; // Also "slot" might be unused, in case "values" is empty
    }
 
    template <std::size_t... S>
@@ -1816,6 +1823,24 @@ public:
    ROOT::RDF::SampleCallback_t GetSampleCallback() final
    {
       return [this](unsigned int slot, const RSampleInfo &) mutable { fBranchAddressesNeedReset[slot] = 1; };
+   }
+
+   /**
+    * @brief Create a new SnapshotHelperMT with a different output file name
+    *
+    * @param newName A type-erased string with the output file name
+    * @return SnapshotHelperMT
+    *
+    * This MakeNew implementation is tied to the cloning feature of actions
+    * of the computation graph. In particular, cloning a Snapshot node usually
+    * also involves changing the name of the output file, otherwise the cloned
+    * Snapshot would overwrite the same file.
+    */
+   SnapshotHelperMT MakeNew(void *newName)
+   {
+      const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+      return SnapshotHelperMT{fNSlots,           finalName,          fDirName, fTreeName,
+                              fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
    }
 };
 

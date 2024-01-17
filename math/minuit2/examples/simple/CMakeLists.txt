@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 # This is a test of the Minuit2 CMake build system.
 
 project(Quad1F LANGUAGES CXX)

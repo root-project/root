@@ -16,8 +16,6 @@
 #ifndef ROO_CACHE_MANAGER
 #define ROO_CACHE_MANAGER
 
-#include "Rtypes.h"
-
 #include "RooMsgService.h"
 #include "RooNormSetCache.h"
 #include "RooAbsReal.h"
@@ -26,7 +24,10 @@
 #include "RooAbsCache.h"
 #include "RooAbsCacheElement.h"
 #include "RooNameReg.h"
-#include "RooHelpers.h"
+
+#include <ROOT/StringUtils.hxx>
+#include "Rtypes.h"
+
 #include <vector>
 
 
@@ -316,22 +317,32 @@ T* RooCacheManager<T>::getObjByIndex(Int_t index) const
 }
 
 
-/// Create RooArgSet contatining the objects that are both in the cached set 1
-//with a given index and an input argSet.
-template<class T>
-RooArgSet RooCacheManager<T>::selectFromSet1(RooArgSet const& argSet, int index) const
+/// Create RooArgSet containing the objects that are both in the cached set 1
+/// with a given index and an input argSet.
+template <class T>
+RooArgSet RooCacheManager<T>::selectFromSet1(RooArgSet const &argSet, int index) const
 {
-  return RooHelpers::selectFromArgSet(argSet, _nsetCache.at(index).nameSet1());
+   RooArgSet output;
+   for (auto const &name : ROOT::Split(_nsetCache.at(index).nameSet1(), ":")) {
+      if (RooAbsArg *arg = argSet.find(name.c_str())) {
+         output.add(*arg);
+      }
+   }
+   return output;
 }
 
-
-/// Create RooArgSet contatining the objects that are both in the cached set 2
-//with a given index and an input argSet.
-template<class T>
-RooArgSet RooCacheManager<T>::selectFromSet2(RooArgSet const& argSet, int index) const
+/// Create RooArgSet containing the objects that are both in the cached set 2
+/// with a given index and an input argSet.
+template <class T>
+RooArgSet RooCacheManager<T>::selectFromSet2(RooArgSet const &argSet, int index) const
 {
-  return RooHelpers::selectFromArgSet(argSet, _nsetCache.at(index).nameSet2());
+   RooArgSet output;
+   for (auto const &name : ROOT::Split(_nsetCache.at(index).nameSet2(), ":")) {
+      if (RooAbsArg *arg = argSet.find(name.c_str())) {
+         output.add(*arg);
+      }
+   }
+   return output;
 }
-
 
 #endif

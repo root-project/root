@@ -43,31 +43,31 @@ protected:
 public:
    TEveGeoNode(TGeoNode* node);
 
-   virtual TObject* GetObject(const TEveException&) const
+   TObject* GetObject(const TEveException&) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
-   virtual const char* GetName()  const;
-   virtual const char* GetTitle() const;
-   virtual const char* GetElementName()  const;
-   virtual const char* GetElementTitle() const;
+   const char* GetName()  const override;
+   const char* GetTitle() const override;
+   const char* GetElementName()  const override;
+   const char* GetElementTitle() const override;
 
    TGeoNode* GetNode() const { return fNode; }
 
-   virtual void   ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
+   void   ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent) override;
 
    virtual void   ExpandIntoListTrees();
    virtual void   ExpandIntoListTreesRecursively();
 
-   virtual Bool_t CanEditElement() const { return kFALSE; }
+   Bool_t CanEditElement() const override { return kFALSE; }
 
-   virtual void   AddStamp(UChar_t bits);
+   void   AddStamp(UChar_t bits) override;
 
-   virtual Bool_t CanEditMainColor() const;
-   virtual void   SetMainColor(Color_t color);
+   Bool_t CanEditMainColor() const override;
+   void   SetMainColor(Color_t color) override;
 
-   virtual Bool_t  CanEditMainTransparency() const;
-   virtual Char_t  GetMainTransparency() const;
-   virtual void    SetMainTransparency(Char_t t);
+   Bool_t  CanEditMainTransparency() const override;
+   Char_t  GetMainTransparency() const override;
+   void    SetMainTransparency(Char_t t) override;
 
    void UpdateNode(TGeoNode* node);
    void UpdateVolume(TGeoVolume* volume);
@@ -76,12 +76,12 @@ public:
    void SaveExtract(const char* file, const char* name, Bool_t leafs_only);
    void WriteExtract(const char* name, Bool_t leafs_only);
 
-   virtual void Draw(Option_t* option="");
+   void Draw(Option_t* option="") override;
 
    static Int_t GetCSGExportNSeg();
    static void  SetCSGExportNSeg(Int_t nseg);
 
-   ClassDef(TEveGeoNode, 0); // Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
+   ClassDefOverride(TEveGeoNode, 0); // Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 };
 
 //----------------------------------------------------------------
@@ -100,7 +100,7 @@ protected:
 public:
    TEveGeoTopNode(TGeoManager* manager, TGeoNode* node, Int_t visopt=1,
                   Int_t vislvl=3, Int_t maxvisnds=10000);
-   virtual ~TEveGeoTopNode() {}
+   ~TEveGeoTopNode() override {}
 
    void         UseNodeTrans();
 
@@ -113,13 +113,13 @@ public:
    Int_t GetMaxVisNodes()    const { return fMaxVisNodes; }
    void  SetMaxVisNodes(Int_t mvn) { fMaxVisNodes = mvn;  }
 
-   virtual Bool_t CanEditElement() const { return kTRUE; }
-   virtual Bool_t SingleRnrState() const { return kTRUE; }
+   Bool_t CanEditElement() const override { return kTRUE; }
+   Bool_t SingleRnrState() const override { return kTRUE; }
 
-   virtual void   AddStamp(UChar_t bits);
+   void   AddStamp(UChar_t bits) override;
 
-   virtual void Draw(Option_t* option="");
-   virtual void Paint(Option_t* option="");
+   void Draw(Option_t* option="") override;
+   void Paint(Option_t* option="") override;
 
    // Signals from GeoManager.
    // These are not available any more ... colors in list-tree not refreshed
@@ -128,7 +128,7 @@ public:
    void VolumeColChanged(TGeoVolume* volume);
    void NodeVisChanged(TGeoNode* node);
 
-   ClassDef(TEveGeoTopNode, 0); // Top-level TEveGeoNode with a pointer to TGeoManager and controls for steering of TGeoPainter.
+   ClassDefOverride(TEveGeoTopNode, 0); // Top-level TEveGeoNode with a pointer to TGeoManager and controls for steering of TGeoPainter.
 };
 
 #endif

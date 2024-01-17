@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -24,8 +26,6 @@
 #include <RooSimultaneous.h>
 
 #include <string>
-
-using ROOT::Experimental::RooNLLVarNew;
 
 namespace {
 
@@ -127,3 +127,5 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
 
    return nll;
 }
+
+/// \endcond

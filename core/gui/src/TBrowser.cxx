@@ -23,7 +23,7 @@ contents of the selected class in the icon-box. And so on....
 
 \since **ROOT version 6.24/00**
 
-TBrowser invokes by default the Web-based %ROOT file browser [RBrowser](ROOT::Experimental::RBrowser)
+TBrowser invokes by default the Web-based %ROOT file browser [RBrowser](ROOT::RBrowser)
 To change this behaviour, and invoke the standard TBrowser, one should put
 the following directive in the `.rootrc` file:
 ```
@@ -115,7 +115,7 @@ Bool_t TBrowser::InitGraphics()
 
    TString hname = gEnv->GetValue("Browser.Name", "TRootBrowserLite");
 
-   Bool_t isweb = gROOT->IsWebDisplay() || (hname == "ROOT::Experimental::RWebBrowserImp");
+   Bool_t isweb = gROOT->IsWebDisplay() || (hname == "ROOT::RWebBrowserImp");
 
    if (gApplication)
       gApplication->InitializeGraphics(isweb);

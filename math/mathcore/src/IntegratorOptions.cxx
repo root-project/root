@@ -68,7 +68,7 @@ namespace IntegOptionsUtil {
    struct OptionTrait {
       static int N() { return 0; }
       static int N(const OptionType & ) { return 0; }
-      static const char * DescriptionOfN() {return 0; }
+      static const char * DescriptionOfN() {return nullptr; }
    };
    template<>
    struct OptionTrait<IntegratorOneDimOptions> {
@@ -107,7 +107,7 @@ namespace IntegOptionsUtil {
    template <class OptionType>
    void PrintDefault(const char * name, std::ostream & os) {
       //print default options
-      std::string integName = (name != 0) ? name : OptionType::DefaultIntegrator();
+      std::string integName = (name != nullptr) ? name : OptionType::DefaultIntegrator();
       os << "Default options for numerical integrator "  << integName << " : " << std::endl;
       os << std::setw(25) << "Absolute tolerance"     << " : " << std::setw(15) << OptionType::DefaultAbsTolerance() << std::endl;
       os << std::setw(25) << "Relative tolerance"     << " : " <<std::setw(15) << OptionType::DefaultRelTolerance() << std::endl;
@@ -126,10 +126,10 @@ BaseIntegratorOptions::BaseIntegratorOptions() :
    fIntegType(-1),
    fWKSize(0), fNCalls(0),
    fAbsTolerance(0), fRelTolerance(0),
-   fExtraOptions(0)
+   fExtraOptions(nullptr)
 {}
 
-BaseIntegratorOptions::BaseIntegratorOptions(const BaseIntegratorOptions & opt) : fExtraOptions(0) {
+BaseIntegratorOptions::BaseIntegratorOptions(const BaseIntegratorOptions & opt) : fExtraOptions(nullptr) {
    // copy constructor
    (*this) = opt;
 }
@@ -161,7 +161,7 @@ BaseIntegratorOptions & BaseIntegratorOptions::operator=(const BaseIntegratorOpt
 void BaseIntegratorOptions::ClearExtra() {
    // delete extra options
    if (fExtraOptions) delete fExtraOptions;
-   fExtraOptions = 0;
+   fExtraOptions = nullptr;
 }
 
 void BaseIntegratorOptions::SetExtraOptions(const IOptions & opt) {

@@ -42,7 +42,7 @@ namespace ROOT {
 
 BasicMinimizer::BasicMinimizer( ) :
    fDim(0),
-   fObjFunc(0),
+   fObjFunc(nullptr),
    fMinVal(0)
 {
    fValues.reserve(10);
@@ -132,7 +132,7 @@ bool BasicMinimizer::SetVariableValue(unsigned int ivar, double val) {
 
 bool BasicMinimizer::SetVariableValues( const double * x) {
    // set all variable values in minimizer
-   if (x == 0) return false;
+   if (x == nullptr) return false;
    std::copy(x,x+fValues.size(), fValues.begin() );
    return true;
 }
@@ -243,13 +243,6 @@ void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
    fDim = fObjFunc->NDim();
 }
 
-void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) {
-   // set the gradient function to minimize after cloning it
-   fObjFunc = dynamic_cast<const ROOT::Math::IMultiGradFunction *>( func.Clone());
-   assert(fObjFunc != 0);
-   fDim = fObjFunc->NDim();
-}
-
 
 bool BasicMinimizer::CheckDimension() const {
    unsigned int npar = fValues.size();
@@ -261,7 +254,7 @@ bool BasicMinimizer::CheckDimension() const {
 }
 
 bool BasicMinimizer::CheckObjFunction() const {
-   if (fObjFunc == 0) {
+   if (fObjFunc == nullptr) {
       MATH_ERROR_MSG("BasicMinimizer::CheckFunction","Function has not been set");
       return false;
    }
@@ -283,7 +276,7 @@ MinimTransformFunction * BasicMinimizer::CreateTransformation(std::vector<double
    // and transform from external variables  to internals ones type
    // Transformations are supported only for gradient function
    const IMultiGradFunction * gradObjFunc = (func) ? func : dynamic_cast<const IMultiGradFunction *>(fObjFunc);
-   doTransform &= (gradObjFunc != 0);
+   doTransform &= (gradObjFunc != nullptr);
 
    if (!doTransform) return nullptr;
 

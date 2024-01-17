@@ -22,6 +22,8 @@
 #include "TError.h"
 #include "Getline.h"
 #include "TVirtualMutex.h"
+#include "TVirtualPad.h"
+#include "TROOT.h"
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Create an RPyROOTApplication.
@@ -150,9 +152,9 @@ void PyROOT::RPyROOTApplication::InitROOTMessageCallback()
 PyObject *PyROOT::RPyROOTApplication::InitApplication(PyObject * /*self*/, PyObject *args)
 {
    int argc = PyTuple_GET_SIZE(args);
-   if (argc == 1) { 
-      PyObject *ignoreCmdLineOpts = PyTuple_GetItem(args, 0); 
-      
+   if (argc == 1) {
+      PyObject *ignoreCmdLineOpts = PyTuple_GetItem(args, 0);
+
       if (!PyBool_Check(ignoreCmdLineOpts)) {
          PyErr_SetString(PyExc_TypeError, "Expected boolean type as argument.");
          return nullptr;
@@ -197,6 +199,8 @@ static int EventInputHook()
    // This method is supposed to be called from CPython's command line and
    // drives the GUI
    PyEval_RestoreThread(sInputHookEventThreadState);
+   if (gPad && gPad->IsWeb())
+      gPad->UpdateAsync();
    gSystem->ProcessEvents();
    PyEval_SaveThread();
 

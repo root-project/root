@@ -19,7 +19,7 @@
 \class RooAbsTestStatistic
 \ingroup Roofitcore
 
-RooAbsTestStatistic is the abstract base class for all test
+Abstract base class for all test
 statistics. Test statistics that evaluate the PDF at each data
 point should inherit from the RooAbsOptTestStatistic class which
 implements several generic optimizations that can be done for such
@@ -45,7 +45,7 @@ combined in the main thread.
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 #include "RooAbsOptTestStatistic.h"
 #include "RooCategory.h"
 
@@ -72,7 +72,7 @@ ClassImp(RooAbsTestStatistic);
 /// - rangeName Fit data only in range with given name
 /// - addCoefRangeName If not null, all RooAddPdf components of `real` will be instructed to fix their fraction definitions to the given named range.
 /// - nCPU If larger than one, the test statistic calculation will be parallelized over multiple processes.
-///   By default the data is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+///   By default the data is split with 'bulk' partitioning (each process calculates a contiguous block of fraction 1/nCPU
 ///   of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
 ///   in each processing block many vary greatly thereby distributing the workload rather unevenly.
 /// - interleave is set to true, the interleave partitioning strategy is used where each partition
@@ -256,6 +256,7 @@ double RooAbsTestStatistic::evaluate() const
       break ;
     }
 
+    runRecalculateCache(nFirst, nLast, nStep);
     double ret = evaluatePartition(nFirst,nLast,nStep);
 
     if (numSets()==1) {
@@ -473,6 +474,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // *** START HERE
       // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
       auto binnedInfo = RooHelpers::getBinnedL(*pdf);
+      RooAbsReal &actualPdf = binnedInfo.binnedPdf ? *binnedInfo.binnedPdf : *pdf;
       // WVE END HACK
       // Below here directly pass binnedPdf instead of PROD(binnedPdf,constraints) as constraints are evaluated elsewhere anyway
       // and omitting them reduces model complexity and associated handling/cloning times
@@ -491,7 +493,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       }
       cfg.rangeName = RooHelpers::getRangeNameForSimComponent(rangeName, _splitRange, catName);
       cfg.nCPU = _nCPU;
-      _gofArray.emplace_back(create(catName.c_str(),catName.c_str(),(binnedInfo.binnedPdf?*binnedInfo.binnedPdf:*pdf),*dset,*projDeps,cfg));
+      _gofArray.emplace_back(create(catName.c_str(),catName.c_str(),actualPdf,*dset,*projDeps,cfg));
       // *** END HERE
 
       // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting of all components
@@ -501,7 +503,6 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
       // Servers may have been redirected between instantiation and (deferred) initialization
 
-      RooAbsArg &actualPdf = binnedInfo.binnedPdf ? *binnedInfo.binnedPdf : *pdf;
       RooArgSet actualParams;
       actualPdf.getParameters(dset->get(), actualParams);
       RooArgSet selTargetParams;

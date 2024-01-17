@@ -62,7 +62,7 @@ void rf708_bphysics()
    // ---------------------------------------------------
 
    // Generate some data
-   RooDataSet *data = bmix.generate(RooArgSet(dt, mixState, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data{bmix.generate({dt, mixState, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately
    // For all plots below B0 and B0 tagged data will look somewhat differently
@@ -114,7 +114,7 @@ void rf708_bphysics()
    // ---------------------------------------------------------------------------
 
    // Generate some data
-   RooDataSet *data2 = bcp.generate(RooArgSet(dt, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data2{bcp.generate({dt, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately
    RooPlot *frame4 = dt.frame(Title("B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)"));
@@ -131,7 +131,7 @@ void rf708_bphysics()
    absLambda = 0.7;
 
    // Generate some data
-   RooDataSet *data3 = bcp.generate(RooArgSet(dt, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data3{bcp.generate({dt, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately (sin2b = 0.7 plus direct CPV |l|=0.5)
    RooPlot *frame5 = dt.frame(Title("B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0bar)"));
@@ -170,7 +170,7 @@ void rf708_bphysics()
    // -------------------------------------------------------------------------------------
 
    // Generate some data
-   RooDataSet *data4 = bcpg.generate(RooArgSet(dt, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data4{bcpg.generate({dt, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately
    RooPlot *frame6 = dt.frame(Title("B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)"));

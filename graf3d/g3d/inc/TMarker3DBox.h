@@ -58,25 +58,25 @@ public:
    TMarker3DBox(Float_t x, Float_t y, Float_t z,
                 Float_t dx, Float_t dy, Float_t dz,
                 Float_t theta, Float_t phi);
-   virtual        ~TMarker3DBox();
+          ~TMarker3DBox() override;
 
-   virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Int_t   DistancetoPrimitive(Int_t px, Int_t py) override;
+   void    ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    TObject        *GetRefObject() const {return fRefObject;}
    virtual void    GetDirection(Float_t &theta, Float_t &phi) const {theta = fTheta; phi = fPhi;}
    virtual void    GetPosition(Float_t &x, Float_t &y, Float_t &z) const {x=fX; y=fY, z=fZ;}
    virtual void    GetSize(Float_t &dx, Float_t &dy, Float_t &dz) const {dx=fDx; dy=fDy; dz=fDz;}
 
-   virtual void    Paint(Option_t *option);
+   void    Paint(Option_t *option) override;
    static  void    PaintH3(TH1 *h, Option_t *option);
-   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
+   void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void    SetPoints(Double_t *buff) const;
    virtual void    SetDirection(Float_t theta, Float_t phi);
    virtual void    SetPosition(Float_t x, Float_t y, Float_t z);
    virtual void    SetSize(Float_t dx, Float_t dy, Float_t dz);
    virtual void    SetRefObject(TObject *obj = nullptr) {fRefObject = obj;}
 
-   ClassDef(TMarker3DBox,2)  //A special 3-D marker designed for event display
+   ClassDefOverride(TMarker3DBox,2)  //A special 3-D marker designed for event display
 };
 
 #endif

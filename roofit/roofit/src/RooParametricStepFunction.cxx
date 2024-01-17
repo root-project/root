@@ -78,15 +78,10 @@ xframe->Draw();
 ~~~
 */
 
-#include "Riostream.h"
-#include "TArrayD.h"
-#include <math.h>
+#include <RooParametricStepFunction.h>
 
-#include "RooParametricStepFunction.h"
-#include "RooRealVar.h"
-#include "RooArgList.h"
-
-#include "TError.h"
+#include <RooCurve.h>
+#include <RooRealVar.h>
 
 ClassImp(RooParametricStepFunction);
 
@@ -94,7 +89,7 @@ ClassImp(RooParametricStepFunction);
 /// Constructor
 
 RooParametricStepFunction::RooParametricStepFunction(const char* name, const char* title,
-              RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins) :
+              RooAbsReal& x, const RooArgList& coefList, TArrayD const& limits, Int_t nBins) :
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefList","List of coefficients",this),
@@ -110,9 +105,11 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
 
   for (auto *coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      std::cout << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                << " is not of type RooAbsReal" << std::endl ;
-      R__ASSERT(0) ;
+      std::stringstream errorMsg;
+      errorMsg << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
+                << " is not of type RooAbsReal";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
+      throw std::invalid_argument(errorMsg.str().c_str());
     }
     _coefList.add(*coef) ;
   }
@@ -144,10 +141,8 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooParametricStepFunction::analyticalIntegral(Int_t /*code*/, const char* rangeName) const
 {
-  R__ASSERT(code==1) ;
-
   // Case without range is trivial: p.d.f is by construction normalized
   if (!rangeName) {
     return 1.0 ;
@@ -210,20 +205,10 @@ double RooParametricStepFunction::evaluate() const
    // in Bin i-1 (starting with Bin 0)
    if (i<_nBins) {
      // not in last Bin
-     RooRealVar* tmp = (RooRealVar*) _coefList.at(i-1);
-     value =  tmp->getVal();
+     value = static_cast<RooRealVar*>(_coefList.at(i-1))->getVal();
      break;
    } else {
-     // in last Bin
-     double sum(0.);
-     double binSize(0.);
-     for (Int_t j=1;j<_nBins;j++){
-       RooRealVar* tmp = (RooRealVar*) _coefList.at(j-1);
-       binSize = _limits[j] - _limits[j-1];
-       sum = sum + tmp->getVal()*binSize;
-     }
-     binSize = _limits[_nBins] - _limits[_nBins-1];
-     value = (1.0 - sum)/binSize;
+     value = lastBinValue();
      if (value<=0.0){
        value = 0.000001;
        //       cout << "RooParametricStepFunction: sum of values gt 1.0 -- beware!!" <<endl;
@@ -236,4 +221,19 @@ double RooParametricStepFunction::evaluate() const
   }
   return value;
 
+}
+
+
+std::list<double>* RooParametricStepFunction::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
+{
+   if(obs.namePtr() != _x->namePtr()) {
+      return nullptr;
+   }
+
+  // Retrieve position of all bin boundaries
+  std::span<const double> boundaries{_limits.GetArray(), static_cast<std::size_t>(_limits.GetSize())};
+
+  // Use the helper function from RooCurve to make sure to get sampling hints
+  // that work with the RooFitPlotting.
+  return RooCurve::plotSamplingHintForBinBoundaries(boundaries, xlo, xhi);
 }

@@ -34,7 +34,7 @@ private:
 
 public:
    TGColorFrame(const TGWindow *p = nullptr, Pixel_t c = 0, Int_t n = 1);
-   virtual ~TGColorFrame() { }
+   ~TGColorFrame() override { }
 
    Bool_t   HandleButton(Event_t *event) override;
    void     DrawBorder() override;
@@ -60,7 +60,7 @@ private:
 
 public:
    TG16ColorSelector(const TGWindow *p = nullptr);
-   virtual ~TG16ColorSelector();
+   ~TG16ColorSelector() override;
 
    Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
@@ -86,7 +86,7 @@ private:
 
 public:
    TGColorPopup(const TGWindow *p = nullptr, const TGWindow *m = nullptr, Pixel_t color = 0);
-   virtual ~TGColorPopup();
+   ~TGColorPopup() override;
 
    Bool_t  HandleButton(Event_t *event) override;
    Bool_t  ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
@@ -120,7 +120,7 @@ private:
 public:
    TGColorSelect(const TGWindow *p = nullptr, Pixel_t color = 0,
                  Int_t id = -1);
-   virtual ~TGColorSelect();
+   ~TGColorSelect() override;
 
    Bool_t  HandleButton(Event_t *event) override;
    Bool_t  ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;

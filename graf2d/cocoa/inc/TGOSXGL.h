@@ -15,37 +15,37 @@
 class TGOSXGLManager : public TGLManager {
 public:
    TGOSXGLManager();
-   ~TGOSXGLManager();
+   ~TGOSXGLManager() override;
 
    //TGLManager's final-overriders (window + context management):
-   Int_t    InitGLWindow(Window_t winID);
-   Int_t    CreateGLContext(Int_t winInd);
-   void     DeleteGLContext(Int_t devInd);
-   Bool_t   MakeCurrent(Int_t devInd);
-   void     Flush(Int_t ctxInd);
+   Int_t    InitGLWindow(Window_t winID) override;
+   Int_t    CreateGLContext(Int_t winInd) override;
+   void     DeleteGLContext(Int_t devInd) override;
+   Bool_t   MakeCurrent(Int_t devInd) override;
+   void     Flush(Int_t ctxInd) override;
 
    //In case of Cocoa 'VirtulXInd' == devInd (again, legacy).
-   Int_t    GetVirtualXInd(Int_t devInd);
+   Int_t    GetVirtualXInd(Int_t devInd) override;
 
    //These are empty overriders, we do not have/use off-screen renreding in TCanvas/TPad anymore
    //(before we had 1) non-hardware glpixmaps/DIB sections and later 2) a hack with double buffer).
-   Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void     SelectOffScreenDevice(Int_t devInd);
-   void     MarkForDirectCopy(Int_t devInd, Bool_t);
-   void     ExtractViewport(Int_t devInd, Int_t *vp);
-   void     ReadGLBuffer(Int_t devInd);
+   Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void     SelectOffScreenDevice(Int_t devInd) override;
+   void     MarkForDirectCopy(Int_t devInd, Bool_t) override;
+   void     ExtractViewport(Int_t devInd, Int_t *vp) override;
+   void     ReadGLBuffer(Int_t devInd) override;
 
    //Used by our OpenGL viewer.
    //In the past we had to implement this functions to deal with mt-issues on Windows.
-   Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
-   Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);
-   char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py);
-   void     PaintSingleObject(TVirtualGLPainter *);
-   void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
-   void     PrintViewer(TVirtualViewer3D *vv);
+   Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox) override;
+   Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py) override;
+   char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py) override;
+   void     PaintSingleObject(TVirtualGLPainter *) override;
+   void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y) override;
+   void     PrintViewer(TVirtualViewer3D *vv) override;
 
-   Bool_t   HighColorFormat(Int_t /*ctxInd*/){return kFALSE;}
+   Bool_t   HighColorFormat(Int_t /*ctxInd*/) override{return kFALSE;}
 
 private:
    typedef std::map<Handle_t, Window_t> CtxToWindowMap_t;
@@ -54,7 +54,7 @@ private:
    TGOSXGLManager(const TGOSXGLManager &);
    TGOSXGLManager &operator = (const TGOSXGLManager &);
 
-   ClassDef(TGOSXGLManager, 0) //Cocoa specific version of TGLManager.
+   ClassDefOverride(TGOSXGLManager, 0) //Cocoa specific version of TGLManager.
 };
 
 #endif

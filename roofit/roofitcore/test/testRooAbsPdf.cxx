@@ -22,27 +22,26 @@
 #include <TClass.h>
 #include <TRandom.h>
 
-#include <gtest/gtest.h>
-
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "gtest_wrapper.h"
 
 #include <memory>
 
-class FitTest : public testing::TestWithParam<std::tuple<std::string>> {
+class FitTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
+public:
+   FitTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
+private:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(1337ul);
-      _batchMode = std::get<0>(GetParam());
+      _evalBackend = std::get<0>(GetParam());
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
-   std::string _batchMode;
+   RooFit::EvalBackend _evalBackend;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
@@ -69,9 +68,9 @@ TEST_P(FitTest, AsymptoticallyCorrectErrors)
    ASSERT_NE(weightedData.weight(), 1);
 
    a = 1.2;
-   auto result = pdf.fitTo(weightedData, Save(), AsymptoticError(true), PrintLevel(-1), BatchMode(_batchMode));
+   auto result = pdf.fitTo(weightedData, Save(), AsymptoticError(true), PrintLevel(-1), _evalBackend);
    a = 1.2;
-   auto result2 = pdf.fitTo(weightedData, Save(), SumW2Error(false), PrintLevel(-1), BatchMode(_batchMode));
+   auto result2 = pdf.fitTo(weightedData, Save(), SumW2Error(false), PrintLevel(-1), _evalBackend);
 
    // Set relative tolerance for errors to large value to only check for values
    EXPECT_TRUE(result->isIdenticalNoCov(*result2, 1e-6, 10.0)) << "Fit results should be very similar.";
@@ -93,6 +92,10 @@ TEST_P(FitTest, AsymptoticallyCorrectErrors)
 // checked by hijacking the FastEvaluations log. If a RooRealIntegral is
 // evaluated in batch mode and data size is greater than one, the batch mode
 // will inform that a batched evaluation function is missing.
+//
+// This test is disabled if the legacy backend is not available, because then
+// we don't have any reference to compare to.
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST(RooAbsPdf, ConditionalFitBatchMode)
 {
    using namespace RooFit;
@@ -144,11 +147,10 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 
       RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::FastEvaluations);
 
-      for (bool batchMode : {false, true}) {
+      for (auto evalBackend : {EvalBackend::Legacy(), EvalBackend::Cpu()}) {
          factor.setVal(1.0);
          factor.setError(0.0);
-         fitResults.emplace_back(
-            model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), BatchMode(batchMode)));
+         fitResults.emplace_back(model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), evalBackend));
          if (verbose) {
             fitResults.back()->Print();
          }
@@ -161,6 +163,7 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
       ++iMean;
    }
 }
+#endif
 
 // ROOT-9530: RooFit side-band fit inconsistent with fit to full range
 TEST_P(FitTest, MultiRangeFit)
@@ -197,26 +200,49 @@ TEST_P(FitTest, MultiRangeFit)
       nsig.setError(0.0);
    };
 
-   // loop over non-extended and extended fit
-   for (auto *model : {static_cast<RooAbsPdf *>(&modelSimple), static_cast<RooAbsPdf *>(&modelExtended)}) {
+   std::unique_ptr<RooAbsData> dataSet{modelSimple.generate(x, nEvents)};
+   std::unique_ptr<RooAbsData> dataHist{static_cast<RooDataSet &>(*dataSet).binnedClone()};
 
-      std::unique_ptr<RooAbsData> dataSet{model->generate(x, nEvents)};
-      std::unique_ptr<RooAbsData> dataHist{static_cast<RooDataSet &>(*dataSet).binnedClone()};
+   // loop over non-extended and extended fit
+   for (auto *model : {&modelSimple, &modelExtended}) {
 
       // loop over binned fit and unbinned fit
       for (auto *data : {dataSet.get(), dataHist.get()}) {
          // full range
          resetValues();
          std::unique_ptr<RooFitResult> fitResultFull{
-            model->fitTo(*data, Range("full"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+            model->fitTo(*data, Range("full"), Save(), PrintLevel(-1), _evalBackend)};
 
          // part (side band fit, but the union of the side bands is the full range)
          resetValues();
          std::unique_ptr<RooFitResult> fitResultPart{
-            model->fitTo(*data, Range("low,high"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+            model->fitTo(*data, Range("low,high"), Save(), PrintLevel(-1), _evalBackend)};
 
          EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
             << "Results of fitting " << model->GetName() << " to a " << data->ClassName() << " should be very similar.";
+      }
+   }
+
+   // If the BatchMode is off, we are doing the same cross-check also with the
+   // chi-square fit on the RooDataHist.
+   if (_evalBackend == EvalBackend::Legacy()) {
+
+      auto &dh = static_cast<RooDataHist &>(*dataHist);
+
+      // loop over non-extended and extended fit
+      for (auto *model : {&modelSimple, &modelExtended}) {
+
+         // full range
+         resetValues();
+         std::unique_ptr<RooFitResult> fitResultFull{model->chi2FitTo(dh, Range("full"), Save(), PrintLevel(-1))};
+
+         // part (side band fit, but the union of the side bands is the full range)
+         resetValues();
+         std::unique_ptr<RooFitResult> fitResultPart{model->chi2FitTo(dh, Range("low,high"), Save(), PrintLevel(-1))};
+
+         EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
+            << "Results of fitting " << model->GetName()
+            << " to a RooDataHist should be very similar also for chi2FitTo().";
       }
    }
 }
@@ -282,15 +308,34 @@ TEST_P(FitTest, MultiRangeFit2D)
       // full range
       resetValues();
       std::unique_ptr<RooFitResult> fitResultFull{
-         model.fitTo(*data, Range("FULL"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+         model.fitTo(*data, Range("FULL"), Save(), PrintLevel(-1), _evalBackend)};
 
       // part (side band fit, but the union of the side bands is the full range)
       resetValues();
       std::unique_ptr<RooFitResult> fitResultPart{
-         model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+         model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), _evalBackend)};
 
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
          << "Results of fitting " << model.GetName() << " to a " << data->ClassName() << " should be very similar.";
+   }
+
+   // If the BatchMode is off, we are doing the same cross-check also with the
+   // chi-square fit on the RooDataHist.
+   if (_evalBackend.name() == EvalBackend::Legacy().name()) {
+
+      // full range
+      resetValues();
+      std::unique_ptr<RooFitResult> fitResultFull{
+         model.fitTo(*dataHist, Range("FULL"), Save(), PrintLevel(-1), _evalBackend)};
+
+      // part (side band fit, but the union of the side bands is the full range)
+      resetValues();
+      std::unique_ptr<RooFitResult> fitResultPart{
+         model.fitTo(*dataHist, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), _evalBackend)};
+
+      EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
+         << "Results of fitting " << model.GetName()
+         << " to a RooDataHist should be very similar also for chi2FitTo().";
    }
 }
 
@@ -316,20 +361,18 @@ TEST_P(FitTest, ProblemsWith2DSimultaneousFit)
    // Complete model
    ws.factory("AddPdf::model({sig, sig_y, uniform2, uniform1}, {yield[100], yield, yield, yield})");
 
-   RooAbsPdf &model = *ws.pdf("model");
-
    // Define category to distinguish d0 and d0bar samples events
    RooCategory sample("sample", "sample", {{"cat0", 0}, {"cat1", 1}});
 
-   // Construct a dummy dataset
-   RooDataSet data("data", "data", RooArgSet(sample, *ws.var("x"), *ws.var("y")));
-
    // Construct a simultaneous pdf using category sample as index
    RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
-   simPdf.addPdf(model, "cat0");
-   simPdf.addPdf(model, "cat1");
+   simPdf.addPdf(*ws.pdf("model"), "cat0");
+   simPdf.addPdf(*ws.pdf("model"), "cat1");
 
-   simPdf.fitTo(data, PrintLevel(-1), BatchMode(_batchMode));
+   // Construct a dummy dataset
+   std::unique_ptr<RooDataSet> data{simPdf.generate({sample, *ws.var("x"), *ws.var("y")})};
+
+   simPdf.fitTo(*data, PrintLevel(-1), _evalBackend);
 }
 
 // Verifies that a server pdf gets correctly reevaluated when the normalization
@@ -354,9 +397,9 @@ TEST(RooAbsPdf, NormSetChange)
    EXPECT_NE(v1, v2);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values("Off", "Cpu"),
+INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values(ROOFIT_EVAL_BACKENDS),
                          [](testing::TestParamInfo<FitTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
-                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
                             return ss.str();
                          });

@@ -17,7 +17,7 @@
 #define ROO_CONV_COEF_VAR
 
 #include <cmath>
-#include <float.h>
+#include <cfloat>
 
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
@@ -34,9 +34,6 @@ public:
   RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, Int_t coefIdx, const RooArgSet* varList=nullptr) ;
   RooConvCoefVar(const RooConvCoefVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooConvCoefVar(*this,newname); }
-  /// Destructor
-  ~RooConvCoefVar() override {
-  } ;
 
   double getValV(const RooArgSet* nset=nullptr) const override ;
 

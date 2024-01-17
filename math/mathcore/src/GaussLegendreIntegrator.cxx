@@ -23,17 +23,17 @@ namespace Math {
    GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) :
       GaussIntegrator(eps, eps)
 {
-   // Basic contructor
+   // Basic constructor
    fNum = num;
-   fX = 0;
-   fW = 0;
+   fX = nullptr;
+   fW = nullptr;
 
    CalcGaussLegendreSamplingPoints();
 }
 
 GaussLegendreIntegrator::~GaussLegendreIntegrator()
 {
-   // Default Destructor
+   // Default destructor
 
 
    delete [] fX;
@@ -61,7 +61,7 @@ double GaussLegendreIntegrator::DoIntegral(double a, double b, const IGenFunctio
 {
    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints.
 
-   if (fNum<=0 || fX == 0 || fW == 0)
+   if (fNum<=0 || fX == nullptr || fW == nullptr)
       return 0;
 
    fUsedOnce = true;

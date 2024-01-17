@@ -27,6 +27,7 @@
 #include <array>
 #include <cassert>
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 #include <functional>
 #include <set>
@@ -508,7 +509,7 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList, bo
       // if the formula has been correctly initialized add to the list of global functions
       if (ok) {
          if (addToGlobList && gROOT) {
-            TFormula *old = 0;
+            TFormula *old = nullptr;
             R__LOCKGUARD(gROOTMutex);
             old = dynamic_cast<TFormula *>(gROOT->GetListOfFunctions()->FindObject(name));
             if (old)
@@ -556,7 +557,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
       fReadyToExecute = true;
 
       if (addToGlobList && gROOT) {
-         TFormula *old = 0;
+         TFormula *old = nullptr;
          R__LOCKGUARD(gROOTMutex);
          old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
          if (old)
@@ -800,7 +801,7 @@ static std::unique_ptr<TMethodCall>
 prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
               bool IsVectorized, bool AddCladArrayRef = false) {
    std::unique_ptr<TMethodCall>
-       Method = std::unique_ptr<TMethodCall>(new TMethodCall());
+       Method = std::make_unique<TMethodCall>();
 
    TString prototypeArguments = "";
    if (HasVariables || HasParameters) {
@@ -1074,7 +1075,7 @@ void TFormula::HandlePolN(TString &formula)
       }
       if (formula == pattern) {
          // case of single polynomial
-         SetBit(kLinear, 1);
+         SetBit(kLinear, true);
          fNumber = 300 + degree;
       }
       formula.ReplaceAll(pattern, replacement);
@@ -1175,7 +1176,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          }
 
          if (isNormalized) {
-            SetBit(kNormalized, 1);
+            SetBit(kNormalized, true);
          }
          std::vector<TString> variables;
          Int_t dim = 0;
@@ -1413,7 +1414,7 @@ void TFormula::HandleFunctionArguments(TString &formula)
          argSeparators.push_back(k - 1); // closing parenthesis
 
          // retrieve `f` (code copied from ExtractFunctors)
-         TObject *obj = 0;
+         TObject *obj = nullptr;
          {
             R__LOCKGUARD(gROOTMutex);
             obj = gROOT->GetListOfFunctions()->FindObject(name);
@@ -1751,7 +1752,7 @@ void TFormula::HandleLinear(TString &formula)
          expandedFormula += formula(delimeterPos, formula.Length() - (delimeterPos + 1));
          break;
       }
-      SetBit(kLinear, 1);
+      SetBit(kLinear, true);
       auto termName = std::string("__linear") + std::to_string(iTerm+1);
       fLinearParts.push_back(new TFormula(termName.c_str(), terms[iTerm].c_str(), false));
       std::stringstream ss;
@@ -1964,7 +1965,7 @@ void TFormula::ExtractFunctors(TString &formula)
             // function " << std::endl;
 
             // check if function is provided by gROOT
-            TObject *obj = 0;
+            TObject *obj = nullptr;
             // exclude case function name is x,y,z,t
             if (!IsReservedName(name))
             {
@@ -2164,7 +2165,7 @@ void TFormula::ProcessFormula(TString &formula)
          }
 #endif
       } else {
-         TFormula *old = 0;
+         TFormula *old = nullptr;
          {
             R__LOCKGUARD(gROOTMutex);
             old = (TFormula *)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
@@ -2875,7 +2876,7 @@ Double_t* TFormula::GetParameters() const
 {
    if(!fClingParameters.empty())
       return const_cast<Double_t*>(&fClingParameters[0]);
-   return 0;
+   return nullptr;
 }
 
 void TFormula::GetParameters(Double_t *params) const
@@ -3172,7 +3173,7 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 bool TFormula::fIsCladRuntimeIncluded = false;
 
 static bool functionExists(const string &Name) {
-   return gInterpreter->GetFunction(/*cl*/0, Name.c_str());
+   return gInterpreter->GetFunction(/*cl*/nullptr, Name.c_str());
 }
 
 static void IncludeCladRuntime(Bool_t &IsCladRuntimeIncluded) {
@@ -3224,7 +3225,7 @@ static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr
       //    }
       // }
       args[1] = &result;
-      (*FuncPtr)(0, 2, args, /*ret*/ nullptr); // We do not use ret in a return-void func.
+      (*FuncPtr)(nullptr, 2, args, /*ret*/ nullptr); // We do not use ret in a return-void func.
    } else {
       // __attribute__((used)) extern "C" void __cf_0(void* obj, int nargs, void** args, void* ret)
       // {
@@ -3246,7 +3247,7 @@ static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr
 
       array_ref_interface ari{result, static_cast<size_t>(result_size)};
       args[2] = &ari;
-      (*FuncPtr)(0, 3, args, /*ret*/nullptr); // We do not use ret in a return-void func.
+      (*FuncPtr)(nullptr, 3, args, /*ret*/nullptr); // We do not use ret in a return-void func.
    }
 }
 
@@ -3498,11 +3499,11 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    double * vars = (x) ? const_cast<double*>(x) : const_cast<double*>(fClingVariables.data());
    args[0] = &vars;
    if (fNpar <= 0) {
-      (*fFuncPtr)(0, 1, args, &result);
+      (*fFuncPtr)(nullptr, 1, args, &result);
    } else {
       double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
       args[1] = &pars;
-      (*fFuncPtr)(0, 2, args, &result);
+      (*fFuncPtr)(nullptr, 2, args, &result);
    }
    return result;
 }
@@ -3633,7 +3634,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
    if (opt.Contains("CLING") ) {
       std::string clingFunc = fClingInput.Data();
       std::size_t found = clingFunc.find("return");
-      std::size_t found2 = clingFunc.rfind(";");
+      std::size_t found2 = clingFunc.rfind(';');
       if (found == std::string::npos || found2 == std::string::npos) {
          Error("GetExpFormula","Invalid Cling expression - return default formula expression");
          return fFormula;

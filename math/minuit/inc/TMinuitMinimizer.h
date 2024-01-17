@@ -85,9 +85,6 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
-   /// set the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
-
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) override;
 
@@ -195,7 +192,7 @@ public:
 
    /// minos status code of last Minos run
    /// minos status = -1   : Minos is not run
-   ///              =  0   : last MINOS run was succesfull
+   ///              =  0   : last MINOS run was successful
    ///              >  0   : some problems encountered when running MINOS
    int MinosStatus() const override { return fMinosStatus; }
 
@@ -237,7 +234,7 @@ public:
    /// By default they are suppressed only when the printlevel is <= 0
    void SuppressMinuitWarnings(bool nowarn=true);
 
-   /// set debug mode. Return true if setting was successfull
+   /// set debug mode. Return true if setting was successful
    bool SetDebug(bool on = true);
 
 protected:

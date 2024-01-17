@@ -90,10 +90,6 @@ void StandardBayesianNumericalDemo(const char *infile = "", const char *workspac
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -227,7 +223,7 @@ void StandardBayesianNumericalDemo(const char *infile = "", const char *workspac
 
    cout << "\nDrawing plot of posterior function....." << endl;
 
-   // always plot using numer of scan points
+   // always plot using number of scan points
    bayesianCalc.SetScanOfPosterior(nScanPoints);
 
    RooPlot *plot = bayesianCalc.GetPosteriorPlot();

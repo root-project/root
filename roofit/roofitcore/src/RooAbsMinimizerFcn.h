@@ -90,7 +90,6 @@ public:
 
    /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.
    virtual void setOffsetting(bool flag) = 0;
-   virtual bool fit(ROOT::Fit::Fitter &) const = 0;
    virtual ROOT::Math::IMultiGenFunction *getMultiGenFcn() = 0;
 
    RooMinimizer::Config const &cfg() const { return _context->_cfg; }

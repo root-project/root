@@ -67,7 +67,7 @@ void rf201_composite()
    // ---------------------------------------------------
 
    // Generate a data sample of 1000 events in x from model
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // Fit model to data
    model.fitTo(*data, PrintLevel(-1));

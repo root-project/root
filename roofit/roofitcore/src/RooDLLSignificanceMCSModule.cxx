@@ -44,8 +44,6 @@ to test that assumption.
 using namespace std;
 
 ClassImp(RooDLLSignificanceMCSModule);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +53,7 @@ ClassImp(RooDLLSignificanceMCSModule);
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
   _parName(param.GetName()),
-  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
+  _nullValue(nullHypoValue)
 {
 }
 
@@ -68,7 +66,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
   _parName(parName),
-  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
+  _nullValue(nullHypoValue)
 {
 }
 
@@ -80,7 +78,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, do
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) :
   RooAbsMCStudyModule(other),
   _parName(other._parName),
-  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(other._nullValue)
+  _nullValue(other._nullValue)
 {
 }
 
@@ -167,7 +165,7 @@ RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 ////////////////////////////////////////////////////////////////////////////////
 /// Save likelihood from nominal fit, fix chosen parameter to its
 /// null hypothesis value and rerun fit Save difference in likelihood
-/// and associated Gaussian significance in auxilary dataset
+/// and associated Gaussian significance in auxiliary dataset
 
 bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
 {

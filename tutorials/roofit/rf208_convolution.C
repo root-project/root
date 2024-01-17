@@ -58,7 +58,7 @@ void rf208_convolution()
    // ----------------------------------------------------------------------
 
    // Sample 1000 events in x from gxlx
-   RooDataSet *data = lxg.generate(t, 10000);
+   std::unique_ptr<RooDataSet> data{lxg.generate(t, 10000)};
 
    // Fit gxlx to data
    lxg.fitTo(*data, PrintLevel(-1));

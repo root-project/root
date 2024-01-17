@@ -50,7 +50,7 @@ protected:
 public:
    TChainElement();
    TChainElement(const char *title, const char *filename);
-   virtual ~TChainElement();
+   ~TChainElement() override;
    virtual void        CreatePackets();
    virtual void       *GetBaddress() const {return fBaddress;}
    virtual const char *GetBaddressClassName() const { return fBaddressClassName; }
@@ -65,7 +65,7 @@ public:
    virtual Int_t       GetPacketSize() const {return fPacketSize;}
    virtual Int_t       GetStatus() const {return fStatus;}
    virtual Bool_t      HasBeenLookedUp() { return TestBit(kHasBeenLookedUp); }
-   virtual void        ls(Option_t *option="") const;
+   void        ls(Option_t *option="") const override;
    virtual void        SetBaddress(void *add) {fBaddress = add;}
    virtual void        SetBaddressClassName(const char* clname) { fBaddressClassName = clname; }
    virtual void        SetBaddressIsPtr(Bool_t isptr) { fBaddressIsPtr = isptr; }
@@ -79,7 +79,7 @@ public:
    virtual void        SetPacketSize(Int_t size = 100);
    virtual void        SetStatus(Int_t status) {fStatus = status;}
 
-   ClassDef(TChainElement,2);  //A chain element
+   ClassDefOverride(TChainElement,2);  //A chain element
 };
 
 #endif

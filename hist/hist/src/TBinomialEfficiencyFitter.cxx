@@ -99,14 +99,14 @@ ClassImp(TBinomialEfficiencyFitter);
 /// default constructor
 
 TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
-   fNumerator   = 0;
-   fDenominator = 0;
-   fFunction    = 0;
+   fNumerator   = nullptr;
+   fDenominator = nullptr;
+   fFunction    = nullptr;
    fFitDone     = kFALSE;
    fAverage     = kFALSE;
    fRange       = kFALSE;
    fEpsilon     = kDefaultEpsilon;
-   fFitter      = 0;
+   fFitter      = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,8 +120,8 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
 
 TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator) {
    fEpsilon  = kDefaultEpsilon;
-   fFunction = 0;
-   fFitter   = 0;
+   fFunction = nullptr;
+   fFitter   = nullptr;
    Set(numerator,denominator);
 }
 
@@ -130,7 +130,7 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const
 
 TBinomialEfficiencyFitter::~TBinomialEfficiencyFitter() {
    if (fFitter) delete fFitter;
-   fFitter = 0;
+   fFitter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,28 +282,33 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
    // perform the actual fit
 
-   fFitDone = kTRUE;
+   // set the fit to be a binned likelihood fit
+   // so use as chi2 for goodness of fit Baker&Cousins LR
+   fFitter->SetFitType(3);
    Bool_t status = fFitter->FitFCN();
    if ( !status && !quiet)
       Warning("Fit","Abnormal termination of minimization.");
 
+   fFitDone = kTRUE;
+
+   // set the number of fitted points
+   // number of fit points is set in ComputeFCN in the TF1 object
+   fFitter->SetNumberOfFitPoints(f1->GetNumberFitPoints());
 
    //Store fit results in fitFunction
    const ROOT::Fit::FitResult & fitResult = fFitter->Result();
    if (!fitResult.IsEmpty() ) {
-      // set in f1 the result of the fit
       f1->SetNDF(fitResult.Ndf() );
-
-      //f1->SetNumberFitPoints(...);  // this is set in ComputeFCN
+      f1->SetChisquare(fitResult.Chi2());
 
       f1->SetParameters( &(fitResult.Parameters().front()) );
       if ( int( fitResult.Errors().size()) >= f1->GetNpar() )
          f1->SetParErrors( &(fitResult.Errors().front()) );
 
-      f1->SetChisquare(2.*fitResult.MinFcnValue());    // store goodness of fit (Baker&Cousins)
-      f1->SetNDF(f1->GetNumberFitPoints()- fitResult.NFreeParameters());
-      Info("result"," chi2 %f ndf %d ",2.*fitResult.MinFcnValue(), fitResult.Ndf() );
-
+      if (!quiet) {
+         Info("Fit","Successful Result from Binomial Efficiency fitter of function %s",f1->GetName());
+         fitResult.Print(std::cout);
+      }
    }
    // create a new result class if needed
    if (saveResult) {

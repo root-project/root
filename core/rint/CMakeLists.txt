@@ -22,4 +22,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rint
     Core
 )
 
+target_include_directories(Core PRIVATE inc)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

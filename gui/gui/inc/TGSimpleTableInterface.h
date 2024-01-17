@@ -28,7 +28,7 @@ protected:
 public:
    TGSimpleTableInterface(Double_t **data, UInt_t nrows = 2,
                           UInt_t ncolumns = 2);
-   virtual ~TGSimpleTableInterface();
+   ~TGSimpleTableInterface() override;
 
    Double_t    GetValue(UInt_t row, UInt_t column) override;
    const char *GetValueAsString(UInt_t row, UInt_t column) override;

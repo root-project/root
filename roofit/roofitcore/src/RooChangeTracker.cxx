@@ -19,7 +19,7 @@
 \class RooChangeTracker
 \ingroup Roofitcore
 
-RooChangeTracker is a meta object that tracks value
+Meta object that tracks value
 changes in a given set of RooAbsArgs by registering itself as value
 client of these objects. The change tracker can perform an
 additional validation step where it also compares the numeric
@@ -32,7 +32,7 @@ though usually only one observable actually changes.
 
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooChangeTracker.h"
 #include "RooAbsReal.h"

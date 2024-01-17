@@ -591,6 +591,70 @@ void CPyCppyy::Utility::ConstructCallbackReturn(const std::string& retType, int 
     code << (isVoid ? ";\n  }\n" : " ret;\n  }\n");
 }
 
+
+//----------------------------------------------------------------------------
+static std::map<void*, PyObject*> sStdFuncLookup;
+static std::map<std::string, PyObject*> sStdFuncMakerLookup;
+PyObject* CPyCppyy::Utility::FuncPtr2StdFunction(
+        const std::string& retType, const std::string& signature, void* address)
+{
+// Convert a function pointer to an equivalent std::function<> object.
+    static int maker_count = 0;
+
+    if (!address) {
+        PyErr_SetString(PyExc_TypeError, "can not convert null function pointer");
+        return nullptr;
+    }
+
+    auto pf = sStdFuncLookup.find(address);
+    if (pf != sStdFuncLookup.end()) {
+        Py_INCREF(pf->second);
+        return pf->second;
+    }
+
+    PyObject* maker = nullptr;
+
+    auto pm = sStdFuncMakerLookup.find(retType+signature);
+    if (pm == sStdFuncMakerLookup.end()) {
+        std::ostringstream fname;
+        fname << "ptr2func" << ++maker_count;
+
+        std::ostringstream code;
+        code << "namespace __cppyy_internal { std::function<"
+             << retType << signature << "> " << fname.str()
+             << "(intptr_t faddr) { return (" << retType << "(*)" << signature << ")faddr;} }";
+
+        if (!Cppyy::Compile(code.str())) {
+            PyErr_SetString(PyExc_TypeError, "conversion to std::function failed");
+            return nullptr;
+        }
+
+        PyObject* pyscope = CreateScopeProxy("__cppyy_internal");
+        maker = PyObject_GetAttrString(pyscope, fname.str().c_str());
+        Py_DECREF(pyscope);
+        if (!maker)
+            return nullptr;
+
+    // cache the new maker (TODO: does it make sense to use weakrefs?)
+        sStdFuncMakerLookup[retType+signature] = maker;
+    } else
+        maker = pm->second;
+
+    PyObject* args = PyTuple_New(1);
+    PyTuple_SET_ITEM(args, 0, PyLong_FromLongLong((intptr_t)address));
+    PyObject* func = PyObject_Call(maker, args, NULL);
+    Py_DECREF(args);
+
+    if (func) {    // prevent moving this func object, since then it can not be reused
+        ((CPPInstance*)func)->fFlags |= CPPInstance::kIsLValue;
+        Py_INCREF(func);     // TODO: use weak? The C++ maker doesn't go away either
+        sStdFuncLookup[address] = func;
+    }
+
+    return func;
+}
+
+
 //----------------------------------------------------------------------------
 bool CPyCppyy::Utility::InitProxy(PyObject* module, PyTypeObject* pytype, const char* name)
 {

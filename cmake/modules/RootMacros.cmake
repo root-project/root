@@ -190,7 +190,7 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          --gccxmlpath=${GCCXML_home}/bin ${ARG_OPTIONS}
-         "-I$<JOIN:${include_dirs},;-I>"
+         "-I$<JOIN:$<REMOVE_DUPLICATES:$<FILTER:${include_dirs},EXCLUDE,^$>>,;-I>"
          "$<$<BOOL:$<JOIN:${definitions},>>:-D$<JOIN:${definitions},;-D>>"
     DEPENDS ${headerfiles} ${selectionfile} ${ARG_DEPENDS}
 
@@ -258,6 +258,17 @@ function(ROOT_GET_INSTALL_DIR result)
 endfunction(ROOT_GET_INSTALL_DIR)
 
 #---------------------------------------------------------------------------------------------------
+#---ROOT_REPLACE_BUILD_INTERFACE( include_dir_var include_dir )
+# Update the `include_dir` variable after resolve the BUILD_INTERFACE
+function(ROOT_REPLACE_BUILD_INTERFACE include_dir_var include_dir)
+  string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" include_dir ${include_dir})
+  # BUILD_INTERFACE might contain space-separated paths. They are split by
+  # foreach, leaving a trailing 'include/something>'. Remove the trailing '>'.
+  string(REGEX REPLACE ">$" "" include_dir ${include_dir})
+  set(${include_dir_var} ${include_dir} PARENT_SCOPE)
+endfunction(ROOT_REPLACE_BUILD_INTERFACE)
+
+#---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_DICTIONARY( dictionary headerfiles NODEPHEADERS ghdr1 ghdr2 ...
 #                                                    MODULE module DEPENDENCIES dep1 dep2
 #                                                    BUILTINS dep1 dep2
@@ -298,17 +309,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
     if(target_incdirs)
        foreach(dir ${target_incdirs})
-          string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
-          # BUILD_INTERFACE might contain space-separated paths. They are split by
-          # foreach, leaving a trailing 'include/something>'. Remove the trailing '>'.
-          string(REGEX REPLACE ">$" "" dir ${dir})
+          ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
           # check that dir not a empty dir like $<BUILD_INTERFACE:>
           if(NOT ${dir} MATCHES "^[$]")
-             list(APPEND incdirs ${dir})
-          endif()
-          string(FIND ${dir} "${CMAKE_SOURCE_DIR}" src_dir_in_dir)
-          if(${src_dir_in_dir} EQUAL 0)
-             list(APPEND headerdirs ${dir})
+            list(APPEND incdirs ${dir})
+            string(FIND ${dir} "${CMAKE_SOURCE_DIR}" src_dir_in_dir)
+            if(${src_dir_in_dir} EQUAL 0)
+              list(APPEND headerdirs ${dir})
+            endif()
           endif()
        endforeach()
     endif()
@@ -376,7 +384,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     if(TARGET ${ARG_MODULE})
       get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
       foreach(dir ${target_incdirs})
-        string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+        ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
         if(NOT ${dir} MATCHES "^[$]")
           list(APPEND incdirs ${dir})
         endif()
@@ -473,10 +481,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     foreach(dep ${ARG_DEPENDENCIES})
       if(TARGET ${dep})
-        get_property(dep_include_dirs TARGET ${dep} PROPERTY INCLUDE_DIRECTORIES)
-        foreach(d ${dep_include_dirs})
-          list(APPEND incdirs ${d})
-        endforeach()
+        get_target_property(dep_include_dirs ${dep} INTERFACE_INCLUDE_DIRECTORIES)
+        if (NOT dep_include_dirs)
+          get_target_property(dep_include_dirs ${dep} INCLUDE_DIRECTORIES)
+        endif()
+        if (dep_include_dirs)
+          foreach(d ${dep_include_dirs})
+            list(APPEND incdirs ${d})
+          endforeach()
+        endif()
       endif()
     endforeach()
 
@@ -521,11 +534,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif(ARG_MODULE)
 
-  # modules.idx deps
-  get_property(local_modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
-  list(APPEND local_modules_idx_deps ${library_target_name})
-  set_property(GLOBAL PROPERTY modules_idx_deps_property "${local_modules_idx_deps}")
-
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   set(runtime_cxxmodule_dependencies )
@@ -551,17 +559,24 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       if(cpp_module)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
         # The module depends on its modulemap file.
-        if (cpp_module_file)
+        if (cpp_module_file AND CMAKE_PROJECT_NAME STREQUAL ROOT)
           set (runtime_cxxmodule_dependencies copymodulemap "${CMAKE_BINARY_DIR}/include/module.modulemap")
         endif()
       endif(cpp_module)
     endif()
   endif()
 
+  # modules.idx deps
+  get_property(local_modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
   if (ARG_NO_CXXMODULE)
     unset(cpp_module)
     unset(cpp_module_file)
-  endif()
+  else()
+    list(APPEND local_modules_idx_deps ${cpp_module})
+    set_property(GLOBAL PROPERTY modules_idx_deps_property "${local_modules_idx_deps}")
+  endif(ARG_NO_CXXMODULE)
+
+
 
   if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
     set(rootmap_name)
@@ -648,7 +663,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(incdirs)
      list(REMOVE_DUPLICATES incdirs)
      foreach(dir ${incdirs})
-        list(APPEND includedirs -I${dir})
+        if (NOT ${dir} MATCHES "^\\$<INSTALL_INTERFACE:")
+          list(APPEND includedirs -I${dir})
+        endif()
      endforeach()
   endif()
 
@@ -765,7 +782,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     list(APPEND found_headers "${dir_headers}")
   endforeach()
 
-  set(excluded_headers RConfig.h RVersion.h RtypesImp.h
+  set(excluded_headers RConfig.h RVersion.h core/foundation/inc/ROOT/RVersion.hxx RtypesImp.h
                         RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h ESTLType.h ROOT/RStringView.hxx Varargs.h
@@ -923,8 +940,10 @@ function(ROOT_LINKER_LIBRARY library)
           endif()
           if(lib_incdirs)
             foreach(dir ${lib_incdirs})
-              string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
-              list(APPEND dep_list ${dir})
+              ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
+              if(NOT ${dir} MATCHES "^[$]")
+                list(APPEND dep_list ${dir})
+              endif()
             endforeach()
           endif()
         endif()
@@ -953,8 +972,10 @@ function(ROOT_LINKER_LIBRARY library)
           endif()
           if(lib_incdirs)
             foreach(dir ${lib_incdirs})
-              string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
-              list(APPEND dep_inc_list ${dir})
+              ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
+              if(NOT ${dir} MATCHES "^[$]")
+                list(APPEND dep_inc_list ${dir})
+              endif()
             endforeach()
           endif()
           if(lib_rpath)
@@ -1026,8 +1047,10 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
         get_target_property(lib_incdirs Core INCLUDE_DIRECTORIES)
         if(lib_incdirs)
           foreach(dir ${lib_incdirs})
-            string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
-            target_include_directories(${library} BEFORE PRIVATE ${dir})
+            ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
+            if(NOT ${dir} MATCHES "^[$]")
+              target_include_directories(${library} BEFORE PRIVATE ${dir})
+            endif()
           endforeach()
         endif()
       endif()
@@ -1210,9 +1233,6 @@ function(ROOT_INSTALL_HEADERS)
     set (options ${options} REGEX "${f}" EXCLUDE)
   endforeach()
   set (filter "(${filter})")
-  string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
-  string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-  set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
                            COMPONENT headers
@@ -1234,7 +1254,12 @@ function(ROOT_INSTALL_HEADERS)
       list(APPEND dst_list ${dst})
     endforeach()
   endforeach()
-  add_custom_target(${tgt} DEPENDS ${dst_list})
+  if (dst_list)
+    string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
+    string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
+    add_custom_target(${tgt} DEPENDS ${dst_list})
+  endif()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -1391,8 +1416,10 @@ function(ROOT_EXECUTABLE executable)
           get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
           if(lib_incdirs)
             foreach(dir ${lib_incdirs})
-              string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
-              list(APPEND dep_list ${dir})
+              ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
+              if(NOT ${dir} MATCHES "^[$]")
+                list(APPEND dep_list ${dir})
+              endif()
             endforeach()
           endif()
         endif()
@@ -1804,7 +1831,7 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
+  target_link_libraries(${test_suite} gtest_main gmock gmock_main)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} ROOT::TestSupport)
   else()

@@ -138,7 +138,7 @@ private:
 private:
 
    mutable std::vector<double>  fX;                 ///< internal cached of external values
-   std::vector<MinimTransformVariable> fVariables;  ///< vector of variable settings and tranformation function
+   std::vector<MinimTransformVariable> fVariables;  ///< vector of variable settings and transformation function
    std::vector<unsigned int>      fIndex;           ///< vector with external indices for internal variables
    const IMultiGradFunction * fFunc;                ///< user function
 

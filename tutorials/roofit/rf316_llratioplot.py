@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Multidimensional models: using the likelihood ratio techique to construct a signal
+## Multidimensional models: using the likelihood ratio technique to construct a signal
 ## enhanced one-dimensional projection of a multi-dimensional pdf
 ##
 ## \macro_image
@@ -23,9 +23,9 @@ y = ROOT.RooRealVar("y", "y", -5, 5)
 z = ROOT.RooRealVar("z", "z", -5, 5)
 
 # Create signal pdf gauss(x)*gauss(y)*gauss(z)
-gx = ROOT.RooGaussian("gx", "gx", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
-gy = ROOT.RooGaussian("gy", "gy", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
-gz = ROOT.RooGaussian("gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
+gx = ROOT.RooGaussian("gx", "gx", x, 0.0, 1.0)
+gy = ROOT.RooGaussian("gy", "gy", y, 0.0, 1.0)
+gz = ROOT.RooGaussian("gz", "gz", z, 0.0, 1.0)
 sig = ROOT.RooProdPdf("sig", "sig", [gx, gy, gz])
 
 # Create background pdf poly(x)*poly(y)*poly(z)

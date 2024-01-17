@@ -22,7 +22,7 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 # ------------------------------------------------------
 
 # ROOT.To construct a proper pdf, the formula expression is explicitly normalized internally by dividing
-# it by a numeric integral of the expresssion over x in the range [-20,20]
+# it by a numeric integral of the expression over x in the range [-20,20]
 #
 alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
 genpdf = ROOT.RooGenericPdf("genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))", [x, alpha])
@@ -63,7 +63,7 @@ g2 = ROOT.RooGaussian("g2", "h2", x, mean, sigma)
 
 # Construct a separate gaussian g1(x,10,3) to generate a toy Gaussian
 # dataset with mean 10 and width 3
-g1 = ROOT.RooGaussian("g1", "g1", x, ROOT.RooFit.RooConst(10), ROOT.RooFit.RooConst(3))
+g1 = ROOT.RooGaussian("g1", "g1", x, 10, 3)
 data2 = g1.generate({x}, 1000)
 
 # Fit and plot tailored standard pdf

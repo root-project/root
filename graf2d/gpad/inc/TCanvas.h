@@ -61,6 +61,7 @@ protected:
    Bool_t        fRetained;        ///< Retain structure flag
    Bool_t        fUseGL;           ///<! True when rendering is with GL
    Bool_t        fDrawn;           ///<! Set to True when the Draw method is called
+   Bool_t        fUpdated;         ///<! Set to True when Update method was called
    //
    TVirtualPadPainter *fPainter;   ///<! Canvas (pad) painter.
 
@@ -102,7 +103,7 @@ public:
    TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy,
            Int_t ww, Int_t wh);
    TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid);
-   virtual ~TCanvas();
+   ~TCanvas() override;
 
    //-- used by friend TThread class
    void Constructor();
@@ -168,11 +169,12 @@ public:
    virtual void      HighlightConnect(const char *slot);
    void              Iconify();
    Bool_t            IsBatch() const override { return fBatch; }
-   Bool_t            IsDrawn() { return fDrawn; }
+   Bool_t            IsDrawn() const { return fDrawn; }
+   Bool_t            IsUpdated() const { return fUpdated; }
    Bool_t            IsFolder() const override;
    Bool_t            IsGrayscale();
    Bool_t            IsRetained() const override { return fRetained; }
-   Bool_t            IsWeb() const;
+   Bool_t            IsWeb() const override;
    void              ls(Option_t *option="") const override;
    void              MoveOpaque(Int_t set=1);
    Bool_t            OpaqueMoving() const override { return TestBit(kMoveOpaque); }
@@ -187,7 +189,8 @@ public:
    virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*
    void              Closed() override;                                                // *SIGNAL*
    void              RaiseWindow();
-   void              ResetDrawn() { fDrawn=kFALSE; }
+   void              ResetDrawn() { fDrawn = kFALSE; }
+   void              ResetUpdated() { fUpdated = kFALSE; }
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");
@@ -220,6 +223,7 @@ public:
    virtual void      ToggleEditor();
    virtual void      ToggleToolTips();
    void              Update() override;
+   void              UpdateAsync() override;
 
    Bool_t              UseGL() const { return fUseGL; }
    void                SetSupportGL(Bool_t support) {fUseGL = support;}
@@ -228,6 +232,8 @@ public:
 
    static TCanvas   *MakeDefCanvas();
    static Bool_t     SupportAlpha();
+
+   static Bool_t     SaveAll(const std::vector<TPad *>& = {}, const char *filename = "", Option_t *option = "");
 
    ClassDefOverride(TCanvas,8)  //Graphics canvas
 };

@@ -115,23 +115,12 @@ public:
 
 
 namespace Internal {
+// TODO(bgruber): convert this trait into a requires clause in C++20
+template <typename FieldT, typename SFINAE = void>
+inline constexpr bool isMappable = false;
 
-template <class FieldT>
-class IsMappable {
-public:
-   using RSuccess = char;
-   struct RFailure { char x[2]; };
-
-   template<class C, typename ... ArgsT>
-   using MapOverloadT = decltype(std::declval<C>().Map(std::declval<ArgsT>() ...)) (C::*)(ArgsT ...);
-
-   template <class C> static RSuccess Test(MapOverloadT<C, NTupleSize_t>);
-   template <class C> static RFailure Test(...);
-
-public:
-   static constexpr bool value = sizeof(Test<FieldT>(0)) == sizeof(RSuccess);
-};
-
+template <typename FieldT>
+inline constexpr bool isMappable<FieldT, std::void_t<decltype(std::declval<FieldT>().Map(NTupleSize_t{}))>> = true;
 } // namespace Internal
 
 
@@ -158,17 +147,19 @@ private:
    /// fFieldId has fParent always set to null; views access nested fields without looking at the parent
    FieldT fField;
    /// Used as a Read() destination for fields that are not mappable
-   Detail::RFieldValue fValue;
+   Detail::RFieldBase::RValue fValue;
 
 public:
+   using FieldTypeT = T;
+
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
         fValue(fField.GenerateValue())
    {
-      if ((fField.GetTraits() & Detail::RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
-         throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
       fField.SetOnDiskId(fieldId);
       fField.ConnectPageSource(*pageSource);
+      if ((fField.GetTraits() & Detail::RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
+         throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
       for (auto &f : fField) {
          auto subFieldId =
             pageSource->GetSharedDescriptorGuard()->FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
@@ -181,41 +172,41 @@ public:
    RNTupleView(RNTupleView&& other) = default;
    RNTupleView& operator=(const RNTupleView& other) = delete;
    RNTupleView& operator=(RNTupleView&& other) = default;
-   ~RNTupleView() { fField.DestroyValue(fValue); }
+   ~RNTupleView() = default;
 
    RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
 
-   template <typename C = T>
-   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C&>
-   operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
-
-   template <typename C = T>
-   typename std::enable_if_t<!Internal::IsMappable<FieldT>::value, const C&>
-   operator()(NTupleSize_t globalIndex) {
-      fField.Read(globalIndex, &fValue);
-      return *fValue.Get<T>();
+   const T &operator()(NTupleSize_t globalIndex)
+   {
+      if constexpr (Internal::isMappable<FieldT>)
+         return *fField.Map(globalIndex);
+      else {
+         fValue.Read(globalIndex);
+         return *fValue.Get<T>();
+      }
    }
 
-   template <typename C = T>
-   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C&>
-   operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
-
-   template <typename C = T>
-   typename std::enable_if_t<!Internal::IsMappable<FieldT>::value, const C&>
-   operator()(const RClusterIndex &clusterIndex) {
-      fField.Read(clusterIndex, &fValue);
-      return *fValue.Get<T>();
+   const T &operator()(const RClusterIndex &clusterIndex)
+   {
+      if constexpr (Internal::isMappable<FieldT>)
+         return *fField.Map(clusterIndex);
+      else {
+         fValue.Read(clusterIndex);
+         return *fValue.Get<T>();
+      }
    }
 
-   template <typename C = T>
-   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
-   MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+   // TODO(bgruber): turn enable_if into requires clause with C++20
+   template <typename C = T, std::enable_if_t<Internal::isMappable<FieldT>, C*> = nullptr>
+   const C *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
+   {
       return fField.MapV(globalIndex, nItems);
    }
 
-   template <typename C = T>
-   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
-   MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   // TODO(bgruber): turn enable_if into requires clause with C++20
+   template <typename C = T, std::enable_if_t<Internal::isMappable<FieldT>, C*> = nullptr>
+   const C *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems)
+   {
       return fField.MapV(clusterIndex, nItems);
    }
 };

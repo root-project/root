@@ -17,15 +17,16 @@
 #define ROO_GENERIC_PDF
 
 #include "RooAbsPdf.h"
-#include "RooFormula.h"
 #include "RooListProxy.h"
 
 class RooArgList ;
+class RooFormula ;
 
 class RooGenericPdf : public RooAbsPdf {
 public:
   // Constructors, assignment etc
-  inline RooGenericPdf(){}
+  RooGenericPdf();
+  ~RooGenericPdf() override;
   RooGenericPdf(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
   RooGenericPdf(const RooGenericPdf& other, const char* name=nullptr);
@@ -53,7 +54,7 @@ public:
   void printMetaArgs(std::ostream& os) const override ;
 
   // Debugging
-  void dumpFormula() { formula().dump() ; }
+  void dumpFormula();
 
   const char* expression() const { return _formExpr.Data(); }
   const RooArgList& dependents() const { return _actualVars; }
@@ -65,17 +66,14 @@ protected:
   // Function evaluation
   RooListProxy _actualVars ;
   double evaluate() const override ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
-
-  bool setFormula(const char* formula) ;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
   // Post-processing of server redirection
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
-  bool isValidReal(double value, bool printError) const override ;
+  bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
 
-  std::unique_ptr<RooFormula> _formula{nullptr}; ///<! Formula engine
+  mutable RooFormula * _formula = nullptr; ///<! Formula engine
   TString _formExpr ;            ///< Formula expression string
 
   ClassDefOverride(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables

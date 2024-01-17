@@ -23,7 +23,7 @@ RooConstVar represent a constant real-valued object
 **/
 
 #include "RooConstVar.h"
-#include "RunContext.h"
+#include "RooNumber.h"
 
 using namespace std;
 
@@ -51,18 +51,6 @@ RooConstVar::RooConstVar(const RooConstVar& other, const char* name) :
   _fast = true;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return batch with 1 constant element.
-RooSpan<const double> RooConstVar::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet*) const {
-  auto item = evalData.spans.find(this);
-  if (item == evalData.spans.end()) {
-    return evalData.spans[this] = {&_value, 1};
-  }
-
-  return evalData.spans[this];
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
@@ -71,3 +59,17 @@ void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
   os << _value ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void RooConstVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Just return a stringy-field version of the const value.
+   // Formats to the maximum precision.
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   std::stringstream ss;
+   ss.precision(max_precision);
+   // Just use toString to make sure we do not output 'inf'.
+   // This is really ugly for large numbers...
+   ss << std::fixed << RooNumber::toString(_value);
+   ctx.addResult(this, ss.str());
+}

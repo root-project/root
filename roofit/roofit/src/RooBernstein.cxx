@@ -66,7 +66,10 @@ RooBernstein::RooBernstein(const char* name, const char* title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooBernstein::RooBernstein(const RooBernstein &other, const char *name)
-   : RooAbsPdf(other, name), _x("x", this, other._x), _coefList("coefList", this, other._coefList)
+   : RooAbsPdf(other, name),
+     _x("x", this, other._x),
+     _coefList("coefList", this, other._coefList),
+     _refRangeName{other._refRangeName}
 {
 }
 
@@ -129,7 +132,7 @@ double RooBernstein::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Bernstein distribution.
-void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooBernstein::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   const int nCoef = _coefList.size();
   std::vector<double> extraArgs(nCoef+2);
@@ -138,8 +141,7 @@ void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEv
   extraArgs[nCoef] = _x.min();
   extraArgs[nCoef+1] = _x.max();
 
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Bernstein, output, nEvents, {dataMap.at(_x)}, extraArgs);
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Bernstein, output, nEvents, {dataMap.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +161,7 @@ double RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 
   double xmax,xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
+
   const double xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
   const double xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
 
@@ -178,6 +181,5 @@ double RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
     norm += temp; // add this basis's contribution to total
   }
 
-  norm *= xmax-xmin;
-  return norm;
+  return norm * (xmax - xmin);
 }

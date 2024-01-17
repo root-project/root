@@ -19,7 +19,8 @@ from typing import Any, Dict, List, Tuple, TYPE_CHECKING, Union
 
 import ROOT
 
-from DistRDF.CppWorkflow import CppWorkflow
+from DistRDF._graph_cache import ExecutionIdentifier, _ACTIONS_REGISTER
+from DistRDF.Backends import Utils
 
 from DistRDF.Operation import Action, AsNumpy, InstantAction, Operation, Snapshot, VariationsFor
 from DistRDF.PythonMergeables import SnapshotResult
@@ -51,7 +52,7 @@ def _(operation: Union[Action, InstantAction], promise: Any, results: list) -> N
 
 @append_node_to_results.register
 def _(operation: Snapshot, promise: Any, results: list) -> None:
-    results.append(SnapshotResult(operation.args[0], [operation.args[1]]))
+    results.append(SnapshotResult(operation.args[0], [operation.args[1]], promise))
 
 
 @singledispatch
@@ -190,7 +191,8 @@ def generate_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.R
     return promises
 
 
-def trigger_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
+def trigger_computation_graph(
+    graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int, exec_id: ExecutionIdentifier) -> List:
     """
     Trigger the computation graph.
 
@@ -213,7 +215,16 @@ def trigger_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.RN
         list: A list of objects that can be either used as or converted into
             mergeable values.
     """
-    actions = generate_computation_graph(graph, starting_node, range_id)
+    if exec_id not in _ACTIONS_REGISTER:
+        # Fill the cache with the future results
+        actions = generate_computation_graph(graph, starting_node, range_id)
+        _ACTIONS_REGISTER[exec_id] = actions
+    else:
+        # Create clones according to different types of actions
+        actions = [
+            Utils.clone_action(action, range_id)
+            for action in _ACTIONS_REGISTER[exec_id]
+        ]
 
     # Trigger computation graph with the GIL released
     rnode = ROOT.RDF.AsRNode(starting_node)
@@ -226,30 +237,3 @@ def trigger_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.RN
     # an instance of `AsNumpyResult`. For `Snapshot`, it returns a
     # `SnapshotResult`
     return actions
-
-
-def run_with_cppworkflow(graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int) -> Tuple[List, List[str]]:
-    """
-    The callable that traverses the DistRDF graph nodes, generates the
-    code to create the same graph in C++, compiles it and runs it.
-    This function triggers the event loop via the CppWorkflow class.
-
-    Args:
-        rdf_node (ROOT.RDF.RNode): The RDataFrame node that will serve as
-            the root of the computation graph.
-        range_id (int): Id of the current range. Needed to assign a name
-            to a partial Snapshot output file.
-
-    Returns:
-        tuple[list, list]: the first element is the list of results of the actions
-            in the C++ workflow, the second element is the list of
-            result types corresponding to those actions.
-    """
-
-    # Generate the code of the C++ workflow
-    cpp_workflow = CppWorkflow(graph, starting_node, range_id)
-
-    logger.debug(f"Generated C++ workflow is:\n{cpp_workflow}")
-
-    # Compile and run the C++ workflow on the received RDF head node
-    return cpp_workflow.execute()

@@ -70,6 +70,10 @@ public:
       return column(label, precision, label);
    }
 
+   void clearColumnDefinitions(){
+      fSpecs[fClassName].clear();
+   }
+
    REveTableHandle(std::string className, Specs_t &specs)
       :fClassName(className), fSpecs(specs)
    {

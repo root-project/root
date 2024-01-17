@@ -27,9 +27,9 @@ if(dataframe)
     # RReader
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # Tree inference system and user interface
-    if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+    if(NOT MSVC OR llvm13_broken_tests)
         ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
-        ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVA)
+        ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
     endif()
 endif()
 
@@ -39,3 +39,17 @@ if(dataframe AND NOT pyroot_legacy)
     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
   endif()
 endif()
+
+#--stressTMVA--------------------------------------------------------------------------------------
+
+ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
+
+if(tmva-gpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
+endif()
+
+if(tmva-cpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCPU)
+endif()
+
+ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)

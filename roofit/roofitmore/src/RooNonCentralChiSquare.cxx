@@ -43,7 +43,7 @@ http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/
 #include "RooNonCentralChiSquare.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include <math.h>
+#include <cmath>
 #include "TMath.h"
 //#include "RooNumber.h"
 #include "Math/DistFunc.h"
@@ -72,13 +72,9 @@ RooNonCentralChiSquare::RooNonCentralChiSquare(const char *name, const char *tit
    fHasIssuedConvWarning(false),
    fHasIssuedSumWarning(false)
 {
-#ifdef R__HAS_MATHMORE
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
       "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
    fForceSum = false;
-#else
-   fForceSum = true;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,27 +89,15 @@ RooNonCentralChiSquare::RooNonCentralChiSquare(const RooNonCentralChiSquare& oth
    fHasIssuedConvWarning(false),
    fHasIssuedSumWarning(false)
 {
-#ifdef R__HAS_MATHMORE
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
      "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
    fForceSum = other.fForceSum;
-#else
-   fForceSum = true;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooNonCentralChiSquare::SetForceSum(bool flag) {
    fForceSum = flag;
-#ifndef R__HAS_MATHMORE
-   if (!fForceSum) {
-      ccoutD(InputArguments) << "RooNonCentralChiSquare::SetForceSum" << GetName() <<
-         "MathMore is not available- ForceSum must be on "<< endl ;
-      fForceSum = true;
-   }
-#endif
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,13 +174,7 @@ double RooNonCentralChiSquare::evaluate() const
 
    // SECOND FORM (use MathMore function based on Bessel function (if k>2) or
    // or  regularized confluent hypergeometric limit function.
-#ifdef R__HAS_MATHMORE
    return  ROOT::Math::noncentral_chisquared_pdf(_x,k,lambda);
-#else
-   coutF(Eval) << "RooNonCentralChisquare: ForceSum must be set" << endl;
-   return 0;
-#endif
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +209,7 @@ double RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeN
 
    double sum = 0;
    double ithTerm = 0;
-   double errorTol = fErrorTol; // for nomralization allow slightly larger error
+   double errorTol = fErrorTol; // for normalization allow slightly larger error
    int MaxIters = fMaxIters; // for normalization use more terms
 
    int iDominant = (int) TMath::Floor(lambda/2);

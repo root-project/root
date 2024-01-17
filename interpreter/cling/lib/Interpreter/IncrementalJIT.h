@@ -99,7 +99,7 @@ public:
 
   /// @brief Get the TargetMachine used by the JIT.
   /// Non-const because BackendPasses need to update OptLevel.
-  llvm::TargetMachine &getTargetMachine() { return *TM; }
+  llvm::TargetMachine &getTargetMachine() { return *m_TM; }
 
 private:
   std::unique_ptr<llvm::orc::LLJIT> Jit;
@@ -115,8 +115,9 @@ private:
   std::map<const Transaction*, llvm::orc::ResourceTrackerSP> m_ResourceTrackers;
   std::map<const llvm::Module *, llvm::orc::ThreadSafeModule> m_CompiledModules;
 
+  bool m_JITLink;
   // FIXME: Move TargetMachine ownership to BackendPasses
-  std::unique_ptr<llvm::TargetMachine> TM;
+  std::unique_ptr<llvm::TargetMachine> m_TM;
 
   // TODO: We only need the context for materialization. Instead of defining it
   // here we might want to pass one in on a per-module basis.

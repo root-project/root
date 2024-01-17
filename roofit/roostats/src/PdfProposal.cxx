@@ -77,7 +77,6 @@ PdfProposal::PdfProposal() : ProposalFunction()
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +89,6 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,15 +116,15 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
       fLastX.addClone(x);
       // generate initial cache
       RooStats::SetParameters(&x, &fMaster);
-      if (fMap.size() > 0) {
+      if (!fMap.empty()) {
          for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
             fIt->first->setVal(fIt->second->getVal(&x));
       }
-      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)}.release();
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)};
    }
 
    bool moved = false;
-   if (fMap.size() > 0) {
+   if (!fMap.empty()) {
       moved = !Equals(fLastX, x);
 
       // if we've moved, set the values of the variables in the PDF to the
@@ -147,8 +145,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 
    // generate new cache if necessary
    if (moved || fCachePosition >= fCacheSize) {
-      delete fCache;
-      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)}.release();
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)};
       fCachePosition = 0;
    }
 
@@ -159,7 +156,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine whether or not the proposal density is symmetric for
-/// points x1 and x2 - that is, whether the probabilty of reaching x2
+/// points x1 and x2 - that is, whether the propabilty of reaching x2
 /// from x1 is equal to the probability of reaching x1 from x2
 
 bool PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)

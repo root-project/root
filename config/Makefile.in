@@ -80,7 +80,6 @@ INCDIR         := @incdir@
 ETCDIR         := @etcdir@
 MANDIR         := @mandir@
 DATADIR        := @datadir@
-ELISPDIR       := @elispdir@
 TTFFONTDIR     := @ttffontdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
@@ -203,11 +202,6 @@ GFALCLILIB     := @gfallib@
 GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
-
-BUILDALIEN     := @buildalien@
-ALIENLIBDIR    := @alienlibdir@
-ALIENCLILIB    := @alienlib@
-ALIENINCDIR    := $(filter-out /usr/include, @alienincdir@)
 
 BUILDASIMAGE   := @buildasimage@
 BUILTINASIMAGE := @builtinafterimage@

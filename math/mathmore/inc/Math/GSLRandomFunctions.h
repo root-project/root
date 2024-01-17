@@ -32,8 +32,8 @@ namespace Math {
 
 //___________________________________________________________________________________
    /**
-       Specialized implementation of the Random functions based on the GSL library. 
-       These will work onlmy with a GSLRandomEngine type 
+       Specialized implementation of the Random functions based on the GSL library.
+       These will work onlmy with a GSLRandomEngine type
 
        @ingroup  Random
    */
@@ -43,25 +43,25 @@ namespace Math {
    class RandomFunctions<EngineType, ROOT::Math::GSLRandomEngine> : public RandomFunctions<EngineType, DefaultEngineType> {
       //class RandomFunctions<Engine, ROOT::Math::GSLRandomEngine>  {
 
-      //typdef TRandomEngine DefaulEngineType;
-      
+      //typedef TRandomEngine DefaultEngineType;
+
    public:
 
-      RandomFunctions() {} 
+      RandomFunctions() {}
 
       RandomFunctions(EngineType & rng) : RandomFunctions<EngineType, DefaultEngineType>(rng) {}
 
 
       inline EngineType & Engine() { return  RandomFunctions<EngineType,DefaultEngineType>::Rng(); }
-      
+
       double GausZig(double mean, double sigma) {
          return Engine().GaussianZig(sigma) + mean;
       }
       // double GausRatio(double mean, double sigma) {
       //    auto & r =  RandomFunctions<Engine,DefaultEngineType>::Rng();
-      //    return r.GaussianRatio(sigma) + mean; 
+      //    return r.GaussianRatio(sigma) + mean;
       // }
-      
+
       /**
          Gaussian distribution. Default method (use Ziggurat)
       */
@@ -75,26 +75,37 @@ namespace Math {
       double GausBM(double mean = 0, double sigma = 1) {
          return mean + Engine().Gaussian(sigma);
       }
-      
+
       /**
          Gaussian distribution (Ratio Method)
       */
       double GausR(double mean = 0, double sigma = 1) {
          return mean + Engine().GaussianRatio(sigma);
       }
-      
+
       /**
          Gaussian Tail distribution
       */
       double GaussianTail(double a, double sigma = 1) {
          return Engine().GaussianTail(a,sigma);
       }
-      
+
       /**
          Bivariate Gaussian distribution with correlation
       */
       void Gaussian2D(double sigmaX, double sigmaY, double rho, double &x, double &y) {
          Engine().Gaussian2D(sigmaX, sigmaY, rho, x, y);
+      }
+
+      /**
+         Multi-variate Gaussian distribution with correlation. The covMatrix is a pointer to
+         the covcariance matrix (NxN)
+         Lmat is a pointer to store the factorized Cholesky decomposition C  = LL^T of the covariance matrix
+         If the generator is to be called again with the same covariance one can provide a null CovMAtrix and only
+         lmat
+      */
+      void GaussianND(size_t n, const double * meanVec, const double * covMatrix, double * x, double * lmat = nullptr) {
+         Engine().GaussianND(n, meanVec,covMatrix,x,lmat);
       }
 
       /**
@@ -109,7 +120,7 @@ namespace Math {
       double BreitWigner(double mean = 0., double gamma = 1) {
          return mean + Engine().Cauchy( gamma/2.0 );
       }
-      
+
       /**
          Landau distribution
       */
@@ -146,7 +157,7 @@ namespace Math {
       }
 
       /**
-         F distrbution
+         F distribution
       */
       double FDist(double nu1, double nu2) {
          return Engine().FDist(nu1,nu2);

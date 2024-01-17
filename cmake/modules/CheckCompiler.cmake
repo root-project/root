@@ -51,6 +51,26 @@ else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
 endif()
 
+#---Enable CUDA ---
+if(cuda)
+  check_language(CUDA)
+  if (CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    if(NOT DEFINED CMAKE_CUDA_STANDARD)
+      set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+    endif()
+  else()
+    if(fail-on-missing)
+       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
+    else()
+       message(STATUS "CUDA not found. Disable RooFit and TMVA cuda computation")
+       set(cuda OFF CACHE BOOL "Disabled because CUDA is not found" FORCE)
+       set(cudnn OFF)
+       set(tmva-gpu OFF)
+    endif()
+  endif()
+endif(cuda)
+
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   exec_program(${CMAKE_CXX_COMPILER} ARGS "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info)
@@ -123,10 +143,15 @@ else()
                    OUTPUT_VARIABLE CXX_STANDARD_STRING
                    ERROR_QUIET
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
-   # if the above command fails to set the variable for any reason, let's default to 2011 with a warning
+   # if the above command fails to set the variable for any reason, let's default to 2017 with a warning
    if (NOT CXX_STANDARD_STRING)
-      message(WARNING "Could not detect the default C++ standard in use by the detected compiler (${CMAKE_CXX_COMPILER}). Falling back to C++14 as a default, can be overridden by setting CMAKE_CXX_STANDARD.")
-      set(CXX_STANDARD_STRING 2014)
+      message(WARNING "Could not detect the default C++ standard in use by the detected compiler (${CMAKE_CXX_COMPILER}). Falling back to C++17 as a default, can be overridden by setting CMAKE_CXX_STANDARD.")
+      set(CXX_STANDARD_STRING 2017)
+   endif()
+   # If the native compiler defaults to a C++ standard lower than 17, overwrite the default value
+   if (NOT ${CXX_STANDARD_STRING} STRGREATER "201402L")
+      message(STATUS "The default C++ standard in use by the detected compiler (${CMAKE_CXX_COMPILER}) is lower than C++17. Setting C++17 as the minimum standard.")
+      set(CXX_STANDARD_STRING 2017)
    endif()
 endif()
 # Lexicographically compare the value of __cplusplus (e.g. "201703L" for C++17) to figure out
@@ -140,32 +165,15 @@ if (${CXX_STANDARD_STRING} STRGREATER "201703L")
 elseif(${CXX_STANDARD_STRING} STRGREATER "201402L")
    set(CXX_STANDARD_STRING 17 CACHE STRING "")
 else()
-   # We stick to C++14 as a minimum value
-   set(CXX_STANDARD_STRING 14 CACHE STRING "")
+   # We stick to C++17 as a minimum value
+   set(CXX_STANDARD_STRING 17 CACHE STRING "")
 endif()
 set(CMAKE_CXX_STANDARD ${CXX_STANDARD_STRING} CACHE STRING "")
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "")
 
-if(cxx11 OR cxx14 OR cxx17)
-  message(DEPRECATION "Options cxx11/14/17 are deprecated. Please use CMAKE_CXX_STANDARD instead.")
-
-  # for backward compatibility
-  if(cxx17)
-    set(CMAKE_CXX_STANDARD 17 CACHE STRING "" FORCE)
-  elseif(cxx14)
-    set(CMAKE_CXX_STANDARD 14 CACHE STRING "" FORCE)
-  elseif(cxx11)
-    set(CMAKE_CXX_STANDARD 11 CACHE STRING "" FORCE)
-  endif()
-
-  unset(cxx17 CACHE)
-  unset(cxx14 CACHE)
-  unset(cxx11 CACHE)
-endif()
-
-if(NOT CMAKE_CXX_STANDARD MATCHES "14|17|20")
-  message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}")
+if(NOT CMAKE_CXX_STANDARD MATCHES "17|20")
+  message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}. Supported standards are: 17, 20.")
 endif()
 
 # needed by roottest, to be removed once roottest is fixed
@@ -204,6 +212,8 @@ endif()
 #---Setup details depending on the major platform type----------------------------------------------
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
   include(SetUpLinux)
+elseif(CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  include(SetUpFreeBSD)
 elseif(APPLE)
   include(SetUpMacOS)
 elseif(WIN32)

@@ -161,6 +161,7 @@ public:
    virtual Bool_t   IsModified() const = 0;
    virtual Bool_t   IsRetained() const = 0;
    virtual Bool_t   IsVertical() const = 0;
+   virtual Bool_t   IsWeb() const { return kFALSE; }
            void     ls(Option_t *option="") const override = 0;
    virtual void     Modified(Bool_t flag=1) = 0;
    virtual Bool_t   OpaqueMoving() const = 0;
@@ -242,6 +243,7 @@ public:
    virtual void     ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;
+   virtual void     UpdateAsync() = 0;
    virtual Int_t    UtoAbsPixel(Double_t u) const = 0;
    virtual Int_t    VtoAbsPixel(Double_t v) const = 0;
    virtual Int_t    UtoPixel(Double_t u) const = 0;

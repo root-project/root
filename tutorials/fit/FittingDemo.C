@@ -5,7 +5,7 @@
 /// This example can be executed with:
 ///
 /// ~~~{.cpp}
-/// root > .x FittingDemo.C  (using the CINT interpreter)
+/// root > .x FittingDemo.C  (using the cling interpreter)
 /// root > .x FittingDemo.C+ (using the native complier via ACLIC)
 /// ~~~
 ///
@@ -59,7 +59,7 @@ void FittingDemo() {
       "Lorentzian Peak on Quadratic Background",60,0,3);
    histo->SetMarkerStyle(21);
    histo->SetMarkerSize(0.8);
-   histo->SetStats(0);
+   histo->SetStats(false);
 
    for(int i=0; i < nBins;  i++) histo->SetBinContent(i+1,data[i]);
 

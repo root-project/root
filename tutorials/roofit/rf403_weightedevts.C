@@ -37,7 +37,7 @@ void rf403_weightedevts()
    RooPolynomial p0("px", "px", x);
 
    // Sample 1000 events from pdf
-   RooDataSet *data = p0.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{p0.generate(x, 1000)};
 
    // C a l c u l a t e   w e i g h t   a n d   m a k e   d a t a s e t   w e i g h t e d
    // -----------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ void rf403_weightedevts()
    data->Print();
 
    // Instruct dataset wdata in interpret w as event weight rather than as observable
-   RooDataSet wdata(data->GetName(), data->GetTitle(), data, *data->get(), 0, w->GetName());
+   RooDataSet wdata(data->GetName(), data->GetTitle(), data.get(), *data->get(), 0, w->GetName());
 
    // Dataset d is now a dataset with one observable (x) with 1000 entries and a sum of weights of ~430K
    wdata.Print();
@@ -109,10 +109,10 @@ void rf403_weightedevts()
    RooGenericPdf genPdf("genPdf", "x*x+10", x);
 
    // Sample a dataset with the same number of events as data
-   RooDataSet *data2 = genPdf.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data2{genPdf.generate(x, 1000)};
 
    // Sample a dataset with the same number of weights as data
-   RooDataSet *data3 = genPdf.generate(x, 43000);
+   std::unique_ptr<RooDataSet> data3{genPdf.generate(x, 43000)};
 
    // Fit the 2nd order polynomial to both unweighted datasets and save the results for comparison
    std::unique_ptr<RooFitResult> r_ml_unw10{p2.fitTo(*data2, Save(), PrintLevel(-1))};

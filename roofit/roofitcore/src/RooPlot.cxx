@@ -367,7 +367,10 @@ void RooPlot::SetDirectory(TDirectory *dir) {
 
 void RooPlot::updateNormVars(const RooArgSet &vars)
 {
-  if(0 == _normVars) _normVars= (RooArgSet*) vars.snapshot(true);
+  if(_normVars == nullptr) {
+    _normVars = new RooArgSet;
+    vars.snapshot(*_normVars, true);
+  }
 }
 
 
@@ -379,7 +382,7 @@ void RooPlot::updateNormVars(const RooArgSet &vars)
 
 void RooPlot::addObject(TObject *obj, Option_t *drawOptions, bool invisible)
 {
-  if(0 == obj) {
+  if(nullptr == obj) {
     coutE(InputArguments) << fName << "::addObject: called with a null pointer" << endl;
     return;
   }
@@ -398,7 +401,7 @@ void RooPlot::addObject(TObject *obj, Option_t *drawOptions, bool invisible)
 
 void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, bool invisible)
 {
-  if(0 == hist) {
+  if(nullptr == hist) {
     coutE(InputArguments) << fName << "::addTH1: called with a null pointer" << endl;
     return;
   }
@@ -535,7 +538,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
 
   // add this element to our list and remember its drawing option
   TObject *obj= plotable->crossCast();
-  if(0 == obj) {
+  if(nullptr == obj) {
     coutE(InputArguments) << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
   }
   else {
@@ -584,7 +587,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
 
     if (std::abs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
       coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac
-            << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+            << " will supersede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
     }
 
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
@@ -610,7 +613,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update our y-axis limits to accomodate an object whose spread
+/// Update our y-axis limits to accommodate an object whose spread
 /// in y is (ymin,ymax). Use the specified y-axis label if we don't
 /// have one assigned already.
 
@@ -751,7 +754,7 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, bool verbose, TStri
 {
   TString deeper(indent);
   deeper.Append("    ");
-  if(0 != _plotVar) {
+  if(nullptr != _plotVar) {
     os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") plots variable ";
     _plotVar->printStream(os,kName|kTitle,kSingleLine,"");
   }
@@ -789,7 +792,7 @@ const char* RooPlot::nameOf(Int_t idx) const
   TObject* obj = _items.at(idx).first;
   if (!obj) {
     coutE(InputArguments) << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << endl ;
-    return 0 ;
+    return nullptr ;
   }
   return obj->GetName() ;
 }
@@ -805,7 +808,7 @@ TObject* RooPlot::getObject(Int_t idx) const
   TObject* obj = _items.at(idx).first;
   if (!obj) {
     coutE(InputArguments) << "RooPlot::getObject(" << GetName() << ") index " << idx << " out of range" << endl ;
-    return 0 ;
+    return nullptr ;
   }
   return obj ;
 }
@@ -951,14 +954,14 @@ bool RooPlot::drawAfter(const char *after, const char *target)
 /// methods to change the drawing style attributes of a contained
 /// object directly.
 
-TObject *RooPlot::findObject(const char *name, const TClass* clas) const
+TObject *RooPlot::findObject(const char *name, const TClass* tClass) const
 {
   TObject *ret = nullptr;
 
   for(auto const& item : _items) {
     TObject &obj = *item.first;
     if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName()))
-        && (!clas || (obj.IsA()==clas))) {
+        && (!tClass || (obj.IsA()==tClass))) {
       ret = &obj ;
     }
   }
@@ -1076,7 +1079,7 @@ void RooPlot::SetMinimum(double minimum)
 ///
 /// \note The \f$ \chi^2 \f$ is calculated between a *plot of the original distribution* and the data.
 /// It therefore has more rounding errors than directly calculating the \f$ \chi^2 \f$ from a PDF or
-/// function. To do this, use RooChi2Var.
+/// function. To do this, use RooAbsReal::createChi2(RooDataHist&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&).
 double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitParam) const
 {
 
@@ -1184,7 +1187,7 @@ void RooPlot::DrawOpt::initialize(const char* inRawOpt)
   }
   strlcpy(drawOptions,inRawOpt,128) ;
   strtok(drawOptions,":") ;
-  const char* extraOpt = strtok(0,":") ;
+  const char* extraOpt = strtok(nullptr,":") ;
   if (extraOpt) {
     invisible =  (extraOpt[0]=='I') ;
   }

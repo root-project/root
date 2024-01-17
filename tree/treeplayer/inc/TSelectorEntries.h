@@ -41,23 +41,23 @@ public :
 
    TSelectorEntries(TTree *tree = nullptr, const char *selection = nullptr);
    TSelectorEntries(const char *selection);
-   virtual ~TSelectorEntries();
-   virtual Int_t    Version() const { return 2; }
-   virtual void     Begin(TTree *tree);
-   virtual void     SlaveBegin(TTree *tree);
-   virtual void     Init(TTree *tree);
-   virtual Bool_t   Notify();
-   virtual Bool_t   Process(Long64_t entry);
-   virtual Int_t    GetEntry(Long64_t entry, Int_t getall = 0);
+   ~TSelectorEntries() override;
+   Int_t    Version() const override { return 2; }
+   void     Begin(TTree *tree) override;
+   void     SlaveBegin(TTree *tree) override;
+   void     Init(TTree *tree) override;
+   Bool_t   Notify() override;
+   Bool_t   Process(Long64_t entry) override;
+   Int_t    GetEntry(Long64_t entry, Int_t getall = 0) override;
    virtual Long64_t GetSelectedRows() const { return fSelectedRows; }
-   virtual void     SetOption(const char *option) { fOption = option; }
-   virtual void     SetObject(TObject *obj) { fObject = obj; }
+   void     SetOption(const char *option) override { fOption = option; }
+   void     SetObject(TObject *obj) override { fObject = obj; }
    virtual void     SetSelection(const char *selection);
-   virtual TList   *GetOutputList() const { return fOutput; }
-   virtual void     SlaveTerminate();
-   virtual void     Terminate();
+   TList   *GetOutputList() const override { return fOutput; }
+   void     SlaveTerminate() override;
+   void     Terminate() override;
 
-   ClassDef(TSelectorEntries,1); //A specialized TSelector for TTree::GetEntries(selection)
+   ClassDefOverride(TSelectorEntries,1); //A specialized TSelector for TTree::GetEntries(selection)
 };
 
 #endif

@@ -49,7 +49,7 @@ void rf304_uncorrprod()
    // ---------------------------------------------------------------------------
 
    // Generate 10000 events in x and y from gaussxy
-   RooDataSet *data = gaussxy.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> data{gaussxy.generate({x, y}, 10000)};
 
    // Plot x distribution of data and projection of gaussxy on x = Int(dy) gaussxy(x,y)
    RooPlot *xframe = x.frame(Title("X projection of gauss(x)*gauss(y)"));

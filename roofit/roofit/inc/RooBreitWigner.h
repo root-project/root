@@ -29,7 +29,6 @@ public:
          RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _width);
   RooBreitWigner(const RooBreitWigner& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooBreitWigner(*this,newname); }
-  inline ~RooBreitWigner() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
@@ -41,7 +40,7 @@ protected:
   RooRealProxy width ;
 
   double evaluate() const override ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 //   void initGenerator();

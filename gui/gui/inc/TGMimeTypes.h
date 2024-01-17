@@ -40,7 +40,7 @@ private:
 
 public:
    TGMime() : fReg(nullptr) {}
-   ~TGMime();
+   ~TGMime() override;
 };
 
 
@@ -58,7 +58,7 @@ protected:
 
 public:
    TGMimeTypes(TGClient *client, const char *file);
-   virtual ~TGMimeTypes();
+   ~TGMimeTypes() override;
 
    void   SaveMimes();
    Bool_t HasChanged() const { return fChanged; }

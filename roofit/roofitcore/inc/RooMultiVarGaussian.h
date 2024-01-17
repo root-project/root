@@ -32,15 +32,14 @@ class RooMultiVarGaussian : public RooAbsPdf {
 public:
 
   RooMultiVarGaussian() {} ;
-  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& covMatrix) ;
+  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooArgList& mu, const TMatrixDBase& covMatrix) ;
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooFitResult& fr, bool reduceToConditional=true) ;
-  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& covMatrix) ;
-  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec,const TMatrixDSym& covMatrix) ;
+  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const TVectorD& mu, const TMatrixDBase& covMatrix) ;
+  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec,const TMatrixDBase& covMatrix) ;
   void setAnaIntZ(double z) { _z = z ; }
 
   RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooMultiVarGaussian(*this,newname); }
-  inline ~RooMultiVarGaussian() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

@@ -32,6 +32,7 @@
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TColor.h"
+#include "TSystem.h"
 #include "TObjArray.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
@@ -161,6 +162,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    fSelectedY        = 0;
    fRetained         = kTRUE;
    fDrawn            = kFALSE;
+   fUpdated          = kFALSE;
    fSelected         = nullptr;
    fClickSelected    = nullptr;
    fSelectedPad      = nullptr;
@@ -320,21 +322,20 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       fBatch        = kTRUE;
    } else {                  //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
-      if (form < 1 || form > 5) form = 1;
+      if (form < 1 || form > 20) form = 1;
       auto factory = gROOT->IsWebDisplay() ? gBatchGuiFactory : gGuiFactory;
+      Int_t ux, uy, cw, ch;
       if (form == 1) {
-         UInt_t uh = UInt_t(cx*gStyle->GetCanvasDefH());
-         UInt_t uw = UInt_t(cx*gStyle->GetCanvasDefW());
-         Int_t  ux = Int_t(cx*gStyle->GetCanvasDefX());
-         Int_t  uy = Int_t(cx*gStyle->GetCanvasDefY());
-         fCanvasImp = factory->CreateCanvasImp(this, name, ux, uy, uw, uh);
+         cw = gStyle->GetCanvasDefW();
+         ch = gStyle->GetCanvasDefH();
+         ux = gStyle->GetCanvasDefX();
+         uy = gStyle->GetCanvasDefY();
+      } else {
+         cw = ch = 500;
+         ux = uy = form * 10;
       }
-      fCw = 500;
-      fCh = 500;
-      if (form == 2) fCanvasImp = factory->CreateCanvasImp(this, name, 20, 20, UInt_t(cx*500), UInt_t(cx*500));
-      if (form == 3) fCanvasImp = factory->CreateCanvasImp(this, name, 30, 30, UInt_t(cx*500), UInt_t(cx*500));
-      if (form == 4) fCanvasImp = factory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
-      if (form == 5) fCanvasImp = factory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
+
+      fCanvasImp = factory->CreateCanvasImp(this, name, Int_t(cx*ux), Int_t(cx*uy), UInt_t(cx*cw),  UInt_t(cx*ch));
       if (!fCanvasImp) return;
 
       if (!gROOT->IsBatch() && fCanvasID == -1)
@@ -574,6 +575,7 @@ void TCanvas::Init()
    fEventY          = -1;
    fContextMenu     = nullptr;
    fDrawn           = kFALSE;
+   fUpdated          = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,7 +603,7 @@ void TCanvas::Build()
       fCw -= 4;
       fCh -= 28;
    } else if (IsWeb()) {
-      // mark canvas as batch - avoid virtualx in many places
+      // mark canvas as batch - avoid gVirtualX in many places
       SetBatch(kTRUE);
    } else {
       //normal mode with a screen window
@@ -718,10 +720,9 @@ TVirtualPad *TCanvas::cd(Int_t subpadnumber)
    TPad::cd(subpadnumber);
 
    // in case doublebuffer is off, draw directly onto display window
-   if (!IsBatch()) {
-      if (!fDoubleBuffer)
-         gVirtualX->SelectWindow(fCanvasID);//Ok, does not matter for glpad.
-   }
+   if (!IsBatch() && !IsWeb() && !fDoubleBuffer)
+      gVirtualX->SelectWindow(fCanvasID);//Ok, does not matter for glpad.
+
    return gPad;
 }
 
@@ -788,7 +789,7 @@ void TCanvas::Close(Option_t *option)
 
    if (fCanvasID != -1) {
 
-      if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+      if (!gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
          gInterpreter->Execute(this, IsA(), "Close", option);
          return;
       }
@@ -800,7 +801,7 @@ void TCanvas::Close(Option_t *option)
       cd();
       TPad::Close(option);
 
-      if (!IsBatch()) {
+      if (!IsBatch() && !IsWeb()) {
          gVirtualX->SelectWindow(fCanvasID);    //select current canvas
 
          DeleteCanvasPainter();
@@ -859,7 +860,12 @@ void TCanvas::Draw(Option_t *)
 
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
    if (old == this) {
-      Paint();
+      if (IsWeb()) {
+         Modified();
+         UpdateAsync();
+      } else {
+         Paint();
+      }
       return;
    }
    if (old) { gROOT->GetListOfCanvases()->Remove(old); delete old;}
@@ -1119,6 +1125,9 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TCanvas::FeedbackMode(Bool_t set)
 {
+   if (IsWeb())
+      return;
+
    if (set) {
       SetDoubleBuffer(0);             // turn off double buffer mode
       gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
@@ -1173,7 +1182,7 @@ void TCanvas::ForceUpdate()
 
 void TCanvas::UseCurrentStyle()
 {
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+   if (!gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "UseCurrentStyle", "");
       return;
    }
@@ -1302,7 +1311,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          gPad = fSelectedPad;
 
          fSelected->ExecuteEvent(event, px, py);
-         gVirtualX->Update();
+         if (!IsWeb())
+            gVirtualX->Update();
          if (fSelected && !fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
@@ -1657,7 +1667,7 @@ void TCanvas::Resize(Option_t *)
 {
    if (fCanvasID == -1) return;
 
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+   if (!gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "Resize", "");
       return;
    }
@@ -1666,7 +1676,7 @@ void TCanvas::Resize(Option_t *)
 
    TContext ctxt(this, kTRUE);
 
-   if (!IsBatch()) {
+   if (!IsBatch() && !IsWeb()) {
       gVirtualX->SelectWindow(fCanvasID);      //select current canvas
       gVirtualX->ResizeWindow(fCanvasID);      //resize canvas and off-screen buffer
 
@@ -1807,7 +1817,7 @@ void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 /// The precision can be changed (via system.rootrc) by changing the value
 /// of the environment variable "Canvas.SavePrecision"
 
-void TCanvas::SaveSource(const char *filename, Option_t *option)
+void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 {
    //    reset bit TClass::kClassSaved for all classes
    TIter next(gROOT->GetListOfClasses());
@@ -1926,7 +1936,8 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    //   Now recursively scan all pads of this canvas
    cd();
    if (invalid) SetName("c1");
-   TPad::SavePrimitive(out,option);
+   TPad::SavePrimitive(out,"toplevel");
+
    //   Write canvas options related to pad editor
    out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<std::endl;
    if (GetShowToolBar()) {
@@ -1964,13 +1975,15 @@ void TCanvas::SetBatch(Bool_t batch)
 /// the scroll bars. The Width and Height in this method are different from those
 /// given in the TCanvas constructors where these two dimension include the size
 /// of the window decoration whereas they do not in this method.
+/// When both ww==0 and wh==0, auto resize mode will be enabled again and
+/// canvas drawing area will automatically fit available window size
 
 void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 {
    if (fCanvasImp) {
-      fCanvasImp->SetCanvasSize(ww, wh);
       fCw = ww;
       fCh = wh;
+      fCanvasImp->SetCanvasSize(ww, wh);
       TContext ctxt(this, kTRUE);
       ResizePad();
    }
@@ -1981,8 +1994,8 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 
 void TCanvas::SetCursor(ECursor cursor)
 {
-   if (IsBatch()) return;
-   gVirtualX->SetCursor(fCanvasID, cursor);
+   if (!IsBatch() && !IsWeb())
+      gVirtualX->SetCursor(fCanvasID, cursor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1990,7 +2003,8 @@ void TCanvas::SetCursor(ECursor cursor)
 
 void TCanvas::SetDoubleBuffer(Int_t mode)
 {
-   if (IsBatch()) return;
+   if (IsBatch() || IsWeb())
+      return;
    fDoubleBuffer = mode;
    gVirtualX->SetDoubleBuffer(fCanvasID, mode);
 
@@ -2167,7 +2181,7 @@ void TCanvas::SetWindowPosition(Int_t x, Int_t y)
 
 void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 {
-   if (fBatch)
+   if (fBatch && !IsWeb())
       SetCanvasSize((ww + fCw) / 2, (wh + fCh) / 2);
    else if (fCanvasImp)
       fCanvasImp->SetWindowSize(ww, wh);
@@ -2458,7 +2472,7 @@ void TCanvas::ToggleToolTips()
 Bool_t TCanvas::SupportAlpha()
 {
    return gPad && (gVirtualX->InheritsFrom("TGQuartz") ||
-                   gPad->GetGLDevice() != -1);
+                   (gPad->GetGLDevice() != -1) || (gPad->GetCanvas() && gPad->GetCanvas()->IsWeb()));
 }
 
 extern "C" void ROOT_TCanvas_Update(void* TheCanvas) {
@@ -2470,6 +2484,8 @@ extern "C" void ROOT_TCanvas_Update(void* TheCanvas) {
 
 void TCanvas::Update()
 {
+   fUpdated = kTRUE;
+
    if (fUpdating) return;
 
    if (fPixmapID == -1) return;
@@ -2501,7 +2517,7 @@ void TCanvas::Update()
 
    fUpdating = kTRUE;
 
-   if (!fCanvasImp->PerformUpdate()) {
+   if (!fCanvasImp->PerformUpdate(kFALSE)) {
 
       if (!IsBatch()) FeedbackMode(kFALSE); // Goto double buffer mode
 
@@ -2513,6 +2529,23 @@ void TCanvas::Update()
    }
 
    fUpdating = kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Asynchronous pad update.
+/// In case of web-based canvas triggers update of the canvas on the client side,
+/// but does not wait that real update is completed. Avoids blocking of caller thread.
+/// Have to be used if called from other web-based widget to avoid logical dead-locks.
+/// In case of normal canvas just canvas->Update() is performed.
+
+void TCanvas::UpdateAsync()
+{
+   fUpdated = kTRUE;
+
+   if (IsWeb())
+      fCanvasImp->PerformUpdate(kTRUE);
+   else
+      Update();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2540,7 +2573,12 @@ void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
 {
    if (IsGrayscale() == set) return;
    SetBit(kIsGrayscale, set);
-   Paint(); // update canvas and all sub-pads, unconditionally!
+   if (IsWeb()) {
+      Modified();
+      UpdateAsync();
+   } else {
+      Paint(); // update canvas and all sub-pads, unconditionally!
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2597,4 +2635,133 @@ void TCanvas::DeleteCanvasPainter()
       gGLManager->DeleteGLContext(fGLDevice);//?
       fGLDevice = -1;
    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save provided pads/canvases into the image file(s)
+/// Filename can include printf argument for image number - like "image%03d.png".
+/// In this case images: "image000.png", "image001.png", "image002.png" will be created.
+/// If pattern is not provided - it will be automatically inserted before extension except PDF and ROOT files.
+/// In last case PDF or ROOT file will contain all pads.
+/// Parameter option only used when output into PDF/PS files
+/// If TCanvas::SaveAll() called without arguments - all existing canvases will be stored in allcanvases.pdf file.
+
+Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, Option_t *option)
+{
+   if (pads.size() == 0) {
+      std::vector<TPad *> canvases;
+      TIter iter(gROOT->GetListOfCanvases());
+      while (auto c = dynamic_cast<TCanvas *>(iter()))
+         canvases.emplace_back(c);
+
+      if (canvases.size() == 0) {
+         ::Warning("TCanvas::SaveAll", "No pads are provided");
+         return kFALSE;
+      }
+
+      return TCanvas::SaveAll(canvases, filename && *filename ? filename : "allcanvases.pdf", option);
+   }
+
+   TString fname = filename, ext;
+
+   Bool_t hasArg = fname.Contains("%");
+
+   if ((pads.size() == 1) && !hasArg) {
+      pads[0]->SaveAs(filename);
+      return kTRUE;
+   }
+
+   auto p = fname.Last('.');
+   if (p != kNPOS) {
+      ext = fname(p+1, fname.Length() - p - 1);
+      ext.ToLower();
+   } else {
+      p = fname.Length();
+      ::Warning("TCanvas::SaveAll", "Extension is not provided in file name %s, append .png", filename);
+      fname.Append(".png");
+      ext = "png";
+   }
+
+   if (ext != "pdf" && ext != "ps" && ext != "root" && ext != "xml" && !hasArg) {
+      fname.Insert(p, "%d");
+      hasArg = kTRUE;
+   }
+
+   static std::vector<TString> webExtensions = { "png", "json", "svg", "pdf", "jpg", "jpeg", "webp" };
+
+   if (gROOT->IsWebDisplay()) {
+      Bool_t isSupported = kFALSE;
+      for (auto &wext : webExtensions) {
+         if ((isSupported = (wext == ext)))
+            break;
+      }
+
+      if (isSupported) {
+         auto cmd = TString::Format("TWebCanvas::ProduceImages( *((std::vector<TPad *> *) 0x%zx), \"%s\")", (size_t) &pads, fname.Data());
+
+         return (Bool_t) gROOT->ProcessLine(cmd);
+      }
+
+      ::Warning("TCanvas::SaveAll", "TWebCanvas does not support image format %s - use normal ROOT functionality", fname.Data());
+   }
+
+   // store all pads into single PDF/PS files
+   if (ext == "pdf" || ext == "ps") {
+      for (unsigned n = 0; n < pads.size(); ++n) {
+         TString fn = fname;
+         if (hasArg)
+            fn = TString::Format(fname.Data(), (int) n);
+         else if (n == 0)
+            fn.Append("(");
+         else if (n == pads.size() - 1)
+            fn.Append(")");
+
+         pads[n]->Print(fn.Data(), option && *option ? option : ext.Data());
+      }
+
+      return kTRUE;
+   }
+
+   // store all pads in single ROOT file
+   if ((ext == "root" || ext == "xml") && !hasArg) {
+      TString fn = fname;
+      gSystem->ExpandPathName(fn);
+      if (fn.IsNull()) {
+         fn.Form("%s.%s", pads[0]->GetName(), ext.Data());
+         ::Warning("TCanvas::SaveAll", "Filename %s cannot be used - use pad name %s as pattern", fname.Data(), fn.Data());
+      }
+
+      Bool_t isError = kFALSE;
+
+      if (!gDirectory) {
+         isError = kTRUE;
+      } else {
+         for (unsigned n = 0; n < pads.size(); ++n) {
+            auto sz = gDirectory->SaveObjectAs(pads[n], fn.Data(), n==0 ? "q" : "qa");
+            if (!sz) { isError = kTRUE; break; }
+         }
+      }
+
+      if (isError)
+         ::Error("TCanvas::SaveAll", "Failure to store pads in %s", filename);
+      else
+         ::Info("TCanvas::SaveAll", "ROOT file %s has been created", filename);
+
+      return !isError;
+   }
+
+   for (unsigned n = 0; n < pads.size(); ++n) {
+      TString fn = TString::Format(fname.Data(), (int) n);
+      gSystem->ExpandPathName(fn);
+      if (fn.IsNull()) {
+         fn.Form("%s%d.%s", pads[n]->GetName(), (int) n, ext.Data());
+         ::Warning("TCanvas::SaveAll", "Filename %s cannot be used - use pad name %s as pattern", fname.Data(), fn.Data());
+      }
+
+      pads[n]->SaveAs(fn.Data());
+   }
+
+   return kTRUE;
+
 }

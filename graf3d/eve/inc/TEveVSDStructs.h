@@ -54,14 +54,14 @@ public:
 
    TEveMCTrack() : fLabel(-1), fIndex(-1), fEvaLabel(-1),
                    fDecayed(kFALSE), fTDecay(0), fVDecay(), fPDecay() {}
-   virtual ~TEveMCTrack() {}
+   ~TEveMCTrack() override {}
 
    TEveMCTrack& operator=(const TParticle& p)
    { *((TParticle*)this) = p; return *this; }
 
    void ResetPdgCode() { fPdgCode = 0; }
 
-   ClassDef(TEveMCTrack, 1); // Monte Carlo track (also used in VSD).
+   ClassDefOverride(TEveMCTrack, 1); // Monte Carlo track (also used in VSD).
 };
 
 
@@ -88,9 +88,9 @@ public:
    // Float_t charge; probably specific.
 
    TEveHit() : fDetId(0), fSubdetId(0), fLabel(0), fEvaLabel(0), fV() {}
-   virtual ~TEveHit() {}
+   ~TEveHit() override {}
 
-   ClassDef(TEveHit, 1); // Monte Carlo hit (also used in VSD).
+   ClassDefOverride(TEveHit, 1); // Monte Carlo hit (also used in VSD).
 };
 
 
@@ -116,9 +116,9 @@ public:
    // Coord system? Errors and/or widths Wz, Wy?
 
    TEveCluster() : fDetId(0), fSubdetId(0), fV() { fLabel[0] = fLabel[1] = fLabel[2] = 0; }
-   virtual ~TEveCluster() {}
+   ~TEveCluster() override {}
 
-   ClassDef(TEveCluster, 1); // Reconstructed cluster (also used in VSD).
+   ClassDefOverride(TEveCluster, 1); // Reconstructed cluster (also used in VSD).
 };
 
 
@@ -144,11 +144,11 @@ public:
    // PID data missing
 
    TEveRecTrackT() : fLabel(-1), fIndex(-1), fStatus(0), fSign(0), fV(), fP(), fBeta(0), fDcaXY(0), fDcaZ(0), fPVX(0), fPVY(0), fPVZ(0) {}
-   virtual ~TEveRecTrackT() {}
+   ~TEveRecTrackT() override {}
 
    Float_t Pt() { return fP.Perp(); }
 
-   ClassDef(TEveRecTrackT, 2); // Template for reconstructed track (also used in VSD).
+   ClassDefOverride(TEveRecTrackT, 2); // Template for reconstructed track (also used in VSD).
 };
 
 typedef TEveRecTrackT<Float_t>  TEveRecTrack;
@@ -184,9 +184,9 @@ public:
      fKinkIndex[0] = fKinkIndex[1] = 0;
      fKinkPdg[0]   = fKinkPdg[1]   = 0;
    }
-   virtual ~TEveRecKink() {}
+   ~TEveRecKink() override {}
 
-   ClassDef(TEveRecKink, 1); // Reconstructed kink (also used in VSD).
+   ClassDefOverride(TEveRecKink, 1); // Reconstructed kink (also used in VSD).
 };
 
 
@@ -215,9 +215,9 @@ public:
    TEveRecV0() : fStatus(), fVNeg(), fPNeg(), fVPos(), fPPos(),
                  fVCa(), fV0Birth(), fLabel(0), fPdg(0)
    { fDLabel[0] = fDLabel[1] = 0; }
-   virtual ~TEveRecV0() {}
+   ~TEveRecV0() override {}
 
-   ClassDef(TEveRecV0, 1); // Reconstructed V0 (also used in VSD).
+   ClassDefOverride(TEveRecV0, 1); // Reconstructed V0 (also used in VSD).
 };
 
 
@@ -244,9 +244,9 @@ public:
    TEveRecCascade() : fStatus(),  fVBac(), fPBac(),
                       fCascadeVCa(), fCascadeBirth(),
                       fLabel(0), fPdg(0), fDLabel(0) {}
-   virtual ~TEveRecCascade() {}
+   ~TEveRecCascade() override {}
 
-   ClassDef(TEveRecCascade, 1); // Reconstructed Cascade (also used in VSD).
+   ClassDefOverride(TEveRecCascade, 1); // Reconstructed Cascade (also used in VSD).
 };
 
 
@@ -266,9 +266,9 @@ public:
 
    TEveMCRecCrossRef() : fIsRec(false), fHasV0(false), fHasKink(false),
                          fLabel(0), fNHits(0), fNClus(0) {}
-   virtual ~TEveMCRecCrossRef() {}
+   ~TEveMCRecCrossRef() override {}
 
-   ClassDef(TEveMCRecCrossRef, 1); // Cross-reference of sim/rec data per particle (also used in VSD).
+   ClassDefOverride(TEveMCRecCrossRef, 1); // Cross-reference of sim/rec data per particle (also used in VSD).
 };
 
 

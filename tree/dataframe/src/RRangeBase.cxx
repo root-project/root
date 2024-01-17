@@ -11,7 +11,6 @@
 #include "ROOT/RDF/RRangeBase.hxx"
 
 using ROOT::Detail::RDF::RRangeBase;
-using ROOT::Detail::RDF::RLoopManager;
 
 RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
                        const unsigned int nSlots, const std::vector<std::string> &prevVariations)
@@ -19,7 +18,7 @@ RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int s
 {
 }
 
-void RRangeBase::ResetCounters()
+void RRangeBase::InitNode()
 {
    fLastCheckedEntry = -1;
    fNProcessedEntries = 0;

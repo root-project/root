@@ -53,7 +53,7 @@ public:
   };
 
   // Constructors, assignment etc
-  inline RooSimultaneous() : _plotCoefNormRange(nullptr), _partIntMgr(this,10) {}
+  inline RooSimultaneous() : _partIntMgr(this,10) {}
   RooSimultaneous(const char *name, const char *title, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const char *name, const char *title, std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
@@ -75,11 +75,11 @@ public:
 
   using RooAbsPdf::plotOn ;
   RooPlot* plotOn(RooPlot* frame,
-           const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
-           const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-           const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-           const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),
-           const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const override {
+           const RooCmdArg& arg1            , const RooCmdArg& arg2={},
+           const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+           const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+           const RooCmdArg& arg7={}, const RooCmdArg& arg8={},
+           const RooCmdArg& arg9={}, const RooCmdArg& arg10={}) const override {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
   RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const override ;
@@ -117,7 +117,6 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    ~CacheElem() override {} ;
     RooArgList containedArgs(Action) override { return RooArgList(_partIntList) ; }
     RooArgList _partIntList ;
   } ;

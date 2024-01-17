@@ -108,6 +108,8 @@ const char *TClingTypeInfo::Name() const
    TTHREAD_TLS_DECL( std::string, buf);
    buf.clear();
 
+   // TODO: This needs to be locked, but the lock cannot be placed in TClingUtils.cxx as it cannot depend from
+   // TInterpreter.h for the declaration of gInterpreterMutex. Or can it?
    R__LOCKGUARD(gInterpreterMutex);
    ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,fQualType,*fInterp);
    return buf.c_str();  // NOLINT
@@ -236,12 +238,15 @@ int TClingTypeInfo::Size() const
 const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    // Note: This *must* be static because we are returning a pointer inside it.
    TTHREAD_TLS_DECL( std::string, buf);
    buf.clear();
 
+   // TODO: This needs to be locked, but the lock cannot be placed in TClingUtils.cxx as it cannot depend from
+   // TInterpreter.h for the declaration of gInterpreterMutex. Or can it?
+   R__LOCKGUARD(gInterpreterMutex);
    ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);
 
    return buf.c_str(); // NOLINT
@@ -257,9 +262,22 @@ std::string TClingTypeInfo::NormalizedName(const ROOT::TMetaUtils::TNormalizedCt
       return "";
    }
    std::string buf;
+
+   // TODO: This needs to be locked, but the lock cannot be placed in TClingUtils.cxx as it cannot depend from
+   // TInterpreter.h for the declaration of gInterpreterMutex. Or can it?
+   R__LOCKGUARD(gInterpreterMutex);
    ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);
 
    // in C++11 this will be efficient thanks to the move constructor.
    return buf;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the QualType as a void pointer
+
+void *TClingTypeInfo::QualTypePtr() const
+{
+   return fQualType.getAsOpaquePtr();
+}
+
 

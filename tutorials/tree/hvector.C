@@ -94,14 +94,14 @@ void read()
 
    TTree *t; f->GetObject("tvec",t);
 
-   std::vector<float> *vpx = 0;
+   std::vector<float> *vpx = nullptr;
 
   // Create a new canvas.
    TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
 
    const Int_t kUPDATE = 1000;
 
-   TBranch *bvpx = 0;
+   TBranch *bvpx = nullptr;
    t->SetBranchAddress("vpx",&vpx,&bvpx);
 
 

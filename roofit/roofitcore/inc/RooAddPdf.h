@@ -20,7 +20,6 @@
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
-#include "RooNormSetCache.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
 #include "RooTrace.h"
@@ -34,7 +33,7 @@ class AddCacheElem;
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE }
+  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE; }
   RooAddPdf(const char *name, const char *title=nullptr);
   RooAddPdf(const char *name, const char *title,
             RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
@@ -43,7 +42,7 @@ public:
 
   RooAddPdf(const RooAddPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooAddPdf(*this,newname) ; }
-  ~RooAddPdf() override { TRACE_DESTROY }
+  ~RooAddPdf() override { TRACE_DESTROY; }
 
   bool checkObservables(const RooArgSet* nset) const override;
 
@@ -80,7 +79,7 @@ public:
   void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
   void fixCoefRange(const char* rangeName) ;
 
-  const RooArgSet& getCoefNormalization() const { return _refCoefNorm ; }
+  const RooArgSet& getCoefNormalization() const;
   const char* getCoefRange() const { return _refCoefRangeName?RooNameReg::str(_refCoefRangeName):"" ; }
 
   void resetErrorCounters(Int_t resetValue=10) override;
@@ -94,15 +93,16 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; };
   void setCacheAndTrackHints(RooArgSet&) override;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
-protected:
-
+  protected:
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override;
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override;
 
   mutable RooSetProxy _refCoefNorm ;   ///< Reference observable set for coefficient interpretation
-  mutable TNamed* _refCoefRangeName = nullptr ;  ///< Reference range name for coefficient interpreation
+  mutable TNamed* _refCoefRangeName = nullptr ;  ///< Reference range name for coefficient interpretation
 
   mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
@@ -122,7 +122,7 @@ protected:
       return getValV(nullptr);
   }
   double getValV(const RooArgSet* set=nullptr) const override ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 
@@ -146,6 +146,7 @@ private:
   mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; ///<!
 
   void finalizeConstruction();
+  void materializeRefCoefNormFromAttribute() const;
 
   ClassDefOverride(RooAddPdf,5) // PDF representing a sum of PDFs
 };

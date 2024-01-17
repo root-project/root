@@ -104,7 +104,6 @@
 #pragma link C++ typedef ROOT::Math::IMultiGradFunction;
 
 #pragma link C++ class ROOT::Math::IBaseFunctionOneDim+;
-#pragma link C++ class ROOT::Math::IGradientOneDim+;
 #pragma link C++ class ROOT::Math::IGradientFunctionOneDim+;
 #pragma link C++ class ROOT::Math::IBaseParam+;
 
@@ -112,7 +111,6 @@
 #pragma link C++ class ROOT::Math::IParametricGradFunctionOneDim+;
 
 #pragma link C++ class ROOT::Math::IBaseFunctionMultiDim+;
-#pragma link C++ class ROOT::Math::IGradientMultiDim+;
 #pragma link C++ class ROOT::Math::IGradientFunctionMultiDim+;
 #pragma link C++ class ROOT::Math::IParametricFunctionMultiDim+;
 #pragma link C++ class ROOT::Math::IParametricGradFunctionMultiDim+;

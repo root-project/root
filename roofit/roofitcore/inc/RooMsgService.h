@@ -129,6 +129,11 @@ public:
     bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, const RooAbsArg* obj) ;
     bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, const TObject* obj) ;
 
+    inline bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, std::nullptr_t obj)
+    {
+       return match(level, facility, static_cast<TObject const *>(obj));
+    }
+
     bool active ;
     bool universal ;
 
@@ -150,8 +155,8 @@ public:
   static bool anyDebug() ;
 
   // User interface -- Add or delete reporting streams ;
-  Int_t addStream(RooFit::MsgLevel level, const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),
-                          const RooCmdArg& arg4=RooCmdArg(), const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg());
+  Int_t addStream(RooFit::MsgLevel level, const RooCmdArg& arg1={}, const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
+                          const RooCmdArg& arg4={}, const RooCmdArg& arg5={}, const RooCmdArg& arg6={});
   void deleteStream(Int_t id) ;
   StreamConfig& getStream(Int_t id) { return _streams[id] ; }
 
@@ -175,8 +180,13 @@ public:
   inline std::ostream& log(std::nullptr_t, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) {
       return log(static_cast<TObject*>(nullptr), level, facility, forceSkipPrefix);
   }
-  bool isActive(const RooAbsArg* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
-  bool isActive(const TObject* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
+
+  /// Check if logging is active for given object/topic/RooFit::%MsgLevel combination.
+  template <class T>
+  bool isActive(T self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
+  {
+     return activeStream(self, topic, level) >= 0;
+  }
 
   static Int_t _debugCount ;
   std::map<int,std::string> _levelNames ;
@@ -198,8 +208,19 @@ public:
 
 protected:
 
-  Int_t activeStream(const RooAbsArg* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
-  Int_t activeStream(const TObject* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
+  /// Find appropriate logging stream for message from given object with given topic and message level.
+  template <class T>
+  Int_t activeStream(T self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
+  {
+     if (level < _globMinLevel)
+        return -1;
+     for (UInt_t i = 0; i < _streams.size(); i++) {
+        if (_streams[i].match(level, topic, self)) {
+           return i;
+        }
+     }
+     return -1;
+  }
 
   std::vector<StreamConfig> _streams ;
   std::stack<std::vector<StreamConfig> > _streamsSaved ;

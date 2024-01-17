@@ -364,7 +364,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
 TMVA::MethodBase::~MethodBase( void )
 {
    // destructor
-   if (!fSetupCompleted) Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Calling destructor of method which got never setup" << Endl;
+   if (!fSetupCompleted) Log() << kWARNING <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Calling destructor of method which got never setup" << Endl;
 
    // destructor
    if (fInputVars != 0)  { fInputVars->clear(); delete fInputVars; }
@@ -385,14 +385,14 @@ TMVA::MethodBase::~MethodBase( void )
    if (fSplTrainRefB)    { delete fSplTrainRefB; fSplTrainRefB = 0; }
    if (fSplTrainEffBvsS) { delete fSplTrainEffBvsS; fSplTrainEffBvsS = 0; }
 
-   for (Int_t i = 0; i < 2; i++ ) {
+   for (size_t i = 0; i < fEventCollections.size(); i++ ) {
       if (fEventCollections.at(i)) {
          for (std::vector<Event*>::const_iterator it = fEventCollections.at(i)->begin();
               it != fEventCollections.at(i)->end(); ++it) {
             delete (*it);
          }
          delete fEventCollections.at(i);
-         fEventCollections.at(i) = 0;
+         fEventCollections.at(i) = nullptr;
       }
    }
 
@@ -809,11 +809,12 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    resMulticlass->Resize( nEvents );
+   Int_t modulo = Int_t(nEvents/100) + 1;
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
       Data()->SetCurrentEvent(ievt);
       std::vector< Float_t > vals = GetMulticlassValues();
       resMulticlass->SetValue( vals, ievt );
-      timer.DrawProgressBar( ievt );
+      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())
@@ -963,6 +964,8 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    mvaProb->Resize( nEvents );
+   Int_t modulo = Int_t(nEvents/100);
+   if (modulo <= 0 ) modulo = 1;
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
 
       Data()->SetCurrentEvent(ievt);
@@ -971,8 +974,6 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
       mvaProb->SetValue( proba, ievt, DataInfo().IsSignal( Data()->GetEvent()) );
 
       // print progress
-      Int_t modulo = Int_t(nEvents/100);
-      if (modulo <= 0 ) modulo = 1;
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
@@ -1008,6 +1009,7 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
    Float_t  xmin = 1e30, xmax = -1e30;
    Log() << kINFO << "Calculate regression for all events" << Endl;
    Timer timer( nevt, GetName(), kTRUE );
+   Long64_t modulo = Long64_t(nevt / 100) + 1;
    for (Long64_t ievt=0; ievt<nevt; ievt++) {
 
       const Event* ev = Data()->GetEvent(ievt); // NOTE: need untransformed event here !
@@ -1036,7 +1038,6 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
       m2  += r*w; s2 += r*r*w;
       s12 += t*r;
       // print progress
-      Long64_t modulo = Long64_t(nevt / 100);
       if (ievt % modulo == 0)
          timer.DrawProgressBar(ievt);
    }
@@ -1158,13 +1159,11 @@ void TMVA::MethodBase::TestClassification()
    // classifier response distributions for training sample
    // MVA plots used for graphics representation (signal)
    TString TestvarName;
-   if(IsSilentFile())
-      {
-         TestvarName=Form("[%s]%s",DataInfo().GetName(),GetTestvarName().Data());
-      }else
-      {
-         TestvarName=GetTestvarName();
-      }
+   if(IsSilentFile()) {
+      TestvarName = TString::Format("[%s]%s",DataInfo().GetName(),GetTestvarName().Data());
+   } else {
+      TestvarName=GetTestvarName();
+   }
    TH1* mva_s = new TH1D( TestvarName + "_S",TestvarName + "_S", fNbinsMVAoutput, fXmin, sxmax );
    TH1* mva_b = new TH1D( TestvarName + "_B",TestvarName + "_B", fNbinsMVAoutput, fXmin, sxmax );
    mvaRes->Store(mva_s, "MVA_S");
@@ -1926,7 +1925,7 @@ void TMVA::MethodBase::ReadClassesFromXML( void* clsnode )
    void* ch = gTools().GetChild(clsnode);
    if (!ch) {
       for (UInt_t icls = 0; icls<readNCls;++icls) {
-         TString classname = Form("class%i",icls);
+         TString classname = TString::Format("class%i",icls);
          DataInfo().AddClass(classname);
 
       }
@@ -2033,17 +2032,17 @@ TDirectory *TMVA::MethodBase::MethodBaseDir() const
    if (!factoryBaseDir) return nullptr;
    fMethodBaseDir = factoryBaseDir->GetDirectory(datasetName);
    if (!fMethodBaseDir) {
-      fMethodBaseDir = factoryBaseDir->mkdir(datasetName, Form("Base directory for dataset %s", datasetName));
+      fMethodBaseDir = factoryBaseDir->mkdir(datasetName, TString::Format("Base directory for dataset %s", datasetName).Data());
       if (!fMethodBaseDir) {
          Log() << kFATAL << "Can not create dir " << datasetName;
       }
    }
-   TString methodTypeDir = Form("Method_%s", GetMethodTypeName().Data());
+   TString methodTypeDir = TString::Format("Method_%s", GetMethodTypeName().Data());
    fMethodBaseDir = fMethodBaseDir->GetDirectory(methodTypeDir.Data());
 
    if (!fMethodBaseDir) {
       TDirectory *datasetDir = factoryBaseDir->GetDirectory(datasetName);
-      TString methodTypeDirHelpStr = Form("Directory for all %s methods", GetMethodTypeName().Data());
+      TString methodTypeDirHelpStr = TString::Format("Directory for all %s methods", GetMethodTypeName().Data());
       fMethodBaseDir = datasetDir->mkdir(methodTypeDir.Data(), methodTypeDirHelpStr);
       Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodName()
             << " does not exist yet--> created it" << Endl;
@@ -2236,7 +2235,7 @@ void TMVA::MethodBase::CreateMVAPdfs()
 
    if (DataInfo().GetNClasses() == 2) { // TODO: this is an ugly hack.. adapt this to new framework
       Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())
-            << Form( "<CreateMVAPdfs> Separation from histogram (PDF): %1.3f (%1.3f)",
+            << TString::Format( "<CreateMVAPdfs> Separation from histogram (PDF): %1.3f (%1.3f)",
                      GetSeparation( histMVAPdfS, histMVAPdfB ), GetSeparation( fMVAPdfS, fMVAPdfB ) )
             << Endl;
    }
@@ -3373,7 +3372,7 @@ TString TMVA::MethodBase::GetTrainingTMVAVersionString() const
    UInt_t b = GetTrainingTMVAVersionCode() & 0x00ff00; b>>=8;
    UInt_t c = GetTrainingTMVAVersionCode() & 0x0000ff;
 
-   return TString(Form("%i.%i.%i",a,b,c));
+   return TString::Format("%i.%i.%i",a,b,c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3385,7 +3384,7 @@ TString TMVA::MethodBase::GetTrainingROOTVersionString() const
    UInt_t b = GetTrainingROOTVersionCode() & 0x00ff00; b>>=8;
    UInt_t c = GetTrainingROOTVersionCode() & 0x0000ff;
 
-   return TString(Form("%i.%02i/%02i",a,b,c));
+   return TString::Format("%i.%02i/%02i",a,b,c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

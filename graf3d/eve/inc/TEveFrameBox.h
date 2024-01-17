@@ -41,7 +41,7 @@ protected:
 
 public:
    TEveFrameBox();
-   virtual ~TEveFrameBox();
+   ~TEveFrameBox() override;
 
    void SetAAQuadXY(Float_t x, Float_t y, Float_t z, Float_t dx, Float_t dy);
    void SetAAQuadXZ(Float_t x, Float_t y, Float_t z, Float_t dx, Float_t dz);
@@ -85,9 +85,9 @@ public:
    Bool_t GetDrawBack() const   { return fDrawBack; }
    void   SetDrawBack(Bool_t f) { fDrawBack = f;    }
 
-   virtual void OnZeroRefCount() { delete this; }
+   void OnZeroRefCount() override { delete this; }
 
-   ClassDef(TEveFrameBox, 0); // Description of a 2D or 3D frame that can be used to visually group a set of objects.
+   ClassDefOverride(TEveFrameBox, 0); // Description of a 2D or 3D frame that can be used to visually group a set of objects.
 };
 
 #endif

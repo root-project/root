@@ -20,27 +20,20 @@
 #include "RooNumIntConfig.h"
 
 class RooInvTransform;
-class RooIntegrator1D;
+class RooRombergIntegrator;
 
 class RooImproperIntegrator1D : public RooAbsIntegrator {
 public:
 
-  RooImproperIntegrator1D() ;
   RooImproperIntegrator1D(const RooAbsFunc& function);
   RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config);
   RooImproperIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config);
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
 
   bool checkLimits() const override;
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
   double integral(const double* yvec=nullptr) override ;
-
-  bool canIntegrate1D() const override { return true ; }
-  bool canIntegrate2D() const override { return false ; }
-  bool canIntegrateND() const override { return false ; }
-  bool canIntegrateOpenEnded() const override { return true ; }
 
 protected:
 
@@ -59,9 +52,9 @@ protected:
   RooAbsFunc*      _origFunc = nullptr;  ///< Original function binding
   std::unique_ptr<RooInvTransform> _function;   ///< Binding with inverse of function
   RooNumIntConfig  _config ;    ///< Configuration object
-  mutable std::unique_ptr<RooIntegrator1D> _integrator1; ///< Piece integrator 1
-  mutable std::unique_ptr<RooIntegrator1D> _integrator2; ///< Piece integrator 2
-  mutable std::unique_ptr<RooIntegrator1D> _integrator3; ///< Piece integrator 3
+  mutable std::unique_ptr<RooRombergIntegrator> _integrator1; ///< Piece integrator 1
+  mutable std::unique_ptr<RooRombergIntegrator> _integrator2; ///< Piece integrator 2
+  mutable std::unique_ptr<RooRombergIntegrator> _integrator3; ///< Piece integrator 3
 
   ClassDefOverride(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine
 };

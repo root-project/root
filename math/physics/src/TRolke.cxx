@@ -32,7 +32,7 @@
    from sidebands (or MC), and
    the signal efficiency was determined from Monte Carlo
 
-2: SetPoissonBkgGaussEff(x,y,em,sde,tau)
+2: SetPoissonBkgGaussEff(x,y,em,tau,sde)
 ~~~
    Background: Poisson
    Efficiency: Gaussian
@@ -579,7 +579,7 @@ bool TRolke::GetCriticalNumber(Int_t& ncrit, Int_t maxtry)
 void TRolke::SetSwitch(bool bnd) {
    if(fNumWarningsDeprecated1<2){
       std::cerr << "*******************************************" <<std::endl;
-      std::cerr << "TRolke - Warning: 'SetSwitch' is depricated and may be removed from future releases:" <<std::endl;
+      std::cerr << "TRolke - Warning: 'SetSwitch' is deprecated and may be removed from future releases:" <<std::endl;
       std::cerr << " - Use 'SetBounding' instead "<<std::endl;
       std::cerr << "*******************************************" <<std::endl;
       fNumWarningsDeprecated1++;
@@ -637,7 +637,7 @@ void TRolke::Print(Option_t*) const {
 Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m){
    if (fNumWarningsDeprecated2<2 ) {
       std::cerr << "*******************************************" <<std::endl;
-      std::cerr << "TRolke - Warning: 'CalculateInterval' is depricated and may be removed from future releases:" <<std::endl;
+      std::cerr << "TRolke - Warning: 'CalculateInterval' is deprecated and may be removed from future releases:" <<std::endl;
       std::cerr << " - Use e.g. 'SetGaussBkgGaussEff' and 'GetLimits' instead (read the docs in Rolke.cxx )"<<std::endl;
       std::cerr << "*******************************************" <<std::endl;
       fNumWarningsDeprecated2++;

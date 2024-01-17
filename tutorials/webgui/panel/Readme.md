@@ -7,7 +7,7 @@ This class provides methods, which simplify handling of communication between se
 
 First of all, when creating RWebWindow, one should configure panel name. Like:
 
-     auto win = ROOT::Experimental::RWebWindow::Create();
+     auto win = ROOT::RWebWindow::Create();
 
      win->SetPanelName("localapp.view.TestPanel");
 

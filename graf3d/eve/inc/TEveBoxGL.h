@@ -39,21 +39,21 @@ protected:
 
 public:
    TEveBoxGL();
-   virtual ~TEveBoxGL() {}
+   ~TEveBoxGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
 
-   virtual void Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void DirectDraw(TGLRnrCtx& rnrCtx) const;
+   void Draw(TGLRnrCtx& rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
-   ClassDef(TEveBoxGL, 0); // GL renderer class for TEveBox.
+   ClassDefOverride(TEveBoxGL, 0); // GL renderer class for TEveBox.
 };
 
 
@@ -74,21 +74,21 @@ protected:
 
 public:
    TEveBoxProjectedGL();
-   virtual ~TEveBoxProjectedGL() {}
+   ~TEveBoxProjectedGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
 
-   virtual void Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void DirectDraw(TGLRnrCtx& rnrCtx) const;
+   void Draw(TGLRnrCtx& rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
-   ClassDef(TEveBoxProjectedGL, 0); // GL renderer class for TEveBoxProjected.
+   ClassDefOverride(TEveBoxProjectedGL, 0); // GL renderer class for TEveBoxProjected.
 };
 
 #endif

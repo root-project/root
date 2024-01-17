@@ -39,8 +39,6 @@ namespace RooStats {
       /// point x2
       double GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
 
-      ~UniformProposal() override {}
-
       ClassDefOverride(UniformProposal,1) // A concrete implementation of ProposalFunction, that uniformly samples the parameter space.
    };
 }

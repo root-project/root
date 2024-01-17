@@ -3,7 +3,7 @@
 set -ex
 
 echo "Running clang-format against branch $TRAVIS_BRANCH, with hash $BASE_COMMIT"
-COMMIT_FILES=$(git diff --name-only $BASE_COMMIT | grep -i -v LinkDef)
+COMMIT_FILES=$(git diff --name-status $BASE_COMMIT | grep -i -v LinkDef | grep -v -E '^D +' | sed -E 's,^.[[:space:]]+,,')
 RESULT_OUTPUT="$(git-clang-format --commit $BASE_COMMIT --diff --binary `which clang-format` $COMMIT_FILES)"
 
 if [ "$RESULT_OUTPUT" == "no modified files to format" ] \

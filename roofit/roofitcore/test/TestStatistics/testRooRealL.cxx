@@ -28,17 +28,14 @@
 #include <RooConstraintSum.h>
 #include <RooDataHist.h>
 #include <RooRealSumPdf.h>
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include <RooNLLVar.h>
+#endif
 #include <RooRealVar.h>
 
 #include <algorithm> // count_if
 
-#include <gtest/gtest.h>
-
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "../gtest_wrapper.h"
 
 class RooRealL : public ::testing::TestWithParam<std::tuple<std::size_t>> {};
 
@@ -57,13 +54,14 @@ TEST_P(RooRealL, getVal)
    auto nominal_result = nll->getVal();
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    auto mp_result = nll_new.getVal();
 
    EXPECT_DOUBLE_EQ(nominal_result, mp_result);
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 void check_NLL_type(RooAbsReal *nll, bool verbose = false)
 {
    if (dynamic_cast<RooAddition *>(nll) != nullptr) {
@@ -198,6 +196,7 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    count_NLL_components(nll.get());
 }
 #endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_P(RooRealL, setVal)
 {
@@ -213,7 +212,7 @@ TEST_P(RooRealL, setVal)
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    // calculate first results
    auto nominal_result1 = nll->getVal();
@@ -267,7 +266,7 @@ TEST_P(RealLVsMPFE, getVal)
    auto mpfe_result = nll_mpfe->getVal();
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    auto mp_result = nll_new.getVal();
 
@@ -305,15 +304,13 @@ TEST_P(RealLVsMPFE, minimize)
 
    std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data)};
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    // save initial values for the start of all minimizations
-   RooArgSet values = RooArgSet(*mu, *pdf);
+   RooArgSet values{*mu, *pdf};
 
-   auto savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
-   if (savedValues == nullptr) {
-      throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
-   }
+   RooArgSet savedValues;
+   values.snapshot(savedValues);
 
    // --------
 
@@ -331,7 +328,7 @@ TEST_P(RealLVsMPFE, minimize)
    double mu0 = mu->getVal();
    double muerr0 = mu->getError();
 
-   values = *savedValues;
+   values.assign(savedValues);
 
    RooMinimizer m1(nll_new);
    m1.setMinimizerType("Minuit2");
@@ -351,8 +348,6 @@ TEST_P(RealLVsMPFE, minimize)
    EXPECT_EQ(mu0, mu1);
    EXPECT_EQ(muerr0, muerr1);
    EXPECT_EQ(edm0, edm1);
-
-   delete savedValues;
 }
 
 INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RealLVsMPFE, ::testing::Values(2, 3)); // random seed

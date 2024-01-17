@@ -36,11 +36,11 @@ namespace ROOT {
 
          @ingroup CppFunctions
       */
-      class WrappedTF1 : public ROOT::Math::IParamGradFunction, public ROOT::Math::IGradientOneDim {
+      class WrappedTF1 : public ROOT::Math::IParamGradFunction, public ROOT::Math::IGradientFunctionOneDim {
 
       public:
 
-         typedef  ROOT::Math::IGradientOneDim     IGrad;
+         typedef  ROOT::Math::IGradientFunctionOneDim     IGrad;
          typedef  ROOT::Math::IParamGradFunction  BaseGradFunc;
          typedef  ROOT::Math::IParamGradFunction::BaseFunc BaseFunc;
 

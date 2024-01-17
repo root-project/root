@@ -7,7 +7,7 @@
 // can be found in the LICENSE file.
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -35,4 +35,9 @@ void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefStr
 {
    CefWindowHandle hwnd = browser->GetHost()->GetWindowHandle();
    SetWindowText(hwnd, std::string(title).c_str());
+}
+
+bool GuiHandler::PlatformResize(CefRefPtr<CefBrowser>, int, int)
+{
+   return false;
 }

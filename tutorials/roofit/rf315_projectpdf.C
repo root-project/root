@@ -20,7 +20,6 @@
 #include "TAxis.h"
 #include "RooPlot.h"
 #include "RooNumIntConfig.h"
-#include "RooConstVar.h"
 using namespace RooFit;
 
 void rf315_projectpdf()
@@ -47,7 +46,7 @@ void rf315_projectpdf()
    RooGaussian gaussx("gaussx", "Gaussian in x with shifting mean in y", x, fy, sigmax);
 
    // Create gaussy(y,0,2)
-   RooGaussian gaussy("gaussy", "Gaussian in y", y, RooConst(0), RooConst(2));
+   RooGaussian gaussy("gaussy", "Gaussian in y", y, 0.0, 2.0);
 
    // Create gaussx(x,sx|y) * gaussy(y)
    RooProdPdf model("model", "gaussx(x|y)*gaussy(y)", gaussy, Conditional(gaussx, x));
@@ -62,7 +61,7 @@ void rf315_projectpdf()
    // ------------------------------------------------------------------------------------------
 
    // Sample 1000 events from modelx
-   RooAbsData *data = modelx->generateBinned(x, 1000);
+   std::unique_ptr<RooAbsData> data{modelx->generateBinned(x, 1000)};
 
    // Fit modelx to toy data
    modelx->fitTo(*data, Verbose(), PrintLevel(-1));

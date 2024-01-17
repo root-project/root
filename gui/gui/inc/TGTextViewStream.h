@@ -34,7 +34,7 @@ protected:
 
 public:
    TGTextViewStreamBuf(TGTextView *textview);
-   virtual ~TGTextViewStreamBuf() {}
+   ~TGTextViewStreamBuf() override {}
 
    ClassDef(TGTextViewStreamBuf, 0) // Specialization of std::streambuf
 };
@@ -54,7 +54,7 @@ public:
    TGTextViewostream(const TGWindow *parent, UInt_t w, UInt_t h,
                      const char *string, Int_t id, UInt_t sboptions,
                      ULong_t back);
-   virtual ~TGTextViewostream() {}
+   ~TGTextViewostream() override {}
 
    ClassDefOverride(TGTextViewostream, 0) // Specialization of TGTextView and std::ostream
 };

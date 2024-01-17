@@ -14,7 +14,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
@@ -35,8 +34,8 @@ void rf313_paramranges()
 
    // Define 3 dimensional pdf
    RooRealVar z0("z0", "z0", -0.1, 1);
-   RooPolynomial px("px", "px", x, RooConst(0));
-   RooPolynomial py("py", "py", y, RooConst(0));
+   RooPolynomial px("px", "px", x, RooConst(0.0));
+   RooPolynomial py("py", "py", y, RooConst(0.0));
    RooPolynomial pz("pz", "pz", z, z0);
    RooProdPdf pxyz("pxyz", "pxyz", RooArgSet(px, py, pz));
 

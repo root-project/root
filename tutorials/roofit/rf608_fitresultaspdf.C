@@ -47,7 +47,7 @@ void rf608_fitresultaspdf()
    RooAddPdf model("model", "model", RooArgList(g1, g2), frac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // F i t   m o d e l   t o   d a t a
    // ----------------------------------
@@ -63,7 +63,7 @@ void rf608_fitresultaspdf()
    // -----------------------------------------------------------------------------
 
    // Generate 100K points in the parameter space, sampled from the MVGaussian pdf
-   RooDataSet *d = parabPdf->generate(RooArgSet(mean, sigma_g2, frac), 100000);
+   std::unique_ptr<RooDataSet> d{parabPdf->generate({mean, sigma_g2, frac}, 100000)};
 
    // Sample a 3-D histogram of the pdf to be visualized as an error ellipsoid using the GLISO draw option
    TH3 *hh_3d = (TH3 *)parabPdf->createHistogram("mean,sigma_g2,frac", 25, 25, 25);

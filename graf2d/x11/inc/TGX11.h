@@ -159,7 +159,7 @@ public:
    TGX11();
    TGX11(const TGX11 &org);
    TGX11(const char *name, const char *title);
-   virtual ~TGX11();
+   ~TGX11() override;
 
    Bool_t    Init(void *display) override;
    void      ClearWindow() override;

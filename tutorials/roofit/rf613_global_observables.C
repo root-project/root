@@ -46,7 +46,7 @@
 ///
 /// \f[ L'(data | mu, count) = L(data | mu, count) * \text{Poisson}(count_obs | count) \f]
 ///
-/// Unlike a Guassian, a Poissonian is not symmetric under exchange of the
+/// Unlike a Gaussian, a Poissonian is not symmetric under exchange of the
 /// observable and the parameter, so here you need to be more careful to follow
 /// the global observable prescription correctly.
 ///
@@ -94,7 +94,7 @@ void rf613_global_observables()
    // note: alternatively, one can create a constant with default limits using `RooRealVar("mu_obs", "mu_obs", 1.0)`
 
    // constraint pdf
-   RooGaussian constraint("constraint", "constraint", mu_obs, mu, RooConst(0.1));
+   RooGaussian constraint("constraint", "constraint", mu_obs, mu, 0.1);
 
    // full pdf including constraint pdf
    RooProdPdf model("model", "model", {gauss, constraint});
@@ -169,7 +169,7 @@ void rf613_global_observables()
 
    // If you want to explicitly ignore the global observables in the dataset,
    // you can do that by specifying GlobalObservablesSource("model"). Keep in
-   // mind that now it's also again your responsability to define the set of
+   // mind that now it's also again your responsibility to define the set of
    // global observables.
    std::cout << "3. model.fitTo(*data, GlobalObservables(mu_obs), GlobalObservablesSource(\"model\"))\n";
    std::cout << "------------------------------------------------\n";

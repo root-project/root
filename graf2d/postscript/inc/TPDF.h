@@ -52,11 +52,12 @@ protected:
 
    static Int_t       fgLineJoin;       ///< Appearance of joining lines
    static Int_t       fgLineCap;        ///< Appearance of line caps
+   static Bool_t      fgObjectIsOpen;   ///< Indicates if an object is open
 
 public:
    TPDF();
    TPDF(const char *filename, Int_t type=-111);
-   virtual ~TPDF();
+   ~TPDF() override;
 
    void     CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
    void     CellArrayFill(Int_t r, Int_t g, Int_t b) override;
@@ -76,6 +77,7 @@ public:
    void     DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
    void     LineTo(Double_t x, Double_t y);
    void     MoveTo(Double_t x, Double_t y);
+   void     EndObject();
    void     FontEncode();
    void     NewObject(Int_t n);
    void     NewPage() override;
