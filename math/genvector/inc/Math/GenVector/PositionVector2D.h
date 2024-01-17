@@ -61,14 +61,14 @@ namespace ROOT {
           Default constructor. Construct an empty object with zero values
       */
 
-       PositionVector2D() : fCoordinates() { }
+       constexpr PositionVector2D() : fCoordinates() { }
 
        /**
           Construct from three values of type <em>Scalar</em>.
           In the case of a XYPoint the values are x,y
           In the case of  a polar vector they are r,phi
        */
-       PositionVector2D(const Scalar & a, const Scalar & b) :
+       constexpr PositionVector2D(const Scalar & a, const Scalar & b) :
           fCoordinates ( a , b)  { }
 
        /**
@@ -76,14 +76,14 @@ namespace ROOT {
           coordinates, or using a different Scalar type
        */
        template <class T>
-       explicit PositionVector2D( const PositionVector2D<T,Tag> & v) :
+       explicit constexpr PositionVector2D( const PositionVector2D<T,Tag> & v) :
           fCoordinates ( v.Coordinates() ) { }
 
        /**
           Construct from an arbitrary displacement vector
        */
        template <class T>
-       explicit PositionVector2D( const DisplacementVector2D<T,Tag> & p) :
+       explicit constexpr PositionVector2D( const DisplacementVector2D<T,Tag> & p) :
           fCoordinates ( p.Coordinates() ) { }
 
        /**
@@ -91,7 +91,7 @@ namespace ROOT {
           Precondition: v must implement methods x() and  y()
        */
        template <class ForeignVector>
-       explicit PositionVector2D( const ForeignVector & v) :
+       explicit constexpr PositionVector2D( const ForeignVector & v) :
           fCoordinates ( Cartesian2D<Scalar>( v.x(), v.y() ) ) { }
 
        // compiler-generated copy ctor and dtor are fine.
@@ -339,10 +339,10 @@ namespace ROOT {
        // this should not compile (if from a vector or points with different tag
 
        template <class OtherCoords, class OtherTag>
-       explicit PositionVector2D( const PositionVector2D<OtherCoords, OtherTag> & );
+       explicit constexpr PositionVector2D( const PositionVector2D<OtherCoords, OtherTag> & );
 
        template <class OtherCoords, class OtherTag>
-       explicit PositionVector2D( const DisplacementVector2D<OtherCoords, OtherTag> & );
+       explicit constexpr PositionVector2D( const DisplacementVector2D<OtherCoords, OtherTag> & );
 
        template <class OtherCoords, class OtherTag>
        PositionVector2D & operator=( const PositionVector2D<OtherCoords, OtherTag> & );

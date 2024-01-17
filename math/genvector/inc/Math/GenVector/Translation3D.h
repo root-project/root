@@ -81,7 +81,7 @@ public:
       Construct from any Displacement vector in ant tag and coordinate system
    */
    template<class CoordSystem, class Tag>
-   explicit Translation3D( const DisplacementVector3D<CoordSystem,Tag> & v) :
+   explicit constexpr Translation3D( const DisplacementVector3D<CoordSystem,Tag> & v) :
       fVect(Vector(v.X(),v.Y(),v.Z()))
    { }
 

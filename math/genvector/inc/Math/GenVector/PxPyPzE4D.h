@@ -67,7 +67,7 @@ public :
       implementing x(), y() and z() and t()
    */
    template <class CoordSystem>
-   explicit PxPyPzE4D(const CoordSystem & v) :
+   explicit constexpr PxPyPzE4D(const CoordSystem & v) :
       fX( v.x() ), fY( v.y() ), fZ( v.z() ), fT( v.t() )  { }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower

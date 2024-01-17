@@ -91,7 +91,7 @@ public:
       Construct from another supported rotation type (see gv_detail::convert )
    */
    template <class OtherRotation>
-   explicit AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
+   explicit constexpr AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**

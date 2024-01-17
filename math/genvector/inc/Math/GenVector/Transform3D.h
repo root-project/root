@@ -162,35 +162,35 @@ public:
    /**
       Construct from a 3D Rotation only with zero translation
    */
-   explicit Transform3D( const Rotation3D & r) {
+   explicit constexpr Transform3D( const Rotation3D & r) {
       AssignFrom(r);
    }
 
    // convenience methods for constructing a Transform3D from all the 3D rotations classes
    // (cannot use templates for conflict with LA)
 
-   explicit Transform3D( const AxisAngle & r) {
+   explicit constexpr Transform3D( const AxisAngle & r) {
       AssignFrom(Rotation3D(r));
    }
-   explicit Transform3D( const EulerAngles & r) {
+   explicit constexpr Transform3D( const EulerAngles & r) {
       AssignFrom(Rotation3D(r));
    }
-   explicit Transform3D( const Quaternion & r) {
+   explicit constexpr Transform3D( const Quaternion & r) {
       AssignFrom(Rotation3D(r));
    }
-   explicit Transform3D( const RotationZYX & r) {
+   explicit constexpr Transform3D( const RotationZYX & r) {
       AssignFrom(Rotation3D(r));
    }
 
    // Constructors from axial rotations
    // TO DO: implement direct methods for axial rotations without going through Rotation3D
-   explicit Transform3D( const RotationX & r) {
+   explicit constexpr Transform3D( const RotationX & r) {
       AssignFrom(Rotation3D(r));
    }
-   explicit Transform3D( const RotationY & r) {
+   explicit constexpr Transform3D( const RotationY & r) {
       AssignFrom(Rotation3D(r));
    }
-   explicit Transform3D( const RotationZ & r) {
+   explicit constexpr Transform3D( const RotationZ & r) {
       AssignFrom(Rotation3D(r));
    }
 
@@ -199,21 +199,21 @@ public:
       and with an identity rotation
    */
    template<class CoordSystem, class Tag>
-   explicit Transform3D( const DisplacementVector3D<CoordSystem,Tag> & v) {
+   explicit constexpr Transform3D( const DisplacementVector3D<CoordSystem,Tag> & v) {
       AssignFrom(Vector(v.X(),v.Y(),v.Z()));
    }
    /**
       Construct from a translation only, represented by a Cartesian 3D Vector,
       and with an identity rotation
    */
-   explicit Transform3D( const Vector & v) {
+   explicit constexpr Transform3D( const Vector & v) {
       AssignFrom(v);
    }
    /**
       Construct from a translation only, represented by a Translation3D class
       and with an identity rotation
    */
-   explicit Transform3D(const Translation3D<T> &t) { AssignFrom(t.Vect()); }
+   explicit constexpr Transform3D(const Translation3D<T> &t) { AssignFrom(t.Vect()); }
 
    //#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambiguous with double * , double *
 
@@ -435,7 +435,7 @@ public:
       are described by the 4-th column
    */
    template<class ForeignMatrix>
-   explicit Transform3D(const ForeignMatrix & m) {
+   explicit constexpr Transform3D(const ForeignMatrix & m) {
       SetComponents(m);
    }
 

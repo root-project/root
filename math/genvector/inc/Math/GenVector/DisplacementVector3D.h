@@ -68,7 +68,7 @@ namespace ROOT {
       /**
           Default constructor. Construct an empty object with zero values
       */
-      DisplacementVector3D ( ) :   fCoordinates()  { }
+      constexpr DisplacementVector3D ( ) :   fCoordinates()  { }
 
 
       /**
@@ -76,7 +76,7 @@ namespace ROOT {
          In the case of a XYZVector the values are x,y,z
          In the case of  a polar vector they are r,theta, phi
       */
-      DisplacementVector3D(Scalar a, Scalar b, Scalar c) :
+      constexpr DisplacementVector3D(Scalar a, Scalar b, Scalar c) :
         fCoordinates ( a , b,  c )  { }
 
      /**
@@ -84,7 +84,7 @@ namespace ROOT {
           coordinates, or using a different Scalar type, but with same coordinate system tag
       */
       template <class OtherCoords>
-      explicit DisplacementVector3D( const DisplacementVector3D<OtherCoords, Tag> & v) :
+      explicit constexpr DisplacementVector3D( const DisplacementVector3D<OtherCoords, Tag> & v) :
         fCoordinates ( v.Coordinates() ) { }
 
 
@@ -93,7 +93,7 @@ namespace ROOT {
          but with the same coordinate system tag
       */
       template <class OtherCoords>
-      explicit DisplacementVector3D( const PositionVector3D<OtherCoords,Tag> & p) :
+      explicit constexpr DisplacementVector3D( const PositionVector3D<OtherCoords,Tag> & p) :
         fCoordinates ( p.Coordinates() ) { }
 
 
@@ -102,7 +102,7 @@ namespace ROOT {
           Precondition: v must implement methods x(), y() and z()
       */
       template <class ForeignVector>
-      explicit DisplacementVector3D( const ForeignVector & v) :
+      explicit constexpr DisplacementVector3D( const ForeignVector & v) :
         fCoordinates ( Cartesian3D<Scalar>( v.x(), v.y(), v.z() ) ) { }
 
 
@@ -116,7 +116,7 @@ namespace ROOT {
          ( x= v[index0] for Cartesian and r=v[index0] for Polar )
       */
       template <class LAVector>
-      DisplacementVector3D(const LAVector & v, size_t index0 ) {
+      constexpr DisplacementVector3D(const LAVector & v, size_t index0 ) {
         fCoordinates = CoordSystem ( v[index0], v[index0+1], v[index0+2] );
       }
 #endif
@@ -538,10 +538,10 @@ namespace ROOT {
 
       // this should not compile (if from a vector or points with different tag
       template <class OtherCoords, class OtherTag>
-      explicit DisplacementVector3D( const DisplacementVector3D<OtherCoords, OtherTag> & ) {}
+      explicit constexpr DisplacementVector3D( const DisplacementVector3D<OtherCoords, OtherTag> & ) {}
 
       template <class OtherCoords, class OtherTag>
-      explicit DisplacementVector3D( const PositionVector3D<OtherCoords, OtherTag> & ) {}
+      explicit constexpr DisplacementVector3D( const PositionVector3D<OtherCoords, OtherTag> & ) {}
 
       template <class OtherCoords, class OtherTag>
       DisplacementVector3D & operator=( const DisplacementVector3D<OtherCoords, OtherTag> & );

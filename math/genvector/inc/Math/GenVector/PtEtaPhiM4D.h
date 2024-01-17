@@ -78,7 +78,7 @@ public :
       Pt(), Eta(), Phi() and M()
    */
    template <class CoordSystem >
-   explicit PtEtaPhiM4D(const CoordSystem & c) :
+   explicit constexpr PtEtaPhiM4D(const CoordSystem & c) :
       fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fM(c.M())  { RestrictPhi(); }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
