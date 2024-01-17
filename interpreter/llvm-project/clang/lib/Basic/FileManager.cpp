@@ -339,7 +339,9 @@ FileManager::getFileRef(StringRef Filename, bool openFile, bool CacheFailure) {
   }
 
   FileEntryRef ReturnedRef(*NamedFileEnt);
-  if (ReusingEntry) { // Already have an entry with this inode, return it.
+  if (ReusingEntry &&
+      llvm::sys::toTimeT(Status.getLastModificationTime()) == UFE->ModTime) {
+    // Already have an entry with this inode, return it.
 
     // FIXME: This hack ensures that `getDir()` will use the path that was
     // used to lookup this file, even if we found a file by different path
@@ -351,8 +353,6 @@ FileManager::getFileRef(StringRef Filename, bool openFile, bool CacheFailure) {
     // also depend on this logic and they have `use-external-paths: false`.
     if (&DirInfo.getDirEntry() != UFE->Dir && Status.IsVFSMapped)
       UFE->Dir = &DirInfo.getDirEntry();
-  }
-  if (llvm::sys::toTimeT(Status.getLastModificationTime()) == UFE->ModTime) {
 
     // Always update LastRef to the last name by which a file was accessed.
     // FIXME: Neither this nor always using the first reference is correct; we
