@@ -361,6 +361,15 @@ add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir
 
 add_subdirectory (interpreter)
 
+# Update etc/gitinfo.txt for every build.
+add_custom_target(gitinfotxt
+  ALL
+  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
+  COMMENT "Updating etc/gitinfo.txt."
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+)
+install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
   # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
@@ -437,7 +446,7 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
-add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(MSVC)
