@@ -10,16 +10,6 @@
 
 include(SetROOTVersion)
 
-# Update etc/gitinfo.txt for every build.
-add_custom_target(gitinfotxt
-  ALL
-  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
-  WORKING_DIRECTORY 
-  COMMENT "Updating etc/gitinfo.txt."
-  BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-)
-install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
 
