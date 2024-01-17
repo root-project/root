@@ -77,7 +77,7 @@ public:
       Construct from another supported rotation type (see gv_detail::convert )
    */
    template <class OtherRotation>
-   explicit Quaternion(const OtherRotation & r) {gv_detail::convert(r,*this);}
+   explicit constexpr Quaternion(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**

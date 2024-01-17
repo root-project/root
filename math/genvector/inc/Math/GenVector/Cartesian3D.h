@@ -64,7 +64,7 @@ public :
       X(), Y() and Z()
    */
    template <class CoordSystem>
-   explicit Cartesian3D(const CoordSystem & v)
+   explicit constexpr Cartesian3D(const CoordSystem & v)
       : fX(v.X()), fY(v.Y()), fZ(v.Z()) {  }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
@@ -192,7 +192,7 @@ public :
    // ============= Overloads for improved speed ==================
 
    template <class T2>
-   explicit Cartesian3D( const Polar3D<T2> & v ) : fZ (v.Z())
+   explicit constexpr Cartesian3D( const Polar3D<T2> & v ) : fZ (v.Z())
    {
       const T rho = v.Rho();
       // re-using this instead of calling v.X() and v.Y()

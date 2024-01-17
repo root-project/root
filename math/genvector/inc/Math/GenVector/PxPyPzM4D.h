@@ -74,7 +74,7 @@ public :
       implementing X(), Y(), X() and M()
    */
    template <class CoordSystem>
-   explicit PxPyPzM4D(const CoordSystem & v) :
+   explicit constexpr PxPyPzM4D(const CoordSystem & v) :
       fX( v.X() ), fY( v.Y() ), fZ( v.Z() ), fM( v.M() )
    { }
 

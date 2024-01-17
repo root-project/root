@@ -131,7 +131,7 @@ public:
       or re-adjusting is performed.
    */
    template<class ForeignMatrix>
-   explicit Rotation3D(const ForeignMatrix & m) { SetComponents(m); }
+   explicit constexpr Rotation3D(const ForeignMatrix & m) { SetComponents(m); }
 
    /**
       Construct from three orthonormal vectors (which must have methods

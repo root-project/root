@@ -63,7 +63,7 @@ public :
       R() and Phi()
    */
    template <class CoordSystem >
-   explicit Polar2D( const CoordSystem & v ) :
+   explicit constexpr Polar2D( const CoordSystem & v ) :
       fR(v.R() ),  fPhi(v.Phi() )  { Restrict(); }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
