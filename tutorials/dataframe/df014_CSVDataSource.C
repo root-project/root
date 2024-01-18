@@ -71,6 +71,7 @@ int df014_CSVDataSource()
    leftPad->SetLogy();
    fullSpectrum->DrawClone("Hist");
    dualCanvas->cd(2);
+   jpsi->SetMarkerStyle(20);
    jpsi->DrawClone("HistP");
 
    return 0;
