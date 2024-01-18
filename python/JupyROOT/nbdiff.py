@@ -15,7 +15,7 @@ convCmdTmpl = "%s nbconvert " \
 "--ExecutePreprocessor.startup_timeout=180 " \
 "%s " \
 "--output %s"
-pythonInterpName = 'python3' if sys.version_info >= (3, 0) else 'python2'
+pythonInterpName = 'python3'
 
 rootKernelFileContent = '''{
  "language": "c++",
