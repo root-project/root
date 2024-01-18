@@ -642,7 +642,7 @@ Int_t TMySQLServer::Reload()
    Int_t res;
    
    #if MYSQL_VERSION_ID >= 80000
-   res = mysql_query(fMySQL, FLUSH_PRIVILEGES);
+   res = mysql_query(fMySQL, "FLUSH PRIVILEGES");
    #else
    res = mysql_reload(fMySQL);
    #endif
@@ -663,7 +663,7 @@ Int_t TMySQLServer::Shutdown()
    Int_t res;
 
 #if MYSQL_VERSION_ID >= 80000
-   res = mysql_query(fMySQL, SHUTDOWN);
+   res = mysql_query(fMySQL, "SHUTDOWN");
 #elif MYSQL_VERSION_ID >= 50001 || \
     (MYSQL_VERSION_ID < 50000 && MYSQL_VERSION_ID >= 40103)
    res = mysql_shutdown(fMySQL, SHUTDOWN_DEFAULT);
