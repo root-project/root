@@ -10,6 +10,7 @@
 #include "TGFrame.h"
 #include "TGWindow.h"
 #include "TGSpeedo.h"
+#include "TVirtualX.h"
 
 class TGShapedMain : public TGMainFrame {
 
@@ -56,10 +57,12 @@ TGShapedMain::TGShapedMain(const TGWindow *p, int w, int h) :
    fTimer->SetCommand("Update()");
 
    fBgnd = fSpeedo->GetPicture();
-   gVirtualX->ShapeCombineMask(GetId(), 0, 0, fBgnd->GetMask());
-   SetBackgroundPixmap(fBgnd->GetPicture());
-   SetWMSizeHints(fBgnd->GetWidth(), fBgnd->GetHeight(), fBgnd->GetWidth(),
-                  fBgnd->GetHeight(), 1, 1);
+   if(fBgnd) {
+      gVirtualX->ShapeCombineMask(GetId(), 0, 0, fBgnd->GetMask());
+      SetBackgroundPixmap(fBgnd->GetPicture());
+      SetWMSizeHints(fBgnd->GetWidth(), fBgnd->GetHeight(), fBgnd->GetWidth(),
+                     fBgnd->GetHeight(), 1, 1);
+   }
 
    MapSubwindows();
    MapWindow();
