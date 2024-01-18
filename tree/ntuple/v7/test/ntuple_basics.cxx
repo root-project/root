@@ -630,24 +630,24 @@ TEST(RNTuple, BareEntry)
    FileRaii fileGuard("test_ntuple_bare_entry.root");
    {
       auto ntuple = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
-      const auto model = ntuple->GetModel();
+      const auto &model = ntuple->GetModel();
       try {
-         model->GetDefaultEntry();
+         model.GetDefaultEntry();
          FAIL() << "accessing default entry of bare model should throw";
       } catch (const RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
       try {
-         model->Get<float>("pt");
+         model.Get<float>("pt");
          FAIL() << "accessing default entry of bare model should throw";
       } catch (const RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
 
-      auto e1 = model->CreateEntry();
+      auto e1 = model.CreateEntry();
       ASSERT_NE(nullptr, e1->Get<float>("pt"));
       *(e1->Get<float>("pt")) = 1.0;
-      auto e2 = model->CreateBareEntry();
+      auto e2 = model.CreateBareEntry();
       EXPECT_EQ(nullptr, e2->Get<float>("pt"));
       float pt = 2.0;
       e2->CaptureValueUnsafe("pt", &pt);
