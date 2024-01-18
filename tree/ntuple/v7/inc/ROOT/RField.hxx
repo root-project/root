@@ -116,7 +116,7 @@ public:
    /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
    /// A trivially constructible field has a no-op GenerateValue() implementation
    static constexpr int kTraitTriviallyConstructible = 0x01;
-   /// The type is cleaned up just by freeing its memory. I.e. the deleter performs a no-op.
+   /// The type is cleaned up just by freeing its memory. I.e. the destructor performs a no-op.
    static constexpr int kTraitTriviallyDestructible = 0x02;
    /// A field of a fundamental type that can be directly mapped via `RField<T>::Map()`, i.e. maps as-is to a single
    /// column
