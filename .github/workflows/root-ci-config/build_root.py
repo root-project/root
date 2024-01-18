@@ -117,7 +117,7 @@ def main():
 
     if testing:
       # Where to put the roottest directory
-      if os.path.exists(f"{WORKDIR}/src/roottest/.git"):
+      if os.path.exists(os.path.join(f"{WORKDIR}","src","roottest",".git")):
          roottest_dir = "src/roottest"
       else:
          roottest_dir = "roottest"
@@ -257,7 +257,7 @@ def git_pull(directory: str, repository: str, branch: str):
         if returncode == 0:
             break
 
-        if os.path.exists(f"{WORKDIR}/{directory}/.git"):
+        if os.path.exists(os.path.join(f"{WORKDIR}",f"{directory}",".git")):
             returncode = subprocess_with_log(f"""
                 cd '{WORKDIR}/{directory}'
                 git checkout {branch}
@@ -378,13 +378,13 @@ def cmake_build(buildtype):
 
 
 def build(options, buildtype):
-    if not os.path.isdir(f'{WORKDIR}/build'):
+    if not os.path.isdir(os.path.join(f"{WORKDIR}","build")):
         result = subprocess_with_log(f"mkdir {WORKDIR}/build")
 
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
+    if not os.path.exists(os.path.join(f"{WORKDIR}","build","CMakeCache.txt")):
         cmake_configure(options, buildtype)
     else:
         cmake_dump_config()
