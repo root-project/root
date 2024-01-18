@@ -362,6 +362,8 @@ private:
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;
 
+   Detail::RNTupleMetrics fMetrics;
+
    NTupleSize_t fLastCommitted = 0;
    NTupleSize_t fNEntries = 0;
    /// Keeps track of the number of bytes written into the current cluster
@@ -407,6 +409,9 @@ public:
    NTupleSize_t GetLastCommitted() const { return fLastCommitted; }
    /// Return the number of entries filled so far.
    NTupleSize_t GetNEntries() const { return fNEntries; }
+
+   void EnableMetrics() { fMetrics.Enable(); }
+   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
 
 // clang-format off

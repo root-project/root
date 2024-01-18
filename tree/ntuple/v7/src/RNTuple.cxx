@@ -266,7 +266,7 @@ const ROOT::Experimental::RNTupleDescriptor *ROOT::Experimental::RNTupleReader::
 
 ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
                                                            std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
-   : fSink(std::move(sink)), fModel(std::move(model))
+   : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
    if (!fModel) {
       throw RException(R__FAIL("null model"));
@@ -276,6 +276,7 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT:
    }
    fModel->Freeze();
    fSink->Create(*fModel.get());
+   fMetrics.ObserveMetrics(fSink->GetMetrics());
 
    const auto &writeOpts = fSink->GetWriteOptions();
    fMaxUnzippedClusterSize = writeOpts.GetMaxUnzippedClusterSize();
@@ -332,6 +333,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
       fFillContext.fSink->SetTaskScheduler(fZipTasks.get());
    }
 #endif
+   // Observe directly the sink's metrics to avoid an additional prefix from the fill context.
    fMetrics.ObserveMetrics(fFillContext.fSink->GetMetrics());
 }
 
