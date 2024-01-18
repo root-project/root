@@ -43,7 +43,7 @@ class REntry {
    friend class RCollectionNTupleWriter;
    friend class RNTupleModel;
    friend class RNTupleReader;
-   friend class RNTupleWriter;
+   friend class RNTupleFillContext;
 
    /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
    std::uint64_t fModelId = 0;
