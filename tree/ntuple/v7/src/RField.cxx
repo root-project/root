@@ -283,7 +283,7 @@ std::size_t EvalRVecAlignment(std::size_t alignOfSubField)
    return std::max({alignof(void *), alignof(std::int32_t), alignOfSubField});
 }
 
-void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, std::int32_t *capacityPtr, bool dtorOnly)
+void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, std::int32_t *capacityPtr)
 {
    // figure out if we are in the small state, i.e. begin == &inlineBuffer
    // there might be padding between fCapacity and the inline buffer, so we compute it here
@@ -296,9 +296,6 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
       free(begin);
-
-   if (!dtorOnly)
-      free(beginPtr);
 }
 
 } // anonymous namespace
@@ -330,6 +327,7 @@ ROOT::Experimental::Detail::RFieldBase::RBulk::RBulk(RBulk &&other)
      fNValidValues(other.fNValidValues),
      fFirstIndex(other.fFirstIndex)
 {
+   std::swap(fDeleter, other.fDeleter);
    std::swap(fValues, other.fValues);
    std::swap(fMaskAvail, other.fMaskAvail);
 }
@@ -337,6 +335,7 @@ ROOT::Experimental::Detail::RFieldBase::RBulk::RBulk(RBulk &&other)
 ROOT::Experimental::Detail::RFieldBase::RBulk &ROOT::Experimental::Detail::RFieldBase::RBulk::operator=(RBulk &&other)
 {
    std::swap(fField, other.fField);
+   std::swap(fDeleter, other.fDeleter);
    std::swap(fValues, other.fValues);
    std::swap(fValueSize, other.fValueSize);
    std::swap(fCapacity, other.fCapacity);
@@ -361,7 +360,7 @@ void ROOT::Experimental::Detail::RFieldBase::RBulk::ReleaseValues()
    }
 
    for (std::size_t i = 0; i < fCapacity; ++i) {
-      fField->DestroyValue(GetValuePtrAt(i), true /* dtorOnly */);
+      fDeleter->operator()(GetValuePtrAt(i), true /* dtorOnly */);
    }
    free(fValues);
 }
@@ -673,16 +672,10 @@ std::size_t ROOT::Experimental::Detail::RFieldBase::ReadBulkImpl(const RBulkSpec
 
 ROOT::Experimental::Detail::RFieldBase::RValue ROOT::Experimental::Detail::RFieldBase::GenerateValue()
 {
-   void *where = malloc(GetValueSize());
+   void *where = operator new(GetValueSize());
    R__ASSERT(where != nullptr);
    GenerateValue(where);
    return RValue(this, where, true /* isOwning */);
-}
-
-void ROOT::Experimental::Detail::RFieldBase::DestroyValue(void *objPtr, bool dtorOnly) const
-{
-   if (!dtorOnly)
-      free(objPtr);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -1366,12 +1359,6 @@ void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleD
    fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(onDiskTypes[1]), 1));
 }
 
-void ROOT::Experimental::RField<std::string>::DestroyValue(void *objPtr, bool dtorOnly) const
-{
-   std::destroy_at(static_cast<std::string *>(objPtr));
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
-}
-
 std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::string *>(from);
@@ -1402,7 +1389,6 @@ void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisito
 }
 
 //------------------------------------------------------------------------------
-
 
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className)
    : RClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
@@ -1554,10 +1540,10 @@ void ROOT::Experimental::RClassField::GenerateValue(void *where) const
    fClass->New(where);
 }
 
-void ROOT::Experimental::RClassField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RClassField::RClassDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -1805,17 +1791,26 @@ void ROOT::Experimental::RProxiedCollectionField::GenerateValue(void *where) con
    fProxy->New(where);
 }
 
-void ROOT::Experimental::RProxiedCollectionField::DestroyValue(void *objPtr, bool dtorOnly) const
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter>
+ROOT::Experimental::RProxiedCollectionField::GetDeleter() const
 {
    if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
+      std::size_t itemSize = fCollectionType == kSTLvector ? fItemSize : 0U;
+      return std::make_unique<RProxiedCollectionDeleter>(fProxy, GetDeleterOf(*fSubFields[0]), itemSize);
+   }
+   return std::make_unique<RProxiedCollectionDeleter>(fProxy);
+}
+
+void ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionDeleter::operator()(void *objPtr, bool dtorOnly)
+{
+   if (fItemDeleter) {
       TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), objPtr);
-      for (auto ptr : RCollectionIterableOnce{objPtr, fIFuncsWrite, fProxy.get(),
-                                              (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
-         CallDestroyValueOn(*fSubFields[0], ptr, true /* dtorOnly */);
+      for (auto ptr : RCollectionIterableOnce{objPtr, fIFuncsWrite, fProxy.get(), fItemSize}) {
+         fItemDeleter->operator()(ptr, true /* dtorOnly */);
       }
    }
    fProxy->Destructor(objPtr, true /* dtorOnly */);
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -1926,12 +1921,22 @@ void ROOT::Experimental::RRecordField::GenerateValue(void *where) const
    }
 }
 
-void ROOT::Experimental::RRecordField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RRecordField::RRecordDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      CallDestroyValueOn(*fSubFields[i], static_cast<unsigned char *>(objPtr) + fOffsets[i], true /* dtorOnly */);
+   for (unsigned i = 0; i < fItemDeleters.size(); ++i) {
+      fItemDeleters[i]->operator()(reinterpret_cast<unsigned char *>(objPtr) + fOffsets[i], true /* dtorOnly */);
    }
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter> ROOT::Experimental::RRecordField::GetDeleter() const
+{
+   std::vector<std::unique_ptr<RDeleter>> itemDeleters;
+   itemDeleters.reserve(fOffsets.size());
+   for (const auto &f : fSubFields) {
+      itemDeleters.emplace_back(GetDeleterOf(*f));
+   }
+   return std::make_unique<RRecordDeleter>(itemDeleters, fOffsets);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -1959,6 +1964,8 @@ ROOT::Experimental::RVectorField::RVectorField(
       fieldName, "std::vector<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false /* isSimple */)
    , fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
+   if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
+      fItemDeleter = GetDeleterOf(*itemField);
    Attach(std::move(itemField));
 }
 
@@ -2009,10 +2016,10 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    const auto oldNItems = typedValue->size() / fItemSize;
    const bool canRealloc = oldNItems < nItems;
    bool allDeallocated = false;
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+   if (fItemDeleter) {
       allDeallocated = canRealloc;
       for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
-         CallDestroyValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize), true /* dtorOnly */);
+         fItemDeleter->operator()(typedValue->data() + (i * fItemSize), true /* dtorOnly */);
       }
    }
    typedValue->resize(nItems * fItemSize);
@@ -2047,19 +2054,25 @@ void ROOT::Experimental::RVectorField::GenerateColumnsImpl(const RNTupleDescript
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RVectorField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
-   R__ASSERT((vecPtr->size() % fItemSize) == 0);
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+   if (fItemDeleter) {
+      R__ASSERT((vecPtr->size() % fItemSize) == 0);
       auto nItems = vecPtr->size() / fItemSize;
-      for (unsigned i = 0; i < nItems; ++i) {
-         CallDestroyValueOn(*fSubFields[0], vecPtr->data() + (i * fItemSize), true /* dtorOnly */);
+      for (std::size_t i = 0; i < nItems; ++i) {
+         fItemDeleter->operator()(vecPtr->data() + (i * fItemSize), true /* dtorOnly */);
       }
    }
    std::destroy_at(vecPtr);
-   if (!dtorOnly)
-      free(vecPtr);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter> ROOT::Experimental::RVectorField::GetDeleter() const
+{
+   if (fItemDeleter)
+      return std::make_unique<RVectorDeleter>(fItemSize, GetDeleterOf(*fSubFields[0]));
+   return std::make_unique<RVectorDeleter>();
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -2088,6 +2101,8 @@ ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::uniq
                                             ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
+   if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
+      fItemDeleter = GetDeleterOf(*itemField);
    Attach(std::move(itemField));
    fValueSize = EvalRVecValueSize(fSubFields[0]->GetAlignment(), fSubFields[0]->GetValueSize(), GetAlignment());
 }
@@ -2137,12 +2152,12 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    // on the element construction/destrution.
    const bool owns = (*capacityPtr != -1);
    const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
-   const bool needsDestruct = owns && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible);
+   const bool needsDestruct = owns && fItemDeleter;
 
    // Destroy excess elements, if any
    if (needsDestruct) {
       for (std::size_t i = nItems; i < oldSize; ++i) {
-         CallDestroyValueOn(*fSubFields[0], begin + (i * fItemSize), true /* dtorOnly */);
+         fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
       }
    }
 
@@ -2152,7 +2167,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
       if (needsDestruct) {
          for (std::size_t i = 0u; i < oldSize; ++i) {
-            CallDestroyValueOn(*fSubFields[0], begin + (i * fItemSize), true /* dtorOnly */);
+            fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
          }
       }
 
@@ -2285,18 +2300,26 @@ void ROOT::Experimental::RRVecField::GenerateValue(void *where) const
    new (sizePtr + 1) std::int32_t(-1);
 }
 
-void ROOT::Experimental::RRVecField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RRVecField::RRVecDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
 
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+   if (fItemDeleter) {
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         CallDestroyValueOn(*fSubFields[0], begin + i * fItemSize, true /* dtorOnly */);
+         fItemDeleter->operator()(begin + i * fItemSize, true /* dtorOnly */);
       }
    }
 
-   DestroyRVecWithChecks(fSubFields[0]->GetAlignment(), beginPtr, begin, capacityPtr, dtorOnly);
+   DestroyRVecWithChecks(fItemAlignment, beginPtr, begin, capacityPtr);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter> ROOT::Experimental::RRVecField::GetDeleter() const
+{
+   if (fItemDeleter)
+      return std::make_unique<RRVecDeleter>(fSubFields[0]->GetAlignment(), fItemSize, GetDeleterOf(*fSubFields[0]));
+   return std::make_unique<RRVecDeleter>(fSubFields[0]->GetAlignment());
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -2404,12 +2427,6 @@ ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) c
    return result;
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(void *objPtr, bool dtorOnly) const
-{
-   std::destroy_at(static_cast<std::vector<bool> *>(objPtr));
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
-}
-
 void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorBoolField(*this);
@@ -2475,15 +2492,21 @@ void ROOT::Experimental::RArrayField::GenerateValue(void *where) const
    }
 }
 
-void ROOT::Experimental::RArrayField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   auto arrayPtr = static_cast<unsigned char *>(objPtr);
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+   if (fItemDeleter) {
       for (unsigned i = 0; i < fArrayLength; ++i) {
-         CallDestroyValueOn(*fSubFields[0], arrayPtr + (i * fItemSize), true /* dtorOnly */);
+         fItemDeleter->operator()(reinterpret_cast<unsigned char *>(objPtr) + i * fItemSize, true /* dtorOnly */);
       }
    }
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter> ROOT::Experimental::RArrayField::GetDeleter() const
+{
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
+      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubFields[0]));
+   return std::make_unique<RDeleter>();
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -2515,6 +2538,8 @@ ROOT::Experimental::RArrayAsRVecField::RArrayAsRVecField(
 {
    Attach(std::move(itemField));
    fValueSize = EvalRVecValueSize(fSubFields[0]->GetAlignment(), fSubFields[0]->GetValueSize(), GetAlignment());
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
+      fItemDeleter = GetDeleterOf(*fSubFields[0]);
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -2544,13 +2569,13 @@ void ROOT::Experimental::RArrayAsRVecField::GenerateValue(void *where) const
    // on the element construction.
    const bool owns = (*capacityPtr != -1); // RVec is adopting the memory
    const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
-   const bool needsDestruct = owns && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible);
+   const bool needsDestruct = owns && fItemDeleter;
 
    // Destroy old elements: useless work for trivial types, but in case the element type's constructor
    // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
    if (needsDestruct) {
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         CallDestroyValueOn(*fSubFields[0], begin + (i * fItemSize), true /* dtorOnly */);
+         fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
       }
    }
 
@@ -2575,19 +2600,14 @@ void ROOT::Experimental::RArrayAsRVecField::GenerateValue(void *where) const
    }
 }
 
-void ROOT::Experimental::RArrayAsRVecField::DestroyValue(void *objPtr, bool dtorOnly) const
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter>
+ROOT::Experimental::RArrayAsRVecField::GetDeleter() const
 {
-
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
-
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
-      for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         CallDestroyValueOn(*fSubFields[0], begin + i * fItemSize, true /* dtorOnly */);
-      }
+   if (fItemDeleter) {
+      return std::make_unique<RRVecField::RRVecDeleter>(fSubFields[0]->GetAlignment(), fItemSize,
+                                                        GetDeleterOf(*fSubFields[0]));
    }
-
-   DestroyRVecWithChecks(fSubFields[0]->GetAlignment(), beginPtr, begin, capacityPtr, dtorOnly);
+   return std::make_unique<RRVecField::RRVecDeleter>(fSubFields[0]->GetAlignment());
 }
 
 void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to)
@@ -2757,21 +2777,21 @@ ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
    return std::make_unique<RVariantField>(newName, itemFields);
 }
 
-std::uint32_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr) const
+std::uint32_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr, std::size_t tagOffset)
 {
-   auto index = *(reinterpret_cast<const char *>(variantPtr) + fTagOffset);
+   auto index = *(reinterpret_cast<const char *>(variantPtr) + tagOffset);
    return (index < 0) ? 0 : index + 1;
 }
 
-void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::uint32_t tag) const
+void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::size_t tagOffset, std::uint32_t tag)
 {
-   auto index = reinterpret_cast<char *>(variantPtr) + fTagOffset;
+   auto index = reinterpret_cast<char *>(variantPtr) + tagOffset;
    *index = static_cast<char>(tag - 1);
 }
 
 std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
 {
-   auto tag = GetTag(from);
+   auto tag = GetTag(from, fTagOffset);
    std::size_t nbytes = 0;
    auto index = 0;
    if (tag > 0) {
@@ -2796,7 +2816,7 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
       CallGenerateValueOn(*fSubFields[tag - 1], to);
       CallReadOn(*fSubFields[tag - 1], variantIndex, to);
    }
-   SetTag(to, tag);
+   SetTag(to, fTagOffset, tag);
 }
 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
@@ -2821,16 +2841,26 @@ void ROOT::Experimental::RVariantField::GenerateValue(void *where) const
 {
    memset(where, 0, GetValueSize());
    CallGenerateValueOn(*fSubFields[0], where);
-   SetTag(where, 1);
+   SetTag(where, fTagOffset, 1);
 }
 
-void ROOT::Experimental::RVariantField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RVariantField::RVariantDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   auto tag = GetTag(objPtr);
+   auto tag = GetTag(objPtr, fTagOffset);
    if (tag > 0) {
-      CallDestroyValueOn(*fSubFields[tag - 1], objPtr, true /* dtorOnly */);
+      fItemDeleters[tag - 1]->operator()(objPtr, true /* dtorOnly */);
    }
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter> ROOT::Experimental::RVariantField::GetDeleter() const
+{
+   std::vector<std::unique_ptr<RDeleter>> itemDeleters;
+   itemDeleters.reserve(fSubFields.size());
+   for (const auto &f : fSubFields) {
+      itemDeleters.emplace_back(GetDeleterOf(*f));
+   }
+   return std::make_unique<RVariantDeleter>(fTagOffset, itemDeleters);
 }
 
 size_t ROOT::Experimental::RVariantField::GetValueSize() const
@@ -3017,7 +3047,7 @@ void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &vi
 
 ROOT::Experimental::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::string_view typeName,
                                                      std::unique_ptr<Detail::RFieldBase> itemField)
-   : RNullableField(fieldName, typeName, std::move(itemField))
+   : RNullableField(fieldName, typeName, std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubFields[0]))
 {
 }
 
@@ -3052,7 +3082,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
 
    if (isValidValue && !isValidItem) {
       ptr->release();
-      CallDestroyValueOn(*fSubFields[0], valuePtr, false /* dtorOnly */);
+      fItemDeleter->operator()(valuePtr, false /* dtorOnly */);
       return;
    }
 
@@ -3068,14 +3098,20 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
    CallReadOn(*fSubFields[0], itemIndex, valuePtr);
 }
 
-void ROOT::Experimental::RUniquePtrField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RUniquePtrField::RUniquePtrDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto typedPtr = static_cast<std::unique_ptr<char> *>(objPtr);
    if (*typedPtr) {
-      CallDestroyValueOn(*fSubFields[0], typedPtr->get(), false /* dtorOnly */);
+      fItemDeleter->operator()(typedPtr->get(), false /* dtorOnly */);
       typedPtr->release();
    }
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter>
+ROOT::Experimental::RUniquePtrField::GetDeleter() const
+{
+   return std::make_unique<RUniquePtrDeleter>(GetDeleterOf(*fSubFields[0]));
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -3143,10 +3179,10 @@ void ROOT::Experimental::RPairField::GenerateValue(void *where) const
    fClass->New(where);
 }
 
-void ROOT::Experimental::RPairField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RPairField::RPairDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
 }
 
 //------------------------------------------------------------------------------
@@ -3214,10 +3250,10 @@ void ROOT::Experimental::RTupleField::GenerateValue(void *where) const
    fClass->New(where);
 }
 
-void ROOT::Experimental::RTupleField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RTupleField::RTupleDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
-   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   RDeleter::operator()(objPtr, dtorOnly);
 }
 
 //------------------------------------------------------------------------------
