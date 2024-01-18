@@ -825,15 +825,26 @@ void TLegend::PaintPrimitives()
             dynamic_cast<TAttFill*>(eobj)->Copy(*entry);
          }
 
+         // Case of exclusion graphs
+         Float_t wl = 1., wu = 1.;
+         if (eobj && eobj->InheritsFrom(TAttLine::Class())
+                  && eobj->InheritsFrom(TGraph::Class())) {
+            Int_t w = dynamic_cast<TAttLine*>(eobj)->GetLineWidth();
+            if (TMath::Abs(w)>999) {
+               if (w<0) wu = 0;
+               else     wl = 0;
+            }
+         }
+
          // box total height is yspace*0.7
          entry->TAttFill::Modify();
          Double_t xf[4],yf[4];
          xf[0] = xsym - boxw;
-         yf[0] = ysym - yspace*0.35;
+         yf[0] = ysym - wl*yspace*0.35;
          xf[1] = xsym + boxw;
          yf[1] = yf[0];
          xf[2] = xf[1];
-         yf[2] = ysym + yspace*0.35;
+         yf[2] = ysym + wu*yspace*0.35;
          xf[3] = xf[0];
          yf[3] = yf[2];
          for (Int_t i=0;i<4;i++) {
