@@ -55,6 +55,7 @@ ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
+TClassRef R__RNTuple_Class("ROOT::Experimental::RNTuple");
 
 static const Int_t kCpProgress = BIT(14);
 static const Int_t kCintFileNumber = 100;
@@ -374,18 +375,6 @@ Bool_t TFileMerger::Merge(Bool_t)
 
 namespace {
 
-/// Merge a list of RNTuples
-Long64_t MergeRNTuples(TClass* rntupleHandle, const TString& /* target */, const TList& /* sources */) {
-   if (!rntupleHandle) {
-      return Long64_t(-1);
-   }
-   // todo(max) implement rntuple merger
-   // [ ] build complete list of sources (some sources may actually be a directory with RNTuples inside)
-   // [ ] merge them
-   ROOT::MergeFunc_t func = rntupleHandle->GetMerge();
-   return func(static_cast<void*>(rntupleHandle), nullptr, nullptr);
-}
-
 Bool_t IsMergeable(TClass *cl)
 {
    return (cl->GetMerge() || cl->InheritsFrom(TDirectory::Class()) ||
@@ -595,13 +584,26 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       if (!status) return kFALSE;
    } else if (!cl->IsTObject() && cl->GetMerge()) {
       // merge objects that don't derive from TObject
-      if (std::string(keyclassname) == "ROOT::Experimental::RNTuple") {
-         Warning("MergeRecursive", "merging RNTuples is experimental");
-         // todo(max): check if this works when a TDirectory is passed as the first
-         // input argument
-         Long64_t mergeResult = MergeRNTuples(cl, *path, *sourcelist);
-         if (mergeResult < 0) {
-            Error("MergeRecursive", "error merging RNTuples");
+      if (cl->InheritsFrom(R__RNTuple_Class)) {
+         Warning("MergeRecursive", "Merging RNTuples is experimental");
+
+         // Collect all the data to be passed on to the merger
+         TList mergeData;
+         // First entry is the TKey of the ntuple
+         mergeData.Add(key);
+         // Second entry is the output file
+         mergeData.Add(target->GetFile());
+         // Remaining entries are the input files
+         TIter nextFile(sourcelist);
+         while (const auto &inFile = nextFile()) {
+            mergeData.Add(inFile);
+         }
+         // Get the merge fuction and pass the data
+         ROOT::MergeFunc_t func = cl->GetMerge();
+         Long64_t result = func(obj, &mergeData, &info);
+         mergeData.Clear("nodelete");
+         if (result < 0) {
+            Error("MergeRecursive", "Could NOT merge RNTuples!");
             return kFALSE;
          }
       } else {
