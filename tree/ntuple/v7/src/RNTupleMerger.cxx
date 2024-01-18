@@ -19,13 +19,55 @@
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RPageStorageFile.hxx>
+#include "TFile.h"
 
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 {
-   if (inputs == nullptr || mergeInfo == nullptr) {
+   // Check the inputs
+   if (!inputs || inputs->GetEntries() < 3 || !mergeInfo)
       return -1;
+
+   // Parse the input parameters
+   TIter itr(inputs);
+
+   // First entry is the RNTuple name
+   std::string ntupleName = std::string(itr()->GetName());
+
+   // Second entry is the output file
+   TFile *outFile = dynamic_cast<TFile *>(itr());
+   if (!outFile)
+      return -1;
+   RNTupleWriteOptions writeOpts;
+   writeOpts.SetUseBufferedWrite(false);
+   auto destination = std::make_unique<Internal::RPageSinkFile>(ntupleName, *outFile, writeOpts);
+
+   // The remaining entries are the input files
+   std::vector<std::unique_ptr<Internal::RPageSourceFile>> sources;
+   std::vector<Internal::RPageSource *> sourcePtrs;
+
+   while (const auto &pitr = itr()) {
+      TFile *inFile = dynamic_cast<TFile *>(pitr);
+      RNTuple *anchor = inFile ? inFile->Get<RNTuple>(ntupleName.c_str()) : nullptr;
+      if (!anchor)
+         return -1;
+      sources.push_back(Internal::RPageSourceFile::CreateFromAnchor(*anchor));
    }
-   return -1;
+
+   // Interface conversion
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   // Now merge
+   Internal::RNTupleMerger merger;
+   merger.Merge(sourcePtrs, *destination);
+
+   // Provide the caller with a merged anchor object (even though we've already
+   // written it).
+   *this = *outFile->Get<RNTuple>(ntupleName.c_str());
+
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
