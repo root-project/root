@@ -93,6 +93,7 @@ protected:
    /// the field has been destructed.
    class RDeleter {
    public:
+      virtual ~RDeleter() = default;
       virtual void operator()(void *objPtr, bool dtorOnly)
       {
          if (!dtorOnly)
