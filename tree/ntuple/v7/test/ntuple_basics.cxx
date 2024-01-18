@@ -752,3 +752,22 @@ TEST(RNTuple, FillBytesWritten)
    optsSmall.SetHasSmallClusters(true);
    checkFillReturnValue(optsSmall);
 }
+
+TEST(RNTuple, RFieldDeleter)
+{
+   auto f1 = RFieldBase::Create("f1", "CustomStruct").Unwrap();
+   auto f2 = RFieldBase::Create("f2", "std::vector<std::vector<std::variant<std::string, float>>>").Unwrap();
+   auto f3 = RFieldBase::Create("f3", "std::variant<std::unique_ptr<CustomStruct>, ComplexStruct>>").Unwrap();
+   auto v1 = f1->GenerateValue();
+   auto v2 = f2->GenerateValue();
+   auto v3 = f3->GenerateValue();
+
+   // Destruct fields to check if the deleters work without the fields
+   f1 = nullptr;
+   f2 = nullptr;
+   f3 = nullptr;
+
+   // The deleters are called in the destructors of the values
+
+   // TODO(jblomer): this becomes more explicit when the RValues contain shared pointers
+}
