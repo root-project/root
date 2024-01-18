@@ -167,8 +167,8 @@ TEST(RNTuple, ArrayField)
       model->AddField(RFieldBase::Create("array2", "unsigned char[4]").Unwrap());
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto array1_field = ntuple->GetModel()->GetDefaultEntry()->Get<float[2]>("array1");
-      auto array2_field = ntuple->GetModel()->GetDefaultEntry()->Get<unsigned char[4]>("array2");
+      auto array1_field = ntuple->GetModel().GetDefaultEntry()->Get<float[2]>("array1");
+      auto array2_field = ntuple->GetModel().GetDefaultEntry()->Get<unsigned char[4]>("array2");
       for (int i = 0; i < 2; i++) {
          new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}, {{2*i}, {2*i + 1}}});
          new (array1_field) float[2]{0.0f, static_cast<float>(i)};
@@ -208,8 +208,8 @@ TEST(RNTuple, NDimArrayField)
       model->AddField(RFieldBase::Create("dim3", "int[1][2][3]").Unwrap());
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto dim2_field = ntuple->GetModel()->GetDefaultEntry()->Get<int[2][3]>("dim2");
-      auto dim3_field = ntuple->GetModel()->GetDefaultEntry()->Get<int[1][2][3]>("dim3");
+      auto dim2_field = ntuple->GetModel().GetDefaultEntry()->Get<int[2][3]>("dim2");
+      auto dim3_field = ntuple->GetModel().GetDefaultEntry()->Get<int[1][2][3]>("dim3");
       (*dim2_field)[0][0] = 0;
       (*dim2_field)[0][1] = 1;
       (*dim2_field)[0][2] = 2;
@@ -270,7 +270,7 @@ TEST(RNTuple, StdPair)
       model->AddField(std::move(myPair2));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "pair_ntuple", fileGuard.GetPath());
-      auto pair_field2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::pair<double, std::string>>("myPair2");
+      auto pair_field2 = ntuple->GetModel().GetDefaultEntry()->Get<std::pair<double, std::string>>("myPair2");
       for (int i = 0; i < 2; i++) {
          *pair_field = {static_cast<double>(i), std::to_string(i)};
          *pair_field2 = {static_cast<double>(i + 1), std::to_string(i + 1)};
@@ -320,9 +320,9 @@ TEST(RNTuple, StdTuple)
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "tuple_ntuple", fileGuard.GetPath());
       auto tuple_field2 =
-         ntuple->GetModel()->GetDefaultEntry()->Get<std::tuple<char, float, std::string, char>>("myTuple2");
+         ntuple->GetModel().GetDefaultEntry()->Get<std::tuple<char, float, std::string, char>>("myTuple2");
       auto tuple_field3 =
-         ntuple->GetModel()->GetDefaultEntry()->Get<std::tuple<int32_t, std::tuple<std::string, char>>>("myTuple3");
+         ntuple->GetModel().GetDefaultEntry()->Get<std::tuple<int32_t, std::tuple<std::string, char>>>("myTuple3");
       for (int i = 0; i < 2; i++) {
          *tuple_field = {'A' + i, static_cast<float>(i), std::to_string(i), '0' + i};
          *tuple_field2 = {'B' + i, static_cast<float>(i), std::to_string(i), '1' + i};
@@ -384,8 +384,8 @@ TEST(RNTuple, StdSet)
       model->AddField(std::move(mySet4));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
-      auto set_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::string>>("mySet3");
-      auto set_field4 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet4");
+      auto set_field3 = ntuple->GetModel().GetDefaultEntry()->Get<std::set<std::string>>("mySet3");
+      auto set_field4 = ntuple->GetModel().GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet4");
       for (int i = 0; i < 2; i++) {
          *set_field = {static_cast<float>(i), 3.14, 0.42};
          *set_field2 = {
@@ -450,8 +450,8 @@ TEST(RNTuple, StdUnorderedSet)
       model->AddField(std::move(mySet4));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
-      auto set_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_set<std::string>>("mySet3");
-      auto set_field4 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_set<std::vector<bool>>>("mySet4");
+      auto set_field3 = ntuple->GetModel().GetDefaultEntry()->Get<std::unordered_set<std::string>>("mySet3");
+      auto set_field4 = ntuple->GetModel().GetDefaultEntry()->Get<std::unordered_set<std::vector<bool>>>("mySet4");
       for (int i = 0; i < 2; i++) {
          *set_field = {static_cast<float>(i), 3.14, 0.42};
          *set_field2 = {CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"},
@@ -527,9 +527,9 @@ TEST(RNTuple, StdMap)
       model->AddField(std::move(myMap4));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "map_ntuple", fileGuard.GetPath());
-      auto map_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::map<char, std::string>>("myMap3");
+      auto map_field3 = ntuple->GetModel().GetDefaultEntry()->Get<std::map<char, std::string>>("myMap3");
       auto map_field4 =
-         ntuple->GetModel()->GetDefaultEntry()->Get<std::map<float, std::map<char, std::int32_t>>>("myMap4");
+         ntuple->GetModel().GetDefaultEntry()->Get<std::map<float, std::map<char, std::int32_t>>>("myMap4");
       for (int i = 0; i < 2; i++) {
          *map_field = {{"foo", static_cast<float>(i + 0.1)},
                        {"bar", static_cast<float>(i * 0.2)},
@@ -617,9 +617,9 @@ TEST(RNTuple, StdUnorderedMap)
       model->AddField(std::move(myMap4));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "map_ntuple", fileGuard.GetPath());
-      auto map_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_map<char, std::string>>("myMap3");
+      auto map_field3 = ntuple->GetModel().GetDefaultEntry()->Get<std::unordered_map<char, std::string>>("myMap3");
       auto map_field4 =
-         ntuple->GetModel()->GetDefaultEntry()->Get<std::unordered_map<float, std::vector<bool>>>("myMap4");
+         ntuple->GetModel().GetDefaultEntry()->Get<std::unordered_map<float, std::vector<bool>>>("myMap4");
       for (int i = 0; i < 2; i++) {
          *map_field = {{"foo", static_cast<float>(i + 0.1)},
                        {"bar", static_cast<float>(i * 0.2)},
@@ -955,7 +955,7 @@ TEST(RNTuple, StdAtomic)
       model->AddField(RFieldBase::Create("f2", "std::atomic<float>").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
-      auto f2 = writer->GetModel()->GetDefaultEntry()->Get<std::atomic<float>>("f2");
+      auto f2 = writer->GetModel().GetDefaultEntry()->Get<std::atomic<float>>("f2");
       for (int i = 0; i < 2; i++) {
          *f1 = i % 2 == 0;
          *f2 = static_cast<float>(i);
@@ -1058,30 +1058,30 @@ TYPED_TEST(UniquePtr, Basics)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
 
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PBool")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PCustomStruct")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PArray")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsDense());
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PBool")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PCustomStruct")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PIOConstructor")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PPString")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PArray")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PIOConstructor")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PPString")).IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsSparse());
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PBool")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PCustomStruct")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PIOConstructor")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PPString")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel()->GetField("PArray")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PIOConstructor")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PPString")).IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsDense());
       }
 
-      auto pBool = writer->GetModel()->Get<std::unique_ptr<bool>>("PBool");
-      auto pCustomStruct = writer->GetModel()->Get<std::unique_ptr<CustomStruct>>("PCustomStruct");
-      auto pIOConstructor = writer->GetModel()->Get<std::unique_ptr<IOConstructor>>("PIOConstructor");
-      auto ppString = writer->GetModel()->Get<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
-      auto pArray = writer->GetModel()->Get<std::unique_ptr<std::array<char, 2>>>("PArray");
+      auto pBool = writer->GetModel().Get<std::unique_ptr<bool>>("PBool");
+      auto pCustomStruct = writer->GetModel().Get<std::unique_ptr<CustomStruct>>("PCustomStruct");
+      auto pIOConstructor = writer->GetModel().Get<std::unique_ptr<IOConstructor>>("PIOConstructor");
+      auto ppString = writer->GetModel().Get<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
+      auto pArray = writer->GetModel().Get<std::unique_ptr<std::array<char, 2>>>("PArray");
 
       *pBool = std::make_unique<bool>(true);
       EXPECT_EQ(nullptr, pCustomStruct->get());
@@ -1202,8 +1202,8 @@ TEST(RNTuple, Casting)
    modelA->AddField(std::move(fldF));
    {
       auto writer = RNTupleWriter::Recreate(std::move(modelA), "ntuple", fileGuard.GetPath());
-      *writer->GetModel()->GetDefaultEntry()->Get<std::int32_t>("i1") = 42;
-      *writer->GetModel()->GetDefaultEntry()->Get<std::int32_t>("i2") = 137;
+      *writer->GetModel().GetDefaultEntry()->Get<std::int32_t>("i1") = 42;
+      *writer->GetModel().GetDefaultEntry()->Get<std::int32_t>("i2") = 137;
       writer->Fill();
    }
 
@@ -1258,8 +1258,8 @@ TEST(RNTuple, HalfPrecisionFloat)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto f1 = writer->GetModel()->GetDefaultEntry()->Get<float>("f1");
-      auto fVec = writer->GetModel()->GetDefaultEntry()->Get<std::vector<float>>("fVec");
+      auto f1 = writer->GetModel().GetDefaultEntry()->Get<float>("f1");
+      auto fVec = writer->GetModel().GetDefaultEntry()->Get<std::vector<float>>("fVec");
       *f1 = 0.1f;
       *fVec = {0.1f, 0.2f};
       writer->Fill();
@@ -1305,8 +1305,8 @@ TEST(RNTuple, Double32)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto d1 = writer->GetModel()->GetDefaultEntry()->Get<double>("d1");
-      auto d2 = writer->GetModel()->GetDefaultEntry()->Get<double>("d2");
+      auto d1 = writer->GetModel().GetDefaultEntry()->Get<double>("d1");
+      auto d2 = writer->GetModel().GetDefaultEntry()->Get<double>("d2");
       *d1 = 0.0;
       *d2 = 0.0;
       writer->Fill();
@@ -1654,9 +1654,9 @@ TEST(RNTuple, TVirtualCollectionProxy)
       auto fieldNested = model->MakeField<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>>("nested");
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
-      auto fieldC = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<char>>("C");
-      auto fieldF = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<float>>("F");
-      auto fieldS = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<CustomStruct>>("S");
+      auto fieldC = ntuple->GetModel().GetDefaultEntry()->Get<StructUsingCollectionProxy<char>>("C");
+      auto fieldF = ntuple->GetModel().GetDefaultEntry()->Get<StructUsingCollectionProxy<float>>("F");
+      auto fieldS = ntuple->GetModel().GetDefaultEntry()->Get<StructUsingCollectionProxy<CustomStruct>>("S");
       for (unsigned i = 0; i < 1000; ++i) {
          if ((i % 100) == 0) {
             fieldC->v.clear();

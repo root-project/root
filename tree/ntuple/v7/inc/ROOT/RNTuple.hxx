@@ -430,7 +430,7 @@ public:
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   const RNTupleModel *GetModel() const { return fModel.get(); }
+   const RNTupleModel &GetModel() const { return *fModel; }
 
    /// Get a `RNTupleModel::RUpdater` that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.
