@@ -180,7 +180,7 @@ def handle_test_failure(ctest_returncode):
 
 
 def parse_args():
-        # it is difficult to use boolean flags from github actions, use strings to convey
+    # it is difficult to use boolean flags from github actions, use strings to convey
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform",                           help="Platform to build on")
@@ -309,10 +309,12 @@ def show_node_state() -> None:
     if result != 0:
         build_utils.print_warning("Failed to extract node state")
 
-# Just return the exit code in case of test failures instead of `die()`-ing; report test
-# failures in main().
 @github_log_group("Run tests")
 def run_ctest(extra_ctest_flags: str) -> int:
+    """
+    Just return the exit code in case of test failures instead of `die()`-ing; report test
+    failures in main().
+    """
     ctest_result = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
@@ -423,12 +425,13 @@ def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sh
     if result != 0:
         die(result, "Rebase failed")
 
-# get_stdout_subprocess
-# execute and log a command.
-# capture the stdout, strip white space and return it
-# die in case of failed execution unless the error_message is empty.
 def get_stdout_subprocess(command: str, error_message: str) -> str:
-
+  """
+  get_stdout_subprocess
+  execute and log a command.
+  capture the stdout, strip white space and return it
+  die in case of failed execution unless the error_message is empty.
+  """
   result  = subprocess_with_capture(command)
   if result.returncode != 0:
     if error_message != "":
@@ -449,13 +452,14 @@ def get_stdout_subprocess(command: str, error_message: str) -> str:
   return string_result
 
 
-# get_base_head_sha
-#
-# Given a pull request merge commit and the incoming commit return
-# the commit corresponding to the head of the branch we are merging into.
 @github_log_group("Rebase")
 def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha: str) -> str:
+  """
+  get_base_head_sha
 
+  Given a pull request merge commit and the incoming commit return
+  the commit corresponding to the head of the branch we are merging into.
+  """
   command = f"""
       cd '{WORKDIR}/{directory}'
       git fetch {repository} {merge_sha}
@@ -476,13 +480,15 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
   return ""
 
 @github_log_group("Pull/clone roottest branch")
-# relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
-#                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
-# Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
-# current head name.
-#
-# See relatedrepo_GetClosestMatch in toplevel CMakeLists.txt
 def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
+  """
+  relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
+                              FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
+  Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
+  current head name.
+
+  See relatedrepo_GetClosestMatch in toplevel CMakeLists.txt
+  """
 
   # Alternatively, we could use: re.sub( "/root(.git)*$", "", varname)
   origin_prefix = origin[:origin.rfind('/')]
