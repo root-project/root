@@ -354,11 +354,15 @@ ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const
 }
 
 void ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::CollectColumnIds(DescriptorId_t fieldId) {
-   for (unsigned int i = 0; true; ++i) {
-      auto logicalId = fNTuple.FindLogicalColumnId(fieldId, i);
-      if (logicalId == kInvalidDescriptorId)
-         break;
-      fColumns.emplace_back(logicalId);
+   std::vector<std::pair<std::uint32_t, DescriptorId_t>> columns;
+   for (const auto &cd : fNTuple.fColumnDescriptors) {
+      if (cd.second.GetFieldId() == fieldId)
+         columns.emplace_back(cd.second.GetIndex(), cd.second.GetLogicalId());
+   }
+   std::sort(columns.begin(), columns.end());
+   fColumns.reserve(columns.size());
+   for (const auto &c : columns) {
+      fColumns.emplace_back(c.second);
    }
 }
 
