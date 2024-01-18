@@ -4,7 +4,7 @@
 if (ROOT_test_distrdf_pyspark_FOUND AND ROOT_test_distrdf_dask_FOUND)
 
     # Define environment variables needed in all pyspark tests
-    set(PYSPARK_ENV_VARS PYSPARK_PYTHON=${PYTHON_EXECUTABLE_Development_Main})
+    set(PYSPARK_ENV_VARS PYSPARK_PYTHON=${PYTHON_EXECUTABLE})
 
     if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
         # MacOS has changed rules about forking processes after 10.13

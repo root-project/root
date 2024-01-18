@@ -11,7 +11,7 @@ if(ROOT_pyroot_FOUND)
                   MACRO execNormalizationInf.py
                   OUTREF execNormalizationInf.py.ref
                   ENVIRONMENT CLING_STANDARD_PCH=none
-                  CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING_Development_Main}.so)
+                  CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING}.so)
 endif()
 
 ROOTTEST_ADD_TEST(execROOT_6038

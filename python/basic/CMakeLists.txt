@@ -11,7 +11,7 @@ if(NOT MSVC OR win_broken_tests)
                     COPY_TO_BUILDDIR DataTypes.C DataTypes.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING_Development_Main}.so
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING}.so
                                 ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()
 
@@ -26,7 +26,7 @@ if(NOT MSVC OR win_broken_tests)
                     COPY_TO_BUILDDIR Overloads.C Overloads.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING_Development_Main}.so
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING}.so
                                 ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()
 endif()
