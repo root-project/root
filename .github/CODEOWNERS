@@ -9,8 +9,8 @@
 
 # Coarse-grained ownership
 * @dpiparo
-/bindings/ @ dpiparo @vepadulano
-/core/ @ dpiparo @pcanal
+/bindings/ @dpiparo @vepadulano
+/core/ @dpiparo @pcanal
 /documentation/ @couet
 /fonts/ @bellenot
 /geom/ @agheata
