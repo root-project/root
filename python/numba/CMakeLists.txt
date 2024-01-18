@@ -1,5 +1,5 @@
 if(ROOT_pyroot_FOUND)
-  if(NOT (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
+  if(NOT (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR EQUAL 3))
     if(NOT MSVC OR win_broken_tests)
       ROOTTEST_ADD_TEST(numba
                         MACRO PyROOT_numbatests.py
