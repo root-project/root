@@ -349,7 +349,7 @@ public:
 An output ntuple can be filled with entries. The caller has to make sure that the data that gets filled into an ntuple
 is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
 writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception is thrown.
+triggered by CommitCluster() or by destructing the writer.  On I/O errors, an exception is thrown.
 */
 // clang-format on
 class RNTupleWriter {
