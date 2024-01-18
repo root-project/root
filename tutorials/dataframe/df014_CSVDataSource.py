@@ -69,6 +69,7 @@ leftPad.SetLogx()
 leftPad.SetLogy()
 fullSpectrum.Draw("Hist")
 dualCanvas.cd(2)
+jpsi.SetMarkerStyle(20)
 jpsi.Draw("HistP")
 dualCanvas.SaveAs("df014_jpsi.png")
 
