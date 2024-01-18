@@ -129,7 +129,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Clone(const RNTupleModel *ne
 }
 
 ROOT::Experimental::RNTupleModel::RUpdater::RUpdater(RNTupleWriter &writer)
-   : fWriter(writer), fOpenChangeset(*fWriter.fModel)
+   : fWriter(writer), fOpenChangeset(fWriter.GetUpdatableModel())
 {
 }
 
@@ -146,7 +146,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    Detail::RNTupleModelChangeset toCommit{fOpenChangeset.fModel};
    std::swap(fOpenChangeset.fAddedFields, toCommit.fAddedFields);
    std::swap(fOpenChangeset.fAddedProjectedFields, toCommit.fAddedProjectedFields);
-   fWriter.fSink->UpdateSchema(toCommit, fWriter.fNEntries);
+   fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());
 }
 
 void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<Detail::RFieldBase> field)

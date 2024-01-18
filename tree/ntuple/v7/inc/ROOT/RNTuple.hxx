@@ -342,6 +342,75 @@ public:
 
 // clang-format off
 /**
+\class ROOT::Experimental::RNTupleFillContext
+\ingroup NTuple
+\brief A context for filling entries (data) into clusters of an RNTuple
+
+An output cluster can be filled with entries. The caller has to make sure that the data that gets filled into a cluster
+is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
+writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
+triggered by CommitCluster() or by destructing the context.  On I/O errors, an exception is thrown.
+
+Instances of this class are not meant to be used in isolation. For sequential writing, please refer to RNTupleWriter.
+*/
+// clang-format on
+class RNTupleFillContext {
+   friend RNTupleWriter;
+
+private:
+   std::unique_ptr<Detail::RPageSink> fSink;
+   /// Needs to be destructed before fSink
+   std::unique_ptr<RNTupleModel> fModel;
+
+   NTupleSize_t fLastCommitted = 0;
+   NTupleSize_t fNEntries = 0;
+   /// Keeps track of the number of bytes written into the current cluster
+   std::size_t fUnzippedClusterSize = 0;
+   /// The total number of bytes written to storage (i.e., after compression)
+   std::uint64_t fNBytesCommitted = 0;
+   /// The total number of bytes filled into all the so far committed clusters,
+   /// i.e. the uncompressed size of the written clusters
+   std::uint64_t fNBytesFilled = 0;
+   /// Limit for committing cluster no matter the other tunables
+   std::size_t fMaxUnzippedClusterSize;
+   /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
+   std::size_t fUnzippedClusterSizeEst;
+
+   RNTupleFillContext(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   RNTupleFillContext(const RNTupleFillContext &) = delete;
+   RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
+
+public:
+   ~RNTupleFillContext();
+
+   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
+   /// context's own model.
+   /// \return The number of uncompressed bytes written.
+   std::size_t Fill(REntry &entry)
+   {
+      if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
+         throw RException(R__FAIL("mismatch between entry and model"));
+
+      const std::size_t bytesWritten = entry.Append();
+      fUnzippedClusterSize += bytesWritten;
+      fNEntries++;
+      if ((fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst))
+         CommitCluster();
+      return bytesWritten;
+   }
+   /// Ensure that the data from the so far seen Fill calls has been written to storage
+   void CommitCluster();
+
+   std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
+
+   /// Return the entry number that was last committed in a cluster.
+   NTupleSize_t GetLastCommitted() const { return fLastCommitted; }
+   /// Return the number of entries filled so far.
+   NTupleSize_t GetNEntries() const { return fNEntries; }
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::RNTupleWriter
 \ingroup NTuple
 \brief An RNTuple that gets filled with entries (data) and writes them to storage
@@ -357,26 +426,15 @@ class RNTupleWriter {
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
-   /// Needs to be destructed after the page sink is destructed and so declared before.
+   /// Needs to be destructed after the page sink (in the fill context) is destructed and so declared before.
    std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fZipTasks;
-   std::unique_ptr<Detail::RPageSink> fSink;
-   /// Needs to be destructed before fSink
-   std::unique_ptr<RNTupleModel> fModel;
+   RNTupleFillContext fFillContext;
    Detail::RNTupleMetrics fMetrics;
-   NTupleSize_t fLastCommitted = 0;
+
    NTupleSize_t fLastCommittedClusterGroup = 0;
-   NTupleSize_t fNEntries = 0;
-   /// Keeps track of the number of bytes written into the current cluster
-   std::size_t fUnzippedClusterSize = 0;
-   /// The total number of bytes written to storage (i.e., after compression)
-   std::uint64_t fNBytesCommitted = 0;
-   /// The total number of bytes filled into all the so far committed clusters,
-   /// i.e. the uncompressed size of the written clusters
-   std::uint64_t fNBytesFilled = 0;
-   /// Limit for committing cluster no matter the other tunables
-   std::size_t fMaxUnzippedClusterSize;
-   /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
-   std::size_t fUnzippedClusterSizeEst;
+
+   RNTupleModel &GetUpdatableModel() { return *fFillContext.fModel; }
+   Detail::RPageSink &GetSink() { return *fFillContext.fSink; }
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
@@ -400,37 +458,32 @@ public:
 
    /// The simplest user interface if the default entry that comes with the ntuple model is used.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill() { return Fill(*fModel->GetDefaultEntry()); }
+   std::size_t Fill() { return fFillContext.Fill(*fFillContext.fModel->GetDefaultEntry()); }
    /// Multiple entries can have been instantiated from the ntuple model.  This method will perform
    /// a light check whether the entry comes from the ntuple's own model.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill(REntry &entry) {
-      if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
-         throw RException(R__FAIL("mismatch between entry and model"));
-
-      const std::size_t bytesWritten = entry.Append();
-      fUnzippedClusterSize += bytesWritten;
-      fNEntries++;
-      if ((fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst))
-         CommitCluster();
-      return bytesWritten;
-   }
+   std::size_t Fill(REntry &entry) { return fFillContext.Fill(entry); }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
-   void CommitCluster(bool commitClusterGroup = false);
+   void CommitCluster(bool commitClusterGroup = false)
+   {
+      fFillContext.CommitCluster();
+      if (commitClusterGroup)
+         CommitClusterGroup();
+   }
 
-   std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
+   std::unique_ptr<REntry> CreateEntry() { return fFillContext.CreateEntry(); }
 
    /// Return the entry number that was last committed in a cluster.
-   NTupleSize_t GetLastCommitted() const { return fLastCommitted; }
+   NTupleSize_t GetLastCommitted() const { return fFillContext.GetLastCommitted(); }
    /// Return the entry number that was last committed in a cluster group.
    NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
    /// Return the number of entries filled so far.
-   NTupleSize_t GetNEntries() const { return fNEntries; }
+   NTupleSize_t GetNEntries() const { return fFillContext.GetNEntries(); }
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   const RNTupleModel &GetModel() const { return *fModel; }
+   const RNTupleModel &GetModel() const { return *fFillContext.fModel; }
 
    /// Get a `RNTupleModel::RUpdater` that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.
