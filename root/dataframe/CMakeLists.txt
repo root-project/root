@@ -112,11 +112,26 @@ ROOTTEST_ADD_TEST(test_inference
                   OUTREF test_inference.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_ADD_TEST(test_snapshot
-                  MACRO test_snapshot.C+
+ROOTTEST_ADD_TEST(test_snapshot_dir
+                  MACRO test_snapshot_dir.C+
                   ${WILLFAIL_ON_WIN32}
-                  OUTREF test_snapshot.ref)
+                  OUTREF test_snapshot_dir.ref)
 
+ROOTTEST_ADD_TEST(test_snapshot_subdir
+                  MACRO test_snapshot_subdir.C+
+                  ${WILLFAIL_ON_WIN32}
+                  OUTREF test_snapshot_subdir.ref)                  
+
+ROOTTEST_ADD_TEST(test_snapshotMT_dir
+                  MACRO test_snapshotMT_dir.C+
+                  ${WILLFAIL_ON_WIN32}
+                  OUTREF test_snapshotMT_dir.ref)
+
+ROOTTEST_ADD_TEST(test_snapshotMT_subdir
+                  MACRO test_snapshotMT_subdir.C+
+                  ${WILLFAIL_ON_WIN32}
+                  OUTREF test_snapshotMT_subdir.ref) 
+                  
 ROOTTEST_ADD_TEST(test_stringfiltercolumn
                   MACRO test_stringfiltercolumn.C+
                   OUTREF test_stringfiltercolumn.ref)
