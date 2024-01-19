@@ -198,3 +198,87 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
       EXPECT_EQ((*ids)[i], i);
    }
 }
+
+TEST(RNTuple, DISABLED_Limits_LargePage)
+{
+   // Writing and reading one page with 100M elements takes around 3.5s and seems to have linear complexity (200M
+   // elements take 7s, 400M elements take 13.5s).
+   FileRaii fileGuard("test_ntuple_limits_largePage.root");
+
+   static constexpr int NumElements = 100'000'000;
+
+   {
+      auto model = RNTupleModel::Create();
+      auto id = model->MakeField<int>("id");
+      RNTupleWriteOptions options;
+      static constexpr std::size_t Size = NumElements * sizeof(int);
+      options.SetMaxUnzippedClusterSize(Size);
+      options.SetApproxZippedClusterSize(Size);
+      options.SetApproxUnzippedPageSize(Size);
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
+      for (int i = 0; i < NumElements; i++) {
+         *id = i;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto descriptor = reader->GetDescriptor();
+   auto model = reader->GetModel();
+   auto fieldId = descriptor->FindFieldId("id");
+   auto columnId = descriptor->FindPhysicalColumnId(fieldId, 0);
+
+   EXPECT_EQ(reader->GetNEntries(), NumElements);
+   EXPECT_EQ(descriptor->GetNClusters(), 1);
+   EXPECT_EQ(descriptor->GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+
+   auto *id = model->GetDefaultEntry()->Get<int>("id");
+   for (int i = 0; i < NumElements; i++) {
+      reader->LoadEntry(i);
+      EXPECT_EQ(*id, i);
+   }
+}
+
+TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
+{
+   // Writing and reading one page with 100M elements takes around 1.7s and seems to have linear complexity (200M
+   // elements take 3.5s, 400M elements take around 7s).
+   FileRaii fileGuard("test_ntuple_limits_largePageOneEntry.root");
+
+   static constexpr int NumElements = 100'000'000;
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ids = model->MakeField<std::vector<int>>("ids");
+      RNTupleWriteOptions options;
+      static constexpr std::size_t Size = NumElements * sizeof(int);
+      options.SetMaxUnzippedClusterSize(Size);
+      options.SetApproxZippedClusterSize(Size);
+      options.SetApproxUnzippedPageSize(Size);
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
+      for (int i = 0; i < NumElements; i++) {
+         ids->push_back(i);
+      }
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto descriptor = reader->GetDescriptor();
+   auto model = reader->GetModel();
+   auto fieldId = descriptor->FindFieldId("ids");
+   auto subFieldId = descriptor->FindFieldId("_0", fieldId);
+   auto columnId = descriptor->FindPhysicalColumnId(subFieldId, 0);
+
+   EXPECT_EQ(reader->GetNEntries(), 1);
+   EXPECT_EQ(descriptor->GetNClusters(), 1);
+   EXPECT_EQ(descriptor->GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+
+   auto *ids = model->GetDefaultEntry()->Get<std::vector<int>>("ids");
+   reader->LoadEntry(0);
+   EXPECT_EQ(ids->size(), NumElements);
+   for (int i = 0; i < NumElements; i++) {
+      EXPECT_EQ((*ids)[i], i);
+   }
+}
