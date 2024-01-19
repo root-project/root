@@ -830,7 +830,7 @@ void TLegend::PaintPrimitives()
          if (eobj && eobj->InheritsFrom(TAttLine::Class())
                   && eobj->InheritsFrom(TGraph::Class())) {
             Int_t w = dynamic_cast<TAttLine*>(eobj)->GetLineWidth();
-            if (TMath::Abs(w)>999) {
+            if (TMath::Abs(w)>99) {
                if (w<0) wu = 0;
                else     wl = 0;
             }
