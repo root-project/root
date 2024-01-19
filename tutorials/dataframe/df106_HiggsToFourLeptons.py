@@ -209,7 +209,7 @@ for i in range(0, histos_mc["nominal"].GetXaxis().GetNbins()):
 ROOT.gROOT.SetStyle("ATLAS")
 
 
-# Function to add ATLAS label
+# Function to add ATLAS label.
 def draw_atlas_label():
     text = ROOT.TLatex()
     text.SetNDC()
