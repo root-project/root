@@ -125,6 +125,7 @@ int do_work(const char *fileName, const char *outFileName, const char *treeName,
 }
 
 int runTest() {
+  // we put tree in a directory
   auto fileName = "test_snapshot.root";
   auto outFileName = "test_snapshot_output.root";
   auto treeName = "myTree";
@@ -133,12 +134,6 @@ int runTest() {
 
   std::cout << "---- Now with a tree in the root directory\n";
   int ret = do_work(fileName, outFileName, treeName, outTreeName);
-
-  // now we put the tree in a directory
-  outFileName = "test_snapshot_inDirectory_output.root";
-  treeName = "myTree";
-  outTreeName = "a/myTree";
-
   return ret;
 }
 

@@ -125,6 +125,7 @@ int do_work(const char *fileName, const char *outFileName, const char *treeName,
 }
 
 int runTest() {
+  // we put tree in a directory
   auto fileName = "test_snapshot.root";
   auto outFileName = "test_snapshot_output.root";
   auto treeName = "myTree";
