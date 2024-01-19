@@ -884,7 +884,7 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 | Maximum frame size                             | 2^62B, 4B items (list frame) | Frame preamble encoding                              |
 | Maximum field / type version                   | 4B                           | Field meta-data encoding                             |
 | Maximum number of fields, columns              | 4B (foreseen: <10M)          | 32bit column / field IDs, list frame limit           |
-| Maximum number of column groups                | 4B (foreseen: <10k)          | List frame limits                                    |
+| Maximum number of cluster groups               | 4B (foreseen: <10k)          | List frame limits                                    |
 | Maximum number of clusters per group           | 4B (foreseen: <10k)          | List frame limits, cluster group summary encoding    |
 | Maximum number of pages per cluster per column | 4B                           | List frame limits                                    |
 | Maximum number of entries per cluster          | 2^60                         | Cluster summary encoding                             |
