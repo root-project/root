@@ -21,6 +21,9 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 
+#include "TInterpreter.h" // gInterpreterMutex
+#include "TVirtualMutex.h" // R__LOCKGUARD
+
 using namespace clang;
 
 // pin the vtable here.
@@ -28,6 +31,8 @@ TClingDeclInfo::~TClingDeclInfo() {}
 
 const char* TClingDeclInfo::Name() const
 {
+   // Modifies the cached name, needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    if (!IsValid())
       return nullptr;
 
