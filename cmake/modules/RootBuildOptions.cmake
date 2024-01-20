@@ -310,7 +310,6 @@ endif()
 #---Changes in defaults due to platform-------------------------------------------------------
 if(WIN32)
   set(davix_defvalue OFF)
-  set(pyroot_legacy_defvalue OFF)
   set(roofit_multiprocess_defvalue OFF)
   set(roottest_defvalue OFF)
   set(rpath_defvalue OFF)
@@ -327,7 +326,6 @@ endif()
 # Pyroot requires Python development package; force to OFF if it was not found
 if(NOT Python3_Development_FOUND)
   set(pyroot_defvalue OFF)
-  set(pyroot_legacy_defvalue OFF)
   set(tmva-pymva_defvalue OFF)
 endif()
 

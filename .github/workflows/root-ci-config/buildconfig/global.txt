@@ -76,7 +76,6 @@ opengl=ON
 oracle=OFF
 pgsql=ON
 pyroot=ON
-pyroot_legacy=OFF
 pythia6=OFF
 pythia6_nolink=OFF
 pythia8=ON

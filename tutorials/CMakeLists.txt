@@ -727,15 +727,6 @@ if(ROOT_pyroot_FOUND)
              launcher.py            # Not a tutorial
              )
 
-  if(pyroot_legacy)
-    # Disable in old PyROOT, which lacks Import pythonization
-    list(APPEND pyveto
-        roofit/rf502_wspacewrite.py
-        roofit/rf504_simwstool.py
-        roofit/rf509_wsinteractive.py
-        roofit/rf511_wsfactory_basic.py)
-  endif()
-
   if(NOT dataframe
      OR DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3}
      OR (MSVC AND NOT win_broken_tests))

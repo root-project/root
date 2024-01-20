@@ -5,24 +5,17 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(pyroot)
+  add_subdirectory(pyroot)
+  add_subdirectory(tpython)
+  add_subdirectory(jupyroot)
+  add_subdirectory(jsmva)
 
-  if(pyroot_legacy)
-    add_subdirectory(pyroot_legacy)
+  if(dataframe)
+    message(STATUS "Distributed RDataFrame enabled")
+    add_subdirectory(experimental/distrdf)
   else()
-
-    add_subdirectory(pyroot)
-    add_subdirectory(tpython)
-    add_subdirectory(jupyroot)
-    add_subdirectory(jsmva)
-
-    if(dataframe)
-      message(STATUS "Distributed RDataFrame enabled")
-      add_subdirectory(experimental/distrdf)
-    else()
-      message(STATUS "Requirements to enable distributed RDataFrame:")
-      message(STATUS "    dataframe: required:ON, actual:${dataframe}")
-    endif()
-
+    message(STATUS "Requirements to enable distributed RDataFrame:")
+    message(STATUS "    dataframe: required:ON, actual:${dataframe}")
   endif()
 endif()
 
