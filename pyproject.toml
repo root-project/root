@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cmake", "setuptools", "wheel"]
+requires = ["cmake", "setuptools", "wheel", "ninja"]
 
 [project]
 name = "root-cern"
@@ -18,3 +18,8 @@ license = {file = "LICENSE"}
 
 [project.scripts]
 root = "ROOT._rootcli:main"
+
+[tool.cibuildwheel]
+# Increase pip debugging output
+build-verbosity = 1
+

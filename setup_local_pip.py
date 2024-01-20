@@ -20,9 +20,9 @@ here = pathlib.Path(__file__).parent.resolve()
 # Get the long description from the README file
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
-SOURCE_DIR = os.path.join(os.getcwd(), "rootsrc")
-BUILD_DIR = os.path.join(os.getcwd(), "myrootbuild")
-INSTALL_DIR = os.path.join(os.getcwd(), "myrootinstall")
+SOURCE_DIR = os.path.expanduser("~/programs/rootproject/rootsrc")
+BUILD_DIR = os.path.expanduser("~/programs/rootproject/pip-tests/build")
+INSTALL_DIR = os.path.expanduser("~/programs/rootproject/pip-tests/install")
 
 
 class my_cmake_build(_build):
@@ -31,7 +31,7 @@ class my_cmake_build(_build):
         _build.run(self)
 
         if not os.path.exists(SOURCE_DIR):
-            subprocess.run(shlex.split("git clone https://github.com/root-project/root.git rootsrc"), check=True)
+            raise RuntimeError("Could not find the source directory!")
 
         if not os.path.exists(BUILD_DIR):
             os.makedirs(BUILD_DIR)
