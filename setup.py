@@ -15,6 +15,7 @@ import subprocess
 import os
 import glob
 import shlex
+import sys
 here = pathlib.Path(__file__).parent.resolve()
 
 # Get the long description from the README file
@@ -87,7 +88,8 @@ class my_install(_install):
         self.copy_tree(os.path.join(lib_dir, "cppyy_backend"),
                        os.path.join(install_path, "cppyy_backend"))
 
-        extlibs = ["libcppyy3_11.so", "libcppyy_backend3_11.so", "libROOTPythonizations3_11.so"]
+        libs_version = f"{sys.version_info.major}_{sys.version_info.minor}"
+        extlibs = [f"libcppyy{libs_version}.so", f"libcppyy_backend{libs_version}.so", f"libROOTPythonizations{libs_version}.so"]
         for ext in extlibs:
             self.copy_file(os.path.join(lib_dir, ext), install_path)
 
