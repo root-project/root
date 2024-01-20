@@ -1776,21 +1776,6 @@ if(pyroot)
 
 endif()
 
-#---Check for PyROOT legacy---------------------------------------------------------------
-if(pyroot_legacy)
-  if(NOT pyroot)
-    message(FATAL_ERROR "pyroot_legacy is ON but pyroot is OFF. Please reconfigure with -Dpyroot=ON")
-  endif()
-
-  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND))
-    message(FATAL_ERROR "PyROOT: Python development package not found and pyroot legacy component required"
-                        " (python executable: ${PYTHON_EXECUTABLE})")
-  elseif(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)
-    message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot_legacy option")
-    set(pyroot_legacy OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
-  endif()
-endif()
-
 #---Check for deprecated PyROOT experimental ---------------------------------------------
 if(pyroot_experimental)
   message(WARNING "pyroot_experimental is a deprecated flag from 6.22.00."

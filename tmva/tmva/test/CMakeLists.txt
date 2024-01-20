@@ -33,7 +33,7 @@ if(dataframe)
     endif()
 endif()
 
-if(dataframe AND NOT pyroot_legacy)
+if(dataframe)
   find_python_module(xgboost QUIET)
   if (PY_XGBOOST_FOUND)
     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
