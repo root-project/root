@@ -22,10 +22,21 @@
  * @date September 30th 2013
  *    provide routines to access the result of the decomposition L and its
  *    inverse
+ * @date January 20th 2024
+ *    CholeskyDecompGenDim allowed copying and moving, but did not provide
+ *    copy and move constructors or assignment operators, resulting in
+ *    incorrect code and potential memory corruption, if somebody tried to
+ *    copy/move a CholeskyDecompGenDim instance. Since we're in a C++17
+ *    world now, use std::unique_ptr<F[]> and std::make_unique to get rid of
+ *    explicit memory management in CholeskyDecompGenDim, and provide correct
+ *    code for copy construction and assignment (the default constructor and
+ *    destructor, and the move construction and assignment code auto-generated
+ *    by the compiler are fine, and these methods are defaulted).
  */
 
 #include <cmath>
 #include <algorithm>
+#include <memory>
 
 namespace ROOT {
 
@@ -312,14 +323,43 @@ template<class F> class CholeskyDecompGenDim
 private:
    /** @brief dimensionality
     * dimensionality of the problem */
-   unsigned fN;
+   unsigned fN = 0;
    /// lower triangular matrix L
    /** lower triangular matrix L, packed storage, with diagonal
     * elements pre-inverted */
-   F *fL;
+   std::unique_ptr<F[]> fL;
    /// flag indicating a successful decomposition
-   bool fOk;
+   bool fOk = false;
 public:
+   // default construction, move construction and assignment, and destruction
+   // do the right thing, so use the versions that the compiler generates for
+   // us...
+   CholeskyDecompGenDim() = default;
+   CholeskyDecompGenDim(CholeskyDecompGenDim&&) = default;
+   CholeskyDecompGenDim& operator=(CholeskyDecompGenDim&&) = default;
+   ~CholeskyDecompGenDim() = default;
+
+   /// copy constructor
+   CholeskyDecompGenDim(const CholeskyDecompGenDim& other)
+           : fN(other.fN), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2)),
+             fOk(other.fOk)
+   {
+       std::copy(other.fL, other.fL + (fN * (fN + 1)) / 2, fL);
+   }
+   /// (copy) assignment
+   CholeskyDecompGenDim& operator=(const CholeskyDecompGenDim& other)
+   {
+       if (this != &other) {
+           // check if fL is large enough to hold other, if not, reallocate
+           if (fN < other.fN)
+               fL = std::make_unique<F[]>((other.fN * (other.fN + 1)) / 2);
+           fN = other.fN;
+           std::copy(other.fL, other.fL + (fN * (fN + 1)) / 2, fL);
+           fOk = other.fOk;
+       }
+       return *this;
+   }
+
    /// perform a Cholesky decomposition
    /** perform a Cholesky decomposition of a symmetric positive
     * definite matrix m
@@ -329,10 +369,10 @@ public:
     * operator()(int i, int j) for access to elements)
     */
    template<class M> CholeskyDecompGenDim(unsigned N, const M& m) :
-      fN(N), fL(new F[(fN * (fN + 1)) / 2]), fOk(false)
+      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2)), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
-      fOk = _decomposerGenDim<F, M>()(fL, m, fN);
+      fOk = _decomposerGenDim<F, M>()(fL.get(), m, fN);
    }
 
    /// perform a Cholesky decomposition
@@ -347,16 +387,13 @@ public:
     * (i * (i + 1)) / 2 + j
     */
    template<typename G> CholeskyDecompGenDim(unsigned N, G* m) :
-      fN(N), fL(new F[(fN * (fN + 1)) / 2]), fOk(false)
+      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2)), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
       using CholeskyDecompHelpers::PackedArrayAdapter;
       fOk = _decomposerGenDim<F, PackedArrayAdapter<G> >()(
-         fL, PackedArrayAdapter<G>(m), fN);
+         fL.get(), PackedArrayAdapter<G>(m), fN);
    }
-
-   /// destructor
-   ~CholeskyDecompGenDim() { delete[] fL; }
 
    /// returns true if decomposition was successful
    /** @returns true if decomposition was successful */
@@ -376,7 +413,7 @@ public:
    template<class V> bool Solve(V& rhs) const
    {
       using CholeskyDecompHelpers::_solverGenDim;
-      if (fOk) _solverGenDim<F,V>()(rhs, fL, fN);
+      if (fOk) _solverGenDim<F,V>()(rhs, fL.get(), fN);
       return fOk;
    }
 
@@ -389,7 +426,7 @@ public:
    template<class M> bool Invert(M& m) const
    {
       using CholeskyDecompHelpers::_inverterGenDim;
-      if (fOk) _inverterGenDim<F,M>()(m, fL, fN);
+      if (fOk) _inverterGenDim<F,M>()(m, fL.get(), fN);
       return fOk;
    }
 
@@ -409,7 +446,7 @@ public:
       using CholeskyDecompHelpers::PackedArrayAdapter;
       if (fOk) {
          PackedArrayAdapter<G> adapted(m);
-         _inverterGenDim<F,PackedArrayAdapter<G> >()(adapted, fL, fN);
+         _inverterGenDim<F,PackedArrayAdapter<G> >()(adapted, fL.get(), fN);
       }
       return fOk;
    }
@@ -423,13 +460,14 @@ public:
    template<class M> bool getL(M& m) const
    {
       if (!fOk) return false;
+      const F* L = fL.get();
       for (unsigned i = 0; i < fN; ++i) {
          // zero upper half of matrix
          for (unsigned j = i + 1; j < fN; ++j)
             m(i, j) = F(0);
          // copy the rest
          for (unsigned j = 0; j <= i; ++j)
-            m(i, j) = fL[i * (i + 1) / 2 + j];
+            m(i, j) = L[i * (i + 1) / 2 + j];
          // adjust the diagonal - we save 1/L(i, i) in that position, so
          // convert to what caller expects
          m(i, i) = F(1) / m(i, i);
@@ -448,13 +486,14 @@ public:
    template<typename G> bool getL(G* m) const
    {
        if (!fOk) return false;
+       const F* L = fL.get();
        // copy L
        for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
-          m[i] = fL[i];
+          m[i] = L[i];
        // adjust diagonal - we save 1/L(i, i) in that position, so convert to
        // what caller expects
        for (unsigned i = 0; i < fN; ++i)
-          m[(i * (i + 1)) / 2 + i] = F(1) / fL[(i * (i + 1)) / 2 + i];
+          m[(i * (i + 1)) / 2 + i] = F(1) / L[(i * (i + 1)) / 2 + i];
        return true;
    }
 
@@ -467,13 +506,14 @@ public:
    template<class M> bool getLi(M& m) const
    {
       if (!fOk) return false;
+      const F* L = fL.get();
       for (unsigned i = 0; i < fN; ++i) {
          // zero lower half of matrix
          for (unsigned j = i + 1; j < fN; ++j)
             m(j, i) = F(0);
          // copy the rest
          for (unsigned j = 0; j <= i; ++j)
-            m(j, i) = fL[i * (i + 1) / 2 + j];
+            m(j, i) = L[i * (i + 1) / 2 + j];
       }
       // invert the off-diagonal part of what we just copied
       for (unsigned i = 1; i < fN; ++i) {
@@ -497,10 +537,11 @@ public:
     */
    template<typename G> bool getLi(G* m) const
    {
-       if (!fOk) return false;
+      if (!fOk) return false;
+      const F* L = fL.get();
       // copy L
       for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
-         m[i] = fL[i];
+         m[i] = L[i];
       // invert the off-diagonal part of what we just copied
       G* base1 = &m[1];
       for (unsigned i = 1; i < fN; base1 += ++i) {
@@ -590,7 +631,8 @@ namespace CholeskyDecompHelpers {
       void operator()(M& dst, const F* src, unsigned N) const
       {
          // make working copy
-         F * l = new F[N * (N + 1) / 2];
+         auto l_ = std::make_unique<F[]>(N * (N + 1) / 2);
+         F* l = l_.get();
          std::copy(src, src + ((N * (N + 1)) / 2), l);
          // ok, next step: invert off-diagonal part of matrix
          F* base1 = &l[1];
@@ -614,7 +656,6 @@ namespace CholeskyDecompHelpers {
                dst(i, j) = tmp;
             }
          }
-         delete [] l;
       }
    };
 
