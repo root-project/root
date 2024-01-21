@@ -331,10 +331,8 @@ private:
    /// flag indicating a successful decomposition
    bool fOk = false;
 public:
-   // default construction, move construction and assignment, and destruction
-   // do the right thing, so use the versions that the compiler generates for
-   // us...
-   CholeskyDecompGenDim() = default;
+   // move construction and assignment, and destruction do the right thing, so
+   // use the versions that the compiler generates for us...
    CholeskyDecompGenDim(CholeskyDecompGenDim&&) = default;
    CholeskyDecompGenDim& operator=(CholeskyDecompGenDim&&) = default;
    ~CholeskyDecompGenDim() = default;
