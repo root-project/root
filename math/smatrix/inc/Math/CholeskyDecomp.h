@@ -369,7 +369,7 @@ public:
     * operator()(int i, int j) for access to elements)
     */
    template<class M> CholeskyDecompGenDim(unsigned N, const M& m) :
-      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2)), fOk(false)
+      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2))
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
       fOk = _decomposerGenDim<F, M>()(fL.get(), m, fN);
@@ -387,7 +387,7 @@ public:
     * (i * (i + 1)) / 2 + j
     */
    template<typename G> CholeskyDecompGenDim(unsigned N, G* m) :
-      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2)), fOk(false)
+      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2))
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
       using CholeskyDecompHelpers::PackedArrayAdapter;
