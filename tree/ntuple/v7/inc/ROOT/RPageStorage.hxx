@@ -44,6 +44,7 @@ class RNTupleModel;
 namespace Internal {
 class RNTupleCompressor;
 class RNTupleDecompressor;
+class RSealedPageHelper;
 } // namespace Internal
 
 namespace Detail {
@@ -346,6 +347,8 @@ The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+   friend class Internal::RSealedPageHelper;
+
 public:
    /// Used in SetEntryRange / GetEntryRange
    struct REntryRange {
@@ -552,6 +555,26 @@ public:
 };
 
 } // namespace Detail
+
+namespace Internal {
+// clang-format off
+/**
+\class ROOT::Experimental::Internal::RSealedPageHelper
+\ingroup NTuple
+\brief Helper interface for decompressing and unpacking RNTuple pages
+
+The RSealedPageHelper provides a thin public wrapper around Detail::RPageSource::UnsealPage.
+*/
+// clang-format on
+class RSealedPageHelper {
+public:
+   static Detail::RPage UnsealPage(Detail::RPageSource &pageSource, const Detail::RPageStorage::RSealedPage &sealedPage,
+                                   const Detail::RColumnElementBase &element, DescriptorId_t physicalColumnId)
+   {
+      return pageSource.UnsealPage(sealedPage, element, physicalColumnId);
+   }
+};
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT
