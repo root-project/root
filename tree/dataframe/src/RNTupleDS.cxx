@@ -101,7 +101,7 @@ public:
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
-   void ReadInClusterImpl(const ROOT::Experimental::RClusterIndex &clusterIndex, void *to) final
+   void ReadInClusterImpl(ROOT::Experimental::RClusterIndex clusterIndex, void *to) final
    {
       RClusterIndex collectionStart;
       ClusterSize_t size;
@@ -127,7 +127,7 @@ private:
    void GenerateColumnsImpl() final { assert(false && "RArraySizeField fields must only be used for reading"); }
    void GenerateColumnsImpl(const ROOT::Experimental::RNTupleDescriptor &) final {}
    void ReadGlobalImpl(NTupleSize_t /*globalIndex*/, void *to) final { *static_cast<std::size_t *>(to) = fArrayLength; }
-   void ReadInClusterImpl(const RClusterIndex & /*clusterIndex*/, void *to) final
+   void ReadInClusterImpl(RClusterIndex /*clusterIndex*/, void *to) final
    {
       *static_cast<std::size_t *>(to) = fArrayLength;
    }

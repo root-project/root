@@ -319,8 +319,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
 }
 
 void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(DescriptorId_t physicalColumnId,
-                                                                 const RClusterIndex &clusterIndex,
-                                                                 RSealedPage &sealedPage)
+                                                                 RClusterIndex clusterIndex, RSealedPage &sealedPage)
 {
    const auto clusterId = clusterIndex.GetClusterId();
 
@@ -435,9 +434,8 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    return PopulatePageFromCluster(columnHandle, clusterInfo, idxInCluster);
 }
 
-
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::PopulatePage(
-   ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex)
+ROOT::Experimental::Detail::RPage
+ROOT::Experimental::Detail::RPageSourceFile::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    const auto clusterId = clusterIndex.GetClusterId();
    const auto idxInCluster = clusterIndex.GetIndex();

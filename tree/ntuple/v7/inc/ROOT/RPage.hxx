@@ -97,13 +97,14 @@ public:
       return (globalIndex >= fRangeFirst) && (globalIndex < fRangeFirst + NTupleSize_t(fNElements));
    }
 
-   bool Contains(const RClusterIndex &clusterIndex) const {
+   bool Contains(RClusterIndex clusterIndex) const
+   {
       if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
          return false;
       auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetIndexOffset());
       return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
              (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
-    }
+   }
 
    void* GetBuffer() const { return fBuffer; }
    /// Called during writing: returns a pointer after the last element and increases the element counter

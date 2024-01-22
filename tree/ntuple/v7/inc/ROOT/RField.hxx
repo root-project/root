@@ -218,7 +218,7 @@ public:
 
       std::size_t Append() { return fField->Append(fObjPtr); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
-      void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
+      void Read(RClusterIndex clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
       void Bind(void *objPtr)
       {
          DestroyIfOwning();
@@ -261,10 +261,10 @@ public:
       void ReleaseValues();
       /// Sets a new range for the bulk. If there is enough capacity, the fValues array will be reused.
       /// Otherwise a new array is allocated. After reset, fMaskAvail is false for all values.
-      void Reset(const RClusterIndex &firstIndex, std::size_t size);
+      void Reset(RClusterIndex firstIndex, std::size_t size);
       void CountValidValues();
 
-      bool ContainsRange(const RClusterIndex &firstIndex, std::size_t size) const
+      bool ContainsRange(RClusterIndex firstIndex, std::size_t size) const
       {
          if (firstIndex.GetClusterId() != fFirstIndex.GetClusterId())
             return false;
@@ -293,7 +293,7 @@ public:
       /// relative to a certain cluster. The return value points to the array of read objects.
       /// The 'maskReq' parameter is a bool array of at least 'size' elements. Only objects for which the mask is
       /// true are guaranteed to be read in the returned value array.
-      void *ReadBulk(const RClusterIndex &firstIndex, const bool *maskReq, std::size_t size)
+      void *ReadBulk(RClusterIndex firstIndex, const bool *maskReq, std::size_t size)
       {
          if (!ContainsRange(firstIndex, size))
             Reset(firstIndex, size);
@@ -433,7 +433,7 @@ protected:
    /// column type exists.
    virtual std::size_t AppendImpl(const void *from);
    virtual void ReadGlobalImpl(NTupleSize_t globalIndex, void *to);
-   virtual void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
+   virtual void ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
    {
       ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), to);
    }
@@ -465,7 +465,7 @@ protected:
          InvokeReadCallbacks(to);
    }
 
-   void Read(const RClusterIndex &clusterIndex, void *to)
+   void Read(RClusterIndex clusterIndex, void *to)
    {
       if (fIsSimple)
          return (void)fPrincipalColumn->Read(clusterIndex, to);
@@ -500,10 +500,7 @@ protected:
 
    /// Allow derived classes to call Append and Read on other (sub) fields.
    static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
-   static void CallReadOn(RFieldBase &other, const RClusterIndex &clusterIndex, void *to)
-   {
-      other.Read(clusterIndex, to);
-   }
+   static void CallReadOn(RFieldBase &other, RClusterIndex clusterIndex, void *to) { other.Read(clusterIndex, to); }
    static void CallReadOn(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
 
    /// Fields may need direct access to the principal column of their sub fields, e.g. in RRVecField::ReadBulk
@@ -757,7 +754,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
    void OnConnectPageSource() final;
 
 public:
@@ -789,10 +786,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final
-   {
-      CallReadOn(*fSubFields[0], clusterIndex, to);
-   }
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final { CallReadOn(*fSubFields[0], clusterIndex, to); }
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -952,7 +946,7 @@ public:
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
@@ -992,7 +986,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
 
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
                 const std::vector<std::size_t> &offsets, std::string_view typeName = "");
@@ -1077,7 +1071,8 @@ public:
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
 };
@@ -1139,7 +1134,7 @@ public:
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
@@ -1176,7 +1171,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
 
 public:
    RArrayField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength);
@@ -1217,7 +1212,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
 
 public:
    /**
@@ -1457,10 +1452,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final
-   {
-      CallReadOn(*fSubFields[0], clusterIndex, to);
-   }
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final { CallReadOn(*fSubFields[0], clusterIndex, to); }
 
 public:
    RAtomicField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -1747,13 +1739,12 @@ public:
    ClusterSize_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<ClusterSize_t>(globalIndex);
    }
-   ClusterSize_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<ClusterSize_t>(clusterIndex);
-   }
+   ClusterSize_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<ClusterSize_t>(clusterIndex); }
    ClusterSize_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<ClusterSize_t>(globalIndex, nItems);
    }
-   ClusterSize_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   ClusterSize_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<ClusterSize_t>(clusterIndex, nItems);
    }
 
@@ -1765,7 +1756,8 @@ public:
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1801,7 +1793,7 @@ public:
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final
    {
       RClusterIndex collectionStart;
       ClusterSize_t size;
@@ -1862,13 +1854,12 @@ public:
    bool *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<bool>(globalIndex);
    }
-   bool *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<bool>(clusterIndex);
-   }
+   bool *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<bool>(clusterIndex); }
    bool *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<bool>(globalIndex, nItems);
    }
-   bool *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   bool *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<bool>(clusterIndex, nItems);
    }
 
@@ -1904,13 +1895,12 @@ public:
    float *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<float>(globalIndex);
    }
-   float *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<float>(clusterIndex);
-   }
+   float *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<float>(clusterIndex); }
    float *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<float>(globalIndex, nItems);
    }
-   float *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   float *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<float>(clusterIndex, nItems);
    }
 
@@ -1948,13 +1938,12 @@ public:
    double *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<double>(globalIndex);
    }
-   double *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<double>(clusterIndex);
-   }
+   double *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<double>(clusterIndex); }
    double *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<double>(globalIndex, nItems);
    }
-   double *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   double *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<double>(clusterIndex, nItems);
    }
 
@@ -1992,12 +1981,12 @@ public:
    ~RField() override = default;
 
    std::byte *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<std::byte>(globalIndex); }
-   std::byte *Map(const RClusterIndex &clusterIndex) { return fPrincipalColumn->Map<std::byte>(clusterIndex); }
+   std::byte *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::byte>(clusterIndex); }
    std::byte *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
    {
       return fPrincipalColumn->MapV<std::byte>(globalIndex, nItems);
    }
-   std::byte *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems)
+   std::byte *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
    {
       return fPrincipalColumn->MapV<std::byte>(clusterIndex, nItems);
    }
@@ -2034,13 +2023,12 @@ public:
    char *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<char>(globalIndex);
    }
-   char *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<char>(clusterIndex);
-   }
+   char *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<char>(clusterIndex); }
    char *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<char>(globalIndex, nItems);
    }
-   char *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   char *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<char>(clusterIndex, nItems);
    }
 
@@ -2076,13 +2064,12 @@ public:
    std::int8_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int8_t>(globalIndex);
    }
-   std::int8_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int8_t>(clusterIndex);
-   }
+   std::int8_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int8_t>(clusterIndex); }
    std::int8_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::int8_t>(globalIndex, nItems);
    }
-   std::int8_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::int8_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::int8_t>(clusterIndex, nItems);
    }
 
@@ -2118,13 +2105,12 @@ public:
    std::uint8_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint8_t>(globalIndex);
    }
-   std::uint8_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::uint8_t>(clusterIndex);
-   }
+   std::uint8_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::uint8_t>(clusterIndex); }
    std::uint8_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::uint8_t>(globalIndex, nItems);
    }
-   std::uint8_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::uint8_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::uint8_t>(clusterIndex, nItems);
    }
 
@@ -2160,13 +2146,12 @@ public:
    std::int16_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int16_t>(globalIndex);
    }
-   std::int16_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int16_t>(clusterIndex);
-   }
+   std::int16_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int16_t>(clusterIndex); }
    std::int16_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::int16_t>(globalIndex, nItems);
    }
-   std::int16_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::int16_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::int16_t>(clusterIndex, nItems);
    }
 
@@ -2202,13 +2187,12 @@ public:
    std::uint16_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint16_t>(globalIndex);
    }
-   std::uint16_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::uint16_t>(clusterIndex);
-   }
+   std::uint16_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::uint16_t>(clusterIndex); }
    std::uint16_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::uint16_t>(globalIndex, nItems);
    }
-   std::uint16_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::uint16_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::uint16_t>(clusterIndex, nItems);
    }
 
@@ -2244,13 +2228,12 @@ public:
    std::int32_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int32_t>(globalIndex);
    }
-   std::int32_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int32_t>(clusterIndex);
-   }
+   std::int32_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int32_t>(clusterIndex); }
    std::int32_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::int32_t>(globalIndex, nItems);
    }
-   std::int32_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::int32_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::int32_t>(clusterIndex, nItems);
    }
 
@@ -2292,7 +2275,8 @@ public:
    std::uint32_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::uint32_t>(globalIndex, nItems);
    }
-   std::uint32_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::uint32_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::uint32_t>(clusterIndex, nItems);
    }
 
@@ -2328,13 +2312,12 @@ public:
    std::uint64_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint64_t>(globalIndex);
    }
-   std::uint64_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::uint64_t>(clusterIndex);
-   }
+   std::uint64_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::uint64_t>(clusterIndex); }
    std::uint64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::uint64_t>(globalIndex, nItems);
    }
-   std::uint64_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::uint64_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::uint64_t>(clusterIndex, nItems);
    }
 
@@ -2370,13 +2353,12 @@ public:
    std::int64_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int64_t>(globalIndex);
    }
-   std::int64_t *Map(const RClusterIndex &clusterIndex) {
-      return fPrincipalColumn->Map<std::int64_t>(clusterIndex);
-   }
+   std::int64_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int64_t>(clusterIndex); }
    std::int64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
       return fPrincipalColumn->MapV<std::int64_t>(globalIndex, nItems);
    }
-   std::int64_t *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   std::int64_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       return fPrincipalColumn->MapV<std::int64_t>(clusterIndex, nItems);
    }
 
@@ -2646,7 +2628,7 @@ public:
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }

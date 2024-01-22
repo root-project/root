@@ -524,7 +524,7 @@ public:
    /// Allocates and fills a page that contains the index-th element
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) = 0;
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by selaedPage. The sealed page
    /// can be used subsequently in a call to RPageSink::CommitSealedPage.
@@ -532,7 +532,7 @@ public:
    /// no data will be copied but the returned size information can be used by the caller to allocate a large enough
    /// buffer and call LoadSealedPage again.
    virtual void
-   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) = 0;
+   LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) = 0;
 
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.

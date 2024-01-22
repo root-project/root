@@ -96,7 +96,7 @@ public:
       using reference = RClusterIndex&;
 
       RIterator() = default;
-      explicit RIterator(const RClusterIndex &index) : fIndex(index) {}
+      explicit RIterator(RClusterIndex index) : fIndex(index) {}
       ~RIterator() = default;
 
       iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
@@ -186,7 +186,7 @@ public:
       }
    }
 
-   const T &operator()(const RClusterIndex &clusterIndex)
+   const T &operator()(RClusterIndex clusterIndex)
    {
       if constexpr (Internal::isMappable<FieldT>)
          return *fField.Map(clusterIndex);
@@ -204,8 +204,8 @@ public:
    }
 
    // TODO(bgruber): turn enable_if into requires clause with C++20
-   template <typename C = T, std::enable_if_t<Internal::isMappable<FieldT>, C*> = nullptr>
-   const C *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems)
+   template <typename C = T, std::enable_if_t<Internal::isMappable<FieldT>, C *> = nullptr>
+   const C *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
    {
       return fField.MapV(clusterIndex, nItems);
    }
@@ -246,7 +246,8 @@ public:
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
-   RNTupleClusterRange GetCollectionRange(const RClusterIndex &clusterIndex) {
+   RNTupleClusterRange GetCollectionRange(RClusterIndex clusterIndex)
+   {
       ClusterSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
@@ -280,7 +281,8 @@ public:
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
       return size;
    }
-   ClusterSize_t operator()(const RClusterIndex &clusterIndex) {
+   ClusterSize_t operator()(RClusterIndex clusterIndex)
+   {
       ClusterSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);

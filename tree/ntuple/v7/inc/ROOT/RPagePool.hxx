@@ -70,7 +70,7 @@ public:
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
    Detail::RPage GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
-   Detail::RPage GetPage(ColumnId_t columnId, const RClusterIndex &clusterIndex);
+   Detail::RPage GetPage(ColumnId_t columnId, RClusterIndex clusterIndex);
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
    /// during registration.

@@ -88,12 +88,9 @@ public:
    {
       return RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId);
    }
-   RPage PopulatePage(ColumnHandle_t, const ROOT::Experimental::RClusterIndex &) final { return RPage(); }
+   RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPage(); }
    void ReleasePage(RPage &) final {}
-   void
-   LoadSealedPage(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::RClusterIndex &, RSealedPage &) final
-   {
-   }
+   void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };
 } // anonymous namespace

@@ -121,10 +121,8 @@ public:
    RClusterIndex  operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
    RClusterIndex  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
    RClusterIndex& operator++()    /* prefix */         { ++fIndex; return *this; }
-   bool operator==(const RClusterIndex &other) const {
-      return fClusterId == other.fClusterId && fIndex == other.fIndex;
-   }
-   bool operator!=(const RClusterIndex &other) const { return !(*this == other); }
+   bool operator==(RClusterIndex other) const { return fClusterId == other.fClusterId && fIndex == other.fIndex; }
+   bool operator!=(RClusterIndex other) const { return !(*this == other); }
 
    DescriptorId_t GetClusterId() const { return fClusterId; }
    ClusterSize_t::ValueType GetIndex() const { return fIndex; }

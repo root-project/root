@@ -77,7 +77,7 @@ ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, NTupleSize
 }
 
 ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, const RClusterIndex &clusterIndex)
+ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, RClusterIndex clusterIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    unsigned int N = fPages.size();
