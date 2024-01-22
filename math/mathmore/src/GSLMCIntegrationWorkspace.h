@@ -132,7 +132,7 @@ namespace Math {
       VegasParameters & Parameters()  { return fParams; }
 
       std::unique_ptr<IOptions> Options() const override {
-         return fParams();
+         return fParams.MakeIOptions();
       }
       /// set options
       virtual void SetOptions(const ROOT::Math::IOptions & opt) override {
@@ -209,7 +209,7 @@ namespace Math {
       MiserParameters & Parameters()  { return fParams; }
 
       std::unique_ptr<ROOT::Math::IOptions> Options() const override {
-         return fParams();
+         return fParams.MakeIOptions();
       }
       virtual void SetOptions(const ROOT::Math::IOptions & opt) override {
          SetParameters(MiserParameters(opt));

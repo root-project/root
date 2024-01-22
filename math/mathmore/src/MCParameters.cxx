@@ -69,15 +69,15 @@ namespace Math {
       return *this;
    }
 
-   std::unique_ptr<ROOT::Math::IOptions> VegasParameters::operator() () const {
+   std::unique_ptr<ROOT::Math::IOptions> VegasParameters::MakeIOptions() const {
       // convert to options (return object is managed by the user)
-      GenAlgoOptions * opt = new GenAlgoOptions();
+      auto opt = std::make_unique<GenAlgoOptions>();
       opt->SetRealValue("alpha",alpha);
       opt->SetIntValue("iterations",iterations);
       opt->SetIntValue("stage",stage);
       opt->SetIntValue("mode",mode);
       opt->SetIntValue("verbose",verbose);
-      return std::unique_ptr<ROOT::Math::IOptions>(opt);
+      return opt;
    }
 
 
@@ -119,15 +119,15 @@ namespace Math {
       return *this;
    }
 
-   std::unique_ptr<ROOT::Math::IOptions>  MiserParameters::operator() () const {
+   std::unique_ptr<ROOT::Math::IOptions>  MiserParameters::MakeIOptions() const {
       // convert to options (return object is managed by the user)
-      GenAlgoOptions * opt = new GenAlgoOptions();
+      auto opt = std::make_unique<GenAlgoOptions>();
       opt->SetRealValue("alpha",alpha);
       opt->SetRealValue("dither",dither);
       opt->SetRealValue("estimate_frac",estimate_frac);
       opt->SetIntValue("min_calls",min_calls);
       opt->SetIntValue("min_calls_per_bisection",min_calls_per_bisection);
-      return std::unique_ptr<ROOT::Math::IOptions>(opt);
+      return opt;
    }
 
 
