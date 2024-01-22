@@ -471,8 +471,7 @@ const char * GSLMCIntegrator::GetTypeName() const {
 }
 
 ROOT::Math::IntegratorMultiDimOptions  GSLMCIntegrator::Options() const {
-   auto extraOpts = ExtraOptions();
-   ROOT::Math::IntegratorMultiDimOptions opt(extraOpts.release());
+   ROOT::Math::IntegratorMultiDimOptions opt(ExtraOptions().release());
    opt.SetAbsTolerance(fAbsTol);
    opt.SetRelTolerance(fRelTol);
    opt.SetNCalls(fCalls);
