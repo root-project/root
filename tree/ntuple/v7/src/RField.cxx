@@ -366,7 +366,7 @@ void ROOT::Experimental::Detail::RFieldBase::RBulk::ReleaseValues()
    free(fValues);
 }
 
-void ROOT::Experimental::Detail::RFieldBase::RBulk::Reset(const RClusterIndex &firstIndex, std::size_t size)
+void ROOT::Experimental::Detail::RFieldBase::RBulk::Reset(RClusterIndex firstIndex, std::size_t size)
 {
    if (fCapacity < size) {
       ReleaseValues();
@@ -1516,7 +1516,7 @@ void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, v
    }
 }
 
-void ROOT::Experimental::RClassField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
+void ROOT::Experimental::RClassField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       CallReadOn(*fSubFields[i], clusterIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
@@ -1912,7 +1912,7 @@ void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
-void ROOT::Experimental::RRecordField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
+void ROOT::Experimental::RRecordField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
       CallReadOn(*fSubFields[i], clusterIndex, static_cast<unsigned char *>(to) + fOffsets[i]);
@@ -2455,7 +2455,7 @@ void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, v
    }
 }
 
-void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
+void ROOT::Experimental::RArrayField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
 {
    auto arrayPtr = static_cast<unsigned char *>(to);
    for (unsigned i = 0; i < fArrayLength; ++i) {
@@ -2607,8 +2607,7 @@ void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::Experimental::N
    }
 }
 
-void ROOT::Experimental::RArrayAsRVecField::ReadInClusterImpl(const ROOT::Experimental::RClusterIndex &clusterIndex,
-                                                              void *to)
+void ROOT::Experimental::RArrayAsRVecField::ReadInClusterImpl(ROOT::Experimental::RClusterIndex clusterIndex, void *to)
 {
    auto [beginPtr, _, __] = GetRVecDataMembers(to);
    auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics

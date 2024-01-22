@@ -174,7 +174,7 @@ public:
       std::memcpy(to, from, elemSize);
    }
 
-   void Read(const RClusterIndex &clusterIndex, void *to)
+   void Read(RClusterIndex clusterIndex, void *to)
    {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
@@ -204,7 +204,7 @@ public:
       }
    }
 
-   void ReadV(const RClusterIndex &clusterIndex, const ClusterSize_t::ValueType count, void *to)
+   void ReadV(RClusterIndex clusterIndex, const ClusterSize_t::ValueType count, void *to)
    {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
@@ -230,7 +230,8 @@ public:
    }
 
    template <typename CppT>
-   CppT *Map(const RClusterIndex &clusterIndex) {
+   CppT *Map(RClusterIndex clusterIndex)
+   {
       NTupleSize_t nItems;
       return MapV<CppT>(clusterIndex, nItems);
    }
@@ -248,7 +249,8 @@ public:
    }
 
    template <typename CppT>
-   CppT *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   CppT *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
@@ -259,7 +261,8 @@ public:
          (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * RColumnElement<CppT>::kSize);
    }
 
-   NTupleSize_t GetGlobalIndex(const RClusterIndex &clusterIndex) {
+   NTupleSize_t GetGlobalIndex(RClusterIndex clusterIndex)
+   {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
@@ -298,8 +301,7 @@ public:
       *collectionStart = RClusterIndex(fReadPage.GetClusterInfo().GetId(), idxStart);
    }
 
-   void GetCollectionInfo(const RClusterIndex &clusterIndex,
-                          RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
    {
       auto index = clusterIndex.GetIndex();
       auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t>(clusterIndex - 1);
@@ -317,7 +319,7 @@ public:
 
    void Flush();
    void MapPage(const NTupleSize_t index);
-   void MapPage(const RClusterIndex &clusterIndex);
+   void MapPage(RClusterIndex clusterIndex);
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
    const RColumnModel &GetModel() const { return fModel; }

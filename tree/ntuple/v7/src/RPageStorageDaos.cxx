@@ -564,8 +564,7 @@ std::string ROOT::Experimental::Detail::RPageSourceDaos::GetObjectClass() const
 }
 
 void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t physicalColumnId,
-                                                                 const RClusterIndex &clusterIndex,
-                                                                 RSealedPage &sealedPage)
+                                                                 RClusterIndex clusterIndex, RSealedPage &sealedPage)
 {
    const auto clusterId = clusterIndex.GetClusterId();
 
@@ -694,8 +693,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
 }
 
 ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnHandle,
-                                                          const RClusterIndex &clusterIndex)
+ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    const auto clusterId = clusterIndex.GetClusterId();
    const auto idxInCluster = clusterIndex.GetIndex();

@@ -99,7 +99,7 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
    R__ASSERT(fReadPage.Contains(index));
 }
 
-void ROOT::Experimental::Detail::RColumn::MapPage(const RClusterIndex &clusterIndex)
+void ROOT::Experimental::Detail::RColumn::MapPage(RClusterIndex clusterIndex)
 {
    fPageSource->ReleasePage(fReadPage);
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
