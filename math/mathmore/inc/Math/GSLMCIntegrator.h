@@ -290,7 +290,7 @@ public:
       std::unique_ptr<ROOT::Math::IOptions> ExtraOptions() const;
 
       /**
-       * set the extra options for Vegas and Miser
+       * Set the extra options for Vegas and Miser.
       */
       void SetExtraOptions(const ROOT::Math::IOptions & opt);
 
