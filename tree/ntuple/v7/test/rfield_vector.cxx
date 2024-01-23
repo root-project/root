@@ -219,7 +219,7 @@ TEST(RNTuple, RVecTypeErased)
       auto field = RFieldBase::Create("v", "ROOT::VecOps::RVec<int>").Unwrap();
       m->AddField(std::move(field));
       m->Freeze();
-      m->GetDefaultEntry()->CaptureValueUnsafe("v", (void *)&rvec);
+      m->GetDefaultEntry()->BindRawPtr("v", &rvec);
 
       auto w = RNTupleWriter::Recreate(std::move(m), "r", fileGuard.GetPath());
       w->Fill();
