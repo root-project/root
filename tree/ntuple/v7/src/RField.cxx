@@ -675,7 +675,7 @@ ROOT::Experimental::Detail::RFieldBase::RValue ROOT::Experimental::Detail::RFiel
    void *where = operator new(GetValueSize());
    R__ASSERT(where != nullptr);
    GenerateValue(where);
-   return RValue(this, where, true /* isOwning */);
+   return RValue(this, std::shared_ptr<void>(where, RSharedPtrDeleter(GetDeleter())));
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>

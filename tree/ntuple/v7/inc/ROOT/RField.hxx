@@ -112,6 +112,14 @@ protected:
       }
    };
 
+   // We cannot directly use RFieldBase::RDeleter as a shared pointer deleter due to splicing. We use this
+   // wrapper class to store a polymorphic pointer to the actual deleter.
+   struct RSharedPtrDeleter {
+      std::unique_ptr<RFieldBase::RDeleter> fDeleter;
+      void operator()(void *objPtr) { fDeleter->operator()(objPtr, false /* dtorOnly*/); }
+      explicit RSharedPtrDeleter(std::unique_ptr<RFieldBase::RDeleter> deleter) : fDeleter(std::move(deleter)) {}
+   };
+
 public:
    static constexpr std::uint32_t kInvalidTypeVersion = -1U;
    /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
@@ -168,30 +176,10 @@ public:
       friend class RFieldBase;
 
    private:
-      // We cannot directly use RFieldBase::RDeleter due to splicing. We need this wrapper class to store
-      // a polymorphic pointer to the actual deleter.
-      struct RSharedPtrDeleter {
-         std::unique_ptr<RFieldBase::RDeleter> fDeleter;
-         bool fDontDelete = false;
-         void operator()(void *objPtr)
-         {
-            if (fDontDelete)
-               return;
-            fDeleter->operator()(objPtr, false /* dtorOnly*/);
-         }
-         explicit RSharedPtrDeleter(std::unique_ptr<RFieldBase::RDeleter> deleter) : fDeleter(std::move(deleter)) {}
-      };
-
       RFieldBase *fField = nullptr; ///< The field that created the RValue
-      /// Created by RFieldBase::GenerateValue(), SplitValue() or BindValue()
-      std::shared_ptr<void> fObjPtr;
+      std::shared_ptr<void> fObjPtr; ///< Set by Bind() or by RFieldBase::GenerateValue(), SplitValue() or BindValue()
 
-      RValue(RFieldBase *field, void *objPtr, bool isOwning)
-         : fField(field), fObjPtr(std::shared_ptr<void>(objPtr, RSharedPtrDeleter(fField->GetDeleter())))
-      {
-         if (!isOwning)
-            std::get_deleter<RSharedPtrDeleter>(fObjPtr)->fDontDelete = true;
-      }
+      RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
 
    public:
       RValue(const RValue &) = default;
@@ -207,6 +195,7 @@ public:
 
       std::shared_ptr<void> GetPtr() const { return fObjPtr; }
 
+      // TODO(jblomer): remove me
       template <typename T>
       T *Get() const
       {
@@ -593,7 +582,10 @@ public:
    /// The returned bulk is initially empty; RBulk::ReadBulk will construct the array of values
    RBulk GenerateBulk() { return RBulk(this); }
    /// Creates a value from a memory location with an already constructed object
-   RValue BindValue(void *where) { return RValue(this, where, false /* isOwning */); }
+   RValue BindValue(void *where)
+   {
+      return RValue(this, std::shared_ptr<void>(where, [](void *) {}));
+   }
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
    /// correct variant or all the elements of a collection.  The default implementation assumes no sub values
    /// and returns an empty vector.
