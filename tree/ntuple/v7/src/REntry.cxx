@@ -17,7 +17,6 @@
 #include <ROOT/RError.hxx>
 
 #include <algorithm>
-#include <memory>
 
 void ROOT::Experimental::REntry::AddValue(Detail::RFieldBase::RValue &&value)
 {
