@@ -218,10 +218,7 @@ public:
       std::size_t Append() { return fField->Append(fObjPtr.get()); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
       void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
-      void Bind(void *objPtr)
-      {
-         fObjPtr = std::shared_ptr<void>(objPtr, [](void *) {});
-      }
+      void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
 
       template <typename T>
       T *Get() const

@@ -17,6 +17,7 @@
 #include <ROOT/RError.hxx>
 
 #include <algorithm>
+#include <memory>
 
 void ROOT::Experimental::REntry::AddValue(Detail::RFieldBase::RValue &&value)
 {
@@ -28,7 +29,7 @@ void ROOT::Experimental::REntry::CaptureValueUnsafe(std::string_view fieldName, 
    for (std::size_t i = 0; i < fValues.size(); ++i) {
       if (fValues[i].GetField().GetName() != fieldName)
          continue;
-      fValues[i].Bind(where);
+      fValues[i].Bind(std::shared_ptr<void>(where, [](void *) {}));
       return;
    }
    throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
