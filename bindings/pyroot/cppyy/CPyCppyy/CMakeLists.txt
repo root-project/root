@@ -90,7 +90,6 @@ target_include_directories(${libname}
       ${CMAKE_BINARY_DIR}/ginclude
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})

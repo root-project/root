@@ -11,7 +11,6 @@
 
 // Bindings
 #include "Python.h"
-#include "CPyCppyy.h"
 #include "RPyROOTApplication.h"
 
 // ROOT
@@ -50,14 +49,14 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
          argv = new char *[argc];
       } else {
          // Retrieve sys.argv list from Python
-         PyObject *argl = PySys_GetObject(const_cast<char *>("argv"));
+         PyObject *argl = PySys_GetObject("argv");
 
          if (argl && 0 < PyList_Size(argl))
             argc = (int)PyList_GET_SIZE(argl);
 
          argv = new char *[argc];
          for (int i = 1; i < argc; ++i) {
-            char *argi = const_cast<char *>(CPyCppyy_PyText_AsString(PyList_GET_ITEM(argl, i)));
+            char *argi = const_cast<char *>(PyUnicode_AsUTF8(PyList_GET_ITEM(argl, i)));
             if (strcmp(argi, "-") == 0 || strcmp(argi, "--") == 0) {
                // Stop collecting options, the remaining are for the Python script
                argc = i; // includes program name

@@ -15,10 +15,9 @@
 #include "RPyROOTApplication.h"
 
 // Cppyy
-#include "CPyCppyy.h"
-#include "CallContext.h"
-#include "ProxyWrappers.h"
-#include "Utility.h"
+#include "CPyCppyy/API.h"
+#include "../../cppyy/CPyCppyy/src/CallContext.h"
+#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
 
 // ROOT
 #include "TROOT.h"

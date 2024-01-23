@@ -16,16 +16,18 @@ pythonizations.
 */
 #include "PyzCppHelpers.hxx"
 
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
+
 // Call method with signature: obj->meth()
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth)
 {
-   return PyObject_CallMethod(obj, const_cast<char *>(meth), const_cast<char *>(""));
+   return PyObject_CallMethod(obj, meth, "");
 }
 
 // Call method with signature: obj->meth(arg1)
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1)
 {
-   return PyObject_CallMethod(obj, const_cast<char *>(meth), const_cast<char *>("O"), arg1);
+   return PyObject_CallMethod(obj, meth, "O", arg1);
 }
 
 // Convert generic python object into a boolean value
@@ -41,9 +43,14 @@ PyObject *BoolNot(PyObject *value)
 }
 
 // Get the TClass of the C++ object proxied by pyobj
-TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj)
+TClass *GetTClass(const PyObject *pyobj)
 {
-   return TClass::GetClass(Cppyy::GetScopedFinalName(pyobj->ObjectIsA()).c_str());
+   return TClass::GetClass(GetScopedFinalNameFromPyObject(pyobj).c_str());
+}
+
+std::string GetScopedFinalNameFromPyObject(const PyObject *pyobj)
+{
+   return Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance*)pyobj)->ObjectIsA());
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -114,7 +121,7 @@ std::string GetTypestrFromArrayInterface(PyObject *obj)
       PyErr_SetString(PyExc_RuntimeError, "Object not convertible: __array_interface__['typestr'] does not exist.");
       return "";
    }
-   std::string typestr = CPyCppyy_PyText_AsString(pytypestr);
+   std::string typestr = PyUnicode_AsUTF8(pytypestr);
    const auto length = typestr.length();
    if(length != 3) {
       PyErr_SetString(PyExc_RuntimeError,

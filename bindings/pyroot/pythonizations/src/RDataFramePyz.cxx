@@ -9,13 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "CPyCppyy.h"
-#include "CPPInstance.h"
-#include "ProxyWrappers.h"
+#include "CPyCppyy/API.h"
+
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
+
 #include "PyROOTPythonize.h"
 #include "ROOT/RConfig.hxx"
 #include "TInterpreter.h"
-#include "CPyCppyy/API.h"
 
 #include <utility> // std::pair
 #include <sstream> // std::stringstream

@@ -16,6 +16,7 @@ def pythonize_tclass():
     klass = cppyy.gbl.TClass
 
     # DynamicCast
+    klass._TClass__DynamicCast = klass.DynamicCast
     AddTClassDynamicCastPyz(klass)
 
 # Instant pythonization (executed at `import ROOT` time), no need of a

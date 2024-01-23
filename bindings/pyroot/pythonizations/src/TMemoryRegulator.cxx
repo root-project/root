@@ -11,9 +11,8 @@
 
 #include "TMemoryRegulator.h"
 
-#include "ProxyWrappers.h"
-#include "CPPInstance.h"
-#include "CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 
 using namespace CPyCppyy;
 
