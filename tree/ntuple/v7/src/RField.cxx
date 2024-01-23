@@ -1626,7 +1626,7 @@ std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::REnumField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   result.emplace_back(fSubFields[0]->BindValue(value.GetRawPtr()));
+   result.emplace_back(fSubFields[0]->BindValue(value.Get<void>()));
    return result;
 }
 
@@ -1817,8 +1817,8 @@ std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::RProxiedCollectionField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get(),
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.Get<void>());
+   for (auto ptr : RCollectionIterableOnce{value.Get<void>(), fIFuncsWrite, fProxy.get(),
                                            (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
       result.emplace_back(fSubFields[0]->BindValue(ptr));
    }
@@ -2325,7 +2325,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase::RDeleter> ROOT::Experime
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::RRVecField::SplitValue(const RValue &value) const
 {
-   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetRawPtr());
+   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.Get<void>());
 
    std::vector<RValue> result;
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
@@ -2940,8 +2940,8 @@ std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::RMapField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get(), 0U}) {
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.Get<void>());
+   for (auto ptr : RCollectionIterableOnce{value.Get<void>(), fIFuncsWrite, fProxy.get(), 0U}) {
       result.emplace_back(fSubFields[0]->BindValue(ptr));
    }
    return result;
@@ -3002,7 +3002,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
    if (IsDense()) {
       bool mask = false;
       fPrincipalColumn->Append(&mask);
-      return 1 + CallAppendOn(*fSubFields[0], fDefaultItemValue->GetRawPtr());
+      return 1 + CallAppendOn(*fSubFields[0], fDefaultItemValue->Get<void>());
    } else {
       fPrincipalColumn->Append(&fNWritten);
       return sizeof(ClusterSize_t);
@@ -3328,7 +3328,7 @@ std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::RAtomicField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   result.emplace_back(fSubFields[0]->BindValue(value.GetRawPtr()));
+   result.emplace_back(fSubFields[0]->BindValue(value.Get<void>()));
    return result;
 }
 
