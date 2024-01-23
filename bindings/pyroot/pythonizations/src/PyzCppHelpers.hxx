@@ -11,8 +11,8 @@
 #ifndef PYROOT_PYZCPPHELPERS
 #define PYROOT_PYZCPPHELPERS
 
-#include "CPyCppyy.h"
-#include "CPPInstance.h"
+#include "CPyCppyy/API.h"
+
 #include "TClass.h"
 #include "ROOT/RConfig.hxx"
 
@@ -21,7 +21,8 @@
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth);
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1);
 PyObject *BoolNot(PyObject *value);
-TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj);
+TClass *GetTClass(const PyObject *pyobj);
+std::string GetScopedFinalNameFromPyObject(const PyObject *pyobj);
 std::string GetCppTypeFromNumpyType(const std::string& dtype);
 PyObject *GetArrayInterface(PyObject *obj);
 unsigned long long GetDataPointerFromArrayInterface(PyObject *obj);

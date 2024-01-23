@@ -10,12 +10,13 @@
  *************************************************************************/
 
 // Bindings
-#include "CPyCppyy.h"
 #include "CPyCppyy/API.h"
+
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/Utility.h"
+
 #include "PyROOTPythonize.h"
-#include "CPPInstance.h"
-#include "Utility.h"
-#include "ProxyWrappers.h"
 #include "PyzCppHelpers.hxx"
 
 // ROOT
@@ -30,7 +31,7 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
    PyObject *pyclass = nullptr;
    PyObject *pyobject = nullptr;
    int up = 1;
-   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O|i:DynamicCast"),
+   if (!PyArg_ParseTuple(args, "O!O|i:DynamicCast",
                          &CPPInstance_Type, &pyclass,
                          &pyobject,
                          &up))
@@ -42,8 +43,8 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 
    void *address = cl1->DynamicCast(cl2, CPyCppyy::Instance_AsVoidPtr(pyobject), up);
 
-   if (CPPInstance_Check(pyobject)) {
-      address = ((CPPInstance *)pyobject)->GetObject();
+   if (CPyCppyy::Instance_Check(pyobject)) {
+      address = CPyCppyy::Instance_AsVoidPtr(pyobject);
    } else if (PyInt_Check(pyobject) || PyLong_Check(pyobject)) {
       address = (void *)PyLong_AsLongLong(pyobject);
    } else {
@@ -54,13 +55,13 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
    TClass *klass = nullptr;
    if (up) {
       // Upcast: result is a base
-      klass = (TClass *)GetTClass((CPPInstance *)pyclass)->DynamicCast(TClass::Class(), CPyCppyy::Instance_AsVoidPtr(pyclass));
+      klass = (TClass *)GetTClass(pyclass)->DynamicCast(TClass::Class(), CPyCppyy::Instance_AsVoidPtr(pyclass));
    } else {
       // Downcast: result is a derived
-      klass = (TClass *)GetTClass((CPPInstance *)self)->DynamicCast(TClass::Class(), cl1);
+      klass = (TClass *)GetTClass(self)->DynamicCast(TClass::Class(), cl1);
    }
 
-   return BindCppObjectNoCast(address, Cppyy::GetScope(klass->GetName()));
+   return CPyCppyy::Instance_FromVoidPtr(address, klass->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -75,7 +76,6 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 PyObject *PyROOT::AddTClassDynamicCastPyz(PyObject * /* self */, PyObject *args)
 {
    PyObject *pyclass = PyTuple_GetItem(args, 0);
-   Utility::AddToClass(pyclass, "_TClass__DynamicCast", "DynamicCast");
    Utility::AddToClass(pyclass, "DynamicCast", (PyCFunction)TClassDynamicCastPyz);
    Py_RETURN_NONE;
 }

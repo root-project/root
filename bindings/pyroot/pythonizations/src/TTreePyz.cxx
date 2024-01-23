@@ -10,12 +10,20 @@
  *************************************************************************/
 
 // Bindings
-#include "CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
+#include "../../cppyy/CPyCppyy/src/Utility.h"
+
+// Th API changed a bit with the new CPyCppyy, which we can detect by checking
+// if CPYCPPYY_VERSION_HEX is defined.
+#ifdef CPYCPPYY_VERSION_HEX
+#include "../../cppyy/CPyCppyy/src/Dimensions.h"
+#endif
+
+#include "CPyCppyy/API.h"
+
 #include "PyROOTPythonize.h"
-#include "CPPInstance.h"
-#include "ProxyWrappers.h"
-#include "Converters.h"
-#include "Utility.h"
 #include "PyzCppHelpers.hxx"
 
 // ROOT
@@ -65,7 +73,7 @@ static PyObject *BindBranchToProxy(TTree *tree, const char *name, TBranch *branc
       TBranchElement *be = (TBranchElement *)branch;
       if (be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID())) {
          Long_t offset = ((TStreamerElement *)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
-         return BindCppObjectNoCast(be->GetObject() + offset, Cppyy::GetScope(be->GetCurrentClass()->GetName()));
+         return CPyCppyy::Instance_FromVoidPtr(be->GetObject() + offset, be->GetCurrentClass()->GetName());
       }
    }
 
@@ -73,12 +81,12 @@ static PyObject *BindBranchToProxy(TTree *tree, const char *name, TBranch *branc
    if (branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class()) {
       TClass *klass = TClass::GetClass(branch->GetClassName());
       if (klass && branch->GetAddress())
-         return BindCppObjectNoCast(*(void **)branch->GetAddress(), Cppyy::GetScope(branch->GetClassName()));
+         return CPyCppyy::Instance_FromVoidPtr(*(void **)branch->GetAddress(), branch->GetClassName());
 
       // try leaf, otherwise indicate failure by returning a typed null-object
       TObjArray *leaves = branch->GetListOfLeaves();
       if (klass && !tree->GetLeaf(name) && !(leaves->GetSize() && (leaves->First() == leaves->Last())))
-         return BindCppObjectNoCast(nullptr, Cppyy::GetScope(branch->GetClassName()));
+         return CPyCppyy::Instance_FromVoidPtr(nullptr, branch->GetClassName());
    }
 
    return nullptr;
@@ -88,8 +96,13 @@ static PyObject *WrapLeaf(TLeaf *leaf)
 {
    if (1 < leaf->GetLenStatic() || leaf->GetLeafCount()) {
       // array types
-      dim_t dims[] = { 1, leaf->GetNdata() }; // first entry is the number of dims
       std::string typeName = leaf->GetTypeName();
+#ifdef CPYCPPYY_VERSION_HEX
+      dim_t dimsArr[]{ leaf->GetNdata() };
+      CPyCppyy::Dimensions dims{1, dimsArr};
+#else
+      dim_t dims[]{ 1, leaf->GetNdata() }; // first entry is the number of dims
+#endif
       Converter *pcnv = CreateConverter(typeName + '*', dims);
 
       void *address = 0;
@@ -119,14 +132,14 @@ static PyObject *WrapLeaf(TLeaf *leaf)
 }
 
 // Allow access to branches/leaves as if they were data members
-PyObject *GetAttr(CPPInstance *self, PyObject *pyname)
+PyObject *GetAttr(PyObject *self, PyObject *pyname)
 {
-   const char *name_possibly_alias = CPyCppyy_PyText_AsString(pyname);
+   const char *name_possibly_alias = PyUnicode_AsUTF8(pyname);
    if (!name_possibly_alias)
       return 0;
 
    // get hold of actual tree
-   auto tree = (TTree *)GetTClass(self)->DynamicCast(TTree::Class(), self->GetObject());
+   auto tree = (TTree *)GetTClass(self)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(self));
 
    if (!tree) {
       PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
@@ -201,10 +214,9 @@ PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
 
 // Look for the (const char*, void*) overload
    auto argParseStr = "OUO:SetBranchAddress";
-   if (argc == 3 && PyArg_ParseTuple(args, const_cast<char *>(argParseStr), &treeObj, &name, &address)) {
+   if (argc == 3 && PyArg_ParseTuple(args, argParseStr, &treeObj, &name, &address)) {
 
-      auto treeProxy = (CPPInstance *)treeObj;
-      auto tree = (TTree *)GetTClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
+      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
 
       if (!tree) {
          PyErr_SetString(PyExc_TypeError,
@@ -212,7 +224,7 @@ PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
          return nullptr;
       }
 
-      auto branchName = CPyCppyy_PyText_AsString(name);
+      auto branchName = PyUnicode_AsUTF8(name);
       auto branch = tree->GetBranch(branchName);
       if (!branch) {
          PyErr_SetString(PyExc_TypeError, "TTree::SetBranchAddress must be called with a valid branch name");
@@ -222,18 +234,18 @@ PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
       bool isLeafList = branch->IsA() == TBranch::Class();
 
       void *buf = 0;
-      if (CPPInstance_Check(address)) {
+      if (CPyCppyy::Instance_Check(address)) {
          ((CPPInstance *)address)->GetDatamemberCache(); // force creation of cache
 
          if (((CPPInstance *)address)->fFlags & CPPInstance::kIsReference || isLeafList)
-            buf = (void *)((CPPInstance *)address)->GetObject();
+            buf = CPyCppyy::Instance_AsVoidPtr(address);
          else
             buf = (void *)&(((CPPInstance *)address)->GetObjectRaw());
       } else
          Utility::GetBuffer(address, '*', 1, buf, false);
 
       if (buf != nullptr) {
-         auto res = tree->SetBranchAddress(CPyCppyy_PyText_AsString(name), buf);
+         auto res = tree->SetBranchAddress(PyUnicode_AsUTF8(name), buf);
          return PyInt_FromLong(res);
       }
    }
@@ -252,15 +264,14 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
    PyObject *treeObj = nullptr;
    PyObject *name = nullptr, *address = nullptr, *leaflist = nullptr, *bufsize = nullptr;
 
-   if (PyArg_ParseTuple(args, const_cast<char *>("OO!OO!|O!:Branch"),
+   if (PyArg_ParseTuple(args, "OO!OO!|O!:Branch",
                         &treeObj,
-                        &CPyCppyy_PyText_Type, &name,
+                        &PyUnicode_Type, &name,
                         &address,
-                        &CPyCppyy_PyText_Type, &leaflist,
+                        &PyUnicode_Type, &leaflist,
                         &PyInt_Type, &bufsize)) {
 
-      auto treeProxy = (CPPInstance *)treeObj;
-      auto tree = (TTree *)GetTClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
+      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
       if (!tree) {
          PyErr_SetString(PyExc_TypeError, "TTree::Branch must be called with a TTree instance as first argument");
          return nullptr;
@@ -268,17 +279,17 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
 
       void *buf = nullptr;
       if (CPPInstance_Check(address))
-         buf = (void *)((CPPInstance *)address)->GetObject();
+         buf = CPyCppyy::Instance_AsVoidPtr(address);
       else
          Utility::GetBuffer(address, '*', 1, buf, false);
 
       if (buf) {
          TBranch *branch = nullptr;
          if (argc == 5) {
-            branch = tree->Branch(CPyCppyy_PyText_AsString(name), buf, CPyCppyy_PyText_AsString(leaflist),
+            branch = tree->Branch(PyUnicode_AsUTF8(name), buf, PyUnicode_AsUTF8(leaflist),
                                   PyInt_AS_LONG(bufsize));
          } else {
-            branch = tree->Branch(CPyCppyy_PyText_AsString(name), buf, CPyCppyy_PyText_AsString(leaflist));
+            branch = tree->Branch(PyUnicode_AsUTF8(name), buf, PyUnicode_AsUTF8(leaflist));
          }
 
          return BindCppObject(branch, Cppyy::GetScope("TBranch"));
@@ -302,19 +313,19 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
    PyObject *name = nullptr, *clName = nullptr, *address = nullptr, *bufsize = nullptr, *splitlevel = nullptr;
 
    auto bIsMatch = false;
-   if (PyArg_ParseTuple(args, const_cast<char *>("OO!O!O|O!O!:Branch"),
+   if (PyArg_ParseTuple(args, "OO!O!O|O!O!:Branch",
                         &treeObj,
-                        &CPyCppyy_PyText_Type, &name,
-                        &CPyCppyy_PyText_Type, &clName,
+                        &PyUnicode_Type, &name,
+                        &PyUnicode_Type, &clName,
                         &address,
                         &PyInt_Type, &bufsize,
                         &PyInt_Type, &splitlevel)) {
       bIsMatch = true;
    } else {
       PyErr_Clear();
-      if (PyArg_ParseTuple(args, const_cast<char *>("OO!O|O!O!"),
+      if (PyArg_ParseTuple(args, "OO!O|O!O!",
                            &treeObj,
-                           &CPyCppyy_PyText_Type, &name,
+                           &PyUnicode_Type, &name,
                            &address,
                            &PyInt_Type, &bufsize,
                            &PyInt_Type, &splitlevel)) {
@@ -325,14 +336,13 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
    }
 
    if (bIsMatch) {
-      auto treeProxy = (CPPInstance *)treeObj;
-      auto tree = (TTree *)GetTClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
+      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
       if (!tree) {
          PyErr_SetString(PyExc_TypeError, "TTree::Branch must be called with a TTree instance as first argument");
          return nullptr;
       }
 
-      std::string klName = clName ? CPyCppyy_PyText_AsString(clName) : "";
+      std::string klName = clName ? PyUnicode_AsUTF8(clName) : "";
       void *buf = nullptr;
 
       if (CPPInstance_Check(address)) {
@@ -342,7 +352,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
             buf = (void *)&((CPPInstance *)address)->fObject;
 
          if (!clName) {
-            klName = GetTClass((CPPInstance *)address)->GetName();
+            klName = GetTClass(address)->GetName();
             argc += 1;
          }
       } else {
@@ -352,11 +362,11 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
       if (buf && !klName.empty()) {
          TBranch *branch = nullptr;
          if (argc == 4) {
-            branch = tree->Branch(CPyCppyy_PyText_AsString(name), klName.c_str(), buf);
+            branch = tree->Branch(PyUnicode_AsUTF8(name), klName.c_str(), buf);
          } else if (argc == 5) {
-            branch = tree->Branch(CPyCppyy_PyText_AsString(name), klName.c_str(), buf, PyInt_AS_LONG(bufsize));
+            branch = tree->Branch(PyUnicode_AsUTF8(name), klName.c_str(), buf, PyInt_AS_LONG(bufsize));
          } else if (argc == 6) {
-            branch = tree->Branch(CPyCppyy_PyText_AsString(name), klName.c_str(), buf, PyInt_AS_LONG(bufsize),
+            branch = tree->Branch(PyUnicode_AsUTF8(name), klName.c_str(), buf, PyInt_AS_LONG(bufsize),
                                   PyInt_AS_LONG(splitlevel));
          }
 

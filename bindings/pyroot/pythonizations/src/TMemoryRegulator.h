@@ -34,8 +34,8 @@
 // Bindings
 // CPyCppyy.h must be go first, since it includes Python.h, which must be
 // included before any standard header
-#include "CPyCppyy.h"
-#include "MemoryRegulator.h"
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/MemoryRegulator.h"
 
 // ROOT
 #include "TObject.h"
