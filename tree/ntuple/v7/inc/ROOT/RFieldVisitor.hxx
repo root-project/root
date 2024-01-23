@@ -191,9 +191,9 @@ private:
    void PrintCollection(const Detail::RFieldBase &field);
 
 public:
-   RPrintValueVisitor(Detail::RFieldBase::RValue &&value, std::ostream &output, unsigned int level = 0,
+   RPrintValueVisitor(Detail::RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
-      : fValue(std::move(value)), fOutput{output}, fLevel(level), fPrintOptions(options)
+      : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options)
    {
    }
 
