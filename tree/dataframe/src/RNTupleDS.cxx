@@ -220,7 +220,7 @@ public:
          fValue->Read(entry - fEntryOffset);
          fLastEntry = entry;
       }
-      return fValue->GetRawPtr();
+      return fValue->Get<void>();
    }
 };
 
