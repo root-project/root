@@ -650,7 +650,7 @@ TEST(RNTuple, BareEntry)
       auto e2 = model.CreateBareEntry();
       EXPECT_EQ(nullptr, e2->Get<float>("pt"));
       float pt = 2.0;
-      e2->CaptureValueUnsafe("pt", &pt);
+      e2->BindRawPtr("pt", &pt);
 
       ntuple->Fill(*e1);
       ntuple->Fill(*e2);
