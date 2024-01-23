@@ -250,7 +250,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          if (isCString) {
             branchBufferSize = l->GetMaximum();
             f.fValue = std::make_unique<Detail::RFieldBase::RValue>(field->GenerateValue());
-            f.fFieldBuffer = f.fValue->GetRawPtr();
+            f.fFieldBuffer = f.fValue->Get<void>();
             fImportTransformations.emplace_back(
                std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
          } else {
@@ -270,7 +270,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
             recordItems.emplace_back(std::move(field));
          } else if (isLeafCountArray) {
             f.fValue = std::make_unique<Detail::RFieldBase::RValue>(field->GenerateValue());
-            f.fFieldBuffer = f.fValue->GetRawPtr();
+            f.fFieldBuffer = f.fValue->Get<void>();
             f.fIsInUntypedCollection = true;
             const std::string countleafName = countleaf->GetName();
             fLeafCountCollections[countleafName].fCollectionModel->AddField(std::move(field));
