@@ -205,20 +205,12 @@ public:
 
       RValue GetNonOwningCopy() const { return RValue(fField, fObjPtr.get(), false); }
 
-      template <typename T>
-      void *Release()
-      {
-         std::get_deleter<RSharedPtrDeleter>(fObjPtr)->fDontDelete = true;
-         void *result = fObjPtr.get();
-         fObjPtr = nullptr;
-         return static_cast<T *>(result);
-      }
-      void TakeOwnership() { std::get_deleter<RSharedPtrDeleter>(fObjPtr)->fDontDelete = false; }
-
       std::size_t Append() { return fField->Append(fObjPtr.get()); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
       void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
       void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
+
+      std::shared_ptr<void> GetPtr() const { return fObjPtr; }
 
       template <typename T>
       T *Get() const
