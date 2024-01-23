@@ -9,9 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "CPyCppyy.h"
-#include "CPPInstance.h"
-#include "ProxyWrappers.h"
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
+
 #include "PyROOTPythonize.h"
 #include "TInterpreter.h"
 #include "PyzCppHelpers.hxx"

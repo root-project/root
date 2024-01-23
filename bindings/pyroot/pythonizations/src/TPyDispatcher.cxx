@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// Bindings
-#include "CPyCppyy.h"
 #include "TPyDispatcher.h"
-#include "ProxyWrappers.h"
+
+// Bindings
+#include "CPyCppyy/API.h"
 
 // ROOT
 #include "TClass.h"
@@ -113,7 +113,7 @@ PyObject *TPyDispatcher::DispatchVA(const char *format, ...)
 
 PyObject *TPyDispatcher::DispatchVA1(const char *clname, void *obj, const char *format, ...)
 {
-   PyObject *pyobj = CPyCppyy::BindCppObject(obj, Cppyy::GetScope(clname), kFALSE /* isRef */);
+   PyObject *pyobj = CPyCppyy::Instance_FromVoidPtr(obj, clname);
    if (!pyobj) {
       PyErr_Print();
       return 0;
@@ -171,9 +171,9 @@ PyObject *TPyDispatcher::DispatchVA1(const char *clname, void *obj, const char *
 PyObject *TPyDispatcher::Dispatch(TPad *selpad, TObject *selected, Int_t event)
 {
    PyObject *args = PyTuple_New(3);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::BindCppObject(selpad, Cppyy::GetScope("TPad")));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::BindCppObject(selected, Cppyy::GetScope("TObject")));
-   PyTuple_SET_ITEM(args, 2, PyInt_FromLong(event));
+   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(selpad, "TPad"));
+   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(selected, "TObject"));
+   PyTuple_SET_ITEM(args, 2, PyLong_FromLong(event));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
    Py_XDECREF(args);
@@ -191,10 +191,10 @@ PyObject *TPyDispatcher::Dispatch(TPad *selpad, TObject *selected, Int_t event)
 PyObject *TPyDispatcher::Dispatch(Int_t event, Int_t x, Int_t y, TObject *selected)
 {
    PyObject *args = PyTuple_New(4);
-   PyTuple_SET_ITEM(args, 0, PyInt_FromLong(event));
-   PyTuple_SET_ITEM(args, 1, PyInt_FromLong(x));
-   PyTuple_SET_ITEM(args, 2, PyInt_FromLong(y));
-   PyTuple_SET_ITEM(args, 3, CPyCppyy::BindCppObject(selected, Cppyy::GetScope("TObject")));
+   PyTuple_SET_ITEM(args, 0, PyLong_FromLong(event));
+   PyTuple_SET_ITEM(args, 1, PyLong_FromLong(x));
+   PyTuple_SET_ITEM(args, 2, PyLong_FromLong(y));
+   PyTuple_SET_ITEM(args, 3, CPyCppyy::Instance_FromVoidPtr(selected, "TObject"));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
    Py_XDECREF(args);
@@ -212,9 +212,9 @@ PyObject *TPyDispatcher::Dispatch(Int_t event, Int_t x, Int_t y, TObject *select
 PyObject *TPyDispatcher::Dispatch(TVirtualPad *pad, TObject *obj, Int_t event)
 {
    PyObject *args = PyTuple_New(3);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::BindCppObject(pad, Cppyy::GetScope("TVirtualPad")));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::BindCppObject(obj, Cppyy::GetScope("TObject")));
-   PyTuple_SET_ITEM(args, 2, PyInt_FromLong(event));
+   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(pad, "TVirtualPad"));
+   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(obj, "TObject"));
+   PyTuple_SET_ITEM(args, 2, PyLong_FromLong(event));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
    Py_XDECREF(args);
@@ -232,8 +232,8 @@ PyObject *TPyDispatcher::Dispatch(TVirtualPad *pad, TObject *obj, Int_t event)
 PyObject *TPyDispatcher::Dispatch(TGListTreeItem *item, TDNDData *data)
 {
    PyObject *args = PyTuple_New(2);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::BindCppObject(item, Cppyy::GetScope("TGListTreeItem")));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::BindCppObject(data, Cppyy::GetScope("TDNDData")));
+   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(item, "TGListTreeItem"));
+   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(data, "TDNDData"));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
    Py_XDECREF(args);
@@ -252,7 +252,7 @@ PyObject *TPyDispatcher::Dispatch(const char *name, const TList *attr)
 {
    PyObject *args = PyTuple_New(2);
    PyTuple_SET_ITEM(args, 0, PyBytes_FromString(name));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::BindCppObject((void *)attr, Cppyy::GetScope("TList")));
+   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr((void *)attr, "TList"));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
    Py_XDECREF(args);
@@ -270,8 +270,8 @@ PyObject *TPyDispatcher::Dispatch(const char *name, const TList *attr)
 PyObject *TPyDispatcher::Dispatch(TSlave *slave, TProofProgressInfo *pi)
 {
    PyObject *args = PyTuple_New(2);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::BindCppObject(slave, Cppyy::GetScope("TSlave")));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::BindCppObject(pi, Cppyy::GetScope("TProofProgressInfo")));
+   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(slave, "TSlave"));
+   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(pi, "TProofProgressInfo"));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
    Py_XDECREF(args);

@@ -11,10 +11,14 @@
 
 #include "Python.h"
 
-#include "CPyCppyy.h"
+#include "CPyCppyy/API.h"
+
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/Utility.h"
+
 #include "PyROOTPythonize.h"
-#include "CPPInstance.h"
-#include "Utility.h"
+#include "PyzCppHelpers.hxx"
+
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
@@ -22,11 +26,6 @@
 #include <map>
 
 using namespace CPyCppyy;
-
-static std::string GetCppName(const CPPInstance *self)
-{
-   return Cppyy::GetScopedFinalName(self->ObjectIsA());
-}
 
 // We take as unique identifier the declId of the class to
 // treat the case where a class is loaded, an instance printed,
@@ -41,16 +40,16 @@ static ULong64_t GetClassID(const char *clName)
    return 0;
 }
 
-PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
+PyObject *ClingPrintValue(PyObject *self, PyObject * /* args */)
 {
    // Map holding the classID of the classes and the pointer
    // to the printer function.
    static std::map<ULong64_t, void *> declIDPrinterMap;
 
-   auto cppObj = self->GetObject();
+   auto cppObj = CPyCppyy::Instance_AsVoidPtr(self);
    if (!cppObj)
       // Proxied cpp object is null, use cppyy's generic __repr__
-      return PyObject_Repr((PyObject*)self);
+      return PyObject_Repr(self);
 
    // We jit the helper only once, at the first invocation of any
    // printer. The integer parameter is there to make sure we have
@@ -67,7 +66,7 @@ PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
       gInterpreter->Declare(printerCode.c_str());
    }
 
-   const std::string className = GetCppName(self);
+   const std::string className = GetScopedFinalNameFromPyObject(self);
 
    std::string printResult;
 
@@ -93,9 +92,9 @@ PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
 
    if (printResult.find("@0x") == 0) {
       // Fall back to __repr__ if we just get an address from cling
-      return PyObject_Repr((PyObject*)self);
+      return PyObject_Repr(self);
    } else {
-      return CPyCppyy_PyText_FromString(printResult.c_str());
+      return PyUnicode_FromString(printResult.c_str());
    }
 }
 

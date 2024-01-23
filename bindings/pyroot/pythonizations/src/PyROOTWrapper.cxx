@@ -14,8 +14,7 @@
 #include "TMemoryRegulator.h"
 
 // Cppyy
-#include "CPyCppyy.h"
-#include "ProxyWrappers.h"
+#include "CPyCppyy/API.h"
 
 // ROOT
 #include "TROOT.h"
@@ -32,11 +31,11 @@ using namespace PyROOT;
 
 namespace {
 
-static void AddToGlobalScope(const char *label, const char * /* hdr */, TObject *obj, Cppyy::TCppType_t klass)
+static void AddToGlobalScope(const char *label, TObject *obj, const char * classname)
 {
    // Bind the given object with the given class in the global scope with the
    // given label for its reference.
-   PyModule_AddObject(gRootModule, const_cast<char *>(label), CPyCppyy::BindCppObjectNoCast(obj, klass));
+   PyModule_AddObject(gRootModule, label, CPyCppyy::Instance_FromVoidPtr(obj, classname));
 }
 
 } // unnamed namespace
@@ -58,9 +57,9 @@ void PyROOT::Init()
    gROOT->GetListOfCleanups()->Add(&GetMemoryRegulator());
 
    // Bind ROOT globals that will be needed in ROOT.py
-   AddToGlobalScope("gROOT", "TROOT.h", gROOT, Cppyy::GetScope(gROOT->IsA()->GetName()));
-   AddToGlobalScope("gSystem", "TSystem.h", gSystem, Cppyy::GetScope(gSystem->IsA()->GetName()));
-   AddToGlobalScope("gInterpreter", "TInterpreter.h", gInterpreter, Cppyy::GetScope(gInterpreter->IsA()->GetName()));
+   AddToGlobalScope("gROOT", gROOT, gROOT->IsA()->GetName());
+   AddToGlobalScope("gSystem", gSystem, gSystem->IsA()->GetName());
+   AddToGlobalScope("gInterpreter", gInterpreter, gInterpreter->IsA()->GetName());
 }
 
 PyObject *PyROOT::ClearProxiedObjects(PyObject * /* self */, PyObject * /* args */)
