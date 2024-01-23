@@ -168,68 +168,65 @@ public:
       friend class RFieldBase;
 
    private:
+      // We cannot directly use RFieldBase::RDeleter due to splicing. We need this wrapper class to store
+      // a polymorphic pointer to the actual deleter.
+      struct RSharedPtrDeleter {
+         std::unique_ptr<RFieldBase::RDeleter> fDeleter;
+         bool fDontDelete = false;
+         void operator()(void *objPtr)
+         {
+            if (fDontDelete)
+               return;
+            fDeleter->operator()(objPtr, false /* dtorOnly*/);
+         }
+         explicit RSharedPtrDeleter(std::unique_ptr<RFieldBase::RDeleter> deleter) : fDeleter(std::move(deleter)) {}
+      };
+
       RFieldBase *fField = nullptr; ///< The field that created the RValue
-      std::unique_ptr<RFieldBase::RDeleter> fDeleter;
-      /// Created by RFieldBase::GenerateValue() or a non-owning pointer from SplitValue() or BindValue()
-      void *fObjPtr = nullptr;
+      /// Created by RFieldBase::GenerateValue(), SplitValue() or BindValue()
+      std::shared_ptr<void> fObjPtr;
       bool fIsOwning = false; ///< If true, fObjPtr is destroyed in the destructor
 
       RValue(RFieldBase *field, void *objPtr, bool isOwning)
-         : fField(field), fDeleter(fField->GetDeleter()), fObjPtr(objPtr), fIsOwning(isOwning)
+         : fField(field),
+           fObjPtr(std::shared_ptr<void>(objPtr, RSharedPtrDeleter(fField->GetDeleter()))),
+           fIsOwning(isOwning)
       {
-      }
-
-      void DestroyIfOwning()
-      {
-         if (fIsOwning)
-            fDeleter->operator()(fObjPtr, false /* dtorOnly */);
+         if (!fIsOwning)
+            std::get_deleter<RSharedPtrDeleter>(fObjPtr)->fDontDelete = true;
       }
 
    public:
       RValue(const RValue &) = delete;
       RValue &operator=(const RValue &) = delete;
-      RValue(RValue &&other) : fField(other.fField), fDeleter(fField->GetDeleter()), fObjPtr(other.fObjPtr)
-      {
-         std::swap(fIsOwning, other.fIsOwning);
-      }
-      RValue &operator=(RValue &&other)
-      {
-         DestroyIfOwning();
-         fIsOwning = false;
-         std::swap(fField, other.fField);
-         std::swap(fDeleter, other.fDeleter);
-         std::swap(fObjPtr, other.fObjPtr);
-         std::swap(fIsOwning, other.fIsOwning);
-         return *this;
-      }
-      ~RValue() { DestroyIfOwning(); }
+      RValue(RValue &&other) = default;
+      RValue &operator=(RValue &&other) = default;
+      ~RValue() = default;
 
-      RValue GetNonOwningCopy() const { return RValue(fField, fObjPtr, false); }
+      RValue GetNonOwningCopy() const { return RValue(fField, fObjPtr.get(), false); }
 
       template <typename T>
       void *Release()
       {
-         fIsOwning = false;
-         void *result = nullptr;
-         std::swap(result, fObjPtr);
+         std::get_deleter<RSharedPtrDeleter>(fObjPtr)->fDontDelete = true;
+         void *result = fObjPtr.get();
+         fObjPtr = nullptr;
          return static_cast<T *>(result);
       }
-      void TakeOwnership() { fIsOwning = true; }
+      void TakeOwnership() { std::get_deleter<RSharedPtrDeleter>(fObjPtr)->fDontDelete = false; }
 
-      std::size_t Append() { return fField->Append(fObjPtr); }
-      void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
-      void Read(RClusterIndex clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
+      std::size_t Append() { return fField->Append(fObjPtr.get()); }
+      void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
+      void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
       void Bind(void *objPtr)
       {
-         DestroyIfOwning();
-         fObjPtr = objPtr;
-         fIsOwning = false;
+         fObjPtr = std::shared_ptr<void>(objPtr, [](void *) {});
       }
 
       template <typename T>
       T *Get() const
       {
-         return static_cast<T *>(fObjPtr);
+         return static_cast<T *>(fObjPtr.get());
       }
       const RFieldBase &GetField() const { return *fField; }
    }; // class RValue
