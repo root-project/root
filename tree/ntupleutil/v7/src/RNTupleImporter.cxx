@@ -357,7 +357,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       fEntry->BindRawPtr(f.fField->GetName(), f.fFieldBuffer);
    }
    for (const auto &[_, c] : fLeafCountCollections) {
-      fEntry->BindRawPtr(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
+      fEntry->BindRawPtr<void>(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
    }
 
    if (!fIsQuiet)
