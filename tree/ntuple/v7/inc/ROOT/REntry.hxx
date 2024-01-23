@@ -23,6 +23,7 @@
 #include <TError.h>
 
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -99,21 +100,18 @@ public:
    template <typename T>
    T *Get(std::string_view fieldName) const
    {
-      for (auto& v : fValues) {
-         if (v.GetField().GetName() == fieldName) {
-            R__ASSERT(v.GetField().GetType() == RField<T>::TypeName());
-            return v.Get<T>();
-         }
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
-   }
+      for (auto &v : fValues) {
+         if (v.GetField().GetName() != fieldName)
+            continue;
 
-   void *GetRawPtr(std::string_view fieldName) const
-   {
-      for (auto& v : fValues) {
-         if (v.GetField().GetName() == fieldName) {
-            return v.GetRawPtr();
+         if constexpr (std::is_void_v<T>)
+            return v.Get<T>();
+
+         if (v.GetField().GetType() != RField<T>::TypeName()) {
+            throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
+                                     v.GetField().GetType() + " vs. " + RField<T>::TypeName()));
          }
+         return v.Get<T>();
       }
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
