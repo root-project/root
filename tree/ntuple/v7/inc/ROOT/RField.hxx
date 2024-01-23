@@ -185,14 +185,11 @@ public:
       RFieldBase *fField = nullptr; ///< The field that created the RValue
       /// Created by RFieldBase::GenerateValue(), SplitValue() or BindValue()
       std::shared_ptr<void> fObjPtr;
-      bool fIsOwning = false; ///< If true, fObjPtr is destroyed in the destructor
 
       RValue(RFieldBase *field, void *objPtr, bool isOwning)
-         : fField(field),
-           fObjPtr(std::shared_ptr<void>(objPtr, RSharedPtrDeleter(fField->GetDeleter()))),
-           fIsOwning(isOwning)
+         : fField(field), fObjPtr(std::shared_ptr<void>(objPtr, RSharedPtrDeleter(fField->GetDeleter())))
       {
-         if (!fIsOwning)
+         if (!isOwning)
             std::get_deleter<RSharedPtrDeleter>(fObjPtr)->fDontDelete = true;
       }
 
