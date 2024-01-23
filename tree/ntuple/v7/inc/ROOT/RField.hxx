@@ -197,13 +197,11 @@ public:
       }
 
    public:
-      RValue(const RValue &) = delete;
-      RValue &operator=(const RValue &) = delete;
+      RValue(const RValue &) = default;
+      RValue &operator=(const RValue &) = default;
       RValue(RValue &&other) = default;
       RValue &operator=(RValue &&other) = default;
       ~RValue() = default;
-
-      RValue GetNonOwningCopy() const { return RValue(fField, fObjPtr.get(), false); }
 
       std::size_t Append() { return fField->Append(fObjPtr.get()); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
