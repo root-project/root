@@ -95,10 +95,29 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
-   void BindValue(std::string_view fieldName, std::shared_ptr<void> objPtr);
-   void BindRawPtr(std::string_view fieldName, void *rawPtr)
+   template <typename T>
+   void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
-      BindValue(fieldName, std::shared_ptr<void>(rawPtr, [](void *) {}));
+      for (auto &v : fValues) {
+         if (v.GetField().GetName() != fieldName)
+            continue;
+
+         if constexpr (!std::is_void_v<T>) {
+            if (v.GetField().GetType() != RField<T>::TypeName()) {
+               throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
+                                        v.GetField().GetType() + " vs. " + RField<T>::TypeName()));
+            }
+         }
+         v.Bind(objPtr);
+         return;
+      }
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   }
+
+   template <typename T>
+   void BindRawPtr(std::string_view fieldName, T *rawPtr)
+   {
+      BindValue(fieldName, std::shared_ptr<T>(rawPtr, [](T *) {}));
    }
 
    template <typename T>

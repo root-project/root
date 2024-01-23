@@ -23,14 +23,3 @@ void ROOT::Experimental::REntry::AddValue(Detail::RFieldBase::RValue &&value)
 {
    fValues.emplace_back(std::move(value));
 }
-
-void ROOT::Experimental::REntry::BindValue(std::string_view fieldName, std::shared_ptr<void> objName)
-{
-   for (std::size_t i = 0; i < fValues.size(); ++i) {
-      if (fValues[i].GetField().GetName() != fieldName)
-         continue;
-      fValues[i].Bind(objName);
-      return;
-   }
-   throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
-}
