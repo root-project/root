@@ -45,6 +45,7 @@ The following people have contributed to this new version:
   Please use the RooDataSet constructors that take RooFit command arguments instead
 - ROOT does not longer support Python 2. The minimum required Python version to build ROOT is 3.8.
 - Support for wildcard imports like `from ROOT import *` is dropped from PyROOT
+- Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
 
 ## Core Libraries
 
