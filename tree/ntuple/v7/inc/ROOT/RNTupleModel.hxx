@@ -322,7 +322,7 @@ public:
       std::unique_ptr<RNTupleModel> collectionModel);
 
    std::unique_ptr<REntry> CreateEntry() const;
-   /// In a bare entry, all values point to nullptr. The resulting entry shall use CaptureValueUnsafe() in order
+   /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
    std::unique_ptr<REntry> CreateBareEntry() const;
    REntry *GetDefaultEntry() const;
