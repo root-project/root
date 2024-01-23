@@ -23,20 +23,20 @@
  *    provide routines to access the result of the decomposition L and its
  *    inverse
  * @date January 20th 2024
- *    CholeskyDecompGenDim allowed copying and moving, but did not provide
- *    copy and move constructors or assignment operators, resulting in
- *    incorrect code and potential memory corruption, if somebody tried to
- *    copy/move a CholeskyDecompGenDim instance. Since we're in a C++17
- *    world now, use std::unique_ptr<F[]> and std::make_unique to get rid of
- *    explicit memory management in CholeskyDecompGenDim, and provide correct
- *    code for copy construction and assignment (the default constructor and
- *    destructor, and the move construction and assignment code auto-generated
- *    by the compiler are fine, and these methods are defaulted).
+ *    CholeskyDecompGenDim allowed copying and moving, but did not provide copy
+ *    and move constructors or assignment operators, resulting in incorrect
+ *    code and potential memory corruption, if somebody tried to copy/move a
+ *    CholeskyDecompGenDim instance. Since we're in a C++17 world now, use the
+ *    excellent movable std::vector<F> to get rid of explicit memory management
+ *    in CholeskyDecompGenDim, and thus provide correct code for copy/move
+ *    construction and assignment. Moreover, the provided releaseWorkspace
+ *    method allows reuse of the allocated vector inside a CholeskyDecompGenDim
+ *    to reduce the cost of repeated matrix decomposition.
  */
 
 #include <cmath>
+#include <vector>
 #include <algorithm>
-#include <memory>
 
 namespace ROOT {
 
@@ -103,7 +103,7 @@ public:
     * operator()(int i, int j) for access to elements)
     */
    template<class M> CholeskyDecomp(const M& m) :
-      fL( ), fOk(false)
+      fOk(false)
    {
       using CholeskyDecompHelpers::_decomposer;
       fOk = _decomposer<F, N, M>()(fL, m);
@@ -121,7 +121,7 @@ public:
     * (i * (i + 1)) / 2 + j
     */
    template<typename G> CholeskyDecomp(G* m) :
-      fL(), fOk(false)
+      fOk(false)
    {
       using CholeskyDecompHelpers::_decomposer;
       using CholeskyDecompHelpers::PackedArrayAdapter;
@@ -327,37 +327,10 @@ private:
    /// lower triangular matrix L
    /** lower triangular matrix L, packed storage, with diagonal
     * elements pre-inverted */
-   std::unique_ptr<F[]> fL;
+   std::vector<F> fL;
    /// flag indicating a successful decomposition
    bool fOk = false;
 public:
-   // move construction and assignment, and destruction do the right thing, so
-   // use the versions that the compiler generates for us...
-   CholeskyDecompGenDim(CholeskyDecompGenDim&&) = default;
-   CholeskyDecompGenDim& operator=(CholeskyDecompGenDim&&) = default;
-   ~CholeskyDecompGenDim() = default;
-
-   /// copy constructor
-   CholeskyDecompGenDim(const CholeskyDecompGenDim& other)
-           : fN(other.fN), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2)),
-             fOk(other.fOk)
-   {
-       std::copy(other.fL, other.fL + (fN * (fN + 1)) / 2, fL);
-   }
-   /// (copy) assignment
-   CholeskyDecompGenDim& operator=(const CholeskyDecompGenDim& other)
-   {
-       if (this != &other) {
-           // check if fL is large enough to hold other, if not, reallocate
-           if (fN < other.fN)
-               fL = std::make_unique<F[]>((other.fN * (other.fN + 1)) / 2);
-           fN = other.fN;
-           std::copy(other.fL, other.fL + (fN * (fN + 1)) / 2, fL);
-           fOk = other.fOk;
-       }
-       return *this;
-   }
-
    /// perform a Cholesky decomposition
    /** perform a Cholesky decomposition of a symmetric positive
     * definite matrix m
@@ -365,12 +338,18 @@ public:
     * this is the constructor to uses with an SMatrix (and objects
     * that behave like an SMatrix in terms of using
     * operator()(int i, int j) for access to elements)
+    *
+    * The optional wksp parameter that can be used to avoid (re-)allocations
+    * on repeated decompositions of the same size (by passing a workspace of
+    * size N * (N + 1), or reusing one returned from releaseWorkspace by a
+    * previous decomposition).
     */
-   template<class M> CholeskyDecompGenDim(unsigned N, const M& m) :
-      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2))
+   template<class M> CholeskyDecompGenDim(unsigned N, const M& m, std::vector<F> wksp = {}) :
+      fN(N), fL(std::move(wksp))
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
-      fOk = _decomposerGenDim<F, M>()(fL.get(), m, fN);
+      if (fL.size() < fN * (fN + 1) / 2) fL.resize(fN * (fN + 1) / 2);
+      fOk = _decomposerGenDim<F, M>()(fL.data(), m, fN);
    }
 
    /// perform a Cholesky decomposition
@@ -383,14 +362,60 @@ public:
     * NOTE: the matrix is given in packed representation, matrix
     * element m(i,j) (j <= i) is supposed to be in array element
     * (i * (i + 1)) / 2 + j
+    *
+    * The optional wksp parameter that can be used to avoid (re-)allocations
+    * on repeated decompositions of the same size (by passing a workspace of
+    * size N * (N + 1), or reusing one returned from releaseWorkspace by a
+    * previous decomposition).
     */
-   template<typename G> CholeskyDecompGenDim(unsigned N, G* m) :
-      fN(N), fL(std::make_unique<F[]>((fN * (fN + 1)) / 2))
+   template<typename G> CholeskyDecompGenDim(unsigned N, G* m, std::vector<F> wksp = {}) :
+      fN(N), fL(std::move(wksp))
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
       using CholeskyDecompHelpers::PackedArrayAdapter;
+      if (fL.size() < fN * (fN + 1) / 2) fL.resize(fN * (fN + 1) / 2);
       fOk = _decomposerGenDim<F, PackedArrayAdapter<G> >()(
-         fL.get(), PackedArrayAdapter<G>(m), fN);
+         fL.data(), PackedArrayAdapter<G>(m), fN);
+   }
+
+   /// release the workspace of the decomposition for reuse
+   /** release the workspace of the decomposition for reuse
+    *
+    * If you use CholeskyDecompGenDim repeatedly with the same size N, it is
+    * possible to avoid repeatedly allocating the internal workspace. The
+    * constructors take an optional wksp argument, and this routine can be
+    * called to get the workspace out of a decomposition when you are done
+    * with it.
+    *
+    * Please note that once you call releaseWorkspace, you cannot do further
+    * operations on the decomposition object (and this is indicated by having
+    * it return false when you call ok()).
+    *
+    * Here is an example snippet of (pseudo-)code which illustrates the use of
+    * releaseWorkspace for inverting the covariance matrices of a number of
+    * items (which must all be of the same size):
+    *
+    * @code
+    * std::vector<float> wksp;
+    * for (const auto& item: items) {
+    *     CholeskyDecompGenDim decomp(item.cov().size(), item.cov(),
+    *                                 std::move(wksp));
+    *     if (decomp.ok()) {
+    *         decomp.Invert(item.invcov());
+    *     }
+    *     wksp = std::move(decomp.releaseWorkspace());
+    * }
+    * @endcode
+    *
+    * In the above code snippet, only the first CholeskyDecompGenDim
+    * constructor call will allocate memory. Subsequent calls in the loop will
+    * reuse the buffer from the first iteration.
+    */
+   std::vector<F> releaseWorkspace()
+   {
+       fN = 0;
+       fOk = false;
+       return std::move(fL);
    }
 
    /// returns true if decomposition was successful
@@ -411,7 +436,7 @@ public:
    template<class V> bool Solve(V& rhs) const
    {
       using CholeskyDecompHelpers::_solverGenDim;
-      if (fOk) _solverGenDim<F,V>()(rhs, fL.get(), fN);
+      if (fOk) _solverGenDim<F,V>()(rhs, fL.data(), fN);
       return fOk;
    }
 
@@ -424,7 +449,10 @@ public:
    template<class M> bool Invert(M& m) const
    {
       using CholeskyDecompHelpers::_inverterGenDim;
-      if (fOk) _inverterGenDim<F,M>()(m, fL.get(), fN);
+      if (fOk) {
+         auto wksp = fL;
+	 _inverterGenDim<F,M>()(m, fN, wksp.data());
+      }
       return fOk;
    }
 
@@ -443,8 +471,9 @@ public:
       using CholeskyDecompHelpers::_inverterGenDim;
       using CholeskyDecompHelpers::PackedArrayAdapter;
       if (fOk) {
+         auto wksp = fL;
          PackedArrayAdapter<G> adapted(m);
-         _inverterGenDim<F,PackedArrayAdapter<G> >()(adapted, fL.get(), fN);
+         _inverterGenDim<F,PackedArrayAdapter<G> >()(adapted, fN, wksp.data());
       }
       return fOk;
    }
@@ -458,7 +487,7 @@ public:
    template<class M> bool getL(M& m) const
    {
       if (!fOk) return false;
-      const F* L = fL.get();
+      const F* L = fL.data();
       for (unsigned i = 0; i < fN; ++i) {
          // zero upper half of matrix
          for (unsigned j = i + 1; j < fN; ++j)
@@ -484,7 +513,7 @@ public:
    template<typename G> bool getL(G* m) const
    {
        if (!fOk) return false;
-       const F* L = fL.get();
+       const F* L = fL.data();
        // copy L
        for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
           m[i] = L[i];
@@ -504,7 +533,7 @@ public:
    template<class M> bool getLi(M& m) const
    {
       if (!fOk) return false;
-      const F* L = fL.get();
+      const F* L = fL.data();
       for (unsigned i = 0; i < fN; ++i) {
          // zero lower half of matrix
          for (unsigned j = i + 1; j < fN; ++j)
@@ -536,7 +565,7 @@ public:
    template<typename G> bool getLi(G* m) const
    {
       if (!fOk) return false;
-      const F* L = fL.get();
+      const F* L = fL.data();
       // copy L
       for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
          m[i] = L[i];
@@ -626,18 +655,14 @@ namespace CholeskyDecompHelpers {
    template<class F, class M> struct _inverterGenDim
    {
       /// method to do the inversion
-      void operator()(M& dst, const F* src, unsigned N) const
+      void operator()(M& dst, unsigned N, F* wksp) const
       {
-         // make working copy
-         auto l_ = std::make_unique<F[]>(N * (N + 1) / 2);
-         F* l = l_.get();
-         std::copy(src, src + ((N * (N + 1)) / 2), l);
-         // ok, next step: invert off-diagonal part of matrix
-         F* base1 = &l[1];
+         // invert off-diagonal part of matrix
+         F* base1 = &wksp[1];
          for (unsigned i = 1; i < N; base1 += ++i) {
             for (unsigned j = 0; j < i; ++j) {
                F tmp = F(0.0);
-               const F *base2 = &l[(i * (i - 1)) / 2];
+               const F *base2 = &wksp[(i * (i - 1)) / 2];
                for (unsigned k = i; k-- > j; base2 -= k)
                   tmp -= base1[k] * base2[j];
                base1[j] = tmp * base1[i];
@@ -648,7 +673,7 @@ namespace CholeskyDecompHelpers {
          for (unsigned i = N; i--; ) {
             for (unsigned j = i + 1; j--; ) {
                F tmp = F(0.0);
-               base1 = &l[(N * (N - 1)) / 2];
+               base1 = &wksp[(N * (N - 1)) / 2];
                for (unsigned k = N; k-- > i; base1 -= k)
                   tmp += base1[i] * base1[j];
                dst(i, j) = tmp;
@@ -662,7 +687,12 @@ namespace CholeskyDecompHelpers {
    {
       /// method to do the inversion
       void operator()(M& dst, const F* src) const
-      { return _inverterGenDim<F, M>()(dst, src, N); }
+      {
+         // make working copy
+         F wksp[N * (N + 1) / 2];
+         std::copy(src, src + ((N * (N + 1)) / 2), wksp);
+         return _inverterGenDim<F, M>()(dst, N, wksp);
+      }
    };
 
    /// struct to solve a linear system using its Cholesky decomposition (generalised dimensionality)
