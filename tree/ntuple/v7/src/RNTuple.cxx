@@ -152,13 +152,13 @@ ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
    return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceFriends>("_friends", sources));
 }
 
-ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
+const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
       fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
       ConnectModel(*fModel);
    }
-   return fModel.get();
+   return *fModel;
 }
 
 void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
@@ -235,7 +235,7 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &output)
 {
    auto reader = GetDisplayReader();
-   const auto &entry = reader->GetModel()->GetDefaultEntry();
+   const auto &entry = reader->GetModel().GetDefaultEntry();
 
    reader->LoadEntry(index);
    output << "{";
