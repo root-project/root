@@ -248,10 +248,10 @@ def dirListSort(dirList):
     """
     dirList.sort(key=lambda x: [n.lower() for n in x])
 
-def keyClassSpliter(rootFile,pathSplitList):
+def keyClassSplitter(rootFile,pathSplitList):
     """
     Return a list of directories and a list of keys corresponding
-    to the other objects, for rootLs and rooprint use
+    to the other objects, for rootls and rootprint use
     """
     keyList = []
     dirList = []
@@ -457,6 +457,7 @@ def getSourceListOptDict(parser, wildcards = True):
                     {'longListing': False,
                      'oneColumn': False,
                      'treeListing': False,
+                     'recursiveListing'; False,
                      'FILE': ['tutorials/tmva/TMVA.root:Method_BDT/BDT']
                      }
     """
@@ -905,7 +906,7 @@ def write(string,indent=0,end=""):
 
 TREE_TEMPLATE = "{0:{nameWidth}}"+"{1:{titleWidth}}{2:{memoryWidth}}"
 
-def _recursifTreePrinter(tree,indent):
+def _recursiveTreePrinter(tree,indent):
     """Print recursively tree informations"""
     listOfBranches = tree.GetListOfBranches()
     if len(listOfBranches) > 0: # Width informations
@@ -923,7 +924,7 @@ def _recursifTreePrinter(tree,indent):
             "\""+branch.GetTitle()+"\"", \
             str(branch.GetTotBytes())]
         write(TREE_TEMPLATE.format(*rec,**dic),indent,end="\n")
-        _recursifTreePrinter(branch,indent+2)
+        _recursiveTreePrinter(branch,indent+2)
     write("")
 
 def _prepareTime(time):
@@ -956,7 +957,7 @@ def _printClusters(tree, indent):
     write(isSpecial(ANSI_BOLD,"The total number of clusters is %d\n" % nTotClusters), indent)
 
 
-def _rootLsPrintLongLs(keyList, indent, treeListing):
+def _rootLsPrintLongLs(keyList, indent, treeListing, recursiveListing):
     """Prints a list of `TKey`s and some information.
 
     The information of each key is printed with the following pattern:
@@ -1042,12 +1043,19 @@ def _rootLsPrintLongLs(keyList, indent, treeListing):
         write(LONG_TEMPLATE.format(*rec, **dic), indent, end="\n")
         if treeListing and isTreeKey(currentkey):
             tree = currentkey.ReadObj()
-            _recursifTreePrinter(tree, indent+2)
+            _recursiveTreePrinter(tree, indent+2)
             tree = tree.GetTree()
             _printClusters(tree, indent+2)
         if treeListing and isTHnSparseKey(currentkey):
             hs = currentkey.ReadObj()
             hs.Print("all")
+        if recursiveListing and isDirectoryKey(currentkey) and len(ROOT.gDirectory.Get(currentkey.GetName()).GetListOfKeys()):
+            subDir = ROOT.gDirectory.Get(currentkey.GetName())
+            subkeyList = subDir.GetListOfKeys()
+            subDir.cd()
+            _rootLsPrintLongLs(subkeyList, indent + 2, treeListing, recursiveListing)
+            subDir.cd('../')
+
 
 ##
 # The code of the getTerminalSize function can be found here :
@@ -1138,7 +1146,7 @@ def _get_terminal_size_linux():
 # End of getTerminalSize code
 ##
 
-def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
+def _rootLsPrintSimpleLs(keyList, indent, oneColumn, recursiveListing):
     """Print list of strings in columns
     - blue for directories
     - green for trees"""
@@ -1171,33 +1179,48 @@ def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
         if (i+1)%ncol != 0 and i != len(keyList)-1:
             if not IS_TERMINAL: write( \
                 key.GetName().ljust(col_widths[i%ncol]))
-            elif isDirectoryKey(keyList[i]): write( \
+            elif isDirectoryKey(key):
+                write( \
                 isSpecial(ANSI_BLUE,key.GetName()).ljust( \
                     col_widths[i%ncol] + ANSI_BLUE_LENGTH))
-            elif isTreeKey(keyList[i]): write( \
+                if recursiveListing and len(ROOT.gDirectory.Get(key.GetName()).GetListOfKeys()):
+                    subDir = ROOT.gDirectory.Get(key.GetName())
+                    subkeyList = subDir.GetListOfKeys()
+                    subDir.cd()
+                    write('\n')
+                    _rootLsPrintSimpleLs(subkeyList, indent + 2, oneColumn, recursiveListing)
+                    subDir.cd('../')
+            elif isTreeKey(key): write( \
                 isSpecial(ANSI_GREEN,key.GetName()).ljust( \
                     col_widths[i%ncol] + ANSI_GREEN_LENGTH))
             else: write(key.GetName().ljust(col_widths[i%ncol]))
         else: # No spaces after the last element of the line or of the list
             if not IS_TERMINAL: write(key.GetName())
-            elif isDirectoryKey(keyList[i]):
+            elif isDirectoryKey(key):
                 write(isSpecial(ANSI_BLUE, key.GetName()))
-            elif isTreeKey(keyList[i]):
+                if recursiveListing and len(ROOT.gDirectory.Get(key.GetName()).GetListOfKeys()):
+                    subDir = ROOT.gDirectory.Get(key.GetName())
+                    subkeyList = subDir.GetListOfKeys()
+                    subDir.cd()
+                    write('\n')
+                    _rootLsPrintSimpleLs(subkeyList, indent + 2, oneColumn, recursiveListing)
+                    subDir.cd('../')
+            elif isTreeKey(key):
                 write(isSpecial(ANSI_GREEN, key.GetName()))
             else: write(key.GetName())
             write('\n')
 
 def _rootLsPrint(keyList, indent, oneColumn, \
-                 longListing, treeListing):
+                 longListing, treeListing, recursiveListing):
     """Print informations given by keyList with a rootLs
     style chosen with the options"""
     if longListing or treeListing: \
-       _rootLsPrintLongLs(keyList, indent, treeListing)
+       _rootLsPrintLongLs(keyList, indent, treeListing, recursiveListing)
     else:
-       _rootLsPrintSimpleLs(keyList, indent, oneColumn)
+       _rootLsPrintSimpleLs(keyList, indent, oneColumn, recursiveListing)
 
 def _rootLsProcessFile(fileName, pathSplitList, manySources, indent, \
-                       oneColumn, longListing, treeListing):
+                       oneColumn, longListing, treeListing, recursiveListing):
     '''rootls main routine for one file looping over paths in the file
 
     sorts out directories and key, and loops over all paths, then forwards to
@@ -1207,6 +1230,7 @@ def _rootLsProcessFile(fileName, pathSplitList, manySources, indent, \
        oneColumn   (bool):
        longListing (bool):
        treeListing (bool):
+       recursiveListing(bool):
        indent       (int): how many columns the printout should be indented globally
        manySources (bool): if more than one file is printed
        fileName     (str): the root file name
@@ -1221,11 +1245,11 @@ def _rootLsProcessFile(fileName, pathSplitList, manySources, indent, \
     rootFile = openROOTFile(fileName)
     if not rootFile: return 1
 
-    keyList,dirList = keyClassSpliter(rootFile,pathSplitList)
+    keyList,dirList = keyClassSplitter(rootFile,pathSplitList)
     # keyList lists the TKey objects from pathSplitList
     # dirList is 'just the pathSplitList' for what aren't TKeys
     if manySources: write("{0} :".format(fileName)+"\n")
-    _rootLsPrint(keyList, indent, oneColumn, longListing, treeListing)
+    _rootLsPrint(keyList, indent, oneColumn, longListing, treeListing, recursiveListing)
 
     # Loop on the directories
     manyPathSplits = len(pathSplitList) > 1
@@ -1234,18 +1258,19 @@ def _rootLsProcessFile(fileName, pathSplitList, manySources, indent, \
         keyList = getKeyList(rootFile,pathSplit)
         keyListSort(keyList)
         if manyPathSplits: write("{0} :".format("/".join(pathSplit)),indent,end="\n")
-        _rootLsPrint(keyList, indent+indentDir, oneColumn, longListing, treeListing)
+        _rootLsPrint(keyList, indent+indentDir, oneColumn, longListing, treeListing, recursiveListing)
 
     rootFile.Close()
     return retcode
 
-def rootLs(sourceList, oneColumn=False, longListing=False, treeListing=False):
+def rootLs(sourceList, oneColumn=False, longListing=False, treeListing=False, recursiveListing=False):
     '''rootls main routine for an arbitrary number of files
 
     args:
        oneColumn   (bool):
        longListing (bool):
        treeListing (bool):
+       recursiveListing(bool):
        sourceList: a list of tuples with one list element per file
                    the first tuple entry being the root file,
                    the second a list of subdirectories,
@@ -1268,7 +1293,7 @@ def rootLs(sourceList, oneColumn=False, longListing=False, treeListing=False):
     indent = 2 if manySources else 0
     for fileName, pathSplitList in sourceList:
         retcode += _rootLsProcessFile(fileName, pathSplitList, manySources, indent, \
-                                      oneColumn, longListing, treeListing)
+                                      oneColumn, longListing, treeListing, recursiveListing)
     return retcode
 
 # End of ROOTLS
@@ -1385,7 +1410,7 @@ def rootMv(sourceList, destFileName, destPathSplit, compress=None, \
 # ROOTPRINT
 
 def _keyListExtended(rootFile,pathSplitList):
-    keyList,dirList = keyClassSpliter(rootFile,pathSplitList)
+    keyList,dirList = keyClassSplitter(rootFile,pathSplitList)
     for pathSplit in dirList: keyList.extend(getKeyList(rootFile,pathSplit))
     keyList = [key for key in keyList if not isDirectoryKey(key)]
     keyListSort(keyList)
