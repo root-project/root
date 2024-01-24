@@ -235,16 +235,16 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &output)
 {
    auto reader = GetDisplayReader();
-   auto entry = reader->GetModel()->GetDefaultEntry();
+   const auto &entry = reader->GetModel()->GetDefaultEntry();
 
    reader->LoadEntry(index);
    output << "{";
-   for (auto iValue = entry->begin(); iValue != entry->end();) {
+   for (auto iValue = entry.begin(); iValue != entry.end();) {
       output << std::endl;
       RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
       iValue->GetField().AcceptVisitor(visitor);
 
-      if (++iValue == entry->end()) {
+      if (++iValue == entry.end()) {
          output << std::endl;
          break;
       } else {

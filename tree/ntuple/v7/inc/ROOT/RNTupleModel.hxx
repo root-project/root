@@ -325,7 +325,9 @@ public:
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
    std::unique_ptr<REntry> CreateBareEntry() const;
-   REntry *GetDefaultEntry() const;
+
+   REntry &GetDefaultEntry();
+   const REntry &GetDefaultEntry() const;
 
    /// Non-const access to the root field is used to commit clusters during writing
    /// and to set the on-disk field IDs when connecting a model to a page source or sink.

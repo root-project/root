@@ -459,9 +459,9 @@ TEST(RNTupleShow, RVecTypeErased)
       ROOT::RVec<CustomStruct> customStructVec{CustomStruct(), {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
 
       m->Freeze();
-      m->GetDefaultEntry()->BindRawPtr("intVec", &intVec);
-      m->GetDefaultEntry()->BindRawPtr("floatVecVec", &floatVecVec);
-      m->GetDefaultEntry()->BindRawPtr("customStructVec", &customStructVec);
+      m->GetDefaultEntry().BindRawPtr("intVec", &intVec);
+      m->GetDefaultEntry().BindRawPtr("floatVecVec", &floatVecVec);
+      m->GetDefaultEntry().BindRawPtr("customStructVec", &customStructVec);
 
       auto ntuple = RNTupleWriter::Recreate(std::move(m), ntupleName, rootFileName);
 
