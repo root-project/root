@@ -49,8 +49,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Attr syntax for TDirectory, TDirectoryFile and TFile"},
    {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
     (char *)"Allow to access branches as tree attributes"},
-   {(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
-    (char *)"Make TFile::Open a constructor, adjusting for example the reference count"},
    {(char *)"AddTDirectoryFileGetPyz", (PyCFunction)PyROOT::AddTDirectoryFileGetPyz, METH_VARARGS,
     (char *)"Get objects inside TDirectoryFile and TFile instantiations"},
    {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,

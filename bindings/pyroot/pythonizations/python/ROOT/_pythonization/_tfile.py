@@ -72,7 +72,6 @@ statement, you can use the context manager functionality offered by TContext.
 */
 '''
 
-from libROOTPythonizations import AddFileOpenPyz
 from . import pythonization
 from libcppyy import bind_object
 
@@ -124,7 +123,7 @@ def pythonize_tfile(klass):
     """
 
     # Pythonizations for TFile::Open
-    AddFileOpenPyz(klass)
+    klass.Open.__creates__ = True
     klass._OriginalOpen = klass.Open
     klass.Open = classmethod(_TFileOpen)
 

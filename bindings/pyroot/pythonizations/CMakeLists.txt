@@ -119,7 +119,6 @@ set(cpp_sources
     src/TClonesArrayPyz.cxx
     src/TDirectoryFilePyz.cxx
     src/TDirectoryPyz.cxx
-    src/TFilePyz.cxx
     src/TMemoryRegulator.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
