@@ -235,7 +235,7 @@ TEST(RNTuple, LargeFile2)
    {
       auto reader = RNTupleReader::Open("small", fileGuard.GetPath());
       reader->LoadEntry(0);
-      EXPECT_EQ(42.0f, *reader->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+      EXPECT_EQ(42.0f, *reader->GetModel()->GetDefaultEntry()->GetPtr<float>("pt"));
 
       reader = RNTupleReader::Open("large", fileGuard.GetPath());
       auto viewE = reader->GetView<double>("E");
@@ -256,7 +256,7 @@ TEST(RNTuple, LargeFile2)
 
       auto reader = RNTupleReader::Open(f->Get<RNTuple>("small"));
       reader->LoadEntry(0);
-      EXPECT_EQ(42.0f, *reader->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+      EXPECT_EQ(42.0f, *reader->GetModel()->GetDefaultEntry()->GetPtr<float>("pt"));
 
       reader = RNTupleReader::Open(f->Get<RNTuple>("large"));
       auto viewE = reader->GetView<double>("E");

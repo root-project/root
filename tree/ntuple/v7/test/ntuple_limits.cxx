@@ -42,7 +42,7 @@ TEST(RNTuple, DISABLED_Limits_ManyFields)
 
    reader->LoadEntry(0);
    for (int i = 0; i < NumFields; i++) {
-      auto *valuePtr = model->GetDefaultEntry()->Get<int>("f" + std::to_string(i));
+      auto valuePtr = model->GetDefaultEntry()->GetPtr<int>("f" + std::to_string(i));
       EXPECT_EQ(*valuePtr, i);
    }
 }
@@ -75,7 +75,7 @@ TEST(RNTuple, DISABLED_Limits_ManyClusters)
    EXPECT_EQ(descriptor->GetNClusters(), NumClusters);
    EXPECT_EQ(descriptor->GetNActiveClusters(), NumClusters);
 
-   auto *id = model->GetDefaultEntry()->Get<int>("id");
+   auto id = model->GetDefaultEntry()->GetPtr<int>("id");
    for (int i = 0; i < NumClusters; i++) {
       reader->LoadEntry(i);
       EXPECT_EQ(*id, i);
@@ -110,7 +110,7 @@ TEST(RNTuple, DISABLED_Limits_ManyClusterGroups)
    EXPECT_EQ(descriptor->GetNClusterGroups(), NumClusterGroups);
    EXPECT_EQ(descriptor->GetNClusters(), NumClusterGroups);
 
-   auto *id = model->GetDefaultEntry()->Get<int>("id");
+   auto id = model->GetDefaultEntry()->GetPtr<int>("id");
    for (int i = 0; i < NumClusterGroups; i++) {
       reader->LoadEntry(i);
       EXPECT_EQ(*id, i);

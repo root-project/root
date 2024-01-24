@@ -141,13 +141,13 @@ TEST(RNTupleMerger, MergeSymmetric)
       auto ntuple3 = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
       ASSERT_EQ(ntuple1->GetNEntries() + ntuple2->GetNEntries(), ntuple3->GetNEntries());
 
-      auto foo1 = ntuple1->GetModel()->GetDefaultEntry()->Get<int>("foo");
-      auto foo2 = ntuple2->GetModel()->GetDefaultEntry()->Get<int>("foo");
-      auto foo3 = ntuple3->GetModel()->GetDefaultEntry()->Get<int>("foo");
+      auto foo1 = ntuple1->GetModel()->GetDefaultEntry()->GetPtr<int>("foo");
+      auto foo2 = ntuple2->GetModel()->GetDefaultEntry()->GetPtr<int>("foo");
+      auto foo3 = ntuple3->GetModel()->GetDefaultEntry()->GetPtr<int>("foo");
 
-      auto bar1 = ntuple1->GetModel()->GetDefaultEntry()->Get<int>("bar");
-      auto bar2 = ntuple2->GetModel()->GetDefaultEntry()->Get<int>("bar");
-      auto bar3 = ntuple3->GetModel()->GetDefaultEntry()->Get<int>("bar");
+      auto bar1 = ntuple1->GetModel()->GetDefaultEntry()->GetPtr<int>("bar");
+      auto bar2 = ntuple2->GetModel()->GetDefaultEntry()->GetPtr<int>("bar");
+      auto bar3 = ntuple3->GetModel()->GetDefaultEntry()->GetPtr<int>("bar");
 
       ntuple1->LoadEntry(1);
       ntuple2->LoadEntry(1);
@@ -394,13 +394,13 @@ TEST(RNTupleMerger, MergeVector)
       auto ntuple3 = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
       ASSERT_EQ(ntuple1->GetNEntries() + ntuple2->GetNEntries(), ntuple3->GetNEntries());
 
-      auto foo1 = ntuple1->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("foo");
-      auto foo2 = ntuple2->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("foo");
-      auto foo3 = ntuple3->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("foo");
+      auto foo1 = ntuple1->GetModel()->GetDefaultEntry()->GetPtr<std::vector<int>>("foo");
+      auto foo2 = ntuple2->GetModel()->GetDefaultEntry()->GetPtr<std::vector<int>>("foo");
+      auto foo3 = ntuple3->GetModel()->GetDefaultEntry()->GetPtr<std::vector<int>>("foo");
 
-      auto bar1 = ntuple1->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("bar");
-      auto bar2 = ntuple2->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("bar");
-      auto bar3 = ntuple3->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("bar");
+      auto bar1 = ntuple1->GetModel()->GetDefaultEntry()->GetPtr<std::vector<int>>("bar");
+      auto bar2 = ntuple2->GetModel()->GetDefaultEntry()->GetPtr<std::vector<int>>("bar");
+      auto bar3 = ntuple3->GetModel()->GetDefaultEntry()->GetPtr<std::vector<int>>("bar");
 
       ntuple1->LoadEntry(1);
       ntuple2->LoadEntry(1);

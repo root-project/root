@@ -140,17 +140,17 @@ TEST(RNTuple, InsideCollection)
 
    auto value = field->GenerateValue();
    value.Read(0);
-   auto aVec = value.Get<std::vector<float>>();
-   EXPECT_EQ(1U, aVec->size());
-   EXPECT_EQ(42.0, (*aVec)[0]);
+   auto aVec = value.GetRef<std::vector<float>>();
+   EXPECT_EQ(1U, aVec.size());
+   EXPECT_EQ(42.0, aVec[0]);
 
    auto valueCardinality64 = fieldCardinality64->GenerateValue();
    valueCardinality64.Read(0);
-   EXPECT_EQ(1U, *valueCardinality64.Get<std::uint64_t>());
+   EXPECT_EQ(1U, valueCardinality64.GetRef<std::uint64_t>());
 
    auto valueCardinality32 = fieldCardinality32->GenerateValue();
    valueCardinality32.Read(0);
-   EXPECT_EQ(1U, *valueCardinality32.Get<std::uint32_t>());
+   EXPECT_EQ(1U, valueCardinality32.GetRef<std::uint32_t>());
 
    // TODO: test reading of "klassVec.v1"
 }
@@ -359,7 +359,7 @@ TEST(RNTuple, ComplexVector)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry()->GetPtr<std::vector<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -402,7 +402,7 @@ TEST(RNTuple, ComplexRVec)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<ROOT::RVec<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry()->GetPtr<ROOT::RVec<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());

@@ -121,20 +121,20 @@ public:
    }
 
    template <typename T>
-   T *Get(std::string_view fieldName) const
+   std::shared_ptr<T> GetPtr(std::string_view fieldName) const
    {
       for (auto &v : fValues) {
          if (v.GetField().GetName() != fieldName)
             continue;
 
          if constexpr (std::is_void_v<T>)
-            return v.Get<T>();
+            return v.GetPtr<void>();
 
          if (v.GetField().GetType() != RField<T>::TypeName()) {
             throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
                                      v.GetField().GetType() + " vs. " + RField<T>::TypeName()));
          }
-         return v.Get<T>();
+         return std::static_pointer_cast<T>(v.GetPtr<void>());
       }
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }

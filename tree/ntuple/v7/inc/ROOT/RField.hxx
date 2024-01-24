@@ -193,14 +193,18 @@ public:
       void Read(RClusterIndex clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
       void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
 
-      std::shared_ptr<void> GetPtr() const { return fObjPtr; }
-
-      // TODO(jblomer): remove me
       template <typename T>
-      T *Get() const
+      std::shared_ptr<T> GetPtr() const
       {
-         return static_cast<T *>(fObjPtr.get());
+         return std::static_pointer_cast<T>(fObjPtr);
       }
+
+      template <typename T>
+      const T &GetRef() const
+      {
+         return *static_cast<T *>(fObjPtr.get());
+      }
+
       const RFieldBase &GetField() const { return *fField; }
    }; // class RValue
 
