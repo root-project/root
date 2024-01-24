@@ -71,6 +71,8 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include <string>
 #include <sstream>
 
+#include <iostream>
+
 using namespace ROOT;
 using namespace llvm;
 using namespace clang;
@@ -383,9 +385,44 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
          callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
       } else {
-         // pointer falls back to non-pointer case; the argument preserves
-         // the "pointerness" (i.e. doesn't reference the value).
-         callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+         // By-value construction; this may either copy or move, but there is no
+         // information here in terms of intent. Thus, simply assume that the intent
+         // is to move if there is no viable copy constructor (ie. if the code would
+         // otherwise fail to even compile).
+         auto copyCtorIsDeleted = [](CXXRecordDecl *RD) {
+            if (auto it = std::find_if(RD->ctor_begin(), RD->ctor_end(),
+                                       [](CXXConstructorDecl *ctor) { return ctor->isCopyConstructor(); });
+                it != RD->ctor_end()) {
+               CXXConstructorDecl *copyctor = *it;
+               return copyctor->isDeleted();
+            }
+            return false;
+         };
+         // There does not appear to be a simple way of determining whether a viable
+         // copy constructor exists, so the next condition tries to include as many
+         // cases as possible. After checking for the existence of the record, the
+         // two following conditions are:
+         // 1. There is a trivial copy constructor, but not a uniquely available one.
+         //    At the same time, the class has a move constructor, so probably that
+         //    is the right one to use.
+         // 2. There is a copy constructor, but it is deleted. This is computed
+         //    through the above lambda which traverses the available class
+         //    constructors so it is a bit more costly. For this reason, this
+         //    condition is short-circuited by the previous one. It is still crucial
+         //    to resolve some relevant cases, such as when a class has a deleted
+         //    copy constructor but a templated move constructor. In that case the
+         //    first condition would be false. A notable example is the definition
+         //    of Microsoft's std::unique_ptr.
+         if (CXXRecordDecl *RD = QT->getAsCXXRecordDecl();
+             RD &&
+             (((RD->hasTrivialCopyConstructor() && !RD->hasSimpleCopyConstructor()) && RD->hasMoveConstructor()) ||
+              copyCtorIsDeleted(RD))) {
+            // move construction as needed for classes (note that this is implicit)
+            callbuf << "std::move(*(" << type_name.c_str() << "*)args[" << i << "])";
+         } else {
+            // otherwise, and for builtins, use copy construction of temporary*/
+            callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+         }
       }
    }
    callbuf << ")";
