@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cmake", "setuptools", "wheel", "ninja"]
+requires = ["cmake", "setuptools", "wheel", "ninja", "numpy"]
 
 [project]
 name = "root-cern"
