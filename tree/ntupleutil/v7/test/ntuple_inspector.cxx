@@ -259,8 +259,8 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
 
       for (int i = 0; i < 5; ++i) {
          auto e = ntuple->CreateEntry();
-         *e->Get<std::int32_t>("int32") = i;
-         *e->Get<double>("splitReal64") = i;
+         *e->GetPtr<std::int32_t>("int32") = i;
+         *e->GetPtr<double>("splitReal64") = i;
          ntuple->Fill(*e);
       }
    }

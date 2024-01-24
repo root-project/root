@@ -23,7 +23,7 @@ TEST(RField, Blob)
    auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
    ASSERT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
-   auto fldBlob = reader->GetModel()->GetDefaultEntry()->Get<std::vector<std::byte>>("blob");
+   auto fldBlob = reader->GetModel()->GetDefaultEntry()->GetPtr<std::vector<std::byte>>("blob");
    TMemFile f("buffer", TMemFile::ZeroCopyView_t(reinterpret_cast<char *>(fldBlob->data()), fldBlob->size()));
    auto str = f.Get<std::string>("string");
    EXPECT_EQ("x", *str);
