@@ -66,6 +66,7 @@ protected:
   // Function evaluation
   RooListProxy _actualVars ;
   double evaluate() const override ;
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
   void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
   // Post-processing of server redirection
