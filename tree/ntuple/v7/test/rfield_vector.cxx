@@ -219,7 +219,7 @@ TEST(RNTuple, RVecTypeErased)
       auto field = RFieldBase::Create("v", "ROOT::VecOps::RVec<int>").Unwrap();
       m->AddField(std::move(field));
       m->Freeze();
-      m->GetDefaultEntry()->BindRawPtr("v", &rvec);
+      m->GetDefaultEntry().BindRawPtr("v", &rvec);
 
       auto w = RNTupleWriter::Recreate(std::move(m), "r", fileGuard.GetPath());
       w->Fill();
@@ -359,7 +359,7 @@ TEST(RNTuple, ComplexVector)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->GetPtr<std::vector<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry().GetPtr<std::vector<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -402,7 +402,7 @@ TEST(RNTuple, ComplexRVec)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->GetPtr<ROOT::RVec<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry().GetPtr<ROOT::RVec<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());

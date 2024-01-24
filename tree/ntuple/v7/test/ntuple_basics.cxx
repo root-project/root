@@ -31,19 +31,19 @@ TEST(RNTuple, ReconstructModel)
 
    auto modelReconstructed = source.GetSharedDescriptorGuard()->GenerateModel();
    try {
-      modelReconstructed->GetDefaultEntry()->GetPtr<float>("xyz");
+      modelReconstructed->GetDefaultEntry().GetPtr<float>("xyz");
       FAIL() << "invalid field name should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
    }
-   auto vecPtr = modelReconstructed->GetDefaultEntry()->GetPtr<std::vector<std::vector<float>>>("nnlo");
+   auto vecPtr = modelReconstructed->GetDefaultEntry().GetPtr<std::vector<std::vector<float>>>("nnlo");
    EXPECT_TRUE(vecPtr != nullptr);
    // Don't crash
    vecPtr->push_back(std::vector<float>{1.0});
-   auto array = modelReconstructed->GetDefaultEntry()->GetPtr<std::array<double, 2>>("array");
+   auto array = modelReconstructed->GetDefaultEntry().GetPtr<std::array<double, 2>>("array");
    EXPECT_TRUE(array != nullptr);
    auto variant =
-      modelReconstructed->GetDefaultEntry()->GetPtr<std::variant<double, std::variant<std::string, double>>>("variant");
+      modelReconstructed->GetDefaultEntry().GetPtr<std::variant<double, std::variant<std::string, double>>>("variant");
    EXPECT_TRUE(variant != nullptr);
 }
 
@@ -659,9 +659,9 @@ TEST(RNTuple, BareEntry)
    auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    ASSERT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
-   EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry()->GetPtr<float>("pt"));
+   EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry().GetPtr<float>("pt"));
    ntuple->LoadEntry(1);
-   EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->GetPtr<float>("pt"));
+   EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry().GetPtr<float>("pt"));
 }
 
 namespace ROOT::Experimental::Internal {
@@ -713,7 +713,7 @@ TEST(RNTuple, ReadCallback)
    model->AddField(std::move(fieldKlass));
 
    auto ntuple = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
-   auto rdKlass = ntuple->GetModel()->GetDefaultEntry()->GetPtr<CustomStruct>("klass");
+   auto rdKlass = ntuple->GetModel()->GetDefaultEntry().GetPtr<CustomStruct>("klass");
    EXPECT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
    EXPECT_EQ(1337.0, rdKlass->a);

@@ -330,12 +330,20 @@ ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
    return *f;
 }
 
-ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
+ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEntry()
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
    EnsureNotBare();
-   return fDefaultEntry.get();
+   return *fDefaultEntry;
+}
+
+const ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
+   EnsureNotBare();
+   return *fDefaultEntry;
 }
 
 std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry() const
