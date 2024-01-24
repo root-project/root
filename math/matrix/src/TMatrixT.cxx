@@ -189,13 +189,22 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
          break;
 
       case kInvMult:
-      {
-         Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
-         *this = a;
-         const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
-         this->Invert();
-         this->SetTol(oldTol);
-         *this *= b;
+      {  Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
+         // if size(a) == size(b), perform in place computation
+         if (a.GetNrows() == b.GetNcols()){
+            *this = a;
+            const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
+            this->Invert();
+            this->SetTol(oldTol);
+            *this *= b;
+         }
+         else{
+            TMatrixT<Element> ainv = a;
+            const Element oldTol = ainv.SetTol(std::numeric_limits<Element>::min());
+            ainv.Invert();
+            ainv.SetTol(oldTol);
+            Mult(ainv,b);
+         }
          break;
       }
 
@@ -303,13 +312,22 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
          break;
 
       case kInvMult:
-      {
-         Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
-         *this = a;
-         const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
-         this->Invert();
-         this->SetTol(oldTol);
-         *this *= b;
+      {  Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
+         // if size(a) == size(b), perform in place computation
+         if (a.GetNrows() == b.GetNcols()){
+            *this = a;
+            const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
+            this->Invert();
+            this->SetTol(oldTol);
+            *this *= b;
+         }
+         else{
+            TMatrixTSym<Element> ainv = a;
+            const Element oldTol = ainv.SetTol(std::numeric_limits<Element>::min());
+            ainv.Invert();
+            ainv.SetTol(oldTol);
+            Mult(ainv,b);
+         }
          break;
       }
 
