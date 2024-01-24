@@ -31,19 +31,19 @@ TEST(RNTuple, ReconstructModel)
 
    auto modelReconstructed = source.GetSharedDescriptorGuard()->GenerateModel();
    try {
-      modelReconstructed->GetDefaultEntry()->Get<float>("xyz");
+      modelReconstructed->GetDefaultEntry()->GetPtr<float>("xyz");
       FAIL() << "invalid field name should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
    }
-   auto vecPtr = modelReconstructed->GetDefaultEntry()->Get<std::vector<std::vector<float>>>("nnlo");
+   auto vecPtr = modelReconstructed->GetDefaultEntry()->GetPtr<std::vector<std::vector<float>>>("nnlo");
    EXPECT_TRUE(vecPtr != nullptr);
    // Don't crash
    vecPtr->push_back(std::vector<float>{1.0});
-   auto array = modelReconstructed->GetDefaultEntry()->Get<std::array<double, 2>>("array");
+   auto array = modelReconstructed->GetDefaultEntry()->GetPtr<std::array<double, 2>>("array");
    EXPECT_TRUE(array != nullptr);
-   auto variant = modelReconstructed->GetDefaultEntry()->Get<
-      std::variant<double, std::variant<std::string, double>>>("variant");
+   auto variant =
+      modelReconstructed->GetDefaultEntry()->GetPtr<std::variant<double, std::variant<std::string, double>>>("variant");
    EXPECT_TRUE(variant != nullptr);
 }
 
@@ -645,10 +645,10 @@ TEST(RNTuple, BareEntry)
       }
 
       auto e1 = model.CreateEntry();
-      ASSERT_NE(nullptr, e1->Get<float>("pt"));
-      *(e1->Get<float>("pt")) = 1.0;
+      ASSERT_NE(nullptr, e1->GetPtr<float>("pt"));
+      *(e1->GetPtr<float>("pt")) = 1.0;
       auto e2 = model.CreateBareEntry();
-      EXPECT_EQ(nullptr, e2->Get<float>("pt"));
+      EXPECT_EQ(nullptr, e2->GetPtr<float>("pt"));
       float pt = 2.0;
       e2->BindRawPtr("pt", &pt);
 
@@ -659,9 +659,9 @@ TEST(RNTuple, BareEntry)
    auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    ASSERT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
-   EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+   EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry()->GetPtr<float>("pt"));
    ntuple->LoadEntry(1);
-   EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+   EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->GetPtr<float>("pt"));
 }
 
 namespace ROOT::Experimental::Internal {
@@ -713,7 +713,7 @@ TEST(RNTuple, ReadCallback)
    model->AddField(std::move(fieldKlass));
 
    auto ntuple = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
-   auto rdKlass = ntuple->GetModel()->GetDefaultEntry()->Get<CustomStruct>("klass");
+   auto rdKlass = ntuple->GetModel()->GetDefaultEntry()->GetPtr<CustomStruct>("klass");
    EXPECT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
    EXPECT_EQ(1337.0, rdKlass->a);

@@ -182,7 +182,7 @@ public:
          return *fField.Map(globalIndex);
       else {
          fValue.Read(globalIndex);
-         return *fValue.Get<T>();
+         return fValue.GetRef<T>();
       }
    }
 
@@ -192,7 +192,7 @@ public:
          return *fField.Map(clusterIndex);
       else {
          fValue.Read(clusterIndex);
-         return *fValue.Get<T>();
+         return fValue.GetRef<T>();
       }
    }
 

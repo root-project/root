@@ -66,7 +66,7 @@ TEST_F(RPageStorageDaos, Basics)
 
    auto ntuple = RNTupleReader::Open(ntupleName, daosUri);
    EXPECT_EQ(3U, ntuple->GetNEntries());
-   auto rdPt = ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt");
+   auto rdPt = ntuple->GetModel()->GetDefaultEntry()->GetPtr<float>("pt");
 
    ntuple->LoadEntry(0);
    EXPECT_EQ(42.0, *rdPt);
@@ -114,7 +114,7 @@ TEST_F(RPageStorageDaos, Extended)
    RNTupleReadOptions options;
    options.SetClusterBunchSize(5);
    auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
-   auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
+   auto rdVector = ntuple->GetModel()->GetDefaultEntry()->GetPtr<std::vector<double>>("vector");
 
    double chksumRead = 0.0;
    for (auto entryId : *ntuple) {
@@ -196,14 +196,14 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
       EXPECT_EQ(3U, ntuple2->GetNEntries());
 
       {
-         auto rdPt = ntuple1->GetModel()->GetDefaultEntry()->Get<float>("pt");
+         auto rdPt = ntuple1->GetModel()->GetDefaultEntry()->GetPtr<float>("pt");
          ntuple1->LoadEntry(0);
          EXPECT_EQ(34.0, *rdPt);
          ntuple1->LoadEntry(1);
          EXPECT_EQ(160.0, *rdPt);
       }
       {
-         auto rdPt = ntuple2->GetModel()->GetDefaultEntry()->Get<float>("pt");
+         auto rdPt = ntuple2->GetModel()->GetDefaultEntry()->GetPtr<float>("pt");
          ntuple2->LoadEntry(0);
          EXPECT_EQ(81.0, *rdPt);
          ntuple2->LoadEntry(1);
@@ -255,7 +255,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
       options.SetClusterBunchSize(5);
       auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
-      auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
+      auto rdVector = ntuple->GetModel()->GetDefaultEntry()->GetPtr<std::vector<double>>("vector");
 
       double chksumRead = 0.0;
       for (auto entryId : *ntuple) {

@@ -62,10 +62,10 @@ void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
    auto prng = std::make_unique<TRandom3>();
    prng->SetSeed();
 
-   auto id = entry->Get<std::uint32_t>("id");
-   auto vpx = entry->Get<std::vector<float>>("vpx");
-   auto vpy = entry->Get<std::vector<float>>("vpy");
-   auto vpz = entry->Get<std::vector<float>>("vpz");
+   auto id = entry->GetPtr<std::uint32_t>("id");
+   auto vpx = entry->GetPtr<std::vector<float>>("vpx");
+   auto vpy = entry->GetPtr<std::vector<float>>("vpy");
+   auto vpz = entry->GetPtr<std::vector<float>>("vpz");
 
    for (int i = 0; i < kNEventsPerThread; i++) {
       vpx->clear();

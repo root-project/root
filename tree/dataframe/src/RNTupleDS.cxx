@@ -207,7 +207,7 @@ public:
    void Disconnect(bool keepValue)
    {
       if (fValue && keepValue) {
-         fValuePtr = fValue->GetPtr();
+         fValuePtr = fValue->GetPtr<void>();
       }
       fValue = nullptr;
       fField = nullptr;
@@ -220,7 +220,7 @@ public:
          fValue->Read(entry - fEntryOffset);
          fLastEntry = entry;
       }
-      return fValue->Get<void>();
+      return fValue->GetPtr<void>().get();
    }
 };
 
