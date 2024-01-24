@@ -2278,7 +2278,7 @@ void TGraph::SetEditable(Bool_t editable)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set highlight (enable/disble) mode for the graph
+/// Set highlight (enable/disable) mode for the graph
 /// by default highlight mode is disable
 
 void TGraph::SetHighlight(Bool_t set)
