@@ -582,10 +582,7 @@ public:
    /// The returned bulk is initially empty; RBulk::ReadBulk will construct the array of values
    RBulk GenerateBulk() { return RBulk(this); }
    /// Creates a value from a memory location with an already constructed object
-   RValue BindValue(void *where)
-   {
-      return RValue(this, std::shared_ptr<void>(where, [](void *) {}));
-   }
+   RValue BindValue(std::shared_ptr<void> objPtr) { return RValue(this, objPtr); }
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
    /// correct variant or all the elements of a collection.  The default implementation assumes no sub values
    /// and returns an empty vector.
