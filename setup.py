@@ -21,9 +21,9 @@ here = pathlib.Path(__file__).parent.resolve()
 # Get the long description from the README file
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
-SOURCE_DIR = os.path.join(os.getcwd(), "rootsrc")
-BUILD_DIR = os.path.join(os.getcwd(), "myrootbuild")
-INSTALL_DIR = os.path.join(os.getcwd(), "myrootinstall")
+SOURCE_DIR = os.getcwd()
+BUILD_DIR = os.path.expanduser("~/programs/rootproject/pip-tests/build")
+INSTALL_DIR = os.path.expanduser("~/programs/rootproject/pip-tests/install")
 
 
 class my_cmake_build(_build):
@@ -31,8 +31,8 @@ class my_cmake_build(_build):
         # base run
         _build.run(self)
 
-        if not os.path.exists(SOURCE_DIR):
-            subprocess.run(shlex.split("git clone https://github.com/root-project/root.git rootsrc"), check=True)
+        # if not os.path.exists(SOURCE_DIR):
+            # subprocess.run(shlex.split("git clone https://github.com/root-project/root.git rootsrc"), check=True)
 
         if not os.path.exists(BUILD_DIR):
             os.makedirs(BUILD_DIR)
@@ -41,7 +41,7 @@ class my_cmake_build(_build):
             os.makedirs(INSTALL_DIR)
 
         base_opts = shlex.split("cmake -GNinja -Dccache=ON")
-        mode_opts = shlex.split("-Dminimal=ON -Dpyroot=ON -Druntime_cxxmodules=ON")
+        mode_opts = shlex.split("-Dminimal=ON -Drpath=ON -Dpyroot=ON -Druntime_cxxmodules=ON")
         dirs_opts = shlex.split(
             f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR}")
         configure_command = base_opts + mode_opts + dirs_opts
@@ -93,13 +93,13 @@ class my_install(_install):
         for ext in extlibs:
             self.copy_file(os.path.join(lib_dir, ext), install_path)
 
-        cppextensions = [os.path.join(install_path, ext) for ext in extlibs]
-        for ext in cppextensions:
-            subprocess.run(shlex.split(f"patchelf --set-rpath \$ORIGIN:\$ORIGIN/ROOT/lib {ext}"))
+        # cppextensions = [os.path.join(install_path, ext) for ext in extlibs]
+        # for ext in cppextensions:
+        #     subprocess.run(shlex.split(f"patchelf --set-rpath \$ORIGIN:\$ORIGIN/ROOT/lib {ext}"))
 
-        rootlibs = glob.glob(os.path.join(install_libdir, "lib*.so"))
-        for lib in rootlibs:
-            subprocess.run(shlex.split(f"patchelf --set-rpath \$ORIGIN {lib}"))
+        # rootlibs = glob.glob(os.path.join(install_libdir, "lib*.so"))
+        # for lib in rootlibs:
+        #     subprocess.run(shlex.split(f"patchelf --set-rpath \$ORIGIN {lib}"))
 
     def get_outputs(self):
         outputs = _install.get_outputs(self)

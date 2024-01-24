@@ -151,6 +151,7 @@ file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 set(libname ROOTPythonizations)
 
 add_library(${libname} SHARED ${cpp_sources})
+set_target_properties(${libname} PROPERTIES  INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/ROOT/lib")
 
 # Insert the ROOTPythonizationsPySources in the dependency graph
 add_dependencies(${libname} ROOTPythonizationsPySources)
