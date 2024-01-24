@@ -33,10 +33,10 @@ TEST(RNTuple, DISABLED_Limits_ManyFields)
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto descriptor = reader->GetDescriptor();
+   const auto &descriptor = reader->GetDescriptor();
    auto model = reader->GetModel();
 
-   EXPECT_EQ(descriptor->GetNFields(), 1 + NumFields);
+   EXPECT_EQ(descriptor.GetNFields(), 1 + NumFields);
    EXPECT_EQ(model->GetFieldZero().GetSubFields().size(), NumFields);
    EXPECT_EQ(reader->GetNEntries(), 1);
 
@@ -68,12 +68,12 @@ TEST(RNTuple, DISABLED_Limits_ManyClusters)
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto descriptor = reader->GetDescriptor();
+   const auto &descriptor = reader->GetDescriptor();
    auto model = reader->GetModel();
 
    EXPECT_EQ(reader->GetNEntries(), NumClusters);
-   EXPECT_EQ(descriptor->GetNClusters(), NumClusters);
-   EXPECT_EQ(descriptor->GetNActiveClusters(), NumClusters);
+   EXPECT_EQ(descriptor.GetNClusters(), NumClusters);
+   EXPECT_EQ(descriptor.GetNActiveClusters(), NumClusters);
 
    auto id = model->GetDefaultEntry().GetPtr<int>("id");
    for (int i = 0; i < NumClusters; i++) {
@@ -103,12 +103,12 @@ TEST(RNTuple, DISABLED_Limits_ManyClusterGroups)
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto descriptor = reader->GetDescriptor();
+   const auto &descriptor = reader->GetDescriptor();
    auto model = reader->GetModel();
 
    EXPECT_EQ(reader->GetNEntries(), NumClusterGroups);
-   EXPECT_EQ(descriptor->GetNClusterGroups(), NumClusterGroups);
-   EXPECT_EQ(descriptor->GetNClusters(), NumClusterGroups);
+   EXPECT_EQ(descriptor.GetNClusterGroups(), NumClusterGroups);
+   EXPECT_EQ(descriptor.GetNClusters(), NumClusterGroups);
 
    auto id = model->GetDefaultEntry().GetPtr<int>("id");
    for (int i = 0; i < NumClusterGroups; i++) {

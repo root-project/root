@@ -702,15 +702,15 @@ TEST(RNTuple, Int64)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt64,
-             (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64,
-             (*desc->GetColumnIterable(desc->FindFieldId("i2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt64,
-             (*desc->GetColumnIterable(desc->FindFieldId("i3")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt64,
-             (*desc->GetColumnIterable(desc->FindFieldId("i4")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int64_t>::max() - 137,
              *reader->GetModel()->GetDefaultEntry().GetPtr<std::int64_t>("i1"));
@@ -758,15 +758,15 @@ TEST(RNTuple, Int32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt32,
-             (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt32,
-             (*desc->GetColumnIterable(desc->FindFieldId("i2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt32,
-             (*desc->GetColumnIterable(desc->FindFieldId("i3")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt32,
-             (*desc->GetColumnIterable(desc->FindFieldId("i4")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int32_t>::max() - 137,
              *reader->GetModel()->GetDefaultEntry().GetPtr<std::int32_t>("i1"));
@@ -816,15 +816,15 @@ TEST(RNTuple, Int16)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt16,
-             (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt16,
-             (*desc->GetColumnIterable(desc->FindFieldId("i2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt16,
-             (*desc->GetColumnIterable(desc->FindFieldId("i3")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt16,
-             (*desc->GetColumnIterable(desc->FindFieldId("i4")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int16_t>::max() - 137,
              *reader->GetModel()->GetDefaultEntry().GetPtr<std::int16_t>("i1"));
@@ -896,11 +896,11 @@ TEST(RNTuple, Double)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kReal64,
-             (*desc->GetColumnIterable(desc->FindFieldId("d1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("d1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal64,
-             (*desc->GetColumnIterable(desc->FindFieldId("d2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("d2")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_DOUBLE_EQ(1.0, *reader->GetModel()->GetDefaultEntry().GetPtr<double>("d1"));
    EXPECT_DOUBLE_EQ(2.0, *reader->GetModel()->GetDefaultEntry().GetPtr<double>("d2"));
@@ -929,11 +929,11 @@ TEST(RNTuple, Float)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kReal32,
-             (*desc->GetColumnIterable(desc->FindFieldId("f1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32,
-             (*desc->GetColumnIterable(desc->FindFieldId("f2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("f2")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_FLOAT_EQ(1.0, *reader->GetModel()->GetDefaultEntry().GetPtr<float>("f1"));
    EXPECT_FLOAT_EQ(2.0, *reader->GetModel()->GetDefaultEntry().GetPtr<float>("f2"));
@@ -1275,8 +1275,8 @@ TEST(RNTuple, HalfPrecisionFloat)
 
    EXPECT_EQ(4, ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType::kReal16)->GetSize());
 
-   const auto *desc = reader->GetDescriptor();
-   EXPECT_EQ(EColumnType::kReal16, (*desc->GetColumnIterable(desc->FindFieldId("f1")).begin()).GetModel().GetType());
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ(EColumnType::kReal16, (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetModel().GetType());
 
    auto f1 = reader->GetModel()->GetDefaultEntry().GetPtr<float>("f1");
    auto fVec = reader->GetModel()->GetDefaultEntry().GetPtr<std::vector<float>>("fVec");
@@ -1515,7 +1515,7 @@ TEST(RNTuple, TClassEBO)
    {
       auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
       EXPECT_EQ(1U, ntuple->GetNEntries());
-      auto idEmptyStruct = ntuple->GetDescriptor()->FindFieldId("klass.:_0");
+      auto idEmptyStruct = ntuple->GetDescriptor().FindFieldId("klass.:_0");
       EXPECT_NE(idEmptyStruct, ROOT::Experimental::kInvalidDescriptorId);
       auto viewKlass = ntuple->GetView<TestEBO>("klass");
       EXPECT_EQ(42, viewKlass(0).u64);
