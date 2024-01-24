@@ -180,7 +180,6 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
 /// Return true if the name of the iarg-th argument's type match `type_name`
 Bool_t TPluginHandler::CheckNameMatch(int iarg, const std::type_info& ti)
 {
-   R__LOCKGUARD(gInterpreterMutex);
    int err = 0;
    char* demangled_name = TClassEdit::DemangleTypeIdName(ti, err);
    if (err) {

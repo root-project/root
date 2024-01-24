@@ -169,6 +169,8 @@ private:
       auto name = typeid(std::tuple<T...>).name();
       if (!fArgTupleTypeInfo[nargs - 1].empty())
          return name == fArgTupleTypeInfo[nargs - 1];
+
+      R__LOCKGUARD(gInterpreterMutex);
       if (!CheckExactMatch<T...>(0, params...))
          return false;
       fArgTupleTypeInfo[nargs - 1] = name;
