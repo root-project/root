@@ -299,14 +299,6 @@ public:
    /// Projected fields can only be used for models used to write data.
    RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
                                    std::function<std::string(const std::string &)> mapping);
-
-   template <typename T>
-   T *Get(std::string_view fieldName) const
-   {
-      EnsureNotBare();
-      return fDefaultEntry->GetPtr<T>(fieldName).get();
-   }
-
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
    void Freeze();
