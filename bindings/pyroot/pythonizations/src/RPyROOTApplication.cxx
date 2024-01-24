@@ -67,14 +67,7 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
          }
       }
 
-#if PY_VERSION_HEX < 0x03000000
-      if (Py_GetProgramName() && strlen(Py_GetProgramName()) != 0)
-         argv[0] = Py_GetProgramName();
-      else
-         argv[0] = (char *)"python";
-#else
       argv[0] = (char *)"python";
-#endif
 
       gApplication = new RPyROOTApplication("PyROOT", &argc, argv);
       delete[] argv; // TApplication ctor has copied argv, so done with it
@@ -96,11 +89,7 @@ void PyROOT::RPyROOTApplication::InitROOTGlobals()
       gStyle = new TStyle();
 
    if (!gProgName) // should have been set by TApplication
-#if PY_VERSION_HEX < 0x03000000
-      gSystem->SetProgname(Py_GetProgramName());
-#else
       gSystem->SetProgname("python");
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////
