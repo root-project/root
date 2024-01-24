@@ -69,6 +69,7 @@ public:
    }
 
    std::string formulaString() const { return _tFormula ? _tFormula->GetTitle() : ""; }
+   TFormula* getTFormula() const { return _tFormula.get(); }
 
 private:
    std::string processFormula(std::string origFormula) const;
