@@ -20,7 +20,6 @@ PyObject *AddCPPInstancePickling(PyObject *self, PyObject *args);
 
 PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 
-PyObject *AddDirectoryGetAttrPyz(PyObject *self, PyObject *args);
 PyObject *AddDirectoryWritePyz(PyObject *self, PyObject *args);
 PyObject *AddTDirectoryFileGetPyz(PyObject *self, PyObject *args);
 
