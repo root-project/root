@@ -200,11 +200,7 @@ PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
    int argc = PyTuple_GET_SIZE(args);
 
 // Look for the (const char*, void*) overload
-#if PY_VERSION_HEX < 0x03000000
-   auto argParseStr = "OSO:SetBranchAddress";
-#else
    auto argParseStr = "OUO:SetBranchAddress";
-#endif
    if (argc == 3 && PyArg_ParseTuple(args, const_cast<char *>(argParseStr), &treeObj, &name, &address)) {
 
       auto treeProxy = (CPPInstance *)treeObj;
