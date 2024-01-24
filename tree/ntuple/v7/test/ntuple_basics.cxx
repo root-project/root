@@ -179,8 +179,8 @@ TEST(RNTuple, FileAnchor)
    EXPECT_EQ(1U, readerA->GetNEntries());
    EXPECT_EQ(1U, readerB->GetNEntries());
 
-   auto a = readerA->GetModel()->GetDefaultEntry().GetPtr<int>("a");
-   auto b = readerB->GetModel()->GetDefaultEntry().GetPtr<int>("b");
+   auto a = readerA->GetModel().GetDefaultEntry().GetPtr<int>("a");
+   auto b = readerB->GetModel().GetDefaultEntry().GetPtr<int>("b");
    readerA->LoadEntry(0);
    readerB->LoadEntry(0);
    EXPECT_EQ(42, *a);
@@ -661,9 +661,9 @@ TEST(RNTuple, BareEntry)
    auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    ASSERT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
-   EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry().GetPtr<float>("pt"));
+   EXPECT_EQ(1.0, *ntuple->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
    ntuple->LoadEntry(1);
-   EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry().GetPtr<float>("pt"));
+   EXPECT_EQ(2.0, *ntuple->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 }
 
 namespace ROOT::Experimental::Internal {
@@ -715,7 +715,7 @@ TEST(RNTuple, ReadCallback)
    model->AddField(std::move(fieldKlass));
 
    auto ntuple = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
-   auto rdKlass = ntuple->GetModel()->GetDefaultEntry().GetPtr<CustomStruct>("klass");
+   auto rdKlass = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("klass");
    EXPECT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
    EXPECT_EQ(1337.0, rdKlass->a);
