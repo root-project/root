@@ -79,53 +79,6 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
    return PyInt_FromLong((Long_t)result);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Implements a getter to assign to TDirectory.__getattr__
-/// Method that is assigned to TDirectory.__getattr__. It relies on Get to
-/// obtain the object from the TDirectory and adds on top:
-/// - Raising an AttributeError if the object does not exist
-/// - Caching the result of a successful get for future re-attempts.
-/// Once cached, the same object is retrieved every time.
-/// This pythonisation is inherited by TDirectoryFile and TFile.
-PyObject *TDirectoryGetAttr(PyObject *self, PyObject *attr)
-{
-   // Injection of TDirectory.__getattr__ that raises AttributeError on failure.
-   PyObject *result = CallPyObjMethod(self, "Get", attr);
-   if (!result)
-      return result;
-
-   if (!PyObject_IsTrue(result)) {
-      PyObject *astr = PyObject_Str(attr);
-      PyObject *stypestr = PyObject_Str(PyObject_Type(self));
-      PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'", CPyCppyy_PyText_AsString(stypestr),
-                   CPyCppyy_PyText_AsString(astr));
-      Py_DECREF(astr);
-      Py_DECREF(result);
-      return nullptr;
-   }
-
-   // Caching behavior seems to be more clear to the user; can always override said
-   // behavior (i.e. re-read from file) with an explicit Get() call
-   PyObject_SetAttr(self, attr, result);
-   return result;
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Add attr syntax to TDirectory
-/// \param[in] self Always null, since this is a module function.
-/// \param[in] args Pointer to a Python tuple object containing the arguments
-/// This allows to use TDirectory and daughters (such as TDirectoryFile and TFile)
-/// as follows
-/// ~~~{.py}
-/// myfile.mydir.mysubdir.myHist.Draw()
-/// ~~~
-PyObject *PyROOT::AddDirectoryGetAttrPyz(PyObject * /* self */, PyObject *args)
-{
-   PyObject *pyclass = PyTuple_GetItem(args, 0);
-   Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)TDirectoryGetAttr, METH_O);
-   Py_RETURN_NONE;
-}
-
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Add pythonisation of TDirectory::WriteObject
 /// \param[in] self Always null, since this is a module function.

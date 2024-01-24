@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-r'''
+r"""
 /**
 \class TDirectory
 \brief \parblock \endparblock
@@ -48,15 +48,42 @@ for more information.
 </div>
 \endhtmlonly
 */
-'''
+"""
 
-from libROOTPythonizations import AddDirectoryGetAttrPyz, AddDirectoryWritePyz
+from libROOTPythonizations import AddDirectoryWritePyz
 import cppyy
+
+
+def _TDirectory_getattr(self, attr):
+    """Injection of TDirectory.__getattr__ that raises AttributeError on failure.
+
+    Method that is assigned to TDirectory.__getattr__. It relies on Get to
+    obtain the object from the TDirectory and adds on top:
+    - Raising an AttributeError if the object does not exist
+    - Caching the result of a successful get for future re-attempts.
+    Once cached, the same object is retrieved every time.
+    This pythonisation is inherited by TDirectoryFile and TFile.
+
+    Example:
+    ```
+    myfile.mydir.mysubdir.myHist.Draw()
+    ```
+    """
+    result = self.Get(attr)
+    if not result:
+        raise AttributeError(f"{repr(self)} object has no attribute '{attr}'")
+
+    # Caching behavior seems to be more clear to the user; can always override said
+    # behavior (i.e. re-read from file) with an explicit Get() call
+    setattr(self, attr, result)
+    return result
+
 
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
-    AddDirectoryGetAttrPyz(klass)
+    klass.__getattr__ = _TDirectory_getattr
     AddDirectoryWritePyz(klass)
+
 
 # Instant pythonization (executed at `import ROOT` time), no need of a
 # decorator. This is a core class that is instantiated before cppyy's
