@@ -307,7 +307,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    field->SetDescription(collectionModel->GetDescription());
 
    if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->BindValue(collectionWriter->GetOffsetPtr()));
+      fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(collectionWriter->GetOffsetPtr(), [](void *) {})));
 
    fFieldZero->Attach(std::move(field));
    return collectionWriter;
