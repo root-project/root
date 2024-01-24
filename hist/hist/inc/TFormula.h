@@ -126,12 +126,10 @@ private:
    void FillVecFunctionsShurtCuts();
    void ReInitializeEvalMethod();
    std::string GetGradientFuncName() const {
-      assert(fClingName.Length() && "TFormula is not initialized yet!");
-      return std::string(fClingName.Data()) + "_grad_1";
+      return std::string(GetUniqueFuncName().Data()) + "_grad_1";
    }
    std::string GetHessianFuncName() const {
-      assert(fClingName.Length() && "TFormula is not initialized yet!");
-      return std::string(fClingName.Data()) + "_hessian_1";
+      return std::string(GetUniqueFuncName().Data()) + "_hessian_1";
    }
    bool HasGradientGenerationFailed() const {
       return !fGradFuncPtr && !fGradGenerationInput.empty();
@@ -252,6 +250,11 @@ public:
    TString        GetExpFormula(Option_t *option="") const;
    TString        GetGradientFormula() const;
    TString        GetHessianFormula() const;
+   TString        GetUniqueFuncName() const {
+      assert(fClingName.Length() && "TFormula is not initialized yet!");
+      return fClingName;
+   }
+
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
    Int_t          GetNpar() const {return fNpar;}
