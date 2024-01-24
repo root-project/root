@@ -8,6 +8,7 @@ TEST(RNTuple, Variant)
    auto wrVariant = modelWrite->MakeField<std::variant<double, int>>("variant");
    *wrVariant = 2.0;
 
+   modelWrite->Freeze();
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
    {
@@ -20,7 +21,7 @@ TEST(RNTuple, Variant)
       *wrVariant = 8.0;
       ntuple.Fill();
    }
-   auto rdVariant = modelRead->Get<std::variant<double, int>>("variant");
+   auto rdVariant = modelRead->GetDefaultEntry().GetPtr<std::variant<double, int>>("variant").get();
 
    RNTupleReader ntuple(std::move(modelRead),
       std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));

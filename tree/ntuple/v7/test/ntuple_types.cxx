@@ -1077,11 +1077,13 @@ TYPED_TEST(UniquePtr, Basics)
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsDense());
       }
 
-      auto pBool = writer->GetModel().Get<std::unique_ptr<bool>>("PBool");
-      auto pCustomStruct = writer->GetModel().Get<std::unique_ptr<CustomStruct>>("PCustomStruct");
-      auto pIOConstructor = writer->GetModel().Get<std::unique_ptr<IOConstructor>>("PIOConstructor");
-      auto ppString = writer->GetModel().Get<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
-      auto pArray = writer->GetModel().Get<std::unique_ptr<std::array<char, 2>>>("PArray");
+      auto pBool = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<bool>>("PBool");
+      auto pCustomStruct = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<CustomStruct>>("PCustomStruct");
+      auto pIOConstructor =
+         writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<IOConstructor>>("PIOConstructor");
+      auto ppString =
+         writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
+      auto pArray = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<std::array<char, 2>>>("PArray");
 
       *pBool = std::make_unique<bool>(true);
       EXPECT_EQ(nullptr, pCustomStruct->get());

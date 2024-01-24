@@ -232,7 +232,7 @@ TEST(RNTuple, RVecTypeErased)
 
    // read back RVec with type-erased API
    auto r = RNTupleReader::Open("r", fileGuard.GetPath());
-   auto v = r->GetModel()->Get<ROOT::RVec<int>>("v");
+   auto v = r->GetModel()->GetDefaultEntry().GetPtr<ROOT::RVec<int>>("v");
 
    r->LoadEntry(0);
    EXPECT_EQ(v->size(), 3);
@@ -291,6 +291,7 @@ TEST(RNTuple, BoolVector)
    wrBoolRVec->push_back(true);
    wrBoolRVec->push_back(false);
 
+   modelWrite->Freeze();
    auto modelRead = modelWrite->Clone();
 
    {
@@ -299,8 +300,8 @@ TEST(RNTuple, BoolVector)
       ntuple.Fill();
    }
 
-   auto rdBoolStdVec = modelRead->Get<std::vector<bool>>("boolStdVec");
-   auto rdBoolRVec = modelRead->Get<ROOT::RVec<bool>>("boolRVec");
+   auto rdBoolStdVec = modelRead->GetDefaultEntry().GetPtr<std::vector<bool>>("boolStdVec");
+   auto rdBoolRVec = modelRead->GetDefaultEntry().GetPtr<ROOT::RVec<bool>>("boolRVec");
    RNTupleReader ntuple(std::move(modelRead),
       std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(1U, ntuple.GetNEntries());

@@ -105,6 +105,7 @@ TEST(RNTuple, WriteRead)
    auto wrKlass = modelWrite->MakeField<CustomStruct>("klass");
    wrKlass->s = "abc";
 
+   modelWrite->Freeze();
    auto modelRead = modelWrite->Clone();
 
    {
@@ -113,13 +114,13 @@ TEST(RNTuple, WriteRead)
       ntuple.Fill();
    }
 
-   auto rdSignal = modelRead->Get<bool>("signal");
-   auto rdPt = modelRead->Get<float>("pt");
-   auto rdEnergy = modelRead->Get<float>("energy");
-   auto rdTag = modelRead->Get<std::string>("tag");
-   auto rdJets = modelRead->Get<std::vector<float>>("jets");
-   auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
-   auto rdKlass = modelRead->Get<CustomStruct>("klass");
+   auto rdSignal = modelRead->GetDefaultEntry().GetPtr<bool>("signal");
+   auto rdPt = modelRead->GetDefaultEntry().GetPtr<float>("pt");
+   auto rdEnergy = modelRead->GetDefaultEntry().GetPtr<float>("energy");
+   auto rdTag = modelRead->GetDefaultEntry().GetPtr<std::string>("tag");
+   auto rdJets = modelRead->GetDefaultEntry().GetPtr<std::vector<float>>("jets");
+   auto rdNnlo = modelRead->GetDefaultEntry().GetPtr<std::vector<std::vector<float>>>("nnlo");
+   auto rdKlass = modelRead->GetDefaultEntry().GetPtr<CustomStruct>("klass");
 
    RNTupleReader ntuple(std::move(modelRead),
       std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
@@ -178,8 +179,8 @@ TEST(RNTuple, FileAnchor)
    EXPECT_EQ(1U, readerA->GetNEntries());
    EXPECT_EQ(1U, readerB->GetNEntries());
 
-   auto a = readerA->GetModel()->Get<int>("a");
-   auto b = readerB->GetModel()->Get<int>("b");
+   auto a = readerA->GetModel()->GetDefaultEntry().GetPtr<int>("a");
+   auto b = readerB->GetModel()->GetDefaultEntry().GetPtr<int>("b");
    readerA->LoadEntry(0);
    readerB->LoadEntry(0);
    EXPECT_EQ(42, *a);
@@ -203,6 +204,7 @@ TEST(RNTuple, Clusters)
    wrFourVec->at(2) = 2.0;
    wrFourVec->at(3) = 3.0;
 
+   modelWrite->Freeze();
    auto modelRead = modelWrite->Clone();
 
    {
@@ -222,10 +224,10 @@ TEST(RNTuple, Clusters)
       ntuple.Fill();
    }
 
-   auto rdPt = modelRead->Get<float>("pt");
-   auto rdTag = modelRead->Get<std::string>("tag");
-   auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
-   auto rdFourVec = modelRead->Get<std::array<float, 4>>("fourVec");
+   auto rdPt = modelRead->GetDefaultEntry().GetPtr<float>("pt");
+   auto rdTag = modelRead->GetDefaultEntry().GetPtr<std::string>("tag");
+   auto rdNnlo = modelRead->GetDefaultEntry().GetPtr<std::vector<std::vector<float>>>("nnlo");
+   auto rdFourVec = modelRead->GetDefaultEntry().GetPtr<std::array<float, 4>>("fourVec");
 
    RNTupleReader ntuple(std::move(modelRead),
       std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
@@ -638,7 +640,7 @@ TEST(RNTuple, BareEntry)
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
       try {
-         model.Get<float>("pt");
+         model.GetDefaultEntry().GetPtr<float>("pt");
          FAIL() << "accessing default entry of bare model should throw";
       } catch (const RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
