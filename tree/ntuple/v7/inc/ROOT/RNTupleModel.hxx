@@ -290,7 +290,7 @@ public:
 
       auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
       field->SetDescription(fieldNameDesc.fDescription);
-      fDefaultEntry->AddValue(field->BindValue(fromWhere));
+      fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(fromWhere, [](void *) {})));
       fFieldZero->Attach(std::move(field));
    }
 

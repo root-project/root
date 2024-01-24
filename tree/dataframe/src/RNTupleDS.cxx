@@ -196,8 +196,7 @@ public:
 
       if (fValuePtr) {
          // When the reader reconnects to a new file, the fValuePtr is already set
-         fValue = std::make_unique<RFieldBase::RValue>(fField->BindValue(fValuePtr.get()));
-         fValue->Bind(fValuePtr);
+         fValue = std::make_unique<RFieldBase::RValue>(fField->BindValue(fValuePtr));
          fValuePtr = nullptr;
       } else {
          // For the first file, create a new object for this field (reader)

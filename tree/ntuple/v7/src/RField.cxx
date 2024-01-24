@@ -1551,7 +1551,8 @@ ROOT::Experimental::RClassField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      result.emplace_back(fSubFields[i]->BindValue(value.Get<unsigned char>() + fSubFieldsInfo[i].fOffset));
+      result.emplace_back(fSubFields[i]->BindValue(
+         std::shared_ptr<void>(value.GetPtr(), value.Get<unsigned char>() + fSubFieldsInfo[i].fOffset)));
    }
    return result;
 }
@@ -1626,7 +1627,7 @@ std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::REnumField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   result.emplace_back(fSubFields[0]->BindValue(value.Get<void>()));
+   result.emplace_back(fSubFields[0]->BindValue(value.GetPtr()));
    return result;
 }
 
@@ -1820,7 +1821,7 @@ ROOT::Experimental::RProxiedCollectionField::SplitValue(const RValue &value) con
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.Get<void>());
    for (auto ptr : RCollectionIterableOnce{value.Get<void>(), fIFuncsWrite, fProxy.get(),
                                            (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
-      result.emplace_back(fSubFields[0]->BindValue(ptr));
+      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr(), ptr)));
    }
    return result;
 }
@@ -1944,7 +1945,8 @@ ROOT::Experimental::RRecordField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      result.emplace_back(fSubFields[i]->BindValue(value.Get<unsigned char>() + fOffsets[i]));
+      result.emplace_back(
+         fSubFields[i]->BindValue(std::shared_ptr<void>(value.GetPtr(), value.Get<unsigned char>() + fOffsets[i])));
    }
    return result;
 }
@@ -2083,7 +2085,8 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
    auto nItems = vec->size() / fItemSize;
    std::vector<RValue> result;
    for (unsigned i = 0; i < nItems; ++i) {
-      result.emplace_back(fSubFields[0]->BindValue(vec->data() + (i * fItemSize)));
+      result.emplace_back(
+         fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr(), vec->data() + (i * fItemSize))));
    }
    return result;
 }
@@ -2331,7 +2334,7 @@ ROOT::Experimental::RRVecField::SplitValue(const RValue &value) const
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    result.reserve(*sizePtr);
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      result.emplace_back(fSubFields[0]->BindValue(begin + i * fItemSize));
+      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr(), begin + i * fItemSize)));
    }
    return result;
 }
@@ -2412,17 +2415,14 @@ void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumnsImpl(const RN
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) const
 {
-   const static bool trueValue = true;
-   const static bool falseValue = false;
-
    auto typedValue = value.Get<std::vector<bool>>();
    auto count = typedValue->size();
    std::vector<RValue> result;
    for (unsigned i = 0; i < count; ++i) {
       if ((*typedValue)[i])
-         result.emplace_back(fSubFields[0]->BindValue(const_cast<bool *>(&trueValue)));
+         result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<bool>(new bool(true))));
       else
-         result.emplace_back(fSubFields[0]->BindValue(const_cast<bool *>(&falseValue)));
+         result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<bool>(new bool(false))));
    }
    return result;
 }
@@ -2515,7 +2515,7 @@ ROOT::Experimental::RArrayField::SplitValue(const RValue &value) const
    auto arrayPtr = value.Get<unsigned char>();
    std::vector<RValue> result;
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      result.emplace_back(fSubFields[0]->BindValue(arrayPtr + (i * fItemSize)));
+      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr(), arrayPtr + (i * fItemSize))));
    }
    return result;
 }
@@ -2659,7 +2659,7 @@ ROOT::Experimental::RArrayAsRVecField::SplitValue(const ROOT::Experimental::Deta
    auto arrayPtr = value.Get<unsigned char>();
    std::vector<ROOT::Experimental::Detail::RFieldBase::RValue> result;
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      result.emplace_back(fSubFields[0]->BindValue(arrayPtr + (i * fItemSize)));
+      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr(), arrayPtr + (i * fItemSize))));
    }
    return result;
 }
@@ -2942,7 +2942,7 @@ ROOT::Experimental::RMapField::SplitValue(const RValue &value) const
    std::vector<RValue> result;
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.Get<void>());
    for (auto ptr : RCollectionIterableOnce{value.Get<void>(), fIFuncsWrite, fProxy.get(), 0U}) {
-      result.emplace_back(fSubFields[0]->BindValue(ptr));
+      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr(), ptr)));
    }
    return result;
 }
@@ -3119,7 +3119,7 @@ ROOT::Experimental::RUniquePtrField::SplitValue(const RValue &value) const
    std::vector<RValue> result;
    auto ptr = value.Get<std::unique_ptr<char>>();
    if (*ptr) {
-      result.emplace_back(fSubFields[0]->BindValue(ptr->get()));
+      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr(), ptr->get())));
    }
    return result;
 }
@@ -3328,7 +3328,7 @@ std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
 ROOT::Experimental::RAtomicField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   result.emplace_back(fSubFields[0]->BindValue(value.Get<void>()));
+   result.emplace_back(fSubFields[0]->BindValue(value.GetPtr()));
    return result;
 }
 
