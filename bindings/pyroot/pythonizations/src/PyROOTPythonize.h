@@ -23,7 +23,6 @@ PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 PyObject *AddDirectoryGetAttrPyz(PyObject *self, PyObject *args);
 PyObject *AddDirectoryWritePyz(PyObject *self, PyObject *args);
 PyObject *AddTDirectoryFileGetPyz(PyObject *self, PyObject *args);
-PyObject *AddFileOpenPyz(PyObject *self, PyObject *args);
 
 PyObject *AddBranchAttrSyntax(PyObject *self, PyObject *args);
 PyObject *BranchPyz(PyObject *self, PyObject *args);
