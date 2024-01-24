@@ -200,8 +200,8 @@ public:
    std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
-   RNTupleModel *GetModel();
    NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
+   const RNTupleModel &GetModel();
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call
    /// to LoadEntry or to any of the views returned from the reader.
