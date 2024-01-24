@@ -370,6 +370,16 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    return entry;
 }
 
+ROOT::Experimental::Detail::RFieldBase::RBulk
+ROOT::Experimental::RNTupleModel::GenerateBulk(std::string_view fieldName) const
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
+
+   auto f = FindField(fieldName);
+   return f->GenerateBulk();
+}
+
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
    if (!IsFrozen())
