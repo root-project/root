@@ -54,6 +54,7 @@ set(libname cppyy)
 add_library(${libname} SHARED ${headers} ${sources})
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+set_target_properties(${libname} PROPERTIES  INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/ROOT/lib")
 if(MSVC)
   target_link_libraries(${libname} PUBLIC cppyy_backend Python3::Python)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

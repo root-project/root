@@ -677,7 +677,7 @@ set(Python3_FIND_FRAMEWORK LAST)
 # Even if we don't build PyROOT, one still need python executable to run some scripts
 list(APPEND python_components Interpreter)
 if(pyroot OR tmva-pymva)
-  list(APPEND python_components Development)
+  list(APPEND python_components Development.Module)
 endif()
 if(tmva-pymva)
   list(APPEND python_components NumPy)
@@ -1759,7 +1759,7 @@ endif(tmva)
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
 
-  if(Python3_Development_FOUND)
+  if(Python3_Development.Module_FOUND)
     message(STATUS "PyROOT: development package found. Building for version ${Python3_VERSION}")
   else()
     if(fail-on-missing)

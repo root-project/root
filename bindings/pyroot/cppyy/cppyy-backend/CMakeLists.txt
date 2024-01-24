@@ -31,6 +31,7 @@ if(MSVC)
 endif()
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+set_target_properties(${libname} PROPERTIES  INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/ROOT/lib")
 target_link_libraries(${libname} Core ${CMAKE_DL_LIBS})
 
 # cppyy uses ROOT headers from binary directory
