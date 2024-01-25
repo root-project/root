@@ -161,10 +161,6 @@ public:
    /// Uses a C stream for writing
    static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path, int defaultCompression,
                                       ENTupleContainerFormat containerFormat);
-   /// Create or truncate the local or remote file given by path with the new empty RNTuple identified by ntupleName.
-   /// Creates a new TFile object for writing and hands over ownership of the object to the user.
-   static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path,
-                                      std::unique_ptr<TFile> &file);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
    static RNTupleFileWriter *Append(std::string_view ntupleName, TFile &file);
 

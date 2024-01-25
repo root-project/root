@@ -76,15 +76,6 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
 }
 
 
-ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
-   const RNTupleWriteOptions &options, std::unique_ptr<TFile> &file)
-   : RPageSinkFile(ntupleName, options)
-{
-   fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(
-      Internal::RNTupleFileWriter::Recreate(ntupleName, path, file));
-}
-
-
 ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 {
 }

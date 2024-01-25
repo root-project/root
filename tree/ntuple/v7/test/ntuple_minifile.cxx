@@ -88,8 +88,8 @@ TEST(MiniFile, Proper)
 {
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
-   std::unique_ptr<TFile> file;
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), file));
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
 
    char header = 'h';
    char footer = 'f';
@@ -223,8 +223,8 @@ TEST(MiniFile, ProperKeys)
 {
    FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
 
-   std::unique_ptr<TFile> file;
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), file));
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -352,9 +352,9 @@ TEST(MiniFile, Multi)
 {
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
 
-   std::unique_ptr<TFile> file;
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto writer1 =
-      std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("FirstNTuple", fileGuard.GetPath(), file));
+      std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("FirstNTuple", *file));
    auto writer2 = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("SecondNTuple", *file));
 
    char header1 = 'h';

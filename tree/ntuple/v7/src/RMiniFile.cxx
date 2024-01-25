@@ -1318,18 +1318,6 @@ ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::R
 }
 
 
-ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(
-   std::string_view ntupleName, std::string_view path, std::unique_ptr<TFile> &file)
-{
-   file = std::unique_ptr<TFile>(TFile::Open(std::string(path.data(), path.size()).c_str(), "RECREATE"));
-   R__ASSERT(file && !file->IsZombie());
-
-   auto writer = new RNTupleFileWriter(ntupleName);
-   writer->fFileProper.fFile = file.get();
-   return writer;
-}
-
-
 ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::RNTupleFileWriter::Append(
    std::string_view ntupleName, TFile &file)
 {
