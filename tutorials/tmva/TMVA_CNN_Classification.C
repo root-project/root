@@ -223,8 +223,6 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    **/
 
-   // TString inputFileName = "tmva_class_example.root";
-
    std::unique_ptr<TFile> inputFile{TFile::Open(inputFileName)};
    if (!inputFile) {
       Error("TMVA_CNN_Classification", "Error opening input file %s - exit", inputFileName.Data());
@@ -297,8 +295,6 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
 
    **/
-
-   // signalTree->Print();
 
    /****
         # Booking Methods
