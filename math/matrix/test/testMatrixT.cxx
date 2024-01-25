@@ -12,19 +12,15 @@
 #include <TMatrixDSym.h>
 #include <TMatrixF.h>
 #include <TMatrixFSym.h>
-//#include <Math.h>
 
 #include <gtest/gtest.h>
 
 #include <iostream>
 
-typedef TMatrixF MTX;
-typedef float Scalar;
 double tol = std::numeric_limits<double>::epsilon() * 100;
 float tol_f = std::numeric_limits<float>::epsilon() * 100;
 
 // Helper functions for element-wise comparison of TMatrix.
-
 #define CHECK_TMATRIX_FLOAT(a, b, m, n)                                                     \
    {                                                                                        \
       for (size_t i = 0; i < m; i++) {                                                      \
@@ -52,10 +48,10 @@ void CompareTMatrix(TMatrixF result,
                     TMatrixF expected){CHECK_TMATRIX_FLOAT(result, expected, result.GetNrows(), result.GetNcols())}
 
 Int_t n = 5;
-Scalar values[5] = {-0.26984126984127, -0.1375661375661377, -0.0052910052910052, 0.1269841269841271,
+double values[5] = {-0.26984126984127, -0.1375661375661377, -0.0052910052910052, 0.1269841269841271,
                     0.2592592592592592};
 
-// template <typename MTX>
+template <typename MTX>
 class testMatrix : public testing::Test {
 protected:
    void SetUp() override
@@ -79,38 +75,40 @@ protected:
    MTX eye;
 };
 
-TEST_F(testMatrix, kPlus)
+using MyTypes = ::testing::Types<TMatrixF, TMatrixD>;
+TYPED_TEST_SUITE(testMatrix, MyTypes);
+
+TYPED_TEST(testMatrix, kPlus)
 {
-   MTX b(n, n);
+   TypeParam b(n, n);
 
    for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
          b(i, j) = n * i + j + 1 * (i == j);
 
-   MTX c(m1, MTX::kPlus, eye);
+   TypeParam c(TestFixture::m1, TypeParam::kPlus, TestFixture::eye);
 
    EXPECT_EQ(c, b);
 }
 
-TEST_F(testMatrix, kMinus)
+TYPED_TEST(testMatrix, kMinus)
 {
-   MTX b(n, n);
+   TypeParam b(n, n);
 
    for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
          b(i, j) = n * i + j - 1 * (i == j);
 
-   MTX c(m1, MTX::kMinus, eye);
+   TypeParam c(TestFixture::m1, TypeParam::kMinus, TestFixture::eye);
 
    EXPECT_EQ(c, b);
 }
 
-TEST_F(testMatrix, kMult)
+TYPED_TEST(testMatrix, kMult)
 {
 
-   MTX b(n, 2 * n);
-   // b = m1;
-   Scalar sum;
+   TypeParam b(n, 2 * n);
+   double sum;
 
    for (int i = 0; i < n; i++) {
       sum = 0.0;
@@ -120,39 +118,33 @@ TEST_F(testMatrix, kMult)
          b(i, j) = sum;
    }
 
-   MTX c(m1, MTX::kMult, m2);
+   TypeParam c(TestFixture::m1, TypeParam::kMult, TestFixture::m2);
 
    EXPECT_EQ(c, b);
 }
 
-TEST_F(testMatrix, kInvMult)
+TYPED_TEST(testMatrix, kInvMult)
 {
 
-   MTX b(n, 2 * n);
-   MTX tol(n, 2 * n);
-   // b = m1;
-   Scalar sum;
-   Scalar eps = std::numeric_limits<Scalar>::min();
+   TypeParam b(n, 2 * n);
+   double sum;
 
    for (int i = 0; i < n; i++) {
       sum = values[i];
-      for (int j = 0; j < 2 * n; j++) {
+      for (int j = 0; j < 2 * n; j++)
          b(i, j) = sum;
-         tol(i, j) = eps;
-         if (i == j)
-            m1(i, j) += 1;
-      }
    }
 
-   MTX c(m1, MTX::kInvMult, m2);
+   TestFixture::m1 += TestFixture::eye;
+
+   TypeParam c(TestFixture::m1, TypeParam::kInvMult, TestFixture::m2);
 
    CompareTMatrix(c, b);
 }
 
-TEST_F(testMatrix, Invert)
+TYPED_TEST(testMatrix, Invert)
 {
-   MTX b(n, n);
-   // b = m1;
+   TypeParam b(n, n);
 
    for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
@@ -160,9 +152,9 @@ TEST_F(testMatrix, Invert)
 
    b.Invert();
 
-   m1 += eye;
+   TestFixture::m1 += TestFixture::eye;
 
-   MTX c(m1, MTX::kMult, b);
+   TypeParam c(TestFixture::m1, TypeParam::kMult, b);
 
-   CompareTMatrix(c, eye);
+   CompareTMatrix(c, TestFixture::eye);
 }
