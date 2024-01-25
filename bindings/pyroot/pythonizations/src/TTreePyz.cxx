@@ -65,7 +65,7 @@ static PyObject *BindBranchToProxy(TTree *tree, const char *name, TBranch *branc
       TBranchElement *be = (TBranchElement *)branch;
       if (be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID())) {
          Long_t offset = ((TStreamerElement *)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
-         return BindCppObjectNoCast(be->GetObject() + offset, Cppyy::GetScope(be->GetCurrentClass()->GetName()));
+         return BindCppObjectNoCast((char *)be->GetObject() + offset, Cppyy::GetScope(be->GetCurrentClass()->GetName()));
       }
    }
 

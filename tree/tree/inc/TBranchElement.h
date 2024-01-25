@@ -178,7 +178,7 @@ public:
            void             Browse(TBrowser* b) override;
            TBranch         *FindBranch(const char *name) override;
            TLeaf           *FindLeaf(const char *name) override;
-           char            *GetAddress() const override;
+           void            *GetAddress() const override;
            TBranchElement  *GetBranchCount() const { return fBranchCount; }
            TBranchElement  *GetBranchCount2() const { return fBranchCount2; }
            Int_t           *GetBranchOffset() const { return fBranchOffset; }
@@ -195,7 +195,7 @@ public:
            Int_t            GetID() const { return fID; }
            TStreamerInfo   *GetInfo() const;
            bool             GetMakeClass() const override;
-           char            *GetObject() const;
+           void            *GetObject() const;
            TVirtualArray   *GetOnfileObject() const { return fOnfileObject; }
    virtual const char      *GetParentName() const { return fParentName.Data(); }
    virtual Int_t            GetMaximum() const;

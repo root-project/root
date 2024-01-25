@@ -209,7 +209,7 @@ public:
            Int_t     FlushBaskets();
            Int_t     FlushOneBasket(UInt_t which);
 
-   virtual char     *GetAddress() const {return fAddress;}
+   virtual void     *GetAddress() const {return (void*)fAddress;}
            TBasket  *GetBasket(Int_t basket) {return GetBasketImpl(basket, nullptr);}
            Int_t    *GetBasketBytes() const {return fBasketBytes;}
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
