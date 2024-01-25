@@ -4521,11 +4521,11 @@ Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf* leaf) const
          }
       }
       if (id < 0) {
-         char* address = branch->GetObject();
+         char* address = (char*) branch->GetObject();
          thisobj = address;
       } else {
          //char* address = branch->GetAddress();
-         char* address = branch->GetObject();
+         char* address = (char*) branch->GetObject();
          if (address) {
             thisobj = *((char**) (address + offset));
          } else {
@@ -4581,11 +4581,11 @@ void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf* leaf) const
          }
       }
       if (id < 0) {
-         char* address = branch->GetObject();
+         char* address = (char*) branch->GetObject();
          thisobj = address;
       } else {
          //char* address = branch->GetAddress();
-         char* address = branch->GetObject();
+         char* address = (char*) branch->GetObject();
          if (address) {
             thisobj = *((char**) (address + offset));
          } else {

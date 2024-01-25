@@ -160,6 +160,31 @@ Status = -2
 ## Language Bindings
 
 
+## PyROOT
+
+### Changing return type of TBranch::GetAddress() and others to `void *`
+
+So far, the `TBranch::GetAddress` method returned a `char *`. This causes
+incompatibility with PyROOT, because `char *` is automatically converted to a
+Python string, which is the wrong thing to for an address. This made the return
+value unusable in PyROOT.
+
+Therefore, the return type of `TBranch::GetAddress()` was changed to `void *`
+in this release. Even if this change is not backwards compatible for typing
+reasons, the returned value is the same. In case your C++ code doesn't compile
+because of this, just explicitly cast the return value to what you want with a
+C-style or better `reinterpret_cast`. Like this, your code will stay compatible
+with all ROOT versions. For example:
+```c++
+void *addr = reinterpret_cast<void *>(branch->GetAddress());
+```
+
+The same change also applies to other functions, the full list is here:
+
+  * TBranch::GetAddress()
+  * TBranchElement::GetObject()
+
+
 ## JavaScript ROOT
 
 

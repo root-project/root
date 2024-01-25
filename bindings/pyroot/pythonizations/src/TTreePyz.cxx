@@ -80,7 +80,7 @@ static std::pair<void *, std::string> ResolveBranch(TTree *tree, const char *nam
       TBranchElement *be = (TBranchElement *)branch;
       if (be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID())) {
          Long_t offset = ((TStreamerElement *)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
-         return {be->GetObject() + offset, be->GetCurrentClass()->GetName()};
+         return {(char *)be->GetObject() + offset, be->GetCurrentClass()->GetName()};
       }
    }
 
