@@ -49,13 +49,12 @@ TEST(RNTuple, ModelExtensionSimple)
 
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      std::array<double, 2> fieldArray = refArray;
-      modelUpdater->AddField<std::array<double, 2>>("array", &fieldArray);
+      auto fieldArray = modelUpdater->MakeField<std::array<double, 2>>("array", refArray);
       modelUpdater->CommitUpdate();
 
       ntuple->Fill();
       *fieldPt = 1.0;
-      fieldArray[1] = 1337.0;
+      fieldArray->at(1) = 1337.0;
       ntuple->Fill();
    }
 
@@ -91,8 +90,7 @@ TEST(RNTuple, ModelExtensionInvalidUse)
 
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      double d;
-      modelUpdater->AddField<double>("d", &d);
+      auto d = modelUpdater->MakeField<double>("d");
       // Cannot fill if the model is not frozen
       EXPECT_THROW(ntuple->Fill(), ROOT::Experimental::RException);
       // Trying to create an entry should throw if model is not frozen
@@ -132,28 +130,25 @@ TEST(RNTuple, ModelExtensionMultiple)
 
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      std::vector<std::uint32_t> fieldVec{0x11223344};
-      modelUpdater->AddField<std::vector<std::uint32_t>>("vec", &fieldVec);
+      auto fieldVec = modelUpdater->MakeField<std::vector<std::uint32_t>>("vec");
+      fieldVec->emplace_back(0x11223344);
       modelUpdater->CommitUpdate();
 
       modelUpdater->BeginUpdate();
-      float fieldFloat = 10.0;
-      modelUpdater->AddField<float>("f", &fieldFloat);
+      auto fieldFloat = modelUpdater->MakeField<float>("f", 10);
       modelUpdater->CommitUpdate();
 
       modelUpdater->BeginUpdate();
-      std::uint8_t u8 = 0x7f;
-      std::string str{"default"};
-      modelUpdater->AddField<std::uint8_t>("u8", &u8);
-      modelUpdater->AddField<std::string>("str", &str);
+      auto u8 = modelUpdater->MakeField<std::uint8_t>("u8", 0x7f);
+      auto str = modelUpdater->MakeField<std::string>("str", "default");
       modelUpdater->CommitUpdate();
 
       ntuple->Fill();
       *fieldPt = 12.0;
-      fieldFloat = 1.0;
-      fieldVec = refVec;
-      u8 = 0xaa;
-      str = "abcdefABCDEF1234567890!@#$%^&*()";
+      *fieldFloat = 1.0;
+      *fieldVec = refVec;
+      *u8 = 0xaa;
+      *str = "abcdefABCDEF1234567890!@#$%^&*()";
       ntuple->Fill();
    }
 
@@ -213,8 +208,7 @@ TEST(RNTuple, ModelExtensionProject)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      std::vector<std::uint32_t> fieldVec;
-      modelUpdater->AddField<std::vector<std::uint32_t>>("vec", &fieldVec);
+      auto fieldVec = modelUpdater->MakeField<std::vector<std::uint32_t>>("vec");
       modelUpdater->CommitUpdate();
 
       modelUpdater->BeginUpdate();
@@ -229,7 +223,7 @@ TEST(RNTuple, ModelExtensionProject)
 
       ntuple->Fill();
       *fieldPt = 12.0;
-      fieldVec = refVec;
+      *fieldVec = refVec;
       ntuple->Fill();
    }
 
@@ -266,22 +260,19 @@ TEST(RNTuple, ModelExtensionRealWorld1)
 
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      std::vector<std::uint32_t> fieldVec;
-      double wrEnergy;
-      std::vector<std::uint32_t> wrIndices;
-      modelUpdater->AddField<double>("energy", &wrEnergy);
-      modelUpdater->AddField<std::vector<std::uint32_t>>("indices", &wrIndices);
+      auto wrEnergy = modelUpdater->MakeField<double>("energy");
+      auto wrIndices = modelUpdater->MakeField<std::vector<std::uint32_t>>("indices");
       modelUpdater->CommitUpdate();
 
       constexpr unsigned int nEvents = 60000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          *wrEvent = i;
-         wrEnergy = rnd.Rndm() * 1000.;
+         *wrEnergy = rnd.Rndm() * 1000.;
          *wrSignal = i % 2;
 
          chksumWrite += double(*wrEvent);
          chksumWrite += double(*wrSignal);
-         chksumWrite += wrEnergy;
+         chksumWrite += *wrEnergy;
 
          auto nTimes = 1 + floor(rnd.Rndm() * 1000.);
          wrTimes->resize(nTimes);
@@ -291,10 +282,10 @@ TEST(RNTuple, ModelExtensionRealWorld1)
          }
 
          auto nIndices = 1 + floor(rnd.Rndm() * 1000.);
-         wrIndices.resize(nIndices);
+         wrIndices->resize(nIndices);
          for (unsigned int n = 0; n < nIndices; ++n) {
-            wrIndices.at(n) = 1 + floor(rnd.Rndm() * 1000.);
-            chksumWrite += double(wrIndices.at(n));
+            wrIndices->at(n) = 1 + floor(rnd.Rndm() * 1000.);
+            chksumWrite += double(wrIndices->at(n));
          }
 
          ntuple->Fill();
@@ -379,14 +370,12 @@ TEST(RNTuple, ModelExtensionComplex)
       ntuple->CommitCluster(true /* commitClusterGroup */);
 
       modelUpdater->BeginUpdate();
-      std::vector<double> dblVec;
-      doubleAoA_t doubleAoA;
-      modelUpdater->AddField<std::vector<double>>("dblVec", &dblVec);
-      modelUpdater->AddField<doubleAoA_t>("doubleAoA", &doubleAoA);
+      auto dblVec = modelUpdater->MakeField<std::vector<double>>("dblVec");
+      auto doubleAoA = modelUpdater->MakeField<doubleAoA_t>("doubleAoA");
       modelUpdater->CommitUpdate();
       for (unsigned int i = 10000; i < 20000; ++i) {
          updateInitialFields(i, *u32, *dbl);
-         updateLateFields1(i, dblVec, doubleAoA);
+         updateLateFields1(i, *dblVec, *doubleAoA);
          ntuple->Fill();
       }
 
@@ -395,28 +384,25 @@ TEST(RNTuple, ModelExtensionComplex)
       ntuple->CommitCluster();
 
       modelUpdater->BeginUpdate();
-      std::variant<std::uint64_t, double> var;
-      modelUpdater->AddField<std::variant<std::uint64_t, double>>("var", &var);
+      auto var = modelUpdater->MakeField<std::variant<std::uint64_t, double>>("var");
       modelUpdater->CommitUpdate();
       for (unsigned int i = 20000; i < 30000; ++i) {
          updateInitialFields(i, *u32, *dbl);
-         updateLateFields1(i, dblVec, doubleAoA);
-         updateLateFields2(i, var);
+         updateLateFields1(i, *dblVec, *doubleAoA);
+         updateLateFields2(i, *var);
          ntuple->Fill();
       }
 
       modelUpdater->BeginUpdate();
-      bool b = false;
-      EmptyStruct noColumns{};
-      modelUpdater->AddField<bool>("b", &b);
-      modelUpdater->AddField<EmptyStruct>("noColumns", &noColumns);
+      auto b = modelUpdater->MakeField<bool>("b", false);
+      auto noColumns = modelUpdater->MakeField<EmptyStruct>("noColumns");
       modelUpdater->CommitUpdate();
       for (unsigned int i = 30000; i < 40000; ++i) {
          updateInitialFields(i, *u32, *dbl);
-         updateLateFields1(i, dblVec, doubleAoA);
-         updateLateFields2(i, var);
-         b = !b;
-         chksumWrite += static_cast<double>(b);
+         updateLateFields1(i, *dblVec, *doubleAoA);
+         updateLateFields2(i, *var);
+         *b = !(*b);
+         chksumWrite += static_cast<double>(*b);
          ntuple->Fill();
       }
    }
