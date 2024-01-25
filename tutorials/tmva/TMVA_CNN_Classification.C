@@ -32,6 +32,7 @@ void MakeImagesTree(int n, int nh, int nw)
    // image size (nh x nw)
    const int ntot = nh * nw;
    const TString fileOutName = TString::Format("images_data_%dx%d.root", nh, nw);
+   TFile f(fileOutName, "RECREATE");
 
    const int nRndmEvts = 10000; // number of events we use to fill each image
    double delta_sigma = 0.1;    // 5% difference in the sigma
@@ -47,7 +48,7 @@ void MakeImagesTree(int n, int nh, int nw)
 
    TF2 f1("f1", "xygaus");
    TF2 f2("f2", "xygaus");
-   TFile f(fileOutName, "RECREATE");
+
    TTree sgn("sig_tree", "signal_tree");
    TTree bkg("bkg_tree", "background_tree");
 
