@@ -437,6 +437,8 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    **/
 
+#ifdef R__HAS_PYMVA
+   // The next section uses Python packages, execute it only if PyMVA is available
    TString tmva_python_exe{TMVA::Python_Executable()};
    TString python_exe = tmva_python_exe.IsNull() ? "python" : tmva_python_exe;
 
@@ -501,7 +503,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
          factory.BookMethod(&loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
       }
    }
-
+#endif
 
    ////  ## Train Methods
 
