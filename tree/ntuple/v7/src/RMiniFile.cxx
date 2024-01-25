@@ -155,15 +155,23 @@ constexpr std::int32_t ChecksumRNTupleClass() {
 #pragma pack(push, 1)
 /// A name (type, identifies, ...) in the TFile binary format
 struct RTFString {
-   char fLName{0};
+   unsigned char fLName{0};
    char fData[255];
    RTFString() = default;
    RTFString(const std::string &str) {
-      R__ASSERT(str.length() < 256);
+      // The length of strings with 255 characters and longer are encoded with a 32-bit integer following the first
+      // byte. This is currently not handled.
+      R__ASSERT(str.length() < 255);
       fLName = str.length();
       memcpy(fData, str.data(), fLName);
    }
-   char GetSize() const { return 1 + fLName; }
+   std::size_t GetSize() const
+   {
+      // A length of 255 is special and means that the first byte is followed by a 32-bit integer with the actual
+      // length.
+      R__ASSERT(fLName != 255);
+      return 1 + fLName;
+   }
 };
 
 /// The timestamp format used in TFile; the default constructor initializes with the current time
