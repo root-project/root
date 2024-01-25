@@ -130,7 +130,7 @@ ds.SetBranchAddress('structb', ms)
 */
 """
 
-from libROOTPythonizations import GetBranchAttr, BranchPyz
+from libROOTPythonizations import BranchPyz
 from ._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
 from . import pythonization
 
@@ -196,8 +196,7 @@ def _get_cpp_type_from_array_typecode(typecode):
 
 
 def _determine_data_type(addr):
-    """ Figure out data_type in case addr is a numpy.ndarray or array.array.
-    """
+    """Figure out data_type in case addr is a numpy.ndarray or array.array."""
 
     # For NumPy arrays
     if hasattr(addr, "__array_interface__"):
@@ -255,29 +254,110 @@ def _Branch(self, *args):
     return res
 
 
+def search_for_branch(tree, name):
+    branch = tree.GetBranch(name)
+    # branch will be nullptr if not found
+    if not branch:
+        # for benefit of naming of sub-branches, the actual name may have a trailing '.'
+        branch = tree.GetBranch(name + ".")
+    return branch
+
+
+def search_for_leaf(tree, name, branch):
+    leaf = tree.GetLeaf(name)
+    if not branch or leaf:
+        return leaf
+
+    leaf = branch.GetLeaf(name)
+    if not leaf:
+        leaves = branch.GetListOfLeaves()
+        if leaves.GetEntries() == 1:
+            # i.e., if unambiguously only this one
+            leaf = leaves.At(0)
+    return leaf
+
+
+def bind_branch_to_proxy(tree, name, branch):
+    import cppyy
+    import cppyy.ll
+
+    # for partial return of a split object
+    if branch.InheritsFrom("TBranchElement") and branch.GetCurrentClass():
+        if branch.GetCurrentClass() != branch.GetTargetClass() and branch.GetID() >= 0:
+            offset = branch.GetInfo().GetElements().At(branch.GetID()).GetOffset()
+            # cppyy doesn't do pointer arithmetic
+            address = cppyy.ll.cast["std::uintptr_t"](branch.GetObject()) + offset
+            return cppyy.bind_object(address, branch.GetCurrentClass())
+
+    # for return of a full object
+    if branch.ClassName() in ["TBranchElement", "TBranchObject"]:
+        return cppyy.bind_object(branch.GetAddress()[0], branch.GetClassName())
+
+        # try leaf, otherwise indicate failure by returning a typed null-object
+        leaves = branch.GetListOfLeaves()
+        if not tree.GetLeaf(name) and leaves.GetEntries() != 1:
+            return cppyy.bind_object(cppyy.nullptr, branch.GetClassName())
+
+    return cppyy.nullptr
+
+
+def wrap_leaf(leaf):
+    import cppyy
+    import cppyy.ll
+
+    if leaf.GetBranch():
+        address = leaf.GetBranch().GetAddress()
+        if not address:
+            address = leaf.GetValuePointer()
+    else:
+        address = leaf.GetValuePointer()
+
+    d = cppyy.ll.cast[leaf.GetTypeName() + "*"](address)
+
+    # char* arrays will automatically get converted to str and should be returned directly.
+    if isinstance(d, str):
+        return d
+
+    n = leaf.GetNdata()
+    if n == 1:
+        return d[0]
+    d.reshape((n,))
+    return d
+
+
 def _TTree__getattr__(self, key):
     """
     Allow branches to be accessed as attributes of a tree.
+    \param[in] self Always null, since this is a module function.
+    \param[in] args Pointer to a Python tuple object containing the arguments
+    received from Python.
 
-    Allow access to branches/leaves as if they were Python data attributes of
-    the tree (e.g. mytree.branch).
-
-    To avoid using the CPyCppyy API, any necessary cast is done here on the
-    Python side. The GetBranchAttr() function encodes a necessary cast in the
-    second element of the output tuple, which is a string with the required
-    type name.
-
-    Parameters:
-    self (TTree): The instance of the TTree object from which the attribute is being retrieved.
-    key (str): The name of the branch to retrieve from the TTree object.
+    Allow access to branches/leaves as if they were Python data attributes of the tree
+    (e.g. mytree.branch)
     """
+    # deal with possible aliasing
+    name = self.GetAlias(key)
+    if len(name) == 0:
+        name = key
 
-    import cppyy.ll
+    # search for branch first (typical for objects)
+    branch = search_for_branch(self, name)
 
-    out, cast_type = GetBranchAttr(self, key)
-    if cast_type:
-        out = cppyy.ll.cast[cast_type](out)
-    return out
+    if branch:
+        # found a branched object, wrap its address for the object it represents
+        proxy = bind_branch_to_proxy(self, name, branch)
+        if proxy:
+            return proxy
+
+    # if not, try leaf
+    leaf = search_for_leaf(self, name, branch)
+
+    if leaf:
+        # found a leaf, extract value and wrap with a Python object according to its type
+        return wrap_leaf(leaf)
+
+    # confused
+    raise AttributeError(f"'{self.IsA().GetName()}' object has no attribute '{name}'")
 
 
 @pythonization("TTree")

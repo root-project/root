@@ -66,8 +66,6 @@ PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
 static PyMethodDef gPyROOTMethods[] = {
    {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_VARARGS,
     (char *)"Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {(char *)"GetBranchAttr", (PyCFunction)PyROOT::GetBranchAttr, METH_VARARGS,
-    (char *)"Allow to access branches as tree attributes"},
    {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
     (char *)"Cast the void* returned by TClass::DynamicCast to the right type"},
    {(char *)"AddTObjectEqNePyz", (PyCFunction)PyROOT::AddTObjectEqNePyz, METH_VARARGS,
