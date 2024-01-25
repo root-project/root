@@ -269,7 +269,7 @@ public:
       field->SetDescription(fieldNameDesc.fDescription);
       std::shared_ptr<T> ptr;
       if (fDefaultEntry)
-         ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
+         ptr = fDefaultEntry->AddValue<T>(*field, std::forward<ArgsT>(args)...);
       fFieldZero->Attach(std::move(field));
       return ptr;
    }
