@@ -977,14 +977,14 @@ You don't need to read all these to start using RDataFrame, but they are useful 
 ### Systematic variations
 
 Starting from ROOT v6.26, RDataFrame provides a flexible syntax to define systematic variations.
-This is done in two steps: a) variations for one or more existing columns are registered via Vary() and b) variations
-of normal RDataFrame results are extracted with a call to VariationsFor(). In between these steps, no other change
+This is done in two steps: a) register variations for one or more existing columns using Vary() and b) extract variations
+of normal RDataFrame results using \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()". In between these steps, no other change
 to the analysis code is required: the presence of systematic variations for certain columns is automatically propagated
 through filters, defines and actions, and RDataFrame will take these dependencies into account when producing varied
-results. VariationsFor() is included in header `ROOT/RDFHelpers.hxx`, which compiled C++ programs must include
-explicitly.
+results. \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" is included in header `ROOT/RDFHelpers.hxx`. The compiled C++ programs must include this header
+explicitly, this is not required for ROOT macros. 
 
-An example usage of Vary() and VariationsFor() in C++:
+An example usage of Vary() and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in C++:
 
 ~~~{.cpp}
 auto nominal_hx =
@@ -993,7 +993,7 @@ auto nominal_hx =
      .Define("x", someFunc, {"pt"})
      .Histo1D<float>("x");
 
-// request the generation of varied results from the nominal
+// request the generation of varied results from the nominal_hx
 ROOT::RDF::Experimental::RResultMap<TH1D> hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
 
 // the event loop runs here, upon first access to any of the results or varied results:
@@ -1002,20 +1002,20 @@ hx["pt:down"].Draw("SAME");
 hx["pt:up"].Draw("SAME");
 ~~~
 
-A list of variation "tags" is passed as last argument to Vary(): they give a name to the varied values that are returned
-as elements of an RVec of the appropriate type. The number of variation tags must correspond to the number of elements
-the RVec returned by the expression (2 in the example above: the first element will correspond to tag "down", the second
-to tag "up"). The _full_ variation name will be composed of the varied column name and the variation tags (e.g.
+A list of variation "tags" is passed as the last argument to Vary(). The tags give names to the varied values that are returned
+as elements of an RVec of the appropriate C++ type. The number of variation tags must correspond to the number of elements of
+this RVec (2 in the example above: the first element will correspond to the tag "down", the second
+to the tag "up"). The _full_ variation name will be composed of the varied column name and the variation tags (e.g.
 "pt:down", "pt:up" in this example). Python usage looks similar.
 
 Note how we use the "pt" column as usual in the Filter() and Define() calls and we simply use "x" as the value to fill
 the resulting histogram. To produce the varied results, RDataFrame will automatically execute the Filter and Define
 calls for each variation and fill the histogram with values and cuts that depend on the variation.
 
-There is no limitation to the complexity of a Vary() expression, and just like for Define() and Filter() calls users are
+There is no limitation to the complexity of a Vary() expression. Just like for the Define() and Filter() calls, users are
 not limited to string expressions but they can also pass any valid C++ callable, including lambda functions and
 complex functors. The callable can be applied to zero or more existing columns and it will always receive their
-_nominal_ values in input.
+_nominal_ value in input.
 
 #### Varying multiple columns in lockstep
 
@@ -1029,15 +1029,15 @@ df.Vary(["pt", "eta"],
         variationName="ptAndEta")
 ~~~
 
-The expression returns an RVec of two RVecs: each inner vector contains the varied values for one column, and the
-inner vectors follow the same ordering as the column names passed as first argument. Besides the variation tags, in
-this case we also have to explicitly pass a variation name as there is no one column name that can be used as default.
+The expression returns an RVec of two RVecs: each inner vector contains the varied values for one column. The
+inner vectors follow the same ordering as the column names that are passed as the first argument. Besides the variation tags, in
+this case we also have to explicitly pass the variation name (here: "ptAndEta") as the default column name does not exist.
 
-The call above will produce variations "ptAndEta:down" and "ptAndEta:up".
+The above call will produce variations "ptAndEta:down" and "ptAndEta:up".
 
 #### Combining multiple variations
 
-Even if a result depends on multiple variations, only one is applied at a time, i.e. there will be no result produced
+Even if a result depends on multiple variations, only one variation is applied at a time, i.e. there will be no result produced
 by applying multiple systematic variations at the same time.
 For example, in the following example snippet, the RResultMap instance `all_h` will contain keys "nominal", "pt:down",
 "pt:up", "eta:0", "eta:1", but no "pt:up&&eta:0" or similar:
@@ -1059,12 +1059,15 @@ all_hs.GetKeys(); // returns {"nominal", "pt:down", "pt:up", "eta:0", "eta:1"}
 Note how we passed the integer `2` instead of a list of variation tags to the second Vary() invocation: this is a
 shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
 
-\note As of v6.26, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
+\note Currently, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
       interfaces might still evolve and improve based on user feedback. We expect that some aspects of the related
       programming model will be streamlined in future versions.
 
-\note As of v6.26, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
-      call VariationsFor() on them. These limitations will be lifted in future releases.
+\note Currently, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
+      call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" on them. These limitations will be lifted in future releases.
+
+See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html) 
+for an example usage of Vary and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in the analysis.
 
 \anchor rnode
 ### RDataFrame objects as function arguments and return values
