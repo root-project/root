@@ -224,7 +224,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    // TString inputFileName = "tmva_class_example.root";
 
-   auto inputFile = TFile::Open(inputFileName);
+   std::unique_ptr<TFile> inputFile{TFile::Open(inputFileName)};
    if (!inputFile) {
       Error("TMVA_CNN_Classification", "Error opening input file %s - exit", inputFileName.Data());
       return;
