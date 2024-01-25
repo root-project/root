@@ -202,7 +202,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    **/
 
-   TMVA::DataLoader *loader = new TMVA::DataLoader("dataset");
+   TMVA::DataLoader loader("dataset");
 
    /***
 
@@ -243,17 +243,17 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
    Double_t backgroundWeight = 1.0;
 
    // You can add an arbitrary number of signal or background trees
-   loader->AddSignalTree(signalTree, signalWeight);
-   loader->AddBackgroundTree(backgroundTree, backgroundWeight);
+   loader.AddSignalTree(signalTree, signalWeight);
+   loader.AddBackgroundTree(backgroundTree, backgroundWeight);
 
    /// add event variables (image)
    /// use new method (from ROOT 6.20 to add a variable array for all image data)
-   loader->AddVariablesArray("vars", imgSize);
+   loader.AddVariablesArray("vars", imgSize);
 
    // Set individual event weights (the variables must exist in the original TTree)
    //    for signal    : factory->SetSignalWeightExpression    ("weight1*weight2");
    //    for background: factory->SetBackgroundWeightExpression("weight1*weight2");
-   // loader->SetBackgroundWeightExpression( "weight" );
+   // loader.SetBackgroundWeightExpression( "weight" );
 
    // Apply additional cuts on the signal and background samples (can be different)
    TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
@@ -263,7 +263,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
    //
    // If no numbers of events are given, half of the events in the tree are used
    // for training, and the other half for testing:
-   //    loader->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );
+   //    loader.PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );
    // It is possible also to specify the number of training and testing events,
    // note we disable the computation of the correlation matrix of the input variables
 
@@ -275,7 +275,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       "nTrain_Signal=%d:nTrain_Background=%d:SplitMode=Random:SplitSeed=100:NormMode=NumEvents:!V:!CalcCorrelations",
       nTrainSig, nTrainBkg);
 
-   loader->PrepareTrainingAndTestTree(mycuts, mycutb, prepareOptions);
+   loader.PrepareTrainingAndTestTree(mycuts, mycutb, prepareOptions);
 
    /***
 
@@ -299,7 +299,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    // Boosted Decision Trees
    if (useTMVABDT) {
-      factory.BookMethod(loader, TMVA::Types::kBDT, "BDT",
+      factory.BookMethod(&loader, TMVA::Types::kBDT, "BDT",
                          "!V:NTrees=200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:"
                          "UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
    }
@@ -346,7 +346,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       dnnOptions += ":Architecture=CPU";
 #endif
 
-      factory.BookMethod(loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
+      factory.BookMethod(&loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
    }
 
    /***
@@ -419,7 +419,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       cnnMethodName = "TMVA_CNN_CPU";
 #endif
 
-      factory.BookMethod(loader, TMVA::Types::kDL, cnnMethodName, cnnOptions);
+      factory.BookMethod(&loader, TMVA::Types::kDL, cnnMethodName, cnnOptions);
    }
 
    /**
@@ -468,7 +468,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
          // book PyKeras method only if Keras model could be created
          Info("TMVA_CNN_Classification", "Booking tf.Keras CNN model");
          factory.BookMethod(
-            loader, TMVA::Types::kPyKeras, "PyKeras",
+            &loader, TMVA::Types::kPyKeras, "PyKeras",
             "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:tf.keras:"
             "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=10:BatchSize=100:"
             "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
@@ -488,7 +488,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
          TString methodOpt = "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
                              "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=10:BatchSize=100";
          methodOpt += TString(":UserCode=") + pyTorchFileName;
-         factory.BookMethod(loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
+         factory.BookMethod(&loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
       }
    }
 
@@ -505,7 +505,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    /// ## Plot ROC Curve
 
-   auto c1 = factory.GetROCCurve(loader);
+   auto c1 = factory.GetROCCurve(&loader);
    c1->Draw();
 
    // close outputfile to save output file
