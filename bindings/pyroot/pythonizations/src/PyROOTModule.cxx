@@ -45,8 +45,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Allow to use seamlessly from Python the templated TDirectory::WriteObject method"},
    {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_VARARGS,
     (char *)"Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
-    (char *)"Allow to access branches as tree attributes"},
    {(char *)"AddTDirectoryFileGetPyz", (PyCFunction)PyROOT::AddTDirectoryFileGetPyz, METH_VARARGS,
     (char *)"Get objects inside TDirectoryFile and TFile instantiations"},
    {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,

@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-r'''
+r"""
 /**
 \class TTree
 \brief \parblock \endparblock
@@ -128,10 +128,11 @@ ds.SetBranchAddress('structb', ms)
 </div>
 \endhtmlonly
 */
-'''
+"""
 
-from libROOTPythonizations import AddBranchAttrSyntax, SetBranchAddressPyz, BranchPyz
+from libROOTPythonizations import SetBranchAddressPyz, BranchPyz
 from . import pythonization
+
 
 # TTree iterator
 def _TTree__iter__(self):
@@ -145,6 +146,7 @@ def _TTree__iter__(self):
     if bytes_read == -1:
         raise RuntimeError("TTree I/O error")
 
+
 def _SetBranchAddress(self, *args):
     # Modify the behaviour if args is (const char*, void*)
     res = SetBranchAddressPyz(self, *args)
@@ -154,6 +156,7 @@ def _SetBranchAddress(self, *args):
         res = self._OriginalSetBranchAddress(*args)
 
     return res
+
 
 def _Branch(self, *args):
     # Modify the behaviour if args is one of:
@@ -168,7 +171,114 @@ def _Branch(self, *args):
 
     return res
 
-@pythonization('TTree')
+
+def search_for_branch(tree, name):
+    branch = tree.GetBranch(name)
+    # branch will be nullptr if not found
+    if not branch:
+        # for benefit of naming of sub-branches, the actual name may have a trailing '.'
+        branch = tree.GetBranch(name + ".")
+    return branch
+
+
+def search_for_leaf(tree, name, branch):
+    leaf = tree.GetLeaf(name)
+    if not branch or leaf:
+        return leaf
+
+    leaf = branch.GetLeaf(name)
+    if not leaf:
+        leaves = branch.GetListOfLeaves()
+        if leaves.GetEntries() == 1:
+            # i.e., if unambiguously only this one
+            leaf = leaves.At(0)
+    return leaf
+
+
+def bind_branch_to_proxy(tree, name, branch):
+    import cppyy
+    import cppyy.ll
+
+    # for partial return of a split object
+    if branch.InheritsFrom("TBranchElement") and branch.GetCurrentClass():
+        if branch.GetCurrentClass() != branch.GetTargetClass() and branch.GetID() >= 0:
+            offset = branch.GetInfo().GetElements().At(branch.GetID()).GetOffset()
+            # cppyy doesn't do pointer arithmetic
+            address = cppyy.ll.cast["std::uintptr_t"](branch.GetObject()) + offset
+            return cppyy.bind_object(address, branch.GetCurrentClass())
+
+    # for return of a full object
+    if branch.ClassName() in ["TBranchElement", "TBranchObject"]:
+        return cppyy.bind_object(branch.GetAddress()[0], branch.GetClassName())
+
+        # try leaf, otherwise indicate failure by returning a typed null-object
+        leaves = branch.GetListOfLeaves()
+        if not tree.GetLeaf(name) and leaves.GetEntries() != 1:
+            return cppyy.bind_object(cppyy.nullptr, branch.GetClassName())
+
+    return cppyy.nullptr
+
+
+def wrap_leaf(leaf):
+    import cppyy
+    import cppyy.ll
+
+    if leaf.GetBranch():
+        address = leaf.GetBranch().GetAddress()
+        if not address:
+            address = leaf.GetValuePointer()
+    else:
+        address = leaf.GetValuePointer()
+
+    d = cppyy.ll.cast[leaf.GetTypeName() + "*"](address)
+
+    # char* arrays will automatically get converted to str and should be returned directly.
+    if isinstance(d, str):
+        return d
+
+    n = leaf.GetNdata()
+    if n == 1:
+        return d[0]
+    d.reshape((n,))
+    return d
+
+
+def _TTree__getattr__(self, key):
+    """
+    Allow branches to be accessed as attributes of a tree.
+    \param[in] self Always null, since this is a module function.
+    \param[in] args Pointer to a Python tuple object containing the arguments
+    received from Python.
+
+    Allow access to branches/leaves as if they were Python data attributes of the tree
+    (e.g. mytree.branch)
+    """
+    # deal with possible aliasing
+    name = self.GetAlias(key)
+    if len(name) == 0:
+        name = key
+
+    # search for branch first (typical for objects)
+    branch = search_for_branch(self, name)
+
+    if branch:
+        # found a branched object, wrap its address for the object it represents
+        proxy = bind_branch_to_proxy(self, name, branch)
+        if proxy:
+            return proxy
+
+    # if not, try leaf
+    leaf = search_for_leaf(self, name, branch)
+
+    if leaf:
+        # found a leaf, extract value and wrap with a Python object according to its type
+        return wrap_leaf(leaf)
+
+    # confused
+    raise AttributeError(f"'{self.IsA().GetName()}' object has no attribute '{name}'")
+
+
+@pythonization("TTree")
 def pythonize_ttree(klass, name):
     # Parameters:
     # klass: class to be pythonized
@@ -183,7 +293,7 @@ def pythonize_ttree(klass, name):
     klass.__iter__ = _TTree__iter__
 
     # tree.branch syntax
-    AddBranchAttrSyntax(klass)
+    klass.__getattr__ = _TTree__getattr__
 
     # SetBranchAddress
     klass._OriginalSetBranchAddress = klass.SetBranchAddress
@@ -193,7 +303,8 @@ def pythonize_ttree(klass, name):
     klass._OriginalBranch = klass.Branch
     klass.Branch = _Branch
 
-@pythonization('TChain')
+
+@pythonization("TChain")
 def pythonize_tchain(klass):
     # Parameters:
     # klass: class to be pythonized
