@@ -33,6 +33,11 @@ inline double gaussianEvaluate(double x, double mean, double sigma)
    return std::exp(-0.5 * arg * arg / (sig * sig));
 }
 
+// RooRation evaluate function.
+inline double ratioEvaluate(double numerator, double denominator) {
+   return numerator / denominator;
+}
+
 inline double bifurGaussEvaluate(double x, double mean, double sigmaL, double sigmaR)
 {
    // Note: this simplification does not work with Clad as of v1.1!
