@@ -42,11 +42,11 @@ void MakeImagesTree(int n, int nh, int nw)
    double sX2 = sX1 + delta_sigma;
    double sY2 = sY1 - delta_sigma;
 
-   auto h1 = new TH2D("h1", "h1", nh, 0, 10, nw, 0, 10);
-   auto h2 = new TH2D("h2", "h2", nh, 0, 10, nw, 0, 10);
+   TH2D h1("h1", "h1", nh, 0, 10, nw, 0, 10);
+   TH2D h2("h2", "h2", nh, 0, 10, nw, 0, 10);
 
-   auto f1 = new TF2("f1", "xygaus");
-   auto f2 = new TF2("f2", "xygaus");
+   TF2 f1("f1", "xygaus");
+   TF2 f2("f2", "xygaus");
    TFile f(fileOutName, "RECREATE");
    TTree sgn("sig_tree", "signal_tree");
    TTree bkg("bkg_tree", "background_tree");
@@ -69,30 +69,30 @@ void MakeImagesTree(int n, int nh, int nw)
    sgn.SetDirectory(&f);
    bkg.SetDirectory(&f);
 
-   f1->SetParameters(1, 5, sX1, 5, sY1);
-   f2->SetParameters(1, 5, sX2, 5, sY2);
+   f1.SetParameters(1, 5, sX1, 5, sY1);
+   f2.SetParameters(1, 5, sX2, 5, sY2);
    gRandom->SetSeed(0);
    std::cout << "Filling ROOT tree " << std::endl;
    for (int i = 0; i < n; ++i) {
       if (i % 1000 == 0)
          std::cout << "Generating image event ... " << i << std::endl;
-      h1->Reset();
-      h2->Reset();
+      h1.Reset();
+      h2.Reset();
       // generate random means in range [3,7] to be not too much on the border
-      f1->SetParameter(1, gRandom->Uniform(3, 7));
-      f1->SetParameter(3, gRandom->Uniform(3, 7));
-      f2->SetParameter(1, gRandom->Uniform(3, 7));
-      f2->SetParameter(3, gRandom->Uniform(3, 7));
+      f1.SetParameter(1, gRandom->Uniform(3, 7));
+      f1.SetParameter(3, gRandom->Uniform(3, 7));
+      f2.SetParameter(1, gRandom->Uniform(3, 7));
+      f2.SetParameter(3, gRandom->Uniform(3, 7));
 
-      h1->FillRandom("f1", nRndmEvts);
-      h2->FillRandom("f2", nRndmEvts);
+      h1.FillRandom("f1", nRndmEvts);
+      h2.FillRandom("f2", nRndmEvts);
 
       for (int k = 0; k < nh; ++k) {
          for (int l = 0; l < nw; ++l) {
             int m = k * nw + l;
             // add some noise in each bin
-            x1[m] = h1->GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
-            x2[m] = h2->GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
+            x1[m] = h1.GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
+            x2[m] = h2.GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
          }
       }
       sgn.Fill();
