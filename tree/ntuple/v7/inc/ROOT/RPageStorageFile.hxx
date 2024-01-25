@@ -82,8 +82,6 @@ protected:
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
-   RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options,
-                 std::unique_ptr<TFile> &file);
    RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile&) = delete;
    RPageSinkFile& operator=(const RPageSinkFile&) = delete;
