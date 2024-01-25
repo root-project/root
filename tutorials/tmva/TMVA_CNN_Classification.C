@@ -120,6 +120,16 @@ void MakeImagesTree(int n, int nh, int nw)
 void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1, 1, 1})
 {
 
+   int imgSize = 16 * 16;
+   TString inputFileName = "images_data_16x16.root";
+
+   bool fileExist = !gSystem->AccessPathName(inputFileName);
+
+   // if file does not exists create it
+   if (!fileExist) {
+      MakeImagesTree(nevts, 16, 16);
+   }
+
    bool useTMVACNN = (opt.size() > 0) ? opt[0] : false;
    bool useKerasCNN = (opt.size() > 1) ? opt[1] : false;
    bool useTMVADNN = (opt.size() > 2) ? opt[2] : false;
@@ -212,16 +222,6 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
        Define input data file and signal and background trees
 
    **/
-
-   int imgSize = 16 * 16;
-   TString inputFileName = "images_data_16x16.root";
-
-   bool fileExist = !gSystem->AccessPathName(inputFileName);
-
-   // if file does not exists create it
-   if (!fileExist) {
-      MakeImagesTree(nevts, 16, 16);
-   }
 
    // TString inputFileName = "tmva_class_example.root";
 
