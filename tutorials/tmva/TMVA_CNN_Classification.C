@@ -233,8 +233,17 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
    // --- Register the training and test trees
 
-   TTree *signalTree = (TTree *)inputFile->Get("sig_tree");
-   TTree *backgroundTree = (TTree *)inputFile->Get("bkg_tree");
+   auto signalTree = inputFile->Get<TTree>("sig_tree");
+   auto backgroundTree = inputFile->Get<TTree>("bkg_tree");
+
+   if (!signalTree) {
+      Error("TMVA_CNN_Classification", "Could not find signal tree in file '%s'", inputFileName.Data());
+      return;
+   }
+   if (!backgroundTree) {
+      Error("TMVA_CNN_Classification", "Could not find background tree in file '%s'", inputFileName.Data());
+      return;
+   }
 
    int nEventsSig = signalTree->GetEntries();
    int nEventsBkg = backgroundTree->GetEntries();
