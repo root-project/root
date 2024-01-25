@@ -342,13 +342,6 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
-   try {
-      float num = 10.0;
-      model->AddField("pt", &num);
-      FAIL() << "repeated field names should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
-   }
 
    // MakeCollection
    try {
@@ -372,9 +365,6 @@ TEST(RNTupleModel, FieldDescriptions)
 
    auto pt = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
 
-   float num = 10.0;
-   model->AddField({"mass", "mass"}, &num);
-
    auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
    charge->SetDescription("electric charge");
    model->AddField(std::move(charge));
@@ -388,10 +378,9 @@ TEST(RNTupleModel, FieldDescriptions)
    for (auto &f : ntuple->GetDescriptor().GetTopLevelFields()) {
       fieldDescriptions.push_back(f.GetFieldDescription());
    }
-   ASSERT_EQ(3, fieldDescriptions.size());
+   ASSERT_EQ(2u, fieldDescriptions.size());
    EXPECT_EQ(std::string("transverse momentum"), fieldDescriptions[0]);
-   EXPECT_EQ(std::string("mass"), fieldDescriptions[1]);
-   EXPECT_EQ(std::string("electric charge"), fieldDescriptions[2]);
+   EXPECT_EQ(std::string("electric charge"), fieldDescriptions[1]);
 }
 
 TEST(RNTupleModel, CollectionFieldDescriptions)
@@ -488,12 +477,6 @@ TEST(RNTuple, NullSafety)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("null field"));
    }
-   try {
-      model->AddField<float>("pt", nullptr);
-      FAIL() << "null fields should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("null field fromWhere"));
-   }
 
    // RNTupleReader and RNTupleWriter
    FileRaii fileGuard("test_ntuple_null_safety.root");
@@ -569,13 +552,6 @@ TEST(RNTuple, ModelId)
    }
    try {
       m1->MakeField<float>("pt");
-      FAIL() << "changing frozen model should throw";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
-   }
-   try {
-      float dummy;
-      m1->AddField<float>("pt", &dummy);
       FAIL() << "changing frozen model should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
