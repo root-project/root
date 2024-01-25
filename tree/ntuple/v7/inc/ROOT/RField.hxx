@@ -190,7 +190,7 @@ public:
 
       std::size_t Append() { return fField->Append(fObjPtr.get()); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
-      void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
+      void Read(RClusterIndex clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
       void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
 
       std::shared_ptr<void> GetPtr() const { return fObjPtr; }
