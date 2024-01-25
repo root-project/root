@@ -1920,10 +1920,10 @@ TLeaf* TBranchElement::FindLeaf(const char *name)
 ///
 /// - Return a pointer to our object.
 
-char* TBranchElement::GetAddress() const
+void* TBranchElement::GetAddress() const
 {
    ValidateAddress();
-   return fAddress;
+   return (void*)fAddress;
 }
 
 
@@ -2882,10 +2882,10 @@ Int_t TBranchElement::GetMaximum() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to our object.
 
-char* TBranchElement::GetObject() const
+void* TBranchElement::GetObject() const
 {
    ValidateAddress();
-   return fObject;
+   return (void*)fObject;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

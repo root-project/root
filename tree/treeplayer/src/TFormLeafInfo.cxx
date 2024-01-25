@@ -189,9 +189,9 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
       // Branch is a top-level branch.
       if (branch->GetTree()->GetMakeClass()) {
          // Branch belongs to a MakeClass tree.
-         return branch->GetAddress();
+         return (char*) branch->GetAddress();
       } else {
-         return branch->GetObject();
+         return (char*) branch->GetObject();
       }
    }
    TStreamerInfo* info = branch->GetInfo();
@@ -211,7 +211,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
    char* thisobj = nullptr;
    if (!address) {
       // FIXME: This makes no sense, if the branch address is not set, then object will not be set either.
-      thisobj = branch->GetObject();
+      thisobj = (char*) branch->GetObject();
    } else {
       Int_t type = -1;
       if (id > -1) {

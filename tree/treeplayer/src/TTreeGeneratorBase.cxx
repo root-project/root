@@ -166,7 +166,7 @@ namespace Internal {
          Long64_t i = branch->GetTree()->GetReadEntry();
          if (i<0) i = 0;
          branch->GetEntry(i);
-         char *obj = branch->GetObject();
+         char *obj = (char*) branch->GetObject();
 
          TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
          const char *pclname = parent->GetClassName();
