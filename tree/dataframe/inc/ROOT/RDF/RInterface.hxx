@@ -643,18 +643,18 @@ public:
       return newInterface;
    }
 
-   /// \brief Register systematic variations for an existing column.
+   /// \brief Register systematic variations for a single existing column using custom variation tags.
    /// \param[in] colName name of the column for which varied values are provided.
    /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
-   ///            take any column values as input, similarly to what happens with Filter and Define calls. It must
+   ///            take any column values as input, similarly to what happens during Filter and Define calls. It must
    ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
-   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
-   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   /// \param[in] variationTags names for each of the varied values, e.g. `"up"` and `"down"`.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///
    /// Vary provides a natural and flexible syntax to define systematic variations that automatically propagate to
    /// Filters, Defines and results. RDataFrame usage of columns with attached variations does not change, but for
-   /// results that depend on any varied quantity a map/dictionary of varied results can be produced with
+   /// results that depend on any varied quantity, a map/dictionary of varied results can be produced with
    /// ROOT::RDF::Experimental::VariationsFor (see the example below).
    ///
    /// The dictionary will contain a "nominal" value (accessed with the "nominal" key) for the unchanged result, and
@@ -671,9 +671,10 @@ public:
    ///       .Define("x", someFunc, {"pt"})
    ///       .Histo1D("x");
    ///
-   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
    /// hx["nominal"].Draw();
    /// hx["pt:down"].Draw("SAME");
+   /// hx["pt:up"].Draw("SAME");
    /// ~~~
    /// RDataFrame computes all variations as part of a single loop over the data.
    /// In particular, this means that I/O and computation of values shared
@@ -682,8 +683,12 @@ public:
    /// variations.
    ///
    /// RDataFrame lazily computes the varied values required to produce the
-   /// outputs of VariationsFor(). If VariationsFor() was not called for a result,
-   /// the computations run are only for the nominal case.
+   /// outputs of \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()". If \ref
+   /// ROOT::RDF::Experimental::VariationsFor "VariationsFor()" was not called for a result, the computations are only
+   /// run for the nominal case.
+   ///
+   /// See other overloads for examples when variations are added for multiple existing columns,
+   /// or when the tags are auto-generated instead of being directly defined.
    template <typename F>
    RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
                                   const std::vector<std::string> &variationTags, std::string_view variationName = "")
@@ -695,10 +700,34 @@ public:
                             theVariationName);
    }
 
-   /// \brief Register systematic variations for an existing columns using auto-generated variation tags.
-   /// This overload of Vary takes a nVariations parameter instead of a list of tag names. Tag names
-   /// will be auto-generated as the sequence 0...nVariations-1.
-   /// See the documentation of the previous overload for more information.
+   /// \brief Register systematic variations for a single existing column using auto-generated variation tags.
+   /// \param[in] colName name of the column for which varied values are provided.
+   /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
+   ///            take any column values as input, similarly to what happens during Filter and Define calls. It must
+   ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
+   /// \param[in] inputColumns the names of the columns to be passed to the callable.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
+   /// `"1"`, etc. 
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
+   ///            colName is used if none is provided.
+   ///
+   /// This overload of Vary takes an nVariations parameter instead of a list of tag names.
+   /// The varied results will be accessible via the keys of the dictionary with the form `variationName:N` where `N`
+   /// is the corresponding sequential tag starting at 0 and going up to `nVariations - 1`.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///   df.Vary("pt", [] (double pt) { return RVecD{pt*0.9, pt*1.1}; }, 2)
+   ///     .Histo1D("x");
+   ///
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["x:0"].Draw("SAME");
+   /// hx["x:1"].Draw("SAME");
+   /// ~~~
+   ///
+   /// \sa This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
                                   std::size_t nVariations, std::string_view variationName = "")
@@ -715,21 +744,38 @@ public:
       return Vary(colName, std::forward<F>(expression), inputColumns, std::move(variationTags), theVariationName);
    }
 
-   /// \brief Register a systematic variation that affects multiple columns simultaneously.
-   /// This overload of Vary takes a list of column names as first argument rather than a single name and
+   /// \brief Register systematic variations for multiple existing columns using custom variation tags.
+   /// \param[in] colNames set of names of the columns for which varied values are provided.
+   /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
+   ///            take any column values as input, similarly to what happens during Filter and Define calls. It must
+   ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
+   /// \param[in] inputColumns the names of the columns to be passed to the callable.
+   /// \param[in] variationTags names for each of the varied values, e.g. `"up"` and `"down"`.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`
+   ///
+   /// This overload of Vary takes a list of column names as first argument and
    /// requires that the expression returns an RVec of RVecs of values: one inner RVec for the variations of each
-   /// affected column.
-   /// See the documentation of the first Vary overload for more information.
+   /// affected column. The `variationTags` are defined as `{"down", "up"}`.
    ///
    /// Example usage:
    /// ~~~{.cpp}
    /// // produce variations "ptAndEta:down" and "ptAndEta:up"
-   /// df.Vary({"pt", "eta"}, // the columns that will vary simultaneously
+   /// auto nominal_hx =
+   ///   df.Vary({"pt", "eta"}, // the columns that will vary simultaneously
    ///         [](double pt, double eta) { return RVec<RVecF>{{pt*0.9, pt*1.1}, {eta*0.9, eta*1.1}}; },
    ///         {"pt", "eta"},  // inputs to the Vary expression, independent of what columns are varied
    ///         {"down", "up"}, // variation tags
-   ///         "ptAndEta");    // variation name
+   ///         "ptAndEta")    // variation name
+   ///     .Histo1D("pt", "eta");
+   ///
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["ptAndEta:down"].Draw("SAME");
+   /// hx["ptAndEta:up"].Draw("SAME");
    /// ~~~
+   ///
+   /// \sa This Vary() overload for more information.
+
    template <typename F>
    RInterface<Proxied, DS_t>
    Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
@@ -738,7 +784,20 @@ public:
       return VaryImpl<false>(colNames, std::forward<F>(expression), inputColumns, variationTags, variationName);
    }
 
-   /// Overload to avoid ambiguity between C++20 string, vector<string> construction from init list.
+   /// \brief Register systematic variations for multiple existing columns using custom variation tags.
+   /// \param[in] colNames set of names of the columns for which varied values are provided.
+   /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
+   ///            take any column values as input, similarly to what happens during Filter and Define calls. It must
+   ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
+   /// \param[in] inputColumns the names of the columns to be passed to the callable.
+   /// \param[in] variationTags names for each of the varied values, e.g. `"up"` and `"down"`.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
+   ///            colName is used if none is provided.
+   ///
+   /// \note This overload ensures that the ambiguity between C++20 string, vector<string> construction from init list
+   /// is avoided.
+   ///
+   /// \sa This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t>
    Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
@@ -747,10 +806,38 @@ public:
       return Vary(std::vector<std::string>(colNames), std::forward<F>(expression), inputColumns, variationTags, variationName);
    }
 
-   /// \brief Register systematic variations for one or more existing columns using auto-generated tags.
-   /// This overload of Vary takes a nVariations parameter instead of a list of tag names. Tag names
-   /// will be auto-generated as the sequence 0...nVariations-1.
-   /// See the documentation of the previous overload for more information.
+   /// \brief Register systematic variations for multiple existing columns using auto-generated tags.
+   /// \param[in] colNames set of names of the columns for which varied values are provided.
+   /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
+   ///            take any column values as input, similarly to what happens during Filter and Define calls. It must
+   ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
+   /// \param[in] inputColumns the names of the columns to be passed to the callable.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
+   /// `"1"`, etc. 
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
+   ///            colName is used if none is provided.
+   ///
+   /// This overload of Vary takes a list of column names as first argument.
+   /// It takes an `nVariations` parameter instead of a list of tag names (`variationTags`). Tag names
+   /// will be auto-generated as the sequence 0...``nVariations-1``.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///   df.Vary({"pt", "eta"}, // the columns that will vary simultaneously
+   ///         [](double pt, double eta) { return RVec<RVecF>{{pt*0.9, pt*1.1}, {eta*0.9, eta*1.1}}; },
+   ///         {"pt", "eta"},  // inputs to the Vary expression, independent of what columns are varied
+   ///         2, // auto-generated variation tags
+   ///         "ptAndEta")    // variation name
+   ///     .Histo1D("pt", "eta");
+   ///
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["ptAndEta:0"].Draw("SAME");
+   /// hx["ptAndEta:1"].Draw("SAME");
+   /// ~~~
+   ///
+   /// \sa This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t>
    Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
@@ -766,7 +853,22 @@ public:
       return Vary(colNames, std::forward<F>(expression), inputColumns, std::move(variationTags), variationName);
    }
 
-   /// Overload to avoid ambiguity between C++20 string, vector<string> construction from init list.
+   /// \brief Register systematic variations for for multiple existing columns using custom variation tags.
+   /// \param[in] colNames set of names of the columns for which varied values are provided.
+   /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
+   ///            take any column values as input, similarly to what happens during Filter and Define calls. It must
+   ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
+   /// \param[in] inputColumns the names of the columns to be passed to the callable.
+   /// \param[in] inputColumns the names of the columns to be passed to the callable.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
+   /// `"1"`, etc. 
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
+   ///            colName is used if none is provided.
+   ///
+   /// \note This overload ensures that the ambiguity between C++20 string, vector<string> construction from init list
+   /// is avoided.
+   ///
+   /// \sa This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t>
    Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
@@ -775,14 +877,17 @@ public:
       return Vary(std::vector<std::string>(colNames), std::forward<F>(expression), inputColumns, nVariations, variationName);
    }
 
-   /// \brief Register systematic variations for an existing column.
+   /// \brief Register systematic variations for a single existing column using custom variation tags.
    /// \param[in] colName name of the column for which varied values are provided.
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
    ///            values for the specified column.
-   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
-   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   /// \param[in] variationTags names for each of the varied values, e.g. `"up"` and `"down"`.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
+   /// This overload adds the possibility for the expression used to evaluate the varied values to be just-in-time
+   /// compiled. The example below shows how Vary() is used while dealing with a single column. The variation tags are
+   /// defined as `{"down", "up"}`.
    /// ~~~{.cpp}
    /// auto nominal_hx =
    ///     df.Vary("pt", "ROOT::RVecD{pt*0.9, pt*1.1}", {"down", "up"})
@@ -790,10 +895,13 @@ public:
    ///       .Define("x", someFunc, {"pt"})
    ///       .Histo1D("x");
    ///
-   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
    /// hx["nominal"].Draw();
    /// hx["pt:down"].Draw("SAME");
+   /// hx["pt:up"].Draw("SAME");
    /// ~~~
+   ///
+   /// \sa This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName = "")
    {
@@ -803,15 +911,30 @@ public:
       return JittedVaryImpl(colNames, expression, variationTags, theVariationName, /*isSingleColumn=*/true);
    }
 
-   /// \brief Register systematic variations for an existing column.
+   /// \brief Register systematic variations for a single existing column using auto-generated variation tags.
    /// \param[in] colName name of the column for which varied values are provided.
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
    ///            values for the specified column.
-   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be "0", "1", etc.
-   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
+   /// `"1"`, etc. 
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
-   /// See the documentation for the previous overload for more information.
+   /// This overload adds the possibility for the expression used to evaluate the varied values to be a just-in-time
+   /// compiled. The example below shows how Vary() is used while dealing with a single column. The variation tags are
+   /// auto-generated.
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", "ROOT::RVecD{pt*0.9, pt*1.1}", 2)
+   ///       .Histo1D("pt");
+   ///
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["pt:0"].Draw("SAME");
+   /// hx["pt:1"].Draw("SAME");
+   /// ~~~
+   ///
+   /// \sa This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
                                   std::string_view variationName = "")
    {
@@ -823,23 +946,32 @@ public:
       return Vary(colName, expression, std::move(variationTags), variationName);
    }
 
-   /// \brief Register systematic variations for one or more existing columns.
-   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \brief Register systematic variations for multiple existing columns using auto-generated variation tags.
+   /// \param[in] colNames set of names of the columns for which varied values are provided.
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
    ///            values for the specified columns.
-   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be "0", "1", etc.
-   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
+   /// `"1"`, etc. 
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
+   ///
+   /// This overload adds the possibility for the expression used to evaluate the varied values to be just-in-time
+   /// compiled. It takes an nVariations parameter instead of a list of tag names.
+   /// The varied results will be accessible via the keys of the dictionary with the form `variationName:N` where `N`
+   /// is the corresponding sequential tag starting at 0 and going up to `nVariations - 1`.
+   /// The example below shows how Vary() is used while dealing with multiple columns.
    ///
    /// ~~~{.cpp}
    /// auto nominal_hx =
    ///     df.Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", 2, "xy")
    ///       .Histo1D("x", "y");
    ///
-   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
    /// hx["nominal"].Draw();
    /// hx["xy:0"].Draw("SAME");
    /// hx["xy:1"].Draw("SAME");
    /// ~~~
+   ///
+   /// \sa This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   std::size_t nVariations, std::string_view variationName)
    {
@@ -851,30 +983,47 @@ public:
       return Vary(colNames, expression, std::move(variationTags), variationName);
    }
 
-   /// Overload to avoid ambiguity between C++20 string, vector<string> construction from init list.
+   /// \brief Register systematic variations for multiple existing columns using auto-generated variation tags.
+   /// \param[in] colNames set of names of the columns for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
+   ///            values for the specified column.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
+   /// `"1"`, etc. 
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
+   ///            colName is used if none is provided.
+   ///
+   /// \note This overload ensures that the ambiguity between C++20 string, vector<string> construction from init list
+   /// is avoided.
+   ///
+   /// \sa This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(std::initializer_list<std::string> colNames, std::string_view expression,
                                   std::size_t nVariations, std::string_view variationName)
    {
       return Vary(std::vector<std::string>(colNames), expression, nVariations, variationName);
    }
 
-   /// \brief Register systematic variations for one or more existing columns.
-   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \brief Register systematic variations for multiple existing columns using custom variation tags.
+   /// \param[in] colNames set of names of the columns for which varied values are provided.
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
    ///            values for the specified columns.
-   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
-   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   /// \param[in] variationTags names for each of the varied values, e.g. `"up"` and `"down"`.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///
+   /// This overload adds the possibility for the expression used to evaluate the varied values to be just-in-time
+   /// compiled. The example below shows how Vary() is used while dealing with multiple columns. The tags are defined as
+   /// `{"down", "up"}`.
    /// ~~~{.cpp}
    /// auto nominal_hx =
    ///     df.Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", {"down", "up"}, "xy")
    ///       .Histo1D("x", "y");
    ///
-   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// auto hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
    /// hx["nominal"].Draw();
    /// hx["xy:down"].Draw("SAME");
    /// hx["xy:up"].Draw("SAME");
    /// ~~~
+   ///
+   /// \sa This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName)
    {
