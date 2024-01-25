@@ -157,17 +157,19 @@ public:
       /// Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
       void CommitUpdate();
 
-      void AddField(std::unique_ptr<Detail::RFieldBase> field);
-      template <typename T>
-      void AddField(const NameWithDescription_t &fieldNameDesc, T *fromWhere)
+      template <typename T, typename... ArgsT>
+      std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc, ArgsT &&...args)
       {
-         fOpenChangeset.fModel.AddField<T>(fieldNameDesc, fromWhere);
+         auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc, std::forward<ArgsT>(args)...);
          auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
          auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
                                 [&](const auto &f) { return f.GetName() == fieldNameDesc.fName; });
          R__ASSERT(it != fieldZero->end());
          fOpenChangeset.fAddedFields.emplace_back(&(*it));
+         return objPtr;
       }
+
+      void AddField(std::unique_ptr<Detail::RFieldBase> field);
 
       RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
                                       std::function<std::string(const std::string &)> mapping);
@@ -260,8 +262,7 @@ public:
    /// });
    /// ~~~
    template <typename T, typename... ArgsT>
-   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc,
-      ArgsT&&... args)
+   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc, ArgsT &&...args)
    {
       EnsureNotFrozen();
       EnsureValidFieldName(fieldNameDesc.fName);
@@ -278,21 +279,6 @@ public:
    ///
    /// Throws an exception if the field is null.
    void AddField(std::unique_ptr<Detail::RFieldBase> field);
-
-   /// Throws an exception if fromWhere is null.
-   template <typename T>
-   void AddField(const NameWithDescription_t &fieldNameDesc, T* fromWhere) {
-      EnsureNotFrozen();
-      EnsureNotBare();
-      if (!fromWhere)
-         throw RException(R__FAIL("null field fromWhere"));
-      EnsureValidFieldName(fieldNameDesc.fName);
-
-      auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
-      field->SetDescription(fieldNameDesc.fDescription);
-      fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(fromWhere, [](void *) {})));
-      fFieldZero->Attach(std::move(field));
-   }
 
    /// Adds a top-level field based on existing fields. The mapping function is called with the qualified field names
    /// of the provided field and the subfields.  It should return the qualified field names used as a mapping source.
