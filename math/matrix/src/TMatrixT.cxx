@@ -158,7 +158,8 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op, const TMatrixT<Element> &prot
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of matrix applying a specific operation to two prototypes.
 /// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
-/// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
+/// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b);
+/// Whenever kInvMult is invoked and b is not squared, additional memory is allocated for a^(-1)
 
 template <class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a, EMatrixCreatorsOp2 op, const TMatrixT<Element> &b)
@@ -274,6 +275,7 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a, EMatrixCreatorsOp2 op, c
 /// Constructor of matrix applying a specific operation to two prototypes.
 /// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
 /// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
+/// Whenever kInvMult is invoked and b is not squared, additional memory is allocated for a^(-1)
 
 template <class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a, EMatrixCreatorsOp2 op, const TMatrixT<Element> &b)
