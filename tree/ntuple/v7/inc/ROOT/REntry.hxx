@@ -59,10 +59,11 @@ class REntry {
    void AddValue(Detail::RFieldBase::RValue &&value) { fValues.emplace_back(std::move(value)); }
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
-   template<typename T, typename... ArgsT>
-   std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
+   template <typename T, typename... ArgsT>
+   std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
+   {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fValues.emplace_back(field->BindValue(ptr));
+      fValues.emplace_back(field.BindValue(ptr));
       return ptr;
    }
 
