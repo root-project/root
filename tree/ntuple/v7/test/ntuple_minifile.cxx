@@ -324,6 +324,30 @@ TEST(MiniFile, ProperKeys)
    EXPECT_EQ(offset, size);
 }
 
+TEST(MiniFile, LongString)
+{
+   FileRaii fileGuard("test_ntuple_minifile_long_string.root");
+
+   static constexpr const char *LongString =
+      "This is a very long text with exactly 254 characters, which is the maximum that the RNTupleWriter can currently "
+      "store in a TFile header. For longer strings, a length of 255 is special and means that the first length byte is "
+      "followed by an integer length.";
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("ntuple", *file));
+
+   char header = 'h';
+   char footer = 'f';
+   auto offHeader = writer->WriteNTupleHeader(&header, 1, 1);
+   auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
+   writer->Commit();
+
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
+   RMiniFileReader reader(rawFile.get());
+   auto ntuple1 = reader.GetNTuple("ntuple").Inspect();
+   EXPECT_EQ(offHeader, ntuple1.fSeekHeader);
+   EXPECT_EQ(offFooter, ntuple1.fSeekFooter);
+}
+
 TEST(MiniFile, Multi)
 {
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
