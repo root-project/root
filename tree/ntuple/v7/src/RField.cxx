@@ -373,7 +373,7 @@ void ROOT::Experimental::Detail::RFieldBase::RBulk::Reset(RClusterIndex firstInd
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
-            fField->GenerateValue(GetValuePtrAt(i));
+            fField->CreateValue(GetValuePtrAt(i));
          }
       }
 
@@ -670,11 +670,11 @@ std::size_t ROOT::Experimental::Detail::RFieldBase::ReadBulkImpl(const RBulkSpec
    return nRead;
 }
 
-ROOT::Experimental::Detail::RFieldBase::RValue ROOT::Experimental::Detail::RFieldBase::GenerateValue()
+ROOT::Experimental::Detail::RFieldBase::RValue ROOT::Experimental::Detail::RFieldBase::CreateValue()
 {
    void *where = operator new(GetValueSize());
    R__ASSERT(where != nullptr);
-   GenerateValue(where);
+   CreateValue(where);
    return RValue(this, std::shared_ptr<void>(where, RSharedPtrDeleter(GetDeleter())));
 }
 
@@ -1535,7 +1535,7 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
    AddReadCallbacksFromIORules(rules, fClass);
 }
 
-void ROOT::Experimental::RClassField::GenerateValue(void *where) const
+void ROOT::Experimental::RClassField::CreateValue(void *where) const
 {
    fClass->New(where);
 }
@@ -1788,7 +1788,7 @@ void ROOT::Experimental::RProxiedCollectionField::GenerateColumnsImpl(const RNTu
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RProxiedCollectionField::GenerateValue(void *where) const
+void ROOT::Experimental::RProxiedCollectionField::CreateValue(void *where) const
 {
    fProxy->New(where);
 }
@@ -1917,10 +1917,10 @@ void ROOT::Experimental::RRecordField::ReadInClusterImpl(RClusterIndex clusterIn
    }
 }
 
-void ROOT::Experimental::RRecordField::GenerateValue(void *where) const
+void ROOT::Experimental::RRecordField::CreateValue(void *where) const
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      CallGenerateValueOn(*fSubFields[i], static_cast<unsigned char *>(where) + fOffsets[i]);
+      CallCreateValueOn(*fSubFields[i], static_cast<unsigned char *>(where) + fOffsets[i]);
    }
 }
 
@@ -2029,7 +2029,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    typedValue->resize(nItems * fItemSize);
    if (!(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)) {
       for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
-         CallGenerateValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
+         CallCreateValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
       }
    }
 
@@ -2191,7 +2191,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
       // Placement new for elements that were already there before the resize
       if (needsConstruct) {
          for (std::size_t i = 0u; i < oldSize; ++i)
-            CallGenerateValueOn(*fSubFields[0], begin + (i * fItemSize));
+            CallCreateValueOn(*fSubFields[0], begin + (i * fItemSize));
       }
    }
    *sizePtr = nItems;
@@ -2199,7 +2199,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    // Placement new for new elements, if any
    if (needsConstruct) {
       for (std::size_t i = oldSize; i < nItems; ++i)
-         CallGenerateValueOn(*fSubFields[0], begin + (i * fItemSize));
+         CallCreateValueOn(*fSubFields[0], begin + (i * fItemSize));
    }
 
    if (fSubFields[0]->IsSimple() && nItems) {
@@ -2296,7 +2296,7 @@ void ROOT::Experimental::RRVecField::GenerateColumnsImpl(const RNTupleDescriptor
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RRVecField::GenerateValue(void *where) const
+void ROOT::Experimental::RRVecField::CreateValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
    // currently the inline buffer is left uninitialized
@@ -2483,14 +2483,14 @@ void ROOT::Experimental::RArrayField::ReadInClusterImpl(RClusterIndex clusterInd
    }
 }
 
-void ROOT::Experimental::RArrayField::GenerateValue(void *where) const
+void ROOT::Experimental::RArrayField::CreateValue(void *where) const
 {
    if (fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)
       return;
 
    auto arrayPtr = reinterpret_cast<unsigned char *>(where);
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      CallGenerateValueOn(*fSubFields[0], arrayPtr + (i * fItemSize));
+      CallCreateValueOn(*fSubFields[0], arrayPtr + (i * fItemSize));
    }
 }
 
@@ -2552,7 +2552,7 @@ ROOT::Experimental::RArrayAsRVecField::CloneImpl(std::string_view newName) const
    return std::make_unique<RArrayAsRVecField>(newName, std::move(newItemField), fArrayLength);
 }
 
-void ROOT::Experimental::RArrayAsRVecField::GenerateValue(void *where) const
+void ROOT::Experimental::RArrayAsRVecField::CreateValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
    void **beginPtr = new (where)(void *)(nullptr);
@@ -2599,7 +2599,7 @@ void ROOT::Experimental::RArrayAsRVecField::GenerateValue(void *where) const
    // Placement new for the array elements
    if (needsConstruct) {
       for (std::size_t i = 0; i < fArrayLength; ++i)
-         CallGenerateValueOn(*fSubFields[0], begin + (i * fItemSize));
+         CallCreateValueOn(*fSubFields[0], begin + (i * fItemSize));
    }
 }
 
@@ -2816,7 +2816,7 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes
    // any `std::holds_alternative<T>` check fail later.
    if (R__likely(tag > 0)) {
-      CallGenerateValueOn(*fSubFields[tag - 1], to);
+      CallCreateValueOn(*fSubFields[tag - 1], to);
       CallReadOn(*fSubFields[tag - 1], variantIndex, to);
    }
    SetTag(to, fTagOffset, tag);
@@ -2840,10 +2840,10 @@ void ROOT::Experimental::RVariantField::GenerateColumnsImpl(const RNTupleDescrip
    fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RVariantField::GenerateValue(void *where) const
+void ROOT::Experimental::RVariantField::CreateValue(void *where) const
 {
    memset(where, 0, GetValueSize());
-   CallGenerateValueOn(*fSubFields[0], where);
+   CallCreateValueOn(*fSubFields[0], where);
    SetTag(where, fTagOffset, 1);
 }
 
@@ -2985,7 +2985,7 @@ void ROOT::Experimental::RNullableField::GenerateColumnsImpl()
       }
    }
    if (IsDense()) {
-      fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->GenerateValue());
+      fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->CreateValue());
       fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
    } else {
       fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
@@ -3095,7 +3095,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
 
    if (!isValidValue) {
       valuePtr = malloc(fSubFields[0]->GetValueSize());
-      CallGenerateValueOn(*fSubFields[0], valuePtr);
+      CallCreateValueOn(*fSubFields[0], valuePtr);
       ptr->reset(reinterpret_cast<char *>(valuePtr));
    }
 
@@ -3178,7 +3178,7 @@ ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
    return result;
 }
 
-void ROOT::Experimental::RPairField::GenerateValue(void *where) const
+void ROOT::Experimental::RPairField::CreateValue(void *where) const
 {
    fClass->New(where);
 }
@@ -3249,7 +3249,7 @@ ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
    return result;
 }
 
-void ROOT::Experimental::RTupleField::GenerateValue(void *where) const
+void ROOT::Experimental::RTupleField::CreateValue(void *where) const
 {
    fClass->New(where);
 }

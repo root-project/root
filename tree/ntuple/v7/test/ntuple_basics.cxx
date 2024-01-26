@@ -758,9 +758,9 @@ TEST(RNTuple, RFieldDeleter)
    auto f1 = RFieldBase::Create("f1", "CustomStruct").Unwrap();
    auto f2 = RFieldBase::Create("f2", "std::vector<std::vector<std::variant<std::string, float>>>").Unwrap();
    auto f3 = RFieldBase::Create("f3", "std::variant<std::unique_ptr<CustomStruct>, ComplexStruct>>").Unwrap();
-   auto v1 = f1->GenerateValue();
-   auto v2 = f2->GenerateValue();
-   auto v3 = f3->GenerateValue();
+   auto v1 = f1->CreateValue();
+   auto v2 = f2->CreateValue();
+   auto v3 = f3->CreateValue();
 
    // Destruct fields to check if the deleters work without the fields
    f1 = nullptr;
