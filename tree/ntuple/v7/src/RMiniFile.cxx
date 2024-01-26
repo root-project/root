@@ -1056,7 +1056,9 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    RTFKey key;
    RTFString name;
    ReadBuffer(&key, sizeof(key), fileHeader.fBEGIN);
+   // Skip over the entire key length, including the class name, object name, and title stored in it.
    std::uint64_t offset = fileHeader.fBEGIN + key.fKeyLen;
+   // Skip over the name and title of the TNamed preceding the TFile entry.
    ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
    ReadBuffer(&name, 1, offset);
@@ -1501,6 +1503,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
    fFileSimple.Write(&keyList, keyList.GetSize());
    fFileSimple.Write(&keyRNTuple, keyRNTuple.fKeyHeaderSize);
+   // Write class name, object name, and title for this key.
    fFileSimple.Write(&strRNTupleClass, strRNTupleClass.GetSize());
    fFileSimple.Write(&strRNTupleName, strRNTupleName.GetSize());
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
@@ -1556,9 +1559,11 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
    fFileSimple.fControlBlock->fHeader.SetNbytesName(nbytesName);
 
    fFileSimple.Write(&keyRoot, keyRoot.fKeyHeaderSize, 100);
+   // Write class name, object name, and title for the TFile key.
    fFileSimple.Write(&strTFile, strTFile.GetSize());
    fFileSimple.Write(&strFileName, strFileName.GetSize());
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
+   // Write the name and title of the TNamed preceding the TFile entry.
    fFileSimple.Write(&strFileName, strFileName.GetSize());
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
    // Will be overwritten on commit
