@@ -82,11 +82,9 @@ public:
    const RError &GetError() const { return fError; }
 };
 
-
-namespace Internal {
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RResultBase
+\class ROOT::Experimental::RResultBase
 \ingroup Base
 \brief Common handling of the error case for RResult<T> (T != void) and RResult<void>
 
@@ -142,8 +140,6 @@ public:
    void *operator new[](std::size_t) = delete;
    void *operator new[](std::size_t, void *) = delete;
 }; // class RResultBase
-} // namespace Internal
-
 
 // clang-format off
 /**
@@ -204,7 +200,7 @@ where an exception may be thrown.
 */
 // clang-format on
 template <typename T>
-class RResult : public Internal::RResultBase {
+class RResult : public RResultBase {
 private:
    /// The result value in case of successful execution
    T fValue;
@@ -265,8 +261,8 @@ public:
 };
 
 /// RResult<void> has no data member and no Inspect() method but instead a Success() factory method
-template<>
-class RResult<void> : public Internal::RResultBase {
+template <>
+class RResult<void> : public RResultBase {
 private:
    RResult() = default;
 
