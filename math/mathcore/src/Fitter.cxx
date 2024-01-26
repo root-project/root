@@ -847,14 +847,16 @@ bool Fitter::DoMinimization(std::unique_ptr<ObjFunc_t>  objFunc, const ROOT::Mat
 template<class ObjFunc_t>
 bool Fitter::DoWeightMinimization(std::unique_ptr<ObjFunc_t> objFunc, const ROOT::Math::IMultiGenFunction * chi2func) {
    // perform the minimization initializing the minimizer starting from a given obj function
-   // and apply afterwards the correction for weights. This applyies only for logL fitting
+   // and apply afterwards the correction for weights. This applies only for logL fitting
    this->fFitType = objFunc->Type();
    fExtObjFunction = nullptr;
-   fObjFunction = std::move(objFunc);
+   // need to use a temporary shared pointer to the objective function since we cannot use the unique pointer when it has been moved
+   std::shared_ptr<ObjFunc_t> sObjFunc{ std::move(objFunc)};
+   fObjFunction = sObjFunc;
    if (!DoInitMinimizer()) return false;
    if (!DoMinimization(chi2func)) return false;
-   objFunc->UseSumOfWeightSquare();
-   return ApplyWeightCorrection(*objFunc);
+   sObjFunc->UseSumOfWeightSquare();
+   return ApplyWeightCorrection(*sObjFunc);
 }
 
 
