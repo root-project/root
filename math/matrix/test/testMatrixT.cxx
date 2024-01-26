@@ -23,8 +23,8 @@ float tol_f = std::numeric_limits<float>::epsilon() * 100;
 // Helper functions for element-wise comparison of TMatrix.
 #define CHECK_TMATRIX_FLOAT(a, b, m, n)                                                     \
    {                                                                                        \
-      for (Int_t i = 0; i < m; i++) {                                                      \
-         for (Int_t j = 0; j < n; j++) {                                                   \
+      for (Int_t i = 0; i < m; i++) {                                                       \
+         for (Int_t j = 0; j < n; j++) {                                                    \
             EXPECT_NEAR(a(i, j), b(i, j), tol_f) << "  at entry (" << i << "," << j << ")"; \
          }                                                                                  \
       }                                                                                     \
@@ -32,8 +32,8 @@ float tol_f = std::numeric_limits<float>::epsilon() * 100;
 
 #define CHECK_TMATRIX_DOUBLE(a, b, m, n)                                                  \
    {                                                                                      \
-      for (Int_t i = 0; i < m; i++) {                                                    \
-         for (Int_t j = 0; j < n; j++) {                                                 \
+      for (Int_t i = 0; i < m; i++) {                                                     \
+         for (Int_t j = 0; j < n; j++) {                                                  \
             EXPECT_NEAR(a(i, j), b(i, j), tol) << "  at entry (" << i << "," << j << ")"; \
          }                                                                                \
       }                                                                                   \
