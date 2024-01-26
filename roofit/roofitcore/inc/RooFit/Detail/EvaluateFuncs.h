@@ -233,6 +233,10 @@ inline double logNormalEvaluateStandard(double x, double sigma, double mu)
    return ROOT::Math::lognormal_pdf(x, mu, std::abs(sigma));
 }
 
+inline double effProdEvaluate(double eff, double pdf) {
+   return eff * pdf;
+}
+
 } // namespace EvaluateFuncs
 
 } // namespace Detail
