@@ -32,6 +32,8 @@ protected:
 
   // Function evaluation
   double evaluate() const override ;
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 
   RooRealProxy _pdf ;               ///< Probability Density function
   RooRealProxy _eff;                ///< Efficiency function
