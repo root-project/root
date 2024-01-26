@@ -7,8 +7,9 @@ from functools import partial
 import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
 from cppyy import cppdef, include
-from libROOTPythonizations import gROOT, CreateBufferFromAddress
+from libROOTPythonizations import gROOT
 from cppyy.gbl import gSystem
+import cppyy.ll
 
 from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
@@ -137,8 +138,12 @@ class ROOTFacade(types.ModuleType):
         # addr is the address of the address of the object
         addr = self.addressof(instance=obj, byref=True)
 
+        # Check for 64 bit as suggested here:
+        # https://docs.python.org/3/library/platform.html#cross-platform
+        out_type = "Long64_t*" if sys.maxsize > 2**32 else "Int_t*"
+
         # Create a buffer (LowLevelView) from address
-        return CreateBufferFromAddress(addr)
+        return cppyy.ll.cast[out_type](addr)
 
     def _handle_import_all(self):
         # Called if "from ROOT import *" is executed in the app.

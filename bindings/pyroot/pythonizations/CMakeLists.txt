@@ -125,7 +125,6 @@ set(cpp_sources
     src/PyzCppHelpers.cxx
     src/PyzPythonHelpers.cxx
     src/CPPInstancePyz.cxx
-    src/FacadeHelpers.cxx
     src/TPyDispatcher.cxx
     inc/TPyDispatcher.h
     ${PYROOT_EXTRA_CPP_SOURCES}
