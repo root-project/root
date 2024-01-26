@@ -130,15 +130,6 @@ public:
       result.fError->AddFrame(std::move(sourceLocation));
       return *result.fError;
    }
-
-   // Help to prevent heap construction of RResult objects. Unchecked RResult objects in failure state should throw
-   // an exception close to the error location. For stack allocated RResult objects, an exception is thrown
-   // the latest when leaving the scope. Heap allocated RResult objects in failure state can live much longer making it
-   // difficult to trace back the original error.
-   void *operator new(std::size_t size) = delete;
-   void *operator new(std::size_t, void *) = delete;
-   void *operator new[](std::size_t) = delete;
-   void *operator new[](std::size_t, void *) = delete;
 }; // class RResultBase
 
 // clang-format off
