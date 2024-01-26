@@ -423,3 +423,69 @@ def pythonize_rdataframe(klass):
 
     klass.Filter = _PyFilter
     klass.Define = _PyDefine
+
+
+def _MakeNumpyDataFrame(np_dict):
+    """
+    Make an RDataFrame from a dictionary of numpy arrays
+
+    \param[in] self Always null, since this is a module function.
+    \param[in] pydata Dictionary with numpy arrays
+
+    This function takes a dictionary of numpy arrays and creates an RDataFrame
+    using the keys as column names and the numpy arrays as data.
+    """
+    import ROOT
+    import cppyy
+    import platform
+
+    if not isinstance(np_dict, dict):
+        raise RuntimeError("Object not convertible: Python object is not a dictionary.")
+
+    if len(np_dict) == 0:
+        raise RuntimeError("Object not convertible: Dictionary is empty.")
+
+    address_prefix = "0x" if platform.system() == "Windows" else ""
+
+    pyvecs = dict()
+
+    # Add PyObject (dictionary) holding RVecs to data source
+    code = "ROOT::Internal::RDF::MakeNumpyDataFrame("
+    code += f"reinterpret_cast<PyObject*>({address_prefix}{id(pyvecs)}), "
+
+    def write_vec_code(key, value):
+        # Get name of key
+        if not isinstance(key, str):
+            raise RuntimeError("Object not convertible: Dictionary key is not convertible to a string.")
+
+        # Convert value to RVec and attach to dictionary
+        pyvec = ROOT.VecOps.AsRVec(value)
+        if not pyvec:
+            raise RuntimeError("Object not convertible: Dictionary entry " + key + " is not convertible with AsRVec.")
+
+        pyvecs[key] = pyvec
+
+        # Add pairs of column name and associated RVec to signature
+        vectype = type(pyvec).__cpp_name__
+        vecaddress = cppyy.addressof(pyvec)
+        code = "std::pair<std::string, " + vectype + '*>("' + key
+        code += '", reinterpret_cast<' + vectype + f"*>({address_prefix}{vecaddress}))"
+
+        return code
+
+    # Iterate over dictionary, convert numpy arrays to RVecs and put together interpreter code
+    code += ", ".join([write_vec_code(key, value) for key, value in np_dict.items()]) + ")"
+
+    # Create RDataFrame and build Python proxy
+    err = ROOT.gInterpreter.Declare('#include "ROOT/RNumpyDS.hxx"')
+    if not err:
+        raise RuntimeError('Failed to find "ROOT/RNumpyDS.hxx".')
+
+    address = ROOT.gInterpreter.Calc(code)
+    rdf = cppyy.bind_object(address, "ROOT::RDataFrame")
+    ROOT.SetOwnership(rdf, True)
+
+    # Bind pyobject holding adopted memory to the RVec
+    rdf.__data__ = pyvecs
+
+    return rdf
