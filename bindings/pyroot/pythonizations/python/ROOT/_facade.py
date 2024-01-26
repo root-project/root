@@ -292,8 +292,7 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         ns = self._fallback_getattr("RDF")
         try:
-            # Inject FromNumpy function
-            from libROOTPythonizations import MakeNumpyDataFrame
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
             # Make a copy of the arrays that have strides to make sure we read the correct values
             # TODO a cleaner fix
@@ -303,7 +302,7 @@ class ROOTFacade(types.ModuleType):
                 for key in np_dict.keys():
                     if (np_dict[key].__array_interface__["strides"]) is not None:
                         np_dict[key] = numpy.copy(np_dict[key])
-                return MakeNumpyDataFrame(np_dict)
+                return _MakeNumpyDataFrame(np_dict)
 
             ns.FromNumpy = MakeNumpyDataFrameCopy
 
@@ -312,7 +311,7 @@ class ROOTFacade(types.ModuleType):
                 np_dict = {}
                 for key in df.columns:
                     np_dict[key] = df[key].to_numpy()
-                return MakeNumpyDataFrame(np_dict)
+                return _MakeNumpyDataFrame(np_dict)
             ns.FromPandas = MakePandasDataFrame
 
             try:

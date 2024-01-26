@@ -16,7 +16,6 @@ if(dataframe)
         ROOT/_pythonization/_rdf_conversion_maps.py
         ROOT/_pythonization/_rdf_pyz.py)
     list(APPEND PYROOT_EXTRA_CPP_SOURCES
-        src/RDataFramePyz.cxx
         src/RTensorPyz.cxx)
     list(APPEND PYROOT_EXTRA_HEADERS
         inc/RNumpyDS.hxx)
