@@ -33,7 +33,7 @@ inline double gaussianEvaluate(double x, double mean, double sigma)
    return std::exp(-0.5 * arg * arg / (sig * sig));
 }
 
-// RooRation evaluate function.
+// RooRatio evaluate function.
 inline double ratioEvaluate(double numerator, double denominator) {
    return numerator / denominator;
 }
