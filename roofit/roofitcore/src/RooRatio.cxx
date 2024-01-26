@@ -27,6 +27,8 @@ Represents the ratio of two RooAbsReal objects.
 #include <RooRealVar.h>
 #include <RooTrace.h>
 
+#include "RooFit/Detail/EvaluateFuncs.h"
+
 #include <Riostream.h>
 
 #include <TMath.h>
@@ -111,7 +113,7 @@ RooRatio::RooRatio(const RooRatio &other, const char *name)
 
 double RooRatio::evaluate() const
 {
-   return _numerator / _denominator;
+   return RooFit::Detail::EvaluateFuncs::ratioEvaluate(_numerator, _denominator);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +126,5 @@ void RooRatio::computeBatch(double *output, size_t nEvents, RooFit::Detail::Data
 
 void RooRatio::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   std::stringstream code;
-   code << ctx.getResult(_numerator) << "/" << ctx.getResult(_denominator) << std::endl;
-   ctx.addResult(this, code.str());
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::ratioEvaluate", _numerator, _denominator));
 }
