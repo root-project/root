@@ -21,7 +21,7 @@
 #include "TVirtualX.h"
 
 
-const Double_t kPI = 3.14159265358979323846;
+const Double_t kPI = TMath::Pi();
 
 ClassImp(TEllipse);
 
@@ -506,6 +506,38 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return 1 if the point (x,y) is inside the polygon defined by
+/// the ellipse 0 otherwise.
+
+Int_t TEllipse::IsInside(Double_t x, Double_t y) const
+{
+
+   const Int_t n = 200;
+   Double_t xe[n+3], ye[n+3];
+
+   Double_t phi1 = TMath::Min(fPhimin,fPhimax);
+   Double_t phi2 = TMath::Max(fPhimin,fPhimax);
+   Double_t angle,dx,dy;
+   Double_t dphi = (phi2-phi1)*kPI/(180*n);
+   Double_t ct   = TMath::Cos(kPI*fTheta/180);
+   Double_t st   = TMath::Sin(kPI*fTheta/180);
+   for (Int_t i=0; i<=n; i++) {
+      angle = phi1*kPI/180 + Double_t(i)*dphi;
+      dx    = fR1*TMath::Cos(angle);
+      dy    = fR2*TMath::Sin(angle);
+      xe[i] = fX1 + dx*ct - dy*st;
+      ye[i] = fY1 + dx*st + dy*ct;
+   }
+   xe[n+1] = fX1;
+   ye[n+1] = fY1;
+   xe[n+2] = xe[0];
+   ye[n+2] = ye[0];
+
+   return (Int_t)TMath::IsInside(x, y, n+3, xe, ye);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// List this ellipse with its attributes.
