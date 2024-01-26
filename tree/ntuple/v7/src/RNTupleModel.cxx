@@ -377,6 +377,8 @@ ROOT::Experimental::RNTupleModel::GenerateBulk(std::string_view fieldName) const
       throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
 
    auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("no such field: " + std::string(fieldName)));
    return f->GenerateBulk();
 }
 
