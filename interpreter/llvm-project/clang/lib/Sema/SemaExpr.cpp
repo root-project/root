@@ -15190,8 +15190,10 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
 
                  return ExprError();
               }
-              VD->setTypeSourceInfo(C.getTrivialTypeSourceInfo(ResTy));
-              VD->setType(ResTy);
+              if (!ResTy.isNull()) {
+                VD->setTypeSourceInfo(C.getTrivialTypeSourceInfo(ResTy));
+                VD->setType(ResTy);
+              }
               VD->setInit(DefaultLvalueConversion(RHSExpr).get());
               PushOnScopeChains(VD, getCurScope(), /*Add to ctx*/true);
 
