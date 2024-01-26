@@ -138,17 +138,17 @@ TEST(RNTuple, InsideCollection)
    fieldCardinality32->SetOnDiskId(idKlassVec);
    fieldCardinality32->ConnectPageSource(*source);
 
-   auto value = field->GenerateValue();
+   auto value = field->CreateValue();
    value.Read(0);
    auto aVec = value.GetRef<std::vector<float>>();
    EXPECT_EQ(1U, aVec.size());
    EXPECT_EQ(42.0, aVec[0]);
 
-   auto valueCardinality64 = fieldCardinality64->GenerateValue();
+   auto valueCardinality64 = fieldCardinality64->CreateValue();
    valueCardinality64.Read(0);
    EXPECT_EQ(1U, valueCardinality64.GetRef<std::uint64_t>());
 
-   auto valueCardinality32 = fieldCardinality32->GenerateValue();
+   auto valueCardinality32 = fieldCardinality32->CreateValue();
    valueCardinality32.Read(0);
    EXPECT_EQ(1U, valueCardinality32.GetRef<std::uint32_t>());
 

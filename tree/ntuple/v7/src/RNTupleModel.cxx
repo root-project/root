@@ -223,7 +223,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    if (fDefaultEntry) {
       cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(fModelId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
-         cloneModel->fDefaultEntry->AddValue(f->GenerateValue());
+         cloneModel->fDefaultEntry->AddValue(f->CreateValue());
       }
    }
    return cloneModel;
@@ -258,7 +258,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
    EnsureValidFieldName(field->GetName());
 
    if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->GenerateValue());
+      fDefaultEntry->AddValue(field->CreateValue());
    fFieldZero->Attach(std::move(field));
 }
 
@@ -345,7 +345,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
    for (const auto &f : fFieldZero->GetSubFields()) {
-      entry->AddValue(f->GenerateValue());
+      entry->AddValue(f->CreateValue());
    }
    return entry;
 }

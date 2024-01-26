@@ -14,10 +14,10 @@ Given a properly constructed and valid object, the object must ensure that it st
 However, the object should not rely on its transient state to remain unchanged during reading:
 it may be destructed and constructed again when it is read as part of a collection (see below).
 
-An object that is being read from disk may have been constructed by `RField::GenerateValue()`.
+An object that is being read from disk may have been constructed by `RField::CreateValue()`.
 In this case, RNTuple owns the object. The deleter returned by `RField::GetDeleter()` releases the resources.
 
-When reading collections of type `T` (`std::vector<T>`, `ROOT::RVec<T>`, ...), RNTuple uses `RField::GenerateValue()` to construct elements of the inner type `T`.
+When reading collections of type `T` (`std::vector<T>`, `ROOT::RVec<T>`, ...), RNTuple uses `RField::CreateValue()` to construct elements of the inner type `T`.
 As the size of a collection changes from event to event, this has the following effect on its elements
   - If the collection shrinks, cut-off elements are destructed
   - If the collection grows, new elements are constructed before reading them
