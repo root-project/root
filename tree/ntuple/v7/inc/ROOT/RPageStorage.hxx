@@ -38,6 +38,7 @@
 namespace ROOT {
 namespace Experimental {
 
+class RFieldBase;
 class RNTupleModel;
 // TODO(jblomer): factory methods to create tree sinks and sources outside Detail namespace
 
@@ -51,7 +52,6 @@ namespace Detail {
 class RColumn;
 class RColumnElementBase;
 struct RNTupleModelChangeset;
-class RFieldBase;
 
 enum class EPageStorageType {
    kSink,

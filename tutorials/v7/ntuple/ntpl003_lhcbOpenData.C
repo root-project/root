@@ -40,7 +40,7 @@ R__LOAD_LIBRARY(ROOTNTuple)
 
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
+using RFieldBase = ROOT::Experimental::RFieldBase;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 

@@ -100,7 +100,7 @@ public:
    public:
       /// The map keys are the projected target fields, the map values are the backing source fields
       /// Note that sub fields are treated individually and indepently of their parent field
-      using FieldMap_t = std::unordered_map<const Detail::RFieldBase *, const Detail::RFieldBase *>;
+      using FieldMap_t = std::unordered_map<const RFieldBase *, const RFieldBase *>;
 
    private:
       explicit RProjectedFields(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero)) {}
@@ -113,7 +113,7 @@ public:
 
       /// Asserts that the passed field is a valid target of the source field provided in the field map.
       /// Checks the field without looking into sub fields.
-      RResult<void> EnsureValidMapping(const Detail::RFieldBase *target, const FieldMap_t &fieldMap);
+      RResult<void> EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap);
 
    public:
       explicit RProjectedFields(const RNTupleModel *model) : fFieldZero(std::make_unique<RFieldZero>()), fModel(model)
@@ -129,10 +129,10 @@ public:
       std::unique_ptr<RProjectedFields> Clone(const RNTupleModel *newModel) const;
 
       RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
-      const Detail::RFieldBase *GetSourceField(const Detail::RFieldBase *target) const;
+      const RFieldBase *GetSourceField(const RFieldBase *target) const;
       /// Adds a new projected field. The field map needs to provide valid source fields of fModel for 'field'
       /// and each of its sub fields.
-      RResult<void> Add(std::unique_ptr<Detail::RFieldBase> field, const FieldMap_t &fieldMap);
+      RResult<void> Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap);
       bool IsEmpty() const { return fFieldZero->begin() == fFieldZero->end(); }
    };
 
@@ -169,10 +169,10 @@ public:
          return objPtr;
       }
 
-      void AddField(std::unique_ptr<Detail::RFieldBase> field);
+      void AddField(std::unique_ptr<RFieldBase> field);
 
-      RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
-                                      std::function<std::string(const std::string &)> mapping);
+      RResult<void>
+      AddProjectedField(std::unique_ptr<RFieldBase> field, std::function<std::string(const std::string &)> mapping);
    };
 
 private:
@@ -201,7 +201,7 @@ private:
    void EnsureNotBare() const;
 
    /// The field name can be a top-level field or a nested field. Returns nullptr if the field is not in the model.
-   Detail::RFieldBase *FindField(std::string_view fieldName) const;
+   RFieldBase *FindField(std::string_view fieldName) const;
 
    RNTupleModel(std::unique_ptr<RFieldZero> fieldZero);
 
@@ -278,13 +278,13 @@ public:
    /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
    ///
    /// Throws an exception if the field is null.
-   void AddField(std::unique_ptr<Detail::RFieldBase> field);
+   void AddField(std::unique_ptr<RFieldBase> field);
 
    /// Adds a top-level field based on existing fields. The mapping function is called with the qualified field names
    /// of the provided field and the subfields.  It should return the qualified field names used as a mapping source.
    /// Projected fields can only be used for models used to write data.
-   RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
-                                   std::function<std::string(const std::string &)> mapping);
+   RResult<void>
+   AddProjectedField(std::unique_ptr<RFieldBase> field, std::function<std::string(const std::string &)> mapping);
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
    void Freeze();
@@ -304,7 +304,7 @@ public:
    /// set memory addresses to be serialized / deserialized
    std::unique_ptr<REntry> CreateBareEntry() const;
    /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
-   Detail::RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
+   RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 
    REntry &GetDefaultEntry();
    const REntry &GetDefaultEntry() const;
@@ -313,7 +313,7 @@ public:
    /// and to set the on-disk field IDs when connecting a model to a page source or sink.
    RFieldZero &GetFieldZero();
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
-   const Detail::RFieldBase &GetField(std::string_view fieldName) const;
+   const RFieldBase &GetField(std::string_view fieldName) const;
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);

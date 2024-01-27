@@ -29,8 +29,7 @@
 
 //----------------------------- RPrepareVisitor --------------------------------
 
-
-void ROOT::Experimental::RPrepareVisitor::VisitField(const Detail::RFieldBase &field)
+void ROOT::Experimental::RPrepareVisitor::VisitField(const RFieldBase &field)
 {
    auto subFields = field.GetSubFields();
    for (auto f : subFields) {
@@ -64,7 +63,7 @@ void ROOT::Experimental::RPrintSchemaVisitor::SetNumFields(int n)
    SetAvailableSpaceForStrings();
 }
 
-void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBase &field)
+void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const RFieldBase &field)
 {
    fOutput << fFrameSymbol << ' ';
 
@@ -117,15 +116,13 @@ void ROOT::Experimental::RPrintValueVisitor::PrintIndent()
       fOutput << "  ";
 }
 
-
-void ROOT::Experimental::RPrintValueVisitor::PrintName(const Detail::RFieldBase &field)
+void ROOT::Experimental::RPrintValueVisitor::PrintName(const RFieldBase &field)
 {
    if (fPrintOptions.fPrintName)
       fOutput << "\"" << field.GetFieldName() << "\": ";
 }
 
-
-void ROOT::Experimental::RPrintValueVisitor::PrintCollection(const Detail::RFieldBase &field)
+void ROOT::Experimental::RPrintValueVisitor::PrintCollection(const RFieldBase &field)
 {
    PrintIndent();
    PrintName(field);
@@ -146,8 +143,7 @@ void ROOT::Experimental::RPrintValueVisitor::PrintCollection(const Detail::RFiel
    fOutput << "]";
 }
 
-
-void ROOT::Experimental::RPrintValueVisitor::VisitField(const Detail::RFieldBase &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitField(const RFieldBase &field)
 {
    PrintIndent();
    PrintName(field);

@@ -645,7 +645,7 @@ TEST(RNTuple, BareEntry)
 namespace ROOT::Experimental::Internal {
 struct RFieldCallbackInjector {
    template <typename FieldT>
-   static void Inject(FieldT &field, ROOT::Experimental::Detail::RFieldBase::ReadCallback_t func)
+   static void Inject(FieldT &field, ROOT::Experimental::RFieldBase::ReadCallback_t func)
    {
       field.AddReadCallback(func);
    }
