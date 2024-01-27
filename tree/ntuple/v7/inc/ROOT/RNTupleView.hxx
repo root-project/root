@@ -147,7 +147,7 @@ private:
    /// fFieldId has fParent always set to null; views access nested fields without looking at the parent
    FieldT fField;
    /// Used as a Read() destination for fields that are not mappable
-   Detail::RFieldBase::RValue fValue;
+   RFieldBase::RValue fValue;
 
 public:
    using FieldTypeT = T;
@@ -158,7 +158,7 @@ public:
    {
       fField.SetOnDiskId(fieldId);
       fField.ConnectPageSource(*pageSource);
-      if ((fField.GetTraits() & Detail::RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
+      if ((fField.GetTraits() & RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
          throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
    }
 

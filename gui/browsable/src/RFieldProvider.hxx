@@ -148,7 +148,7 @@ class RFieldProvider : public RProvider {
          return fHist.release();
       }
 
-      void VisitField(const ROOT::Experimental::Detail::RFieldBase & /* field */) final {}
+      void VisitField(const ROOT::Experimental::RFieldBase & /* field */) final {}
       void VisitBoolField(const RField<bool> &field) final { FillHistogram(field); }
       void VisitFloatField(const RField<float> &field) final { FillHistogram(field); }
       void VisitDoubleField(const RField<double> &field) final { FillHistogram(field); }
@@ -182,7 +182,7 @@ public:
       auto ntplSource = holder->GetNtplSource();
       std::string name = holder->GetParentName();
 
-      std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> field;
+      std::unique_ptr<ROOT::Experimental::RFieldBase> field;
       {
          auto descriptorGuard = ntplSource->GetSharedDescriptorGuard();
          field = descriptorGuard->GetFieldDescriptor(holder->GetId()).CreateField(descriptorGuard.GetRef());

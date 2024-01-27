@@ -42,7 +42,7 @@ by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit
 // clang-format on
 class RFieldVisitor {
 public:
-   virtual void VisitField(const Detail::RFieldBase &field) = 0;
+   virtual void VisitField(const RFieldBase &field) = 0;
    virtual void VisitFieldZero(const RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
    virtual void VisitArrayAsRVecField(const RArrayAsRVecField &field) { VisitField(field); }
@@ -93,7 +93,7 @@ private:
 
 public:
    RPrepareVisitor() = default;
-   void VisitField(const Detail::RFieldBase &field) final;
+   void VisitField(const RFieldBase &field) final;
    void VisitFieldZero(const RFieldZero &field) final;
 
    unsigned int GetDeepestLevel() const { return fDeepestLevel; }
@@ -134,7 +134,7 @@ public:
       SetAvailableSpaceForStrings();
    }
    /// Prints summary of Field
-   void VisitField(const Detail::RFieldBase &field) final;
+   void VisitField(const RFieldBase &field) final;
    void VisitFieldZero(const RFieldZero &fieldZero) final;
    void SetFrameSymbol(char s) { fFrameSymbol = s; }
    void SetWidth(int w) { fWidth = w; }
@@ -180,24 +180,24 @@ public:
    };
 
 private:
-   Detail::RFieldBase::RValue fValue;
+   RFieldBase::RValue fValue;
    /// The output is directed to fOutput which may differ from std::cout.
    std::ostream &fOutput;
    unsigned int fLevel;
    RPrintOptions fPrintOptions;
 
    void PrintIndent();
-   void PrintName(const Detail::RFieldBase &field);
-   void PrintCollection(const Detail::RFieldBase &field);
+   void PrintName(const RFieldBase &field);
+   void PrintCollection(const RFieldBase &field);
 
 public:
-   RPrintValueVisitor(Detail::RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
+   RPrintValueVisitor(RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
       : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options)
    {
    }
 
-   void VisitField(const Detail::RFieldBase &field) final;
+   void VisitField(const RFieldBase &field) final;
 
    void VisitBoolField(const RField<bool> &field) final;
    void VisitDoubleField(const RField<double> &field) final;

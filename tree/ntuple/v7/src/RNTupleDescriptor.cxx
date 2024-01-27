@@ -59,13 +59,13 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
    return clone;
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc) const
 {
    if (GetTypeName().empty() && GetStructure() == ENTupleStructure::kCollection) {
       // For untyped collections, we have no class available to collect all the sub fields.
       // Therefore, we create an untyped record field as an artifical binder for the collection items.
-      std::vector<std::unique_ptr<Detail::RFieldBase>> memberFields;
+      std::vector<std::unique_ptr<RFieldBase>> memberFields;
       for (auto id : fLinkIds) {
          const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
          memberFields.emplace_back(memberDesc.CreateField(ntplDesc));
@@ -76,8 +76,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       return collectionField;
    }
 
-   auto field =
-      Detail::RFieldBase::Create(GetFieldName(), GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias()).Unwrap();
+   auto field = RFieldBase::Create(GetFieldName(), GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias()).Unwrap();
    field->SetOnDiskId(fFieldId);
    for (auto &f : *field)
       f.SetOnDiskId(ntplDesc.FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId()));
@@ -660,7 +659,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(Descri
 ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
 {
    // Reuse field name validity check
-   auto validName = Detail::RFieldBase::EnsureValidFieldName(fDescriptor.GetName());
+   auto validName = RFieldBase::EnsureValidFieldName(fDescriptor.GetName());
    if (!validName) {
       return R__FORWARD_ERROR(validName);
    }
@@ -719,7 +718,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::RFieldDescriptorBuilder(c
 }
 
 ROOT::Experimental::Internal::RFieldDescriptorBuilder
-ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const Detail::RFieldBase &field)
+ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const RFieldBase &field)
 {
    RFieldDescriptorBuilder fieldDesc;
    fieldDesc.FieldVersion(field.GetFieldVersion())
@@ -744,7 +743,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
    }
    // FieldZero is usually named "" and would be a false positive here
    if (fField.GetParentId() != kInvalidDescriptorId) {
-      auto validName = Detail::RFieldBase::EnsureValidFieldName(fField.GetFieldName());
+      auto validName = RFieldBase::EnsureValidFieldName(fField.GetFieldName());
       if (!validName) {
          return R__FORWARD_ERROR(validName);
       }

@@ -49,14 +49,14 @@ class REntry {
    /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
-   std::vector<Detail::RFieldBase::RValue> fValues;
+   std::vector<RFieldBase::RValue> fValues;
 
    // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
    explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
 
-   void AddValue(Detail::RFieldBase::RValue &&value) { fValues.emplace_back(std::move(value)); }
+   void AddValue(RFieldBase::RValue &&value) { fValues.emplace_back(std::move(value)); }
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template <typename T, typename... ArgsT>

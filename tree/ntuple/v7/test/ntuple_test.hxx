@@ -66,7 +66,7 @@ using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBu
 using RException = ROOT::Experimental::RException;
 template <class T>
 using RField = ROOT::Experimental::RField<T>;
-using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
+using RFieldBase = ROOT::Experimental::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
