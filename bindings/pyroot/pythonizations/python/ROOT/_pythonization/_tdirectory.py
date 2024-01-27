@@ -50,7 +50,6 @@ for more information.
 */
 """
 
-from libROOTPythonizations import AddDirectoryWritePyz
 import cppyy
 
 
@@ -79,10 +78,29 @@ def _TDirectory_getattr(self, attr):
     return result
 
 
+def _TDirectory_WriteObject(self, obj, *args):
+    """
+    Implements the WriteObject method of TDirectory
+    This method allows to write objects into TDirectory instances with this
+    syntax:
+    ```
+    myDir.WriteObject(myObj, "myKeyName")
+    ```
+    """
+    # Implement a check on whether the object is derived from TObject or not.
+    # Similarly to what is done in TDirectory::WriteObject with SFINAE.
+
+    if isinstance(obj, cppyy.gbl.TObject):
+        return self.WriteTObject(obj, *args)
+
+    return self.WriteObjectAny(obj, type(obj).__cpp_name__, *args)
+
+
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
     klass.__getattr__ = _TDirectory_getattr
-    AddDirectoryWritePyz(klass)
+    klass._WriteObject = klass.WriteObject
+    klass.WriteObject = _TDirectory_WriteObject
 
 
 # Instant pythonization (executed at `import ROOT` time), no need of a
