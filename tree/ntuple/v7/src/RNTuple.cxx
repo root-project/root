@@ -155,7 +155,7 @@ ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
 ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
-      fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
+      fModel = fSource->GetSharedDescriptorGuard()->CreateModel();
       ConnectModel(*fModel);
    }
    return fModel.get();
@@ -180,7 +180,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       {
          auto descriptorGuard = fSource->GetSharedDescriptorGuard();
          name = descriptorGuard->GetName();
-         fullModel = descriptorGuard->GenerateModel();
+         fullModel = descriptorGuard->CreateModel();
       }
 
       for (int i = 0; i < (width / 2 + width % 2 - 4); ++i)

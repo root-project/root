@@ -123,7 +123,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource *> s
 
       // Create sink from the input model of the very first input file
       if (isFirstSource) {
-         auto model = descriptor->GenerateModel();
+         auto model = descriptor->CreateModel();
          destination.Create(*model.get());
          isFirstSource = false;
       }

@@ -449,7 +449,7 @@ ROOT::Experimental::RNTupleDescriptor::DropClusterGroupDetails(DescriptorId_t cl
    return RResult<void>::Success();
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::CreateModel() const
 {
    auto fieldZero = std::make_unique<RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());

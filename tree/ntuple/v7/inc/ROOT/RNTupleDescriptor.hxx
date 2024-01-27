@@ -803,7 +803,7 @@ public:
    void IncGeneration() { fGeneration++; }
 
    /// Re-create the C++ model from the stored meta-data
-   std::unique_ptr<RNTupleModel> GenerateModel() const;
+   std::unique_ptr<RNTupleModel> CreateModel() const;
    void PrintInfo(std::ostream &output) const;
 };
 
