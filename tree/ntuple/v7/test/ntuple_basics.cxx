@@ -29,7 +29,7 @@ TEST(RNTuple, ReconstructModel)
    // Should not throw
    source.SetEntryRange({0, source.GetNEntries()});
 
-   auto modelReconstructed = source.GetSharedDescriptorGuard()->GenerateModel();
+   auto modelReconstructed = source.GetSharedDescriptorGuard()->CreateModel();
    try {
       modelReconstructed->GetDefaultEntry()->GetPtr<float>("xyz");
       FAIL() << "invalid field name should throw";

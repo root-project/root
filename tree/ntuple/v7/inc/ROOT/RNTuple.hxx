@@ -247,7 +247,7 @@ public:
    void LoadEntry(NTupleSize_t index) {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
-         fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
+         fModel = fSource->GetSharedDescriptorGuard()->CreateModel();
          ConnectModel(*fModel);
       }
       LoadEntry(index, *fModel->GetDefaultEntry());
