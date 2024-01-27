@@ -25,7 +25,7 @@
 #include <utility>
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Detail::RFieldBase *target,
+ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFieldBase *target,
                                                                        const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
@@ -43,7 +43,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Det
    // field is on the same path of collection fields in the field tree than the source field.
 
    // Finds the first non-record parent field of the input field
-   auto fnBreakPoint = [](const Detail::RFieldBase *f) -> const Detail::RFieldBase * {
+   auto fnBreakPoint = [](const RFieldBase *f) -> const RFieldBase * {
       auto parent = f->GetParent();
       while (parent) {
          if (parent->GetStructure() != ENTupleStructure::kRecord)
@@ -84,8 +84,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Det
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<Detail::RFieldBase> field,
-                                                        const FieldMap_t &fieldMap)
+ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap)
 {
    auto result = EnsureValidMapping(field.get(), fieldMap);
    if (!result)
@@ -101,8 +100,8 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<Detail::
    return RResult<void>::Success();
 }
 
-const ROOT::Experimental::Detail::RFieldBase *
-ROOT::Experimental::RNTupleModel::RProjectedFields::GetSourceField(const Detail::RFieldBase *target) const
+const ROOT::Experimental::RFieldBase *
+ROOT::Experimental::RNTupleModel::RProjectedFields::GetSourceField(const RFieldBase *target) const
 {
    if (auto it = fFieldMap.find(target); it != fFieldMap.end())
       return it->second;
@@ -149,7 +148,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());
 }
 
-void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<Detail::RFieldBase> field)
+void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<RFieldBase> field)
 {
    auto fieldp = field.get();
    fOpenChangeset.fModel.AddField(std::move(field));
@@ -157,7 +156,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<Detail
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
+ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<RFieldBase> field,
                                                               std::function<std::string(const std::string &)> mapping)
 {
    auto fieldp = field.get();
@@ -169,7 +168,7 @@ ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<De
 
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
-   RResult<void> nameValid = Detail::RFieldBase::EnsureValidFieldName(fieldName);
+   RResult<void> nameValid = RFieldBase::EnsureValidFieldName(fieldName);
    if (!nameValid) {
       nameValid.Throw();
    }
@@ -229,12 +228,12 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    return cloneModel;
 }
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::FindField(std::string_view fieldName) const
+ROOT::Experimental::RFieldBase *ROOT::Experimental::RNTupleModel::FindField(std::string_view fieldName) const
 {
    if (fieldName.empty())
       return nullptr;
 
-   auto *field = static_cast<ROOT::Experimental::Detail::RFieldBase *>(fFieldZero.get());
+   auto *field = static_cast<ROOT::Experimental::RFieldBase *>(fFieldZero.get());
    for (auto subfieldName : ROOT::Split(fieldName, ".")) {
       const auto subfields = field->GetSubFields();
       auto it = std::find_if(subfields.begin(), subfields.end(),
@@ -250,7 +249,7 @@ ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::FindFi
    return field;
 }
 
-void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
+void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<RFieldBase> field)
 {
    EnsureNotFrozen();
    if (!field)
@@ -263,7 +262,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
+ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> field,
                                                     std::function<std::string(const std::string &)> mapping)
 {
    EnsureNotFrozen();
@@ -320,8 +319,7 @@ ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetFieldZero()
    return *fFieldZero;
 }
 
-const ROOT::Experimental::Detail::RFieldBase &
-ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
+const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
    auto f = FindField(fieldName);
    if (!f)
@@ -370,8 +368,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    return entry;
 }
 
-ROOT::Experimental::Detail::RFieldBase::RBulk
-ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
+ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
