@@ -40,8 +40,6 @@ PyObject *gRootModule = 0;
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
-   {(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
-    (char *)"Allow to use seamlessly from Python the templated TDirectory::WriteObject method"},
    {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_VARARGS,
     (char *)"Add a custom pickling mechanism for Cppyy Python proxy objects"},
    {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
