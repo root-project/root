@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-r'''
+r"""
 /**
 \class TDirectoryFile
 \brief \parblock \endparblock
@@ -53,13 +53,37 @@ d.WriteObject(obj, 'keyName')
 </div>
 \endhtmlonly
 */
-'''
+"""
 
-from libROOTPythonizations import AddTDirectoryFileGetPyz
 from . import pythonization
 
+
+def _TDirectoryFile_Get(self, namecycle):
+    """
+    Allow access to objects through the method Get().
+
+    This concerns both TDirectoryFile and TFile, since the latter
+    inherits the Get method from the former.
+    We decided not to inject this behavior directly in TDirectory
+    because this one already has a templated method Get which, when
+    invoked from Python, returns an object of the derived class (e.g. TH1F)
+    and not a generic TObject.
+    In case the object is not found, a null pointer is returned.
+    """
+
+    import cppyy
+
+    key = self.GetKey(namecycle)
+    if key:
+        class_name = key.GetClassName()
+        address = self.GetObjectChecked(namecycle, class_name)
+        return cppyy.bind_object(address, class_name)
+    # no key? for better or worse, call normal Get()
+    return self._Get(namecycle)
+
+
 # Pythonizor function
-@pythonization('TDirectoryFile')
+@pythonization("TDirectoryFile")
 def pythonize_tdirectoryfile(klass):
     """
     TDirectoryFile inherits from TDirectory the pythonized attr syntax (__getattr__)
@@ -76,4 +100,5 @@ def pythonize_tdirectoryfile(klass):
         2.2 returns nullptr if object not found
     """
 
-    AddTDirectoryFileGetPyz(klass)
+    klass._Get = klass.Get
+    klass.Get = _TDirectoryFile_Get
