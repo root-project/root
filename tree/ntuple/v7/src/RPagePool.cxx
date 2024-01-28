@@ -21,7 +21,7 @@
 #include <cstdlib>
 
 void ROOT::Experimental::Internal::RPagePool::RegisterPage(const Detail::RPage &page,
-                                                           const Detail::RPageDeleter &deleter)
+                                                           const Internal::RPageDeleter &deleter)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(page);
@@ -30,7 +30,7 @@ void ROOT::Experimental::Internal::RPagePool::RegisterPage(const Detail::RPage &
 }
 
 void ROOT::Experimental::Internal::RPagePool::PreloadPage(const Detail::RPage &page,
-                                                          const Detail::RPageDeleter &deleter)
+                                                          const Internal::RPageDeleter &deleter)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(page);
