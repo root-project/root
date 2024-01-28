@@ -406,10 +406,10 @@ TEST(RNTupleModel, GetField)
    m->MakeField<int>("x");
    m->MakeField<CustomStruct>("cs");
    m->Freeze();
-   EXPECT_EQ(m->GetField("x").GetName(), "x");
-   EXPECT_EQ(m->GetField("x").GetType(), "std::int32_t");
-   EXPECT_EQ(m->GetField("cs.v1").GetName(), "v1");
-   EXPECT_EQ(m->GetField("cs.v1").GetType(), "std::vector<float>");
+   EXPECT_EQ(m->GetField("x").GetFieldName(), "x");
+   EXPECT_EQ(m->GetField("x").GetTypeName(), "std::int32_t");
+   EXPECT_EQ(m->GetField("cs.v1").GetFieldName(), "v1");
+   EXPECT_EQ(m->GetField("cs.v1").GetTypeName(), "std::vector<float>");
    try {
       m->GetField("nonexistent");
       FAIL() << "invalid field name should throw";

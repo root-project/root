@@ -73,9 +73,9 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBas
    fOutput << RNTupleFormatter::FitString(key, fAvailableSpaceKeyString);
    fOutput << " : ";
 
-   std::string value = field.GetName();
-   if (!field.GetType().empty())
-      value += " (" + field.GetType() + ")";
+   std::string value = field.GetFieldName();
+   if (!field.GetTypeName().empty())
+      value += " (" + field.GetTypeName() + ")";
    fOutput << RNTupleFormatter::FitString(value, fAvailableSpaceValueString);
    fOutput << fFrameSymbol << std::endl;
 
@@ -121,7 +121,7 @@ void ROOT::Experimental::RPrintValueVisitor::PrintIndent()
 void ROOT::Experimental::RPrintValueVisitor::PrintName(const Detail::RFieldBase &field)
 {
    if (fPrintOptions.fPrintName)
-      fOutput << "\"" << field.GetName() << "\": ";
+      fOutput << "\"" << field.GetFieldName() << "\": ";
 }
 
 
@@ -151,7 +151,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitField(const Detail::RFieldBase
 {
    PrintIndent();
    PrintName(field);
-   fOutput << "\"<unsupported type: " << field.GetType() << ">\"";
+   fOutput << "\"<unsupported type: " << field.GetTypeName() << ">\"";
 }
 
 

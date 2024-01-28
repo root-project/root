@@ -95,13 +95,13 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelCh
    // The buffered page sink maintains a copy of the RNTupleModel for the inner sink; replicate the changes there
    // TODO(jalopezg): we should be able, in general, to simplify the buffered sink.
    auto cloneAddField = [&](const RFieldBase *field) {
-      auto cloned = field->Clone(field->GetName());
+      auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
       fInnerModel->AddField(std::move(cloned));
       return p;
    };
    auto cloneAddProjectedField = [&](RFieldBase *field) {
-      auto cloned = field->Clone(field->GetName());
+      auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
       auto &projectedFields = changeset.fModel.GetProjectedFields();
       RNTupleModel::RProjectedFields::FieldMap_t fieldMap;

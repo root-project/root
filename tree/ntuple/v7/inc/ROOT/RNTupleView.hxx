@@ -162,7 +162,7 @@ public:
          throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
       for (auto &f : fField) {
          auto subFieldId =
-            pageSource->GetSharedDescriptorGuard()->FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
+            pageSource->GetSharedDescriptorGuard()->FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId());
          f.SetOnDiskId(subFieldId);
          f.ConnectPageSource(*pageSource);
       }

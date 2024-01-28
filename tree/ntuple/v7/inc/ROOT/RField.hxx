@@ -602,10 +602,10 @@ public:
    /// Flushes data from active columns to disk and calls CommitClusterImpl
    void CommitCluster();
 
-   std::string GetName() const { return fName; }
+   std::string GetFieldName() const { return fName; }
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
-   std::string GetType() const { return fType; }
+   std::string GetTypeName() const { return fType; }
    std::string GetTypeAlias() const { return fTypeAlias; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
@@ -2612,7 +2612,7 @@ class RField<ROOT::VecOps::RVec<ItemT>> : public RRVecField {
    using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
-      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
       return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
    }
 
@@ -2685,8 +2685,8 @@ private:
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      std::array<std::unique_ptr<Detail::RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetName()),
-                                                               fSubFields[1]->Clone(fSubFields[1]->GetName())};
+      std::array<std::unique_ptr<Detail::RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetFieldName()),
+                                                               fSubFields[1]->Clone(fSubFields[1]->GetFieldName())};
       return std::make_unique<RField<std::pair<T1, T2>>>(newName, std::move(items));
    }
 
@@ -2761,7 +2761,7 @@ protected:
    {
       std::vector<std::unique_ptr<Detail::RFieldBase>> items;
       for (auto &item : fSubFields)
-         items.push_back(item->Clone(item->GetName()));
+         items.push_back(item->Clone(item->GetFieldName()));
       return std::make_unique<RField<std::tuple<ItemTs...>>>(newName, std::move(items));
    }
 
