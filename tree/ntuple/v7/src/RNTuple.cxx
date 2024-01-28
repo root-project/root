@@ -75,7 +75,7 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
          field.SetOnDiskId(
-            fSource->GetSharedDescriptorGuard()->FindFieldId(field.GetName(), field.GetParent()->GetOnDiskId()));
+            fSource->GetSharedDescriptorGuard()->FindFieldId(field.GetFieldName(), field.GetParent()->GetOnDiskId()));
       }
       field.ConnectPageSource(*fSource);
    }

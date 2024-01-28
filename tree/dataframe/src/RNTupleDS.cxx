@@ -177,7 +177,7 @@ public:
       fEntryOffset = entryOffset;
 
       // Create a new, real field from the prototype and set its field ID in the context of the given page source
-      fField = fProtoField->Clone(fProtoField->GetName());
+      fField = fProtoField->Clone(fProtoField->GetFieldName());
       {
          auto descGuard = source.GetSharedDescriptorGuard();
          // Set the on-disk field IDs for the field and the subfield
@@ -280,7 +280,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          auto cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
          cardinalityField->SetOnDiskId(fieldId);
          fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
-         fColumnTypes.emplace_back(cardinalityField->GetType());
+         fColumnTypes.emplace_back(cardinalityField->GetTypeName());
          fProtoFields.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
@@ -316,7 +316,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    auto valueField = fieldOrException.Unwrap();
    valueField->SetOnDiskId(fieldId);
    for (auto &f : *valueField) {
-      f.SetOnDiskId(desc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));
+      f.SetOnDiskId(desc.FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId()));
    }
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
@@ -362,13 +362,13 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
    if (cardinalityField) {
       fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
-      fColumnTypes.emplace_back(cardinalityField->GetType());
+      fColumnTypes.emplace_back(cardinalityField->GetTypeName());
       fProtoFields.emplace_back(std::move(cardinalityField));
    }
 
    fieldInfos.emplace_back(fieldId, nRepetitions);
    fColumnNames.emplace_back(colName);
-   fColumnTypes.emplace_back(valueField->GetType());
+   fColumnTypes.emplace_back(valueField->GetTypeName());
    fProtoFields.emplace_back(std::move(valueField));
 }
 

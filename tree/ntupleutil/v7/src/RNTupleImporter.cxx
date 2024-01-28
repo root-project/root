@@ -147,7 +147,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDesti
 void ROOT::Experimental::RNTupleImporter::ReportSchema()
 {
    for (const auto &f : fImportFields) {
-      std::cout << "Importing '" << f.fField->GetName() << "' [" << f.fField->GetType() << ']' << std::endl;
+      std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << ']' << std::endl;
    }
 }
 
@@ -324,7 +324,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       c.fCollectionModel->Freeze();
       c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
       for (auto idx : c.fImportFieldIndexes) {
-         const auto name = fImportFields[idx].fField->GetName();
+         const auto name = fImportFields[idx].fField->GetFieldName();
          const auto buffer = fImportFields[idx].fFieldBuffer;
          c.fCollectionEntry->BindRawPtr(name, buffer);
       }
@@ -332,9 +332,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       c.fCollectionWriter = fModel->MakeCollection(c.fFieldName, std::move(c.fCollectionModel));
       // Add projected fields for all leaf count arrays
       for (auto idx : c.fImportFieldIndexes) {
-         const auto name = fImportFields[idx].fField->GetName();
+         const auto name = fImportFields[idx].fField->GetFieldName();
          auto projectedField =
-            Detail::RFieldBase::Create(name, "ROOT::RVec<" + fImportFields[idx].fField->GetType() + ">").Unwrap();
+            Detail::RFieldBase::Create(name, "ROOT::RVec<" + fImportFields[idx].fField->GetTypeName() + ">").Unwrap();
          fModel->AddProjectedField(std::move(projectedField), [&name, &c](const std::string &fieldName) {
             if (fieldName == name)
                return c.fFieldName;
@@ -354,7 +354,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)
          continue;
-      fEntry->BindRawPtr(f.fField->GetName(), f.fFieldBuffer);
+      fEntry->BindRawPtr(f.fField->GetFieldName(), f.fFieldBuffer);
    }
    for (const auto &[_, c] : fLeafCountCollections) {
       fEntry->BindRawPtr<void>(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
