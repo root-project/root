@@ -53,7 +53,7 @@ private:
    ///   - searching by tree index
    std::vector<Detail::RPage> fPages;
    std::vector<std::int32_t> fReferences;
-   std::vector<Detail::RPageDeleter> fDeleters;
+   std::vector<RPageDeleter> fDeleters;
    std::mutex fLock;
 
 public:
@@ -64,9 +64,9 @@ public:
 
    /// Adds a new page to the pool together with the function to free its space. Upon registration,
    /// the page pool takes ownership of the page's memory. The new page has its reference counter set to 1.
-   void RegisterPage(const Detail::RPage &page, const Detail::RPageDeleter &deleter);
+   void RegisterPage(const Detail::RPage &page, const RPageDeleter &deleter);
    /// Like RegisterPage() but the reference counter is initialized to 0
-   void PreloadPage(const Detail::RPage &page, const Detail::RPageDeleter &deleter);
+   void PreloadPage(const Detail::RPage &page, const RPageDeleter &deleter);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
    Detail::RPage GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
