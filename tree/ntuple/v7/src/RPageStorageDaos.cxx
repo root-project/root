@@ -279,7 +279,8 @@ std::uint32_t ROOT::Experimental::Detail::RDaosNTupleAnchor::GetSize()
 
 ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
                                                          const RNTupleWriteOptions &options)
-   : RPagePersistentSink(ntupleName, options), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fURI(uri)
+   : RPagePersistentSink(ntupleName, options), fPageAllocator(std::make_unique<Internal::RPageAllocatorHeap>()),
+     fURI(uri)
 {
    R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
                                << "Do not store real data with this version of RNTuple!";
@@ -616,7 +617,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
       pageZero.GrowUnchecked(pageInfo.fNElements);
       pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
-      fPagePool->RegisterPage(pageZero, RPageDeleter([](const RPage &, void *) {}, nullptr));
+      fPagePool->RegisterPage(pageZero, Internal::RPageDeleter([](const RPage &, void *) {}, nullptr));
       return pageZero;
    }
 
@@ -661,7 +662,8 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fPagePool->RegisterPage(
       newPage,
-      RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
+      Internal::RPageDeleter([](const RPage &page, void *) { Internal::RPageAllocatorHeap::DeletePage(page); },
+                             nullptr));
    fCounters->fNPagePopulated.Inc();
    return newPage;
 }
@@ -861,7 +863,7 @@ void ROOT::Experimental::Detail::RPageSourceDaos::UnzipClusterImpl(RCluster *clu
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
             fPagePool->PreloadPage(
                newPage,
-               RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); },
+               Internal::RPageDeleter([](const RPage &page, void *) { Internal::RPageAllocatorHeap::DeletePage(page); },
                             nullptr));
          };
 

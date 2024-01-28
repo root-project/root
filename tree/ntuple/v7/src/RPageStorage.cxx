@@ -176,7 +176,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSource::Unsea
    }
 
    const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
-   using Allocator_t = RPageAllocatorHeap;
+   using Allocator_t = Internal::RPageAllocatorHeap;
    auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
    if (sealedPage.fSize != bytesPacked) {
       fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, page.GetBuffer());

@@ -18,16 +18,16 @@
 
 #include <TError.h>
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorHeap::NewPage(
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Internal::RPageAllocatorHeap::NewPage(
    ColumnId_t columnId, std::size_t elementSize, std::size_t nElements)
 {
    R__ASSERT((elementSize > 0) && (nElements > 0));
    auto nbytes = elementSize * nElements;
    auto buffer = new unsigned char[nbytes];
-   return RPage(columnId, buffer, elementSize, nElements);
+   return Detail::RPage(columnId, buffer, elementSize, nElements);
 }
 
-void ROOT::Experimental::Detail::RPageAllocatorHeap::DeletePage(const RPage& page)
+void ROOT::Experimental::Internal::RPageAllocatorHeap::DeletePage(const Detail::RPage& page)
 {
    if (!page.IsPageZero())
       delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());

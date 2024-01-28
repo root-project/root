@@ -41,13 +41,13 @@ namespace Experimental {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
 namespace Internal {
+class RPageAllocatorHeap;
 class RPagePool;
 }
 
 namespace Detail {
 
 class RClusterPool;
-class RPageAllocatorHeap;
 
 // clang-format off
 /**
@@ -60,7 +60,7 @@ The written file can be either in ROOT format or in RNTuple bare format.
 // clang-format on
 class RPageSinkFile : public RPagePersistentSink {
 private:
-   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
+   std::unique_ptr<Internal::RPageAllocatorHeap> fPageAllocator;
 
    std::unique_ptr<Internal::RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster

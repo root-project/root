@@ -24,11 +24,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageDeleter
+\class ROOT::Experimental::Internal::RPageDeleter
 \ingroup NTuple
 \brief A closure that can free the memory associated with a mapped page
 
@@ -39,7 +39,7 @@ the page pool, the passed page deleter encapsulates that knowledge.
 class RPageDeleter {
 private:
    /// The callable that is suppped to free the given page; it is called with fUserData as the second argument.
-   std::function<void(const RPage &page, void *userData)> fFnDelete;
+   std::function<void(const Detail::RPage &page, void *userData)> fFnDelete;
    /// Optionally additional information necessary to free resources associated with a page.  For instance,
    /// when the page is read from a TKey, user data points to the ROOT object created for reading, which needs to be
    /// freed as well.
@@ -53,13 +53,13 @@ public:
    RPageDeleter &operator =(const RPageDeleter &other) = default;
    ~RPageDeleter() = default;
 
-   void operator()(const RPage &page) { fFnDelete(page, fUserData); }
+   void operator()(const Detail::RPage &page) { fFnDelete(page, fUserData); }
 };
 
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageAllocatorHeap
+\class ROOT::Experimental::Internal::RPageAllocatorHeap
 \ingroup NTuple
 \brief Uses standard C++ memory allocation for the column data pages
 
@@ -72,12 +72,12 @@ class RPageAllocatorHeap {
 public:
    /// Reserves memory large enough to hold nElements of the given size. The page is immediately tagged with
    /// a column id.
-   static RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements);
+   static Detail::RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements);
    /// Releases the memory pointed to by page and resets the page's information
-   static void DeletePage(const RPage &page);
+   static void DeletePage(const Detail::RPage &page);
 };
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

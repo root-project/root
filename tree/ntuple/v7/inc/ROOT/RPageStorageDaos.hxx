@@ -37,6 +37,7 @@ namespace Internal {
 using ntuple_index_t = std::uint32_t;
 class RDaosPool;
 class RDaosContainer;
+class RPageAllocatorHeap;
 class RPagePool;
 enum EDaosLocatorFlags {
    // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
@@ -48,7 +49,6 @@ namespace Detail {
 
 class RCluster;
 class RClusterPool;
-class RPageAllocatorHeap;
 
 // clang-format off
 /**
@@ -105,7 +105,7 @@ Objects can correspond to pages or clusters of pages depending on the RNTuple-DA
 // clang-format on
 class RPageSinkDaos : public RPagePersistentSink {
 private:
-   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
+   std::unique_ptr<Internal::RPageAllocatorHeap> fPageAllocator;
 
    /// \brief Underlying DAOS container. An internal `std::shared_ptr` keep the pool connection alive.
    /// ISO C++ ensures the correct destruction order, i.e., `~RDaosContainer` is invoked first
