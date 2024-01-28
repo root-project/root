@@ -80,7 +80,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       Detail::RFieldBase::Create(GetFieldName(), GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias()).Unwrap();
    field->SetOnDiskId(fFieldId);
    for (auto &f : *field)
-      f.SetOnDiskId(ntplDesc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));
+      f.SetOnDiskId(ntplDesc.FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId()));
    return field;
 }
 
@@ -724,9 +724,9 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const Detail::R
    RFieldDescriptorBuilder fieldDesc;
    fieldDesc.FieldVersion(field.GetFieldVersion())
       .TypeVersion(field.GetTypeVersion())
-      .FieldName(field.GetName())
+      .FieldName(field.GetFieldName())
       .FieldDescription(field.GetDescription())
-      .TypeName(field.GetType())
+      .TypeName(field.GetTypeName())
       .TypeAlias(field.GetTypeAlias())
       .Structure(field.GetStructure())
       .NRepetitions(field.GetNRepetitions());

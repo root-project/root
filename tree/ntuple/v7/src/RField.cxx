@@ -410,10 +410,10 @@ ROOT::Experimental::Detail::RFieldBase::~RFieldBase()
 
 std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() const
 {
-   std::string result = GetName();
+   std::string result = GetFieldName();
    auto parent = GetParent();
-   while (parent && !parent->GetName().empty()) {
-      result = parent->GetName() + "." + result;
+   while (parent && !parent->GetFieldName().empty()) {
+      result = parent->GetFieldName() + "." + result;
       parent = parent->GetParent();
    }
    return result;
@@ -522,19 +522,19 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    } else if (canonicalType.substr(0, 16) == "std::unique_ptr<") {
       std::string itemTypeName = canonicalType.substr(16, canonicalType.length() - 17);
       auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetType();
+      auto normalizedInnerTypeName = itemField->GetTypeName();
       result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
                                                  std::move(itemField));
    } else if (canonicalType.substr(0, 9) == "std::set<") {
       std::string itemTypeName = canonicalType.substr(9, canonicalType.length() - 10);
       auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetType();
+      auto normalizedInnerTypeName = itemField->GetTypeName();
       result =
          std::make_unique<RSetField>(fieldName, "std::set<" + normalizedInnerTypeName + ">", std::move(itemField));
    } else if (canonicalType.substr(0, 19) == "std::unordered_set<") {
       std::string itemTypeName = canonicalType.substr(19, canonicalType.length() - 20);
       auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetType();
+      auto normalizedInnerTypeName = itemField->GetTypeName();
       result = std::make_unique<RSetField>(fieldName, "std::unordered_set<" + normalizedInnerTypeName + ">",
                                            std::move(itemField));
    } else if (canonicalType.substr(0, 9) == "std::map<") {
@@ -565,7 +565,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    } else if (canonicalType.substr(0, 12) == "std::atomic<") {
       std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
       auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetType();
+      auto normalizedInnerTypeName = itemField->GetTypeName();
       result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
                                               std::move(itemField));
    } else if (canonicalType == ":Collection:") {
@@ -913,7 +913,7 @@ ROOT::Experimental::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
    auto result = std::make_unique<RFieldZero>();
    for (auto &f : fSubFields)
-      result->Attach(f->Clone(f->GetName()));
+      result->Attach(f->Clone(f->GetFieldName()));
    return result;
 }
 
@@ -1481,7 +1481,7 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORules(const std::spa
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RClassField::CloneImpl(std::string_view newName) const
 {
-   auto result = std::unique_ptr<RClassField>(new RClassField(newName, GetType(), fClass));
+   auto result = std::unique_ptr<RClassField>(new RClassField(newName, GetTypeName(), fClass));
    SyncFieldIDs(*this, *result);
    return result;
 }
@@ -1620,8 +1620,8 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::REnumField::CloneImpl(std::string_view newName) const
 {
-   auto newIntField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::unique_ptr<REnumField>(new REnumField(newName, GetType(), std::move(newIntField)));
+   auto newIntField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   return std::unique_ptr<REnumField>(new REnumField(newName, GetTypeName(), std::move(newIntField)));
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -1728,9 +1728,9 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
    return std::unique_ptr<RProxiedCollectionField>(
-      new RProxiedCollectionField(newName, GetType(), std::move(newItemField)));
+      new RProxiedCollectionField(newName, GetTypeName(), std::move(newItemField)));
 }
 
 std::size_t ROOT::Experimental::RProxiedCollectionField::AppendImpl(const void *from)
@@ -1890,8 +1890,8 @@ ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
    std::vector<std::unique_ptr<Detail::RFieldBase>> cloneItems;
    cloneItems.reserve(fSubFields.size());
    for (auto &item : fSubFields)
-      cloneItems.emplace_back(item->Clone(item->GetName()));
-   return std::unique_ptr<RRecordField>(new RRecordField(newName, std::move(cloneItems), fOffsets, GetType()));
+      cloneItems.emplace_back(item->Clone(item->GetFieldName()));
+   return std::unique_ptr<RRecordField>(new RRecordField(newName, std::move(cloneItems), fOffsets, GetTypeName()));
 }
 
 std::size_t ROOT::Experimental::RRecordField::AppendImpl(const void *from)
@@ -1961,12 +1961,12 @@ void ROOT::Experimental::RRecordField::AcceptVisitor(Detail::RFieldVisitor &visi
 
 //------------------------------------------------------------------------------
 
-
-ROOT::Experimental::RVectorField::RVectorField(
-   std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
-   : ROOT::Experimental::Detail::RFieldBase(
-      fieldName, "std::vector<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false /* isSimple */)
-   , fItemSize(itemField->GetValueSize()), fNWritten(0)
+ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName,
+                                               std::unique_ptr<Detail::RFieldBase> itemField)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, "std::vector<" + itemField->GetTypeName() + ">",
+                                            ENTupleStructure::kCollection, false /* isSimple */),
+     fItemSize(itemField->GetValueSize()),
+     fNWritten(0)
 {
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
@@ -1976,7 +1976,7 @@ ROOT::Experimental::RVectorField::RVectorField(
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
    return std::make_unique<RVectorField>(newName, std::move(newItemField));
 }
 
@@ -2102,9 +2102,10 @@ void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visi
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
-   : ROOT::Experimental::Detail::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetType() + ">",
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetTypeName() + ">",
                                             ENTupleStructure::kCollection, false /* isSimple */),
-     fItemSize(itemField->GetValueSize()), fNWritten(0)
+     fItemSize(itemField->GetValueSize()),
+     fNWritten(0)
 {
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
@@ -2115,7 +2116,7 @@ ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::uniq
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RRVecField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
    return std::make_unique<RRVecField>(newName, std::move(newItemField));
 }
 
@@ -2437,13 +2438,13 @@ void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RField
 
 //------------------------------------------------------------------------------
 
-
-ROOT::Experimental::RArrayField::RArrayField(
-   std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength)
+ROOT::Experimental::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField,
+                                             std::size_t arrayLength)
    : ROOT::Experimental::Detail::RFieldBase(
-      fieldName, "std::array<" + itemField->GetType() + "," + std::to_string(arrayLength) + ">",
-      ENTupleStructure::kLeaf, false /* isSimple */, arrayLength)
-   , fItemSize(itemField->GetValueSize()), fArrayLength(arrayLength)
+        fieldName, "std::array<" + itemField->GetTypeName() + "," + std::to_string(arrayLength) + ">",
+        ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
+     fItemSize(itemField->GetValueSize()),
+     fArrayLength(arrayLength)
 {
    fTraits |= itemField->GetTraits() & ~kTraitMappable;
    Attach(std::move(itemField));
@@ -2452,7 +2453,7 @@ ROOT::Experimental::RArrayField::RArrayField(
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RArrayField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
    return std::make_unique<RArrayField>(newName, std::move(newItemField), fArrayLength);
 }
 
@@ -2534,7 +2535,7 @@ void ROOT::Experimental::RArrayField::AcceptVisitor(Detail::RFieldVisitor &visit
 ROOT::Experimental::RArrayAsRVecField::RArrayAsRVecField(
    std::string_view fieldName, std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField,
    std::size_t arrayLength)
-   : ROOT::Experimental::Detail::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetType() + ">",
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetTypeName() + ">",
                                             ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
@@ -2548,7 +2549,7 @@ ROOT::Experimental::RArrayAsRVecField::RArrayAsRVecField(
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RArrayAsRVecField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
    return std::make_unique<RArrayAsRVecField>(newName, std::move(newItemField), fArrayLength);
 }
 
@@ -2741,7 +2742,7 @@ std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<Det
 {
    std::string result;
    for (size_t i = 0; i < itemFields.size(); ++i) {
-      result += itemFields[i]->GetType() + ",";
+      result += itemFields[i]->GetTypeName() + ",";
    }
    R__ASSERT(!result.empty()); // there is always at least one variant
    result.pop_back(); // remove trailing comma
@@ -2775,7 +2776,7 @@ ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
    std::vector<Detail::RFieldBase *> itemFields;
    for (unsigned i = 0; i < nFields; ++i) {
       // TODO(jblomer): use unique_ptr in RVariantField constructor
-      itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetName()).release());
+      itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetFieldName()).release());
    }
    return std::make_unique<RVariantField>(newName, itemFields);
 }
@@ -2887,8 +2888,8 @@ ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::string
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::make_unique<RSetField>(newName, GetType(), std::move(newItemField));
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   return std::make_unique<RSetField>(newName, GetTypeName(), std::move(newItemField));
 }
 
 //------------------------------------------------------------------------------
@@ -2955,8 +2956,8 @@ ROOT::Experimental::RMapField::SplitValue(const RValue &value) const
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RMapField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::unique_ptr<RMapField>(new RMapField(newName, GetType(), std::move(newItemField)));
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   return std::unique_ptr<RMapField>(new RMapField(newName, GetTypeName(), std::move(newItemField)));
 }
 
 //------------------------------------------------------------------------------
@@ -3058,8 +3059,8 @@ ROOT::Experimental::RUniquePtrField::RUniquePtrField(std::string_view fieldName,
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RUniquePtrField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::make_unique<RUniquePtrField>(newName, GetType(), std::move(newItemField));
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   return std::make_unique<RUniquePtrField>(newName, GetTypeName(), std::move(newItemField));
 }
 
 std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const void *from)
@@ -3134,7 +3135,7 @@ ROOT::Experimental::RUniquePtrField::SplitValue(const RValue &value) const
 std::string ROOT::Experimental::RPairField::RPairField::GetTypeList(
    const std::array<std::unique_ptr<Detail::RFieldBase>, 2> &itemFields)
 {
-   return itemFields[0]->GetType() + "," + itemFields[1]->GetType();
+   return itemFields[0]->GetTypeName() + "," + itemFields[1]->GetTypeName();
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
@@ -3151,9 +3152,9 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
-   fClass = TClass::GetClass(GetType().c_str());
+   fClass = TClass::GetClass(GetTypeName().c_str());
    if (!fClass)
-      throw RException(R__FAIL("cannot get type information for " + GetType()));
+      throw RException(R__FAIL("cannot get type information for " + GetTypeName()));
    fSize = fClass->Size();
 
    auto firstElem = fClass->GetRealData("first");
@@ -3170,8 +3171,8 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
 {
-   std::array<std::unique_ptr<Detail::RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetName()),
-                                                            fSubFields[1]->Clone(fSubFields[1]->GetName())};
+   std::array<std::unique_ptr<Detail::RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetFieldName()),
+                                                            fSubFields[1]->Clone(fSubFields[1]->GetFieldName())};
 
    std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), {fOffsets[0], fOffsets[1]}));
    result->fClass = fClass;
@@ -3198,7 +3199,7 @@ std::string ROOT::Experimental::RTupleField::RTupleField::GetTypeList(
    if (itemFields.empty())
       throw RException(R__FAIL("the type list for std::tuple must have at least one element"));
    for (size_t i = 0; i < itemFields.size(); ++i) {
-      result += itemFields[i]->GetType() + ",";
+      result += itemFields[i]->GetTypeName() + ",";
    }
    result.pop_back();          // remove trailing comma
    return result;
@@ -3217,9 +3218,9 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
                                       "std::tuple<" + GetTypeList(itemFields) + ">")
 {
-   fClass = TClass::GetClass(GetType().c_str());
+   fClass = TClass::GetClass(GetTypeName().c_str());
    if (!fClass)
-      throw RException(R__FAIL("cannot get type information for " + GetType()));
+      throw RException(R__FAIL("cannot get type information for " + GetTypeName()));
    fSize = fClass->Size();
 
    // ISO C++ does not guarantee neither specific layout nor member names for `std::tuple`.  However, most
@@ -3242,7 +3243,7 @@ ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
    std::vector<std::unique_ptr<Detail::RFieldBase>> items;
    items.reserve(fSubFields.size());
    for (const auto &item : fSubFields)
-      items.push_back(item->Clone(item->GetName()));
+      items.push_back(item->Clone(item->GetFieldName()));
 
    std::unique_ptr<RTupleField> result(new RTupleField(newName, std::move(items), fOffsets));
    result->fClass = fClass;
@@ -3299,7 +3300,7 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 {
    auto parent = std::make_unique<RFieldZero>();
    for (auto& f : fSubFields) {
-      parent->Attach(f->Clone(f->GetName()));
+      parent->Attach(f->Clone(f->GetFieldName()));
    }
    return std::make_unique<RCollectionField>(newName, fCollectionWriter, std::move(parent));
 }
@@ -3325,8 +3326,8 @@ ROOT::Experimental::RAtomicField::RAtomicField(std::string_view fieldName, std::
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RAtomicField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::make_unique<RAtomicField>(newName, GetType(), std::move(newItemField));
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   return std::make_unique<RAtomicField>(newName, GetTypeName(), std::move(newItemField));
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>

@@ -96,13 +96,13 @@ public:
    void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
       for (auto &v : fValues) {
-         if (v.GetField().GetName() != fieldName)
+         if (v.GetField().GetFieldName() != fieldName)
             continue;
 
          if constexpr (!std::is_void_v<T>) {
-            if (v.GetField().GetType() != RField<T>::TypeName()) {
+            if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
                throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                        v.GetField().GetType() + " vs. " + RField<T>::TypeName()));
+                                        v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
             }
          }
          v.Bind(objPtr);
@@ -121,15 +121,15 @@ public:
    std::shared_ptr<T> GetPtr(std::string_view fieldName) const
    {
       for (auto &v : fValues) {
-         if (v.GetField().GetName() != fieldName)
+         if (v.GetField().GetFieldName() != fieldName)
             continue;
 
          if constexpr (std::is_void_v<T>)
             return v.GetPtr<void>();
 
-         if (v.GetField().GetType() != RField<T>::TypeName()) {
+         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
             throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                     v.GetField().GetType() + " vs. " + RField<T>::TypeName()));
+                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
          }
          return std::static_pointer_cast<T>(v.GetPtr<void>());
       }

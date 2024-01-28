@@ -82,7 +82,7 @@ class RFieldProvider : public RProvider {
       template<typename T>
       void FillHistogram(const RField<T> &field)
       {
-         std::string title = "Drawing of RField "s + field.GetName();
+         std::string title = "Drawing of RField "s + field.GetFieldName();
 
          fHist = std::make_unique<TH1F>("hdraw", title.c_str(), 100, 0, 0);
          fHist->SetDirectory(nullptr);
@@ -126,7 +126,7 @@ class RFieldProvider : public RProvider {
 
          // now create histogram with labels
 
-         std::string title = "Drawing of RField "s + field.GetName();
+         std::string title = "Drawing of RField "s + field.GetFieldName();
          fHist = std::make_unique<TH1F>("h",title.c_str(),3,0,3);
          fHist->SetDirectory(nullptr);
          fHist->SetStats(0);
@@ -187,7 +187,7 @@ public:
          auto descriptorGuard = ntplSource->GetSharedDescriptorGuard();
          field = descriptorGuard->GetFieldDescriptor(holder->GetId()).CreateField(descriptorGuard.GetRef());
       }
-      name.append(field->GetName());
+      name.append(field->GetFieldName());
 
       RDrawVisitor drawVisitor(ntplSource);
       field->AcceptVisitor(drawVisitor);

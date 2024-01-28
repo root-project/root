@@ -163,7 +163,7 @@ public:
          auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc, std::forward<ArgsT>(args)...);
          auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
          auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
-                                [&](const auto &f) { return f.GetName() == fieldNameDesc.fName; });
+                                [&](const auto &f) { return f.GetFieldName() == fieldNameDesc.fName; });
          R__ASSERT(it != fieldZero->end());
          fOpenChangeset.fAddedFields.emplace_back(&(*it));
          return objPtr;
