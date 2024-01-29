@@ -2019,24 +2019,24 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
    std::string kbis = get_digest(hash1);
 
    std::string ki = kbis, ko = kbis;
-   const int ipad = 0x5c;
-   const int opad = 0x36;
+   const int opad = 0x5c;
+   const int ipad = 0x36;
    for (size_t i = 0; i < kbis.length(); ++i) {
-      ki[i] = kbis[i] ^ ipad;
       ko[i] = kbis[i] ^ opad;
+      ki[i] = kbis[i] ^ ipad;
    }
 
    // calculate hash for ko + msg;
    sha256_t hash2;
    sha256_init(&hash2);
-   sha256_update(&hash2, (const unsigned char *) ko.data(), ko.length());
+   sha256_update(&hash2, (const unsigned char *) ki.data(), ki.length());
    sha256_update(&hash2, (const unsigned char *) msg, msglen);
    std::string m2digest = get_digest(hash2);
 
    // calculate hash for ki + m2_digest;
    sha256_t hash3;
    sha256_init(&hash3);
-   sha256_update(&hash3, (const unsigned char *) ki.data(), ki.length());
+   sha256_update(&hash3, (const unsigned char *) ko.data(), ko.length());
    sha256_update(&hash3, (const unsigned char *) m2digest.data(), m2digest.length());
 
    return get_digest(hash3, true);
