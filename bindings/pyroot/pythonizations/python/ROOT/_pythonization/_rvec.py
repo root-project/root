@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-r'''
+r"""
 /**
 \class ROOT::VecOps::RVec
 \brief \parblock \endparblock
@@ -63,7 +63,7 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 </div>
 \endhtmlonly
 */
-'''
+"""
 
 from . import pythonization
 import cppyy
@@ -97,17 +97,15 @@ def get_array_interface(self):
             else:
                 pointer = cppyy.ll.addressof(self.data())
             return {
-                "shape": (size, ),
+                "shape": (size,),
                 "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),
                 "version": 3,
-                "data": (pointer, False)
+                "data": (pointer, False),
             }
 
 
 def add_array_interface_property(klass, name):
-    if True in [
-            name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map
-    ]:
+    if True in [name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map]:
         klass.__array_interface__ = property(get_array_interface)
 
 
