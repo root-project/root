@@ -518,9 +518,15 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::_FindConnWithKey(const std::str
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Check if provided key, ntry parameters could be accepted
+/// Check if provided hash, ntry parameters from the connection request could be accepted
+/// \param hash - provided hash value which should match with HMAC hash for generated before connection key
+/// \param ntry - connection attempt number provided together with request, must come in increasing order
+/// \param remote - boolean flag indicating if request comming from remote (via real http),
+///                 for local displays like Qt5 or CEF simpler connection rules are applied
+/// \param test_first_time - true if hash/ntry tested for the first time, false appears only with
+///                          websocket when connection accepted by server
 
-bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool test_first_time)
+bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &hash, const std::string &ntry, bool remote, bool test_first_time)
 {
    if (!conn)
       return false;
@@ -531,18 +537,18 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
    auto expected = HMAC(conn->fKey, fMgr->fUseSessionKey && remote ? fMgr->fSessionKey : ""s, msg.Data(), msg.Length());
 
    if (!IsRequireAuthKey())
-      return (conn->fKey.empty() && key.empty()) || (key == conn->fKey) || (key == expected);
+      return (conn->fKey.empty() && hash.empty()) || (hash == conn->fKey) || (hash == expected);
 
    // for local connection simple key can be used
-   if (!remote && (key == conn->fKey))
+   if (!remote && (hash == conn->fKey))
       return true;
 
-   if (key == expected) {
+   if (hash == expected) {
       if (test_first_time) {
          if (conn->fKeyUsed >= intry) {
-            // this is indication of network sniffing, already checked hashed value was shown again!!!
+            // this is indication of main in the middle, already checked hashed value was shown again!!!
             // client sends id with increasing counter, if previous value is presented it is BAD
-            R__LOG_ERROR(WebGUILog()) << "Detect MD5 connection hash send before, possible sniffing attack!!!";
+            R__LOG_ERROR(WebGUILog()) << "Detect connection hash send before, possible replay attack!!!";
             return false;
          }
          // remember counter, it should prevent trying previous hash values
@@ -550,7 +556,7 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
       } else {
          if (conn->fKeyUsed != intry) {
             // this is rather error condition, should never happen
-            R__LOG_ERROR(WebGUILog()) << "Connection failure with MD5 check";
+            R__LOG_ERROR(WebGUILog()) << "Connection failure with HMAC signature check";
             return false;
          }
       }
@@ -784,7 +790,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          ntry = url.GetValueFromOptions("ntry");
 
       for (auto &conn : fPendingConn)
-         if (_CanTrustIn(conn, key, ntry, is_remote, true))
+         if (_CanTrustIn(conn, key, ntry, is_remote, true /* test_first_time */))
              return true;
 
       return false;
@@ -809,9 +815,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
       std::lock_guard<std::mutex> grd(fConnMutex);
 
-      // check if in pending connection exactly this combination was checked
+      // check if in pending connections exactly this combination was checked
       for (size_t n = 0; n < fPendingConn.size(); ++n)
-         if (_CanTrustIn(fPendingConn[n], key, ntry, is_remote, false)) {
+         if (_CanTrustIn(fPendingConn[n], key, ntry, is_remote, false /* test_first_time */)) {
             conn = std::move(fPendingConn[n]);
             fPendingConn.erase(fPendingConn.begin() + n);
             break;
@@ -851,7 +857,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if(url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
 
-      if (!_CanTrustIn(conn, key, ntry, is_remote, true))
+      if (!_CanTrustIn(conn, key, ntry, is_remote, true /* test_first_time */))
          return false;
    }
 
@@ -900,20 +906,25 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.GetPostDataLength() <= 0)
       return true;
 
-   // here start testing of MD5 sum in the begin of the message
+   // here start testing of HMAC in the begin of the message
 
    const char *buf0 = (const char *) arg.GetPostData();
    Long_t data_len = arg.GetPostDataLength();
 
    const char *buf = strchr(buf0, ':');
    if (!buf) {
-      R__LOG_ERROR(WebGUILog()) << "missing separator for md5 checksum";
+      R__LOG_ERROR(WebGUILog()) << "missing separator for HMAC checksum";
       return false;
    }
 
    Int_t code_len =  buf - buf0;
    data_len -= code_len + 1;
    buf++; // starting of normal message
+
+   if (data_len < 0) {
+      R__LOG_ERROR(WebGUILog()) << "no any data after HMAC checksum";
+      return false;
+   }
 
    bool is_none = strncmp(buf0, "none:", 5) == 0, is_match = false;
 
@@ -926,13 +937,13 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       is_match = true;
    }
 
-   // IMPORTANT: final place where MD5 sum of input message checked!
+   // IMPORTANT: final place where integrity of input message is checked!
    if (!is_match) {
-      // mismatch of md5 checksum
+      // mismatch of HMAC checksum
       if (is_remote && IsRequireAuthKey())
          return false;
       if (!is_none) {
-         R__LOG_ERROR(WebGUILog()) << "wrong hmac checksum provided";
+         R__LOG_ERROR(WebGUILog()) << "wrong HMAC checksum provided";
          return false;
       }
    }
