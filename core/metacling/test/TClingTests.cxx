@@ -88,6 +88,24 @@ TEST_F(TClingTests, GetEnumWithSameVariableName)
    EXPECT_TRUE(en != nullptr);
 }
 
+TEST_F(TClingTests, SuccessfulAutoInjection)
+{
+   gInterpreter->ProcessLine("int SuccessfulAutoInjectionTest(int j) { return 0; }");
+   gInterpreter->ProcessLine("success = SuccessfulAutoInjectionTest(3)");
+
+   auto success = gInterpreter->GetDataMember(nullptr, "success");
+   EXPECT_TRUE(success != nullptr);
+}
+
+TEST_F(TClingTests, FailedAutoInjection)
+{
+   gInterpreter->ProcessLine("int FailedAutoInjectionTest(int j) { return 0; }");
+   gInterpreter->ProcessLine("failed = FailedAutoInjectionTest(3, 6)");
+
+   auto failed = gInterpreter->GetDataMember(nullptr, "failed");
+   EXPECT_TRUE(failed == nullptr);
+}
+
 // Check if we can get the source code of function definitions.
 TEST_F(TClingTests, MakeInterpreterValue)
 {
