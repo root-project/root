@@ -582,7 +582,7 @@ public:
    /// Generates an object of the field type and allocates new initialized memory according to the type.
    RValue CreateValue();
    /// The returned bulk is initially empty; RBulk::ReadBulk will construct the array of values
-   RBulk GenerateBulk() { return RBulk(this); }
+   RBulk CreateBulk() { return RBulk(this); }
    /// Creates a value from a memory location with an already constructed object
    RValue BindValue(std::shared_ptr<void> objPtr) { return RValue(this, objPtr); }
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
