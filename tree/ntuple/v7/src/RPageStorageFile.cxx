@@ -49,8 +49,11 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
                                                          const RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options), fPageAllocator(std::make_unique<Internal::RPageAllocatorHeap>())
 {
-   R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
-      "Do not store real data with this version of RNTuple!";
+   static std::once_flag once;
+   std::call_once(once, []() {
+      R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. "
+                                  << "Do not store real data with this version of RNTuple!";
+   });
    fCompressor = std::make_unique<Internal::RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkFile");
 }
@@ -262,7 +265,10 @@ void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const RNTuple &
       throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
    }
    if (anchor.fVersionEpoch == 0) {
-      R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << anchor.fVersionMajor;
+      static std::once_flag once;
+      std::call_once(once, [&anchor]() {
+         R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << anchor.fVersionMajor;
+      });
    }
 
    fDescriptorBuilder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
