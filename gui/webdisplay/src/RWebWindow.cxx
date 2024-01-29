@@ -2018,6 +2018,8 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
    sha256_update(&hash1, (const unsigned char *) key.data(), key.length());
    std::string kbis = get_digest(hash1);
 
+   kbis.resize(64, 0); // resize to blocksize 64 bytes required by the sha256
+
    std::string ki = kbis, ko = kbis;
    const int opad = 0x5c;
    const int ipad = 0x36;
