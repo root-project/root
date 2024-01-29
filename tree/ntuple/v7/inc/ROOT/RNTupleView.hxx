@@ -160,12 +160,6 @@ public:
       fField.ConnectPageSource(*pageSource);
       if ((fField.GetTraits() & Detail::RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
          throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
-      for (auto &f : fField) {
-         auto subFieldId =
-            pageSource->GetSharedDescriptorGuard()->FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId());
-         f.SetOnDiskId(subFieldId);
-         f.ConnectPageSource(*pageSource);
-      }
    }
 
    RNTupleView(const RNTupleView& other) = delete;

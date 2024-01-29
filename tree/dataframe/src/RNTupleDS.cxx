@@ -191,8 +191,6 @@ public:
       }
 
       fField->ConnectPageSource(source);
-      for (auto &f : *fField)
-         f.ConnectPageSource(source);
 
       if (fValuePtr) {
          // When the reader reconnects to a new file, the fValuePtr is already set

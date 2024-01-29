@@ -69,15 +69,17 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
    auto &fieldZero = model.GetFieldZero();
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
-   fieldZero.SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
-   for (auto &field : fieldZero) {
-      // If the model has been created from the descritor, the on-disk IDs are already set.
+   DescriptorId_t fieldZeroId = fSource->GetSharedDescriptorGuard()->GetFieldZeroId();
+   fieldZero.SetOnDiskId(fieldZeroId);
+   // Iterate only over fieldZero's direct subfields; their descendants are recursively handled in
+   // RFieldBase::ConnectPageSource
+   for (auto &field : fieldZero.GetSubFields()) {
+      // If the model has been created from the descriptor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
-      if (field.GetOnDiskId() == kInvalidDescriptorId) {
-         field.SetOnDiskId(
-            fSource->GetSharedDescriptorGuard()->FindFieldId(field.GetFieldName(), field.GetParent()->GetOnDiskId()));
+      if (field->GetOnDiskId() == kInvalidDescriptorId) {
+         field->SetOnDiskId(fSource->GetSharedDescriptorGuard()->FindFieldId(field->GetFieldName(), fieldZeroId));
       }
-      field.ConnectPageSource(*fSource);
+      field->ConnectPageSource(*fSource);
    }
 }
 
