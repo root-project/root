@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/11/2023',
+version_date = '29/01/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -2394,7 +2394,7 @@ const radians = Math.PI / 180;
 const degrees$1 = 180 / Math.PI;
 
 // https://observablehq.com/@mbostock/lab-and-rgb
-const K = 18,
+const K$1 = 18,
     Xn = 0.96422,
     Yn = 1,
     Zn = 0.82521,
@@ -2431,10 +2431,10 @@ function Lab(l, a, b, opacity) {
 
 define(Lab, lab, extend(Color$1, {
   brighter(k) {
-    return new Lab(this.l + K * (k == null ? 1 : k), this.a, this.b, this.opacity);
+    return new Lab(this.l + K$1 * (k == null ? 1 : k), this.a, this.b, this.opacity);
   },
   darker(k) {
-    return new Lab(this.l - K * (k == null ? 1 : k), this.a, this.b, this.opacity);
+    return new Lab(this.l - K$1 * (k == null ? 1 : k), this.a, this.b, this.opacity);
   },
   rgb() {
     var y = (this.l + 16) / 116,
@@ -2495,10 +2495,10 @@ function hcl2lab(o) {
 
 define(Hcl, hcl, extend(Color$1, {
   brighter(k) {
-    return new Hcl(this.h, this.c, this.l + K * (k == null ? 1 : k), this.opacity);
+    return new Hcl(this.h, this.c, this.l + K$1 * (k == null ? 1 : k), this.opacity);
   },
   darker(k) {
-    return new Hcl(this.h, this.c, this.l - K * (k == null ? 1 : k), this.opacity);
+    return new Hcl(this.h, this.c, this.l - K$1 * (k == null ? 1 : k), this.opacity);
   },
   rgb() {
     return hcl2lab(this).rgb();
@@ -60580,7 +60580,7 @@ function getTimeOffset(axis) {
       sof = sof.slice(pos + 1);
       if (!Number.isInteger(val) || (val < min) || (val > max)) return min;
       return val;
-   }, year = next('-', 1970, 2300),
+   }, year = next('-', 1900, 2900),
       month = next('-', 1, 12) - 1,
       day = next(' ', 1, 31),
       hour = next(':', 0, 23),
@@ -67114,7 +67114,7 @@ class TPadPainter extends ObjectPainter {
 
       const cp = this.getCanvPainter();
 
-      let lineatt = this.is_active_pad && (cp?.highlight_gpad !== false) ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
+      let lineatt = this.is_active_pad && cp?.highlight_gpad ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
 
       if (!lineatt) lineatt = new TAttLineHandler({ color: 'none' });
 
@@ -79629,8 +79629,10 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             path_err += `M${midx-dlw},${my-yerr1+dend}h${2*dlw}m${-dlw},0v${yerr1+yerr2-2*dend}m${-dlw},0h${2*dlw}`;
          else
             path_err += `M${midx},${my-yerr1+dend}v${yerr1+yerr2-2*dend}`;
-         if (hints_err !== null)
-            hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
+         if (hints_err !== null) {
+            const he1 = Math.max(yerr1, 5), he2 = Math.max(yerr2, 5);
+            hints_err += `M${midx-edx},${my-he1}h${2*edx}v${he1+he2}h${-2*edx}z`;
+         }
       }, draw_bin = bin => {
          if (extract_bin(bin)) {
             if (show_text) {
@@ -80780,14 +80782,20 @@ function _getTF1Save(func, x) {
   * @desc First try evaluate, if not possible - check saved buffer
   * @private */
 function getTF1Value(func, x, skip_eval = undefined) {
-   let y = 0;
+   let y = 0, iserr = false;
    if (!func)
       return 0;
 
-   if (!skip_eval && !func.evalPar)
-      proivdeEvalPar(func);
+   if (!skip_eval && !func.evalPar) {
+      try {
+         if (!proivdeEvalPar(func))
+            iserr = true;
+      } catch {
+         iserr = true;
+      }
+   }
 
-   if (func.evalPar) {
+   if (func.evalPar && !iserr) {
       try {
          y = func.evalPar(x);
          return y;
@@ -80904,8 +80912,14 @@ class TF1Painter extends TH1Painter$2 {
          const np = Math.max(tf1.fNpx, 100);
          let iserror = false;
 
-         if (!tf1.evalPar && !proivdeEvalPar(tf1))
-            iserror = true;
+         if (!tf1.evalPar) {
+            try {
+               if (!proivdeEvalPar(tf1))
+                  iserror = true;
+            } catch {
+               iserror = true;
+            }
+         }
 
          ensureBins(np);
 
@@ -103149,19 +103163,19 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Create file hierarchy
      * @private */
-   fileHierarchy(file) {
-      const painter = this,
+   fileHierarchy(file, folder) {
+      const painter = this;
+      if (!folder) folder = {};
 
-       folder = {
-         _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`,
-         _kind: kindTFile,
-         _file: file,
-         _fullurl: file.fFullURL,
-         _localfile: file.fLocalFile,
-         _had_direct_read: false,
-         // this is central get method, item or itemname can be used, returns promise
-         _get(item, itemname) {
+      folder._name = file.fFileName;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`;
+      folder._kind = kindTFile;
+      folder._file = file;
+      folder._fullurl = file.fFullURL;
+      folder._localfile = file.fLocalFile;
+      folder._had_direct_read = false;
+      // this is central get method, item or itemname can be used, returns promise
+      folder._get = function(item, itemname) {
             if (item?._readobj)
                return Promise.resolve(item._readobj);
 
@@ -103206,8 +103220,7 @@ class HierarchyPainter extends BasePainter {
             if (this._localfile) return openFile(this._localfile).then(f => readFileObject(f));
             if (this._fullurl) return openFile(this._fullurl).then(f => readFileObject(f));
             return Promise.resolve(null);
-         }
-      };
+         };
 
       keysHierarchy(folder, file.fKeys, file, '');
 
@@ -103693,7 +103706,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          const pr = this.expandItem(this.itemFullName(hitem));
-         if (isPromise(pr))
+         if (isPromise(pr) && isObject(promises))
             promises.push(pr);
          if (hitem._childs !== undefined) hitem._isopen = true;
          return hitem._isopen;
@@ -104989,6 +105002,7 @@ class HierarchyPainter extends BasePainter {
       if (isfileopened) return;
 
       return httpRequest(filepath, 'object').then(res => {
+         if (!res) return;
          const h1 = { _jsonfile: filepath, _kind: prROOT + res._typename, _jsontmp: res, _name: filepath.split('/').pop() };
          if (res.fTitle) h1._title = res.fTitle;
          h1._get = function(item /* ,itemname */) {
@@ -105063,6 +105077,61 @@ class HierarchyPainter extends BasePainter {
             setTimeout(() => select('#gui_fileCORS').style('background', ''), 5000);
          return false;
       }).finally(() => showProgress());
+   }
+
+   /** @summary Create list of files for specified directory */
+   async listServerDir(dirname) {
+      return httpRequest(dirname, 'text').then(res => {
+         if (!res) return false;
+         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true };
+         let p = 0;
+         while (p < res.length) {
+            p = res.indexOf('a href="', p+1);
+            if (p < 0) break;
+            p += 8;
+            const p2 = res.indexOf('"', p+1);
+            if (p2 < 0) break;
+
+            const fname = res.slice(p, p2);
+            p = p2 + 1;
+            if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
+                  _click_action: 'expand', _more: true, _obj: {},
+                  _expand: item => {
+                     return openFile(item._url).then(file => {
+                        if (!file) return false;
+                        delete item._exapnd;
+                        delete item._more;
+                        delete item._click_action;
+                        delete item._obj;
+                        item._isopen = true;
+                        this.fileHierarchy(file, item);
+                        this.updateTreeNode(item);
+                     });
+                  }
+               });
+            } else if (((fname.lastIndexOf('.json.gz') === fname.length - 8) && (fname.length > 8)) ||
+                       ((fname.lastIndexOf('.json') === fname.length - 5) && (fname.length > 5))) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _jsonfile: dirname + fname, _can_draw: true,
+                  _get: item => {
+                     return httpRequest(item._jsonfile, 'object').then(res => {
+                        if (res) {
+                          item._kind = prROOT + res._typename;
+                          item._jsontmp = res;
+                          this.updateTreeNode(item);
+                        }
+                        return res;
+                     });
+                  }
+               });
+            }
+         }
+         if (h._childs.length > 0)
+            this.h = h;
+         return true;
+      });
    }
 
    /** @summary Apply loaded TStyle object
@@ -105689,6 +105758,7 @@ class HierarchyPainter extends BasePainter {
 
       let prereq = getOption('prereq') || '',
           load = getOption('load'),
+          dir = getOption('dir'),
           inject = getOption('inject'),
           filesarr = getOptionAsArray('#file;files'),
           itemsarr = getOptionAsArray('#item;items'),
@@ -105803,7 +105873,9 @@ class HierarchyPainter extends BasePainter {
             promise = this.openJsonFile(jsonarr.shift());
          else if (filesarr.length > 0)
             promise = this.openRootFile(filesarr.shift());
-         else if (expanditems.length > 0)
+         else if (dir) {
+            promise = this.listServerDir(dir); dir = '';
+         } else if (expanditems.length > 0)
             promise = this.expandItem(expanditems.shift());
          else if (style.length > 0)
             promise = this.applyStyle(style.shift());
@@ -109198,12 +109270,26 @@ class THStackPainter extends ObjectPainter {
       lst.Add(clone(stack.fHists.arr[0]), stack.fHists.opt[0]);
       for (let i = 1; i < nhists; ++i) {
          const hnext = clone(stack.fHists.arr[i]),
-             hnextopt = stack.fHists.opt[i],
-             hprev = lst.arr[i-1];
+               hnextopt = stack.fHists.opt[i],
+               hprev = lst.arr[i-1],
+               xnext = hnext.fXaxis, xprev = hprev.fXaxis;
 
-         if ((hnext.fNbins !== hprev.fNbins) ||
-             (hnext.fXaxis.fXmin !== hprev.fXaxis.fXmin) ||
-             (hnext.fXaxis.fXmax !== hprev.fXaxis.fXmax)) {
+         let match = (xnext.fNbins === xprev.fNbins) &&
+                     (xnext.fXmin === xprev.fXmin) &&
+                     (xnext.fXmax === xprev.fXmax);
+
+         if (!match && (xnext.fNbins > 0) && (xnext.fNbins < xprev.fNbins) && (xnext.fXmin === xprev.fXmin) &&
+             (Math.abs((xnext.fXmax - xnext.fXmin)/xnext.fNbins - (xprev.fXmax - xprev.fXmin)/xprev.fNbins) < 0.0001)) {
+            // simple extension of histogram to make sum
+            const arr = new Array(hprev.fNcells).fill(0);
+            for (let n = 1; n <= xnext.fNbins; ++n)
+               arr[n] = hnext.fArray[n];
+            hnext.fNcells = hprev.fNcells;
+            Object.assign(xnext, xprev);
+            hnext.fArray = arr;
+            match = true;
+         }
+         if (!match) {
             console.warn(`When drawing THStack, cannot sum-up histograms ${hnext.fName} and ${hprev.fName}`);
             lst.Clear();
             return false;
@@ -118710,6 +118796,295 @@ class RPadPainter extends RObjectPainter {
 } // class RPadPainter
 
 /**
+ * [js-sha256]{@link https://github.com/emn178/js-sha256}
+ *
+ * @version 0.10.1
+ * @author Chen, Yi-Cyuan [emn178@gmail.com]
+ * @copyright Chen, Yi-Cyuan 2014-2023
+ * @license MIT
+ */
+
+const HEX_CHARS = '0123456789abcdef'.split(''),
+      EXTRA = [-2147483648, 8388608, 32768, 128],
+      SHIFT = [24, 16, 8, 0],
+      K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+           0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+           0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+           0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+           0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+           0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+           0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+           0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+
+
+class Sha256 {
+
+  constructor(is224) {
+    this.blocks = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    if (is224) {
+      this.h0 = 0xc1059ed8;
+      this.h1 = 0x367cd507;
+      this.h2 = 0x3070dd17;
+      this.h3 = 0xf70e5939;
+      this.h4 = 0xffc00b31;
+      this.h5 = 0x68581511;
+      this.h6 = 0x64f98fa7;
+      this.h7 = 0xbefa4fa4;
+    } else { // 256
+      this.h0 = 0x6a09e667;
+      this.h1 = 0xbb67ae85;
+      this.h2 = 0x3c6ef372;
+      this.h3 = 0xa54ff53a;
+      this.h4 = 0x510e527f;
+      this.h5 = 0x9b05688c;
+      this.h6 = 0x1f83d9ab;
+      this.h7 = 0x5be0cd19;
+    }
+
+    this.block = this.start = this.bytes = this.hBytes = 0;
+    this.finalized = this.hashed = false;
+    this.first = true;
+    this.is224 = is224;
+  }
+
+  /** One can use only string or Uint8Array */
+  update(message) {
+    if (this.finalized)
+      return;
+
+    const notString = (typeof message !== 'string'),
+          length = message.length, blocks = this.blocks;
+
+    let code, index = 0, i;
+
+    while (index < length) {
+      if (this.hashed) {
+        this.hashed = false;
+        blocks[0] = this.block;
+        blocks[16] = blocks[1] = blocks[2] = blocks[3] =
+          blocks[4] = blocks[5] = blocks[6] = blocks[7] =
+          blocks[8] = blocks[9] = blocks[10] = blocks[11] =
+          blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+      }
+
+      if (notString) {
+        for (i = this.start; index < length && i < 64; ++index)
+          blocks[i >> 2] |= message[index] << SHIFT[i++ & 3];
+      } else {
+        for (i = this.start; index < length && i < 64; ++index) {
+          code = message.charCodeAt(index);
+          if (code < 0x80)
+            blocks[i >> 2] |= code << SHIFT[i++ & 3];
+          else if (code < 0x800) {
+            blocks[i >> 2] |= (0xc0 | (code >> 6)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
+          } else if (code < 0xd800 || code >= 0xe000) {
+            blocks[i >> 2] |= (0xe0 | (code >> 12)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
+          } else {
+            code = 0x10000 + (((code & 0x3ff) << 10) | (message.charCodeAt(++index) & 0x3ff));
+            blocks[i >> 2] |= (0xf0 | (code >> 18)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | ((code >> 12) & 0x3f)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
+          }
+        }
+      }
+
+      this.lastByteIndex = i;
+      this.bytes += i - this.start;
+      if (i >= 64) {
+        this.block = blocks[16];
+        this.start = i - 64;
+        this.hash();
+        this.hashed = true;
+      } else
+        this.start = i;
+    }
+    if (this.bytes > 4294967295) {
+      this.hBytes += this.bytes / 4294967296 << 0;
+      this.bytes = this.bytes % 4294967296;
+    }
+    return this;
+  }
+
+  finalize() {
+    if (this.finalized)
+      return;
+    this.finalized = true;
+    const blocks = this.blocks,
+          i = this.lastByteIndex;
+    blocks[16] = this.block;
+    blocks[i >> 2] |= EXTRA[i & 3];
+    this.block = blocks[16];
+    if (i >= 56) {
+      if (!this.hashed)
+        this.hash();
+      blocks[0] = this.block;
+      blocks[16] = blocks[1] = blocks[2] = blocks[3] =
+      blocks[4] = blocks[5] = blocks[6] = blocks[7] =
+      blocks[8] = blocks[9] = blocks[10] = blocks[11] =
+      blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+    }
+    blocks[14] = this.hBytes << 3 | this.bytes >>> 29;
+    blocks[15] = this.bytes << 3;
+    this.hash();
+  }
+
+  hash() {
+    const blocks = this.blocks;
+    let a = this.h0, b = this.h1, c = this.h2, d = this.h3, e = this.h4, f = this.h5, g = this.h6,
+        h = this.h7, j, s0, s1, maj, t1, t2, ch, ab, da, cd, bc;
+
+    for (j = 16; j < 64; ++j) {
+      // rightrotate
+      t1 = blocks[j - 15];
+      s0 = ((t1 >>> 7) | (t1 << 25)) ^ ((t1 >>> 18) | (t1 << 14)) ^ (t1 >>> 3);
+      t1 = blocks[j - 2];
+      s1 = ((t1 >>> 17) | (t1 << 15)) ^ ((t1 >>> 19) | (t1 << 13)) ^ (t1 >>> 10);
+      blocks[j] = blocks[j - 16] + s0 + blocks[j - 7] + s1 << 0;
+    }
+
+    bc = b & c;
+    for (j = 0; j < 64; j += 4) {
+      if (this.first) {
+        if (this.is224) {
+          ab = 300032;
+          t1 = blocks[0] - 1413257819;
+          h = t1 - 150054599 << 0;
+          d = t1 + 24177077 << 0;
+        } else {
+          ab = 704751109;
+          t1 = blocks[0] - 210244248;
+          h = t1 - 1521486534 << 0;
+          d = t1 + 143694565 << 0;
+        }
+        this.first = false;
+      } else {
+        s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        ab = a & b;
+        maj = ab ^ (a & c) ^ bc;
+        ch = (e & f) ^ (~e & g);
+        t1 = h + s1 + ch + K[j] + blocks[j];
+        t2 = s0 + maj;
+        h = d + t1 << 0;
+        d = t1 + t2 << 0;
+      }
+      s0 = ((d >>> 2) | (d << 30)) ^ ((d >>> 13) | (d << 19)) ^ ((d >>> 22) | (d << 10));
+      s1 = ((h >>> 6) | (h << 26)) ^ ((h >>> 11) | (h << 21)) ^ ((h >>> 25) | (h << 7));
+      da = d & a;
+      maj = da ^ (d & b) ^ ab;
+      ch = (h & e) ^ (~h & f);
+      t1 = g + s1 + ch + K[j + 1] + blocks[j + 1];
+      t2 = s0 + maj;
+      g = c + t1 << 0;
+      c = t1 + t2 << 0;
+      s0 = ((c >>> 2) | (c << 30)) ^ ((c >>> 13) | (c << 19)) ^ ((c >>> 22) | (c << 10));
+      s1 = ((g >>> 6) | (g << 26)) ^ ((g >>> 11) | (g << 21)) ^ ((g >>> 25) | (g << 7));
+      cd = c & d;
+      maj = cd ^ (c & a) ^ da;
+      ch = (g & h) ^ (~g & e);
+      t1 = f + s1 + ch + K[j + 2] + blocks[j + 2];
+      t2 = s0 + maj;
+      f = b + t1 << 0;
+      b = t1 + t2 << 0;
+      s0 = ((b >>> 2) | (b << 30)) ^ ((b >>> 13) | (b << 19)) ^ ((b >>> 22) | (b << 10));
+      s1 = ((f >>> 6) | (f << 26)) ^ ((f >>> 11) | (f << 21)) ^ ((f >>> 25) | (f << 7));
+      bc = b & c;
+      maj = bc ^ (b & d) ^ cd;
+      ch = (f & g) ^ (~f & h);
+      t1 = e + s1 + ch + K[j + 3] + blocks[j + 3];
+      t2 = s0 + maj;
+      e = a + t1 << 0;
+      a = t1 + t2 << 0;
+      this.chromeBugWorkAround = true;
+    }
+
+    this.h0 = this.h0 + a << 0;
+    this.h1 = this.h1 + b << 0;
+    this.h2 = this.h2 + c << 0;
+    this.h3 = this.h3 + d << 0;
+    this.h4 = this.h4 + e << 0;
+    this.h5 = this.h5 + f << 0;
+    this.h6 = this.h6 + g << 0;
+    this.h7 = this.h7 + h << 0;
+  }
+
+  digest() {
+    this.finalize();
+
+    const h0 = this.h0, h1 = this.h1, h2 = this.h2, h3 = this.h3, h4 = this.h4, h5 = this.h5,
+          h6 = this.h6, h7 = this.h7,
+    arr = [
+      (h0 >> 24) & 0xFF, (h0 >> 16) & 0xFF, (h0 >> 8) & 0xFF, h0 & 0xFF,
+      (h1 >> 24) & 0xFF, (h1 >> 16) & 0xFF, (h1 >> 8) & 0xFF, h1 & 0xFF,
+      (h2 >> 24) & 0xFF, (h2 >> 16) & 0xFF, (h2 >> 8) & 0xFF, h2 & 0xFF,
+      (h3 >> 24) & 0xFF, (h3 >> 16) & 0xFF, (h3 >> 8) & 0xFF, h3 & 0xFF,
+      (h4 >> 24) & 0xFF, (h4 >> 16) & 0xFF, (h4 >> 8) & 0xFF, h4 & 0xFF,
+      (h5 >> 24) & 0xFF, (h5 >> 16) & 0xFF, (h5 >> 8) & 0xFF, h5 & 0xFF,
+      (h6 >> 24) & 0xFF, (h6 >> 16) & 0xFF, (h6 >> 8) & 0xFF, h6 & 0xFF
+    ];
+    if (!this.is224)
+      arr.push((h7 >> 24) & 0xFF, (h7 >> 16) & 0xFF, (h7 >> 8) & 0xFF, h7 & 0xFF);
+    return arr;
+  }
+
+  hex() {
+    const d = this.digest();
+    let res = '';
+    for (let i = 0; i < d.length; ++i)
+       res += HEX_CHARS[(d[i] >> 4) & 0xF] + HEX_CHARS[d[i] & 0xF];
+    return res;
+  }
+
+  toString() {
+    return this.hex();
+  }
+
+} // class Sha256
+
+function sha256(message, as_hex) {
+  const m = new Sha256(false);
+  m.update(message);
+  return as_hex ? m.hex() : m.digest();
+}
+
+function sha256_2(message, arr, as_hex) {
+  const m = new Sha256(false);
+  m.update(message);
+  m.update(arr);
+  return as_hex ? m.hex() : m.digest();
+}
+
+// secret session key used for hashing connections keys
+// only if set, all messages from and to server signed with HMAC hash
+let sessionKey = '';
+
+/** @summary HMAC implementation
+ * @desc see https://en.wikipedia.org/wiki/HMAC for more details
+ * @private */
+function HMAC(key, m, o) {
+   const kbis = sha256(sessionKey + key),
+         block_size = 64,
+         opad = 0x5c, ipad = 0x36,
+         ko = [], ki = [];
+   while (kbis.length < block_size)
+      kbis.push(0);
+   for (let i = 0; i < kbis.length; ++i) {
+      const code = kbis[i];
+      ko.push(code ^ opad);
+      ki.push(code ^ ipad);
+   }
+
+   const hash = sha256_2(ki, (o === undefined) ? m : new Uint8Array(m, o));
+
+   return sha256_2(ko, hash, true);
+}
+
+/**
  * @summary Class emulating web socket with long-poll http requests
  *
  * @private
@@ -118717,12 +119092,13 @@ class RPadPainter extends RObjectPainter {
 
 class LongPollSocket {
 
-   constructor(addr, _raw, _args) {
+   constructor(addr, _raw, _handle, _counter) {
       this.path = addr;
       this.connid = null;
       this.req = null;
       this.raw = _raw;
-      this.args = _args;
+      this.handle = _handle;
+      this.counter = _counter;
 
       this.nextRequest('', 'connect');
    }
@@ -118732,18 +119108,20 @@ class LongPollSocket {
       let url = this.path, reqmode = 'buf', post = null;
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
-         if (this.args) url += '&' + this.args;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          console.log(`longpoll connect ${url} raw = ${this.raw}`);
          this.connid = 'connect';
       } else if (kind === 'close') {
          if ((this.connid === null) || (this.connid === 'close')) return;
          url += `?connection=${this.connid}&close`;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
          if (!browser.qt5) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          if (kind === 'dummy') url += '&dummy';
       }
 
@@ -118952,6 +119330,8 @@ class WebWindowHandle {
       this.credits = credits || 10;
       this.cansend = this.credits;
       this.ackn = this.credits;
+      this.send_seq = 1; // sequence counter of send messages
+      this.recv_seq = 0; // sequence counter of received messages
    }
 
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
@@ -119097,11 +119477,15 @@ class WebWindowHandle {
 
       if (this.cansend <= 0) console.error(`should be queued before sending cansend: ${this.cansend}`);
 
-      const prefix = `${this.ackn}:${this.cansend}:${chid}:`;
+      const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`;
       this.ackn = 0;
       this.cansend--; // decrease number of allowed send packets
 
-      this._websocket.send(prefix + msg);
+      let hash = 'none';
+      if (this.key && sessionKey)
+         hash = HMAC(this.key, `${prefix}${msg}`);
+
+      this._websocket.send(`${hash}:${prefix}${msg}`);
 
       if ((this.kind === 'websocket') || (this.kind === 'longpoll')) {
          if (this.timerid) clearTimeout(this.timerid);
@@ -119219,17 +119603,28 @@ class WebWindowHandle {
       return addr;
    }
 
+   /** @summary provide connection args for the web socket
+    * @private */
+   getConnArgs(ntry) {
+      let args = '';
+      if (this.key) {
+         const k = HMAC(this.key, `attempt_${ntry}`);
+         args += `key=${k}&ntry=${ntry}`;
+      }
+      if (this.token) {
+         if (args) args += '&';
+         args += `token=${this.token}`;
+      }
+      return args;
+   }
+
    /** @summary Create configured socket for current object.
      * @private */
    connect(href) {
       this.close();
       if (!href && this.href) href = this.href;
 
-      let ntry = 0, args = (this.key ? ('key=' + this.key) : '');
-      if (this.token) {
-         if (args) args += '&';
-         args += 'token=' + this.token;
-      }
+      let ntry = 0;
 
       const retry_open = first_time => {
          if (this.state !== 0) return;
@@ -119261,13 +119656,13 @@ class WebWindowHandle {
             console.log(`configure protocol log ${path}`);
          } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            if (args) path += '?' + args;
+            path += '?' + this.getConnArgs(ntry);
             console.log(`configure websocket ${path}`);
             this._websocket = new WebSocket(path);
          } else {
             path += 'root.longpoll';
             console.log(`configure longpoll ${path}`);
-            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), args);
+            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this, ntry);
          }
 
          if (!this._websocket) return;
@@ -119285,18 +119680,39 @@ class WebWindowHandle {
             let msg = e.data;
 
             if (this.next_binary) {
-               const binchid = this.next_binary;
+               const binchid = this.next_binary,
+                     server_hash = this.next_binary_hash;
                delete this.next_binary;
+               delete this.next_binary_hash;
 
                if (msg instanceof Blob) {
                   // convert Blob object to BufferArray
                   const reader = new FileReader(), qitem = this.reserveQueueItem();
                   // The file's text will be printed here
-                  reader.onload = event => this.markQueueItemDone(qitem, event.target.result, 0);
+                  reader.onload = event => {
+                     let result = event.target.result;
+                     if (this.key && sessionKey) {
+                        const hash = HMAC(this.key, result, 0);
+                        if (hash !== server_hash) {
+                           console.log('Discard binary buffer because of HMAC mismatch');
+                           result = new ArrayBuffer(0);
+                        }
+                     }
+
+                     this.markQueueItemDone(qitem, result, 0);
+                  };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // this is from CEF or LongPoll handler
-                  this.provideData(binchid, msg, e.offset || 0);
+                  let result = msg;
+                  if (this.key && sessionKey) {
+                     const hash = HMAC(this.key, result, e.offset || 0);
+                     if (hash !== server_hash) {
+                        console.log('Discard binary buffer because of HMAC mismatch');
+                        result = new ArrayBuffer(0);
+                     }
+                  }
+                  this.provideData(binchid, result, e.offset || 0);
                }
 
                return;
@@ -119305,17 +119721,34 @@ class WebWindowHandle {
             if (!isStr(msg))
                return console.log(`unsupported message kind: ${typeof msg}`);
 
-            const i1 = msg.indexOf(':'),
-                  credit = parseInt(msg.slice(0, i1)),
+            const i0 = msg.indexOf(':'),
+                  server_hash = msg.slice(0, i0),
+                  i1 = msg.indexOf(':', i0 + 1),
+                  seq_id = Number.parseInt(msg.slice(i0 + 1, i1)),
                   i2 = msg.indexOf(':', i1 + 1),
-                  // cansend = parseInt(msg.slice(i1 + 1, i2)),  // TODO: take into account when sending messages
+                  credit = Number.parseInt(msg.slice(i1 + 1, i2)),
                   i3 = msg.indexOf(':', i2 + 1),
-                  chid = parseInt(msg.slice(i2 + 1, i3));
+                  // cansend = parseInt(msg.slice(i2 + 1, i3)),  // TODO: take into account when sending messages
+                  i4 = msg.indexOf(':', i3 + 1),
+                  chid = Number.parseInt(msg.slice(i3 + 1, i4));
 
+            // for authentication HMAC checksum and sequence id is important
+            // HMAC used to authenticate server
+            // sequence id is necessary to exclude submission of same packet again
+            if (this.key && sessionKey) {
+               const client_hash = HMAC(this.key, msg.slice(i0+1));
+               if (server_hash !== client_hash)
+                  return console.log(`Failure checking server md5 sum ${server_hash}`);
+            }
+
+            if (seq_id <= this.recv_seq)
+               return console.log(`Failure with packet sequence ${seq_id} <= ${this.recv_seq}`);
+
+            this.recv_seq = seq_id; // sequence id of received packet
             this.ackn++;            // count number of received packets,
             this.cansend += credit; // how many packets client can send
 
-            msg = msg.slice(i3 + 1);
+            msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
                console.log(`GET chid=0 message ${msg}`);
@@ -119325,13 +119758,19 @@ class WebWindowHandle {
                } else if (msg.indexOf('NEW_KEY=') === 0) {
                   const newkey = msg.slice(8);
                   this.close(true);
-                  if (typeof sessionStorage !== 'undefined')
+                  let href = (typeof document !== 'undefined') ? document.URL : null;
+                  if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
+                     const p = href.indexOf('?key=');
+                     if (p > 0) href = href.slice(0, p);
+                     window.history.replaceState(window.history.state, undefined, `${href}?key=${newkey}`);
+                  } else if (typeof sessionStorage !== 'undefined')
                      sessionStorage.setItem('RWebWindow_Key', newkey);
                   location.reload(true);
                }
-            } else if (msg === '$$binary$$')
+            } else if (msg.slice(0, 10) === '$$binary$$') {
                this.next_binary = chid;
-            else if (msg === '$$nullbinary$$')
+               this.next_binary_hash = msg.slice(10);
+            } else if (msg === '$$nullbinary$$')
                this.provideData(chid, new ArrayBuffer(0), 0);
             else
                this.provideData(chid, msg);
