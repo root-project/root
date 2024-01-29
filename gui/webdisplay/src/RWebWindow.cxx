@@ -74,7 +74,7 @@ using RWebWindow::Send() method and call-back function assigned via RWebWindow::
 
 RWebWindow::RWebWindow()
 {
-   fRequireAuthKey = RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey", 1); // does authentication key really required
+   fRequireAuthKey = RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey", 1) == 1; // does authentication key really required
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
