@@ -25,9 +25,12 @@
 
 using namespace ROOT;
 
-double wasteCPUTime(std::mt19937 &gen)
+double wasteCPUTime()
 {
-   // Simulate number crunching through gen and ridiculous num bits
+   // Simulate number crunching through gen and ridiculous num bits in a
+   // thread-safe way
+   thread_local std::random_device rd{};
+   thread_local std::mt19937 gen{rd()};
    return std::generate_canonical<double, 100>(gen) + std::generate_canonical<double, 100>(gen) +
           std::generate_canonical<double, 100>(gen) + std::generate_canonical<double, 100>(gen) +
           std::generate_canonical<double, 100>(gen);
@@ -40,10 +43,9 @@ using Filler_t = Experimental::RHistConcurrentFiller<Experimental::RH2D, 1024>;
 /// several times.
 void theTask(Filler_t filler)
 {
-   std::mt19937 gen;
-
-   for (int i = 0; i < 3000000; ++i)
-      filler.Fill({wasteCPUTime(gen), wasteCPUTime(gen)});
+   const int nFills{3000000};
+   for (int i = 0; i < nFills; ++i)
+      filler.Fill({wasteCPUTime(), wasteCPUTime()});
 }
 
 /// This example fills a histogram concurrently, from several threads.

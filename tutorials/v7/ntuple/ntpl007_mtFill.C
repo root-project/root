@@ -51,6 +51,24 @@ constexpr int kNWriterThreads = 4;
 // Number of events to generate is kNEventsPerThread * kNWriterThreads
 constexpr int kNEventsPerThread = 25000;
 
+double RandomGaus(double mean, double sigma)
+{
+   // Thread-safe random number generation (normal)
+   thread_local std::random_device rd{};
+   thread_local std::mt19937 gen{rd()};
+   thread_local std::normal_distribution<double> d{mean, sigma};
+   return d(gen);
+}
+
+int RandomUniform(int lower, int higher)
+{
+   // Thread-safe random number generation (uniform)
+   thread_local std::random_device rd{};
+   thread_local std::mt19937 gen{rd()};
+   thread_local std::uniform_int_distribution<int> d{lower, higher};
+   return d(gen);
+}
+
 // Thread function to generate and write events
 void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
    // Protect the ntuple->Fill() call
@@ -58,9 +76,6 @@ void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
 
    static std::atomic<std::uint32_t> gThreadId;
    const auto threadId = ++gThreadId;
-
-   auto prng = std::make_unique<TRandom3>();
-   prng->SetSeed();
 
    auto id = entry->GetPtr<std::uint32_t>("id");
    auto vpx = entry->GetPtr<std::vector<float>>("vpx");
@@ -73,11 +88,12 @@ void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
       vpz->clear();
       *id = threadId;
 
-      int npx = static_cast<int>(prng->Rndm(1) * 15);
+      int npx = RandomUniform(0, 15);
       // Set the field data for the current event
       for (int j = 0; j < npx; ++j) {
          float px, py, pz;
-         prng->Rannor(px, py);
+         px = RandomGaus(0., 1.);
+         py = RandomGaus(0., 1.);
          pz = px*px + py*py;
 
          vpx->emplace_back(px);
