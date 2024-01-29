@@ -91,7 +91,7 @@ std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 static bool gWebWinMainThrdSet = true;
 static bool gWebWinLoopbackMode = true;
-static bool gWebWinUseSessionKey = false;
+static bool gWebWinUseSessionKey = true;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
@@ -131,9 +131,11 @@ void RWebWindowsManager::SetLoopbackMode(bool on)
       printf("\nWARNING!\n");
       printf("Disabling loopback mode may leads to security problem.\n");
       printf("See https://root.cern/about/security/ for more information.\n\n");
-      printf("Enabling session key to provide more security.\n");
-      printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
-      gWebWinUseSessionKey = true;
+      if (!gWebWinUseSessionKey) {
+         printf("Enforce session key to safely work on public network.\n");
+         printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
+         gWebWinUseSessionKey = true;
+      }
    }
 }
 
