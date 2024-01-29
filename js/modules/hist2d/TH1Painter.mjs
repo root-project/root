@@ -572,8 +572,10 @@ class TH1Painter extends THistPainter {
             path_err += `M${midx-dlw},${my-yerr1+dend}h${2*dlw}m${-dlw},0v${yerr1+yerr2-2*dend}m${-dlw},0h${2*dlw}`;
          else
             path_err += `M${midx},${my-yerr1+dend}v${yerr1+yerr2-2*dend}`;
-         if (hints_err !== null)
-            hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
+         if (hints_err !== null) {
+            const he1 = Math.max(yerr1, 5), he2 = Math.max(yerr2, 5);
+            hints_err += `M${midx-edx},${my-he1}h${2*edx}v${he1+he2}h${-2*edx}z`;
+         }
       }, draw_bin = bin => {
          if (extract_bin(bin)) {
             if (show_text) {

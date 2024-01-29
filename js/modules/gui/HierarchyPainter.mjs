@@ -779,19 +779,19 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Create file hierarchy
      * @private */
-   fileHierarchy(file) {
-      const painter = this,
+   fileHierarchy(file, folder) {
+      const painter = this;
+      if (!folder) folder = {};
 
-       folder = {
-         _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`,
-         _kind: kindTFile,
-         _file: file,
-         _fullurl: file.fFullURL,
-         _localfile: file.fLocalFile,
-         _had_direct_read: false,
-         // this is central get method, item or itemname can be used, returns promise
-         _get(item, itemname) {
+      folder._name = file.fFileName;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`;
+      folder._kind = kindTFile;
+      folder._file = file;
+      folder._fullurl = file.fFullURL;
+      folder._localfile = file.fLocalFile;
+      folder._had_direct_read = false;
+      // this is central get method, item or itemname can be used, returns promise
+      folder._get = function(item, itemname) {
             if (item?._readobj)
                return Promise.resolve(item._readobj);
 
@@ -836,8 +836,7 @@ class HierarchyPainter extends BasePainter {
             if (this._localfile) return openFile(this._localfile).then(f => readFileObject(f));
             if (this._fullurl) return openFile(this._fullurl).then(f => readFileObject(f));
             return Promise.resolve(null);
-         }
-      };
+         };
 
       keysHierarchy(folder, file.fKeys, file, '');
 
@@ -1325,7 +1324,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          const pr = this.expandItem(this.itemFullName(hitem));
-         if (isPromise(pr))
+         if (isPromise(pr) && isObject(promises))
             promises.push(pr);
          if (hitem._childs !== undefined) hitem._isopen = true;
          return hitem._isopen;
@@ -2621,6 +2620,7 @@ class HierarchyPainter extends BasePainter {
       if (isfileopened) return;
 
       return httpRequest(filepath, 'object').then(res => {
+         if (!res) return;
          const h1 = { _jsonfile: filepath, _kind: prROOT + res._typename, _jsontmp: res, _name: filepath.split('/').pop() };
          if (res.fTitle) h1._title = res.fTitle;
          h1._get = function(item /* ,itemname */) {
@@ -2695,6 +2695,61 @@ class HierarchyPainter extends BasePainter {
             setTimeout(() => d3_select('#gui_fileCORS').style('background', ''), 5000);
          return false;
       }).finally(() => showProgress());
+   }
+
+   /** @summary Create list of files for specified directory */
+   async listServerDir(dirname) {
+      return httpRequest(dirname, 'text').then(res => {
+         if (!res) return false;
+         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true };
+         let p = 0;
+         while (p < res.length) {
+            p = res.indexOf('a href="', p+1);
+            if (p < 0) break;
+            p += 8;
+            const p2 = res.indexOf('"', p+1);
+            if (p2 < 0) break;
+
+            const fname = res.slice(p, p2);
+            p = p2 + 1;
+            if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
+                  _click_action: 'expand', _more: true, _obj: {},
+                  _expand: item => {
+                     return openFile(item._url).then(file => {
+                        if (!file) return false;
+                        delete item._exapnd;
+                        delete item._more;
+                        delete item._click_action;
+                        delete item._obj;
+                        item._isopen = true;
+                        this.fileHierarchy(file, item);
+                        this.updateTreeNode(item);
+                     });
+                  }
+               });
+            } else if (((fname.lastIndexOf('.json.gz') === fname.length - 8) && (fname.length > 8)) ||
+                       ((fname.lastIndexOf('.json') === fname.length - 5) && (fname.length > 5))) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _jsonfile: dirname + fname, _can_draw: true,
+                  _get: item => {
+                     return httpRequest(item._jsonfile, 'object').then(res => {
+                        if (res) {
+                          item._kind = prROOT + res._typename;
+                          item._jsontmp = res;
+                          this.updateTreeNode(item);
+                        }
+                        return res;
+                     });
+                  }
+               });
+            }
+         }
+         if (h._childs.length > 0)
+            this.h = h;
+         return true;
+      });
    }
 
    /** @summary Apply loaded TStyle object
@@ -3321,6 +3376,7 @@ class HierarchyPainter extends BasePainter {
 
       let prereq = getOption('prereq') || '',
           load = getOption('load'),
+          dir = getOption('dir'),
           inject = getOption('inject'),
           filesarr = getOptionAsArray('#file;files'),
           itemsarr = getOptionAsArray('#item;items'),
@@ -3435,7 +3491,9 @@ class HierarchyPainter extends BasePainter {
             promise = this.openJsonFile(jsonarr.shift());
          else if (filesarr.length > 0)
             promise = this.openRootFile(filesarr.shift());
-         else if (expanditems.length > 0)
+         else if (dir) {
+            promise = this.listServerDir(dir); dir = '';
+         } else if (expanditems.length > 0)
             promise = this.expandItem(expanditems.shift());
          else if (style.length > 0)
             promise = this.applyStyle(style.shift());

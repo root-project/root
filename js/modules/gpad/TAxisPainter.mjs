@@ -28,7 +28,7 @@ function getTimeOffset(axis) {
       sof = sof.slice(pos + 1);
       if (!Number.isInteger(val) || (val < min) || (val > max)) return min;
       return val;
-   }, year = next('-', 1970, 2300),
+   }, year = next('-', 1900, 2900),
       month = next('-', 1, 12) - 1,
       day = next(' ', 1, 31),
       hour = next(':', 0, 23),
