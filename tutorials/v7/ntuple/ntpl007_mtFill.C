@@ -158,7 +158,7 @@ void Read()
    auto nEvents = ntuple->GetNEntries();
    auto viewId = ntuple->GetView<std::uint32_t>("id");
    TH2F hFillSequence("","Entry Id vs Thread Id;Entry Sequence Number;Filling Thread",
-                      100, 0, nEvents, 100, 0, kNWriterThreads);
+                      100, 0, nEvents, 100, 0, kNWriterThreads+1);
    for (auto i : ntuple->GetEntryRange())
       hFillSequence.Fill(i, viewId(i));
    hFillSequence.DrawCopy();
