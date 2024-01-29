@@ -61,7 +61,7 @@ foreach(rawUtilName ${utils})
     # We need the .py only on Windows
     string(REPLACE ".py" "" utilName ${utilName})
   endif()
-  set(python ${PYTHON_EXECUTABLE})
+  set(python python3)
   configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
   install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
