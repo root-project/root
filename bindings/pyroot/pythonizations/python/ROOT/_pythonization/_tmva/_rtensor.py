@@ -7,11 +7,69 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-
 from .. import pythonization
-from .._rvec import _array_interface_dtype_map
+from .._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
 import cppyy
 import sys
+
+
+def _AsRTensor(arr):
+    """
+    Adopt memory of a Python object with array interface using an RTensor.
+
+    \param[in] self Always null, since this is a module function.
+    \param[in] obj PyObject with array interface
+
+    This function returns an RTensor which adopts the memory of the given
+    PyObject. The RTensor takes the data pointer and the shape from the array
+    interface dictionary.
+    """
+    import ROOT
+    import math
+    import platform
+
+    # Get array interface of object
+    interface = arr.__array_interface__
+
+    # Get the data-pointer
+    data = interface["data"][0]
+
+    # Get the size of the contiguous memory
+    shape = interface["shape"]
+    size = math.prod(shape) if len(shape) > 0 else 0
+
+    # Get the typestring and properties thereof
+    typestr = interface["typestr"]
+    if len(typestr) != 3:
+        raise RuntimeError(
+            "Object not convertible: __array_interface__['typestr'] returned '"
+            + typestr
+            + "' with invalid length unequal 3."
+        )
+
+    dtype = typestr[1:]
+    dtypesize = int(typestr[-1])
+    cppdtype = _get_cpp_type_from_numpy_type(dtype)
+
+    # Get strides
+    strides = arr.strides
+
+    # Infer memory layout from strides
+    layout_enum = ROOT.TMVA.Experimental.MemoryLayout
+    layout = layout_enum.ColumnMajor if len(strides) > 1 and strides[0] < strides[-1] else layout_enum.RowMajor
+
+    # Construct an RTensor of the correct data-type
+    out = ROOT.TMVA.Experimental.RTensor[cppdtype, ROOT.std.vector[cppdtype]](
+        ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data),
+        [s for s in shape],
+        [s // dtypesize for s in strides],
+        layout,
+    )
+
+    # Bind pyobject holding adopted memory to the RTensor
+    out.__adopted__ = arr
+
+    return out
 
 
 def get_array_interface(self):
