@@ -489,9 +489,7 @@ endif()
 
 #---Special return code------------------------------------------------
 set(returncode_1 fit/fit2a.C
-                 graphics/arrow.C
-                 graphics/crown.C graphics/diamond.C
-                 graphics/earth.C graphics/ellipse.C
+                 graphics/earth.C
                  graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
                  graphs/timeonaxis.C
