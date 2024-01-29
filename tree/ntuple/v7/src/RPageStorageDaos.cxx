@@ -174,7 +174,11 @@ struct RDaosContainerNTupleLocator {
             R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
       }
       if (anchor.fVersionEpoch == 0) {
-         R__LOG_WARNING(ROOT::Experimental::NTupleLog()) << "Pre-release format version: RC " << anchor.fVersionMajor;
+         static std::once_flag once;
+         std::call_once(once, [&anchor]() {
+            R__LOG_WARNING(ROOT::Experimental::NTupleLog())
+               << "Pre-release format version: RC " << anchor.fVersionMajor;
+         });
       }
 
       builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
@@ -282,8 +286,11 @@ ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntuple
    : RPagePersistentSink(ntupleName, options), fPageAllocator(std::make_unique<Internal::RPageAllocatorHeap>()),
      fURI(uri)
 {
-   R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
-                               << "Do not store real data with this version of RNTuple!";
+   static std::once_flag once;
+   std::call_once(once, []() {
+      R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
+                                  << "Do not store real data with this version of RNTuple!";
+   });
    fCompressor = std::make_unique<Internal::RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkDaos");
 }
