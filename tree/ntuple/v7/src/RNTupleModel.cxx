@@ -371,7 +371,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 }
 
 ROOT::Experimental::Detail::RFieldBase::RBulk
-ROOT::Experimental::RNTupleModel::GenerateBulk(std::string_view fieldName) const
+ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
@@ -379,7 +379,7 @@ ROOT::Experimental::RNTupleModel::GenerateBulk(std::string_view fieldName) const
    auto f = FindField(fieldName);
    if (!f)
       throw RException(R__FAIL("no such field: " + std::string(fieldName)));
-   return f->GenerateBulk();
+   return f->CreateBulk();
 }
 
 void ROOT::Experimental::RNTupleModel::Unfreeze()
