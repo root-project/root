@@ -493,7 +493,7 @@ class TPadPainter extends ObjectPainter {
 
       const cp = this.getCanvPainter();
 
-      let lineatt = this.is_active_pad && (cp?.highlight_gpad !== false) ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
+      let lineatt = this.is_active_pad && cp?.highlight_gpad ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
 
       if (!lineatt) lineatt = new TAttLineHandler({ color: 'none' });
 
