@@ -875,6 +875,13 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
    if (!fDescription.empty())
       throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
+   for (auto &f : fSubFields) {
+      if (f->GetOnDiskId() == kInvalidDescriptorId) {
+         f->SetOnDiskId(pageSource.GetSharedDescriptorGuard()->FindFieldId(f->GetFieldName(), GetOnDiskId()));
+      }
+      f->ConnectPageSource(pageSource);
+   }
+
    {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
