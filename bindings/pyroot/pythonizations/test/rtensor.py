@@ -276,3 +276,7 @@ class NumpyCompliance(unittest.TestCase):
             self.assertEqual(i, j)
         self.assertEqual(x4[0], y4[0])
         self.assertEqual(x4[1], y4[1])
+
+
+if __name__ == '__main__':
+    unittest.main()

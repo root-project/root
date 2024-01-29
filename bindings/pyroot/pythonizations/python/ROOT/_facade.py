@@ -279,9 +279,9 @@ class ROOTFacade(types.ModuleType):
     def VecOps(self):
         ns = self._fallback_getattr("VecOps")
         try:
-            from libROOTPythonizations import AsRVec
+            from ._pythonization._rvec import _AsRVec
 
-            ns.AsRVec = AsRVec
+            ns.AsRVec = _AsRVec
         except:
             raise Exception("Failed to pythonize the namespace VecOps")
         del type(self).VecOps
@@ -347,12 +347,10 @@ class ROOTFacade(types.ModuleType):
         hasRDF = "dataframe" in gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator
+                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor
 
                 inject_rbatchgenerator(ns)
-                from libROOTPythonizations import AsRTensor
-
-                ns.Experimental.AsRTensor = AsRTensor
+                ns.Experimental.AsRTensor = _AsRTensor
             except:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA

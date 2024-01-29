@@ -28,9 +28,6 @@ PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
 
-PyObject *AsRVec(PyObject *self, PyObject *obj);
-PyObject *AsRTensor(PyObject *self, PyObject *obj);
-
 PyObject *CPPInstanceExpand(PyObject *self, PyObject *args);
 
 } // namespace PyROOT
