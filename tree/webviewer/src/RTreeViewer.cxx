@@ -236,6 +236,7 @@ std::string RTreeViewer::GetWindowAddr() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return URL of web window used for tree viewer
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
 
 std::string RTreeViewer::GetWindowUrl(bool remote)
 {

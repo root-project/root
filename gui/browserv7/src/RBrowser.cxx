@@ -524,6 +524,7 @@ void RBrowser::Hide()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Return URL parameter for the window showing ROOT Browser
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
 
 std::string RBrowser::GetWindowUrl(bool remote)
 {

@@ -137,6 +137,7 @@ std::string RGeomViewer::GetWindowAddr() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return web window URL which can be used for connection
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
 
 std::string RGeomViewer::GetWindowUrl(bool remote)
 {

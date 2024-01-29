@@ -163,7 +163,7 @@ RWebWindow::CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id
 /// URL may include extra parameters required for connection
 /// WARNING - do not invoke this method without real need, while each such URL
 /// registered in the web window and expected for connection from outside
-/// \param remote if true, real HTTP server will be started automatically
+/// \param remote when true, real HTTP server will be started automatically
 
 std::string RWebWindow::GetUrl(bool remote)
 {
