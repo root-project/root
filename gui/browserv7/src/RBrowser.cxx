@@ -235,7 +235,7 @@ public:
 class RBrowserCatchedWidget : public RBrowserWidget {
 public:
 
-   RWebWindow  *fWindow{nullptr};   // catched widget, should be changed to shared_ptr
+   RWebWindow  *fWindow{nullptr};   // catched widget, TODO: to be changed to shared_ptr
    std::string fCatchedKind;  // kind of catched widget
 
    void Show(const std::string &) override {}
