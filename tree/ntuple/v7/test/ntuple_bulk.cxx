@@ -14,7 +14,7 @@ TEST(RNTupleBulk, Simple)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   RFieldBase::RBulk bulk = reader->GetModel().GenerateBulk("int");
+   RFieldBase::RBulk bulk = reader->GetModel().CreateBulk("int");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, true);
@@ -47,7 +47,7 @@ TEST(RNTupleBulk, Complex)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   RFieldBase::RBulk bulk = reader->GetModel().GenerateBulk("S");
+   RFieldBase::RBulk bulk = reader->GetModel().CreateBulk("S");
    auto mask = std::make_unique<bool[]>(10);
    for (unsigned int i = 0; i < 10; ++i)
       mask[i] = (i % 2 == 0);
@@ -96,8 +96,8 @@ TEST(RNTupleBulk, CardinalityField)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    const auto &model = reader->GetModel();
 
-   RFieldBase::RBulk bulk32 = model.GenerateBulk("card32");
-   RFieldBase::RBulk bulk64 = model.GenerateBulk("card64");
+   RFieldBase::RBulk bulk32 = model.CreateBulk("card32");
+   RFieldBase::RBulk bulk64 = model.CreateBulk("card64");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, false /* the cardinality field optimization should ignore the mask */);
@@ -138,9 +138,9 @@ TEST(RNTupleBulk, RVec)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    const auto &model = reader->GetModel();
 
-   RFieldBase::RBulk bulkI = model.GenerateBulk("vint");
-   RFieldBase::RBulk bulkS = model.GenerateBulk("vs");
-   RFieldBase::RBulk bulkVI = model.GenerateBulk("vvint");
+   RFieldBase::RBulk bulkI = model.CreateBulk("vint");
+   RFieldBase::RBulk bulkS = model.CreateBulk("vs");
+   RFieldBase::RBulk bulkVI = model.CreateBulk("vvint");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, true);
