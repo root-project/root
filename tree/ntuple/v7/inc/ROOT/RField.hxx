@@ -190,9 +190,8 @@ public:
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
       void Read(RClusterIndex clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
       void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
-      /// In contrast to copying the RValue and calling Bind, where the caller needs to provide an object pointer,
-      /// Clone() lets the field create a new object pointer.
-      RValue Clone() { return fField->GenerateValue(); }
+      /// Replace the current object pointer by a pointer to a new object constructed by the field
+      void EmplaceNew() { fObjPtr = fField->CreateValue().GetPtr<void>(); }
 
       template <typename T>
       std::shared_ptr<T> GetPtr() const
