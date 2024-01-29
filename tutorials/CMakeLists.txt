@@ -371,6 +371,7 @@ else()
     list(APPEND root7_veto dataframe/df013_InspectAnalysis.C)
   endif()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.py v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C rcanvas/*.py rcanvas/*.cxx)
+
   list(APPEND root7_veto ${v7_veto_files})
 endif()
 
@@ -472,6 +473,8 @@ if(root7 AND webgui)
   list(APPEND tutorials ${tutorials_rcanvas})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
+
+message(FATAL_ERROR "\n\n\n${tutorials}\n\n\n")
 
 list(LENGTH tutorials nTotal)
 list(REMOVE_ITEM tutorials ${tutorials_veto})
