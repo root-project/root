@@ -141,16 +141,16 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto descriptor = reader->GetDescriptor();
-   auto model = reader->GetModel();
-   auto fieldId = descriptor->FindFieldId("id");
-   auto columnId = descriptor->FindPhysicalColumnId(fieldId, 0);
+   const auto &descriptor = reader->GetDescriptor();
+   const auto &model = reader->GetModel();
+   auto fieldId = descriptor.FindFieldId("id");
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumEntries);
-   EXPECT_EQ(descriptor->GetNClusters(), 1);
-   EXPECT_EQ(descriptor->GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), NumPages);
+   EXPECT_EQ(descriptor.GetNClusters(), 1);
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), NumPages);
 
-   auto *id = model->GetDefaultEntry()->Get<int>("id");
+   auto id = model.GetDefaultEntry().GetPtr<int>("id");
    for (int i = 0; i < NumEntries; i++) {
       reader->LoadEntry(i);
       EXPECT_EQ(*id, i);
@@ -181,17 +181,17 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto descriptor = reader->GetDescriptor();
-   auto model = reader->GetModel();
-   auto fieldId = descriptor->FindFieldId("ids");
-   auto subFieldId = descriptor->FindFieldId("_0", fieldId);
-   auto columnId = descriptor->FindPhysicalColumnId(subFieldId, 0);
+   const auto &descriptor = reader->GetDescriptor();
+   const auto &model = reader->GetModel();
+   auto fieldId = descriptor.FindFieldId("ids");
+   auto subFieldId = descriptor.FindFieldId("_0", fieldId);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
-   EXPECT_EQ(descriptor->GetNClusters(), 1);
-   EXPECT_EQ(descriptor->GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), NumPages);
+   EXPECT_EQ(descriptor.GetNClusters(), 1);
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), NumPages);
 
-   auto *ids = model->GetDefaultEntry()->Get<std::vector<int>>("ids");
+   auto ids = model.GetDefaultEntry().GetPtr<std::vector<int>>("ids");
    reader->LoadEntry(0);
    EXPECT_EQ(ids->size(), NumElements);
    for (int i = 0; i < NumElements; i++) {
@@ -224,16 +224,16 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto descriptor = reader->GetDescriptor();
-   auto model = reader->GetModel();
-   auto fieldId = descriptor->FindFieldId("id");
-   auto columnId = descriptor->FindPhysicalColumnId(fieldId, 0);
+   const auto &descriptor = reader->GetDescriptor();
+   const auto &model = reader->GetModel();
+   auto fieldId = descriptor.FindFieldId("id");
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumElements);
-   EXPECT_EQ(descriptor->GetNClusters(), 1);
-   EXPECT_EQ(descriptor->GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+   EXPECT_EQ(descriptor.GetNClusters(), 1);
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
 
-   auto *id = model->GetDefaultEntry()->Get<int>("id");
+   auto id = model.GetDefaultEntry().GetPtr<int>("id");
    for (int i = 0; i < NumElements; i++) {
       reader->LoadEntry(i);
       EXPECT_EQ(*id, i);
@@ -265,17 +265,17 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto descriptor = reader->GetDescriptor();
-   auto model = reader->GetModel();
-   auto fieldId = descriptor->FindFieldId("ids");
-   auto subFieldId = descriptor->FindFieldId("_0", fieldId);
-   auto columnId = descriptor->FindPhysicalColumnId(subFieldId, 0);
+   const auto &descriptor = reader->GetDescriptor();
+   const auto &model = reader->GetModel();
+   auto fieldId = descriptor.FindFieldId("ids");
+   auto subFieldId = descriptor.FindFieldId("_0", fieldId);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
-   EXPECT_EQ(descriptor->GetNClusters(), 1);
-   EXPECT_EQ(descriptor->GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+   EXPECT_EQ(descriptor.GetNClusters(), 1);
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
 
-   auto *ids = model->GetDefaultEntry()->Get<std::vector<int>>("ids");
+   auto ids = model.GetDefaultEntry().GetPtr<std::vector<int>>("ids");
    reader->LoadEntry(0);
    EXPECT_EQ(ids->size(), NumElements);
    for (int i = 0; i < NumElements; i++) {
