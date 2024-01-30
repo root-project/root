@@ -15,6 +15,8 @@ This class registers for all classes their name, id and dictionary
 function in a hash table. Classes are automatically added by the
 ctor of a special init class when a global of this init class is
 initialized when the program starts (see the ClassImp macro).
+
+All functions in TClassTable are thread-safe.
 */
 
 #include "TClassTable.h"
@@ -38,6 +40,7 @@ initialized when the program starts (see the ClassImp macro).
 #include <typeinfo>
 #include <cstdlib>
 #include <string>
+#include <mutex>
 
 using namespace ROOT;
 
@@ -61,13 +64,18 @@ static std::mutex &GetClassTableMutex()
 }
 
 // RAII to first normalize the input classname (operation that
-// both requires the ROOT global lock and might call `TClassTable
+// both requires the ROOT global lock and might call `TClassTable`
 // resursively) and then acquire a lock on `TClassTable` local
 // mutex.
 class TClassTable::NormalizeThenLock {
    std::string fNormalizedName;
 
 public:
+   NormalizeThenLock() = delete;
+   NormalizeThenLock(const NormalizeThenLock&) = delete;
+   NormalizeThenLock(NormalizeThenLock&&) = delete;
+   NormalizeThenLock& operator=(const NormalizeThenLock&) = delete;
+   NormalizeThenLock& operator=(NormalizeThenLock&&) = delete;
 
    NormalizeThenLock(const char *cname)
    {
@@ -320,10 +328,12 @@ inline Bool_t TClassTable::CheckClassTableInit()
 
 void TClassTable::Print(Option_t *option) const
 {
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
+   // This is the very rare case (i.e. called before any dictionary load)
+   // so we don't need to execute this outside of the critical section.
    if (fgTally == 0 || !fgTable)
       return;
-
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    SortTable();
 
@@ -396,7 +406,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
    if (!gClassTable)
       new TClassTable;
 
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+   std::unique_lock<std::mutex> lock(GetClassTableMutex());
 
    // check if already in table, if so return
    TClassRec *r = FindElement(cname, kTRUE);
@@ -408,6 +418,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
          return;
       }
       if (!TClassEdit::IsStdClass(cname)) {
+         lock.unlock(); // Warning might recursively call TClassTable during gROOT init
          // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
@@ -451,7 +462,7 @@ void TClassTable::Add(TProtoClass *proto)
    if (!gClassTable)
       new TClassTable;
 
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+   std::unique_lock<std::mutex> lock(GetClassTableMutex());
 
    // By definition the name in the TProtoClass is (must be) the normalized
    // name, so there is no need to tweak it.
@@ -463,6 +474,8 @@ void TClassTable::Add(TProtoClass *proto)
       if (r->fProto) delete r->fProto;
       r->fProto = proto;
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
+
+      lock.unlock(); // FillTClass might recursively call TClassTable during gROOT init
       if (oldcl && oldcl->GetState() == TClass::kHasTClassInit)
          proto->FillTClass(oldcl);
       return;
@@ -474,6 +487,7 @@ void TClassTable::Add(TProtoClass *proto)
                    // files loaded by the current dictionary wil also de-activate the update
                    // class info mechanism!
 
+         lock.unlock(); // Warning might recursively call TClassTable during gROOT init
          ::Warning("TClassTable::Add(TProtoClass*)","Called for existing class without a prior call add the dictionary function.");
       }
    }
@@ -577,6 +591,7 @@ void TClassTable::Remove(const char *cname)
 /// Find a class by name in the class table (using hash of name). Returns
 /// 0 if the class is not in the table. Unless arguments insert is true in
 /// which case a new entry is created and returned.
+/// `cname` must be the normalized name of the class.
 
 TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
@@ -650,6 +665,9 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
    if (!CheckClassTableInit())
       return nullptr;
 
+   if (gDebug > 9)
+      ROOT::GetROOT(); // Info might recursively call TClassTable during the gROOT init
+
    std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    if (gDebug > 9) {
@@ -671,6 +689,9 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
    if (!CheckClassTableInit())
       return nullptr;
+
+   if (gDebug > 9)
+      ROOT::GetROOT(); // Info might recursively call TClassTable during the gROOT init
 
    std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
@@ -698,12 +719,14 @@ TProtoClass *TClassTable::GetProto(const char *cname)
    if (!CheckClassTableInit())
       return nullptr;
 
+   NormalizeThenLock guard(cname);
+
    if (gDebug > 9) {
+      // Because of the early call to Info, gROOT is already initialized
+      // and thus this will not cause a recursive call to TClassTable.
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
-
-   NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
