@@ -127,7 +127,6 @@ class ROOTFacade(types.ModuleType):
         # - Set batch mode in gROOT
         # - Set options in PyConfig
         self.__class__.__getattr__ = self._getattr
-        self.__class__.__setattr__ = self._setattr
 
     def AddressOf(self, obj):
         # Return an indexable buffer of length 1, whose only element
@@ -202,7 +201,6 @@ class ROOTFacade(types.ModuleType):
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
-        self.__class__.__setattr__ = lambda self, name, val: setattr(gbl_namespace, name, val)
 
         # Run rootlogon if exists
         self._run_rootlogon()
@@ -215,11 +213,6 @@ class ROOTFacade(types.ModuleType):
         self._finalSetup()
 
         return getattr(self, name)
-
-    def _setattr(self, name, val):
-        self._finalSetup()
-
-        return setattr(self, name, val)
 
     def _execute_rootlogon_module(self, file_path):
         """Execute the 'rootlogon.py' module found at the given 'file_path'"""
