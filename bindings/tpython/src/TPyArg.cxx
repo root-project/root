@@ -10,7 +10,8 @@
 //  *************************************************************************/
 
 // Bindings
-#include "CPyCppyy.h"
+#include "Python.h"
+
 #include "TPyArg.h"
 
 //______________________________________________________________________________
@@ -81,7 +82,7 @@ TPyArg::TPyArg(PyObject *pyobject)
 
 TPyArg::TPyArg(Int_t value)
 {
-   fPyObject = PyInt_FromLong(value);
+   fPyObject = PyLong_FromLong(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +106,7 @@ TPyArg::TPyArg(Double_t value)
 
 TPyArg::TPyArg(const char *value)
 {
-   fPyObject = CPyCppyy_PyText_FromString(value);
+   fPyObject = PyUnicode_FromString(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
