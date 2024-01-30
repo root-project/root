@@ -115,7 +115,6 @@ set(cpp_sources
     src/GenericPyz.cxx
     src/RVecPyz.cxx
     src/TClassPyz.cxx
-    src/TClonesArrayPyz.cxx
     src/TMemoryRegulator.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
