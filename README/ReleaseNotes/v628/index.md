@@ -989,6 +989,7 @@ Published on January 30, 2024
 Besides the items below, this patch release features some improvements relative to run time performance. Firstly, the memory footprint of the plugin manager has been reduced. Moreover, the mechanism by which symbols are looked up by the interpreter was improved, avoiding to open and close a large number of libraries at startup, which improves considerably the user experience as well as cpu efficiency on batch jobs. More verbose output is now provided if wrong settings are used for the web-based widgets, the loopback device is always used and only one connection is allowed to `RBrowser`.
 
 List of issues solved:
+
 * [[ROOT-10234](https://its.cern.ch/jira/browse/ROOT-10234)] - Mistake in rs301_splot.C
 * [[#8126] (https://github.com/root-project/root/issues/8126)] - cling interpreter crash while autocomplete
 * [[#10178] (https://github.com/root-project/root/issues/10178)] - [cling] crash / compilation exception after undo
