@@ -12,11 +12,8 @@
 // Bindings
 // CPyCppyy.h must be go first, since it includes Python.h, which must be
 // included before any standard header
-#include "CPyCppyy.h"
+#include "CPyCppyy/API.h"
 #include "TPython.h"
-#include "CPPInstance.h"
-#include "CPPOverload.h"
-#include "ProxyWrappers.h"
 #include "TPyClassGenerator.h"
 
 // ROOT
@@ -223,7 +220,7 @@ Bool_t TPython::Import(const char *mod_name)
       Py_INCREF(value);
 
       // collect classes
-      if (PyClass_Check(value) || PyObject_HasAttr(value, CPyCppyy::PyStrings::gBases)) {
+      if (PyType_Check(value) || PyObject_HasAttr(value, CPyCppyy::PyStrings::gBases)) {
          // get full class name (including module)
          PyObject *pyClName = PyObject_GetAttr(value, CPyCppyy::PyStrings::gCppName);
          if (!pyClName) {
@@ -236,7 +233,7 @@ Bool_t TPython::Import(const char *mod_name)
          // build full, qualified name
          std::string fullname = mod_name;
          fullname += ".";
-         fullname += CPyCppyy_PyText_AsString(pyClName);
+         fullname += PyUnicode_AsUTF8(pyClName);
 
          // force class creation (this will eventually call TPyClassGenerator)
          TClass::GetClass(fullname.c_str(), kTRUE);
@@ -289,7 +286,7 @@ void TPython::LoadMacro(const char *name)
 
       if (!PySequence_Contains(old, value)) {
          // collect classes
-         if (PyClass_Check(value) || PyObject_HasAttr(value, CPyCppyy::PyStrings::gBases)) {
+         if (PyType_Check(value) || PyObject_HasAttr(value, CPyCppyy::PyStrings::gBases)) {
             // get full class name (including module)
             PyObject *pyModName = PyObject_GetAttr(value, CPyCppyy::PyStrings::gModule);
             PyObject *pyClName = PyObject_GetAttr(value, CPyCppyy::PyStrings::gName);
@@ -300,12 +297,12 @@ void TPython::LoadMacro(const char *name)
             // need to check for both exact and derived (differences exist between older and newer
             // versions of python ... bug?)
             if ((pyModName && pyClName) &&
-                ((CPyCppyy_PyText_CheckExact(pyModName) && CPyCppyy_PyText_CheckExact(pyClName)) ||
-                 (CPyCppyy_PyText_Check(pyModName) && CPyCppyy_PyText_Check(pyClName)))) {
+                ((PyUnicode_CheckExact(pyModName) && PyUnicode_CheckExact(pyClName)) ||
+                 (PyUnicode_Check(pyModName) && PyUnicode_Check(pyClName)))) {
                // build full, qualified name
-               std::string fullname = CPyCppyy_PyText_AsString(pyModName);
+               std::string fullname = PyUnicode_AsUTF8(pyModName);
                fullname += '.';
-               fullname += CPyCppyy_PyText_AsString(pyClName);
+               fullname += PyUnicode_AsUTF8(pyClName);
 
                // force class creation (this will eventually call TPyClassGenerator)
                TClass::GetClass(fullname.c_str(), kTRUE);
@@ -488,8 +485,8 @@ const TPyReturn TPython::Eval(const char *expr)
    }
 
    // results that require no conversion
-   if (result == Py_None || CPyCppyy::CPPInstance_Check(result) || PyBytes_Check(result) || PyFloat_Check(result) ||
-       PyLong_Check(result) || PyInt_Check(result))
+   if (result == Py_None || CPyCppyy::Instance_Check(result) || PyBytes_Check(result) || PyFloat_Check(result) ||
+       PyLong_Check(result))
       return TPyReturn(result);
 
    // explicit conversion for python type required
@@ -500,7 +497,7 @@ const TPyReturn TPython::Eval(const char *expr)
       PyObject *module = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gModule);
 
       // concat name
-      std::string qname = std::string(CPyCppyy_PyText_AsString(module)) + '.' + CPyCppyy_PyText_AsString(name);
+      std::string qname = std::string(PyUnicode_AsUTF8(module)) + '.' + PyUnicode_AsUTF8(name);
       Py_DECREF(module);
       Py_DECREF(name);
       Py_DECREF(pyclass);
@@ -531,7 +528,7 @@ Bool_t TPython::Bind(TObject *object, const char *label)
    // bind object in the main namespace
    TClass *klass = object->IsA();
    if (klass != 0) {
-      PyObject *bound = CPyCppyy::BindCppObject((void *)object, Cppyy::GetScope(klass->GetName()));
+      PyObject *bound = CPyCppyy::Instance_FromVoidPtr((void *)object, klass->GetName());
 
       if (bound) {
          Bool_t bOk = PyDict_SetItemString(gMainDict, const_cast<char *>(label), bound) == 0;
@@ -570,7 +567,7 @@ Bool_t TPython::CPPInstance_Check(PyObject *pyobject)
       return kFALSE;
 
    // detailed walk through inheritance hierarchy
-   return CPyCppyy::CPPInstance_Check(pyobject);
+   return CPyCppyy::Instance_Check(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -583,7 +580,7 @@ Bool_t TPython::CPPInstance_CheckExact(PyObject *pyobject)
       return kFALSE;
 
    // direct pointer comparison of type member
-   return CPyCppyy::CPPInstance_CheckExact(pyobject);
+   return CPyCppyy::Instance_CheckExact(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -597,7 +594,7 @@ Bool_t TPython::CPPOverload_Check(PyObject *pyobject)
       return kFALSE;
 
    // detailed walk through inheritance hierarchy
-   return CPyCppyy::CPPOverload_Check(pyobject);
+   return CPyCppyy::Overload_Check(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -610,7 +607,7 @@ Bool_t TPython::CPPOverload_CheckExact(PyObject *pyobject)
       return kFALSE;
 
    // direct pointer comparison of type member
-   return CPyCppyy::CPPOverload_CheckExact(pyobject);
+   return CPyCppyy::Overload_CheckExact(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,12 +619,8 @@ void *TPython::CPPInstance_AsVoidPtr(PyObject *pyobject)
    if (!Initialize())
       return 0;
 
-   // check validity of cast
-   if (!CPyCppyy::CPPInstance_Check(pyobject))
-      return 0;
-
    // get held object (may be null)
-   return ((CPyCppyy::CPPInstance *)pyobject)->GetObject();
+   return CPyCppyy::Instance_AsVoidPtr(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -640,11 +633,6 @@ PyObject *TPython::CPPInstance_FromVoidPtr(void *addr, const char *classname, Bo
       return 0;
 
    // perform cast (the call will check TClass and addr, and set python errors)
-   PyObject *pyobject = CPyCppyy::BindCppObjectNoCast(addr, Cppyy::GetScope(classname), false);
-
    // give ownership, for ref-counting, to the python side, if so requested
-   if (python_owns && CPyCppyy::CPPInstance_Check(pyobject))
-      ((CPyCppyy::CPPInstance *)pyobject)->PythonOwns();
-
-   return pyobject;
+   return CPyCppyy::Instance_FromVoidPtr(addr, classname, python_owns);
 }
