@@ -991,9 +991,9 @@ Besides the items below, this patch release features some improvements relative 
 List of issues solved:
 
 * [[ROOT-10234](https://its.cern.ch/jira/browse/ROOT-10234)] - Mistake in rs301_splot.C
-* [[#8126] (https://github.com/root-project/root/issues/8126)] - cling interpreter crash while autocomplete
-* [[#10178] (https://github.com/root-project/root/issues/10178)] - [cling] crash / compilation exception after undo
-* [[#11746] (https://github.com/root-project/root/issues/11746)] - TH2::Fill(const char *namex, const char *namey, Double_t w) doesn't update fTsumwxy
+* [[#8126](https://github.com/root-project/root/issues/8126)] - cling interpreter crash while autocomplete
+* [[#10178](https://github.com/root-project/root/issues/10178)] - [cling] crash / compilation exception after undo
+* [[#11746](https://github.com/root-project/root/issues/11746)] - TH2::Fill(const char *namex, const char *namey, Double_t w) doesn't update fTsumwxy
 
 ## HEAD of the v6-28-00-patches branch
 
