@@ -981,8 +981,21 @@ Published on November 27, 2023
 This release also addresses a security issue.
 More details will follow.
 
+## Release 6.28/12
+
+Published on January 30, 2024
+
+### Bugs and Issues fixed in this release
+Besides the items below, this patch release features some improvements relative to run time performance. Firstly, the memory footprint of the plugin manager has been reduced. Moreover, the mechanism by which symbols are looked up by the interpreter was improved, avoiding to open and close a large number of libraries at startup, which improves considerably the user experience as well as cpu efficiency on batch jobs. More verbose output is now provided if wrong settings are used for the web-based widgets, the loopback device is always used and only one connection is allowed to `RBrowser`.
+
+List of issues solved:
+* [[ROOT-10234](https://its.cern.ch/jira/browse/ROOT-10234)] - Mistake in rs301_splot.C
+* [[#8126] (https://github.com/root-project/root/issues/8126)] - cling interpreter crash while autocomplete
+* [[#10178] (https://github.com/root-project/root/issues/10178)] - [cling] crash / compilation exception after undo
+* [[#11746] (https://github.com/root-project/root/issues/11746)] - TH2::Fill(const char *namex, const char *namey, Double_t w) doesn't update fTsumwxy
+
 ## HEAD of the v6-28-00-patches branch
 
-These changes will be part of a future 6.28/12.
+These changes will be part of a future 6.28/14.
 
 - None so far.
