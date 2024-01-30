@@ -409,7 +409,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             gROOT->SetWebDisplay("off");
          else {
             printf("\nWARNING!\n");
-            printf("Web mode switch --web is disabled for security reason.\n");
+            printf("Web mode switch --web is disabled for security reasons.\n");
             printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
             printf("For environments controlling the security issues you can enable web display by calling\n");
             printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");

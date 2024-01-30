@@ -83,7 +83,7 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
 
    if ((browserVersion == "ROOT::Experimental::RWebBrowserImp") && !gROOT->IsWebDisplay()) {
       printf("\nWARNING!\n");
-      printf("rootrc parameter \"Browser.Name\" with web browser disabled for security reason.\n");
+      printf("rootrc parameter \"Browser.Name\" with web browser disabled for security reasons.\n");
       printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
       printf("For environments controlling the security issues you can enable web display by calling\n");
       printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");
@@ -121,7 +121,7 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
 
    if ((browserVersion == "ROOT::Experimental::RWebBrowserImp") && !gROOT->IsWebDisplay()) {
       printf("\nWARNING!\n");
-      printf("rootrc parameter \"Browser.Name\" with web browser disabled for security reason.\n");
+      printf("rootrc parameter \"Browser.Name\" with web browser disabled for security reasons.\n");
       printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
       printf("For environments controlling the security issues you can enable web display by calling\n");
       printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");
