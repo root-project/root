@@ -9,13 +9,18 @@
 ################################################################################
 
 from . import pythonization
-from libROOTPythonizations import AddSetItemTCAPyz
 
 
-@pythonization('TClonesArray')
+def _TClonesArray__setitem__(self, key, val):
+    raise RuntimeError(
+        "You can't set items of a TClonesArray! You can however TClonesArray::ConstructedAt() to access an element that is guaranteed to be constructed, and then modify it in-place."
+    )
+
+
+@pythonization("TClonesArray")
 def pythonize_tclonesarray(klass):
     # Parameters:
     # klass: class to be pythonized
 
     # Add item setter method
-    AddSetItemTCAPyz(klass)
+    klass.__setitem__ = _TClonesArray__setitem__
