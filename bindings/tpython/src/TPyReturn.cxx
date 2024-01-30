@@ -10,9 +10,8 @@
 //  *************************************************************************/
 
 // Bindings
-#include "CPyCppyy.h"
+#include "CPyCppyy/API.h"
 #include "TPyReturn.h"
-#include "CPPInstance.h"
 
 // ROOT
 #include "TObject.h"
@@ -110,7 +109,7 @@ TPyReturn::operator const char *() const
    if (fPyObject == Py_None) // for void returns
       return 0;
 
-   const char *s = CPyCppyy_PyText_AsString(fPyObject);
+   const char *s = PyUnicode_AsUTF8(fPyObject);
    if (PyErr_Occurred()) {
       PyErr_Print();
       return 0;
@@ -179,11 +178,7 @@ TPyReturn::operator void *() const
    if (fPyObject == Py_None)
       return 0;
 
-   if (CPyCppyy::CPPInstance_Check(fPyObject)) {
-      ((CPyCppyy::CPPInstance *)fPyObject)->CppOwns();
-      return ((CPyCppyy::CPPInstance *)fPyObject)->GetObject();
-   } else
-      return fPyObject; // borrows reference
+   return static_cast<void *>(CPyCppyy::PyResult{fPyObject});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
