@@ -137,13 +137,13 @@ bool RColumnRegister::IsDefineOrAlias(std::string_view name) const
 /// Internally it recreates the map with the new column, and swaps it with the old one.
 void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> define)
 {
-   auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
+   // auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
    const std::string &colName = define->GetName();
 
    // this will assign over a pre-existing element in case this AddDefine is due to a Redefine
-   (*newDefines)[colName] = std::make_shared<RDefinesWithReaders>(define, fLoopManager->GetNSlots());
+   (*fDefines)[colName] = std::make_shared<RDefinesWithReaders>(define, fLoopManager->GetNSlots());
 
-   fDefines = std::move(newDefines);
+   // fDefines = std::move(newDefines);
    AddName(colName);
 }
 
@@ -246,9 +246,7 @@ void RColumnRegister::AddName(std::string_view name)
    if (std::find(names.begin(), names.end(), name) != names.end())
       return; // must be a Redefine of an existing column. Nothing to do.
 
-   auto newColsNames = std::make_shared<ColumnNames_t>(names);
-   newColsNames->emplace_back(std::string(name));
-   fColumnNames = newColsNames;
+   fColumnNames->emplace_back(std::string(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////

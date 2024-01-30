@@ -104,7 +104,7 @@ class RColumnRegister {
    /// Variations that affect multiple columns are inserted in the map multiple times, once per column,
    /// and conversely each column (i.e. each key) can have several associated variations.
    std::shared_ptr<VariationsMap_t> fVariations;
-   std::shared_ptr<const ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
+   std::shared_ptr<ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
 
    void AddName(std::string_view name);
 
