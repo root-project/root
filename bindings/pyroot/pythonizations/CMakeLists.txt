@@ -110,7 +110,6 @@ set(py_sources
 
 set(cpp_sources
     src/PyROOTModule.cxx
-    src/PyROOTStrings.cxx
     src/PyROOTWrapper.cxx
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx

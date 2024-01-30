@@ -12,7 +12,6 @@
 // Bindings
 #include "CPyCppyy.h"
 #include "PyROOTPythonize.h"
-#include "PyROOTStrings.h"
 #include "CPPInstance.h"
 #include "Utility.h"
 #include "ProxyWrappers.h"
@@ -22,6 +21,28 @@
 #include "TClass.h"
 
 using namespace CPyCppyy;
+
+namespace {
+
+class CachedPyString {
+
+public:
+   CachedPyString(const char *name) : fObj{PyUnicode_FromString(name)} {}
+
+   CachedPyString(CachedPyString const&) = delete;
+   CachedPyString(CachedPyString &&) = delete;
+   CachedPyString& operator=(CachedPyString const&) = delete;
+   CachedPyString& operator=(CachedPyString &&) = delete;
+
+   ~CachedPyString() { Py_DECREF(fObj); }
+
+   PyObject *obj() { return fObj; }
+
+private:
+   PyObject *fObj = nullptr;
+};
+
+} // namespace
 
 // Cast the void* returned by TClass::DynamicCast to the right type
 PyObject *TClassDynamicCastPyz(CPPInstance *self, PyObject *args)
@@ -36,8 +57,12 @@ PyObject *TClassDynamicCastPyz(CPPInstance *self, PyObject *args)
                          &up))
       return nullptr;
 
+   // Cache the name of the attribute that is used to refer to the original
+   // DynamicCast() method
+   static CachedPyString gTClassDynCast{"_TClass__DynamicCast"};
+
    // Perform actual cast - calls default implementation of DynamicCast
-   auto meth = PyObject_GetAttr((PyObject *)self, PyROOT::PyStrings::gTClassDynCast);
+   auto meth = PyObject_GetAttr((PyObject *)self, gTClassDynCast.obj());
    auto ptr = meth ? PyObject_Call(meth, args, nullptr) : nullptr;
    Py_XDECREF(meth);
 

@@ -11,7 +11,6 @@
 
 // Bindings
 #include "PyROOTPythonize.h"
-#include "PyROOTStrings.h"
 #include "PyROOTWrapper.h"
 #include "RPyROOTApplication.h"
 
@@ -112,10 +111,6 @@ static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       LIBROOTPYZ_N
 LIBROOTPYZ_INIT_FUNCTION(extern "C" PyObject* PyInit_libROOTPythonizations, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
 {
    using namespace PyROOT;
-
-   // load commonly used python strings
-   if (!PyROOT::CreatePyStrings())
-      PYROOT_INIT_ERROR;
 
 // setup PyROOT
    gRootModule = PyModule_Create(&moduledef);

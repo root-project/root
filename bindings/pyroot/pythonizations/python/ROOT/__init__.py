@@ -35,6 +35,13 @@ importlib.import_module(librootpyz_mod_name)
 # ensure 'import libROOTPythonizations' will find the versioned module
 sys.modules["libROOTPythonizations"] = sys.modules[librootpyz_mod_name]
 
+# Build cache of commonly used python strings (the cache is python intern, so
+# all strings are shared python-wide, not just in PyROOT).
+# See: https://docs.python.org/3.2/library/sys.html?highlight=sys.intern#sys.intern
+_cached_strings = []
+for s in ["Branch", "FitFCN", "ROOT", "SetBranchAddress", "SetFCN", "_TClass__DynamicCast", "__class__"]:
+    _cached_strings.append(sys.intern(s))
+
 # Trigger the addition of the pythonizations
 from ._pythonization import _register_pythonizations
 
