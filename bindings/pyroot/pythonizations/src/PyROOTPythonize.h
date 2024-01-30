@@ -28,8 +28,6 @@ PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
 
-PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
-
 PyObject *AsRVec(PyObject *self, PyObject *obj);
 PyObject *AsRTensor(PyObject *self, PyObject *obj);
 
