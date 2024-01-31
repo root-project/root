@@ -6,14 +6,15 @@ https://github.com/pypa/sampleproject
 """
 
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 import pathlib
+import shutil
+import tempfile
 from setuptools.command.build import build as _build
 from setuptools.command.install import install as _install
 
 import subprocess
 import os
-import glob
 import shlex
 import sys
 here = pathlib.Path(__file__).parent.resolve()
@@ -22,8 +23,8 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
 SOURCE_DIR = os.getcwd()
-BUILD_DIR = os.path.expanduser("~/programs/rootproject/pip-tests/build")
-INSTALL_DIR = os.path.expanduser("~/programs/rootproject/pip-tests/install")
+BUILD_DIR = tempfile.mkdtemp()
+INSTALL_DIR = tempfile.mkdtemp()
 
 
 class my_cmake_build(_build):
@@ -93,18 +94,21 @@ class my_install(_install):
         for ext in extlibs:
             self.copy_file(os.path.join(lib_dir, ext), install_path)
 
-        # cppextensions = [os.path.join(install_path, ext) for ext in extlibs]
-        # for ext in cppextensions:
-        #     subprocess.run(shlex.split(f"patchelf --set-rpath \$ORIGIN:\$ORIGIN/ROOT/lib {ext}"))
-
-        # rootlibs = glob.glob(os.path.join(install_libdir, "lib*.so"))
-        # for lib in rootlibs:
-        #     subprocess.run(shlex.split(f"patchelf --set-rpath \$ORIGIN {lib}"))
-
     def get_outputs(self):
         outputs = _install.get_outputs(self)
         return outputs
 
+
+class CMakeExtension(Extension):
+    """
+    An extension to run the cmake build
+
+    This simply overrides the base extension class so that setuptools
+    doesn't try to build your sources for you
+    """
+
+    def __init__(self, name, sources=[]):
+        super().__init__(name = name, sources = sources)
 
 pkgs = (
     find_packages('bindings/pyroot/pythonizations/python') +
@@ -116,9 +120,17 @@ s = setup(
     package_dir={'': 'bindings/pyroot/pythonizations/python',
                  'cppyy': 'bindings/pyroot/cppyy/cppyy/python'},
     packages=pkgs,
+    ext_modules=[
+        CMakeExtension(name="pippo"),
+    ],
 
     cmdclass={
         'build': my_cmake_build,
         'install': my_install},
 
 )
+
+
+# Cleanup temporary directories
+shutil.rmtree(BUILD_DIR)
+shutil.rmtree(INSTALL_DIR)
