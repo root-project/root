@@ -89,8 +89,8 @@ ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 {
 }
 
-void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */,
-                                                           unsigned char *serializedHeader, std::uint32_t length)
+void ROOT::Experimental::Detail::RPageSinkFile::CreateDatasetImpl(const RNTupleModel & /* model */,
+                                                                  unsigned char *serializedHeader, std::uint32_t length)
 {
    auto zipBuffer = std::make_unique<unsigned char[]>(length);
    auto szZipHeader = fCompressor->Zip(serializedHeader, length, GetWriteOptions().GetCompression(),

@@ -41,7 +41,7 @@ protected:
       return {};
    }
 
-   void Create(RNTupleModel &) final {}
+   void CreateDataset(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Experimental::Detail::RNTupleModelChangeset &, NTupleSize_t) final {}
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
