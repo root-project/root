@@ -38,6 +38,7 @@ HEADERS
   ROOT/RNTupleZip.hxx
   ROOT/RPage.hxx
   ROOT/RPageAllocator.hxx
+  ROOT/RPageNullSink.hxx
   ROOT/RPagePool.hxx
   ROOT/RPageSinkBuf.hxx
   ROOT/RPageSourceFriends.hxx
