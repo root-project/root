@@ -79,7 +79,7 @@ void ROOT::Experimental::Detail::RColumn::Flush()
       // Small tail page: merge with previously used page; we know that there is enough space in the shadow page
       auto &thisPage = fWritePage[fWritePageIdx];
       void *dst = fWritePage[otherIdx].GrowUnchecked(thisPage.GetNElements());
-      memcpy(dst, thisPage.GetBuffer(), thisPage.GetElementSize() * thisPage.GetNElements());
+      memcpy(dst, thisPage.GetBuffer(), thisPage.GetNBytes());
       thisPage.Reset(0);
       std::swap(fWritePageIdx, otherIdx);
    }
