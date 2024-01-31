@@ -267,8 +267,12 @@ class RColumnElementBase {
 protected:
    /// Size of the C++ value that corresponds to the on-disk element
    std::size_t fSize;
+   std::size_t fBitsOnStorage;
 
-   explicit RColumnElementBase(std::size_t size) : fSize(size) {}
+   explicit RColumnElementBase(std::size_t size, std::size_t bitsOnStorage = 0)
+      : fSize(size), fBitsOnStorage(bitsOnStorage ? bitsOnStorage : 8 * size)
+   {
+   }
 
 public:
    RColumnElementBase(const RColumnElementBase& other) = default;
@@ -284,8 +288,11 @@ public:
    static std::string GetTypeName(EColumnType type);
 
    /// Derived, typed classes tell whether the on-storage layout is bitwise identical to the memory layout
-   virtual bool IsMappable() const { R__ASSERT(false); return false; }
-   virtual std::size_t GetBitsOnStorage() const { R__ASSERT(false); return 0; }
+   virtual bool IsMappable() const
+   {
+      R__ASSERT(false);
+      return false;
+   }
 
    /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page
    virtual void Pack(void *destination, void *source, std::size_t count) const
@@ -300,7 +307,8 @@ public:
    }
 
    std::size_t GetSize() const { return fSize; }
-   std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * GetBitsOnStorage() + 7) / 8; }
+   std::size_t GetBitsOnStorage() const { return fBitsOnStorage; }
+   std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
 };
 
 /**
@@ -310,7 +318,7 @@ public:
 template <typename CppT>
 class RColumnElementLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementLE(std::size_t size) : RColumnElementBase(size) {}
+   explicit RColumnElementLE(std::size_t size, std::size_t bitsOnStorage) : RColumnElementBase(size, bitsOnStorage) {}
 
 public:
    static constexpr bool kIsMappable = (R__LITTLE_ENDIAN == 1);
@@ -340,7 +348,9 @@ public:
 template <typename CppT, typename NarrowT>
 class RColumnElementCastLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementCastLE(std::size_t size) : RColumnElementBase(size) {}
+   explicit RColumnElementCastLE(std::size_t size, std::size_t bitsOnStorage) : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
 
 public:
    static constexpr bool kIsMappable = false;
@@ -357,7 +367,9 @@ public:
 template <typename CppT, typename NarrowT>
 class RColumnElementSplitLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementSplitLE(std::size_t size) : RColumnElementBase(size) {}
+   explicit RColumnElementSplitLE(std::size_t size, std::size_t bitsOnStorage) : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
 
 public:
    static constexpr bool kIsMappable = false;
@@ -374,7 +386,10 @@ public:
 template <typename CppT, typename NarrowT>
 class RColumnElementDeltaSplitLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementDeltaSplitLE(std::size_t size) : RColumnElementBase(size) {}
+   explicit RColumnElementDeltaSplitLE(std::size_t size, std::size_t bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
 
 public:
    static constexpr bool kIsMappable = false;
@@ -397,7 +412,10 @@ public:
 template <typename CppT, typename NarrowT>
 class RColumnElementZigzagSplitLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementZigzagSplitLE(std::size_t size) : RColumnElementBase(size) {}
+   explicit RColumnElementZigzagSplitLE(std::size_t size, std::size_t bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
 
 public:
    static constexpr bool kIsMappable = false;
@@ -552,9 +570,8 @@ public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
    static constexpr std::size_t kBitsOnStorage = 96;
-   RColumnElement() : RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
-   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 
    void Pack(void *dst, void *src, std::size_t count) const final
    {
@@ -592,9 +609,8 @@ public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(bool);
    static constexpr std::size_t kBitsOnStorage = 1;
-   RColumnElement() : RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
-   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 
    void Pack(void *dst, void *src, std::size_t count) const final;
    void Unpack(void *dst, void *src, std::size_t count) const final;
@@ -606,9 +622,8 @@ public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(float);
    static constexpr std::size_t kBitsOnStorage = 16;
-   RColumnElement() : RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
-   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 
    void Pack(void *dst, void *src, std::size_t count) const final
    {
@@ -636,14 +651,10 @@ public:
 #define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
    static constexpr std::size_t kSize = sizeof(CppT);           \
    static constexpr std::size_t kBitsOnStorage = BitsOnStorage; \
-   RColumnElement() : BaseT(kSize) {}                           \
+   RColumnElement() : BaseT(kSize, kBitsOnStorage) {}           \
    bool IsMappable() const final                                \
    {                                                            \
       return kIsMappable;                                       \
-   }                                                            \
-   std::size_t GetBitsOnStorage() const final                   \
-   {                                                            \
-      return kBitsOnStorage;                                    \
    }
 /// These macros are used to declare `RColumnElement` template specializations below.  Additional arguments can be used
 /// to forward template parameters to the base class, e.g.
