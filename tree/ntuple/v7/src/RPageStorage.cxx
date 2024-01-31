@@ -465,7 +465,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::UpdateSchema(const RNTuple
       fSerializationContext.MapSchema(descriptor, /*forHeaderExtension=*/true);
 }
 
-void ROOT::Experimental::Detail::RPagePersistentSink::CreateDataset(RNTupleModel &model)
+void ROOT::Experimental::Detail::RPagePersistentSink::Init(RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
@@ -486,7 +486,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CreateDataset(RNTupleModel
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeader(nullptr, descriptor);
    auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeader(buffer.get(), descriptor);
-   CreateDatasetImpl(buffer.get(), fSerializationContext.GetHeaderSize());
+   InitImpl(buffer.get(), fSerializationContext.GetHeaderSize());
 
    fDescriptorBuilder.BeginHeaderExtension();
 }
