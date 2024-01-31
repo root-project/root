@@ -221,9 +221,8 @@ public:
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
-   /// To do so, Create() calls CreateImpl() after updating the descriptor.
-   /// Create() associates column handles to the columns referenced by the model
-   virtual void Create(RNTupleModel &model) = 0;
+   /// CreateDataset() associates column handles to the columns referenced by the model
+   virtual void CreateDataset(RNTupleModel &model) = 0;
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Create(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
@@ -285,7 +284,7 @@ protected:
    };
    std::unique_ptr<RCounters> fCounters;
 
-   virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
+   virtual void CreateDatasetImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
 
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator
@@ -323,7 +322,8 @@ public:
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
-   void Create(RNTupleModel &model) final;
+   /// Updates the descriptor and calls CreateDatasetImpl() that handles the backend-specific details (file, DAOS, etc.)
+   void CreateDataset(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;

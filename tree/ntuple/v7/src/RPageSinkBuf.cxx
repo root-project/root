@@ -79,12 +79,12 @@ void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<R
    fBufferedColumns.resize(fNColumns);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::Create(RNTupleModel &model)
+void ROOT::Experimental::Detail::RPageSinkBuf::CreateDataset(RNTupleModel &model)
 {
    ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
 
    fInnerModel = model.Clone();
-   fInnerSink->Create(*fInnerModel);
+   fInnerSink->CreateDataset(*fInnerModel);
 }
 
 void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
