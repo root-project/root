@@ -75,6 +75,10 @@ env:
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   build-macos:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
