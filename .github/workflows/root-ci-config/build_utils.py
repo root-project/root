@@ -120,12 +120,7 @@ def subprocess_with_capture(command: str):
     if os.name == 'nt':
         command = "$env:comspec = 'cmd.exe'; " + command
 
-    if sys.version_info <= (3,6):
-      res = subprocess.getstatusoutput(command)
-      Results = namedtuple('Results', ['returncode', 'stdout', 'stderr'])
-      result = Results(res[0], res[1], "")
-    else:
-      result = subprocess.run(command, capture_output=True, text=True, shell=True, check=False)
+    result = subprocess.run(command, capture_output=True, text=True, shell=True, check=False)
 
     print(result.stdout)
     print(result.stderr)
