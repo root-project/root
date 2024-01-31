@@ -95,13 +95,52 @@ static PyObject *gMainDict = 0;
 // needed to properly resolve (dllimport) symbols on Windows
 namespace CPyCppyy {
    R__EXTERN PyObject *gThisModule;
-   namespace PyStrings {
-      R__EXTERN PyObject *gBases;
-      R__EXTERN PyObject *gCppName;
-      R__EXTERN PyObject *gModule;
-      R__EXTERN PyObject *gName;
-   }
 }
+
+namespace {
+
+class CachedPyString {
+
+public:
+   CachedPyString(const char *name) : fObj{PyUnicode_FromString(name)} {}
+
+   CachedPyString(CachedPyString const&) = delete;
+   CachedPyString(CachedPyString &&) = delete;
+   CachedPyString& operator=(CachedPyString const&) = delete;
+   CachedPyString& operator=(CachedPyString &&) = delete;
+
+   ~CachedPyString() { Py_DECREF(fObj); }
+
+   PyObject *obj() { return fObj; }
+
+private:
+   PyObject *fObj = nullptr;
+};
+
+namespace PyStrings {
+PyObject *basesStr()
+{
+   static CachedPyString wrapper{"__bases__"};
+   return wrapper.obj();
+}
+PyObject *cppNameStr()
+{
+   static CachedPyString wrapper{"__cpp_name__"};
+   return wrapper.obj();
+}
+PyObject *moduleStr()
+{
+   static CachedPyString wrapper{"__module__"};
+   return wrapper.obj();
+}
+PyObject *nameStr()
+{
+   static CachedPyString wrapper{"__name__"};
+   return wrapper.obj();
+}
+} // namespace PyStrings
+
+} // namespace
 
 //- static public members ----------------------------------------------------
 /// Initialization method: setup the python interpreter and load the
@@ -220,11 +259,11 @@ Bool_t TPython::Import(const char *mod_name)
       Py_INCREF(value);
 
       // collect classes
-      if (PyType_Check(value) || PyObject_HasAttr(value, CPyCppyy::PyStrings::gBases)) {
+      if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
          // get full class name (including module)
-         PyObject *pyClName = PyObject_GetAttr(value, CPyCppyy::PyStrings::gCppName);
+         PyObject *pyClName = PyObject_GetAttr(value, PyStrings::cppNameStr());
          if (!pyClName) {
-            pyClName = PyObject_GetAttr(value, CPyCppyy::PyStrings::gName);
+            pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
          }
 
          if (PyErr_Occurred())
@@ -286,10 +325,10 @@ void TPython::LoadMacro(const char *name)
 
       if (!PySequence_Contains(old, value)) {
          // collect classes
-         if (PyType_Check(value) || PyObject_HasAttr(value, CPyCppyy::PyStrings::gBases)) {
+         if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
             // get full class name (including module)
-            PyObject *pyModName = PyObject_GetAttr(value, CPyCppyy::PyStrings::gModule);
-            PyObject *pyClName = PyObject_GetAttr(value, CPyCppyy::PyStrings::gName);
+            PyObject *pyModName = PyObject_GetAttr(value, PyStrings::moduleStr());
+            PyObject *pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
 
             if (PyErr_Occurred())
                PyErr_Clear();
@@ -493,8 +532,8 @@ const TPyReturn TPython::Eval(const char *expr)
    PyObject *pyclass = PyObject_GetAttrString(result, const_cast<char*>("__class__"));
    if (pyclass != 0) {
       // retrieve class name and the module in which it resides
-      PyObject *name = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gName);
-      PyObject *module = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gModule);
+      PyObject *name = PyObject_GetAttr(pyclass, PyStrings::nameStr());
+      PyObject *module = PyObject_GetAttr(pyclass, PyStrings::moduleStr());
 
       // concat name
       std::string qname = std::string(PyUnicode_AsUTF8(module)) + '.' + PyUnicode_AsUTF8(name);
