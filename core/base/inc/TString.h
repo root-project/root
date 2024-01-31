@@ -278,6 +278,7 @@ public:
    enum EStripType   { kLeading = 0x1, kTrailing = 0x2, kBoth = 0x3 };
    enum ECaseCompare { kExact, kIgnoreCase };
    static constexpr Ssiz_t kNPOS = ::kNPOS;
+   using size_type = Ssiz_t;
 
    TString();                           // Null string
    explicit TString(Ssiz_t ic);         // Suggested capacity
