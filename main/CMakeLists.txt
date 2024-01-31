@@ -62,7 +62,7 @@ foreach(rawUtilName ${utils})
     string(REPLACE ".py" "" utilName ${utilName})
     set(python python3)
   else()
-    set(python python.exe)
+    set(python python)
   endif()
   configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
