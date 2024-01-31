@@ -19,7 +19,7 @@ protected:
       return {};
    }
 
-   void Create(RNTupleModel &) final {}
+   void CreateDataset(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Experimental::Detail::RNTupleModelChangeset &, NTupleSize_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
