@@ -277,7 +277,7 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT:
       throw RException(R__FAIL("null sink"));
    }
    fModel->Freeze();
-   fSink->CreateDataset(*fModel.get());
+   fSink->Init(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
 
    const auto &writeOpts = fSink->GetWriteOptions();
