@@ -297,8 +297,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntuple
 
 ROOT::Experimental::Detail::RPageSinkDaos::~RPageSinkDaos() = default;
 
-void ROOT::Experimental::Detail::RPageSinkDaos::CreateDatasetImpl(const RNTupleModel & /* model */,
-                                                                  unsigned char *serializedHeader, std::uint32_t length)
+void ROOT::Experimental::Detail::RPageSinkDaos::CreateDatasetImpl(unsigned char *serializedHeader, std::uint32_t length)
 {
    auto opts = dynamic_cast<RNTupleWriteOptionsDaos *>(fOptions.get());
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
