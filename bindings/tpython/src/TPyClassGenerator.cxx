@@ -9,10 +9,8 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
-// Bindings
-// CPyCppyy.h must be go first, since it includes Python.h, which must be
-// included before any standard header
-#include "CPyCppyy/API.h"
+#include "Python.h"
+
 #include "TPyClassGenerator.h"
 #include "TPyReturn.h"
 
@@ -26,11 +24,6 @@
 #include <sstream>
 #include <string>
 #include <typeinfo>
-
-// needed to properly resolve (dllimport) symbols on Windows
-namespace CPyCppyy {
-   R__EXTERN bool gDictLookupActive;
-}
 
 namespace {
    class PyGILRAII {
@@ -52,10 +45,6 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load)
 TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
    // Class generator to make python classes available to Cling
-
-   // called if all other class generators failed, attempt to build from python class
-   if (CPyCppyy::gDictLookupActive == kTRUE)
-      return 0; // call originated from python
 
    if (!load || !name)
       return 0;
