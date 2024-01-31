@@ -92,11 +92,6 @@
 ClassImp(TPython);
 static PyObject *gMainDict = 0;
 
-// needed to properly resolve (dllimport) symbols on Windows
-namespace CPyCppyy {
-   R__EXTERN PyObject *gThisModule;
-}
-
 namespace {
 
 class CachedPyString {
@@ -233,23 +228,15 @@ Bool_t TPython::Initialize()
 
 Bool_t TPython::Import(const char *mod_name)
 {
-   // setup
-   if (!Initialize())
-      return kFALSE;
-
-   PyObject *mod = PyImport_ImportModule(mod_name);
-   if (!mod) {
-      PyErr_Print();
-      return kFALSE;
+   if (!CPyCppyy::Import(mod_name)) {
+      return false;
    }
-
-   // allow finding to prevent creation of a python proxy for the C++ proxy
-   Py_INCREF(mod);
-   PyModule_AddObject(CPyCppyy::gThisModule, mod_name, mod);
 
    // force creation of the module as a namespace
    TClass::GetClass(mod_name, kTRUE);
 
+   PyObject *modNameObj = PyUnicode_FromString(mod_name);
+   PyObject *mod = PyImport_GetModule(modNameObj);
    PyObject *dct = PyModule_GetDict(mod);
 
    // create Cling classes for all new python classes
@@ -284,8 +271,9 @@ Bool_t TPython::Import(const char *mod_name)
    }
 
    Py_DECREF(values);
+   Py_DECREF(mod);
+   Py_DECREF(modNameObj);
 
-   // TODO: mod "leaks" here
    if (PyErr_Occurred())
       return kFALSE;
    return kTRUE;
