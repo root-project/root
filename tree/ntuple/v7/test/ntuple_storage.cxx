@@ -1,6 +1,9 @@
 #include "ntuple_test.hxx"
 #include <TRandom3.h>
 
+#include <ROOT/RPageNullSink.hxx>
+using ROOT::Experimental::Internal::RPageNullSink;
+
 namespace {
 /// An RPageSink that keeps counters of (vector) commit of (sealed) pages; used to test RPageSinkBuf
 class RPageSinkMock : public RPageSink {
@@ -522,4 +525,17 @@ TEST(RPageSink, MultipleClusterGroups)
    EXPECT_EQ(24.0, *rdPt);
    ntuple->LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
+}
+
+TEST(RPageNullSink, Basics)
+{
+   auto model = RNTupleModel::Create();
+   auto wrPt = model->MakeField<float>("pt");
+
+   auto sink = std::make_unique<RPageNullSink>("null", RNTupleWriteOptions());
+   auto ntuple = ROOT::Experimental::Internal::CreateRNTupleWriter(std::move(model), std::move(sink));
+
+   *wrPt = 42.0;
+   ntuple->Fill();
+   EXPECT_EQ(ntuple->GetNEntries(), 1);
 }
