@@ -151,12 +151,13 @@ public:
          : std::vector<std::shared_ptr<xRooNode>>::const_iterator(itr)
       {
       }
-      std::shared_ptr<xRooNode> const &operator*() const
+      decltype(auto) operator*() const
       {
-         auto &&out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
-         if (out->get() && out->empty())
+         const std::shared_ptr<xRooNode> &out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
+         if (out->get() && out->empty()) {
             out->browse();
-         return std::move(out);
+         }
+         return std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
       }
       bool operator!=(xRooNodeIterator const &b) const
       {

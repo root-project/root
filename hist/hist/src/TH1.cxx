@@ -8036,7 +8036,9 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 ///       compare the KS distance of the pseudoexperiment to the parent
 ///       distribution, and count all the KS values above the value
 ///       obtained from the original data to Monte Carlo distribution.
-///       The number of pseudo-experiments nEXPT is currently fixed at 1000.
+///       The number of pseudo-experiments nEXPT is by default 1000, and
+///       it can be changed by specifying the option as "X=number",
+///       for example "X=10000" for 10000 toys.
 ///       The function returns the probability.
 ///       (thanks to Ben Kilminster to submit this procedure). Note that
 ///       this option "X" is much slower.
@@ -8209,40 +8211,82 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       if (prob > 0 && prb2 > 0) prob *= prb2*(1-TMath::Log(prob*prb2));
       else                      prob = 0;
    }
-   // X option. Pseudo-experiments post-processor to determine KS probability
-   const Int_t nEXPT = 1000;
-   if (opt.Contains("X") && !(afunc1 || afunc2 ) ) {
-      Double_t dSEXPT;
-      TH1 *h1_cpy =  (TH1 *)(gDirectory ? gDirectory->CloneObject(this, kFALSE) : gROOT->CloneObject(this, kFALSE));
-      TH1 *h1Expt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
-      TH1 *h2Expt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
+   // X option. Run Pseudo-experiments to determine NULL distribution of the
+   // KS distance. We can find the probability from the number of pseudo-experiment that have a
+   // KS distance larger than the one opbserved in the data.
+   // We use the histogram with the largest statistics as a parent distribution for the NULL.
+   // Note if one histogram has zero errors is considered as a function. In that case we use it
+   // as parent distribution for the toys.
+   //
+   Int_t nEXPT = 1000;
+   if (opt.Contains("X")) {
+      // get number of pseudo-experiment of specified
+      if (opt.Contains("X=")) {
+         int numpos = opt.Index("X=") + 2;   // 2 is length of X=
+         int numlen = 0;
+         int len = opt.Length();
+         while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) )
+            numlen++;
+         TString snum = opt(numpos,numlen);
+         int num = atoi(snum.Data());
+         if (num <= 0)
+            Warning("KolmogorovTest","invalid number of toys given: %d - use 1000",num);
+         else
+            nEXPT = num;
+      }
 
-      if (GetMinimum() < 0.0) {
+      Double_t dSEXPT;
+      TH1D hparent;
+      // we cannot have afunc1 and func2 both True
+      if (afunc1 || esum1 > esum2 ) h1->Copy(hparent);
+      else h2->Copy(hparent);
+
+      // copy h1Expt from h1 and h2. It is just needed to get the correct binning
+
+
+      if (hparent.GetMinimum() < 0.0) {
          // we need to create a new histogram
          // With negative bins we can't draw random samples in a meaningful way.
          Warning("KolmogorovTest", "Detected bins with negative weights, these have been ignored and output might be "
                                    "skewed. Reduce number of bins for histogram?");
-         while (h1_cpy->GetMinimum() < 0.0) {
-            Int_t idx = h1_cpy->GetMinimumBin();
-            h1_cpy->SetBinContent(idx, 0.0);
+         while (hparent.GetMinimum() < 0.0) {
+            Int_t idx = hparent.GetMinimumBin();
+            hparent.SetBinContent(idx, 0.0);
          }
       }
 
       // make nEXPT experiments (this should be a parameter)
       prb3 = 0;
+      TH1D h1Expt;
+      h1->Copy(h1Expt);
+      TH1D h2Expt;
+      h1->Copy(h2Expt);
+      // loop on pseudoexperients and generate the two histograms h1Expt and h2Expt according to the
+      // parent distribution. In case the parent distribution is not an histogram but a function randomize only one
+      // histogram
       for (Int_t i=0; i < nEXPT; i++) {
-         h1Expt->Reset();
-         h2Expt->Reset();
-         h1Expt->FillRandom(h1_cpy, (Int_t)esum1);
-         h2Expt->FillRandom(h1_cpy, (Int_t)esum2);
-         dSEXPT = h1Expt->KolmogorovTest(h2Expt,"M");
+         if (!afunc1) {
+            h1Expt.Reset();
+            h1Expt.FillRandom(&hparent, (Int_t)esum1);
+         }
+         if (!afunc2) {
+            h2Expt.Reset();
+            h2Expt.FillRandom(&hparent, (Int_t)esum2);
+         }
+         // note we cannot have both afunc1 and afunc2 to be true
+         if (afunc1)
+            dSEXPT = hparent.KolmogorovTest(&h2Expt,"M");
+         else if (afunc2)
+            dSEXPT = hparent.KolmogorovTest(&h1Expt,"M");
+         else
+            dSEXPT = h1Expt.KolmogorovTest(&h2Expt,"M");
+         // count number of cases toy KS distance (TS) is larger than oberved one
          if (dSEXPT>dfmax) prb3 += 1.0;
       }
+      // compute p-value
       prb3 /= (Double_t)nEXPT;
-      delete h1_cpy;
-      delete h1Expt;
-      delete h2Expt;
    }
+
 
    // debug printout
    if (opt.Contains("D")) {

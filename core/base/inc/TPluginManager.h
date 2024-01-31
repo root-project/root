@@ -115,7 +115,7 @@ private:
    TString      fOrigin;    // origin of plugin handler definition
    TMethodCall *fCallEnv;   //!ctor method call environment
    TFunction   *fMethod;    //!ctor method or global function
-   std::vector<const TClass *> fArgTupleClasses; //! cached TClass pointers for fast comparison
+   std::vector<std::string> fArgTupleTypeInfo; // Cached type_info name for fast comparison
    AtomicInt_t  fCanCall;   //!if 1 fCallEnv is ok, -1 fCallEnv is not ok, 0 fCallEnv not setup yet.
    Bool_t       fIsMacro;   // plugin is a macro and not a library
    Bool_t       fIsGlobal;  // plugin ctor is a global function
@@ -145,23 +145,36 @@ private:
    Bool_t CheckForExecPlugin(Int_t nargs);
    void LoadPluginImpl();
 
-public:
-   const char *GetClass() const { return fClass; }
-   Int_t       CheckPlugin() const;
-   Int_t       LoadPlugin();
+   bool CheckNameMatch(int iarg, const std::type_info &ti);
 
-   // zero arguments case
-   Longptr_t ExecPluginImpl()
+   template <typename T0>
+   bool CheckExactMatch(int iarg, const T0&)
    {
-      if (!CheckForExecPlugin(0))
-         return 0;
+      return CheckNameMatch(iarg, typeid(T0));
+   }
 
-      Longptr_t ret;
-      // locking is handled within this call, but will only be needed
-      // on the first call for initialization
-      fCallEnv->Execute(nullptr, nullptr, 0, &ret);
+   template <typename T0, typename... T>
+   bool CheckExactMatch(int iarg, const T0&, const T&... params)
+   {
+      if (CheckNameMatch(iarg, typeid(T0)))
+         return CheckExactMatch(iarg + 1, params...);
+      else
+         return false;
+   }
 
-      return ret;
+   template <typename... T>
+   bool ExactArgMatch(const T&... params)
+   {
+      constexpr auto nargs = sizeof...(T);
+      auto name = typeid(std::tuple<T...>).name();
+      if (!fArgTupleTypeInfo[nargs - 1].empty())
+         return name == fArgTupleTypeInfo[nargs - 1];
+
+      R__LOCKGUARD(gInterpreterMutex);
+      if (!CheckExactMatch<T...>(0, params...))
+         return false;
+      fArgTupleTypeInfo[nargs - 1] = name;
+      return true;
    }
 
    template <typename... T> Longptr_t ExecPluginImpl(const T&... params)
@@ -172,8 +185,7 @@ public:
       Longptr_t ret;
 
       // check if types match such that function can be called directly
-      const TClass *tupleclass = TClass::GetClass<std::tuple<T...>>();
-      if (tupleclass == fArgTupleClasses[nargs - 1]) {
+      if (ExactArgMatch<T...>(params...)) {
          const void *args[nargs] = {&params...};
          // locking is handled within this call, but will only be needed
          // on the first call for initialization
@@ -192,6 +204,25 @@ public:
       fCallEnv->SetParams(params...);
 
       fCallEnv->Execute(ret);
+
+      return ret;
+   }
+
+public:
+   const char *GetClass() const { return fClass; }
+   Int_t       CheckPlugin() const;
+   Int_t       LoadPlugin();
+
+   // zero arguments case
+   Longptr_t ExecPluginImpl()
+   {
+      if (!CheckForExecPlugin(0))
+         return 0;
+
+      Longptr_t ret;
+      // locking is handled within this call, but will only be needed
+      // on the first call for initialization
+      fCallEnv->Execute(nullptr, nullptr, 0, &ret);
 
       return ret;
    }

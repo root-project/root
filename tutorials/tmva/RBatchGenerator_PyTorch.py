@@ -1,7 +1,13 @@
-##################################################
-# An example of a basic PyTorch workflow
-# when using the RBatchGenerator
-##################################################
+### \file
+### \ingroup tutorial_tmva
+### \notebook -nodraw
+###
+### Example of getting batches of events from a ROOT dataset into a basic
+### PyTorch workflow.
+###
+### \macro_code
+### \macro_output
+### \author Dante Niewenhuis
 
 import torch
 import ROOT

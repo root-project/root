@@ -12,9 +12,11 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Daniel Álvarez Conde, CERN/EP-SFT,\
  Guilherme Amadio, CERN/IT,\
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
+ Patrick Bos, Netherlands eScience Center,\
  Rene Brun,\
  Carsten Burgard, TU Dortmund,\
  Will Buttinger, Rutherford Appleton Lab,\
@@ -24,11 +26,15 @@ The following people have contributed to this new version:
  Mattias Ellert, Uppsala Uni,\
  Edward Finkelstein, JGU Mainz,\
  Gerri Ganis, CERN/EP-SFT,\
+ Paul Gessinger, CERN/EP-SFT,\
  Florine de Geus, CERN/ATLAS,\
  Andrei Gheata, CERN/EP-SFT,\
  Enrico Guiraud, CERN/EP-SFT and Princeton,\
+ Ahmat Hamdan, CERN/EP-SFT,\
+ Stephan Hageboeck, CERN/IT,\
  Jonas Hahnfeld, CERN/EP-SFT,\
  Fernando Hueso González, CSIC/UV,\
+ Attila Krasznahorkay, CERN/ATLAS,\
  Baidyanath Kundu, CERN/EP-SFT and Princeton,\
  Giovanna Lazzari Miotto, CERN/EP-SFT,\
  Sergey Linev, GSI,\
@@ -39,21 +45,30 @@ The following people have contributed to this new version:
  Ole Morud, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
+ Dante Niewenhuis, UvA and CERN/EP-SFT,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
+ Ioanna Maria Panagou, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
  [QuillPusher](https://github.com/QuillPusher), [Compiler Research Group](https://compiler-research.org/team/),\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
+ Jakob Schneekloth, CERN/EP-SFT,\
  Sanjiban Sengupta, CERN/EP-SFT,\
+ Neel Shah, GSoC,\
  Garima Singh, CERN/EP-SFT and Princeton,\
- Enric Tejedor Saavedra, CERN/EP-SFT,\
+ Yash Solanki, GSoC,\
+ Uri Stern, CERN/EP-SFT,\
+ Silia Taider, CPE Lyon and CERN EP-SFT,\
+ Enric Tejedor Saavedra, CERN/IT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
+ Wouter Verkerke, NIKHEF/ATLAS,\
+ Daniel Werner, CERN/EP-SFT,\
+ Zef Wolffs, NIKHEF/ATLAS
 
 ## Platform support
 
-- GCC 12 is now supported.
+- GCC 13 is now supported.
 - macOS 14 is now supported.
 
 ## Deprecation and Removal
@@ -354,6 +369,65 @@ method now does an extended fit by default if the pdf is extendible. This makes
 the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
 `RooAbsPdf::createChi2()`.
 
+## TMVA
+### SOFIE : Code generation for fast inference of Deep Learning models
+TMVA SOFIE now supports parsing and further inference of Graph Neural Networks based on DeepMind's [graph_nets](https://github.com/google-deepmind/graph_nets). The list of all operators supported in the `RModel` class is the one provided below for the ONNX parser.
+
+#### SOFIE-GNN
+1. The SOFIE-GNN implementation brought a major change in SOFIE's architecture. Instead of having only the RModel class to store model information, now SOFIE has RModel, RModel_GNN and RModel_GraphIndependent classes which are inherited from RModel_Base.
+2. **RModel_GNN** is used to store a GNN model having nodes, edges, and globals with functions for their update and aggregate(for inter-relationships).
+3. **RModel_GraphIndependent** is used to store an independent Graph model with nodes, edges and globals with their individual update functions.
+4. **RFunctions** are used to declare update/aggregate operations over graph components. Currently supported RFunctions include:
+    - **Update Functions**
+        - RFunction_MLP
+    - **Aggregate Functions**
+        - RFunction_Mean
+        - RFunction_Sum
+5. Pythonized functions for parsing a Graphnets' model can be used to generate inference code
+```
+   import graph_nets as gn
+   from graph_nets import utils_tf
+
+   GraphModule = gn.modules.GraphNetwork(
+      edge_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
+      node_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
+      global_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True))
+
+   GraphData = get_graph_data_dict(2,1,2,2,2)
+
+   model = ROOT.TMVA.Experimental.SOFIE.RModel_GNN.ParseFromMemory(GraphModule, GraphData)
+   model.Generate()
+   model.OutputGenerated()
+
+```
+A complete tutorial for the SOFIE-GNN implementation can be found [here](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_GNN.py)
+
+#### SOFIE ONNX Parser
+
+The ONNX parser supports now several new ONNX operators. The list of the current supported ONNX operator is the following:
+- Gemm
+- Conv (in 1D,2D and 3D)
+- RNN, GRU, LSTM
+- Relu, Selu, Sigmoid, Softmax, Tanh, LeakyRelu
+- BatchNormalization
+- MaxPool, AveragePool, GlobalAverage
+- ConvTranspose
+- Gather
+- Expand, Reduce
+- Neg, Exp, Sqrt, Reciprocal
+- Add, Sum, Mul, Div
+- Reshape, Flatten, Transpose
+- Squeeze, Unsqueeze, Slice
+- Concat, Reduce
+- Identity
+- Shape
+- Custom
+- Error
+- Log
+
+#### SOFIE Keras Parser
+- The Swish Activation function is now supported in the SOFIE Keras parser.
+
 ## 2D Graphics Libraries
 
 - Introduce `TAxis::ChangeLabelByValue` to set custom label defined by axis value. It works also
@@ -369,6 +443,15 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
   Have to be used if called from other web-based widget to avoid logical dead-locks.
   In case of normal canvas just canvas->Update() is performed.
 
+## Machine Learning integration
+
+- ROOT now offers functionality to extract batches of events out of a dataset for use in common ML training workflows. For example, one can generate PyTorch tensors from a TTree. The functionality is available through the `RBatchGenerator` class and can be seamlessly integrated in user code, for example:
+   ```python
+   # Returns two generators that return training and validation batches as PyTorch tensors.
+   gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+      tree_name, file_name, batch_size, chunk_size, target=target, validation_split=0.3)
+   ```
+   The functionality is also available for TensorFlow datasets and Python generators of numpy arrays. See more in the `RBatchGenerator*` tutorials under the TMVA folder.
 
 ## Language Bindings
 
@@ -393,6 +476,10 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
 - Doxygen 1.9.8 is now supported, including its support for dark mode.
 
 ## Build, Configuration and Testing Infrastructure
+
+`root-config` (and many other versioning interfaces) now reports `6.30.00` instead of `6.30/00`.
+This allows many tools to understand ROOT's version number, better than before.
+
 
 If `-Droottest=ON` is specified, the ROOT build system used to clone a matching branch of the `roottest` repository.
 This logic has been improved and is now as follows:
@@ -588,8 +675,43 @@ More details will follow.
 * [[#13864](https://github.com/root-project/root/issues/13864)] - [PyROOT] Python 3.12: warnings during compilation and crash
 * [[#11287](https://github.com/root-project/root/issues/11287)] - `gitinfo.txt` not updated in incremental build
 
+## Release 6.30.04
+
+Published on January 31, 2024
+
+### Bugs and Issues fixed in this release
+
+This release addresses many items, thanks to an effort made during the break at the end of the year.
+Not only problems were removed, but runtime performance was greatly improved, especially the one of the interpreters.
+The memory footprint of the plugin manager has been reduced. Moreover, the mechanism by which symbols are looked up by the interpreter was improved, avoiding to open and close a large number of libraries at startup, which improves considerably the user experience as well as cpu efficiency on batch jobs. More verbose output is now provided if wrong settings are used for the web-based widgets, the usage of the loopback device is enforced and only one connection is allowed to `RBrowser`.
+
+
+
+* [[#7207](https://github.com/root-project/root/issues/7207)] - Cling memory leaks
+* [[#11743](https://github.com/root-project/root/issues/11743)] - CMake >= 3.24 fails to build LZMA: WARNING: 'aclocal-1.15' is missing on your system.
+* [[#11901](https://github.com/root-project/root/issues/11901)] - Binary distribution for Ubutu 22.04 is broken (on WSL2)
+* [[#12023](https://github.com/root-project/root/issues/12023)] - SIGSEGV from Destructor of `ROOT::RDF::RNode`
+* [[#12492](https://github.com/root-project/root/issues/12492)] - The problem with building ROOT v6-26-10 in debug mode on ubuntu 20.04
+* [[#13110](https://github.com/root-project/root/issues/13110)] - Bug in `TDecompBase::DiagProd`
+* [[#13697](https://github.com/root-project/root/issues/13697)] - Unexpected behaviour of KSTest with toys ("X" option) for identical histograms
+* [[#14085](https://github.com/root-project/root/issues/14085)] - thisroot.sh does not recognize bash when running in qemu-x86_64 #14085
+* [[#14103](https://github.com/root-project/root/issues/14103)] - version_id Fedora
+* [[#14157](https://github.com/root-project/root/issues/14157)] - Minuit2 standalone build: StandAlone.cmake looks for the wrong path for VERSION_FILE
+* [[#14162](https://github.com/root-project/root/issues/14162)] - RooFFTConvPdf is not working for ROOT 6.30/02
+* [[#14163](https://github.com/root-project/root/issues/14163)] - cmake find_package ROOT broken with 6.30, nlohmann and vdt are builtin but not found
+* [[#14188](https://github.com/root-project/root/issues/14188)] - cmake find_package ROOT 6.30 broken: it requires nlohmann-json 
+* [[#14195](https://github.com/root-project/root/issues/14195)] - cmake find_package VDT not found in root docker container
+* [[#14223](https://github.com/root-project/root/issues/14223)] - Extremely long startup time when loading dictionaries with pyroot 
+* [[#14225](https://github.com/root-project/root/issues/14225)] - [RF] Segmentation fault in ROOT 6.30 workspace creation
+* [[#14229](https://github.com/root-project/root/issues/14229)] - [6.30] root-config --git-revision broken
+* [[#14256](https://github.com/root-project/root/issues/14256)] - `TAxis::GetTicks` and `TAxis::SetTicks` are inconsistent. Significantly so.
+* [[#14277](https://github.com/root-project/root/issues/14277)] - Cling triggers a huge number of openat calls when loading libraries
+* [[#14302](https://github.com/root-project/root/issues/14302)] - The command "root --notebook" is not allowed on Windows 11
+* [[#14376](https://github.com/root-project/root/issues/14376)] - build failure with mysql 8.3 
+* [[#14416](https://github.com/root-project/root/issues/14416)] - [6.30] rootls and rootprint broken on Ubuntu 22.04 binary release
+
 ## HEAD of the v6-30-00-patches branch
 
-These changes will be part of a future 6.30/04.
+These changes will be part of a future 6.30.06.
 
 - None so far.

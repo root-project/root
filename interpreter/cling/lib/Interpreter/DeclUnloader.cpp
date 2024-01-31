@@ -327,24 +327,6 @@ namespace {
     }
   }
 
-  typedef llvm::SmallVector<VarDecl*, 2> Vars;
-  class StaticVarCollector : public RecursiveASTVisitor<StaticVarCollector> {
-    Vars& m_V;
-
-  public:
-    StaticVarCollector(FunctionDecl* FD, Vars& V) : m_V(V) {
-      TraverseStmt(FD->getBody());
-    }
-    bool VisitDeclStmt(DeclStmt* DS) {
-      for (DeclStmt::decl_iterator I = DS->decl_begin(), E = DS->decl_end();
-           I != E; ++I)
-        if (VarDecl* VD = dyn_cast<VarDecl>(*I))
-          if (VD->isStaticLocal())
-            m_V.push_back(VD);
-      return true;
-    }
-  };
-
   // Template instantiation of templated function first creates a canonical
   // declaration and after the actual template specialization. For example:
   // template<typename T> T TemplatedF(T t);
@@ -490,21 +472,6 @@ namespace {
 
 namespace cling {
   using namespace clang;
-
-  ///\brief Return whether `D' is a template that was first instantiated non-
-  /// locally, i.e. in a PCH/module. If `D' is not an instantiation, return
-  /// false.
-  bool DeclUnloader::isInstantiatedInPCH(const Decl* D) {
-    SourceManager& SM = D->getASTContext().getSourceManager();
-    if (const auto FD = dyn_cast<FunctionDecl>(D))
-      return FD->isTemplateInstantiation() &&
-             !SM.isLocalSourceLocation(FD->getPointOfInstantiation());
-    else if (const auto CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
-      return !SM.isLocalSourceLocation(CTSD->getPointOfInstantiation());
-    else if (const auto VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
-      return !SM.isLocalSourceLocation(VTSD->getPointOfInstantiation());
-    return false;
-  }
 
   void DeclUnloader::resetDefinitionData(TagDecl* decl) {
     auto canon = dyn_cast<CXXRecordDecl>(decl->getCanonicalDecl());
@@ -677,15 +644,18 @@ namespace cling {
       // which we will remove soon. (Eg. mangleDeclName iterates the redecls)
       GlobalDecl GD(FD);
       MaybeRemoveDeclFromModule(GD);
+
       // Handle static locals. void func() { static int var; } is represented in
       // the llvm::Module is a global named @func.var
-      Vars V;
-      StaticVarCollector c(FD, V);
-      for (Vars::iterator I = V.begin(), E = V.end(); I != E; ++I) {
-        GlobalDecl GD(*I);
-        MaybeRemoveDeclFromModule(GD);
+      for (auto D : FunctionDecl::castToDeclContext(FD)->noload_decls()) {
+        if (auto VD = dyn_cast<VarDecl>(D))
+          if (VD->isStaticLocal()) {
+            GlobalDecl GD(VD);
+            MaybeRemoveDeclFromModule(GD);
+          }
       }
     }
+
     // VisitRedeclarable() will mess around with this!
     bool wasCanonical = FD->isCanonicalDecl();
     // FunctionDecl : DeclaratiorDecl, DeclContext, Redeclarable
@@ -693,6 +663,36 @@ namespace cling {
     // DeclContext and when trying to remove them we need the full redecl chain
     // still in place.
     bool Successful = VisitDeclContext(FD);
+    // The body of member functions of a templated class only gets instantiated
+    // when the function is used, i.e.
+    // `-ClassTemplateDecl
+    //   |-TemplateTypeParmDecl referenced typename depth 0 index 0 T
+    //   |-CXXRecordDecl struct Foo definition
+    //   | |-DefinitionData
+    //   | `-CXXMethodDecl f 'T (T)'
+    //   |   |-ParmVarDecl 0x55e5787cac70 referenced x 'T'
+    //   |   `-CompoundStmt
+    //   |     `-ReturnStmt
+    //   |       `-DeclRefExpr 'T' lvalue ParmVar 0x55e5787cac70 'x' 'T'
+    //   `-ClassTemplateSpecializationDecl struct Foo definition
+    //     |-DefinitionData
+    //     |-TemplateArgument type 'int'
+    //     | `-BuiltinType 'int'
+    //     |-CXXMethodDecl f 'int (int)'    <<<< Instantiation pending
+    //     | `-ParmVarDecl x 'int':'int'
+    //     |-CXXConstructorDecl implicit used constexpr Foo 'void () noexcept'
+    //     inline default trivial
+    //
+    // Such functions should not be deleted from the AST, but returned to the
+    // 'pending instantiation' state.
+    if (auto MSI = FD->getMemberSpecializationInfo()) {
+      MSI->setPointOfInstantiation(SourceLocation());
+      MSI->setTemplateSpecializationKind(
+          TemplateSpecializationKind::TSK_ImplicitInstantiation);
+      FD->setBody(nullptr);
+      FD->setInstantiationIsPending(true);
+      return Successful;
+    }
     Successful &= VisitRedeclarable(FD, FD->getDeclContext());
     Successful &= VisitDeclaratorDecl(FD);
 

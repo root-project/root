@@ -86,6 +86,7 @@ TFile, TSQLServer, TGrid, etc. functionality.
 #include "THashList.h"
 #include "THashTable.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TInterpreter.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
@@ -176,6 +177,22 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if the name of the iarg-th argument's type match `type_name`
+Bool_t TPluginHandler::CheckNameMatch(int iarg, const std::type_info& ti)
+{
+   int err = 0;
+   char* demangled_name = TClassEdit::DemangleTypeIdName(ti, err);
+   if (err) {
+      return false;
+   }
+   std::string norm_name;
+   TClassEdit::GetNormalizedName(norm_name, demangled_name);
+   free(demangled_name);
+   const TMethodArg *arg = static_cast<const TMethodArg *>(fMethod->GetListOfMethodArgs()->At(iarg));
+   return norm_name == arg->GetTypeNormalizedName();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Setup ctor or static method call environment.
 
 void TPluginHandler::SetupCallEnv()
@@ -229,29 +246,14 @@ void TPluginHandler::SetupCallEnv()
    fCallEnv->Init(fMethod);
 
    // cache argument types for fast comparison
-   fArgTupleClasses.clear();
-
-   std::stringstream typelist;
-   for (int iarg = 0; iarg < fMethod->GetNargs(); ++iarg) {
-      if (iarg > 0) {
-         typelist << ", ";
-      }
-      const TMethodArg *arg = static_cast<const TMethodArg *>(fMethod->GetListOfMethodArgs()->At(iarg));
-      typelist << arg->GetTypeNormalizedName();
-
-      std::stringstream tupletype;
-      tupletype << "std::tuple<" << typelist.str() << ">";
-      const TClass *tupleclass = TClass::GetClass(tupletype.str().c_str());
-      if (!tupleclass) {
-         Error("SetupCallEnv", "couldn't get TClass for tuple of argument types %s", tupletype.str().c_str());
-      }
-      fArgTupleClasses.push_back(tupleclass);
-   }
+   fArgTupleTypeInfo.clear();
+   fArgTupleTypeInfo.resize(fMethod->GetNargs());
 
    setCanCall = 1;
 
    return;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the plugin library for this handler exits. Returns 0

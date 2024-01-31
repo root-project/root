@@ -181,15 +181,20 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
       }
    }
 
-   AddLocation("currentdir/", ".");
+   Bool_t basic_sniffer = strstr(engine, "basic_sniffer") != nullptr;
+
    AddLocation("jsrootsys/", fJSROOTSYS.Data());
-   AddLocation("rootsys/", TROOT::GetRootSys());
+
+   if (!basic_sniffer) {
+      AddLocation("currentdir/", ".");
+      AddLocation("rootsys/", TROOT::GetRootSys());
+   }
 
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
    fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    TRootSniffer *sniff = nullptr;
-   if (strstr(engine, "basic_sniffer")) {
+   if (basic_sniffer) {
       sniff = new TRootSniffer("sniff");
       sniff->SetScanGlobalDir(kFALSE);
       sniff->CreateOwnTopFolder(); // use dedicated folder
@@ -921,7 +926,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       }
 
       if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
-         arg->fContent = BuildWSEntryPage();
+         arg->SetContent("refused"); //  BuildWSEntryPage();
+         arg->Set404();
       }
 
       if (arg->fContent.empty() && !IsWSOnly()) {

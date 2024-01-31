@@ -75,8 +75,13 @@ std::vector<double> histToVector(TH1 const &hist)
    // Must get the full size of the TH1 (No direct method to do this...)
    int numBins = hist.GetNbinsX() * hist.GetNbinsY() * hist.GetNbinsZ();
    std::vector<double> out(numBins);
+   int histIndex = 0;
    for (int i = 0; i < numBins; ++i) {
-      out[i] = hist.GetBinContent(i + 1);
+      while (hist.IsBinUnderflow(histIndex) || hist.IsBinOverflow(histIndex)) {
+         ++histIndex;
+      }
+      out[i] = hist.GetBinContent(histIndex);
+      ++histIndex;
    }
    return out;
 }
@@ -822,6 +827,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       constraintTermNames.push_back("lumiConstraint");
     } else {
       proto.var("Lumi")->setConstant();
+      proto.defineSet("globalObservables",RooArgSet()); // create empty set as is assumed it exists later
     }
     //proto.factory("SigXsecOverSM[1.,0.5,1..8]");
     ///////////////////////////////////
@@ -1253,11 +1259,12 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     for(unsigned int i=0; i<systToFix.size(); ++i){
       RooRealVar* temp = proto.var(systToFix.at(i));
       if(!temp) {
-        cxcoutE(HistFactory) << "could not find variable " << systToFix.at(i)
+        cxcoutW(HistFactory) << "could not find variable " << systToFix.at(i)
             << " could not set it to constant" << endl;
+      } else {
+        // set the parameter constant
+        temp->setConstant();
       }
-      // set the parameter constant
-      temp->setConstant();
     }
 
     //////////////////////////////////////

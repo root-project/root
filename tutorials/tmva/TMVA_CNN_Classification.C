@@ -47,10 +47,10 @@ void MakeImagesTree(int n, int nh, int nw)
 
    auto f1 = new TF2("f1", "xygaus");
    auto f2 = new TF2("f2", "xygaus");
+   TFile f(fileOutName, "RECREATE");
    TTree sgn("sig_tree", "signal_tree");
    TTree bkg("bkg_tree", "background_tree");
 
-   TFile f(fileOutName, "RECREATE");
 
    std::vector<float> x1(ntot);
    std::vector<float> x2(ntot);

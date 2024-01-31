@@ -16,6 +16,17 @@
 
 #include <nlohmann/json.hpp>
 
+namespace {
+inline nlohmann::json parseWrapper(std::istream &is)
+{
+   try {
+      return nlohmann::json::parse(is);
+   } catch (const nlohmann::json::exception &ex) {
+      throw std::runtime_error(ex.what());
+   }
+}
+} // namespace
+
 // TJSONTree methods
 
 TJSONTree::TJSONTree() : root(this){};
@@ -70,7 +81,7 @@ class TJSONTree::Node::Impl::BaseNode : public TJSONTree::Node::Impl {
 public:
    nlohmann::json &get() override { return node; }
    const nlohmann::json &get() const override { return node; }
-   BaseNode(std::istream &is) : Impl(""), node(nlohmann::json::parse(is)) {}
+   BaseNode(std::istream &is) : Impl(""), node(parseWrapper(is)) {}
    BaseNode() : Impl("") {}
 };
 
@@ -107,8 +118,6 @@ TJSONTree::Node::Node(TJSONTree *t, Impl &other)
 }
 
 TJSONTree::Node::Node(const Node &other) : Node(other.tree, *other.node) {}
-
-TJSONTree::Node::~Node() {}
 
 // TJSONNode interface
 
@@ -200,7 +209,7 @@ TJSONTree::Node &TJSONTree::Node::set_map()
    if (isResettingPossible(node->get())) {
       node->get() = nlohmann::json::object();
    } else {
-      throw std::runtime_error("cannot declare " + this->key() + " to be of map-type, already of type " +
+      throw std::runtime_error("cannot declare \"" + this->key() + "\" to be of map - type, already of type " +
                                node->get().type_name());
    }
    return *this;
@@ -214,7 +223,7 @@ TJSONTree::Node &TJSONTree::Node::set_seq()
    if (isResettingPossible(node->get())) {
       node->get() = nlohmann::json::array();
    } else {
-      throw std::runtime_error("cannot declare " + this->key() + " to be of seq-type, already of type " +
+      throw std::runtime_error("cannot declare \"" + this->key() + "\" to be of seq - type, already of type " +
                                node->get().type_name());
    }
    return *this;
@@ -239,8 +248,8 @@ std::string TJSONTree::Node::val() const
    case nlohmann::json::value_t::number_unsigned: return std::to_string(node->get().get<unsigned int>());
    case nlohmann::json::value_t::number_float: return std::to_string(node->get().get<double>());
    default:
-      throw std::runtime_error(std::string("node " + node->key() + ": implicit string conversion for type " +
-                                           node->get().type_name() + " not supported!"));
+      throw std::runtime_error("node \"" + node->key() + "\": implicit string conversion for type " +
+                               node->get().type_name() + " not supported!");
    }
 }
 

@@ -54,7 +54,6 @@ as a TString, construct a TString from it, eg:
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 
-
 #if defined(R__WIN32)
 #define strtoull _strtoui64
 #endif

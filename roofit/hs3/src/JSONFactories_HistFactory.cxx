@@ -274,9 +274,14 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
       RooArgList histoLo;
       RooArgList histoHi;
 
+      int idx = 0;
       for (const auto &mod : p["modifiers"].children()) {
          std::string const &modtype = mod["type"].val();
-         std::string const &sysname = mod["name"].val();
+         std::string const &sysname =
+            mod.has_child("name")
+               ? mod["name"].val()
+               : (mod.has_child("parameter") ? mod["parameter"].val() : "syst_" + std::to_string(idx));
+         ++idx;
          if (modtype == "staterror") {
             // this is dealt with at a different place, ignore it for now
          } else if (modtype == "normfactor") {
@@ -319,7 +324,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             constraints.add(getConstraint(ws, parname));
          } else if (modtype == "shapesys") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
-            // funName should be "<channel_name>_<sysname>_ShapeSys"
+            // funcName should be "<channel_name>_<sysname>_ShapeSys"
             std::vector<double> vals;
             for (const auto &v : mod["data"]["vals"].children()) {
                vals.push_back(v.val_double());
@@ -327,6 +332,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             std::vector<std::string> parnames;
             for (const auto &v : mod["parameters"].children()) {
                parnames.push_back(v.val());
+            }
+            if (vals.empty()) {
+               RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname + "' with 0 values!");
             }
             std::string constraint(mod["constraint"].val());
             shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
@@ -922,9 +930,14 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          optionallyExportGammaParameters(mod, sys.name, sys.parameters);
          mod["constraint"] << toString(sys.constraint);
          if (sys.constraint) {
-            auto &data = mod["data"].set_map();
-            auto &vals = data["vals"];
+            auto &vals = mod["data"].set_map()["vals"];
             vals.fill_seq(sys.constraints);
+         } else {
+            auto &vals = mod["data"].set_map()["vals"];
+            vals.set_seq();
+            for (std::size_t i = 0; i < sys.parameters.size(); ++i) {
+               vals.append_child() << 0;
+            }
          }
       }
 
