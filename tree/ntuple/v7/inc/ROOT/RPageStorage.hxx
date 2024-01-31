@@ -224,7 +224,7 @@ public:
    /// Init() associates column handles to the columns referenced by the model
    virtual void Init(RNTupleModel &model) = 0;
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
-   /// added after the initial call to `RPageSink::Create(RNTupleModel &)`.
+   /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
    virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) = 0;
 
