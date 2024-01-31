@@ -675,8 +675,43 @@ More details will follow.
 * [[#13864](https://github.com/root-project/root/issues/13864)] - [PyROOT] Python 3.12: warnings during compilation and crash
 * [[#11287](https://github.com/root-project/root/issues/11287)] - `gitinfo.txt` not updated in incremental build
 
+## Release 6.30.04
+
+Published on January 31, 2024
+
+### Bugs and Issues fixed in this release
+
+This release addresses many items, thanks to an effort made during the break at the end of the year.
+Not only problems were removed, but runtime performance was greatly improved, especially the one of the interpreters.
+The memory footprint of the plugin manager has been reduced. Moreover, the mechanism by which symbols are looked up by the interpreter was improved, avoiding to open and close a large number of libraries at startup, which improves considerably the user experience as well as cpu efficiency on batch jobs. More verbose output is now provided if wrong settings are used for the web-based widgets, the usage of the loopback device is enforced and only one connection is allowed to `RBrowser`.
+
+
+
+* [[#7207](https://github.com/root-project/root/issues/7207)] - Cling memory leaks
+* [[#11743](https://github.com/root-project/root/issues/11743)] - CMake >= 3.24 fails to build LZMA: WARNING: 'aclocal-1.15' is missing on your system.
+* [[#11901](https://github.com/root-project/root/issues/11901)] - Binary distribution for Ubutu 22.04 is broken (on WSL2)
+* [[#12023](https://github.com/root-project/root/issues/12023)] - SIGSEGV from Destructor of `ROOT::RDF::RNode`
+* [[#12492](https://github.com/root-project/root/issues/12492)] - The problem with building ROOT v6-26-10 in debug mode on ubuntu 20.04
+* [[#13110](https://github.com/root-project/root/issues/13110)] - Bug in `TDecompBase::DiagProd`
+* [[#13697](https://github.com/root-project/root/issues/13697)] - Unexpected behaviour of KSTest with toys ("X" option) for identical histograms
+* [[#14085](https://github.com/root-project/root/issues/14085)] - thisroot.sh does not recognize bash when running in qemu-x86_64 #14085
+* [[#14103](https://github.com/root-project/root/issues/14103)] - version_id Fedora
+* [[#14157](https://github.com/root-project/root/issues/14157)] - Minuit2 standalone build: StandAlone.cmake looks for the wrong path for VERSION_FILE
+* [[#14162](https://github.com/root-project/root/issues/14162)] - RooFFTConvPdf is not working for ROOT 6.30/02
+* [[#14163](https://github.com/root-project/root/issues/14163)] - cmake find_package ROOT broken with 6.30, nlohmann and vdt are builtin but not found
+* [[#14188](https://github.com/root-project/root/issues/14188)] - cmake find_package ROOT 6.30 broken: it requires nlohmann-json 
+* [[#14195](https://github.com/root-project/root/issues/14195)] - cmake find_package VDT not found in root docker container
+* [[#14223](https://github.com/root-project/root/issues/14223)] - Extremely long startup time when loading dictionaries with pyroot 
+* [[#14225](https://github.com/root-project/root/issues/14225)] - [RF] Segmentation fault in ROOT 6.30 workspace creation
+* [[#14229](https://github.com/root-project/root/issues/14229)] - [6.30] root-config --git-revision broken
+* [[#14256](https://github.com/root-project/root/issues/14256)] - `TAxis::GetTicks` and `TAxis::SetTicks` are inconsistent. Significantly so.
+* [[#14277](https://github.com/root-project/root/issues/14277)] - Cling triggers a huge number of openat calls when loading libraries
+* [[#14302](https://github.com/root-project/root/issues/14302)] - The command "root --notebook" is not allowed on Windows 11
+* [[#14376](https://github.com/root-project/root/issues/14376)] - build failure with mysql 8.3 
+* [[#14416](https://github.com/root-project/root/issues/14416)] - [6.30] rootls and rootprint broken on Ubuntu 22.04 binary release
+
 ## HEAD of the v6-30-00-patches branch
 
-These changes will be part of a future 6.30/04.
+These changes will be part of a future 6.30.06.
 
 - None so far.
