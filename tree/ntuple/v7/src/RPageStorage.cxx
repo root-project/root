@@ -486,7 +486,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CreateDataset(RNTupleModel
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeader(nullptr, descriptor);
    auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeader(buffer.get(), descriptor);
-   CreateDatasetImpl(model, buffer.get(), fSerializationContext.GetHeaderSize());
+   CreateDatasetImpl(buffer.get(), fSerializationContext.GetHeaderSize());
 
    fDescriptorBuilder.BeginHeaderExtension();
 }

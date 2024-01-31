@@ -284,7 +284,7 @@ protected:
    };
    std::unique_ptr<RCounters> fCounters;
 
-   virtual void CreateDatasetImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
+   virtual void CreateDatasetImpl(unsigned char *serializedHeader, std::uint32_t length) = 0;
 
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator

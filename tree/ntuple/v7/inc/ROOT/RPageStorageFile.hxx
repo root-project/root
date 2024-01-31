@@ -71,7 +71,7 @@ private:
                                                 std::size_t bytesPacked);
 
 protected:
-   void CreateDatasetImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
+   void CreateDatasetImpl(unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
