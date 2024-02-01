@@ -349,11 +349,13 @@ is not modified for the time of the Fill() call. The fill call serializes the C+
 writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
 triggered by CommitCluster() or by destructing the context.  On I/O errors, an exception is thrown.
 
-Instances of this class are not meant to be used in isolation. For sequential writing, please refer to RNTupleWriter.
+Instances of this class are not meant to be used in isolation and can be created from an RNTupleParallelWriter. For
+sequential writing, please refer to RNTupleWriter.
 */
 // clang-format on
 class RNTupleFillContext {
-   friend RNTupleWriter;
+   friend class RNTupleWriter;
+   friend class RNTupleParallelWriter;
 
 private:
    std::unique_ptr<Detail::RPageSink> fSink;

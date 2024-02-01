@@ -12,6 +12,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -80,6 +81,7 @@ using RNTupleDecompressor = ROOT::Experimental::Internal::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleDescriptorBuilder = ROOT::Experimental::Internal::RNTupleDescriptorBuilder;
 using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
+using RNTupleParallelWriter = ROOT::Experimental::RNTupleParallelWriter;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleReadOptions = ROOT::Experimental::RNTupleReadOptions;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
