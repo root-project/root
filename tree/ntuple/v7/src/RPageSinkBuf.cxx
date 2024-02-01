@@ -40,10 +40,12 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
    : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions()), fInnerSink(std::move(inner))
 {
    fMetrics = RNTupleMetrics("RPageSinkBuf");
-   fCounters = std::make_unique<RCounters>(RCounters{
-      *fMetrics.MakeCounter<RNTuplePlainCounter*>("ParallelZip", "",
-         "compressing pages in parallel")
-   });
+   fCounters = std::make_unique<RCounters>(
+      RCounters{*fMetrics.MakeCounter<RNTuplePlainCounter *>("ParallelZip", "", "compressing pages in parallel"),
+                *fMetrics.MakeCounter<RNTuplePlainCounter *>("timeWallCriticalSection", "ns",
+                                                             "wall clock time spent in critical sections"),
+                *fMetrics.MakeCounter<RNTupleTickCounter<RNTuplePlainCounter> *>(
+                   "timeCpuCriticalSection", "ns", "CPU time spent in critical section")});
    fMetrics.ObserveMetrics(fInnerSink->GetMetrics());
 }
 
@@ -181,20 +183,32 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Expe
       const auto &sealedPages = bufColumn.GetSealedPages();
       toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
    }
-   fInnerSink->CommitSealedPageV(toCommit);
+
+   std::uint64_t nbytes;
+   {
+      RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
+      RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
+      fInnerSink->CommitSealedPageV(toCommit);
+
+      nbytes = fInnerSink->CommitCluster(nNewEntries);
+   }
 
    for (auto &bufColumn : fBufferedColumns)
       bufColumn.DropBufferedPages();
-   return fInnerSink->CommitCluster(nNewEntries);
+   return nbytes;
 }
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroup()
 {
+   RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
+   RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
    fInnerSink->CommitClusterGroup();
 }
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitDataset()
 {
+   RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
+   RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
    fInnerSink->CommitDataset();
 }
 
