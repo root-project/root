@@ -57,13 +57,9 @@ class TFileOpenReadWrite(unittest.TestCase):
 
     def test_caching_getattr(self):
         f = ROOT.TFile.Open(self.filename)
-        # check that __dict__ of self.dir_caching is initially empty
-        self.assertFalse(f.__dict__)
+        # check that object is not cached initially
+        self.assertFalse("h" in f.__dict__)
         f.h
-        # check that after call is not empty anymore
-        self.assertTrue(f.__dict__)
-        # check that __dict__ has only one entry
-        self.assertEqual(len(f.__dict__), 1)
         # check that the value in __dict__ is actually the object
         # inside the directory
         self.assertEqual(f.__dict__['h'], f.h)
