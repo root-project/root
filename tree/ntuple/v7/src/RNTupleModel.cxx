@@ -213,9 +213,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
 {
    auto cloneModel = std::unique_ptr<RNTupleModel>(
       new RNTupleModel(std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()))));
-   auto cloneFieldZero = fFieldZero->Clone("");
    cloneModel->fModelId = fModelId;
-   cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
