@@ -224,13 +224,13 @@ protected:
 TEST(TClingDataMemberInfo, Offset)
 {
    gInterpreter->ProcessLine("int ROOT_7459 = 42; ROOT_7459++;");
-   EXPECT_TRUE(43 == *(int*)gROOT->GetGlobal("ROOT_7459")->GetAddress());
+   EXPECT_EQ(43, *(int*)gROOT->GetGlobal("ROOT_7459")->GetAddress());
 
    gInterpreter->ProcessLine("constexpr int var1 = 1;");
-   EXPECT_TRUE(1 == *(int*)gROOT->GetGlobal("var1")->GetAddress());
+   EXPECT_EQ(1, *(int*)gROOT->GetGlobal("var1")->GetAddress());
 
    gInterpreter->ProcessLine("static constexpr int var2 = -2;");
-   EXPECT_TRUE(-2 == *(int*)gROOT->GetGlobal("var2")->GetAddress());
+   EXPECT_EQ(-2, *(int*)gROOT->GetGlobal("var2")->GetAddress());
 
    gInterpreter->ProcessLine("const float var3 = 3.1;");
    EXPECT_FLOAT_EQ(3.1, *(float*)gROOT->GetGlobal("var3")->GetAddress());
@@ -249,6 +249,6 @@ TEST(TClingDataMemberInfo, Offset)
    // libGeom at gROOT->GetGlobal time.
    TGlobal *GeoManagerInfo = gROOT->GetGlobal("gGeoManager");
    TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
-   EXPECT_TRUE(-1L == (ptrdiff_t)GeoManagerInfo->GetAddress());
+   EXPECT_EQ(-1L, (ptrdiff_t)GeoManagerInfo->GetAddress());
 #endif // R__USE_CXXMODULES
 }
