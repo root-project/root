@@ -1177,8 +1177,7 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string_view fileNameGlob,
                                        const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
-   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(datasetName, fileNameGlob);
-   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(std::move(pageSource));
+   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(datasetName, fileNameGlob);
    auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
