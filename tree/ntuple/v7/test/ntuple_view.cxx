@@ -13,12 +13,11 @@ TEST(RNTuple, View)
    fieldJets->push_back(3);
 
    {
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
-      ntuple.CommitCluster();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
       fieldJets->clear();
-      ntuple.Fill();
+      writer->Fill();
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());

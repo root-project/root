@@ -262,8 +262,7 @@ TEST(RNTupleDescriptor, QualifiedFieldName)
    model->MakeField<std::vector<float>>("jets");
    FileRaii fileGuard("test_field_qualified.root");
    {
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -287,9 +286,8 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
 
    FileRaii fileGuard("test_field_iterator.root");
    {
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -345,9 +343,8 @@ TEST(RFieldDescriptorIterable, SortByLambda)
 
    FileRaii fileGuard("test_field_iterator.root");
    {
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -401,9 +398,8 @@ TEST(RColumnDescriptorIterable, IterateOverColumns)
 
    FileRaii fileGuard("test_column_iterator.root");
    {
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -450,12 +446,11 @@ TEST(RClusterDescriptor, GetBytesOnStorage)
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), options));
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
       fldJets->push_back(1.0);
       fldJets->push_back(2.0);
       *fldTag = "abc";
-      ntuple.Fill();
+      writer->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -474,11 +469,10 @@ TEST(RNTupleDescriptor, Clone)
 
    FileRaii fileGuard("test_ntuple_descriptor_clone.root");
    {
-      RNTupleWriter ntuple(std::move(model),
-                           std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
-      ntuple.CommitCluster(true /* commitClusterGroup */);
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster(true /* commitClusterGroup */);
+      writer->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
