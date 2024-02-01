@@ -109,9 +109,8 @@ TEST(RNTuple, WriteRead)
    auto modelRead = modelWrite->Clone();
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
    auto rdSignal = modelRead->GetDefaultEntry().GetPtr<bool>("signal");
@@ -207,20 +206,19 @@ TEST(RNTuple, Clusters)
    auto modelRead = modelWrite->Clone();
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
-      ntuple.CommitCluster();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
       *wrPt = 24.0;
       wrNnlo->clear();
       *wrTag = "";
       wrFourVec->at(2) = 42.0;
-      ntuple.Fill();
+      writer->Fill();
       *wrPt = 12.0;
       wrNnlo->push_back(std::vector<float>{42.0});
       *wrTag = "12345";
       wrFourVec->at(1) = 24.0;
-      ntuple.Fill();
+      writer->Fill();
    }
 
    auto rdPt = modelRead->GetDefaultEntry().GetPtr<float>("pt");
@@ -474,35 +472,6 @@ TEST(RNTuple, NullSafety)
       FAIL() << "null fields should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("null field"));
-   }
-
-   // RNTupleReader and RNTupleWriter
-   FileRaii fileGuard("test_ntuple_null_safety.root");
-   try {
-      RNTupleWriter ntuple(nullptr,
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      FAIL() << "null models should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
-   }
-   try {
-      RNTupleWriter ntuple(std::move(model), nullptr);
-      FAIL() << "null sinks should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("null sink"));
-   }
-   try {
-      auto ntuple = RNTupleWriter::Recreate(nullptr, "myNtuple", fileGuard.GetPath());
-      FAIL() << "null models should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
-   }
-   try {
-      auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 101);
-      auto ntuple = RNTupleWriter::Append(nullptr, "myNtuple", *file);
-      FAIL() << "null models should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("null model"));
    }
 }
 

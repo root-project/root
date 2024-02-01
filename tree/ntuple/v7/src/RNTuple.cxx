@@ -273,12 +273,6 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT:
                                                            std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
-   if (!fModel) {
-      throw RException(R__FAIL("null model"));
-   }
-   if (!fSink) {
-      throw RException(R__FAIL("null sink"));
-   }
    fModel->Freeze();
    fSink->Init(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
@@ -356,7 +350,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                             std::string_view storage, const RNTupleWriteOptions &options)
 {
-   return std::make_unique<RNTupleWriter>(std::move(model), Detail::RPageSink::Create(ntupleName, storage, options));
+   return std::unique_ptr<RNTupleWriter>(
+      new RNTupleWriter(std::move(model), Detail::RPageSink::Create(ntupleName, storage, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
@@ -366,9 +361,9 @@ ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, s
    auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
    if (options.GetUseBufferedWrite()) {
       auto bufferedSink = std::make_unique<Detail::RPageSinkBuf>(std::move(sink));
-      return std::make_unique<RNTupleWriter>(std::move(model), std::move(bufferedSink));
+      return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(bufferedSink)));
    }
-   return std::make_unique<RNTupleWriter>(std::move(model), std::move(sink));
+   return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(sink)));
 }
 
 void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
@@ -377,6 +372,14 @@ void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
       return;
    fFillContext.fSink->CommitClusterGroup();
    fLastCommittedClusterGroup = GetNEntries();
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleWriter>
+ROOT::Experimental::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
+                                                  std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
+{
+   return std::unique_ptr<ROOT::Experimental::RNTupleWriter>(
+      new ROOT::Experimental::RNTupleWriter(std::move(model), std::move(sink)));
 }
 
 //------------------------------------------------------------------------------

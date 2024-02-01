@@ -294,18 +294,16 @@ TEST(RPageSinkBuf, Basics)
    FileRaii fileGuardBuf("test_ntuple_sinkbuf_basics_buf.root");
    FileRaii fileGuard("test_ntuple_sinkbuf_basics.root");
    {
+      RNTupleWriteOptions options;
+      options.SetUseBufferedWrite(true);
       TestModel bufModel;
       // PageSinkBuf wraps a concrete page source
-      auto ntupleBuf = std::make_unique<RNTupleWriter>(std::move(bufModel.fModel),
-         std::make_unique<RPageSinkBuf>(std::make_unique<RPageSinkFile>(
-            "buf", fileGuardBuf.GetPath(), RNTupleWriteOptions()
-      )));
+      auto ntupleBuf = RNTupleWriter::Recreate(std::move(bufModel.fModel), "buf", fileGuardBuf.GetPath(), options);
       ntupleBuf->EnableMetrics();
 
+      options.SetUseBufferedWrite(false);
       TestModel unbufModel;
-      auto ntuple = std::make_unique<RNTupleWriter>(std::move(unbufModel.fModel),
-         std::make_unique<RPageSinkFile>("unbuf", fileGuard.GetPath(), RNTupleWriteOptions()
-      ));
+      auto ntuple = RNTupleWriter::Recreate(std::move(unbufModel.fModel), "unbuf", fileGuard.GetPath(), options);
 
       for (int i = 0; i < 40000; i++) {
          *bufModel.fFloatField = static_cast<float>(i);
@@ -388,11 +386,8 @@ TEST(RPageSinkBuf, ParallelZip) {
       auto model = RNTupleModel::Create();
       auto floatField = model->MakeField<float>("pt");
       auto fieldKlassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
-      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
-         std::make_unique<RPageSinkBuf>(std::make_unique<RPageSinkFile>(
-            "buf_pzip", fileGuard.GetPath(), RNTupleWriteOptions()
-      )));
-      ntuple->EnableMetrics();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "buf_pzip", fileGuard.GetPath());
+      writer->EnableMetrics();
       for (int i = 0; i < 20000; i++) {
          *floatField = static_cast<float>(i);
          CustomStruct klass;
@@ -401,11 +396,10 @@ TEST(RPageSinkBuf, ParallelZip) {
          klass.v2.emplace_back(std::vector<float>(3, static_cast<float>(i)));
          klass.s = "hi" + std::to_string(i);
          *fieldKlassVec = std::vector<CustomStruct>{klass};
-         ntuple->Fill();
+         writer->Fill();
          if (i && i % 15000 == 0) {
-            ntuple->CommitCluster();
-            auto *parallel_zip = ntuple->GetMetrics().GetCounter(
-               "RNTupleWriter.RPageSinkBuf.ParallelZip");
+            writer->CommitCluster();
+            auto *parallel_zip = writer->GetMetrics().GetCounter("RNTupleWriter.RPageSinkBuf.ParallelZip");
             ASSERT_FALSE(parallel_zip == nullptr);
 #ifdef R__USE_IMT
             EXPECT_EQ(1, parallel_zip->GetValueAsInt());
@@ -446,7 +440,8 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       auto u64Field = model->MakeField<std::uint64_t>("u64");
       auto u32Field = model->MakeField<std::uint16_t>("u32");
       auto strField = model->MakeField<std::string>("str");
-      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
+      auto ntuple = ROOT::Experimental::Internal::CreateRNTupleWriter(std::move(model),
+                                                                      std::make_unique<RPageSinkBuf>(std::move(sink)));
       ntuple->Fill();
       ntuple->Fill();
       ntuple->Fill();
@@ -467,7 +462,8 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       auto u64Field = model->MakeField<std::uint64_t>("u64");
       auto u32Field = model->MakeField<std::uint32_t>("u32");
       auto strField = model->MakeField<std::string>("str");
-      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
+      auto ntuple = ROOT::Experimental::Internal::CreateRNTupleWriter(std::move(model),
+                                                                      std::make_unique<RPageSinkBuf>(std::move(sink)));
       ntuple->Fill();
       ntuple->Fill();
       ntuple->CommitCluster();

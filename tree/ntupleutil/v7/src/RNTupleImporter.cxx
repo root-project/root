@@ -377,7 +377,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
 
-   auto ntplWriter = std::make_unique<RNTupleWriter>(std::move(fModel), std::move(sink));
+   auto ntplWriter = Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
    // The guard needs to be destructed before the writer goes out of scope
    RImportGuard importGuard(*this);
 
