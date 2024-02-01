@@ -68,7 +68,6 @@ template <class T>
 using RField = ROOT::Experimental::RField<T>;
 using RFieldBase = ROOT::Experimental::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
-using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
 using RNTupleLocatorObject64 = ROOT::Experimental::RNTupleLocatorObject64;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
