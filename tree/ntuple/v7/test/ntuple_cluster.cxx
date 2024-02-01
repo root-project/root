@@ -332,14 +332,12 @@ TEST(PageStorageFile, LoadClusters)
    auto wrTag = modelWrite->MakeField<std::int32_t>("tag", 0);
 
    {
-      ROOT::Experimental::RNTupleWriter ntuple(
-         std::move(modelWrite), std::make_unique<ROOT::Experimental::Detail::RPageSinkFile>(
-            "myNTuple", fileGuard.GetPath(), ROOT::Experimental::RNTupleWriteOptions()));
-      ntuple.Fill();
-      ntuple.CommitCluster();
+      auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
       *wrPt = 24.0;
       *wrTag = 1;
-      ntuple.Fill();
+      writer->Fill();
    }
 
    ROOT::Experimental::Detail::RPageSourceFile source(

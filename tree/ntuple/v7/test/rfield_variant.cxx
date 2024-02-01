@@ -12,14 +12,13 @@ TEST(RNTuple, Variant)
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
-      ntuple.CommitCluster();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
       *wrVariant = 4;
-      ntuple.Fill();
+      writer->Fill();
       *wrVariant = 8.0;
-      ntuple.Fill();
+      writer->Fill();
    }
    auto rdVariant = modelRead->GetDefaultEntry().GetPtr<std::variant<double, int>>("variant").get();
 

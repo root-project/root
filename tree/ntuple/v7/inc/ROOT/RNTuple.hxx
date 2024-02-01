@@ -413,6 +413,12 @@ public:
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
 
+namespace Internal {
+// Non-public factory method for an RNTuple writer that uses an already constructed page sink
+std::unique_ptr<RNTupleWriter>
+CreateRNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
+} // namespace Internal
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleWriter
@@ -427,6 +433,8 @@ triggered by CommitCluster() or by destructing the writer.  On I/O errors, an ex
 // clang-format on
 class RNTupleWriter {
    friend RNTupleModel::RUpdater;
+   friend std::unique_ptr<RNTupleWriter>
+      Internal::CreateRNTupleWriter(std::unique_ptr<RNTupleModel>, std::unique_ptr<Detail::RPageSink>);
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
@@ -436,6 +444,8 @@ private:
    Detail::RNTupleMetrics fMetrics;
 
    NTupleSize_t fLastCommittedClusterGroup = 0;
+
+   RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
 
    RNTupleModel &GetUpdatableModel() { return *fFillContext.fModel; }
    Detail::RPageSink &GetSink() { return *fFillContext.fSink; }
@@ -450,12 +460,9 @@ public:
                                                   std::string_view storage,
                                                   const RNTupleWriteOptions &options = RNTupleWriteOptions());
    /// Throws an exception if the model is null.
-   static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model,
-                                                std::string_view ntupleName,
+   static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                                 TFile &file,
                                                 const RNTupleWriteOptions &options = RNTupleWriteOptions());
-   /// Throws an exception if the model or the sink is null.
-   RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    RNTupleWriter(const RNTupleWriter&) = delete;
    RNTupleWriter& operator=(const RNTupleWriter&) = delete;
    ~RNTupleWriter();
@@ -512,7 +519,7 @@ public:
    {
       return std::make_unique<RNTupleModel::RUpdater>(*this);
    }
-};
+}; // class RNTupleWriter
 
 // clang-format off
 /**

@@ -18,19 +18,18 @@ void TestClassVector(const char *fname)
    wrKlassVec->emplace_back(klass);
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-                           std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
 
       // enlarge
       wrKlassVec->emplace_back(CustomStruct{1.f, {1.f, 2.f, 3.f}, {{42.f}}, "foo", std::byte{0}});
       wrKlassVec->emplace_back(CustomStruct{2.f, {4.f, 5.f, 6.f}, {{1.f}, {2.f, 3.f}}, "bar", std::byte{0}});
-      ntuple.Fill();
+      writer->Fill();
 
       // shrink
       wrKlassVec->clear();
       wrKlassVec->emplace_back(CustomStruct{3.f, {7.f, 8.f, 9.f}, {{4.f, 5.f}, {}}, "baz", std::byte{0}});
-      ntuple.Fill();
+      writer->Fill();
    }
 
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
@@ -108,9 +107,8 @@ TEST(RNTuple, InsideCollection)
    wrKlassVec->emplace_back(klass);
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
    auto source = std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
@@ -165,12 +163,11 @@ TEST(RNTuple, RVec)
    wrJets->push_back(7.0);
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
       wrJets->clear();
       wrJets->push_back(1.0);
-      ntuple.Fill();
+      writer->Fill();
    }
 
    auto modelReadAsRVec = RNTupleModel::Create();
@@ -292,9 +289,8 @@ TEST(RNTuple, BoolVector)
    auto modelRead = modelWrite->Clone();
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
    auto rdBoolStdVec = modelRead->GetDefaultEntry().GetPtr<std::vector<bool>>("boolStdVec");
