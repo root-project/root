@@ -192,14 +192,6 @@ public:
    static std::unique_ptr<RNTupleInspector> Create(std::string_view ntupleName, std::string_view storage);
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a new RNTupleInspector.
-   ///
-   /// \param[in] pageSource The RPageSource object belonging to the RNTuple to be inspected.
-   ///
-   /// \see Create(RNTuple *sourceNTuple)
-   static std::unique_ptr<RNTupleInspector> Create(std::unique_ptr<Detail::RPageSource> pageSource);
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the descriptor for the RNTuple being inspected.
    ///
    /// \return A static copy of the RNTupleDescriptor belonging to the inspected RNTuple.

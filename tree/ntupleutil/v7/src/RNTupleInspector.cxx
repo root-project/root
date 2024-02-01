@@ -35,6 +35,9 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(
    fPageSource->Attach();
    auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
    fDescriptor = descriptorGuard->Clone();
+
+   CollectColumnInfo();
+   CollectFieldTreeInfo(fDescriptor->GetFieldZeroId());
 }
 
 void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
@@ -137,38 +140,20 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(DescriptorId_t fieldId
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
-ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
-{
-   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
-
-   inspector->CollectColumnInfo();
-   inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());
-
-   return inspector;
-}
-
-std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *sourceNTuple)
 {
    if (!sourceNTuple) {
       throw RException(R__FAIL("provided RNTuple is null"));
    }
 
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource = sourceNTuple->MakePageSource();
-
-   return ROOT::Experimental::RNTupleInspector::Create(std::move(pageSource));
+   return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(sourceNTuple->MakePageSource()));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::string_view sourceFileName)
 {
    auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, sourceFileName);
-   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
-
-   inspector->CollectColumnInfo();
-   inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());
-
-   return inspector;
+   return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 
 std::string ROOT::Experimental::RNTupleInspector::GetCompressionSettingsAsString() const
