@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RError.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleInspector.hxx>
@@ -146,7 +147,8 @@ ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *source
       throw RException(R__FAIL("provided RNTuple is null"));
    }
 
-   return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(sourceNTuple->MakePageSource()));
+   auto pageSource = Detail::RPageSourceFile::CreateFromAnchor(*sourceNTuple);
+   return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>

@@ -16,6 +16,7 @@
 
 #include <ROOT/RDF/RColumnReaderBase.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
@@ -648,7 +649,8 @@ ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(std::string_view ntupleNam
 
 ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::Experimental::RNTuple *ntuple)
 {
-   ROOT::RDataFrame rdf(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple->MakePageSource()));
+   auto pageSource = ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(*ntuple);
+   ROOT::RDataFrame rdf(std::make_unique<ROOT::Experimental::RNTupleDS>(std::move(pageSource)));
    return rdf;
 }
 

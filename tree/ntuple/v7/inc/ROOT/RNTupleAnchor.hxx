@@ -16,12 +16,9 @@
 #ifndef ROOT7_RNTupleAnchor
 #define ROOT7_RNTupleAnchor
 
-#include <ROOT/RNTupleOptions.hxx>
-
 #include <Rtypes.h>
 
 #include <cstdint>
-#include <memory>
 
 class TCollection;
 class TFile;
@@ -31,7 +28,7 @@ namespace ROOT {
 namespace Experimental {
 
 namespace Detail {
-class RPageSource;
+class RPageSourceFile;
 }
 namespace Internal {
 class RMiniFileReader;
@@ -59,14 +56,12 @@ For instance, for an RNTuple called "Events" in a ROOT file, usage can be
 ~~~ {.cpp}
 auto f = TFile::Open("data.root");
 auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Events");
-
 auto reader = RNTupleReader::Open(ntpl);
-or
-auto pageSource = ntpl->MakePageSource();
 ~~~
 */
 // clang-format on
 class RNTuple final {
+   friend class Detail::RPageSourceFile;
    friend class Internal::RMiniFileReader;
    friend class Internal::RNTupleFileWriter;
 
@@ -115,24 +110,23 @@ public:
    std::uint16_t GetVersionMajor() const { return fVersionMajor; }
    std::uint16_t GetVersionMinor() const { return fVersionMinor; }
    std::uint16_t GetVersionPatch() const { return fVersionPatch; }
+
    std::uint64_t GetSeekHeader() const { return fSeekHeader; }
    std::uint64_t GetNBytesHeader() const { return fNBytesHeader; }
    std::uint64_t GetLenHeader() const { return fLenHeader; }
+
    std::uint64_t GetSeekFooter() const { return fSeekFooter; }
    std::uint64_t GetNBytesFooter() const { return fNBytesFooter; }
    std::uint64_t GetLenFooter() const { return fLenFooter; }
-   std::uint64_t GetChecksum() const { return fChecksum; }
 
-   /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
-   /// If fFile is not set, an exception is thrown.
-   std::unique_ptr<Detail::RPageSource> MakePageSource(const RNTupleReadOptions &options = RNTupleReadOptions());
+   std::uint64_t GetChecksum() const { return fChecksum; }
 
    /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
    ClassDefNV(RNTuple, 4);
-};
+}; // class RNTuple
 
 } // namespace Experimental
 } // namespace ROOT

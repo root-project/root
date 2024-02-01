@@ -29,6 +29,7 @@
 
 #include <RVersion.h>
 #include <TError.h>
+#include <TFile.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -277,9 +278,15 @@ void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const RNTuple &
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSourceFile>
-ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, std::string_view path,
-                                                              const RNTupleReadOptions &options)
+ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options)
 {
+   if (!anchor.fFile)
+      throw RException(R__FAIL("This RNTuple object was not streamed from a ROOT file (TFile or descendant)"));
+
+   // TODO(jblomer): Add RRawFile factory that create a raw file from a TFile. This may then duplicate the file
+   // descriptor (to avoid re-open).  There could also be a raw file that uses a TFile as a "backend" for TFile cases
+   // that are unsupported by raw file.
+   auto path = anchor.fFile->GetEndpointUrl()->GetFile();
    auto pageSource = std::make_unique<RPageSourceFile>("", path, options);
    pageSource->InitDescriptor(anchor);
    pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
