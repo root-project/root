@@ -8405,6 +8405,11 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
          }
       }
       axis->SetOption(chopaz);
+      TString ztit = fZaxis->GetTitle();
+      if (ztit.Index(";")>0) {
+         ztit.Remove(ztit.Index(";"),ztit.Length());
+         axis->SetTitle(ztit.Data());
+      }
       axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
    }
 
