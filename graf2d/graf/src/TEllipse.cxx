@@ -21,7 +21,7 @@
 #include "TVirtualX.h"
 
 
-const Double_t kPI = TMath::Pi();
+constexpr Double_t kPI = TMath::Pi();
 
 ClassImp(TEllipse);
 
