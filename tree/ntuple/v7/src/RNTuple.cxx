@@ -141,7 +141,7 @@ ROOT::Experimental::RNTupleReader::Open(std::string_view ntupleName, std::string
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
 ROOT::Experimental::RNTupleReader::Open(ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
 {
-   return std::make_unique<RNTupleReader>(ntuple->MakePageSource(options));
+   return std::make_unique<RNTupleReader>(Detail::RPageSourceFile::CreateFromAnchor(*ntuple, options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>

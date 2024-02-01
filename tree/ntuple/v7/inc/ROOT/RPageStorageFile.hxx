@@ -131,9 +131,7 @@ private:
    void InitDescriptor(const RNTuple &anchor);
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
-   /// Used from the RNTuple class to build a datasource if the anchor is already available
-   static std::unique_ptr<RPageSourceFile>
-   CreateFromAnchor(const RNTuple &anchor, std::string_view path, const RNTupleReadOptions &options);
+
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 
@@ -151,6 +149,10 @@ protected:
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
+   /// Used from the RNTuple class to build a datasource if the anchor is already available.
+   /// Requires the RNTuple object to be streamed from a file.
+   static std::unique_ptr<RPageSourceFile>
+   CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options = RNTupleReadOptions());
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    /// The meta-data (header and footer) is reread and parsed by the clone.
    std::unique_ptr<RPageSource> Clone() const final;
