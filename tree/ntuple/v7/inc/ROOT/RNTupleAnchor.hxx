@@ -30,11 +30,11 @@ class TFileMergeInfo;
 namespace ROOT {
 namespace Experimental {
 
-class RNTupleReadOptions;
 namespace Detail {
 class RPageSource;
 }
 namespace Internal {
+class RMiniFileReader;
 class RNTupleFileWriter;
 }
 
@@ -67,12 +67,16 @@ auto pageSource = ntpl->MakePageSource();
 */
 // clang-format on
 class RNTuple final {
+   friend class Internal::RMiniFileReader;
+   friend class Internal::RNTupleFileWriter;
+
 public:
    static constexpr std::uint16_t kVersionEpoch = 0;
    static constexpr std::uint16_t kVersionMajor = 2;
    static constexpr std::uint16_t kVersionMinor = 0;
    static constexpr std::uint16_t kVersionPatch = 0;
 
+private:
    /// Version of the RNTuple binary format that the writer supports (see specification).
    /// Changing the epoch indicates backward-incompatible changes
    std::uint16_t fVersionEpoch = kVersionEpoch;
@@ -103,8 +107,21 @@ public:
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
+public:
    RNTuple() = default;
    ~RNTuple() = default;
+
+   std::uint16_t GetVersionEpoch() const { return fVersionEpoch; }
+   std::uint16_t GetVersionMajor() const { return fVersionMajor; }
+   std::uint16_t GetVersionMinor() const { return fVersionMinor; }
+   std::uint16_t GetVersionPatch() const { return fVersionPatch; }
+   std::uint64_t GetSeekHeader() const { return fSeekHeader; }
+   std::uint64_t GetNBytesHeader() const { return fNBytesHeader; }
+   std::uint64_t GetLenHeader() const { return fLenHeader; }
+   std::uint64_t GetSeekFooter() const { return fSeekFooter; }
+   std::uint64_t GetNBytesFooter() const { return fNBytesFooter; }
+   std::uint64_t GetLenFooter() const { return fLenFooter; }
+   std::uint64_t GetChecksum() const { return fChecksum; }
 
    /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
    /// If fFile is not set, an exception is thrown.

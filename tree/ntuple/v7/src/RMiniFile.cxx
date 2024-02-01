@@ -18,7 +18,6 @@
 #include "ROOT/RMiniFile.hxx"
 
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RNTuple.hxx> // For converting an anchor to an RNTuple object
 #include <ROOT/RNTupleZip.hxx>
 
 #include <TError.h>
@@ -941,35 +940,19 @@ struct RTFNTuple {
    RTFNTuple() = default;
    explicit RTFNTuple(const ROOT::Experimental::RNTuple &inMemoryAnchor)
    {
-      fVersionEpoch = inMemoryAnchor.fVersionEpoch;
-      fVersionMajor = inMemoryAnchor.fVersionMajor;
-      fVersionMinor = inMemoryAnchor.fVersionMinor;
-      fVersionPatch = inMemoryAnchor.fVersionPatch;
-      fSeekHeader = inMemoryAnchor.fSeekHeader;
-      fNBytesHeader = inMemoryAnchor.fNBytesHeader;
-      fLenHeader = inMemoryAnchor.fLenHeader;
-      fSeekFooter = inMemoryAnchor.fSeekFooter;
-      fNBytesFooter = inMemoryAnchor.fNBytesFooter;
-      fLenFooter = inMemoryAnchor.fLenFooter;
+      fVersionEpoch = inMemoryAnchor.GetVersionEpoch();
+      fVersionMajor = inMemoryAnchor.GetVersionMajor();
+      fVersionMinor = inMemoryAnchor.GetVersionMinor();
+      fVersionPatch = inMemoryAnchor.GetVersionPatch();
+      fSeekHeader = inMemoryAnchor.GetSeekHeader();
+      fNBytesHeader = inMemoryAnchor.GetNBytesHeader();
+      fLenHeader = inMemoryAnchor.GetLenHeader();
+      fSeekFooter = inMemoryAnchor.GetSeekFooter();
+      fNBytesFooter = inMemoryAnchor.GetNBytesFooter();
+      fLenFooter = inMemoryAnchor.GetLenFooter();
       fChecksum = XXH3_64bits(GetPtrCkData(), GetSizeCkData());
    }
    std::uint32_t GetSize() const { return sizeof(RTFNTuple); }
-   ROOT::Experimental::RNTuple ToAnchor() const
-   {
-      ROOT::Experimental::RNTuple anchor;
-      anchor.fVersionEpoch = fVersionEpoch;
-      anchor.fVersionMajor = fVersionMajor;
-      anchor.fVersionMinor = fVersionMinor;
-      anchor.fVersionPatch = fVersionPatch;
-      anchor.fSeekHeader = fSeekHeader;
-      anchor.fNBytesHeader = fNBytesHeader;
-      anchor.fLenHeader = fLenHeader;
-      anchor.fSeekFooter = fSeekFooter;
-      anchor.fNBytesFooter = fNBytesFooter;
-      anchor.fLenFooter = fLenFooter;
-      anchor.fChecksum = fChecksum;
-      return anchor;
-   }
    // The byte count and class version members are not checksummed
    std::uint32_t GetOffsetCkData() { return sizeof(fByteCount) + sizeof(fVersionClass); }
    std::uint32_t GetSizeCkData() { return GetSize() - GetOffsetCkData() - sizeof(fChecksum); }
@@ -1034,6 +1017,26 @@ struct RTFileControlBlock {
 ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::RRawFile *rawFile)
    : fRawFile(rawFile)
 {
+}
+
+ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::CreateAnchor(
+   std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor, std::uint16_t versionPatch,
+   std::uint64_t seekHeader, std::uint64_t nbytesHeader, std::uint64_t lenHeader, std::uint64_t seekFooter,
+   std::uint64_t nbytesFooter, std::uint64_t lenFooter, std::uint64_t checksum)
+{
+   RNTuple ntuple;
+   ntuple.fVersionEpoch = versionEpoch;
+   ntuple.fVersionMajor = versionMajor;
+   ntuple.fVersionMinor = versionMinor;
+   ntuple.fVersionPatch = versionPatch;
+   ntuple.fSeekHeader = seekHeader;
+   ntuple.fNBytesHeader = nbytesHeader;
+   ntuple.fLenHeader = lenHeader;
+   ntuple.fSeekFooter = seekFooter;
+   ntuple.fNBytesFooter = nbytesFooter;
+   ntuple.fLenFooter = lenFooter;
+   ntuple.fChecksum = checksum;
+   return ntuple;
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
@@ -1128,7 +1131,9 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
       return R__FAIL("RNTuple anchor checksum mismatch");
    }
 
-   return ntuple->ToAnchor();
+   return CreateAnchor(ntuple->fVersionEpoch, ntuple->fVersionMajor, ntuple->fVersionMinor, ntuple->fVersionPatch,
+                       ntuple->fSeekHeader, ntuple->fNBytesHeader, ntuple->fLenHeader, ntuple->fSeekFooter,
+                       ntuple->fNBytesFooter, ntuple->fLenFooter, ntuple->fChecksum);
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
@@ -1153,7 +1158,9 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
    auto checksum = XXH3_64bits(ntuple.GetPtrCkData(), ntuple.GetSizeCkData());
    if (checksum != static_cast<uint64_t>(ntuple.fChecksum))
       return R__FAIL("RNTuple bare file: anchor checksum mismatch");
-   return ntuple.ToAnchor();
+   return CreateAnchor(ntuple.fVersionEpoch, ntuple.fVersionMajor, ntuple.fVersionMinor, ntuple.fVersionPatch,
+                       ntuple.fSeekHeader, ntuple.fNBytesHeader, ntuple.fLenHeader, ntuple.fSeekFooter,
+                       ntuple.fNBytesFooter, ntuple.fLenFooter, ntuple.fChecksum);
 }
 
 
