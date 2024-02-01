@@ -32,7 +32,6 @@ class RNTupleDSTest : public ::testing::Test {
 protected:
    std::string fFileName = "RNTupleDS_test.root";
    std::string fNtplName = "ntuple";
-   std::unique_ptr<RPageSource> fPageSource;
 
    void SetUp() override {
       auto model = RNTupleModel::Create();
@@ -54,7 +53,6 @@ protected:
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNtplName, fFileName);
          ntuple->Fill();
       }
-      fPageSource = RPageSource::Create(fNtplName, fFileName);
    }
 
    void TearDown() override {
@@ -64,27 +62,27 @@ protected:
 
 TEST_F(RNTupleDSTest, ColTypeNames)
 {
-   RNTupleDS tds(std::move(fPageSource));
+   RNTupleDS ds(fNtplName, fFileName);
 
-   auto colNames = tds.GetColumnNames();
+   auto colNames = ds.GetColumnNames();
    ASSERT_EQ(15, colNames.size());
 
-   EXPECT_TRUE(tds.HasColumn("pt"));
-   EXPECT_TRUE(tds.HasColumn("energy"));
-   EXPECT_TRUE(tds.HasColumn("rvec"));
-   EXPECT_TRUE(tds.HasColumn("R_rdf_sizeof_nnlo"));
-   EXPECT_TRUE(tds.HasColumn("electron"));
-   EXPECT_TRUE(tds.HasColumn("electron.pt"));
-   EXPECT_TRUE(tds.HasColumn("VecElectron"));
-   EXPECT_TRUE(tds.HasColumn("R_rdf_sizeof_VecElectron"));
-   EXPECT_TRUE(tds.HasColumn("VecElectron.pt"));
-   EXPECT_TRUE(tds.HasColumn("R_rdf_sizeof_VecElectron.pt"));
-   EXPECT_FALSE(tds.HasColumn("Address"));
+   EXPECT_TRUE(ds.HasColumn("pt"));
+   EXPECT_TRUE(ds.HasColumn("energy"));
+   EXPECT_TRUE(ds.HasColumn("rvec"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_nnlo"));
+   EXPECT_TRUE(ds.HasColumn("electron"));
+   EXPECT_TRUE(ds.HasColumn("electron.pt"));
+   EXPECT_TRUE(ds.HasColumn("VecElectron"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_VecElectron"));
+   EXPECT_TRUE(ds.HasColumn("VecElectron.pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_VecElectron.pt"));
+   EXPECT_FALSE(ds.HasColumn("Address"));
 
-   EXPECT_STREQ("std::string", tds.GetTypeName("tag").c_str());
-   EXPECT_STREQ("float", tds.GetTypeName("energy").c_str());
-   EXPECT_STREQ("std::size_t", tds.GetTypeName("R_rdf_sizeof_jets").c_str());
-   EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", tds.GetTypeName("rvec").c_str());
+   EXPECT_STREQ("std::string", ds.GetTypeName("tag").c_str());
+   EXPECT_STREQ("float", ds.GetTypeName("energy").c_str());
+   EXPECT_STREQ("std::size_t", ds.GetTypeName("R_rdf_sizeof_jets").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
 }
 
 

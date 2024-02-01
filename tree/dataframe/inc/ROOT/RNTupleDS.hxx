@@ -119,8 +119,11 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// is not enough work to give at least one cluster to every slot.
    void PrepareNextRanges();
 
-public:
    explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
+
+public:
+   RNTupleDS(std::string_view ntupleName, std::string_view fileName);
+   RNTupleDS(ROOT::Experimental::RNTuple *ntuple);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
    ~RNTupleDS();
 
