@@ -21,18 +21,18 @@ TEST(RNTuple, View)
       ntuple.Fill();
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   auto viewPt = ntuple.GetView<float>("pt");
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = reader->GetView<float>("pt");
    int n = 0;
-   for (auto i : ntuple.GetEntryRange()) {
+   for (auto i : reader->GetEntryRange()) {
       EXPECT_EQ(42.0, viewPt(i));
       n++;
    }
    EXPECT_EQ(2, n);
 
-   auto viewJets = ntuple.GetView<std::vector<std::int32_t>>("jets");
+   auto viewJets = reader->GetView<std::vector<std::int32_t>>("jets");
    n = 0;
-   for (auto i : ntuple.GetEntryRange()) {
+   for (auto i : reader->GetEntryRange()) {
       if (i == 0) {
          EXPECT_EQ(3U, viewJets(i).size());
          EXPECT_EQ(1, viewJets(i)[0]);
@@ -45,7 +45,7 @@ TEST(RNTuple, View)
    }
    EXPECT_EQ(2, n);
 
-   auto viewJetElements = ntuple.GetView<std::int32_t>("jets._0");
+   auto viewJetElements = reader->GetView<std::int32_t>("jets._0");
    n = 0;
    for (auto i : viewJetElements.GetFieldRange()) {
       n++;
