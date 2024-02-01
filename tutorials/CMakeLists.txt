@@ -129,6 +129,10 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
     list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
 endif()
 
+if(NOT ROOT_proof_FOUND)
+   set(proof_veto roostats/StandardFrequentistDiscovery.C)
+endif()
+
 if(NOT ROOT_spectrum_FOUND)
    set(spectrum_veto spectrum/*.C)
 endif()
@@ -462,6 +466,7 @@ set(all_veto hsimple.C
              ${dataframe_veto}
              ${macm1_veto}
              ${clad_veto}
+             ${proof_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
