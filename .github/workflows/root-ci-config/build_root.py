@@ -117,7 +117,7 @@ def main():
 
     if testing:
       # Where to put the roottest directory
-      if os.path.exists(os.path.join(f"{WORKDIR}","src","roottest",".git")):
+      if os.path.exists(os.path.join(WORKDIR, "src", "roottest", ".git")):
          roottest_dir = "src/roottest"
       else:
          roottest_dir = "roottest"
@@ -165,7 +165,7 @@ def main():
     print_trace()
 
 def handle_test_failure(ctest_returncode):
-    logloc = f'{WORKDIR}/build/Testing/Temporary/LastTestsFailed.log'
+    logloc = os.path.join(WORKDIR, "build", "Testing", "Temporary", "LastTestsFailed.log")
     if os.path.isfile(logloc):
         with open(logloc, 'r') as logf:
             print("TEST FAILURES:")
@@ -257,16 +257,17 @@ def git_pull(directory: str, repository: str, branch: str):
         if returncode == 0:
             break
 
-        if os.path.exists(os.path.join(f"{WORKDIR}",f"{directory}",".git")):
+        targetdir = os.path.join(WORKDIR, directory)
+        if os.path.exists(os.path.join(targetdir, ".git")):
             returncode = subprocess_with_log(f"""
-                cd '{WORKDIR}/{directory}'
+                cd '{targetdir}'
                 git checkout {branch}
                 git fetch
                 git reset --hard @{{u}}
             """)
         else:
             returncode = subprocess_with_log(f"""
-                git clone --branch {branch} --single-branch {repository} "{WORKDIR}/{directory}"
+                git clone --branch {branch} --single-branch {repository} "{targetdir}"
             """)
 
     if returncode != 0:
@@ -287,8 +288,8 @@ def download_artifacts(obj_prefix: str):
 
     except Exception as err:
         build_utils.print_warning("failed to download/extract:", err)
-        shutil.rmtree(f'{WORKDIR}/src', ignore_errors=True)
-        shutil.rmtree(f'{WORKDIR}/build', ignore_errors=True)
+        shutil.rmtree(os.path.join(WORKDIR, "src"), ignore_errors=True)
+        shutil.rmtree(os.path.join(WORKDIR, "build"), ignore_errors=True)
         raise err
 
 
@@ -315,8 +316,9 @@ def run_ctest(extra_ctest_flags: str) -> int:
     Just return the exit code in case of test failures instead of `die()`-ing; report test
     failures in main().
     """
+    builddir = os.path.join(WORKDIR, "build")
     ctest_result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build'
+        cd '{builddir}'
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
 
@@ -343,8 +345,10 @@ def archive_and_upload(archive_name, prefix):
 
 @github_log_group("Configure")
 def cmake_configure(options, buildtype):
+    srcdir = os.path.join(WORKDIR, "src")
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -DCMAKE_BUILD_TYPE={buildtype} {options}
+        cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
     """)
 
     if result != 0:
@@ -354,8 +358,10 @@ def cmake_configure(options, buildtype):
 @github_log_group("Dump existing configuration")
 def cmake_dump_config():
     # Print CMake cached config
+    srcdir = os.path.join(WORKDIR, "src")
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -N -L
+        cmake -S '{srcdir}' -B '{builddir}' -N -L
     """)
 
     if result != 0:
@@ -371,8 +377,9 @@ def dump_requested_config(options):
 def cmake_build(buildtype):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
 
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
+        cmake --build '{builddir}' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
     """)
 
     if result != 0:
@@ -380,13 +387,14 @@ def cmake_build(buildtype):
 
 
 def build(options, buildtype):
-    if not os.path.isdir(os.path.join(f"{WORKDIR}","build")):
-        result = subprocess_with_log(f"mkdir {WORKDIR}/build")
+    if not os.path.isdir(os.path.join(WORKDIR, "build")):
+        builddir = os.path.join(WORKDIR, "build")
+        result = subprocess_with_log(f"mkdir {builddir}")
 
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(os.path.join(f"{WORKDIR}","build","CMakeCache.txt")):
+    if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
         cmake_configure(options, buildtype)
     else:
         cmake_dump_config()
@@ -398,10 +406,12 @@ def build(options, buildtype):
 
 @github_log_group("Create binary packages")
 def create_binaries(buildtype):
-    os.makedirs(f"{WORKDIR}/packages/", exist_ok=True)
+    builddir = os.path.join(WORKDIR, "build")
+    packagedir = os.path.join(WORKDIR, "packages")
+    os.makedirs(packagedir, exist_ok=True)
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build'
-        cpack -B {WORKDIR}/packages/ --verbose -C {buildtype}
+        cd '{builddir}'
+        cpack -B {packagedir} --verbose -C {buildtype}
     """)
 
     if result != 0:
@@ -411,8 +421,9 @@ def create_binaries(buildtype):
 @github_log_group("Rebase")
 def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str) -> None:
     # rebase fails unless user.email and user.name is set
+    targetdir = os.path.join(WORKDIR, directory)
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/{directory}'
+        cd '{targetdir}'
 
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
@@ -460,15 +471,16 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
   Given a pull request merge commit and the incoming commit return
   the commit corresponding to the head of the branch we are merging into.
   """
+  targetdir = os.path.join(WORKDIR, directory)
   command = f"""
-      cd '{WORKDIR}/{directory}'
+      cd '{targetdir}'
       git fetch {repository} {merge_sha}
       """
   result = subprocess_with_log(command)
   if result != 0:
       die("Failed to fetch {merge_sha} from {repository}")
   command = f"""
-      cd '{WORKDIR}/{directory}'
+      cd '{targetdir}'
       git rev-list --parents -1 {merge_sha}
       """
   result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
@@ -496,8 +508,9 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
 
   fetch_url = upstream_prefix + "/" + repo_name
 
+  gitdir = os.path.join(WORKDIR, "src", ".git")
   current_head = get_stdout_subprocess(f"""
-      git --git-dir={WORKDIR}/src/.git rev-parse --abbrev-ref HEAD
+      git --git-dir={gitdir} rev-parse --abbrev-ref HEAD
       """, "Failed capture of current branch name")
 
   # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
@@ -509,7 +522,7 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
     if current_head == "latest-stable":
       # Resolve the 'latest-stable' branch to the latest merged head/tag
       current_head = get_stdout_subprocess(f"""
-           git --git-dir={WORKDIR}/src/.git for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\))
+           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\))
            """, "Failed capture of lastest-stable underlying branch name")
       return fetch_url, current_head
 
@@ -523,7 +536,7 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
 
   # Finally, try upstream using the closest head/tag below the parent commit of the current head
   closest_ref = get_stdout_subprocess(f"""
-       git --git-dir={WORKDIR}/src/.git describe --all --abbrev=0 HEAD^
+       git --git-dir={gitdir} describe --all --abbrev=0 HEAD^
        """, "") # Empty error means, ignore errors.
   candidate_head = re.sub("^(heads|tags)/", "", closest_ref)
 
@@ -537,8 +550,9 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
 
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build'
+        cd '{builddir}'
         gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="roottest|runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
     """)
 
