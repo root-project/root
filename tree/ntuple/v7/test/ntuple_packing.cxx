@@ -327,10 +327,10 @@ TEST(Packing, OnDiskEncoding)
                                  0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex64, sizeof(expIndex64)), 0);
 
-   auto reader = RNTupleReader(std::move(source));
-   EXPECT_EQ(EColumnType::kIndex64, reader.GetModel().GetField("str").GetColumnRepresentative()[0]);
-   EXPECT_EQ(2u, reader.GetNEntries());
-   auto viewStr = reader.GetView<std::string>("str");
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentative()[0]);
+   EXPECT_EQ(2u, reader->GetNEntries());
+   auto viewStr = reader->GetView<std::string>("str");
    EXPECT_EQ(std::string("abc"), viewStr(0));
    EXPECT_EQ(std::string("de"), viewStr(1));
 }

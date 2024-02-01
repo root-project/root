@@ -99,12 +99,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
                                                  std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
 {
-   if (!fSource) {
-      throw RException(R__FAIL("null source"));
-   }
-   if (!fModel) {
-      throw RException(R__FAIL("null model"));
-   }
+   // TODO(jblomer): properly support projected fields
    if (!fModel->GetProjectedFields().IsEmpty()) {
       throw RException(R__FAIL("model has projected fields, which is incompatible with providing a read model"));
    }
@@ -116,9 +111,6 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader")
 {
-   if (!fSource) {
-      throw RException(R__FAIL("null source"));
-   }
    InitPageSource();
 }
 
@@ -128,20 +120,30 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader>
 ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                         std::string_view storage, const RNTupleReadOptions &options)
 {
-   return std::make_unique<RNTupleReader>(std::move(model), Detail::RPageSource::Create(ntupleName, storage, options));
+   return std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(std::move(model), Detail::RPageSource::Create(ntupleName, storage, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
 ROOT::Experimental::RNTupleReader::Open(std::string_view ntupleName, std::string_view storage,
                                         const RNTupleReadOptions &options)
 {
-   return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage, options));
+   return std::unique_ptr<RNTupleReader>(new RNTupleReader(Detail::RPageSource::Create(ntupleName, storage, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
 ROOT::Experimental::RNTupleReader::Open(ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
 {
-   return std::make_unique<RNTupleReader>(Detail::RPageSourceFile::CreateFromAnchor(*ntuple, options));
+   return std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(Detail::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleReader>
+ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, ROOT::Experimental::RNTuple *ntuple,
+                                        const RNTupleReadOptions &options)
+{
+   return std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(std::move(model), Detail::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
@@ -151,7 +153,8 @@ ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
    for (const auto &n : ntuples) {
       sources.emplace_back(Detail::RPageSource::Create(n.fNTupleName, n.fStorage, n.fOptions));
    }
-   return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceFriends>("_friends", sources));
+   return std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(std::make_unique<Detail::RPageSourceFriends>("_friends", sources)));
 }
 
 const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetModel()
