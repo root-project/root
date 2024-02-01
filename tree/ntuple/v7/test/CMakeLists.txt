@@ -60,6 +60,8 @@ ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 
+ROOT_ADD_GTEST(ntuple_parallel_writer ntuple_parallel_writer.cxx LIBRARIES ROOTNTuple)
+
 ROOT_ADD_GTEST(ntuple_limits ntuple_limits.cxx LIBRARIES ROOTNTuple)
 
 if(daos OR daos_mock)
