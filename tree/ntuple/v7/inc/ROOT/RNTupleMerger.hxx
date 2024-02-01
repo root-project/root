@@ -31,22 +31,6 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RFieldMerger
-\ingroup NTuple
-\brief Two-way merge between NTuple fields
-*/
-// clang-format on
-class RFieldMerger {
-private:
-   /// The merged field descriptor
-   RFieldDescriptor fMergedField = RFieldDescriptor();
-
-public:
-   static RResult<RFieldMerger> Merge(const RFieldDescriptor &lhs, const RFieldDescriptor &rhs);
-};
-
-// clang-format off
-/**
  * \class ROOT::Experimental::RNTupleMerger
  * \ingroup NTuple
  * \brief Given a set of RPageSources merge them into an RPageSink

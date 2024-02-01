@@ -73,12 +73,6 @@ TEST(RPageStorage, ReadSealedPages)
    }
 }
 
-TEST(RFieldMerger, Merge)
-{
-   auto mergeResult = RFieldMerger::Merge(RFieldDescriptor(), RFieldDescriptor());
-   EXPECT_FALSE(mergeResult);
-}
-
 TEST(RNTupleMerger, MergeSymmetric)
 {
    // Write two test ntuples to be merged
