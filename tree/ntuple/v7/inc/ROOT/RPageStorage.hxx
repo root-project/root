@@ -31,6 +31,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <unordered_set>
 #include <vector>
@@ -246,6 +247,35 @@ public:
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
+
+   /// An RAII wrapper used to synchronize a page sink. See GetSinkGuard().
+   class RSinkGuard {
+      std::mutex *fLock;
+
+   public:
+      explicit RSinkGuard(std::mutex *lock) : fLock(lock)
+      {
+         if (fLock != nullptr) {
+            fLock->lock();
+         }
+      }
+      RSinkGuard(const RSinkGuard &) = delete;
+      RSinkGuard &operator=(const RSinkGuard &) = delete;
+      RSinkGuard(RSinkGuard &&) = delete;
+      RSinkGuard &operator=(RSinkGuard &&) = delete;
+      ~RSinkGuard()
+      {
+         if (fLock != nullptr) {
+            fLock->unlock();
+         }
+      }
+   };
+
+   virtual RSinkGuard GetSinkGuard()
+   {
+      // By default, there is no lock and the guard does nothing.
+      return RSinkGuard(nullptr);
+   }
 };
 
 // clang-format off

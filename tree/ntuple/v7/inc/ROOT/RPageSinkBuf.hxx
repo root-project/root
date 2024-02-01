@@ -118,6 +118,8 @@ private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {
       RNTuplePlainCounter &fParallelZip;
+      RNTuplePlainCounter &fTimeWallCriticalSection;
+      RNTupleTickCounter<RNTuplePlainCounter> &fTimeCpuCriticalSection;
    };
    std::unique_ptr<RCounters> fCounters;
    /// The inner sink, responsible for actually performing I/O.
