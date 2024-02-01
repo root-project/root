@@ -5,10 +5,12 @@
 namespace {
 bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
 {
-   return a.fVersionEpoch == b.fVersionEpoch && a.fVersionMajor == b.fVersionMajor &&
-          a.fVersionMinor == b.fVersionMinor && a.fVersionPatch == b.fVersionPatch && a.fSeekHeader == b.fSeekHeader &&
-          a.fNBytesHeader == b.fNBytesHeader && a.fLenHeader == b.fLenHeader && a.fSeekFooter == b.fSeekFooter &&
-          a.fNBytesFooter == b.fNBytesFooter && a.fLenFooter == b.fLenFooter && a.fChecksum == b.fChecksum;
+   return a.GetVersionEpoch() == b.GetVersionEpoch() && a.GetVersionMajor() == b.GetVersionMajor() &&
+          a.GetVersionMinor() == b.GetVersionMinor() && a.GetVersionPatch() == b.GetVersionPatch() &&
+          a.GetSeekHeader() == b.GetSeekHeader() && a.GetNBytesHeader() == b.GetNBytesHeader() &&
+          a.GetLenHeader() == b.GetLenHeader() && a.GetSeekFooter() == b.GetSeekFooter() &&
+          a.GetNBytesFooter() == b.GetNBytesFooter() && a.GetLenFooter() == b.GetLenFooter() &&
+          a.GetChecksum() == b.GetChecksum();
 }
 
 struct RNTupleTester {
@@ -36,8 +38,8 @@ TEST(MiniFile, Raw)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple.fSeekHeader);
-   EXPECT_EQ(offFooter, ntuple.fSeekFooter);
+   EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob);
@@ -66,8 +68,8 @@ TEST(MiniFile, Stream)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple.fSeekHeader);
-   EXPECT_EQ(offFooter, ntuple.fSeekFooter);
+   EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob);
@@ -102,8 +104,8 @@ TEST(MiniFile, Proper)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple.fSeekHeader);
-   EXPECT_EQ(offFooter, ntuple.fSeekFooter);
+   EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob);
@@ -344,8 +346,8 @@ TEST(MiniFile, LongString)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple1 = reader.GetNTuple("ntuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple1.fSeekHeader);
-   EXPECT_EQ(offFooter, ntuple1.fSeekFooter);
+   EXPECT_EQ(offHeader, ntuple1.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple1.GetSeekFooter());
 }
 
 TEST(MiniFile, Multi)
@@ -375,11 +377,11 @@ TEST(MiniFile, Multi)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple1 = reader.GetNTuple("FirstNTuple").Inspect();
-   EXPECT_EQ(offHeader1, ntuple1.fSeekHeader);
-   EXPECT_EQ(offFooter1, ntuple1.fSeekFooter);
+   EXPECT_EQ(offHeader1, ntuple1.GetSeekHeader());
+   EXPECT_EQ(offFooter1, ntuple1.GetSeekFooter());
    auto ntuple2 = reader.GetNTuple("SecondNTuple").Inspect();
-   EXPECT_EQ(offHeader2, ntuple2.fSeekHeader);
-   EXPECT_EQ(offFooter2, ntuple2.fSeekFooter);
+   EXPECT_EQ(offHeader2, ntuple2.GetSeekHeader());
+   EXPECT_EQ(offFooter2, ntuple2.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob1);

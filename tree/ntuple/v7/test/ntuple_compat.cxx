@@ -5,7 +5,9 @@ TEST(RNTupleCompat, Epoch)
    FileRaii fileGuard("test_ntuple_compat_epoch.root");
 
    RNTuple ntpl;
-   ntpl.fVersionEpoch++;
+   // The first 16 bit integer in the struct is the epoch
+   std::uint16_t *versionEpoch = reinterpret_cast<uint16_t *>(&ntpl);
+   *versionEpoch = *versionEpoch + 1;
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    file->WriteObject(&ntpl, "ntpl");
    file->Close();
