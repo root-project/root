@@ -3618,8 +3618,37 @@ void TF1::Streamer(TBuffer &b)
 
 void TF1::Update()
 {
-   delete fHistogram;
-   fHistogram = nullptr;
+   if (fHistogram) {
+      TString XAxisTitle = fHistogram->GetXaxis()->GetTitle();
+      TString YAxisTitle = fHistogram->GetYaxis()->GetTitle();
+      Int_t XLabCol = fHistogram->GetXaxis()->GetLabelColor();
+      Int_t YLabCol = fHistogram->GetYaxis()->GetLabelColor();
+      Int_t XLabFont = fHistogram->GetXaxis()->GetLabelFont();
+      Int_t YLabFont = fHistogram->GetYaxis()->GetLabelFont();
+      Float_t XLabOffset = fHistogram->GetXaxis()->GetLabelOffset();
+      Float_t YLabOffset = fHistogram->GetYaxis()->GetLabelOffset();
+      Float_t XLabSize = fHistogram->GetXaxis()->GetLabelSize();
+      Float_t YLabSize = fHistogram->GetYaxis()->GetLabelSize();
+      Int_t XNdiv = fHistogram->GetXaxis()->GetNdivisions();
+      Int_t YNdiv = fHistogram->GetYaxis()->GetNdivisions();
+
+      delete fHistogram;
+      fHistogram = nullptr;
+      GetHistogram();
+
+      fHistogram->GetXaxis()->SetTitle(XAxisTitle.Data());
+      fHistogram->GetYaxis()->SetTitle(YAxisTitle.Data());
+      fHistogram->GetXaxis()->SetLabelColor(XLabCol);
+      fHistogram->GetYaxis()->SetLabelColor(YLabCol);
+      fHistogram->GetXaxis()->SetLabelFont(XLabFont);
+      fHistogram->GetYaxis()->SetLabelFont(YLabFont);
+      fHistogram->GetXaxis()->SetLabelOffset(XLabOffset);
+      fHistogram->GetYaxis()->SetLabelOffset(YLabOffset);
+      fHistogram->GetXaxis()->SetLabelSize(XLabSize);
+      fHistogram->GetYaxis()->SetLabelSize(YLabSize);
+      fHistogram->GetXaxis()->SetNdivisions(XNdiv);
+      fHistogram->GetYaxis()->SetNdivisions(YNdiv);
+   }
    if (!fIntegral.empty()) {
       fIntegral.clear();
       fAlpha.clear();
