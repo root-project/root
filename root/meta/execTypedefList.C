@@ -77,6 +77,13 @@ int check_exist(const char *name)
 #include <iostream>
 #include <fstream>
 
+bool IsProofEnabled() {
+   return nullptr != strstr(gROOT->GetConfigFeatures(), "proof");
+}
+bool IsProofType(const char *what) {
+   return nullptr != strstr(what, "TProof") || nullptr != strstr(what, "TDSet");
+}
+
 int check_file(const char *filename, int expected_count)
 {
    std::ifstream f(filename);
@@ -84,13 +91,17 @@ int check_file(const char *filename, int expected_count)
    int count = 0;
    int found = 0;
    char what[1000];
+   const bool isProofEnabled = IsProofEnabled();
    while( f.getline(what,1000) ) {
       ++count;
       if (what[0]=='#') continue;
-      int lres = check_exist(what);
-      if (lres) {
-         fprintf(stderr,"Failed on count == %d in %s\n",count,filename);
-         res = lres;
+      // If Proof is disabled and this is a name related to it, skip the analysis
+      if (isProofEnabled || !IsProofType(what)) {
+         int lres = check_exist(what);
+         if (lres) {
+            fprintf(stderr,"Failed on count == %d in %s\n",count,filename);
+            res = lres;
+         }
       }
       ++found;
    }
