@@ -181,9 +181,8 @@ public:
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader>
-   Open(RNTuple *ntuple, const RNTupleReadOptions &options =
-                            RNTupleReadOptions()); /// The caller imposes a model, which must be compatible with the
-                                                   /// model found in the data on storage.
+   Open(RNTuple *ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
+   /// The caller imposes a model, which must be compatible with the model found in the data on storage.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
