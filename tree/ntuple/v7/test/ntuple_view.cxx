@@ -199,6 +199,26 @@ TEST(RNTuple, Composable)
    EXPECT_EQ(8, nEv);
 }
 
+TEST(RNTuple, VoidView)
+{
+   FileRaii fileGuard("test_ntuple_voidview.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+   auto viewPt = reader->GetView<void>("pt");
+   viewPt(0);
+   EXPECT_FLOAT_EQ(42.0, viewPt.GetValue().GetRef<float>());
+   EXPECT_STREQ("pt", viewPt.GetField().GetFieldName().c_str());
+}
+
 TEST(RNTuple, MissingViewNames)
 {
    FileRaii fileGuard("test_ntuple_missing_view_names.root");

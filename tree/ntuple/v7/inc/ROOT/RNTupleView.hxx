@@ -139,6 +139,7 @@ Fields of simple types with a Map() method will use that and thus expose zero-co
 // clang-format on
 template <typename T>
 class RNTupleView {
+   friend class RNTupleReader;
    friend class RNTupleViewCollection;
 
    using FieldT = RField<T>;
@@ -148,9 +149,6 @@ private:
    FieldT fField;
    /// Used as a Read() destination for fields that are not mappable
    RFieldBase::RValue fValue;
-
-public:
-   using FieldTypeT = T;
 
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
@@ -162,12 +160,14 @@ public:
          throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
    }
 
+public:
    RNTupleView(const RNTupleView& other) = delete;
    RNTupleView(RNTupleView&& other) = default;
    RNTupleView& operator=(const RNTupleView& other) = delete;
    RNTupleView& operator=(RNTupleView&& other) = default;
    ~RNTupleView() = default;
 
+   const FieldT &GetField() const { return fField; }
    RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
 
    const T &operator()(NTupleSize_t globalIndex)
@@ -205,6 +205,51 @@ public:
    }
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleView<void>
+\ingroup NTuple
+\brief An RNTupleView where the type is not known at compile time.
+
+Can be used to read individual fields whose type is unknown. The void view gives access to the RValue
+in addition to the field, so that the read object can be retrieved.
+*/
+// clang-format on
+template <>
+class RNTupleView<void> {
+   friend class RNTupleReader;
+   friend class RNTupleViewCollection;
+
+private:
+   std::unique_ptr<RFieldBase> fField;
+   RFieldBase::RValue fValue;
+
+   static std::unique_ptr<RFieldBase> CreateField(DescriptorId_t fieldId, const RNTupleDescriptor &desc)
+   {
+      return desc.GetFieldDescriptor(fieldId).CreateField(desc);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
+      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->CreateValue())
+   {
+      fField->SetOnDiskId(fieldId);
+      fField->ConnectPageSource(*pageSource);
+   }
+
+public:
+   RNTupleView(const RNTupleView &other) = delete;
+   RNTupleView(RNTupleView &&other) = default;
+   RNTupleView &operator=(const RNTupleView &other) = delete;
+   RNTupleView &operator=(RNTupleView &&other) = default;
+   ~RNTupleView() = default;
+
+   const RFieldBase &GetField() const { return *fField; }
+   const RFieldBase::RValue &GetValue() const { return fValue; }
+   RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField->GetNElements()); }
+
+   void operator()(NTupleSize_t globalIndex) { fValue.Read(globalIndex); }
+   void operator()(RClusterIndex clusterIndex) { fValue.Read(clusterIndex); }
+};
 
 // clang-format off
 /**
