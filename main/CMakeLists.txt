@@ -60,8 +60,10 @@ foreach(rawUtilName ${utils})
   if(NOT WIN32)
     # We need the .py only on Windows
     string(REPLACE ".py" "" utilName ${utilName})
+    set(python python3)
+  else()
+    set(python python)
   endif()
-  set(python python3)
   configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
   install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
