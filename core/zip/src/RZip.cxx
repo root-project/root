@@ -78,14 +78,18 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
 /*                      3 = old */
 void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
 {
+  *irep = 0;
 
+  // Performance optimization: avoid compressing tiny source buffers.
   if (*srcsize < 1 + HDRSIZE + 1) {
-     *irep = 0;
+     return;
+  }
+  // Correctness check: we need at least enough bytes to prepend the header!
+  if (*tgtsize <= HDRSIZE) {
      return;
   }
 
   if (cxlevel <= 0) {
-    *irep = 0;
     return;
   }
 
