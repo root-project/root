@@ -5780,7 +5780,12 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
     return Self.Context.typesAreCompatible(Lhs, Rhs);
   }
   case BTT_IsConvertible:
+#if defined(MAC_SDK_WORKAROUND)
+  case BTT_IsConvertibleTo:
+  case BTT_IsNothrowConvertible: {
+#else
   case BTT_IsConvertibleTo: {
+#endif
     // C++0x [meta.rel]p4:
     //   Given the following function prototype:
     //
@@ -5841,7 +5846,17 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
       return false;
 
     ExprResult Result = Init.Perform(Self, To, Kind, FromPtr);
+#if defined(MAC_SDK_WORKAROUND)
+    if (Result.isInvalid() || SFINAE.hasErrorOccurred())
+      return false;
+
+    if (BTT != BTT_IsNothrowConvertible)
+      return true;
+
+    return Self.canThrow(Result.get()) == CT_Cannot;
+#else
     return !Result.isInvalid() && !SFINAE.hasErrorOccurred();
+#endif
   }
 
   case BTT_IsAssignable:
