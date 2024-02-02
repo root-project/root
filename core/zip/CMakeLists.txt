@@ -22,3 +22,5 @@ target_include_directories(Core PUBLIC
 )
 
 ROOT_INSTALL_HEADERS()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
