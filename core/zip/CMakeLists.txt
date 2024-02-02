@@ -28,3 +28,5 @@ target_include_directories(Zip PRIVATE
 )
 
 ROOT_INSTALL_HEADERS()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
