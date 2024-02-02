@@ -6,7 +6,6 @@
 #include <vector>
 #include "TFile.h"
 #include "TChain.h"
-#include "TDSet.h"
 #include "TError.h"
 
 const Int_t noChains = 2;

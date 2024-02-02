@@ -83,7 +83,6 @@
 #include "TClonesArray.h"
 #include "TStopwatch.h"
 #include "TClass.h"
-#include "TProofServ.h"
 #include "Event.h"
 #include "TSocket.h"
 #include "TObjString.h"
