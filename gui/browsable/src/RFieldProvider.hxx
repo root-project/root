@@ -44,7 +44,7 @@ using RField = ROOT::Experimental::RField<T>;
 class RFieldProvider : public RProvider {
    class RDrawVisitor : public ROOT::Experimental::Detail::RFieldVisitor {
    private:
-      std::shared_ptr<ROOT::Experimental::Detail::RPageSource> fNtplSource;
+      std::shared_ptr<ROOT::Experimental::RNTupleReader> fNtplReader;
       std::unique_ptr<TH1> fHist;
 
       /** Test collected entries if it looks like integer values and one can use better binning */
@@ -91,7 +91,7 @@ class RFieldProvider : public RProvider {
          int cnt = 0;
          if (bufsize > 10) bufsize-=3; else bufsize = -1;
 
-         auto view = ROOT::Experimental::RNTupleView<T>(field.GetOnDiskId(), fNtplSource.get());
+         auto view = fNtplReader->GetView<T>(field.GetOnDiskId());
          for (auto i : view.GetFieldRange()) {
             fHist->Fill(view(i));
             if (++cnt == bufsize) {
@@ -111,7 +111,7 @@ class RFieldProvider : public RProvider {
 
          int nentries = 0;
 
-         auto view = ROOT::Experimental::RNTupleView<std::string>(field.GetOnDiskId(), fNtplSource.get());
+         auto view = fNtplReader->GetView<std::string>(field.GetOnDiskId());
          for (auto i : view.GetFieldRange()) {
              std::string v = view(i);
              nentries++;
@@ -139,10 +139,7 @@ class RFieldProvider : public RProvider {
       }
 
    public:
-      explicit RDrawVisitor(std::shared_ptr<ROOT::Experimental::Detail::RPageSource> ntplSource)
-         : fNtplSource(ntplSource)
-      {
-      }
+      explicit RDrawVisitor(std::shared_ptr<ROOT::Experimental::RNTupleReader> ntplReader) : fNtplReader(ntplReader) {}
 
       TH1 *MoveHist() {
          return fHist.release();
@@ -179,18 +176,16 @@ public:
    {
       if (!holder) return nullptr;
 
-      auto ntplSource = holder->GetNtplSource();
+      auto ntplReader = holder->GetNtplReader();
       std::string name = holder->GetParentName();
 
-      std::unique_ptr<ROOT::Experimental::RFieldBase> field;
-      {
-         auto descriptorGuard = ntplSource->GetSharedDescriptorGuard();
-         field = descriptorGuard->GetFieldDescriptor(holder->GetId()).CreateField(descriptorGuard.GetRef());
-      }
-      name.append(field->GetFieldName());
+      const auto fieldName = ntplReader->GetDescriptor().GetFieldDescriptor(holder->GetId()).GetFieldName();
+      const auto qualifiedFieldName = ntplReader->GetDescriptor().GetQualifiedFieldName(holder->GetId());
+      auto view = ntplReader->GetView<void>(qualifiedFieldName);
+      name.append(fieldName);
 
-      RDrawVisitor drawVisitor(ntplSource);
-      field->AcceptVisitor(drawVisitor);
+      RDrawVisitor drawVisitor(ntplReader);
+      view.GetField().AcceptVisitor(drawVisitor);
       return drawVisitor.MoveHist();
    }
 };

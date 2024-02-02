@@ -297,6 +297,12 @@ public:
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
+      return GetView<T>(fieldId);
+   }
+
+   template <typename T>
+   RNTupleView<T> GetView(DescriptorId_t fieldId)
+   {
       return RNTupleView<T>(fieldId, fSource.get());
    }
 
@@ -309,6 +315,11 @@ public:
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
+      return GetViewCollection(fieldId);
+   }
+
+   RNTupleViewCollection GetViewCollection(DescriptorId_t fieldId)
+   {
       return RNTupleViewCollection(fieldId, fSource.get());
    }
 
