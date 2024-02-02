@@ -8,10 +8,12 @@
 /// \author George Lewis
 
 
-#include "RooStats/HistFactory/Measurement.h"
-#include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
-#include "TFile.h"
-#include "TROOT.h"
+#include <RooStats/HistFactory/Measurement.h>
+#include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+
+#include <TFile.h>
+#include <TROOT.h>
+#include <TSystem.h>
 
 using namespace RooStats;
 using namespace HistFactory;
@@ -68,7 +70,7 @@ void hf001_example() {
   chan.AddSample( background1 );
 
 
-  // Background 1
+  // Background 2
   Sample background2( "background2", "background2", InputFile );
   background2.ActivateStatError();
   background2.AddOverallSys( "syst3", 0.95, 1.05  );
