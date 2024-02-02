@@ -1124,9 +1124,10 @@ namespace {
           return false;
         }
 
-        bool ReadPreprocessorOptions(const PreprocessorOptions &PPOpts,
-                                     bool /*Complain*/,
-                                std::string &/*SuggestedPredefines*/) override {
+        bool
+        ReadPreprocessorOptions(const PreprocessorOptions& PPOpts,
+                                bool /*ReadMacros*/, bool /*Complain*/,
+                                std::string& /*SuggestedPredefines*/) override {
           Out.indent(2) << "Preprocessor options:\n";
           DUMP_BOOLEAN(PPOpts.UsePredefines,
                        "Uses compiler/target-specific predefines [-undef]");
@@ -1505,9 +1506,10 @@ namespace {
             m_ReadTarget = true;
             return false;
           }
-          bool ReadPreprocessorOptions(const PreprocessorOptions &PPOpts,
-                                       bool /*Complain*/,
-                                  std::string &/*SuggestedPredefines*/) override {
+          bool ReadPreprocessorOptions(
+              const PreprocessorOptions& PPOpts, bool /*ReadMacros*/,
+              bool /*Complain*/,
+              std::string& /*SuggestedPredefines*/) override {
             // Import selected options, e.g. don't overwrite ImplicitPCHInclude.
             PreprocessorOptions& myPP = m_Invocation.getPreprocessorOpts();
             insertBehind(myPP.Macros, PPOpts.Macros);
