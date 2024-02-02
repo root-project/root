@@ -1125,7 +1125,7 @@ namespace {
         }
 
         bool ReadPreprocessorOptions(const PreprocessorOptions &PPOpts,
-                                     bool /*Complain*/,
+                                     bool /*ReadMacros*/, bool /*Complain*/,
                                 std::string &/*SuggestedPredefines*/) override {
           Out.indent(2) << "Preprocessor options:\n";
           DUMP_BOOLEAN(PPOpts.UsePredefines,
@@ -1501,7 +1501,7 @@ namespace {
             return false;
           }
           bool ReadPreprocessorOptions(const PreprocessorOptions &PPOpts,
-                                       bool /*Complain*/,
+                                       bool /*ReadMacros*/, bool /*Complain*/,
                                   std::string &/*SuggestedPredefines*/) override {
             // Import selected options, e.g. don't overwrite ImplicitPCHInclude.
             PreprocessorOptions& myPP = m_Invocation.getPreprocessorOpts();
