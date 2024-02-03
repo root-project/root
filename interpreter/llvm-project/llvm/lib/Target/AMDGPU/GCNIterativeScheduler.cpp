@@ -251,7 +251,7 @@ GCNIterativeScheduler::getRegionPressure(MachineBasicBlock::iterator Begin,
   assert(UPTracker.isValid() ||
          (dbgs() << "Tracked region ",
           printRegion(dbgs(), Begin, End, LIS), false));
-  return UPTracker.moveMaxPressure();
+  return UPTracker.getMaxPressureAndReset();
 }
 
 // returns max pressure for a tentative schedule
@@ -272,7 +272,7 @@ GCNIterativeScheduler::getSchedulePressure(const Region &R,
   for (auto I = Schedule.end(), B = Schedule.begin(); I != B;) {
     RPTracker.recede(*getMachineInstr(*--I));
   }
-  return RPTracker.moveMaxPressure();
+  return RPTracker.getMaxPressureAndReset();
 }
 
 void GCNIterativeScheduler::enterRegion(MachineBasicBlock *BB, // overridden
@@ -367,9 +367,8 @@ void GCNIterativeScheduler::scheduleRegion(Region &R, Range &&Schedule,
     }
     if (!MI->isDebugInstr()) {
       // Reset read - undef flags and update them later.
-      for (auto &Op : MI->operands())
-        if (Op.isReg() && Op.isDef())
-          Op.setIsUndef(false);
+      for (auto &Op : MI->all_defs())
+        Op.setIsUndef(false);
 
       RegisterOperands RegOpers;
       RegOpers.collect(*MI, *TRI, MRI, /*ShouldTrackLaneMasks*/true,

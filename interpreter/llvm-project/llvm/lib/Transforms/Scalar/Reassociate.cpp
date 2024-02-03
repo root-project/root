@@ -52,6 +52,7 @@
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
@@ -69,6 +70,12 @@ using namespace PatternMatch;
 STATISTIC(NumChanged, "Number of insts reassociated");
 STATISTIC(NumAnnihil, "Number of expr tree annihilated");
 STATISTIC(NumFactor , "Number of multiplies factored");
+
+static cl::opt<bool>
+    UseCSELocalOpt(DEBUG_TYPE "-use-cse-local",
+                   cl::desc("Only reorder expressions within a basic block "
+                            "when exposing CSE opportunities"),
+                   cl::init(true), cl::Hidden);
 
 #ifndef NDEBUG
 /// Print out the expression identified in the Ops list.
@@ -459,7 +466,8 @@ using RepeatedValue = std::pair<Value*, APInt>;
 /// type and thus make the expression bigger.
 static bool LinearizeExprTree(Instruction *I,
                               SmallVectorImpl<RepeatedValue> &Ops,
-                              ReassociatePass::OrderedSet &ToRedo) {
+                              ReassociatePass::OrderedSet &ToRedo,
+                              bool &HasNUW) {
   assert((isa<UnaryOperator>(I) || isa<BinaryOperator>(I)) &&
          "Expected a UnaryOperator or BinaryOperator!");
   LLVM_DEBUG(dbgs() << "LINEARIZE: " << *I << '\n');
@@ -507,6 +515,9 @@ static bool LinearizeExprTree(Instruction *I,
   while (!Worklist.empty()) {
     std::pair<Instruction*, APInt> P = Worklist.pop_back_val();
     I = P.first; // We examine the operands of this binary operator.
+
+    if (isa<OverflowingBinaryOperator>(I))
+      HasNUW &= I->hasNoUnsignedWrap();
 
     for (unsigned OpIdx = 0; OpIdx < I->getNumOperands(); ++OpIdx) { // Visit operands.
       Value *Op = I->getOperand(OpIdx);
@@ -620,8 +631,7 @@ static bool LinearizeExprTree(Instruction *I,
 
   // The leaves, repeated according to their weights, represent the linearized
   // form of the expression.
-  for (unsigned i = 0, e = LeafOrder.size(); i != e; ++i) {
-    Value *V = LeafOrder[i];
+  for (Value *V : LeafOrder) {
     LeafMap::iterator It = Leaves.find(V);
     if (It == Leaves.end())
       // Node initially thought to be a leaf wasn't.
@@ -651,7 +661,8 @@ static bool LinearizeExprTree(Instruction *I,
 /// Now that the operands for this expression tree are
 /// linearized and optimized, emit them in-order.
 void ReassociatePass::RewriteExprTree(BinaryOperator *I,
-                                      SmallVectorImpl<ValueEntry> &Ops) {
+                                      SmallVectorImpl<ValueEntry> &Ops,
+                                      bool HasNUW) {
   assert(Ops.size() > 1 && "Single values should be used directly!");
 
   // Since our optimizations should never increase the number of operations, the
@@ -683,10 +694,12 @@ void ReassociatePass::RewriteExprTree(BinaryOperator *I,
   for (unsigned i = 0, e = Ops.size(); i != e; ++i)
     NotRewritable.insert(Ops[i].Op);
 
-  // ExpressionChanged - Non-null if the rewritten expression differs from the
-  // original in some non-trivial way, requiring the clearing of optional flags.
-  // Flags are cleared from the operator in ExpressionChanged up to I inclusive.
-  BinaryOperator *ExpressionChanged = nullptr;
+  // ExpressionChangedStart - Non-null if the rewritten expression differs from
+  // the original in some non-trivial way, requiring the clearing of optional
+  // flags. Flags are cleared from the operator in ExpressionChangedStart up to
+  // ExpressionChangedEnd inclusive.
+  BinaryOperator *ExpressionChangedStart = nullptr,
+                 *ExpressionChangedEnd = nullptr;
   for (unsigned i = 0; ; ++i) {
     // The last operation (which comes earliest in the IR) is special as both
     // operands will come from Ops, rather than just one with the other being
@@ -728,7 +741,9 @@ void ReassociatePass::RewriteExprTree(BinaryOperator *I,
       }
       LLVM_DEBUG(dbgs() << "TO: " << *Op << '\n');
 
-      ExpressionChanged = Op;
+      ExpressionChangedStart = Op;
+      if (!ExpressionChangedEnd)
+        ExpressionChangedEnd = Op;
       MadeChange = true;
       ++NumChanged;
 
@@ -750,7 +765,9 @@ void ReassociatePass::RewriteExprTree(BinaryOperator *I,
         if (BO && !NotRewritable.count(BO))
           NodesToRewrite.push_back(BO);
         Op->setOperand(1, NewRHS);
-        ExpressionChanged = Op;
+        ExpressionChangedStart = Op;
+        if (!ExpressionChangedEnd)
+          ExpressionChangedEnd = Op;
       }
       LLVM_DEBUG(dbgs() << "TO: " << *Op << '\n');
       MadeChange = true;
@@ -787,7 +804,9 @@ void ReassociatePass::RewriteExprTree(BinaryOperator *I,
     LLVM_DEBUG(dbgs() << "RA: " << *Op << '\n');
     Op->setOperand(0, NewOp);
     LLVM_DEBUG(dbgs() << "TO: " << *Op << '\n');
-    ExpressionChanged = Op;
+    ExpressionChangedStart = Op;
+    if (!ExpressionChangedEnd)
+      ExpressionChangedEnd = Op;
     MadeChange = true;
     ++NumChanged;
     Op = NewOp;
@@ -797,27 +816,42 @@ void ReassociatePass::RewriteExprTree(BinaryOperator *I,
   // starting from the operator specified in ExpressionChanged, and compactify
   // the operators to just before the expression root to guarantee that the
   // expression tree is dominated by all of Ops.
-  if (ExpressionChanged)
+  if (ExpressionChangedStart) {
+    bool ClearFlags = true;
     do {
-      // Preserve FastMathFlags.
-      if (isa<FPMathOperator>(I)) {
-        FastMathFlags Flags = I->getFastMathFlags();
-        ExpressionChanged->clearSubclassOptionalData();
-        ExpressionChanged->setFastMathFlags(Flags);
-      } else
-        ExpressionChanged->clearSubclassOptionalData();
+      // Preserve flags.
+      if (ClearFlags) {
+        if (isa<FPMathOperator>(I)) {
+          FastMathFlags Flags = I->getFastMathFlags();
+          ExpressionChangedStart->clearSubclassOptionalData();
+          ExpressionChangedStart->setFastMathFlags(Flags);
+        } else {
+          ExpressionChangedStart->clearSubclassOptionalData();
+          // Note that it doesn't hold for mul if one of the operands is zero.
+          // TODO: We can preserve NUW flag if we prove that all mul operands
+          // are non-zero.
+          if (HasNUW && ExpressionChangedStart->getOpcode() == Instruction::Add)
+            ExpressionChangedStart->setHasNoUnsignedWrap();
+        }
+      }
 
-      if (ExpressionChanged == I)
+      if (ExpressionChangedStart == ExpressionChangedEnd)
+        ClearFlags = false;
+      if (ExpressionChangedStart == I)
         break;
 
       // Discard any debug info related to the expressions that has changed (we
-      // can leave debug infor related to the root, since the result of the
-      // expression tree should be the same even after reassociation).
-      replaceDbgUsesWithUndef(ExpressionChanged);
+      // can leave debug info related to the root and any operation that didn't
+      // change, since the result of the expression tree should be the same
+      // even after reassociation).
+      if (ClearFlags)
+        replaceDbgUsesWithUndef(ExpressionChangedStart);
 
-      ExpressionChanged->moveBefore(I);
-      ExpressionChanged = cast<BinaryOperator>(*ExpressionChanged->user_begin());
+      ExpressionChangedStart->moveBefore(I);
+      ExpressionChangedStart =
+          cast<BinaryOperator>(*ExpressionChangedStart->user_begin());
     } while (true);
+  }
 
   // Throw away any left over nodes from the original expression.
   for (unsigned i = 0, e = NodesToRewrite.size(); i != e; ++i)
@@ -898,16 +932,20 @@ static Value *NegateValue(Value *V, Instruction *BI,
         TheNeg->getParent()->getParent() != BI->getParent()->getParent())
       continue;
 
-    Instruction *InsertPt;
+    BasicBlock::iterator InsertPt;
     if (Instruction *InstInput = dyn_cast<Instruction>(V)) {
-      InsertPt = InstInput->getInsertionPointAfterDef();
-      if (!InsertPt)
+      auto InsertPtOpt = InstInput->getInsertionPointAfterDef();
+      if (!InsertPtOpt)
         continue;
+      InsertPt = *InsertPtOpt;
     } else {
-      InsertPt = &*TheNeg->getFunction()->getEntryBlock().begin();
+      InsertPt = TheNeg->getFunction()
+                     ->getEntryBlock()
+                     .getFirstNonPHIOrDbg()
+                     ->getIterator();
     }
 
-    TheNeg->moveBefore(InsertPt);
+    TheNeg->moveBefore(*InsertPt->getParent(), InsertPt);
     if (TheNeg->getOpcode() == Instruction::Sub) {
       TheNeg->setHasNoUnsignedWrap(false);
       TheNeg->setHasNoSignedWrap(false);
@@ -1148,7 +1186,8 @@ Value *ReassociatePass::RemoveFactorFromExpression(Value *V, Value *Factor) {
     return nullptr;
 
   SmallVector<RepeatedValue, 8> Tree;
-  MadeChange |= LinearizeExprTree(BO, Tree, RedoInsts);
+  bool HasNUW = true;
+  MadeChange |= LinearizeExprTree(BO, Tree, RedoInsts, HasNUW);
   SmallVector<ValueEntry, 8> Factors;
   Factors.reserve(Tree.size());
   for (unsigned i = 0, e = Tree.size(); i != e; ++i) {
@@ -1190,7 +1229,7 @@ Value *ReassociatePass::RemoveFactorFromExpression(Value *V, Value *Factor) {
 
   if (!FoundFactor) {
     // Make sure to restore the operands to the expression tree.
-    RewriteExprTree(BO, Factors);
+    RewriteExprTree(BO, Factors, HasNUW);
     return nullptr;
   }
 
@@ -1202,7 +1241,7 @@ Value *ReassociatePass::RemoveFactorFromExpression(Value *V, Value *Factor) {
     RedoInsts.insert(BO);
     V = Factors[0].Op;
   } else {
-    RewriteExprTree(BO, Factors);
+    RewriteExprTree(BO, Factors, HasNUW);
     V = BO;
   }
 
@@ -1507,8 +1546,7 @@ Value *ReassociatePass::OptimizeXor(Instruction *I,
   // Step 4: Reassemble the Ops
   if (Changed) {
     Ops.clear();
-    for (unsigned int i = 0, e = Opnds.size(); i < e; i++) {
-      XorOpnd &O = Opnds[i];
+    for (const XorOpnd &O : Opnds) {
       if (O.isInvalid())
         continue;
       ValueEntry VE(getRank(O.getValue()), O.getValue());
@@ -1644,8 +1682,7 @@ Value *ReassociatePass::OptimizeAdd(Instruction *I,
 
     // Add one to FactorOccurrences for each unique factor in this op.
     SmallPtrSet<Value*, 8> Duplicates;
-    for (unsigned i = 0, e = Factors.size(); i != e; ++i) {
-      Value *Factor = Factors[i];
+    for (Value *Factor : Factors) {
       if (!Duplicates.insert(Factor).second)
         continue;
 
@@ -2048,7 +2085,7 @@ void ReassociatePass::EraseInst(Instruction *I) {
       // blocks because it's a waste of time and also because it can
       // lead to infinite loop due to LLVM's non-standard definition
       // of dominance.
-      if (ValueRankMap.find(Op) != ValueRankMap.end())
+      if (ValueRankMap.contains(Op))
         RedoInsts.insert(Op);
     }
 
@@ -2231,9 +2268,10 @@ void ReassociatePass::OptimizeInst(Instruction *I) {
   // with no common bits set, convert it to X+Y.
   if (I->getOpcode() == Instruction::Or &&
       shouldConvertOrWithNoCommonBitsToAdd(I) && !isLoadCombineCandidate(I) &&
-      haveNoCommonBitsSet(I->getOperand(0), I->getOperand(1),
-                          I->getModule()->getDataLayout(), /*AC=*/nullptr, I,
-                          /*DT=*/nullptr)) {
+      (cast<PossiblyDisjointInst>(I)->isDisjoint() ||
+       haveNoCommonBitsSet(I->getOperand(0), I->getOperand(1),
+                           SimplifyQuery(I->getModule()->getDataLayout(),
+                                         /*DT=*/nullptr, /*AC=*/nullptr, I)))) {
     Instruction *NI = convertOrWithNoCommonBitsToAdd(I);
     RedoInsts.insert(I);
     MadeChange = true;
@@ -2328,7 +2366,8 @@ void ReassociatePass::ReassociateExpression(BinaryOperator *I) {
   // First, walk the expression tree, linearizing the tree, collecting the
   // operand information.
   SmallVector<RepeatedValue, 8> Tree;
-  MadeChange |= LinearizeExprTree(I, Tree, RedoInsts);
+  bool HasNUW = true;
+  MadeChange |= LinearizeExprTree(I, Tree, RedoInsts, HasNUW);
   SmallVector<ValueEntry, 8> Ops;
   Ops.reserve(Tree.size());
   for (const RepeatedValue &E : Tree)
@@ -2410,8 +2449,67 @@ void ReassociatePass::ReassociateExpression(BinaryOperator *I) {
     unsigned BestRank = 0;
     std::pair<unsigned, unsigned> BestPair;
     unsigned Idx = I->getOpcode() - Instruction::BinaryOpsBegin;
-    for (unsigned i = 0; i < Ops.size() - 1; ++i)
-      for (unsigned j = i + 1; j < Ops.size(); ++j) {
+    unsigned LimitIdx = 0;
+    // With the CSE-driven heuristic, we are about to slap two values at the
+    // beginning of the expression whereas they could live very late in the CFG.
+    // When using the CSE-local heuristic we avoid creating dependences from
+    // completely unrelated part of the CFG by limiting the expression
+    // reordering on the values that live in the first seen basic block.
+    // The main idea is that we want to avoid forming expressions that would
+    // become loop dependent.
+    if (UseCSELocalOpt) {
+      const BasicBlock *FirstSeenBB = nullptr;
+      int StartIdx = Ops.size() - 1;
+      // Skip the first value of the expression since we need at least two
+      // values to materialize an expression. I.e., even if this value is
+      // anchored in a different basic block, the actual first sub expression
+      // will be anchored on the second value.
+      for (int i = StartIdx - 1; i != -1; --i) {
+        const Value *Val = Ops[i].Op;
+        const auto *CurrLeafInstr = dyn_cast<Instruction>(Val);
+        const BasicBlock *SeenBB = nullptr;
+        if (!CurrLeafInstr) {
+          // The value is free of any CFG dependencies.
+          // Do as if it lives in the entry block.
+          //
+          // We do this to make sure all the values falling on this path are
+          // seen through the same anchor point. The rationale is these values
+          // can be combined together to from a sub expression free of any CFG
+          // dependencies so we want them to stay together.
+          // We could be cleverer and postpone the anchor down to the first
+          // anchored value, but that's likely complicated to get right.
+          // E.g., we wouldn't want to do that if that means being stuck in a
+          // loop.
+          //
+          // For instance, we wouldn't want to change:
+          // res = arg1 op arg2 op arg3 op ... op loop_val1 op loop_val2 ...
+          // into
+          // res = loop_val1 op arg1 op arg2 op arg3 op ... op loop_val2 ...
+          // Because all the sub expressions with arg2..N would be stuck between
+          // two loop dependent values.
+          SeenBB = &I->getParent()->getParent()->getEntryBlock();
+        } else {
+          SeenBB = CurrLeafInstr->getParent();
+        }
+
+        if (!FirstSeenBB) {
+          FirstSeenBB = SeenBB;
+          continue;
+        }
+        if (FirstSeenBB != SeenBB) {
+          // ith value is in a different basic block.
+          // Rewind the index once to point to the last value on the same basic
+          // block.
+          LimitIdx = i + 1;
+          LLVM_DEBUG(dbgs() << "CSE reordering: Consider values between ["
+                            << LimitIdx << ", " << StartIdx << "]\n");
+          break;
+        }
+      }
+    }
+    for (unsigned i = Ops.size() - 1; i > LimitIdx; --i) {
+      // We must use int type to go below zero when LimitIdx is 0.
+      for (int j = i - 1; j >= (int)LimitIdx; --j) {
         unsigned Score = 0;
         Value *Op0 = Ops[i].Op;
         Value *Op1 = Ops[j].Op;
@@ -2429,12 +2527,26 @@ void ReassociatePass::ReassociateExpression(BinaryOperator *I) {
         }
 
         unsigned MaxRank = std::max(Ops[i].Rank, Ops[j].Rank);
+
+        // By construction, the operands are sorted in reverse order of their
+        // topological order.
+        // So we tend to form (sub) expressions with values that are close to
+        // each other.
+        //
+        // Now to expose more CSE opportunities we want to expose the pair of
+        // operands that occur the most (as statically computed in
+        // BuildPairMap.) as the first sub-expression.
+        //
+        // If two pairs occur as many times, we pick the one with the
+        // lowest rank, meaning the one with both operands appearing first in
+        // the topological order.
         if (Score > Max || (Score == Max && MaxRank < BestRank)) {
-          BestPair = {i, j};
+          BestPair = {j, i};
           Max = Score;
           BestRank = MaxRank;
         }
       }
+    }
     if (Max > 1) {
       auto Op0 = Ops[BestPair.first];
       auto Op1 = Ops[BestPair.second];
@@ -2444,9 +2556,11 @@ void ReassociatePass::ReassociateExpression(BinaryOperator *I) {
       Ops.push_back(Op1);
     }
   }
+  LLVM_DEBUG(dbgs() << "RAOut after CSE reorder:\t"; PrintOps(I, Ops);
+             dbgs() << '\n');
   // Now that we ordered and optimized the expressions, splat them back into
   // the expression tree, removing any unneeded nodes.
-  RewriteExprTree(I, Ops);
+  RewriteExprTree(I, Ops, HasNUW);
 }
 
 void
@@ -2454,7 +2568,7 @@ ReassociatePass::BuildPairMap(ReversePostOrderTraversal<Function *> &RPOT) {
   // Make a "pairmap" of how often each operand pair occurs.
   for (BasicBlock *BI : RPOT) {
     for (Instruction &I : *BI) {
-      if (!I.isAssociative())
+      if (!I.isAssociative() || !I.isBinaryOp())
         continue;
 
       // Ignore nodes that aren't at the root of trees.
