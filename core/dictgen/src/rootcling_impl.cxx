@@ -3909,7 +3909,7 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch 
                header, clang::SourceLocation(),
                /*isAngled*/ false,
                /*FromDir*/ 0, CurDir,
-               clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
+               clang::ArrayRef<std::pair<clang::OptionalFileEntryRef, clang::DirectoryEntryRef>>(),
                /*SearchPath*/ 0,
                /*RelativePath*/ 0,
                /*RequestingModule*/ 0, &SuggestedModule,
