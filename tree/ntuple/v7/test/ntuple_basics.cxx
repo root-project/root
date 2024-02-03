@@ -692,3 +692,33 @@ TEST(RNTuple, RValue)
 
    // The deleters are called in the destructors of the values
 }
+
+TEST(REntry, Basics)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("pt");
+   model->Freeze();
+
+   auto e = model->CreateEntry();
+   EXPECT_EQ(e->GetModelId(), model->GetModelId());
+   for (const auto &v : *e) {
+      EXPECT_STREQ("pt", v.GetField().GetFieldName().c_str());
+   }
+
+   EXPECT_EQ(0u, e->GetIndex("pt"));
+   EXPECT_THROW(e->GetIndex(""), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetIndex("eta"), ROOT::Experimental::RException);
+
+   std::shared_ptr<float> ptrPt;
+   e->BindValue(0, ptrPt);
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<float>(0).get());
+
+   EXPECT_THROW(e->GetPtr<void>(1), ROOT::Experimental::RException);
+   EXPECT_THROW(e->BindValue(1, ptrPt), ROOT::Experimental::RException);
+   std::shared_ptr<double> ptrDouble;
+   EXPECT_THROW(e->BindValue(0, ptrDouble), ROOT::Experimental::RException);
+
+   float pt;
+   e->BindRawPtr(0, &pt);
+   EXPECT_EQ(&pt, e->GetPtr<void>(0).get());
+}
