@@ -245,7 +245,7 @@ public:
 #include "llvm/IR/Instruction.def"
 
   static BinaryOperator *
-  CreateWithCopiedFlags(BinaryOps Opc, Value *V1, Value *V2, Instruction *CopyO,
+  CreateWithCopiedFlags(BinaryOps Opc, Value *V1, Value *V2, Value *CopyO,
                         const Twine &Name = "",
                         Instruction *InsertBefore = nullptr) {
     BinaryOperator *BO = Create(Opc, V1, V2, Name, InsertBefore);
@@ -336,6 +336,15 @@ public:
     return BO;
   }
 
+  static inline BinaryOperator *
+  CreateDisjoint(BinaryOps Opc, Value *V1, Value *V2, const Twine &Name = "");
+  static inline BinaryOperator *CreateDisjoint(BinaryOps Opc, Value *V1,
+                                               Value *V2, const Twine &Name,
+                                               BasicBlock *BB);
+  static inline BinaryOperator *CreateDisjoint(BinaryOps Opc, Value *V1,
+                                               Value *V2, const Twine &Name,
+                                               Instruction *I);
+
 #define DEFINE_HELPERS(OPC, NUWNSWEXACT)                                       \
   static BinaryOperator *Create##NUWNSWEXACT##OPC(Value *V1, Value *V2,        \
                                                   const Twine &Name = "") {    \
@@ -363,6 +372,8 @@ public:
   DEFINE_HELPERS(UDiv, Exact)  // CreateExactUDiv
   DEFINE_HELPERS(AShr, Exact)  // CreateExactAShr
   DEFINE_HELPERS(LShr, Exact)  // CreateExactLShr
+
+  DEFINE_HELPERS(Or, Disjoint) // CreateDisjointOr
 
 #undef DEFINE_HELPERS
 
@@ -414,6 +425,50 @@ struct OperandTraits<BinaryOperator> :
 };
 
 DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BinaryOperator, Value)
+
+/// An or instruction, which can be marked as "disjoint", indicating that the
+/// inputs don't have a 1 in the same bit position. Meaning this instruction
+/// can also be treated as an add.
+class PossiblyDisjointInst : public BinaryOperator {
+public:
+  enum { IsDisjoint = (1 << 0) };
+
+  void setIsDisjoint(bool B) {
+    SubclassOptionalData =
+        (SubclassOptionalData & ~IsDisjoint) | (B * IsDisjoint);
+  }
+
+  bool isDisjoint() const { return SubclassOptionalData & IsDisjoint; }
+
+  static bool classof(const Instruction *I) {
+    return I->getOpcode() == Instruction::Or;
+  }
+
+  static bool classof(const Value *V) {
+    return isa<Instruction>(V) && classof(cast<Instruction>(V));
+  }
+};
+
+BinaryOperator *BinaryOperator::CreateDisjoint(BinaryOps Opc, Value *V1,
+                                               Value *V2, const Twine &Name) {
+  BinaryOperator *BO = Create(Opc, V1, V2, Name);
+  cast<PossiblyDisjointInst>(BO)->setIsDisjoint(true);
+  return BO;
+}
+BinaryOperator *BinaryOperator::CreateDisjoint(BinaryOps Opc, Value *V1,
+                                               Value *V2, const Twine &Name,
+                                               BasicBlock *BB) {
+  BinaryOperator *BO = Create(Opc, V1, V2, Name, BB);
+  cast<PossiblyDisjointInst>(BO)->setIsDisjoint(true);
+  return BO;
+}
+BinaryOperator *BinaryOperator::CreateDisjoint(BinaryOps Opc, Value *V1,
+                                               Value *V2, const Twine &Name,
+                                               Instruction *I) {
+  BinaryOperator *BO = Create(Opc, V1, V2, Name, I);
+  cast<PossiblyDisjointInst>(BO)->setIsDisjoint(true);
+  return BO;
+}
 
 //===----------------------------------------------------------------------===//
 //                               CastInst Class
@@ -628,13 +683,6 @@ public:
   /// Determine if this is an integer-only cast.
   bool isIntegerCast() const;
 
-  /// A lossless cast is one that does not alter the basic value. It implies
-  /// a no-op cast but is more stringent, preventing things like int->float,
-  /// long->double, or int->ptr.
-  /// @returns true iff the cast is lossless.
-  /// Determine if this is a lossless cast.
-  bool isLosslessCast() const;
-
   /// A no-op cast is one that can be effected without changing any bits.
   /// It implies that the source and destination types are the same size. The
   /// DataLayout argument is to determine the pointer size when examining casts
@@ -694,6 +742,20 @@ public:
   static bool classof(const Instruction *I) {
     return I->isCast();
   }
+  static bool classof(const Value *V) {
+    return isa<Instruction>(V) && classof(cast<Instruction>(V));
+  }
+};
+
+/// Instruction that can have a nneg flag (only zext).
+class PossiblyNonNegInst : public CastInst {
+public:
+  enum { NonNeg = (1 << 0) };
+
+  static bool classof(const Instruction *I) {
+    return I->getOpcode() == Instruction::ZExt;
+  }
+
   static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
@@ -842,6 +904,17 @@ public:
 
   Predicate getOrderedPredicate() const {
     return getOrderedPredicate(getPredicate());
+  }
+
+  /// Returns the unordered variant of a floating point compare.
+  ///
+  /// For example, OEQ -> UEQ, OLT -> ULT, OEQ -> UEQ
+  static Predicate getUnorderedPredicate(Predicate Pred) {
+    return static_cast<Predicate>(Pred | FCMP_UNO);
+  }
+
+  Predicate getUnorderedPredicate() const {
+    return getUnorderedPredicate(getPredicate());
   }
 
   /// For example, EQ -> NE, UGT -> ULE, SLT -> SGE,
@@ -1073,6 +1146,8 @@ struct OperandTraits<CmpInst> : public FixedNumOperandTraits<CmpInst, 2> {
 };
 
 DEFINE_TRANSPARENT_OPERAND_ACCESSORS(CmpInst, Value)
+
+raw_ostream &operator<<(raw_ostream &OS, CmpInst::Predicate Pred);
 
 /// A lightweight accessor for an operand bundle meant to be passed
 /// around by value.
@@ -1455,7 +1530,6 @@ public:
   /// type.
   void setCalledFunction(FunctionType *FTy, Value *Fn) {
     this->FTy = FTy;
-    assert(cast<PointerType>(Fn->getType())->isOpaqueOrPointeeTypeMatches(FTy));
     // This function doesn't mutate the return type, only the function
     // type. Seems broken, but I'm just gonna stick an assert in for now.
     assert(getType() == FTy->getReturnType());
@@ -1561,6 +1635,11 @@ public:
 
   /// Removes the attribute from the function
   void removeFnAttr(Attribute::AttrKind Kind) {
+    Attrs = Attrs.removeFnAttribute(getContext(), Kind);
+  }
+
+  /// Removes the attribute from the function
+  void removeFnAttr(StringRef Kind) {
     Attrs = Attrs.removeFnAttribute(getContext(), Kind);
   }
 
@@ -1803,7 +1882,10 @@ public:
   /// Extract the number of dereferenceable bytes for a call or
   /// parameter (0=unknown).
   uint64_t getRetDereferenceableBytes() const {
-    return Attrs.getRetDereferenceableBytes();
+    uint64_t Bytes = Attrs.getRetDereferenceableBytes();
+    if (const Function *F = getCalledFunction())
+      Bytes = std::max(Bytes, F->getAttributes().getRetDereferenceableBytes());
+    return Bytes;
   }
 
   /// Extract the number of dereferenceable bytes for a call or
@@ -1815,7 +1897,13 @@ public:
   /// Extract the number of dereferenceable_or_null bytes for a call
   /// (0=unknown).
   uint64_t getRetDereferenceableOrNullBytes() const {
-    return Attrs.getRetDereferenceableOrNullBytes();
+    uint64_t Bytes = Attrs.getRetDereferenceableOrNullBytes();
+    if (const Function *F = getCalledFunction()) {
+      Bytes = std::max(Bytes,
+                       F->getAttributes().getRetDereferenceableOrNullBytes());
+    }
+
+    return Bytes;
   }
 
   /// Extract the number of dereferenceable_or_null bytes for a
@@ -1823,6 +1911,14 @@ public:
   uint64_t getParamDereferenceableOrNullBytes(unsigned i) const {
     return Attrs.getParamDereferenceableOrNullBytes(i);
   }
+
+  /// Extract a test mask for disallowed floating-point value classes for the
+  /// return value.
+  FPClassTest getRetNoFPClass() const;
+
+  /// Extract a test mask for disallowed floating-point value classes for the
+  /// parameter.
+  FPClassTest getParamNoFPClass(unsigned i) const;
 
   /// Return true if the return value is known to be not null.
   /// This may be because it has the nonnull attribute, or because at least
@@ -1927,7 +2023,7 @@ public:
     return Attrs.hasAttrSomewhere(Attribute::ByVal);
   }
 
-  ///@{
+  ///@}
   // End of attribute API.
 
   /// \name Operand Bundle API
@@ -2131,7 +2227,7 @@ public:
   /// OperandBundleUse.
   OperandBundleUse
   operandBundleFromBundleOpInfo(const BundleOpInfo &BOI) const {
-    auto begin = op_begin();
+    const auto *begin = op_begin();
     ArrayRef<Use> Inputs(begin + BOI.Begin, begin + BOI.End);
     return OperandBundleUse(BOI.Tag, Inputs);
   }

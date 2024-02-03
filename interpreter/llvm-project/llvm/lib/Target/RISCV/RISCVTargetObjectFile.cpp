@@ -1,4 +1,4 @@
-//===-- RISCVTargetObjectFile.cpp - RISCV Object Info -----------------===//
+//===-- RISCVTargetObjectFile.cpp - RISC-V Object Info --------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -7,21 +7,41 @@
 //===----------------------------------------------------------------------===//
 
 #include "RISCVTargetObjectFile.h"
+#include "MCTargetDesc/RISCVMCObjectFileInfo.h"
 #include "RISCVTargetMachine.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCSectionELF.h"
+#include "llvm/MC/MCValue.h"
 
 using namespace llvm;
+
+unsigned RISCVELFTargetObjectFile::getTextSectionAlignment() const {
+  return RISCVMCObjectFileInfo::getTextSectionAlignment(
+      *getContext().getSubtargetInfo());
+}
 
 void RISCVELFTargetObjectFile::Initialize(MCContext &Ctx,
                                           const TargetMachine &TM) {
   TargetLoweringObjectFileELF::Initialize(Ctx, TM);
 
+  PLTRelativeVariantKind = MCSymbolRefExpr::VK_PLT;
+  SupportIndirectSymViaGOTPCRel = true;
+
   SmallDataSection = getContext().getELFSection(
       ".sdata", ELF::SHT_PROGBITS, ELF::SHF_WRITE | ELF::SHF_ALLOC);
   SmallBSSSection = getContext().getELFSection(".sbss", ELF::SHT_NOBITS,
                                                ELF::SHF_WRITE | ELF::SHF_ALLOC);
+}
+
+const MCExpr *RISCVELFTargetObjectFile::getIndirectSymViaGOTPCRel(
+    const GlobalValue *GV, const MCSymbol *Sym, const MCValue &MV,
+    int64_t Offset, MachineModuleInfo *MMI, MCStreamer &Streamer) const {
+  int64_t FinalOffset = Offset + MV.getConstant();
+  const MCExpr *Res =
+      MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_GOTPCREL, getContext());
+  const MCExpr *Off = MCConstantExpr::create(FinalOffset, getContext());
+  return MCBinaryExpr::createAdd(Res, Off, getContext());
 }
 
 // A address must be loaded from a small section if its size is less than the
