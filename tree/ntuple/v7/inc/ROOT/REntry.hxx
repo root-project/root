@@ -92,48 +92,73 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
+   /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
+   std::size_t GetIndex(std::string_view fieldName) const
+   {
+      for (std::size_t i = 0; i < fValues.size(); ++i) {
+         if (fValues[i].GetField().GetFieldName() == fieldName)
+            return i;
+      }
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   }
+
+   template <typename T>
+   void BindValue(std::size_t index, std::shared_ptr<T> objPtr)
+   {
+      if (index >= fValues.size()) {
+         throw RException(R__FAIL("out of bounds entry index: " + std::to_string(index)));
+      }
+
+      auto &v = fValues[index];
+      if constexpr (!std::is_void_v<T>) {
+         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
+         }
+      }
+      v.Bind(objPtr);
+   }
+
    template <typename T>
    void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
-      for (auto &v : fValues) {
-         if (v.GetField().GetFieldName() != fieldName)
-            continue;
+      BindValue<T>(GetIndex(fieldName), objPtr);
+   }
 
-         if constexpr (!std::is_void_v<T>) {
-            if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-               throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                        v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-            }
-         }
-         v.Bind(objPtr);
-         return;
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   template <typename T>
+   void BindRawPtr(std::size_t index, T *rawPtr)
+   {
+      BindValue<void>(index, std::shared_ptr<T>(rawPtr, [](T *) {}));
    }
 
    template <typename T>
    void BindRawPtr(std::string_view fieldName, T *rawPtr)
    {
-      BindValue(fieldName, std::shared_ptr<T>(rawPtr, [](T *) {}));
+      BindValue<void>(fieldName, std::shared_ptr<T>(rawPtr, [](T *) {}));
+   }
+
+   template <typename T>
+   std::shared_ptr<T> GetPtr(std::size_t index) const
+   {
+      if (index >= fValues.size()) {
+         throw RException(R__FAIL("out of bounds entry index: " + std::to_string(index)));
+      }
+
+      auto &v = fValues[index];
+      if constexpr (std::is_void_v<T>)
+         return v.GetPtr<void>();
+
+      if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+         throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                  v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
+      }
+      return std::static_pointer_cast<T>(v.GetPtr<void>());
    }
 
    template <typename T>
    std::shared_ptr<T> GetPtr(std::string_view fieldName) const
    {
-      for (auto &v : fValues) {
-         if (v.GetField().GetFieldName() != fieldName)
-            continue;
-
-         if constexpr (std::is_void_v<T>)
-            return v.GetPtr<void>();
-
-         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-         }
-         return std::static_pointer_cast<T>(v.GetPtr<void>());
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      return GetPtr<T>(GetIndex(fieldName));
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
