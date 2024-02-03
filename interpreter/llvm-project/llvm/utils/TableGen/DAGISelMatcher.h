@@ -12,12 +12,18 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/CodeGen/MachineValueType.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/MachineValueType.h"
+#include <cassert>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace llvm {
-  struct CodeGenRegister;
+  class CodeGenRegister;
   class CodeGenDAGPatterns;
+  class CodeGenInstruction;
   class Matcher;
   class PatternToMatch;
   class raw_ostream;
@@ -27,161 +33,167 @@ namespace llvm {
   class TreePredicateFn;
   class TreePattern;
 
-Matcher *ConvertPatternToMatcher(const PatternToMatch &Pattern,unsigned Variant,
-                                 const CodeGenDAGPatterns &CGP);
-void OptimizeMatcher(std::unique_ptr<Matcher> &Matcher,
-                     const CodeGenDAGPatterns &CGP);
-void EmitMatcherTable(Matcher *Matcher, const CodeGenDAGPatterns &CGP,
-                      raw_ostream &OS);
+  Matcher *ConvertPatternToMatcher(const PatternToMatch &Pattern,
+                                   unsigned Variant,
+                                   const CodeGenDAGPatterns &CGP);
+  void OptimizeMatcher(std::unique_ptr<Matcher> &Matcher,
+                       const CodeGenDAGPatterns &CGP);
+  void EmitMatcherTable(Matcher *Matcher, const CodeGenDAGPatterns &CGP,
+                        raw_ostream &OS);
 
+  /// Matcher - Base class for all the DAG ISel Matcher representation
+  /// nodes.
+  class Matcher {
+    // The next matcher node that is executed after this one.  Null if this is
+    // the last stage of a match.
+    std::unique_ptr<Matcher> Next;
+    size_t Size = 0; // Size in bytes of matcher and all its children (if any).
+    virtual void anchor();
 
-/// Matcher - Base class for all the DAG ISel Matcher representation
-/// nodes.
-class Matcher {
-  // The next matcher node that is executed after this one.  Null if this is the
-  // last stage of a match.
-  std::unique_ptr<Matcher> Next;
-  size_t Size; // Size in bytes of matcher and all its children (if any).
-  virtual void anchor();
-public:
-  enum KindTy {
-    // Matcher state manipulation.
-    Scope,                // Push a checking scope.
-    RecordNode,           // Record the current node.
-    RecordChild,          // Record a child of the current node.
-    RecordMemRef,         // Record the memref in the current node.
-    CaptureGlueInput,     // If the current node has an input glue, save it.
-    MoveChild,            // Move current node to specified child.
-    MoveParent,           // Move current node to parent.
+  public:
+    enum KindTy {
+      // Matcher state manipulation.
+      Scope,            // Push a checking scope.
+      RecordNode,       // Record the current node.
+      RecordChild,      // Record a child of the current node.
+      RecordMemRef,     // Record the memref in the current node.
+      CaptureGlueInput, // If the current node has an input glue, save it.
+      MoveChild,        // Move current node to specified child.
+      MoveSibling,      // Move current node to specified sibling.
+      MoveParent,       // Move current node to parent.
 
-    // Predicate checking.
-    CheckSame,            // Fail if not same as prev match.
-    CheckChildSame,       // Fail if child not same as prev match.
-    CheckPatternPredicate,
-    CheckPredicate,       // Fail if node predicate fails.
-    CheckOpcode,          // Fail if not opcode.
-    SwitchOpcode,         // Dispatch based on opcode.
-    CheckType,            // Fail if not correct type.
-    SwitchType,           // Dispatch based on type.
-    CheckChildType,       // Fail if child has wrong type.
-    CheckInteger,         // Fail if wrong val.
-    CheckChildInteger,    // Fail if child is wrong val.
-    CheckCondCode,        // Fail if not condcode.
-    CheckChild2CondCode,  // Fail if child is wrong condcode.
-    CheckValueType,
-    CheckComplexPat,
-    CheckAndImm,
-    CheckOrImm,
-    CheckImmAllOnesV,
-    CheckImmAllZerosV,
-    CheckFoldableChainNode,
+      // Predicate checking.
+      CheckSame,      // Fail if not same as prev match.
+      CheckChildSame, // Fail if child not same as prev match.
+      CheckPatternPredicate,
+      CheckPredicate,      // Fail if node predicate fails.
+      CheckOpcode,         // Fail if not opcode.
+      SwitchOpcode,        // Dispatch based on opcode.
+      CheckType,           // Fail if not correct type.
+      SwitchType,          // Dispatch based on type.
+      CheckChildType,      // Fail if child has wrong type.
+      CheckInteger,        // Fail if wrong val.
+      CheckChildInteger,   // Fail if child is wrong val.
+      CheckCondCode,       // Fail if not condcode.
+      CheckChild2CondCode, // Fail if child is wrong condcode.
+      CheckValueType,
+      CheckComplexPat,
+      CheckAndImm,
+      CheckOrImm,
+      CheckImmAllOnesV,
+      CheckImmAllZerosV,
+      CheckFoldableChainNode,
 
-    // Node creation/emisssion.
-    EmitInteger,          // Create a TargetConstant
-    EmitStringInteger,    // Create a TargetConstant from a string.
-    EmitRegister,         // Create a register.
-    EmitConvertToTarget,  // Convert a imm/fpimm to target imm/fpimm
-    EmitMergeInputChains, // Merge together a chains for an input.
-    EmitCopyToReg,        // Emit a copytoreg into a physreg.
-    EmitNode,             // Create a DAG node
-    EmitNodeXForm,        // Run a SDNodeXForm
-    CompleteMatch,        // Finish a match and update the results.
-    MorphNodeTo,          // Build a node, finish a match and update results.
+      // Node creation/emisssion.
+      EmitInteger,          // Create a TargetConstant
+      EmitStringInteger,    // Create a TargetConstant from a string.
+      EmitRegister,         // Create a register.
+      EmitConvertToTarget,  // Convert a imm/fpimm to target imm/fpimm
+      EmitMergeInputChains, // Merge together a chains for an input.
+      EmitCopyToReg,        // Emit a copytoreg into a physreg.
+      EmitNode,             // Create a DAG node
+      EmitNodeXForm,        // Run a SDNodeXForm
+      CompleteMatch,        // Finish a match and update the results.
+      MorphNodeTo,          // Build a node, finish a match and update results.
 
-    // Highest enum value; watch out when adding more.
-    HighestKind = MorphNodeTo
-  };
-  const KindTy Kind;
+      // Highest enum value; watch out when adding more.
+      HighestKind = MorphNodeTo
+    };
+    const KindTy Kind;
 
-protected:
-  Matcher(KindTy K) : Kind(K) {}
-public:
-  virtual ~Matcher() {}
+  protected:
+    Matcher(KindTy K) : Kind(K) {}
 
-  unsigned getSize() const { return Size; }
-  void setSize(unsigned sz) { Size = sz; }
-  KindTy getKind() const { return Kind; }
+  public:
+    virtual ~Matcher() {}
 
-  Matcher *getNext() { return Next.get(); }
-  const Matcher *getNext() const { return Next.get(); }
-  void setNext(Matcher *C) { Next.reset(C); }
-  Matcher *takeNext() { return Next.release(); }
+    unsigned getSize() const { return Size; }
+    void setSize(unsigned sz) { Size = sz; }
+    KindTy getKind() const { return Kind; }
 
-  std::unique_ptr<Matcher> &getNextPtr() { return Next; }
+    Matcher *getNext() { return Next.get(); }
+    const Matcher *getNext() const { return Next.get(); }
+    void setNext(Matcher *C) { Next.reset(C); }
+    Matcher *takeNext() { return Next.release(); }
 
-  bool isEqual(const Matcher *M) const {
-    if (getKind() != M->getKind()) return false;
-    return isEqualImpl(M);
-  }
+    std::unique_ptr<Matcher> &getNextPtr() { return Next; }
 
-  /// isSimplePredicateNode - Return true if this is a simple predicate that
-  /// operates on the node or its children without potential side effects or a
-  /// change of the current node.
-  bool isSimplePredicateNode() const {
-    switch (getKind()) {
-    default: return false;
-    case CheckSame:
-    case CheckChildSame:
-    case CheckPatternPredicate:
-    case CheckPredicate:
-    case CheckOpcode:
-    case CheckType:
-    case CheckChildType:
-    case CheckInteger:
-    case CheckChildInteger:
-    case CheckCondCode:
-    case CheckChild2CondCode:
-    case CheckValueType:
-    case CheckAndImm:
-    case CheckOrImm:
-    case CheckImmAllOnesV:
-    case CheckImmAllZerosV:
-    case CheckFoldableChainNode:
-      return true;
+    bool isEqual(const Matcher *M) const {
+      if (getKind() != M->getKind())
+        return false;
+      return isEqualImpl(M);
     }
-  }
 
-  /// isSimplePredicateOrRecordNode - Return true if this is a record node or
-  /// a simple predicate.
-  bool isSimplePredicateOrRecordNode() const {
-    return isSimplePredicateNode() ||
-           getKind() == RecordNode || getKind() == RecordChild;
-  }
+    /// isSimplePredicateNode - Return true if this is a simple predicate that
+    /// operates on the node or its children without potential side effects or a
+    /// change of the current node.
+    bool isSimplePredicateNode() const {
+      switch (getKind()) {
+      default:
+        return false;
+      case CheckSame:
+      case CheckChildSame:
+      case CheckPatternPredicate:
+      case CheckPredicate:
+      case CheckOpcode:
+      case CheckType:
+      case CheckChildType:
+      case CheckInteger:
+      case CheckChildInteger:
+      case CheckCondCode:
+      case CheckChild2CondCode:
+      case CheckValueType:
+      case CheckAndImm:
+      case CheckOrImm:
+      case CheckImmAllOnesV:
+      case CheckImmAllZerosV:
+      case CheckFoldableChainNode:
+        return true;
+      }
+    }
 
-  /// unlinkNode - Unlink the specified node from this chain.  If Other == this,
-  /// we unlink the next pointer and return it.  Otherwise we unlink Other from
-  /// the list and return this.
-  Matcher *unlinkNode(Matcher *Other);
+    /// isSimplePredicateOrRecordNode - Return true if this is a record node or
+    /// a simple predicate.
+    bool isSimplePredicateOrRecordNode() const {
+      return isSimplePredicateNode() || getKind() == RecordNode ||
+             getKind() == RecordChild;
+    }
 
-  /// canMoveBefore - Return true if this matcher is the same as Other, or if
-  /// we can move this matcher past all of the nodes in-between Other and this
-  /// node.  Other must be equal to or before this.
-  bool canMoveBefore(const Matcher *Other) const;
+    /// unlinkNode - Unlink the specified node from this chain.  If Other ==
+    /// this, we unlink the next pointer and return it.  Otherwise we unlink
+    /// Other from the list and return this.
+    Matcher *unlinkNode(Matcher *Other);
 
-  /// canMoveBeforeNode - Return true if it is safe to move the current matcher
-  /// across the specified one.
-  bool canMoveBeforeNode(const Matcher *Other) const;
+    /// canMoveBefore - Return true if this matcher is the same as Other, or if
+    /// we can move this matcher past all of the nodes in-between Other and this
+    /// node.  Other must be equal to or before this.
+    bool canMoveBefore(const Matcher *Other) const;
 
-  /// isContradictory - Return true of these two matchers could never match on
-  /// the same node.
-  bool isContradictory(const Matcher *Other) const {
-    // Since this predicate is reflexive, we canonicalize the ordering so that
-    // we always match a node against nodes with kinds that are greater or equal
-    // to them.  For example, we'll pass in a CheckType node as an argument to
-    // the CheckOpcode method, not the other way around.
-    if (getKind() < Other->getKind())
-      return isContradictoryImpl(Other);
-    return Other->isContradictoryImpl(this);
-  }
+    /// canMoveBeforeNode - Return true if it is safe to move the current
+    /// matcher across the specified one.
+    bool canMoveBeforeNode(const Matcher *Other) const;
 
-  void print(raw_ostream &OS, unsigned indent = 0) const;
-  void printOne(raw_ostream &OS) const;
-  void dump() const;
-protected:
-  virtual void printImpl(raw_ostream &OS, unsigned indent) const = 0;
-  virtual bool isEqualImpl(const Matcher *M) const = 0;
-  virtual bool isContradictoryImpl(const Matcher *M) const { return false; }
-};
+    /// isContradictory - Return true of these two matchers could never match on
+    /// the same node.
+    bool isContradictory(const Matcher *Other) const {
+      // Since this predicate is reflexive, we canonicalize the ordering so that
+      // we always match a node against nodes with kinds that are greater or
+      // equal to them.  For example, we'll pass in a CheckType node as an
+      // argument to the CheckOpcode method, not the other way around.
+      if (getKind() < Other->getKind())
+        return isContradictoryImpl(Other);
+      return Other->isContradictoryImpl(this);
+    }
+
+    void print(raw_ostream &OS, unsigned indent = 0) const;
+    void printOne(raw_ostream &OS) const;
+    void dump() const;
+
+  protected:
+    virtual void printImpl(raw_ostream &OS, unsigned indent) const = 0;
+    virtual bool isEqualImpl(const Matcher *M) const = 0;
+    virtual bool isContradictoryImpl(const Matcher *M) const { return false; }
+  };
 
 /// ScopeMatcher - This attempts to match each of its children to find the first
 /// one that successfully matches.  If one child fails, it tries the next child.
@@ -189,9 +201,8 @@ protected:
 class ScopeMatcher : public Matcher {
   SmallVector<Matcher*, 4> Children;
 public:
-  ScopeMatcher(ArrayRef<Matcher *> children)
-    : Matcher(Scope), Children(children.begin(), children.end()) {
-  }
+  ScopeMatcher(SmallVectorImpl<Matcher *> &&children)
+      : Matcher(Scope), Children(std::move(children)) {}
   ~ScopeMatcher() override;
 
   unsigned getNumChildren() const { return Children.size(); }
@@ -337,6 +348,26 @@ private:
   }
 };
 
+/// MoveSiblingMatcher - This tells the interpreter to move into the
+/// specified sibling node.
+class MoveSiblingMatcher : public Matcher {
+  unsigned SiblingNo;
+
+public:
+  MoveSiblingMatcher(unsigned SiblingNo)
+      : Matcher(MoveSibling), SiblingNo(SiblingNo) {}
+
+  unsigned getSiblingNo() const { return SiblingNo; }
+
+  static bool classof(const Matcher *N) { return N->getKind() == MoveSibling; }
+
+private:
+  void printImpl(raw_ostream &OS, unsigned Indent) const override;
+  bool isEqualImpl(const Matcher *M) const override {
+    return cast<MoveSiblingMatcher>(M)->getSiblingNo() == getSiblingNo();
+  }
+};
+
 /// MoveParentMatcher - This tells the interpreter to move to the parent
 /// of the current node.
 class MoveParentMatcher : public Matcher {
@@ -473,8 +504,9 @@ private:
 class SwitchOpcodeMatcher : public Matcher {
   SmallVector<std::pair<const SDNodeInfo*, Matcher*>, 8> Cases;
 public:
-  SwitchOpcodeMatcher(ArrayRef<std::pair<const SDNodeInfo*, Matcher*> > cases)
-    : Matcher(SwitchOpcode), Cases(cases.begin(), cases.end()) {}
+  SwitchOpcodeMatcher(
+      SmallVectorImpl<std::pair<const SDNodeInfo *, Matcher *>> &&cases)
+      : Matcher(SwitchOpcode), Cases(std::move(cases)) {}
   ~SwitchOpcodeMatcher() override;
 
   static bool classof(const Matcher *N) {
@@ -523,8 +555,9 @@ private:
 class SwitchTypeMatcher : public Matcher {
   SmallVector<std::pair<MVT::SimpleValueType, Matcher*>, 8> Cases;
 public:
-  SwitchTypeMatcher(ArrayRef<std::pair<MVT::SimpleValueType, Matcher*> > cases)
-  : Matcher(SwitchType), Cases(cases.begin(), cases.end()) {}
+  SwitchTypeMatcher(
+      SmallVectorImpl<std::pair<MVT::SimpleValueType, Matcher *>> &&cases)
+      : Matcher(SwitchType), Cases(std::move(cases)) {}
   ~SwitchTypeMatcher() override;
 
   static bool classof(const Matcher *N) {
@@ -991,7 +1024,7 @@ private:
 /// EmitNodeMatcherCommon - Common class shared between EmitNode and
 /// MorphNodeTo.
 class EmitNodeMatcherCommon : public Matcher {
-  std::string OpcodeName;
+  const CodeGenInstruction &CGI;
   const SmallVector<MVT::SimpleValueType, 3> VTs;
   const SmallVector<unsigned, 6> Operands;
   bool HasChain, HasInGlue, HasOutGlue, HasMemRefs;
@@ -1001,18 +1034,17 @@ class EmitNodeMatcherCommon : public Matcher {
   /// operands in the root of the pattern.  The rest are appended to this node.
   int NumFixedArityOperands;
 public:
-  EmitNodeMatcherCommon(const std::string &opcodeName,
+  EmitNodeMatcherCommon(const CodeGenInstruction &cgi,
                         ArrayRef<MVT::SimpleValueType> vts,
-                        ArrayRef<unsigned> operands,
-                        bool hasChain, bool hasInGlue, bool hasOutGlue,
-                        bool hasmemrefs,
+                        ArrayRef<unsigned> operands, bool hasChain,
+                        bool hasInGlue, bool hasOutGlue, bool hasmemrefs,
                         int numfixedarityoperands, bool isMorphNodeTo)
-    : Matcher(isMorphNodeTo ? MorphNodeTo : EmitNode), OpcodeName(opcodeName),
-      VTs(vts.begin(), vts.end()), Operands(operands.begin(), operands.end()),
-      HasChain(hasChain), HasInGlue(hasInGlue), HasOutGlue(hasOutGlue),
-      HasMemRefs(hasmemrefs), NumFixedArityOperands(numfixedarityoperands) {}
+      : Matcher(isMorphNodeTo ? MorphNodeTo : EmitNode), CGI(cgi),
+        VTs(vts.begin(), vts.end()), Operands(operands.begin(), operands.end()),
+        HasChain(hasChain), HasInGlue(hasInGlue), HasOutGlue(hasOutGlue),
+        HasMemRefs(hasmemrefs), NumFixedArityOperands(numfixedarityoperands) {}
 
-  const std::string &getOpcodeName() const { return OpcodeName; }
+  const CodeGenInstruction &getInstruction() const { return CGI; }
 
   unsigned getNumVTs() const { return VTs.size(); }
   MVT::SimpleValueType getVT(unsigned i) const {
@@ -1031,8 +1063,8 @@ public:
 
 
   bool hasChain() const { return HasChain; }
-  bool hasInFlag() const { return HasInGlue; }
-  bool hasOutFlag() const { return HasOutGlue; }
+  bool hasInGlue() const { return HasInGlue; }
+  bool hasOutGlue() const { return HasOutGlue; }
   bool hasMemRefs() const { return HasMemRefs; }
   int getNumFixedArityOperands() const { return NumFixedArityOperands; }
 
@@ -1050,16 +1082,15 @@ class EmitNodeMatcher : public EmitNodeMatcherCommon {
   void anchor() override;
   unsigned FirstResultSlot;
 public:
-  EmitNodeMatcher(const std::string &opcodeName,
+  EmitNodeMatcher(const CodeGenInstruction &cgi,
                   ArrayRef<MVT::SimpleValueType> vts,
-                  ArrayRef<unsigned> operands,
-                  bool hasChain, bool hasInFlag, bool hasOutFlag,
-                  bool hasmemrefs,
-                  int numfixedarityoperands, unsigned firstresultslot)
-  : EmitNodeMatcherCommon(opcodeName, vts, operands, hasChain,
-                          hasInFlag, hasOutFlag, hasmemrefs,
-                          numfixedarityoperands, false),
-    FirstResultSlot(firstresultslot) {}
+                  ArrayRef<unsigned> operands, bool hasChain, bool hasInGlue,
+                  bool hasOutGlue, bool hasmemrefs, int numfixedarityoperands,
+                  unsigned firstresultslot)
+      : EmitNodeMatcherCommon(cgi, vts, operands, hasChain, hasInGlue,
+                              hasOutGlue, hasmemrefs, numfixedarityoperands,
+                              false),
+        FirstResultSlot(firstresultslot) {}
 
   unsigned getFirstResultSlot() const { return FirstResultSlot; }
 
@@ -1073,17 +1104,15 @@ class MorphNodeToMatcher : public EmitNodeMatcherCommon {
   void anchor() override;
   const PatternToMatch &Pattern;
 public:
-  MorphNodeToMatcher(const std::string &opcodeName,
+  MorphNodeToMatcher(const CodeGenInstruction &cgi,
                      ArrayRef<MVT::SimpleValueType> vts,
-                     ArrayRef<unsigned> operands,
-                     bool hasChain, bool hasInFlag, bool hasOutFlag,
-                     bool hasmemrefs,
+                     ArrayRef<unsigned> operands, bool hasChain, bool hasInGlue,
+                     bool hasOutGlue, bool hasmemrefs,
                      int numfixedarityoperands, const PatternToMatch &pattern)
-    : EmitNodeMatcherCommon(opcodeName, vts, operands, hasChain,
-                            hasInFlag, hasOutFlag, hasmemrefs,
-                            numfixedarityoperands, true),
-      Pattern(pattern) {
-  }
+      : EmitNodeMatcherCommon(cgi, vts, operands, hasChain, hasInGlue,
+                              hasOutGlue, hasmemrefs, numfixedarityoperands,
+                              true),
+        Pattern(pattern) {}
 
   const PatternToMatch &getPattern() const { return Pattern; }
 

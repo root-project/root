@@ -13,6 +13,7 @@
 
 #include "llvm/ProfileData/InstrProfWriter.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/ProfileSummary.h"
 #include "llvm/ProfileData/InstrProf.h"
@@ -48,9 +49,9 @@ namespace llvm {
 class ProfOStream {
 public:
   ProfOStream(raw_fd_ostream &FD)
-      : IsFDOStream(true), OS(FD), LE(FD, support::little) {}
+      : IsFDOStream(true), OS(FD), LE(FD, llvm::endianness::little) {}
   ProfOStream(raw_string_ostream &STR)
-      : IsFDOStream(false), OS(STR), LE(STR, support::little) {}
+      : IsFDOStream(false), OS(STR), LE(STR, llvm::endianness::little) {}
 
   uint64_t tell() { return OS.tell(); }
   void write(uint64_t V) { LE.write<uint64_t>(V); }
@@ -79,7 +80,8 @@ public:
       std::string &Data = SOStream.str(); // with flush
       for (int K = 0; K < NItems; K++) {
         for (int I = 0; I < P[K].N; I++) {
-          uint64_t Bytes = endian::byte_swap<uint64_t, little>(P[K].D[I]);
+          uint64_t Bytes =
+              endian::byte_swap<uint64_t, llvm::endianness::little>(P[K].D[I]);
           Data.replace(P[K].Pos + I * sizeof(uint64_t), sizeof(uint64_t),
                        (const char *)&Bytes, sizeof(uint64_t));
         }
@@ -105,7 +107,7 @@ public:
   using hash_value_type = uint64_t;
   using offset_type = uint64_t;
 
-  support::endianness ValueProfDataEndianness = support::little;
+  llvm::endianness ValueProfDataEndianness = llvm::endianness::little;
   InstrProfSummaryBuilder *SummaryBuilder;
   InstrProfSummaryBuilder *CSSummaryBuilder;
 
@@ -119,7 +121,7 @@ public:
   EmitKeyDataLength(raw_ostream &Out, key_type_ref K, data_type_ref V) {
     using namespace support;
 
-    endian::Writer LE(Out, little);
+    endian::Writer LE(Out, llvm::endianness::little);
 
     offset_type N = K.size();
     LE.write<offset_type>(N);
@@ -130,6 +132,8 @@ public:
       M += sizeof(uint64_t); // The function hash
       M += sizeof(uint64_t); // The size of the Counts vector
       M += ProfRecord.Counts.size() * sizeof(uint64_t);
+      M += sizeof(uint64_t); // The size of the Bitmap vector
+      M += ProfRecord.BitmapBytes.size() * sizeof(uint64_t);
 
       // Value data
       M += ValueProfData::getSize(ProfileData.second);
@@ -146,7 +150,7 @@ public:
   void EmitData(raw_ostream &Out, key_type_ref, data_type_ref V, offset_type) {
     using namespace support;
 
-    endian::Writer LE(Out, little);
+    endian::Writer LE(Out, llvm::endianness::little);
     for (const auto &ProfileData : *V) {
       const InstrProfRecord &ProfRecord = ProfileData.second;
       if (NamedInstrProfRecord::hasCSFlagInHash(ProfileData.first))
@@ -157,6 +161,10 @@ public:
       LE.write<uint64_t>(ProfileData.first); // Function hash
       LE.write<uint64_t>(ProfRecord.Counts.size());
       for (uint64_t I : ProfRecord.Counts)
+        LE.write<uint64_t>(I);
+
+      LE.write<uint64_t>(ProfRecord.BitmapBytes.size());
+      for (uint64_t I : ProfRecord.BitmapBytes)
         LE.write<uint64_t>(I);
 
       // Write value data
@@ -171,14 +179,17 @@ public:
 
 } // end namespace llvm
 
-InstrProfWriter::InstrProfWriter(bool Sparse)
-    : Sparse(Sparse), InfoObj(new InstrProfRecordWriterTrait()) {}
+InstrProfWriter::InstrProfWriter(bool Sparse,
+                                 uint64_t TemporalProfTraceReservoirSize,
+                                 uint64_t MaxTemporalProfTraceLength)
+    : Sparse(Sparse), MaxTemporalProfTraceLength(MaxTemporalProfTraceLength),
+      TemporalProfTraceReservoirSize(TemporalProfTraceReservoirSize),
+      InfoObj(new InstrProfRecordWriterTrait()) {}
 
 InstrProfWriter::~InstrProfWriter() { delete InfoObj; }
 
 // Internal interface for testing purpose only.
-void InstrProfWriter::setValueProfDataEndianness(
-    support::endianness Endianness) {
+void InstrProfWriter::setValueProfDataEndianness(llvm::endianness Endianness) {
   InfoObj->ValueProfDataEndianness = Endianness;
 }
 
@@ -200,7 +211,7 @@ void InstrProfWriter::overlapRecord(NamedInstrProfRecord &&Other,
   auto Name = Other.Name;
   auto Hash = Other.Hash;
   Other.accumulateCounts(FuncLevelOverlap.Test);
-  if (FunctionData.find(Name) == FunctionData.end()) {
+  if (!FunctionData.contains(Name)) {
     Overlap.addOneUnique(FuncLevelOverlap.Test);
     return;
   }
@@ -285,6 +296,62 @@ void InstrProfWriter::addBinaryIds(ArrayRef<llvm::object::BuildID> BIs) {
   llvm::append_range(BinaryIds, BIs);
 }
 
+void InstrProfWriter::addTemporalProfileTrace(TemporalProfTraceTy Trace) {
+  if (Trace.FunctionNameRefs.size() > MaxTemporalProfTraceLength)
+    Trace.FunctionNameRefs.resize(MaxTemporalProfTraceLength);
+  if (Trace.FunctionNameRefs.empty())
+    return;
+
+  if (TemporalProfTraceStreamSize < TemporalProfTraceReservoirSize) {
+    // Simply append the trace if we have not yet hit our reservoir size limit.
+    TemporalProfTraces.push_back(std::move(Trace));
+  } else {
+    // Otherwise, replace a random trace in the stream.
+    std::uniform_int_distribution<uint64_t> Distribution(
+        0, TemporalProfTraceStreamSize);
+    uint64_t RandomIndex = Distribution(RNG);
+    if (RandomIndex < TemporalProfTraces.size())
+      TemporalProfTraces[RandomIndex] = std::move(Trace);
+  }
+  ++TemporalProfTraceStreamSize;
+}
+
+void InstrProfWriter::addTemporalProfileTraces(
+    SmallVectorImpl<TemporalProfTraceTy> &SrcTraces, uint64_t SrcStreamSize) {
+  // Assume that the source has the same reservoir size as the destination to
+  // avoid needing to record it in the indexed profile format.
+  bool IsDestSampled =
+      (TemporalProfTraceStreamSize > TemporalProfTraceReservoirSize);
+  bool IsSrcSampled = (SrcStreamSize > TemporalProfTraceReservoirSize);
+  if (!IsDestSampled && IsSrcSampled) {
+    // If one of the traces are sampled, ensure that it belongs to Dest.
+    std::swap(TemporalProfTraces, SrcTraces);
+    std::swap(TemporalProfTraceStreamSize, SrcStreamSize);
+    std::swap(IsDestSampled, IsSrcSampled);
+  }
+  if (!IsSrcSampled) {
+    // If the source stream is not sampled, we add each source trace normally.
+    for (auto &Trace : SrcTraces)
+      addTemporalProfileTrace(std::move(Trace));
+    return;
+  }
+  // Otherwise, we find the traces that would have been removed if we added
+  // the whole source stream.
+  SmallSetVector<uint64_t, 8> IndicesToReplace;
+  for (uint64_t I = 0; I < SrcStreamSize; I++) {
+    std::uniform_int_distribution<uint64_t> Distribution(
+        0, TemporalProfTraceStreamSize);
+    uint64_t RandomIndex = Distribution(RNG);
+    if (RandomIndex < TemporalProfTraces.size())
+      IndicesToReplace.insert(RandomIndex);
+    ++TemporalProfTraceStreamSize;
+  }
+  // Then we insert a random sample of the source traces.
+  llvm::shuffle(SrcTraces.begin(), SrcTraces.end(), RNG);
+  for (const auto &[Index, Trace] : llvm::zip(IndicesToReplace, SrcTraces))
+    TemporalProfTraces[Index] = std::move(Trace);
+}
+
 void InstrProfWriter::mergeRecordsFromWriter(InstrProfWriter &&IPW,
                                              function_ref<void(Error)> Warn) {
   for (auto &I : IPW.FunctionData)
@@ -294,6 +361,9 @@ void InstrProfWriter::mergeRecordsFromWriter(InstrProfWriter &&IPW,
   BinaryIds.reserve(BinaryIds.size() + IPW.BinaryIds.size());
   for (auto &I : IPW.BinaryIds)
     addBinaryIds(I);
+
+  addTemporalProfileTraces(IPW.TemporalProfTraces,
+                           IPW.TemporalProfTraceStreamSize);
 
   MemProfFrameData.reserve(IPW.MemProfFrameData.size());
   for (auto &I : IPW.MemProfFrameData) {
@@ -315,6 +385,8 @@ bool InstrProfWriter::shouldEncodeData(const ProfilingData &PD) {
   for (const auto &Func : PD) {
     const InstrProfRecord &IPR = Func.second;
     if (llvm::any_of(IPR.Counts, [](uint64_t Count) { return Count > 0; }))
+      return true;
+    if (llvm::any_of(IPR.BitmapBytes, [](uint8_t Byte) { return Byte > 0; }))
       return true;
   }
   return false;
@@ -349,9 +421,13 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
   InfoObj->CSSummaryBuilder = &CSISB;
 
   // Populate the hash table generator.
+  SmallVector<std::pair<StringRef, const ProfilingData *>, 0> OrderedData;
   for (const auto &I : FunctionData)
     if (shouldEncodeData(I.getValue()))
-      Generator.insert(I.getKey(), &I.getValue());
+      OrderedData.emplace_back((I.getKey()), &I.getValue());
+  llvm::sort(OrderedData, less_first());
+  for (const auto &I : OrderedData)
+    Generator.insert(I.first, I.second);
 
   // Write the header.
   IndexedInstrProf::Header Header;
@@ -370,18 +446,21 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
     Header.Version |= VARIANT_MASK_FUNCTION_ENTRY_ONLY;
   if (static_cast<bool>(ProfileKind & InstrProfKind::MemProf))
     Header.Version |= VARIANT_MASK_MEMPROF;
+  if (static_cast<bool>(ProfileKind & InstrProfKind::TemporalProfile))
+    Header.Version |= VARIANT_MASK_TEMPORAL_PROF;
 
   Header.Unused = 0;
   Header.HashType = static_cast<uint64_t>(IndexedInstrProf::HashType);
   Header.HashOffset = 0;
   Header.MemProfOffset = 0;
   Header.BinaryIdOffset = 0;
+  Header.TemporalProfTracesOffset = 0;
   int N = sizeof(IndexedInstrProf::Header) / sizeof(uint64_t);
 
-  // Only write out all the fields except 'HashOffset', 'MemProfOffset' and
-  // 'BinaryIdOffset'. We need to remember the offset of these fields to allow
-  // back patching later.
-  for (int I = 0; I < N - 3; I++)
+  // Only write out all the fields except 'HashOffset', 'MemProfOffset',
+  // 'BinaryIdOffset' and `TemporalProfTracesOffset`. We need to remember the
+  // offset of these fields to allow back patching later.
+  for (int I = 0; I < N - 4; I++)
     OS.write(reinterpret_cast<uint64_t *>(&Header)[I]);
 
   // Save the location of Header.HashOffset field in \c OS.
@@ -400,6 +479,9 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
   uint64_t BinaryIdSectionOffset = OS.tell();
   // Reserve space for the BinaryIdOffset field to be patched later if this
   // profile contains binary ids.
+  OS.write(0);
+
+  uint64_t TemporalProfTracesOffset = OS.tell();
   OS.write(0);
 
   // Reserve space to write profile summary data.
@@ -454,7 +536,12 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
       // Insert the key (func hash) and value (memprof record).
       RecordTableGenerator.insert(I.first, I.second);
     }
+    // Release the memory of this MapVector as it is no longer needed.
+    MemProfRecordData.clear();
 
+    // The call to Emit invokes RecordWriterTrait::EmitData which destructs
+    // the memprof record copies owned by the RecordTableGenerator. This works
+    // because the RecordTableGenerator is not used after this point.
     uint64_t RecordTableOffset =
         RecordTableGenerator.Emit(OS.OS, *RecordWriter);
 
@@ -467,6 +554,8 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
       // Insert the key (frame id) and value (frame contents).
       FrameTableGenerator.insert(I.first, I.second);
     }
+    // Release the memory of this MapVector as it is no longer needed.
+    MemProfFrameData.clear();
 
     uint64_t FrameTableOffset = FrameTableGenerator.Emit(OS.OS, *FrameWriter);
 
@@ -515,6 +604,19 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
       OS.writeByte(0);
   }
 
+  uint64_t TemporalProfTracesSectionStart = 0;
+  if (static_cast<bool>(ProfileKind & InstrProfKind::TemporalProfile)) {
+    TemporalProfTracesSectionStart = OS.tell();
+    OS.write(TemporalProfTraces.size());
+    OS.write(TemporalProfTraceStreamSize);
+    for (auto &Trace : TemporalProfTraces) {
+      OS.write(Trace.Weight);
+      OS.write(Trace.FunctionNameRefs.size());
+      for (auto &NameRef : Trace.FunctionNameRefs)
+        OS.write(NameRef);
+    }
+  }
+
   // Allocate space for data to be serialized out.
   std::unique_ptr<IndexedInstrProf::Summary> TheSummary =
       IndexedInstrProf::allocSummary(SummarySize);
@@ -542,6 +644,9 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
       {MemProfSectionOffset, &MemProfSectionStart, 1},
       // Patch the Header.BinaryIdSectionOffset.
       {BinaryIdSectionOffset, &BinaryIdSectionStart, 1},
+      // Patch the Header.TemporalProfTracesOffset (=0 for profiles without
+      // traces).
+      {TemporalProfTracesOffset, &TemporalProfTracesSectionStart, 1},
       // Patch the summary data.
       {SummaryOffset, reinterpret_cast<uint64_t *>(TheSummary.get()),
        (int)(SummarySize / sizeof(uint64_t))},
@@ -564,12 +669,16 @@ Error InstrProfWriter::write(raw_fd_ostream &OS) {
   return writeImpl(POS);
 }
 
+Error InstrProfWriter::write(raw_string_ostream &OS) {
+  ProfOStream POS(OS);
+  return writeImpl(POS);
+}
+
 std::unique_ptr<MemoryBuffer> InstrProfWriter::writeBuffer() {
   std::string Data;
   raw_string_ostream OS(Data);
-  ProfOStream POS(OS);
   // Write the hash table.
-  if (Error E = writeImpl(POS))
+  if (Error E = write(OS))
     return nullptr;
   // Return this in an aligned memory buffer.
   return MemoryBuffer::getMemBufferCopy(Data);
@@ -609,6 +718,17 @@ void InstrProfWriter::writeRecordInText(StringRef Name, uint64_t Hash,
   for (uint64_t Count : Func.Counts)
     OS << Count << "\n";
 
+  if (Func.BitmapBytes.size() > 0) {
+    OS << "# Num Bitmap Bytes:\n$" << Func.BitmapBytes.size() << "\n";
+    OS << "# Bitmap Byte Values:\n";
+    for (uint8_t Byte : Func.BitmapBytes) {
+      OS << "0x";
+      OS.write_hex(Byte);
+      OS << "\n";
+    }
+    OS << "\n";
+  }
+
   uint32_t NumValueKinds = Func.getNumValueKinds();
   if (!NumValueKinds) {
     OS << "\n";
@@ -628,7 +748,7 @@ void InstrProfWriter::writeRecordInText(StringRef Name, uint64_t Hash,
       std::unique_ptr<InstrProfValueData[]> VD = Func.getValueForSite(VK, S);
       for (uint32_t I = 0; I < ND; I++) {
         if (VK == IPVK_IndirectCallTarget)
-          OS << Symtab.getFuncNameOrExternalSymbol(VD[I].Value) << ":"
+          OS << Symtab.getFuncOrVarNameIfDefined(VD[I].Value) << ":"
              << VD[I].Count << "\n";
         else
           OS << VD[I].Value << ":" << VD[I].Count << "\n";
@@ -649,6 +769,8 @@ Error InstrProfWriter::writeText(raw_fd_ostream &OS) {
   if (static_cast<bool>(ProfileKind &
                         InstrProfKind::FunctionEntryInstrumentation))
     OS << "# Always instrument the function entry block\n:entry_first\n";
+  if (static_cast<bool>(ProfileKind & InstrProfKind::SingleByteCoverage))
+    OS << "# Instrument block coverage\n:single_byte_coverage\n";
   InstrProfSymtab Symtab;
 
   using FuncPair = detail::DenseMapPair<uint64_t, InstrProfRecord>;
@@ -663,6 +785,9 @@ Error InstrProfWriter::writeText(raw_fd_ostream &OS) {
         OrderedFuncData.push_back(std::make_pair(I.getKey(), Func));
     }
   }
+
+  if (static_cast<bool>(ProfileKind & InstrProfKind::TemporalProfile))
+    writeTextTemporalProfTraceData(OS, Symtab);
 
   llvm::sort(OrderedFuncData, [](const RecordType &A, const RecordType &B) {
     return std::tie(A.first, A.second.first) <
@@ -682,4 +807,19 @@ Error InstrProfWriter::writeText(raw_fd_ostream &OS) {
   }
 
   return Error::success();
+}
+
+void InstrProfWriter::writeTextTemporalProfTraceData(raw_fd_ostream &OS,
+                                                     InstrProfSymtab &Symtab) {
+  OS << ":temporal_prof_traces\n";
+  OS << "# Num Temporal Profile Traces:\n" << TemporalProfTraces.size() << "\n";
+  OS << "# Temporal Profile Trace Stream Size:\n"
+     << TemporalProfTraceStreamSize << "\n";
+  for (auto &Trace : TemporalProfTraces) {
+    OS << "# Weight:\n" << Trace.Weight << "\n";
+    for (auto &NameRef : Trace.FunctionNameRefs)
+      OS << Symtab.getFuncOrVarName(NameRef) << ",";
+    OS << "\n";
+  }
+  OS << "\n";
 }

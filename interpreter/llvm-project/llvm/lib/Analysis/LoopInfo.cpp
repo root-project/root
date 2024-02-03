@@ -17,7 +17,6 @@
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Analysis/IVDescriptors.h"
-#include "llvm/Analysis/LoopInfoImpl.h"
 #include "llvm/Analysis/LoopIterator.h"
 #include "llvm/Analysis/LoopNestAnalysis.h"
 #include "llvm/Analysis/MemorySSA.h"
@@ -36,6 +35,7 @@
 #include "llvm/IR/PrintPasses.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/GenericLoopInfoImpl.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
@@ -737,7 +737,7 @@ void UnloopUpdater::updateBlockParents() {
   bool Changed = FoundIB;
   for (unsigned NIters = 0; Changed; ++NIters) {
     assert(NIters < Unloop.getNumBlocks() && "runaway iterative algorithm");
-    (void) NIters;
+    (void)NIters;
 
     // Iterate over the postorder list of blocks, propagating the nearest loop
     // from successors to predecessors as before.
@@ -929,9 +929,8 @@ void LoopInfo::erase(Loop *Unloop) {
   }
 }
 
-bool
-LoopInfo::wouldBeOutOfLoopUseRequiringLCSSA(const Value *V,
-                                            const BasicBlock *ExitBB) const {
+bool LoopInfo::wouldBeOutOfLoopUseRequiringLCSSA(
+    const Value *V, const BasicBlock *ExitBB) const {
   if (V->getType()->isTokenTy())
     // We can't form PHIs of token type, so the definition of LCSSA excludes
     // values of that type.
@@ -970,7 +969,9 @@ LoopInfo LoopAnalysis::run(Function &F, FunctionAnalysisManager &AM) {
 
 PreservedAnalyses LoopPrinterPass::run(Function &F,
                                        FunctionAnalysisManager &AM) {
-  AM.getResult<LoopAnalysis>(F).print(OS);
+  auto &LI = AM.getResult<LoopAnalysis>(F);
+  OS << "Loop info for function '" << F.getName() << "':\n";
+  LI.print(OS);
   return PreservedAnalyses::all();
 }
 
@@ -1144,7 +1145,7 @@ MDNode *llvm::makePostTransformationMetadata(LLVMContext &Context,
         if (S)
           IsVectorMetadata =
               llvm::any_of(RemovePrefixes, [S](StringRef Prefix) -> bool {
-                return S->getString().startswith(Prefix);
+                return S->getString().starts_with(Prefix);
               });
       }
       if (!IsVectorMetadata)
@@ -1219,7 +1220,7 @@ PreservedAnalyses LoopVerifierPass::run(Function &F,
 /// Traverse the loop blocks and store the DFS result.
 /// Useful for clients that just want the final DFS result and don't need to
 /// visit blocks during the initial traversal.
-void LoopBlocksDFS::perform(LoopInfo *LI) {
+void LoopBlocksDFS::perform(const LoopInfo *LI) {
   LoopBlocksTraversal Traversal(*this, LI);
   for (LoopBlocksTraversal::POTIterator POI = Traversal.begin(),
                                         POE = Traversal.end();
