@@ -119,8 +119,8 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
       auto hdrFileEntry
          =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
                                  true /*isAngled*/, nullptr /*FromDir*/, CurDir,
-                                 clang::ArrayRef<std::pair<const clang::FileEntry*,
-                                                           const clang::DirectoryEntry*>>(),
+                                 clang::ArrayRef<std::pair<clang::OptionalFileEntryRef,
+                                                           clang::DirectoryEntryRef>>(),
                                  nullptr /*SearchPath*/,/*RelativePath*/ nullptr,
                                  nullptr /*RequestingModule*/, nullptr /*SuggestedModule*/,
                                  nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/);
@@ -581,8 +581,8 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
    if (auto hdrFileEntry
          =  HdrSearch.LookupFile(hdrName, clang::SourceLocation(),
                                  true /*isAngled*/, nullptr /*FromDir*/, CurDir,
-                                 clang::ArrayRef<std::pair<const clang::FileEntry*,
-                                                         const clang::DirectoryEntry*>>(),
+                                 clang::ArrayRef<std::pair<clang::OptionalFileEntryRef,
+                                                         clang::DirectoryEntryRef>>(),
                                  nullptr /*SearchPath*/, nullptr /*RelativePath*/,
                                  nullptr /*RequestingModule*/, nullptr/*SuggestedModule*/,
                                  nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/)) {
