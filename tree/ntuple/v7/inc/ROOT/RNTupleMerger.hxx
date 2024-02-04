@@ -28,6 +28,7 @@
 
 namespace ROOT {
 namespace Experimental {
+namespace Internal {
 
 // clang-format off
 /**
@@ -77,6 +78,7 @@ public:
 
 }; // end of class RNTupleMerger
 
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 
