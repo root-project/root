@@ -29,8 +29,8 @@ Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::BuildColumnIdMap(
-   std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns)
+void ROOT::Experimental::Internal::RNTupleMerger::BuildColumnIdMap(
+   std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo> &columns)
 {
    for (auto &column : columns) {
       column.fColumnOutputId = fOutputIdMap.size();
@@ -39,8 +39,8 @@ void ROOT::Experimental::RNTupleMerger::BuildColumnIdMap(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::ValidateColumns(
-   std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns)
+void ROOT::Experimental::Internal::RNTupleMerger::ValidateColumns(
+   std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo> &columns)
 {
    // First ensure that we have the same number of columns
    if (fOutputIdMap.size() != columns.size()) {
@@ -58,11 +58,11 @@ void ROOT::Experimental::RNTupleMerger::ValidateColumns(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo>
-ROOT::Experimental::RNTupleMerger::CollectColumns(const Detail::RPageSource &source, bool firstSource)
+std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo>
+ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const Detail::RPageSource &source, bool firstSource)
 {
    auto desc = source.GetSharedDescriptorGuard();
-   std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> columns;
+   std::vector<RColumnInfo> columns;
    // Here we recursively find the columns and fill the RColumnInfo vector
    AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldZero());
    // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
@@ -76,8 +76,8 @@ ROOT::Experimental::RNTupleMerger::CollectColumns(const Detail::RPageSource &sou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::AddColumnsFromField(
-   std::vector<ROOT::Experimental::RNTupleMerger::RColumnInfo> &columns, const RNTupleDescriptor &desc,
+void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(
+   std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo> &columns, const RNTupleDescriptor &desc,
    const RFieldDescriptor &fieldDesc, const std::string &prefix)
 {
    for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
@@ -92,7 +92,8 @@ void ROOT::Experimental::RNTupleMerger::AddColumnsFromField(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource *> sources, Detail::RPageSink &destination)
+void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<Detail::RPageSource *> sources,
+                                                        Detail::RPageSink &destination)
 {
    // Append the sources to the destination one-by-one
    bool isFirstSource = true;
