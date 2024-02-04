@@ -136,6 +136,8 @@ if(ROOT_vdt_FOUND AND NOT TARGET VDT::VDT)
       find_dependency(Vdt)
     endfunction()
     find_builtin_vdt()
+  else()
+    find_dependency(Vdt)
   endif()
 endif()
 
