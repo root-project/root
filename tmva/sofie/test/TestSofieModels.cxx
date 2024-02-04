@@ -94,11 +94,7 @@ void TestLinear(int nbatches, bool useBN = false, int inputSize = 10, int nlayer
       f >> refValue[i];
       if (verbose)
          std::cout << " result " << result.at(i) << " reference " << refValue[i] << std::endl;
-      if (std::abs(refValue[i]) > 0.5)
-         EXPECT_FLOAT_EQ(result.at(i), refValue[i]);
-      else
-         // expect float fails for small values
-         EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
+      EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
    }
 }
 
