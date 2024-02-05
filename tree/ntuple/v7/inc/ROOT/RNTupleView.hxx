@@ -155,7 +155,7 @@ private:
         fValue(fField.CreateValue())
    {
       fField.SetOnDiskId(fieldId);
-      fField.ConnectPageSource(*pageSource);
+      Internal::CallConnectPageSourceOnField(fField, *pageSource);
       if ((fField.GetTraits() & RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
          throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
    }
@@ -233,7 +233,7 @@ private:
       : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->CreateValue())
    {
       fField->SetOnDiskId(fieldId);
-      fField->ConnectPageSource(*pageSource);
+      Internal::CallConnectPageSourceOnField(*fField, *pageSource);
    }
 
 public:

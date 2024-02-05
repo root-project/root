@@ -309,6 +309,10 @@ void ROOT::Experimental::Internal::CallConnectPageSinkOnField(RFieldBase &field,
 {
    field.ConnectPageSink(sink, firstEntry);
 }
+void ROOT::Experimental::Internal::CallConnectPageSourceOnField(RFieldBase &field, Detail::RPageSource &source)
+{
+   field.ConnectPageSource(source);
+}
 
 //------------------------------------------------------------------------------
 

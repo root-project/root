@@ -193,7 +193,7 @@ public:
          }
       }
 
-      fField->ConnectPageSource(source);
+      ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fField, source);
 
       if (fValuePtr) {
          // When the reader reconnects to a new file, the fValuePtr is already set
