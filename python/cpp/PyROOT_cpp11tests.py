@@ -24,23 +24,39 @@ CreateMyCounterClass = ROOT.CreateMyCounterClass
 
 ### C++11 standard library classes ===========================================
 class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
-   def test01SharedPtr( self ):
-      """Test usage and access of std::shared_ptr<>"""
+    def test01SharedPtr( self ):
+        """Test usage and access of std::shared_ptr<>"""
 
-    # proper memory accounting
-      self.assertEqual( MyCounterClass.counter, 0 )
+        # proper memory accounting
+        self.assertEqual( MyCounterClass.counter, 0 )
 
-      ptr1 = CreateMyCounterClass()
-      self.assertTrue( not not ptr1 )
-      self.assertEqual( MyCounterClass.counter, 1 )
+        ptr1 = CreateMyCounterClass()
+        self.assertTrue( not not ptr1 )
+        self.assertEqual( MyCounterClass.counter, 1 )
 
-      ptr2 = CreateMyCounterClass()
-      self.assertTrue( not not ptr2 )
-      self.assertEqual( MyCounterClass.counter, 2 )
+        ptr2 = CreateMyCounterClass()
+        self.assertTrue( not not ptr2 )
+        self.assertEqual( MyCounterClass.counter, 2 )
 
-      del ptr2, ptr1
-      import gc; gc.collect()
-      self.assertEqual( MyCounterClass.counter, 0 )
+        del ptr2, ptr1
+        import gc; gc.collect()
+        self.assertEqual( MyCounterClass.counter, 0 )
+
+    def test02TupleElement(self):
+        """
+        Check that std::tuple_element works in PyROOT.
+
+        See: https://github.com/root-project/root/issues/14232.
+        """
+
+        ROOT.gInterpreter.LoadText("""
+        #include <tuple>
+        #include <string>
+        using ATuple = std::tuple<int, float, std::string, double>;
+        """)
+        from ROOT import ATuple
+
+        ROOT.std.tuple_element[1, ATuple].type
 
 
 ### C++11 language constructs test cases =====================================
@@ -68,7 +84,7 @@ class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
       g = TGraphErrors( 0, nullptr, nullptr )
       self.assertEqual( round( g.GetMean(), 8 ), 0.0 )
 
- 
+
 ## actual test run
 if __name__ == '__main__':
    from MyTextTestRunner import MyTextTestRunner
