@@ -194,6 +194,10 @@ long TClingClassInfo::ClassProperty() const
    if (CRD->isPolymorphic()) {
       property |= kClassHasVirtual;
    }
+   if (CRD->isAggregate() || CRD->isPOD()) {
+      // according to the C++ standard, being a POD implies being an aggregate
+      property |= kClassIsAggregate;
+   }
    return property;
 }
 

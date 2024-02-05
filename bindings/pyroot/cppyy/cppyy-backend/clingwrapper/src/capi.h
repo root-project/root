@@ -104,6 +104,8 @@ extern "C" {
     int cppyy_is_abstract(cppyy_type_t type);
     RPY_EXPORTED
     int cppyy_is_enum(const char* type_name);
+    RPY_EXPORTED
+    int cppyy_is_aggregate(cppyy_type_t type);
 
     RPY_EXPORTED
     const char** cppyy_get_all_cpp_names(cppyy_scope_t scope, size_t* count);

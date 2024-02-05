@@ -993,6 +993,15 @@ bool Cppyy::IsEnum(const std::string& type_name)
     return gInterpreter->ClassInfo_IsEnum(tn_short.c_str());
 }
 
+bool Cppyy::IsAggregate(TCppType_t klass)
+{
+// Test if this type is an aggregate type
+    TClassRef& cr = type_from_handle(klass);
+    if (cr.GetClass())
+        return cr->ClassProperty() & kClassIsAggregate;
+    return false;
+}
+
 // helpers for stripping scope names
 static
 std::string outer_with_template(const std::string& name)
@@ -2483,6 +2492,10 @@ int cppyy_is_abstract(cppyy_type_t type) {
 
 int cppyy_is_enum(const char* type_name) {
     return (int)Cppyy::IsEnum(type_name);
+}
+
+int cppyy_is_aggregate(cppyy_type_t type) {
+    return (int)Cppyy::IsAggregate(type);
 }
 
 const char** cppyy_get_all_cpp_names(cppyy_scope_t scope, size_t* count) {
