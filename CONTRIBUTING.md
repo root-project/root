@@ -56,6 +56,14 @@ It should describe the **why**, rather than the **what** and **how** (we can gat
 change diff, respectively).
 The commit message should be wrapped at 72 characters.
 
+> [!TIP]
+> We provide a commit message template to help with following the above guidelines. It can be found in the root of this
+> repository as [`.git-commit-template`](https://github.com/root-project/root/blob/master/.git-commit-template),
+> and can be set to automatically be used for every commit with the following command:
+> ```sh
+> $ git config commit.template .git-commit-template
+> ```
+
 ## Your Pull Request
 
 > [!NOTE]
