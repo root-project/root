@@ -1368,11 +1368,10 @@ bool HeaderSearch::ShouldEnterIncludeFile(Preprocessor &PP,
 }
 
 size_t HeaderSearch::getTotalMemory() const {
-  return SearchDirs.capacity()
-    + llvm::capacity_in_bytes(FileInfo)
-    + llvm::capacity_in_bytes(HeaderMaps)
-    + LookupFileCache.getAllocator().getTotalMemory()
-    + FrameworkMap.getAllocator().getTotalMemory();
+  return SearchDirs.capacity() + llvm::capacity_in_bytes(FileInfo) +
+         llvm::capacity_in_bytes(HeaderMaps) +
+         LookupFileCache.getAllocator().getTotalMemory() +
+         FrameworkMap.getAllocator().getTotalMemory();
 }
 
 StringRef HeaderSearch::getUniqueFrameworkName(StringRef Framework) {
