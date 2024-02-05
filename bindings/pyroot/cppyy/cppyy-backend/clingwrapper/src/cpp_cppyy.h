@@ -114,6 +114,8 @@ namespace Cppyy {
     bool IsAbstract(TCppType_t type);
     RPY_EXPORTED
     bool IsEnum(const std::string& type_name);
+    RPY_EXPORTED
+    bool IsAggregate(TCppType_t type);
 
     RPY_EXPORTED
     void GetAllCppNames(TCppScope_t scope, std::set<std::string>& cppnames);
