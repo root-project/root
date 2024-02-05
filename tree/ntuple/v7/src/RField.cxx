@@ -300,6 +300,11 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
 
 } // anonymous namespace
 
+void ROOT::Experimental::Internal::CallCommitClusterOnField(RFieldBase &field)
+{
+   field.CommitCluster();
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RFieldBase::RColumnRepresentations::RColumnRepresentations()

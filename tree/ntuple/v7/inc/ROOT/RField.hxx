@@ -53,6 +53,7 @@ class TEnum;
 namespace ROOT {
 
 class TSchemaRule;
+class RFieldBase;
 
 namespace Experimental {
 
@@ -62,6 +63,7 @@ class REntry;
 
 namespace Internal {
 struct RFieldCallbackInjector;
+void CallCommitClusterOnField(RFieldBase &);
 } // namespace Internal
 
 namespace Detail {
@@ -84,6 +86,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
+   friend void Internal::CallCommitClusterOnField(RFieldBase &);
    using ReadCallback_t = std::function<void(void *)>;
 
 protected:
@@ -333,6 +336,9 @@ private:
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
    /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
    NTupleSize_t EntryToColumnElementIndex(NTupleSize_t globalIndex) const;
+
+   /// Flushes data from active columns to disk and calls CommitClusterImpl
+   void CommitCluster();
 
 protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
@@ -599,9 +605,6 @@ public:
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
-   /// Flushes data from active columns to disk and calls CommitClusterImpl
-   void CommitCluster();
-
    std::string GetFieldName() const { return fName; }
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
@@ -660,7 +663,7 @@ public:
    RConstSchemaIterator cend() const { return RConstSchemaIterator(this, -1); }
 
    virtual void AcceptVisitor(Detail::RFieldVisitor &visitor) const;
-};
+}; // class RFieldBase
 
 /// The container field for an ntuple model, which itself has no physical representation.
 /// Therefore, the zero field must not be connected to a page source or sink.
