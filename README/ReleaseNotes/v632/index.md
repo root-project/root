@@ -44,6 +44,7 @@ The following people have contributed to this new version:
 - Some redundant **RooDataSet** constructors are deprecated and will be removed in ROOT 6.34.
   Please use the RooDataSet constructors that take RooFit command arguments instead
 - ROOT does not longer support Python 2. The minimum required Python version to build ROOT is 3.8.
+- Support for wildcard imports like `from ROOT import *` is dropped from PyROOT
 
 ## Core Libraries
 
