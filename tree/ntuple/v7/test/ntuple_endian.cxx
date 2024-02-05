@@ -50,6 +50,11 @@ protected:
 
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
+   RWrittenPage WriteSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
+   {
+      return {};
+   }
+   void CommitWrittenPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RWrittenPage &) final {}
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
    std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }

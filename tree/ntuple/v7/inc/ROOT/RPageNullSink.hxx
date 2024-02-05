@@ -73,6 +73,12 @@ public:
    }
 
    void CommitPage(ColumnHandle_t, const RPage &page) final { fNBytesCurrentCluster += page.GetNBytes(); }
+   RWrittenPage WriteSealedPage(DescriptorId_t, const RSealedPage &page) final
+   {
+      fNBytesCurrentCluster += page.fSize;
+      return {};
+   }
+   void CommitWrittenPage(DescriptorId_t, const RWrittenPage &) final {}
    void CommitSealedPage(DescriptorId_t, const RSealedPage &page) final { fNBytesCurrentCluster += page.fSize; }
    void CommitSealedPageV(std::span<RSealedPageGroup> ranges) final
    {
