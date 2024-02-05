@@ -58,6 +58,18 @@ class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
 
         ROOT.std.tuple_element[1, ATuple].type
 
+    def test03InitializerList(self):
+        """
+        Check if we can convert a list of strings to a C++ initializer list.
+
+        Reproducer of https://github.com/root-project/root/issues/11411
+        """
+
+        ROOT.gInterpreter.Declare("""
+        void foo(std::initializer_list<std::string> const& columns) {}
+        """)
+        ROOT.foo(["x"])
+
 
 ### C++11 language constructs test cases =====================================
 class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
