@@ -328,8 +328,6 @@ const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetField
 
 ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEntry()
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
    EnsureNotBare();
    return *fDefaultEntry;
 }
