@@ -145,22 +145,6 @@ class ROOTFacade(types.ModuleType):
         # Create a buffer (LowLevelView) from address
         return cppyy.ll.cast[out_type](addr)
 
-    def _handle_import_all(self):
-        # Called if "from ROOT import *" is executed in the app.
-        # Customises lookup in Python's main module to also
-        # check in C++'s global namespace
-
-        # Get caller module (jump over the facade frames)
-        num_frame = 2
-        frame = sys._getframe(num_frame).f_globals["__name__"]
-        while frame == "ROOT._facade":
-            num_frame += 1
-            frame = sys._getframe(num_frame).f_globals["__name__"]
-        caller = sys.modules[frame]
-
-        # Install the hook
-        cppyy_backend._set_cpp_lazy_lookup(caller.__dict__)
-
     def _fallback_getattr(self, name):
         # Try:
         # - in the global namespace
@@ -170,13 +154,8 @@ class ROOTFacade(types.ModuleType):
         # The first two attempts allow to lookup
         # e.g. ROOT.ROOT.Math as ROOT.Math
 
-        if name == "__all__":
-            self._handle_import_all()
-            # Make the attributes of the facade be injected in the
-            # caller module
-            raise AttributeError()
         # Note that hasattr caches the lookup for getattr
-        elif hasattr(gbl_namespace, name):
+        if hasattr(gbl_namespace, name):
             return getattr(gbl_namespace, name)
         elif hasattr(gbl_namespace.ROOT, name):
             return getattr(gbl_namespace.ROOT, name)
