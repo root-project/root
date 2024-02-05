@@ -30,6 +30,14 @@ protected:
    void Init(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
+   RWrittenPage WriteSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
+   {
+      return {};
+   }
+   void CommitWrittenPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RWrittenPage &) final
+   {
+      fCounters.fNCommitSealedPage++;
+   }
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
    {
       fCounters.fNCommitSealedPage++;
