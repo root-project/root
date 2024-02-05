@@ -412,7 +412,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::UpdateSchema(const RNTuple
          Internal::RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
-      f.ConnectPageSink(*this, firstEntry); // issues in turn one or several calls to `AddColumn()`
+      Internal::CallConnectPageSinkOnField(f, *this, firstEntry); // issues in turn calls to `AddColumn()`
    };
    auto addProjectedField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();

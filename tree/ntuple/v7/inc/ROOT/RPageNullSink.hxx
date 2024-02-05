@@ -51,7 +51,7 @@ public:
 
    void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry)
    {
-      auto connectField = [&](RFieldBase &f) { f.ConnectPageSink(*this, firstEntry); };
+      auto connectField = [&](RFieldBase &f) { CallConnectPageSinkOnField(f, *this, firstEntry); };
       for (auto *f : fields) {
          connectField(*f);
          for (auto &descendant : *f) {
