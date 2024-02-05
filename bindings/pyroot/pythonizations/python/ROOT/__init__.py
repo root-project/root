@@ -55,6 +55,26 @@ else:
 
 _is_ipython = hasattr(builtins, "__IPYTHON__")
 
+
+class _PoisonedDunderAll:
+    """
+    Dummy class used to trigger an ImportError on wildcard imports if the
+    `__all__` attribute of a module is an instance of this class.
+    """
+
+    def __getitem__(self, _):
+        import textwrap
+
+        message = """
+        Wildcard import e.g. `from module import *` is bad practice, so it is disallowed in ROOT. Please import explicitly.
+        """
+        raise ImportError(textwrap.dedent(message))
+
+
+# Prevent `from ROOT import *` by setting the __all__ attribute to something
+# that will raise an ImportError on item retrieval.
+__all__ = _PoisonedDunderAll()
+
 # Configure ROOT facade module
 import sys
 from ._facade import ROOTFacade
@@ -127,7 +147,12 @@ class _RootNamespaceLoader(Loader):
         return _lookup_root_module(fullname) is not None
 
     def create_module(self, spec: ModuleSpec):
-        return _lookup_root_module(spec.name)
+        out = _lookup_root_module(spec.name)
+        # Prevent wildcard import for the submodule by setting the __all__
+        # attribute to something that will raise an ImportError on item
+        # retrieval.
+        out.__all__ = _PoisonedDunderAll()
+        return out
 
     def exec_module(self, module):
         pass

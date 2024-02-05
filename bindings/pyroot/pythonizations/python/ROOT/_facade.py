@@ -82,9 +82,8 @@ class ROOTFacade(types.ModuleType):
         types.ModuleType.__init__(self, module.__name__)
 
         self.module = module
-        # Importing all will be customised later
-        self.module.__all__ = []
 
+        self.__all__ = module.__all__
         self.__name__ = module.__name__
         self.__file__ = module.__file__
         self.__cached__ = module.__cached__
