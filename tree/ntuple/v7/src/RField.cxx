@@ -304,6 +304,11 @@ void ROOT::Experimental::Internal::CallCommitClusterOnField(RFieldBase &field)
 {
    field.CommitCluster();
 }
+void ROOT::Experimental::Internal::CallConnectPageSinkOnField(RFieldBase &field, Detail::RPageSink &sink,
+                                                              NTupleSize_t firstEntry)
+{
+   field.ConnectPageSink(sink, firstEntry);
+}
 
 //------------------------------------------------------------------------------
 

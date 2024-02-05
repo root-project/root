@@ -64,6 +64,7 @@ class REntry;
 namespace Internal {
 struct RFieldCallbackInjector;
 void CallCommitClusterOnField(RFieldBase &);
+void CallConnectPageSinkOnField(RFieldBase &, Detail::RPageSink &, NTupleSize_t firstEntry = 0);
 } // namespace Internal
 
 namespace Detail {
@@ -87,6 +88,7 @@ class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
+   friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Detail::RPageSink &, NTupleSize_t);
    using ReadCallback_t = std::function<void(void *)>;
 
 protected:
@@ -339,6 +341,10 @@ private:
 
    /// Flushes data from active columns to disk and calls CommitClusterImpl
    void CommitCluster();
+   /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
+   /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
+   /// \param firstEntry The global index of the first entry with on-disk data for the connected field
+   void ConnectPageSink(Detail::RPageSink &pageSink, NTupleSize_t firstEntry = 0);
 
 protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
@@ -634,10 +640,6 @@ public:
    /// Whether or not an explicit column representative was set
    bool HasDefaultColumnRepresentative() const { return fColumnRepresentative == nullptr; }
 
-   /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
-   /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
-   /// \param firstEntry The global index of the first entry with on-disk data for the connected field
-   void ConnectPageSink(Detail::RPageSink &pageSink, NTupleSize_t firstEntry = 0);
    /// Connects the field and its sub field tree to the given page source. Once connected, data can be read.
    /// Only unconnected fields may be connected, i.e. the method is not idempotent. The field ID has to be set prior to
    /// calling this function. For sub fields, a field ID may or may not be set. If the field ID is unset, it will be
