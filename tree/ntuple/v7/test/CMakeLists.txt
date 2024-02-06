@@ -78,3 +78,8 @@ if(daos OR daos_mock)
             APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_MOCK=1)
   endif()
 endif()
+
+if (davix OR builtin_davix)
+  ROOT_ADD_GTEST(ntuple_storage_s3 ntuple_storage_s3.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+  target_link_libraries(ntuple_storage_s3 PRIVATE ${DAOS_LIBRARIES})
+endif()
