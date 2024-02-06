@@ -116,9 +116,7 @@ TEST(RNTupleMerger, MergeSymmetric)
       }
 
       // Create the output
-      RNTupleWriteOptions writeOpts;
-      writeOpts.SetUseBufferedWrite(false);
-      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
 
       // Now Merge the inputs
       RNTupleMerger merger;
@@ -207,9 +205,7 @@ TEST(RNTupleMerger, MergeAsymmetric1)
       }
 
       // Create the output
-      RNTupleWriteOptions writeOpts;
-      writeOpts.SetUseBufferedWrite(false);
-      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
 
       // Now Merge the inputs
       // We expect this to fail since the fields between the sources do NOT match
@@ -258,9 +254,7 @@ TEST(RNTupleMerger, MergeAsymmetric2)
       }
 
       // Create the output
-      RNTupleWriteOptions writeOpts;
-      writeOpts.SetUseBufferedWrite(false);
-      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
 
       // Now Merge the inputs
       // We expect this to fail since the fields between the sources do NOT match
@@ -309,9 +303,7 @@ TEST(RNTupleMerger, MergeAsymmetric3)
       }
 
       // Create the output
-      RNTupleWriteOptions writeOpts;
-      writeOpts.SetUseBufferedWrite(false);
-      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
 
       // Now Merge the inputs
       // We expect this to fail since the fields between the sources do NOT match
@@ -369,9 +361,7 @@ TEST(RNTupleMerger, MergeVector)
       }
 
       // Create the output
-      RNTupleWriteOptions writeOpts;
-      writeOpts.SetUseBufferedWrite(false);
-      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
 
       // Now Merge the inputs
       RNTupleMerger merger;
@@ -463,9 +453,7 @@ TEST(RNTupleMerger, MergeInconsistentTypes)
       }
 
       // Create the output
-      RNTupleWriteOptions writeOpts;
-      writeOpts.SetUseBufferedWrite(false);
-      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
 
       // Now Merge the inputs
       // We expect this to fail since the fields between the sources do NOT match
