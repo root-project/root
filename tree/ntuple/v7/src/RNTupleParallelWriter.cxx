@@ -139,7 +139,7 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<RNTupleModel
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, storage, options);
+   auto sink = Detail::RPagePersistentSink::Create(ntupleName, storage, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
