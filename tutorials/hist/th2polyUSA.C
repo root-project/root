@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This tutorial illustrates how to create an histogram with polygonal
-/// bins (TH2Poly), fill it and draw it using the `col` option. The initial data
+/// This tutorial illustrates how to create a histogram with polygonal
+/// bins (TH2Poly), fill it, and draw it using the `col` option. The initial data
 /// are stored in TMultiGraphs. They represent the USA map. Such histograms can
 /// be rendered in 3D using the option `legogl`.
 ///
@@ -15,43 +15,30 @@
 ///
 /// \author Olivier Couet
 
-void th2polyUSA()
-{
-   Int_t i, bin;
-   const Int_t nx = 48;
-   const char *states [nx] = {
-      "alabama",      "arizona",        "arkansas",       "california",
-      "colorado",     "connecticut",    "delaware",       "florida",
-      "georgia",      "idaho",          "illinois",       "indiana",
-      "iowa",         "kansas",         "kentucky",       "louisiana",
-      "maine",        "maryland",       "massachusetts",  "michigan",
-      "minnesota",    "mississippi",    "missouri",       "montana",
-      "nebraska",     "nevada",         "new_hampshire",  "new_jersey",
-      "new_mexico",   "new_york",       "north_carolina", "north_dakota",
-      "ohio",         "oklahoma",       "oregon",         "pennsylvania",
-      "rhode_island", "south_carolina", "south_dakota",   "tennessee",
-      "texas",        "utah",           "vermont",        "virginia",
-      "washington",   "west_virginia",  "wisconsin",      "wyoming"
-   };
-   Double_t pop[nx] = {
-    4708708, 6595778,  2889450, 36961664, 5024748,  3518288,  885122, 18537969,
-    9829211, 1545801, 12910409,  6423113, 3007856,  2818747, 4314113,  4492076,
-    1318301, 5699478,  6593587,  9969727, 5266214,  2951996, 5987580,   974989,
-    1796619, 2643085,  1324575,  8707739, 2009671, 19541453, 9380884,   646844,
-   11542645, 3687050,  3825657, 12604767, 1053209,  4561242,  812383,  6296254,
-   24782302, 2784572,   621760,  7882590, 6664195,  1819777, 5654774,   544270
+void th2polyUSA() {
+   std::vector<std::pair<std::string, UInt_t>> statePop
+   {
+         {"alabama", 4708708}, {"arizona", 6595778}, {"arkansas", 2889450}, {"california", 36961664},
+         {"colorado", 5024748}, {"connecticut", 3518288}, {"delaware", 885122}, {"florida", 18537969},
+         {"georgia", 9829211}, {"idaho", 1545801}, {"illinois", 12910409}, {"indiana", 6423113}, {"iowa", 3007856},
+         {"kansas", 2818747}, {"kentucky", 4314113}, {"louisiana", 4492076}, {"maine", 1318301}, {"maryland", 5699478},
+         {"massachusetts", 6593587}, {"michigan", 9969727}, {"minnesota", 5266214}, {"mississippi", 2951996},
+         {"missouri", 5987580}, {"montana", 974989}, {"nebraska", 1796619}, {"nevada", 2643085},
+         {"new_hampshire", 1324575}, {"new_jersey", 8707739}, {"new_mexico", 2009671}, {"new_york", 19541453},
+         {"north_carolina", 9380884}, {"north_dakota", 646844}, {"ohio", 11542645}, {"oklahoma", 3687050},
+         {"oregon", 3825657}, {"pennsylvania", 12604767}, {"rhode_island", 1053209}, {"south_carolina", 4561242},
+         {"south_dakota", 812383}, {"tennessee", 6296254}, {"texas", 24782302}, {"utah", 2784572}, {"vermont", 621760},
+         {"virginia", 7882590}, {"washington", 6664195}, {"west_virginia", 1819777}, {"wisconsin", 5654774},
+         {"wyoming", 544270}
    };
 
-   TCanvas *usa = new TCanvas("USA", "USA");
-   usa->ToggleEventStatus();
-   Double_t lon1 = -130;
-   Double_t lon2 = -65;
-   Double_t lat1 = 24;
-   Double_t lat2 = 50;
-   TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
-
+   auto lon1 = -130.;
+   auto lon2 = -65.;
+   auto lat1 = 24.;
+   auto lat2 = 50.;
+   auto p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
    TFile::SetCacheFileDir(".");
-   TFile *f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
+   auto f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
 
    if (!f) {
       printf("Cannot access usa.root. Is internet working ?\n");
@@ -59,20 +46,16 @@ void th2polyUSA()
    }
 
    // Define the TH2Poly bins.
-   TMultiGraph *mg;
-   TKey *key;
-   TIter nextkey(gDirectory->GetListOfKeys());
-   while ((key = (TKey*)nextkey())) {
-      TObject *obj = key->ReadObj();
-      if (obj->InheritsFrom("TMultiGraph")) {
-         mg = (TMultiGraph*)obj;
-         bin = p->AddBin(mg);
+   for (auto [state, pop] : statePop) {
+      if (auto stateGraph = f->Get<TMultiGraph>(state.c_str())) {
+         p->AddBin(stateGraph);
+         p->Fill(state.c_str(), pop);
+      } else {
+         std::cerr << "Error reading object " << state << " from the file." << std::endl;
       }
    }
 
-   // Fill TH2Poly.
-   for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
-
+   // Draw
    gStyle->SetOptStat(11);
    p->Draw("colz textn");
 }
