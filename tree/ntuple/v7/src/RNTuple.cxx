@@ -347,11 +347,21 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
+ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink,
+                                          const RNTupleWriteOptions &options)
+{
+   if (options.GetUseBufferedWrite()) {
+      sink = std::make_unique<Detail::RPageSinkBuf>(std::move(sink));
+   }
+   return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(sink)));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                             std::string_view storage, const RNTupleWriteOptions &options)
 {
-   return std::unique_ptr<RNTupleWriter>(
-      new RNTupleWriter(std::move(model), Detail::RPageSink::Create(ntupleName, storage, options)));
+   auto sink = Detail::RPagePersistentSink::Create(ntupleName, storage, options);
+   return Create(std::move(model), std::move(sink), options);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
@@ -359,11 +369,7 @@ ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, s
                                           const RNTupleWriteOptions &options)
 {
    auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
-   if (options.GetUseBufferedWrite()) {
-      auto bufferedSink = std::make_unique<Detail::RPageSinkBuf>(std::move(sink));
-      return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(bufferedSink)));
-   }
-   return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(sink)));
+   return Create(std::move(model), std::move(sink), options);
 }
 
 void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()

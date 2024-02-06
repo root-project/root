@@ -212,9 +212,6 @@ public:
    RPageSink& operator=(RPageSink&&) = default;
    ~RPageSink() override;
 
-   /// Guess the concrete derived page source from the file name (location)
-   static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
-                                            const RNTupleWriteOptions &options = RNTupleWriteOptions());
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
    /// Returns the sink's write options.
    const RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
@@ -349,6 +346,10 @@ public:
    RPagePersistentSink(RPagePersistentSink &&) = default;
    RPagePersistentSink &operator=(RPagePersistentSink &&) = default;
    ~RPagePersistentSink() override;
+
+   /// Guess the concrete derived page source from the location
+   static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
+                                            const RNTupleWriteOptions &options = RNTupleWriteOptions());
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
