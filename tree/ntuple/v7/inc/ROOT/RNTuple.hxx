@@ -465,6 +465,11 @@ private:
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
 
+   /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
+   static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<RNTupleModel> model,
+                                                std::unique_ptr<Detail::RPageSink> sink,
+                                                const RNTupleWriteOptions &options);
+
 public:
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,

@@ -324,31 +324,6 @@ ROOT::Experimental::Detail::RPageSink::~RPageSink()
 {
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
-   std::string_view ntupleName, std::string_view location, const RNTupleWriteOptions &options)
-{
-   if (ntupleName.empty()) {
-      throw RException(R__FAIL("empty RNTuple name"));
-   }
-   if (location.empty()) {
-      throw RException(R__FAIL("empty storage location"));
-   }
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSink> realSink;
-   if (location.find("daos://") == 0) {
-#ifdef R__ENABLE_DAOS
-      realSink = std::make_unique<RPageSinkDaos>(ntupleName, location, options);
-#else
-      throw RException(R__FAIL("This RNTuple build does not support DAOS."));
-#endif
-   } else {
-      realSink = std::make_unique<RPageSinkFile>(ntupleName, location, options);
-   }
-
-   if (options.GetUseBufferedWrite())
-      return std::make_unique<RPageSinkBuf>(std::move(realSink));
-   return realSink;
-}
-
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
 ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element,
                                                 int compressionSetting, void *buf, bool allowAlias)
@@ -387,6 +362,28 @@ ROOT::Experimental::Detail::RPageSink::SealPage(
 }
 
 //------------------------------------------------------------------------------
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSink>
+ROOT::Experimental::Detail::RPagePersistentSink::Create(std::string_view ntupleName, std::string_view location,
+                                                        const RNTupleWriteOptions &options)
+{
+   if (ntupleName.empty()) {
+      throw RException(R__FAIL("empty RNTuple name"));
+   }
+   if (location.empty()) {
+      throw RException(R__FAIL("empty storage location"));
+   }
+   if (location.find("daos://") == 0) {
+#ifdef R__ENABLE_DAOS
+      return std::make_unique<RPageSinkDaos>(ntupleName, location, options);
+#else
+      throw RException(R__FAIL("This RNTuple build does not support DAOS."));
+#endif
+   }
+
+   // Otherwise assume that the user wants us to create a file.
+   return std::make_unique<RPageSinkFile>(ntupleName, location, options);
+}
 
 ROOT::Experimental::Detail::RPagePersistentSink::RPagePersistentSink(std::string_view name,
                                                                      const RNTupleWriteOptions &options)
