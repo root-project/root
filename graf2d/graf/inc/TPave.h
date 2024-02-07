@@ -70,6 +70,10 @@ public:
                                Int_t bordersize=4 ,Option_t *option="br");
    void           Print(Option_t *option="") const override;
    void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   /**
+    * \brief Sets the border size of the TPave box and shadow
+    * \param bordersize 0: disable shadow and box, 1: disable only shadow, 2+: tunes the shadow border size
+    */
    virtual void   SetBorderSize(Int_t bordersize=4) {fBorderSize = bordersize;} // *MENU*
    virtual void   SetCornerRadius(Double_t rad = 0.2) {fCornerRadius = rad;} // *MENU*
    virtual void   SetName(const char *name="") {fName = name;} // *MENU*

@@ -167,6 +167,8 @@ its position with these lines ("`h`" being the pointer to the histogram):
       Root > st->SetX2NDC(newx2); //new x end position
 ~~~
 
+To remove the border or shadow of the TPaveStats, use the function TPave::SetBorderSize
+
 To change the type of information for an histogram with an existing
 `TPaveStats` one should do:
 ~~~ {.cpp}

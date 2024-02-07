@@ -90,6 +90,8 @@ TPaveText::TPaveText(): TPave(), TAttText()
 ///  If none of these four above options is specified the default the
 ///  option "BR" will be used to draw the border. To produces a pave
 ///  without any border it is enough to specify the option "NB" (no border).
+///  If you want to remove the border or shadow of an already existing TPaveText,
+///  then use the function TPave::SetBorderSize.
 ///
 ///  - option = "NDC" x1,y1,x2,y2 are given in NDC
 ///  - option = "ARC" corners are rounded
