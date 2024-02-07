@@ -19,6 +19,7 @@
 #include <ROOT/RNTupleImporter.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <string_view>
@@ -54,6 +55,10 @@ public:
          return;
       std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
       fNbytesNext += gUpdateFrequencyBytes;
+      if (nbytesWritten > fNbytesNext) {
+         // If we already passed the next threshold, increase by a sensible amount.
+         fNbytesNext = nbytesWritten + gUpdateFrequencyBytes;
+      }
    }
 
    void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
@@ -373,9 +378,14 @@ void ROOT::Experimental::RNTupleImporter::Import()
 
    PrepareSchema();
 
-   auto sink = std::make_unique<Detail::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
+   std::unique_ptr<Detail::RPageSink> sink =
+      std::make_unique<Detail::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
+
+   if (fWriteOptions.GetUseBufferedWrite()) {
+      sink = std::make_unique<Detail::RPageSinkBuf>(std::move(sink));
+   }
 
    auto ntplWriter = Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
    // The guard needs to be destructed before the writer goes out of scope
