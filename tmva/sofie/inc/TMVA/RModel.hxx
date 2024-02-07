@@ -122,6 +122,7 @@ public:
 
     void PrintRequiredInputTensors();
     void PrintInitializedTensors();
+    void PrintDynamicTensors();
     void HeadInitializedTensors(std::string name, int n_print = 50);
 
     bool UseSession() const {
