@@ -36,6 +36,34 @@ void testNormCross()
    << endl;
 }
 
+template <typename T>
+void testMovingFunctions()
+{
+   const Long64_t n = 10;
+   const Long64_t k1 = 5;
+   const Long64_t k2 = 6;
+   T sa[n] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+
+   const T meanresulta[n] = {4, 5, 6, 7, 9, 11, 13, 15, 16, 17};
+   const T medianresulta[n] = {4, 5, 6, 8, 10, 12, 14, 16, 17, 18};
+
+   Double_t w[n] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+   Long64_t work[n] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+   T *movmedian = TMath::MovMedian(n, sa, k1, w, work);
+   T *movmean = TMath::MovMean(n, sa, k2, w);
+
+   for (Long64_t i = 0; i < n; i++) {
+      if (meanresulta[i] != movmean[i])
+         Error("testMovingFunctions", "For MovMean, different values found at i = %lld", i);
+
+      if (medianresulta[i] != movmedian[i])
+         Error("testMovingFunctions", "For MovMedian, different values found at i = %lld", i);
+   }
+
+   delete[] movmedian;
+   delete[] movmean;
+}
 
 template <typename T, typename U>
 void testArrayFunctions()
@@ -63,6 +91,7 @@ void testArrayFunctions()
         << " RMS: " << RMS(n, sa)
         << " Median: " << Median(n, sa)
         << " KOrdStat(3): " << KOrdStat(n, sa, k)
+        << " Mode: " << Mode(n, sa)
         << endl;
 
    Sort(n, sa, index, kFALSE);
@@ -182,6 +211,15 @@ void testTMath()
    testIteratorFunctions<Double_t>();
    testIteratorFunctions<Long_t>();
    testIteratorFunctions<Long64_t>();
+
+   cout << "\nMoving functions tests: " << endl;
+
+   testMovingFunctions<Short_t>();
+   testMovingFunctions<Int_t>();
+   testMovingFunctions<Float_t>();
+   testMovingFunctions<Double_t>();
+   testMovingFunctions<Long_t>();
+   testMovingFunctions<Long64_t>();
 
    cout << "\nPoint functions tests: " << endl;
 
