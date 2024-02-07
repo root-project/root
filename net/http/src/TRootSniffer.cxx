@@ -1448,6 +1448,16 @@ Bool_t TRootSniffer::ProduceBinary(const std::string & /*path*/, const std::stri
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Produce ROOT file for specified item
+///
+/// Implemented only in TRootSnifferFull class
+
+Bool_t TRootSniffer::ProduceRootFile(const std::string & /*path*/, const std::string & /*query*/, std::string & /*res*/)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Method to produce image from specified object
 ///
 /// Parameters:
@@ -1496,6 +1506,7 @@ Bool_t TRootSniffer::CallProduceImage(const std::string &/*kind*/, const std::st
 /// * "root.gif"  - gif image
 /// * "root.xml"  - xml representation
 /// * "root.json" - json representation
+/// * "file.root" - ROOT file with stored object
 /// * "exe.json"  - method execution with json reply
 /// * "exe.bin"   - method execution with binary reply
 /// * "exe.txt"   - method execution with debug output
@@ -1528,6 +1539,9 @@ Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, c
 
    if (file == "root.json")
       return ProduceJson(path, options, res);
+
+   if (file == "file.root")
+      return ProduceRootFile(path, options, res);
 
    // used for debugging
    if (file == "exe.txt")

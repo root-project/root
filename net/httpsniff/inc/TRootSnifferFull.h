@@ -36,6 +36,8 @@ protected:
 
    Bool_t ProduceBinary(const std::string &path, const std::string &options, std::string &res) override;
 
+   Bool_t ProduceRootFile(const std::string &path, const std::string &options, std::string &res) override;
+
    Bool_t ProduceImage(Int_t kind, const std::string &path, const std::string &options, std::string &res) override;
 
    Bool_t ProduceXml(const std::string &path, const std::string &options, std::string &res) override;

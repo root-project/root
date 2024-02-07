@@ -326,6 +326,56 @@ Bool_t TRootSnifferFull::ProduceBinary(const std::string &path, const std::strin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Produce ROOT file for specified item
+///
+/// File created in memory using TMemFile class.
+
+Bool_t TRootSnifferFull::ProduceRootFile(const std::string &path, const std::string & /*query*/, std::string &res)
+{
+   if (path.empty())
+      return kFALSE;
+
+   const char *path_ = path.c_str();
+   if (*path_ == '/')
+      path_++;
+
+   TClass *obj_cl = nullptr;
+   void *obj_ptr = FindInHierarchy(path_, &obj_cl);
+   if (!obj_ptr || !obj_cl)
+      return kFALSE;
+
+   const char *store_name = "object";
+
+   if (obj_cl->GetBaseClassOffset(TNamed::Class()) == 0) {
+      const char *obj_name = ((TNamed *) obj_ptr)->GetName();
+      if (obj_name && *obj_name)
+         store_name = obj_name;
+   }
+
+   TDirectory *olddir = gDirectory;
+   gDirectory = nullptr;
+   TFile *oldfile = gFile;
+   gFile = nullptr;
+
+   {
+      TMemFile memfile("dummy.file", "RECREATE");
+      gROOT->GetListOfFiles()->Remove(&memfile);
+
+      memfile.WriteObjectAny(obj_ptr, obj_cl, store_name);
+      memfile.Close();
+
+      res.resize(memfile.GetSize());
+      memfile.CopyTo(res.data(), memfile.GetSize());
+   }
+
+   gDirectory = olddir;
+   gFile = oldfile;
+
+   return kTRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Method to produce image from specified object
 ///
 ///  @param kind  image kind TImage::kPng, TImage::kJpeg, TImage::kGif
