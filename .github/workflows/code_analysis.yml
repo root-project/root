@@ -8,6 +8,12 @@ on: pull_request
 
 jobs:
   clang-format:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
     runs-on: ubuntu-latest
     env:
       TRAVIS_BRANCH: ${{ github.base_ref }} 
