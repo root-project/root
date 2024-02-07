@@ -37,6 +37,7 @@ ROOT_GENERATE_DICTIONARY(G__data2Tree data2Tree.hxx LINKDEF data2TreeLinkDef.hxx
 #   * the class implementation
 add_library(data2TreeLib SHARED data2Tree.cxx G__data2Tree.cxx)
 target_link_libraries(data2TreeLib ${ROOT_LIBRARIES}  ) 
+add_dependencies(data2TreeLib G__data2Tree  )
 
 #--- This is needed on Windows in order to export the symbols and create the data2TreeLib.lib file
 if(MSVC)
