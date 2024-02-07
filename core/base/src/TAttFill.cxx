@@ -55,8 +55,8 @@ End_Macro
 ### Color transparency
 `SetFillColorAlpha()`, allows to set a transparent color.
 In the following example the fill color of the histogram `histo`
-is set to blue with a transparency of 35%. The color `kBlue`
-itself remains fully opaque.
+is set to blue with an opacity of 35% (i.e. a transparency of 65%).
+(The color `kBlue` itself is internally stored as fully opaque.)
 
 ~~~ {.cpp}
 histo->SetFillColorAlpha(kBlue, 0.35);
@@ -66,6 +66,9 @@ The transparency is available on all platforms when the flag
 `OpenGL.CanvasPreferGL` is set to `1` in `$ROOTSYS/etc/system.rootrc`, or on Mac
 with the Cocoa backend.
 On the file output it is visible with PDF, PNG, Gif, JPEG, SVG, TeX... but not PostScript.
+
+Alternatively, you can call at the top of your script `gSytle->SetCanvasPreferGL();`.
+Or if you prefer to activate GL for a single canvas `c`, then use `c->SetSupportGL(true);`.
 
 ### The ROOT Color Wheel.
 The wheel contains the recommended 216 colors to be used in web applications.
@@ -255,8 +258,10 @@ void TAttFill::SetFillAttributes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a transparent fill color. falpha defines the percentage of
-/// the color opacity from 0. (fully transparent) to 1. (fully opaque).
+/// Set a transparent fill color. 
+/// \param fcolor defines the fill color
+/// \param falpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
+/// \note falpha is ignored (treated as 1) if the TCanvas has no GL support activated.
 
 void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
 {
