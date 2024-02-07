@@ -1005,8 +1005,8 @@ in parallelcoordtrans.C.
 To ease the creation of a transparent color the static method
 `GetColorTransparent(Int_t color, Float_t a)` is provided.
 In the following example the `trans_red` color index point to
-a red color 30% transparent. The alpha value of the color index
-`kRed` is not modified.
+a red color 30% opaque (70% transparent). The alpha value of
+the color index `kRed` is not modified.
 
 ~~~ {.cpp}
    Int_t trans_red = GetColorTransparent(kRed, 0.3);
@@ -1016,8 +1016,8 @@ This function is also used in the methods
 `SetFillColorAlpha()`, `SetLineColorAlpha()`,
 `SetMarkerColorAlpha()` and `SetTextColorAlpha()`.
 In the following example the fill color of the histogram `histo`
-is set to blue with a transparency of 35%. The color `kBlue`
-itself remains fully opaque.
+is set to blue with an opacity of 35% (i.e. a transparency of 65%).
+(The color `kBlue` itself is internally stored as fully opaque.)
 
 ~~~ {.cpp}
    histo->SetFillColorAlpha(kBlue, 0.35);
@@ -1026,6 +1026,10 @@ itself remains fully opaque.
 The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
+
+Alternatively, you can call at the top of your script `gSytle->SetCanvasPreferGL();`.
+Or if you prefer to activate GL for a single canvas `c`, then use `c->SetSupportGL(true);`.
+
 The following macro gives an example of transparency usage:
 
 Begin_Macro(source)
@@ -2046,7 +2050,7 @@ Int_t TColor::GetColorDark(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the transparent color number corresponding to n.
-/// The transparency level is given by the alpha value a. If a color with the same
+/// The opacity level is given by the alpha value a. If a color with the same
 /// RGBa values already exists it is returned.
 
 Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
@@ -2433,7 +2437,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 /// \param fileName: Name of a .txt file (ASCII) containing three floats per
 /// line, separated by spaces, namely the r g b fractions of the color, each
 /// value being in the range [0,1].
-/// \param alpha the global transparency for all colors within this palette
+/// \param alpha the global opacity for all colors within this palette
 /// \return a positive value on success and -1 on error.
 /// \author Fernando Hueso-González
 Int_t TColor::CreateColorTableFromFile(TString fileName, Float_t alpha)
