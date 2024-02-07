@@ -81,7 +81,11 @@ concurrency:
 
 jobs:
   build-macos:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
 
     permissions:
       contents: read
@@ -208,7 +212,11 @@ jobs:
 
 
   build-windows:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
 
     permissions:
       contents: read
@@ -316,7 +324,11 @@ jobs:
 
 
   build-linux:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
 
     permissions:
       contents: read
@@ -482,7 +494,12 @@ jobs:
           if-no-files-found: error
 
   event_file:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
     name: "Upload Event Payload"
     runs-on: ubuntu-latest
     steps:
