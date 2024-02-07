@@ -162,7 +162,7 @@ public:
    static ESurfaceFinish StringToFinish(const char *finish);
    static const char *FinishToString(ESurfaceFinish finish);
 
-   ClassDefOverride(TGeoOpticalSurface, 1) // Class representing an optical surface
+   ClassDefOverride(TGeoOpticalSurface, 2) // Class representing an optical surface
 };
 
 ////////////////////////////////////////////////////////////////////////////
