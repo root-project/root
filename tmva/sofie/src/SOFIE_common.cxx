@@ -86,6 +86,17 @@ std::string ConvertShapeToString(std::vector<size_t> shape) {
    return out.str();
 }
 
+std::string ConvertDynamicShapeToString(std::vector<Dim> shape) {
+   std::stringstream out;
+   out << "{ ";
+   for (size_t i = 0; i < shape.size(); i++) {
+      out << shape[i].GetVal();
+      if (i < shape.size()-1) out << " , ";
+   }
+   out << " }";
+   return out.str();
+}
+
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape) {
    std::string length;
    if (shape[0].isParam) {
@@ -127,6 +138,18 @@ bool UTILITY::AreSameShape(const std::vector<size_t>& shapeA, const std::vector<
    }
    for (size_t dim = 0; dim < shapeA.size(); dim++) {
       if (shapeA[dim] != shapeB[dim]) {
+         return false;
+      }
+   }
+   return true;
+}
+bool UTILITY::AreSameShape(const std::vector<size_t>& shapeA, const std::vector<Dim>& shapeB) {
+   if (shapeA.size() != shapeB.size()) {
+      return false;
+   }
+   for (size_t dim = 0; dim < shapeA.size(); dim++) {
+      if (shapeB[dim].isParam) return false;
+      if (shapeA[dim] != shapeB[dim].dim) {
          return false;
       }
    }

@@ -70,6 +70,8 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) {
     if (f4 != fIntermediateTensorInfos.end()) {
         return f4->second.shape;
     }
+    if (fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
+      throw std::runtime_error("TMVA SOFIE tensor [" + name + "] is a dynamic tensor. Use GetDynamicTensorShape instead of GetTensorShape");
 
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
@@ -320,17 +322,24 @@ void RModel::GenerateIntermediateTensorInfo() {
 }
 
 void RModel::GenerateOutput() {
+
     size_t outputSize = fOutputTensorNames.size();
     // assume output types are all the same
     std::string outputType;
     if (outputSize == 1) {
         auto f = fIntermediateTensorInfos.find(fOutputTensorNames[0]);
-        if (f == fIntermediateTensorInfos.end()) {
-            throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[0] + " not found when trying to get its info");
-        } else {
+        if (f != fIntermediateTensorInfos.end()) {
             outputType = ConvertTypeToString(f->second.type);
-            fGC += "std::vector<" + outputType + "> ";
+        } else {
+            auto f2 = fDynamicTensorInfos.find(fOutputTensorNames[0]);
+            if (f2 != fDynamicTensorInfos.end()) {
+               outputType = ConvertTypeToString(f2->second.type);
+            }
+            else {
+               throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[0] + " not found when trying to get its info");
+            }
         }
+        fGC += "std::vector<" + outputType + "> ";
     } else {
         std::vector<ETensorType> outputTensorsTypes(outputSize);
         for (size_t i = 0; i < outputSize; i++) {
@@ -342,7 +351,7 @@ void RModel::GenerateOutput() {
                if (f2 != fDynamicTensorInfos.end()) {
                   outputTensorsTypes[i] = f2->second.type;
                } else {
-                  throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i]
+                  throw std::runtime_error("TMVA-SOFIE: output tensor-" + std::to_string(i) + " " + fOutputTensorNames[i]
                      + " not found when trying to get its info");
                }
             }
@@ -745,11 +754,28 @@ void RModel::PrintIntermediateTensors() {
     }
 }
 
+void RModel::PrintDynamicTensors() {
+    std::cout << "Model specify the following dynamic tensors:\n";
+    for (auto& it: fDynamicTensorInfos) {
+        std::cout << "Tensor name: \"" << it.first << "\"\t";
+        std::cout << "type: " << ConvertTypeToString(it.second.type) << "\t";
+        std::cout << "shape: [";
+        for (size_t i = 0; i < it.second.shape.size(); i++) {
+            std::cout << it.second.shape[i].GetVal();
+            if (i < it.second.shape.size() - 1) std::cout << ",";
+        }
+        std::cout << "]" << std::endl;
+    }
+}
+
 void RModel::PrintOutputTensors() {
     std::cout << "Model specify the following output tensors:\n";
     for (auto& it: fOutputTensorNames) {
         std::cout << "Tensor name: \"" << it << "\"\t";
-        std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
+        if (!IsDynamicTensor(it))
+          std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
+       else
+          std::cout << "shape: " << ConvertDynamicShapeToString(GetDynamicTensorShape(it)) << std::endl;
     }
 }
 
