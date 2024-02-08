@@ -1981,6 +1981,27 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static method returning color number for a color specified by name.
+///
+/// If specified color name does not exist -1 is returned.
+
+Int_t TColor::GetColorByName(const char *colorname)
+{
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   Int_t ncolors = colors->GetSize();
+   TColor *color = 0;
+   TString colname;
+
+   for (Int_t i = 0; i<ncolors; i++) {
+      color = (TColor*)colors->At(i);
+      colname = color->GetName();
+      if (!colname.Index(colorname)) return i;
+   }
+
+   return -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the bright color number corresponding to n
 /// If the TColor object does not exist, it is created.
 /// The convention is that the bright color nb = n+150
@@ -2241,6 +2262,44 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
 Int_t TColor::GetFreeColorIndex()
 {
    return gHighestColorIndex+1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// List colors form ci1 to ci2
+
+void TColor::ListColors(Int_t ci1, Int_t ci2)
+{
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   Int_t ncolors = colors->GetSize();
+   if (ci2==0) ci2 = ncolors;
+   TColor *color = 0;
+   Int_t nc =0 ;
+
+   printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
+   printf("   | Idx  | Red   | Green | Blue  | Alpha |     Color Name     |    Color Title     |\n");
+   printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
+
+   for (Int_t i = ci1; i<ci2; i++) {
+      color = (TColor*)colors->At(i);
+      if (color) {
+         printf("   | %4d | %5.3f | %5.3f | %5.3f | %5.3f | %18s | %18s |\n", i,
+                                                           color->GetRed(),
+                                                           color->GetGreen(),
+                                                           color->GetBlue(),
+                                                           color->GetAlpha(),
+                                                           color->GetName(),
+                                                           color->GetTitle());
+         nc++;
+      } else {
+         printf("   | %4d |   ?   |   ?   |   ?   |   ?   |                  ? |                  ? |\n",i);
+      }
+   }
+   printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
+   printf("   | Number of possible colors = %4d                                               |\n",ncolors);
+   printf("   | Number of defined colors between %4d and %4d = %4d                          |\n",ci1,ci2,nc);
+   printf("   | Number of free indeces between %4d and %4d   = %4d                          |\n",ci1,ci2,ci2-ci1-nc);
+   printf("   +--------------------------------------------------------------------------------+\n\n");
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
