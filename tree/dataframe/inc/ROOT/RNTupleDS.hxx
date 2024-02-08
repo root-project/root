@@ -153,8 +153,8 @@ protected:
 namespace RDF {
 namespace Experimental {
 RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
-RDataFrame FromRNTuple(ROOT::Experimental::RNTuple *ntuple);
 RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
+RDataFrame FromRNTuple(ROOT::Experimental::RNTuple *ntuple);
 } // namespace Experimental
 } // namespace RDF
 
