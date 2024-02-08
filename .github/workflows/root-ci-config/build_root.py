@@ -422,13 +422,18 @@ def create_binaries(buildtype):
 def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str) -> None:
     # rebase fails unless user.email and user.name is set
     targetdir = os.path.join(WORKDIR, directory)
+    if (head_sha and head_ref):
+      branch = f"{head_sha}:{head_ref}"
+    else:
+      branch = ""
+
     result = subprocess_with_log(f"""
         cd '{targetdir}'
 
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
 
-        git fetch {repository} {head_sha}:{head_ref}
+        git fetch {repository} {branch}
         git checkout {head_ref}
         git rebase {base_ref}
     """)
