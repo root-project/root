@@ -145,6 +145,7 @@ public:
    private:
       RNTupleWriter &fWriter;
       Detail::RNTupleModelChangeset fOpenChangeset;
+      std::uint64_t fNewModelId = 0; ///< The model ID after committing
 
    public:
       explicit RUpdater(RNTupleWriter &writer);
@@ -186,9 +187,11 @@ private:
    std::string fDescription;
    /// The set of projected top-level fields
    std::unique_ptr<RProjectedFields> fProjectedFields;
-   /// Upon freezing, every model has a unique ID to distingusish it from other models.  Cloning preserves the ID.
-   /// Entries are linked to models via the ID.
+   /// Every model has a unique ID to distinguish it from other models. Entries are linked to models via the ID.
+   /// Cloned models get a new model ID.
    std::uint64_t fModelId = 0;
+   /// Changed by Freeze() / Unfreeze() and by the RUpdater.
+   bool fIsFrozen = false;
 
    /// Checks that user-provided field names are valid in the context
    /// of this NTuple model. Throws an RException for invalid names.
@@ -289,7 +292,7 @@ public:
 
    void Freeze();
    void Unfreeze();
-   bool IsFrozen() const { return fModelId != 0; }
+   bool IsFrozen() const { return fIsFrozen; }
    std::uint64_t GetModelId() const { return fModelId; }
 
    /// Ingests a model for a sub collection and attaches it to the current model

@@ -24,6 +24,14 @@
 #include <memory>
 #include <utility>
 
+namespace {
+std::uint64_t GetNewModelId()
+{
+   static std::atomic<std::uint64_t> gLastModelId = 0;
+   return ++gLastModelId;
+}
+} // anonymous namespace
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFieldBase *target,
                                                                        const FieldMap_t &fieldMap)
@@ -135,11 +143,15 @@ ROOT::Experimental::RNTupleModel::RUpdater::RUpdater(RNTupleWriter &writer)
 void ROOT::Experimental::RNTupleModel::RUpdater::BeginUpdate()
 {
    fOpenChangeset.fModel.Unfreeze();
+   // We set the model ID to zero until CommitUpdate(). That prevents calls to RNTupleWriter::Fill() in the middle
+   // of updates
+   std::swap(fOpenChangeset.fModel.fModelId, fNewModelId);
 }
 
 void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
 {
    fOpenChangeset.fModel.Freeze();
+   std::swap(fOpenChangeset.fModel.fModelId, fNewModelId);
    if (fOpenChangeset.IsEmpty())
       return;
    Detail::RNTupleModelChangeset toCommit{fOpenChangeset.fModel};
@@ -190,7 +202,8 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
 }
 
-ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero))
+ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero)
+   : fFieldZero(std::move(fieldZero)), fModelId(GetNewModelId())
 {}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel>
@@ -205,7 +218,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleModel::Create(std::unique_ptr<RFieldZero> fieldZero)
 {
    auto model = CreateBare(std::move(fieldZero));
-   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
+   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry(model->fModelId));
    return model;
 }
 
@@ -213,12 +226,13 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
 {
    auto cloneModel = std::unique_ptr<RNTupleModel>(
       new RNTupleModel(std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()))));
-   cloneModel->fModelId = fModelId;
+   cloneModel->fModelId = GetNewModelId();
+   cloneModel->fIsFrozen = fIsFrozen;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
    if (fDefaultEntry) {
-      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(fModelId));
+      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
          cloneModel->fDefaultEntry->AddValue(f->CreateValue());
       }
@@ -378,19 +392,17 @@ ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBu
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
    if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to unfreeze an unfrozen model"));
-   fModelId = 0;
+      return;
+
+   fModelId = GetNewModelId();
+   if (fDefaultEntry)
+      fDefaultEntry->fModelId = fModelId;
+   fIsFrozen = false;
 }
 
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
-   if (IsFrozen())
-      return;
-
-   static std::atomic<std::uint64_t> gLastModelId = 0;
-   fModelId = ++gLastModelId;
-   if (fDefaultEntry)
-      fDefaultEntry->fModelId = fModelId;
+   fIsFrozen = true;
 }
 
 void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
