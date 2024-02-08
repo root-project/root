@@ -668,6 +668,47 @@ TEST(RNTuple, FillBytesWritten)
    checkFillReturnValue(optsSmall);
 }
 
+TEST(RNTuple, FillBytesWrittenCollections)
+{
+   FileRaii fileGuard("test_ntuple_fillbytes_collections.root");
+
+   auto eventModel = RNTupleModel::Create();
+   auto fldPt = eventModel->MakeField<float>("pt", 0.0);
+
+   auto hitModel = RNTupleModel::Create();
+   auto fldHitX = hitModel->MakeField<float>("x", 0.0);
+   auto fldHitY = hitModel->MakeField<float>("y", 0.0);
+
+   auto trackModel = RNTupleModel::Create();
+   auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
+
+   auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
+   auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
+
+   {
+      RNTupleWriteOptions options;
+      options.SetApproxZippedClusterSize(1024 * 1024);
+      auto writer = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath(), options);
+
+      for (unsigned i = 0; i < 30000; ++i) {
+         for (unsigned t = 0; t < 3; ++t) {
+            for (unsigned h = 0; h < 2; ++h) {
+               *fldHitX = 4.0;
+               *fldHitY = 8.0;
+               EXPECT_EQ(4 + 4, fldHits->Fill());
+            }
+            *fldTrackEnergy = i * t;
+            EXPECT_EQ(2 * (4 + 4) + 8 + 4, fldTracks->Fill());
+         }
+         *fldPt = float(i);
+         EXPECT_EQ(3 * (2 * (4 + 4) + 8 + 4) + 8 + 4, writer->Fill());
+      }
+   }
+
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetDescriptor().GetNClusters(), 2);
+}
+
 TEST(RNTuple, RValue)
 {
    auto f1 = RFieldBase::Create("f1", "CustomStruct").Unwrap();

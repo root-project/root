@@ -41,6 +41,7 @@ class TFile;
 namespace ROOT {
 namespace Experimental {
 
+class RCollectionField;
 class REntry;
 class RNTuple;
 class RNTupleModel;
@@ -550,7 +551,10 @@ public:
 */
 // clang-format on
 class RCollectionNTupleWriter {
+   friend class RCollectionField;
+
 private:
+   std::size_t fBytesWritten = 0;
    ClusterSize_t fOffset;
    std::unique_ptr<REntry> fDefaultEntry;
 public:
@@ -559,10 +563,13 @@ public:
    RCollectionNTupleWriter& operator=(const RCollectionNTupleWriter&) = delete;
    ~RCollectionNTupleWriter() = default;
 
-   void Fill() { Fill(*fDefaultEntry); }
-   void Fill(REntry &entry) {
-      entry.Append();
+   std::size_t Fill() { return Fill(*fDefaultEntry); }
+   std::size_t Fill(REntry &entry)
+   {
+      const std::size_t bytesWritten = entry.Append();
+      fBytesWritten += bytesWritten;
       fOffset++;
+      return bytesWritten;
    }
 
    ClusterSize_t *GetOffsetPtr() { return &fOffset; }
