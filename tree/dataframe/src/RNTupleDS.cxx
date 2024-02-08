@@ -655,13 +655,13 @@ ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(std::string_view ntupleNam
    return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RNTupleDS>(ntupleName, fileName));
 }
 
-ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::Experimental::RNTuple *ntuple)
-{
-   return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple));
-}
-
 ROOT::RDataFrame
 ROOT::RDF::Experimental::FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames)
 {
    return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RNTupleDS>(ntupleName, fileNames));
+}
+
+ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::Experimental::RNTuple *ntuple)
+{
+   return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple));
 }
