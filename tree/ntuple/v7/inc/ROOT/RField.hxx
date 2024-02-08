@@ -1571,6 +1571,9 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    void CreateValue(void *) const final {}
 
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
    void CommitClusterImpl() final;
 
 public:
