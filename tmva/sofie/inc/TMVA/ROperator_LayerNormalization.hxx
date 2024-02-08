@@ -93,12 +93,13 @@ public:
       // Mean
       if (fNMean.empty()) {
          fNMean = "Mean" + fNX;
-         model.AddIntermediateTensor(fNMean, type, {fAxesLength});
+         // cannot use initializer list with one element since it is ambiguous
+         model.AddIntermediateTensor(fNMean, type, std::vector<size_t>(1,fAxesLength));
       }
       // Inverse Standard Deviation
       if (fNInvStdDev.empty()) {
          fNInvStdDev = "InvStdDev" + fNX;
-         model.AddIntermediateTensor(fNInvStdDev, type, {fAxesLength});
+         model.AddIntermediateTensor(fNInvStdDev, type, std::vector<size_t>(1,fAxesLength));
       }
       // Cast X to float
       if (fAttrStashType == 1 && model.GetTensorType(fNX) != ETensorType::FLOAT) {

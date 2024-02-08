@@ -32,15 +32,13 @@ ETensorType ConvertStringToType(std::string type);
 
 struct Dim{
    bool isParam = false;
-   size_t dim;
+   size_t dim = 0;
    std::string param;
 
    std::string GetVal() const {
       return (isParam) ? param : std::to_string(dim);
    }
 };
-
-std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
 
 
 struct InputTensorInfo{
@@ -57,6 +55,10 @@ struct DynamicTensorInfo{
    ETensorType type;
    std::vector<Dim> shape;
 };
+
+std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
+
+std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
 
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
@@ -150,6 +152,8 @@ namespace UTILITY{
 // Check if two shapes are equal
 bool AreSameShape(const std::vector<size_t>&, const std::vector<size_t>&);
 bool AreSameShape(const std::vector<size_t>&, const std::vector<Dim>&);
+bool AreSameShape(const std::vector<Dim>&, const std::vector<Dim>&);
+
 
 // Multidirectional broadcast a list of tensors to the same shape
 std::vector<size_t> MultidirectionalBroadcastShape(std::vector<std::vector<size_t>>);

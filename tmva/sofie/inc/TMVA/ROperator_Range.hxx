@@ -76,9 +76,13 @@ public:
       out << "\n//------ Range\n";
       std::string sizeName = fShape[0].param;
       out << SP << "size_t " << sizeName << " = static_cast<size_t>(std::max(std::ceil((static_cast<float>(*tensor_" << fNLimit << ") - static_cast<float>(*tensor_" << fNStart << ")) / static_cast<float>(*tensor_" << fNDelta << ")), 0.0f));\n";
-      out << SP << "tensor_" << fNOutput << ".resize(" << sizeName << ");\n";
+      out << SP << "if (" << sizeName << " > " << "fTensor_" << fNOutput << ".size() ){\n";
+      out << SP << SP << "fTensor_" << fNOutput << ".resize(" << sizeName << ");\n";
+      // need to re-initialized pointer to tensor data
+      out << SP << SP << "tensor_" << fNOutput << " = fTensor_" << fNOutput << ".data();\n";
+      out << SP << "}\n";
       out << SP << "for (size_t i = 0; i < " << sizeName << "; i++) {\n";
-      out << SP << SP << "tensor_" << fNOutput << "[i] = *tensor_" << fNStart << " + i * (*tensor_" << fNDelta << ");\n";
+      out << SP << SP << "fTensor_" << fNOutput << "[i] = *tensor_" << fNStart << " + i * (*tensor_" << fNDelta << ");\n";
       out << SP << "}\n";
       return out.str();
    }
