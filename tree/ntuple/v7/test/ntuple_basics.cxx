@@ -480,7 +480,7 @@ TEST(RNTuple, ModelId)
    auto m1 = RNTupleModel::Create();
    auto m2 = RNTupleModel::Create();
    EXPECT_FALSE(m1->IsFrozen());
-   EXPECT_EQ(m1->GetModelId(), m2->GetModelId());
+   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
 
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
@@ -498,18 +498,14 @@ TEST(RNTuple, ModelId)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
 
-   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
    // Freeze() should be idempotent call
    auto id = m1->GetModelId();
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
    EXPECT_EQ(id, m1->GetModelId());
 
-   m2->Freeze();
-   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
-
    auto m2c = m2->Clone();
-   EXPECT_EQ(m2->GetModelId(), m2c->GetModelId());
+   EXPECT_NE(m2->GetModelId(), m2c->GetModelId());
 }
 
 TEST(RNTuple, Entry)
