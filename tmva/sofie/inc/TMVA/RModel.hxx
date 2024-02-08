@@ -13,15 +13,18 @@ class RModel: public RModel_Base {
 
 private:
 
-    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //graph input only; not including operator input (intermediate tensors)
-    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
+    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //input tensors where shape is not defined or other graph inputs?
+    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;  // input tensors where shape is full defined
     std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
     std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
     std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
+    std::unordered_map<std::string, int> fShapeParams; // parameters defining the dynamic shape (e.g. batch size)
     std::vector<std::string> fOutputTensorNames;
     std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
 
     std::vector<std::unique_ptr<ROperator>> fOperators;
+
+    const std::string SP = "   ";
 
 public:
 
@@ -41,7 +44,7 @@ public:
     RModel(std::string function_name):RModel_Base(function_name) {}
 
     const std::vector<size_t>& GetTensorShape(std::string name);
-    const std::vector<Dim>& GetDynamicTensorShape(std::string name);
+    std::vector<Dim> GetDynamicTensorShape(std::string name);
     const ETensorType& GetTensorType(std::string name);
 
     bool CheckIfTensorAlreadyExist(std::string tensor_name);
@@ -68,22 +71,27 @@ public:
     // Check if a tensor is initialized
     bool IsInitializedTensor(const std::string& name) const;
     bool IsDynamicTensor(const std::string& name) const;
+    bool IsInputTensor(const std::string& name) const;
 
+    // Add intermediate tensor
+    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<Dim> dim_shape);
     void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
+    // Add an intermediate dynamic tensor
     void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
 
     void AddInputTensorName(std::string name);
-    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
+    void AddOutputTensorNameList(std::vector<std::string> output_tensor_names);
     void UpdateOutputTensorList(std::vector<std::string> curr_output_tensor, std::vector<std::string> modify_output_tensor);
     void UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
     std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
 
-    void Initialize(int batchSize=1);
+    void Initialize(int batchSize = -1, bool verbose = false);
     void GenerateInitializedTensorInfo();
     void GenerateIntermediateTensorInfo();
+    void GenerateDynamicTensorInfo();
     void GenerateOutput();
-    void Generate(std::underlying_type_t<Options> options, int batchSize = 1, long pos = 0);
-    void Generate(Options options = Options::kDefault, int batchSize = 1, int pos = 0) {
+    void Generate(std::underlying_type_t<Options> options, int batchSize = -1, long pos = 0);
+    void Generate(Options options = Options::kDefault, int batchSize = -1, int pos = 0) {
         Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos);
     }
 
