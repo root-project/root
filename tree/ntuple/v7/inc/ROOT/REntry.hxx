@@ -22,6 +22,8 @@
 
 #include <TError.h>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -104,11 +106,13 @@ public:
    /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
    RFieldToken GetToken(std::string_view fieldName) const
    {
-      for (std::size_t i = 0; i < fValues.size(); ++i) {
-         if (fValues[i].GetField().GetFieldName() == fieldName)
-            return RFieldToken(i, fModelId);
+      auto it = std::find_if(fValues.begin(), fValues.end(),
+         [&fieldName] (const RFieldBase::RValue &value) { return value.GetField().GetFieldName() == fieldName; });
+
+      if ( it == fValues.end() ) {
+         throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
       }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      return RFieldToken(std::distance(fValues.begin(), it), fModelId);
    }
 
    template <typename T>
