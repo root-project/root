@@ -115,7 +115,8 @@ public:
    void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
    {
       if (fModelId != token.fModelId) {
-         throw RException(R__FAIL("invalid token for this entry"));
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from the same model as this entry."));
       }
       auto &v = fValues[token.fIndex];
       if constexpr (!std::is_void_v<T>) {
