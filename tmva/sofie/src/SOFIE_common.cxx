@@ -7,13 +7,32 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+/// @brief  Convert shape from integer format to dynamic one (based on Dim)
+/// @param shape
+/// @return shape based on Dim
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape){
-   std::vector<Dim> fshape(shape.size());
+   std::vector<Dim> ret_shape(shape.size());
    for (size_t i =0; i < shape.size(); i++){
-      fshape[i].dim = shape[i];
+      ret_shape[i].dim = shape[i];
    }
-   return fshape;
+   return ret_shape;
 }
+
+/// @brief Convert shape based on Dim to integer format
+/// @param shape
+/// @return shape based on integer. Return an empty shape in case shape is dynamic (has a parameter)
+std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape){
+   std::vector<size_t> ret_shape(shape.size());
+   for (size_t i =0; i < shape.size(); i++){
+      if (shape[i].isParam) {
+         ret_shape.clear();
+         break;
+      }
+      ret_shape[i] = shape[i].dim;
+   }
+   return ret_shape;
+}
+
 
 std::size_t ConvertShapeToLength(std::vector<size_t> shape){
    // Empty shape represent scalar values, so we return a length=1
@@ -98,19 +117,25 @@ std::string ConvertDynamicShapeToString(std::vector<Dim> shape) {
 }
 
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape) {
+   // convert generic shape to a string
+   // multiply all the integer specified dimensions of the shape
    std::string length;
-   if (shape[0].isParam) {
-      length += shape[0].param;
-   } else {
-      length += std::to_string(shape[0].dim);
-   }
-   for (size_t i = 1; i < shape.size(); i++) {
-      length += " * ";
+   size_t int_length = 0;
+   for (size_t i = 0; i < shape.size(); i++) {
       if (shape[i].isParam) {
+         if (!length.empty()) length += " * ";
          length += shape[i].param;
       } else {
-         length += std::to_string(shape[i].dim);
+         if (int_length == 0)
+            int_length = shape[i].dim;
+         else
+            int_length *= shape[i].dim;
       }
+   }
+   // multiply the integer components to the parametric one
+   if (int_length > 0) {
+      if (!length.empty()) length += " * ";
+      length += std::to_string(int_length);
    }
    return length;
 }
@@ -150,6 +175,17 @@ bool UTILITY::AreSameShape(const std::vector<size_t>& shapeA, const std::vector<
    for (size_t dim = 0; dim < shapeA.size(); dim++) {
       if (shapeB[dim].isParam) return false;
       if (shapeA[dim] != shapeB[dim].dim) {
+         return false;
+      }
+   }
+   return true;
+}
+bool UTILITY::AreSameShape(const std::vector<Dim>& shapeA, const std::vector<Dim>& shapeB) {
+   if (shapeA.size() != shapeB.size()) {
+      return false;
+   }
+   for (size_t dim = 0; dim < shapeA.size(); dim++) {
+      if (shapeA[dim].GetVal() != shapeB[dim].GetVal()) {
          return false;
       }
    }

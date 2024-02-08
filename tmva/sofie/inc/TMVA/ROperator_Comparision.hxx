@@ -161,11 +161,11 @@ public:
       }
       const std::string& nameX1 = fNBroadcastedX1.empty()? fNX1 : fNBroadcastedX1;
       const std::string& nameX2 = fNBroadcastedX2.empty()? fNX2 : fNBroadcastedX2;
-     
+
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = " << ComparisionTrait<T,Op>::Op( "tensor_" + nameX1 + "[id]" , "tensor_" + nameX2 + "[id]") <<  " ;\n";
+      out << SP << SP << "fTensor_" << fNY << "[id] = " << ComparisionTrait<T,Op>::Op( "tensor_" + nameX1 + "[id]" , "tensor_" + nameX2 + "[id]") <<  " ;\n";
       out << SP << "}\n";
-   
+
       return out.str();
    }
 
