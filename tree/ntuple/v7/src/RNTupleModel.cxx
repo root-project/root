@@ -193,12 +193,22 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
 ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero))
 {}
 
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
+{
+   return CreateBare(std::make_unique<RFieldZero>());
+}
+
 std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleModel::CreateBare(std::unique_ptr<RFieldZero> fieldZero)
 {
    auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel(std::move(fieldZero)));
    model->fProjectedFields = std::make_unique<RProjectedFields>(model.get());
    return model;
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
+{
+   return Create(std::make_unique<RFieldZero>());
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel>

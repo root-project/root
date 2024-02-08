@@ -78,3 +78,9 @@ if(daos OR daos_mock)
             APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_MOCK=1)
   endif()
 endif()
+
+
+# RNTuple Python interface tests
+if(pyroot)
+  ROOT_ADD_PYUNITTEST(ntuple_py_model ntuple_model.py)
+endif()
