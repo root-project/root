@@ -99,6 +99,12 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
+          - platform: mac12
+            arch: X64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+          - platform: mac13   
+            arch: ARM64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - platform: mac14
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
