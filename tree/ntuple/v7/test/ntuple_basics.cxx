@@ -701,20 +701,19 @@ TEST(REntry, Basics)
       EXPECT_STREQ("pt", v.GetField().GetFieldName().c_str());
    }
 
-   EXPECT_EQ(0u, e->GetIndex("pt"));
-   EXPECT_THROW(e->GetIndex(""), ROOT::Experimental::RException);
-   EXPECT_THROW(e->GetIndex("eta"), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetToken(""), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
 
    std::shared_ptr<float> ptrPt;
-   e->BindValue(0, ptrPt);
-   EXPECT_EQ(ptrPt.get(), e->GetPtr<float>(0).get());
+   e->BindValue("pt", ptrPt);
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<float>("pt").get());
 
-   EXPECT_THROW(e->GetPtr<void>(1), ROOT::Experimental::RException);
-   EXPECT_THROW(e->BindValue(1, ptrPt), ROOT::Experimental::RException);
+   auto model2 = model->Clone();
+   EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::Experimental::RException);
    std::shared_ptr<double> ptrDouble;
-   EXPECT_THROW(e->BindValue(0, ptrDouble), ROOT::Experimental::RException);
+   EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::Experimental::RException);
 
    float pt;
-   e->BindRawPtr(0, &pt);
-   EXPECT_EQ(&pt, e->GetPtr<void>(0).get());
+   e->BindRawPtr("pt", &pt);
+   EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
 }

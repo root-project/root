@@ -86,6 +86,15 @@ class REntry {
 public:
    using ConstIterator_t = decltype(fValues)::const_iterator;
 
+   /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
+   /// methods, e.g. BindValue
+   class RFieldToken {
+      friend class REntry;
+      std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
+      std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
+      RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
+   };
+
    REntry(const REntry &other) = delete;
    REntry &operator=(const REntry &other) = delete;
    REntry(REntry &&other) = default;
@@ -93,23 +102,22 @@ public:
    ~REntry() = default;
 
    /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
-   std::size_t GetIndex(std::string_view fieldName) const
+   RFieldToken GetToken(std::string_view fieldName) const
    {
       for (std::size_t i = 0; i < fValues.size(); ++i) {
          if (fValues[i].GetField().GetFieldName() == fieldName)
-            return i;
+            return RFieldToken(i, fModelId);
       }
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
 
    template <typename T>
-   void BindValue(std::size_t index, std::shared_ptr<T> objPtr)
+   void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
    {
-      if (index >= fValues.size()) {
-         throw RException(R__FAIL("out of bounds entry index: " + std::to_string(index)));
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry"));
       }
-
-      auto &v = fValues[index];
+      auto &v = fValues[token.fIndex];
       if constexpr (!std::is_void_v<T>) {
          if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
             throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
@@ -122,13 +130,13 @@ public:
    template <typename T>
    void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
-      BindValue<T>(GetIndex(fieldName), objPtr);
+      BindValue<T>(GetToken(fieldName), objPtr);
    }
 
    template <typename T>
-   void BindRawPtr(std::size_t index, T *rawPtr)
+   void BindRawPtr(RFieldToken token, T *rawPtr)
    {
-      BindValue<void>(index, std::shared_ptr<T>(rawPtr, [](T *) {}));
+      BindValue<void>(token, std::shared_ptr<T>(rawPtr, [](T *) {}));
    }
 
    template <typename T>
@@ -138,13 +146,13 @@ public:
    }
 
    template <typename T>
-   std::shared_ptr<T> GetPtr(std::size_t index) const
+   std::shared_ptr<T> GetPtr(RFieldToken token) const
    {
-      if (index >= fValues.size()) {
-         throw RException(R__FAIL("out of bounds entry index: " + std::to_string(index)));
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry"));
       }
 
-      auto &v = fValues[index];
+      auto &v = fValues[token.fIndex];
       if constexpr (std::is_void_v<T>)
          return v.GetPtr<void>();
 
@@ -158,7 +166,7 @@ public:
    template <typename T>
    std::shared_ptr<T> GetPtr(std::string_view fieldName) const
    {
-      return GetPtr<T>(GetIndex(fieldName));
+      return GetPtr<T>(GetToken(fieldName));
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
