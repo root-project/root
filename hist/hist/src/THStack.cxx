@@ -59,7 +59,7 @@ The specific stack's drawing options are:
   - **NOSTACK** If option "nostack" is specified, histograms are all painted in the same pad
     as if the option "same" had been specified.
 
-  - **NOSTACKB** If the option "nostackb" is specified histograms are all painted in the same pad
+  - **NOSTACKB** If the option "nostackb" is specified histograms are all painted on the same pad
     next to each other as bar plots.
 
   - **PADS** if option "pads" is specified, the current pad/canvas is subdivided into
@@ -67,10 +67,9 @@ The specific stack's drawing options are:
     is painted into a separate pad.
 
   - **NOCLEAR** By default the background of the histograms is erased before drawing the
-    histograms. The option "noclear" avoid this behaviour. This is useful
-    when drawing a THStack on top of an other plot. If the patterns used to
-    draw the histograms in the stack are transparents, then the plot behind
-    will be visible.
+    histograms. The option "noclear" avoids this behavior. This is useful when drawing a
+    THStack on top of another plot. If the patterns used to draw the histograms in the
+    stack are transparent, then the plot behind will be visible.
 
 See the THistPainter class for the list of valid histograms' painting options.
 
