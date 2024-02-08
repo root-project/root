@@ -559,9 +559,9 @@ public:
    RCollectionNTupleWriter& operator=(const RCollectionNTupleWriter&) = delete;
    ~RCollectionNTupleWriter() = default;
 
-   void Fill() { Fill(fDefaultEntry.get()); }
-   void Fill(REntry *entry) {
-      entry->Append();
+   void Fill() { Fill(*fDefaultEntry); }
+   void Fill(REntry &entry) {
+      entry.Append();
       fOffset++;
    }
 

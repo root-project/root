@@ -409,7 +409,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
                if (!result)
                   throw RException(R__FORWARD_ERROR(result));
             }
-            c.fCollectionWriter->Fill(c.fCollectionEntry.get());
+            c.fCollectionWriter->Fill(*c.fCollectionEntry);
          }
          for (auto &t : c.fTransformations)
             t->ResetEntry();
