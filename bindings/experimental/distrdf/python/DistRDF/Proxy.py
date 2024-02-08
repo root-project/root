@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import logging
+import textwrap
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import singledispatch
@@ -151,10 +152,13 @@ class ResultMapProxy(Proxy):
             # TODO:
             # The event loop has not been triggered yet. Currently we can't retrieve
             # the list of variation names without starting the distributed computations
-            raise RuntimeError("The list of variation names cannot be (yet) retrieved without starting the "
-                               "distributed computation graph. Please try to retrieve at least one variation value, "
-                               "then the list of variation names will be available. In the future, it will be possible "
-                               "to get the names without triggering.")
+            raise RuntimeError(textwrap.dedent(
+                """
+                A list of names of systematic variations was requested, but the corresponding map of variations is not
+                present. The variation names cannot be retrieved unless the computation graph has properly run and
+                finished. Something may have gone wrong in the distributed execution, or no variation values were
+                explicitly requested. In the future, it will be possible to get the variation names without triggering.
+                """))
         else:
             if self._keys is None:
                 self._keys = [str(key) for key in self.proxied_node.value.GetKeys()]
