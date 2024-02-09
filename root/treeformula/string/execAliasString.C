@@ -1,10 +1,6 @@
 {
    bool error = false;
-#ifdef ClingWorkAroundMissingImplicitAuto
-   TTree *tree = new TTree ("tree", "tree");
-#else
-   tree = new TTree ("tree", "tree");
-#endif
+   auto tree = new TTree ("tree", "tree");
    tree->ReadFile ("test.txt","",' ');
    tree->SetAlias("first", "(name==\"16A\")");
    tree->SetAlias("second", "count==2");

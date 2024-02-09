@@ -20,15 +20,8 @@ static int gValue = 0;
 void create_file (const string &fname)
 {
 	cout << "Making ntuple file " << fname << endl;
-#ifdef ClingWorkAroundMissingImplicitAuto
-	TFile* f = new TFile (fname.c_str(), "RECREATE");
-   
-	TTree* t = new TTree ("ntup", "Ntuple of one");
-#else
 	auto f = new TFile (fname.c_str(), "RECREATE");
-   
 	auto t = new TTree ("ntup", "Ntuple of one");
-#endif
 	t->Branch("val", &gValue);
    
 	for (int i = 0; i < 10; i++)
@@ -48,11 +41,7 @@ void execresetbranch()
 	create_file ("n2.root");
    
 	/// Create the chain that we will be reading in
-#ifdef ClingWorkAroundMissingImplicitAuto
-	TChain* c = new TChain("ntup");
-#else
 	auto c = new TChain("ntup");
-#endif
 	c->AddFile("n1.root");
 	c->AddFile("n2.root");
    

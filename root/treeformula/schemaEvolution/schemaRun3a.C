@@ -13,10 +13,7 @@
    T->Show(5); //ok
    T->Scan("fTemperature"); //ok
    // gSystem->Load("libTreePlayer");
-#ifdef ClingWorkAroundMissingImplicitAuto
-   TTreeFormula *
-#endif
-   tf = new TTreeFormula("tf","fTemperature",T);
+   auto tf = new TTreeFormula("tf","fTemperature",T);
       
 #if defined(ClingWorkAroundIncorrectTearDownOrder)
    }

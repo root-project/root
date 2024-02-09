@@ -5,7 +5,7 @@ TObject *o = new TNamed("subdir","some title and more inf");
 o->Write("",TObject::kWriteDelete);
 cout << "File map after the object write/delete\n";
 dirfile->Map("forcomp");
-key = (TKey*)dirfile->GetListOfKeys()->FindObject("subdir");
+auto key = (TKey*)dirfile->GetListOfKeys()->FindObject("subdir");
 key->Delete();
 cout << "File map after the explicit key delete\n";
 dirfile->Map("forcomp");

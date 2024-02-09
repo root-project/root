@@ -6,12 +6,8 @@
    gSystem -> Load("ConfigRecord_cxx");
 #endif
    
-#ifdef ClingWorkAroundMissingImplicitAuto
-   TFile *f;
-   TTree *t;
-#endif
-f = new TFile("configtest.root","RECREATE");
-t = new TTree("Config","Config Test");
+auto f = new TFile("configtest.root","RECREATE");
+auto t = new TTree("Config","Config Test");
 
 ConfigRecord* record = 0;
 t -> Branch("ConfigRecord","ConfigRecord",&record,32000,99);

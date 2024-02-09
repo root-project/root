@@ -35,8 +35,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseUsingNamespace"
 
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 # Features needed for the tutorials
-#CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
-CALLROOTEXE += -e "\#define ClingWorkAroundExtraParensWithImplicitAuto"
 # and See ClingReinstateRedeclarationAllowed
 # Other missing features
 CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
@@ -77,8 +75,6 @@ CALLROOTEXEBUILD += -e "\#define ClingWorkAroundTClassUpdateDouble32"
 
 # variable to be used in Makefiles.
 ClingWorkAroundLackOfModule = yes
-#ClingWorkAroundMissingImplicitAuto = yes
-ClingWorkAroundExtraParensWithImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 #ClingWorkAroundMissingUnloading = yes
 #ClingWorkAroundUnloadingIOSTREAM = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-6217
@@ -125,7 +121,7 @@ ClingWorkAroundAutoParseUsingNamespace = yes   # See https://sft.its.cern.ch/jir
 #ClingWorkAroundAutoParseDeclaration = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-6320
 #ClingWorkAroundAutoParseTooPrecise = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-6321
 
-ifneq ($(ClingReinstateRedeclarationAllowed)-$(ClingWorkAroundMissingImplicitAuto),yes-)
+ifneq ($(ClingReinstateRedeclarationAllowed)-,yes-)
 ClingWorkAroundSavePrimitive = yes             # stressGraphics use of SavePrimitive currently requires at least implicit auto and allowing redeclaration
 endif
 

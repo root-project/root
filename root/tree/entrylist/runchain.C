@@ -1,12 +1,8 @@
 {
-#ifdef ClingWorkAroundMissingImplicitAuto
-TFile *f;
-TTree *t;
-#endif
-f = new TFile("sub.root","RECREATE");
+auto f = new TFile("sub.root","RECREATE");
 f->mkdir("sub");
 f->cd("sub");
-t = new TTree("tree","tree");
+auto t = new TTree("tree","tree");
 int i = 3;
 t->Fill();
 t->Branch("i",i);

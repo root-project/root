@@ -2,10 +2,7 @@
 bool result = true;
 TFile *f = new TFile("orange.root");
 TTree *t = (TTree*)f->Get("h1");
-#ifdef ClingWorkAroundMissingImplicitAuto
-TCanvas *c;
-#endif
-c = new TCanvas();
+auto c = new TCanvas();
 c->Divide(1,2);
 
 #ifdef ClingWorkAroundMissingDynamicScope

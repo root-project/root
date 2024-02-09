@@ -1,16 +1,12 @@
 {   
-#ifdef ClingWorkAroundMissingImplicitAuto
-   TTree *newTree;
-   TFile *
-#endif
-   fFile = TFile::Open("copy.root","RECREATE");
+   auto fFile = TFile::Open("copy.root","RECREATE");
    TTree *tree = new TTree("T","T");
    int i;
    tree->Branch("i",&i);
    tree->BranchRef();
    TFile *temp = TFile::Open("temp.root","RECREATE");
    temp->cd();
-   newTree = tree->CloneTree(0);
+   auto newTree = tree->CloneTree(0);
    newTree->SetDirectory(fFile);
    
    delete temp;

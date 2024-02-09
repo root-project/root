@@ -47,10 +47,7 @@ t1->Print();
 TTreeFormula *t2 = new TTreeFormula("t2","(e*e)-pp*pp",T);
 t2->Print();
 
-#ifdef ClingWorkAroundMissingImplicitAuto
-TH1F*
-#endif
-myhist = new TH1F("myhisto","test",100,-10,10);
+auto myhist = new TH1F("myhisto","test",100,-10,10);
 T->Draw("abs(((e*e)-pp*pp)-(e*e-pp*pp))>0.0001 >> myhisto","","goff");
 if (myhist->GetMean()!=0 || myhist->GetRMS()!=0) {
     printf("Error: TTreeFormula does not think that (e*e)-pp*pp)==(e*e-pp*pp) [%f,%f]\n",

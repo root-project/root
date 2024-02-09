@@ -18,10 +18,7 @@
    tree->Process(&isel);
 # endif
 
-# ifdef ClingWorkAroundMissingImplicitAuto
-   TChain *
-# endif
-   c = new TChain("T1");
+   auto c = new TChain("T1");
    c->Add("Event1.root");
 # ifdef ClingWorkAroundMissingDynamicScope
    c->Process(isel);
@@ -46,7 +43,7 @@
       tree->Process(&csel);
 # endif
 
-   c = new TChain("T1");
+   auto c = new TChain("T1");
    c->Add("Event1.root");
 # ifdef ClingWorkAroundMissingDynamicScope
    c->Process(csel);
