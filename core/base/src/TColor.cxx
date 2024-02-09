@@ -2265,7 +2265,7 @@ Int_t TColor::GetFreeColorIndex()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List colors form ci1 to ci2
+/// List colors from color index ci1 to color index ci2.
 
 void TColor::ListColors(Int_t ci1, Int_t ci2)
 {
