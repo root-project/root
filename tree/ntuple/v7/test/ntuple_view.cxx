@@ -92,7 +92,7 @@ TEST(RNTuple, BulkView)
    }
 }
 
-TEST(RNTuple, BulkViewCollection)
+TEST(RNTuple, BulkCollectionView)
 {
    FileRaii fileGuard("test_ntuple_bulk_view_collection.root");
 
@@ -170,9 +170,9 @@ TEST(RNTuple, Composable)
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto viewPt = ntuple->GetView<float>("pt");
-   auto viewTracks = ntuple->GetViewCollection("tracks");
+   auto viewTracks = ntuple->GetCollectionView("tracks");
    auto viewTrackEnergy = viewTracks.GetView<float>("energy");
-   auto viewHits = viewTracks.GetViewCollection("hits");
+   auto viewHits = viewTracks.GetCollectionView("hits");
    auto viewHitX = viewHits.GetView<float>("x");
    auto viewHitY = viewHits.GetView<float>("y");
 
@@ -232,7 +232,7 @@ TEST(RNTuple, MissingViewNames)
    }
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto viewPt = ntuple->GetView<float>("pt");
-   auto viewMuon = ntuple->GetViewCollection("Muon");
+   auto viewMuon = ntuple->GetCollectionView("Muon");
    try {
       auto badView = ntuple->GetView<float>("pT");
       FAIL() << "missing field names should throw";
@@ -240,7 +240,7 @@ TEST(RNTuple, MissingViewNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'pT' in RNTuple 'myNTuple'"));
    }
    try {
-      auto badView = ntuple->GetViewCollection("Moun");
+      auto badView = ntuple->GetCollectionView("Moun");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'Moun' in RNTuple 'myNTuple'"));
@@ -252,7 +252,7 @@ TEST(RNTuple, MissingViewNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in RNTuple 'myNTuple'"));
    }
    try {
-      auto badView = viewMuon.GetViewCollection("badC");
+      auto badView = viewMuon.GetCollectionView("badC");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));

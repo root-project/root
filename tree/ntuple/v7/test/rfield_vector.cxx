@@ -35,7 +35,7 @@ void TestClassVector(const char *fname)
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(3U, reader->GetNEntries());
 
-   auto viewKlassVec = reader->GetViewCollection("klassVec");
+   auto viewKlassVec = reader->GetCollectionView("klassVec");
    auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
    auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
    auto viewKlassV1 = viewKlassVec.GetView<std::vector<float>>("_0.v1");
