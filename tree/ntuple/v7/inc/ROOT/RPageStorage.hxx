@@ -41,17 +41,12 @@ namespace Experimental {
 
 class RFieldBase;
 class RNTupleModel;
-// TODO(jblomer): factory methods to create tree sinks and sources outside Detail namespace
 
 namespace Internal {
-class RNTupleCompressor;
-class RNTupleDecompressor;
-} // namespace Internal
-
-namespace Detail {
-
 class RColumn;
 class RColumnElementBase;
+class RNTupleCompressor;
+class RNTupleDecompressor;
 struct RNTupleModelChangeset;
 
 enum class EPageStorageType {
@@ -61,7 +56,7 @@ enum class EPageStorageType {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageStorage
+\class ROOT::Experimental::Internal::RPageStorage
 \ingroup NTuple
 \brief Common functionality of an ntuple storage for both reading and writing
 
@@ -114,7 +109,7 @@ public:
    };
 
 protected:
-   RNTupleMetrics fMetrics;
+   Detail::RNTupleMetrics fMetrics;
 
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
@@ -161,17 +156,17 @@ public:
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
-   virtual RNTupleMetrics &GetMetrics() { return fMetrics; }
+   virtual Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 
    /// Returns the NTuple name.
    const std::string &GetNTupleName() const { return fNTupleName; }
 
    void SetTaskScheduler(RTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
-};
+}; // class RPageStorage
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSink
+\class ROOT::Experimental::Internal::RPageSink
 \ingroup NTuple
 \brief Abstract interface to write data into an ntuple
 
@@ -190,7 +185,7 @@ protected:
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
-   std::unique_ptr<Internal::RNTupleCompressor> fCompressor;
+   std::unique_ptr<RNTupleCompressor> fCompressor;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
@@ -273,11 +268,11 @@ public:
       // By default, there is no lock and the guard does nothing.
       return RSinkGuard(nullptr);
    }
-};
+}; // class RPageSink
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPagePersistentSink
+\class ROOT::Experimental::Internal::RPagePersistentSink
 \ingroup NTuple
 \brief Base class for a sink with a physical storage backend
 */
@@ -285,7 +280,7 @@ public:
 class RPagePersistentSink : public RPageSink {
 private:
    /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
-   Internal::RNTupleSerializer::RContext fSerializationContext;
+   RNTupleSerializer::RContext fSerializationContext;
 
    /// Remembers the starting cluster id for the next cluster group
    std::uint64_t fNextClusterInGroup = 0;
@@ -301,13 +296,13 @@ protected:
 
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
-      RNTupleAtomicCounter &fNPageCommitted;
-      RNTupleAtomicCounter &fSzWritePayload;
-      RNTupleAtomicCounter &fSzZip;
-      RNTupleAtomicCounter &fTimeWallWrite;
-      RNTupleAtomicCounter &fTimeWallZip;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
+      Detail::RNTupleAtomicCounter &fNPageCommitted;
+      Detail::RNTupleAtomicCounter &fSzWritePayload;
+      Detail::RNTupleAtomicCounter &fSzZip;
+      Detail::RNTupleAtomicCounter &fTimeWallWrite;
+      Detail::RNTupleAtomicCounter &fTimeWallZip;
+      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuWrite;
+      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuZip;
    };
    std::unique_ptr<RCounters> fCounters;
 
@@ -363,11 +358,11 @@ public:
    std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
    void CommitClusterGroup() final;
    void CommitDataset() final;
-};
+}; // class RPagePersistentSink
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSource
+\class ROOT::Experimental::Internal::RPageSource
 \ingroup NTuple
 \brief Abstract interface to read data from an ntuple
 
@@ -437,23 +432,23 @@ private:
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
-      RNTupleAtomicCounter &fNReadV;
-      RNTupleAtomicCounter &fNRead;
-      RNTupleAtomicCounter &fSzReadPayload;
-      RNTupleAtomicCounter &fSzReadOverhead;
-      RNTupleAtomicCounter &fSzUnzip;
-      RNTupleAtomicCounter &fNClusterLoaded;
-      RNTupleAtomicCounter &fNPageLoaded;
-      RNTupleAtomicCounter &fNPagePopulated;
-      RNTupleAtomicCounter &fTimeWallRead;
-      RNTupleAtomicCounter &fTimeWallUnzip;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuRead;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuUnzip;
-      RNTupleCalcPerf &fBandwidthReadUncompressed;
-      RNTupleCalcPerf &fBandwidthReadCompressed;
-      RNTupleCalcPerf &fBandwidthUnzip;
-      RNTupleCalcPerf &fFractionReadOverhead;
-      RNTupleCalcPerf &fCompressionRatio;
+      Detail::RNTupleAtomicCounter &fNReadV;
+      Detail::RNTupleAtomicCounter &fNRead;
+      Detail::RNTupleAtomicCounter &fSzReadPayload;
+      Detail::RNTupleAtomicCounter &fSzReadOverhead;
+      Detail::RNTupleAtomicCounter &fSzUnzip;
+      Detail::RNTupleAtomicCounter &fNClusterLoaded;
+      Detail::RNTupleAtomicCounter &fNPageLoaded;
+      Detail::RNTupleAtomicCounter &fNPagePopulated;
+      Detail::RNTupleAtomicCounter &fTimeWallRead;
+      Detail::RNTupleAtomicCounter &fTimeWallUnzip;
+      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuRead;
+      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuUnzip;
+      Detail::RNTupleCalcPerf &fBandwidthReadUncompressed;
+      Detail::RNTupleCalcPerf &fBandwidthReadCompressed;
+      Detail::RNTupleCalcPerf &fBandwidthUnzip;
+      Detail::RNTupleCalcPerf &fFractionReadOverhead;
+      Detail::RNTupleCalcPerf &fCompressionRatio;
    };
 
    /// Keeps track of the requested physical column IDs. When using alias columns (projected fields), physical
@@ -478,7 +473,7 @@ protected:
    /// Helper to unzip pages and header/footer; comprises a 16MB (kMAXZIPBUF) unzip buffer.
    /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
    /// leave it up to the derived class whether or not the decompressor gets constructed.
-   std::unique_ptr<Internal::RNTupleDecompressor> fDecompressor;
+   std::unique_ptr<RNTupleDecompressor> fDecompressor;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
    // Only called if a task scheduler is set. No-op be default.
@@ -580,9 +575,9 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
-};
+}; // class RPageSource
 
-} // namespace Detail
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

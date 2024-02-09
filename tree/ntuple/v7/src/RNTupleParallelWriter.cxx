@@ -27,10 +27,10 @@ using ROOT::Experimental::DescriptorId_t;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RException;
 using ROOT::Experimental::RNTupleModel;
-using ROOT::Experimental::Detail::RColumn;
-using ROOT::Experimental::Detail::RNTupleModelChangeset;
-using ROOT::Experimental::Detail::RPage;
-using ROOT::Experimental::Detail::RPageSink;
+using ROOT::Experimental::Internal::RColumn;
+using ROOT::Experimental::Internal::RNTupleModelChangeset;
+using ROOT::Experimental::Internal::RPage;
+using ROOT::Experimental::Internal::RPageSink;
 
 /// An internal RPageSink that enables multiple RNTupleFillContext to write into a single common RPageSink.
 ///
@@ -105,7 +105,7 @@ public:
 } // namespace
 
 ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr<RNTupleModel> model,
-                                                                 std::unique_ptr<Detail::RPageSink> sink)
+                                                                 std::unique_ptr<Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
 {
    fModel->Freeze();
@@ -139,7 +139,7 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<RNTupleModel
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = Detail::RPagePersistentSink::Create(ntupleName, storage, options);
+   auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
@@ -152,7 +152,7 @@ ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<RNTupleModel> 
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
@@ -165,7 +165,7 @@ std::shared_ptr<ROOT::Experimental::RNTupleFillContext> ROOT::Experimental::RNTu
 
    // TODO: Think about honoring RNTupleWriteOptions::SetUseBufferedWrite(false); this requires synchronization on every
    // call to CommitPage() *and* preparing multiple cluster descriptors in parallel!
-   auto sink = std::make_unique<Detail::RPageSinkBuf>(std::make_unique<RPageSynchronizingSink>(*fSink, fSinkMutex));
+   auto sink = std::make_unique<Internal::RPageSinkBuf>(std::make_unique<RPageSynchronizingSink>(*fSink, fSinkMutex));
 
    // Cannot use std::make_shared because the constructor of RNTupleFillContext is private. Also it would mean that the
    // (direct) memory of all contexts stays around until the vector of weak_ptr's is cleared.

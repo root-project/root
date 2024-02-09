@@ -41,17 +41,13 @@ namespace Experimental {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
 namespace Internal {
+class RClusterPool;
 class RPageAllocatorHeap;
 class RPagePool;
-}
-
-namespace Detail {
-
-class RClusterPool;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSinkFile
+\class ROOT::Experimental::Internal::RPageSinkFile
 \ingroup NTuple
 \brief Storage provider that write ntuple pages into a file
 
@@ -60,9 +56,9 @@ The written file can be either in ROOT format or in RNTuple bare format.
 // clang-format on
 class RPageSinkFile : public RPagePersistentSink {
 private:
-   std::unique_ptr<Internal::RPageAllocatorHeap> fPageAllocator;
+   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
-   std::unique_ptr<Internal::RNTupleFileWriter> fWriter;
+   std::unique_ptr<RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
@@ -91,11 +87,11 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-};
+}; // class RPageSinkFile
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSourceFile
+\class ROOT::Experimental::Internal::RPageSourceFile
 \ingroup NTuple
 \brief Storage provider that reads ntuple pages from a file
 */
@@ -115,15 +111,15 @@ private:
    };
 
    /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<Internal::RPagePool> fPagePool;
+   std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
-   Internal::RMiniFileReader fReader;
+   RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
-   Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
+   RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
@@ -170,10 +166,9 @@ public:
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
-};
+}; // class RPageSourceFile
 
-
-} // namespace Detail
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

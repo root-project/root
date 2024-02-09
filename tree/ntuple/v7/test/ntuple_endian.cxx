@@ -20,15 +20,15 @@
 
 using EColumnType = ROOT::Experimental::EColumnType;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
-using RCluster = ROOT::Experimental::Detail::RCluster;
-using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
+using RCluster = ROOT::Experimental::Internal::RCluster;
+using RColumnElementBase = ROOT::Experimental::Internal::RColumnElementBase;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
-using RPage = ROOT::Experimental::Detail::RPage;
-using RPageSink = ROOT::Experimental::Detail::RPageSink;
-using RPageSource = ROOT::Experimental::Detail::RPageSource;
-using RPageStorage = ROOT::Experimental::Detail::RPageStorage;
+using RPage = ROOT::Experimental::Internal::RPage;
+using RPageSink = ROOT::Experimental::Internal::RPageSink;
+using RPageSource = ROOT::Experimental::Internal::RPageSource;
+using RPageStorage = ROOT::Experimental::Internal::RPageStorage;
 
 namespace {
 class RPageSinkMock : public RPageSink {
@@ -36,13 +36,13 @@ protected:
    const RColumnElementBase &fElement;
    std::vector<RPageStorage::RSealedPage> fPages;
 
-   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Detail::RColumn &) final
+   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Internal::RColumn &) final
    {
       return {};
    }
 
    void Init(RNTupleModel &) final {}
-   void UpdateSchema(const ROOT::Experimental::Detail::RNTupleModelChangeset &, NTupleSize_t) final {}
+   void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
    std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
@@ -97,7 +97,7 @@ public:
 
 TEST(RColumnElementEndian, ByteCopy)
 {
-   ROOT::Experimental::Detail::RColumnElement<float, EColumnType::kReal32> element;
+   ROOT::Experimental::Internal::RColumnElement<float, EColumnType::kReal32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -118,7 +118,7 @@ TEST(RColumnElementEndian, ByteCopy)
 
 TEST(RColumnElementEndian, Cast)
 {
-   ROOT::Experimental::Detail::RColumnElement<std::int64_t, EColumnType::kInt32> element;
+   ROOT::Experimental::Internal::RColumnElement<std::int64_t, EColumnType::kInt32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -143,7 +143,7 @@ TEST(RColumnElementEndian, Cast)
 
 TEST(RColumnElementEndian, Split)
 {
-   ROOT::Experimental::Detail::RColumnElement<double, EColumnType::kSplitReal64> splitElement;
+   ROOT::Experimental::Internal::RColumnElement<double, EColumnType::kSplitReal64> splitElement;
 
    RPageSinkMock sink1(splitElement);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -165,7 +165,7 @@ TEST(RColumnElementEndian, DeltaSplit)
 {
    using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 
-   ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element;
+   ROOT::Experimental::Internal::RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
