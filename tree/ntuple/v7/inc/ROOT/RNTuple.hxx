@@ -310,18 +310,19 @@ public:
    /// Raises an exception if:
    /// * there is no field with the given name or,
    /// * the field is not a collection
-   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
+   RNTupleCollectionView GetCollectionView(std::string_view fieldName)
+   {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
-      return GetViewCollection(fieldId);
+      return GetCollectionView(fieldId);
    }
 
-   RNTupleViewCollection GetViewCollection(DescriptorId_t fieldId)
+   RNTupleCollectionView GetCollectionView(DescriptorId_t fieldId)
    {
-      return RNTupleViewCollection(fieldId, fSource.get());
+      return RNTupleCollectionView(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }

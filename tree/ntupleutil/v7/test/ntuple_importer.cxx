@@ -385,10 +385,10 @@ TEST(RNTupleImporter, LeafCountArray)
    EXPECT_EQ(1, viewBegin(0));
    EXPECT_EQ(2, viewMiddle(0));
    EXPECT_EQ(3, viewEnd(0));
-   auto viewJets = reader->GetViewCollection("_collection0");
+   auto viewJets = reader->GetCollectionView("_collection0");
    auto viewJetPt = viewJets.GetView<float>("jet_pt");
    auto viewJetEta = viewJets.GetView<float>("jet_eta");
-   auto viewMuons = reader->GetViewCollection("_collection1");
+   auto viewMuons = reader->GetCollectionView("_collection1");
    auto viewMuonPt = viewMuons.GetView<float>("muon_pt");
    auto viewProjectedNjets = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("njets");
    auto viewProjectedJetPt = reader->GetView<ROOT::RVec<float>>("jet_pt");
