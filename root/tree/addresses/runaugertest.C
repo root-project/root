@@ -89,10 +89,7 @@
    XmaxVsXlow_1 = dynamic_cast<TPad*>( (TPad*)gROOT->FindObject("XmaxVsXlow_1") );
 #endif
    XmaxVsXlow_1->SetGrid();
-#ifdef ClingWorkAroundMissingImplicitAuto
-   TProfile*
-#endif
-   Xlow170  = new TProfile("Xlow170","17.25<LogE<17.5",30,400,1200);
+   auto Xlow170 = new TProfile("Xlow170","17.25<LogE<17.5",30,400,1200);
    //Xlow170->SetMinimum(500);
    //Xlow170->SetMaximum(900);
    Xlow170->SetYTitle("Xmax(g/cm^{2}) ");

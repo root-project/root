@@ -13,10 +13,7 @@ TFile *Event = TFile::Open("Event.new.split0.root");
    gROOT->ProcessLine("TTree *tree = (TTree*)gFile->Get(\"T\"); TTreeFormula *tf;TObject * o;");
    gROOT->ProcessLine(".L helper.C");
 #else
-#ifdef ClingWorkAroundMissingImplicitAuto
-      TTree *
-#endif
-   tree = (TTree*)Event->Get("T");
+   auto tree = (TTree*)Event->Get("T");
    TTreeFormula *tf;
    TObject * o;
 #endif

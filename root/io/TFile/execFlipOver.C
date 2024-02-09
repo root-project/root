@@ -71,7 +71,7 @@
 
    // Set the last free block to just fit the list of keys, so we can test
    // this boundary condition.
-   be = (TFree*)f->GetListOfFree()->Last();
+   auto be = (TFree*)f->GetListOfFree()->Last();
    be->SetFirst(2999997803-7);
    f->SetEND(2999997803-7);
    //f->GetListOfFree()->ls();

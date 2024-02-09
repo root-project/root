@@ -1,19 +1,12 @@
 {
-#ifdef ClingWorkAroundMissingImplicitAuto
-   TChain *
-#endif
-   c = new TChain("esdTree"); c->Add("AliESDs*.root");
+   auto c = new TChain("esdTree"); c->Add("AliESDs*.root");
    c->SetCacheSize();
    TTreeCache::SetLearnEntries(100);
    for (int i=0; i<10; ++i) {
       c->GetEntry(i);
    }
    TFile *curfile = c->GetCurrentFile(); 
-#ifdef ClingWorkAroundMissingImplicitAuto
-   TTreeCache *
-#endif
-   ca = (TTreeCache*)curfile->GetCacheRead(); 
-   
+   auto ca = (TTreeCache*)curfile->GetCacheRead();
    
    c->LoadTree(101);
    TBranch *b = c->GetBranch("AliESDRun.fMagneticField");
