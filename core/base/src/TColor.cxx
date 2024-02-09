@@ -1981,9 +1981,9 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static method returning color number for a color specified by name.
-///
-/// If specified color name does not exist -1 is returned.
+/// Static method returning color index for a color specified by name.
+/// The list of defined colors and their names is given by TColor::ListColors.
+/// If the specified color name does not exist -1 is returned.
 
 Int_t TColor::GetColorByName(const char *colorname)
 {
