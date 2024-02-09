@@ -24,7 +24,7 @@ protected:
    void SetUp() override
    {
       // Initialized at the start of each test to expect diagnostic messages from TestSupport
-      fRootDiags.optionalDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos",
+      fRootDiags.optionalDiag(kWarning, "ROOT::Experimental::Internal::RPageSinkDaos::RPageSinkDaos",
                               "The DAOS backend is experimental and still under development.", false);
       fRootDiags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
       fRootDiags.optionalDiag(kWarning, "in int daos_init()",
@@ -156,7 +156,7 @@ TEST_F(RPageStorageDaos, Options)
 
    auto readOptions = RNTupleReadOptions();
    readOptions.SetClusterBunchSize(3);
-   ROOT::Experimental::Detail::RPageSourceDaos source(ntupleName, daosUri, readOptions);
+   ROOT::Experimental::Internal::RPageSourceDaos source(ntupleName, daosUri, readOptions);
    source.Attach();
    EXPECT_STREQ("RP_XSF", source.GetObjectClass().c_str());
    EXPECT_EQ(3U, source.GetReadOptions().GetClusterBunchSize());

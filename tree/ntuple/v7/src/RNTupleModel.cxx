@@ -154,7 +154,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    std::swap(fOpenChangeset.fModel.fModelId, fNewModelId);
    if (fOpenChangeset.IsEmpty())
       return;
-   Detail::RNTupleModelChangeset toCommit{fOpenChangeset.fModel};
+   Internal::RNTupleModelChangeset toCommit{fOpenChangeset.fModel};
    std::swap(fOpenChangeset.fAddedFields, toCommit.fAddedFields);
    std::swap(fOpenChangeset.fAddedProjectedFields, toCommit.fAddedProjectedFields);
    fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());

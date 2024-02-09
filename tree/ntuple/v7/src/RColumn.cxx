@@ -20,12 +20,12 @@
 
 #include <TError.h>
 
-ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
+ROOT::Experimental::Internal::RColumn::RColumn(const RColumnModel &model, std::uint32_t index)
    : fModel(model), fIndex(index)
 {
 }
 
-ROOT::Experimental::Detail::RColumn::~RColumn()
+ROOT::Experimental::Internal::RColumn::~RColumn()
 {
    if (!fWritePage[0].IsNull())
       fPageSink->ReleasePage(fWritePage[0]);
@@ -39,8 +39,8 @@ ROOT::Experimental::Detail::RColumn::~RColumn()
       fPageSource->DropColumn(fHandleSource);
 }
 
-void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage,
-                                                  NTupleSize_t firstElementIndex)
+void ROOT::Experimental::Internal::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage,
+                                                    NTupleSize_t firstElementIndex)
 {
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
@@ -69,7 +69,7 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
    }
 }
 
-void ROOT::Experimental::Detail::RColumn::Flush()
+void ROOT::Experimental::Internal::RColumn::Flush()
 {
    auto otherIdx = 1 - fWritePageIdx;
    if (fWritePage[fWritePageIdx].IsEmpty() && fWritePage[otherIdx].IsEmpty())
@@ -89,7 +89,7 @@ void ROOT::Experimental::Detail::RColumn::Flush()
    fWritePage[fWritePageIdx].Reset(fNElements);
 }
 
-void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
+void ROOT::Experimental::Internal::RColumn::MapPage(const NTupleSize_t index)
 {
    fPageSource->ReleasePage(fReadPage);
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
@@ -99,7 +99,7 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
    R__ASSERT(fReadPage.Contains(index));
 }
 
-void ROOT::Experimental::Detail::RColumn::MapPage(RClusterIndex clusterIndex)
+void ROOT::Experimental::Internal::RColumn::MapPage(RClusterIndex clusterIndex)
 {
    fPageSource->ReleasePage(fReadPage);
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case

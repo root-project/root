@@ -132,7 +132,7 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ClusterSize_t::ValueTyp
 
 std::size_t
 ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const RColumnRange &columnRange,
-                                                                           const Detail::RColumnElementBase &element,
+                                                                           const Internal::RColumnElementBase &element,
                                                                            std::size_t pageSize)
 {
    R__ASSERT(fPhysicalColumnId == columnRange.fPhysicalColumnId);
@@ -581,8 +581,8 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddDeferredColumnRanges
                if (c.IsDeferredColumn()) {
                   columnRange.fFirstElementIndex = fCluster.GetFirstEntryIndex() * nRepetitions;
                   columnRange.fNElements = fCluster.GetNEntries() * nRepetitions;
-                  const auto element = Detail::RColumnElementBase::Generate<void>(c.GetModel().GetType());
-                  pageRange.ExtendToFitColumnRange(columnRange, *element, Detail::RPage::kPageZeroSize);
+                  const auto element = Internal::RColumnElementBase::Generate<void>(c.GetModel().GetType());
+                  pageRange.ExtendToFitColumnRange(columnRange, *element, Internal::RPage::kPageZeroSize);
                }
             }
          },

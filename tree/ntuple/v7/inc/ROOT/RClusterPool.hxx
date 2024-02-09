@@ -30,13 +30,13 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
 
+namespace Internal {
 class RPageSource;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RClusterPool
+\class ROOT::Experimental::Internal::RClusterPool
 \ingroup NTuple
 \brief Managed a set of clusters containing compressed and packed pages
 
@@ -161,7 +161,7 @@ public:
    void WaitForInFlightClusters();
 }; // class RClusterPool
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

@@ -28,11 +28,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSinkBuf
+\class ROOT::Experimental::Internal::RPageSinkBuf
 \ingroup NTuple
 \brief Wrapper sink that coalesces cluster column page writes
 *
@@ -117,9 +117,9 @@ private:
 private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {
-      RNTuplePlainCounter &fParallelZip;
-      RNTuplePlainCounter &fTimeWallCriticalSection;
-      RNTupleTickCounter<RNTuplePlainCounter> &fTimeCpuCriticalSection;
+      Detail::RNTuplePlainCounter &fParallelZip;
+      Detail::RNTuplePlainCounter &fTimeWallCriticalSection;
+      Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> &fTimeCpuCriticalSection;
    };
    std::unique_ptr<RCounters> fCounters;
    /// The inner sink, responsible for actually performing I/O.
@@ -156,9 +156,9 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-};
+}; // RPageSinkBuf
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

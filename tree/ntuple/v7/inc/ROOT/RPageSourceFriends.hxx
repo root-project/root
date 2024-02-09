@@ -27,11 +27,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSourceFriends
+\class ROOT::Experimental::Internal::RPageSourceFriends
 \ingroup NTuple
 \brief Virtual storage that combines several other sources horizontally
 */
@@ -73,11 +73,11 @@ private:
       }
    };
 
-   RNTupleMetrics fMetrics;
+   Detail::RNTupleMetrics fMetrics;
    std::vector<std::unique_ptr<RPageSource>> fSources;
    RIdBiMap fIdBiMap;
 
-   Internal::RNTupleDescriptorBuilder fBuilder;
+   RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
 
    void AddVirtualField(const RNTupleDescriptor &originDesc, std::size_t originIdx, const RFieldDescriptor &originField,
@@ -103,11 +103,10 @@ public:
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
-};
+   Detail::RNTupleMetrics &GetMetrics() final { return fMetrics; }
+}; // class RPageSourceFriends
 
-
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

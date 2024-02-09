@@ -15,9 +15,9 @@
 #include <limits>
 
 using ROOT::Experimental::RNTupleDS;
-using ROOT::Experimental::RNTupleWriter;
 using ROOT::Experimental::RNTupleModel;
-using ROOT::Experimental::Detail::RPageSource;
+using ROOT::Experimental::RNTupleWriter;
+using ROOT::Experimental::Internal::RPageSource;
 
 template <typename V1, typename V2>
 void EXPECT_VEC_EQ(const V1 &v1, const V2 &v2)

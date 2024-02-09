@@ -246,12 +246,11 @@ static void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 
 namespace ROOT {
 namespace Experimental {
-
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RColumnElementBase
+\class ROOT::Experimental::Internal::RColumnElementBase
 \ingroup NTuple
 \brief A column element encapsulates the translation between basic C++ types and their column representation.
 
@@ -309,7 +308,7 @@ public:
    std::size_t GetSize() const { return fSize; }
    std::size_t GetBitsOnStorage() const { return fBitsOnStorage; }
    std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
-};
+}; // class RColumnElementBase
 
 /**
  * Base class for columns whose on-storage representation is little-endian.
@@ -631,7 +630,7 @@ public:
       std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(dst);
 
       for (std::size_t i = 0; i < count; ++i) {
-         uint16Array[i] = Internal::FloatToHalf(floatArray[i]);
+         uint16Array[i] = FloatToHalf(floatArray[i]);
          ByteSwapIfNecessary(uint16Array[i]);
       }
    }
@@ -643,7 +642,7 @@ public:
 
       for (std::size_t i = 0; i < count; ++i) {
          ByteSwapIfNecessary(floatArray[i]);
-         floatArray[i] = Internal::HalfToFloat(uint16Array[i]);
+         floatArray[i] = HalfToFloat(uint16Array[i]);
       }
    }
 };
@@ -794,7 +793,7 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
 template <>
 std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(EColumnType type);
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

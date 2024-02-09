@@ -89,7 +89,7 @@ public:
    {
       auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
       fColumns.emplace_back(
-         ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
+         ROOT::Experimental::Internal::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
    }
 
    size_t GetValueSize() const final { return sizeof(std::size_t); }
@@ -156,7 +156,7 @@ public:
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::RFieldBase;
-   using RPageSource = ROOT::Experimental::Detail::RPageSource;
+   using RPageSource = ROOT::Experimental::Internal::RPageSource;
 
    RNTupleDS *fDataSource;                     ///< The data source that owns this column reader
    RFieldBase *fProtoField;                    ///< The prototype field from which fField is cloned
@@ -373,7 +373,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    fProtoFields.emplace_back(std::move(valueField));
 }
 
-RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource) : fPrincipalSource(std::move(pageSource))
+RNTupleDS::RNTupleDS(std::unique_ptr<Internal::RPageSource> pageSource) : fPrincipalSource(std::move(pageSource))
 {
    fPrincipalSource->Attach();
    fPrincipalDescriptor = fPrincipalSource->GetSharedDescriptorGuard()->Clone();
@@ -383,17 +383,17 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource) : fPrincip
 }
 
 RNTupleDS::RNTupleDS(std::string_view ntupleName, std::string_view fileName)
-   : RNTupleDS(ROOT::Experimental::Detail::RPageSource::Create(ntupleName, fileName))
+   : RNTupleDS(ROOT::Experimental::Internal::RPageSource::Create(ntupleName, fileName))
 {
 }
 
 RNTupleDS::RNTupleDS(RNTuple *ntuple)
-   : RNTupleDS(ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(*ntuple))
+   : RNTupleDS(ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(*ntuple))
 {
 }
 
 RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames)
-   : RNTupleDS(Detail::RPageSource::Create(ntupleName, fileNames[0]))
+   : RNTupleDS(Internal::RPageSource::Create(ntupleName, fileNames[0]))
 {
    fNTupleName = ntupleName;
    fFileNames = fileNames;
@@ -450,7 +450,7 @@ void RNTupleDS::PrepareNextRanges()
             assert(fNextFileIndex == 0);
             std::swap(fPrincipalSource, range.fSource);
          } else {
-            range.fSource = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+            range.fSource = Internal::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
             range.fSource->Attach();
          }
          fNextFileIndex++;
@@ -470,13 +470,13 @@ void RNTupleDS::PrepareNextRanges()
    // Again, we need to skip empty files.
    unsigned int nSlotsPerFile = fNSlots / nRemainingFiles;
    for (std::size_t i = 0; (fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles); ++i) {
-      std::unique_ptr<Detail::RPageSource> source;
+      std::unique_ptr<Internal::RPageSource> source;
       if (fPrincipalSource) {
          // Avoid reopening the first file, which has been opened already to read the schema
          assert(fNextFileIndex == 0);
          std::swap(source, fPrincipalSource);
       } else {
-         source = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+         source = Internal::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
          source->Attach();
       }
       fNextFileIndex++;

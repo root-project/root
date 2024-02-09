@@ -17,13 +17,13 @@ public:
 protected:
    RPageAllocatorHeap fPageAllocator{};
 
-   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Detail::RColumn &) final
+   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Internal::RColumn &) final
    {
       return {};
    }
 
    void Init(RNTupleModel &) final {}
-   void UpdateSchema(const ROOT::Experimental::Detail::RNTupleModelChangeset &, NTupleSize_t) final {}
+   void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
    {

@@ -59,7 +59,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::ValidateColumns(
 
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo>
-ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const Detail::RPageSource &source, bool firstSource)
+ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RPageSource &source, bool firstSource)
 {
    auto desc = source.GetSharedDescriptorGuard();
    std::vector<RColumnInfo> columns;
@@ -92,8 +92,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<Detail::RPageSource *> sources,
-                                                        Detail::RPageSink &destination)
+void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination)
 {
    // Append the sources to the destination one-by-one
    bool isFirstSource = true;
@@ -147,7 +146,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<Detail::RPageS
                // LoadSealedPage reads packed/compressed bytes of a page into
                // a memory buffer provided by a sealed page
                RClusterIndex clusterIndex(clusterId, idx);
-               Detail::RPageStorage::RSealedPage sealedPage;
+               Internal::RPageStorage::RSealedPage sealedPage;
                source->LoadSealedPage(columnId, clusterIndex, sealedPage);
 
                // The way LoadSealedPage works might require a double call

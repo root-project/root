@@ -150,7 +150,7 @@ private:
    /// Used as a Read() destination for fields that are not mappable
    RFieldBase::RValue fValue;
 
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
         fValue(fField.CreateValue())
    {
@@ -229,7 +229,7 @@ private:
       return desc.GetFieldDescriptor(fieldId).CreateField(desc);
    }
 
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
       : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->CreateValue())
    {
       fField->SetOnDiskId(fieldId);
@@ -262,10 +262,10 @@ class RNTupleCollectionView : public RNTupleView<ClusterSize_t> {
    friend class RNTupleReader;
 
 private:
-   Detail::RPageSource* fSource;
+   Internal::RPageSource *fSource;
    DescriptorId_t fCollectionFieldId;
 
-   RNTupleCollectionView(DescriptorId_t fieldId, Detail::RPageSource *source)
+   RNTupleCollectionView(DescriptorId_t fieldId, Internal::RPageSource *source)
       : RNTupleView<ClusterSize_t>(fieldId, source), fSource(source), fCollectionFieldId(fieldId)
    {}
 

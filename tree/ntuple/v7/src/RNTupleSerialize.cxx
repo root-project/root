@@ -169,7 +169,7 @@ std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &d
                                   const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
                                   void *buffer)
 {
-   using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
+   using RColumnElementBase = ROOT::Experimental::Internal::RColumnElementBase;
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -246,7 +246,7 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
       bytes += RNTupleSerializer::DeserializeUInt64(bytes, firstElementIdx);
    }
 
-   if (ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
+   if (ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
       return R__FAIL("column element size mismatch");
 
    const bool isSorted = (flags & (RNTupleSerializer::kFlagSortAscColumn | RNTupleSerializer::kFlagSortDesColumn));

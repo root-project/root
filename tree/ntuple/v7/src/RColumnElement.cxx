@@ -24,8 +24,8 @@
 #include <utility>
 
 template <>
-std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
-ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
+std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
+ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType type)
 {
    switch (type) {
    case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>();
@@ -64,7 +64,8 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
    return nullptr;
 }
 
-std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(EColumnType type) {
+std::size_t ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(EColumnType type)
+{
    switch (type) {
    case EColumnType::kIndex64: return 64;
    case EColumnType::kIndex32: return 32;
@@ -99,7 +100,8 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
    return 0;
 }
 
-std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnType type) {
+std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColumnType type)
+{
    switch (type) {
    case EColumnType::kIndex64: return "Index64";
    case EColumnType::kIndex32: return "Index32";
@@ -132,8 +134,8 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
    }
 }
 
-void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
-  void *dst, void *src, std::size_t count) const
+void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
+   void *dst, void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(src);
    char *charArray = reinterpret_cast<char *>(dst);
@@ -152,8 +154,8 @@ void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColum
    }
 }
 
-void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(
-  void *dst, void *src, std::size_t count) const
+void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(
+   void *dst, void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(dst);
    char *charArray = reinterpret_cast<char *>(src);

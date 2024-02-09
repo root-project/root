@@ -35,13 +35,9 @@ class RFieldBase;
 class RNTuple;
 class RNTupleDescriptor;
 
-namespace Detail {
-class RFieldValue;
-class RPageSource;
-} // namespace Detail
-
 namespace Internal {
 class RNTupleColumnReader;
+class RPageSource;
 }
 
 class RNTupleDS final : public ROOT::RDF::RDataSource {
@@ -51,7 +47,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of
    /// REntryRangeDS records to return the list of ranges ready to use by the RDF loop manager.
    struct REntryRangeDS {
-      std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fSource;
+      std::unique_ptr<ROOT::Experimental::Internal::RPageSource> fSource;
       ULong64_t fFirstEntry = 0; ///< First entry index in fSource
       /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
       ULong64_t fLastEntry = 0;
@@ -60,7 +56,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// The first source is used to extract the schema and build the prototype fields. The page source
    /// is used to extract a clone of the descriptor to fPrincipalDescriptor. Afterwards it is moved
    /// into the first REntryRangeDS.
-   std::unique_ptr<Detail::RPageSource> fPrincipalSource;
+   std::unique_ptr<Internal::RPageSource> fPrincipalSource;
    /// A clone of the first pages source's descriptor.
    std::unique_ptr<RNTupleDescriptor> fPrincipalDescriptor;
 
@@ -119,7 +115,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// is not enough work to give at least one cluster to every slot.
    void PrepareNextRanges();
 
-   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
+   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource);
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);

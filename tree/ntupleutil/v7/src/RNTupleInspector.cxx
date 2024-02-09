@@ -30,7 +30,7 @@
 #include <iostream>
 
 ROOT::Experimental::RNTupleInspector::RNTupleInspector(
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
+   std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource)
    : fPageSource(std::move(pageSource))
 {
    fPageSource->Attach();
@@ -52,7 +52,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements.
       auto colType = colDesc.GetModel().GetType();
-      std::uint32_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(colType)->GetSize();
+      std::uint32_t elemSize = ROOT::Experimental::Internal::RColumnElementBase::Generate(colType)->GetSize();
       std::uint64_t nElems = 0;
       std::vector<std::uint64_t> compressedPageSizes{};
 
@@ -147,14 +147,14 @@ ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *source
       throw RException(R__FAIL("provided RNTuple is null"));
    }
 
-   auto pageSource = Detail::RPageSourceFile::CreateFromAnchor(*sourceNTuple);
+   auto pageSource = Internal::RPageSourceFile::CreateFromAnchor(*sourceNTuple);
    return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::string_view sourceFileName)
 {
-   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, sourceFileName);
+   auto pageSource = ROOT::Experimental::Internal::RPageSource::Create(ntupleName, sourceFileName);
    return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 
@@ -242,7 +242,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       output << " column type    | count   | # elements      | compressed bytes  | uncompressed bytes\n"
              << "----------------|---------|-----------------|-------------------|--------------------" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
-         output << std::setw(15) << Detail::RColumnElementBase::GetTypeName(colType) << " |" << std::setw(8)
+         output << std::setw(15) << Internal::RColumnElementBase::GetTypeName(colType) << " |" << std::setw(8)
                 << typeInfo.count << " |" << std::setw(16) << typeInfo.nElems << " |" << std::setw(18)
                 << typeInfo.compressedSize << " |" << std::setw(18) << typeInfo.uncompressedSize << " " << std::endl;
       }
@@ -250,7 +250,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
    case ENTupleInspectorPrintFormat::kCSV:
       output << "columnType,count,nElements,compressedSize,uncompressedSize" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
-         output << Detail::RColumnElementBase::GetTypeName(colType) << "," << typeInfo.count << "," << typeInfo.nElems
+         output << Internal::RColumnElementBase::GetTypeName(colType) << "," << typeInfo.count << "," << typeInfo.nElems
                 << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << std::endl;
       }
       break;
@@ -294,8 +294,8 @@ ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental
       default: throw RException(R__FAIL("Unknown histogram type"));
       }
 
-      hist->AddBinContent(hist->GetXaxis()->FindBin(Detail::RColumnElementBase::GetTypeName(colInfo.GetType()).c_str()),
-                          data);
+      hist->AddBinContent(
+         hist->GetXaxis()->FindBin(Internal::RColumnElementBase::GetTypeName(colInfo.GetType()).c_str()), data);
    }
 
    return hist;
@@ -316,9 +316,9 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental
                                                               std::string histName, std::string histTitle, size_t nBins)
 {
    if (histName.empty())
-      histName = "pageSizeHistCol" + Detail::RColumnElementBase::GetTypeName(colType);
+      histName = "pageSizeHistCol" + Internal::RColumnElementBase::GetTypeName(colType);
    if (histTitle.empty())
-      histTitle = "Page size distribution for columns with type " + Detail::RColumnElementBase::GetTypeName(colType);
+      histTitle = "Page size distribution for columns with type " + Internal::RColumnElementBase::GetTypeName(colType);
 
    auto perTypeHist = GetPageSizeDistribution({colType}, histName, histTitle, nBins);
 
@@ -408,8 +408,8 @@ std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPageSizeDistri
 
    for (const auto &[colType, pageSizesForColType] : pageSizes) {
       auto hist = std::make_unique<TH1D>(
-         TString::Format("%s%s", histName.c_str(), Detail::RColumnElementBase::GetTypeName(colType).c_str()),
-         Detail::RColumnElementBase::GetTypeName(colType).c_str(), nBins, histMin,
+         TString::Format("%s%s", histName.c_str(), Internal::RColumnElementBase::GetTypeName(colType).c_str()),
+         Internal::RColumnElementBase::GetTypeName(colType).c_str(), nBins, histMin,
          histMax + ((histMax - histMin) / static_cast<double>(nBins)));
 
       for (const auto pageSize : pageSizesForColType) {

@@ -125,7 +125,7 @@ public:
    };
 
 private:
-   std::unique_ptr<Detail::RPageSource> fPageSource;
+   std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
    int fCompressionSettings = -1;
    std::uint64_t fCompressedSize = 0;
@@ -134,7 +134,7 @@ private:
    std::map<int, RColumnInspector> fColumnInfo;
    std::map<int, RFieldTreeInspector> fFieldTreeInfo;
 
-   RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
+   RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Gather column-level and RNTuple-level information.

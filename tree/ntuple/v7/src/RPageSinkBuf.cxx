@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <memory>
 
-void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
+void ROOT::Experimental::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
    for (auto &bufPage : fBufferedPages) {
       if (!bufPage.fPage.IsNull()) {
@@ -36,20 +36,20 @@ void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
    fSealedPages.clear();
 }
 
-ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
+ROOT::Experimental::Internal::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
    : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions()), fInnerSink(std::move(inner))
 {
-   fMetrics = RNTupleMetrics("RPageSinkBuf");
-   fCounters = std::make_unique<RCounters>(
-      RCounters{*fMetrics.MakeCounter<RNTuplePlainCounter *>("ParallelZip", "", "compressing pages in parallel"),
-                *fMetrics.MakeCounter<RNTuplePlainCounter *>("timeWallCriticalSection", "ns",
-                                                             "wall clock time spent in critical sections"),
-                *fMetrics.MakeCounter<RNTupleTickCounter<RNTuplePlainCounter> *>(
-                   "timeCpuCriticalSection", "ns", "CPU time spent in critical section")});
+   fMetrics = Detail::RNTupleMetrics("RPageSinkBuf");
+   fCounters = std::make_unique<RCounters>(RCounters{
+      *fMetrics.MakeCounter<Detail::RNTuplePlainCounter *>("ParallelZip", "", "compressing pages in parallel"),
+      *fMetrics.MakeCounter<Detail::RNTuplePlainCounter *>("timeWallCriticalSection", "ns",
+                                                           "wall clock time spent in critical sections"),
+      *fMetrics.MakeCounter<Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> *>(
+         "timeCpuCriticalSection", "ns", "CPU time spent in critical section")});
    fMetrics.ObserveMetrics(fInnerSink->GetMetrics());
 }
 
-ROOT::Experimental::Detail::RPageSinkBuf::~RPageSinkBuf()
+ROOT::Experimental::Internal::RPageSinkBuf::~RPageSinkBuf()
 {
    // Wait for unterminated tasks, if any, as they may still hold a reference to `this`.
    // This cannot be moved to the base class destructor, given non-static members have been destroyed by the time the
@@ -57,20 +57,20 @@ ROOT::Experimental::Detail::RPageSinkBuf::~RPageSinkBuf()
    WaitForAllTasks();
 }
 
-ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSinkBuf::AddColumn(DescriptorId_t /*fieldId*/, const RColumn &column)
+ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(DescriptorId_t /*fieldId*/, const RColumn &column)
 {
    return ColumnHandle_t{fNColumns++, &column};
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<RFieldBase *> &fields,
-                                                             NTupleSize_t firstEntry)
+void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector<RFieldBase *> &fields,
+                                                               NTupleSize_t firstEntry)
 {
    auto connectField = [&](RFieldBase &f) {
       // Field Zero would have id 0.
       ++fNFields;
       f.SetOnDiskId(fNFields);
-      Internal::CallConnectPageSinkOnField(f, *this, firstEntry); // issues in turn calls to `AddColumn()`
+      CallConnectPageSinkOnField(f, *this, firstEntry); // issues in turn calls to `AddColumn()`
    };
    for (auto *f : fields) {
       connectField(*f);
@@ -81,7 +81,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<R
    fBufferedColumns.resize(fNColumns);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::Init(RNTupleModel &model)
+void ROOT::Experimental::Internal::RPageSinkBuf::Init(RNTupleModel &model)
 {
    ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
 
@@ -89,8 +89,8 @@ void ROOT::Experimental::Detail::RPageSinkBuf::Init(RNTupleModel &model)
    fInnerSink->Init(*fInnerModel);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
-                                                            NTupleSize_t firstEntry)
+void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
+                                                              NTupleSize_t firstEntry)
 {
    ConnectFields(changeset.fAddedFields, firstEntry);
 
@@ -124,7 +124,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelCh
    fInnerSink->UpdateSchema(innerChangeset, firstEntry);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto colId = columnHandle.fPhysicalId;
    const auto &element = *columnHandle.fColumn->GetElement();
@@ -161,18 +161,18 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CommitPage(ColumnHandle_t columnH
    });
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPage(DescriptorId_t /*physicalColumnId*/,
-                                                                const RSealedPage & /*sealedPage*/)
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPage(DescriptorId_t /*physicalColumnId*/,
+                                                                  const RSealedPage & /*sealedPage*/)
 {
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> /*ranges*/)
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> /*ranges*/)
 {
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
 
-std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
+std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
 {
    WaitForAllTasks();
 
@@ -187,7 +187,7 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Expe
    std::uint64_t nbytes;
    {
       RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
-      RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
+      Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
       fInnerSink->CommitSealedPageV(toCommit);
 
       nbytes = fInnerSink->CommitCluster(nNewEntries);
@@ -198,27 +198,27 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkBuf::CommitCluster(ROOT::Expe
    return nbytes;
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroup()
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitClusterGroup()
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
-   RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
+   Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
    fInnerSink->CommitClusterGroup();
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitDataset()
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitDataset()
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
-   RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
+   Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
    fInnerSink->CommitDataset();
 }
 
-ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    return fInnerSink->ReservePage(columnHandle, nElements);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::ReleasePage(RPage &page)
+void ROOT::Experimental::Internal::RPageSinkBuf::ReleasePage(RPage &page)
 {
    fInnerSink->ReleasePage(page);
 }

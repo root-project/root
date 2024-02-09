@@ -37,12 +37,12 @@ class RCollectionNTupleWriter;
 class RNTupleModel;
 class RNTupleWriter;
 
-namespace Detail {
+namespace Internal {
 class RPageSinkBuf;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RNTupleModelChangeset
+\class ROOT::Experimental::Internal::RNTupleModelChangeset
 \ingroup NTuple
 \brief The incremental changes to a `RNTupleModel`
 
@@ -62,7 +62,7 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 };
 
-} // namespace Detail
+} // namespace Internal
 
 // clang-format off
 /**
@@ -144,7 +144,7 @@ public:
    class RUpdater {
    private:
       RNTupleWriter &fWriter;
-      Detail::RNTupleModelChangeset fOpenChangeset;
+      Internal::RNTupleModelChangeset fOpenChangeset;
       std::uint64_t fNewModelId = 0; ///< The model ID after committing
 
    public:

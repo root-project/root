@@ -27,8 +27,7 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
-
+namespace Internal {
 
 // clang-format off
 /**
@@ -66,36 +65,35 @@ public:
    std::uint32_t GetSize() const { return fSize; }
 
    bool IsNull() const { return fAddress == nullptr; }
-};
+}; // class ROnDiskPage
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 
 // For hash maps ROnDiskPage::Key --> ROnDiskPage
 namespace std
 {
-   template <>
-   struct hash<ROOT::Experimental::Detail::ROnDiskPage::Key>
+template <>
+struct hash<ROOT::Experimental::Internal::ROnDiskPage::Key> {
+   // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
+   size_t operator()(const ROOT::Experimental::Internal::ROnDiskPage::Key &key) const
    {
-      // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
-      size_t operator()(const ROOT::Experimental::Detail::ROnDiskPage::Key &key) const
-      {
-         return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fPhysicalColumnId) ^
-                  (hash<ROOT::Experimental::NTupleSize_t>()(key.fPageNo) << 1)) >>
-                 1);
-      }
-   };
+      return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fPhysicalColumnId) ^
+               (hash<ROOT::Experimental::NTupleSize_t>()(key.fPageNo) << 1)) >>
+              1);
+   }
+};
 }
 
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::ROnDiskPageMap
+\class ROOT::Experimental::Internal::ROnDiskPageMap
 \ingroup NTuple
 \brief A memory region that contains packed and compressed pages
 
@@ -120,12 +118,11 @@ public:
    /// needs to be owned by the page map (see derived classes).  If a page map contains a page of a given column,
    /// it is expected that _all_ the pages of that column in that cluster are part of the page map.
    void Register(const ROnDiskPage::Key &key, const ROnDiskPage &onDiskPage) { fOnDiskPages.emplace(key, onDiskPage); }
-};
-
+}; // class ROnDiskPageMap
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::ROnDiskPageMapHeap
+\class ROOT::Experimental::Internal::ROnDiskPageMapHeap
 \ingroup NTuple
 \brief An ROnDiskPageMap that is used for an fMemory allocated as an array of unsigned char.
 */
@@ -141,11 +138,11 @@ public:
    ROnDiskPageMapHeap &operator =(const ROnDiskPageMapHeap &other) = delete;
    ROnDiskPageMapHeap &operator =(ROnDiskPageMapHeap &&other) = default;
    ~ROnDiskPageMapHeap() override;
-};
+}; // class ROnDiskPageMapHeap
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RCluster
+\class ROOT::Experimental::Internal::RCluster
 \ingroup NTuple
 \brief An in-memory subset of the packed and compressed pages of a cluster
 
@@ -199,9 +196,9 @@ public:
    const ColumnSet_t &GetAvailPhysicalColumns() const { return fAvailPhysicalColumns; }
    bool ContainsColumn(DescriptorId_t colId) const { return fAvailPhysicalColumns.count(colId) > 0; }
    size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
-};
+}; // class RCluster
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 
