@@ -105,7 +105,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
-      auto elementSize = Detail::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();
+      auto elementSize = Internal::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();
 
       ColumnInfo info;
       info.fPhysicalColumnId = column.second.GetPhysicalId();
@@ -184,8 +184,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    for (const auto &col : columns) {
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
       auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
-      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]"
-         + "  --  " + Detail::RColumnElementBase::GetTypeName(col.fType);
+      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]" +
+                                "  --  " + Internal::RColumnElementBase::GetTypeName(col.fType);
       std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
       if (col.fLogicalColumnId != col.fPhysicalColumnId)
          id += " --alias--> " + std::to_string(col.fPhysicalColumnId);

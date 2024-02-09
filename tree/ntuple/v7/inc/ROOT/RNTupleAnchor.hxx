@@ -27,12 +27,10 @@ class TFileMergeInfo;
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
-class RPageSourceFile;
-}
 namespace Internal {
 class RMiniFileReader;
 class RNTupleFileWriter;
+class RPageSourceFile;
 }
 
 // clang-format off
@@ -61,9 +59,9 @@ auto reader = RNTupleReader::Open(ntpl);
 */
 // clang-format on
 class RNTuple final {
-   friend class Detail::RPageSourceFile;
    friend class Internal::RMiniFileReader;
    friend class Internal::RNTupleFileWriter;
+   friend class Internal::RPageSourceFile;
 
 public:
    static constexpr std::uint16_t kVersionEpoch = 0;
