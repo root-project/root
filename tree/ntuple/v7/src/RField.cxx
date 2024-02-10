@@ -584,9 +584,6 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       auto normalizedInnerTypeName = itemField->GetTypeName();
       result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
                                               std::move(itemField));
-   } else if (canonicalType == ":Collection:") {
-      // TODO: create an RCollectionField?
-      result = std::make_unique<RField<ClusterSize_t>>(fieldName);
    } else if (canonicalType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(39, canonicalType.length() - 40));
       if (innerTypes.size() != 1)
