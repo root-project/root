@@ -10,4 +10,3 @@ mathmore=On
 tmva-cpu=On
 tmva-pymva=On
 tmva-sofie=On
-r=On
