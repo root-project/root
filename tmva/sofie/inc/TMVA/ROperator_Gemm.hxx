@@ -71,35 +71,6 @@ namespace SOFIE{
          return {out};
       }
 
-#if 0
-      std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
-         if (input.size() > 3) throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only need 2 or 3 input tensor");
-         for (auto& i: input){
-            if (i.size() > 2){
-               throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only accept input tensor with 2 dimensions");
-            }
-         }
-         std::vector<std::vector<size_t>> ret;
-         if (input.size() == 3){
-            ret.push_back(input[2]);   //shape of C is shape of Y
-            return ret;
-         }
-         std::vector<size_t> s_a(input[0]);
-         std::vector<size_t> s_b(input[1]);
-         if (fAttrTransA){
-            std::reverse(s_a.begin(), s_a.end());
-         }
-         if (fAttrTransB){
-            std::reverse(s_b.begin(), s_b.end());
-         }
-         std::vector<size_t> s_y(2);
-         s_y[0] = s_a[0];
-         s_y[1] = s_b[1];
-         ret.push_back(s_y);
-         return ret;
-      }
-   #endif
-
       template <typename U>
       std::vector<std::vector<U>> DoShapeInference(const std::vector<std::vector<U>> & input){
          if (input.size() > 3) throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only need 2 or 3 input tensor");

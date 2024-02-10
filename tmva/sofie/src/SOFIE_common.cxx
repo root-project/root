@@ -373,7 +373,21 @@ std::vector<size_t> UTILITY::ComputeStrideFromShape(const std::vector<size_t> & 
    const auto size = shape.size();
    std::vector<size_t> strides(size,1);
    for (std::size_t i = 1; i < size; i++) {
-      strides[size - 1 - i] = strides[size - 1 - i + 1] * shape[size - 1 - i + 1];
+      strides[size - 1 - i] = strides[size - i ] * shape[size - i];
+   }
+   return strides;
+}
+
+std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape) {
+   // assume row major layout
+   const auto size = shape.size();
+   std::vector<Dim> strides(size);
+   strides[size-1] = Dim{false,1,""};
+   for (std::size_t i = 1; i < size; i++) {
+      if (!shape[size-i].isParam && !strides[size-i].isParam)
+         strides[size - 1 - i] = Dim{false, strides[size-i].dim * shape[size-i].dim,""};
+      else
+         strides[size - 1 - i] = Dim{true, 0, std::string(strides[size-i].GetVal() + "*" + shape[size-i].GetVal())};
    }
    return strides;
 }

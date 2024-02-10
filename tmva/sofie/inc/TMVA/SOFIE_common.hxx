@@ -63,8 +63,10 @@ std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
 std::string ConvertShapeToString(std::vector<size_t> shape);
-
 std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
+// std::string ConvertShapeToString(std::vector<Dim> shape) {
+//    return ConvertDynamicShapeToString(shape);
+// }
 
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
@@ -273,6 +275,7 @@ T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, cons
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
+std::vector<Dim> ComputeStrideFromShape(const std::vector<Dim> & shape);
 
 /// function to check if a >> 0 and a < MAX using a single comparison
 //// use trick casting to unsigned values so it becomes a single comparison

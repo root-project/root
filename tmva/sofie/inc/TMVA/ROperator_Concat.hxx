@@ -24,8 +24,8 @@
          int fnewAxis=0;
          std::vector<std::string> fInputs;
          std::string fOutput;
-         std::vector<size_t>fOutputShape;
-         std::vector<std::vector<size_t>> fInputShapes;
+         std::vector<Dim>fOutputShape;
+         std::vector<std::vector<Dim>> fInputShapes;
 
      public:
          ROperator_Concat(){}
@@ -52,17 +52,17 @@
 
             int concat_dim=0;
             if(fnewAxis == 0){
-               for(size_t i = 0; i < inputs.size(); i++) {
-                  if (i > 0 && inputs[i].size() != inputs[i-1].size() )
-                  throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " +
-                     ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
+               for (size_t i = 0; i < inputs.size(); i++) {
+                  if (i > 0 && inputs[i].size() != inputs[i - 1].size())
+                     throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " +
+                                              ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i - 1]));
                   for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
-                  if ((int) iaxis == fAxis)
-                     concat_dim += inputs[i][iaxis];
-                  else
-                     if (i> 0 && inputs[i][iaxis] != inputs[i-1][iaxis])
+                     if ((int)iaxis == fAxis)
+                        concat_dim += inputs[i][iaxis];
+                     else if (i > 0 && inputs[i][iaxis] != inputs[i - 1][iaxis])
                         throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have wrong shapes " +
-                        ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
+                                                 ConvertShapeToString(inputs[i]) + " and " +
+                                                 ConvertShapeToString(inputs[i - 1]));
                   }
                }
 
@@ -84,12 +84,58 @@
                         throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have wrong shapes " +
                         ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
                   }
-                  
+
                }
                for(auto it:stack)
                ret[0].push_back(it);
             }
 
+            return ret;
+         }
+
+         // get shape of output given inputs. It is going to be called after initialized
+         std::vector<std::vector<Dim>> ShapeInference(const std::vector<std::vector<Dim>> & inputs){
+            std::vector<std::vector<Dim>> ret(1);
+            // treat negative axis case
+            if (fAxis<0) {
+               fAxis = inputs[0].size()+fAxis;
+            }
+            if (fAxis < 0 || fAxis >= (int) inputs[0].size())
+               throw std::runtime_error("TMVA SOFIE Concat Op - invalid axis value ");
+
+            int concat_dim=0;
+            if(fnewAxis == 0){
+               for (size_t i = 0; i < inputs.size(); i++) {
+                  if (i > 0 && inputs[i].size() != inputs[i - 1].size())
+                     throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " +
+                                              ConvertDynamicShapeToString(inputs[i]) + " and " + ConvertDynamicShapeToString(inputs[i - 1]));
+                  for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
+                     if ((int)iaxis == fAxis) {
+                        // support only non-params shape for the concatenation axis
+                        if (inputs[i][iaxis].isParam)
+                           throw std::runtime_error("TMVA SOFIE Concat Op - not supporting input param dimensions for concatenation axis. Input shape is " +
+                                                     ConvertDynamicShapeToString(inputs[i]));
+                        concat_dim += inputs[i][iaxis].dim;
+                     }
+                     // other dimensions must be the same
+                     else if (i > 0 && inputs[i][iaxis].GetVal() != inputs[i - 1][iaxis].GetVal())
+                        throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have wrong shapes " +
+                                                 ConvertDynamicShapeToString(inputs[i]) + " and " +
+                                                 ConvertDynamicShapeToString(inputs[i - 1]));
+                  }
+               }
+
+               // output shape
+               ret[0] = inputs[0];
+               ret[0][fAxis].dim = concat_dim;
+            }
+            // case of stacking (not supported yet)
+            // here we need to check that input shapes are the same
+            // for example for fAxis == 0
+            // output shapes: [inputs.size(), inputs[0][0], inputs[0][1],....]
+            if(fnewAxis == 1){
+               throw std::runtime_error("TMVA SOFIE Concat Op - stacking (i.e. COncatFromSequence with new_axis=1) is not supported ");
+            }
             return ret;
          }
 
@@ -99,7 +145,7 @@
                if (model.CheckIfTensorAlreadyExist(it) == false) {
                   throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");
                }
-               fInputShapes.push_back(model.GetTensorShape(it));
+               fInputShapes.push_back(model.GetDynamicTensorShape(it));
             }
             fOutputShape = ShapeInference(fInputShapes)[0];
             model.AddIntermediateTensor(fOutput, model.GetTensorType(fInputs[0]), fOutputShape);
@@ -112,25 +158,28 @@
             }
             std::stringstream out;
             out<<"\n//--------- Concat\n";
-            // special case when memory is contigous
+            // special case when memory is contiguous
             bool hasShapeOnes = true;
             for(int i = 0; i<fAxis; ++i){
-               if(fInputShapes[0][i]!=1){
+               if(fInputShapes[0][i].dim !=1){
                   hasShapeOnes = false;
                   break;
                }
             }
             if (fAxis == 0 || hasShapeOnes) {
-               size_t offset = 0;
-               for(size_t i=0; i<fInputs.size(); ++i){
-                  out<<SP<<"std::copy(tensor_"<<fInputs[i]<<", tensor_"<<fInputs[i]<<"+"<<ConvertShapeToLength(fInputShapes[i])<<", tensor_"<<fOutput<<"+"<<offset<<");\n";
-                  offset+=ConvertShapeToLength(fInputShapes[i]);
+               std::string offset;
+               for(size_t i=0; i<fInputs.size(); ++i) {
+                  std::string length = ConvertDynamicShapeToLength(fInputShapes[i]);
+                  out << SP << "std::copy(tensor_" <<fInputs[i] << ", tensor_" <<fInputs[i] << "+" << length <<", tensor_"<<fOutput;
+                  if (i > 0)  out << offset;
+                  offset += " + " + length;
+                  out << ");\n";
                }
             }
             else {
 
-               std::vector<size_t> outStride = UTILITY::ComputeStrideFromShape(fOutputShape);
-               std::vector<std::vector<size_t>> inStrides(fInputs.size());
+               std::vector<Dim> outStride = UTILITY::ComputeStrideFromShape(fOutputShape);
+               std::vector<std::vector<Dim>> inStrides(fInputs.size());
                int idx = 0;
                for ( auto &s : inStrides) {
                   s = UTILITY::ComputeStrideFromShape(fInputShapes[idx]);
@@ -138,22 +187,26 @@
                }
                for (int i = 0; i < fAxis; ++i) {
                   // loop on dimensions
-                  out << SP << "for (size_t i" << i << " = 0; i" << i << " < " << fOutputShape[i] << "; ++i" << i <<") {\n";
+                  out << SP << "for (size_t i" << i << " = 0; i" << i << " < " << fOutputShape[i].GetVal() << "; ++i" << i <<") {\n";
                }
 
-               out << SP << SP << SP << "int idxOut =";
-               for (int k = 0; k < fAxis; k++)
-                  out << " + " << outStride[k] << "*i" << k;
+               out << SP << SP << SP << "int idxOut = ";
+               for (int k = 0; k < fAxis; k++) {
+                  if (k > 0) out << " + ";
+                  out << outStride[k].GetVal() << "*i" << k;
+               }
                out << ";\n";
 
                for (size_t j = 0; j < fInputs.size(); j++) {
                   if (j>0)
-                  out << SP << SP << SP << "idxOut += " << fInputShapes[j-1][fAxis] << ";\n";
-                  out << SP << SP << SP << "int idxIn" << j <<" =";
-                  for (int k = 0; k < fAxis; k++)
-                     out << " + " << inStrides[j][k] << "*i" << k;
+                  out << SP << SP << SP << "idxOut += " << fInputShapes[j-1][fAxis].GetVal() << ";\n";
+                  out << SP << SP << SP << "int idxIn" << j <<" = ";
+                  for (int k = 0; k < fAxis; k++) {
+                     if (k > 0) out << " + ";
+                     out << inStrides[j][k].GetVal() << "*i" << k;
+                  }
                   out << ";\n";
-                  out << SP << SP << SP << "for (size_t iC = 0; iC < " << fInputShapes[j][fAxis] << "; ++iC) {\n";
+                  out << SP << SP << SP << "for (size_t iC = 0; iC < " << fInputShapes[j][fAxis].GetVal() << "; ++iC) {\n";
                   out << SP << SP << SP << SP << "tensor_" << fOutput << "[idxOut+iC] = tensor_" << fInputs[j] << "[idxIn" << j << "+iC];\n";
                   out << SP << SP << SP << "}\n";
                // concatenate the axis values
