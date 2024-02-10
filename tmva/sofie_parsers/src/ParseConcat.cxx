@@ -34,7 +34,7 @@ ParserFuncSignature ParseConcat = [](RModelParser_ONNX &parser, const onnx::Node
       std::string attribute_name = nodeproto.attribute(i).name();
       if (attribute_name == "axis")
          attr_axis = nodeproto.attribute(i).i();
-      else if (attribute_name == "new_axis")
+      else if (attribute_name == "new_axis") // this is for ConcatFromSequence (that is equivalent to np.stack)
          attr_new_axis = nodeproto.attribute(i).i();
    }
    switch (input_type) {
