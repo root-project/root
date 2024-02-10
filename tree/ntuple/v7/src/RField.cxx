@@ -343,6 +343,7 @@ ROOT::Experimental::RFieldBase::RBulk::RBulk(RBulk &&other)
      fValueSize(other.fValueSize),
      fCapacity(other.fCapacity),
      fSize(other.fSize),
+     fIsAdopted(other.fIsAdopted),
      fNValidValues(other.fNValidValues),
      fFirstIndex(other.fFirstIndex)
 {
@@ -359,6 +360,7 @@ ROOT::Experimental::RFieldBase::RBulk &ROOT::Experimental::RFieldBase::RBulk::op
    std::swap(fValueSize, other.fValueSize);
    std::swap(fCapacity, other.fCapacity);
    std::swap(fSize, other.fSize);
+   std::swap(fIsAdopted, other.fIsAdopted);
    std::swap(fMaskAvail, other.fMaskAvail);
    std::swap(fNValidValues, other.fNValidValues);
    std::swap(fFirstIndex, other.fFirstIndex);
@@ -373,6 +375,9 @@ ROOT::Experimental::RFieldBase::RBulk::~RBulk()
 
 void ROOT::Experimental::RFieldBase::RBulk::ReleaseValues()
 {
+   if (fIsAdopted)
+      return;
+
    if (fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible) {
       free(fValues);
       return;
@@ -387,6 +392,9 @@ void ROOT::Experimental::RFieldBase::RBulk::ReleaseValues()
 void ROOT::Experimental::RFieldBase::RBulk::Reset(RClusterIndex firstIndex, std::size_t size)
 {
    if (fCapacity < size) {
+      if (fIsAdopted) {
+         throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
+      }
       ReleaseValues();
       fValues = malloc(size * fValueSize);
 
@@ -412,6 +420,20 @@ void ROOT::Experimental::RFieldBase::RBulk::CountValidValues()
    fNValidValues = 0;
    for (std::size_t i = 0; i < fSize; ++i)
       fNValidValues += static_cast<std::size_t>(fMaskAvail[i]);
+}
+
+void ROOT::Experimental::RFieldBase::RBulk::AdoptBuffer(void *buf, std::size_t capacity)
+{
+   ReleaseValues();
+   fValues = buf;
+   fCapacity = capacity;
+   fSize = capacity;
+
+   fMaskAvail = std::make_unique<bool[]>(capacity);
+
+   fFirstIndex = RClusterIndex();
+
+   fIsAdopted = true;
 }
 
 //------------------------------------------------------------------------------
@@ -2246,7 +2268,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    }
    const auto itemValueSize = *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data());
    unsigned char *itemValueArray = bulkSpec.fAuxData->data() + sizeof(std::size_t);
-   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(bulkSpec.fValues);
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(bulkSpec.fValues);
 
    // Get size of the first RVec of the bulk
    RClusterIndex firstItemIndex;
@@ -2255,6 +2277,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
    *sizePtr = collectionSize;
+   *capacityPtr = -1;
 
    // Set the size of the remaining RVecs of the bulk, going page by page through the RNTuple offset column.
    // We optimistically assume that bulkSpec.fAuxData is already large enough to hold all the item values in the
@@ -2269,10 +2292,11 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
       const std::size_t nBatch = std::min(nRemainingValues, nElementsUntilPageEnd);
       for (std::size_t i = 0; i < nBatch; ++i) {
          const auto size = offsets[i] - lastOffset;
-         std::tie(beginPtr, sizePtr, _) = GetRVecDataMembers(
-            reinterpret_cast<unsigned char *>(bulkSpec.fValues) + (nValues + i) * fValueSize);
+         std::tie(beginPtr, sizePtr, capacityPtr) =
+            GetRVecDataMembers(reinterpret_cast<unsigned char *>(bulkSpec.fValues) + (nValues + i) * fValueSize);
          *beginPtr = itemValueArray + nItems * itemValueSize;
          *sizePtr = size;
+         *capacityPtr = -1;
 
          nItems += size;
          lastOffset = offsets[i];
