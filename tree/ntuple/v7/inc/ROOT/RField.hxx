@@ -232,6 +232,7 @@ public:
       std::size_t fValueSize = 0;         ///< Cached copy of fField->GetValueSize()
       std::size_t fCapacity = 0;          ///< The size of the array memory block in number of values
       std::size_t fSize = 0;              ///< The number of available values in the array (provided their mask is set)
+      bool fIsAdopted = false;            ///< True if the user provides the memory buffer for fValues
       std::unique_ptr<bool[]> fMaskAvail; ///< Masks invalid values in the array
       std::size_t fNValidValues = 0;      ///< The sum of non-zero elements in the fMask
       RClusterIndex fFirstIndex;          ///< Index of the first value of the array
@@ -270,6 +271,10 @@ public:
       RBulk &operator=(const RBulk &) = delete;
       RBulk(RBulk &&other);
       RBulk &operator=(RBulk &&other);
+
+      // Sets fValues and fSize/fCapacity to the given values. The capacity is specified in number of values.
+      // Once a buffer is adopted, an attempt to read more values then available throws an exception.
+      void AdoptBuffer(void *buf, std::size_t capacity);
 
       /// Reads 'size' values from the associated field, starting from 'firstIndex'. Note that the index is given
       /// relative to a certain cluster. The return value points to the array of read objects.
