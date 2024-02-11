@@ -8,6 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+// Test
+
 #ifndef ROOT_Rtypes
 #define ROOT_Rtypes
 
