@@ -578,9 +578,14 @@ FactoryTestParams param13{"RooFormulaVar",
                          1e-4,
                          /*randomizeParameters=*/false};
 
-INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
-                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param8p1,
-                                         param9, param10, param11, param12, param13),
+auto testValues = testing::Values(param1, param2,
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+                                         param3,
+#endif
+                              param4, param5, param6, param7, param8, param8p1,
+                              param9, param10, param11, param12, param13);
+
+INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });

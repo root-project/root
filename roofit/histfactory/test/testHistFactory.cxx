@@ -774,6 +774,7 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(ROOFIT_EVAL_BACKENDS)),
                          getNameFromInfo);
 
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS) // See https://github.com/vgvassilev/clad/issues/752
 #ifdef TEST_CODEGEN_AD
 // TODO: merge with the previous HFFixtureFix test suite once the codegen AD
 // supports all of HistFactory
@@ -783,4 +784,5 @@ INSTANTIATE_TEST_SUITE_P(HistFactoryCodeGen, HFFixtureFit,
                                           testing::Values(false), // no non-uniform bins
                                           testing::Values(RooFit::EvalBackend::Codegen())),
                          getNameFromInfo);
-#endif
+#endif // TEST_CODEGEN_AD
+#endif // R__WIN32
