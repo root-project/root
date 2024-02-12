@@ -46,10 +46,9 @@ if(NOT MSVC OR win_broken_tests)
   # unknown file: error: SEH exception with code 0xc0000005 thrown in the test body.
   # According to the internet, this has to do with gtest, so it's not a RooFit problem
   ROOT_ADD_GTEST(testRooRealIntegral testRooRealIntegral.cxx LIBRARIES RooFitCore)
-  if(clad)
-    # Test disabled on windows due to an issue with cling symbols.
-    ROOT_ADD_GTEST(testRooFuncWrapper testRooFuncWrapper.cxx LIBRARIES RooFitCore RooFit HistFactory)
-  endif()
+endif()
+if(clad)
+  ROOT_ADD_GTEST(testRooFuncWrapper testRooFuncWrapper.cxx LIBRARIES RooFitCore RooFit HistFactory)
 endif()
 ROOT_ADD_GTEST(testTestStatistics testTestStatistics.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testGlobalObservables testGlobalObservables.cxx LIBRARIES RooFitCore)
