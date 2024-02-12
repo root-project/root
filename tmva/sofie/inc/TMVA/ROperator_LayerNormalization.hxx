@@ -97,7 +97,8 @@ public:
          fNMean = "Mean" + fNX;
          // cannot use initializer list with one element since it is ambiguous
          if (isDynamic)
-            model.AddIntermediateTensor(fNMean, type, std::vector<Dim>(1,Dim{true,0,"layernorm_length"}));
+            // add size_t(-1) to indicate that shape is an expression
+            model.AddIntermediateTensor(fNMean, type, std::vector<Dim>(1,Dim{fAxesLength,std::size_t(-1)}));
          else
             model.AddIntermediateTensor(fNMean, type, std::vector<size_t>(1,std::stoi(fAxesLength)));
       }
@@ -105,7 +106,7 @@ public:
       if (fNInvStdDev.empty()) {
          fNInvStdDev = "InvStdDev" + fNX;
          if (isDynamic)
-            model.AddIntermediateTensor(fNMean, type, std::vector<Dim>(1,Dim{true,0,"layernorm_length"}));
+            model.AddIntermediateTensor(fNInvStdDev, type, std::vector<Dim>(1,Dim{fAxesLength,std::size_t(-1)}));
          else
             model.AddIntermediateTensor(fNInvStdDev, type, std::vector<size_t>(1,std::stoi(fAxesLength)));
       }
@@ -125,6 +126,7 @@ public:
             model.AddIntermediateTensor(fNBroadcastedB, ConvertStringToType(fType), fShapeX);
          }
       }
+      model.AddNeededStdLib("cmath");
    }
 
    std::string GenerateInitCode() override

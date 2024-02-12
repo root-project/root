@@ -63,7 +63,7 @@ public:
             std::runtime_error("TMVA SOFIE Range Op Input Tensor " + fNDelta + "is not found in model");
       }
       ETensorType type = ConvertStringToType(fType);
-      fShape = {Dim{true, 0, "range_size"}};
+      fShape = {Dim{"range_size"}};
       model.AddDynamicTensor(fNOutput, type, fShape);
    }
 

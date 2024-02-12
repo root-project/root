@@ -14,12 +14,12 @@ namespace SOFIE {
 class RFunction_Update;
 
 struct GraphIndependent_Init {
-    // updation blocks
+    // update blocks
     std::unique_ptr<RFunction_Update> edges_update_block;
     std::unique_ptr<RFunction_Update> nodes_update_block;
     std::unique_ptr<RFunction_Update> globals_update_block;
 
-    int num_nodes;
+    std::size_t num_nodes;
     std::vector<std::pair<int,int>> edges;
 
     int num_node_features;
@@ -65,8 +65,8 @@ private:
     std::unique_ptr<RFunction_Update> nodes_update_block;
     std::unique_ptr<RFunction_Update> globals_update_block;
 
-    int num_nodes;
-    int num_edges;
+    std::size_t num_nodes;
+    std::size_t num_edges;
 
     std::size_t num_node_features;
     std::size_t num_edge_features;
