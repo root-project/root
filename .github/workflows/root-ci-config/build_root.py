@@ -43,6 +43,13 @@ try:
 except Exception as exc:
     print("Failed to open the S3 connection:", exc, file=sys.stderr)
     CONNECTION = None
+    if 'OS_APPLICATION_CREDENTIAL_SECRET' in os.environ:
+        if len(os.environ['OS_APPLICATION_CREDENTIAL_SECRET']) == 0:
+            print('Credential is empty!')
+        else:
+            print('Credential is provided but invalid!')
+    else:
+        print('Credential cannot be found in the environment!')
 
 WINDOWS = (os.name == 'nt')
 WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
