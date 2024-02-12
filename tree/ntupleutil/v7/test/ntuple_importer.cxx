@@ -378,6 +378,9 @@ TEST(RNTupleImporter, LeafCountArray)
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // Ensure that it's possible to get a ptr to the projected RVec fields.
+   reader->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<float>>("jet_pt");
+
    EXPECT_EQ(3U, reader->GetNEntries());
    auto viewBegin = reader->GetView<std::int32_t>("begin");
    auto viewMiddle = reader->GetView<std::int32_t>("middle");
