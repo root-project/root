@@ -51,6 +51,7 @@ public:
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
    virtual void VisitTObjectField(const RField<TObject> &field) { VisitField(field); }
+   virtual void VisitUnsplitField(const RUnsplitField &field) { VisitField(field); }
    virtual void VisitProxiedCollectionField(const RProxiedCollectionField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
@@ -221,6 +222,7 @@ public:
    void VisitArrayAsRVecField(const RArrayAsRVecField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitTObjectField(const RField<TObject> &field) final;
+   void VisitUnsplitField(const RUnsplitField &field) final;
    void VisitRecordField(const RRecordField &field) final;
    void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
    void VisitVectorField(const RVectorField &field) final;

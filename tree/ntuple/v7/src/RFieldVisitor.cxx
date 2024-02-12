@@ -331,6 +331,13 @@ void ROOT::Experimental::RPrintValueVisitor::VisitArrayAsRVecField(const RArrayA
    PrintCollection(field);
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitUnsplitField(const RUnsplitField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << "<unsplit>";
+}
+
 void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &field)
 {
    PrintRecord(field);
