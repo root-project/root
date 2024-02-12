@@ -75,8 +75,8 @@ def main():
         **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
     }
 
-    if args.binaries:
-        options_dict = remove_gpl_options(options_dict)
+    #if args.binaries:
+    #   options_dict = remove_gpl_options(options_dict)
 
     options = build_utils.cmake_options_from_dict(options_dict)
 
