@@ -756,6 +756,9 @@ They are stored as two fields:
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
+For RVecs, ROOT will always store the fully qualified type name `ROOT::VecOps::RVec<T>`.
+Implementations should also be able to parse the shorter alias `ROOT::Vec<T>`.
+
 #### std::array<T, N> and array type of the form T[N]
 
 Fixed-sized arrays are stored as two fields:
