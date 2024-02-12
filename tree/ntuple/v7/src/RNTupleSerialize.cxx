@@ -588,6 +588,7 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStr
          return SerializeUInt16(0x03, buffer);
       case ENTupleStructure::kReference:
          return SerializeUInt16(0x04, buffer);
+      case ENTupleStructure::kUnsplit: return SerializeUInt16(0x05, buffer);
       default:
          throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
    }
@@ -616,6 +617,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       case 0x04:
          structure = ENTupleStructure::kReference;
          break;
+      case 0x05: structure = ENTupleStructure::kUnsplit; break;
       default:
          return R__FAIL("unexpected on-disk field structure value");
    }
