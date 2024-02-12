@@ -18,7 +18,7 @@ private:
     std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
     std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
     std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
-    std::unordered_map<std::string, int> fShapeParams; // parameters defining the dynamic shape (e.g. batch size)
+    std::unordered_map<std::string, std::string> fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
     std::vector<std::string> fOutputTensorNames;
     std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
 
