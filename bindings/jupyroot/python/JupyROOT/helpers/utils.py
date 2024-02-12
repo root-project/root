@@ -170,9 +170,6 @@ def _getLibExtension(thePlatform):
     }
     return pExtMap.get(thePlatform, '.so')
 
-def welcomeMsg():
-    print("Welcome to JupyROOT %s" %ROOT.gROOT.GetVersion())
-
 @contextmanager
 def _setIgnoreLevel(level):
     originalLevel = ROOT.gErrorIgnoreLevel
@@ -693,5 +690,3 @@ def iPythonize():
     declareProcessLineWrapper()
     #enableCppHighlighting()
     enhanceROOTModule()
-    welcomeMsg()
-
