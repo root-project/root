@@ -15,7 +15,7 @@ class RFunction_Update;
 class RFunction_Aggregate;
 
 struct GNN_Init {
-    // updation blocks
+    // update blocks
     std::unique_ptr<RFunction_Update> edges_update_block;
     std::unique_ptr<RFunction_Update> nodes_update_block;
     std::unique_ptr<RFunction_Update> globals_update_block;
@@ -25,7 +25,7 @@ struct GNN_Init {
     std::unique_ptr<RFunction_Aggregate> edge_global_agg_block;
     std::unique_ptr<RFunction_Aggregate> node_global_agg_block;
 
-    int num_nodes;
+    std::size_t num_nodes;
     std::vector<std::pair<int,int>> edges;
 
     std::size_t num_node_features;
@@ -92,7 +92,7 @@ class RModel_GNN: public RModel_GNNBase {
 
 private:
 
-    // updation function for edges, nodes & global attributes
+    // update function for edges, nodes & global attributes
     std::unique_ptr<RFunction_Update> edges_update_block;
     std::unique_ptr<RFunction_Update> nodes_update_block;
     std::unique_ptr<RFunction_Update> globals_update_block;
@@ -102,8 +102,8 @@ private:
     std::unique_ptr<RFunction_Aggregate> edge_global_agg_block;
     std::unique_ptr<RFunction_Aggregate> node_global_agg_block;
 
-    int num_nodes;   // maximum number of nodes
-    int num_edges;   // maximum number of edges
+    std::size_t num_nodes;   // maximum number of nodes
+    std::size_t num_edges;   // maximum number of edges
 
     std::size_t num_node_features;
     std::size_t num_edge_features;

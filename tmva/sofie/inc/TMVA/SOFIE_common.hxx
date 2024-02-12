@@ -35,6 +35,15 @@ struct Dim{
    size_t dim = 0;
    std::string param;
 
+    // default constructor (for I/O)
+   Dim() {}
+
+   // constructor for a parametric dimension with the option to pass a default dim value
+   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p) {}
+
+   // constructor for a non-parametric dimension
+   Dim(size_t d) : dim(d) {}
+
    std::string GetVal() const {
       return (isParam) ? param : std::to_string(dim);
    }

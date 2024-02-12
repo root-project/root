@@ -209,11 +209,18 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
    DynamicTensorInfo new_tensor {type, shape};
    fDynamicTensorInfos[tensor_name] = new_tensor;
    // store shape parameter if not existing
+   int i = 0;
    for (auto &d : shape) {
       if (d.isParam) {
-         if (fShapeParams.count(d.param) == 0)
-            fShapeParams[d.param] = 0;
+         if (fShapeParams.count(d.param) == 0) {
+            // case parameter is an expression of some other existing parameter, no need to
+            // register it
+            if (d.dim != size_t(-1)) {
+              fShapeParams[d.param] = std::to_string(d.dim);
+            }
+         }
       }
+      i++;
    }
 }
 
@@ -265,7 +272,7 @@ void RModel::Initialize(int batchSize, bool verbose) {
          // shape.reserve(input.second.shape.size());
          for (auto &d : input.second.shape) {
             if (d.isParam && (d.param == "bs" || d.param == "batch_size")) {
-               d = Dim{false, static_cast<size_t>(batchSize), ""};
+               d = Dim{static_cast<size_t>(batchSize)};
             }
          }
       }
@@ -276,14 +283,14 @@ void RModel::Initialize(int batchSize, bool verbose) {
          // remove from the tensor info
          fInputTensorInfos.erase(input.first);
       }
+      // store the parameters of the input tensors
       else {
          // store the found parametric shape parameters
          for (auto &d : input.second.shape) {
             if (d.isParam)
-               fShapeParams[d.param] = -1;
+               fShapeParams[d.param] = std::to_string(d.dim);
          }
       }
-      //   AddDynamicTensor(input.first, input.second.type, input.second.shape);
    }
 
    if (verbose) {
@@ -421,13 +428,19 @@ void RModel::GenerateOutput() {
 
    fGC += "infer(";
 
+   std::unordered_map<std::string, int> inputParams;
+   int i_input = 0;
    for (auto &name : fInputTensorNames) {
       // if is a dynamic tensor pass initial parameters
       if (IsInputTensor(name)) {
          auto shape = GetDynamicTensorShape(name);
          for (auto &d : shape) {
-            if (d.isParam)
+            std::string pName = d.param;
+            // need to check if the input parameters is already existing in another input tensor
+            if (d.isParam && inputParams.count(pName) == 0) {
                fGC += "size_t " + d.param + ",";
+               inputParams[pName] = i_input;
+            }
          }
       }
       switch (GetTensorType(name)) {
@@ -456,6 +469,7 @@ void RModel::GenerateOutput() {
                                   " is of a data type which is not yet supported.");
       }
       }
+      i_input++;
    }
 
    fGC.pop_back(); // remove last ","
@@ -579,7 +593,7 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
         if (!fShapeParams.empty()) {
             for (auto & p : fShapeParams) {
                fGC += ",\n";
-               fGC += "        size_t " + p.first + " = " + std::to_string(p.second);
+               fGC += "        size_t " + p.first + " = " + p.second;
             }
         }
         fGC += ") {\n";
