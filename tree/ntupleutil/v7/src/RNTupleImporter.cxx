@@ -339,7 +339,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       for (auto idx : c.fImportFieldIndexes) {
          const auto name = fImportFields[idx].fField->GetFieldName();
          auto projectedField =
-            RFieldBase::Create(name, "ROOT::RVec<" + fImportFields[idx].fField->GetTypeName() + ">").Unwrap();
+            RFieldBase::Create(name, "ROOT::VecOps::RVec<" + fImportFields[idx].fField->GetTypeName() + ">").Unwrap();
+         R__ASSERT(dynamic_cast<RRVecField *>(projectedField.get()));
          fModel->AddProjectedField(std::move(projectedField), [&name, &c](const std::string &fieldName) {
             if (fieldName == name)
                return c.fFieldName;
