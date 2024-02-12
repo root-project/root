@@ -82,10 +82,12 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"unsigned int", "std::uint32_t"},
    {"uint32_t",     "std::uint32_t"},
 
+   // FIXME: Long_t and ULong_t are 32-bit on 64-bit Windows.
    {"Long_t",        "std::int64_t"},
    {"Long64_t",      "std::int64_t"},
    {"int64_t",       "std::int64_t"},
    {"long",          "std::int64_t"},
+   {"ULong_t",       "std::uint64_t"},
    {"ULong64_t",     "std::uint64_t"},
    {"unsigned long", "std::uint64_t"},
    {"uint64_t",      "std::uint64_t"}
