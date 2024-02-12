@@ -774,7 +774,7 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(ROOFIT_EVAL_BACKENDS)),
                          getNameFromInfo);
 
-#ifndef R__WIN32 // See https://github.com/vgvassilev/clad/issues/752
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS) // See https://github.com/vgvassilev/clad/issues/752
 #ifdef TEST_CODEGEN_AD
 // TODO: merge with the previous HFFixtureFix test suite once the codegen AD
 // supports all of HistFactory
