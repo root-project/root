@@ -33,13 +33,10 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
-class RCluster;
-class RClusterPool;
-} // namespace Detail
-
 namespace Internal {
 using ntuple_index_t = std::uint32_t;
+class RCluster;
+class RClusterPool;
 class RDaosPool;
 class RDaosContainer;
 class RPageAllocatorHeap;
