@@ -47,8 +47,6 @@ class RNTuple;
 class RNTupleModel;
 
 namespace Internal {
-class RPageSink;
-class RPageSource;
 struct RNTupleTester; // friend of RNTuple
 } // namespace Internal
 
