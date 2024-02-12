@@ -59,6 +59,7 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"Double_t", "double"},
    {"string",   "std::string"},
 
+   {"byte",          "std::byte"},
    {"Char_t",        "char"},
    {"int8_t",        "std::int8_t"},
    {"signed char",   "char"},
@@ -195,8 +196,6 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "atomic<")
       normalizedType = "std::" + normalizedType;
-   if (normalizedType == "byte")
-      normalizedType = "std::byte";
 
    if (normalizedType.substr(0, 11) == "ROOT::RVec<")
       normalizedType = "ROOT::VecOps::RVec<" + normalizedType.substr(11);
