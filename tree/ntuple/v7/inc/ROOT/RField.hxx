@@ -63,11 +63,12 @@ class REntry;
 
 namespace Internal {
 struct RFieldCallbackInjector;
-class RPageStorage;
+class RPageSink;
+class RPageSource;
 // TODO(jblomer): find a better way to not have these three methods in the RFieldBase public API
 void CallCommitClusterOnField(RFieldBase &);
-void CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, NTupleSize_t firstEntry = 0);
-void CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
+void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, NTupleSize_t firstEntry = 0);
+void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
 } // namespace Internal
 
 namespace Detail {
