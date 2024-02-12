@@ -8,5 +8,5 @@ unuran=On
 mathmore=On
 tmva-cpu=On
 tmva-pymva=On
-tmva-sofie=On
+tmva-sofie=Off
 

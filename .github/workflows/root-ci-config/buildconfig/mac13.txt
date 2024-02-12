@@ -34,6 +34,6 @@ test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 tmva-cpu=ON
 tmva-pymva=ON
-tmva-sofie=ON
+tmva-sofie=OFF
 unfold=ON
 x11=OFF
