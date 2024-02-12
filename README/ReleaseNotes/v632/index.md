@@ -266,6 +266,18 @@ struct.char_buffer            :  <cppyy.LowLevelView object at 0x74c7a2682fb0>
 struct.char_buffer.as_string():  foo
 ```
 
+### Deprecate the attribute pythonization of `TDirectory` in favor of item-getting syntax
+
+The new recommended way to get objects from a `TFile` or any `TDirectory` in general is now via `__getitem__`:
+
+```python
+tree = my_file["my_tree"] # instead of my_file.my_tree
+```
+
+This is more consistent with other Python collections (like dictionaries), makes sure that member functions can't be confused with branch names, and easily allows you to use string variables as keys.
+
+The old pythonization with the `__getattr__` syntax still works, but emits a deprecation warning and will be removed from ROOT 6.34.
+
 ## Language Bindings
 
 
