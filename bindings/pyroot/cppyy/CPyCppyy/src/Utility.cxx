@@ -10,7 +10,6 @@
 #include "CustomPyTypes.h"
 #include "TemplateProxy.h"
 #include "TypeManip.h"
-#include "RConfig.h"
 
 // Standard
 #include <limits.h>
@@ -696,11 +695,11 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
         memset(&bufinfo, 0, sizeof(Py_buffer));
         if (PyObject_GetBuffer(pyobject, &bufinfo, PyBUF_FORMAT) == 0) {
             if (tc == '*' || strchr(bufinfo.format, tc)
-#if defined(_WIN32) || ( defined(R__LINUX) && !defined(R__B64) )
-            // ctypes is inconsistent in format on Windows; either way these types are the same size
-            // observed also in 32-bit Linux for a NumPy array
-                || (tc == 'I' && strchr(bufinfo.format, 'L')) || (tc == 'i' && strchr(bufinfo.format, 'l'))
-#endif
+            // if `long int` and `int` are the same size (on 32-bit Windows and
+            // some Linux), `ctypes` isn't too picky about the type format,
+            // which doesn't matter because of the same size anyway
+                || (sizeof(long int) == sizeof(int) && ((tc == 'I' && strchr(bufinfo.format, 'L')) ||
+                                                        (tc == 'i' && strchr(bufinfo.format, 'l'))))
             // allow 'signed char' ('b') from array to pass through '?' (bool as from struct)
                 || (tc == '?' && strchr(bufinfo.format, 'b'))
                     ) {
