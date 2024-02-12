@@ -62,6 +62,10 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc) const
 {
+   if (GetStructure() == ENTupleStructure::kUnsplit) {
+      return std::make_unique<RUnsplitField>(GetFieldName(), GetTypeName());
+   }
+
    if (GetTypeName().empty()) {
       // For untyped records or collections, we have no class available to collect all the sub fields.
       // Therefore, we create an untyped record field as an artificial binder for the record itself, and in the case of

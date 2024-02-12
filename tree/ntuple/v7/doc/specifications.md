@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.0.0
+# RNTuple Reference Specifications 0.2.1.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -338,13 +338,14 @@ The flags field can have one of the following bits set
 
 The structural role of the field can have on of the following values
 
-| Value    | Structural role                                          |
-|----------|----------------------------------------------------------|
-| 0x00     | Leaf field in the schema tree                            |
-| 0x01     | The field is the mother of a collection (e.g., a vector) |
-| 0x02     | The field is the mother of a record (e.g., a struct)     |
-| 0x03     | The field is the mother of a variant (e.g., a union)     |
-| 0x04     | The field is a reference (pointer), TODO                 |
+| Value    | Structural role                                                          |
+|----------|--------------------------------------------------------------------------|
+| 0x00     | Leaf field in the schema tree                                            |
+| 0x01     | The field is the mother of a collection (e.g., a vector)                 |
+| 0x02     | The field is the mother of a record (e.g., a struct)                     |
+| 0x03     | The field is the mother of a variant (e.g., a union)                     |
+| 0x04     | The field is a reference (pointer), TODO                                 |
+| 0x05     | The field represents an unsplit object serialized with the ROOT streamer |
 
 
 #### Column Description
@@ -874,6 +875,13 @@ If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in th
 
 The `SizeT` template parameter defines the in-memory integer type of the collection size.
 The valid types are `std::uint32_t` and `std::uint64_t`.
+
+### Unsplit types
+
+A field with the structural role 0x05 ("unsplit") represents an object serialized by the ROOT streamer in unsplit mode.
+It can have any type supported by TClass (even types that are not available in the native RNTuple type system).
+The first (principle) column is of type [Split]Index[32|64].
+The second column is of type Byte.
 
 ## Limits
 
