@@ -24,6 +24,7 @@
 #include <ROOT/RNTupleModel.hxx>
 
 #include <TBaseClass.h>
+#include <TBufferFile.h>
 #include <TClass.h>
 #include <TClassEdit.h>
 #include <TCollection.h>
@@ -1861,6 +1862,112 @@ size_t ROOT::Experimental::RField<TObject>::GetAlignment() const
 void ROOT::Experimental::RField<TObject>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitTObjectField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className)
+   : RUnsplitField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+{
+}
+
+ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp)
+   : ROOT::Experimental::RFieldBase(fieldName, className, ENTupleStructure::kUnsplit, false /* isSimple */),
+     fClass(classp),
+     fIndex(0)
+{
+   if (fClass == nullptr) {
+      throw RException(R__FAIL("RUnsplitField: no I/O support for type " + std::string(className)));
+   }
+
+   if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
+      fTraits |= kTraitTriviallyConstructible;
+   if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
+      fTraits |= kTraitTriviallyDestructible;
+}
+
+std::unique_ptr<ROOT::Experimental::RFieldBase>
+ROOT::Experimental::RUnsplitField::CloneImpl(std::string_view newName) const
+{
+   return std::unique_ptr<RUnsplitField>(new RUnsplitField(newName, GetTypeName(), fClass));
+}
+
+std::size_t ROOT::Experimental::RUnsplitField::AppendImpl(const void *from)
+{
+   TBufferFile buffer(TBuffer::kWrite, GetValueSize());
+   fClass->Streamer(const_cast<void *>(from), buffer);
+
+   auto nbytes = buffer.Length();
+   fColumns[1]->AppendV(buffer.Buffer(), buffer.Length());
+   fIndex += nbytes;
+   fColumns[0]->Append(&fIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
+}
+
+void ROOT::Experimental::RUnsplitField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+{
+   RClusterIndex collectionStart;
+   ClusterSize_t nbytes;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
+
+   TBufferFile buffer(TBuffer::kRead, nbytes);
+   fColumns[1]->ReadV(collectionStart, nbytes, buffer.Buffer());
+   fClass->Streamer(to, buffer);
+}
+
+const ROOT::Experimental::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RUnsplitField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex64, EColumnType::kByte},
+                                                  {EColumnType::kIndex64, EColumnType::kByte},
+                                                  {EColumnType::kSplitIndex32, EColumnType::kByte},
+                                                  {EColumnType::kIndex32, EColumnType::kByte}},
+                                                 {});
+   return representations;
+}
+
+void ROOT::Experimental::RUnsplitField::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+   fColumns.emplace_back(Internal::RColumn::Create<std::byte>(RColumnModel(GetColumnRepresentative()[1]), 1));
+}
+
+void ROOT::Experimental::RUnsplitField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
+   fColumns.emplace_back(Internal::RColumn::Create<std::byte>(RColumnModel(onDiskTypes[1]), 1));
+}
+
+void ROOT::Experimental::RUnsplitField::ConstructValue(void *where) const
+{
+   fClass->New(where);
+}
+
+void ROOT::Experimental::RUnsplitField::RUnsplitDeleter::operator()(void *objPtr, bool dtorOnly)
+{
+   fClass->Destructor(objPtr, true /* dtorOnly */);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::size_t ROOT::Experimental::RUnsplitField::GetAlignment() const
+{
+   return std::min(alignof(std::max_align_t), GetValueSize()); // TODO(jblomer): fix me
+}
+
+std::size_t ROOT::Experimental::RUnsplitField::GetValueSize() const
+{
+   return fClass->GetClassSize();
+}
+
+std::uint32_t ROOT::Experimental::RUnsplitField::GetTypeVersion() const
+{
+   return fClass->GetClassVersion();
+}
+
+void ROOT::Experimental::RUnsplitField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitUnsplitField(*this);
 }
 
 //------------------------------------------------------------------------------
