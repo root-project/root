@@ -817,6 +817,51 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
 
+/// The field for a class in unsplit mode, which is using ROOT standard streaming
+class RUnsplitField final : public RFieldBase {
+private:
+   class RUnsplitDeleter : public RDeleter {
+   private:
+      TClass *fClass;
+
+   public:
+      explicit RUnsplitDeleter(TClass *cl) : fClass(cl) {}
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   TClass *fClass = nullptr;
+   ClusterSize_t fIndex; ///< number of bytes written in the current cluster
+
+private:
+   RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp);
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RUnsplitDeleter>(fClass); }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+   void CommitClusterImpl() final { fIndex = 0; }
+
+public:
+   RUnsplitField(std::string_view fieldName, std::string_view className);
+   RUnsplitField(RUnsplitField &&other) = default;
+   RUnsplitField &operator=(RUnsplitField &&other) = default;
+   ~RUnsplitField() override = default;
+
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   std::uint32_t GetTypeVersion() const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
 /// The field for an unscoped or scoped enum with dictionary
 class REnumField : public RFieldBase {
 private:
