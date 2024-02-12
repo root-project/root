@@ -162,7 +162,8 @@ std::string GetCanonicalTypeName(const std::string &typeName)
 /// Applies type name normalization rules that lead to the final name used to create a RField, e.g. transforms
 /// `unsigned int` to `std::uint32_t` or `const vector<T>` to `std::vector<T>`.  Specifically, `const` / `volatile`
 /// qualifiers are removed, integral types such as `unsigned int` or `long` are translated to fixed-length integer types
-/// (e.g. `std::uint32_t`), and `std::` is added to fully qualify known types in the `std` namespace.
+/// (e.g. `std::uint32_t`), and `std::` is added to fully qualify known types in the `std` namespace.  The same happens
+/// to `ROOT::RVec` which is normalized to `ROOT::VecOps::RVec`.
 std::string GetNormalizedTypeName(const std::string &typeName)
 {
    std::string normalizedType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
@@ -196,6 +197,9 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType == "byte")
       normalizedType = "std::byte";
+
+   if (normalizedType.substr(0, 11) == "ROOT::RVec<")
+      normalizedType = "ROOT::VecOps::RVec<" + normalizedType.substr(11);
 
    return normalizedType;
 }
