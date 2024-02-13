@@ -758,3 +758,23 @@ TEST(REntry, Basics)
    e->BindRawPtr("pt", &pt);
    EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
 }
+
+TEST(RFieldBase, CreateObject)
+{
+   auto ptrInt = RField<int>("name").CreateObject<int>();
+   EXPECT_EQ(0, *ptrInt);
+
+   void *rawPtr = RField<int>("name").CreateObject<void>().release();
+   EXPECT_EQ(0, *static_cast<int *>(rawPtr));
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kWarning, "[ROOT.NTuple]", "possibly leaking", false /* matchFullMessage */);
+      auto p = RField<int>("name").CreateObject<void>();
+   }
+
+   EXPECT_THROW(RField<int>("name").CreateObject<float>(), RException);
+
+   auto ptrClass = RField<LowPrecisionFloats>("name").CreateObject<LowPrecisionFloats>();
+   EXPECT_DOUBLE_EQ(1.0, ptrClass->b);
+}
