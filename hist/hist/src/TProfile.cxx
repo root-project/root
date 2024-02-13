@@ -302,7 +302,10 @@ Bool_t TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       Error("Add","Attempt to add a non-profile object");
       return kFALSE;
    }
-   return TProfileHelper::Add(this, h1, h2, c1, c2);
+   Bool_t ret = TProfileHelper::Add(this, h1, h2, c1, c2);
+   if (c1 < 0 || c2 < 0)
+      ResetStats();
+   return ret;
 }
 
 
