@@ -360,6 +360,9 @@ private:
    /// determined using the page source descriptor, based on the parent field ID and the sub field name.
    void ConnectPageSource(Internal::RPageSource &pageSource);
 
+   /// Factory method for the field's type. The caller owns the returned pointer
+   void *CreateObjectRawPtr() const;
+
 protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
    struct RBulkSpec {
@@ -587,6 +590,12 @@ public:
    using RSchemaIterator = RSchemaIteratorTemplate<false>;
    using RConstSchemaIterator = RSchemaIteratorTemplate<true>;
 
+   // This is used in CreateObject and is specialized for void
+   template <typename T>
+   struct RCreateObjectDeleter {
+      using deleter = std::default_delete<T>;
+   };
+
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
    /// If `isSimple` is `true`, the trait `kTraitMappable` is automatically set on construction. However, the
    /// field might be demoted to non-simple if a post-read callback is set.
@@ -608,6 +617,18 @@ public:
    static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 
    /// Generates an object of the field type and allocates new initialized memory according to the type.
+   /// Implemented at the end of this header because the implementation is using RField<T>::TypeName()
+   /// The returned object can be released with `delete`, i.e. it is valid to call
+   ///    auto ptr = field->CreateObject();
+   ///    delete ptr.release();
+   ///
+   /// Note that CreateObject<void> is supported. The returned unique_ptr has a custom deleter that reports an error
+   /// if it is called. The intended use of the returned unique_ptr<void> is to call `release()`. In this way, the
+   /// transfer of pointer ownership is explicit.
+   template <typename T>
+   std::unique_ptr<T, typename RCreateObjectDeleter<T>::deleter> CreateObject() const;
+   /// Generates an object of the field type and wraps the created object in a shared pointer and returns it an RValue
+   /// connected to the field.
    RValue CreateValue();
    /// The returned bulk is initially empty; RBulk::ReadBulk will construct the array of values
    RBulk CreateBulk() { return RBulk(this); }
@@ -2844,6 +2865,29 @@ public:
 
    using RFieldBase::CreateValue;
 };
+
+// Has to be implemented after the definition of all RField<T> types
+// The void type is specialized in RField.cxx
+
+template <typename T>
+std::unique_ptr<T, typename RFieldBase::RCreateObjectDeleter<T>::deleter> RFieldBase::CreateObject() const
+{
+   if (GetTypeName() != RField<T>::TypeName()) {
+      throw RException(
+         R__FAIL("type mismatch for field " + GetFieldName() + ": " + GetTypeName() + " vs. " + RField<T>::TypeName()));
+   }
+   return std::unique_ptr<T>(static_cast<T *>(CreateObjectRawPtr()));
+}
+
+template <>
+struct RFieldBase::RCreateObjectDeleter<void> {
+   using deleter = RCreateObjectDeleter<void>;
+   void operator()(void *);
+};
+
+template <>
+std::unique_ptr<void, typename RFieldBase::RCreateObjectDeleter<void>::deleter>
+ROOT::Experimental::RFieldBase::CreateObject<void>() const;
 
 } // namespace Experimental
 } // namespace ROOT

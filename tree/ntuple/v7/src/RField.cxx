@@ -438,6 +438,21 @@ void ROOT::Experimental::RFieldBase::RBulk::AdoptBuffer(void *buf, std::size_t c
 
 //------------------------------------------------------------------------------
 
+void ROOT::Experimental::RFieldBase::RCreateObjectDeleter<void>::operator()(void *)
+{
+   R__LOG_WARNING(NTupleLog()) << "possibly leaking object from RField<T>::CreateObject<void>";
+}
+
+template <>
+std::unique_ptr<void, typename ROOT::Experimental::RFieldBase::RCreateObjectDeleter<void>::deleter>
+ROOT::Experimental::RFieldBase::CreateObject<void>() const
+{
+   static RCreateObjectDeleter<void>::deleter gDeleter;
+   return std::unique_ptr<void, RCreateObjectDeleter<void>::deleter>(CreateObjectRawPtr(), gDeleter);
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::Experimental::RFieldBase::RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure,
                                            bool isSimple, std::size_t nRepetitions)
    : fName(name),
@@ -708,12 +723,18 @@ std::size_t ROOT::Experimental::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSp
    return nRead;
 }
 
-ROOT::Experimental::RFieldBase::RValue ROOT::Experimental::RFieldBase::CreateValue()
+void *ROOT::Experimental::RFieldBase::CreateObjectRawPtr() const
 {
    void *where = operator new(GetValueSize());
    R__ASSERT(where != nullptr);
    CreateValue(where);
-   return RValue(this, std::shared_ptr<void>(where, RSharedPtrDeleter(GetDeleter())));
+   return where;
+}
+
+ROOT::Experimental::RFieldBase::RValue ROOT::Experimental::RFieldBase::CreateValue()
+{
+   void *obj = CreateObjectRawPtr();
+   return RValue(this, std::shared_ptr<void>(obj, RSharedPtrDeleter(GetDeleter())));
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
