@@ -336,7 +336,8 @@ When using the options 2 or 3 above, the labels are automatically
  If TH1::Sumw2 has been called before filling, the sum of squares of
  weights is also stored.
  One can also increment directly a bin number via TH1::AddBinContent
- or replace the existing content via TH1::SetBinContent.
+ or replace the existing content via TH1::SetBinContent. Passing an
+ out-of-range bin to TH1::AddBinContent leads to undefined behavior.
  To access the bin content of a given bin, do:
 ~~~ {.cpp}
        Double_t binContent = h->GetBinContent(bin);
@@ -1253,6 +1254,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1::AddBinContent(Int_t)
 {
@@ -1261,6 +1263,7 @@ void TH1::AddBinContent(Int_t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by a weight w.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1::AddBinContent(Int_t, Double_t)
 {
@@ -9407,6 +9410,7 @@ TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1C::AddBinContent(Int_t bin)
 {
@@ -9415,6 +9419,7 @@ void TH1C::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1C::AddBinContent(Int_t bin, Double_t w)
 {
@@ -9590,6 +9595,7 @@ TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1S::AddBinContent(Int_t bin)
 {
@@ -9598,6 +9604,7 @@ void TH1S::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1S::AddBinContent(Int_t bin, Double_t w)
 {
@@ -9774,6 +9781,7 @@ TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1I::AddBinContent(Int_t bin)
 {
@@ -9782,6 +9790,7 @@ void TH1I::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH1I::AddBinContent(Int_t bin, Double_t w)
 {
