@@ -22,7 +22,7 @@ href="https://www.gnu.org/software/gsl/manual/html_node/Unix-random-number-gener
 that it should not be used because its period is only 2**31, i.e. approximately 2 billion events, that can be generated
 in just few seconds.
 
-To generate random numbers, one should use the derived class, which  are :
+To generate random numbers, one should use one of the derived classes, which are:
 - TRandom3: it is based on the "Mersenne Twister generator",
 it is fast and a very long period of about \f$10^{6000}\f$. However it fails some of the most stringent tests of the
 <a href="http://simul.iro.umontreal.ca/testu01/tu01.html">TestU01 suite</a>.
@@ -85,7 +85,7 @@ for the random numbers obtained using a macbookpro 2.6 GHz Intel Core i7 CPU:
 -   ::TRandom1          80   ns/call
 -   ::TRandomRanlux48  250  ns/call
 
-The following methods are provided to generate random numbers disctributed according to some basic distributions:
+The following methods are provided to generate random numbers distributed according to some basic distributions:
 
 - Exp(Double_t tau)
 - Integer(UInt_t imax)
@@ -625,7 +625,7 @@ void TRandom::SetSeed(ULong_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the random generator seed.
+/// Get the random generator seed. \warning Might not be the initial seed!
 /// Note that this function returns the given seed only when using
 /// as random generator engine TRandom itself, which is an LCG generator
 /// and it has as seed (state) only one 32 bit word.
