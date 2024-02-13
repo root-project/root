@@ -823,13 +823,17 @@ void TGraph::Draw(Option_t *option)
       opt.Replace(pos, 1, "p");
    }
 
-   // If no option is specified, it is defined as "alp" in case there
-   // no current pad or if the current pad as no axis defined.
-   if (!option || !strlen(option)) {
+   // If no option is specified, it is defined as "alp" in case there is
+   // no current pad or if the current pad has no axis defined and if there is
+   // no default option set using TGraph::SetOption. If fOption is set using
+   // TGraph::SetOption, it is used as default option.
+   if ((!option || !strlen(option))) {
+      Option_t *topt = (!fOption.IsNull()) ? fOption.Data() : "alp";
       if (gPad) {
-         if (!gPad->GetListOfPrimitives()->FindObject("TFrame")) opt = "alp";
+         if (!gPad->GetListOfPrimitives()->FindObject("TFrame"))
+            opt = topt;
       } else {
-         opt = "alp";
+         opt = topt;
       }
    }
 
