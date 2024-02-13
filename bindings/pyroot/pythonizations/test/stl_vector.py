@@ -30,7 +30,7 @@ class STL_vector(unittest.TestCase):
         """
         ROOT.std.vector['const char*']()
 
-    def test_vector_boolean(self):
+    def test_stl_vector_boolean(self):
         """
         Test that the boolean conversion of a std::vector works as expected.
         https://github.com/root-project/root/issues/14573
@@ -38,11 +38,25 @@ class STL_vector(unittest.TestCase):
         for entry_type in ['int', 'float', 'double']:
             vector = ROOT.std.vector[entry_type]()
             self.assertTrue(vector.empty())
-            self.assertTrue(bool(vector))
+            self.assertFalse(bool(vector))
 
             vector.push_back(1)
             self.assertFalse(vector.empty())
+            self.assertTrue(bool(vector))
+
+    def test_stl_set_boolean(self):
+        """
+        Test that the boolean conversion of a std::vector works as expected.
+        https://github.com/root-project/root/issues/14573
+        """
+        for entry_type in ['int', 'float', 'double']:
+            vector = ROOT.set.vector[entry_type]()
+            self.assertTrue(vector.empty())
             self.assertFalse(bool(vector))
+
+            vector.insert(1)
+            self.assertFalse(vector.empty())
+            self.assertTrue(bool(vector))
 
     def test_tree_with_containers(self):
         """
@@ -79,8 +93,8 @@ class STL_vector(unittest.TestCase):
             entry_numpy = entries_to_fill[i]
             entry_python_list = list(entry_root)
 
-            assert len(entry_numpy) == len(entry_root)
-            assert bool(entry_python_list) == bool(entry_root)  # numpy arrays cannot be converted to bool
+            self.assertEqual(len(entry_numpy), len(entry_root))
+            self.assertEqual(bool(entry_python_list), bool(entry_root))  # numpy arrays cannot be converted to bool
             np.testing.assert_allclose(entry_numpy, np.array(entry_root), rtol=1e-5)
 
 
