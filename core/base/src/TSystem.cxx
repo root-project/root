@@ -4340,14 +4340,29 @@ TString TSystem::SplitAclicMode(const char *filename, TString &aclicMode,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove the shared libs produced by the CompileMacro() function.
+/// Remove the shared libs produced by the CompileMacro() function, together
+/// with their rootmaps, linkdefs, and pcms (and some more on Windows).
 
 void TSystem::CleanCompiledMacros()
 {
    TIter next(fCompiled);
    TNamed *lib;
+   const char *extensions[] = {".lib", ".exp", ".d", ".def", ".rootmap",
+                               "_ACLiC_linkdef.h", "_ACLiC_dict_rdict.pcm"};
    while ((lib = (TNamed*)next())) {
-      if (lib->TestBit(kMustCleanup)) Unlink(lib->GetTitle());
+      if (lib->TestBit(kMustCleanup)) {
+         TString libname = lib->GetTitle();
+         std::cout << "TSystem::CleanCompiledMacros() : " << libname << std::endl;
+         if (gInterpreter->IsLibraryLoaded(libname))
+            Unload(libname);
+         Unlink(libname);
+         TString target, soExt = "." + fSoExt;
+         libname.ReplaceAll(soExt, "");
+         for (const char *ext : extensions) {
+            target = libname + ext;
+            Unlink(target);
+         }
+      }
    }
 }
 
