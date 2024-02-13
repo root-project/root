@@ -115,6 +115,18 @@ public:
       return RFieldToken(std::distance(fValues.begin(), it), fModelId);
    }
 
+   void EmplaceNewValue(RFieldToken token)
+   {
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from the same model as this entry."));
+      }
+      auto &v = fValues[token.fIndex];
+      v.EmplaceNew();
+   }
+
+   void EmplaceNewValue(std::string_view fieldName) { EmplaceNewValue(GetToken(fieldName)); }
+
    template <typename T>
    void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
    {

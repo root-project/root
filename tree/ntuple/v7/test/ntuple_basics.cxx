@@ -757,4 +757,7 @@ TEST(REntry, Basics)
    float pt;
    e->BindRawPtr("pt", &pt);
    EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
+
+   e->EmplaceNewValue("pt");
+   EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
 }
