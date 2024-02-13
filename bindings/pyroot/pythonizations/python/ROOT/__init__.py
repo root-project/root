@@ -23,17 +23,8 @@ environ["CPPYY_NO_ROOT_FILTER"] = "1"
 from . import _asan
 
 import cppyy
-
-# import libROOTPythonizations with Python version number
 import sys, importlib
-import warnings
-
-major, minor = sys.version_info[0:2]
-librootpyz_mod_name = "libROOTPythonizations{}_{}".format(major, minor)
-importlib.import_module(librootpyz_mod_name)
-
-# ensure 'import libROOTPythonizations' will find the versioned module
-sys.modules["libROOTPythonizations"] = sys.modules[librootpyz_mod_name]
+import libROOTPythonizations
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).

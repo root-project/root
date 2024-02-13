@@ -11,8 +11,6 @@ Python variables.
 Variables set when Interpreter is found:
   - PYTHON_EXECUTABLE
   - PYTHON_VERSION_STRING
-  - PYTHON_UNDER_VERSION_STRING: Python version with "_" replacing ".". Used to give a version-dependent name to the libraries, to allow
-  multiple builds
   - PYTHON_VERSION_MAJOR
   - PYTHON_VERSION_MINOR
 
@@ -54,7 +52,6 @@ if(Python3_Interpreter_FOUND)
   set(PYTHON_VERSION_STRING "${Python3_VERSION}" CACHE INTERNAL "" FORCE)
   set(PYTHON_VERSION_MAJOR "${Python3_VERSION_MAJOR}" CACHE INTERNAL "" FORCE)
   set(PYTHON_VERSION_MINOR "${Python3_VERSION_MINOR}" CACHE INTERNAL "" FORCE )
-  set(PYTHON_UNDER_VERSION_STRING "${Python3_VERSION_MAJOR}_${Python3_VERSION_MINOR}" CACHE INTERNAL "" FORCE )
   if(Python3_Development_FOUND)
     set(PYTHON_INCLUDE_DIRS "${Python3_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
     set(PYTHON_LIBRARIES "${Python3_LIBRARIES}" CACHE INTERNAL "" FORCE)
