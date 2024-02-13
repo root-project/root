@@ -16,16 +16,10 @@ from threading import Thread
 from time import sleep as timeSleep
 from sys import platform
 from os import path
-import sys
 import queue
 
 from JupyROOT import helpers
-
-# import libJupyROOT with Python version number
-import importlib
-major, minor = sys.version_info[0:2]
-libjupyroot_mod_name = 'libJupyROOT{}_{}'.format(major, minor)
-_lib = importlib.import_module(libjupyroot_mod_name)
+import libJupyROOT as _lib
 
 
 class IOHandler(object):

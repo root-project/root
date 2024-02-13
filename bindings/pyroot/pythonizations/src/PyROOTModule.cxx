@@ -72,14 +72,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Clear proxied objects regulated by PyROOT"},
    {NULL, NULL, 0, NULL}};
 
-#define QuoteIdent(ident) #ident
-#define QuoteMacro(macro) QuoteIdent(macro)
-#define LIBROOTPYZ_NAME "libROOTPythonizations" QuoteMacro(PY_MAJOR_VERSION) "_" QuoteMacro(PY_MINOR_VERSION)
-#define LIBCPPYY_NAME "libcppyy" QuoteMacro(PY_MAJOR_VERSION) "_" QuoteMacro(PY_MINOR_VERSION)
-
-#define CONCAT(a, b, c, d) a##b##c##d
-#define LIBROOTPYZ_INIT_FUNCTION(a, b, c, d) CONCAT(a, b, c, d)
-
 struct module_state {
    PyObject *error;
 };
@@ -98,13 +90,13 @@ static int rootmodule_clear(PyObject *m)
    return 0;
 }
 
-static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       LIBROOTPYZ_NAME,  NULL,
+static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPythonizations",  NULL,
                                        sizeof(struct module_state), gPyROOTMethods,   NULL,
                                        rootmodule_traverse,         rootmodule_clear, NULL};
 
 /// Initialization of extension module libROOTPythonizations
 
-LIBROOTPYZ_INIT_FUNCTION(extern "C" PyObject* PyInit_libROOTPythonizations, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
+extern "C" PyObject* PyInit_libROOTPythonizations()
 {
    using namespace PyROOT;
 
@@ -117,7 +109,7 @@ LIBROOTPYZ_INIT_FUNCTION(extern "C" PyObject* PyInit_libROOTPythonizations, PY_M
    // or a self-referencing cycle would be created
 
    // Make sure libcppyy has been imported
-   PyImport_ImportModule(LIBCPPYY_NAME);
+   PyImport_ImportModule("libcppyy");
 
    // setup PyROOT
    PyROOT::Init();

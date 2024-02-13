@@ -30,7 +30,7 @@ set(py_sources
 set(JupyROOTPySrcDir python/JupyROOT)
 file(COPY ${JupyROOTPySrcDir} DESTINATION ${localruntimedir})
 
-set(libname JupyROOT${PYTHON_UNDER_VERSION_STRING})
+set(libname JupyROOT)
 
 # libJupyROOT uses ROOT headers from source dirs and depends on Core
 add_library(${libname} SHARED src/IOHandler.cxx)

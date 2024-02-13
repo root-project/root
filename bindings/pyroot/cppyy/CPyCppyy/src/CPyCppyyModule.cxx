@@ -795,12 +795,6 @@ static PyMethodDef gCPyCppyyMethods[] = {
     {nullptr, nullptr, 0, nullptr}
 };
 
-#define QuoteIdent(ident) #ident
-#define QuoteMacro(macro) QuoteIdent(macro)
-#define LIBCPPYY_NAME "libcppyy" QuoteMacro(PY_MAJOR_VERSION) "_" QuoteMacro(PY_MINOR_VERSION)
-
-#define CONCAT(a, b, c, d) a##b##c##d
-#define LIBCPPYY_INIT_FUNCTION(a, b, c, d) CONCAT(a, b, c, d)
 
 #if PY_VERSION_HEX >= 0x03000000
 struct module_state {
@@ -823,7 +817,7 @@ static int cpycppyymodule_clear(PyObject* m)
 
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    LIBCPPYY_NAME,
+    "libcppyy",
     nullptr,
     sizeof(struct module_state),
     gCPyCppyyMethods,
@@ -836,10 +830,10 @@ static struct PyModuleDef moduledef = {
 
 //----------------------------------------------------------------------------
 #define CPYCPPYY_INIT_ERROR return nullptr
-LIBCPPYY_INIT_FUNCTION(extern "C" PyObject* PyInit_libcppyy, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
+extern "C" PyObject* PyInit_libcppyy()
 #else
 #define CPYCPPYY_INIT_ERROR return
-LIBCPPYY_INIT_FUNCTION(extern "C" void initlibcppyy, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
+extern "C" void initlibcppyy()
 #endif
 {
 // Initialization of extension module libcppyy.
@@ -870,7 +864,7 @@ LIBCPPYY_INIT_FUNCTION(extern "C" void initlibcppyy, PY_MAJOR_VERSION, _, PY_MIN
 #if PY_VERSION_HEX >= 0x03000000
     gThisModule = PyModule_Create(&moduledef);
 #else
-    gThisModule = Py_InitModule(const_cast<char*>(LIBCPPYY_NAME), gCPyCppyyMethods);
+    gThisModule = Py_InitModule(const_cast<char*>("libcppyy"), gCPyCppyyMethods);
 #endif
     if (!gThisModule)
         CPYCPPYY_INIT_ERROR;
