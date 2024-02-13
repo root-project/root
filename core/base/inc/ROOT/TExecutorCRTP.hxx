@@ -102,19 +102,20 @@ namespace ROOT {
 template<class SubC>
 class TExecutorCRTP {
 
+protected:
    template <typename F, typename... Args>
    using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
-
-public:
-   TExecutorCRTP() = default;
-   TExecutorCRTP(const TExecutorCRTP &) = delete;
-   TExecutorCRTP &operator=(const TExecutorCRTP &) = delete;
 
    /// type definition used in templated functions for not allowing mapping functions that return references or void.
    /// The resulting vector elements must be assignable, references aren't.
    template <class F, class... T>
    using validMapReturnCond =
       std::enable_if_t<!std::is_reference<InvokeResult_t<F, T...>>::value && !std::is_void<InvokeResult_t<F, T...>>::value>;
+
+public:
+   TExecutorCRTP() = default;
+   TExecutorCRTP(const TExecutorCRTP &) = delete;
+   TExecutorCRTP &operator=(const TExecutorCRTP &) = delete;
 
    // Map
    // These trailing return types allow for a compile time check of compatibility between function signatures and args

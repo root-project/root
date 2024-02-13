@@ -41,9 +41,6 @@ namespace ROOT {
    class TThreadExecutor: public TExecutorCRTP<TThreadExecutor> {
       friend TExecutorCRTP;
 
-      template <typename F, typename... Args>
-      using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
-
    public:
 
       explicit TThreadExecutor(UInt_t nThreads = 0u);

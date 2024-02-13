@@ -15,7 +15,6 @@
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/TSequentialExecutor.hxx"
-#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
@@ -37,9 +36,6 @@ namespace ROOT{
 namespace Internal{
 class TExecutor: public TExecutorCRTP<TExecutor> {
    friend TExecutorCRTP;
-
-   template <typename F, typename... Args>
-   using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
 
 public:
 

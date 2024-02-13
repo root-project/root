@@ -37,9 +37,6 @@ namespace ROOT {
 class TProcessExecutor : public TExecutorCRTP<TProcessExecutor>, private TMPClient {
    friend TExecutorCRTP;
 
-   template <typename F, typename... Args>
-   using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
-
 public:
    explicit TProcessExecutor(unsigned nWorkers = 0); //default number of workers is the number of processors
    ~TProcessExecutor() = default;
