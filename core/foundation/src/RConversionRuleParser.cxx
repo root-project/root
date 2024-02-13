@@ -196,18 +196,18 @@ namespace ROOT
 
          if( key == "code" ) {
             // Strip off quotes and trim
-            auto rawCode = TSchemaRuleProcessor::Trim( command.substr( 1, command.length() - 2 ) );
-            if( rawCode[0] != '{' ) {
+            auto rawCode = TSchemaRuleProcessor::Trim(command.substr(1, command.length() - 2));
+            if (rawCode[0] != '{') {
                error_string = "Parsing error while processing key: code\n";
                error_string += "Expected \"{ at the beginning of the value.";
                return false;
             }
-            if( rawCode[rawCode.length() - 1] != '}' ) {
+            if (rawCode[rawCode.length() - 1] != '}') {
                error_string = "Parsing error while processing key: \"" + key + "\"\n";
                error_string += "Expected }\" at the end of the value.";
                return false;
             }
-            rawCode = rawCode.substr( 1, rawCode.length() - 2 );
+            rawCode = rawCode.substr(1, rawCode.length() - 2);
             RemoveEscapeSequences(rawCode);
             result[key] = rawCode;
             l = command.length();
