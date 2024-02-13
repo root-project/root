@@ -125,7 +125,7 @@ protected:
    struct RSharedPtrDeleter {
       std::unique_ptr<RFieldBase::RDeleter> fDeleter;
       void operator()(void *objPtr) { fDeleter->operator()(objPtr, false /* dtorOnly*/); }
-      RSharedPtrDeleter(const RSharedPtrDeleter& deleter) : fDeleter( new RFieldBase::RDeleter(*deleter.fDeleter)) {}
+      RSharedPtrDeleter(const RSharedPtrDeleter& deleter) : fDeleter(new RFieldBase::RDeleter(*deleter.fDeleter)) {}
       explicit RSharedPtrDeleter(std::unique_ptr<RFieldBase::RDeleter> deleter) : fDeleter(std::move(deleter)) {}
    };
 
