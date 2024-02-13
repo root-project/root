@@ -15,8 +15,7 @@ convCmdTmpl = "%s nbconvert  --to notebook --ExecutePreprocessor.kernel_name=%s 
 def customLineJunkFilter(line):
     # Skip the banner and empty lines
     junkLines =["Info in <TUnixSystem::ACLiC",
-                "Info in <TMacOSXSystem::ACLiC",
-                "Welcome to JupyROOT 6."]
+                "Info in <TMacOSXSystem::ACLiC"]
     for junkLine in junkLines:
         if junkLine in line: return False
     return True
@@ -34,9 +33,8 @@ def compareNotebooks(inNBName,outNBName):
     outNBLines = getFilteredLines(outNBName)
     areDifferent = False
     for line in difflib.unified_diff(inNBLines, outNBLines, fromfile=inNBName, tofile=outNBName):
-        if line.find("Welcome to JupyROOT") == -1:
-            areDifferent = True
-            sys.stdout.write(line)
+        areDifferent = True
+        sys.stdout.write(line)
     if areDifferent: print("\n")
     return areDifferent
 
