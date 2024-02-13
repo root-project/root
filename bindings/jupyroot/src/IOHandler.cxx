@@ -301,13 +301,6 @@ static PyMethodDef gJupyROOTMethods[] = {
     (char *)"Destruct JupyROOTExecutorHandler"},
    {NULL, NULL, 0, NULL}};
 
-#define QuoteIdent(ident) #ident
-#define QuoteMacro(macro) QuoteIdent(macro)
-#define LIBJUPYROOT_NAME "libJupyROOT" QuoteMacro(PY_MAJOR_VERSION) "_" QuoteMacro(PY_MINOR_VERSION)
-
-#define CONCAT(a, b, c, d) a##b##c##d
-#define LIBJUPYROOT_INIT_FUNCTION(a, b, c, d) CONCAT(a, b, c, d)
-
 struct module_state {
    PyObject *error;
 };
@@ -326,13 +319,13 @@ static int jupyrootmodule_clear(PyObject *m)
    return 0;
 }
 
-static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       LIBJUPYROOT_NAME,     NULL,
+static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libJupyROOT",        NULL,
                                        sizeof(struct module_state), gJupyROOTMethods,     NULL,
                                        jupyrootmodule_traverse,     jupyrootmodule_clear, NULL};
 
 /// Initialization of extension module libJupyROOT
 
-LIBJUPYROOT_INIT_FUNCTION(extern "C" PyObject *PyInit_libJupyROOT, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
+extern "C" PyObject *PyInit_libJupyROOT()
 {
 // setup PyROOT
    gJupyRootModule = PyModule_Create(&moduledef);

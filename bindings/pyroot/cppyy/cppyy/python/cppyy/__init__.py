@@ -49,66 +49,6 @@ __all__ = [
 from ._version import __version__
 
 import os, sys, sysconfig, warnings
-import importlib
-
-# import libcppyy with Python version number
-major, minor = sys.version_info[0:2]
-py_version_str = '{}_{}'.format(major, minor)
-libcppyy_mod_name = 'libcppyy' + py_version_str
-
-try:
-    importlib.import_module(libcppyy_mod_name)
-except ImportError:
-    raise ImportError(
-            'Failed to import {}. Please check that ROOT has been built for Python {}.{}'.format(
-                libcppyy_mod_name, major, minor))
-
-# ensure 'import libcppyy' will find the versioned module
-sys.modules['libcppyy'] = sys.modules[libcppyy_mod_name]
-
-# tell cppyy that libcppyy_backend is versioned
-def _check_py_version(lib_name, cbl_var):
-    import re
-    if re.match('^libcppyy_backend\d+_\d+$', lib_name):
-       # library name already has version
-       if lib_name.endswith(py_version_str):
-           return ''
-       else:
-           raise RuntimeError('CPPYY_BACKEND_LIBRARY variable ({})'
-                              ' does not match Python version {}.{}'
-                              .format(cbl_var, major, minor))
-    else:
-       return py_version_str
-
-if 'CPPYY_BACKEND_LIBRARY' in os.environ:
-    clean_cbl = False
-    cbl_var = os.environ['CPPYY_BACKEND_LIBRARY']
-    start = 0
-    last_sep = cbl_var.rfind(os.path.sep)
-    if last_sep >= 0:
-        start = last_sep + 1
-    first_dot = cbl_var.find('.', start)
-    if first_dot >= 0:
-        # lib_name = [/path/to/]libcppyy_backend[py_version_str]
-        # suffix = so | ...
-        lib_name = cbl_var[:first_dot]
-        suff = cbl_var[first_dot+1:]
-        ver = _check_py_version(lib_name[start:], cbl_var)
-        os.environ['CPPYY_BACKEND_LIBRARY'] = '.'.join([
-            lib_name + ver, suff])
-    else:
-        ver = _check_py_version(cbl_var[start:], cbl_var)
-        os.environ['CPPYY_BACKEND_LIBRARY'] += ver
-else:
-    clean_cbl = True
-    if not any(var in os.environ for var in ('LD_LIBRARY_PATH','DYLD_LIBRARY_PATH')):
-        # macOS SIP can prevent DYLD_LIBRARY_PATH from having any effect.
-        # Set cppyy env variable here to make sure libraries are found.
-        _lib_dir = os.path.dirname(os.path.dirname(__file__))
-        _lcb_path = os.path.join(_lib_dir, 'libcppyy_backend')
-        os.environ['CPPYY_BACKEND_LIBRARY'] = _lcb_path + py_version_str
-    else:
-        os.environ['CPPYY_BACKEND_LIBRARY'] = 'libcppyy_backend' + py_version_str
 
 if not 'CLING_STANDARD_PCH' in os.environ:
     local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch')
@@ -129,8 +69,6 @@ if ispypy:
     from ._pypy_cppyy import *
 else:
     from ._cpython_cppyy import *
-if clean_cbl:
-    del os.environ['CPPYY_BACKEND_LIBRARY'] # we set it, so clean it
 
 
 #- allow importing from gbl --------------------------------------------------
