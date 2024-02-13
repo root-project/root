@@ -50,6 +50,7 @@ protected:
    TH1F              *fHistogram; ///< Pointer to histogram used for drawing axis
    Double_t           fMinimum;   ///< Minimum value for plotting along y
    Double_t           fMaximum;   ///< Maximum value for plotting along y
+   TString fOption;               ///< Options used for drawing the graph
 
    static void        SwapValues(Double_t* arr, Int_t pos1, Int_t pos2);
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
@@ -185,6 +186,7 @@ public:
    virtual void          SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);
+   virtual void SetOption(Option_t *option = " ") { fOption = option; }
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
    virtual void          SetPointX(Int_t i, Double_t x);
    virtual void          SetPointY(Int_t i, Double_t y);
@@ -197,7 +199,7 @@ public:
    void                  UseCurrentStyle() override;
    void                  Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y,Int_t maxiterations);
 
-   ClassDefOverride(TGraph,4)  //Graph graphics class
+   ClassDefOverride(TGraph, 5) // Graph graphics class
 };
 
 #endif
