@@ -164,6 +164,7 @@ public:
    virtual Bool_t   IsWeb() const { return kFALSE; }
            void     ls(Option_t *option="") const override = 0;
    virtual void     Modified(Bool_t flag=1) = 0;
+   virtual void     ModifiedUpdate() = 0;
    virtual Bool_t   OpaqueMoving() const = 0;
    virtual Bool_t   OpaqueResizing() const = 0;
    virtual Double_t PadtoX(Double_t x) const = 0;
