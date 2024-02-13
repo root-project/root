@@ -20,16 +20,16 @@
 #endif
 
 #ifdef _WIN32
-   #ifndef M_PI
-      #ifndef _USE_MATH_DEFINES
-         #define _USE_MATH_DEFINES
-      #endif
-      #include <math.h>
-      #undef _USE_MATH_DEFINES
-   #endif
-   #define _VECOPS_USE_EXTERN_TEMPLATES false
+#ifndef M_PI
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <math.h>
+#undef _USE_MATH_DEFINES
+#endif
+#define _VECOPS_USE_EXTERN_TEMPLATES false
 #else
-   #define _VECOPS_USE_EXTERN_TEMPLATES true
+#define _VECOPS_USE_EXTERN_TEMPLATES true
 #endif
 
 #include <Rtypes.h> // R__CLING_PTRCHECK
@@ -54,18 +54,17 @@
 #include <vdt/vdtMath.h>
 #endif
 
-
 namespace ROOT {
 
 namespace VecOps {
-template<typename T>
+template <typename T>
 class RVec;
 }
 
 namespace Internal {
 namespace VecOps {
 
-template<typename T>
+template <typename T>
 using RVec = ROOT::VecOps::RVec<T>;
 
 // clang-format off
@@ -85,7 +84,7 @@ constexpr bool All(const bool *vals, std::size_t size)
 }
 
 template <typename... T>
-std::size_t GetVectorsSize(const std::string &id, const RVec<T> &... vs)
+std::size_t GetVectorsSize(const std::string &id, const RVec<T> &...vs)
 {
    constexpr const auto nArgs = sizeof...(T);
    const std::size_t sizes[] = {vs.size()...};
@@ -102,7 +101,7 @@ std::size_t GetVectorsSize(const std::string &id, const RVec<T> &... vs)
 }
 
 template <typename F, typename... RVecs>
-auto MapImpl(F &&f, RVecs &&... vs) -> RVec<decltype(f(vs[0]...))>
+auto MapImpl(F &&f, RVecs &&...vs) -> RVec<decltype(f(vs[0]...))>
 {
    const auto size = GetVectorsSize("Map", vs...);
    RVec<decltype(f(vs[0]...))> ret(size);
@@ -469,10 +468,7 @@ protected:
 
    /// Double the size of the allocated memory, guaranteeing space for at
    /// least one more element or MinSize if specified.
-   void grow(size_t MinSize = 0)
-   {
-      this->grow_pod(MinSize, sizeof(T));
-   }
+   void grow(size_t MinSize = 0) { this->grow_pod(MinSize, sizeof(T)); }
 
 public:
    using iterator = typename SuperClass::iterator;
@@ -543,7 +539,7 @@ void UninitializedValueConstruct(ForwardIt first, ForwardIt last)
 /// - it does not put the RVec in "non-owning mode" (fCapacity == -1)
 /// - it does not free any owned buffer
 template <typename T>
-void ResetView(RVec<T> &v, T* addr, std::size_t sz)
+void ResetView(RVec<T> &v, T *addr, std::size_t sz)
 {
    v.fBeginX = addr;
    v.fSize = sz;
@@ -1133,10 +1129,10 @@ namespace VecOps {
 // Note that we open here with @{ the Doxygen group vecops and it is
 // closed again at the end of the C++ namespace VecOps
 /**
-  * \defgroup vecops VecOps
-  * A "std::vector"-like collection of values implementing handy operation to analyse them
-  * @{
-*/
+ * \defgroup vecops VecOps
+ * A "std::vector"-like collection of values implementing handy operation to analyse them
+ * @{
+ */
 
 // From the original SmallVector code:
 // This is a 'vector' (really, a variable-sized array), optimized
@@ -1212,7 +1208,7 @@ public:
       return *this;
    }
 
-   RVecN(T* p, size_t n) : Detail::VecOps::RVecImpl<T>(N)
+   RVecN(T *p, size_t n) : Detail::VecOps::RVecImpl<T>(N)
    {
       this->fBeginX = p;
       this->fSize = n;
@@ -1238,15 +1234,9 @@ public:
    using Internal::VecOps::SmallVectorTemplateCommon<T>::begin;
    using Internal::VecOps::SmallVectorTemplateCommon<T>::size;
 
-   reference operator[](size_type idx)
-   {
-      return begin()[idx];
-   }
+   reference operator[](size_type idx) { return begin()[idx]; }
 
-   const_reference operator[](size_type idx) const
-   {
-      return begin()[idx];
-   }
+   const_reference operator[](size_type idx) const { return begin()[idx]; }
 
    template <typename V, unsigned M, typename = std::enable_if<std::is_convertible<V, bool>::value>>
    RVecN operator[](const RVecN<V, M> &conds) const
@@ -1349,6 +1339,9 @@ other operations will be propagated potentially leaving the RVec object in an in
 
 \note RVec methods (e.g. `at` or `size`) follow the STL naming convention instead of the ROOT naming convention in order
 to make RVec a drop-in replacement for `std::vector`.
+
+\note RVec  mathematical methods (e.g. `abs` or `sqrt`) <I>also</I> follow ROOT naming convention for clearer separation
+from STL methods.
 
 \htmlonly
 <a href="https://doi.org/10.5281/zenodo.1253756"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1253756.svg" alt="DOI"></a>
@@ -1536,14 +1529,18 @@ public:
    RVec(Detail::VecOps::RVecImpl<T> &&RHS) : SuperClass(std::move(RHS)) {}
 
    template <unsigned N>
-   RVec(RVecN<T, N> &&RHS) : SuperClass(std::move(RHS)) {}
+   RVec(RVecN<T, N> &&RHS) : SuperClass(std::move(RHS))
+   {
+   }
 
    template <unsigned N>
-   RVec(const RVecN<T, N> &RHS) : SuperClass(RHS) {}
+   RVec(const RVecN<T, N> &RHS) : SuperClass(RHS)
+   {
+   }
 
    RVec(const std::vector<T> &RHS) : SuperClass(RHS) {}
 
-   RVec(T* p, size_t n) : SuperClass(p, n) {}
+   RVec(T *p, size_t n) : SuperClass(p, n) {}
 
    // conversion
    template <typename U, typename = std::enable_if<std::is_convertible<T, U>::value>>
@@ -1576,15 +1573,15 @@ inline size_t CapacityInBytes(const RVecN<T, N> &X)
 ///@name RVec Unary Arithmetic Operators
 ///@{
 
-#define RVEC_UNARY_OPERATOR(OP)                                                \
-template <typename T>                                                          \
-RVec<T> operator OP(const RVec<T> &v)                                          \
-{                                                                              \
-   RVec<T> ret(v);                                                             \
-   for (auto &x : ret)                                                         \
-      x = OP x;                                                                \
-return ret;                                                                    \
-}                                                                              \
+#define RVEC_UNARY_OPERATOR(OP)          \
+   template <typename T>                 \
+   RVec<T> operator OP(const RVec<T> &v) \
+   {                                     \
+      RVec<T> ret(v);                    \
+      for (auto &x : ret)                \
+         x = OP x;                       \
+      return ret;                        \
+   }
 
 RVEC_UNARY_OPERATOR(+)
 RVEC_UNARY_OPERATOR(-)
@@ -1596,42 +1593,38 @@ RVEC_UNARY_OPERATOR(!)
 ///@name RVec Binary Arithmetic Operators
 ///@{
 
-#define ERROR_MESSAGE(OP) \
- "Cannot call operator " #OP " on vectors of different sizes."
+#define ERROR_MESSAGE(OP) "Cannot call operator " #OP " on vectors of different sizes."
 
-#define RVEC_BINARY_OPERATOR(OP)                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v, const T1 &y)                               \
-  -> RVec<decltype(v[0] OP y)>                                                 \
-{                                                                              \
-   RVec<decltype(v[0] OP y)> ret(v.size());                                    \
-   auto op = [&y](const T0 &x) { return x OP y; };                             \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const T0 &x, const RVec<T1> &v)                               \
-  -> RVec<decltype(x OP v[0])>                                                 \
-{                                                                              \
-   RVec<decltype(x OP v[0])> ret(v.size());                                    \
-   auto op = [&x](const T1 &y) { return x OP y; };                             \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)                       \
-  -> RVec<decltype(v0[0] OP v1[0])>                                            \
-{                                                                              \
-   if (v0.size() != v1.size())                                                 \
-      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
-                                                                               \
-   RVec<decltype(v0[0] OP v1[0])> ret(v0.size());                              \
-   auto op = [](const T0 &x, const T1 &y) { return x OP y; };                  \
-   std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
-   return ret;                                                                 \
-}                                                                              \
+#define RVEC_BINARY_OPERATOR(OP)                                                            \
+   template <typename T0, typename T1>                                                      \
+   auto operator OP(const RVec<T0> &v, const T1 &y)->RVec<decltype(v[0] OP y)>              \
+   {                                                                                        \
+      RVec<decltype(v[0] OP y)> ret(v.size());                                              \
+      auto op = [&y](const T0 &x) { return x OP y; };                                       \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                  \
+      return ret;                                                                           \
+   }                                                                                        \
+                                                                                            \
+   template <typename T0, typename T1>                                                      \
+   auto operator OP(const T0 &x, const RVec<T1> &v)->RVec<decltype(x OP v[0])>              \
+   {                                                                                        \
+      RVec<decltype(x OP v[0])> ret(v.size());                                              \
+      auto op = [&x](const T1 &y) { return x OP y; };                                       \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                  \
+      return ret;                                                                           \
+   }                                                                                        \
+                                                                                            \
+   template <typename T0, typename T1>                                                      \
+   auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)->RVec<decltype(v0[0] OP v1[0])> \
+   {                                                                                        \
+      if (v0.size() != v1.size())                                                           \
+         throw std::runtime_error(ERROR_MESSAGE(OP));                                       \
+                                                                                            \
+      RVec<decltype(v0[0] OP v1[0])> ret(v0.size());                                        \
+      auto op = [](const T0 &x, const T1 &y) { return x OP y; };                            \
+      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);                    \
+      return ret;                                                                           \
+   }
 
 RVEC_BINARY_OPERATOR(+)
 RVEC_BINARY_OPERATOR(-)
@@ -1647,25 +1640,25 @@ RVEC_BINARY_OPERATOR(&)
 ///@name RVec Assignment Arithmetic Operators
 ///@{
 
-#define RVEC_ASSIGNMENT_OPERATOR(OP)                                           \
-template <typename T0, typename T1>                                            \
-RVec<T0>& operator OP(RVec<T0> &v, const T1 &y)                                \
-{                                                                              \
-   auto op = [&y](T0 &x) { return x OP y; };                                   \
-   std::transform(v.begin(), v.end(), v.begin(), op);                          \
-   return v;                                                                   \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-RVec<T0>& operator OP(RVec<T0> &v0, const RVec<T1> &v1)                        \
-{                                                                              \
-   if (v0.size() != v1.size())                                                 \
-      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
-                                                                               \
-   auto op = [](T0 &x, const T1 &y) { return x OP y; };                        \
-   std::transform(v0.begin(), v0.end(), v1.begin(), v0.begin(), op);           \
-   return v0;                                                                  \
-}                                                                              \
+#define RVEC_ASSIGNMENT_OPERATOR(OP)                                    \
+   template <typename T0, typename T1>                                  \
+   RVec<T0> &operator OP(RVec<T0> &v, const T1 &y)                      \
+   {                                                                    \
+      auto op = [&y](T0 &x) { return x OP y; };                         \
+      std::transform(v.begin(), v.end(), v.begin(), op);                \
+      return v;                                                         \
+   }                                                                    \
+                                                                        \
+   template <typename T0, typename T1>                                  \
+   RVec<T0> &operator OP(RVec<T0> &v0, const RVec<T1> &v1)              \
+   {                                                                    \
+      if (v0.size() != v1.size())                                       \
+         throw std::runtime_error(ERROR_MESSAGE(OP));                   \
+                                                                        \
+      auto op = [](T0 &x, const T1 &y) { return x OP y; };              \
+      std::transform(v0.begin(), v0.end(), v1.begin(), v0.begin(), op); \
+      return v0;                                                        \
+   }
 
 RVEC_ASSIGNMENT_OPERATOR(+=)
 RVEC_ASSIGNMENT_OPERATOR(-=)
@@ -1683,39 +1676,36 @@ RVEC_ASSIGNMENT_OPERATOR(<<=)
 ///@name RVec Comparison and Logical Operators
 ///@{
 
-#define RVEC_LOGICAL_OPERATOR(OP)                                              \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v, const T1 &y)                               \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
-{                                                                              \
-   RVec<int> ret(v.size());                                                    \
-   auto op = [y](const T0 &x) -> int { return x OP y; };                       \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const T0 &x, const RVec<T1> &v)                               \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
-{                                                                              \
-   RVec<int> ret(v.size());                                                    \
-   auto op = [x](const T1 &y) -> int { return x OP y; };                       \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)                       \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
-{                                                                              \
-   if (v0.size() != v1.size())                                                 \
-      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
-                                                                               \
-   RVec<int> ret(v0.size());                                                   \
-   auto op = [](const T0 &x, const T1 &y) -> int { return x OP y; };           \
-   std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
-   return ret;                                                                 \
-}                                                                              \
+#define RVEC_LOGICAL_OPERATOR(OP)                                                                    \
+   template <typename T0, typename T1>                                                               \
+   auto operator OP(const RVec<T0> &v, const T1 &y)->RVec<int> /* avoid std::vector<bool> */         \
+   {                                                                                                 \
+      RVec<int> ret(v.size());                                                                       \
+      auto op = [y](const T0 &x) -> int { return x OP y; };                                          \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                           \
+      return ret;                                                                                    \
+   }                                                                                                 \
+                                                                                                     \
+   template <typename T0, typename T1>                                                               \
+   auto operator OP(const T0 &x, const RVec<T1> &v)->RVec<int> /* avoid std::vector<bool> */         \
+   {                                                                                                 \
+      RVec<int> ret(v.size());                                                                       \
+      auto op = [x](const T1 &y) -> int { return x OP y; };                                          \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                           \
+      return ret;                                                                                    \
+   }                                                                                                 \
+                                                                                                     \
+   template <typename T0, typename T1>                                                               \
+   auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)->RVec<int> /* avoid std::vector<bool> */ \
+   {                                                                                                 \
+      if (v0.size() != v1.size())                                                                    \
+         throw std::runtime_error(ERROR_MESSAGE(OP));                                                \
+                                                                                                     \
+      RVec<int> ret(v0.size());                                                                      \
+      auto op = [](const T0 &x, const T1 &y) -> int { return x OP y; };                              \
+      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);                             \
+      return ret;                                                                                    \
+   }
 
 RVEC_LOGICAL_OPERATOR(<)
 RVEC_LOGICAL_OPERATOR(>)
@@ -1732,13 +1722,26 @@ RVEC_LOGICAL_OPERATOR(||)
 ///@{
 
 /// \cond
-template <typename T> struct PromoteTypeImpl;
+template <typename T>
+struct PromoteTypeImpl;
 
-template <> struct PromoteTypeImpl<float>       { using Type = float;       };
-template <> struct PromoteTypeImpl<double>      { using Type = double;      };
-template <> struct PromoteTypeImpl<long double> { using Type = long double; };
+template <>
+struct PromoteTypeImpl<float> {
+   using Type = float;
+};
+template <>
+struct PromoteTypeImpl<double> {
+   using Type = double;
+};
+template <>
+struct PromoteTypeImpl<long double> {
+   using Type = long double;
+};
 
-template <typename T> struct PromoteTypeImpl { using Type = double; };
+template <typename T>
+struct PromoteTypeImpl {
+   using Type = double;
+};
 
 template <typename T>
 using PromoteType = typename PromoteTypeImpl<T>::Type;
@@ -1748,121 +1751,132 @@ using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
 
 /// \endcond
 
-#define RVEC_UNARY_FUNCTION(NAME, FUNC)                                        \
-   template <typename T>                                                       \
-   RVec<PromoteType<T>> NAME(const RVec<T> &v)                                 \
-   {                                                                           \
-      RVec<PromoteType<T>> ret(v.size());                                      \
-      auto f = [](const T &x) { return FUNC(x); };                             \
-      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
-      return ret;                                                              \
+#define RVEC_UNARY_FUNCTION(NAME, FUNC)                   \
+   template <typename T>                                  \
+   RVec<PromoteType<T>> NAME(const RVec<T> &v)            \
+   {                                                      \
+      RVec<PromoteType<T>> ret(v.size());                 \
+      auto f = [](const T &x) { return FUNC(x); };        \
+      std::transform(v.begin(), v.end(), ret.begin(), f); \
+      return ret;                                         \
    }
 
-#define RVEC_BINARY_FUNCTION(NAME, FUNC)                                       \
-   template <typename T0, typename T1>                                         \
-   RVec<PromoteTypes<T0, T1>> NAME(const T0 &x, const RVec<T1> &v)             \
-   {                                                                           \
-      RVec<PromoteTypes<T0, T1>> ret(v.size());                                \
-      auto f = [&x](const T1 &y) { return FUNC(x, y); };                       \
-      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
-      return ret;                                                              \
-   }                                                                           \
-                                                                               \
-   template <typename T0, typename T1>                                         \
-   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v, const T1 &y)             \
-   {                                                                           \
-      RVec<PromoteTypes<T0, T1>> ret(v.size());                                \
-      auto f = [&y](const T1 &x) { return FUNC(x, y); };                       \
-      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
-      return ret;                                                              \
-   }                                                                           \
-                                                                               \
-   template <typename T0, typename T1>                                         \
-   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v0, const RVec<T1> &v1)     \
-   {                                                                           \
-      if (v0.size() != v1.size())                                              \
-         throw std::runtime_error(ERROR_MESSAGE(NAME));                        \
-                                                                               \
-      RVec<PromoteTypes<T0, T1>> ret(v0.size());                               \
-      auto f = [](const T0 &x, const T1 &y) { return FUNC(x, y); };            \
-      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), f);        \
-      return ret;                                                              \
-   }                                                                           \
+#define RVEC_BINARY_FUNCTION(NAME, FUNC)                                   \
+   template <typename T0, typename T1>                                     \
+   RVec<PromoteTypes<T0, T1>> NAME(const T0 &x, const RVec<T1> &v)         \
+   {                                                                       \
+      RVec<PromoteTypes<T0, T1>> ret(v.size());                            \
+      auto f = [&x](const T1 &y) { return FUNC(x, y); };                   \
+      std::transform(v.begin(), v.end(), ret.begin(), f);                  \
+      return ret;                                                          \
+   }                                                                       \
+                                                                           \
+   template <typename T0, typename T1>                                     \
+   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v, const T1 &y)         \
+   {                                                                       \
+      RVec<PromoteTypes<T0, T1>> ret(v.size());                            \
+      auto f = [&y](const T1 &x) { return FUNC(x, y); };                   \
+      std::transform(v.begin(), v.end(), ret.begin(), f);                  \
+      return ret;                                                          \
+   }                                                                       \
+                                                                           \
+   template <typename T0, typename T1>                                     \
+   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v0, const RVec<T1> &v1) \
+   {                                                                       \
+      if (v0.size() != v1.size())                                          \
+         throw std::runtime_error(ERROR_MESSAGE(NAME));                    \
+                                                                           \
+      RVec<PromoteTypes<T0, T1>> ret(v0.size());                           \
+      auto f = [](const T0 &x, const T1 &y) { return FUNC(x, y); };        \
+      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), f);    \
+      return ret;                                                          \
+   }
 
-#define RVEC_STD_UNARY_FUNCTION(F) RVEC_UNARY_FUNCTION(F, std::F)
-#define RVEC_STD_BINARY_FUNCTION(F) RVEC_BINARY_FUNCTION(F, std::F)
+// Define both Titlecase and lowercase names
+#define RVEC_STD_UNARY_FUNCTION(PASCAL_NAME, LOWER_NAME) \
+   RVEC_UNARY_FUNCTION(PASCAL_NAME, std::LOWER_NAME)     \
+   RVEC_UNARY_FUNCTION(LOWER_NAME, std::LOWER_NAME)
 
-RVEC_STD_UNARY_FUNCTION(abs)
-RVEC_STD_BINARY_FUNCTION(fdim)
-RVEC_STD_BINARY_FUNCTION(fmod)
-RVEC_STD_BINARY_FUNCTION(remainder)
+#define RVEC_STD_BINARY_FUNCTION(PASCAL_NAME, LOWER_NAME) \
+   RVEC_BINARY_FUNCTION(PASCAL_NAME, std::LOWER_NAME)     \
+   RVEC_BINARY_FUNCTION(LOWER_NAME, std::LOWER_NAME)
 
-RVEC_STD_UNARY_FUNCTION(exp)
-RVEC_STD_UNARY_FUNCTION(exp2)
-RVEC_STD_UNARY_FUNCTION(expm1)
+RVEC_STD_UNARY_FUNCTION(Abs, abs)
+RVEC_STD_BINARY_FUNCTION(FDim, fdim)
+RVEC_STD_BINARY_FUNCTION(FMod, fmod)
+RVEC_STD_BINARY_FUNCTION(Remainder, remainder)
 
-RVEC_STD_UNARY_FUNCTION(log)
-RVEC_STD_UNARY_FUNCTION(log10)
-RVEC_STD_UNARY_FUNCTION(log2)
-RVEC_STD_UNARY_FUNCTION(log1p)
+RVEC_STD_UNARY_FUNCTION(Exp, exp)
+RVEC_STD_UNARY_FUNCTION(Exp2, exp2)
+RVEC_STD_UNARY_FUNCTION(ExpM1, expm1)
 
-RVEC_STD_BINARY_FUNCTION(pow)
-RVEC_STD_UNARY_FUNCTION(sqrt)
-RVEC_STD_UNARY_FUNCTION(cbrt)
-RVEC_STD_BINARY_FUNCTION(hypot)
+RVEC_STD_UNARY_FUNCTION(Log, log)
+RVEC_STD_UNARY_FUNCTION(Log10, log10)
+RVEC_STD_UNARY_FUNCTION(Log2, log2)
+RVEC_STD_UNARY_FUNCTION(Log1P, log1p)
 
-RVEC_STD_UNARY_FUNCTION(sin)
-RVEC_STD_UNARY_FUNCTION(cos)
-RVEC_STD_UNARY_FUNCTION(tan)
-RVEC_STD_UNARY_FUNCTION(asin)
-RVEC_STD_UNARY_FUNCTION(acos)
-RVEC_STD_UNARY_FUNCTION(atan)
-RVEC_STD_BINARY_FUNCTION(atan2)
+RVEC_STD_BINARY_FUNCTION(Pow, pow)
+RVEC_STD_UNARY_FUNCTION(Sqrt, sqrt)
+RVEC_STD_UNARY_FUNCTION(Cbrt, cbrt)
+RVEC_STD_BINARY_FUNCTION(Hypot, hypot)
 
-RVEC_STD_UNARY_FUNCTION(sinh)
-RVEC_STD_UNARY_FUNCTION(cosh)
-RVEC_STD_UNARY_FUNCTION(tanh)
-RVEC_STD_UNARY_FUNCTION(asinh)
-RVEC_STD_UNARY_FUNCTION(acosh)
-RVEC_STD_UNARY_FUNCTION(atanh)
+RVEC_STD_UNARY_FUNCTION(Sin, sin)
+RVEC_STD_UNARY_FUNCTION(Cos, cos)
+RVEC_STD_UNARY_FUNCTION(Tan, tan)
+RVEC_STD_UNARY_FUNCTION(ASin, asin)
+RVEC_STD_UNARY_FUNCTION(ACos, acos)
+RVEC_STD_UNARY_FUNCTION(ATan, atan)
+RVEC_STD_BINARY_FUNCTION(ATan2, atan2)
 
-RVEC_STD_UNARY_FUNCTION(floor)
-RVEC_STD_UNARY_FUNCTION(ceil)
-RVEC_STD_UNARY_FUNCTION(trunc)
-RVEC_STD_UNARY_FUNCTION(round)
-RVEC_STD_UNARY_FUNCTION(lround)
-RVEC_STD_UNARY_FUNCTION(llround)
+RVEC_STD_UNARY_FUNCTION(SinH, sinh)
+RVEC_STD_UNARY_FUNCTION(CosH, cosh)
+RVEC_STD_UNARY_FUNCTION(TanH, tanh)
+RVEC_STD_UNARY_FUNCTION(ASinH, asinh)
+RVEC_STD_UNARY_FUNCTION(ACosH, acosh)
+RVEC_STD_UNARY_FUNCTION(ATanH, atanh)
 
-RVEC_STD_UNARY_FUNCTION(erf)
-RVEC_STD_UNARY_FUNCTION(erfc)
-RVEC_STD_UNARY_FUNCTION(lgamma)
-RVEC_STD_UNARY_FUNCTION(tgamma)
+RVEC_STD_UNARY_FUNCTION(Floor, floor)
+RVEC_STD_UNARY_FUNCTION(Ceil, ceil)
+RVEC_STD_UNARY_FUNCTION(Trunc, trunc)
+RVEC_STD_UNARY_FUNCTION(Round, round)
+RVEC_STD_UNARY_FUNCTION(LRound, lround)
+RVEC_STD_UNARY_FUNCTION(LLRound, llround)
+
+RVEC_STD_UNARY_FUNCTION(ErF, erf)
+RVEC_STD_UNARY_FUNCTION(ErFC, erfc)
+RVEC_STD_UNARY_FUNCTION(LGamma, lgamma)
+RVEC_STD_UNARY_FUNCTION(TGamma, tgamma)
+
 #undef RVEC_STD_UNARY_FUNCTION
+#undef RVEC_STD_BINARY_FUNCTION
 
 ///@}
 ///@name RVec Fast Mathematical Functions with Vdt
 ///@{
 
+// Define both Titlecase and lowercase names
 #ifdef R__HAS_VDT
-#define RVEC_VDT_UNARY_FUNCTION(F) RVEC_UNARY_FUNCTION(F, vdt::F)
+#define RVEC_VDT_UNARY_FUNCTION(PASCAL_NAME, LOWER_NAME) \
+   RVEC_UNARY_FUNCTION(PASCAL_NAME, vdt::LOWER_NAME)     \
+   RVEC_UNARY_FUNCTION(LOWER_NAME, vdt::LOWER_NAME)
 
-RVEC_VDT_UNARY_FUNCTION(fast_expf)
-RVEC_VDT_UNARY_FUNCTION(fast_logf)
-RVEC_VDT_UNARY_FUNCTION(fast_sinf)
-RVEC_VDT_UNARY_FUNCTION(fast_cosf)
-RVEC_VDT_UNARY_FUNCTION(fast_tanf)
-RVEC_VDT_UNARY_FUNCTION(fast_asinf)
-RVEC_VDT_UNARY_FUNCTION(fast_acosf)
-RVEC_VDT_UNARY_FUNCTION(fast_atanf)
+RVEC_VDT_UNARY_FUNCTION(Fast_ExpF, fast_expf)
+RVEC_VDT_UNARY_FUNCTION(Fast_LogF, fast_logf)
+RVEC_VDT_UNARY_FUNCTION(Fast_SinF, fast_sinf)
+RVEC_VDT_UNARY_FUNCTION(Fast_CosF, fast_cosf)
+RVEC_VDT_UNARY_FUNCTION(Fast_TanF, fast_tanf)
+RVEC_VDT_UNARY_FUNCTION(Fast_ASinF, fast_asinf)
+RVEC_VDT_UNARY_FUNCTION(Fast_ACosF, fast_acosf)
+RVEC_VDT_UNARY_FUNCTION(Fast_ATanF, fast_atanf)
 
-RVEC_VDT_UNARY_FUNCTION(fast_exp)
-RVEC_VDT_UNARY_FUNCTION(fast_log)
-RVEC_VDT_UNARY_FUNCTION(fast_sin)
-RVEC_VDT_UNARY_FUNCTION(fast_cos)
-RVEC_VDT_UNARY_FUNCTION(fast_tan)
-RVEC_VDT_UNARY_FUNCTION(fast_asin)
-RVEC_VDT_UNARY_FUNCTION(fast_acos)
-RVEC_VDT_UNARY_FUNCTION(fast_atan)
+RVEC_VDT_UNARY_FUNCTION(Fast_Exp, fast_exp)
+RVEC_VDT_UNARY_FUNCTION(Fast_Log, fast_log)
+RVEC_VDT_UNARY_FUNCTION(Fast_Sin, fast_sin)
+RVEC_VDT_UNARY_FUNCTION(Fast_Cos, fast_cos)
+RVEC_VDT_UNARY_FUNCTION(Fast_Tan, fast_tan)
+RVEC_VDT_UNARY_FUNCTION(Fast_ASin, fast_asin)
+RVEC_VDT_UNARY_FUNCTION(Fast_ACos, fast_acos)
+RVEC_VDT_UNARY_FUNCTION(Fast_ATan, fast_atan)
 #undef RVEC_VDT_UNARY_FUNCTION
 
 #endif // R__HAS_VDT
@@ -1946,7 +1960,8 @@ T Product(const RVec<T> &v, const T init = T(1)) // initialize with identity
 template <typename T>
 double Mean(const RVec<T> &v)
 {
-   if (v.empty()) return 0.;
+   if (v.empty())
+      return 0.;
    return double(Sum(v)) / v.size();
 }
 
@@ -1978,7 +1993,8 @@ double Mean(const RVec<T> &v)
 template <typename T, typename R = T>
 R Mean(const RVec<T> &v, const R zero)
 {
-   if (v.empty()) return zero;
+   if (v.empty())
+      return zero;
    return Sum(v, zero) / v.size();
 }
 
@@ -2065,13 +2081,17 @@ template <typename T>
 double Var(const RVec<T> &v)
 {
    const std::size_t size = v.size();
-   if (size < std::size_t(2)) return 0.;
+   if (size < std::size_t(2))
+      return 0.;
    T sum_squares(0), squared_sum(0);
-   auto pred = [&sum_squares, &squared_sum](const T& x) {sum_squares+=x*x; squared_sum+=x;};
+   auto pred = [&sum_squares, &squared_sum](const T &x) {
+      sum_squares += x * x;
+      squared_sum += x;
+   };
    std::for_each(v.begin(), v.end(), pred);
    squared_sum *= squared_sum;
-   const auto dsize = (double) size;
-   return 1. / (dsize - 1.) * (sum_squares - squared_sum / dsize );
+   const auto dsize = (double)size;
+   return 1. / (dsize - 1.) * (sum_squares - squared_sum / dsize);
 }
 
 /// Get the standard deviation of the elements of an RVec
@@ -2110,7 +2130,7 @@ double StdDev(const RVec<T> &v)
 /// // (ROOT::VecOps::RVec<float> &) { 8.12404f, 9.64365f, 11.2250f }
 /// ~~~
 template <typename... Args>
-auto Map(Args &&... args)
+auto Map(Args &&...args)
 {
    /*
    Here the strategy in order to generalise the previous implementation of Map, i.e.
@@ -2236,8 +2256,7 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v, Compare &&c)
    using size_type = typename RVec<T>::size_type;
    RVec<size_type> i(v.size());
    std::iota(i.begin(), i.end(), 0);
-   std::sort(i.begin(), i.end(),
-             [&v, &c](size_type i1, size_type i2) { return c(v[i1], v[i2]); });
+   std::sort(i.begin(), i.end(), [&v, &c](size_type i1, size_type i2) { return c(v[i1], v[i2]); });
    return i;
 }
 
@@ -2316,12 +2335,10 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i, const
    using size_type = typename RVec<T>::size_type;
    const size_type isize = i.size();
    RVec<T> r(isize);
-   for (size_type k = 0; k < isize; k++)
-   {
-      if (k < v.size()){
+   for (size_type k = 0; k < isize; k++) {
+      if (k < v.size()) {
          r[k] = v[i[k]];
-      }
-      else {
+      } else {
          r[k] = default_val;
       }
    }
@@ -3298,52 +3315,58 @@ RVEC_EXTERN_FLOAT_TEMPLATE(double)
 #define RVEC_EXTERN_UNARY_FUNCTION(T, NAME, FUNC) \
    extern template RVec<PromoteType<T>> NAME(const RVec<T> &);
 
-#define RVEC_EXTERN_STD_UNARY_FUNCTION(T, F) RVEC_EXTERN_UNARY_FUNCTION(T, F, std::F)
+#define RVEC_EXTERN_STD_UNARY_FUNCTION(T, PASCAL_NAME, LOWER_NAME) \
+   RVEC_EXTERN_UNARY_FUNCTION(T, PASCAL_NAME, std::LOWER_NAME)     \
+   RVEC_EXTERN_UNARY_FUNCTION(T, LOWER_NAME, std::LOWER_NAME)
 
-#define RVEC_EXTERN_BINARY_FUNCTION(T0, T1, NAME, FUNC)                            \
+#define RVEC_EXTERN_BINARY_FUNCTION(T0, T1, NAME, FUNC)                           \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &, const T1 &); \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const T0 &, const RVec<T1> &); \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &, const RVec<T1> &);
 
-#define RVEC_EXTERN_STD_BINARY_FUNCTION(T, F) RVEC_EXTERN_BINARY_FUNCTION(T, T, F, std::F)
+#define RVEC_EXTERN_STD_BINARY_FUNCTION(T, PASCAL_NAME, LOWER_NAME) \
+   RVEC_EXTERN_BINARY_FUNCTION(T, T, PASCAL_NAME, std::LOWER_NAME)  \
+   RVEC_EXTERN_BINARY_FUNCTION(T, T, LOWER_NAME, std::LOWER_NAME)
 
-#define RVEC_EXTERN_STD_FUNCTIONS(T)             \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, abs)        \
-   RVEC_EXTERN_STD_BINARY_FUNCTION(T, fdim)      \
-   RVEC_EXTERN_STD_BINARY_FUNCTION(T, fmod)      \
-   RVEC_EXTERN_STD_BINARY_FUNCTION(T, remainder) \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, exp)        \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, exp2)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, expm1)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log)        \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log10)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log2)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log1p)      \
-   RVEC_EXTERN_STD_BINARY_FUNCTION(T, pow)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, sqrt)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, cbrt)       \
-   RVEC_EXTERN_STD_BINARY_FUNCTION(T, hypot)     \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, sin)        \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, cos)        \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, tan)        \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, asin)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, acos)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, atan)       \
-   RVEC_EXTERN_STD_BINARY_FUNCTION(T, atan2)     \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, sinh)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, cosh)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, tanh)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, asinh)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, acosh)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, atanh)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, floor)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ceil)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, trunc)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, round)      \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, erf)        \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, erfc)       \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, lgamma)     \
-   RVEC_EXTERN_STD_UNARY_FUNCTION(T, tgamma)     \
+#define RVEC_EXTERN_STD_FUNCTIONS(T)                        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Abs, abs)              \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, FDim, fdim)           \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, FMod, fmod)           \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, Remainder, remainder) \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Exp, exp)              \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Exp2, exp2)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ExpM1, expm1)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Log, log)              \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Log10, log10)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Log2, log2)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Log1P, log1p)          \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, Pow, pow)             \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Sqrt, sqrt)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Cbrt, cbrt)            \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, Hypot, hypot)         \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Sin, sin)              \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Cos, cos)              \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Tan, tan)              \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ASin, asin)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ACos, acos)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ATan, atan)            \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, ATan2, atan2)         \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, SinH, sinh)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, CosH, cosh)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, TanH, tanh)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ASinH, asinh)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ACosH, acosh)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ATanH, atanh)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Floor, floor)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Ceil, ceil)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Trunc, trunc)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, Round, round)          \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, LRound, lround)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, LLRound, llround)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ErF, erf)              \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ErFC, erfc)            \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, LGamma, lgamma)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, TGamma, tgamma)
 
 RVEC_EXTERN_STD_FUNCTIONS(float)
 RVEC_EXTERN_STD_FUNCTIONS(double)
@@ -3353,25 +3376,27 @@ RVEC_EXTERN_STD_FUNCTIONS(double)
 
 #ifdef R__HAS_VDT
 
-#define RVEC_EXTERN_VDT_UNARY_FUNCTION(T, F) RVEC_EXTERN_UNARY_FUNCTION(T, F, vdt::F)
+#define RVEC_EXTERN_VDT_UNARY_FUNCTION(T, PASCAL_NAME, LOWER_NAME) \
+   RVEC_EXTERN_UNARY_FUNCTION(T, PASCAL_NAME, vdt::LOWER_NAME)     \
+   RVEC_EXTERN_UNARY_FUNCTION(T, LOWER_NAME, vdt::LOWER_NAME)
 
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_expf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_logf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_sinf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_cosf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_tanf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_asinf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_acosf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_atanf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_ExpF, fast_expf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_LogF, fast_logf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_SinF, fast_sinf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_CosF, fast_cosf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_TanF, fast_tanf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_ASinF, fast_asinf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_ACosF, fast_acosf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, Fast_ATanF, fast_atanf)
 
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_exp)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_log)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_sin)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_cos)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_tan)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_asin)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_acos)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_Exp, fast_exp)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_Log, fast_log)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_Sin, fast_sin)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_Cos, fast_cos)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_Tan, fast_tan)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_ASin, fast_asin)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_ACos, fast_acos)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, Fast_ATan, fast_atan)
 
 #endif // R__HAS_VDT
 

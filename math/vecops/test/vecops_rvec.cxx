@@ -492,6 +492,91 @@ TEST(VecOps, MathFuncs)
 #endif
 }
 
+TEST(VecOps, MathFuncsPascalCase)
+{
+   RVec<double> u{1, 1, 1};
+   RVec<double> v{1, 2, 3};
+   RVec<double> w{1, 4, 27};
+   RVec<double> p{-3, 2.7, -0.1};
+   CheckEqual(Pow(1, v), u, " error checking math function Pow");
+   CheckEqual(Pow(v, 1), v, " error checking math function Pow");
+   CheckEqual(Pow(v, v), w, " error checking math function Pow");
+
+   CheckEqual(Abs(p), Map(p, [](double x) { return std::abs(x); }), " error checking math function Abs");
+   CheckEqual(FDim(v, w), Map(v, w, [](double x, double y) { return std::fdim(x, y); }),
+              " error checking math function FDim");
+   CheckEqual(FMod(v, w), Map(v, w, [](double x, double y) { return std::fmod(x, y); }),
+              " error checking math function FMod");
+   CheckEqual(Remainder(v, w), Map(v, w, [](double x, double y) { return std::remainder(x, y); }),
+              " error checking math function Remainder");
+
+   CheckEqual(Exp(v), Map(v, [](double x) { return std::exp(x); }), " error checking math function Exp");
+   CheckEqual(Exp2(v), Map(v, [](double x) { return std::exp2(x); }), " error checking math function Exp2");
+   CheckEqual(ExpM1(v), Map(v, [](double x) { return std::expm1(x); }), " error checking math function ExpM1");
+
+   CheckEqual(Log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function Log");
+   CheckEqual(Log10(v), Map(v, [](double x) { return std::log10(x); }), " error checking math function Log10");
+   CheckEqual(Log2(v), Map(v, [](double x) { return std::log2(x); }), " error checking math function Log2");
+   CheckEqual(Log1P(v), Map(v, [](double x) { return std::log1p(x); }), " error checking math function Log1P");
+
+   CheckEqual(Sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function Sqrt");
+   CheckEqual(Cbrt(v), Map(v, [](double x) { return std::cbrt(x); }), " error checking math function Cbrt");
+   CheckEqual(Hypot(v, w), Map(v, w, [](double x, double y) { return std::hypot(x, y); }),
+              " error checking math function Hypot");
+
+   CheckEqual(Sin(v), Map(v, [](double x) { return std::sin(x); }), " error checking math function Sin");
+   CheckEqual(Cos(v), Map(v, [](double x) { return std::cos(x); }), " error checking math function Cos");
+   CheckEqual(Tan(v), Map(v, [](double x) { return std::tan(x); }), " error checking math function Tan");
+   CheckEqual(ATan(v), Map(v, [](double x) { return std::atan(x); }), " error checking math function ATan");
+   CheckEqual(ATan2(v, w), Map(v, w, [](double x, double y) { return std::atan2(x, y); }),
+              " error checking math function ATan2");
+   CheckEqual(SinH(v), Map(v, [](double x) { return std::sinh(x); }), " error checking math function SinH");
+   CheckEqual(CosH(v), Map(v, [](double x) { return std::cosh(x); }), " error checking math function CosH");
+   CheckEqual(TanH(v), Map(v, [](double x) { return std::tanh(x); }), " error checking math function TanH");
+   CheckEqual(ASinH(v), Map(v, [](double x) { return std::asinh(x); }), " error checking math function ASinH");
+   CheckEqual(ACosH(v), Map(v, [](double x) { return std::acosh(x); }), " error checking math function ACosH");
+   v /= 10.;
+   CheckEqual(ASin(v), Map(v, [](double x) { return std::asin(x); }), " error checking math function ASin");
+   CheckEqual(ACos(v), Map(v, [](double x) { return std::acos(x); }), " error checking math function ACos");
+   CheckEqual(ATanH(v), Map(v, [](double x) { return std::atanh(x); }), " error checking math function ATanH");
+
+   CheckEqual(Floor(p), Map(p, [](double x) { return std::floor(x); }), " error checking math function Floor");
+   CheckEqual(Ceil(p), Map(p, [](double x) { return std::ceil(x); }), " error checking math function Ceil");
+   CheckEqual(Trunc(p), Map(p, [](double x) { return std::trunc(x); }), " error checking math function Trunc");
+   CheckEqual(Round(p), Map(p, [](double x) { return std::round(x); }), " error checking math function Round");
+   CheckEqual(LRound(p), Map(p, [](double x) { return std::lround(x); }), " error checking math function LRound");
+   CheckEqual(LLRound(p), Map(p, [](double x) { return std::llround(x); }), " error checking math function LLRound");
+
+   CheckEqual(ErF(v), Map(v, [](double x) { return std::erf(x); }), " error checking math function ErF");
+   CheckEqual(ErFC(v), Map(v, [](double x) { return std::erfc(x); }), " error checking math function ErFC");
+   CheckEqual(LGamma(v), Map(v, [](double x) { return std::lgamma(x); }), " error checking math function LGamma");
+   CheckEqual(TGamma(v), Map(v, [](double x) { return std::tgamma(x); }), " error checking math function TGamma");
+
+#ifdef R__HAS_VDT
+#define CHECK_VDT_FUNC_PASCAL(PASCAL, LOWER)                                           \
+   CheckEqual(Fast_##PASCAL(v), Map(v, [](double x) { return vdt::fast_##LOWER(x); }), \
+              "error checking vdt function " #LOWER);
+
+   CHECK_VDT_FUNC_PASCAL(ExpF, expf)
+   CHECK_VDT_FUNC_PASCAL(LogF, logf)
+   CHECK_VDT_FUNC_PASCAL(SinF, sinf)
+   CHECK_VDT_FUNC_PASCAL(CosF, cosf)
+   CHECK_VDT_FUNC_PASCAL(TanF, tanf)
+   CHECK_VDT_FUNC_PASCAL(ASinF, asinf)
+   CHECK_VDT_FUNC_PASCAL(ACosF, acosf)
+   CHECK_VDT_FUNC_PASCAL(ATanF, atanf)
+
+   CHECK_VDT_FUNC_PASCAL(Exp, exp)
+   CHECK_VDT_FUNC_PASCAL(Log, log)
+   CHECK_VDT_FUNC_PASCAL(Sin, sin)
+   CHECK_VDT_FUNC_PASCAL(Cos, cos)
+   CHECK_VDT_FUNC_PASCAL(Tan, tan)
+   CHECK_VDT_FUNC_PASCAL(ASin, asin)
+   CHECK_VDT_FUNC_PASCAL(ACos, acos)
+   CHECK_VDT_FUNC_PASCAL(ATan, atan)
+#endif
+}
+
 TEST(VecOps, PhysicsSelections)
 {
    // We emulate 8 muons
@@ -824,15 +909,15 @@ TEST(VecOps, TakeN)
    auto res = Take(x,5,1);
    RVec<int> expected = {1,2,3,4,1};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,-5,1);
    expected = {1,1,2,3,4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,-1,1);
    expected = {4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,4,1);
    expected = {1,2,3,4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
@@ -873,7 +958,7 @@ TEST(VecOps, RangeBeginEndStride)
 {
     const RVecI ref{1, 3};
     CheckEqual(Range(1, 5, 2), ref);
-    
+
     CheckEqual(Range(-1, 8, 3), RVecI{-1, 2, 5});
     CheckEqual(Range(6, 1, -1), RVecI{6, 5, 4, 3, 2});
     CheckEqual(Range(-3, -9, -2), RVecI{-3, -5, -7});
