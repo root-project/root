@@ -1344,6 +1344,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // (the friends of the chain will be updated in the
       // next loop).
       fTree->LoadTree(treeReadEntry);
+
       if (fFriends) {
          // The current tree has not changed but some of its friends might.
          //
@@ -1527,6 +1528,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
          returnCode = -4;
       } else if (!fGlobalRegistration) {
          fTree->ResetBit(kMustCleanup);
+      }
+      // Propagate the IMT settings
+      if (fTree) {
+         fTree->SetImplicitMT(fIMTEnabled);
       }
    }
 
