@@ -115,3 +115,21 @@ TEST(TTreeRegressions, GetLeafAndFriends)
    EXPECT_EQ(t.GetLeaf("asdklj", "x"), nullptr);
    EXPECT_EQ(t.GetLeaf("asdklj", "vec"), nullptr);
 }
+
+// ROOT-4839
+TEST(TTreeRegressions, RefreshAndGetEntry)
+{
+   TMemFile f("RefreshAndGetEntry.root", "recreate");
+   {
+      TTree t("t", "t");
+      int x = 42;
+      t.Branch("x", &x);
+      t.Fill();
+      t.Write();
+   }
+
+   auto t = f.Get<TTree>("t");
+   EXPECT_EQ(t->GetEntry(0), 4);
+   t->Refresh();
+   EXPECT_EQ(t->GetEntry(0), 4);
+}
