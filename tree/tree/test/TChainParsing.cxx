@@ -294,4 +294,13 @@ TEST(TChainParsing, RemoteGlob)
    auto chainFileNames = GetFileNamesVec(chainFiles);
    EXPECT_VEC_EQ(chainFileNames, expectedFileNames);
 }
+
+TEST(TChainParsing, DoubleSlash)
+{
+   // Tests #7159
+   TChain c("Events");
+   c.Add("root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod//ZZTo2e2mu.root");
+   EXPECT_EQ(c.GetEntries(), 1497445);
+}
+
 #endif
