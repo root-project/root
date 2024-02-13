@@ -191,23 +191,12 @@ std::pair<std::size_t, std::chrono::seconds> ProgressHelper::RecordEvtCountAndTi
 }
 
 namespace {
-/// Format std::chrono::seconds as `1:30m`.
-std::ostream &operator<<(std::ostream &stream, std::chrono::seconds elapsedSeconds)
-{
-   auto h = std::chrono::duration_cast<std::chrono::hours>(elapsedSeconds);
-   auto m = std::chrono::duration_cast<std::chrono::minutes>(elapsedSeconds - h);
-   auto s = (elapsedSeconds - h - m).count();
-   if (h.count() > 0)
-      stream << h.count() << ':' << std::setw(2) << std::right << std::setfill('0');
-   stream << m.count() << ':' << std::setw(2) << std::right << std::setfill('0') << s;
-   return stream << (h.count() > 0 ? 'h' : 'm');
-}
 
 struct RestoreStreamState {
    RestoreStreamState(std::ostream &stream) : fStream(stream), fFlags(stream.flags()), fFillChar(stream.fill()) {}
    ~RestoreStreamState()
    {
-      fStream.setf(fFlags);
+      fStream.flags(fFlags);
       fStream.fill(fFillChar);
    }
 
@@ -215,12 +204,28 @@ struct RestoreStreamState {
    std::ios_base::fmtflags fFlags;
    std::ostream::char_type fFillChar;
 };
+
+/// Format std::chrono::seconds as `1:30m`.
+std::ostream &operator<<(std::ostream &stream, std::chrono::seconds elapsedSeconds)
+{
+   RestoreStreamState restore(stream);
+   auto h = std::chrono::duration_cast<std::chrono::hours>(elapsedSeconds);
+   auto m = std::chrono::duration_cast<std::chrono::minutes>(elapsedSeconds - h);
+   auto s = (elapsedSeconds - h - m).count();
+
+   if (h.count() > 0)
+      stream << h.count() << ':' << std::setw(2) << std::right << std::setfill('0');
+   stream << m.count() << ':' << std::setw(2) << std::right << std::setfill('0') << s;
+   return stream << (h.count() > 0 ? 'h' : 'm');
+}
+
 } // namespace
 
 /// Print event and time statistics.
 void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCount,
                                 std::chrono::seconds elapsedSeconds) const
 {
+   RestoreStreamState restore(stream);
    auto evtpersec = EvtPerSec();
    auto GetNEventsOfCurrentFile = ComputeNEventsSoFar();
    auto currentFileIdx = ComputeCurrentFileIdx();
@@ -267,6 +272,7 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
 
 void ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds elapsedSeconds) const
 {
+   RestoreStreamState restore(stream);
    auto totalEvents = ComputeNEventsSoFar();
    auto totalFiles = fTotalFiles;
 
