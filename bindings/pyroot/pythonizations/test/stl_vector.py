@@ -44,20 +44,6 @@ class STL_vector(unittest.TestCase):
             self.assertFalse(vector.empty())
             self.assertTrue(bool(vector))
 
-    def test_stl_set_boolean(self):
-        """
-        Test that the boolean conversion of a std::vector works as expected.
-        https://github.com/root-project/root/issues/14573
-        """
-        for entry_type in ['int', 'float', 'double']:
-            vector = ROOT.stl.vector[entry_type]()
-            self.assertTrue(vector.empty())
-            self.assertFalse(bool(vector))
-
-            vector.insert(1)
-            self.assertFalse(vector.empty())
-            self.assertTrue(bool(vector))
-
     def test_tree_with_containers(self):
         """
         Test that the boolean conversion of a std::vector works as expected inside a TTree.
