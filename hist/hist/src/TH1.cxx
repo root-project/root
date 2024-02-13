@@ -1709,8 +1709,9 @@ int TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f$ \chi^{2} \f$ test for comparing weighted and unweighted histograms
+/// \f$ \chi^{2} \f$ test for comparing weighted and unweighted histograms.
 ///
+/// Compares the histograms' adjusted (normalized) residuals.
 /// Function: Returns p-value. Other return values are specified by the 3rd parameter
 ///
 /// \param[in] h2 the second histogram
