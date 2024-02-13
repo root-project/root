@@ -48,7 +48,7 @@ void th2polyUSA()
    Double_t lon2 = -65;
    Double_t lat1 = 24;
    Double_t lat2 = 50;
-   TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
+   TH2Poly *p = new TH2Poly("Lower48","Lower 48 Population (2009);Latitude;Longitude",lon1,lon2,lat1,lat2);
 
    TFile::SetCacheFileDir(".");
    TFile *f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
@@ -70,9 +70,13 @@ void th2polyUSA()
       }
    }
 
-   // Fill TH2Poly.
+   // Fill TH2Poly, with capital letters for the states names
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
-   gStyle->SetOptStat(11);
+   gStyle->SetOptStat(0);
    p->Draw("colz textn");
+
+   // Add the reference for the population
+   TLatex pupulationRef(-128, 27, "#scale[.55]{#splitline{Source:}{http://eadiv.state.wy.us/pop/st-09est.htm}}");
+   pupulationRef.DrawClone();
 }
