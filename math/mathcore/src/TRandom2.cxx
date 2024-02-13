@@ -165,5 +165,5 @@ void TRandom2::SetSeed(ULong_t seed)
 ///
 UInt_t TRandom2::GetSeed() const
 {
-  return fSeed;
+   return fSeed;
 }
