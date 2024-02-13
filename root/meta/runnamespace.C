@@ -1,11 +1,11 @@
 {
    gROOT->ProcessLine(".L fornamespace.C+");
 gROOT->GetClass("MySpace::MyClass");
-#ifdef ClingWorkAroundAutoParseUsingNamespace
-   // This does not work: gInterpreter->AutoParse("MySpace");
-   // so try that:
+if (!strstr(gROOT->GetConfigFeatures(), "modules")) {
+   // Without modules, we explicitly need to autoparse
    gInterpreter->AutoParse("MySpace::MyClass");
-#endif
+}
+
 #ifdef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine("using namespace MySpace;");
 #else
