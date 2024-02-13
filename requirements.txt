@@ -6,7 +6,7 @@ numpy>=1.4.1
 tensorflow
 keras
 torch
-sklearn
+scikit-learn
 xgboost
 sonnet
 graph_nets
