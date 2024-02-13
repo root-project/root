@@ -548,7 +548,7 @@ public:
    void               SetContextMenuTitle(const char *title);
    void               SetCurrentStreamerInfo(TVirtualStreamerInfo *info);
    void               SetGlobalIsA(IsAGlobalFunc_t);
-   void               SetDeclFile(const char *name, int line) { fDeclFileName = name; fDeclFileLine = line; }
+   void               SetDeclFile(const char *name, Short_t line) { fDeclFileName = name; fDeclFileLine = line; }
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
    void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);
    void               SetDirectoryAutoAdd(ROOT::DirAutoAdd_t dirAutoAddFunc);
