@@ -24,6 +24,7 @@ class STL_set(unittest.TestCase):
         """
         Instantiate std::set with different types.
         """
+
         for entry_type in ['int', 'float', 'double', 'char', 'const char*', 'std::string']:
             ROOT.std.set[entry_type]()
 
@@ -32,6 +33,7 @@ class STL_set(unittest.TestCase):
         Test that the boolean conversion of a std::set works as expected.
         https://github.com/root-project/root/issues/14573
         """
+
         for entry_type in ['int', 'float', 'double']:
             s = ROOT.std.set[entry_type]()
             self.assertTrue(s.empty())
@@ -40,6 +42,38 @@ class STL_set(unittest.TestCase):
             s.insert(1)
             self.assertFalse(s.empty())
             self.assertTrue(bool(s))
+
+    def test_stl_set_tree(self):
+        """
+        Test that a TTree with a std::set branch behaves as expected.
+        """
+
+        tree = ROOT.TTree("tree", "Tree with std::vector")
+
+        entries_to_fill = [
+            set(),
+            {1},
+            {1, 2},
+        ]
+
+        # Create variables to store std::vector elements
+        entry_root = ROOT.std.set(int)()
+
+        # Create branches in the TTree
+        tree.Branch("set", entry_root)
+
+        for entry in entries_to_fill:
+            entry_root.clear()
+            for element in entry:
+                entry_root.insert(element)
+            tree.Fill()
+
+        for i in range(tree.GetEntries()):
+            tree.GetEntry(i)
+            entry_python = entries_to_fill[i]
+            self.assertEqual(entry_python, set(entry_root))
+            self.assertEqual(bool(entry_python), bool(entry_root))
+            self.assertEqual(len(entry_python), len(entry_root))
 
 
 if __name__ == '__main__':
