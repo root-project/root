@@ -14,7 +14,6 @@
 #include "ROOT/EExecutionPolicy.hxx"
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSeq.hxx"
-#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 
 #include <initializer_list>
 #include <numeric> //std::accumulate
@@ -25,9 +24,6 @@ namespace ROOT {
 
    class TSequentialExecutor: public TExecutorCRTP<TSequentialExecutor> {
       friend TExecutorCRTP;
-
-      template <typename F, typename... Args>
-      using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
 
    public:
 
