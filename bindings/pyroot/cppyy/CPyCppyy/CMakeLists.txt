@@ -47,20 +47,20 @@ set(sources
 
 file(RELATIVE_PATH PYTHONDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_PYTHONDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
 
-set(libname cppyy${PYTHON_UNDER_VERSION_STRING})
+set(libname cppyy)
 
 add_library(${libname} SHARED ${headers} ${sources})
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
 if(MSVC)
-  target_link_libraries(${libname} PUBLIC cppyy_backend${PYTHON_UNDER_VERSION_STRING} ${PYTHON_LIBRARIES})
+  target_link_libraries(${libname} PUBLIC cppyy_backend ${PYTHON_LIBRARIES})
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES PREFIX "lib")
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
 elseif(APPLE)
-  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup cppyy_backend${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup cppyy_backend)
 else()
-  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all cppyy_backend${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all cppyy_backend)
 endif()
 
 if(NOT MSVC)
