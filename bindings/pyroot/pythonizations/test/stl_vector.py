@@ -50,7 +50,7 @@ class STL_vector(unittest.TestCase):
         https://github.com/root-project/root/issues/14573
         """
         for entry_type in ['int', 'float', 'double']:
-            vector = ROOT.set.vector[entry_type]()
+            vector = ROOT.stl.vector[entry_type]()
             self.assertTrue(vector.empty())
             self.assertFalse(bool(vector))
 
