@@ -47,17 +47,17 @@ public:
    TRandom1(Int_t rowIndex, Int_t colIndex, Int_t lux );
    ~TRandom1() override;
    // Returns current luxury value.
-   virtual Int_t GetLuxury() const {return fLuxury;}
+   virtual Int_t GetLuxury() const { return fLuxury; }
    // Returns the current seed (first element of the table) \warning This is not the initial seed!
-   UInt_t GetSeed() const override { return  UInt_t ( fFloatSeedTable[0] /  fMantissaBit24 ) ; }
+   UInt_t GetSeed() const override { return UInt_t(fFloatSeedTable[0] / fMantissaBit24); }
    // Returns the pointer to the current seeds array.
-   const UInt_t *GetTheSeeds() const {return fTheSeeds;}
+   const UInt_t *GetTheSeeds() const { return fTheSeeds; }
    // Returns the current array of seeds.
-   static void GetTableSeeds(UInt_t* seeds, Int_t index);
+   static void GetTableSeeds(UInt_t *seeds, Int_t index);
    using TRandom::Rndm;
-   Double_t Rndm( ) override;
-    void     RndmArray(Int_t size, Float_t *vect) override;
-    void     RndmArray(Int_t size, Double_t *vect) override;
+   Double_t Rndm() override;
+   void RndmArray(Int_t size, Float_t *vect) override;
+   void RndmArray(Int_t size, Double_t *vect) override;
    virtual  void     SetSeed2(UInt_t seed, Int_t lux=3);
                      // Sets the state of the algorithm according to seed.
    virtual  void     SetSeeds(const UInt_t * seeds, Int_t lux=3);
