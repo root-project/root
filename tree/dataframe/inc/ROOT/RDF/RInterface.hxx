@@ -569,7 +569,7 @@ public:
       RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister, fLoopManager->GetBranchNames(),
                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
-      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType_t));
+      auto retTypeName = ROOT::Internal::GetDemangledTypeName(typeid(RetType_t));
       if (retTypeName.empty()) {
          // The type is not known to the interpreter.
          // We must not error out here, but if/when this column is used in jitted code
@@ -2952,9 +2952,9 @@ private:
       CheckAndFillDSColumns(validColumnNames, ColTypes_t());
 
       // Declare return type to the interpreter, for future use by jitted actions
-      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
+      auto retTypeName = ROOT::Internal::GetDemangledTypeName(typeid(RetType));
       if (retTypeName.empty()) {
-         // The type is not known to the interpreter.
+         // The type is not known to the interpreter
          // We must not error out here, but if/when this column is used in jitted code
          const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
          retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
@@ -3063,7 +3063,7 @@ private:
       const auto validColumnNames = GetValidatedColumnNames(nColumns, inputColumns);
       CheckAndFillDSColumns(validColumnNames, ColTypes_t{});
 
-      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
+      auto retTypeName = ROOT::Internal::GetDemangledTypeName(typeid(RetType));
       if (retTypeName.empty()) {
          // The type is not known to the interpreter, but we don't want to error out
          // here, rather if/when this column is used in jitted code, so we inject a broken but telling type name.

@@ -59,8 +59,8 @@ class RResultHandle {
    {
       if (*fType != type) {
          std::stringstream ss;
-         ss << "Got the type " << ROOT::Internal::RDF::TypeID2TypeName(type)
-            << " but the RResultHandle refers to a result of type " << ROOT::Internal::RDF::TypeID2TypeName(*fType)
+         ss << "Got the type " << ROOT::Internal::GetDemangledTypeName(type)
+            << " but the RResultHandle refers to a result of type " << ROOT::Internal::GetDemangledTypeName(*fType)
             << ".";
          throw std::runtime_error(ss.str());
       }

@@ -62,7 +62,7 @@ class RVecDS final : public ROOT::RDF::RDataSource {
    {
       auto colNameStr = std::string(colName);
       // This could be optimised and done statically
-      const auto idName = ROOT::Internal::RDF::TypeID2TypeName(id);
+      const auto idName = ROOT::Internal::GetDemangledTypeName(id);
       auto it = fColTypesMap.find(colNameStr);
       if (fColTypesMap.end() == it) {
          std::string err = "The specified column name, \"" + colNameStr + "\" is not known to the data source.";
@@ -125,7 +125,7 @@ public:
    RVecDS(std::function<void()> deleteRVecs, std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colsNameVals)
       : fColumns(colsNameVals.second...),
         fColNames{colsNameVals.first...},
-        fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
+        fColTypesMap({{colsNameVals.first, ROOT::Internal::GetDemangledTypeName(typeid(ColumnTypes))}...}),
         fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}),
         fDeleteRVecs(deleteRVecs)
    {

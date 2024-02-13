@@ -102,8 +102,8 @@ protected:
             const auto *expectedTypeID = define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(colTypes[i]);
             if (innerTypeID != *expectedTypeID)
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
-                                        RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
-                                        colTypes[i] + ").");
+                                        ROOT::Internal::GetDemangledTypeName(innerTypeID) +
+                                        ") than the nominal value (" + colTypes[i] + ").");
          }
       } else { // we are varying a single column, RetType is RVec<T>
          const auto &retTypeID = typeid(typename RetType::value_type);
@@ -113,7 +113,7 @@ protected:
             define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(GetColumnType(colName));
          if (retTypeID != *expectedTypeID)
             throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
-                                     RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
+                                     ROOT::Internal::GetDemangledTypeName(retTypeID) + ") than the nominal value (" +
                                      GetColumnType(colName) + ").");
       }
 
