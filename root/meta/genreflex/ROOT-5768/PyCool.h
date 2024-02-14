@@ -147,7 +147,7 @@
 #include "CoolApplication/MessageLevels.h"
 
 // RelationalCool helpers for PyCool
-#include "../RelationalCool/src/PyCool_helpers.h"
+#include "RelationalCool/src/PyCool_helpers.h"
 
 // Pythonize a subset of CORAL RelationalAccess too
 #include "RelationalAccess/IConnectionService.h"
@@ -195,10 +195,6 @@ namespace dummy
   public:
 
     std::type_info                *aTypeInfo;
-
-#ifndef COOL_HAS_CPP11
-    boost::detail::shared_count aSharedCount;
-#endif
 
     coral::Blob aBlob;
     //coral::Date                   aDate;
