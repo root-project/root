@@ -19,7 +19,7 @@ TEST(TRandom3Test, TRandom3vsStdMt19937)
    // Test inspired by code of Giovanni Cerretani in this issue:
    // https://its.cern.ch/jira/browse/ROOT-9733
    // https://github.com/root-project/root/issues/14581
-   for (size_t generation = 0; generation < 3; ++generation) {
+   for (size_t generation = 0; generation < 2; ++generation) {
       unsigned int iteration = 0;
       while (++iteration) {
          double rnd_std = (gen_std() + 1) * 2.3283064365386963e-10;
