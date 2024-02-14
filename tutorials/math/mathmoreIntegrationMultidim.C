@@ -1,12 +1,32 @@
-#include "Math/IntegratorMultiDim.h"
-#include "Math/Functor.h"
-
+/// \file
+/// \ingroup tutorial_math
+/// \notebook -nodraw
+/// Example on the usage of the multidimensional integration algorithm of MathMore
+/// Please refer to the web documentation for further details: 
+///      https://root.cern.ch/root/htmldoc/guides/users-guide/MathLibraries.html#numerical-integration
+/// To execute the macro type the following:
+///
+/// ~~~{.cpp}
+/// root[0] .x mathmoreIntegrationMultidim.C
+/// ~~~
+///
+/// This tutorials require having libMathMore built with ROOT.
+///
+/// To build mathmore you need to have a version of GSL >= 1.8 installed in your system
+/// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
+/// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors A. Tolosa-Delgado
 
 double f2(const double * x) {
    return x[0] + x[1];
 }
 
-int testIntegrationMultiDim() {
+int mathmoreIntegrationMultidim() {
 
    const double RESULT = 1.0;
    const double ERRORLIMIT = 1E-3;
