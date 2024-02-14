@@ -147,6 +147,47 @@ TEST(RNTuple, WriteRead)
    EXPECT_STREQ("abc", rdKlass->s.c_str());
 }
 
+TEST(RNTuple, WriteReadInlinedModel)
+{
+   FileRaii fileGuard("test_ntuple_writeread_inlinedmodel.root");
+
+   {
+      auto writer = RNTupleWriter::Recreate({
+         {"std::uint32_t", "id"},
+         {"std::vector<float>", "vpx"},
+         {"std::vector<float>", "vpy"},
+         {"std::vector<float>", "vpz"},
+      }, "NTuple", fileGuard.GetPath());
+
+      auto entry = writer->CreateEntry();
+      *entry->GetPtr<std::uint32_t>("id") = 1;
+      *entry->GetPtr<std::vector<float>>("vpx") = {1.0, 1.1, 1.2};
+      *entry->GetPtr<std::vector<float>>("vpy") = {2.0, 2.1, 2.2};
+      *entry->GetPtr<std::vector<float>>("vpz") = {3.0, 3.1, 3.2};
+
+      writer->Fill(*entry);
+   }
+
+   auto reader = RNTupleReader::Open("NTuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   auto readid = reader->GetModel().GetDefaultEntry().GetPtr<std::uint32_t>("id");
+   EXPECT_EQ(1, *readid);
+   auto readvpx = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vpx");
+   EXPECT_FLOAT_EQ(1.0, (*readvpx)[0]);
+   EXPECT_FLOAT_EQ(1.1, (*readvpx)[1]);
+   EXPECT_FLOAT_EQ(1.2, (*readvpx)[2]);
+   auto readvpy = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vpy");
+   EXPECT_FLOAT_EQ(2.0, (*readvpy)[0]);
+   EXPECT_FLOAT_EQ(2.1, (*readvpy)[1]);
+   EXPECT_FLOAT_EQ(2.2, (*readvpy)[2]);
+   auto readvpz = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vpz");
+   EXPECT_FLOAT_EQ(3.0, (*readvpz)[0]);
+   EXPECT_FLOAT_EQ(3.1, (*readvpz)[1]);
+   EXPECT_FLOAT_EQ(3.2, (*readvpz)[2]);
+
+}
+
 TEST(RNTuple, FileAnchor)
 {
    FileRaii fileGuard("test_ntuple_file_anchor.root");
