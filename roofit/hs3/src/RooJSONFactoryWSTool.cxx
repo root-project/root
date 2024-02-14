@@ -1120,6 +1120,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
 
    for (size_t i = 0; i < nprox; ++i) {
       RooAbsProxy *p = func.getProxy(i);
+      if(!p) continue;
 
       // some proxies start with a "!". This is a magic symbol that we don't want to stream
       std::string pname(p->name());
@@ -1151,6 +1152,10 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
 
    // export all the servers of a given RooAbsArg
    for (RooAbsArg *s : func.servers()) {
+      if(!s){
+	std::cerr << "unable to locate server of " << func.GetName() << std::endl;
+	continue;
+      }
       this->exportObject(*s, exportedObjectNames);
    }
 }
