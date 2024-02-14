@@ -597,27 +597,3 @@ void TRandom1::SetSeed(ULong_t seed)
    // Set RanLux seed using the luxury level provided in the constructor
    SetSeed2(seed,fLuxury);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Returns current luxury value.
-///
-Int_t TRandom1::GetLuxury() const
-{
-   return fLuxury;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Returns the current seed (first element of the seed table).
-///
-/// \warning This is not the initial seed!
-UInt_t TRandom1::GetSeed() const
-{
-   return static_cast<UInt_t>(fFloatSeedTable[0] / fMantissaBit24);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Returns the pointer to the current seeds array.
-const UInt_t *TRandom1::GetTheSeeds() const
-{
-   return fTheSeeds;
-}
