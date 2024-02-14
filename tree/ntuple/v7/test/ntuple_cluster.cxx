@@ -362,7 +362,7 @@ TEST(PageStorageFile, LoadClusters)
 
    auto column = ROOT::Experimental::Internal::RColumn::Create<float>(
       ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0);
-   column->Connect(ptId, &source);
+   column->ConnectPageSource(ptId, source);
    clusterKeys[0].fClusterId = 1;
    clusterKeys[0].fPhysicalColumnSet.insert(colId);
    cluster = std::move(source.LoadClusters(clusterKeys)[0]);

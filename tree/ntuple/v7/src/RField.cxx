@@ -893,7 +893,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSi
       fPrincipalColumn = fColumns[0].get();
    for (auto &column : fColumns) {
       auto firstElementIndex = (column.get() == fPrincipalColumn) ? EntryToColumnElementIndex(firstEntry) : 0;
-      column->Connect(fOnDiskId, &pageSink, firstElementIndex);
+      column->ConnectPageSink(fOnDiskId, pageSink, firstElementIndex);
    }
 
    fState = EState::kConnectedToSink;
@@ -937,7 +937,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();
    for (auto& column : fColumns)
-      column->Connect(fOnDiskId, &pageSource);
+      column->ConnectPageSource(fOnDiskId, pageSource);
    OnConnectPageSource();
 
    fState = EState::kConnectedToSource;
