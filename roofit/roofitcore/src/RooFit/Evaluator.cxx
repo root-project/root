@@ -666,7 +666,7 @@ RooArgSet Evaluator::getParameters() const
 {
    RooArgSet parameters;
    for (auto &nodeInfo : _nodes) {
-      if (!nodeInfo.fromArrayInput && nodeInfo.isVariable) {
+      if (nodeInfo.isVariable) {
          parameters.add(*nodeInfo.absArg);
       }
    }

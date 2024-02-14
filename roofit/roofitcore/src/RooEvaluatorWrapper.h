@@ -22,6 +22,7 @@
 #include <RooRealProxy.h>
 #include <RooFit/Evaluator.h>
 
+#include "RooFit/Detail/BatchModeDataHelpers.h"
 #include "RooFit/Detail/Buffers.h"
 
 #include <chrono>
@@ -72,6 +73,7 @@ private:
    RooSimultaneous const *_simPdf = nullptr;
    const bool _takeGlobalObservablesFromData;
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources
+   std::map<RooFit::Detail::DataKey, std::span<const double>> _dataSpans;
 };
 
 #endif
