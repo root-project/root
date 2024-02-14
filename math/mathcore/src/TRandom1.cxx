@@ -587,7 +587,7 @@ void TRandom1::SetSeed2(UInt_t seed, int lux)
 /// The initialisation of the other state values is carried out using a Multiplicative
 /// Congruential generator.
 ///
-/// Note: When seed = 0, a random and unique seed is generated.
+/// \note When seed = 0, a random and unique seed is generated.
 ///
 /// \param[in] seed   seed value (note special case if seed=0)
 ///
