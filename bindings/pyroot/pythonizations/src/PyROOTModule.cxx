@@ -104,7 +104,6 @@ static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       LIBROOTPYZ_N
 
 /// Initialization of extension module libROOTPythonizations
 
-#define PYROOT_INIT_ERROR return NULL
 LIBROOTPYZ_INIT_FUNCTION(extern "C" PyObject* PyInit_libROOTPythonizations, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
 {
    using namespace PyROOT;
@@ -112,7 +111,7 @@ LIBROOTPYZ_INIT_FUNCTION(extern "C" PyObject* PyInit_libROOTPythonizations, PY_M
 // setup PyROOT
    gRootModule = PyModule_Create(&moduledef);
    if (!gRootModule)
-      PYROOT_INIT_ERROR;
+      return nullptr;
 
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
