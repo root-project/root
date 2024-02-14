@@ -366,6 +366,21 @@ ROOT::Experimental::RNTupleWriter::Recreate(std::unique_ptr<RNTupleModel> model,
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
+ROOT::Experimental::RNTupleWriter::Recreate(std::initializer_list<std::pair<std::string_view, std::string_view>> fields, std::string_view ntupleName,
+                                            std::string_view storage, const RNTupleWriteOptions &options)
+{
+   auto sink = Detail::RPagePersistentSink::Create(ntupleName, storage, options);
+   auto model = RNTupleModel::Create();
+   for ( const auto& fieldDesc : fields ) {
+      std::string typeName(fieldDesc.first);
+      std::string fieldName(fieldDesc.second);
+      auto field = RFieldBase::Create(fieldName, typeName);
+      model->AddField(field.Unwrap());
+   }
+   return Create(std::move(model), std::move(sink), options);
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, TFile &file,
                                           const RNTupleWriteOptions &options)
 {
