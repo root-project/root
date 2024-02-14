@@ -30,9 +30,17 @@ Examples:
 - rootcp --recreate source.root:hist dest.root
   Recreate 'dest.root' and copy the histogram named 'hist' from 'source.root' into it.
 
-- rootcp -c 1 source.root:hist dest.root
-  Change compression factor of 'dest.root' if not existing and copy the histogram named 'hist' from 'source.root' into it.
-"""
+- rootcp -c 101 source.root:hist dest.root
+  Change compression, if not existing, of 'dest.root' to ZLIB algorithm with compression level 1 and copy the histogram named 'hist' from 'source.root' into it.
+  Meaning of the '-c' argument is given by 'compress = 100 * algorithm + level'.
+  Other examples of usage:
+    * -c 509 : ZSTD with compression level 9
+    * -c 404 : LZ4 with compression level 4
+    * -c 207 : LZMA with compression level 7
+  For more information see https://root.cern.ch/doc/master/classTFile.html#ad0377adf2f3d88da1a1f77256a140d60
+  and https://root.cern.ch/doc/master/structROOT_1_1RCompressionSetting.html
+
+  """
 
 def get_argparse():
 	# Collect arguments with the module argparse
