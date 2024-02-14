@@ -18,8 +18,6 @@
 // only the branch of the computation graph that the node belongs to.
 // If a filename is passed as second argument, the graph is saved to that file, otherwise it is returned as a string.
 
-R__LOAD_LIBRARY(ROOTDataFrame) // only required for ROOT installations without runtime_cxxmodules
-
 void df034_SaveGraph()
 {
    ROOT::RDataFrame rd1(1);
