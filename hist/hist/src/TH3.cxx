@@ -3528,6 +3528,7 @@ TH3C::TH3C(const TH3C &h3c) : TH3(), TArrayC()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3C::AddBinContent(Int_t bin)
 {
@@ -3537,6 +3538,7 @@ void TH3C::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3C::AddBinContent(Int_t bin, Double_t w)
 {
@@ -3794,6 +3796,7 @@ TH3S::TH3S(const TH3S &h3s) : TH3(), TArrayS()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3S::AddBinContent(Int_t bin)
 {
@@ -3803,6 +3806,7 @@ void TH3S::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3S::AddBinContent(Int_t bin, Double_t w)
 {
@@ -4031,6 +4035,7 @@ TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3I::AddBinContent(Int_t bin)
 {
@@ -4040,6 +4045,7 @@ void TH3I::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3I::AddBinContent(Int_t bin, Double_t w)
 {
