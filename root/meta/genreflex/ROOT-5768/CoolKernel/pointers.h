@@ -6,11 +6,7 @@
 #include "CoolKernel/VersionInfo.h"
 
 // Include files
-#ifdef COOL_HAS_CPP11
 #include <memory>
-#else
-#include <boost/shared_ptr.hpp>
-#endif
 #include <vector>
 
 namespace cool 
@@ -39,8 +35,6 @@ namespace cool
 #ifdef COOL300
   class ITransaction;
 #endif
-
-#ifdef COOL_HAS_CPP11
   // STD shared pointers
   typedef std::shared_ptr<IDatabase> IDatabasePtr;
   typedef std::shared_ptr<IFolder> IFolderPtr;
@@ -54,22 +48,6 @@ namespace cool
   typedef std::shared_ptr<IRecordVector> IRecordVectorPtr;
 #ifdef COOL300
   typedef std::shared_ptr<ITransaction> ITransactionPtr;
-#endif
-#else
-  // Boost shared pointers
-  typedef boost::shared_ptr<IDatabase> IDatabasePtr;
-  typedef boost::shared_ptr<IFolder> IFolderPtr;
-  typedef boost::shared_ptr<IFolderSet> IFolderSetPtr;
-  typedef boost::shared_ptr<IObject> IObjectPtr;
-  typedef boost::shared_ptr<IObjectIterator> IObjectIteratorPtr;
-  typedef std::vector<IObjectPtr> IObjectVector;
-  typedef boost::shared_ptr<IObjectVector> IObjectVectorPtr;
-  typedef boost::shared_ptr<IRecord> IRecordPtr;
-  typedef std::vector<IRecordPtr> IRecordVector;
-  typedef boost::shared_ptr<IRecordVector> IRecordVectorPtr;
-#ifdef COOL300
-  typedef boost::shared_ptr<ITransaction> ITransactionPtr;
-#endif
 #endif
 
 }

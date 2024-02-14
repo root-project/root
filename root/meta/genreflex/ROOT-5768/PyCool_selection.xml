@@ -67,5 +67,10 @@
     <variable pattern="cool::SChar*" />
     <!-- Workaround for bug #44524 on Windows (thanks to Axel!) -->
     <!--class pattern="boost::detail::sp*" /-->
+
+    <!-- Exclusions for GH issue #11484 -->
+    <class pattern="std::unique_ptr<*"/>
+    <class pattern="*__shared_ptr_default_*"/>
+    <class pattern="std::shared_ptr<*"/>
   </exclusion>
 </lcgdict>
