@@ -28,7 +28,6 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 #include <RooRealVar.h>
 #include <RooHelpers.h>
 #include <RooMsgService.h>
-#include "RooFit/Detail/BatchModeDataHelpers.h"
 #include <RooSimultaneous.h>
 
 #include <TList.h>
@@ -63,6 +62,16 @@ bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet 
    if (observables) {
       outputSet.remove(*observables);
    }
+   // Exclude the data variables from the parameters which are not global observables
+   for (auto const &item : _dataSpans) {
+      if (_data->getGlobalObservables() && _data->getGlobalObservables()->find(item.first->GetName())) {
+         continue;
+      }
+      RooAbsArg *found = outputSet.find(item.first->GetName());
+      if (found) {
+         outputSet.remove(*found);
+      }
+   }
    // If we take the global observables as data, we have to return these as
    // parameters instead of the parameters in the model. Otherwise, the
    // constant parameters in the fit result that are global observables will
@@ -77,9 +86,9 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
 {
    _data = &data;
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-   auto dataSpans = RooFit::Detail::BatchModeDataHelpers::getDataSpans(
+   _dataSpans = RooFit::Detail::BatchModeDataHelpers::getDataSpans(
       *_data, _rangeName, _simPdf, /*skipZeroWeights=*/true, _takeGlobalObservablesFromData, _vectorBuffers);
-   for (auto const &item : dataSpans) {
+   for (auto const &item : _dataSpans) {
       _evaluator->setInput(item.first->GetName(), item.second, false);
    }
    return true;
