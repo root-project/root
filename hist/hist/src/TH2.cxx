@@ -1933,6 +1933,17 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
    // Copy attributes
    h1->GetXaxis()->ImportAttributes( &outAxis);
+   THashList* labels=outAxis.GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         i++;
+      }
+   }
+
    h1->SetLineColor(this->GetLineColor());
    h1->SetFillColor(this->GetFillColor());
    h1->SetMarkerColor(this->GetMarkerColor());
@@ -2250,6 +2261,9 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    // implement filling of projected histogram
    // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
    // inbin is the axis being integrated. Loop is done only on the selected bins
+   // if the out axis has labels and is extendable, temporary make it non-extendable to avoid adding extra bins
+   Bool_t extendable = outAxis->CanExtend();
+   if ( labels && extendable ) h1->GetXaxis()->SetCanExtend(kFALSE);
    for ( Int_t outbin = 0; outbin <= outAxis->GetNbins() + 1;  ++outbin) {
       err2 = 0;
       cont = 0;
@@ -2277,6 +2291,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       // sum  all content
       totcont += cont;
    }
+   if ( labels ) h1->GetXaxis()->SetCanExtend(extendable);
 
    // check if we can re-use the original statistics from  the previous histogram
    bool reuseStats = false;
