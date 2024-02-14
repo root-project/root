@@ -71,8 +71,10 @@ namespace {
 ClassImp(TRandom3);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-/// If seed is 0, the seed array is automatically computed via a TUUID object.
+/// \brief Default constructor.
+///
+/// If seed is 0, the seed array is automatically computed via a TRandom2
+/// object, which internally uses TUUID.
 /// In this case the seed is guaranteed to be unique in space and time.
 
 TRandom3::TRandom3(UInt_t seed)
@@ -83,7 +85,7 @@ TRandom3::TRandom3(UInt_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default destructor.
+/// \brief Default destructor.
 
 TRandom3::~TRandom3()
 {
@@ -136,7 +138,8 @@ Double_t TRandom3::Rndm()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  \brief Return an array of n random numbers uniformly distributed in [0, 1[
+///  \brief Return an array of n random numbers uniformly distributed in [0, 1[.
+///
 ///  \warning Can produce 0 (zero).
 
 void TRandom3::RndmArray(Int_t n, Float_t *array)
@@ -145,7 +148,8 @@ void TRandom3::RndmArray(Int_t n, Float_t *array)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  \brief Return an array of n random numbers uniformly distributed in [0, 1[
+///  \brief Return an array of n random numbers uniformly distributed in [0, 1[.
+///
 ///  \warning Can produce 0 (zero).
 
 void TRandom3::RndmArray(Int_t n, Double_t *array)
@@ -219,8 +223,8 @@ void TRandom3::SetSeed(ULong_t seed)
 
    } else {
 
-      // use TRandom2 (which is based on TUUId to generate the seed
-      // TRandom2 works fairly well  and has been tested against example
+      // use TRandom2 (which is based on TUUID to generate the seed.
+      // TRandom2 works fairly well and has been tested against example
       // layout in https://savannah.cern.ch/bugs/?99516
       TRandom2 r(0);
       for (Int_t i = 0; i< 624; i++) {
@@ -234,7 +238,7 @@ void TRandom3::SetSeed(ULong_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TRandom3.
+/// \brief Streamer for an object of class TRandom3.
 
 void TRandom3::Streamer(TBuffer &R__b)
 {
