@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -202,9 +203,16 @@ namespace ROOT
             }
             l = command.find( "}\"" );
             if( l == std::string::npos ) {
-               error_string = "Parsing error while processing key: \"" + key + "\"\n";
-               error_string += "Expected }\" at the end of the value.";
-               return false;
+               std::regex white_spaced_sep("}[ 	]*\"");
+               std::smatch match;
+               if (std::regex_search(command, match, white_spaced_sep) && match.size() == 1) {
+                  l = command.find( match[0] );
+                  command.replace(l, match[0].length(), "}\"");
+               } else {
+                  error_string = "Parsing error while processing key: \"" + key + "\"\n";
+                  error_string += "Expected }\" at the end of the value.";
+                  return false;
+               }
             }
             auto rawCode = command.substr( 2, l-2 );
             RemoveEscapeSequences(rawCode);
