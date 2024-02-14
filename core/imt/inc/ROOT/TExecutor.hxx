@@ -205,12 +205,14 @@ auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<Invok
 /// \param func Function to be executed. Must take an element of the sequence passed as second argument as a parameter.
 /// \param nTimes Number of times function should be called.
 /// \param redfunc Reduction function to combine the results of the calls to `func` into partial results, and these
-/// into a final result. Must return the same type as `func`.
+/// into a final result. Must return the same type as `func` and should be callable with `const std::vector<T>` where T is the output of `func`.  
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template <class F, class R, class Cond>
 auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> InvokeResult_t<F>
 {
+   // check we can apply reduce to objs
+   static_assert(std::is_invocable_v<R, std::vector<InvokeResult_t<F>>>, "redfunc does not have the correct signature");
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, nTimes, redfunc, nChunks);
    }
@@ -225,12 +227,13 @@ auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) 
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Sequence of indexes to execute `func` on.
 /// \param redfunc Reduction function to combine the results of the calls to `func` into partial results, and these
-/// into a final result. Must return the same type as `func`.
+/// into a final result. Must return the same type as `func` and should be callable with `std::vector<T>` where T is the output of `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template <class F, class INTEGER, class R, class Cond>
 auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, INTEGER>
 {
+   static_assert(std::is_invocable_v<R, std::vector<InvokeResult_t<F,INTEGER>>>, "redfunc does not have the correct signature");
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
@@ -245,12 +248,13 @@ auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned 
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args initializer_list for a vector to apply `func` on.
 /// \param redfunc Reduction function to combine the results of the calls to `func` into partial results, and these
-/// into a final result. Must return the same type as `func`.
+/// into a final result. Must return the same type as `func` and should be callable with `const std::vector<T>` where T is the output of `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template <class F, class T, class R, class Cond>
 auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>
 {
+      static_assert(std::is_invocable_v<R, std::vector<InvokeResult_t<F,T>>>, "redfunc does not have the correct signature");
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
@@ -265,12 +269,13 @@ auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsi
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Vector of elements passed as an argument to `func`.
 /// \param redfunc Reduction function to combine the results of the calls to `func` into partial results, and these
-/// into a final result. Must return the same type as `func`.
+/// into a final result. Must return the same type as `func` and should be callable with `const std::vector<T>` where T is the output of `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template <class F, class T, class R, class Cond>
 auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>
 {
+   static_assert(std::is_invocable_v<R, std::vector<InvokeResult_t<F,T>>>, "redfunc does not have the correct signature");
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
@@ -285,12 +290,13 @@ auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChu
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Immutable vector, whose elements are passed as an argument to `func`.
 /// \param redfunc Reduction function to combine the results of the calls to `func` into partial results, and these
-/// into a final result. Must return the same type as `func`.
+/// into a final result. Must return the same type as `func` and should be callable with `const std::vector<T>` where T is the output of `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template <class F, class T, class R, class Cond>
 auto TExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>
 {
+   static_assert(std::is_invocable_v<R, std::vector<InvokeResult_t<F,T>>>, "redfunc does not have the correct signature");
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
