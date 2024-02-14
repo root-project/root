@@ -136,7 +136,7 @@ void Ingest()
 void Analyze()
 {
    // Create a RDataframe by wrapping around NTuple.
-   auto df = ROOT::RDF::Experimental::FromRNTuple("GlobalTempData", kNTupleFileName);
+   ROOT::RDataFrame df("GlobalTempData", kNTupleFileName);
    df.Display()->Print();
 
    // Declare the minimum and maximum temperature from the dataset.
