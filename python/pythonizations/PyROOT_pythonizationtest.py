@@ -132,9 +132,10 @@ class TestClassROOT_PYTHONIZATIONS:
         del ws
 
         f = ROOT.TFile.Open("foo.root")
-        assert f.w.var("x").getVal() == 5
-        f.w.var("x").setVal(6)
-        assert f.w.var("x").getVal() == 6   # uncached would give 5
+        ws = f.Get("w")
+        assert ws.var("x").getVal() == 5
+        ws.var("x").setVal(6)
+        assert ws.var("x").getVal() == 6   # uncached would give 5
 
     def test03_th2(self):
         """GetBinErrorUp and GetBinErrorLow overloads obtained with using decls"""

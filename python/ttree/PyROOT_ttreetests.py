@@ -215,12 +215,8 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       myarray = f.Get( 'myarray' )
       self.assertTrue( isinstance( myarray, TArrayI ) )
 
-      if not legacy_pyroot:
+      if legacy_pyroot:
          # New PyROOT does not implement a pythonisation for GetObject.
-         # Just use the getattr syntax, which is much nicer
-         arr = f.myarray
-         self.assertTrue( isinstance( arr, TArrayI ) )
-      else:
          myarray = MakeNullPointer( TArrayI )
          f.GetObject( 'myarray', myarray )
 
@@ -241,7 +237,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f = TFile( self.fname )
 
-      t = f.Proto2Analyzed
+      t = f.Get("Proto2Analyzed")
       self.assertEqual( type(t), TTree )
       self.assertEqual( t.GetEntriesFast(), 1 )
 
@@ -349,7 +345,6 @@ class TFileGetNonTObject( MyTestCase ):
       self.assertEqual( f.GetKey( 'totalEvents' ).GetClassName(), 'TArrayI' )
       self.assertTrue( f.Get( 'totalEvents' ) )
       self.assertEqual( f.Get( 'totalEvents' ).GetSize(), 1 )
-      self.assertEqual( f.totalEvents.GetSize(),          1 )
 
       # the following used to crash
       self.assertTrue( not gDirectory.Get( "non_existent_stuff" ) )
