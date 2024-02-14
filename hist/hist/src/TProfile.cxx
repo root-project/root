@@ -44,7 +44,7 @@ ClassImp(TProfile);
   \begin{align}
        H(j)  &=  \sum w \cdot Y \\
        E(j)  &=  \sum w \cdot Y^2 \\
-       W(j)  &=  \sum w \\
+       W(j)  &=  \sum w                   & &\text{if weights different from 1, the number of bin effective entries is used} \\
        h(j)  &=  H(j) / W(j)              & &\text{mean of Y,} \\
        s(j)  &=  \sqrt{E(j)/W(j)- h(j)^2} & &\text{standard deviation of Y} \\
        e(j)  &=  s(j)/\sqrt{W(j)}         & &\text{standard error on the mean} \\
