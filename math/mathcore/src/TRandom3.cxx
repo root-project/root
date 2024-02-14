@@ -185,10 +185,8 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
       y ^= ((y << 15) & kTemperingMaskC );
       y ^=  (y >> 18);
 
-      if (y) {
-         array[k] = (static_cast<Double_t>(y) + 1) * 2.3283064365386963e-10; // * Power(2,-32)
-         k++;
-      }
+      array[k] = (static_cast<Double_t>(y) + 1) * 2.3283064365386963e-10; // * Power(2,-32)
+      k++;
    }
 }
 
