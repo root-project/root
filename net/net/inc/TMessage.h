@@ -59,6 +59,9 @@ private:
    Bool_t TestBitNumber(UInt_t bitnumber) const { return fBitsPIDs.TestBitNumber(bitnumber); }
 
 protected:
+   enum EStatusBits {
+     kIsOwnerComp = BIT(18) // if TMessage owns fBufComp
+   };
    TMessage(void *buf, Int_t bufsize);   // only called by T(P)Socket::Recv()
    void SetLength() const;               // only called by T(P)Socket::Send()
 
