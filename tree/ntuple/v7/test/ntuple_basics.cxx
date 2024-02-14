@@ -152,12 +152,14 @@ TEST(RNTuple, WriteReadInlinedModel)
    FileRaii fileGuard("test_ntuple_writeread_inlinedmodel.root");
 
    {
-      auto writer = RNTupleWriter::Recreate({
-         {"std::uint32_t", "id"},
-         {"std::vector<float>", "vpx"},
-         {"std::vector<float>", "vpy"},
-         {"std::vector<float>", "vpz"},
-      }, "NTuple", fileGuard.GetPath());
+      auto writer = RNTupleWriter::Recreate(
+         {
+            {"std::uint32_t", "id"},
+            {"std::vector<float>", "vpx"},
+            {"std::vector<float>", "vpy"},
+            {"std::vector<float>", "vpz"},
+         },
+         "NTuple", fileGuard.GetPath());
 
       auto entry = writer->CreateEntry();
       *entry->GetPtr<std::uint32_t>("id") = 1;
@@ -185,7 +187,6 @@ TEST(RNTuple, WriteReadInlinedModel)
    EXPECT_FLOAT_EQ(3.0, (*readvpz)[0]);
    EXPECT_FLOAT_EQ(3.1, (*readvpz)[1]);
    EXPECT_FLOAT_EQ(3.2, (*readvpz)[2]);
-
 }
 
 TEST(RNTuple, FileAnchor)
