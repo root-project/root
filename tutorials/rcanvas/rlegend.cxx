@@ -25,11 +25,6 @@
 #include "ROOT/RLegend.hxx"
 #include "TRandom.h"
 
-// macro must be here while cling is not capable to load
-// library automatically for outlined function see ROOT-10336
-R__LOAD_LIBRARY(libROOTHistDraw)
-R__LOAD_LIBRARY(libROOTGraphicsPrimitives)
-
 using namespace ROOT::Experimental;
 
 void rlegend()
