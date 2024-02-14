@@ -251,17 +251,17 @@ const UInt_t fgSeedTable[215][2] = {
 ClassImp(TRandom1);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Luxury level is set in the same way as the original FORTRAN routine.
-///  level 0  (p=24): equivalent to the original RCARRY of Marsaglia
-///           and Zaman, very long period, but fails many tests.
-///  level 1  (p=48): considerable improvement in quality over level 0,
-///           now passes the gap test, but still fails spectral test.
-///  level 2  (p=97): passes all known tests, but theoretically still
-///           defective.
-///  level 3  (p=223): DEFAULT VALUE.  Any theoretically possible
-///           correlations have very small chance of being observed.
-///  level 4  (p=389): highest possible luxury, all 24 bits chaotic.
-
+/// \brief Luxury level is set in the same way as the original FORTRAN routine.
+///
+///  - level 0 (p=24): equivalent to the original RCARRY of Marsaglia
+///                    and Zaman, very long period, but fails many tests.
+///  - level 1 (p=48): considerable improvement in quality over level 0,
+///                    now passes the gap test, but still fails spectral test.
+///  - level 2 (p=97): passes all known tests, but theoretically still
+///                    defective.
+///  - level 3 (p=223): DEFAULT VALUE. Any theoretically possible
+///                     correlations have very small chance of being observed.
+///  - level 4 (p=389): highest possible luxury, all 24 bits chaotic.
 TRandom1::TRandom1(UInt_t seed, Int_t lux)
         : fIntModulus(0x1000000),
           fMantissaBit24( TMath::Power(0.5,24.) ),
@@ -282,8 +282,7 @@ TRandom1::TRandom1(UInt_t seed, Int_t lux)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///default constructor
-
+/// \brief Default constructor.
 TRandom1::TRandom1()
         : fIntModulus(0x1000000),
           fMantissaBit24( TMath::Power(0.5,24.) ),
@@ -309,8 +308,7 @@ TRandom1::TRandom1()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
-
+/// \brief Constructor.
 TRandom1::TRandom1(Int_t rowIndex, Int_t colIndex, Int_t lux)
         : fIntModulus(0x1000000),
           fMantissaBit24( TMath::Power(0.5,24.) ),
@@ -336,15 +334,13 @@ TRandom1::TRandom1(Int_t rowIndex, Int_t colIndex, Int_t lux)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///destructor
-
+/// \brief Destructor.
 TRandom1::~TRandom1()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///static function returning the table of seeds
-
+/// \brief Static function returning the seeds table.
 void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
 {
    if ((index >= 0) && (index < 215)) {
@@ -355,8 +351,7 @@ void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return a random number in ]0,1]
-
+/// \brief Returns a random number in ]0,1]
 Double_t TRandom1::Rndm( )
 {
    float next_random;
@@ -404,20 +399,18 @@ Double_t TRandom1::Rndm( )
          if(fJlag < 0) fJlag = 23;
       }
    }
-   return (double) next_random;
+   return static_cast<Double_t>(next_random);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return an array of random numbers in ]0,1]
-
+/// \brief Returns an array of random numbers in ]0,1]
 void TRandom1::RndmArray(const Int_t size, Float_t *vect)
 {
    for (Int_t i=0;i<size;i++) vect[i] = Rndm();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return an array of random numbers in ]0,1[
-
+/// \brief Returns an array of random numbers in ]0,1[
 void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 {
    float next_random;
@@ -472,7 +465,8 @@ void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the state of the generator providing an array of seeds
+/// \brief Set the state of the generator providing an array of seeds.
+///
 /// The array of seeds can be of size 24 or less. In case of an array of n seeds with n < 24
 /// the n+1 element must be equal to zero.
 /// The other elements are the initialized using a Multiplicative
@@ -551,15 +545,16 @@ void TRandom1::SetSeeds(const UInt_t *seeds, int lux)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the state of the generator providing a single seed value and a
+/// \brief Set the state of the generator providing a single seed value and a
 /// luxury level.
-///  The initialisation of the other state values is carried out using a Multiplicative
+///
+/// The initialisation of the other state values is carried out using a Multiplicative
 /// Congruential generator using formula constants of L'Ecuyer
 /// as described in "A review of pseudorandom number generators"
 /// (Fred James) published in Computer Physics Communications 60 (1990)
 /// pages 329-344
 ///
-/// Note: When the provided seed = 0, a random and unique seed is generated
+/// \note When provided with seed = 0, a random and unique seed is generated.
 ///
 ///  \param[in] seed   seed value (note special case if seed=0)
 ///  \param[in] lux    Luxury level
@@ -586,11 +581,13 @@ void TRandom1::SetSeed2(UInt_t seed, int lux)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the state of the generator providing a single seed value and using
-/// the luxury level defined when constructing the class
-///  The initialisation of the other state values is carried out using a Multiplicative
+/// \brief Set the state of the generator providing a single seed value and using
+/// the luxury level defined when constructing the class.
+///
+/// The initialisation of the other state values is carried out using a Multiplicative
 /// Congruential generator.
-/// Note: When seed = 0, a random and unique seed is generated
+///
+/// Note: When seed = 0, a random and unique seed is generated.
 ///
 /// \param[in] seed   seed value (note special case if seed=0)
 ///
@@ -599,4 +596,28 @@ void TRandom1::SetSeed(ULong_t seed)
 {
    // Set RanLux seed using the luxury level provided in the constructor
    SetSeed2(seed,fLuxury);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns current luxury value.
+///
+Int_t TRandom1::GetLuxury() const
+{
+  return fLuxury;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns the current seed (first element of the seed table).
+///
+/// \warning This is not the initial seed!
+UInt_t TRandom1::GetSeed() const
+{
+  return static_cast<UInt_t>(fFloatSeedTable[0] / fMantissaBit24);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns the pointer to the current seeds array.
+const UInt_t * TRandom1::GetTheSeeds() const
+{
+  return fTheSeeds;
 }

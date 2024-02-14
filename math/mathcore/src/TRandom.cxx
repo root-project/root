@@ -625,7 +625,10 @@ void TRandom::SetSeed(ULong_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the random generator seed. \warning Might not be the initial seed!
+/// \brief Get the random generator seed.
+///
+/// \warning Might not be the initial seed!
+///
 /// Note that this function returns the given seed only when using
 /// as random generator engine TRandom itself, which is an LCG generator
 /// and it has as seed (state) only one 32 bit word.

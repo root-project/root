@@ -155,13 +155,13 @@ void TRandom2::SetSeed(ULong_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Returns one of the seeds of the generator. \warning This is not the
-/// initial seed!
+/// \brief Returns one of the seeds of the generator.
 ///
-/// Explanation: The internal state of the generator is described by three
-/// `UInt_t` numbers, called seed numbers, but they are not initial seeds.
-/// This function exposes one of them and can't provide full description of the
-/// generator state.
+/// \warning This is not the initial seed!
+///
+/// The internal state of the generator is described by three `UInt_t` numbers,
+/// called seed numbers, but they are not initial seeds. This function exposes
+/// one of them and can't provide full description of the generator state.
 ///
 UInt_t TRandom2::GetSeed() const
 {
