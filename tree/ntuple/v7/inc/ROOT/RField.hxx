@@ -851,7 +851,7 @@ protected:
    void CommitClusterImpl() final { fIndex = 0; }
 
 public:
-   RUnsplitField(std::string_view fieldName, std::string_view className);
+   RUnsplitField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
    RUnsplitField(RUnsplitField &&other) = default;
    RUnsplitField &operator=(RUnsplitField &&other) = default;
    ~RUnsplitField() override = default;
