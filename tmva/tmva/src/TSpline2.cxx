@@ -51,10 +51,7 @@ TMVA::TSpline2::TSpline2( const TString& title, TGraph* theGraph )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::TSpline2::~TSpline2( void )
-{
-   if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
-}
+TMVA::TSpline2::~TSpline2(void) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns quadratically interpolated TGraph entry around x
@@ -72,30 +69,30 @@ Double_t TMVA::TSpline2::Eval( const Double_t x ) const
    if (ibin >= fGraph->GetN()) ibin =  fGraph->GetN() - 1;
 
    Float_t dx = 0; // should be zero
+   if (fGraph->GetN() < 3) { // if the graph does not have enough points
+      Warning("Eval", "Graph has less than 3 points, returning value of the closest");
+      retval = fGraph->GetY()[ibin];
+   } else if (ibin == 0) {
 
-   if (ibin == 0 ) {
+      retval = Quadrax(x,
+                       fGraph->GetX()[ibin] + dx,
+                       fGraph->GetX()[ibin + 1] + dx,
+                       fGraph->GetX()[ibin + 2] + dx,
+                       fGraph->GetY()[ibin],
+                       fGraph->GetY()[ibin + 1],
+                       fGraph->GetY()[ibin + 2]);
 
-      retval = Quadrax(  x,
-                         fGraph->GetX()[ibin]   + dx,
-                         fGraph->GetX()[ibin+1] + dx,
-                         fGraph->GetX()[ibin+2] + dx,
-                         fGraph->GetY()[ibin],
-                         fGraph->GetY()[ibin+1],
-                         fGraph->GetY()[ibin+2]);
-
-   }
-   else if (ibin >= (fGraph->GetN()-2)) {
+   } else if (ibin >= (fGraph->GetN() - 2)) {
       ibin = fGraph->GetN() - 1; // always fixed to last bin
 
-      retval = Quadrax( x,
-                        fGraph->GetX()[ibin-2] + dx,
-                        fGraph->GetX()[ibin-1] + dx,
-                        fGraph->GetX()[ibin]   + dx,
-                        fGraph->GetY()[ibin-2],
-                        fGraph->GetY()[ibin-1],
-                        fGraph->GetY()[ibin]);
-   }
-   else {
+      retval = Quadrax(x,
+                       fGraph->GetX()[ibin - 2] + dx,
+                       fGraph->GetX()[ibin - 1] + dx,
+                       fGraph->GetX()[ibin] + dx,
+                       fGraph->GetY()[ibin - 2],
+                       fGraph->GetY()[ibin - 1],
+                       fGraph->GetY()[ibin]);
+   } else {
 
       retval = ( Quadrax( x,
                           fGraph->GetX()[ibin-1] + dx,
@@ -105,7 +102,8 @@ Double_t TMVA::TSpline2::Eval( const Double_t x ) const
                           fGraph->GetY()[ibin],
                           fGraph->GetY()[ibin+1])
                  +
-                 Quadrax( x, fGraph->GetX()[ibin] + dx,
+                 Quadrax( x,
+                          fGraph->GetX()[ibin] + dx,
                           fGraph->GetX()[ibin+1]  + dx,
                           fGraph->GetX()[ibin+2]  + dx,
                           fGraph->GetY()[ibin],
