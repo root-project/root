@@ -20,12 +20,12 @@
 #include <vector>
 
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
-using RCluster = ROOT::Experimental::Detail::RCluster;
-using RClusterPool = ROOT::Experimental::Detail::RClusterPool;
+using RCluster = ROOT::Experimental::Internal::RCluster;
+using RClusterPool = ROOT::Experimental::Internal::RClusterPool;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using ROnDiskPage = ROOT::Experimental::Detail::ROnDiskPage;
-using RPage = ROOT::Experimental::Detail::RPage;
-using RPageSource = ROOT::Experimental::Detail::RPageSource;
+using ROnDiskPage = ROOT::Experimental::Internal::ROnDiskPage;
+using RPage = ROOT::Experimental::Internal::RPage;
+using RPageSource = ROOT::Experimental::Internal::RPageSource;
 
 namespace {
 
@@ -54,7 +54,7 @@ protected:
 public:
    /// Records the cluster IDs requests by LoadClusters() calls
    std::vector<ROOT::Experimental::DescriptorId_t> fReqsClusterIds;
-   std::vector<ROOT::Experimental::Detail::RCluster::ColumnSet_t> fReqsColumns;
+   std::vector<ROOT::Experimental::Internal::RCluster::ColumnSet_t> fReqsColumns;
 
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
       ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
@@ -87,7 +87,7 @@ public:
          fReqsClusterIds.emplace_back(key.fClusterId);
          fReqsColumns.emplace_back(key.fPhysicalColumnSet);
          auto cluster = std::make_unique<RCluster>(key.fClusterId);
-         auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
+         auto pageMap = std::make_unique<ROOT::Experimental::Internal::ROnDiskPageMap>();
          for (auto colId : key.fPhysicalColumnSet) {
             pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
             cluster->SetColumnAvailable(colId);
@@ -104,10 +104,10 @@ public:
 
 TEST(Cluster, Allocate)
 {
-   auto cluster = new ROOT::Experimental::Detail::ROnDiskPageMapHeap(nullptr);
+   auto cluster = new ROOT::Experimental::Internal::ROnDiskPageMapHeap(nullptr);
    delete cluster;
 
-   cluster = new ROOT::Experimental::Detail::ROnDiskPageMapHeap(std::make_unique<unsigned char []>(1));
+   cluster = new ROOT::Experimental::Internal::ROnDiskPageMapHeap(std::make_unique<unsigned char[]>(1));
    delete cluster;
 }
 
@@ -115,8 +115,8 @@ TEST(Cluster, Allocate)
 TEST(Cluster, Basics)
 {
    auto memory = new unsigned char[3];
-   auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
-      std::unique_ptr<unsigned char []>(memory));
+   auto pageMap =
+      std::make_unique<ROOT::Experimental::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(memory));
    pageMap->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&memory[0], 1));
    pageMap->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&memory[1], 2));
    auto cluster = std::make_unique<RCluster>(0);
@@ -136,14 +136,14 @@ TEST(Cluster, Basics)
 TEST(Cluster, AdoptPageMaps)
 {
    auto mem1 = new unsigned char[3];
-   auto pageMap1 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
-      std::unique_ptr<unsigned char []>(mem1));
+   auto pageMap1 =
+      std::make_unique<ROOT::Experimental::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(mem1));
    pageMap1->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
    pageMap1->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
    // Column 5 is in both mem1 and mem2 but that should not hurt
    auto mem2 = new unsigned char[4];
-   auto pageMap2 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
-      std::unique_ptr<unsigned char []>(mem2));
+   auto pageMap2 =
+      std::make_unique<ROOT::Experimental::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(mem2));
    pageMap2->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
    pageMap2->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
    pageMap2->Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
@@ -174,8 +174,8 @@ TEST(Cluster, AdoptPageMaps)
 TEST(Cluster, AdoptClusters)
 {
    auto mem1 = new unsigned char[3];
-   auto pageMap1 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
-      std::unique_ptr<unsigned char []>(mem1));
+   auto pageMap1 =
+      std::make_unique<ROOT::Experimental::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(mem1));
    pageMap1->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
    pageMap1->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
    auto cluster1 = std::make_unique<RCluster>(0);
@@ -184,8 +184,8 @@ TEST(Cluster, AdoptClusters)
 
    // Column 5 is in both clusters but that should not hurt
    auto mem2 = new unsigned char[4];
-   auto pageMap2 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
-      std::unique_ptr<unsigned char []>(mem2));
+   auto pageMap2 =
+      std::make_unique<ROOT::Experimental::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(mem2));
    pageMap2->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
    pageMap2->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
    pageMap2->Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
@@ -340,8 +340,8 @@ TEST(PageStorageFile, LoadClusters)
       writer->Fill();
    }
 
-   ROOT::Experimental::Detail::RPageSourceFile source(
-      "myNTuple", fileGuard.GetPath(), ROOT::Experimental::RNTupleReadOptions());
+   ROOT::Experimental::Internal::RPageSourceFile source("myNTuple", fileGuard.GetPath(),
+                                                        ROOT::Experimental::RNTupleReadOptions());
    source.Attach();
 
    ROOT::Experimental::DescriptorId_t ptId;
@@ -354,13 +354,13 @@ TEST(PageStorageFile, LoadClusters)
       EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
    }
 
-   std::vector<ROOT::Experimental::Detail::RCluster::RKey> clusterKeys;
+   std::vector<ROOT::Experimental::Internal::RCluster::RKey> clusterKeys;
    clusterKeys.push_back({0, {}});
    auto cluster = std::move(source.LoadClusters(clusterKeys)[0]);
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
-   auto column = ROOT::Experimental::Detail::RColumn::Create<float>(
+   auto column = ROOT::Experimental::Internal::RColumn::Create<float>(
       ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0);
    column->Connect(ptId, &source);
    clusterKeys[0].fClusterId = 1;

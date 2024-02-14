@@ -37,12 +37,12 @@ class RCollectionNTupleWriter;
 class RNTupleModel;
 class RNTupleWriter;
 
-namespace Detail {
+namespace Internal {
 class RPageSinkBuf;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RNTupleModelChangeset
+\class ROOT::Experimental::Internal::RNTupleModelChangeset
 \ingroup NTuple
 \brief The incremental changes to a `RNTupleModel`
 
@@ -62,7 +62,7 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 };
 
-} // namespace Detail
+} // namespace Internal
 
 // clang-format off
 /**
@@ -144,7 +144,8 @@ public:
    class RUpdater {
    private:
       RNTupleWriter &fWriter;
-      Detail::RNTupleModelChangeset fOpenChangeset;
+      Internal::RNTupleModelChangeset fOpenChangeset;
+      std::uint64_t fNewModelId = 0; ///< The model ID after committing
 
    public:
       explicit RUpdater(RNTupleWriter &writer);
@@ -186,9 +187,11 @@ private:
    std::string fDescription;
    /// The set of projected top-level fields
    std::unique_ptr<RProjectedFields> fProjectedFields;
-   /// Upon freezing, every model has a unique ID to distingusish it from other models.  Cloning preserves the ID.
-   /// Entries are linked to models via the ID.
+   /// Every model has a unique ID to distinguish it from other models. Entries are linked to models via the ID.
+   /// Cloned models get a new model ID.
    std::uint64_t fModelId = 0;
+   /// Changed by Freeze() / Unfreeze() and by the RUpdater.
+   bool fIsFrozen = false;
 
    /// Checks that user-provided field names are valid in the context
    /// of this NTuple model. Throws an RException for invalid names.
@@ -211,10 +214,11 @@ public:
    ~RNTupleModel() = default;
 
    std::unique_ptr<RNTupleModel> Clone() const;
-   static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<RFieldZero> fieldZero = std::make_unique<RFieldZero>());
+   static std::unique_ptr<RNTupleModel> Create();
+   static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<RFieldZero> fieldZero);
    /// A bare model has no default entry
-   static std::unique_ptr<RNTupleModel>
-   CreateBare(std::unique_ptr<RFieldZero> fieldZero = std::make_unique<RFieldZero>());
+   static std::unique_ptr<RNTupleModel> CreateBare();
+   static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<RFieldZero> fieldZero);
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
    /// corresponding value that is managed by a shared pointer.
@@ -289,7 +293,7 @@ public:
 
    void Freeze();
    void Unfreeze();
-   bool IsFrozen() const { return fModelId != 0; }
+   bool IsFrozen() const { return fIsFrozen; }
    std::uint64_t GetModelId() const { return fModelId; }
 
    /// Ingests a model for a sub collection and attaches it to the current model

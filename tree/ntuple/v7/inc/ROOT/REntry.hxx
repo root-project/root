@@ -22,6 +22,8 @@
 
 #include <TError.h>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -86,54 +88,102 @@ class REntry {
 public:
    using ConstIterator_t = decltype(fValues)::const_iterator;
 
+   /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
+   /// methods, e.g. BindValue
+   class RFieldToken {
+      friend class REntry;
+      std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
+      std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
+      RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
+   };
+
    REntry(const REntry &other) = delete;
    REntry &operator=(const REntry &other) = delete;
    REntry(REntry &&other) = default;
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
+   /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
+   RFieldToken GetToken(std::string_view fieldName) const
+   {
+      auto it = std::find_if(fValues.begin(), fValues.end(),
+         [&fieldName] (const RFieldBase::RValue &value) { return value.GetField().GetFieldName() == fieldName; });
+
+      if ( it == fValues.end() ) {
+         throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      }
+      return RFieldToken(std::distance(fValues.begin(), it), fModelId);
+   }
+
+   void EmplaceNewValue(RFieldToken token)
+   {
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from the same model as this entry."));
+      }
+      auto &v = fValues[token.fIndex];
+      v.EmplaceNew();
+   }
+
+   void EmplaceNewValue(std::string_view fieldName) { EmplaceNewValue(GetToken(fieldName)); }
+
+   template <typename T>
+   void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
+   {
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from the same model as this entry."));
+      }
+      auto &v = fValues[token.fIndex];
+      if constexpr (!std::is_void_v<T>) {
+         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
+         }
+      }
+      v.Bind(objPtr);
+   }
+
    template <typename T>
    void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
-      for (auto &v : fValues) {
-         if (v.GetField().GetFieldName() != fieldName)
-            continue;
+      BindValue<T>(GetToken(fieldName), objPtr);
+   }
 
-         if constexpr (!std::is_void_v<T>) {
-            if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-               throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                        v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-            }
-         }
-         v.Bind(objPtr);
-         return;
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   template <typename T>
+   void BindRawPtr(RFieldToken token, T *rawPtr)
+   {
+      BindValue<void>(token, std::shared_ptr<T>(rawPtr, [](T *) {}));
    }
 
    template <typename T>
    void BindRawPtr(std::string_view fieldName, T *rawPtr)
    {
-      BindValue(fieldName, std::shared_ptr<T>(rawPtr, [](T *) {}));
+      BindValue<void>(fieldName, std::shared_ptr<T>(rawPtr, [](T *) {}));
+   }
+
+   template <typename T>
+   std::shared_ptr<T> GetPtr(RFieldToken token) const
+   {
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry"));
+      }
+
+      auto &v = fValues[token.fIndex];
+      if constexpr (std::is_void_v<T>)
+         return v.GetPtr<void>();
+
+      if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+         throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                  v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
+      }
+      return std::static_pointer_cast<T>(v.GetPtr<void>());
    }
 
    template <typename T>
    std::shared_ptr<T> GetPtr(std::string_view fieldName) const
    {
-      for (auto &v : fValues) {
-         if (v.GetField().GetFieldName() != fieldName)
-            continue;
-
-         if constexpr (std::is_void_v<T>)
-            return v.GetPtr<void>();
-
-         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-         }
-         return std::static_pointer_cast<T>(v.GetPtr<void>());
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      return GetPtr<T>(GetToken(fieldName));
    }
 
    std::uint64_t GetModelId() const { return fModelId; }

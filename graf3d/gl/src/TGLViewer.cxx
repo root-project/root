@@ -1951,8 +1951,8 @@ void TGLViewer::SetOrthoCamera(ECameraType camera,
 ///  - 'dolly' - distance from 'center'
 ///  - 'center' - world position from which dolly/hRotate/vRotate are measured
 ///                camera rotates round this, always facing in (in center of viewport)
-///  - 'hRotate' - horizontal rotation from initial configuration in degrees
-///  - 'hRotate' - vertical rotation from initial configuration in degrees
+///  - 'hRotate' - horizontal rotation from initial configuration in radians
+///  - 'vRotate' - vertical rotation from initial configuration in radians
 
 void TGLViewer::SetPerspectiveCamera(ECameraType camera,
                                      Double_t fov, Double_t dolly,

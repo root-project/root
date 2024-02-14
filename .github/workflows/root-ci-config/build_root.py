@@ -16,6 +16,7 @@
 import argparse
 import datetime
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -29,6 +30,7 @@ from build_utils import (
     github_log_group,
     load_config,
     subprocess_with_log,
+    subprocess_with_capture,
     upload_file
 )
 import build_utils
@@ -101,10 +103,35 @@ def main():
             build_utils.print_warning(f'Failed to download: {err}')
             args.incremental = False
 
-    git_pull(args.repository, args.base_ref)
+    git_pull("src", args.repository, args.base_ref)
 
     if pull_request:
-        rebase(args.base_ref, args.head_ref)
+      base_head_sha = get_base_head_sha("src", args.repository, args.sha, args.head_sha)
+
+      head_ref_src, _, head_ref_dst = args.head_ref.partition(":")
+      head_ref_dst = head_ref_dst or "__tmp"
+
+      rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
+
+    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
+
+    if testing:
+      # Where to put the roottest directory
+      if os.path.exists(os.path.join(WORKDIR, "src", "roottest", ".git")):
+         roottest_dir = "src/roottest"
+      else:
+         roottest_dir = "roottest"
+
+      # Where to find the target branch
+      roottest_origin_repository = re.sub( "/root(.git)*$", "/roottest.git", args.repository)
+
+      # Where to find the incoming branch
+      roottest_repository, roottest_head_ref = relatedrepo_GetClosestMatch("roottest", args.pull_repository, args.repository)
+
+      git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
+
+      if pull_request:
+        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
 
     if not WINDOWS:
         show_node_state()
@@ -120,8 +147,6 @@ def main():
 
     if args.binaries:
         create_binaries(args.buildtype)
-
-    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
     if testing:
         extra_ctest_flags = ""
@@ -140,7 +165,7 @@ def main():
     print_trace()
 
 def handle_test_failure(ctest_returncode):
-    logloc = f'{WORKDIR}/build/Testing/Temporary/LastTestsFailed.log'
+    logloc = os.path.join(WORKDIR, "build", "Testing", "Temporary", "LastTestsFailed.log")
     if os.path.isfile(logloc):
         with open(logloc, 'r') as logf:
             print("TEST FAILURES:")
@@ -155,20 +180,23 @@ def handle_test_failure(ctest_returncode):
 
 
 def parse_args():
-        # it is difficult to use boolean flags from github actions, use strings to convey
+    # it is difficult to use boolean flags from github actions, use strings to convey
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
-    parser.add_argument("--platform",                        help="Platform to build on")
-    parser.add_argument("--image",        default=None,      help="Container image, if any")
-    parser.add_argument("--dockeropts",   default=None,      help="Extra docker options, if any")
-    parser.add_argument("--incremental",  default="false",   help="Do incremental build")
-    parser.add_argument("--buildtype",    default="Release", help="Release|Debug|RelWithDebInfo")
-    parser.add_argument("--coverage",     default="false",   help="Create Coverage report in XML")
-    parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
-    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
-    parser.add_argument("--binaries",     default="false",   help="Whether to create binary artifacts")
-    parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
-    parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
+    parser.add_argument("--platform",                           help="Platform to build on")
+    parser.add_argument("--image",           default=None,      help="Container image, if any")
+    parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
+    parser.add_argument("--incremental",     default="false",   help="Do incremental build")
+    parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
+    parser.add_argument("--coverage",        default="false",   help="Create Coverage report in XML")
+    parser.add_argument("--sha",             default=None,      help="sha that triggered the event")
+    parser.add_argument("--base_ref",        default=None,      help="Ref to target branch")
+    parser.add_argument("--pull_repository", default="",        help="Url to the pull request incoming repository")
+    parser.add_argument("--head_ref",        default=None,      help="Ref to feature branch; it may contain a :<dst> part")
+    parser.add_argument("--head_sha",        default=None,      help="Sha of commit that triggered the event")
+    parser.add_argument("--binaries",        default="false",   help="Whether to create binary artifacts")
+    parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
+    parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
 
     args = parser.parse_args()
@@ -222,23 +250,24 @@ def cleanup_previous_build():
 
 
 @github_log_group("Pull/clone branch")
-def git_pull(repository: str, branch: str):
+def git_pull(directory: str, repository: str, branch: str):
     returncode = 1
 
     for _ in range(5):
         if returncode == 0:
             break
 
-        if os.path.exists(f"{WORKDIR}/src/.git"):
+        targetdir = os.path.join(WORKDIR, directory)
+        if os.path.exists(os.path.join(targetdir, ".git")):
             returncode = subprocess_with_log(f"""
-                cd '{WORKDIR}/src'
+                cd '{targetdir}'
                 git checkout {branch}
                 git fetch
                 git reset --hard @{{u}}
             """)
         else:
             returncode = subprocess_with_log(f"""
-                git clone --branch {branch} --single-branch {repository} "{WORKDIR}/src"
+                git clone --branch {branch} --single-branch {repository} "{targetdir}"
             """)
 
     if returncode != 0:
@@ -259,8 +288,8 @@ def download_artifacts(obj_prefix: str):
 
     except Exception as err:
         build_utils.print_warning("failed to download/extract:", err)
-        shutil.rmtree(f'{WORKDIR}/src', ignore_errors=True)
-        shutil.rmtree(f'{WORKDIR}/build', ignore_errors=True)
+        shutil.rmtree(os.path.join(WORKDIR, "src"), ignore_errors=True)
+        shutil.rmtree(os.path.join(WORKDIR, "build"), ignore_errors=True)
         raise err
 
 
@@ -281,12 +310,15 @@ def show_node_state() -> None:
     if result != 0:
         build_utils.print_warning("Failed to extract node state")
 
-# Just return the exit code in case of test failures instead of `die()`-ing; report test
-# failures in main().
 @github_log_group("Run tests")
 def run_ctest(extra_ctest_flags: str) -> int:
+    """
+    Just return the exit code in case of test failures instead of `die()`-ing; report test
+    failures in main().
+    """
+    builddir = os.path.join(WORKDIR, "build")
     ctest_result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build'
+        cd '{builddir}'
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
 
@@ -313,8 +345,10 @@ def archive_and_upload(archive_name, prefix):
 
 @github_log_group("Configure")
 def cmake_configure(options, buildtype):
+    srcdir = os.path.join(WORKDIR, "src")
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -DCMAKE_BUILD_TYPE={buildtype} {options}
+        cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
     """)
 
     if result != 0:
@@ -324,8 +358,10 @@ def cmake_configure(options, buildtype):
 @github_log_group("Dump existing configuration")
 def cmake_dump_config():
     # Print CMake cached config
+    srcdir = os.path.join(WORKDIR, "src")
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -N -L
+        cmake -S '{srcdir}' -B '{builddir}' -N -L
     """)
 
     if result != 0:
@@ -341,8 +377,9 @@ def dump_requested_config(options):
 def cmake_build(buildtype):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
 
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
+        cmake --build '{builddir}' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
     """)
 
     if result != 0:
@@ -350,13 +387,14 @@ def cmake_build(buildtype):
 
 
 def build(options, buildtype):
-    if not os.path.isdir(f'{WORKDIR}/build'):
-        result = subprocess_with_log(f"mkdir {WORKDIR}/build")
+    if not os.path.isdir(os.path.join(WORKDIR, "build")):
+        builddir = os.path.join(WORKDIR, "build")
+        result = subprocess_with_log(f"mkdir {builddir}")
 
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
+    if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
         cmake_configure(options, buildtype)
     else:
         cmake_dump_config()
@@ -368,10 +406,12 @@ def build(options, buildtype):
 
 @github_log_group("Create binary packages")
 def create_binaries(buildtype):
-    os.makedirs(f"{WORKDIR}/packages/", exist_ok=True)
+    builddir = os.path.join(WORKDIR, "build")
+    packagedir = os.path.join(WORKDIR, "packages")
+    os.makedirs(packagedir, exist_ok=True)
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build'
-        cpack -B {WORKDIR}/packages/ --verbose -C {buildtype}
+        cd '{builddir}'
+        cpack -B {packagedir} --verbose -C {buildtype}
     """)
 
     if result != 0:
@@ -379,29 +419,145 @@ def create_binaries(buildtype):
 
 
 @github_log_group("Rebase")
-def rebase(base_ref, head_ref) -> None:
-    head_ref_src, _, head_ref_dst = head_ref.partition(":")
-    head_ref_dst = head_ref_dst or "__tmp"
+def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str) -> None:
     # rebase fails unless user.email and user.name is set
+    targetdir = os.path.join(WORKDIR, directory)
+    if (head_sha and head_ref):
+      branch = f"{head_sha}:{head_ref}"
+    else:
+      branch = ""
+
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/src'
+        cd '{targetdir}'
 
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
 
-        git fetch origin {head_ref_src}:{head_ref_dst}
-        git checkout {head_ref_dst}
+        git fetch {repository} {branch}
+        git checkout {head_ref}
         git rebase {base_ref}
     """)
 
     if result != 0:
         die(result, "Rebase failed")
 
+def get_stdout_subprocess(command: str, error_message: str) -> str:
+  """
+  get_stdout_subprocess
+  execute and log a command.
+  capture the stdout, strip white space and return it
+  die in case of failed execution unless the error_message is empty.
+  """
+  result  = subprocess_with_capture(command)
+  if result.returncode != 0:
+    if error_message != "":
+      die(result, error_message)
+    else:
+      print("\033[90m", end='')
+      print(result.stdout)
+      print(result.stderr)
+      print("\033[0m", end='')
+      return ""
+  if result.stderr != "":
+    print("\033[90m", end='')
+    print(result.stdout)
+    print(result.stderr)
+    print("\033[0m", end='')
+  string_result = result.stdout
+  string_result = string_result.strip()
+  return string_result
+
+
+@github_log_group("Rebase")
+def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha: str) -> str:
+  """
+  get_base_head_sha
+
+  Given a pull request merge commit and the incoming commit return
+  the commit corresponding to the head of the branch we are merging into.
+  """
+  targetdir = os.path.join(WORKDIR, directory)
+  command = f"""
+      cd '{targetdir}'
+      git fetch {repository} {merge_sha}
+      """
+  result = subprocess_with_log(command)
+  if result != 0:
+      die("Failed to fetch {merge_sha} from {repository}")
+  command = f"""
+      cd '{targetdir}'
+      git rev-list --parents -1 {merge_sha}
+      """
+  result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
+
+  for s in result.split(' '):
+    if (s != merge_sha and s != head_sha):
+      return s
+
+  return ""
+
+@github_log_group("Pull/clone roottest branch")
+def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
+  """
+  relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
+                              FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
+  Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
+  current head name.
+
+  See relatedrepo_GetClosestMatch in toplevel CMakeLists.txt
+  """
+
+  # Alternatively, we could use: re.sub( "/root(.git)*$", "", varname)
+  origin_prefix = origin[:origin.rfind('/')]
+  upstream_prefix = upstream[:upstream.rfind('/')]
+
+  fetch_url = upstream_prefix + "/" + repo_name
+
+  gitdir = os.path.join(WORKDIR, "src", ".git")
+  current_head = get_stdout_subprocess(f"""
+      git --git-dir={gitdir} rev-parse --abbrev-ref HEAD
+      """, "Failed capture of current branch name")
+
+  # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
+  # upstream as the fork repository may be out-of-sync
+  branch_regex = re.compile("^(master|latest-stable|v[0-9]+-[0-9]+-[0-9]+(-patches)?)$")
+  known_head = branch_regex.match(current_head)
+
+  if known_head:
+    if current_head == "latest-stable":
+      # Resolve the 'latest-stable' branch to the latest merged head/tag
+      current_head = get_stdout_subprocess(f"""
+           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\))
+           """, "Failed capture of lastest-stable underlying branch name")
+      return fetch_url, current_head
+
+  # Otherwise, try to use a branch that matches `current_head` in the fork repository
+  matching_refs = get_stdout_subprocess(f"""
+       git ls-remote --heads --tags {origin_prefix}/{repo_name} {current_head}
+       """, "")
+  if matching_refs != "":
+    fetch_url = origin_prefix + "/" + repo_name
+    return fetch_url, current_head
+
+  # Finally, try upstream using the closest head/tag below the parent commit of the current head
+  closest_ref = get_stdout_subprocess(f"""
+       git --git-dir={gitdir} describe --all --abbrev=0 HEAD^
+       """, "") # Empty error means, ignore errors.
+  candidate_head = re.sub("^(heads|tags)/", "", closest_ref)
+
+  matching_refs = get_stdout_subprocess(f"""
+       git ls-remote --heads --tags {upstream_prefix}/{repo_name} {candidate_head}
+       """, "")
+  if matching_refs != "":
+    return fetch_url, candidate_head
+  return "", ""
+
 
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
+    builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build'
+        cd '{builddir}'
         gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="roottest|runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
     """)
 

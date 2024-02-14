@@ -177,6 +177,7 @@ A TRandom object may be written to a Root file
 #include "TDirectory.h"
 #include "Math/QuantFuncMathCore.h"
 #include "TUUID.h"
+#include "TError.h"
 
 ClassImp(TRandom);
 
@@ -395,13 +396,14 @@ Double_t TRandom::Landau(Double_t mu, Double_t sigma)
 /// the exponential.
 /// For higher values use a rejection method comparing with a Lorentzian
 /// distribution, as suggested by several authors.
-/// This routine since is returning 32 bits integer will not work for values
-/// larger than 2*10**9.
-/// One should then use the Trandom::PoissonD for such large values.
+/// This routine returns now an unsigned 64 bit integer
+/// For large values, larger than 1.84e+19, we print an error message
+/// advising to use the Trandom::PoissonD for such large values,
+/// and return the max value UINT64_MAX
 
-Int_t TRandom::Poisson(Double_t mean)
+ULong64_t TRandom::Poisson(Double_t mean)
 {
-   Int_t n;
+   ULong64_t n;
    if (mean <= 0) return 0;
    if (mean < 25) {
       Double_t expmean = TMath::Exp(-mean);
@@ -434,12 +436,17 @@ Int_t TRandom::Poisson(Double_t mean)
          t = 0.9*(1.0 + y*y)* TMath::Exp(em*alxm - TMath::LnGamma(em + 1.0) - g);
       } while( Rndm() > t );
 
-      return static_cast<Int_t> (em);
+      return static_cast<ULong64_t>(em);
 
    }
    else {
-      // use Gaussian approximation vor very large values
-      n = Int_t(Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5);
+      // use Gaussian approximation for very large values
+      Double_t x = Gaus(0, 1) * TMath::Sqrt(mean) + mean + 0.5;
+      if (x > TMath::Limits<ULong64_t>::Max()) {
+         Error("Poisson", "Overflow in return value. Use PoissonD instead.");
+         return TMath::Limits<ULong64_t>::Max();
+      }
+      n = static_cast<ULong64_t>(x);
       return n;
    }
 }
@@ -489,7 +496,7 @@ Double_t TRandom::PoissonD(Double_t mean)
       return em;
 
    } else {
-      // use Gaussian approximation vor very large values
+      // use Gaussian approximation for very large values
       return Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5;
    }
 }

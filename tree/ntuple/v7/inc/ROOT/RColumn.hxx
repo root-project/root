@@ -31,11 +31,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RColumn
+\class ROOT::Internal::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 */
@@ -330,10 +330,9 @@ public:
    RPageSink *GetPageSink() const { return fPageSink; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
-};
+}; // class RColumn
 
-} // namespace Detail
-
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

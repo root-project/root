@@ -634,6 +634,10 @@ inline Bool_t TString::Contains(const TString &pat, ECaseCompare cmp) const
 inline Bool_t TString::Contains(const char *s, ECaseCompare cmp) const
 { return Index(s, s ? (Ssiz_t)strlen(s) : 0, (Ssiz_t)0, cmp) != kNPOS; }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns whether the string matches the input TRegexp.
+/// \warning Matching regular expressions of type ".?" is not supported. Use
+///          std::regex instead.
 inline Bool_t TString::Contains(const TRegexp &pat) const
 { return Index(pat, (Ssiz_t)0) != kNPOS; }
 

@@ -480,7 +480,7 @@ TEST(RNTuple, ModelId)
    auto m1 = RNTupleModel::Create();
    auto m2 = RNTupleModel::Create();
    EXPECT_FALSE(m1->IsFrozen());
-   EXPECT_EQ(m1->GetModelId(), m2->GetModelId());
+   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
 
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
@@ -498,18 +498,14 @@ TEST(RNTuple, ModelId)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
 
-   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
    // Freeze() should be idempotent call
    auto id = m1->GetModelId();
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
    EXPECT_EQ(id, m1->GetModelId());
 
-   m2->Freeze();
-   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
-
    auto m2c = m2->Clone();
-   EXPECT_EQ(m2->GetModelId(), m2c->GetModelId());
+   EXPECT_NE(m2->GetModelId(), m2c->GetModelId());
 }
 
 TEST(RNTuple, Entry)
@@ -672,6 +668,47 @@ TEST(RNTuple, FillBytesWritten)
    checkFillReturnValue(optsSmall);
 }
 
+TEST(RNTuple, FillBytesWrittenCollections)
+{
+   FileRaii fileGuard("test_ntuple_fillbytes_collections.root");
+
+   auto eventModel = RNTupleModel::Create();
+   auto fldPt = eventModel->MakeField<float>("pt", 0.0);
+
+   auto hitModel = RNTupleModel::Create();
+   auto fldHitX = hitModel->MakeField<float>("x", 0.0);
+   auto fldHitY = hitModel->MakeField<float>("y", 0.0);
+
+   auto trackModel = RNTupleModel::Create();
+   auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
+
+   auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
+   auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
+
+   {
+      RNTupleWriteOptions options;
+      options.SetApproxZippedClusterSize(1024 * 1024);
+      auto writer = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath(), options);
+
+      for (unsigned i = 0; i < 30000; ++i) {
+         for (unsigned t = 0; t < 3; ++t) {
+            for (unsigned h = 0; h < 2; ++h) {
+               *fldHitX = 4.0;
+               *fldHitY = 8.0;
+               EXPECT_EQ(4 + 4, fldHits->Fill());
+            }
+            *fldTrackEnergy = i * t;
+            EXPECT_EQ(2 * (4 + 4) + 8 + 4, fldTracks->Fill());
+         }
+         *fldPt = float(i);
+         EXPECT_EQ(3 * (2 * (4 + 4) + 8 + 4) + 8 + 4, writer->Fill());
+      }
+   }
+
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetDescriptor().GetNClusters(), 2);
+}
+
 TEST(RNTuple, RValue)
 {
    auto f1 = RFieldBase::Create("f1", "CustomStruct").Unwrap();
@@ -691,4 +728,36 @@ TEST(RNTuple, RValue)
    f3 = nullptr;
 
    // The deleters are called in the destructors of the values
+}
+
+TEST(REntry, Basics)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("pt");
+   model->Freeze();
+
+   auto e = model->CreateEntry();
+   EXPECT_EQ(e->GetModelId(), model->GetModelId());
+   for (const auto &v : *e) {
+      EXPECT_STREQ("pt", v.GetField().GetFieldName().c_str());
+   }
+
+   EXPECT_THROW(e->GetToken(""), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
+
+   std::shared_ptr<float> ptrPt;
+   e->BindValue("pt", ptrPt);
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<float>("pt").get());
+
+   auto model2 = model->Clone();
+   EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::Experimental::RException);
+   std::shared_ptr<double> ptrDouble;
+   EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::Experimental::RException);
+
+   float pt;
+   e->BindRawPtr("pt", &pt);
+   EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
+
+   e->EmplaceNewValue("pt");
+   EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
 }

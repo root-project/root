@@ -35,6 +35,8 @@ namespace Experimental {
 
 namespace Internal {
 using ntuple_index_t = std::uint32_t;
+class RCluster;
+class RClusterPool;
 class RDaosPool;
 class RDaosContainer;
 class RPageAllocatorHeap;
@@ -43,16 +45,10 @@ enum EDaosLocatorFlags {
    // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
    kCagedPage = 0x01,
 };
-}
-
-namespace Detail {
-
-class RCluster;
-class RClusterPool;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RDaosNTupleAnchor
+\class ROOT::Experimental::Internal::RDaosNTupleAnchor
 \ingroup NTuple
 \brief Entry point for an RNTuple in a DAOS container. It encodes essential
 information to read the ntuple; currently, it contains (un)compressed size of
@@ -91,11 +87,11 @@ struct RDaosNTupleAnchor {
    RResult<std::uint32_t> Deserialize(const void *buffer, std::uint32_t bufSize);
 
    static std::uint32_t GetSize();
-};
+}; // struct RDaosNTupleAnchor
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSinkDaos
+\class ROOT::Experimental::Internal::RPageSinkDaos
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
 
@@ -105,13 +101,13 @@ Objects can correspond to pages or clusters of pages depending on the RNTuple-DA
 // clang-format on
 class RPageSinkDaos : public RPagePersistentSink {
 private:
-   std::unique_ptr<Internal::RPageAllocatorHeap> fPageAllocator;
+   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    /// \brief Underlying DAOS container. An internal `std::shared_ptr` keep the pool connection alive.
    /// ISO C++ ensures the correct destruction order, i.e., `~RDaosContainer` is invoked first
    /// (which calls `daos_cont_close()`; the destructor for the `std::shared_ptr<RDaosPool>` is invoked
    /// after (which calls `daos_pool_disconect()`).
-   std::unique_ptr<Internal::RDaosContainer> fDaosContainer;
+   std::unique_ptr<RDaosContainer> fDaosContainer;
    /// Page identifier for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
    std::atomic<std::uint64_t> fPageId{0};
    /// Cluster group counter for the next committed cluster pagelist; incremented in `CommitClusterGroupImpl()`
@@ -122,7 +118,7 @@ private:
    std::uint64_t fNBytesCurrentCluster{0};
 
    RDaosNTupleAnchor fNTupleAnchor;
-   Internal::ntuple_index_t fNTupleIndex{0};
+   ntuple_index_t fNTupleIndex{0};
    uint32_t fCageSizeLimit{};
 
 protected:
@@ -144,11 +140,11 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-};
+}; // class RPageSinkDaos
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSourceDaos
+\class ROOT::Experimental::Internal::RPageSourceDaos
 \ingroup NTuple
 \brief Storage provider that reads ntuple pages from a DAOS container
 */
@@ -165,20 +161,20 @@ private:
       std::uint64_t fColumnOffset = 0;
    };
 
-   Internal::ntuple_index_t fNTupleIndex{0};
+   ntuple_index_t fNTupleIndex{0};
 
    /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<Internal::RPagePool> fPagePool;
+   std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
-   std::unique_ptr<Internal::RDaosContainer> fDaosContainer;
+   std::unique_ptr<RDaosContainer> fDaosContainer;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
-   Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
+   RNTupleDescriptorBuilder fDescriptorBuilder;
 
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
@@ -204,9 +200,9 @@ public:
 
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
-};
+}; // class RPageSourceDaos
 
-} // namespace Detail
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

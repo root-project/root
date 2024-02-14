@@ -79,7 +79,7 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
       if (field->GetOnDiskId() == kInvalidDescriptorId) {
          field->SetOnDiskId(fSource->GetSharedDescriptorGuard()->FindFieldId(field->GetFieldName(), fieldZeroId));
       }
-      field->ConnectPageSource(*fSource);
+      Internal::CallConnectPageSourceOnField(*field, *fSource);
    }
 }
 
@@ -96,7 +96,7 @@ void ROOT::Experimental::RNTupleReader::InitPageSource()
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
-                                                 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
+                                                 std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source)
    : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
 {
    // TODO(jblomer): properly support projected fields
@@ -108,7 +108,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    ConnectModel(*fModel);
 }
 
-ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
+ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source)
    : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader")
 {
    InitPageSource();
@@ -121,21 +121,22 @@ ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, std
                                         std::string_view storage, const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(std::move(model), Detail::RPageSource::Create(ntupleName, storage, options)));
+      new RNTupleReader(std::move(model), Internal::RPageSource::Create(ntupleName, storage, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
 ROOT::Experimental::RNTupleReader::Open(std::string_view ntupleName, std::string_view storage,
                                         const RNTupleReadOptions &options)
 {
-   return std::unique_ptr<RNTupleReader>(new RNTupleReader(Detail::RPageSource::Create(ntupleName, storage, options)));
+   return std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(Internal::RPageSource::Create(ntupleName, storage, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
 ROOT::Experimental::RNTupleReader::Open(ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(Detail::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
+      new RNTupleReader(Internal::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
@@ -143,18 +144,18 @@ ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, ROO
                                         const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(std::move(model), Detail::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
+      new RNTupleReader(std::move(model), Internal::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
 ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
 {
-   std::vector<std::unique_ptr<Detail::RPageSource>> sources;
+   std::vector<std::unique_ptr<Internal::RPageSource>> sources;
    for (const auto &n : ntuples) {
-      sources.emplace_back(Detail::RPageSource::Create(n.fNTupleName, n.fStorage, n.fOptions));
+      sources.emplace_back(Internal::RPageSource::Create(n.fNTupleName, n.fStorage, n.fOptions));
    }
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(std::make_unique<Detail::RPageSourceFriends>("_friends", sources)));
+      new RNTupleReader(std::make_unique<Internal::RPageSourceFriends>("_friends", sources)));
 }
 
 const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetModel()
@@ -269,8 +270,8 @@ const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::RNTupleReader::
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
-                                                           std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
+ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<RNTupleModel> model,
+                                                           std::unique_ptr<Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
    fModel->Freeze();
@@ -304,7 +305,7 @@ void ROOT::Experimental::RNTupleFillContext::CommitCluster()
       throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
    for (auto &field : fModel->GetFieldZero()) {
-      field.CommitCluster();
+      Internal::CallCommitClusterOnField(field);
    }
    auto nEntriesInCluster = fNEntries - fLastCommitted;
    fNBytesCommitted += fSink->CommitCluster(nEntriesInCluster);
@@ -323,7 +324,7 @@ void ROOT::Experimental::RNTupleFillContext::CommitCluster()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
-                                                 std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
+                                                 std::unique_ptr<ROOT::Experimental::Internal::RPageSink> sink)
    : fFillContext(std::move(model), std::move(sink)), fMetrics("RNTupleWriter")
 {
 #ifdef R__USE_IMT
@@ -347,23 +348,29 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
+ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model,
+                                          std::unique_ptr<Internal::RPageSink> sink, const RNTupleWriteOptions &options)
+{
+   if (options.GetUseBufferedWrite()) {
+      sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
+   }
+   return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(sink)));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                             std::string_view storage, const RNTupleWriteOptions &options)
 {
-   return std::unique_ptr<RNTupleWriter>(
-      new RNTupleWriter(std::move(model), Detail::RPageSink::Create(ntupleName, storage, options)));
+   auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
+   return Create(std::move(model), std::move(sink), options);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, TFile &file,
                                           const RNTupleWriteOptions &options)
 {
-   auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
-   if (options.GetUseBufferedWrite()) {
-      auto bufferedSink = std::make_unique<Detail::RPageSinkBuf>(std::move(sink));
-      return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(bufferedSink)));
-   }
-   return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(sink)));
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
+   return Create(std::move(model), std::move(sink), options);
 }
 
 void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
@@ -376,7 +383,7 @@ void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
-                                                  std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
+                                                  std::unique_ptr<ROOT::Experimental::Internal::RPageSink> sink)
 {
    return std::unique_ptr<ROOT::Experimental::RNTupleWriter>(
       new ROOT::Experimental::RNTupleWriter(std::move(model), std::move(sink)));

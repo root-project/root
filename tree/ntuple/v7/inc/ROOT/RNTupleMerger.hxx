@@ -32,7 +32,7 @@ namespace Internal {
 
 // clang-format off
 /**
- * \class ROOT::Experimental::RNTupleMerger
+ * \class ROOT::Experimental::Internal::RNTupleMerger
  * \ingroup NTuple
  * \brief Given a set of RPageSources merge them into an RPageSink
  */
@@ -67,14 +67,14 @@ private:
                             const RFieldDescriptor &fieldDesc, const std::string &prefix = "");
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const Detail::RPageSource &source, bool firstSource);
+   std::vector<RColumnInfo> CollectColumns(const RPageSource &source, bool firstSource);
 
    // Internal map that holds column name, type, and type id : output ID information
    std::unordered_map<std::string, DescriptorId_t> fOutputIdMap;
 
 public:
    /// Merge a given set of sources into the destination
-   void Merge(std::span<Detail::RPageSource *> sources, Detail::RPageSink &destination);
+   void Merge(std::span<RPageSource *> sources, RPageSink &destination);
 
 }; // end of class RNTupleMerger
 

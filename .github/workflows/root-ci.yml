@@ -81,7 +81,11 @@ concurrency:
 
 jobs:
   build-macos:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
 
     permissions:
       contents: read
@@ -91,13 +95,21 @@ jobs:
       matrix:
         # Specify platform + arch + (optional) build option overrides
         #
-        # Available platforms: mac14
+        # Available platforms: mac14, mac-beta
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
+          - platform: mac12
+            arch: X64
+          - platform: mac13   
+            arch: ARM64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - platform: mac14
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+#          - platform: mac-beta
+#            arch: X64
+#            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -109,7 +121,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
@@ -146,12 +158,15 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      RelWithDebInfo
-                    --platform       ${{ matrix.platform }}
-                    --incremental    $INCREMENTAL
-                    --base_ref       ${{ github.base_ref }}
-                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+                    --buildtype       RelWithDebInfo
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
@@ -191,13 +206,6 @@ jobs:
           name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
-      - name: Upload build artifacts
-        if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
-          path: /Users/sftnight/ROOT-CI/build/TestResults.xml
-
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v3
@@ -208,7 +216,11 @@ jobs:
 
 
   build-windows:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
 
     permissions:
       contents: read
@@ -241,7 +253,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -251,13 +263,16 @@ jobs:
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
-                    --buildtype    ${{ matrix.config }}
-                    --platform     windows10
-                    --incremental  $INCREMENTAL
-                    --base_ref     ${{ github.base_ref }}
-                    --head_ref     refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --repository   ${{ github.server_url }}/${{ github.repository }}
-                    --architecture ${{ matrix.target_arch }}"
+                    --buildtype       ${{ matrix.config }}
+                    --platform        windows10
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --architecture    ${{ matrix.target_arch }}"
 
       - name: Workflow dispatch/call
         if:   github.event_name == 'workflow_dispatch'
@@ -316,7 +331,11 @@ jobs:
 
 
   build-linux:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
 
     permissions:
       contents: read
@@ -375,7 +394,7 @@ jobs:
         run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Dump GitHub context
         env:
@@ -422,14 +441,17 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      RelWithDebInfo
-                    --platform       ${{ matrix.image }}
-                    --image          registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-                    --dockeropts     '--security-opt label=disable --rm'
-                    --incremental    $INCREMENTAL
-                    --base_ref       ${{ github.base_ref }}
-                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --buildtype       RelWithDebInfo
+                    --platform        ${{ matrix.image }}
+                    --image           registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+                    --dockeropts      '--security-opt label=disable --rm'
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
               "
 
       - name: Workflow dispatch
@@ -482,7 +504,12 @@ jobs:
           if-no-files-found: error
 
   event_file:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
     name: "Upload Event Payload"
     runs-on: ubuntu-latest
     steps:

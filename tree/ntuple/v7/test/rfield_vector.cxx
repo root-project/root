@@ -35,7 +35,7 @@ void TestClassVector(const char *fname)
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(3U, reader->GetNEntries());
 
-   auto viewKlassVec = reader->GetViewCollection("klassVec");
+   auto viewKlassVec = reader->GetCollectionView("klassVec");
    auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
    auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
    auto viewKlassV1 = viewKlassVec.GetView<std::vector<float>>("_0.v1");
@@ -126,14 +126,14 @@ TEST(RNTuple, InsideCollection)
 
    auto field = std::make_unique<ROOT::Experimental::RVectorField>("klassVec", std::move(fieldInner));
    field->SetOnDiskId(idKlassVec);
-   field->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*field, *source);
 
    auto fieldCardinality64 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
    fieldCardinality64->SetOnDiskId(idKlassVec);
-   fieldCardinality64->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality64, *source);
    auto fieldCardinality32 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
    fieldCardinality32->SetOnDiskId(idKlassVec);
-   fieldCardinality32->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality32, *source);
 
    auto value = field->CreateValue();
    value.Read(0);

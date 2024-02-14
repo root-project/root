@@ -30,6 +30,9 @@ parentheses (grouping). Therefore "a|b" does not match "a".
 
 Standard classes like [:alnum:], [:alpha:], etc. are not supported,
 only [a-zA-Z], [^ntf] and so on.
+
+Warning: The preferred way to use regular expressions is via std::regex.
+E.g., Index() functions may return incorrect result.
 */
 
 #include "TRegexp.h"
@@ -205,6 +208,7 @@ const char *TRegexp::MakeWildcard(const char *re)
 /// Find the first occurrence of the regexp in string and return the
 /// position, or -1 if there is no match. Len is length of the matched
 /// string and i is the offset at which the matching should start.
+/// Please, see the Warning in the class documentation above.
 
 Ssiz_t TRegexp::Index(const TString& string, Ssiz_t* len, Ssiz_t i) const
 {
@@ -246,6 +250,7 @@ TRegexp::EStatVal TRegexp::Status()
 /// Find the first occurrence of the regexp in string and return the
 /// position, or -1 if there is no match. Start is the offset at which
 /// the search should start.
+/// Please, see the Warning in the class documentation above.
 
 Ssiz_t TString::Index(const TRegexp& r, Ssiz_t start) const
 {
@@ -257,6 +262,7 @@ Ssiz_t TString::Index(const TRegexp& r, Ssiz_t start) const
 /// Find the first occurrence of the regexp in string and return the
 /// position, or -1 if there is no match. Extent is length of the matched
 /// string and start is the offset at which the matching should start.
+/// Please, see the Warning in the class documentation above.
 
 Ssiz_t TString::Index(const TRegexp& r, Ssiz_t* extent, Ssiz_t start) const
 {
@@ -265,6 +271,7 @@ Ssiz_t TString::Index(const TRegexp& r, Ssiz_t* extent, Ssiz_t start) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the substring found by applying the regexp starting at start.
+/// Please, see the Warning in the class documentation above.
 
 TSubString TString::operator()(const TRegexp& r, Ssiz_t start) const
 {

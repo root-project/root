@@ -41,18 +41,14 @@ class TFile;
 namespace ROOT {
 namespace Experimental {
 
+class RCollectionField;
 class REntry;
 class RNTuple;
 class RNTupleModel;
 
-namespace Detail {
-class RPageSink;
-class RPageSource;
-}
-
 namespace Internal {
 struct RNTupleTester; // friend of RNTuple
-}
+} // namespace Internal
 
 /**
  * Listing of the different options that can be printed by RNTupleReader::GetInfo()
@@ -65,7 +61,7 @@ enum class ENTupleInfo {
 
 #ifdef R__USE_IMT
 class TTaskGroup;
-class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
+class RNTupleImtTaskScheduler : public Internal::RPageStorage::RTaskScheduler {
 private:
    std::unique_ptr<TTaskGroup> fTaskGroup;
 public:
@@ -103,9 +99,9 @@ class RNTupleReader {
 private:
    /// Set as the page source's scheduler for parallel page decompression if IMT is on
    /// Needs to be destructed after the pages source is destructed (an thus be declared before)
-   std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fUnzipTasks;
+   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
 
-   std::unique_ptr<Detail::RPageSource> fSource;
+   std::unique_ptr<Internal::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<RNTupleModel> fModel;
    /// We use a dedicated on-demand reader for Show() and Scan(). Printing data uses all the fields
@@ -120,9 +116,9 @@ private:
    std::unique_ptr<RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
 
-   RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
+   RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage.
-   explicit RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source);
 
    void ConnectModel(RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
@@ -309,18 +305,19 @@ public:
    /// Raises an exception if:
    /// * there is no field with the given name or,
    /// * the field is not a collection
-   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
+   RNTupleCollectionView GetCollectionView(std::string_view fieldName)
+   {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
-      return GetViewCollection(fieldId);
+      return GetCollectionView(fieldId);
    }
 
-   RNTupleViewCollection GetViewCollection(DescriptorId_t fieldId)
+   RNTupleCollectionView GetCollectionView(DescriptorId_t fieldId)
    {
-      return RNTupleViewCollection(fieldId, fSource.get());
+      return RNTupleCollectionView(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }
@@ -369,7 +366,7 @@ class RNTupleFillContext {
    friend class RNTupleParallelWriter;
 
 private:
-   std::unique_ptr<Detail::RPageSink> fSink;
+   std::unique_ptr<Internal::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;
 
@@ -389,7 +386,7 @@ private:
    /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
    std::size_t fUnzippedClusterSizeEst;
 
-   RNTupleFillContext(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   RNTupleFillContext(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;
    RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
 
@@ -428,7 +425,7 @@ public:
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
 std::unique_ptr<RNTupleWriter>
-CreateRNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
+CreateRNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 } // namespace Internal
 
 // clang-format off
@@ -446,24 +443,29 @@ triggered by CommitCluster() or by destructing the writer.  On I/O errors, an ex
 class RNTupleWriter {
    friend RNTupleModel::RUpdater;
    friend std::unique_ptr<RNTupleWriter>
-      Internal::CreateRNTupleWriter(std::unique_ptr<RNTupleModel>, std::unique_ptr<Detail::RPageSink>);
+      Internal::CreateRNTupleWriter(std::unique_ptr<RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
    /// Needs to be destructed after the page sink (in the fill context) is destructed and so declared before.
-   std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fZipTasks;
+   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fZipTasks;
    RNTupleFillContext fFillContext;
    Detail::RNTupleMetrics fMetrics;
 
    NTupleSize_t fLastCommittedClusterGroup = 0;
 
-   RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
    RNTupleModel &GetUpdatableModel() { return *fFillContext.fModel; }
-   Detail::RPageSink &GetSink() { return *fFillContext.fSink; }
+   Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
+
+   /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
+   static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<RNTupleModel> model,
+                                                std::unique_ptr<Internal::RPageSink> sink,
+                                                const RNTupleWriteOptions &options);
 
 public:
    /// Throws an exception if the model is null.
@@ -545,7 +547,10 @@ public:
 */
 // clang-format on
 class RCollectionNTupleWriter {
+   friend class RCollectionField;
+
 private:
+   std::size_t fBytesWritten = 0;
    ClusterSize_t fOffset;
    std::unique_ptr<REntry> fDefaultEntry;
 public:
@@ -554,10 +559,13 @@ public:
    RCollectionNTupleWriter& operator=(const RCollectionNTupleWriter&) = delete;
    ~RCollectionNTupleWriter() = default;
 
-   void Fill() { Fill(fDefaultEntry.get()); }
-   void Fill(REntry *entry) {
-      entry->Append();
+   std::size_t Fill() { return Fill(*fDefaultEntry); }
+   std::size_t Fill(REntry &entry)
+   {
+      const std::size_t bytesWritten = entry.Append();
+      fBytesWritten += bytesWritten;
       fOffset++;
+      return bytesWritten;
    }
 
    ClusterSize_t *GetOffsetPtr() { return &fOffset; }

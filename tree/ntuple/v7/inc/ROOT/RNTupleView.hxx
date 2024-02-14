@@ -140,7 +140,7 @@ Fields of simple types with a Map() method will use that and thus expose zero-co
 template <typename T>
 class RNTupleView {
    friend class RNTupleReader;
-   friend class RNTupleViewCollection;
+   friend class RNTupleCollectionView;
 
    using FieldT = RField<T>;
 
@@ -150,12 +150,12 @@ private:
    /// Used as a Read() destination for fields that are not mappable
    RFieldBase::RValue fValue;
 
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
         fValue(fField.CreateValue())
    {
       fField.SetOnDiskId(fieldId);
-      fField.ConnectPageSource(*pageSource);
+      Internal::CallConnectPageSourceOnField(fField, *pageSource);
       if ((fField.GetTraits() & RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
          throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
    }
@@ -218,7 +218,7 @@ in addition to the field, so that the read object can be retrieved.
 template <>
 class RNTupleView<void> {
    friend class RNTupleReader;
-   friend class RNTupleViewCollection;
+   friend class RNTupleCollectionView;
 
 private:
    std::unique_ptr<RFieldBase> fField;
@@ -229,11 +229,11 @@ private:
       return desc.GetFieldDescriptor(fieldId).CreateField(desc);
    }
 
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
       : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->CreateValue())
    {
       fField->SetOnDiskId(fieldId);
-      fField->ConnectPageSource(*pageSource);
+      Internal::CallConnectPageSourceOnField(*fField, *pageSource);
    }
 
 public:
@@ -253,30 +253,28 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleViewCollection
+\class ROOT::Experimental::RNTupleCollectionView
 \ingroup NTuple
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
 */
 // clang-format on
-class RNTupleViewCollection : public RNTupleView<ClusterSize_t> {
-    friend class RNTupleReader;
+class RNTupleCollectionView : public RNTupleView<ClusterSize_t> {
+   friend class RNTupleReader;
 
 private:
-   Detail::RPageSource* fSource;
+   Internal::RPageSource *fSource;
    DescriptorId_t fCollectionFieldId;
 
-   RNTupleViewCollection(DescriptorId_t fieldId, Detail::RPageSource* source)
-      : RNTupleView<ClusterSize_t>(fieldId, source)
-      , fSource(source)
-      , fCollectionFieldId(fieldId)
+   RNTupleCollectionView(DescriptorId_t fieldId, Internal::RPageSource *source)
+      : RNTupleView<ClusterSize_t>(fieldId, source), fSource(source), fCollectionFieldId(fieldId)
    {}
 
 public:
-   RNTupleViewCollection(const RNTupleViewCollection& other) = delete;
-   RNTupleViewCollection(RNTupleViewCollection&& other) = default;
-   RNTupleViewCollection& operator=(const RNTupleViewCollection& other) = delete;
-   RNTupleViewCollection& operator=(RNTupleViewCollection&& other) = default;
-   ~RNTupleViewCollection() = default;
+   RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
+   RNTupleCollectionView(RNTupleCollectionView &&other) = default;
+   RNTupleCollectionView &operator=(const RNTupleCollectionView &other) = delete;
+   RNTupleCollectionView &operator=(RNTupleCollectionView &&other) = default;
+   ~RNTupleCollectionView() = default;
 
    RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
       ClusterSize_t size;
@@ -305,13 +303,14 @@ public:
       return RNTupleView<T>(fieldId, fSource);
    }
    /// Raises an exception if there is no field with the given name.
-   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
+   RNTupleCollectionView GetCollectionView(std::string_view fieldName)
+   {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fCollectionFieldId);
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
-      return RNTupleViewCollection(fieldId, fSource);
+      return RNTupleCollectionView(fieldId, fSource);
    }
 
    ClusterSize_t operator()(NTupleSize_t globalIndex) {
