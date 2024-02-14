@@ -107,7 +107,7 @@ class THnSparse: public THnBase {
    void SetBinContent(Long64_t bin, Double_t v) override;
    void SetBinError2(Long64_t bin, Double_t e2) override;
 
-   /// Forwards to THnBase::SetBinContent().
+   /// Forwards to THnBase::AddBinContent().
    /// Non-virtual, CINT-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
       THnBase::AddBinContent(idx, v);
