@@ -1030,6 +1030,8 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
       name = fDataSource->GetLabel();
    } else if (fTree) {
       name = fTree->GetName();
+      if (name.empty())
+         name = fTree->ClassName();
    } else {
       name = "Empty source\\nEntries: " + std::to_string(GetNEmptyEntries());
    }
