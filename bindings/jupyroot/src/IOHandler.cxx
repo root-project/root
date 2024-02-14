@@ -190,13 +190,6 @@ bool JupyROOTDeclarerImpl(const char *code)
    return status;
 }
 
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyText_FromString PyUnicode_FromString
-#else
-    #define PyText_FromString PyString_FromString
-#endif
-
 PyObject *JupyROOTExecutor(PyObject * /*self*/, PyObject * args)
 {
    const char *code;
@@ -205,7 +198,7 @@ PyObject *JupyROOTExecutor(PyObject * /*self*/, PyObject * args)
 
    auto res = JupyROOTExecutorImpl(code);
 
-   return PyInt_FromLong(res);
+   return PyLong_FromLong(res);
 }
 
 PyObject *JupyROOTDeclarer(PyObject * /*self*/, PyObject *args)
@@ -216,7 +209,7 @@ PyObject *JupyROOTDeclarer(PyObject * /*self*/, PyObject *args)
 
    auto res = JupyROOTDeclarerImpl(code);
 
-   return PyInt_FromLong(res);
+   return PyLong_FromLong(res);
 }
 
 PyObject *JupyROOTExecutorHandler_Clear(PyObject * /*self*/, PyObject * /*args*/)
@@ -257,13 +250,13 @@ PyObject *JupyROOTExecutorHandler_InitCapture(PyObject * /*self*/, PyObject * /*
 PyObject *JupyROOTExecutorHandler_GetStdout(PyObject * /*self*/, PyObject * /*args*/)
 {
    auto out = JupyROOTExecutorHandler_ptr->GetStdout().c_str();
-   return PyText_FromString(out);
+   return PyUnicode_FromString(out);
 }
 
 PyObject *JupyROOTExecutorHandler_GetStderr(PyObject * /*self*/, PyObject * /*args*/)
 {
    auto err = JupyROOTExecutorHandler_ptr->GetStderr().c_str();
-   return PyText_FromString(err);
+   return PyUnicode_FromString(err);
 }
 
 PyObject *JupyROOTExecutorHandler_Dtor(PyObject * /*self*/, PyObject * /*args*/)
@@ -315,7 +308,6 @@ static PyMethodDef gJupyROOTMethods[] = {
 #define CONCAT(a, b, c, d) a##b##c##d
 #define LIBJUPYROOT_INIT_FUNCTION(a, b, c, d) CONCAT(a, b, c, d)
 
-#if PY_VERSION_HEX >= 0x03000000
 struct module_state {
    PyObject *error;
 };
@@ -340,24 +332,13 @@ static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       LIBJUPYROOT_
 
 /// Initialization of extension module libJupyROOT
 
-#define JUPYROOT_INIT_ERROR return NULL
 LIBJUPYROOT_INIT_FUNCTION(extern "C" PyObject *PyInit_libJupyROOT, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
-#else // PY_VERSION_HEX >= 0x03000000
-#define JUPYROOT_INIT_ERROR return
-LIBJUPYROOT_INIT_FUNCTION(extern "C" void initlibJupyROOT, PY_MAJOR_VERSION, _, PY_MINOR_VERSION) ()
-#endif
 {
 // setup PyROOT
-#if PY_VERSION_HEX >= 0x03000000
    gJupyRootModule = PyModule_Create(&moduledef);
-#else
-   gJupyRootModule = Py_InitModule(const_cast<char *>(LIBJUPYROOT_NAME), gJupyROOTMethods);
-#endif
    if (!gJupyRootModule)
-      JUPYROOT_INIT_ERROR;
+      return nullptr;
 
-#if PY_VERSION_HEX >= 0x03000000
    Py_INCREF(gJupyRootModule);
    return gJupyRootModule;
-#endif
 }

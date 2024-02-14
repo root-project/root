@@ -17,10 +17,7 @@ from time import sleep as timeSleep
 from sys import platform
 from os import path
 import sys
-if sys.hexversion >= 0x3000000:
-    import queue
-else:
-    import Queue as queue
+import queue
 
 from JupyROOT import helpers
 
