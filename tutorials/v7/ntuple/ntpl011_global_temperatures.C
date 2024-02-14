@@ -19,11 +19,6 @@
 // Do not use for real data! During ROOT setup, configure the following flags:
 // `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
 
-// NOTE: Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
-// triggering autoloading from the use of templated types would require an exhaustive enumeration
-// of "all" template instances in the LinkDef file.
-R__LOAD_LIBRARY(ROOTNTuple)
-
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
