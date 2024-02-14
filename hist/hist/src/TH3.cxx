@@ -1975,6 +1975,9 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    if (useUF && !out2->TestBit(TAxis::kAxisRange) )  out2min -= 1;
    if (useOF && !out2->TestBit(TAxis::kAxisRange) )  out2max += 1;
 
+   // if the out axis has labels and is extendable, temporary make it non-extendable to avoid adding extra bins
+   Bool_t extendable = projX->CanExtend();
+   if ( labels && extendable ) h1->GetXaxis()->SetCanExtend(kFALSE);
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++) {
       if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
 
@@ -2002,6 +2005,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
       totcont += cont;
 
    }
+   if ( labels ) h1->GetXaxis()->SetCanExtend(extendable);
 
    // since we use a combination of fill and SetBinError we need to reset and recalculate the statistics
    // for weighted histograms otherwise sumw2 will be wrong.
@@ -2602,6 +2606,30 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
          } else {
             p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
          }
+      }
+   }
+
+   // Copy the axis attributes and the axis labels if needed
+   p2->GetXaxis()->ImportAttributes(projY);
+   p2->GetYaxis()->ImportAttributes(projX);
+   THashList* labelsX = projY->GetLabels();
+   if (labelsX) {
+      TIter iL(labelsX);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         p2->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         ++i;
+      }
+   }
+   THashList* labelsY = projX->GetLabels();
+   if (labelsY) {
+      TIter iL(labelsY);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         p2->GetYaxis()->SetBinLabel(i,lb->String().Data());
+         ++i;
       }
    }
 
