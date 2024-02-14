@@ -96,13 +96,34 @@ Note that this functionality requires the Python packages `numba` and `cffi` to 
 
 Eventually, you probably would like to inspect the content of the RDataFrame or process the data further
 with Python libraries. For this purpose, we provide the `AsNumpy()` function, which returns the columns
-of your RDataFrame as a dictionary of NumPy arrays. See a simple example below or a full tutorial [here](df026__AsNumpyArrays_8py.html).
+of your RDataFrame as a dictionary of NumPy arrays. See a few simple examples below or a full tutorial [here](df026__AsNumpyArrays_8py.html).
 
+\anchor asnumpy_scalar_columns
+##### Scalar columns
+If your column contains scalar values of fundamental types (e.g., integers, floats), `AsNumpy()` produces NumPy arrays with the appropriate `dtype`:
 ~~~{.py}
-df = ROOT.RDataFrame("myTree", "myFile.root")
-cols = df.Filter("x > 10").AsNumpy(["x", "y"]) # retrieve columns "x" and "y" as NumPy arrays
-print(cols["x"], cols["y"]) # the values of the cols dictionary are NumPy arrays
+rdf = ROOT.RDataFrame(10).Define("int_col", "1").Define("float_col", "2.3")
+print(rdf.AsNumpy(["int_col", "float_col"]))
+# Output: {'int_col': array([...], dtype=int32), 'float_col': array([...], dtype=float64)}
 ~~~
+
+Columns containing non-fundamental types (e.g., objects, strings) will result in NumPy arrays with `dtype=object`.
+
+##### Collection Columns
+If your column contains collections of fundamental types (e.g., std::vector<int>), `AsNumpy()` produces a NumPy array with `dtype=object` where each 
+element is a NumPy array representing the collection for its corresponding entry in the column.
+
+If the collection at a certain entry contains values of fundamental types, or if it is a regularly shaped multi-dimensional array of a fundamental type, 
+then the numpy array representing the collection for that entry will have the `dtype` associated with the value type of the collection, for example:
+~~~{.py}
+rdf = rdf.Define("v_col", "std::vector<int>{{1, 2, 3}}")
+print(rdf.AsNumpy(["v_col", "int_col", "float_col"]))
+# Output: {'v_col': array([array([1, 2, 3], dtype=int32), ...], dtype=object), ...}
+~~~
+
+If the collection at a certain entry contains values of a non-fundamental type, `AsNumpy()` will fallback on the [default behavior](\ref asnumpy_scalar_columns) and produce a NumPy array with `dtype=object` for that collection.
+
+For more complex collection types in your entries, e.g. when every entry has a jagged array value, refer to the section on [interoperability with AwkwardArray](\ref awkward_interop).
 
 #### Processing data stored in NumPy arrays
 
@@ -124,6 +145,8 @@ df = ROOT.RDF.FromNumpy({"x": x, "y": y})
 df.Define("z", "x + y").Snapshot("tree", "file.root")
 ~~~
 
+
+\anchor awkward_interop
 ### Interoperability with [AwkwardArray](https://awkward-array.org/doc/main/user-guide/how-to-convert-rdataframe.html)
 
 The function for RDataFrame to Awkward conversion is ak.from_rdataframe(). The argument to this function accepts a tuple of strings that are the RDataFrame column names. By default this function returns ak.Array type.
@@ -204,11 +227,20 @@ df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 \endpythondoc
 '''
 
+from __future__ import annotations
+
+from typing import Iterable, Optional
+
 from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
 
-def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
+def RDataFrameAsNumpy(
+    df: ROOT.RDataFrame,  # noqa: F821
+    columns: Optional[Iterable[str]] = None,
+    exclude: Optional[Iterable[str]] = None,
+    lazy: bool = False,
+):
     """Read-out the RDataFrame as a collection of numpy arrays.
 
     The values of the dataframe are read out as numpy array of the respective type
@@ -226,6 +258,7 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     event-loop.
 
     Parameters:
+        df: The RDataFrame to read out.
         columns: If None return all branches as columns, otherwise specify names in iterable.
         exclude: Exclude branches from selection.
         lazy: Determines whether this action is instant (False, default) or lazy (True).
@@ -240,9 +273,9 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
 
     # Sanitize input arguments
     if isinstance(columns, str):
-        raise TypeError("The columns argument requires a list of strings")
+        raise TypeError("The columns argument requires an iterable of strings")
     if isinstance(exclude, str):
-        raise TypeError("The exclude argument requires a list of strings")
+        raise TypeError("The exclude argument requires an iterable of strings")
 
     # Early check for numpy
     try:
@@ -310,7 +343,7 @@ class AsNumpyResult(object):
         self._columns = columns
         self._py_arrays = None
 
-    def GetValue(self):
+    def GetValue(self) -> dict:
         """Triggers, if necessary, the event loop to run the Take actions for
         the requested columns and produce the NumPy arrays as result.
 
@@ -334,7 +367,11 @@ class AsNumpyResult(object):
                 else:
                     tmp = numpy.empty(len(cpp_reference), dtype=object)
                     for i, x in enumerate(cpp_reference):
-                        tmp[i] = x  # This creates only the wrapping of the objects and does not copy.
+                        if hasattr(x, "__array_interface__"):
+                            tmp[i] = numpy.asarray(x)
+                        else:
+                            tmp[i] = x
+
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
 
         return self._py_arrays

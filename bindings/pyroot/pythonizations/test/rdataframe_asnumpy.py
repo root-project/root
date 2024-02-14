@@ -1,8 +1,11 @@
-import unittest
-import ROOT
-import numpy as np
 import pickle
+import platform
+import tempfile
+import unittest
+from pathlib import Path
 
+import numpy as np
+import ROOT
 from ROOT._pythonization._rdataframe import _clone_asnumpyresult
 
 
@@ -38,8 +41,7 @@ def make_tree(*dtypes):
         elif "O" in dtype:
             var = np.empty(1, dtype=np.uint8)
         else:
-            raise Exception(
-                "Type {} not known to create branch.".format(dtype))
+            raise Exception("Type {} not known to create branch.".format(dtype))
         col_vars.append(var)
 
     for dtype, name, var in zip(dtypes, col_names, col_vars):
@@ -71,6 +73,7 @@ class RDataFrameAsNumpy(unittest.TestCase):
     """
     Testing of RDataFrame.AsNumpy pythonization
     """
+
     def test_branch_dtypes(self):
         """
         Test supported data-types for read-out
@@ -89,8 +92,8 @@ class RDataFrameAsNumpy(unittest.TestCase):
         """
         df = ROOT.RDataFrame(2).Define("x", "bool(rdfentry_)")
         npy = df.AsNumpy()
-        self.assertTrue(bool(npy["x"][0]) == False)
-        self.assertTrue(bool(npy["x"][1]) == True)
+        self.assertFalse(bool(npy["x"][0]))
+        self.assertTrue(bool(npy["x"][1]))
 
     def test_read_array(self):
         """
@@ -131,12 +134,11 @@ class RDataFrameAsNumpy(unittest.TestCase):
             return std::vector<unsigned int>({n, n, n});
         }
         """)
-        df = ROOT.ROOT.RDataFrame(5).Define("x",
-                                       "create_vector_constantsize(rdfentry_)")
+        df = ROOT.ROOT.RDataFrame(5).Define("x", "create_vector_constantsize(rdfentry_)")
         npy = df.AsNumpy()
         self.assertEqual(npy["x"].size, 5)
         self.assertEqual(list(npy["x"][0]), [0, 0, 0])
-        self.assertIn("vector<unsigned int>", str(type(npy["x"][0])))
+        self.assertTrue(isinstance(npy["x"], np.ndarray))
 
     def test_read_vector_variablesize(self):
         """
@@ -147,12 +149,11 @@ class RDataFrameAsNumpy(unittest.TestCase):
             return std::vector<unsigned int>(n);
         }
         """)
-        df = ROOT.ROOT.RDataFrame(5).Define("x",
-                                       "create_vector_variablesize(rdfentry_)")
+        df = ROOT.ROOT.RDataFrame(5).Define("x", "create_vector_variablesize(rdfentry_)")
         npy = df.AsNumpy()
         self.assertEqual(npy["x"].size, 5)
         self.assertEqual(list(npy["x"][3]), [0, 0, 0])
-        self.assertIn("vector<unsigned int>", str(type(npy["x"][0])))
+        self.assertTrue(isinstance(npy["x"], np.ndarray))
 
     def test_read_tlorentzvector(self):
         """
@@ -197,8 +198,7 @@ class RDataFrameAsNumpy(unittest.TestCase):
         """
         Testing reading defined columns
         """
-        df = ROOT.ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define(
-            "z", "3")
+        df = ROOT.ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define("z", "3")
         npy = df.AsNumpy(columns=["x", "y"])
         ref = {"x": np.array([1] * 4), "y": np.array([2] * 4)}
         self.assertTrue(sorted(["x", "y"]) == sorted(npy.keys()))
@@ -209,16 +209,14 @@ class RDataFrameAsNumpy(unittest.TestCase):
         """
         Testing excluding columns from read-out
         """
-        df = ROOT.ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define(
-            "z", "3")
+        df = ROOT.ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define("z", "3")
         npy = df.AsNumpy(exclude=["z"])
         ref = {"x": np.array([1] * 4), "y": np.array([2] * 4)}
         self.assertTrue(sorted(["x", "y"]) == sorted(npy.keys()))
         self.assertTrue(all(ref["x"] == npy["x"]))
         self.assertTrue(all(ref["y"] == npy["y"]))
 
-        df2 = ROOT.ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define(
-            "z", "3")
+        df2 = ROOT.ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define("z", "3")
         npy = df2.AsNumpy(columns=["x", "y"], exclude=["y"])
         ref = {"x": np.array([1] * 4)}
         self.assertTrue(["x"] == list(npy.keys()))
@@ -264,7 +262,7 @@ class RDataFrameAsNumpy(unittest.TestCase):
         df = ROOT.ROOT.RDataFrame(1).Define("x", "std::vector<float>()")
         npy = df.AsNumpy(["x"])
         self.assertEqual(npy["x"].size, 1)
-        self.assertTrue(npy["x"][0].empty())
+        self.assertEqual(npy["x"][0].size, 0)
 
     def test_empty_selection(self):
         """
@@ -319,19 +317,15 @@ class RDataFrameAsNumpy(unittest.TestCase):
 
         # Get the result for the first range
         (begin, end) = ranges.pop(0)
-        ROOT.Internal.RDF.ChangeEmptyEntryRange(
-            ROOT.RDF.AsRNode(df), (begin, end))
+        ROOT.Internal.RDF.ChangeEmptyEntryRange(ROOT.RDF.AsRNode(df), (begin, end))
         asnumpyres = df.AsNumpy(["x"], lazy=True)  # To return an AsNumpyResult
-        self.assertSequenceEqual(
-            asnumpyres.GetValue()["x"].tolist(), np.arange(begin, end).tolist())
+        self.assertSequenceEqual(asnumpyres.GetValue()["x"].tolist(), np.arange(begin, end).tolist())
 
         # Clone the result for following ranges
-        for (begin, end) in ranges:
-            ROOT.Internal.RDF.ChangeEmptyEntryRange(
-                ROOT.RDF.AsRNode(df), (begin, end))
+        for begin, end in ranges:
+            ROOT.Internal.RDF.ChangeEmptyEntryRange(ROOT.RDF.AsRNode(df), (begin, end))
             asnumpyres = _clone_asnumpyresult(asnumpyres)
-            self.assertSequenceEqual(
-                asnumpyres.GetValue()["x"].tolist(), np.arange(begin, end).tolist())
+            self.assertSequenceEqual(asnumpyres.GetValue()["x"].tolist(), np.arange(begin, end).tolist())
 
     def test_bool_column(self):
         """
@@ -343,8 +337,57 @@ class RDataFrameAsNumpy(unittest.TestCase):
         df = ROOT.RDataFrame(n_events).Define(name, f"(int)rdfentry_ > {cut}")
         arr = df.AsNumpy([name])[name]
         ref = np.arange(0, n_events) > cut
-        self.assertTrue(all(arr == ref)) # test values
-        self.assertEqual(arr.dtype, ref.dtype) # test type
+        self.assertTrue(all(arr == ref))  # test values
+        self.assertEqual(arr.dtype, ref.dtype)  # test type
 
-if __name__ == '__main__':
+    def test_rdataframe_as_numpy_array_regular(self):
+        column_name = "vector"
+        n = 10
+        for from_file in [False, True]:
+            for shape, declaration in [
+                ((n, 3), "std::vector<int>{1,2,3}"),
+                ((n, 3), "std::vector<float>{1,2,3}"),
+                ((n, 3), "std::vector<double>{1,2,3}"),
+            ]:
+                df = ROOT.RDataFrame(10).Define(column_name, declaration)
+                temp_file_path = None
+                if from_file:
+                    # save to disk and read back
+                    temp_file = tempfile.NamedTemporaryFile(delete=False)
+                    temp_file_path = Path(temp_file.name)
+                    temp_file.close()
+
+                    df.Snapshot("tree", str(temp_file_path))
+                    df = ROOT.RDataFrame("tree", str(temp_file_path))
+
+                array = df.AsNumpy([column_name])[column_name]
+                self.assertTrue(isinstance(array, np.ndarray))
+                # self.assertEqual(array.shape, shape) # when we implement regular array handling
+                self.assertTrue(array.shape[0] == n)
+                self.assertTrue(all(x.shape[0] == shape[1] for x in array))
+
+                if from_file and platform.system() != "Windows":
+                    temp_file_path.unlink()
+
+    def test_rdataframe_as_numpy_array_jagged(self):
+        jagged_array = ROOT.std.vector(float)()
+        column_name = "jagged_array"
+        tree = ROOT.TTree("tree", "Tree with Jagged Array")
+        tree.Branch(column_name, jagged_array)
+        n = 10
+        for i in range(n):
+            jagged_array.clear()
+            for j in range(i):
+                jagged_array.push_back(j)
+            tree.Fill()
+
+        df = ROOT.RDataFrame(tree)
+        array = df.AsNumpy([column_name])[column_name]
+        self.assertTrue(isinstance(array, np.ndarray))
+        self.assertTrue(array.shape[0] == n)
+        self.assertTrue(all(isinstance(x, np.ndarray) for x in array))
+        self.assertTrue(all(len(x) == i for i, x in enumerate(array)))
+
+
+if __name__ == "__main__":
     unittest.main()
