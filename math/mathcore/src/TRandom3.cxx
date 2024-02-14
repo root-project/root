@@ -94,9 +94,7 @@ TRandom3::~TRandom3()
 ////////////////////////////////////////////////////////////////////////////////
 ///  \brief Machine independent random number generator.
 ///
-///  \warning Can produce 0 (zero).
-///
-///  Produces uniformly-distributed floating points in [0, 1[.
+///  Produces uniformly-distributed floating points in ]0, 1].
 ///  Method: Mersenne Twister
 Double_t TRandom3::Rndm()
 {
@@ -133,31 +131,25 @@ Double_t TRandom3::Rndm()
    y ^= ((y << 15) & kTemperingMaskC );
    y ^=  (y >> 18);
 
-   // 2.3283064365386963e-10 == 1. / (max<UInt_t> + 1) -> then returned value cannot be = 1.0
-   return static_cast<Double_t>(y * 2.3283064365386963e-10);
+   // 2.3283064365386963e-10 == 1. / (max<UInt_t> + 1)
+   return (static_cast<Double_t>(y) + 1) * 2.3283064365386963e-10;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  \brief Return an array of n random numbers uniformly distributed in [0, 1[.
-///
-///  \warning Can produce 0 (zero).
+///  \brief Return an array of n random numbers uniformly distributed in ]0, 1].
 
 void TRandom3::RndmArray(Int_t n, Float_t *array)
 {
-  for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
+  for(Int_t i=0; i<n; i++) {
+    array[i] = static_cast<Float_t>(Rndm());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  \brief Return an array of n random numbers uniformly distributed in [0, 1[.
-///
-///  \warning Can produce 0 (zero).
+///  \brief Return an array of n random numbers uniformly distributed in ]0, 1].
 
 void TRandom3::RndmArray(Int_t n, Double_t *array)
 {
-   Int_t k = 0;
-
-   UInt_t y;
-
    const Int_t  kM = 397;
    const Int_t  kN = 624;
    const UInt_t kTemperingMaskB =  0x9d2c5680;
@@ -166,6 +158,8 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
    const UInt_t kLowerMask =       0x7fffffff;
    const UInt_t kMatrixA =         0x9908b0df;
 
+   Int_t k = 0;
+   UInt_t y;
    while (k < n) {
       if (fCount624 >= kN) {
          Int_t i;
@@ -192,7 +186,7 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
       y ^=  (y >> 18);
 
       if (y) {
-         array[k] = Double_t( y * 2.3283064365386963e-10); // * Power(2,-32)
+         array[k] = (static_cast<Double_t>(y) + 1) * 2.3283064365386963e-10; // * Power(2,-32)
          k++;
       }
    }
@@ -228,7 +222,7 @@ void TRandom3::SetSeed(ULong_t seed)
       // layout in https://savannah.cern.ch/bugs/?99516
       TRandom2 r(0);
       for (Int_t i = 0; i< 624; i++) {
-         fMt[i]   = static_cast<UInt_t> (4294967296.*r.Rndm());
+         fMt[i] = static_cast<UInt_t>(4294967296.*r.Rndm());
       }
       // warm up the generator calling it 10 times
       for (Int_t i = 0; i < 10; ++i) Rndm();
