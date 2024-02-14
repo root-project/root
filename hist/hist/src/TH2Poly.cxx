@@ -178,6 +178,12 @@ TH2Poly::TH2Poly(const char *name,const char *title,
    SetFloat(kFALSE);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+TH2Poly::TH2Poly(const TH2Poly & rhs) {
+    rhs.Copy(*this);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -189,6 +195,52 @@ TH2Poly::~TH2Poly()
    // delete at the end the bin List since it owns the objects
    delete fBins;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+TH2Poly & TH2Poly::operator=(const TH2Poly & rhs) {
+   if (this != &rhs)
+       rhs.Copy(*this);
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy function for TH2Poly
+
+void TH2Poly::Copy(TObject &newobj) const
+{
+   auto & newth2p = dynamic_cast<TH2Poly &>(newobj);
+   newth2p.SetName(GetName());
+   newth2p.SetTitle(GetTitle());
+   // initialize with empty cell and then call ChangePartition which assigns the bins to the cells
+   newth2p.Initialize(fXaxis.GetXmin(),fXaxis.GetXmax(),fYaxis.GetXmin(),fYaxis.GetXmax(),0,0);
+   // need to use Clone to copy the contained list
+   newth2p.fBins = dynamic_cast<TList *>(fBins->Clone());
+   if (!newth2p.fBins)
+      Error("Copy","Error cloning the TH2Poly bin list");
+   // now we can assign the bins to the cell filling the fCells, fIsEmpty and fCompletlyInside arrays
+   newth2p.ChangePartition(fCellX, fCellY);
+   // copy overflow contents
+   for(int i = 0; i < kNOverflow; i++ ) {
+      newth2p.fOverflow[i] = fOverflow[i];
+   }
+   // copy other data members
+   newth2p.fFloat = fFloat;
+   newth2p.fNewBinAdded = fNewBinAdded;
+   newth2p.fBinContentChanged = fBinContentChanged;
+   // copy other member used from TH1/TH2
+   newth2p.fNcells = fNcells;
+   newth2p.fEntries = fEntries;   // The total number of entries
+   newth2p.fTsumw   = fTsumw;  // Total amount of content in the histogram
+   newth2p.fTsumw2  = fTsumw2;  // Sum square of the weights
+   newth2p.fTsumwx  = fTsumwx;  // Weighted sum of x coordinates
+   newth2p.fTsumwx2 = fTsumwx2;  // Weighted sum of the squares of x coordinates
+   newth2p.fTsumwy2 = fTsumwy2;  // Weighted sum of the squares of y coordinates
+   newth2p.fTsumwy  = fTsumwy;    // Weighted sum of y coordinates
+   newth2p.fMinimum  = fMinimum;
+   newth2p.fMaximum  = fMaximum;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create appropriate histogram bin.
@@ -793,6 +845,16 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
    }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
    return TMath::Sqrt(error2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of bins :
+/// it should be the size of the bin list
+Int_t  TH2Poly::GetNumberOfBins() const {
+   Int_t nbins =  fNcells-kNOverflow;
+   if (nbins != fBins->GetSize())
+      Fatal("GetNumberOfBins","Object has an invalid number of bins");
+   return nbins;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
