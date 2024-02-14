@@ -769,11 +769,13 @@ TEST(RFieldBase, CreateObject)
 
    void *rawPtr = RField<int>("name").CreateObject<void>().release();
    EXPECT_EQ(0, *static_cast<int *>(rawPtr));
+   delete static_cast<int *>(rawPtr);
 
    {
       ROOT::TestSupport::CheckDiagsRAII diagRAII;
       diagRAII.requiredDiag(kWarning, "[ROOT.NTuple]", "possibly leaking", false /* matchFullMessage */);
       auto p = RField<int>("name").CreateObject<void>();
+      delete static_cast<int *>(p.get()); // avoid release
    }
 
    EXPECT_THROW(RField<int>("name").CreateObject<float>(), RException);
