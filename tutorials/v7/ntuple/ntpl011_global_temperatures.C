@@ -1,5 +1,6 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_ntuple
+/// \notebook
 ///
 /// This ROOT 7 example demonstrates how to use RNTuple in combination with ROOT 6 features like RDataframe and
 /// visualizations. It ingests climate data and creates a model with fields like AverageTemperature. Then it uses
@@ -10,20 +11,19 @@
 /// TODO(jblomer): re-enable once issues are fixed (\macro_image (rcanvas_js))
 /// \macro_code
 ///
-///
-/// NOTE: Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
-/// triggering autoloading from the use of templated types would require an exhaustive enumeration
-/// of "all" template instances in the LinkDef file.
-///
-/// \warning The RNTuple classes are experimental at this point.
-/// Functionality, interface, and data format is still subject to changes.
-/// Do not use for real data! During ROOT setup, configure the following flags:
-/// `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
-///
 /// \date 2021-02-26
 /// \author John Yoon
 
+// NOTE: The RNTuple classes are experimental at this point.
+// Functionality, interface, and data format is still subject to changes.
+// Do not use for real data! During ROOT setup, configure the following flags:
+// `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
+
+// NOTE: Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
+// triggering autoloading from the use of templated types would require an exhaustive enumeration
+// of "all" template instances in the LinkDef file.
 R__LOAD_LIBRARY(ROOTNTuple)
+
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
@@ -55,7 +55,8 @@ using RRawFile = ROOT::Internal::RRawFile;
 using namespace ROOT::Experimental;
 
 // Helper function to handle histogram pointer ownership.
-std::shared_ptr<TH1D> GetDrawableHist(ROOT::RDF::RResultPtr<TH1D> &h) {
+std::shared_ptr<TH1D> GetDrawableHist(ROOT::RDF::RResultPtr<TH1D> &h)
+{
    auto result = std::shared_ptr<TH1D>(static_cast<TH1D *>(h.GetPtr()->Clone()));
    result->SetDirectory(nullptr);
    return result;
@@ -68,7 +69,8 @@ std::shared_ptr<TH1D> GetDrawableHist(ROOT::RDF::RResultPtr<TH1D> &h) {
 constexpr const char *kRawDataUrl = "http://root.cern./files/tutorials/GlobalLandTemperaturesByCity.csv";
 constexpr const char *kNTupleFileName = "GlobalLandTemperaturesByCity.root";
 
-void Ingest() {
+void Ingest()
+{
    int nRecords = 0;
    int nSkipped = 0;
    std::cout << "Converting " << kRawDataUrl << " to " << kNTupleFileName << std::endl;
@@ -79,15 +81,15 @@ void Ingest() {
    auto model = RNTupleModel::Create();
    // To define the data model, create fields with a given C++ type and name.  Fields are roughly TTree branches.
    // MakeField returns a shared pointer to a memory location to fill the ntuple with data.
-   auto fieldYear       = model->MakeField<std::uint32_t>("Year");
-   auto fieldMonth      = model->MakeField<std::uint32_t>("Month");
-   auto fieldDay        = model->MakeField<std::uint32_t>("Day");
-   auto fieldAvgTemp    = model->MakeField<float>("AverageTemperature");
+   auto fieldYear = model->MakeField<std::uint32_t>("Year");
+   auto fieldMonth = model->MakeField<std::uint32_t>("Month");
+   auto fieldDay = model->MakeField<std::uint32_t>("Day");
+   auto fieldAvgTemp = model->MakeField<float>("AverageTemperature");
    auto fieldTempUncrty = model->MakeField<float>("AverageTemperatureUncertainty");
-   auto fieldCity       = model->MakeField<std::string>("City");
-   auto fieldCountry    = model->MakeField<std::string>("Country");
-   auto fieldLat        = model->MakeField<float>("Latitude");
-   auto fieldLong       = model->MakeField<float>("Longitude");
+   auto fieldCity = model->MakeField<std::string>("City");
+   auto fieldCountry = model->MakeField<std::string>("Country");
+   auto fieldLat = model->MakeField<float>("Latitude");
+   auto fieldLong = model->MakeField<float>("Longitude");
 
    // Hand-over the data model to a newly created ntuple of name "globalTempData", stored in kNTupleFileName.
    // In return, get a unique pointer to a fillable ntuple (first compress the file).
@@ -108,10 +110,9 @@ void Ingest() {
       std::replace(record.begin(), record.end(), ',', ' ');
       char country[kMaxCharsPerLine];
       char city[kMaxCharsPerLine];
-      int nFields = sscanf(record.c_str(), "%u-%u-%u %f %f %s %s %fN %fE",
-                           fieldYear.get(), fieldMonth.get(), fieldDay.get(),
-                           fieldAvgTemp.get(), fieldTempUncrty.get(), country, city,
-                           fieldLat.get(), fieldLong.get());
+      int nFields =
+         sscanf(record.c_str(), "%u-%u-%u %f %f %s %s %fN %fE", fieldYear.get(), fieldMonth.get(), fieldDay.get(),
+                fieldAvgTemp.get(), fieldTempUncrty.get(), country, city, fieldLat.get(), fieldLong.get());
       if (nFields != 9) {
          nSkipped++;
          continue;
@@ -131,14 +132,14 @@ void Ingest() {
 
    auto t2 = Clock::now();
    std::cout << std::endl
-             << "Processing Time: "
-             << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count()
-             << " seconds\n" << std::endl;
+             << "Processing Time: " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << " seconds\n"
+             << std::endl;
 }
 
 // Every data result that we want to get is declared first, and it is only upon their declaration that
 // they are actually used. This stems from motivations relating to efficiency and optimization.
-void Analyze() {
+void Analyze()
+{
    // Create a RDataframe by wrapping around NTuple.
    auto df = ROOT::RDF::Experimental::FromRNTuple("GlobalTempData", kNTupleFileName);
    df.Display()->Print();
@@ -148,10 +149,10 @@ void Analyze() {
    auto max_value = df.Max("AverageTemperature");
 
    // Functions to filter by each season from date formatted "1944-12-01."
-   auto fnWinter = [](int month) { return month == 12 || month == 1  || month == 2;  };
-   auto fnSpring = [](int month) { return month == 3  || month == 4  || month == 5;  };
-   auto fnSummer = [](int month) { return month == 6  || month == 7  || month == 8;  };
-   auto fnFall   = [](int month) { return month == 9  || month == 10 || month == 11; };
+   auto fnWinter = [](int month) { return month == 12 || month == 1 || month == 2; };
+   auto fnSpring = [](int month) { return month == 3 || month == 4 || month == 5; };
+   auto fnSummer = [](int month) { return month == 6 || month == 7 || month == 8; };
+   auto fnFall = [](int month) { return month == 9 || month == 10 || month == 11; };
 
    // Create a RDataFrame per season.
    auto dfWinter = df.Filter(fnWinter, {"Month"});
@@ -178,14 +179,22 @@ void Analyze() {
    auto decade_2003_to_2013_Count = *df2003_to_2013.Count();
 
    // Configure histograms for each season.
-   auto fallHistResultPtr = dfFall.Histo1D({"Fall Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
-   auto winterHistResultPtr = dfWinter.Histo1D({"Winter Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
-   auto springHistResultPtr = dfSpring.Histo1D({"Spring Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
-   auto summerHistResultPtr = dfSummer.Histo1D({"Summer Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
+   auto fallHistResultPtr =
+      dfFall.Histo1D({"Fall Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
+   auto winterHistResultPtr =
+      dfWinter.Histo1D({"Winter Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
+   auto springHistResultPtr =
+      dfSpring.Histo1D({"Spring Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
+   auto summerHistResultPtr =
+      dfSummer.Histo1D({"Summer Average Temp", "Average Temperature by Season", 100, -40, 40}, "AverageTemperature");
 
    // Configure histograms for each decade.
-   auto hist_1993_to_2002_ResultPtr = df1993_to_2002.Histo1D({"1993_to_2002 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
-   auto hist_2003_to_2013_ResultPtr = df2003_to_2013.Histo1D({"2003_to_2013 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40}, "AverageTemperature");
+   auto hist_1993_to_2002_ResultPtr = df1993_to_2002.Histo1D(
+      {"1993_to_2002 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40},
+      "AverageTemperature");
+   auto hist_2003_to_2013_ResultPtr = df2003_to_2013.Histo1D(
+      {"2003_to_2013 Average Temp", "Average Temperature: 1993_to_2002 vs. 2003_to_2013", 100, -40, 40},
+      "AverageTemperature");
 
    //____________________________________________________________________________________
 
@@ -194,20 +203,20 @@ void Analyze() {
    std::cout << "The Maximum temperature is: " << *max_value << std::endl;
 
    // Display the count for each season.
-   std::cout << std::endl << "The count for Winter: " << *winterCount<< std::endl;
+   std::cout << std::endl << "The count for Winter: " << *winterCount << std::endl;
    std::cout << "The count for Spring: " << *springCount << std::endl;
    std::cout << "The count for Summer: " << *summerCount << std::endl;
    std::cout << "The count for Fall: " << *fallCount << std::endl;
 
    // Display the count for each decade.
    std::cout << std::endl << "The count for 1993_to_2002: " << decade_1993_to_2002_Count << std::endl;
-   std::cout << "The count for 2003_to_2013: " <<decade_2003_to_2013_Count << std::endl;
+   std::cout << "The count for 2003_to_2013: " << decade_2003_to_2013_Count << std::endl;
 
    // Transform histogram in order to address ROOT 7 v 6 version compatibility
    auto fallHist = GetDrawableHist(fallHistResultPtr);
    auto winterHist = GetDrawableHist(winterHistResultPtr);
    auto springHist = GetDrawableHist(springHistResultPtr);
-   auto summerHist  = GetDrawableHist(summerHistResultPtr);
+   auto summerHist = GetDrawableHist(summerHistResultPtr);
 
    // Set an orange histogram for fall.
    fallHist->SetLineColor(kOrange);
@@ -233,7 +242,6 @@ void Analyze() {
    hist_2003_to_2013->SetLineColor(kSpring);
    hist_2003_to_2013->SetLineWidth(6);
 
-
    // Create a canvas to display histograms for average temperature by season.
    auto canvas = RCanvas::Create("Average Temperature by Season");
    canvas->Draw<TObjectDrawable>(fallHist, "L");
@@ -242,11 +250,11 @@ void Analyze() {
    canvas->Draw<TObjectDrawable>(summerHist, "L");
 
    // Create a legend for the seasons canvas.
-   auto legend = std::make_shared<TLegend>(0.15,0.65,0.53,0.85);
-   legend->AddEntry(fallHist.get(),"fall","l");
-   legend->AddEntry(winterHist.get(),"winter","l");
-   legend->AddEntry(springHist.get(),"spring","l");
-   legend->AddEntry(summerHist.get(),"summer","l");
+   auto legend = std::make_shared<TLegend>(0.15, 0.65, 0.53, 0.85);
+   legend->AddEntry(fallHist.get(), "fall", "l");
+   legend->AddEntry(winterHist.get(), "winter", "l");
+   legend->AddEntry(springHist.get(), "spring", "l");
+   legend->AddEntry(summerHist.get(), "summer", "l");
    canvas->Draw<TObjectDrawable>(legend, "L");
    canvas->Show();
 
@@ -256,18 +264,18 @@ void Analyze() {
    canvas2->Draw<TObjectDrawable>(hist_2003_to_2013, "L");
 
    // Create a legend for the two decades canvas.
-   auto legend2 = std::make_shared<TLegend>(0.1,0.7,0.48,0.9);
-   legend2->AddEntry(hist_1993_to_2002.get(),"1993_to_2002","l");
-   legend2->AddEntry(hist_2003_to_2013.get(),"2003_to_2013","l");
+   auto legend2 = std::make_shared<TLegend>(0.1, 0.7, 0.48, 0.9);
+   legend2->AddEntry(hist_1993_to_2002.get(), "1993_to_2002", "l");
+   legend2->AddEntry(hist_2003_to_2013.get(), "2003_to_2013", "l");
    canvas2->Draw<TObjectDrawable>(legend2, "L");
    canvas2->Show();
 }
 
-void global_temperatures() {
-   //if NOT zero (the file does NOT already exist), then Ingest
+void ntpl011_global_temperatures()
+{
+   // if NOT zero (the file does NOT already exist), then Ingest
    if (gSystem->AccessPathName(kNTupleFileName) != 0) {
       Ingest();
-
    }
    Analyze();
 }
