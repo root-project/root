@@ -603,7 +603,7 @@ void TRandom1::SetSeed(ULong_t seed)
 ///
 Int_t TRandom1::GetLuxury() const
 {
-  return fLuxury;
+   return fLuxury;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -612,12 +612,12 @@ Int_t TRandom1::GetLuxury() const
 /// \warning This is not the initial seed!
 UInt_t TRandom1::GetSeed() const
 {
-  return static_cast<UInt_t>(fFloatSeedTable[0] / fMantissaBit24);
+   return static_cast<UInt_t>(fFloatSeedTable[0] / fMantissaBit24);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Returns the pointer to the current seeds array.
-const UInt_t * TRandom1::GetTheSeeds() const
+const UInt_t *TRandom1::GetTheSeeds() const
 {
-  return fTheSeeds;
+   return fTheSeeds;
 }
