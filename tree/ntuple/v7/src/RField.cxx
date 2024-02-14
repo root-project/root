@@ -1621,12 +1621,21 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 
       std::string typeName{GetNormalizedTypeName(dataMember->GetTrueTypeName())};
       std::string typeAlias{GetNormalizedTypeName(dataMember->GetFullTypeName())};
+
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
          for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
             typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
       }
-      auto subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
+
+      std::unique_ptr<RFieldBase> subField;
+
+      const char *dmComment = dataMember->GetTitle();
+      if (dmComment && (strlen(dmComment) >= 2) && (strncmp("||", dmComment, 2) == 0)) {
+         subField = std::make_unique<RUnsplitField>(dataMember->GetName(), typeName, typeAlias);
+      } else {
+         subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
+      }
       fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
@@ -1866,9 +1875,11 @@ void ROOT::Experimental::RField<TObject>::AcceptVisitor(Detail::RFieldVisitor &v
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className)
+ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className,
+                                                 std::string_view typeAlias)
    : RUnsplitField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
 {
+   fTypeAlias = typeAlias;
 }
 
 ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp)
