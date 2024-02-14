@@ -1338,6 +1338,22 @@ void TH3::GetStats(Double_t *stats) const
    }
 }
 
+#ifdef ROOT_RDF_CUDA
+void TH3::SetStatsData(Double_t *stats)
+{
+   if (getenv("CUDA_HIST")) {
+      TH1::SetStatsData(stats);
+      fTsumwy = stats[4];
+      fTsumwy2 = stats[5];
+      fTsumwxy = stats[6];
+
+      fTsumwz = stats[7];
+      fTsumwz2 = stats[8];
+      fTsumwxz = stats[9];
+      fTsumwyz = stats[10];
+   }
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return integral of bin contents. Only bins in the bins range are considered.
