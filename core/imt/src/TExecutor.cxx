@@ -57,19 +57,21 @@
 /// into a single object. The signature of the reduce function should be `(const std::vector<T>) -> T`
 ///
 /// An integer can be passed as the fourth argument indicating the number of chunks we want to divide our work in.
-/// <b>(Note: Please be aware that chunking is only available when the policy is kMultiThread, ignoring this argument in other cases)</b>
-/// This may be useful to avoid the overhead introduced when running really short tasks. In this case, the reduction
-/// function should be independent of the size of the vector returned by Map due to optimization of the number of
-/// chunks.
+/// <b>(Note: Please be aware that chunking is only available when the policy is kMultiThread, ignoring this argument in
+/// other cases)</b> This may be useful to avoid the overhead introduced when running really short tasks. In this case,
+/// the reduction function should be independent of the size of the vector returned by Map due to optimization of the
+/// number of chunks.
 ///
 /// #### Examples:
 /// ~~~{.cpp}
-/// root[] ROOT::Internal::TExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](const std::vector<int> &v) { return std::accumulate(v.begin(), v.end(), 0); })
-/// root[] ROOT::Internal::TExecutor pool(ROOT::EExecutionPolicy::kMultiProcess); auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
+/// root[] ROOT::Internal::TExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](const std::vector<int>
+/// &v) { return std::accumulate(v.begin(), v.end(), 0); })
+/// root[] ROOT::Internal::TExecutor
+/// pool(ROOT::EExecutionPolicy::kMultiProcess); auto hist = pool.MapReduce(CreateAndFillHists, 10,
+/// PoolUtils::ReduceObjects);
 /// ~~~
 ///
 //////////////////////////////////////////////////////////////////////////
-
 
 namespace ROOT {
 namespace Internal {
