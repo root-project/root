@@ -140,9 +140,9 @@ Double_t TRandom3::Rndm()
 
 void TRandom3::RndmArray(Int_t n, Float_t *array)
 {
-  for(Int_t i=0; i<n; i++) {
-    array[i] = static_cast<Float_t>(Rndm());
-  }
+   for (Int_t i = 0; i < n; i++) {
+      array[i] = static_cast<Float_t>(Rndm());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,7 +222,7 @@ void TRandom3::SetSeed(ULong_t seed)
       // layout in https://savannah.cern.ch/bugs/?99516
       TRandom2 r(0);
       for (Int_t i = 0; i< 624; i++) {
-         fMt[i] = static_cast<UInt_t>(4294967296.*r.Rndm());
+         fMt[i] = static_cast<UInt_t>(4294967296. * r.Rndm());
       }
       // warm up the generator calling it 10 times
       for (Int_t i = 0; i < 10; ++i) Rndm();
