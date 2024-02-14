@@ -48,10 +48,7 @@ from ._pythonization import _register_pythonizations
 _register_pythonizations()
 
 # Check if we are in the IPython shell
-if major == 3:
-    import builtins
-else:
-    import __builtin__ as builtins
+import builtins
 
 _is_ipython = hasattr(builtins, "__IPYTHON__")
 
