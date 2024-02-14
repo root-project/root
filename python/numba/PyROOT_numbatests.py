@@ -61,7 +61,7 @@ class TestClasNumba:
         # Obtain a vector of ROOT::Math::LorentzVector from the sample
         # .root file
         myfile = ROOT.TFile.Open("vec_lv.root")
-        vec_lv = myfile.vecOfLV
+        vec_lv = myfile.Get("vecOfLV")
 
         def calc_pt(lv):
             return math.sqrt(lv.Px() ** 2 + lv.Py() ** 2)

@@ -422,10 +422,8 @@ class Regression12WriteTGraph( MyTestCase ):
       ff = TFile( "test.root", "RECREATE" )
       ff.WriteObject( gr, "grname", "" )
       if not legacy_pyroot:
-         # In new PyROOT, use a nicer way to get objects in files:
-         # (1) getattr syntax
-         ff.grname
-         # (2) Get pythonisation
+         # In new PyROOT, use a nicer way to get objects in files,
+         # the TDirectory::Get() pythonisation:
          ff.Get("grname")
       else:
          gr2 = TGraph()
