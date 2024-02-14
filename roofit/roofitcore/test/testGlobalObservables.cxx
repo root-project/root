@@ -9,10 +9,11 @@
 #include <RooLinkedList.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
+#include <RooRandom.h>
 
 #include "../src/FitHelpers.h"
 
-#include <gtest/gtest.h>
+#include "gtest_wrapper.h"
 
 #include <memory>
 #include <functional>
@@ -43,12 +44,18 @@ bool isNotIdentical(RooFitResult const &res1, RooFitResult const &res2)
 // Test environment to verify that if we use the feature of storing global
 // observables in a RooDataSet, we can reproduce the same fit results as when
 // we track the global observables separately.
-class TestGlobalObservables : public ::testing::Test {
+class GlobsTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
+   GlobsTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
    void SetUp() override
    {
+      RooRandom::randomGenerator()->SetSeed(1337ul);
+
       // silence log output
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
+
+      _evalBackend = std::get<0>(GetParam());
 
       // We use the global observable also in the model for the event
       // observables. It's unusual, but let's better do this to also cover the
@@ -108,8 +115,8 @@ public:
                                        RooCmdArg const &arg4 = {})
    {
       using namespace RooFit;
-      return std::unique_ptr<RooFitResult>(
-         model.fitTo(data, Save(), Verbose(false), PrintLevel(-1), arg1, arg2, arg3, arg4));
+      return std::unique_ptr<RooFitResult>{
+         model.fitTo(data, Save(), Verbose(false), PrintLevel(-1), _evalBackend, arg1, arg2, arg3, arg4)};
    }
 
    void TearDown() override
@@ -121,6 +128,7 @@ public:
    }
 
 private:
+   RooFit::EvalBackend _evalBackend;
    RooWorkspace _ws;
    std::unique_ptr<RooDataSet> _data;
    std::unique_ptr<RooDataSet> _dataWithMeanSigmaGlobs;
@@ -128,7 +136,7 @@ private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
-TEST_F(TestGlobalObservables, NoConstraints)
+TEST_P(GlobsTest, NoConstraints)
 {
    using namespace RooFit;
 
@@ -158,7 +166,7 @@ TEST_F(TestGlobalObservables, NoConstraints)
    }
 }
 
-TEST_F(TestGlobalObservables, InternalConstraints)
+TEST_P(GlobsTest, InternalConstraints)
 {
    using namespace RooFit;
 
@@ -188,7 +196,7 @@ TEST_F(TestGlobalObservables, InternalConstraints)
    }
 }
 
-TEST_F(TestGlobalObservables, ExternalConstraints)
+TEST_P(GlobsTest, ExternalConstraints)
 {
    using namespace RooFit;
 
@@ -221,7 +229,7 @@ TEST_F(TestGlobalObservables, ExternalConstraints)
    }
 }
 
-TEST_F(TestGlobalObservables, SubsetOfConstraintsFromData)
+TEST_P(GlobsTest, SubsetOfConstraintsFromData)
 {
    using namespace RooFit;
 
@@ -295,7 +303,7 @@ RooCmdConfig minimizerCfg()
 
 } // namespace
 
-TEST_F(TestGlobalObservables, ResetDataToWrongData)
+TEST_P(GlobsTest, ResetDataToWrongData)
 {
    using namespace RooFit;
 
@@ -333,7 +341,7 @@ TEST_F(TestGlobalObservables, ResetDataToWrongData)
          "should have";
 }
 
-TEST_F(TestGlobalObservables, ResetDataToCorrectData)
+TEST_P(GlobsTest, ResetDataToCorrectData)
 {
    using namespace RooFit;
 
@@ -368,7 +376,7 @@ TEST_F(TestGlobalObservables, ResetDataToCorrectData)
                                             "should have";
 }
 
-TEST_F(TestGlobalObservables, GlobalObservablesSourceFromModel)
+TEST_P(GlobsTest, GlobalObservablesSourceFromModel)
 {
    using namespace RooFit;
 
@@ -396,7 +404,7 @@ TEST_F(TestGlobalObservables, GlobalObservablesSourceFromModel)
    EXPECT_TRUE(isNotIdentical(*res2, *res3));
 }
 
-TEST_F(TestGlobalObservables, ResetDataButSourceFromModel)
+TEST_P(GlobsTest, ResetDataButSourceFromModel)
 {
    using namespace RooFit;
 
@@ -431,3 +439,10 @@ TEST_F(TestGlobalObservables, ResetDataButSourceFromModel)
    // the wrong data, we set the global observables source to "model"
    EXPECT_TRUE(res1->isIdentical(*res3));
 }
+
+INSTANTIATE_TEST_SUITE_P(TestGlobalObservables, GlobsTest, testing::Values(ROOFIT_EVAL_BACKENDS),
+                         [](testing::TestParamInfo<GlobsTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
+                            return ss.str();
+                         });
