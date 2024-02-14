@@ -58,9 +58,9 @@ public:
    Double_t Rndm() override;
    void RndmArray(Int_t size, Float_t *vect) override;
    void RndmArray(Int_t size, Double_t *vect) override;
-   virtual void SetSeed2(UInt_t seed, Int_t lux=3);
+   virtual void SetSeed2(UInt_t seed, Int_t lux = 3);
    // Sets the state of the algorithm according to seed.
-   virtual void SetSeeds(const UInt_t * seeds, Int_t lux=3);
+   virtual void SetSeeds(const UInt_t *seeds, Int_t lux = 3);
    // Sets the state of the algorithm according to the zero terminated
    // array of seeds. Only the first seed is used.
    void SetSeed(ULong_t seed) override;
