@@ -3077,7 +3077,10 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
 /// The compression level of the cloned tree is set to the destination
 /// file's compression level.
 ///
-/// NOTE: Only active branches are copied.
+/// NOTE: Only active branches are copied. See TTree::SetBranchStatus for more
+///       information and usage regarding the (de)activation of branches. More
+///       examples are provided in the tutorials listed below.
+///
 /// NOTE: If the TTree is a TChain, the structure of the first TTree
 ///       is used for the copy.
 ///
