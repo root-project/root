@@ -23,6 +23,19 @@ if(MSVC)
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
 endif()
 
+ROOT_STANDARD_LIBRARY_PACKAGE(Unsplit
+                              NO_INSTALL_HEADERS
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Unsplit.hxx
+                              SOURCES Unsplit.cxx
+                              LINKDEF UnsplitLinkDef.h
+                              DEPENDENCIES RIO)
+configure_file(Unsplit.hxx . COPYONLY)
+if(MSVC)
+  add_custom_command(TARGET Unsplit POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libUnsplit.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libUnsplit.dll)
+endif()
+
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
@@ -53,7 +66,7 @@ ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_check rfield_check.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_class rfield_class.cxx LIBRARIES ROOTNTuple CustomStruct Physics)
 ROOT_ADD_GTEST(rfield_string rfield_string.cxx LIBRARIES ROOTNTuple CustomStruct)
-ROOT_ADD_GTEST(rfield_unsplit rfield_unsplit.cxx LIBRARIES ROOTNTuple)
+ROOT_ADD_GTEST(rfield_unsplit rfield_unsplit.cxx LIBRARIES ROOTNTuple Unsplit)
 ROOT_ADD_GTEST(rfield_variant rfield_variant.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
