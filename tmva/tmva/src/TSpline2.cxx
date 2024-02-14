@@ -39,7 +39,7 @@ Quadratic interpolation of TGraph
 ClassImp(TMVA::TSpline2);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor from TGraph
+/// constructor from TGraph pointer (not owned by TSpline2)
 /// TSpline is a TNamed object
 
 TMVA::TSpline2::TSpline2( const TString& title, TGraph* theGraph )
