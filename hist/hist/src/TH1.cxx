@@ -18,6 +18,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -7116,6 +7117,85 @@ void TH1::Reset(Option_t *option)
    }
    if(stats) fFunctions->Add(stats);
    fContour.Set(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save the histogram as .csv, .tsv or .txt. In case of any other extension, fall
+/// back to TObject::SaveAs, which saves as a .C macro (but with the file name
+/// extension specified by the user)
+///
+/// The Under/Overflow bins are also exported (as first and last lines)
+/// The fist 2 columns are the lower and upper edges of the bins
+/// Column 3 contains the bin contents
+/// The last column contains the error in y. If errors are not present, the column
+/// is left empty
+///
+/// The result can be immediately imported into Excel, gnuplot, Python or whatever,
+/// without the needing to install pyroot, etc.
+///
+/// \param filename the name of the file where to store the histogram
+/// \param option some tuning options
+///
+/// The file extension defines the delimiter used:
+///  - `.csv` : comma
+///  - `.tsv` : tab
+///  - `.txt` : space
+///
+/// If option = "title" a title line is generated. If the y-axis has a title,
+/// this title is displayed as column 3 name, otherwise, it shows "BinContent"
+
+void TH1::SaveAs(const char *filename, Option_t *option) const
+{
+   char del = '\0';
+   TString ext = "";
+   TString fname = filename;
+   TString opt = option;
+
+   if (filename) {
+      if (fname.EndsWith(".csv")) {
+         del = ',';
+         ext = "csv";
+      } else if (fname.EndsWith(".tsv")) {
+         del = '\t';
+         ext = "tsv";
+      } else if (fname.EndsWith(".txt")) {
+         del = ' ';
+         ext = "txt";
+      }
+   }
+   if (!del) {
+      Info("SaveAs", "The file extension is not any of '.csv', '.tsv', '.txt'. Falling back to TObject::SaveAs");
+      TObject::SaveAs(filename, option);
+      return;
+   }
+   std::ofstream out;
+   out.open(filename, std::ios::out);
+   if (!out.good()) {
+      Error("SaveAs", "cannot open file: %s", filename);
+      return;
+   }
+   if (opt.Contains("title")) {
+      if (std::strcmp(GetYaxis()->GetTitle(), "") == 0) {
+         out << "#\tBinLowEdge\tBinUpEdge\t"
+             << "BinContent"
+             << "\tey" << std::endl;
+      } else {
+         out << "#\tBinLowEdge\tBinUpEdge\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
+      }
+   }
+   if (fSumw2.fN) {
+      for (Int_t i = 0; i < fNcells; ++i) { // loop on cells (bins including underflow / overflow)
+         out << GetXaxis()->GetBinLowEdge(i) << del << GetXaxis()->GetBinUpEdge(i) << del << GetBinContent(i) << del
+             << GetBinError(i) << std::endl;
+      }
+   } else {
+      for (Int_t i = 0; i < fNcells; ++i) { // loop on cells (bins including underflow / overflow)
+         out << GetXaxis()->GetBinLowEdge(i) << del << GetXaxis()->GetBinUpEdge(i) << del << GetBinContent(i) << del
+             << std::endl;
+      }
+   }
+   out.close();
+   Info("SaveAs", "%s file: %s has been generated", ext.Data(), filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

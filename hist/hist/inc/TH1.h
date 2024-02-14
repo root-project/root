@@ -356,6 +356,7 @@ public:
            void     RecursiveRemove(TObject *obj) override;
    virtual void     Reset(Option_t *option = "");
    virtual void     ResetStats();
+           void     SaveAs(const char *filename, Option_t *option) const override;  // *MENU*
            void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     Scale(Double_t c1=1, Option_t *option="");
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
