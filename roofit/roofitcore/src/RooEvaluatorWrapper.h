@@ -31,12 +31,12 @@
 
 class RooAbsArg;
 class RooAbsCategory;
-class RooSimultaneous;
+class RooAbsPdf;
 
 class RooEvaluatorWrapper final : public RooAbsReal {
 public:
    RooEvaluatorWrapper(RooAbsReal &topNode, std::unique_ptr<RooFit::Evaluator> evaluator, std::string const &rangeName,
-                       RooSimultaneous const *simPdf, bool takeGlobalObservablesFromData);
+                       RooAbsPdf const *simPdf, bool takeGlobalObservablesFromData);
 
    RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const char *name = nullptr);
 
@@ -70,7 +70,7 @@ private:
    RooAbsData *_data = nullptr;
    RooArgSet _parameters;
    std::string _rangeName;
-   RooSimultaneous const *_simPdf = nullptr;
+   RooAbsPdf const *_pdf = nullptr;
    const bool _takeGlobalObservablesFromData;
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources
    std::map<RooFit::Detail::DataKey, std::span<const double>> _dataSpans;
