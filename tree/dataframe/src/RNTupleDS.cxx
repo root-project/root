@@ -64,7 +64,7 @@ protected:
    {
       return std::make_unique<RRDFCardinalityField>();
    }
-   void CreateValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
+   void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
 public:
    static std::string TypeName() { return "std::size_t"; }
@@ -148,7 +148,7 @@ public:
    RArraySizeField &operator=(RArraySizeField &&other) = default;
    ~RArraySizeField() final = default;
 
-   void CreateValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
+   void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
    std::size_t GetValueSize() const final { return sizeof(std::size_t); }
    std::size_t GetAlignment() const final { return alignof(std::size_t); }
 };
