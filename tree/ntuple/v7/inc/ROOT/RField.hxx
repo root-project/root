@@ -1211,7 +1211,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void GenerateColumnsImpl() final { assert(false && "RArrayAsRVec fields must only be used for reading"); }
+   void GenerateColumnsImpl() final { R__ASSERT(false && "RArrayAsRVec fields must only be used for reading"); }
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void CreateValue(void *where) const final;
