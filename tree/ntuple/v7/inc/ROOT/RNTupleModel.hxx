@@ -84,6 +84,7 @@ public:
    /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
    struct NameWithDescription_t {
       NameWithDescription_t(const char *name) : fName(name) {}
+      NameWithDescription_t(const std::string &name) : fName(name) {}
       NameWithDescription_t(std::string_view name) : fName(name) {}
       NameWithDescription_t(std::string_view name, std::string_view descr) : fName(name), fDescription(descr) {}
 
