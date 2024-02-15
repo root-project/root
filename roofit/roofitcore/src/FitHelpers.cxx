@@ -738,8 +738,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       } else {
          auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, evalBackend == RooFit::EvalBackend::Value::Cuda);
          nllWrapper = std::make_unique<RooEvaluatorWrapper>(*nll, std::move(evaluator), rangeName ? rangeName : "",
-                                                            dynamic_cast<RooSimultaneous *>(pdfClone.get()),
-                                                            takeGlobalObservablesFromData);
+                                                            pdfClone.get(), takeGlobalObservablesFromData);
          nllWrapper->setData(data, false);
       }
 
