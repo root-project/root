@@ -64,7 +64,6 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 
        typedef typename CoordSystem::Scalar Scalar;
        typedef CoordSystem CoordinateType;
-       static constexpr unsigned int Dimensions = CoordinateType::Dimensions;
 
        /**
           default constructor of an empty vector (Px = Py = Pz = E = 0 )
@@ -263,6 +262,11 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
        }
 
        // ------ Individual element access, in various coordinate systems ------
+
+       /**
+          dimension
+       */
+       unsigned int Dimension() const { return fDimension; };
 
        // individual coordinate accessors in various coordinate systems
 
@@ -676,6 +680,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
     private:
 
        CoordSystem  fCoordinates;    // internal coordinate system
+       static constexpr unsigned int fDimension = CoordinateType::Dimension;
 
 
     };  // LorentzVector<>
