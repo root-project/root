@@ -46,7 +46,7 @@ class PxPyPzE4D {
 public :
 
    typedef ScalarType Scalar;
-   static constexpr unsigned int Dimensions = 4U;
+   static constexpr unsigned int Dimension = 4U;
 
    // --------- Constructors ---------------
 

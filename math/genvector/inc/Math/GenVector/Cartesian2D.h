@@ -42,7 +42,7 @@ public :
 
    typedef T Scalar;
 
-   static constexpr unsigned int Dimensions = 2U;
+   static constexpr unsigned int Dimension = 2U;
 
    /**
       Default constructor  with x=y=0
