@@ -48,6 +48,17 @@ class REntry {
    friend class RNTupleReader;
    friend class RNTupleFillContext;
 
+public:
+   /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
+   /// methods, e.g. BindValue
+   class RFieldToken {
+      friend class REntry;
+      std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
+      std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
+      RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
+   };
+
+private:
    /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
@@ -85,17 +96,28 @@ class REntry {
       return bytesWritten;
    }
 
+   void EnsureMatchingModel(RFieldToken token) const
+   {
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from the same model as this entry."));
+      }
+   }
+
+   template <typename T>
+   void EnsureMatchingType(RFieldToken token) const
+   {
+      if constexpr (!std::is_void_v<T>) {
+         const auto &v = fValues[token.fIndex];
+         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
+         }
+      }
+   }
+
 public:
    using ConstIterator_t = decltype(fValues)::const_iterator;
-
-   /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
-   /// methods, e.g. BindValue
-   class RFieldToken {
-      friend class REntry;
-      std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
-      std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
-      RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
-   };
 
    REntry(const REntry &other) = delete;
    REntry &operator=(const REntry &other) = delete;
@@ -117,12 +139,8 @@ public:
 
    void EmplaceNewValue(RFieldToken token)
    {
-      if (fModelId != token.fModelId) {
-         throw RException(R__FAIL("invalid token for this entry, "
-                                  "make sure to use a token from the same model as this entry."));
-      }
-      auto &v = fValues[token.fIndex];
-      v.EmplaceNew();
+      EnsureMatchingModel(token);
+      fValues[token.fIndex].EmplaceNew();
    }
 
    void EmplaceNewValue(std::string_view fieldName) { EmplaceNewValue(GetToken(fieldName)); }
@@ -130,18 +148,9 @@ public:
    template <typename T>
    void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
    {
-      if (fModelId != token.fModelId) {
-         throw RException(R__FAIL("invalid token for this entry, "
-                                  "make sure to use a token from the same model as this entry."));
-      }
-      auto &v = fValues[token.fIndex];
-      if constexpr (!std::is_void_v<T>) {
-         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
-                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-         }
-      }
-      v.Bind(objPtr);
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      fValues[token.fIndex].Bind(objPtr);
    }
 
    template <typename T>
@@ -153,18 +162,9 @@ public:
    template <typename T>
    void BindRawPtr(RFieldToken token, T *rawPtr)
    {
-      if (fModelId != token.fModelId) {
-         throw RException(R__FAIL("invalid token for this entry, "
-                                  "make sure to use a token from the same model as this entry."));
-      }
-      auto &v = fValues[token.fIndex];
-      if constexpr (!std::is_void_v<T>) {
-         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
-                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-         }
-      }
-      v.BindRawPtr(rawPtr);
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      fValues[token.fIndex].BindRawPtr(rawPtr);
    }
 
    template <typename T>
@@ -176,19 +176,9 @@ public:
    template <typename T>
    std::shared_ptr<T> GetPtr(RFieldToken token) const
    {
-      if (fModelId != token.fModelId) {
-         throw RException(R__FAIL("invalid token for this entry"));
-      }
-
-      auto &v = fValues[token.fIndex];
-      if constexpr (std::is_void_v<T>)
-         return v.GetPtr<void>();
-
-      if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-         throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
-                                  v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-      }
-      return std::static_pointer_cast<T>(v.GetPtr<void>());
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      return std::static_pointer_cast<T>(fValues[token.fIndex].GetPtr<void>());
    }
 
    template <typename T>
