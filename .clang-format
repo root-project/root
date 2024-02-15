@@ -1,11 +1,9 @@
 # BasedOnStyle:  LLVM
 AccessModifierOffset: -3
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments:
-  Enabled: false
+AlignConsecutiveAssignments: None
 # This would be nice to have but seems to also (mis)align function parameters
-AlignConsecutiveDeclarations:
-  Enabled: false
+AlignConsecutiveDeclarations: None
 AlignEscapedNewlines: Left
 AlignOperands:   true
 AlignTrailingComments: true
