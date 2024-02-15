@@ -338,6 +338,10 @@ ROOT::Experimental::RFieldBase::RColumnRepresentations::RColumnRepresentations(
 
 //------------------------------------------------------------------------------
 
+std::shared_ptr<void> ROOT::Experimental::RFieldBase::RValue::fgRawPtrCtrlBlock;
+
+//------------------------------------------------------------------------------
+
 ROOT::Experimental::RFieldBase::RBulk::RBulk(RBulk &&other)
    : fField(other.fField),
      fValueSize(other.fValueSize),
