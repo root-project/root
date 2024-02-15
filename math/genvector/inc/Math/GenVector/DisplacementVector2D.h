@@ -62,6 +62,7 @@ namespace ROOT {
         typedef typename CoordSystem::Scalar Scalar;
         typedef CoordSystem CoordinateType;
         typedef Tag  CoordinateSystemTag;
+        static constexpr unsigned int Dimensions = CoordinateType::Dimensions;
 
         // ------ ctors ------
 

@@ -51,6 +51,7 @@ class Quaternion {
 public:
 
   typedef double Scalar;
+  static constexpr unsigned int Dimensions = 4U;
 
   // ========== Constructors and Assignment =====================
 

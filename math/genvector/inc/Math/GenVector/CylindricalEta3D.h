@@ -50,6 +50,7 @@ class CylindricalEta3D {
 public :
 
   typedef T Scalar;
+  static constexpr unsigned int Dimensions = 3U;
 
   /**
      Default constructor with rho=eta=phi=0

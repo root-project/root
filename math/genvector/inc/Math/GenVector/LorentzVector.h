@@ -64,6 +64,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 
        typedef typename CoordSystem::Scalar Scalar;
        typedef CoordSystem CoordinateType;
+       static constexpr unsigned int Dimensions = CoordinateType::Dimensions;
 
        /**
           default constructor of an empty vector (Px = Py = Pz = E = 0 )
