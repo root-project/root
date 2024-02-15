@@ -2690,10 +2690,14 @@ void TH1::Copy(TObject &obj) const
       ((TH1&)obj).fBuffer    = buf;
    }
 
-
+   // copy bin contents (this should be done by the derived classes, since TH1 does not store the bin content)
+   // Do this in case derived from TArray
    TArray* a = dynamic_cast<TArray*>(&obj);
-   if (a) a->Set(fNcells);
-   for (Int_t i = 0; i < fNcells; i++) ((TH1&)obj).UpdateBinContent(i, RetrieveBinContent(i));
+   if (a) {
+      a->Set(fNcells);
+      for (Int_t i = 0; i < fNcells; i++)
+         ((TH1&)obj).UpdateBinContent(i, RetrieveBinContent(i));
+   }
 
    ((TH1&)obj).fEntries   = fEntries;
 
