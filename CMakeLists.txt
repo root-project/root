@@ -722,16 +722,30 @@ if(testing)
 
   if(roottest)
     find_package(Git REQUIRED)
-    # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
-    # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
-    # value is used instead.
-    if(DEFINED ENV{GITHUB_PR_ORIGIN})
-      set(originurl $ENV{GITHUB_PR_ORIGIN})
-    else()
-      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # Check whether the repository exists in the source directory or its parent
+    get_filename_component(source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+    if(IS_DIRECTORY ${source_dir}/roottest/.git)
+      set(repo_dir ${source_dir}/roottest)
+    elseif(IS_DIRECTORY ${source_dir}/../roottest/.git)
+      set(repo_dir ${source_dir}/../roottest)
     endif()
-    string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
+    if(DEFINED repo_dir)
+      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${repo_dir}/.git
+                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    else()
+       # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
+       # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
+       # value is used instead.
+       if(DEFINED ENV{GITHUB_PR_ORIGIN})
+         set(originurl $ENV{GITHUB_PR_ORIGIN})
+       else()
+         execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
+                         remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
+       endif()
+    endif()
+    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix ${originurl})
     relatedrepo_GetClosestMatch(REPO_NAME roottest
                                 ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
                                 FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
