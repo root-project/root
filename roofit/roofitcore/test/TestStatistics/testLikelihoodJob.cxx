@@ -417,10 +417,15 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
 
 TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
-   // a variation to test some additional parameters (ConstrainedParameters and offsetting)
+   // A variation to test some additional parameters (ConstrainedParameters and offsetting)
+
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
                                                     RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true))};
+                                                    RooFit::Offset(true), RooFit::EvalBackend("legacy"))};
 
    // --------
 
@@ -478,10 +483,15 @@ class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTes
 
 TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
 {
-   // based on ConstrainedAndOffset, this test tests different parallelization strategies
+   // Based on ConstrainedAndOffset, this test tests different parallelization strategies
+
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
                                                     RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true))};
+                                                    RooFit::Offset(true), RooFit::EvalBackend("legacy"))};
 
    // --------
 
