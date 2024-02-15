@@ -9,11 +9,11 @@
         "type": "integral",
         "proxies": {
             "func": "integrand",	    
-            "sumList": "discrete_variables",
-            "anaList": "analytical_variables",	    
-            "intList": "numerical_variables",
-            "jacList": "jacobian",
-            "facList": "unrelated_variables"
+            "sumList": "variables",
+            "anaList": "variables",	    
+            "intList": "variables",
+	    "jacList": "",
+	    "facList": ""	    
         }
     },
     "RooArgusBG": {
