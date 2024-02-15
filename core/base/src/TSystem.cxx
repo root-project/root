@@ -57,6 +57,7 @@ allows a simple partial implementation for new OS'es.
 
 #ifdef WIN32
 #include <io.h>
+#include "Windows4Root.h"
 #endif
 
 const char *gRootDir = nullptr;
@@ -4352,9 +4353,11 @@ void TSystem::CleanCompiledMacros()
    while ((lib = (TNamed*)next())) {
       if (lib->TestBit(kMustCleanup)) {
          TString libname = lib->GetTitle();
-         std::cout << "TSystem::CleanCompiledMacros() : " << libname << std::endl;
+#ifdef WIN32
+         // On Windows, we need to unload the dll before deleting it
          if (gInterpreter->IsLibraryLoaded(libname))
-            Unload(libname);
+            ::FreeLibrary(::GetModuleHandle(libname));
+#endif
          Unlink(libname);
          TString target, soExt = "." + fSoExt;
          libname.ReplaceAll(soExt, "");
