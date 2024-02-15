@@ -1064,7 +1064,7 @@ void TAxis::SetRange(Int_t first, Int_t last)
    } else {
       if (first<0) Warning("TAxis::SetRange","first < 0, 0 is used");
       fFirst = std::max(first, 0);
-      if (last>nCells) Warning("TAxis::SetRange","last > fNbins, fNbins is used");
+      if (last>nCells) Warning("TAxis::SetRange","last > fNbins+1, fNbins+1 is used");
       fLast = std::min(last, nCells);
       SetBit(kAxisRange, true);
    }
