@@ -324,9 +324,6 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
                                          double integrateOverBinsPrecision, RooFit::OffsetMode offset)
 {
    if (constraints) {
-      // Redirect the global observables to the ones from the dataset if applicable.
-      constraints->setData(data, false);
-
       // The computation graph for the constraints is very small, no need to do
       // the tracking of clean and dirty nodes here.
       constraints->setOperMode(RooAbsArg::ADirty);
