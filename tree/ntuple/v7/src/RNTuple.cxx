@@ -370,7 +370,7 @@ ROOT::Experimental::RNTupleWriter::Recreate(std::initializer_list<std::pair<std:
                                             std::string_view ntupleName, std::string_view storage,
                                             const RNTupleWriteOptions &options)
 {
-   auto sink = Detail::RPagePersistentSink::Create(ntupleName, storage, options);
+   auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
    auto model = RNTupleModel::Create();
    for (const auto &fieldDesc : fields) {
       std::string typeName(fieldDesc.first);
