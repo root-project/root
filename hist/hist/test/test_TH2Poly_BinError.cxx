@@ -101,7 +101,7 @@ TEST(TH2Poly,BinErrorWeighted)
 
 }
 
-TEST(TH2, SetBinError)
+TEST(TH2Poly, SetBinError)
 {
    auto h2p = CreateHist();
 
@@ -129,8 +129,46 @@ TEST(TH2, SetBinError)
    // setting a new content does not set bin error
    h2p->SetBinContent(-1,3); 
    EXPECT_EQ( 0, h2p->GetBinError(-1) );
-
+   
 
 }
 
 
+TEST(TH2Poly, Copy)
+{ 
+  auto h2p = CreateHist();
+
+  // set content and error
+   h2p->SetBinContent(1, 10.0);
+   h2p->SetBinContent(2, 20.0);
+   h2p->SetBinContent(3, 30.0);
+   //
+   h2p->SetBinError(1, 2.5);
+   h2p->SetBinError(2, 3.5);
+   h2p->SetBinError(3, 4.5);
+   // set overflow bins
+  
+   h2p->SetBinContent(-9, 15.0);
+   h2p->SetBinError(-9, 5.);
+   h2p->SetBinContent(-5, 100.0);
+   h2p->SetBinError(-5, 8.);
+
+   // test copying
+   auto h2p_copy = new TH2Poly(*h2p);
+   EXPECT_EQ( h2p_copy->GetNumberOfBins(), h2p->GetNumberOfBins() );
+   for (int i = 1; i <= h2p->GetNumberOfBins(); i++) {
+      EXPECT_EQ( h2p_copy->GetBinContent(i), h2p->GetBinContent(i) );
+      EXPECT_EQ( h2p_copy->GetBinError(i), h2p->GetBinError(i) );
+   }
+   for (int i = -1; i > -10; i--) {
+      EXPECT_EQ( h2p_copy->GetBinContent(i), h2p->GetBinContent(i) );
+      EXPECT_EQ( h2p_copy->GetBinError(i), h2p->GetBinError(i) );
+   }
+
+   // test statistics
+   for (int i = 0; i < 2; i++) {
+      EXPECT_EQ( h2p_copy->GetStdDev(i), h2p->GetMean(i) );
+      EXPECT_EQ( h2p_copy->GetStdDev(i), h2p->GetStdDev(i) );
+   }
+
+}

@@ -815,7 +815,8 @@ Double_t TH2Poly::Integral(Option_t* option) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the content of the input bin
-/// For the overflow/underflow/sea bins:
+/// Bin numbers are from [1,nbins] and
+/// for the overflow/underflow/sea bins the range is [-9,-1]:
 ///~~~ {.cpp}
 /// -1 | -2 | -3
 /// ---+----+----
