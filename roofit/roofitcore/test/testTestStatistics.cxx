@@ -535,9 +535,10 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
    x.setBins(numBins);
 
    {
-      // Uniform RooDataHist
+      // Uniform RooDataHist, but with some empty bins to validate that empty
+      // bins are treated correctly.
       RooDataHist dataHist{"data_hist", "data_hist", x};
-      for (int iBin = 0; iBin < numBins; ++iBin) {
+      for (int iBin = 2; iBin < numBins; ++iBin) {
          dataHist.set(iBin, nEvents / numBins, -1);
       }
 
