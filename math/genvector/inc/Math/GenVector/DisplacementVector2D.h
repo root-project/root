@@ -394,7 +394,6 @@ namespace ROOT {
         CoordSystem fCoordinates;    // internal coordinate system
         static constexpr unsigned int fDimension = CoordinateType::Dimension;
 
-
         // the following methods should not compile
 
         // this should not compile (if from a vector or points with different tag

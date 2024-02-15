@@ -259,7 +259,10 @@ namespace ROOT {
       /**
           Dimension
       */
-      unsigned int Dimension() const { return fDimension; };
+      unsigned int Dimension() const
+      {
+         return fDimension;
+      };
 
       /**
           Cartesian X, converting if necessary from internal coordinate system.
