@@ -167,6 +167,8 @@ void loadFactoryExpressions(const std::string &fname)
       for (const auto &arg : cl["arguments"].children()) {
          ex.arguments.push_back(arg.val());
       }
+      auto *verbose = cl.find("verbose");
+      if(verbose && verbose->val_bool()) ex.verbose = true;      
       factoryExpressions[key] = ex;
    }
 }
@@ -229,6 +231,8 @@ void loadExportKeys(const std::string &fname)
       for (const auto &k : proxies->children()) {
          ex.proxies[k.key()] = k.val();
       }
+      auto *verbose = cl.find("verbose");
+      if(verbose && verbose->val_bool()) ex.verbose = true;
       exportKeys[c] = ex;
    }
 }
