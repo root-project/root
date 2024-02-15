@@ -2812,6 +2812,12 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 ///
 /// (the ... have to be replaced by the actual values and are here only to
 /// shorten this comment).
+///
+/// Note that the default behavior is to remove libraries when closing ROOT,
+/// ie TSystem::CleanCompiledMacros() is called in the TROOT destructor.
+/// The default behavior of .L script.C+ is the opposite one, leaving things
+/// after closing, without removing. In other words, .L always passes the 'k'
+/// option behind the scenes.
 
 int TSystem::CompileMacro(const char *filename, Option_t *opt,
                           const char *library_specified,
@@ -4348,8 +4354,7 @@ void TSystem::CleanCompiledMacros()
 {
    TIter next(fCompiled);
    TNamed *lib;
-   const char *extensions[] = {".lib", ".exp", ".d", ".def", ".rootmap",
-                               "_ACLiC_linkdef.h", "_ACLiC_dict_rdict.pcm"};
+   const char *extensions[] = {".lib", ".exp", ".d", ".def", ".rootmap", "_ACLiC_linkdef.h", "_ACLiC_dict_rdict.pcm"};
    while ((lib = (TNamed*)next())) {
       if (lib->TestBit(kMustCleanup)) {
          TString libname = lib->GetTitle();
