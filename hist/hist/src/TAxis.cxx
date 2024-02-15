@@ -1062,7 +1062,9 @@ void TAxis::SetRange(Int_t first, Int_t last)
       fLast = fNbins;
       SetBit(kAxisRange, false);
    } else {
+      if (first<0) Warning("TAxis::SetRange","first < 0, 0 is used");
       fFirst = std::max(first, 0);
+      if (last>nCells) Warning("TAxis::SetRange","last > fNbins+1, fNbins+1 is used");
       fLast = std::min(last, nCells);
       SetBit(kAxisRange, true);
    }
@@ -1087,6 +1089,8 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
          return;
       }
    }
+   if (ufirst<fXmin) Warning("TAxis::SetRangeUser","ufirst < fXmin, fXmin is used");
+   if (ulast>fXmax) Warning("TAxis::SetRangeUser","ulast > fXmax, fXmax is used");
    Int_t ifirst = FindFixBin(ufirst);
    Int_t ilast = FindFixBin(ulast);
    // fixes for numerical error and for https://savannah.cern.ch/bugs/index.php?99777
