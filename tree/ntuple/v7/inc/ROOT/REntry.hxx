@@ -153,13 +153,24 @@ public:
    template <typename T>
    void BindRawPtr(RFieldToken token, T *rawPtr)
    {
-      BindValue<void>(token, std::shared_ptr<T>(rawPtr, [](T *) {}));
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from the same model as this entry."));
+      }
+      auto &v = fValues[token.fIndex];
+      if constexpr (!std::is_void_v<T>) {
+         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
+         }
+      }
+      v.BindRawPtr(rawPtr);
    }
 
    template <typename T>
    void BindRawPtr(std::string_view fieldName, T *rawPtr)
    {
-      BindValue<void>(fieldName, std::shared_ptr<T>(rawPtr, [](T *) {}));
+      BindRawPtr<void>(GetToken(fieldName), rawPtr);
    }
 
    template <typename T>

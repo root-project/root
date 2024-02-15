@@ -183,6 +183,10 @@ public:
       friend class RFieldBase;
 
    private:
+      /// Empty shared pointer, used as the basis for an aliasing shared pointer constructor in BindRawPtr.
+      /// Note that as a result of BindRawPtr, fObjPtr will be non-empty but have use count zero.
+      static std::shared_ptr<void> fgRawPtrCtrlBlock;
+
       RFieldBase *fField = nullptr; ///< The field that created the RValue
       std::shared_ptr<void> fObjPtr; ///< Set by Bind() or by RFieldBase::CreateValue(), SplitValue() or BindValue()
 
@@ -199,6 +203,7 @@ public:
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
       void Read(RClusterIndex clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
       void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
+      void BindRawPtr(void *rawPtr) { fObjPtr = std::shared_ptr<void>(fgRawPtrCtrlBlock, rawPtr); }
       /// Replace the current object pointer by a pointer to a new object constructed by the field
       void EmplaceNew() { fObjPtr = fField->CreateValue().GetPtr<void>(); }
 
