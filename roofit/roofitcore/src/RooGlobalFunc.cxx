@@ -406,7 +406,8 @@ RooCmdArg TimingAnalysis(bool flag)
 }
 RooCmdArg BatchMode(std::string const &batchMode)
 {
-   oocoutW(nullptr, InputArguments) << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
+   oocoutW(nullptr, InputArguments)
+      << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
    std::string lower = batchMode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
    if (lower == "off") {
@@ -546,7 +547,7 @@ std::string EvalBackend::toName(EvalBackend::Value value)
 }
 EvalBackend::Value &EvalBackend::defaultValue()
 {
-   static Value value = Value::Legacy;
+   static Value value = Value::Cpu;
    return value;
 }
 
