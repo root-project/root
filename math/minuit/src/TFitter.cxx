@@ -22,7 +22,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TFitter
-/// \legacy{TFitter}
+/// \legacy{TFitter, Consider switching to Minuit2.}
 ///
 /// The ROOT standard fitter based on TMinuit
 ///
