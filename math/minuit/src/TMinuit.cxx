@@ -11,6 +11,7 @@
 
 
 /*! \class TMinuit
+\legacy{TMinuit, Consider switching to Minuit2.}
 \ingroup MinuitOld
 
 Implementation in C++ of the Minuit package written by Fred James.

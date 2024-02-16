@@ -30,15 +30,15 @@
 #include <functional>
 #include <cmath>
 
-//______________________________________________________________________________
-//
-//  TMinuitMinimizer class implementing the ROOT::Math::Minimizer interface using
-//  TMinuit.
-//  This class is normally instantiates using the plug-in manager
-//  (plug-in with name Minuit or TMinuit)
-//  In addition the user can choose the minimizer algorithm: Migrad (the default one), Simplex, or Minimize (combined Migrad + Simplex)
-//
-//__________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \class TMinuitMinimizer
+/// \legacy{TMinuitMinimizer, Consider switching to Minuit2.}
+/// TMinuitMinimizer class implementing the ROOT::Math::Minimizer interface
+/// using TMinuit. This class is normally instantiated using the plug-in manager
+/// (plug-in with name Minuit or TMinuit).
+/// In addition the user can choose the minimizer algorithm:
+/// Migrad (the default one), Simplex, or Minimize (combined Migrad + Simplex)
+////////////////////////////////////////////////////////////////////////////////
 
 // initialize the static instances
 
