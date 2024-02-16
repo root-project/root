@@ -52,7 +52,8 @@ RooEvaluatorWrapper::RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const
      _data{other._data},
      _rangeName{other._rangeName},
      _pdf{other._pdf},
-     _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
+     _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData},
+     _dataSpans{other._dataSpans}
 {
 }
 
