@@ -115,6 +115,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussian1D)
    EXPECT_EQ(nll0, nll1.Sum());
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 {
    unsigned int N = 4;
@@ -130,6 +131,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 
    EXPECT_EQ(nll0, nll1.Sum());
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
 {
@@ -395,6 +397,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
    EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
    // A variation to test some additional parameters (ConstrainedParameters and offsetting)
@@ -405,7 +408,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
                                                     RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))),
-                                                    RooFit::Offset(true), RooFit::EvalBackend("legacy"))};
+                                                    RooFit::Offset(true), RooFit::EvalBackend::Legacy())};
 
    // --------
 
@@ -437,6 +440,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    EXPECT_EQ(nll0, nll2);
    EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
 {
