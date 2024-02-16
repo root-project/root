@@ -2,8 +2,11 @@
 //
 
 // need to add include path to find generated model file
+#ifdef __CLING__
 R__ADD_INCLUDE_PATH($PWD)
 R__ADD_INCLUDE_PATH($ROOTSYS/runtutorials)
+#endif
+
 #include "encoder.hxx"
 #include "core.hxx"
 #include "decoder.hxx"
@@ -15,10 +18,23 @@ R__ADD_INCLUDE_PATH($ROOTSYS/runtutorials)
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TSystem.h"
 #include "ROOT/RDataFrame.hxx"
 
 using namespace TMVA::Experimental;
 using namespace TMVA::Experimental::SOFIE;
+
+double check_mem(std::string s = ""){
+   ProcInfo_t p;
+   printf("%s - ",s.c_str());
+   gSystem->GetProcInfo(&p);
+   printf(" Rmem = %8.3f MB, Vmem = %8.f3 MB  \n",
+          p.fMemResident /1024.,  /// convert memory from kB to MB
+          p.fMemVirtual  /1024.
+      );
+   return p.fMemResident / 1024.;
+}
+
 
 template<class T>
 void PrintTensor(RTensor<T> & t) {
@@ -80,6 +96,8 @@ struct SOFIE_GNN {
       return outputData;
    }
 
+   SOFIE_GNN(bool v = false) : verbose(v) {}
+
 };
 
 const int num_max_nodes = 10;
@@ -116,6 +134,7 @@ std::vector<GNN_Data> GenerateData(int nevts, int seed) {
 }
 
 std::vector<GNN_Data> ReadData(std::string treename, std::string filename) {
+   bool verbose = false;
    ROOT::RDataFrame df(treename,filename);
    auto ndata = df.Take<ROOT::RVec<float>>("node_data");
    auto edata = df.Take<ROOT::RVec<float>>("edge_data");
@@ -143,15 +162,19 @@ std::vector<GNN_Data> ReadData(std::string treename, std::string filename) {
       std::copy(s.begin(), s.end(), gd.edge_index.GetData()+num_edges);
 
       dataSet.emplace_back(Copy(gd)); // need to copy data in vector to own
-      if (i < 1) Print(dataSet[i],"Input for Event" + std::to_string(i));
+      if (i < 1 && verbose) Print(dataSet[i],"Input for Event" + std::to_string(i));
    }
    return dataSet;
 }
 
 
-void TMVA_SOFIE_GNN_Application ()
+void TMVA_SOFIE_GNN_Application (bool verbose = false)
 {
+   check_mem("Initial memory");
    SOFIE_GNN gnn;
+   check_mem("After creating GNN");
+
+
    const int seed = 111;
    const int nproc_steps = 5;
    // generate the input data
@@ -168,23 +191,27 @@ void TMVA_SOFIE_GNN_Application ()
    //std::cout << "padding data\n";
    //PadData(inputData) ;
 
-   auto h1 = new TH1D("h1","Node data",40,1,0);
-   auto h2 = new TH1D("h2","Edge data",40,1,0);
-   auto h3 = new TH1D("h3","Global data",40,1,0);
+   auto h1 = new TH1D("h1","SOFIE Node data",40,1,0);
+   auto h2 = new TH1D("h2","SOFIE Edge data",40,1,0);
+   auto h3 = new TH1D("h3","SOFIE Global data",40,1,0);
    std::cout << "doing inference...\n";
+
+
+   check_mem("Before evaluating");
    TStopwatch w; w.Start();
    for (int i = 0; i < nevts; i++) {
       auto result = gnn.Infer(inputData[i], nproc_steps);
       // compute resulting mean and plot them
       auto & lr = result.back();
-      if (i < 1) Print(lr,"Output for Event" + std::to_string(i));
+      if (i < 1 && verbose) Print(lr,"Output for Event" + std::to_string(i));
       h1->Fill(TMath::Mean(lr.node_data.begin(), lr.node_data.end()));
       h2->Fill(TMath::Mean(lr.edge_data.begin(), lr.edge_data.end()));
       h3->Fill(TMath::Mean(lr.global_data.begin(), lr.global_data.end()));
    }
    w.Stop();
    w.Print();
-   auto c1 = new TCanvas("SOFIE Results");
+   check_mem("End evaluation");
+   auto c1 = new TCanvas("c1","SOFIE Results");
    c1->Divide(1,3);
    c1->cd(1); h1->Draw();
    c1->cd(2); h2->Draw();
@@ -192,7 +219,7 @@ void TMVA_SOFIE_GNN_Application ()
 
 
    // compare with the reference
-   auto c2 = new TCanvas("Reference Results");
+   auto c2 = new TCanvas("c2","Reference Results");
    auto file = TFile::Open("graph_data.root");
    auto o1 = file->Get("h1");
    auto o2 = file->Get("h2");
