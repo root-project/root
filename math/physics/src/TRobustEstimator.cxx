@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRobustEstimator
+    \legacy{TRobustEstimator, No alternative classes are currently available.}
     \ingroup Physics
 Minimum Covariance Determinant Estimator - a Fast Algorithm
 invented by Peter J.Rousseeuw and Katrien Van Dreissen
