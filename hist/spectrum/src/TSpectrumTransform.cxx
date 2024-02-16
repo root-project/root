@@ -6,7 +6,7 @@
     \brief Advanced 1-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
- \legacy{TSpectrumTransform}
+ \legacy{TSpectrumTransform, For modeling a spectrum fitting and estimating the background one can use RooFit while for deconvolution and unfolding one can use TUnfold.}
 
 
  Class to carry out transforms of 1D spectra, its filtering and
