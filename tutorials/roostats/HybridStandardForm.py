@@ -88,7 +88,7 @@ from ROOT.RooStats import (
     ProofConfig,
     NumEventsTestStat,
 )
-from ROOT.RooFit import Range, LineColor, ERROR
+from ROOT.RooFit import ERROR
 
 # -------------------------------------------------------
 # A New Test Statistic Class for this example.
@@ -98,8 +98,6 @@ from ROOT.RooFit import Range, LineColor, ERROR
 
 ROOT.gInterpreter.Declare(
     """
-#include "TProof.h"
-
 using namespace RooFit;
 using namespace RooStats;
 
@@ -224,7 +222,7 @@ def HybridStandardForm():
     w.defineSet("poi", "s")
 
     # create a toy dataset with the x=150
-    #  data = RooDataSet("d", "d", w.set("obs"))
+    #  data = ROOT.RooDataSet("d", "d", w.set("obs"))
     #  data.add(w.set("obs"))
     data = w.pdf("px").generate(w.set("obs"), 150)
 
@@ -272,7 +270,7 @@ def HybridStandardForm():
     #
     # Alternatively, we could explicitly use a gamma distribution:
     #
-    # `w.factory("Gamma::gamma(b,sum::temp(y,1),1,0)");`
+    # `w.factory("Gamma::gamma(b,sum::temp(y,1),1,0)")`
     #
     # or we can use some other ad hoc prior that do not naturally
     # follow from the known form of the auxiliary measurement.

@@ -102,7 +102,7 @@
 import ROOT
 
 from ROOT import TFile, TH1F, TCanvas, RooSimultaneous, RooArgSet
-from ROOT.RooStats import FeldmanCousins, ProofConfig
+from ROOT.RooStats import FeldmanCousins, ProofConfig, SignificanceToPValue
 from ROOT.RooFit import Extended
 
 useProof = False  # flag to control whether to use Proof
@@ -176,8 +176,8 @@ def TwoSidedFrequentistUpperLimitWithBands(
     # Now get the POI for convenience
     # you may want to adjust the range of your POI
     firstPOI = mc.GetParametersOfInterest().first()
-    #  firstPOI.setMin(0);
-    #  firstPOI.setMax(10);
+    # firstPOI.setMin(0)
+    # firstPOI.setMax(10)
 
     # -------------------------------------------------------
     # create and use the FeldmanCousins tool
@@ -189,7 +189,7 @@ def TwoSidedFrequentistUpperLimitWithBands(
     fc = FeldmanCousins(data, mc)
     fc.SetConfidenceLevel(confidenceLevel)
     fc.AdditionalNToysFactor(additionalToysFac)  # improve sampling that defines confidence belt
-    #  fc.UseAdaptiveSampling(True) # speed it up a bit, but don't use for expected limits
+    # fc.UseAdaptiveSampling(True) # speed it up a bit, but don't use for expected limits
     fc.SetNBins(nPointsToScan)  # set how many points per parameter of interest to scan
     fc.CreateConfBelt(True)  # save the information in the belt for plotting
 
@@ -199,8 +199,8 @@ def TwoSidedFrequentistUpperLimitWithBands(
     # of the nuisance parameters should be used to generate toys.
     # so let's just change the test statistic and realize this is
     # no longer "Feldman-Cousins" but is a fully frequentist Neyman-Construction.
-    #  fc.GetTestStatSampler().SetTestStatistic(onesided);
-    #  fc.GetTestStatSampler()).SetGenerateBinned(True);
+    # fc.GetTestStatSampler().SetTestStatistic(onesided)
+    # fc.GetTestStatSampler().SetGenerateBinned(True)
     toymcsampler = fc.GetTestStatSampler()
     testStat = toymcsampler.GetTestStatistic()
 
@@ -303,9 +303,9 @@ def TwoSidedFrequentistUpperLimitWithBands(
     for imc in range(nToyMC):
 
         # set parameters back to values for generating pseudo data
-        #    print("\n get current nuis, set vals, print again")
+        # print("\n get current nuis, set vals, print again")
         w.loadSnapshot("paramsToGenerateData")
-        #    poiAndNuisance.Print("v")
+        # poiAndNuisance.Print("v")
 
         # now generate a toy dataset for the main measurement
         if not mc.GetPdf().canBeExtended():
@@ -314,7 +314,7 @@ def TwoSidedFrequentistUpperLimitWithBands(
             else:
                 print(f"Not sure what to do about this model")
         else:
-            #      print("generating extended dataset"<<endl;
+            # print("generating extended dataset")
             toyData = mc.GetPdf().generate(mc.GetObservables(), Extended())
 
         # generate global observables
@@ -339,8 +339,8 @@ def TwoSidedFrequentistUpperLimitWithBands(
         # get test stat at observed UL in observed data
         firstPOI.setVal(observedUL)
         toyTSatObsUL = fc.GetTestStatSampler().EvaluateTestStatistic(toyData, tmpPOI)
-        #    toyData.get().Print("v");
-        #    print("obsTSatObsUL ", obsTSatObsUL, "toyTS ", toyTSatObsUL)
+        # toyData.get().Print("v")
+        # print("obsTSatObsUL ", obsTSatObsUL, "toyTS ", toyTSatObsUL)
         if obsTSatObsUL < toyTSatObsUL:  # not sure about <= part yet
             CLb += (1.0) / nToyMC
         if obsTSatObsUL <= toyTSatObsUL:  # not sure about <= part yet
@@ -352,11 +352,11 @@ def TwoSidedFrequentistUpperLimitWithBands(
             tmpPoint = parameterScan.get(i).clone("temp")
             arMax = belt.GetAcceptanceRegionMax(tmpPoint)
             firstPOI.setVal(tmpPoint.getRealValue(firstPOI.GetName()))
-            #   double thisTS = profile.getVal();
+            # thisTS = profile.getVal()
             thisTS = fc.GetTestStatSampler().EvaluateTestStatistic(toyData, tmpPOI)
 
-            #   print(f"poi = {firstPOI.getVal()} max is {arMax} this profile = {thisTS}")
-            #      print("thisTS = ", thisTS)
+            # print(f"poi = {firstPOI.getVal()} max is {arMax} this profile = {thisTS}")
+            # print("thisTS = ", thisTS)
             if thisTS <= arMax:
                 thisUL = firstPOI.getVal()
             else:
@@ -365,14 +365,14 @@ def TwoSidedFrequentistUpperLimitWithBands(
         histOfUL.Fill(thisUL)
 
         # for few events, data is often the same, and UL is often the same
-        #    print("thisUL = ", thisUL)
+        # print("thisUL = ", thisUL)
 
     histOfUL.Draw()
     c1.SaveAs("two-sided_upper_limit_output.pdf")
 
     # if you want to see a plot of the sampling distribution for a particular scan point:
     #
-    # SamplingDistPlot sampPlot
+    # sampPlot = ROOT.RooStats.SamplingDistPlot()
     # indexInScan = 0
     # tmpPoint = parameterScan.get(indexInScan).clone("temp")
     # firstPOI.setVal( tmpPoint.getRealValue(firstPOI.GetName()) )
@@ -392,15 +392,15 @@ def TwoSidedFrequentistUpperLimitWithBands(
     band1sigUp = 0
     band2sigUp = 0
     for i in range(1, cumulative.GetNbinsX() + 1):
-        if bins[i] < RooStats.SignificanceToPValue(2):
+        if bins[i] < SignificanceToPValue(2):
             band2sigDown = cumulative.GetBinCenter(i)
-        if bins[i] < RooStats.SignificanceToPValue(1):
+        if bins[i] < SignificanceToPValue(1):
             band1sigDown = cumulative.GetBinCenter(i)
         if bins[i] < 0.5:
             bandMedian = cumulative.GetBinCenter(i)
-        if bins[i] < RooStats.SignificanceToPValue(-1):
+        if bins[i] < SignificanceToPValue(-1):
             band1sigUp = cumulative.GetBinCenter(i)
-        if bins[i] < RooStats.SignificanceToPValue(-2):
+        if bins[i] < SignificanceToPValue(-2):
             band2sigUp = cumulative.GetBinCenter(i)
 
     print(f"-2 sigma  band {band2sigDown}")
