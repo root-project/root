@@ -706,7 +706,8 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
    Double_t *pD = d.GetMatrixArray();
    Double_t *pE = e.GetMatrixArray();
 
-   const Int_t n = v.GetNrows();;
+   const Int_t n = v.GetNrows();
+   ;
 
    Double_t eps = std::numeric_limits<Double_t>::epsilon();
 
@@ -720,9 +721,9 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
             k = j;
             norm = norm_new;
          }
-         if (std::fabs(norm_new-norm) <= eps*norm_new){
-            if ((std::fabs(pD[i] - pD[j]) <= eps) && (std::fabs(pE[i] + pE[j]) <= eps) ){
-               if (pE[j] > pE[i]){
+         if (std::fabs(norm_new - norm) <= eps * norm_new) {
+            if ((std::fabs(pD[i] - pD[j]) <= eps) && (std::fabs(pE[i] + pE[j]) <= eps)) {
+               if (pE[j] > pE[i]) {
                   k = j;
                   norm = norm_new;
                }
