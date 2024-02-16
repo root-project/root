@@ -1262,22 +1262,26 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    return *this;
 }
 
-template<class Element>
-TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t nrows,Int_t ncols,Int_t *row,Int_t *col,Element *data)
+template <class Element>
+TMatrixTBase<Element> &
+TMatrixTSparse<Element>::SetMatrixArray(Int_t nr, Int_t nrows, Int_t ncols, Int_t *row, Int_t *col, Element *data)
 {
    R__ASSERT(this->IsValid());
    if (nr <= 0) {
-      Error("SetMatrixArray(Int_t,Int_t*,Int_t*,Element*","nr <= 0");
+      Error("SetMatrixArray(Int_t,Int_t*,Int_t*,Element*", "nr <= 0");
       return *this;
    }
 
    if (nrows != this->fNrows) {
-      if (fRowIndex) { delete [] fRowIndex; fRowIndex = nullptr; }
+      if (fRowIndex) {
+         delete[] fRowIndex;
+         fRowIndex = nullptr;
+      }
       this->fNrows = nrows;
       if (this->fNrows > 0) {
-         fRowIndex = new Int_t[nrows+1];
-         this->fNrowIndex = nrows+1;
-      }  else {
+         fRowIndex = new Int_t[nrows + 1];
+         this->fNrowIndex = nrows + 1;
+      } else {
          fRowIndex = nullptr;
          this->fNrowIndex = 0;
       }
@@ -1293,49 +1297,56 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t nr
       this->fColLwb = tmp;
    }
 
-   const Int_t irowmin = TMath::LocMin(nr,row);
-   const Int_t irowmax = TMath::LocMax(nr,row);
-   const Int_t icolmin = TMath::LocMin(nr,col);
-   const Int_t icolmax = TMath::LocMax(nr,col);
+   const Int_t irowmin = TMath::LocMin(nr, row);
+   const Int_t irowmax = TMath::LocMax(nr, row);
+   const Int_t icolmin = TMath::LocMin(nr, col);
+   const Int_t icolmax = TMath::LocMax(nr, col);
 
-   R__ASSERT(row[irowmin] >= this->fRowLwb && row[irowmax] <= this->fRowLwb+this->fNrows-1);
-   R__ASSERT(col[icolmin] >= this->fColLwb && col[icolmax] <= this->fColLwb+this->fNcols-1);
+   R__ASSERT(row[irowmin] >= this->fRowLwb && row[irowmax] <= this->fRowLwb + this->fNrows - 1);
+   R__ASSERT(col[icolmin] >= this->fColLwb && col[icolmax] <= this->fColLwb + this->fNcols - 1);
 
-   if (row[irowmin] <  this->fRowLwb|| row[irowmax] > this->fRowLwb+this->fNrows-1) {
-      Error("SetMatrixArray","Inconsistency between row index and its range");
+   if (row[irowmin] < this->fRowLwb || row[irowmax] > this->fRowLwb + this->fNrows - 1) {
+      Error("SetMatrixArray", "Inconsistency between row index and its range");
       if (row[irowmin] < this->fRowLwb) {
-         Info("SetMatrixArray","row index lower bound adjusted to %d",row[irowmin]);
+         Info("SetMatrixArray", "row index lower bound adjusted to %d", row[irowmin]);
          this->fRowLwb = row[irowmin];
       }
-      if (row[irowmax] > this->fRowLwb+this->fNrows-1) {
-         Info("SetMatrixArray","row index upper bound adjusted to %d",row[irowmax]);
-         this->fNrows = row[irowmax]-this->fRowLwb+1;
+      if (row[irowmax] > this->fRowLwb + this->fNrows - 1) {
+         Info("SetMatrixArray", "row index upper bound adjusted to %d", row[irowmax]);
+         this->fNrows = row[irowmax] - this->fRowLwb + 1;
       }
    }
-   if (col[icolmin] < this->fColLwb || col[icolmax] > this->fColLwb+this->fNcols-1) {
-      Error("SetMatrixArray","Inconsistency between column index and its range");
+   if (col[icolmin] < this->fColLwb || col[icolmax] > this->fColLwb + this->fNcols - 1) {
+      Error("SetMatrixArray", "Inconsistency between column index and its range");
       if (col[icolmin] < this->fColLwb) {
-         Info("SetMatrixArray","column index lower bound adjusted to %d",col[icolmin]);
+         Info("SetMatrixArray", "column index lower bound adjusted to %d", col[icolmin]);
          this->fColLwb = col[icolmin];
       }
-      if (col[icolmax] > this->fColLwb+this->fNcols-1) {
-         Info("SetMatrixArray","column index upper bound adjusted to %d",col[icolmax]);
-         this->fNcols = col[icolmax]-this->fColLwb+1;
+      if (col[icolmax] > this->fColLwb + this->fNcols - 1) {
+         Info("SetMatrixArray", "column index upper bound adjusted to %d", col[icolmax]);
+         this->fNcols = col[icolmax] - this->fColLwb + 1;
       }
    }
 
-   TMatrixTBase<Element>::DoubleLexSort(nr,row,col,data);
+   TMatrixTBase<Element>::DoubleLexSort(nr, row, col, data);
 
    Int_t nr_nonzeros = 0;
-   const Element *ep        = data;
-   const Element * const fp = data+nr;
+   const Element *ep = data;
+   const Element *const fp = data + nr;
 
    while (ep < fp)
-      if (*ep++ != 0.0) nr_nonzeros++;
+      if (*ep++ != 0.0)
+         nr_nonzeros++;
 
    if (nr_nonzeros != this->fNelems) {
-      if (fColIndex) { delete [] fColIndex; fColIndex = nullptr; }
-      if (fElements) { delete [] fElements; fElements = nullptr; }
+      if (fColIndex) {
+         delete[] fColIndex;
+         fColIndex = nullptr;
+      }
+      if (fElements) {
+         delete[] fElements;
+         fElements = nullptr;
+      }
       this->fNelems = nr_nonzeros;
       if (this->fNelems > 0) {
          fColIndex = new Int_t[nr_nonzeros];
@@ -1346,23 +1357,22 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t nr
       }
    }
 
-
    if (this->fNelems <= 0)
       return *this;
 
    fRowIndex[0] = 0;
    Int_t ielem = 0;
    nr_nonzeros = 0;
-   for (Int_t irow = 1; irow < this->fNrows+1; irow++) {
+   for (Int_t irow = 1; irow < this->fNrows + 1; irow++) {
       if (ielem < nr && row[ielem] - this->fRowLwb < irow) {
          while (ielem < nr) {
             if (data[ielem] != 0.0) {
-               fColIndex[nr_nonzeros] = col[ielem]-this->fColLwb;
+               fColIndex[nr_nonzeros] = col[ielem] - this->fColLwb;
                fElements[nr_nonzeros] = data[ielem];
                nr_nonzeros++;
             }
             ielem++;
-            if (ielem >= nr || row[ielem] != row[ielem-1])
+            if (ielem >= nr || row[ielem] != row[ielem - 1])
                break;
          }
       }
@@ -2136,7 +2146,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
    R__ASSERT(nr_nonzeros >= ielem);
 
    TMatrixTBase<Element>::DoubleLexSort(nr_nonzeros,rownr,colnr,pData_t);
-   SetMatrixArray(nr_nonzeros,source.GetNcols(),source.GetNrows(),rownr,colnr,pData_t);
+   SetMatrixArray(nr_nonzeros, source.GetNcols(), source.GetNrows(), rownr, colnr, pData_t);
 
    R__ASSERT(this->fNelems == fRowIndex[this->fNrowIndex-1]);
 
