@@ -56,6 +56,7 @@ class PtEtaPhiM4D {
 public :
 
    typedef ScalarType Scalar;
+   static constexpr unsigned int Dimension = 4U;
 
    // --------- Constructors ---------------
 

@@ -47,6 +47,7 @@ class Polar2D {
 public :
 
    typedef T Scalar;
+   static constexpr unsigned int Dimension = 2U;
 
    /**
       Default constructor with r=1,phi=0
