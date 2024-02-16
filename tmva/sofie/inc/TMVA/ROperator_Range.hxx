@@ -30,13 +30,12 @@ public:
       fNStart(start), fNLimit(limit), fNDelta(delta),
       fNOutput(UTILITY::Clean_name(nameOutput)) {
       if (std::is_same<T, float>::value) {
-         fType = "float";
+          fType = "float";
       } else if (std::is_same<T, int64_t>::value) {
-         fType = "int64_t";
-      } else {
-         throw
-            std::runtime_error("TMVA::SOFIE - Unsupported type by Range operator");
+          fType = "int64_t";
       }
+      static_assert( (std::is_same_v<T, float> || std::is_same_v<T, int64_t>),
+                  "TMVA::SOFIE - Unsupported type by Range operator");
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
