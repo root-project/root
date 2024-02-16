@@ -6,11 +6,14 @@ import numpy as np
 import graph_nets as gn
 from graph_nets import utils_tf
 import sonnet as snt
+#for getting time and memory
 import time
+import os
+import psutil
 
 # defining graph properties. Number of edges/modes are the maximum
-num_max_nodes=10
-num_max_edges=30
+num_max_nodes=100
+num_max_edges=300
 node_size=4
 edge_size=4
 global_size=1
@@ -18,6 +21,17 @@ LATENT_SIZE = 100
 NUM_LAYERS = 4
 processing_steps = 5
 numevts = 100
+
+verbose = False
+
+#print the used memory in MB
+def printMemory(s = "") :
+    #get memory of current process
+    pid = os.getpid()
+    python_process = psutil.Process(pid)
+    memoryUse = python_process.memory_info()[0]/(1024.*1024.)    #divide by 1024 * 1024 to get memory in MB
+    print(s,"memory:",memoryUse,"(MB)")
+
 
 # method for returning dictionary of graph data
 def get_dynamic_graph_data_dict(NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2, GLOBAL_FEATURE_SIZE=1):
@@ -101,7 +115,10 @@ class EncodeProcessDecode(snt.Module):
 ########################################################################################################
 
 # Instantiating EncodeProcessDecode Model
+
+printMemory("before instantiating")
 ep_model = EncodeProcessDecode()
+printMemory("after instantiating")
 
 # Initializing randomized input data with maximum number of nodes/edges
 GraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, node_size, edge_size, global_size)
@@ -118,7 +135,9 @@ input_core_graph_data = utils_tf.data_dicts_to_graphs_tuple([CoreGraphData])
 DecodeGraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, LATENT_SIZE, LATENT_SIZE, LATENT_SIZE)
 
 # Make prediction of GNN. This will initialize the GNN with weights
+printMemory("before first eval")
 output_gn = ep_model(input_graph_data, processing_steps)
+printMemory("after first eval")
 #print("---> Input:\n",input_graph_data)
 #print("\n\n------> Input core data:\n",input_core_graph_data)
 #print("\n\n---> Output:\n",output_gn)
@@ -165,9 +184,9 @@ tree.Branch("senders", "std::vector<int>" ,  senders)
 
 
 print("\n\nSaving data in a ROOT File:")
-h1 = ROOT.TH1D("h1","nodes output",40,1,0)
-h2 = ROOT.TH1D("h2","edges output",40,1,0)
-h3 = ROOT.TH1D("h3","global output",40,1,0)
+h1 = ROOT.TH1D("h1","GraphNet nodes output",40,1,0)
+h2 = ROOT.TH1D("h2","GraphNet edges output",40,1,0)
+h3 = ROOT.TH1D("h3","GraphNet global output",40,1,0)
 dataset = []
 for i in range(0,numevts):
     graphData = get_dynamic_graph_data_dict(node_size, edge_size, global_size)
@@ -185,7 +204,7 @@ for i in range(0,numevts):
     receivers.assign(tmp.begin(),tmp.end())
     tmp = ROOT.std.vector['int'](graphData['senders'])
     senders.assign(tmp.begin(),tmp.end())
-    if (i < 1) :
+    if (i < 1 and verbose) :
       print("Nodes - shape:",int(node_data.size()/node_size),node_size,"data: ",node_data)
       print("Edges - shape:",num_edges, edge_size,"data: ", edge_data)
       print("Globals : ",global_data)
@@ -200,6 +219,11 @@ for i in range(0,numevts):
 
 tree.Print()
 
+#do a first evaluation
+printMemory("before eval1")
+output_gnn = ep_model(dataset[0], processing_steps)
+printMemory("after eval1")
+
 start = time.time()
 firstEvent = True
 for tf_graph_data in dataset:
@@ -213,7 +237,7 @@ for tf_graph_data in dataset:
     h1.Fill(outgnn[0])
     h2.Fill(outgnn[1])
     h3.Fill(outgnn[2])
-    if (firstEvent) :
+    if (firstEvent and verbose) :
       print("Output of first event")
       print("nodes data", output_gnn[-1].nodes.numpy())
       print("edge data", output_gnn[-1].edges.numpy())
@@ -224,6 +248,7 @@ for tf_graph_data in dataset:
 end = time.time()
 
 print("time to evaluate events",end-start)
+printMemory("after eval Nevts")
 
 c1 = ROOT.TCanvas()
 c1.Divide(1,3)
