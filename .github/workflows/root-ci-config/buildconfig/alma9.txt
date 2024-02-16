@@ -1,2 +1,12 @@
 builtin_nlohmannjson=ON
 builtin_vdt=On
+builtin_gsl=On
+builtin_fftw3=On
+builtin_unuran=On
+fftw3=On
+unfold=On
+unuran=On
+mathmore=On
+tmva-cpu=On
+tmva-pymva=On
+tmva-sofie=On
