@@ -49,6 +49,8 @@ public :
 
    typedef T Scalar;
 
+   static constexpr unsigned int Dimension = 3U;
+
    /**
       Default constructor  with x=y=z=0
    */

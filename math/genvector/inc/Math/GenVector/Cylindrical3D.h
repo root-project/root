@@ -44,6 +44,7 @@ class Cylindrical3D {
 public :
 
    typedef T Scalar;
+   static constexpr unsigned int Dimension = 3U;
 
    /**
       Default constructor with rho=z=phi=0
