@@ -3,6 +3,7 @@
 
 
 /** \class TQuaternion
+    \legacy{TQuaternion, Consider using instead ROOT::Math::Quaternion.}
     \ingroup Physics
  Quaternion is a 4-component mathematic object quite convenient when dealing with
 space rotation (or reference frame transformation).

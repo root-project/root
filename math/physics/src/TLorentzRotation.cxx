@@ -3,6 +3,7 @@
 
 
 /** \class TLorentzRotation
+    \legacy{TLorentzRotation, Consider using instead ROOT::Math::LorentzRotation.}
     \ingroup Physics
 The TLorentzRotation class describes Lorentz transformations including
 Lorentz boosts and rotations (see TRotation)
