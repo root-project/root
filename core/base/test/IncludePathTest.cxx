@@ -3,13 +3,15 @@
 
 #include <string>
 
-TEST(TSystem, IncludePath) {
+TEST(TSystem, IncludePath)
+{
    ASSERT_TRUE(gSystem);
 
    gSystem->AddIncludePath("-I /some/path/with-xin-it -I ./some/relative-path");
    gSystem->AddIncludePath("-I %ROOTSYS%\\include -I ${ROOTSYS}/include");
 #ifdef WIN32
-   gSystem->AddIncludePath("-I \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\include\"");
+   gSystem->AddIncludePath(
+      "-I \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\include\"");
 #endif
 
    testing::internal::CaptureStderr();
@@ -27,4 +29,3 @@ TEST(TSystem, IncludePath) {
    gSystem->Exec("rm -f Foo_C*");
 #endif
 }
-

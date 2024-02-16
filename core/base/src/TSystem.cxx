@@ -3062,7 +3062,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
    {
-       // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
+      // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
       TRegexp rel_inc(" -I\"[^/\\\\$\\%-][^:\\s]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
