@@ -486,7 +486,7 @@ TEST_P(RDatasetSpecTest, SaveGraph)
    static const std::string expectedGraph(
       "digraph {\n"
       "\t1 [label=\"Sum\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t0 [label=\"\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+      "\t0 [label=\"TChain\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
       "\t2 [label=\"Sum\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
       "\t0 -> 1;\n"
       "\t0 -> 2;\n"
@@ -512,7 +512,7 @@ TEST(RDatasetSpecTest, Describe)
    auto res0 = df.Sum<double>("x");
    auto res1 = df.Sum<double>("w");
 
-   static const std::string expectedDescribe("Dataframe from TChain  in files\n"
+   static const std::string expectedDescribe("Dataframe from TChain in files\n"
                                              "  specTestDescribe1.root\n"
                                              "  specTestDescribe2.root\n"
                                              "with friend\n"
@@ -588,7 +588,7 @@ TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)
 
    auto rdf_1 = FromSpec("spec_ordering_samples_withFriends.json");
 
-   static const std::string expectedDescribe("Dataframe from TChain  in files\n"
+   static const std::string expectedDescribe("Dataframe from TChain in files\n"
                                              "  FromSpecTestFile2.root\n"
                                              "  FromSpecTestFile1.root\n"
                                              "with friends\n"

@@ -50,7 +50,7 @@ std::string ROOT::RDF::RInterfaceBase::DescribeDataset() const
       std::stringstream ss;
       ss << "Dataframe from " << treeType;
       if (*treeName != 0) {
-         ss << treeName;
+         ss << " " << treeName;
       }
       if (isInMemory) {
          ss << " (in-memory)";
