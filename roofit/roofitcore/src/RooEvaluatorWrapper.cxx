@@ -62,7 +62,7 @@ bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet 
 {
    outputSet.add(_evaluator->getParameters());
    if (observables) {
-      outputSet.remove(*observables);
+      outputSet.remove(*observables, /*silent*/ false, /*matchByNameOnly*/ true);
    }
    // Exclude the data variables from the parameters which are not global observables
    for (auto const &item : _dataSpans) {
