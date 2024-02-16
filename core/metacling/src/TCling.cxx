@@ -7019,9 +7019,6 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
          // link declaration.
          if (!M->LinkLibraries.size())
             continue;
-         // We have preloaded the Core module thus libCore.so
-         if (M->Name == "Core")
-            continue;
          assert(M->LinkLibraries.size() == 1);
          if (!result.empty())
             result += ' ';
