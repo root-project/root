@@ -9,7 +9,7 @@
 /// root[0] .x mathmoreIntegration.C+
 /// ~~~
 ///
-/// This tutorials require having libMathMore built with ROOT.
+/// This tutorial requires having libMathMore built with ROOT.
 ///
 /// To build mathmore you need to have a version of GSL >= 1.8 installed in your system
 /// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
