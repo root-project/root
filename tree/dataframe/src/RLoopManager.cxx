@@ -1129,7 +1129,7 @@ std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
                                      : fileNameGlob};
 
    ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
-   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBAL_REGISTRATION")};
+   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};
    if (!inFile || inFile->IsZombie())
       throw std::invalid_argument("RDataFrame: could not open file \"" + fileToOpen + "\".");
 
