@@ -2145,8 +2145,11 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
 
    R__ASSERT(nr_nonzeros >= ielem);
 
-   TMatrixTBase<Element>::DoubleLexSort(nr_nonzeros,rownr,colnr,pData_t);
-   SetMatrixArray(nr_nonzeros, source.GetNcols(), source.GetNrows(), rownr, colnr, pData_t);
+   if (source.GetNcols() != source.GetNrows()) {
+      SetMatrixArray(nr_nonzeros, source.GetNcols(), source.GetNrows(), rownr, colnr, pData_t);
+   } else {
+      SetMatrixArray(nr_nonzeros, rownr, colnr, pData_t);
+   }
 
    R__ASSERT(this->fNelems == fRowIndex[this->fNrowIndex-1]);
 
