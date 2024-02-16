@@ -11,6 +11,7 @@
  *************************************************************************/
 
 /** \class TFeldmanCousins
+    \legacy{TFeldmanCousins, Consider switching to RooStats for non-trivial cases.}
     \ingroup Physics
 
 Class to calculate the CL upper limit using
