@@ -62,18 +62,27 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc) const
 {
-   if (GetTypeName().empty() && GetStructure() == ENTupleStructure::kCollection) {
-      // For untyped collections, we have no class available to collect all the sub fields.
-      // Therefore, we create an untyped record field as an artifical binder for the collection items.
+   if (GetTypeName().empty()) {
+      // For untyped records or collections, we have no class available to collect all the sub fields.
+      // Therefore, we create an untyped record field as an artificial binder for the record itself, and in the case of
+      // collections, its items.
       std::vector<std::unique_ptr<RFieldBase>> memberFields;
       for (auto id : fLinkIds) {
          const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
          memberFields.emplace_back(memberDesc.CreateField(ntplDesc));
       }
-      auto recordField = std::make_unique<RRecordField>("_0", memberFields);
-      auto collectionField = std::make_unique<RVectorField>(GetFieldName(), std::move(recordField));
-      collectionField->SetOnDiskId(fFieldId);
-      return collectionField;
+      if (GetStructure() == ENTupleStructure::kRecord) {
+         auto recordField = std::make_unique<RRecordField>(GetFieldName(), memberFields);
+         recordField->SetOnDiskId(fFieldId);
+         return recordField;
+      } else if (GetStructure() == ENTupleStructure::kCollection) {
+         auto recordField = std::make_unique<RRecordField>("_0", memberFields);
+         auto collectionField = std::make_unique<RVectorField>(GetFieldName(), std::move(recordField));
+         collectionField->SetOnDiskId(fFieldId);
+         return collectionField;
+      } else {
+         throw RException(R__FAIL("unknown field type for field \"" + GetFieldName() + "\""));
+      }
    }
 
    auto field = RFieldBase::Create(GetFieldName(), GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias()).Unwrap();
