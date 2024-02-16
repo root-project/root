@@ -1,6 +1,7 @@
 \defgroup MinuitOld TMinuit
 \ingroup Math
 \brief The Minuit Minimization package.
+\deprecated Consider switching to Minuit2
 
 Direct C++ implementation of the Minuit minimization package.
 
