@@ -37,6 +37,8 @@ std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
 
 \class TLinearFitter
 
+\legacy{TLinearFitter, Consider switching to Minuit2.}
+
 \ingroup MinuitOld
 
 The Linear Fitter - For fitting functions that are LINEAR IN PARAMETERS
