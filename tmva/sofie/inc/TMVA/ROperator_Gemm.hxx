@@ -46,24 +46,20 @@ namespace SOFIE{
       ROperator_Gemm(){}
       ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameY):
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
-         fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY)) {
-
-         if (std::is_same<T, float>::value) {
-            fType = "float";
-         }else{
-            throw std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a gemm operator");
-         }
+         fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY))
+      {
+         fType = "float";
+         static_assert(std::is_same_v<T, float>,
+                  "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
       }
 
       ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameC, std::string nameY):
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
-         fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY)) {
-
-         if (std::is_same<T, float>::value) {
-            fType = "float";
-         }else{
-            throw std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a gemm operator");
-         }
+         fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY))
+      {
+         fType = "float";
+         static_assert(std::is_same_v<T, float>,
+                  "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
       }
 
       std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
