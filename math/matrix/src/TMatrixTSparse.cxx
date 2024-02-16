@@ -65,7 +65,14 @@
     nr entries . Only the entries with non-zero data[i] value are
     inserted. Be aware that the input data array will be modified
     inside the routine for doing the necessary sorting of indices !
- 4. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
+ 4. SetMatrixArray(Int_t nr,Int_t nrows,Int_t ncols,Int_t *irow,
+    Int_t *icol,Element *data) where it is expected that the irow,
+    icol and data array contain nr entries . It allows to reshape
+    the matrix according to nrows and ncols. Only the entries with
+    non-zero data[i] value are inserted. Be aware that the input
+    data array will be modified inside the routine for doing the
+    necessary sorting of indices !
+ 5. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
     This is a very flexible method but expensive :
     - if no entry for slot (i,j) is found in the sparse index table
       it will be entered, which involves some memory management !
@@ -2091,7 +2098,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Transpose a matrix.
+/// Transpose a matrix. Set the matrix to ncols x nrows if nrows != ncols.
 
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse<Element> &source)
@@ -2099,12 +2106,6 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(source.IsValid());
-
-      // if (this->fNrows  != source.GetNcols()  || this->fNcols  != source.GetNrows() ||
-      //     this->fRowLwb != source.GetColLwb() || this->fColLwb != source.GetRowLwb()) {
-      //    Error("Transpose","matrix has wrong shape");
-      //    return *this;
-      // }
 
       if (source.NonZeros() <= 0)
          return *this;
