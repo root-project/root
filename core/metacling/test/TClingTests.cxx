@@ -169,6 +169,45 @@ TEST_F(TClingTests, GetClassSharedLibs)
    // GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >")
    //    != GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float>>")
    // note the missing space.
+
+   lib = GetLibs("TArray");
+   EXPECT_EQ("Core", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TInterpreter");
+   EXPECT_EQ("Core", MakeLibNamePlatformIndependent(lib));
+   
+   lib = GetLibs("TRandom");
+   EXPECT_EQ("MathCore", MakeLibNamePlatformIndependent(lib));
+   
+   lib = GetLibs("TTree");
+   EXPECT_EQ("Tree", MakeLibNamePlatformIndependent(lib));
+   
+   lib = GetLibs("TTreeViewer");
+   EXPECT_EQ("TreeViewer", MakeLibNamePlatformIndependent(lib));
+   
+   lib = GetLibs("TGraph");
+   EXPECT_EQ("Hist", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TGWindow");
+   EXPECT_EQ("Gui", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TPad");
+   EXPECT_EQ("Gpad", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TArrow");
+   EXPECT_EQ("Graf", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TImage");
+   EXPECT_EQ("Graf", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TASImage");
+   EXPECT_EQ("ASImage", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TSpectrum");
+   EXPECT_EQ("Spectrum", MakeLibNamePlatformIndependent(lib));
+
+   lib = GetLibs("TFile");
+   EXPECT_EQ("RIO", MakeLibNamePlatformIndependent(lib));
 }
 
 static std::string MakeDepLibsPlatformIndependent(const std::string &libs) {
