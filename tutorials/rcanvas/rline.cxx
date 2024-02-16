@@ -44,8 +44,8 @@ void rline()
 
    canvas->SetSize(900, 700);
 
-   if (canvas->SaveAs("line.png"))
-      printf("Store RCanvas in line.png\n");
+   // if (canvas->SaveAs("line.png"))
+   //    printf("Store RCanvas in line.png\n");
 
    canvas->Show();
 }
