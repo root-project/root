@@ -2,6 +2,7 @@
 // Author: Jan Conrad
 
 /** \class TRolke
+    \legacy{TRolke, Consider switching to RooStats.}
     \ingroup Physics
  This class computes confidence intervals for the rate of a Poisson
  process in the presence of uncertain background and/or efficiency.

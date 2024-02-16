@@ -2,6 +2,7 @@
 // Author: Rene Brun , Valerio Filippini  06/09/2000
 
 /** \class TGenPhaseSpace
+    \legacy{TGenPhaseSpace, No alternative classes are currently available.}
     \ingroup Physics
 
  Utility class to generate n-body event,
