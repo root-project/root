@@ -196,7 +196,6 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    count_NLL_components(nll.get());
 }
 #endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_P(RooRealL, setVal)
 {
@@ -209,7 +208,12 @@ TEST_P(RooRealL, setVal)
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
-   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
+
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
                                             std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
@@ -239,11 +243,13 @@ TEST_P(RooRealL, setVal)
       std::cout << "failed test had seed = " << std::get<0>(GetParam()) << std::endl;
    }
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RooRealL, ::testing::Values(2, 3)); // random seed
 
 class RealLVsMPFE : public ::testing::TestWithParam<std::tuple<std::size_t>> {};
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_P(RealLVsMPFE, getVal)
 {
    // Compare our MP NLL to actual RooRealMPFE results using the same strategies.
@@ -261,7 +267,11 @@ TEST_P(RealLVsMPFE, getVal)
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
 
-   std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data)};
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
+   std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
 
    auto mpfe_result = nll_mpfe->getVal();
 
@@ -275,6 +285,7 @@ TEST_P(RealLVsMPFE, getVal)
       std::cout << "failed test had seed = " << std::get<0>(GetParam()) << std::endl;
    }
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_P(RealLVsMPFE, minimize)
 {
