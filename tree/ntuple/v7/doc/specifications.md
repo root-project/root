@@ -880,7 +880,7 @@ The valid types are `std::uint32_t` and `std::uint64_t`.
 
 A field with the structural role 0x05 ("unsplit") represents an object serialized by the ROOT streamer in unsplit mode.
 It can have any type supported by TClass (even types that are not available in the native RNTuple type system).
-The first (principle) column is of type [Split]Index[32|64].
+The first (principal) column is of type [Split]Index[32|64].
 The second column is of type Byte.
 
 ## Limits
