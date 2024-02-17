@@ -58,7 +58,7 @@ namespace Internal {
 /// This field owns the collection offset field but instead of exposing the collection offsets it exposes
 /// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
-class RRDFCardinalityField : public ROOT::Experimental::RFieldBase {
+class RRDFCardinalityField final : public ROOT::Experimental::RFieldBase {
 protected:
    std::unique_ptr<ROOT::Experimental::RFieldBase> CloneImpl(std::string_view /* newName */) const final
    {
