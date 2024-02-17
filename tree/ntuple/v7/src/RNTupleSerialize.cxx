@@ -578,19 +578,13 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStr
 {
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
    switch (structure) {
-      case ENTupleStructure::kLeaf:
-         return SerializeUInt16(0x00, buffer);
-      case ENTupleStructure::kCollection:
-         return SerializeUInt16(0x01, buffer);
-      case ENTupleStructure::kRecord:
-         return SerializeUInt16(0x02, buffer);
-      case ENTupleStructure::kVariant:
-         return SerializeUInt16(0x03, buffer);
-      case ENTupleStructure::kReference:
-         return SerializeUInt16(0x04, buffer);
-      case ENTupleStructure::kUnsplit: return SerializeUInt16(0x05, buffer);
-      default:
-         throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
+   case ENTupleStructure::kLeaf: return SerializeUInt16(0x00, buffer);
+   case ENTupleStructure::kCollection: return SerializeUInt16(0x01, buffer);
+   case ENTupleStructure::kRecord: return SerializeUInt16(0x02, buffer);
+   case ENTupleStructure::kVariant: return SerializeUInt16(0x03, buffer);
+   case ENTupleStructure::kReference: return SerializeUInt16(0x04, buffer);
+   case ENTupleStructure::kUnsplit: return SerializeUInt16(0x05, buffer);
+   default: throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
    }
 }
 
@@ -602,24 +596,13 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    std::uint16_t onDiskValue;
    auto result = DeserializeUInt16(buffer, onDiskValue);
    switch (onDiskValue) {
-      case 0x00:
-         structure = ENTupleStructure::kLeaf;
-         break;
-      case 0x01:
-         structure = ENTupleStructure::kCollection;
-         break;
-      case 0x02:
-         structure = ENTupleStructure::kRecord;
-         break;
-      case 0x03:
-         structure = ENTupleStructure::kVariant;
-         break;
-      case 0x04:
-         structure = ENTupleStructure::kReference;
-         break;
-      case 0x05: structure = ENTupleStructure::kUnsplit; break;
-      default:
-         return R__FAIL("unexpected on-disk field structure value");
+   case 0x00: structure = ENTupleStructure::kLeaf; break;
+   case 0x01: structure = ENTupleStructure::kCollection; break;
+   case 0x02: structure = ENTupleStructure::kRecord; break;
+   case 0x03: structure = ENTupleStructure::kVariant; break;
+   case 0x04: structure = ENTupleStructure::kReference; break;
+   case 0x05: structure = ENTupleStructure::kUnsplit; break;
+   default: return R__FAIL("unexpected on-disk field structure value");
    }
    return result;
 }
