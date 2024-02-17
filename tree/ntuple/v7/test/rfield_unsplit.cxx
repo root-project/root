@@ -45,4 +45,5 @@ TEST(RField, UnsplitMember)
    EXPECT_FLOAT_EQ(1.0, ptrUnsplitMember->a);
    EXPECT_EQ(1u, ptrUnsplitMember->v.size());
    EXPECT_FLOAT_EQ(2.0, ptrUnsplitMember->v.at(0).a);
+   EXPECT_EQ(0u, ptrUnsplitMember->v.at(0).v.size());
 }
