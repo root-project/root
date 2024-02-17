@@ -85,6 +85,9 @@ A field is a serializable C++ type or a container for a collection of sub fields
 type-safe descendants provide the object to column mapper. They map C++ objects to primitive columns.  The
 mapping is trivial for simple types such as 'double'. Complex types resolve to multiple primitive columns.
 The field knows based on its type and the field name the type(s) and name(s) of the columns.
+
+Note: the class hierarchy starting at RFieldBase is not meant to be extended by user-provided child classes.
+This can and is only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
@@ -699,7 +702,7 @@ public:
 
 /// The container field for an ntuple model, which itself has no physical representation.
 /// Therefore, the zero field must not be connected to a page source or sink.
-class RFieldZero : public RFieldBase {
+class RFieldZero final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
    void GenerateColumnsImpl() final {}
@@ -1462,8 +1465,8 @@ public:
 };
 
 /// Classes with dictionaries that can be inspected by TClass
-template <typename T, typename=void>
-class RField : public RClassField {
+template <typename T, typename = void>
+class RField final : public RClassField {
 protected:
    void ConstructValue(void *where) const final
    {
@@ -1560,7 +1563,7 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 /// };
 /// ```
 template <typename T>
-class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> : public RProxiedCollectionField {
+class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> final : public RProxiedCollectionField {
 protected:
    void ConstructValue(void *where) const final { new (where) T(); }
 
@@ -1576,7 +1579,7 @@ public:
 };
 
 /// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
-class RCollectionField : public ROOT::Experimental::RFieldBase {
+class RCollectionField final : public ROOT::Experimental::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
    std::shared_ptr<RCollectionNTupleWriter> fCollectionWriter;
@@ -1710,7 +1713,7 @@ public:
 };
 
 template <>
-class RField<ClusterSize_t> : public RFieldBase {
+class RField<ClusterSize_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1759,7 +1762,7 @@ public:
 };
 
 template <typename SizeT>
-class RField<RNTupleCardinality<SizeT>> : public RCardinalityField {
+class RField<RNTupleCardinality<SizeT>> final : public RCardinalityField {
 protected:
    std::unique_ptr<ROOT::Experimental::RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1823,7 +1826,7 @@ public:
 };
 
 template <>
-class RField<bool> : public RFieldBase {
+class RField<bool> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1863,7 +1866,7 @@ public:
 };
 
 template <>
-class RField<float> : public RFieldBase {
+class RField<float> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1905,7 +1908,7 @@ public:
 };
 
 template <>
-class RField<double> : public RFieldBase {
+class RField<double> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1948,7 +1951,7 @@ public:
 };
 
 template <>
-class RField<std::byte> : public RFieldBase {
+class RField<std::byte> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1987,7 +1990,7 @@ public:
 };
 
 template <>
-class RField<char> : public RFieldBase {
+class RField<char> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2027,7 +2030,7 @@ public:
 };
 
 template <>
-class RField<std::int8_t> : public RFieldBase {
+class RField<std::int8_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2067,7 +2070,7 @@ public:
 };
 
 template <>
-class RField<std::uint8_t> : public RFieldBase {
+class RField<std::uint8_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2107,7 +2110,7 @@ public:
 };
 
 template <>
-class RField<std::int16_t> : public RFieldBase {
+class RField<std::int16_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2147,7 +2150,7 @@ public:
 };
 
 template <>
-class RField<std::uint16_t> : public RFieldBase {
+class RField<std::uint16_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2187,7 +2190,7 @@ public:
 };
 
 template <>
-class RField<std::int32_t> : public RFieldBase {
+class RField<std::int32_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2227,7 +2230,7 @@ public:
 };
 
 template <>
-class RField<std::uint32_t> : public RFieldBase {
+class RField<std::uint32_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2269,7 +2272,7 @@ public:
 };
 
 template <>
-class RField<std::uint64_t> : public RFieldBase {
+class RField<std::uint64_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2309,7 +2312,7 @@ public:
 };
 
 template <>
-class RField<std::int64_t> : public RFieldBase {
+class RField<std::int64_t> final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2349,7 +2352,7 @@ public:
 };
 
 template <>
-class RField<std::string> : public RFieldBase {
+class RField<std::string> final : public RFieldBase {
 private:
    ClusterSize_t fIndex;
 
@@ -2404,7 +2407,7 @@ public:
 };
 
 template <typename ItemT, std::size_t N>
-class RField<ItemT[N]> : public RField<std::array<ItemT, N>> {
+class RField<ItemT[N]> final : public RField<std::array<ItemT, N>> {
 public:
    explicit RField(std::string_view name) : RField<std::array<ItemT, N>>(name) {}
    RField(RField &&other) = default;
@@ -2433,7 +2436,7 @@ public:
 };
 
 template <typename ItemT>
-class RField<std::unordered_set<ItemT>> : public RSetField {
+class RField<std::unordered_set<ItemT>> final : public RSetField {
    using ContainerT = typename std::unordered_set<ItemT>;
 
 protected:
@@ -2453,7 +2456,7 @@ public:
 };
 
 template <typename KeyT, typename ValueT>
-class RField<std::map<KeyT, ValueT>> : public RMapField {
+class RField<std::map<KeyT, ValueT>> final : public RMapField {
    using ContainerT = typename std::map<KeyT, ValueT>;
 
 protected:
@@ -2479,7 +2482,7 @@ public:
 };
 
 template <typename KeyT, typename ValueT>
-class RField<std::unordered_map<KeyT, ValueT>> : public RMapField {
+class RField<std::unordered_map<KeyT, ValueT>> final : public RMapField {
    using ContainerT = typename std::unordered_map<KeyT, ValueT>;
 
 protected:
@@ -2505,7 +2508,7 @@ public:
 };
 
 template <typename... ItemTs>
-class RField<std::variant<ItemTs...>> : public RVariantField {
+class RField<std::variant<ItemTs...>> final : public RVariantField {
    using ContainerT = typename std::variant<ItemTs...>;
 private:
    template <typename HeadT, typename... TailTs>
@@ -2541,7 +2544,7 @@ public:
 };
 
 template <typename ItemT>
-class RField<std::vector<ItemT>> : public RVectorField {
+class RField<std::vector<ItemT>> final : public RVectorField {
    using ContainerT = typename std::vector<ItemT>;
 
 protected:
@@ -2561,7 +2564,7 @@ public:
 
 // std::vector<bool> is a template specialization and needs special treatment
 template <>
-class RField<std::vector<bool>> : public RFieldBase {
+class RField<std::vector<bool>> final : public RFieldBase {
 private:
    ClusterSize_t fNWritten{0};
 
@@ -2605,7 +2608,7 @@ public:
 };
 
 template <typename ItemT>
-class RField<ROOT::VecOps::RVec<ItemT>> : public RRVecField {
+class RField<ROOT::VecOps::RVec<ItemT>> final : public RRVecField {
    using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
@@ -2662,7 +2665,7 @@ public:
 };
 
 template <typename T1, typename T2>
-class RField<std::pair<T1, T2>> : public RPairField {
+class RField<std::pair<T1, T2>> final : public RPairField {
    using ContainerT = typename std::pair<T1,T2>;
 private:
    template <typename Ty1, typename Ty2>
@@ -2707,7 +2710,7 @@ public:
 };
 
 template <typename... ItemTs>
-class RField<std::tuple<ItemTs...>> : public RTupleField {
+class RField<std::tuple<ItemTs...>> final : public RTupleField {
    using ContainerT = typename std::tuple<ItemTs...>;
 private:
    template <typename HeadT, typename... TailTs>
@@ -2778,7 +2781,7 @@ public:
 };
 
 template <std::size_t N>
-class RField<std::bitset<N>> : public RBitsetField {
+class RField<std::bitset<N>> final : public RBitsetField {
 public:
    static std::string TypeName() { return "std::bitset<" + std::to_string(N) + ">"; }
    explicit RField(std::string_view name) : RBitsetField(name, N) {}
@@ -2788,7 +2791,7 @@ public:
 };
 
 template <typename ItemT>
-class RField<std::unique_ptr<ItemT>> : public RUniquePtrField {
+class RField<std::unique_ptr<ItemT>> final : public RUniquePtrField {
 public:
    static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
@@ -2798,7 +2801,7 @@ public:
 };
 
 template <typename ItemT>
-class RField<std::atomic<ItemT>> : public RAtomicField {
+class RField<std::atomic<ItemT>> final : public RAtomicField {
 public:
    static std::string TypeName() { return "std::atomic<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RAtomicField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
