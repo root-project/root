@@ -105,7 +105,7 @@ private:
    }
 
    template <typename T>
-   void EnsureMatchingType(RFieldToken token) const
+   void EnsureMatchingType(RFieldToken token [[maybe_unused]]) const
    {
       if constexpr (!std::is_void_v<T>) {
          const auto &v = fValues[token.fIndex];
