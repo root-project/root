@@ -423,7 +423,7 @@ void TBufferSQL::WriteCharP(const Char_t *str)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const bool *b, Int_t n)
+void TBufferSQL::WriteFastArray(const bool *b, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += b[i];
@@ -435,7 +435,7 @@ void TBufferSQL::WriteFastArray(const bool *b, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
+void TBufferSQL::WriteFastArray(const Char_t *c, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += (Short_t)c[i];
@@ -447,7 +447,7 @@ void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
+void TBufferSQL::WriteFastArrayString(const Char_t *c, Long64_t /* n */)
 {
    (*fInsertQuery) += "\"";
    (*fInsertQuery) += c;
@@ -458,7 +458,7 @@ void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const UChar_t *uc, Int_t n)
+void TBufferSQL::WriteFastArray(const UChar_t *uc, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += uc[i];
@@ -470,7 +470,7 @@ void TBufferSQL::WriteFastArray(const UChar_t *uc, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Short_t *h, Int_t n)
+void TBufferSQL::WriteFastArray(const Short_t *h, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += h[i];
@@ -482,7 +482,7 @@ void TBufferSQL::WriteFastArray(const Short_t *h, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const UShort_t *us, Int_t n)
+void TBufferSQL::WriteFastArray(const UShort_t *us, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += us[i];
@@ -494,7 +494,7 @@ void TBufferSQL::WriteFastArray(const UShort_t *us, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
+void TBufferSQL::WriteFastArray(const Int_t     *ii, Long64_t n)
 {
     //   std::cerr << "Column: " <<*fIter << "   i:" << *ii << std::endl;
    for(int i=0; i<n; ++i) {
@@ -507,7 +507,7 @@ void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const UInt_t *ui, Int_t n)
+void TBufferSQL::WriteFastArray(const UInt_t *ui, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ui[i];
@@ -519,7 +519,7 @@ void TBufferSQL::WriteFastArray(const UInt_t *ui, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Long_t    *l, Int_t n)
+void TBufferSQL::WriteFastArray(const Long_t    *l, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery)+= l[i];
@@ -531,7 +531,7 @@ void TBufferSQL::WriteFastArray(const Long_t    *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const ULong_t   *ul, Int_t n)
+void TBufferSQL::WriteFastArray(const ULong_t   *ul, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ul[i];
@@ -543,7 +543,7 @@ void TBufferSQL::WriteFastArray(const ULong_t   *ul, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Long64_t  *l, Int_t n)
+void TBufferSQL::WriteFastArray(const Long64_t  *l, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += l[i];
@@ -555,7 +555,7 @@ void TBufferSQL::WriteFastArray(const Long64_t  *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const ULong64_t *ul, Int_t n)
+void TBufferSQL::WriteFastArray(const ULong64_t *ul, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ul[i];
@@ -567,7 +567,7 @@ void TBufferSQL::WriteFastArray(const ULong64_t *ul, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Float_t   *f, Int_t n)
+void TBufferSQL::WriteFastArray(const Float_t   *f, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += f[i];
@@ -579,7 +579,7 @@ void TBufferSQL::WriteFastArray(const Float_t   *f, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
+void TBufferSQL::WriteFastArray(const Double_t  *d, Long64_t n)
 {
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += d[i];
@@ -591,17 +591,17 @@ void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-void TBufferSQL::WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)
+void TBufferSQL::WriteFastArray(void*, const TClass*, Long64_t, TMemberStreamer *)
 {
-   Fatal("WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)","Not implemented yet");
+   Fatal("WriteFastArray(void*, const TClass*, Long64_t, TMemberStreamer *)","Not implemented yet");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
-Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Int_t, bool, TMemberStreamer*)
+Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Long64_t, bool, TMemberStreamer*)
 {
-   Fatal("WriteFastArray(void **, const TClass*, Int_t, bool, TMemberStreamer*)","Not implemented yet");
+   Fatal("WriteFastArray(void **, const TClass*, Long64_t, bool, TMemberStreamer*)","Not implemented yet");
    return 0;
 }
 

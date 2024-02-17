@@ -1944,16 +1944,16 @@ void TBufferFile::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n bools into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Bool_t *b, Int_t n)
+void TBufferFile::WriteFastArray(const Bool_t *b, Long64_t n)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(UChar_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(UChar_t)*n;
@@ -1970,16 +1970,16 @@ void TBufferFile::WriteFastArray(const Bool_t *b, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n characters into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Char_t *c, Int_t n)
+void TBufferFile::WriteFastArray(const Char_t *c, Long64_t n)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Char_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Char_t)*n;
@@ -1991,9 +1991,9 @@ void TBufferFile::WriteFastArray(const Char_t *c, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n characters into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArrayString(const Char_t *c, Int_t n)
+void TBufferFile::WriteFastArrayString(const Char_t *c, Long64_t n)
 {
    if (n < 255) {
       *this << (UChar_t)n;
@@ -2006,8 +2006,8 @@ void TBufferFile::WriteFastArrayString(const Char_t *c, Int_t n)
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Char_t)*n;
@@ -2019,16 +2019,16 @@ void TBufferFile::WriteFastArrayString(const Char_t *c, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n shorts into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Short_t *h, Int_t n)
+void TBufferFile::WriteFastArray(const Short_t *h, Long64_t n)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Short_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Short_t)*n;
@@ -2050,17 +2050,17 @@ void TBufferFile::WriteFastArray(const Short_t *h, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n ints into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Int_t *ii, Int_t n)
+void TBufferFile::WriteFastArray(const Int_t *ii, Long64_t n)
 {
    
    constexpr Int_t dataWidth = 4;
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Int_t)*n;
@@ -2082,16 +2082,16 @@ void TBufferFile::WriteFastArray(const Int_t *ii, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n longs into the I/O buffer with 8-byte width.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Long_t *ll, Int_t n)
+void TBufferFile::WriteFastArray(const Long_t *ll, Long64_t n)
 {
    constexpr Int_t dataWidth = 8;
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = 8*n;
@@ -2104,16 +2104,16 @@ void TBufferFile::WriteFastArray(const Long_t *ll, Int_t n)
 /// Write array of n unsigned longs into the I/O buffer with 8-byte width.
 /// This is an explicit case for unsigned longs since signed longs
 /// have a special tobuf().
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const ULong_t *ll, Int_t n)
+void TBufferFile::WriteFastArray(const ULong_t *ll, Long64_t n)
 {
    constexpr Int_t dataWidth = 8;
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = 8*n;
@@ -2124,16 +2124,16 @@ void TBufferFile::WriteFastArray(const ULong_t *ll, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n long longs into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Long64_t *ll, Int_t n)
+void TBufferFile::WriteFastArray(const Long64_t *ll, Long64_t n)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Long64_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Long64_t)*n;
@@ -2150,16 +2150,16 @@ void TBufferFile::WriteFastArray(const Long64_t *ll, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n floats into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Float_t *f, Int_t n)
+void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Float_t)*n;
@@ -2181,16 +2181,16 @@ void TBufferFile::WriteFastArray(const Float_t *f, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n doubles into the I/O buffer.
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(const Double_t *d, Int_t n)
+void TBufferFile::WriteFastArray(const Double_t *d, Long64_t n)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Double_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Double_t)*n;
@@ -2208,16 +2208,16 @@ void TBufferFile::WriteFastArray(const Double_t *d, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n floats (as truncated float) into the I/O buffer.
 /// see comments about Float16_t encoding at TBufferFile::WriteFloat16
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele)
+void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerElement *ele)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Float_t)*n;
@@ -2266,16 +2266,16 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n doubles (as float) into the I/O buffer.
 /// see comments about Double32_t encoding at TBufferFile::WriteDouble32
-/// \note Operation throws error in case of underflow or overflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele)
+void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreamerElement *ele)
 {
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit).  %d elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Float_t)*n;
@@ -2331,9 +2331,9 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
 ////////////////////////////////////////////////////////////////////////////////
 /// Write an array of object starting at the address 'start' and of length 'n'
 /// the objects in the array are assumed to be of class 'cl'
-/// \note Operation throws error in case of underflow
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
+void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Long64_t n,
                                  TMemberStreamer *streamer)
 {
    if (streamer) {
@@ -2345,8 +2345,8 @@ void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
    if (!n) n=1;
    else if (n < 0)
    {
-      Fatal("WriteFastArray", "Negative number of elements %d", n);
-      return; // In case the user re-route the error handler to not die when Fatal is called)
+      Fatal("WriteFastArray", "Negative number of elements %lld", n);
+      return; // In case the user re-route the error handler to not die when Fatal is called
    }
    int size = cl->Size();
 
@@ -2364,7 +2364,7 @@ void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
 ///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 ///   - -1: underflow, operation skipped
 
-Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
+Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Long64_t n,
                                   Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // if isPreAlloc is true (data member has a ->) we can assume that the pointer
