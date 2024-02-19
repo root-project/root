@@ -339,11 +339,11 @@ void TMVA::PDF::BuildSplinePDF()
       break;
 
    case kSpline1:
-      fSpline = new TMVA::TSpline1( "spline1", new TGraph(*fGraph) );
+      fSpline = new TMVA::TSpline1( "spline1", fGraph ); //TSpline1 only copies graph points
       break;
 
    case kSpline2:
-      fSpline = new TMVA::TSpline2( "spline2", new TGraph(*fGraph) );
+      fSpline = new TMVA::TSpline2( "spline2", fGraph ); //TSpline2 only copies graph points
       break;
 
    case kSpline3:
@@ -356,7 +356,7 @@ void TMVA::PDF::BuildSplinePDF()
 
    default:
       Log() << kWARNING << "No valid interpolation method given! Use Spline2" << Endl;
-      fSpline = new TMVA::TSpline2( "spline2", new TGraph(*fGraph) );
+      fSpline = new TMVA::TSpline2( "spline2", fGraph );
       Log() << kFATAL << " Well.. .thinking about it, I better quit so you notice you are forced to fix the mistake " << Endl;
       std::exit(1);
    }
