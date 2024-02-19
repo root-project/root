@@ -87,7 +87,7 @@ mapping is trivial for simple types such as 'double'. Complex types resolve to m
 The field knows based on its type and the field name the type(s) and name(s) of the columns.
 
 Note: the class hierarchy starting at RFieldBase is not meant to be extended by user-provided child classes.
-This can and is only be partially enforced through C++.
+This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
