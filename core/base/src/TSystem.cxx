@@ -3041,11 +3041,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // Calculate the -I lines
    TString includes = GetIncludePath();
+   includes.ReplaceAll("-I ", "-I");
    includes.Prepend(' ');
 
    {
       // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-      TRegexp rel_inc(" -I[^\"/\\$%-][^:-]+");
+      TRegexp rel_inc(" -I[^\"/\\\\$\\%-][^:\\s]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
       while( len != 0 ) {
@@ -3053,15 +3054,16 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          sub.Remove(0,3); // Remove ' -I'
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I\"");
-         sub.Chop(); // Remove trailing space (i.e between the -Is ...
+         if (sub.EndsWith(" "))
+            sub.Chop(); // Remove trailing space (i.e between the -Is ...
          sub.Append("\" ");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
       }
    }
    {
-       // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
-      TRegexp rel_inc(" -I\"[^/\\$%-][^:-]+");
+      // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
+      TRegexp rel_inc(" -I\"[^/\\\\$\\%-][^:\\s]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
       while( len != 0 ) {
