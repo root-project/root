@@ -59,20 +59,6 @@ enum class ENTupleInfo {
    kMetrics, // internals performance counters, requires that EnableMetrics() was called
 };
 
-#ifdef R__USE_IMT
-class TTaskGroup;
-class RNTupleImtTaskScheduler : public Internal::RPageStorage::RTaskScheduler {
-private:
-   std::unique_ptr<TTaskGroup> fTaskGroup;
-public:
-   RNTupleImtTaskScheduler();
-   ~RNTupleImtTaskScheduler() override = default;
-   void Reset() final;
-   void AddTask(const std::function<void(void)> &taskFunc) final;
-   void Wait() final;
-};
-#endif
-
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleReader

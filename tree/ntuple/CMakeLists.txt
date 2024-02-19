@@ -27,6 +27,7 @@ HEADERS
   ROOT/RNTuple.hxx
   ROOT/RNTupleAnchor.hxx
   ROOT/RNTupleDescriptor.hxx
+  ROOT/RNTupleImtTaskScheduler.hxx
   ROOT/RNTupleMerger.hxx
   ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
