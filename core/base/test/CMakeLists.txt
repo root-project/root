@@ -25,3 +25,6 @@ ROOT_ADD_GTEST(CoreBaseTests
   LIBRARIES ${extralibs} RIO Core)
 
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
+
+configure_file(Foo.C Foo.C COPYONLY)
+ROOT_ADD_GTEST(IncludePathTest IncludePathTest.cxx LIBRARIES Core)
