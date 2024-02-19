@@ -228,7 +228,7 @@ protected:
    // Special concatenation constructor
    TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2);
    void           AssertElement(Ssiz_t nc) const; // Index in range
-   void           Clobber(Ssiz_t nc);             // Remove old contents
+   Ssiz_t         Clobber(Ssiz_t nc);             // Remove old contents
    void           InitChar(char c);               // Initialize from char
 
    enum { kAlignment = 16 };
