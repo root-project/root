@@ -234,7 +234,12 @@ TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
    }
    if (!a1) n1 = 0;
    if (!a2) n2 = 0;
-   Ssiz_t tot = n1+n2;
+   Long64_t tot = static_cast<Long64_t>(n1)+n2; // Final string length, use 64-bit long instead of 32-bit int to check for overflows
+   if (tot > MaxSize()) {
+      Error("TString::TString", "Too large number of characters!");
+      Zero();
+      return;
+   }
    char *data = Init(tot, tot);
    if (a1) memcpy(data,    a1, n1);
    if (a2) memcpy(data+n1, a2, n2);
@@ -398,7 +403,7 @@ TString& TString::Append(char c, Ssiz_t rep)
       return *this;
    }
    Ssiz_t len = Length();
-   Long64_t tot = static_cast<Long64_t>(len) + rep;  // Final string length
+   Long64_t tot = static_cast<Long64_t>(len) + rep;  // Final string length, use 64-bit long instead of 32-bit int to check for overflows
 
    if (tot > MaxSize()) {
       Fatal("TString::Append", "rep too large (%d, max = %d)", rep, MaxSize()-len);
@@ -975,7 +980,7 @@ TString& TString::Prepend(char c, Ssiz_t rep)
       return *this;
 
    Ssiz_t len = Length();
-   Long64_t tot = static_cast<Long64_t>(len) + rep;  // Final string length
+   Long64_t tot = static_cast<Long64_t>(len) + rep;  // Final string length, use 64-bit long instead of 32-bit int to check for overflows
 
    if (tot > MaxSize()) {
       Fatal("TString::Prepend", "rep too large (%d, max = %d)", rep, MaxSize()-len);
@@ -1031,7 +1036,11 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
    n1 = TMath::Min(n1, len - pos);
    if (!cs) n2 = 0;
 
-   Ssiz_t tot = len - n1 + n2;  // Final string length
+   Long64_t tot = static_cast<Long64_t>(len) - n1 + n2;  // Final string length, use 64-bit long instead of 32-bit int to check for overflows
+   if (tot > MaxSize()) {
+      Error("TString::Replace", "Too large number of characters!");
+      return *this;
+   }
    Ssiz_t rem = len - n1 - pos; // Length of remnant at end of string
 
    Ssiz_t capac = Capacity();
