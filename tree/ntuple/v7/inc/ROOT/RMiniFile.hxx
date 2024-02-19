@@ -162,10 +162,16 @@ private:
    void WriteBareFileSkeleton(int defaultCompression);
 
 public:
+   /// For testing purposes, RNTuple data can be written into a bare file container instead of a ROOT file
+   enum class EContainerFormat {
+      kTFile, // ROOT TFile
+      kBare,  // A thin envelope supporting a single RNTuple only
+   };
+
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
    /// Uses a C stream for writing
    static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path, int defaultCompression,
-                                      ENTupleContainerFormat containerFormat);
+                                      EContainerFormat containerFormat);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
    static RNTupleFileWriter *Append(std::string_view ntupleName, TFile &file);
 
