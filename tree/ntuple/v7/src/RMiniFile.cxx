@@ -1289,9 +1289,9 @@ ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter()
 {
 }
 
-
-ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(
-   std::string_view ntupleName, std::string_view path, int defaultCompression, ENTupleContainerFormat containerFormat)
+ROOT::Experimental::Internal::RNTupleFileWriter *
+ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::string_view path,
+                                                          int defaultCompression, EContainerFormat containerFormat)
 {
    std::string fileName(path);
    size_t idxDirSep = fileName.find_last_of("\\/");
@@ -1310,10 +1310,8 @@ ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::R
    writer->fFileName = fileName;
 
    switch (containerFormat) {
-   case ENTupleContainerFormat::kTFile:
-      writer->WriteTFileSkeleton(defaultCompression);
-      break;
-   case ENTupleContainerFormat::kBare:
+   case EContainerFormat::kTFile: writer->WriteTFileSkeleton(defaultCompression); break;
+   case EContainerFormat::kBare:
       writer->fIsBare = true;
       writer->WriteBareFileSkeleton(defaultCompression);
       break;

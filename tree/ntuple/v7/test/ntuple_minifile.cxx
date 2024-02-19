@@ -26,7 +26,7 @@ TEST(MiniFile, Raw)
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kBare));
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kBare));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -56,7 +56,7 @@ TEST(MiniFile, Stream)
    FileRaii fileGuard("test_ntuple_minifile_stream.root");
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -121,7 +121,7 @@ TEST(MiniFile, SimpleKeys)
    FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -402,12 +402,13 @@ TEST(MiniFile, Multi)
 TEST(MiniFile, Failures)
 {
    // TODO(jblomer): failures should be exceptions
-   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, ENTupleContainerFormat::kTFile), ".*");
+   EXPECT_DEATH(
+      RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, RNTupleFileWriter::EContainerFormat::kTFile), ".*");
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';

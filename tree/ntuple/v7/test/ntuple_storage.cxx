@@ -51,15 +51,13 @@ public:
 
 TEST(RNTuple, Basics)
 {
-   FileRaii fileGuard("test_ntuple_barefile.ntuple");
+   FileRaii fileGuard("test_ntuple_basics.ntuple");
 
    {
       auto model = RNTupleModel::Create();
       auto wrPt = model->MakeField<float>("pt", 42.0);
 
-      RNTupleWriteOptions options;
-      options.SetContainerFormat(ENTupleContainerFormat::kBare);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       EXPECT_EQ(ntuple->GetNEntries(), 0);
       ntuple->Fill();
       EXPECT_EQ(ntuple->GetNEntries(), 1);
@@ -94,7 +92,7 @@ TEST(RNTuple, Basics)
 
 TEST(RNTuple, Extended)
 {
-   FileRaii fileGuard("test_ntuple_barefile_ext.ntuple");
+   FileRaii fileGuard("test_ntuple_ext.ntuple");
 
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
@@ -102,9 +100,7 @@ TEST(RNTuple, Extended)
       auto model = RNTupleModel::Create();
       auto wrVector = model->MakeField<std::vector<double>>("vector");
 
-      RNTupleWriteOptions options;
-      options.SetContainerFormat(ENTupleContainerFormat::kBare);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
