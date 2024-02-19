@@ -17,14 +17,12 @@
 
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTupleImtTaskScheduler.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#ifdef R__USE_IMT
-#include <ROOT/TTaskGroup.hxx>
-#endif
 
 #include <TBuffer.h>
 #include <TError.h>
@@ -40,30 +38,6 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-
-#ifdef R__USE_IMT
-ROOT::Experimental::RNTupleImtTaskScheduler::RNTupleImtTaskScheduler()
-{
-   Reset();
-}
-
-void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
-{
-   fTaskGroup = std::make_unique<TTaskGroup>();
-}
-
-void ROOT::Experimental::RNTupleImtTaskScheduler::AddTask(const std::function<void(void)> &taskFunc)
-{
-   fTaskGroup->Run(taskFunc);
-}
-
-void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
-{
-   fTaskGroup->Wait();
-}
-#endif
-
-//------------------------------------------------------------------------------
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
@@ -87,7 +61,7 @@ void ROOT::Experimental::RNTupleReader::InitPageSource()
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
-      fUnzipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fUnzipTasks = std::make_unique<Internal::RNTupleImtTaskScheduler>();
       fSource->SetTaskScheduler(fUnzipTasks.get());
    }
 #endif
@@ -329,7 +303,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
-      fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fZipTasks = std::make_unique<Internal::RNTupleImtTaskScheduler>();
       fFillContext.fSink->SetTaskScheduler(fZipTasks.get());
    }
 #endif
