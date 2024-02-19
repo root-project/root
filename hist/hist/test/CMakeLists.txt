@@ -40,3 +40,6 @@ endif()
 #   for details.
 ROOT_EXECUTABLE(tdirectoryfile_destructor_segfault tdirectoryfile_destructor_segfault.cxx LIBRARIES RIO Hist)
 ROOT_ADD_TEST(test-tdirectoryfile_destructor_segfault COMMAND tdirectoryfile_destructor_segfault)
+
+# Test for https://github.com/root-project/root/issues/6658
+ROOT_ADD_GTEST(test_projections test_projections.cxx LIBRARIES Hist)
