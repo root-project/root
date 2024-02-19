@@ -63,8 +63,8 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
                                                            const RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
-   fWriter = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate(ntupleName, path, options.GetCompression(), options.GetContainerFormat()));
+   fWriter = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate(
+      ntupleName, path, options.GetCompression(), RNTupleFileWriter::EContainerFormat::kTFile));
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TFile &file,

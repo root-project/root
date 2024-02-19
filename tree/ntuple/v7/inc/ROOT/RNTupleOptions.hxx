@@ -26,19 +26,6 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::ENTupleContainerFormat
-\ingroup NTuple
-\brief Describes the options for wrapping RNTuple data in files
-*/
-// clang-format on
-enum class ENTupleContainerFormat {
-   kTFile, // ROOT TFile
-   kBare, // A thin envelope supporting a single RNTuple only
-};
-
-
-// clang-format off
-/**
 \class ROOT::Experimental::RNTupleWriteOptions
 \ingroup NTuple
 \brief Common user-tunable settings for storing ntuples
@@ -49,7 +36,6 @@ All page sink classes need to support the common options.
 class RNTupleWriteOptions {
 protected:
    int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
-   ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
    /// Approximation of the target compressed cluster size
    std::size_t fApproxZippedClusterSize = 50 * 1000 * 1000;
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
@@ -79,9 +65,6 @@ public:
    void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel) {
       fCompression = CompressionSettings(algorithm, compressionLevel);
    }
-
-   ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
-   void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
 
    std::size_t GetApproxZippedClusterSize() const { return fApproxZippedClusterSize; }
    void SetApproxZippedClusterSize(std::size_t val);
