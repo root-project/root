@@ -466,6 +466,7 @@ public:
    {
       return (fType == EFType::kTemplVec) || (fType == EFType::kFormula && fFormula && fFormula->IsVectorized());
    }
+   /// Return the Chisquare after fitting. See ROOT::Fit::FitResult::Chi2()
    Double_t     GetChisquare() const
    {
       return fChisquare;
