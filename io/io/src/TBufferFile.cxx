@@ -196,7 +196,7 @@ void TBufferFile::ReadTString(TString &s)
       else
          nbig = nwh;
 
-      s.Clobber(nbig);
+      nbig = s.Clobber(nbig); // update length since Clobber clamps to MaxSize (if Fatal does not abort)
       char *data = s.GetPointer();
       data[nbig] = 0;
       s.SetSize(nbig);

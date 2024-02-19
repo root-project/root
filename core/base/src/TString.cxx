@@ -251,6 +251,7 @@ TString::~TString()
 ////////////////////////////////////////////////////////////////////////////////
 /// Private member function returning an empty string representation of
 /// size capacity and containing nchar characters.
+/// \warning If nchar > MaxSize(), then Fatal() is raised and only MaxSize() elements are allocated
 
 char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 {
@@ -267,7 +268,7 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
       nchar = capacity;
    }
    if (capacity > MaxSize()) {
-      Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
+      Fatal("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
       capacity = MaxSize();
       if (nchar > capacity)
          nchar = capacity;
@@ -386,6 +387,7 @@ TString& TString::operator=(const TSubString &substr)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append character c rep times to string.
+/// \warning If length+rep exceeds MaxSize(), then Fatal() is raised and only MaxSize()-length elements are added
 
 TString& TString::Append(char c, Ssiz_t rep)
 {
@@ -396,10 +398,10 @@ TString& TString::Append(char c, Ssiz_t rep)
       return *this;
    }
    Ssiz_t len = Length();
-   Ssiz_t tot = len + rep;  // Final string length
+   Long64_t tot = static_cast<Long64_t>(len) + rep;  // Final string length
 
    if (tot > MaxSize()) {
-      Error("TString::Append", "rep too large (%d, max = %d)", rep, MaxSize()-len);
+      Fatal("TString::Append", "rep too large (%d, max = %d)", rep, MaxSize()-len);
       tot = MaxSize();
       rep = tot - len;
    }
@@ -965,6 +967,7 @@ Bool_t TString::MaybeWildcard() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Prepend character c rep times to string.
+/// \warning If length+rep exceeds MaxSize(), then Fatal() is raised and only MaxSize()-length elements are added
 
 TString& TString::Prepend(char c, Ssiz_t rep)
 {
@@ -972,10 +975,10 @@ TString& TString::Prepend(char c, Ssiz_t rep)
       return *this;
 
    Ssiz_t len = Length();
-   Ssiz_t tot = len + rep;  // Final string length
+   Long64_t tot = static_cast<Long64_t>(len) + rep;  // Final string length
 
    if (tot > MaxSize()) {
-      Error("TString::Prepend", "rep too large (%d, max = %d)", rep, MaxSize()-len);
+      Fatal("TString::Prepend", "rep too large (%d, max = %d)", rep, MaxSize()-len);
       tot = MaxSize();
       rep = tot - len;
    }
@@ -1202,12 +1205,14 @@ void TString::AssertElement(Ssiz_t i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate a nice capacity greater than or equal to newCap.
+/// \warning Fatal() is raised if newCap > MaxSize()
+/// \return Resulting recommended capacity (after clamping, if needed)
 
 Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
 {
    Ssiz_t ms = MaxSize();
    if (newCap > ms - 1) {
-      Error("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
+      Fatal("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
             newCap, ms);
    }
    Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
@@ -1225,12 +1230,18 @@ void TString::Clear()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear string and make sure it has a capacity of nc.
+/// \warning If nc > MaxSize(), then Fatal() is raised, and only MaxSize()
+/// elements are allocated if Fatal does not abort
+/// \return Resulting allocated capacity (after clamping, if needed)
 
-void TString::Clobber(Ssiz_t nc)
+Ssiz_t TString::Clobber(Ssiz_t nc)
 {
    if (nc > MaxSize()) {
-      Error("TString::Clobber", "capacity too large (%d, max = %d)", nc, MaxSize());
-      nc = MaxSize();
+      Fatal("TString::Clobber", "capacity too large (%d, max = %d)", nc, MaxSize());
+      // In the rare case where Fatal does not abort, we erase, clamp and continue
+      UnLink();
+      Zero();
+      nc = MaxSize(); // Clamping after deleting to avoid corruption
    }
 
    if (nc < kMinCap) {
@@ -1248,11 +1259,13 @@ void TString::Clobber(Ssiz_t nc)
       SetLongSize(0);
       data[0] = 0;
    }
+   return nc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make self a distinct copy with capacity of at least tot, where tot cannot
 /// be smaller than the current length. Preserve previous contents.
+/// \warning If tot > MaxSize(), then Fatal() is raised and only MaxSize() elements are allocated
 
 void TString::Clone(Ssiz_t tot)
 {
@@ -1260,7 +1273,7 @@ void TString::Clone(Ssiz_t tot)
    if (len >= tot) return;
 
    if (tot > MaxSize()) {
-      Error("TString::Clone", "tot too large (%d, max = %d)", tot, MaxSize());
+      Fatal("TString::Clone", "tot too large (%d, max = %d)", tot, MaxSize());
       tot = MaxSize();
    }
 
@@ -2288,7 +2301,7 @@ TObjArray *TString::Tokenize(const TString &delim) const
 void TString::FormImp(const char *fmt, va_list ap)
 {
    Ssiz_t buflen = 20 + 20 * strlen(fmt);    // pick a number, any strictly positive number
-   Clobber(buflen);
+   buflen = Clobber(buflen); // Update buflen, as Clobber clamps length to MaxSize (if Fatal does not abort)
 
    va_list sap;
    R__VA_COPY(sap, ap);
@@ -2303,7 +2316,7 @@ again:
          buflen *= 2;
       else
          buflen = n+1;
-      Clobber(buflen);
+      buflen = Clobber(buflen);
       va_end(ap);
       R__VA_COPY(ap, sap);
       vc = 1;
