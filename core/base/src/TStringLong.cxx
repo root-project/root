@@ -134,11 +134,11 @@ void TStringLong::Streamer(TBuffer &b)
    Int_t nwh;
    if (b.IsReading()) {
       b >> nwh;
-      Clobber(nwh);
+      Ssiz_t nwr = Clobber(nwh);
       char *data = GetPointer();
-      data[nwh] = 0;
-      SetSize(nwh);
-      for (int i = 0; i < nwh; i++) b >> data[i];
+      data[nwr] = 0;
+      SetSize(nwr);
+      for (Ssiz_t i = 0; i < nwr; i++) b >> data[i];
    } else {
       nwh = Length();
       b << nwh;

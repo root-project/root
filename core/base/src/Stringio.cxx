@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "TString.h"
+#include "TError.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,15 +29,20 @@
 std::istream& TString::ReadFile(std::istream& strm)
 {
    // get file size
-   Ssiz_t end, cur = strm.tellg();
+   auto cur = strm.tellg();
    strm.seekg(0, std::ios::end);
-   end = strm.tellg();
+   auto end = strm.tellg();
    strm.seekg(cur);
 
    // any positive number of reasonable size for a file
    const Ssiz_t incr = 256;
 
-   Clobber(end-cur);
+   Long64_t fileSize = end - cur;
+   if(fileSize > MaxSize()) {
+      Error("TString::ReadFile", "file size too large (%lld, max = %d), clamping", fileSize, MaxSize());
+      fileSize = MaxSize();
+   }
+   Clobber(fileSize);
 
    while(1) {
       Ssiz_t len = Length();
