@@ -43,8 +43,7 @@ namespace TMVA {
    class TSpline1 : public TSpline {
 
    public:
-
-      TSpline1( const TString& title, TGraph* theGraph );
+      TSpline1(const TString &title, const TGraph *theGraph);
       virtual ~TSpline1( void );
 
       virtual  Double_t Eval( Double_t x ) const;
@@ -53,11 +52,10 @@ namespace TMVA {
       virtual void BuildCoeff( void );
       virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
 
-      const TGraph* GetGraph() const { return fGraph; }
-
    private:
-
-      TGraph *fGraph;  ///< graph that is splined
+      int N;
+      std::vector<Double_t> X;
+      std::vector<Double_t> Y;
 
       ClassDef(TSpline1,0); //Linear interpolation class
    };
