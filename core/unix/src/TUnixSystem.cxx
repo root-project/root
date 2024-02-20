@@ -1493,12 +1493,13 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir, const char *suff
    char *b = ConcatFileName(dir ? dir : TempDirectory(), base);
    base = b;
    base += "XXXXXX";
-   if (suffix && *suffix)
+   const bool hasSuffix = suffix && *suffix;
+   if (hasSuffix)
       base.Append(suffix);
    delete [] b;
 
    char *arg = StrDup(base);
-   int fd = suffix && *suffix ? mkstemps(arg, strlen(suffix)) : mkstemp(arg);
+   int fd = hasSuffix ? mkstemps(arg, strlen(suffix)) : mkstemp(arg);
    base = arg;
    delete [] arg;
 
