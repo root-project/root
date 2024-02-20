@@ -18,6 +18,8 @@
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveClient.hxx>
 #include <ROOT/RWebWindow.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
+
 #include <ROOT/RLogger.hxx>
 #include <ROOT/REveSystem.hxx>
 
@@ -155,6 +157,10 @@ REveManager::REveManager()
    TColor::SetColorThreshold(0.1);
 
    fWebWindow = ROOT::RWebWindow::Create();
+
+   ROOT::RWebWindowsManager::SetLoopbackMode(false);
+   ROOT::RWebWindowsManager::SetUseSessionKey(false);
+   fWebWindow->SetRequireAuthKey(false); 
    fWebWindow->UseServerThreads();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
