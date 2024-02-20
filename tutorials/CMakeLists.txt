@@ -681,6 +681,12 @@ foreach(t ${tutorials})
   endif()
 endforeach()
 
+if(root7 AND webgui)
+  # This test starts a headless Chromium, which takes quite some resources.
+  # Don't run any other tests in parallel.
+  set_tests_properties(tutorial-rcanvas-rline.cxx PROPERTIES RUN_SERIAL TRUE)
+endif()
+
 #---Loop over all MPI tutorials and define the corresponding test---------
 foreach(t ${mpi_tutorials})
   list(FIND returncode_1 ${t} index)
