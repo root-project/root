@@ -49,6 +49,9 @@
 #include "TMatrixDEigen.h"
 #include "TMath.h"
 
+#include <limits>
+#include <cmath>
+
 ClassImp(TMatrixDEigen);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -704,6 +707,9 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
    Double_t *pE = e.GetMatrixArray();
 
    const Int_t n = v.GetNrows();
+   ;
+
+   Double_t eps = std::numeric_limits<Double_t>::epsilon();
 
    for (Int_t i = 0; i < n-1; i++) {
       Int_t k = i;
@@ -714,6 +720,14 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
          if (norm_new > norm) {
             k = j;
             norm = norm_new;
+         }
+         if (std::fabs(norm_new - norm) <= eps * norm_new) {
+            if ((std::fabs(pD[i] - pD[j]) <= eps) && (std::fabs(pE[i] + pE[j]) <= eps)) {
+               if (pE[j] > pE[i]) {
+                  k = j;
+                  norm = norm_new;
+               }
+            }
          }
       }
       if (k != i) {
