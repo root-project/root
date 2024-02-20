@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
-#include <regex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -196,6 +195,20 @@ namespace ROOT
          ///////////////////////////////////////////////////////////////////////
 
          if( key == "code" ) {
+            // Cleaning of the input command:
+            // - Trim whitespaces at the borders
+            // - Get the inner command (i.e. the part between quotes)
+            // - Trim whitespaces again
+            // - Stitch back together
+            auto clean_command = [](const std::string &c) {
+               auto first_trim = TSchemaRuleProcessor::Trim(c);
+               auto inner_command =
+                  first_trim.substr(first_trim.find_first_of('"') + 1, first_trim.find_last_of('"') - 1);
+               auto second_trim = TSchemaRuleProcessor::Trim(inner_command);
+               return '"' + second_trim + '"';
+            };
+            command = clean_command(command);
+
             if( command[1] != '{' ) {
                error_string = "Parsing error while processing key: code\n";
                error_string += "Expected \"{ at the beginning of the value.";
@@ -203,16 +216,9 @@ namespace ROOT
             }
             l = command.find( "}\"" );
             if( l == std::string::npos ) {
-               std::regex white_spaced_sep("}[ 	]*\"");
-               std::smatch match;
-               if (std::regex_search(command, match, white_spaced_sep) && match.size() == 1) {
-                  l = command.find( match[0] );
-                  command.replace(l, match[0].length(), "}\"");
-               } else {
-                  error_string = "Parsing error while processing key: \"" + key + "\"\n";
-                  error_string += "Expected }\" at the end of the value.";
-                  return false;
-               }
+               error_string = "Parsing error while processing key: \"" + key + "\"\n";
+               error_string += "Expected }\" at the end of the value.";
+               return false;
             }
             auto rawCode = command.substr( 2, l-2 );
             RemoveEscapeSequences(rawCode);
