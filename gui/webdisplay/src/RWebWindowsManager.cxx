@@ -25,6 +25,7 @@
 #include "TApplication.h"
 #include "TTimer.h"
 #include "TRandom.h"
+#include "TError.h"
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TExec.h"
@@ -591,8 +592,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 
    if (win.IsRequireAuthKey() || produced_key) {
       key = win.GenerateKey();
-      if (key.empty())
-         return "";
+      R__ASSERT(!key.empty());
       addr.append("?key=");
       addr.append(key);
       qmark = true;
