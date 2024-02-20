@@ -926,7 +926,11 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       }
 
       if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
-         arg->SetContent("refused"); //  BuildWSEntryPage();
+         // Creating page with list of available widgets is disabled now for security reasons
+         // Later one can provide functionality back only if explicitely desired by the user
+         //  BuildWSEntryPage();
+
+         arg->SetContent("refused");
          arg->Set404();
       }
 
