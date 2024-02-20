@@ -8114,6 +8114,9 @@ public:
          getLegend(false, true);
          fPad->GetCanvas()->Paint();
          fPad->GetCanvas()->Update();
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
+         fPad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
+#endif
          fPad->cd();
       }
       nExisting--;
@@ -8157,9 +8160,8 @@ void xRooNode::Draw(Option_t *opt)
       if (gPad)
          gPad->Clear();
       xRooNLLVar::xRooHypoPoint(std::dynamic_pointer_cast<RooStats::HypoTestResult>(fComp)).Draw(opt);
-      if (gPad) {
-         gPad->GetCanvas()->Paint();
-         gPad->GetCanvas()->Update();
+      {
+         PadRefresher p(gPad); // refreshes the pad
       }
       gSystem->ProcessEvents();
       return;
