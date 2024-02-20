@@ -106,6 +106,8 @@ public:
    TMatrixTBase<Element>   &SetMatrixArray  (const Element *data,Option_t * /*option*/="") override
                                                     { memcpy(fElements,data,this->fNelems*sizeof(Element)); return *this; }
    virtual TMatrixTBase<Element>   &SetMatrixArray  (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Element *data);
+   virtual TMatrixTBase<Element> &
+   SetMatrixArray(Int_t nr_nonzeros, Int_t nrows, Int_t ncols, Int_t *irow, Int_t *icol, Element *data);
    TMatrixTBase<Element>   &InsertRow       (Int_t row,Int_t col,const Element *v,Int_t n=-1) override;
    void                     ExtractRow      (Int_t row,Int_t col,      Element *v,Int_t n=-1) const override;
 
