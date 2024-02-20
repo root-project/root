@@ -18,7 +18,6 @@
 // Do not use for real data!
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RVec.hxx>
 
@@ -36,7 +35,6 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
 constexpr char const* kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root";

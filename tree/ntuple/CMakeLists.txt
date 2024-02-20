@@ -24,7 +24,6 @@ HEADERS
   ROOT/RField.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
-  ROOT/RNTuple.hxx
   ROOT/RNTupleAnchor.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleImtTaskScheduler.hxx
@@ -33,9 +32,11 @@ HEADERS
   ROOT/RNTupleModel.hxx
   ROOT/RNTupleOptions.hxx
   ROOT/RNTupleParallelWriter.hxx
+  ROOT/RNTupleReader.hxx
   ROOT/RNTupleSerialize.hxx
   ROOT/RNTupleUtil.hxx
   ROOT/RNTupleView.hxx
+  ROOT/RNTupleWriter.hxx
   ROOT/RNTupleZip.hxx
   ROOT/RPage.hxx
   ROOT/RPageAllocator.hxx
@@ -53,7 +54,6 @@ SOURCES
   v7/src/RField.cxx
   v7/src/RFieldVisitor.cxx
   v7/src/RMiniFile.cxx
-  v7/src/RNTuple.cxx
   v7/src/RNTupleAnchor.cxx
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleDescriptorFmt.cxx
@@ -62,8 +62,10 @@ SOURCES
   v7/src/RNTupleModel.cxx
   v7/src/RNTupleOptions.cxx
   v7/src/RNTupleParallelWriter.cxx
+  v7/src/RNTupleReader.cxx
   v7/src/RNTupleSerialize.cxx
   v7/src/RNTupleUtil.cxx
+  v7/src/RNTupleWriter.cxx
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
   v7/src/RPagePool.cxx
