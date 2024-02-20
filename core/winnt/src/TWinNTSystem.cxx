@@ -2256,20 +2256,44 @@ const char *TWinNTSystem::TempDirectory() const
 /// Create a secure temporary file by appending a unique
 /// 6 letter string to base. The file will be created in
 /// a standard (system) directory or in the directory
-/// provided in dir. The full filename is returned in base
+/// provided in dir. Optionally one can provide suffix
+/// append to the final name - like extension ".txt" or ".html".
+/// The full filename is returned in base
 /// and a filepointer is returned for safely writing to the file
 /// (this avoids certain security problems). Returns 0 in case
 /// of error.
 
-FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
+FILE *TWinNTSystem::TempFileName(TString &base, const char *dir, const char *suffix)
 {
    char tmpName[MAX_PATH];
 
-   ::GetTempFileName(dir ? dir : TempDirectory(), base.Data(), 0, tmpName);
-   base = tmpName;
-   FILE *fp = fopen(tmpName, "w+");
+   auto res = ::GetTempFileName(dir ? dir : TempDirectory(), base.Data(), 0, tmpName);
+   if (res == 0) {
+      ::SysError("TempFileName", "Fail to generate temporary file name");
+      return nullptr;
+   }
 
-   if (!fp) ::SysError("TempFileName", "error opening %s", tmpName);
+   base = tmpName;
+   if (suffix && *suffix) {
+      base.Append(suffix);
+
+      if (!AccessPathName(base, kFileExists)) {
+         ::SysError("TempFileName", "Temporary file %s already exists", base.Data());
+         Unlink(tmpName);
+         return nullptr;
+      }
+
+      auto res2 = Rename(tmpName, base.Data());
+      if (res2 != 0) {
+         ::SysError("TempFileName", "Fail to rename temporary file to %s", base.Data());
+         Unlink(tmpName);
+         return nullptr;
+      }
+   }
+
+   FILE *fp = fopen(base.Data(), "w+");
+
+   if (!fp) ::SysError("TempFileName", "error opening %s", base.Data());
 
    return fp;
 }

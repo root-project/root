@@ -422,7 +422,7 @@ public:
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
    virtual const char     *TempDirectory() const;
-   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr);
+   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr);
 
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);

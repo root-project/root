@@ -132,7 +132,7 @@ public:
    const char       *HomeDirectory(const char *userName = nullptr) override;
    std::string       GetHomeDirectory(const char *userName = nullptr) const override;
    const char       *TempDirectory() const override;
-   FILE             *TempFileName(TString &base, const char *dir = nullptr) override;
+   FILE             *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr) override;
 
    //---- Paths & Files ----------------------------------------
    const char       *PrependPathName(const char *dir, TString& name) override;
