@@ -837,29 +837,29 @@ class TAxisPainter extends ObjectPainter {
          title_g.property('shift_x', new_x)
                 .property('shift_y', new_y);
 
-         const axis = this.getObject(), abits = EAxisBits,
-               axis2 = this.source_axis,
-               set_bit = (bit, on) => {
-                  if (axis.TestBit(bit) !== on) axis.InvertBit(bit);
+         const axis = this.getObject(), axis2 = this.source_axis,
+               setBit = (bit, on) => {
+                  if (axis && axis.TestBit(bit) !== on) axis.InvertBit(bit);
                   if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
                };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
-         axis.fTitleOffset = this.titleOffset / this.offsetScaling / this.titleSize;
-         if (axis2) axis2.fTitleOffset = axis.fTitleOffset;
+         const offset = this.titleOffset / this.offsetScaling / this.titleSize;
+         if (axis) axis.fTitleOffset = offset;
+         if (axis2) axis2.fTitleOffset = offset;
 
          if (curr_indx === 1) {
-            set_bit(abits.kCenterTitle, true); this.titleCenter = true;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, true); this.titleCenter = true;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          } else if (curr_indx === 0) {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, true); this.titleOpposite = true;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, true); this.titleOpposite = true;
          } else {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          }
 
-         this.submitAxisExec(`SetTitleOffset(${axis.fTitleOffset});;SetBit(${abits.kCenterTitle},${this.titleCenter?1:0})`);
+         this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
 
          drag_rect.remove();
          drag_rect = null;
@@ -1310,12 +1310,12 @@ class TAxisPainter extends ObjectPainter {
 
             title_shift_x = Math.round(title_offest_k * this.titleOffset);
 
-            if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
-               // special handling for color palette labels - draw them always on right side
-               const rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.width - this.ticksSize)
-                  title_shift_x = Math.round(rect.width - this.ticksSize);
-            }
+            // if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
+            //    // special handling for color palette labels - draw them always on right side
+            //   const rect = axis_g.node().getBoundingClientRect();
+            //   if (title_shift_x < rect.width - this.ticksSize)
+            //      title_shift_x = Math.round(rect.width - this.ticksSize);
+            // }
 
             title_shift_y = Math.round(this.titleCenter ? h/2 : (xor_reverse ? h : 0));
 

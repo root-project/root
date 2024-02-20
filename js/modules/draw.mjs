@@ -384,7 +384,10 @@ async function draw(dom, obj, opt) {
          promise = getPromise(handle.func(dom, obj, opt));
 
       return promise.then(p => {
-         if (!painter) painter = p;
+         if (!painter)
+            painter = p;
+         if (painter === false)
+            return null;
          if (!painter)
              throw Error(`Fail to draw object ${type_info}`);
          if (isObject(painter) && !painter.options)

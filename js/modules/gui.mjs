@@ -13,10 +13,13 @@ function readStyleFromURL(url) {
 
    const d = decodeUrl(url);
 
-   function get_bool(name, field) {
+   function get_bool(name, field, special) {
       if (d.has(name)) {
          const val = d.get(name);
-         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
+         if (special && (val === special))
+            settings[field] = special;
+         else
+            settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -90,7 +93,11 @@ function readStyleFromURL(url) {
       settings.Latex = constants.Latex.fromString(latex);
 
    if (d.has('nomenu')) settings.ContextMenu = false;
-   if (d.has('noprogress')) settings.ProgressBox = false;
+   if (d.has('noprogress'))
+      settings.ProgressBox = false;
+   else
+      get_bool('progress', 'ProgressBox', 'modal');
+
    if (d.has('notouch')) browser.touches = false;
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
@@ -187,7 +194,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       else {
          d3_select('html').style('height', '100%');
          d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
+         myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
       }
    }
 
