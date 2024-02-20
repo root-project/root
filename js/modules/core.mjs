@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/01/2024',
+version_date = '20/02/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -215,7 +215,7 @@ settings = {
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
-   /** @summary Show progress box */
+   /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
    ToolBar: nodejs ? false : 'popup',

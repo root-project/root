@@ -1,4 +1,4 @@
-import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect, getDocument } from '../core.mjs';
+import { settings, internals, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect, getDocument } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
@@ -707,7 +707,9 @@ class JSRootMenu {
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
-      this.addchk(settings.ProgressBox, 'Progress box', flag => { settings.ProgressBox = flag; });
+      this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
+         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+      });
       this.add('endsub:');
 
       this.add('sub:Drawing');
@@ -1319,18 +1321,21 @@ class StandaloneMenu extends JSRootMenu {
    }
 
    /** @summary Run modal elements with standalone code */
-   async runModal(title, main_content, args) {
+   createModal(title, main_content, args) {
       if (!args) args = {};
-      const dlg_id = this.menuname + '_dialog';
+
+      if (!args.Ok) args.Ok = 'Ok';
+
+      const modal = { args }, dlg_id = (this?.menuname ?? 'root_modal') + '_dialog';
       d3_select(`#${dlg_id}`).remove();
       d3_select(`#${dlg_id}_block`).remove();
 
-      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth)),
-          block = d3_select('body').append('div')
+      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth));
+      modal.block = d3_select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
-          element = d3_select('body')
+                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
+      modal.element = d3_select('body')
                       .append('div')
                       .attr('id', dlg_id)
                       .attr('class', 'jsroot_dialog')
@@ -1345,37 +1350,60 @@ class StandaloneMenu extends JSRootMenu {
            `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
            '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>'+
-              '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Ok</button>'+
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>`+
               (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
          '</div></div>');
 
-      return new Promise(resolveFunc => {
-         element.on('keyup', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-               resolveFunc(evnt.code === 'Enter' ? element.node() : null);
-               element.remove();
-               block.remove();
-            }
-         });
-         element.on('keydown', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-            }
-         });
-         element.selectAll('.jsroot_dialog_button').on('click', evnt => {
-            resolveFunc(args.btns && (d3_select(evnt.target).text() === 'Ok') ? element.node() : null);
-            element.remove();
-            block.remove();
-         });
+      modal.done = function(res) {
+         if (this._done) return;
+         this._done = true;
+         if (isFunc(this.call_back))
+            this.call_back(res);
+         this.element.remove();
+         this.block.remove();
+      };
 
-         let f = element.select('.jsroot_dialog_content').select('input');
-         if (f.empty()) f = element.select('.jsroot_dialog_footer').select('button');
-         if (!f.empty()) f.node().focus();
+      modal.setContent = function(content, btn_text) {
+         if (!this._done) {
+            this.element.select('.jsroot_dialog_content').html(content);
+            if (btn_text) {
+               this.args.Ok = btn_text;
+               this.element.select('.jsroot_dialog_button').text(btn_text);
+            }
+         }
+      };
+
+      modal.element.on('keyup', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            modal.done(evnt.code === 'Enter' ? modal.element.node() : null);
+         }
+      });
+      modal.element.on('keydown', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+         }
+      });
+      modal.element.selectAll('.jsroot_dialog_button').on('click', evnt => {
+         modal.done(args.btns && (d3_select(evnt.target).text() === args.Ok) ? modal.element.node() : null);
+      });
+
+      let f = modal.element.select('.jsroot_dialog_content').select('input');
+      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
+      if (!f.empty()) f.node().focus();
+      return modal;
+   }
+
+   /** @summary Run modal elements with standalone code */
+   async runModal(title, main_content, args) {
+      const modal = this.createModal(title, main_content, args);
+      return new Promise(resolveFunc => {
+         modal.call_back = resolveFunc;
       });
    }
+
 
 } // class StandaloneMenu
 
@@ -1421,6 +1449,23 @@ function showPainterMenu(evnt, painter, kind) {
       return painter.fillObjectExecMenu(menu, kind);
    }).then(menu => menu.show());
 }
+
+/** @summary Internal method to implement modal progress
+  * @private */
+internals._modalProgress = function(msg, click_handle) {
+   if (!msg || !isStr(msg)) {
+      internals.modal?.done();
+      delete internals.modal;
+      return;
+   }
+
+   if (!internals.modal)
+      internals.modal = StandaloneMenu.prototype.createModal('Progress', msg);
+
+   internals.modal.setContent(msg, click_handle ? 'Abort' : 'Ok');
+
+   internals.modal.call_back = click_handle;
+};
 
 /** @summary Assign handler for context menu for painter draw element
   * @private */

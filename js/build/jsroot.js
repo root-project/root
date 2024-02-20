@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/01/2024',
+version_date = '20/02/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -221,7 +221,7 @@ settings = {
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
-   /** @summary Show progress box */
+   /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
    ToolBar: nodejs ? false : 'popup',
@@ -10209,7 +10209,7 @@ class BasePainter {
          enlarge = select(doc.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; top: 1px; bottom: 1px; right: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          const rect1 = getElementRect(main),
                rect2 = getElementRect(enlarge);
@@ -12182,8 +12182,10 @@ class ObjectPainter extends BasePainter {
      * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    getObjectHint() {
-      const hint = this.getItemName() || this.getObjectName() || this.getClassName() || '';
-      return (hint.length <= 20) ? hint : hint.slice(0, 17) + '...';
+      const iname = this.getItemName();
+      if (iname)
+         return (iname.length > 20) ? '...' + iname.slice(iname.length - 17) : iname;
+      return this.getObjectName() || this.getClassName() || '';
    }
 
    /** @summary returns color from current list of colors
@@ -58574,42 +58576,54 @@ tgamma: gamma
   * @desc Previous message will be overwritten
   * if no argument specified, any shown messages will be removed
   * @param {string} msg - message to display
-  * @param {number} tmout - optional timeout in milliseconds, after message will disappear
+  * @param {number} [tmout] - optional timeout in milliseconds, after message will disappear
+  * @param {function} [click_handle] - optional handle to process click events
   * @private */
-function showProgress(msg, tmout) {
+function showProgress(msg, tmout, click_handle) {
    if (isBatchMode() || (typeof document === 'undefined'))
       return;
-   const id = 'jsroot_progressbox';
+
+   const id = 'jsroot_progressbox', modal = (settings.ProgressBox === 'modal') && isFunc(internals._modalProgress) ? internals._modalProgress : null;
    let box = select('#' + id);
 
-   if (!settings.ProgressBox)
+   if (!settings.ProgressBox) {
+      if (modal) modal();
       return box.remove();
+   }
 
    if ((arguments.length === 0) || !msg) {
       if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
+      if (modal) modal();
       return;
    }
 
-   if (box.empty()) {
-      box = select(document.body)
-              .append('div').attr('id', id)
-              .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
-      box.append('p');
+   if (modal) {
+      box.remove();
+      modal(msg, click_handle);
+   } else {
+      if (box.empty()) {
+         box = select(document.body)
+               .append('div').attr('id', id)
+               .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
+         box.append('p');
+      }
+
+      box.property('with_timeout', false);
+
+      const p = box.select('p');
+
+      if (isStr(msg)) {
+         p.html(msg)
+          .on('click', isFunc(click_handle) ? click_handle : null)
+          .attr('title', isFunc(click_handle) ? 'Click element to abort current operation' : '');
+      }
+
+      p.attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
    }
-
-   box.property('with_timeout', false);
-
-   if (isStr(msg))
-      box.select('p').html(msg);
-    else {
-      box.html('');
-      box.node().appendChild(msg);
-   }
-
-   box.select('p').attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
-      box.property('with_timeout', true);
+      if (!box.empty())
+         box.property('with_timeout', true);
       setTimeout(() => showProgress('', -1), tmout);
    }
 }
@@ -59837,7 +59851,9 @@ class JSRootMenu {
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
-      this.addchk(settings.ProgressBox, 'Progress box', flag => { settings.ProgressBox = flag; });
+      this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
+         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+      });
       this.add('endsub:');
 
       this.add('sub:Drawing');
@@ -60449,18 +60465,21 @@ class StandaloneMenu extends JSRootMenu {
    }
 
    /** @summary Run modal elements with standalone code */
-   async runModal(title, main_content, args) {
+   createModal(title, main_content, args) {
       if (!args) args = {};
-      const dlg_id = this.menuname + '_dialog';
+
+      if (!args.Ok) args.Ok = 'Ok';
+
+      const modal = { args }, dlg_id = (this?.menuname ?? 'root_modal') + '_dialog';
       select(`#${dlg_id}`).remove();
       select(`#${dlg_id}_block`).remove();
 
-      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth)),
-          block = select('body').append('div')
+      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth));
+      modal.block = select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
-          element = select('body')
+                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
+      modal.element = select('body')
                       .append('div')
                       .attr('id', dlg_id)
                       .attr('class', 'jsroot_dialog')
@@ -60475,37 +60494,60 @@ class StandaloneMenu extends JSRootMenu {
            `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
            '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>'+
-              '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Ok</button>'+
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>`+
               (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
          '</div></div>');
 
-      return new Promise(resolveFunc => {
-         element.on('keyup', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-               resolveFunc(evnt.code === 'Enter' ? element.node() : null);
-               element.remove();
-               block.remove();
-            }
-         });
-         element.on('keydown', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-            }
-         });
-         element.selectAll('.jsroot_dialog_button').on('click', evnt => {
-            resolveFunc(args.btns && (select(evnt.target).text() === 'Ok') ? element.node() : null);
-            element.remove();
-            block.remove();
-         });
+      modal.done = function(res) {
+         if (this._done) return;
+         this._done = true;
+         if (isFunc(this.call_back))
+            this.call_back(res);
+         this.element.remove();
+         this.block.remove();
+      };
 
-         let f = element.select('.jsroot_dialog_content').select('input');
-         if (f.empty()) f = element.select('.jsroot_dialog_footer').select('button');
-         if (!f.empty()) f.node().focus();
+      modal.setContent = function(content, btn_text) {
+         if (!this._done) {
+            this.element.select('.jsroot_dialog_content').html(content);
+            if (btn_text) {
+               this.args.Ok = btn_text;
+               this.element.select('.jsroot_dialog_button').text(btn_text);
+            }
+         }
+      };
+
+      modal.element.on('keyup', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            modal.done(evnt.code === 'Enter' ? modal.element.node() : null);
+         }
+      });
+      modal.element.on('keydown', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+         }
+      });
+      modal.element.selectAll('.jsroot_dialog_button').on('click', evnt => {
+         modal.done(args.btns && (select(evnt.target).text() === args.Ok) ? modal.element.node() : null);
+      });
+
+      let f = modal.element.select('.jsroot_dialog_content').select('input');
+      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
+      if (!f.empty()) f.node().focus();
+      return modal;
+   }
+
+   /** @summary Run modal elements with standalone code */
+   async runModal(title, main_content, args) {
+      const modal = this.createModal(title, main_content, args);
+      return new Promise(resolveFunc => {
+         modal.call_back = resolveFunc;
       });
    }
+
 
 } // class StandaloneMenu
 
@@ -60551,6 +60593,23 @@ function showPainterMenu(evnt, painter, kind) {
       return painter.fillObjectExecMenu(menu, kind);
    }).then(menu => menu.show());
 }
+
+/** @summary Internal method to implement modal progress
+  * @private */
+internals._modalProgress = function(msg, click_handle) {
+   if (!msg || !isStr(msg)) {
+      internals.modal?.done();
+      delete internals.modal;
+      return;
+   }
+
+   if (!internals.modal)
+      internals.modal = StandaloneMenu.prototype.createModal('Progress', msg);
+
+   internals.modal.setContent(msg, click_handle ? 'Abort' : 'Ok');
+
+   internals.modal.call_back = click_handle;
+};
 
 /** @summary Assign handler for context menu for painter draw element
   * @private */
@@ -61389,29 +61448,29 @@ class TAxisPainter extends ObjectPainter {
          title_g.property('shift_x', new_x)
                 .property('shift_y', new_y);
 
-         const axis = this.getObject(), abits = EAxisBits,
-               axis2 = this.source_axis,
-               set_bit = (bit, on) => {
-                  if (axis.TestBit(bit) !== on) axis.InvertBit(bit);
+         const axis = this.getObject(), axis2 = this.source_axis,
+               setBit = (bit, on) => {
+                  if (axis && axis.TestBit(bit) !== on) axis.InvertBit(bit);
                   if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
                };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
-         axis.fTitleOffset = this.titleOffset / this.offsetScaling / this.titleSize;
-         if (axis2) axis2.fTitleOffset = axis.fTitleOffset;
+         const offset = this.titleOffset / this.offsetScaling / this.titleSize;
+         if (axis) axis.fTitleOffset = offset;
+         if (axis2) axis2.fTitleOffset = offset;
 
          if (curr_indx === 1) {
-            set_bit(abits.kCenterTitle, true); this.titleCenter = true;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, true); this.titleCenter = true;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          } else if (curr_indx === 0) {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, true); this.titleOpposite = true;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, true); this.titleOpposite = true;
          } else {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          }
 
-         this.submitAxisExec(`SetTitleOffset(${axis.fTitleOffset});;SetBit(${abits.kCenterTitle},${this.titleCenter?1:0})`);
+         this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
 
          drag_rect.remove();
          drag_rect = null;
@@ -61862,12 +61921,12 @@ class TAxisPainter extends ObjectPainter {
 
             title_shift_x = Math.round(title_offest_k * this.titleOffset);
 
-            if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
-               // special handling for color palette labels - draw them always on right side
-               const rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.width - this.ticksSize)
-                  title_shift_x = Math.round(rect.width - this.ticksSize);
-            }
+            // if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
+            //    // special handling for color palette labels - draw them always on right side
+            //   const rect = axis_g.node().getBoundingClientRect();
+            //   if (title_shift_x < rect.width - this.ticksSize)
+            //      title_shift_x = Math.round(rect.width - this.ticksSize);
+            // }
 
             title_shift_y = Math.round(this.titleCenter ? h/2 : (xor_reverse ? h : 0));
 
@@ -62341,6 +62400,19 @@ const TooltipHandler = {
          }
       }
 
+      let path_name = null, same_path = hints.length > 1;
+      for (let n = 0; n < hints.length; ++n) {
+         const hint = hints[n], p = hint?.lines ? hint.lines[0]?.lastIndexOf('/') : -1;
+         if (p > 0) {
+            const path = hint.lines[0].slice(0, p + 1);
+            if (path_name === null)
+               path_name = path;
+            else if (path_name !== path)
+               same_path = false;
+         } else
+            same_path = false;
+      }
+
       const layer = this.hints_layer(),
             show_only_best = nhints > 15,
             coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
@@ -62435,24 +62507,14 @@ const TooltipHandler = {
           gapminx = -1111, gapmaxx = -1111;
       const minhinty = -frame_shift.y,
             cp = this.getCanvPainter(),
-            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y,
-      FindPosInGap = y => {
-         for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
-            const hint = hints[n];
-            if (!hint) continue;
-            if ((hint.y >= y - 5) && (hint.y <= y + hint.height + 5)) {
-               y = hint.y + 10;
-               n = -1;
-            }
-         }
-         return y;
-      };
+            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y;
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n],
-            group = hintsg.selectChild(`.painter_hint_${n}`);
+             group = hintsg.selectChild(`.painter_hint_${n}`);
 
-         if (show_only_best && (hint !== best_hint)) hint = null;
+         if (show_only_best && (hint !== best_hint))
+            hint = null;
 
          if (hint === null) {
             group.remove();
@@ -62472,16 +62534,23 @@ const TooltipHandler = {
          if (viewmode === 'single')
             curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
           else {
-            gapy = FindPosInGap(gapy);
+            for (let n = 0; (n < hints.length) && (gapy < maxhinty); ++n) {
+               const hint = hints[n];
+               if (!hint) continue;
+               if ((hint.y >= gapy - 5) && (hint.y <= gapy + hint.height + 5)) {
+                  gapy = hint.y + 10;
+                  n = -1;
+               }
+            }
             if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
             gapmaxx = Math.min(gapmaxx, hint.x);
          }
 
          group.attr('x', posx)
-            .attr('y', curry)
-            .property('curry', curry)
-            .property('gapy', gapy);
+              .attr('y', curry)
+              .property('curry', curry)
+              .property('gapy', gapy);
 
          curry += hint.height + 5;
          gapy += hint.height + 5;
@@ -62490,7 +62559,7 @@ const TooltipHandler = {
             group.selectAll('*').remove();
 
          group.attr('width', 60)
-            .attr('height', hint.height);
+              .attr('height', hint.height);
 
          const r = group.append('rect')
             .attr('x', 0)
@@ -62507,8 +62576,11 @@ const TooltipHandler = {
          }
          r.attr('stroke-width', hint.exact ? 3 : 1);
 
-         for (let l = 0; l < (hint.lines ? hint.lines.length : 0); l++) {
-            if (hint.lines[l] !== null) {
+         for (let l = 0; l < (hint.lines?.length ?? 0); l++) {
+            let line = hint.lines[l];
+            if (l === 0 && path_name && same_path)
+               line = line.slice(path_name.length);
+            if (line) {
                const txt = group.append('svg:text')
                   .attr('text-anchor', 'start')
                   .attr('x', wmargin)
@@ -62517,9 +62589,8 @@ const TooltipHandler = {
                   .style('fill', 'black')
                   .style('pointer-events', 'none')
                   .call(font.func)
-                  .text(hint.lines[l]),
-
-                box = getElementRect(txt, 'bbox');
+                  .text(line),
+               box = getElementRect(txt, 'bbox');
 
                actualw = Math.max(actualw, box.width);
             }
@@ -65526,7 +65597,7 @@ class TabsDisplay extends MDIDisplay {
 
       if (top.empty()) {
          top = dom.append('div').attr('class', 'jsroot_tabs')
-                  .attr('style', 'display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px');
+                  .attr('style', 'display: flex; flex-direction: column; position: absolute; overflow: hidden; left: 0px; top: 0px; bottom: 0px; right: 0px;');
          labels = top.append('div').attr('class', 'jsroot_tabs_labels')
                      .attr('style', 'white-space: nowrap; position: relative; overflow-x: auto');
          main = top.append('div').attr('class', 'jsroot_tabs_main')
@@ -65573,7 +65644,7 @@ class TabsDisplay extends MDIDisplay {
       const draw_frame = main.append('div')
                            .attr('frame_title', title)
                            .attr('class', 'jsroot_tabs_draw')
-                           .attr('style', 'overflow: hidden; position: absolute; inset: 0px')
+                           .attr('style', 'overflow: hidden; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px;')
                            .property('frame_id', frame_id);
 
       this.modifyTabsFrame(frame_id, 'activate');
@@ -66140,7 +66211,7 @@ class BrowserLayout {
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
       injectStyle(
-         '.jsroot_browser { pointer-events: none; position: absolute; inset: 0px; margin: 0px; border: 0px; overflow: hidden; }'+
+         '.jsroot_browser { pointer-events: none; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; margin: 0px; border: 0px; overflow: hidden; }'+
          `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }`+
          `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }`+
          `.jsroot_browser_area input { ${input_style} }`+
@@ -66162,7 +66233,7 @@ class BrowserLayout {
       main.append('div').attr('id', this.drawing_divid())
                         .classed('jsroot_draw_area', true)
                         .style('position', 'absolute')
-                        .style('inset', '0px');
+                        .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
 
       if (with_browser)
          main.append('div').classed('jsroot_browser', true);
@@ -67265,7 +67336,7 @@ class TPadPainter extends ObjectPainter {
       if (this._fixed_size)
          svg.attr('width', rect.width).attr('height', rect.height);
       else
-         svg.style('width', '100%').style('height', '100%').style('inset', '0px');
+         svg.style('width', '100%').style('height', '100%').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
 
       svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 
@@ -70781,11 +70852,12 @@ class TPavePainter extends ObjectPainter {
          axis.fTitle = zaxis.fTitle;
          axis.fTitleSize = zaxis.fTitleSize;
          axis.fTitleOffset = zaxis.fTitleOffset;
-         axis.fTitleColor = zaxis.fTitleColor;
+         axis.fTextColor = zaxis.fTitleColor;
+         axis.fTextFont = zaxis.fTitleFont;
          axis.fLineColor = zaxis.fAxisColor;
-         axis.fTextSize = zaxis.fLabelSize;
-         axis.fTextColor = zaxis.fLabelColor;
-         axis.fTextFont = zaxis.fLabelFont;
+         axis.fLabelSize = zaxis.fLabelSize;
+         axis.fLabelColor = zaxis.fLabelColor;
+         axis.fLabelFont = zaxis.fLabelFont;
          axis.fLabelOffset = zaxis.fLabelOffset;
          this.z_handle.setHistPainter(main, 'z');
          this.z_handle.source_axis = zaxis;
@@ -80699,6 +80771,7 @@ function proivdeEvalPar(obj, check_save) {
                 .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
                 .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
+                .replace(/\bsqrt\(/g, 'Math.sqrt(')
                 .replace(/\bxygaus\(/g, 'this.$math.gausxy(this, x, y, ')
                 .replace(/\bgaus\(/g, 'this.$math.gaus(this, x, ')
                 .replace(/\bgausn\(/g, 'this.$math.gausn(this, x, ')
@@ -97900,8 +97973,10 @@ class TFile {
 
                const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
                xhr.addEventListener('progress', oEvent => {
-                  if (oEvent.lengthComputable)
-                     progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
+                  if (oEvent.lengthComputable) {
+                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
+                        xhr.abort();
+                  }
                });
             } else if (first_block_retry && isFunc(xhr.addEventListener)) {
                xhr.addEventListener('progress', oEvent => {
@@ -100341,7 +100416,7 @@ class TDrawSelector extends TSelector {
          const now = new Date().getTime();
          if (now - this.lasttm > this.monitoring) {
             this.lasttm = now;
-            if (this.progress_callback)
+            if (isFunc(this.progress_callback))
                this.progress_callback(this.hist);
          }
       }
@@ -101162,7 +101237,7 @@ async function treeProcess(tree, selector, args) {
 
          const portion = (handle.staged_prev + value * (handle.staged_now - handle.staged_prev)) /
                          (handle.process_max - handle.process_min);
-         handle.selector.ShowProgress(portion);
+        return handle.selector.ShowProgress(portion);
       }
 
       function ProcessBlobs(blobs, places) {
@@ -101321,7 +101396,10 @@ async function treeProcess(tree, selector, args) {
       if (handle.process_max > handle.process_min)
          portion = (handle.staged_prev - handle.process_min) / (handle.process_max - handle.process_min);
 
-      handle.selector.ShowProgress(portion);
+      if (handle.selector.ShowProgress(portion) === 'break') {
+         handle.selector.Terminate(true);
+         return resolveFunc(handle.selector);
+      }
 
       handle.progress_showtm = new Date().getTime();
 
@@ -102075,7 +102153,10 @@ async function draw(dom, obj, opt) {
          promise = getPromise(handle.func(dom, obj, opt));
 
       return promise.then(p => {
-         if (!painter) painter = p;
+         if (!painter)
+            painter = p;
+         if (painter === false)
+            return null;
          if (!painter)
              throw Error(`Fail to draw object ${type_info}`);
          if (isObject(painter) && !painter.options)
@@ -106326,10 +106407,13 @@ function readStyleFromURL(url) {
 
    const d = decodeUrl(url);
 
-   function get_bool(name, field) {
+   function get_bool(name, field, special) {
       if (d.has(name)) {
          const val = d.get(name);
-         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
+         if (special && (val === special))
+            settings[field] = special;
+         else
+            settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -106403,7 +106487,11 @@ function readStyleFromURL(url) {
       settings.Latex = constants$1.Latex.fromString(latex);
 
    if (d.has('nomenu')) settings.ContextMenu = false;
-   if (d.has('noprogress')) settings.ProgressBox = false;
+   if (d.has('noprogress'))
+      settings.ProgressBox = false;
+   else
+      get_bool('progress', 'ProgressBox', 'modal');
+
    if (d.has('notouch')) browser.touches = false;
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
@@ -106500,7 +106588,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       else {
          select('html').style('height', '100%');
          select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
+         myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
       }
    }
 
@@ -108758,60 +108846,38 @@ async function drawPolyMarker3D$1() {
    });
 }
 
-function treeShowProgress(handle, str) {
-   if (isBatchMode() || (typeof document === 'undefined')) return;
-
-   if (!str)
-      return showProgress();
-
-   const main_box = document.createElement('p'),
-         text_node = document.createTextNode(str);
-
-   main_box.appendChild(text_node);
-   main_box.title = 'Click on element to break';
-
-   main_box.onclick = () => {
-      if (!handle._break) handle._break = 0;
-
-      if (++handle._break < 3) {
-         main_box.title = 'Will break after next I/O operation';
-         text_node.nodeValue = 'Breaking ... ';
-         return;
-      }
-      if (isFunc(handle.Abort))
-         handle.Abort();
-      showProgress();
-   };
-
-   showProgress(main_box);
-}
-
-
 /** @summary Show TTree::Draw progress during processing
   * @private */
 TDrawSelector.prototype.ShowProgress = function(value) {
+   let msg, ret;
    if ((value === undefined) || !Number.isFinite(value))
-      return showProgress();
+      msg = ret = '';
+   else if (this._break) {
+      msg = 'Breaking ... ';
+      ret = 'break';
+   } else {
+      if (this.last_progress !== value) {
+         const diff = value - this.last_progress;
+         if (!this.aver_diff) this.aver_diff = diff;
+         this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      }
 
-   if (this.last_progress !== value) {
-      const diff = value - this.last_progress;
-      if (!this.aver_diff) this.aver_diff = diff;
-      this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      this.last_progress = value;
+
+      let ndig = 0;
+      if (this.aver_diff <= 0)
+         ndig = 0;
+      else if (this.aver_diff < 0.0001)
+         ndig = 3;
+      else if (this.aver_diff < 0.001)
+         ndig = 2;
+      else if (this.aver_diff < 0.01)
+         ndig = 1;
+      msg = `TTree draw ${(value * 100).toFixed(ndig)} % `;
    }
 
-   this.last_progress = value;
-
-   let ndig = 0;
-   if (this.aver_diff <= 0)
-      ndig = 0;
-   else if (this.aver_diff < 0.0001)
-      ndig = 3;
-   else if (this.aver_diff < 0.001)
-      ndig = 2;
-   else if (this.aver_diff < 0.01)
-      ndig = 1;
-
-   treeShowProgress(this, `TTree draw ${(value * 100).toFixed(ndig)} % `);
+   showProgress(msg, -1, () => { this._break = 1; });
+   return ret;
 };
 
 /** @summary Draw result of tree drawing
@@ -108872,18 +108938,21 @@ async function treeDrawProgress(obj, final) {
 
    if (!this.last_pr) this.last_pr = Promise.resolve(true);
 
-    return this.last_pr.then(() => {
-       if (this.obj_painter)
-          this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
-       else {
-          this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
-             this.obj_painter = p;
-             if (!final) this.last_pr = null;
-             return p; // return painter for histogram
-          });
-       }
+   return this.last_pr.then(() => {
+      if (this.obj_painter)
+         this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
+      else if (!obj) {
+         if (final) console.log('no result after tree drawing');
+         this.last_pr = false; // return false indicating no drawing is done
+      } else {
+         this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
+            this.obj_painter = p;
+            if (!final) this.last_pr = null;
+            return p; // return painter for histogram
+         });
+      }
 
-       return final ? this.last_pr : null;
+      return final ? this.last_pr : null;
    });
 }
 
@@ -109216,7 +109285,7 @@ async function drawTree(dom, obj, opt) {
    let pr;
    if (args.expr === 'testio') {
       args.testio = true;
-      args.showProgress = msg => treeShowProgress(args, msg);
+      args.showProgress = msg => showProgress(msg, -1, () => { args._break = 1; });
       pr = treeIOTest(tree, args);
    } else if (args.expr || args.branch)
       pr = treeDraw(tree, args);
@@ -112187,6 +112256,8 @@ __proto__: null,
 TScatterPainter: TScatterPainter
 });
 
+const kLineNDC = BIT(14);
+
 class TLinePainter extends ObjectPainter {
 
    /** @summary Start interactive moving */
@@ -112225,14 +112296,16 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Calculate line coordinates */
    prepareDraw() {
-      const line = this.getObject(), kLineNDC = BIT(14);
+      const line = this.getObject();
 
       this.isndc = line.TestBit(kLineNDC);
 
-      this.x1 = this.axisToSvg('x', line.fX1, this.isndc, true);
-      this.y1 = this.axisToSvg('y', line.fY1, this.isndc, true);
-      this.x2 = this.axisToSvg('x', line.fX2, this.isndc, true);
-      this.y2 = this.axisToSvg('y', line.fY2, this.isndc, true);
+      const func = this.getAxisToSvgFunc(this.isndc, true);
+
+      this.x1 = func.x(line.fX1);
+      this.y1 = func.y(line.fY1);
+      this.x2 = func.x(line.fX2);
+      this.y2 = func.y(line.fY2);
 
       this.createAttLine({ attr: line });
    }
@@ -112248,9 +112321,9 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Redraw line */
    redraw() {
-      this.prepareDraw();
-
       this.createG();
+
+      this.prepareDraw();
 
       const elem = this.draw_g.append('svg:path')
                        .attr('d', this.createPath())
@@ -114098,15 +114171,30 @@ class TGaxisPainter extends TAxisPainter {
    }
 
    /** @summary Check if there is function for TGaxis can be found */
-   checkFuncion() {
+   async checkFuncion() {
       const gaxis = this.getObject();
-      if (!gaxis.fFunctionName)
+      if (!gaxis.fFunctionName) {
          this.axis_func = null;
-      else
-         this.axis_func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
+         return;
+      }
+      const func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
 
-      if (this.axis_func)
-         proivdeEvalPar(this.axis_func);
+      let promise = Promise.resolve(func);
+      if (!func) {
+         const h = getHPainter(),
+               item = h?.findItem({ name: gaxis.fFunctionName, check_keys: true });
+         if (item) {
+            promise = h.getObject({ item }).then(res => {
+               return res?.obj?._typename === clTF1 ? res.obj : null;
+            });
+         }
+      }
+
+      return promise.then(f => {
+         this.axis_func = f;
+         if (f)
+            proivdeEvalPar(f);
+      });
    }
 
    /** @summary Create handle for custom function in the axis */
@@ -114163,9 +114251,8 @@ class TGaxisPainter extends TAxisPainter {
 
       return ensureTCanvas(painter, false).then(() => {
          if (opt) painter.convertTo(opt);
-         painter.checkFuncion();
-         return painter.redraw();
-      });
+         return painter.checkFuncion();
+      }).then(() => painter.redraw());
    }
 
 } // class TGaxisPainter
@@ -117589,7 +117676,7 @@ class RPadPainter extends RObjectPainter {
            .style('width', '100%')
            .style('height', '100%')
            .style('position', 'absolute')
-           .style('inset', '0px');
+           .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
       }
 
       svg.style('filter', settings.DarkMode ? 'invert(100%)' : null);

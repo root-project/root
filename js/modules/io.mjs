@@ -2744,8 +2744,10 @@ class TFile {
 
                const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
                xhr.addEventListener('progress', oEvent => {
-                  if (oEvent.lengthComputable)
-                     progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
+                  if (oEvent.lengthComputable) {
+                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
+                        xhr.abort();
+                  }
                });
             } else if (first_block_retry && isFunc(xhr.addEventListener)) {
                xhr.addEventListener('progress', oEvent => {
