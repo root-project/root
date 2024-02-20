@@ -160,10 +160,12 @@ RWebWindow::CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Return URL string to connect web window
-/// URL may include extra parameters required for connection
-/// WARNING - do not invoke this method without real need, while each such URL
-/// registered in the web window and expected for connection from outside
-/// \param remote when true, real HTTP server will be started automatically
+/// URL typically includes extra parameters required for connection with the window like
+/// `http://localhost:9635/win1/?key=<connection_key>#<session_key>`
+/// When \param remote is true, real HTTP server will be started automatically and
+/// widget can be connected from the web browser. If \param remote is false,
+/// HTTP server will not be started and window can be connected only from ROOT application itself.
+/// !!! WARNING - do not invoke this method without real need, each URL consumes resources in widget and in http server
 
 std::string RWebWindow::GetUrl(bool remote)
 {
