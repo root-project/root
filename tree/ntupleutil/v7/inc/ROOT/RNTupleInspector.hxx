@@ -17,8 +17,8 @@
 #define ROOT7_RNTupleInspector
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleReader.hxx>
 
 #include <TFile.h>
 #include <TH1D.h>

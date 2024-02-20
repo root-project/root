@@ -226,7 +226,8 @@ public:
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
+   /// #include <ROOT/RNTupleWriter.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    /// using ROOT::Experimental::RNTupleWriter;
    ///
@@ -249,7 +250,7 @@ public:
    ///
    /// **Example: create a field with an initial value**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    ///
    /// auto model = RNTupleModel::Create();
@@ -258,7 +259,7 @@ public:
    /// ~~~
    /// **Example: create a field with a description**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    ///
    /// auto model = RNTupleModel::Create();

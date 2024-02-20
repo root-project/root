@@ -16,7 +16,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
 
 #include <atomic>

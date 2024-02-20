@@ -19,8 +19,9 @@
 // Do not use for real data!
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 #include <TBranch.h>
 #include <TCanvas.h>

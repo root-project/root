@@ -19,9 +19,9 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <string_view>
 
 #include <TFile.h>

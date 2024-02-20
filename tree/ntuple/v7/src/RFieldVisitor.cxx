@@ -15,7 +15,6 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
 

@@ -4,11 +4,11 @@
 #include <ROOT/RClusterPool.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnModel.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
