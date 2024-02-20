@@ -644,7 +644,7 @@ class TPadPainter extends ObjectPainter {
       if (this._fixed_size)
          svg.attr('width', rect.width).attr('height', rect.height);
       else
-         svg.style('width', '100%').style('height', '100%').style('inset', '0px');
+         svg.style('width', '100%').style('height', '100%').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
 
       svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 

@@ -448,6 +448,19 @@ const TooltipHandler = {
          }
       }
 
+      let path_name = null, same_path = hints.length > 1;
+      for (let n = 0; n < hints.length; ++n) {
+         const hint = hints[n], p = hint?.lines ? hint.lines[0]?.lastIndexOf('/') : -1;
+         if (p > 0) {
+            const path = hint.lines[0].slice(0, p + 1);
+            if (path_name === null)
+               path_name = path;
+            else if (path_name !== path)
+               same_path = false;
+         } else
+            same_path = false;
+      }
+
       const layer = this.hints_layer(),
             show_only_best = nhints > 15,
             coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
@@ -542,24 +555,14 @@ const TooltipHandler = {
           gapminx = -1111, gapmaxx = -1111;
       const minhinty = -frame_shift.y,
             cp = this.getCanvPainter(),
-            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y,
-      FindPosInGap = y => {
-         for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
-            const hint = hints[n];
-            if (!hint) continue;
-            if ((hint.y >= y - 5) && (hint.y <= y + hint.height + 5)) {
-               y = hint.y + 10;
-               n = -1;
-            }
-         }
-         return y;
-      };
+            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y;
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n],
-            group = hintsg.selectChild(`.painter_hint_${n}`);
+             group = hintsg.selectChild(`.painter_hint_${n}`);
 
-         if (show_only_best && (hint !== best_hint)) hint = null;
+         if (show_only_best && (hint !== best_hint))
+            hint = null;
 
          if (hint === null) {
             group.remove();
@@ -579,16 +582,23 @@ const TooltipHandler = {
          if (viewmode === 'single')
             curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
           else {
-            gapy = FindPosInGap(gapy);
+            for (let n = 0; (n < hints.length) && (gapy < maxhinty); ++n) {
+               const hint = hints[n];
+               if (!hint) continue;
+               if ((hint.y >= gapy - 5) && (hint.y <= gapy + hint.height + 5)) {
+                  gapy = hint.y + 10;
+                  n = -1;
+               }
+            }
             if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
             gapmaxx = Math.min(gapmaxx, hint.x);
          }
 
          group.attr('x', posx)
-            .attr('y', curry)
-            .property('curry', curry)
-            .property('gapy', gapy);
+              .attr('y', curry)
+              .property('curry', curry)
+              .property('gapy', gapy);
 
          curry += hint.height + 5;
          gapy += hint.height + 5;
@@ -597,7 +607,7 @@ const TooltipHandler = {
             group.selectAll('*').remove();
 
          group.attr('width', 60)
-            .attr('height', hint.height);
+              .attr('height', hint.height);
 
          const r = group.append('rect')
             .attr('x', 0)
@@ -614,8 +624,11 @@ const TooltipHandler = {
          }
          r.attr('stroke-width', hint.exact ? 3 : 1);
 
-         for (let l = 0; l < (hint.lines ? hint.lines.length : 0); l++) {
-            if (hint.lines[l] !== null) {
+         for (let l = 0; l < (hint.lines?.length ?? 0); l++) {
+            let line = hint.lines[l];
+            if (l === 0 && path_name && same_path)
+               line = line.slice(path_name.length);
+            if (line) {
                const txt = group.append('svg:text')
                   .attr('text-anchor', 'start')
                   .attr('x', wmargin)
@@ -624,9 +637,8 @@ const TooltipHandler = {
                   .style('fill', 'black')
                   .style('pointer-events', 'none')
                   .call(font.func)
-                  .text(hint.lines[l]),
-
-                box = getElementRect(txt, 'bbox');
+                  .text(line),
+               box = getElementRect(txt, 'bbox');
 
                actualw = Math.max(actualw, box.width);
             }

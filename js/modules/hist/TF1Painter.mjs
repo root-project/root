@@ -58,6 +58,7 @@ function proivdeEvalPar(obj, check_save) {
                 .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
                 .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
+                .replace(/\bsqrt\(/g, 'Math.sqrt(')
                 .replace(/\bxygaus\(/g, 'this.$math.gausxy(this, x, y, ')
                 .replace(/\bgaus\(/g, 'this.$math.gaus(this, x, ')
                 .replace(/\bgausn\(/g, 'this.$math.gausn(this, x, ')

@@ -1,4 +1,4 @@
-import { settings, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
+import { settings, internals, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
@@ -8,42 +8,54 @@ import { getRootColors } from '../base/colors.mjs';
   * @desc Previous message will be overwritten
   * if no argument specified, any shown messages will be removed
   * @param {string} msg - message to display
-  * @param {number} tmout - optional timeout in milliseconds, after message will disappear
+  * @param {number} [tmout] - optional timeout in milliseconds, after message will disappear
+  * @param {function} [click_handle] - optional handle to process click events
   * @private */
-function showProgress(msg, tmout) {
+function showProgress(msg, tmout, click_handle) {
    if (isBatchMode() || (typeof document === 'undefined'))
       return;
-   const id = 'jsroot_progressbox';
+
+   const id = 'jsroot_progressbox', modal = (settings.ProgressBox === 'modal') && isFunc(internals._modalProgress) ? internals._modalProgress : null;
    let box = d3_select('#' + id);
 
-   if (!settings.ProgressBox)
+   if (!settings.ProgressBox) {
+      if (modal) modal();
       return box.remove();
+   }
 
    if ((arguments.length === 0) || !msg) {
       if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
+      if (modal) modal();
       return;
    }
 
-   if (box.empty()) {
-      box = d3_select(document.body)
-              .append('div').attr('id', id)
-              .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
-      box.append('p');
+   if (modal) {
+      box.remove();
+      modal(msg, click_handle);
+   } else {
+      if (box.empty()) {
+         box = d3_select(document.body)
+               .append('div').attr('id', id)
+               .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
+         box.append('p');
+      }
+
+      box.property('with_timeout', false);
+
+      const p = box.select('p');
+
+      if (isStr(msg)) {
+         p.html(msg)
+          .on('click', isFunc(click_handle) ? click_handle : null)
+          .attr('title', isFunc(click_handle) ? 'Click element to abort current operation' : '');
+      }
+
+      p.attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
    }
-
-   box.property('with_timeout', false);
-
-   if (isStr(msg))
-      box.select('p').html(msg);
-    else {
-      box.html('');
-      box.node().appendChild(msg);
-   }
-
-   box.select('p').attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
-      box.property('with_timeout', true);
+      if (!box.empty())
+         box.property('with_timeout', true);
       setTimeout(() => showProgress('', -1), tmout);
    }
 }
