@@ -2,6 +2,6 @@
 .L lib/libbtag.so 
 #include "DataVector.h"
 TClass::GetClass("SG::AuxTypeVectorFactory<std::vector<ElementLink<SDataVector<xAOD::SJet_v1> > > >");
-c = TClass::GetClass("SDataVector<xAOD::SJet_v1>")->GetClassInfo();
+auto c = TClass::GetClass("SDataVector<xAOD::SJet_v1>")->GetClassInfo();
 printf("Classinfo for SDataVector<xAOD::SJet_v1> is %s\n",gInterpreter->ClassInfo_IsValid(c) ? "valid" : "invalid");
 
