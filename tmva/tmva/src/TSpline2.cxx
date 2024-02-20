@@ -60,8 +60,8 @@ TMVA::TSpline2::~TSpline2(void) {}
 Double_t TMVA::TSpline2::Eval( const Double_t x ) const
 {
    Double_t retval=0;
-   auto N = fX.size();
-   auto ibin = std::distance(fX.begin(), TMath::BinarySearch( fX.begin(), fX.end(), x ));
+   Int_t N = fX.size();
+   Int_t ibin = std::distance(fX.begin(), TMath::BinarySearch( fX.begin(), fX.end(), x ));
 
    // sanity checks
    if (ibin < 0 ) ibin = 0;
