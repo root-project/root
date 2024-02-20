@@ -254,7 +254,11 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
       auto f = gSystem->TempFileName(filebase, nullptr, ".html");
 
-      if (f) {
+      bool ferr = false;
+
+      if (!f) {
+         ferr = true;
+      } else {
          std::string content = std::regex_replace(
             "<!DOCTYPE html>\n"
             "<html lang=\"en\">\n"
@@ -271,16 +275,20 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
             "</body>\n"
             "</html>\n", std::regex("\\$url"), url);
 
-         fwrite(content.c_str(), 1, content.length(), f);
+         if (fwrite(content.c_str(), 1, content.length(), f) != content.length())
+            ferr = true;
 
-         fclose(f);
+         if (fclose(f) != 0)
+            ferr = true;
 
          tmpfile = filebase.Data();
 
          url = "file://"s + tmpfile;
+      }
 
-
-      } else {
+      if (ferr) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fail to create temporary HTML file to startup widget";
          return nullptr;
       }
@@ -295,6 +303,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
    if (exec.compare(0,5,"fork:") == 0) {
       if (fProg.empty()) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fork instruction without executable";
          return nullptr;
       }
@@ -305,6 +315,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
       std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
       if (!fargs || (fargs->GetLast()<=0)) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fork instruction is empty";
          return nullptr;
       }
@@ -320,6 +332,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
       pid_t pid;
       int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
       if (status != 0) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fail to launch " << argv[0];
          return nullptr;
       }
@@ -331,6 +345,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 #else
 
       if (fProg.empty()) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "No Web browser found";
          return nullptr;
       }
@@ -345,6 +361,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
       ss >> tmp >> c >> pid;
 
       if (pid <= 0) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fail to launch " << fProg;
          return nullptr;
       }
