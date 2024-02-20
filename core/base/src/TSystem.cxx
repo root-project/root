@@ -1477,12 +1477,14 @@ const char *TSystem::TempDirectory() const
 /// Create a secure temporary file by appending a unique
 /// 6 letter string to base. The file will be created in
 /// a standard (system) directory or in the directory
-/// provided in dir. The full filename is returned in base
+/// provided in dir. Optionally one can provide suffix
+/// append to the final name - like extension ".txt" or ".html".
+/// The full filename is returned in base
 /// and a filepointer is returned for safely writing to the file
 /// (this avoids certain security problems). Returns 0 in case
 /// of error.
 
-FILE *TSystem::TempFileName(TString &, const char *)
+FILE *TSystem::TempFileName(TString &, const char *, const char *)
 {
    AbstractMethod("TempFileName");
    return nullptr;
