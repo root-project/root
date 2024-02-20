@@ -13,9 +13,9 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleImporter.hxx>
+#include <ROOT/RNTupleReader.hxx>
 
 #include <TFile.h>
 #include <TROOT.h>

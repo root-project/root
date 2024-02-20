@@ -2,8 +2,8 @@
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RVec.hxx>
 
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <NTupleStruct.hxx>

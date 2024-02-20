@@ -20,10 +20,10 @@
 // `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RColor.hxx>
 #include <ROOT/RHistDrawable.hxx>

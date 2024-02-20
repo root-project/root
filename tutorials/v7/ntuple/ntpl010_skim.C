@@ -13,8 +13,9 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 #include <TH1F.h>
 #include <TRandom.h>

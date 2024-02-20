@@ -3,9 +3,11 @@
 
 #include "gtest/gtest.h"
 
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleAnchor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 /**
  * An RAII wrapper around an open temporary file on disk. It cleans up the

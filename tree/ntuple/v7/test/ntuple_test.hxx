@@ -6,14 +6,15 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
