@@ -42,9 +42,8 @@ ClassImp(TMVA::TSpline1);
 /// TSpline is a TNamed object
 
 TMVA::TSpline1::TSpline1( const TString& title, const TGraph *theGraph )
-   : N(theGraph->GetN()),
-     X(theGraph->GetX(), theGraph->GetX() + N),
-     Y(theGraph->GetY(), theGraph->GetY() + N)
+: fX(theGraph->GetX(), theGraph->GetX() + theGraph->GetN()),
+  fY(theGraph->GetY(), theGraph->GetY() + theGraph->GetN())
 {
    SetNameTitle( title, title );
 }
@@ -59,21 +58,22 @@ TMVA::TSpline1::~TSpline1( void ) {}
 
 Double_t TMVA::TSpline1::Eval( Double_t x ) const
 {
-   Int_t ibin = std::distance(X.begin(), TMath::BinarySearch(X.begin(), X.end(), x));
+   auto N = fX.size();
+   auto ibin = std::distance(fX.begin(), TMath::BinarySearch(fX.begin(), fX.end(), x));
    // sanity checks
    if (ibin < 0 ) ibin = 0;
    if (ibin >= N) ibin = N - 1;
 
    Int_t nextbin = ibin;
-   if ((x > X[ibin] && ibin != N-1) || ibin == 0)
+   if ((x > fX[ibin] && ibin != N-1) || ibin == 0)
       nextbin++;
    else
       nextbin--;
 
    // linear interpolation
-   Double_t dx = X[ibin] - X[nextbin];
-   Double_t dy = Y[ibin] - Y[nextbin];
-   return Y[ibin] + (x - X[ibin]) * dy/dx;
+   Double_t dx = fX[ibin] - fX[nextbin];
+   Double_t dy = fY[ibin] - fY[nextbin];
+   return fY[ibin] + (x - fX[ibin]) * dy/dx;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

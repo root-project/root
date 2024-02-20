@@ -54,9 +54,8 @@ namespace TMVA {
       virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
 
    private:
-      int N;
-      std::vector<Double_t> X;
-      std::vector<Double_t> Y;
+      std::vector<Double_t> fX;
+      std::vector<Double_t> fY;
 
       Double_t Quadrax( Float_t dm, Float_t dm1,
                         Float_t dm2, Float_t dm3,

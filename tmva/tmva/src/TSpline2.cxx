@@ -43,7 +43,8 @@ ClassImp(TMVA::TSpline2);
 /// TSpline is a TNamed object
 
 TMVA::TSpline2::TSpline2(const TString &title, const TGraph *theGraph)
-   : N(theGraph->GetN()), X(theGraph->GetX(), theGraph->GetX() + N), Y(theGraph->GetY(), theGraph->GetY() + N)
+: fX(theGraph->GetX(), theGraph->GetX() + theGraph->GetN()),
+  fY(theGraph->GetY(), theGraph->GetY() + theGraph->GetN())
 {
    SetNameTitle( title, title );
 }
@@ -59,8 +60,8 @@ TMVA::TSpline2::~TSpline2(void) {}
 Double_t TMVA::TSpline2::Eval( const Double_t x ) const
 {
    Double_t retval=0;
-
-   Int_t ibin = std::distance(X.begin(), TMath::BinarySearch( X.begin(), X.end(), x ));
+   auto N = fX.size();
+   auto ibin = std::distance(fX.begin(), TMath::BinarySearch( fX.begin(), fX.end(), x ));
 
    // sanity checks
    if (ibin < 0 ) ibin = 0;
@@ -69,44 +70,44 @@ Double_t TMVA::TSpline2::Eval( const Double_t x ) const
    Float_t dx = 0; // should be zero
    if (N < 3) { // if the graph does not have enough points
       Warning("Eval", "Graph has less than 3 points, returning value of the closest");
-      retval = Y[ibin];
+      retval = fY[ibin];
    } else if (ibin == 0) {
 
       retval = Quadrax(x,
-                       X[ibin] + dx,
-                       X[ibin + 1] + dx,
-                       X[ibin + 2] + dx,
-                       Y[ibin],
-                       Y[ibin + 1],
-                       Y[ibin + 2]);
+                       fX[ibin] + dx,
+                       fX[ibin + 1] + dx,
+                       fX[ibin + 2] + dx,
+                       fY[ibin],
+                       fY[ibin + 1],
+                       fY[ibin + 2]);
 
    } else if (ibin >= (N - 2)) {
       ibin = N - 1; // always fixed to last bin
 
       retval = Quadrax(x,
-                       X[ibin - 2] + dx,
-                       X[ibin - 1] + dx,
-                       X[ibin] + dx,
-                       Y[ibin - 2],
-                       Y[ibin - 1],
-                       Y[ibin]);
+                       fX[ibin - 2] + dx,
+                       fX[ibin - 1] + dx,
+                       fX[ibin] + dx,
+                       fY[ibin - 2],
+                       fY[ibin - 1],
+                       fY[ibin]);
    } else {
 
       retval = ( Quadrax( x,
-                          X[ibin-1] + dx,
-                          X[ibin]   + dx,
-                          X[ibin+1] + dx,
-                          Y[ibin-1],
-                          Y[ibin],
-                          Y[ibin+1])
+                          fX[ibin-1] + dx,
+                          fX[ibin]   + dx,
+                          fX[ibin+1] + dx,
+                          fY[ibin-1],
+                          fY[ibin],
+                          fY[ibin+1])
                  +
                  Quadrax( x,
-                          X[ibin] + dx,
-                          X[ibin+1]  + dx,
-                          X[ibin+2]  + dx,
-                          Y[ibin],
-                          Y[ibin+1],
-                          Y[ibin+2]) )*0.5;
+                          fX[ibin] + dx,
+                          fX[ibin+1]  + dx,
+                          fX[ibin+2]  + dx,
+                          fY[ibin],
+                          fY[ibin+1],
+                          fY[ibin+2]) )*0.5;
    }
 
    return retval;
