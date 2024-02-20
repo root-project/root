@@ -250,17 +250,12 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
    // these are secret parameters, hide them in temp file
    if ((url.find("token=") || url.find("key=")) && !args.IsBatchMode() && !args.IsHeadless()) {
-      gRandom->SetSeed(0);
+      TString filebase = "root_start_";
 
-      tmpfile = gSystem->TempDirectory();
+      auto f = gSystem->TempFileName(filebase, nullptr, ".html");
 
-      if (tmpfile.back() != std::filesystem::path::preferred_separator)
-         tmpfile += std::filesystem::path::preferred_separator;
-      tmpfile += "root_start_"s + std::to_string(gRandom->Integer(0x100000)) + ".html";
-
-      std::ofstream os(tmpfile);
-      if (os) {
-         os << std::regex_replace(
+      if (f) {
+         std::string content = std::regex_replace(
             "<!DOCTYPE html>\n"
             "<html lang=\"en\">\n"
             "<head>\n"
@@ -275,10 +270,16 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
             "</p>\n"
             "</body>\n"
             "</html>\n", std::regex("\\$url"), url);
+
+         fwrite(content.c_str(), 1, content.length(), f);
+
+         fclose(f);
+
+         tmpfile = filebase.Data();
+
          url = "file://"s + tmpfile;
 
-         os.close();
-         gSystem->Chmod(tmpfile.c_str(), 0400); // only read for user itself
+
       } else {
          R__LOG_ERROR(WebGUILog()) << "Fail to create temporary HTML file to startup widget";
          return nullptr;
