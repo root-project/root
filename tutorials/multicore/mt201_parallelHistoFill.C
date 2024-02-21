@@ -52,7 +52,9 @@ Int_t mt201_parallelHistoFill()
    // of interrupting it.
    auto monitor = [&]() {
       for (auto i : ROOT::TSeqI(5)) {
+#if !defined(_MSC_VER) || (_MSC_VER < 1939)
          std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(500));
+#endif
          auto h = ts_h.SnapshotMerge();
          std::cout << "Entries for the snapshot " << h->GetEntries() << std::endl;
       }
