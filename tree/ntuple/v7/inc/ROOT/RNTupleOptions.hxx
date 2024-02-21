@@ -35,7 +35,7 @@ All page sink classes need to support the common options.
 // clang-format on
 class RNTupleWriteOptions {
 protected:
-   int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
+   int fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
    /// Approximation of the target compressed cluster size
    std::size_t fApproxZippedClusterSize = 50 * 1000 * 1000;
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
