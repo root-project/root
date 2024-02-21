@@ -1,5 +1,6 @@
 #include "ntuple_test.hxx"
 #include <TRandom3.h>
+#include <TMemFile.h>
 
 #include <ROOT/RPageNullSink.hxx>
 using ROOT::Experimental::Internal::RPageNullSink;
@@ -275,6 +276,33 @@ TEST(RNTuple, PageFillingString) {
    ASSERT_EQ(2u, pr4.fPageInfos.size());
    EXPECT_EQ(16u, pr4.fPageInfos[0].fNElements);
    EXPECT_EQ(10u, pr4.fPageInfos[1].fNElements);
+}
+
+#ifdef R__HAS_DAVIX
+TEST(RNTuple, OpenHTTP)
+{
+  std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root"));
+  auto reader = RNTupleReader::Open(file->Get<RNTuple>("Events"));
+  reader->LoadEntry(0);
+}
+#endif
+
+TEST(RNTuple, TMemFile)
+{
+   TMemFile file("memfile.root", "RECREATE");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pt = model->MakeField<float>("pt", 42.0);
+
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", file);
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open(file.Get<RNTuple>("ntpl"));
+   auto pt = reader->GetModel().GetDefaultEntry().GetPtr<float>("pt");
+   reader->LoadEntry(0);
+   EXPECT_EQ(*pt, 42.0);
 }
 
 TEST(RPageSinkBuf, Basics)

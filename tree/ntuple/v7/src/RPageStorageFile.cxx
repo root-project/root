@@ -26,6 +26,7 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RRawFileTFile.hxx>
 
 #include <RVersion.h>
 #include <TError.h>
@@ -233,13 +234,20 @@ ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view 
    EnableDefaultMetrics("RPageSourceFile");
 }
 
-ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
+ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
+                                                               std::unique_ptr<ROOT::Internal::RRawFile> file,
                                                                const RNTupleReadOptions &options)
    : RPageSourceFile(ntupleName, options)
 {
-   fFile = ROOT::Internal::RRawFile::Create(path);
+   fFile = std::move(file);
    R__ASSERT(fFile);
    fReader = RMiniFileReader(fFile.get());
+}
+
+ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
+                                                               const RNTupleReadOptions &options)
+   : RPageSourceFile(ntupleName, ROOT::Internal::RRawFile::Create(path), options)
+{
 }
 
 void ROOT::Experimental::Internal::RPageSourceFile::InitDescriptor(const RNTuple &anchor)
@@ -277,11 +285,21 @@ ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &a
    if (!anchor.fFile)
       throw RException(R__FAIL("This RNTuple object was not streamed from a ROOT file (TFile or descendant)"));
 
-   // TODO(jblomer): Add RRawFile factory that create a raw file from a TFile. This may then duplicate the file
-   // descriptor (to avoid re-open).  There could also be a raw file that uses a TFile as a "backend" for TFile cases
-   // that are unsupported by raw file.
-   auto path = anchor.fFile->GetEndpointUrl()->GetFile();
-   auto pageSource = std::make_unique<RPageSourceFile>("", path, options);
+   std::unique_ptr<ROOT::Internal::RRawFile> rawFile;
+   // For local files and supported transport protocols, we want to open a new RRawFile to take advantage of the faster
+   // reading. To detect local files, we do not check for "file" because this could also happen for endpoint URLs of
+   // TMemFiles, but for the RTTI to be exactly a TFile.
+   auto url = anchor.fFile->GetEndpointUrl();
+   auto protocol = std::string(url->GetProtocol());
+   if (typeid(*anchor.fFile) == typeid(TFile)) {
+      rawFile = ROOT::Internal::RRawFile::Create(url->GetFile());
+   } else if (protocol == "http" || protocol == "https" || protocol == "root" || protocol == "roots") {
+      rawFile = ROOT::Internal::RRawFile::Create(url->GetUrl());
+   } else {
+      rawFile.reset(new ROOT::Internal::RRawFileTFile(anchor.fFile));
+   }
+
+   auto pageSource = std::make_unique<RPageSourceFile>("", std::move(rawFile), options);
    pageSource->InitDescriptor(anchor);
    pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
    return pageSource;

@@ -145,6 +145,8 @@ protected:
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
+   RPageSourceFile(std::string_view ntupleName, std::unique_ptr<ROOT::Internal::RRawFile> file,
+                   const RNTupleReadOptions &options);
    /// Used from the RNTuple class to build a datasource if the anchor is already available.
    /// Requires the RNTuple object to be streamed from a file.
    static std::unique_ptr<RPageSourceFile>
