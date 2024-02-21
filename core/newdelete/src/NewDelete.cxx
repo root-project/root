@@ -116,8 +116,7 @@ static TReAllocInit gReallocInit;
 #   define StoreSizeMagic(p, size, where) \
       StoreSize(p, size); \
       StoreMagic(p, size); \
-      EnterStat(size, ExtStart(p)); \
-      CheckObjPtr(ExtStart(p), where);
+      EnterStat(size, ExtStart(p));
 #else
 #   define storage_size(p) ((size_t)0)
 #   define RealSize(sz) (sz)
@@ -125,8 +124,7 @@ static TReAllocInit gReallocInit;
 #   define ExtStart(p) (p)
 #   define MemClear(p, start, len)
 #   define StoreSizeMagic(p, size, where) \
-      EnterStat(size, ExtStart(p)); \
-      CheckObjPtr(ExtStart(p), where);
+      EnterStat(size, ExtStart(p));
 #   define RemoveStatMagic(p, where) \
       RemoveStat(p);
 #endif
@@ -136,13 +134,6 @@ static TReAllocInit gReallocInit;
 
 #define CallFreeHook(p, size) \
    if (TStorage::GetFreeHook()) TStorage::GetFreeHook()(TStorage::GetFreeHookData(), (p), (size))
-
-#ifdef MEM_CHECKOBJECTPOINTERS
-//#   define CheckObjPtr(p, name) gObjectTable->CheckPtrAndWarn((name), (p));
-#   define CheckObjPtr(p, name)
-#else
-#   define CheckObjPtr(p, name)
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -259,7 +250,6 @@ void operator delete(void *ptr) noexcept
       Fatal(where, "space was not allocated via custom new");
 
    if (ptr) {
-      CheckObjPtr(ptr, where);
       CallFreeHook(ptr, storage_size(ptr));
       RemoveStatMagic(ptr, where);
       MemClear(RealStart(ptr), 0, RealSize(storage_size(ptr)));
