@@ -177,6 +177,17 @@ void *operator new(size_t size)
       gNewInit++;
    }
 
+   // Notes:
+   // The return of calloc is aligned with std::max_align_t.
+   // If/whe al > std::max_align_t we need to adjust.
+   // The layout for the Magic, Stat and Size is:
+   //  [0 : sizeof(std::max_align_t) [ -> Record `size`
+   //  [sizeof(std::max_align_t) : same + size ] -> Real data; lower bound id return value
+   //  [sizeof(std::max_align_t) + size : same + 1 [   -> MEM_MAGIC / Integrity marker
+   // We need sizeof(size_t) <= sizeof(std::max_align_t)
+   //
+   assert( sizeof(size_t) <= sizeof(std::max_align_t) );
+
    void *vp;
    if (ROOT::Internal::gMmallocDesc)
       vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
