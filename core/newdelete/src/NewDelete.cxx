@@ -162,13 +162,6 @@ static TReAllocInit gReallocInit;
 #endif
 
 //------------------------------------------------------------------------------
-
-#ifdef __GNUC__
-#   if !defined(R__THROWNEWDELETE) && __GNUC__ >= 3
-#      define R__THROWNEWDELETE
-#   endif
-#endif
-
 static const char *gSpaceErr = "storage exhausted (failed to allocate %ld bytes)";
 static int gNewInit = 0;
 
