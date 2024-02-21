@@ -52,8 +52,8 @@
 // Independent of any compile option settings the new, and ReAlloc      //
 // functions always set the memory to 0.                                //
 //                                                                      //
-// The powerful MEM_DEBUG and MEM_STAT macros were borrowed from        //
-// the ET++ framework.                                                  //
+// The powerful MEM_DEBUG and MEM_STAT macros were originally borrowed  //
+// from the ET++ framework.                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -87,70 +87,74 @@ static TReAllocInit gReallocInit;
 #   define MEM_DEBUG
 #endif
 
-#ifdef MEM_DEBUG
-#   define MEM_MAGIC ((unsigned char)0xAB)
-#   define RealStart(p) ((char*)(p) - sizeof(std::max_align_t))
-#ifdef R__B64
-#   define storage_size(p) (*(size_t*)RealStart(p))
-#   define StoreSize(p, sz) (*((size_t*)(p)) = (sz))
-#else
-#   define StoreSize(p, sz) (*((int*)(p)) = (sz))
-#   define storage_size(p) ((size_t)*(int*)RealStart(p))
-#endif
-#   define ExtStart(p) ((char*)(p) + sizeof(std::max_align_t))
-#   define RealSize(sz) ((sz) + sizeof(std::max_align_t) + sizeof(char))
-#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+sizeof(std::max_align_t)) = MEM_MAGIC
-#   define MemClear(p, start, len) \
-      if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
-#   define TestMagic(p, sz) (*((unsigned char*)(p)+sz) != MEM_MAGIC)
-#   define CheckMagic(p, s, where) \
-      if (TestMagic(p, s))    \
-         Fatal(where, "%s", "storage area overwritten");
-#   define CheckFreeSize(p, where) \
-      if (storage_size((p)) > TStorage::GetMaxBlockSize()) \
-         Fatal(where, "unreasonable size (%ld)", (Long_t)storage_size(p));
-#   define RemoveStatMagic(p, where) \
-      CheckFreeSize(p, where); \
-      RemoveStat(p); \
-      CheckMagic(p, storage_size(p), where)
-#   define StoreSizeMagic(p, size, where) \
-      StoreSize(p, size); \
-      StoreMagic(p, size); \
-      EnterStat(size, ExtStart(p));
-#else
-#   define storage_size(p) ((size_t)0)
-#   define RealSize(sz) (sz)
-#   define RealStart(p) (p)
-#   define ExtStart(p) (p)
-#   define MemClear(p, start, len)
-#   define StoreSizeMagic(p, size, where) \
-      EnterStat(size, ExtStart(p));
-#   define RemoveStatMagic(p, where) \
-      RemoveStat(p);
-#endif
-
-#define MemClearRe(p, start, len) \
-   if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
-
-#define CallFreeHook(p, size) \
-   if (TStorage::GetFreeHook()) TStorage::GetFreeHook()(TStorage::GetFreeHookData(), (p), (size))
-
 ////////////////////////////////////////////////////////////////////////////////
+
+namespace {
 
 #ifdef MEM_STAT
 
-#define EnterStat(s, p) \
-   TStorage::EnterStat(s, p)
-#define RemoveStat(p) \
-   TStorage::RemoveStat(p)
+auto EnterStat(size_t s, void *p) {
+   TStorage::EnterStat(s, p); }
+auto RemoveStat(void *p) {
+   TStorage::RemoveStat(p); }
 
 #else
 
-#define EnterStat(s, p) \
-   TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), s))
-#define RemoveStat(p)
+auto EnterStat(size_t s, void *p) {
+   TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), s)); }
+auto RemoveStat(void *) {}
 
 #endif
+
+#ifdef MEM_DEBUG
+#   define MEM_MAGIC ((unsigned char)0xAB)
+auto RealStart(void *p) { return ((char*)(p) - sizeof(std::max_align_t)); }
+#ifdef R__B64
+auto storage_size(void *p) { return (*(size_t*)RealStart(p)); }
+auto StoreSize(void *p, size_t sz) { return (*((size_t*)(p)) = (sz)); }
+#else
+auto StoreSize(void *p, int sz) { return (*((int*)(p)) = (sz)); }
+auto storage_size(p) { return ((size_t)*(int*)RealStart(p)); }
+#endif
+auto ExtStart(void *p) { return ((char*)(p) + sizeof(std::max_align_t)); }
+auto RealSize(size_t sz) { return ((sz) + sizeof(std::max_align_t) + sizeof(char)); }
+auto StoreMagic(void *p, size_t sz) { return *((unsigned char*)(p)+sz+sizeof(std::max_align_t)) = MEM_MAGIC; }
+auto MemClear(void *p, size_t start, size_t len) {
+      if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len)); }
+auto TestMagic(void *p, size_t sz) { return (*((unsigned char*)(p)+sz) != MEM_MAGIC); }
+auto CheckMagic(void *p, size_t s, const char *where) {
+      if (TestMagic(p, s))
+         Fatal(where, "%s", "storage area overwritten"); }
+auto CheckFreeSize(void *p, const char *where) {
+      if (storage_size((p)) > TStorage::GetMaxBlockSize())
+         Fatal(where, "unreasonable size (%ld)", (Long_t)storage_size(p)); }
+auto RemoveStatMagic(void *p, const char *where) {
+      CheckFreeSize(p, where);
+      RemoveStat(p);
+      CheckMagic(p, storage_size(p), where); }
+auto StoreSizeMagic(void *p, size_t size, const char * /* where */) {
+      StoreSize(p, size);
+      StoreMagic(p, size);
+      EnterStat(size, ExtStart(p)); }
+#else
+auto storage_size(void *) { return ((size_t)0); }
+auto RealSize(size_t sz) { return sz; }
+auto RealStart(p) { return p; }
+auto ExtStart(void *p) { return p; }
+auto MemClear(void *, size_t /* start */, size_t /* len */) {}
+auto StoreSizeMagic(void *p, size_t size, const char * /* where */) {
+      EnterStat(size, ExtStart(p)); }
+auto RemoveStatMagic(void *p, const char * /* where */) {
+      RemoveStat(p); }
+#endif
+
+auto MemClearRe(void *p, size_t start, size_t len) {
+   if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len)); }
+
+auto CallFreeHook(void *p, size_t size) {
+   if (TStorage::GetFreeHook()) TStorage::GetFreeHook()(TStorage::GetFreeHookData(), (p), (size)); }
+
+} // anonymous namespace
 
 //------------------------------------------------------------------------------
 static const char *gSpaceErr = "storage exhausted (failed to allocate %ld bytes)";
