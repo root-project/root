@@ -13,11 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RColumnElement.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleInspector.hxx>
-#include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RError.hxx>
 
 #include <TFile.h>
