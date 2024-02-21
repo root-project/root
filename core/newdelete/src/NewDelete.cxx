@@ -104,7 +104,7 @@ auto RemoveStat(void *p)
 
 #else
 
-auto EnterStat(size_t s, void *p)
+auto EnterStat(size_t s, void *)
 {
    TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), s));
 }
@@ -112,95 +112,164 @@ auto RemoveStat(void *) {}
 
 #endif
 
+constexpr unsigned char kOffsetSlot = 1;
+constexpr unsigned char kAlignmentSlot = 2;
+constexpr unsigned char kSizeSlot = 3;
+
+
+auto align_address_up(void *p, std::align_val_t al)
+{
+   size_t alignment = static_cast<size_t>(al);
+   auto aligned_start = (((size_t)p) + (alignment - 1)) & ~(alignment - 1);
+   return reinterpret_cast<void*>(aligned_start);
+}
+
+auto Offset(void *data_start)
+{
+   size_t *start = reinterpret_cast<size_t*>(data_start);
+   return *(start - kOffsetSlot);
+}
+
+auto RealStart(void *data_start)
+{
+   return ((char *)(data_start) - Offset(data_start));
+}
+
+auto RequestedAlignment(void *data_start)
+{
+   size_t *start = reinterpret_cast<size_t*>(data_start);
+   return static_cast<std::align_val_t>(*(start - kAlignmentSlot));
+}
+
 #ifdef MEM_DEBUG
+
+constexpr unsigned char kMetaDataSize = 3;
+
 #   define MEM_MAGIC ((unsigned char)0xAB)
-auto RealStart(void *p)
+
+auto ExtStart(void *p, std::align_val_t al)
 {
-   return ((char *)(p) - sizeof(std::max_align_t));
+   size_t *start = reinterpret_cast<size_t*>(p);
+   // start is of type size_t so that the addition of kMetaDataSize is correct
+   return reinterpret_cast<size_t*>(align_address_up(start + kMetaDataSize, al));
 }
-#ifdef R__B64
-auto storage_size(void *p)
+
+auto storage_size(void *data_start)
 {
-   return (*(size_t *)RealStart(p));
+   size_t *start = reinterpret_cast<size_t*>(data_start);
+   return *(start - kSizeSlot);
 }
-auto StoreSize(void *p, size_t sz)
+
+auto StoreSize(void *p, size_t sz, std::align_val_t al)
 {
-   return (*((size_t *)(p)) = (sz));
+   size_t *start = ExtStart(p, al);
+   *(start - kOffsetSlot) = (char*)start - (char*)p;
+   *(start - kAlignmentSlot) = static_cast<size_t>(al);
+   return (*(start - kSizeSlot) = sz);
 }
-#else
-auto StoreSize(void *p, int sz)
+
+auto RealSize(void *ptr)
 {
-   return (*((int *)(p)) = (sz));
+   auto requested_size = storage_size(ptr);
+   auto offset = Offset(ptr);
+   return requested_size + offset + 1;
 }
-auto storage_size(p)
+
+auto RealSize(size_t sz, std::align_val_t ale)
 {
-   return ((size_t) * (int *)RealStart(p));
+   size_t al = static_cast<size_t>(ale);
+   // The meta data is the offset and alignment
+   auto real_size = sz + sizeof(size_t) * 2; // Always store the offset
+   real_size += sizeof(size_t) + 1; // size and MEM_MAGIC
+   if ( al > sizeof(size_t) )
+      // Maximum possible 'wastage/padding due to alignment'
+      // i.e. 'at worst' the allocation was one 'calloc' aligment away from
+      // the proper `al` alignment.
+      real_size += al - sizeof(size_t);
+   return real_size;
 }
-#endif
-auto ExtStart(void *p)
+
+auto StoreMagic(void *p, size_t sz, std::align_val_t al)
 {
-   return ((char *)(p) + sizeof(std::max_align_t));
+   auto where = reinterpret_cast<char*>(ExtStart(p, al)) + sz;
+   return *reinterpret_cast<unsigned char*>(where) = MEM_MAGIC;
 }
-auto RealSize(size_t sz)
-{
-   return ((sz) + sizeof(std::max_align_t) + sizeof(char));
-}
-auto StoreMagic(void *p, size_t sz)
-{
-   return *((unsigned char *)(p) + sz + sizeof(std::max_align_t)) = MEM_MAGIC;
-}
+
 auto MemClear(void *p, size_t start, size_t len)
 {
    if ((len) > 0)
       memset(&((char *)(p))[(start)], 0, (len));
 }
-auto TestMagic(void *p, size_t sz)
+
+auto TestMagic(void *data_start, size_t sz)
 {
-   return (*((unsigned char *)(p) + sz) != MEM_MAGIC);
+   return (*((unsigned char *)(data_start) + sz) != MEM_MAGIC);
 }
-auto CheckMagic(void *p, size_t s, const char *where)
+
+auto CheckMagic(void *data_start, size_t s, const char *where)
 {
-   if (TestMagic(p, s))
+   if (TestMagic(data_start, s))
       Fatal(where, "%s", "storage area overwritten");
 }
-auto CheckFreeSize(void *p, const char *where)
+
+auto CheckFreeSize(void *data_start, const char *where)
 {
-   if (storage_size((p)) > TStorage::GetMaxBlockSize())
-      Fatal(where, "unreasonable size (%ld)", (Long_t)storage_size(p));
+   if (storage_size((data_start)) > TStorage::GetMaxBlockSize())
+      Fatal(where, "unreasonable size (%ld)", (Long_t)storage_size(data_start));
 }
-auto RemoveStatMagic(void *p, const char *where)
+
+auto RemoveStatMagic(void *data_start, const char *where)
 {
-   CheckFreeSize(p, where);
-   RemoveStat(p);
-   CheckMagic(p, storage_size(p), where);
+   CheckFreeSize(data_start, where);
+   RemoveStat(data_start);
+   CheckMagic(data_start, storage_size(data_start), where);
 }
-auto StoreSizeMagic(void *p, size_t size, const char * /* where */)
+
+auto StoreSizeMagic(void *p, size_t size, std::align_val_t al)
 {
-   StoreSize(p, size);
-   StoreMagic(p, size);
-   EnterStat(size, ExtStart(p));
+   StoreSize(p, size, al);
+   StoreMagic(p, size, al);
+   EnterStat(size, ExtStart(p, al));
 }
+
 #else
+
+constexpr unsigned char kMetaDataSize = 2;
 auto storage_size(void *)
 {
    return ((size_t)0);
 }
-auto RealSize(size_t sz)
+auto RealSize(void *ptr)
 {
-   return sz;
+   auto requested_size = storage_size(ptr);
+   auto offset = Offset(ptr);
+   return requested_size + offset;
 }
-auto RealStart(p)
+auto RealSize(size_t sz, std::align_val_t  ale)
 {
-   return p;
+   size_t al = static_cast<size_t>(ale);
+   // The meta data is the offset and alignment
+   auto real_size = sz + sizeof(size_t) * kMetaDataSize;
+   if ( al > sizeof(size_t) )
+      // Maximum possible 'wastage/padding due to alignment'
+      // i.e. 'at worst' the allocation was one 'calloc' aligment away from
+      // the proper `al` alignment.
+      real_size += al - sizeof(size_t));
+   return real_size;
 }
-auto ExtStart(void *p)
+auto ExtStart(void *p, std::align_val_t al)
 {
-   return p;
+   size_t *start = reinterpret_cast<size_t*>(p);
+   return reinterpret_cast<size_t*>(align_address_up(start + kMetaDataSize, al));
 }
 auto MemClear(void *, size_t /* start */, size_t /* len */) {}
-auto StoreSizeMagic(void *p, size_t size, const char * /* where */)
+auto StoreSizeMagic(void *p, size_t size, std::align_val_t al)
 {
-   EnterStat(size, ExtStart(p));
+   size_t *start = ExtStart(p, al);
+   *(start - kOffsetSlot) = (char*)start - (char*)p;
+   *(start - kAlignmentSlot) = static_cast<size_t>(al);
+   (void)kSizeSlot;
+   EnterStat(size, ExtStart(p, al));
 }
 auto RemoveStatMagic(void *p, const char * /* where */)
 {
@@ -241,14 +310,14 @@ void *operator new(size_t size, const std::nothrow_t&) noexcept
 
 void *operator new(size_t size, std::align_val_t al)
 {
-  static const char *where = "operator new";
+   static const char *where = "operator new";
 
    if (!gNewInit) {
       TStorage::SetCustomNewDelete();
       gNewInit++;
    }
 
-   // Notes:
+   // Old Notes:
    // The return of calloc is aligned with std::max_align_t.
    // If/whe al > std::max_align_t we need to adjust.
    // The layout for the Magic, Stat and Size is:
@@ -257,17 +326,43 @@ void *operator new(size_t size, std::align_val_t al)
    //  [sizeof(std::max_align_t) + size : same + 1 [   -> MEM_MAGIC / Integrity marker
    // We need sizeof(size_t) <= sizeof(std::max_align_t)
    //
-   assert(sizeof(size_t) <= sizeof(std::max_align_t));
+   // New Notes:
+   // The return of calloc is aligned with std::max_align_t.
+   // If/whe al > std::max_align_t we need to adjust.
+   // The layout for the Offset, Magic, Stat and Size is:
+   //  [0 : returned ptr value - sizeof(size_t) * 3 [ -> Unused; Usually of size 0.
+#ifdef MEM_DEBUG
+   //  [returned ptr value - sizeof(size_t) * 3 : same + sizeof(size_t) [  -> Requested allocation size
+#endif
+   //  [returned ptr value - sizeof(size_t) * 2 : same + sizeof(size_t) [  -> Requested alignment
+   //  [returned ptr value - sizeof(size_t) : same + sizeof(size_t) [  -> Offset between the return ptr value and the allocated start
+   //  [returned ptr value : same + size [ -> Real data start
+   //  [returned ptr value + size : same + 1 [   -> MEM_MAGIC / Integrity marker
+   //
+   // Per C++ standard 3.11 Alignment [basic.align]:
+   //   Every alignment value shall be a non-negative integral power of two.
+#if 0
+   assert( sizeof(size_t) <= sizeof(std::max_align_t) );
+   if (reinterpret_cast<size_t>(al) > sizeof(std::max_align_t)) {
+      // This actually the usual case since __STDCPP_DEFAULT_NEW_ALIGNMENT__ > sizeof(std::max_align_t)
+
+      size_t alignment = reinterpret_cast<size_t>(al);
+      char *p = ...;
+      // size_t((p + (alignment - 1)) / alignment) * alignment
+      char *aligned_start = ((p + (alignment - 1)) & ~(alignment - 1));
+   }
+#endif
 
    void *vp;
+   auto real_size = RealSize(size, al);
    if (ROOT::Internal::gMmallocDesc)
-      vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
+      vp = ::mcalloc(ROOT::Internal::gMmallocDesc, real_size, sizeof(char));
    else
-      vp = ::calloc(RealSize(size), sizeof(char));
+      vp = ::calloc(real_size, sizeof(char));
    if (vp == 0)
-      Fatal(where, gSpaceErr, RealSize(size));
-   StoreSizeMagic(vp, size, where); // NOLINT
-   return ExtStart(vp);
+      Fatal(where, gSpaceErr, real_size);
+   StoreSizeMagic(vp, size, al); // NOLINT
+   return ExtStart(vp, al);
 }
 
 void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
@@ -291,13 +386,13 @@ void *operator new(size_t size, void *vp)
    if (vp == 0) {
       void *vp;
       if (ROOT::Internal::gMmallocDesc)
-         vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
+         vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size, __STDCPP_DEFAULT_NEW_ALIGNMENT__), sizeof(char));
       else
-         vp = ::calloc(RealSize(size), sizeof(char));
+         vp = ::calloc(RealSize(size, __STDCPP_DEFAULT_NEW_ALIGNMENT__), sizeof(char));
       if (vp == 0)
-         Fatal(where, gSpaceErr, RealSize(size));
+         Fatal(where, gSpaceErr, RealSize(size, __STDCPP_DEFAULT_NEW_ALIGNMENT__));
       StoreSizeMagic(vp, size, where);
-      return ExtStart(vp);
+      return ExtStart(vp, al);
    }
    return vp;
 }
@@ -314,15 +409,19 @@ void operator delete(void *ptr) noexcept
       Fatal(where, "space was not allocated via custom new");
 
    if (ptr) {
-      CallFreeHook(ptr, storage_size(ptr));
+      auto requested_size = storage_size(ptr);
+      auto start = RealStart(ptr);
+      auto real_size = RealSize(ptr);
+      CallFreeHook(ptr, requested_size);
       RemoveStatMagic(ptr, where);
-      MemClear(RealStart(ptr), 0, RealSize(storage_size(ptr)));
+      // After this the meta-data is also cleared.
+      MemClear(start, 0, real_size);
       TSystem::ResetErrno();
       if (!ROOT::Internal::gFreeIfTMapFile
-          || !ROOT::Internal::gFreeIfTMapFile(RealStart(ptr))) {
+          || !ROOT::Internal::gFreeIfTMapFile(start)) {
          do {
             TSystem::ResetErrno();
-            ::free(RealStart(ptr)); // NOLINT
+            ::free(start); // NOLINT
          } while (TSystem::GetErrno() == EINTR);
       }
       if (TSystem::GetErrno() != 0)
@@ -451,15 +550,16 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
       return ovp;
    RemoveStatMagic(ovp, where);
    void *vp;
+   std::align_val_t al = RequestedAlignment(ovp);
    if (ROOT::Internal::gMmallocDesc)
-      vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
+      vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size, al));
    else
-      vp = ::realloc((char *)RealStart(ovp), RealSize(size));
+      vp = ::realloc((char *)RealStart(ovp), RealSize(size, al));
    if (vp == 0)
-      Fatal(where, gSpaceErr, RealSize(size));
+      Fatal(where, gSpaceErr, RealSize(size, al));
    if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size - oldsize); // NOLINT
+      MemClearRe(ExtStart(vp, al), oldsize, size - oldsize); // NOLINT
 
-   StoreSizeMagic(vp, size, where);                      // NOLINT
-   return ExtStart(vp);
+   StoreSizeMagic(vp, size, al);                      // NOLINT
+   return ExtStart(vp, al);
 }
