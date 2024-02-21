@@ -45,7 +45,7 @@ void ntpl004_dimuon() {
    // Use all available CPU cores
    ROOT::EnableImplicitMT();
 
-   auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
+   ROOT::RDataFrame df("Events", kNTupleFileName);
 
    // The tutorial is identical to df102_NanoAODDimuonAnalysis except the use of RNTuple.
 
