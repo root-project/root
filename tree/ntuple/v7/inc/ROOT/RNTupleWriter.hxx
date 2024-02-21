@@ -230,7 +230,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RCollectionNTuple
+\class ROOT::Experimental::RCollectionNTupleWriter
 \ingroup NTuple
 \brief A virtual ntuple used for writing untyped collections that can be used to some extent like an RNTupleWriter
 *
