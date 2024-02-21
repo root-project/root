@@ -55,6 +55,6 @@ void ntpl008_import()
    auto reader = RNTupleReader::Open(ntpl);
    reader->PrintInfo();
 
-   auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
+   ROOT::RDataFrame df("Events", kNTupleFileName);
    df.Histo1D({"Jet_pt", "Jet_pt", 100, 0, 0}, "Jet_pt")->DrawCopy();
 }
