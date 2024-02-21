@@ -93,66 +93,132 @@ namespace {
 
 #ifdef MEM_STAT
 
-auto EnterStat(size_t s, void *p) {
-   TStorage::EnterStat(s, p); }
-auto RemoveStat(void *p) {
-   TStorage::RemoveStat(p); }
+auto EnterStat(size_t s, void *p)
+{
+   TStorage::EnterStat(s, p);
+}
+auto RemoveStat(void *p)
+{
+   TStorage::RemoveStat(p);
+}
 
 #else
 
-auto EnterStat(size_t s, void *p) {
-   TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), s)); }
+auto EnterStat(size_t s, void *p)
+{
+   TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), s));
+}
 auto RemoveStat(void *) {}
 
 #endif
 
 #ifdef MEM_DEBUG
 #   define MEM_MAGIC ((unsigned char)0xAB)
-auto RealStart(void *p) { return ((char*)(p) - sizeof(std::max_align_t)); }
+auto RealStart(void *p)
+{
+   return ((char *)(p) - sizeof(std::max_align_t));
+}
 #ifdef R__B64
-auto storage_size(void *p) { return (*(size_t*)RealStart(p)); }
-auto StoreSize(void *p, size_t sz) { return (*((size_t*)(p)) = (sz)); }
+auto storage_size(void *p)
+{
+   return (*(size_t *)RealStart(p));
+}
+auto StoreSize(void *p, size_t sz)
+{
+   return (*((size_t *)(p)) = (sz));
+}
 #else
-auto StoreSize(void *p, int sz) { return (*((int*)(p)) = (sz)); }
-auto storage_size(p) { return ((size_t)*(int*)RealStart(p)); }
+auto StoreSize(void *p, int sz)
+{
+   return (*((int *)(p)) = (sz));
+}
+auto storage_size(p)
+{
+   return ((size_t) * (int *)RealStart(p));
+}
 #endif
-auto ExtStart(void *p) { return ((char*)(p) + sizeof(std::max_align_t)); }
-auto RealSize(size_t sz) { return ((sz) + sizeof(std::max_align_t) + sizeof(char)); }
-auto StoreMagic(void *p, size_t sz) { return *((unsigned char*)(p)+sz+sizeof(std::max_align_t)) = MEM_MAGIC; }
-auto MemClear(void *p, size_t start, size_t len) {
-      if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len)); }
-auto TestMagic(void *p, size_t sz) { return (*((unsigned char*)(p)+sz) != MEM_MAGIC); }
-auto CheckMagic(void *p, size_t s, const char *where) {
-      if (TestMagic(p, s))
-         Fatal(where, "%s", "storage area overwritten"); }
-auto CheckFreeSize(void *p, const char *where) {
-      if (storage_size((p)) > TStorage::GetMaxBlockSize())
-         Fatal(where, "unreasonable size (%ld)", (Long_t)storage_size(p)); }
-auto RemoveStatMagic(void *p, const char *where) {
-      CheckFreeSize(p, where);
-      RemoveStat(p);
-      CheckMagic(p, storage_size(p), where); }
-auto StoreSizeMagic(void *p, size_t size, const char * /* where */) {
-      StoreSize(p, size);
-      StoreMagic(p, size);
-      EnterStat(size, ExtStart(p)); }
+auto ExtStart(void *p)
+{
+   return ((char *)(p) + sizeof(std::max_align_t));
+}
+auto RealSize(size_t sz)
+{
+   return ((sz) + sizeof(std::max_align_t) + sizeof(char));
+}
+auto StoreMagic(void *p, size_t sz)
+{
+   return *((unsigned char *)(p) + sz + sizeof(std::max_align_t)) = MEM_MAGIC;
+}
+auto MemClear(void *p, size_t start, size_t len)
+{
+   if ((len) > 0)
+      memset(&((char *)(p))[(start)], 0, (len));
+}
+auto TestMagic(void *p, size_t sz)
+{
+   return (*((unsigned char *)(p) + sz) != MEM_MAGIC);
+}
+auto CheckMagic(void *p, size_t s, const char *where)
+{
+   if (TestMagic(p, s))
+      Fatal(where, "%s", "storage area overwritten");
+}
+auto CheckFreeSize(void *p, const char *where)
+{
+   if (storage_size((p)) > TStorage::GetMaxBlockSize())
+      Fatal(where, "unreasonable size (%ld)", (Long_t)storage_size(p));
+}
+auto RemoveStatMagic(void *p, const char *where)
+{
+   CheckFreeSize(p, where);
+   RemoveStat(p);
+   CheckMagic(p, storage_size(p), where);
+}
+auto StoreSizeMagic(void *p, size_t size, const char * /* where */)
+{
+   StoreSize(p, size);
+   StoreMagic(p, size);
+   EnterStat(size, ExtStart(p));
+}
 #else
-auto storage_size(void *) { return ((size_t)0); }
-auto RealSize(size_t sz) { return sz; }
-auto RealStart(p) { return p; }
-auto ExtStart(void *p) { return p; }
+auto storage_size(void *)
+{
+   return ((size_t)0);
+}
+auto RealSize(size_t sz)
+{
+   return sz;
+}
+auto RealStart(p)
+{
+   return p;
+}
+auto ExtStart(void *p)
+{
+   return p;
+}
 auto MemClear(void *, size_t /* start */, size_t /* len */) {}
-auto StoreSizeMagic(void *p, size_t size, const char * /* where */) {
-      EnterStat(size, ExtStart(p)); }
-auto RemoveStatMagic(void *p, const char * /* where */) {
-      RemoveStat(p); }
+auto StoreSizeMagic(void *p, size_t size, const char * /* where */)
+{
+   EnterStat(size, ExtStart(p));
+}
+auto RemoveStatMagic(void *p, const char * /* where */)
+{
+   RemoveStat(p);
+}
 #endif
 
-auto MemClearRe(void *p, size_t start, size_t len) {
-   if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len)); }
+auto MemClearRe(void *p, size_t start, size_t len)
+{
+   if ((len) > 0)
+      memset(&((char *)(p))[(start)], 0, (len));
+}
 
-auto CallFreeHook(void *p, size_t size) {
-   if (TStorage::GetFreeHook()) TStorage::GetFreeHook()(TStorage::GetFreeHookData(), (p), (size)); }
+auto CallFreeHook(void *p, size_t size)
+{
+   if (TStorage::GetFreeHook())
+      TStorage::GetFreeHook()(TStorage::GetFreeHookData(), (p), (size));
+}
 
 } // anonymous namespace
 
@@ -181,7 +247,7 @@ void *operator new(size_t size)
    //  [sizeof(std::max_align_t) + size : same + 1 [   -> MEM_MAGIC / Integrity marker
    // We need sizeof(size_t) <= sizeof(std::max_align_t)
    //
-   assert( sizeof(size_t) <= sizeof(std::max_align_t) );
+   assert(sizeof(size_t) <= sizeof(std::max_align_t));
 
    void *vp;
    if (ROOT::Internal::gMmallocDesc)
@@ -190,11 +256,11 @@ void *operator new(size_t size)
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
-   StoreSizeMagic(vp, size, where);  // NOLINT
+   StoreSizeMagic(vp, size, where); // NOLINT
    return ExtStart(vp);
 }
 
-void *operator new(size_t size, const std::nothrow_t&) noexcept
+void *operator new(size_t size, const std::nothrow_t &) noexcept
 {
    return ::operator new(size);
 }
@@ -203,13 +269,13 @@ void *operator new(size_t size, const std::nothrow_t&) noexcept
 
 void *operator new(size_t size, std::align_val_t)
 {
-   Fatal("operator new","with std::align_val_t is not implemented yet");
+   Fatal("operator new", "with std::align_val_t is not implemented yet");
    return ::operator new(size);
 }
 
-void *operator new(size_t size, std::align_val_t, const std::nothrow_t& nt) noexcept
+void *operator new(size_t size, std::align_val_t, const std::nothrow_t &nt) noexcept
 {
-   Fatal("operator new","with std::align_val_t is not implemented yet");
+   Fatal("operator new", "with std::align_val_t is not implemented yet");
    return ::operator new(size, nt);
 }
 
@@ -262,7 +328,7 @@ void operator delete(void *ptr) noexcept
           || !ROOT::Internal::gFreeIfTMapFile(RealStart(ptr))) {
          do {
             TSystem::ResetErrno();
-            ::free(RealStart(ptr));  // NOLINT
+            ::free(RealStart(ptr)); // NOLINT
          } while (TSystem::GetErrno() == EINTR);
       }
       if (TSystem::GetErrno() != 0)
@@ -270,7 +336,7 @@ void operator delete(void *ptr) noexcept
    }
 }
 
-void operator delete(void *ptr, const std::nothrow_t&) noexcept
+void operator delete(void *ptr, const std::nothrow_t &) noexcept
 {
    operator delete(ptr);
 }
@@ -278,25 +344,25 @@ void operator delete(void *ptr, const std::nothrow_t&) noexcept
 #if __cplusplus >= 201700L
 void operator delete(void * /*ptr*/, std::align_val_t /*al*/) noexcept
 {
-   Fatal("operator delete","with std::align_val_t is not implemented yet");
+   Fatal("operator delete", "with std::align_val_t is not implemented yet");
 }
-void operator delete(void * /*ptr*/, std::align_val_t /*al*/, const std::nothrow_t&) noexcept
+void operator delete(void * /*ptr*/, std::align_val_t /*al*/, const std::nothrow_t &) noexcept
 {
-   Fatal("operator delete","with std::align_val_t is not implemented yet");
+   Fatal("operator delete", "with std::align_val_t is not implemented yet");
 }
 #endif
-
 
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
-void operator delete(void* ptr, std::size_t) noexcept {
+void operator delete(void *ptr, std::size_t) noexcept
+{
    operator delete(ptr);
 }
 #if __cplusplus >= 201700L
 void operator delete(void * /*ptr*/, std::size_t, std::align_val_t /*al*/) noexcept
 {
-   Fatal("operator delete","with std::align_val_t is not implemented yet");
+   Fatal("operator delete", "with std::align_val_t is not implemented yet");
 }
 #endif
 #endif
@@ -310,7 +376,7 @@ void *operator new[](size_t size)
    return ::operator new(size);
 }
 
-void *operator new[](size_t size, const std::nothrow_t&) noexcept
+void *operator new[](size_t size, const std::nothrow_t &) noexcept
 {
    return ::operator new(size);
 }
@@ -319,13 +385,13 @@ void *operator new[](size_t size, const std::nothrow_t&) noexcept
 
 void *operator new[](size_t size, std::align_val_t al)
 {
-   Fatal("operator new[]","with std::align_val_t is not implemented yet");
+   Fatal("operator new[]", "with std::align_val_t is not implemented yet");
    return ::operator new(size, al);
 }
 
-void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t& nt) noexcept
+void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t &nt) noexcept
 {
-   Fatal("operator new[]","with std::align_val_t is not implemented yet");
+   Fatal("operator new[]", "with std::align_val_t is not implemented yet");
    return ::operator new(size, al, nt);
 }
 
@@ -351,20 +417,21 @@ void operator delete[](void *ptr) noexcept
 #if __cplusplus >= 201700L
 void operator delete[](void * /*ptr*/, std::align_val_t /*al*/) noexcept
 {
-   Fatal("operator delete[]","with std::align_val_t is not implemented yet");
+   Fatal("operator delete[]", "with std::align_val_t is not implemented yet");
 }
 #endif
 
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
-void operator delete[](void* ptr, std::size_t) noexcept {
+void operator delete[](void *ptr, std::size_t) noexcept
+{
    operator delete[](ptr);
 }
 #if __cplusplus >= 201700L
 void operator delete[](void * /* ptr */, std::size_t, std::align_val_t /* al */) noexcept
 {
-   Fatal("operator delete[]","with size_t and std::align_val_t is not implemented yet");
+   Fatal("operator delete[]", "with size_t and std::align_val_t is not implemented yet");
 }
 #endif
 #endif
@@ -374,10 +441,9 @@ void operator delete[](void * /* ptr */, std::size_t, std::align_val_t /* al */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) block of memory.
 
-void *CustomReAlloc1(void *, size_t )
+void *CustomReAlloc1(void *, size_t)
 {
-   Fatal("NewDelete::CustomRealloc1",
-         "This should not be used. The TStorage interface using this has been removed.");
+   Fatal("NewDelete::CustomRealloc1", "This should not be used. The TStorage interface using this has been removed.");
    return nullptr;
 }
 
@@ -397,8 +463,8 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 
 #if defined(MEM_DEBUG)
    if (oldsize != storage_size(ovp))
-      fprintf(stderr, "<%s>: passed oldsize %u, should be %u\n", where,
-              (unsigned int)oldsize, (unsigned int)storage_size(ovp));
+      fprintf(stderr, "<%s>: passed oldsize %u, should be %u\n", where, (unsigned int)oldsize,
+              (unsigned int)storage_size(ovp));
 #endif
    if (oldsize == size)
       return ovp;
@@ -407,12 +473,12 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    if (ROOT::Internal::gMmallocDesc)
       vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
    else
-      vp = ::realloc((char*)RealStart(ovp), RealSize(size));
+      vp = ::realloc((char *)RealStart(ovp), RealSize(size));
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);   // NOLINT
+      MemClearRe(ExtStart(vp), oldsize, size - oldsize); // NOLINT
 
-   StoreSizeMagic(vp, size, where);    // NOLINT
+   StoreSizeMagic(vp, size, where);                      // NOLINT
    return ExtStart(vp);
 }
