@@ -71,6 +71,8 @@ extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseErf;
 extern ParserFuncSignature ParseElu;
 extern ParserFuncSignature ParseEyeLike;
+extern ParserFuncSignature ParseConstant;
+extern ParserFuncSignature ParseSplit;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -148,6 +150,9 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Erf", ParseErf);
    RegisterOperator("Elu", ParseElu);
    RegisterOperator("EyeLike", ParseEyeLike);
+   RegisterOperator("Constant", ParseConstant);
+   RegisterOperator("ConstantOfShape", ParseConstant);
+   RegisterOperator("Split", ParseSplit);
 }
 
 // Destructor of the parser
@@ -176,6 +181,8 @@ std::vector<std::string> RModelParser_ONNX::GetRegisteredOperators()
 void RModelParser_ONNX::RegisterTensorType(const std::string &name, ETensorType type)
 {
    fTensorTypeMap[UTILITY::Clean_name(name)] = type;
+   if (fVerbose)
+      std::cout << "... registering tensor " << UTILITY::Clean_name(name) << " with type " << ConvertTypeToString(type) << std::endl;
 }
 
 bool RModelParser_ONNX::IsRegisteredTensorType(const std::string &name)
@@ -197,8 +204,17 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    int idx = nodes[i];
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
-   if (fVerbose)
-      std::cout << "Parsing an operator " << op_type << std::endl;
+   if (fVerbose) {
+      std::cout << "Parsing an operator " << op_type << " with inputs ";
+      for (int j = 0; j < nodeproto.input_size(); j++) {
+         std::cout << nodeproto.input(j) << " type  ";
+         if (IsRegisteredTensorType(nodeproto.input(j)))
+            std::cout << ConvertTypeToString(GetTensorType(nodeproto.input(j))) << " ";
+         else
+            std::cout << " not_reg ";
+      }
+      std::cout << std::endl;
+   }
 
    // try to fuse with following operator in case it is not last one
    if (i < nodes.size() - 1) {
@@ -382,6 +398,37 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
          if (verbose) std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
+         allInitializedTensors[input_name] = i;
+         break;
+      }
+      case ETensorType::DOUBLE: {
+         std::shared_ptr<void> data(malloc(fLength * sizeof(double)), free);
+         if (tensorproto->raw_data().empty() == false) {
+            auto raw_data_ptr = reinterpret_cast<double *>(const_cast<char *>(tensorproto->raw_data().c_str()));
+            std::memcpy(data.get(), raw_data_ptr, fLength * sizeof(double));
+         } else {
+            tensorproto->mutable_double_data()->ExtractSubrange(0, tensorproto->double_data_size(),
+                                                               static_cast<double *>(data.get()));
+         }
+
+         if (verbose) std::cout << "add DOUBLE initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::DOUBLE, shape, data);
+         allInitializedTensors[input_name] = i;
+         break;
+      }
+      case ETensorType::INT32: {
+         std::shared_ptr<void> data(malloc(fLength * sizeof(int32_t)), free);
+
+         if (tensorproto->raw_data().empty() == false) {
+            auto raw_data_ptr = reinterpret_cast<int32_t *>(const_cast<char *>(tensorproto->raw_data().c_str()));
+            std::memcpy(data.get(), raw_data_ptr, fLength * sizeof(int32_t));
+         } else {
+            tensorproto->mutable_int32_data()->ExtractSubrange(0, tensorproto->int32_data_size(),
+                                                               static_cast<int32_t *>(data.get()));
+         }
+
+         if (verbose) std::cout << "add INT32 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::INT32, shape, data);
          allInitializedTensors[input_name] = i;
          break;
       }

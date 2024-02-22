@@ -47,8 +47,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Elu.hxx
    TMVA/ROperator_Comparision.hxx
    TMVA/ROperator_EyeLike.hxx
+   TMVA/ROperator_Constant.hxx
+   TMVA/ROperator_Split.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
+
 
    TMVA/FunctionList.hxx
    TMVA/RModel_GNN.hxx

@@ -61,8 +61,23 @@ ETensorType ConvertStringToType(std::string type){
    if(type == "float32" || type == "float" || type == "Float"){
      return ETensorType::FLOAT;
    }
-   else if(type == "int64"){
+   else if(type == "int16_t"){
+     return ETensorType::INT16;
+   }
+   else if(type == "int32_t"){
+     return ETensorType::INT32;
+   }
+   else if(type == "int64_t"){
      return ETensorType::INT64;
+   }
+   else if(type == "uint16_t"){
+     return ETensorType::UINT16;
+   }
+   else if(type == "uint32_t"){
+     return ETensorType::UINT32;
+   }
+   else if(type == "uint64_t"){
+     return ETensorType::UINT64;
    }
    else if (type == "double" || type == "float64"){
       return ETensorType::DOUBLE;

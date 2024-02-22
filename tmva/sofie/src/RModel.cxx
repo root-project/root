@@ -275,7 +275,7 @@ void RModel::GenerateIntermediateTensorInfo() {
             fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
         }
         if (i.second.type == ETensorType::BOOL){
-            fGC += "bool tensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";         
+            fGC += "bool tensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";
         }
     }
 }
@@ -343,7 +343,7 @@ void RModel::GenerateOutput() {
         }
     }
 
-    fGC.pop_back(); //remove last ","
+    if (fInputTensorNames.size() > 0) fGC.pop_back(); //remove last ","
     fGC += "){\n";
 
     const std::string SP = "   ";
