@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleAnchor
-#define ROOT7_RNTupleAnchor
+#ifndef ROOT7_RNTuple
+#define ROOT7_RNTuple
 
 #include <Rtypes.h>
 
@@ -31,7 +31,7 @@ namespace Internal {
 class RMiniFileReader;
 class RNTupleFileWriter;
 class RPageSourceFile;
-}
+} // namespace Internal
 
 // clang-format off
 /**
