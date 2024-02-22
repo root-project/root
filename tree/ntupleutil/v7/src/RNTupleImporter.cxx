@@ -16,8 +16,8 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleImporter.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>

@@ -15,8 +15,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 

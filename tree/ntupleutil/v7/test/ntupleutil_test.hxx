@@ -5,8 +5,9 @@
 
 #include <ROOT/RNTupleAnchor.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 
 /**

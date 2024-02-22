@@ -18,7 +18,6 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleAnchor.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <string_view>
 
 #include <cstdint>

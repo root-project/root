@@ -16,7 +16,7 @@
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RPageSourceFriends.hxx>
 
 #include <utility>
