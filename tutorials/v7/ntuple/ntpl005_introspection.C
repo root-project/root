@@ -15,8 +15,8 @@
 // Do not use for real data!
 
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 
 #include <Compression.h>
