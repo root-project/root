@@ -20,8 +20,8 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleWriter.hxx>
 
 #include <TBaseClass.h>
 #include <TClass.h>
@@ -3332,7 +3332,7 @@ void ROOT::Experimental::RTupleField::RTupleDeleter::operator()(void *objPtr, bo
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RCollectionField::RCollectionField(std::string_view name,
-                                                       std::shared_ptr<RCollectionNTupleWriter> collectionWriter,
+                                                       std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
                                                        std::unique_ptr<RFieldZero> collectionParent)
    : RFieldBase(name, "", ENTupleStructure::kCollection, false /* isSimple */), fCollectionWriter(collectionWriter)
 {
@@ -3375,7 +3375,7 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 std::size_t ROOT::Experimental::RCollectionField::AppendImpl(const void *from)
 {
    // RCollectionFields are almost simple, but they return the bytes written by their subfields as accumulated by the
-   // RCollectionNTupleWriter.
+   // RNTupleCollectionWriter.
    std::size_t bytesWritten = fCollectionWriter->fBytesWritten;
    fCollectionWriter->fBytesWritten = 0;
 
