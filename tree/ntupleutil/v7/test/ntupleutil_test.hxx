@@ -3,7 +3,7 @@
 
 #include "gtest/gtest.h"
 
-#include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleReader.hxx>

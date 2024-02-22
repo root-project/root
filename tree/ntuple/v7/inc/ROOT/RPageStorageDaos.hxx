@@ -18,7 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <string_view>

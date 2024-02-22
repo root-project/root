@@ -18,7 +18,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleImtTaskScheduler.hxx>
-#include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorageFile.hxx>

@@ -36,7 +36,7 @@
 #endif
 
 #ifdef R__HAS_ROOT7
-#include "ROOT/RNTupleAnchor.hxx"
+#include "ROOT/RNTuple.hxx"
 #include "ROOT/RNTupleDS.hxx"
 #endif
 
