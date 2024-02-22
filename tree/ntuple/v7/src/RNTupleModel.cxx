@@ -15,6 +15,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
@@ -313,8 +314,9 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    return RResult<void>::Success();
 }
 
-std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
-   std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
+std::shared_ptr<ROOT::Experimental::RNTupleCollectionWriter>
+ROOT::Experimental::RNTupleModel::MakeCollection(std::string_view fieldName,
+                                                 std::unique_ptr<RNTupleModel> collectionModel)
 {
    EnsureNotFrozen();
    EnsureValidFieldName(fieldName);
@@ -322,7 +324,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
       throw RException(R__FAIL("null collectionModel"));
    }
 
-   auto collectionWriter = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
+   auto collectionWriter = std::make_shared<RNTupleCollectionWriter>(std::move(collectionModel->fDefaultEntry));
 
    auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
    field->SetDescription(collectionModel->GetDescription());
