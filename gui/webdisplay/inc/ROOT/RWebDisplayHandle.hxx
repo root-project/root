@@ -61,6 +61,7 @@ protected:
    class ChromeCreator : public BrowserCreator {
       bool fEdge{false};
       std::string fEnvPrefix; // rc parameters prefix
+      int fChromeVersion{-1}; // major version in chrome browser
    public:
       ChromeCreator(bool is_edge = false);
       ~ChromeCreator() override = default;
