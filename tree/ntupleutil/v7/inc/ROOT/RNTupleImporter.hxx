@@ -114,9 +114,6 @@ public:
    };
 
 private:
-   /// By default, compress RNTuple with zstd, level 5
-   static constexpr int kDefaultCompressionSettings = 505;
-
    struct RImportBranch {
       RImportBranch() = default;
       RImportBranch(const RImportBranch &other) = delete;
