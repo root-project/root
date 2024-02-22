@@ -110,10 +110,3 @@ ROOT::Experimental::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::Experime
    return std::unique_ptr<ROOT::Experimental::RNTupleWriter>(
       new ROOT::Experimental::RNTupleWriter(std::move(model), std::move(sink)));
 }
-
-//------------------------------------------------------------------------------
-
-ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique_ptr<REntry> defaultEntry)
-   : fOffset(0), fDefaultEntry(std::move(defaultEntry))
-{
-}
