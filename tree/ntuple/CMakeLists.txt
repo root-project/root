@@ -25,6 +25,7 @@ HEADERS
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
   ROOT/RNTupleAnchor.hxx
+  ROOT/RNTupleCollectionWriter.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleFillContext.hxx
   ROOT/RNTupleImtTaskScheduler.hxx

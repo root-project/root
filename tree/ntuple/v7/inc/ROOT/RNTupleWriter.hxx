@@ -153,43 +153,6 @@ public:
    }
 }; // class RNTupleWriter
 
-// clang-format off
-/**
-\class ROOT::Experimental::RCollectionNTupleWriter
-\ingroup NTuple
-\brief A virtual ntuple used for writing untyped collections that can be used to some extent like an RNTupleWriter
-*
-* This class is between a field and a ntuple.  It carries the offset column for the collection and the default entry
-* taken from the collection model.  It does not, however, own an ntuple model because the collection model has been
-* merged into the larger ntuple model.
-*/
-// clang-format on
-class RCollectionNTupleWriter {
-   friend class RCollectionField;
-
-private:
-   std::size_t fBytesWritten = 0;
-   ClusterSize_t fOffset;
-   std::unique_ptr<REntry> fDefaultEntry;
-
-public:
-   explicit RCollectionNTupleWriter(std::unique_ptr<REntry> defaultEntry);
-   RCollectionNTupleWriter(const RCollectionNTupleWriter &) = delete;
-   RCollectionNTupleWriter &operator=(const RCollectionNTupleWriter &) = delete;
-   ~RCollectionNTupleWriter() = default;
-
-   std::size_t Fill() { return Fill(*fDefaultEntry); }
-   std::size_t Fill(REntry &entry)
-   {
-      const std::size_t bytesWritten = entry.Append();
-      fBytesWritten += bytesWritten;
-      fOffset++;
-      return bytesWritten;
-   }
-
-   ClusterSize_t *GetOffsetPtr() { return &fOffset; }
-}; // class RCollectionNTupleWriter
-
 } // namespace Experimental
 } // namespace ROOT
 
