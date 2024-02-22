@@ -1,4 +1,4 @@
-/// \file RNTupleAnchor.cxx
+/// \file RNTuple.cxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2023-09-19
@@ -14,7 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
