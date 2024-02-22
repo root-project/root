@@ -1,12 +1,12 @@
-/// \file RNTupleOptions.cxx
+/// \file RNTupleWriteOptions.cxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
-/// \date 2021-07-28
+/// \date 2024-02-22
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,7 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <utility>
 
@@ -41,8 +41,7 @@ void EnsureValidTunables(std::size_t zippedClusterSize, std::size_t unzippedClus
 
 } // anonymous namespace
 
-std::unique_ptr<ROOT::Experimental::RNTupleWriteOptions>
-ROOT::Experimental::RNTupleWriteOptions::Clone() const
+std::unique_ptr<ROOT::Experimental::RNTupleWriteOptions> ROOT::Experimental::RNTupleWriteOptions::Clone() const
 {
    return std::make_unique<RNTupleWriteOptions>(*this);
 }

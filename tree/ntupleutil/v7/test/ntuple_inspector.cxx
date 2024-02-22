@@ -1,5 +1,5 @@
 #include <ROOT/RNTupleInspector.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <TFile.h>
 #include <ROOT/TestSupport.hxx>

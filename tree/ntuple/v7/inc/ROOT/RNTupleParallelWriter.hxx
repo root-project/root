@@ -17,7 +17,7 @@
 #define ROOT7_RNTupleParallelWriter
 
 #include <ROOT/RNTupleMetrics.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <memory>
 #include <mutex>

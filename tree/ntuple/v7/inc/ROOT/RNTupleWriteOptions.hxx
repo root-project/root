@@ -1,7 +1,7 @@
-/// \file ROOT/RNTupleOptions.hxx
+/// \file ROOT/RNTupleWriteOptions.hxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
-/// \date 2019-08-25
+/// \date 2024-02-22
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
@@ -13,12 +13,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleOptions
-#define ROOT7_RNTupleOptions
+#ifndef ROOT7_RNTupleWriteOptions
+#define ROOT7_RNTupleWriteOptions
 
 #include <Compression.h>
-#include <ROOT/RNTupleUtil.hxx>
 
+#include <cstdint>
+#include <cstddef>
 #include <memory>
 
 namespace ROOT {
@@ -62,7 +63,8 @@ public:
 
    int GetCompression() const { return fCompression; }
    void SetCompression(int val) { fCompression = val; }
-   void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel) {
+   void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel)
+   {
       fCompression = CompressionSettings(algorithm, compressionLevel);
    }
 
@@ -82,67 +84,7 @@ public:
    void SetHasSmallClusters(bool val) { fHasSmallClusters = val; }
 };
 
-// clang-format off
-/**
-\class ROOT::Experimental::RNTupleWriteOptionsDaos
-\ingroup NTuple
-\brief DAOS-specific user-tunable settings for storing ntuples
-*/
-// clang-format on
-class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
-   std::string fObjectClass{"SX"};
-   /// The maximum cage size is set to the equivalent of 16 uncompressed pages - 1MiB by default. Empirically, such a
-   /// cage size yields acceptable results in throughput and page granularity for most use cases. A `fMaxCageSize` of 0
-   /// disables the caging mechanism.
-   uint32_t fMaxCageSize = 16 * RNTupleWriteOptions::fApproxUnzippedPageSize;
-
-public:
-   ~RNTupleWriteOptionsDaos() override = default;
-   std::unique_ptr<RNTupleWriteOptions> Clone() const override
-   { return std::make_unique<RNTupleWriteOptionsDaos>(*this); }
-
-   const std::string &GetObjectClass() const { return fObjectClass; }
-   /// Set the object class used to generate OIDs that relate to user data. Any
-   /// `OC_xxx` constant defined in `daos_obj_class.h` may be used here without
-   /// the OC_ prefix.
-   void SetObjectClass(const std::string &val) { fObjectClass = val; }
-
-   uint32_t GetMaxCageSize() const { return fMaxCageSize; }
-   /// Set the upper bound for page concatenation into cages, in bytes. It is assumed
-   /// that cage size will be no smaller than the approximate uncompressed page size.
-   /// To disable page concatenation, set this value to 0.
-   void SetMaxCageSize(uint32_t cageSz) { fMaxCageSize = cageSz; }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::RNTupleReadOptions
-\ingroup NTuple
-\brief Common user-tunable settings for reading ntuples
-
-All page source classes need to support the common options.
-*/
-// clang-format on
-class RNTupleReadOptions {
-public:
-   enum EClusterCache {
-      kOff,
-      kOn,
-      kDefault = kOn,
-   };
-
-private:
-   EClusterCache fClusterCache = EClusterCache::kDefault;
-   unsigned int fClusterBunchSize = 1;
-
-public:
-   EClusterCache GetClusterCache() const { return fClusterCache; }
-   void SetClusterCache(EClusterCache val) { fClusterCache = val; }
-   unsigned int GetClusterBunchSize() const  { return fClusterBunchSize; }
-   void SetClusterBunchSize(unsigned int val) { fClusterBunchSize = val; }
-};
-
 } // namespace Experimental
 } // namespace ROOT
 
-#endif
+#endif // ROOT7_RNTupleWriteOptions

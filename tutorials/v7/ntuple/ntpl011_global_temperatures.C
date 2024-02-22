@@ -21,7 +21,6 @@
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTupleDS.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RCanvas.hxx>
@@ -88,9 +87,7 @@ void Ingest()
 
    // Hand-over the data model to a newly created ntuple of name "globalTempData", stored in kNTupleFileName.
    // In return, get a unique pointer to a fillable ntuple (first compress the file).
-   RNTupleWriteOptions options;
-   options.SetCompression(ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName, options);
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName);
 
    auto file = RRawFile::Create(kRawDataUrl);
    std::string record;
