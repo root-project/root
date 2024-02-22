@@ -329,7 +329,13 @@ set(perl ${PERL_EXECUTABLE})
 find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser google-chrome-stable Google\ Chrome
              PATH_SUFFIXES "Google/Chrome/Application")
 if(CHROME_EXECUTABLE)
+  execute_process(COMMAND "${CHROME_EXECUTABLE}" --version
+                  OUTPUT_VARIABLE CHROME_VERSION
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REGEX MATCH "[0-9]+" CHROME_MAJOR_VERSION "${CHROME_VERSION}")
+  message(STATUS "Found CHROME executable ${CHROME_EXECUTABLE} major version ${CHROME_MAJOR_VERSION}")
   set(chromeexe ${CHROME_EXECUTABLE})
+  set(chromemajor ${CHROME_MAJOR_VERSION})
 endif()
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox-bin firefox.exe
