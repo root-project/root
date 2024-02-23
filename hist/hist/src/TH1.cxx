@@ -61,13 +61,13 @@
 \class TH1S
 \brief 1-D histogram with a short per channel (see TH1 documentation)
 \class TH1I
-\brief 1-D histogram with an int per channel (see TH1 documentation)}
+\brief 1-D histogram with an int per channel (see TH1 documentation)
 \class TH1L
-\brief 1-D histogram with a long64 per channel (see TH1 documentation)}
+\brief 1-D histogram with a long64 per channel (see TH1 documentation)
 \class TH1F
-\brief 1-D histogram with a float per channel (see TH1 documentation)}
+\brief 1-D histogram with a float per channel (see TH1 documentation)
 \class TH1D
-\brief 1-D histogram with a double per channel (see TH1 documentation)}
+\brief 1-D histogram with a double per channel (see TH1 documentation)
 @}
 */
 
