@@ -4206,15 +4206,6 @@ TCling::CheckClassInfo(const char *name, TDictionary::DeclId_t &decl, Bool_t aut
                           : cling::LookupHelper::NoDiagnostics,
                           &type, instantiateTemplate);
    }
-   if (!decl && type) {
-      const TagType *tagtype =type->getAs<TagType>();
-      if (tagtype) {
-         decl = tagtype->getDecl();
-      }
-   }
-   if (decl && ((const clang::Decl*)decl)->isInvalidDecl()) {
-      decl = nullptr;
-   }
    if (type) {
       // If decl==0 and the type is valid, then we have a forward declaration.
       if (!decl) {
