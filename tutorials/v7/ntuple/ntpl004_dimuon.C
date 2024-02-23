@@ -18,7 +18,6 @@
 // Do not use for real data!
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RVec.hxx>
 
@@ -36,7 +35,6 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
 constexpr char const* kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root";
@@ -47,7 +45,7 @@ void ntpl004_dimuon() {
    // Use all available CPU cores
    ROOT::EnableImplicitMT();
 
-   auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
+   ROOT::RDataFrame df("Events", kNTupleFileName);
 
    // The tutorial is identical to df102_NanoAODDimuonAnalysis except the use of RNTuple.
 

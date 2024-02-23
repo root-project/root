@@ -37,7 +37,6 @@
 
 #ifdef R__HAS_ROOT7
 #include "ROOT/RNTuple.hxx"
-#include "ROOT/RPageStorage.hxx"
 #include "ROOT/RNTupleDS.hxx"
 #endif
 

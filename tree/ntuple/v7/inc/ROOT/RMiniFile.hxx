@@ -17,8 +17,7 @@
 #define ROOT7_RMiniFile
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleAnchor.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <string_view>
 
 #include <cstdint>

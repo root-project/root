@@ -33,7 +33,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RCollectionNTupleWriter;
+class RNTupleCollectionWriter;
 class RNTupleModel;
 class RNTupleWriter;
 
@@ -226,7 +226,8 @@ public:
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
+   /// #include <ROOT/RNTupleWriter.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    /// using ROOT::Experimental::RNTupleWriter;
    ///
@@ -249,7 +250,7 @@ public:
    ///
    /// **Example: create a field with an initial value**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    ///
    /// auto model = RNTupleModel::Create();
@@ -258,7 +259,7 @@ public:
    /// ~~~
    /// **Example: create a field with a description**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    ///
    /// auto model = RNTupleModel::Create();
@@ -300,9 +301,8 @@ public:
    /// Ingests a model for a sub collection and attaches it to the current model
    ///
    /// Throws an exception if collectionModel is null.
-   std::shared_ptr<RCollectionNTupleWriter> MakeCollection(
-      std::string_view fieldName,
-      std::unique_ptr<RNTupleModel> collectionModel);
+   std::shared_ptr<RNTupleCollectionWriter>
+   MakeCollection(std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel);
 
    std::unique_ptr<REntry> CreateEntry() const;
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order

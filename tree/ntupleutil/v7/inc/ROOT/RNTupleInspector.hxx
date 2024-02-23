@@ -17,7 +17,6 @@
 #define ROOT7_RNTupleInspector
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include <TFile.h>
@@ -25,12 +24,20 @@
 #include <THStack.h>
 
 #include <cstdlib>
+#include <iostream>
 #include <memory>
+#include <numeric>
 #include <regex>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+class RNTuple;
+
+namespace Internal {
+class RPageSource;
+} // namespace Internal
 
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };

@@ -146,8 +146,10 @@ public:
    const BinData * FittedBinData() const;
 
 
-   /// Chi2 fit value
-   /// in case of likelihood must be computed ?
+   /// Return the Chi2 value after fitting
+   /// In case of unbinned fits (or not defined one, see the documentation of Fitter::FitFCN) return -1
+   /// In case of binned likelihood fits (Poisson Likelihood) return the 2 * negative log-likelihood ratio
+   /// using the definition of Baker-Cousins
    double Chi2() const { return fChi2; }
 
    /// Number of degree of freedom

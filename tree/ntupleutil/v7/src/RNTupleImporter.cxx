@@ -15,10 +15,10 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleImporter.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
@@ -140,7 +140,6 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDestination(std::string_view destFileName)
 {
    fDestFileName = destFileName;
-   fWriteOptions.SetCompression(kDefaultCompressionSettings);
    fDestFile = std::unique_ptr<TFile>(TFile::Open(fDestFileName.c_str(), "UPDATE"));
    if (!fDestFile || fDestFile->IsZombie()) {
       return R__FAIL("cannot open dest file " + std::string(fDestFileName));

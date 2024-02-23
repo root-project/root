@@ -14,9 +14,10 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 #include <Compression.h>
 #include <TCanvas.h>
