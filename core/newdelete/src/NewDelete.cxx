@@ -449,11 +449,11 @@ void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noex
 /// Sized-delete calling non-sized one.
 void operator delete(void *ptr, std::size_t) noexcept
 {
-   operator delete(ptr);
+   ::operator delete(ptr);
 }
-void operator delete(void * /*ptr*/, std::size_t, std::align_val_t /*al*/) noexcept
+void operator delete(void *ptr, std::size_t, std::align_val_t al) noexcept
 {
-   Fatal("operator delete", "with std::align_val_t is not implemented yet");
+   ::operator delete(ptr, al);
 }
 #endif
 
@@ -498,9 +498,9 @@ void operator delete[](void *ptr) noexcept
    ::operator delete(ptr);
 }
 
-void operator delete[](void * /*ptr*/, std::align_val_t /*al*/) noexcept
+void operator delete[](void *ptr, std::align_val_t al) noexcept
 {
-   Fatal("operator delete[]", "with std::align_val_t is not implemented yet");
+   ::operator delete(ptr, al);
 }
 
 #ifdef R__SIZEDDELETE
@@ -508,11 +508,11 @@ void operator delete[](void * /*ptr*/, std::align_val_t /*al*/) noexcept
 /// Sized-delete calling non-sized one.
 void operator delete[](void *ptr, std::size_t) noexcept
 {
-   operator delete[](ptr);
+   ::operator delete[](ptr);
 }
-void operator delete[](void * /* ptr */, std::size_t, std::align_val_t /* al */) noexcept
+void operator delete[](void *ptr, std::size_t, std::align_val_t al) noexcept
 {
-   Fatal("operator delete[]", "with size_t and std::align_val_t is not implemented yet");
+   ::operator delete(ptr, al);
 }
 #endif
 
