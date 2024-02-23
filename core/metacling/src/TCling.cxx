@@ -3985,7 +3985,7 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
 /// Set pointer to the TClingClassInfo in TClass.
 /// If 'reload' is true, (attempt to) generate a new ClassInfo even if we
 /// already have one.
-/// \param preChecked is true if we already called CheckClassInfo and got a valid decl
+/// \param preChecked is true if we already called CheckClassInfo and got a decl returned
 
 void TCling::SetClassInfo(TClass* cl, Bool_t reload, TDictionary::DeclId_t decl, Bool_t preChecked)
 {
@@ -4047,7 +4047,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, TDictionary::DeclId_t decl,
    // that is currently in the caller (like SetUnloaded) that disable AutoLoading and AutoParsing and
    // code is in the callee (disabling template instantiation) and end up with a more explicit class:
    //      TClingClassInfoReadOnly.
-   TClingClassInfo* info = preChecked ? new TClingClassInfo(GetInterpreterImpl(), decl) : new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
+   TClingClassInfo* info = (preChecked && decl) ? new TClingClassInfo(GetInterpreterImpl(), decl) : new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
    if (!info->IsValid()) {
       SetWithoutClassInfoState(cl);
       delete info;
