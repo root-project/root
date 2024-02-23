@@ -48,6 +48,11 @@ TDrawSelector.prototype.ShowProgress = function(value) {
    if ((value === undefined) || !Number.isFinite(value))
       return showProgress();
 
+   if (this._break) {
+      treeShowProgress(this, 'Breaking ... ');
+      return 'break';
+   }
+
    if (this.last_progress !== value) {
       const diff = value - this.last_progress;
       if (!this.aver_diff) this.aver_diff = diff;

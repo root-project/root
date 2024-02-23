@@ -316,6 +316,8 @@ exports.connectWebWindow = function(arg) {
 // try to define global JSROOT
 if ((typeof globalThis !== 'undefined') && !globalThis.JSROOT) {
 
+   console.warn('Usage of JSRoot.core.js script is obsolete. Please swicth to modules.  See https://github.com/root-project/jsroot/blob/master/docs/JSROOT.md#migration-v6---v7');
+
    globalThis.JSROOT = exports;
 
    globalThis.JSROOT.extend = Object.assign;
