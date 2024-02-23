@@ -37,13 +37,13 @@ ClassImp(TH2);
 \class TH2S
 \brief 2-D histogram with a short per channel (see TH1 documentation)
 \class TH2I
-\brief 2-D histogram with an int per channel (see TH1 documentation)}
+\brief 2-D histogram with an int per channel (see TH1 documentation)
 \class TH2L
-\brief 2-D histogram with a long64 per channel (see TH1 documentation)}
+\brief 2-D histogram with a long64 per channel (see TH1 documentation)
 \class TH2F
-\brief 2-D histogram with a float per channel (see TH1 documentation)}
+\brief 2-D histogram with a float per channel (see TH1 documentation)
 \class TH2D
-\brief 2-D histogram with a double per channel (see TH1 documentation)}
+\brief 2-D histogram with a double per channel (see TH1 documentation)
 @}
 */
 

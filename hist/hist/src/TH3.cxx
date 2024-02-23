@@ -34,13 +34,13 @@ ClassImp(TH3);
 \class TH3S
 \brief 3-D histogram with a short per channel (see TH1 documentation)
 \class TH3I
-\brief 3-D histogram with an int per channel (see TH1 documentation)}
+\brief 3-D histogram with an int per channel (see TH1 documentation)
 \class TH3L
-\brief 3-D histogram with a long64 per channel (see TH1 documentation)}
+\brief 3-D histogram with a long64 per channel (see TH1 documentation)
 \class TH3F
-\brief 3-D histogram with a float per channel (see TH1 documentation)}
+\brief 3-D histogram with a float per channel (see TH1 documentation)
 \class TH3D
-\brief 3-D histogram with a double per channel (see TH1 documentation)}
+\brief 3-D histogram with a double per channel (see TH1 documentation)
 @}
 */
 
