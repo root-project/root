@@ -97,6 +97,9 @@ onmessage = function(e) {
 
       // first mark all visible flags
       clones.setVisibleFlags(e.data.flags);
+      clones.setVisLevel(e.data.vislevel);
+      clones.setMaxVisNodes(e.data.maxvisnodes);
+
       delete e.data.flags;
 
       clones.produceIdShifts();

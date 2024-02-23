@@ -42,12 +42,13 @@ class THStackPainter extends ObjectPainter {
       lst.Add(clone(stack.fHists.arr[0]), stack.fHists.opt[0]);
       for (let i = 1; i < nhists; ++i) {
          const hnext = clone(stack.fHists.arr[i]),
-             hnextopt = stack.fHists.opt[i],
-             hprev = lst.arr[i-1];
+               hnextopt = stack.fHists.opt[i],
+               hprev = lst.arr[i-1],
+               xnext = hnext.fXaxis, xprev = hprev.fXaxis;
 
-         if ((hnext.fNbins !== hprev.fNbins) ||
-             (hnext.fXaxis.fXmin !== hprev.fXaxis.fXmin) ||
-             (hnext.fXaxis.fXmax !== hprev.fXaxis.fXmax)) {
+         if ((xnext.fNbins !== xprev.fNbins) ||
+             (xnext.fXmin !== xprev.fXmin) ||
+             (xnext.fXmax !== xprev.fXmax)) {
             console.warn(`When drawing THStack, cannot sum-up histograms ${hnext.fName} and ${hprev.fName}`);
             lst.Clear();
             return false;
@@ -366,8 +367,10 @@ class THStackPainter extends ObjectPainter {
       } else {
          for (let indx = 0; indx < nhists; ++indx) {
             const rindx = this.options.horder ? indx : nhists - indx - 1,
-                  hist = hlst.arr[rindx],
-                  hopt = hlst.opt[rindx];
+                  hist = hlst.arr[rindx], hopt = hlst.opt[rindx], hist0 = this.painters[indx].getHisto();
+            if (this.options._pfc) hist.fFillColor = hist0.fFillColor;
+            if (this.options._plc) hist.fLineColor = hist0.fLineColor;
+            if (this.options._pmc) hist.fMarkerColor = hist0.fMarkerColor;
             this.painters[indx].updateObject(hist, hopt || hist.fOption || this.options.hopt);
          }
       }
