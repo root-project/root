@@ -395,7 +395,7 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
          }
       }
 
-      auto &treeIndex = finfo.fTreeIndexInfos[i];
+      const auto &treeIndex = finfo.fTreeIndexInfos[i];
       if (treeIndex) {
          auto *copyOfIndex = static_cast<TVirtualIndex *>(treeIndex->Clone());
          copyOfIndex->SetTree(frChain.get());

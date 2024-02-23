@@ -27,7 +27,6 @@
 class TTreeFormula;
 
 class TTreeIndex : public TVirtualIndex {
-
 protected:
    TString        fMajorName;           ///< Index major name
    TString        fMinorName;           ///< Index minor name
@@ -50,7 +49,7 @@ private:
 public:
    TTreeIndex();
    TTreeIndex(const TTree *T, const char *majorname, const char *minorname);
-                 ~TTreeIndex() override;
+   ~TTreeIndex() override;
    void                   Append(const TVirtualIndex *,bool delaySort = false) override;
    bool                   ConvertOldToNew();
    Long64_t               FindValues(Long64_t major, Long64_t minor) const;
@@ -69,6 +68,7 @@ public:
    void           Print(Option_t *option="") const override;
    void           UpdateFormulaLeaves(const TTree *parent) override;
    void           SetTree(TTree *T) override;
+   TObject *Clone(const char *newname = "") const override;
 
    ClassDefOverride(TTreeIndex,2);  //A Tree Index with majorname and minorname.
 };
