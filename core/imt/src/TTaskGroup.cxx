@@ -18,6 +18,8 @@
 #define TBB_PREVIEW_ISOLATED_TASK_GROUP 1
 #include "tbb/task_group.h"
 #include "tbb/task_arena.h"
+#include "ROOT/RTaskArena.hxx"
+#include "ROpaqueTaskArena.hxx"
 #endif
 
 #include <type_traits>
@@ -60,6 +62,7 @@ TTaskGroup::TTaskGroup()
    if (!ROOT::IsImplicitMTEnabled()) {
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
+   fTaskArenaW = ROOT::Internal::GetGlobalTaskArena();
    fTaskContainer = ((void *)new tbb::isolated_task_group());
 #endif
 }
@@ -71,6 +74,7 @@ TTaskGroup::TTaskGroup(TTaskGroup &&other)
 
 TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
 {
+   fTaskArenaW = other.fTaskArenaW;
    fTaskContainer = other.fTaskContainer;
    other.fTaskContainer = nullptr;
    return *this;
@@ -87,11 +91,23 @@ TTaskGroup::~TTaskGroup()
 }
 
 /////////////////////////////////////////////////////////////////////////////
+/// Run operation in the internal task arena to implement work isolation, i.e.
+/// prevent stealing of work items spawned by ancestors.
+void TTaskGroup::ExecuteInIsolation(const std::function<void(void)> &operation)
+{
+#ifdef R__USE_IMT
+   fTaskArenaW->Access().execute([&] { operation(); });
+#else
+   operation();
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////
 /// Cancel all submitted tasks immediately.
 void TTaskGroup::Cancel()
 {
 #ifdef R__USE_IMT
-   CastToTG(fTaskContainer)->cancel();
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->cancel(); });
 #endif
 }
 
@@ -106,7 +122,7 @@ void TTaskGroup::Cancel()
 void TTaskGroup::Run(const std::function<void(void)> &closure)
 {
 #ifdef R__USE_IMT
-   CastToTG(fTaskContainer)->run(closure);
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->run(closure); });
 #else
    closure();
 #endif
@@ -118,7 +134,7 @@ void TTaskGroup::Run(const std::function<void(void)> &closure)
 void TTaskGroup::Wait()
 {
 #ifdef R__USE_IMT
-   CastToTG(fTaskContainer)->wait();
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->wait(); });
 #endif
 }
 } // namespace Experimental
