@@ -4047,7 +4047,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, TDictionary::DeclId_t decl,
    // that is currently in the caller (like SetUnloaded) that disable AutoLoading and AutoParsing and
    // code is in the callee (disabling template instantiation) and end up with a more explicit class:
    //      TClingClassInfoReadOnly.
-   TClingClassInfo* info = (preChecked && decl) ? new TClingClassInfo(GetInterpreterImpl(), decl) : new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
+   TClingClassInfo* info = (preChecked && decl && !decl->isInvalidDecl()) ? new TClingClassInfo(GetInterpreterImpl(), decl) : new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
    if (!info->IsValid()) {
       SetWithoutClassInfoState(cl);
       delete info;
