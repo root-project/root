@@ -94,9 +94,7 @@ void MakeTreeWithBools(const std::string &treename, const std::string &fname)
       vec[i] = value;
    }
    t.Fill();
-
-   t.Write();
-   f.Close();
+   f.Write();
 }
 
 TEST(RDFAndVecOps, RVecBool)
