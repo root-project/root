@@ -4126,7 +4126,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, TDictionary::DeclId_t decl)
 /// \param decl parameter passed by reference and set to the found decl, if any
 
 TInterpreter::ECheckClassInfo
-TCling::CheckClassInfo(const char *name, TDictionary::DeclId_t &decl, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/, Bool_t instantiateTemplate /*= kFALSE*/)
+TCling::CheckClassInfo(const char *name, TDictionary::DeclId_t &decl, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
 {
    R__LOCKGUARD(gInterpreterMutex);
    static const char *anonEnum = "anonymous enum ";
@@ -4198,13 +4198,13 @@ TCling::CheckClassInfo(const char *name, TDictionary::DeclId_t &decl, Bool_t aut
       = lh.findScope(classname,
                      gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                      : cling::LookupHelper::NoDiagnostics,
-                     &type, instantiateTemplate);
+                     &type, /* instantiateTemplate= */ false);
    if (!decl) {
       std::string buf = TClassEdit::InsertStd(classname);
       decl = lh.findScope(buf,
                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                           : cling::LookupHelper::NoDiagnostics,
-                          &type, instantiateTemplate);
+                          &type, /* instantiateTemplate= */ false);
    }
    if (type) {
       // If decl==0 and the type is valid, then we have a forward declaration.

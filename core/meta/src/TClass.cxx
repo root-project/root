@@ -1514,7 +1514,7 @@ void TClass::Init(const char *name, Version_t cversion,
             proto->FillTClass(this);
       }
       TDictionary::DeclId_t decl {};
-      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, decl, /* autoload = */ kTRUE, /*isClassOrNamespaceOnly*/ kFALSE, /* instantiateTemplate */ kFALSE)) {
+      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, decl, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this, kFALSE, decl);   // sets fClassInfo pointer
          if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
