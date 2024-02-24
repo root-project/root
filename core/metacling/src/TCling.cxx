@@ -2542,7 +2542,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             if (strncmp(sLine.Data(), ".L", 2) != 0) {
                // if execution was requested.
 
-               if (arguments.Length()==0) {
+               if (arguments.Length() == 0) {
                   arguments = "()";
                }
                // We need to remove the extension.
@@ -2554,6 +2554,29 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                mod_line = function + arguments + io;
                indent = HandleInterpreterException(GetMetaProcessorImpl(), mod_line, compRes, &result);
             }
+         }
+      } else if (cling::DynamicLibraryManager::isSharedLibrary(fname.Data()) &&
+                 strncmp(sLine.Data(), ".L", 2) != 0) { // .x macro_C.so
+         if (gSystem->Load(fname) < 0) {
+            // Loading failed.
+            compRes = cling::Interpreter::kFailure;
+         } else {
+            if (arguments.Length() == 0) {
+               arguments = "()";
+            }
+            // We need to remove the extension. (macro_C.so or macro_C.dll)
+            Ssiz_t ext = fname.Last('.');
+            if (ext != kNPOS) {
+               fname.Remove(ext);
+            }
+            // We need to remove the automatically appended _ extension when compiling (macro_C from macro.C)
+            ext = fname.Last('_');
+            if (ext != kNPOS) {
+               fname.Remove(ext);
+            }
+            const char *function = gSystem->BaseName(fname);
+            mod_line = function + arguments + io;
+            indent = HandleInterpreterException(GetMetaProcessorImpl(), mod_line, compRes, &result);
          }
       } else {
          // not ACLiC
