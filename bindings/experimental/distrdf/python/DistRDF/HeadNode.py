@@ -636,12 +636,14 @@ class RDatasetSpecHeadNode(HeadNode):
             self.friendinfo = fi if not fi.fFriendNames.empty() else None
         else:
             raise RuntimeError(
-                f"First argument {args[0]} of type {type(args[0])} is not supported " 
+                f"First argument {args[0]} of type {type(args[0])} is not supported "
                 "in RDatasetSpecHeaNode")
 
         # subtreenames: names of all subtrees in the chain or full path to the tree in the file it belongs to
-        self.subtreenames = [str(treename) for treename in self.rdatasetspec.GetTreeNames()]
-        self.inputfiles   = [str(filename) for filename in self.rdatasetspec.GetFileNameGlobs()] 
+        self.subtreenames = [str(treename)
+                             for treename in self.rdatasetspec.GetTreeNames()]
+        self.inputfiles = [str(filename)
+                           for filename in self.rdatasetspec.GetFileNameGlobs()]
 
     def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
@@ -656,7 +658,8 @@ class RDatasetSpecHeadNode(HeadNode):
             # Depending on the cluster setup, this may still be quite costly, so
             # we decide to pay the price only if the user explicitly requested
             # warning logging.
-            clusters, entries = Ranges.get_clusters_and_entries(self.subtreenames[0], self.inputfiles[0])
+            clusters, entries = Ranges.get_clusters_and_entries(
+                self.subtreenames[0], self.inputfiles[0])
             # The file could contain an empty tree. In that case, the estimate will not be computed.
             if entries > 0:
                 partitionsperfile = self.npartitions / len(self.inputfiles)
@@ -697,8 +700,12 @@ class RDatasetSpecHeadNode(HeadNode):
                     current_range.friendinfo.fFriendChainSubNames
                 )
                 for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
-                    friend_chainsubnames = friend_chainsubnames if len(friend_chainsubnames) > 0 else [friend_name]*len(friend_filenames)
-                    ds.WithGlobalFriends(friend_chainsubnames, friend_filenames, friend_alias)
+                    friend_chainsubnames = (
+                        friend_chainsubnames if len(friend_chainsubnames) > 0
+                        else [friend_name]*len(friend_filenames)
+                    )
+                    ds.WithGlobalFriends(
+                        friend_chainsubnames, friend_filenames, friend_alias)
 
         def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
@@ -708,15 +715,18 @@ class RDatasetSpecHeadNode(HeadNode):
             input range object. If the chain cannot be built, returns None.
             """
 
-            clustered_range, entries_in_trees = Ranges.get_clustered_range_from_percs(current_range)
+            clustered_range, entries_in_trees = Ranges.get_clustered_range_from_percs(
+                current_range)
 
             if clustered_range is None:
                 return TaskObjects(None, entries_in_trees)
 
             ds = ROOT.RDF.Experimental.RDatasetSpec()
             # add a sample with no name to represent the whole dataset
-            ds.AddSample(("", clustered_range.treenames, clustered_range.filenames))
-            ds.WithGlobalRange((clustered_range.globalstart, clustered_range.globalend))
+            ds.AddSample(
+                ("", clustered_range.treenames, clustered_range.filenames))
+            ds.WithGlobalRange(
+                (clustered_range.globalstart, clustered_range.globalend))
 
             attach_friend_info_if_present(clustered_range, ds)
 
@@ -728,7 +738,8 @@ class RDatasetSpecHeadNode(HeadNode):
                 # Retrieve an already present RDataFrame from the cache
                 rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
                 # Update it to the range of entries for this task
-                ROOT.Internal.RDF.ChangeSpec(ROOT.RDF.AsRNode(rdf_toprocess), ROOT.std.move(ds))
+                ROOT.Internal.RDF.ChangeSpec(
+                    ROOT.RDF.AsRNode(rdf_toprocess), ROOT.std.move(ds))
 
             return TaskObjects(rdf_toprocess, entries_in_trees)
 
@@ -754,16 +765,17 @@ class RDatasetSpecHeadNode(HeadNode):
         # Keys should be exactly the same
         if files_counts.keys() != entries_in_trees.trees_with_entries.keys():
             raise RuntimeError("The specified input files and the files that were "
-                                "actually processed are not the same:\n"
-                                f"Input files: {list(files_counts.keys())}\n"
-                                f"Processed files: {list(entries_in_trees.trees_with_entries.keys())}")
+                               "actually processed are not the same:\n"
+                               f"Input files: {list(files_counts.keys())}\n"
+                               f"Processed files: {list(entries_in_trees.trees_with_entries.keys())}")
 
         # Multiply the entries of each tree by the number of times it was
         # requested by the user
         for fullpath in files_counts:
             entries_in_trees.trees_with_entries[fullpath] *= files_counts[fullpath]
 
-        total_dataset_entries = sum(entries_in_trees.trees_with_entries.values())
+        total_dataset_entries = sum(
+            entries_in_trees.trees_with_entries.values())
         if entries_in_trees.processed_entries != total_dataset_entries:
             raise RuntimeError(f"The dataset has {total_dataset_entries} entries, "
                                f"but {entries_in_trees.processed_entries} were processed.")
