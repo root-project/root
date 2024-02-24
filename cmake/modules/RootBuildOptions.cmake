@@ -420,9 +420,15 @@ foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad gfa
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink pyroot-python2 minuit2)
+foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink pyroot-python2)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
+  endif()
+endforeach()
+
+foreach(opt minuit2)
+  if(NOT ${opt})
+    message(DEPRECATION ">>> Option '${opt}' is deprecated: in the future it will always be set to ON. In the next release of ROOT, you will no longer be able to disable this feature. Please contact root-dev@cern.ch should you still need disabling it.")
   endif()
 endforeach()
 
