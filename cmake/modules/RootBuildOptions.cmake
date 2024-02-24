@@ -413,13 +413,13 @@ foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad gfa
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink minuit2)
+foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
 endforeach()
 
-foreach(opt builtin_afterimage)
+foreach(opt builtin_afterimage minuit2)
   if(NOT ${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. It should always be ON. Please contact root-dev@cern.ch should you still need it.")
   endif()
