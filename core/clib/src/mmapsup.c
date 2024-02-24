@@ -171,6 +171,12 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
           } else {
             /*fprintf(stderr, "mmap_morecore: try to extend mapping by %d bytes, use bigger TMapFile\n", mapbytes);*/
 #ifndef WIN32
+            if (mdp -> top != PAGE_ALIGN(mdp -> top)) {
+              fprintf(stderr,
+                      "mmap_morecore error: base memory location (%p) is not aligned with %zu as required.\n",
+                      mdp -> top, (long)pagesize);
+              return result;
+            }
             mapto = mmap (mdp -> top, mapbytes, PROT_READ | PROT_WRITE,
                           MAP_SHARED | MAP_FIXED, mdp -> fd, foffset);
 #else
