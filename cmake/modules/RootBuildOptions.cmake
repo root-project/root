@@ -421,7 +421,7 @@ endforeach()
 
 foreach(opt builtin_afterimage minuit2)
   if(NOT ${opt})
-    message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. It should always be ON. Please contact root-dev@cern.ch should you still need it.")
+    message(DEPRECATION ">>> Option '${opt}' is deprecated: in the future it will always be set to ON. In the next release of ROOT, you will no longer be able to disable this feature. Please contact root-dev@cern.ch should you still need disabling it.")
   endif()
 endforeach()
 
