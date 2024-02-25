@@ -2155,10 +2155,18 @@ void TBufferXML::WriteArray(const Double_t *d, Int_t n)
 /// Write array without size attribute
 /// Also treat situation, when instead of one single array
 /// chain of several elements should be produced
-
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
+///
 template <typename T>
 R__ALWAYS_INLINE void TBufferXML::XmlWriteFastArray(const T *arr, Long64_t n)
 {
+   constexpr Int_t dataWidth = 1; // at least 1
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("XmlWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called)
+   }
    BeforeIOoperation();
    if (n <= 0)
       return;
@@ -2186,7 +2194,7 @@ void TBufferXML::WriteFastArray(const Char_t *c, Long64_t n)
    Bool_t usedefault = (n == 0);
    const Char_t *buf = c;
    if (!usedefault)
-      for (int i = 0; i < n; i++) {
+      for (Long64_t i = 0; i < n; i++) {
          if (*buf < 27) {
             usedefault = kTRUE;
             break;
@@ -2317,7 +2325,7 @@ void TBufferXML::WriteFastArray(void *start, const TClass *cl, Long64_t n, TMemb
       n = 1;
    int size = cl->Size();
 
-   for (Int_t j = 0; j < n; j++, obj += size) {
+   for (Long64_t j = 0; j < n; j++, obj += size) {
       ((TClass *)cl)->Streamer(obj, *this);
    }
 }
@@ -2355,7 +2363,7 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Long64_t n, Boo
 
    if (!isPreAlloc) {
 
-      for (Int_t j = 0; j < n; j++) {
+      for (Long64_t j = 0; j < n; j++) {
          // must write StreamerInfo if pointer is null
          if (!strInfo && !start[j] && !oldStyle) {
             if (cl->Property() & kIsAbstract) {
@@ -2375,7 +2383,7 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Long64_t n, Boo
    } else {
       // case //-> in comment
 
-      for (Int_t j = 0; j < n; j++) {
+      for (Long64_t j = 0; j < n; j++) {
          if (!start[j])
             start[j] = ((TClass *)cl)->New();
          ((TClass *)cl)->Streamer(start[j], *this);

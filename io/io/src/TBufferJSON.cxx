@@ -3252,7 +3252,8 @@ void TBufferJSON::WriteArray(const Double_t *d, Int_t n)
 /// Template method to write array of arbitrary dimensions
 /// Different methods can be used for store last array dimension -
 /// either JsonWriteArrayCompress<T>() or JsonWriteConstChar()
-
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of overflow. See https://github.com/root-project/root/issues/6734 for more details.
+///
 template <typename T>
 void TBufferJSON::JsonWriteFastArray(const T *arr, Long64_t arrsize, const char *typname,
                                                       void (TBufferJSON::*method)(const T *, Int_t, const char *))
@@ -3261,6 +3262,13 @@ void TBufferJSON::JsonWriteFastArray(const T *arr, Long64_t arrsize, const char 
    if (arrsize <= 0) { /*fJsonrCnt++;*/
       fValue.Append("[]");
       return;
+   }
+   constexpr Int_t dataWidth = 1; // at least 1
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (arrsize > maxElements)
+   {
+      Fatal("JsonWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called)
    }
 
    TStreamerElement *elem = Stack()->fElem;
@@ -3307,7 +3315,7 @@ void TBufferJSON::WriteFastArray(const Char_t *c, Long64_t n)
 {
    Bool_t need_blob = false;
    Bool_t has_zero = false;
-   for (int i=0;i<n;++i) {
+   for (Long64_t i=0;i<n;++i) {
       if (!c[i]) {
          has_zero = true; // might be terminal '\0'
       } else if (has_zero || !isprint(c[i])) {
@@ -3450,7 +3458,7 @@ void TBufferJSON::WriteFastArray(void *start, const TClass *cl, Long64_t n, TMem
          AppendOutput(indexes.GetBegin());
       }
 
-      for (Int_t j = 0; j < n; j++, obj += size) {
+      for (Long64_t j = 0; j < n; j++, obj += size) {
 
          if (j > 0)
             AppendOutput(indexes.NextSeparator());
@@ -3498,7 +3506,7 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Long64_t n, Bo
       AppendOutput(indexes.GetBegin());
    }
 
-   for (Int_t j = 0; j < n; j++) {
+   for (Long64_t j = 0; j < n; j++) {
 
       if (j > 0)
          AppendOutput(indexes.NextSeparator());

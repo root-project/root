@@ -119,7 +119,7 @@ protected:
    R__ALWAYS_INLINE void SqlReadFastArray(T *arr, Int_t arrsize);
 
    template <typename T>
-   R__ALWAYS_INLINE void SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize = kFALSE);
+   R__ALWAYS_INLINE void SqlWriteArray(T *arr, Long64_t arrsize, Bool_t withsize = kFALSE);
 
 public:
    TBufferSQL2(TBuffer::EMode mode, TSQLFile *file = nullptr);
