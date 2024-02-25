@@ -42,7 +42,7 @@ class RooDataSet;
 
 class RooMinimizer : public TObject {
 public:
-   /// Config argument to RooMinimizer ctor
+   /// Config argument to RooMinimizer constructor.
    struct Config {
 
       Config() {}
@@ -55,16 +55,16 @@ public:
       int offsetting = -1;         // RooAbsMinimizerFcn config
       const char *logf = nullptr;  // RooAbsMinimizerFcn config
 
-      // RooAbsMinimizerFcn config that can only be set in ctor, 0 means no parallelization (default),
+      // RooAbsMinimizerFcn config that can only be set in constructor, 0 means no parallelization (default),
       // -1 is parallelization with the number of workers controlled by RooFit::MultiProcess which
       // defaults to the number of available processors, n means parallelization with n CPU's
       int parallelize = 0;
 
-      // Experimental: RooAbsMinimizerFcn config that can only be set in ctor
+      // Experimental: RooAbsMinimizerFcn config that can only be set in constructor
       // argument is ignored when parallelize is 0
       bool enableParallelGradient = true;
 
-      // Experimental: RooAbsMinimizerFcn config that can only be set in ctor
+      // Experimental: RooAbsMinimizerFcn config that can only be set in constructor
       // argument is ignored when parallelize is 0
       bool enableParallelDescent = false;
 
