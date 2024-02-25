@@ -1374,8 +1374,15 @@ Int_t TBufferSQL2::SqlReadArraySize()
 }
 
 template <typename T>
-R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize)
+R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Long64_t arrsize, Bool_t withsize)
 {
+   constexpr Int_t dataWidth = 1; // at least 1
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (arrsize < 0 || arrsize > maxElements)
+   {
+      Fatal("SqlWriteArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called)
+   }
    if (!withsize && (arrsize <= 0))
       return;
    PushStack()->SetArray(withsize ? arrsize : -1);
@@ -1520,7 +1527,7 @@ void TBufferSQL2::WriteFastArray(const Char_t *c, Long64_t n)
    const Char_t *ccc = c;
    // check if no zeros in the array
    if (!usedefault)
-      for (int i = 0; i < n; i++)
+      for (Long64_t i = 0; i < n; i++)
          if (*ccc++ == 0) {
             usedefault = kTRUE;
             break;
@@ -1653,7 +1660,7 @@ void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Long64_t n, TMem
       n = 1;
    int size = cl->Size();
 
-   for (Int_t j = 0; j < n; j++, obj += size)
+   for (Long64_t j = 0; j < n; j++, obj += size)
       StreamObject(obj, cl);
 }
 
@@ -1689,7 +1696,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Long64_t n, Bo
 
    if (!isPreAlloc) {
 
-      for (Int_t j = 0; j < n; j++) {
+      for (Long64_t j = 0; j < n; j++) {
          // must write StreamerInfo if pointer is null
          if (!strInfo && !start[j] && !oldStyle)
             ForceWriteInfo(((TClass *)cl)->GetStreamerInfo(), kFALSE);
@@ -1703,7 +1710,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Long64_t n, Bo
    } else {
       // case //-> in comment
 
-      for (Int_t j = 0; j < n; j++) {
+      for (Long64_t j = 0; j < n; j++) {
          if (!start[j])
             start[j] = ((TClass *)cl)->New();
          StreamObject(start[j], cl);
