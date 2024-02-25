@@ -132,7 +132,7 @@ public:
   RooListProxy _coefList ;  ///<  List of coefficients
   mutable RooArgList* _snormList{nullptr};  ///<!  List of supplemental normalization factors
 
-  bool _haveLastCoef = false;  ///<  Flag indicating if last PDFs coefficient was supplied in the ctor
+  bool _haveLastCoef = false;  ///<  Flag indicating if last PDFs coefficient was supplied in the constructor
   bool _allExtendable = false; ///<  Flag indicating if all PDF components are extendable
   bool _recursive = false;     ///<  Flag indicating is fractions are treated recursively
 

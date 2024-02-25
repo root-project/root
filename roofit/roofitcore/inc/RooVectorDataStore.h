@@ -43,7 +43,7 @@ public:
 
   RooVectorDataStore() ;
 
-  // Empty ctor
+  // Empty constructor
   RooVectorDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=nullptr) ;
 
   RooAbsDataStore* clone(const char* newname=nullptr) const override { return new RooVectorDataStore(*this,newname) ; }

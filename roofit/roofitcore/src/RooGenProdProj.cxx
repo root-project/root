@@ -55,7 +55,7 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   // Set expensive object cache to that of first item in prodSet
   setExpensiveObjectCache(_prodSet.first()->expensiveObjectCache()) ;
 
-  // Create owners of components created in ctor
+  // Create owners of components created in constructor
   _compSetOwnedN = std::make_unique<RooArgSet>();
   _compSetOwnedD = std::make_unique<RooArgSet>();
 

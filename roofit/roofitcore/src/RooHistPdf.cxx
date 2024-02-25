@@ -80,7 +80,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
@@ -135,7 +135,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
