@@ -1953,7 +1953,7 @@ void TBufferFile::WriteFastArray(const Bool_t *b, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(UChar_t)*n;
@@ -1979,7 +1979,7 @@ void TBufferFile::WriteFastArray(const Char_t *c, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Char_t)*n;
@@ -2007,7 +2007,7 @@ void TBufferFile::WriteFastArrayString(const Char_t *c, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Char_t)*n;
@@ -2028,7 +2028,7 @@ void TBufferFile::WriteFastArray(const Short_t *h, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Short_t)*n;
@@ -2060,7 +2060,7 @@ void TBufferFile::WriteFastArray(const Int_t *ii, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Int_t)*n;
@@ -2091,7 +2091,7 @@ void TBufferFile::WriteFastArray(const Long_t *ll, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = 8*n;
@@ -2113,7 +2113,7 @@ void TBufferFile::WriteFastArray(const ULong_t *ll, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = 8*n;
@@ -2133,7 +2133,7 @@ void TBufferFile::WriteFastArray(const Long64_t *ll, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Long64_t)*n;
@@ -2159,7 +2159,7 @@ void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Float_t)*n;
@@ -2190,7 +2190,7 @@ void TBufferFile::WriteFastArray(const Double_t *d, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Double_t)*n;
@@ -2217,7 +2217,7 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerE
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Float_t)*n;
@@ -2275,7 +2275,7 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreame
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    Int_t l = sizeof(Float_t)*n;
@@ -2346,7 +2346,7 @@ void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Long64_t n,
    else if (n < 0)
    {
       Fatal("WriteFastArray", "Negative number of elements %lld", n);
-      return; // In case the user re-route the error handler to not die when Fatal is called
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
    int size = cl->Size();
 
