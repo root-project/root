@@ -1,5 +1,10 @@
 #include "ntuple_test.hxx"
 
+#include <TObject.h>
+#include <TRef.h>
+
+#include <sstream>
+
 namespace {
 class RNoDictionary {};
 } // namespace
@@ -62,4 +67,75 @@ TEST(RNTuple, DiamondInheritance)
    EXPECT_FLOAT_EQ(2.0, d->b);
    EXPECT_FLOAT_EQ(3.0, d->c);
    EXPECT_FLOAT_EQ(4.0, d->d);
+}
+
+TEST(RTNuple, TObject)
+{
+   FileRaii fileGuard("test_ntuple_tobject.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<TObject>("obj");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto entry = writer->GetModel().CreateBareEntry();
+
+      auto heapObj = std::make_unique<TObject>();
+      EXPECT_TRUE(heapObj->TestBit(TObject::kIsOnHeap));
+      EXPECT_TRUE(heapObj->TestBit(TObject::kNotDeleted));
+      heapObj->SetUniqueID(137);
+      entry->BindRawPtr("obj", heapObj.get());
+      writer->Fill(*entry);
+
+      heapObj->~TObject();
+      EXPECT_FALSE(heapObj->TestBit(TObject::kNotDeleted));
+      writer->Fill(*entry);
+
+      TObject stackObj;
+      EXPECT_FALSE(stackObj.TestBit(TObject::kIsOnHeap));
+      entry->BindRawPtr("obj", &stackObj);
+      writer->Fill(*entry);
+
+      stackObj.SetBit(TObject::kIsReferenced);
+      EXPECT_THROW(writer->Fill(*entry), RException);
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+
+   auto entry = reader->GetModel().CreateBareEntry();
+   TObject stackObj;
+   entry->BindRawPtr("obj", &stackObj);
+
+   reader->LoadEntry(0, *entry);
+   EXPECT_EQ(137u, stackObj.GetUniqueID());
+   EXPECT_FALSE(stackObj.TestBit(TObject::kIsOnHeap));
+   EXPECT_TRUE(stackObj.TestBit(TObject::kNotDeleted));
+
+   reader->LoadEntry(1, *entry);
+   EXPECT_EQ(137u, stackObj.GetUniqueID());
+   EXPECT_FALSE(stackObj.TestBit(TObject::kIsOnHeap));
+   EXPECT_TRUE(stackObj.TestBit(TObject::kNotDeleted));
+
+   auto heapObj = std::make_unique<TObject>();
+   entry->BindRawPtr("obj", heapObj.get());
+   reader->LoadEntry(2, *entry);
+   EXPECT_EQ(0u, heapObj->GetUniqueID());
+   EXPECT_TRUE(heapObj->TestBit(TObject::kIsOnHeap));
+   EXPECT_TRUE(heapObj->TestBit(TObject::kNotDeleted));
+
+   heapObj->SetBit(TObject::kIsReferenced);
+   EXPECT_THROW(reader->LoadEntry(2, *entry), RException);
+
+   // clang-format off
+   std::string expected{
+      "{\n"
+      "  \"obj\": {\n"
+      "    \"fUniqueID\": 137,\n"
+      "    \"fBits\": 33554432\n"
+      "  }\n"
+      "}\n"
+   };
+   // clang-format on
+   std::ostringstream os;
+   reader->Show(0, os);
+   EXPECT_EQ(expected, os.str());
 }
