@@ -50,21 +50,19 @@ void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size
    batches._output = output;
 }
 
-void fillArrays(std::vector<Batch> &arrays, const VarVector &vars, double *buffer)
+void fillArrays(std::vector<Batch> &arrays, const VarVector &vars, double *buffer, std::size_t nEvents)
 {
 
    arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
       const std::span<const double> &span = vars[i];
-      if (span.empty()) {
-         std::stringstream ss;
-         ss << "The span number " << i << " passed to Batches::Batches() is empty!";
-         throw std::runtime_error(ss.str());
-      } else if (span.size() > 1) {
-         arrays[i].set(span.data(), true);
-      } else {
+      if (!span.empty() && span.size() < nEvents) {
+         // In the scalar case, copy the value to each element of vector input
+         // buffer.
          std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
          arrays[i].set(&buffer[i * bufferSize], false);
+      } else {
+         arrays[i].set(span.data(), true);
       }
    }
 }
@@ -131,7 +129,7 @@ public:
             Batches batches;
             std::vector<Batch> arrays;
             fillBatches(batches, output, nEventsPerThread, vars.size(), extraArgs);
-            fillArrays(arrays, vars, buffer.data());
+            fillArrays(arrays, vars, buffer.data(), nEvents);
             batches._arrays = arrays.data();
             batches.advance(batches.getNEvents() * idx);
 
@@ -163,7 +161,7 @@ public:
          Batches batches;
          std::vector<Batch> arrays;
          fillBatches(batches, output, nEvents, vars.size(), extraArgs);
-         fillArrays(arrays, vars, buffer.data());
+         fillArrays(arrays, vars, buffer.data(), nEvents);
          batches._arrays = arrays.data();
 
          std::size_t events = batches.getNEvents();
