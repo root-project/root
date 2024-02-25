@@ -24,6 +24,8 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
+#include <ROOT/TestSupport.hxx>
+
 #include "gtest_wrapper.h"
 
 #include <cmath>
@@ -267,6 +269,57 @@ TEST_P(TestStatisticTest, IntegrateBins_RooDataHist)
 
    EXPECT_GT(frame->chiSquare("standard", "data", 1) * 0.9, frame->chiSquare("highRes", "data", 1))
       << "Expect chi2/ndf at least 10% better.";
+}
+
+// Verify that fitting an empty RooDataSet or a RooDataHist with only empty
+// bins does not do anything to the parameters. The point of this test is to
+// validate that the new CPU backend behaves the same as the legacy evaluation
+// backend for empty data objects.
+TEST_P(TestStatisticTest, EmptyData)
+{
+   RooWorkspace ws;
+   ws.factory("Gaussian::model(x[0, 10], mean[6, 0, 10], sigma[2.0, 0.01, 10.0])");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &mean = *ws.var("mean");
+   RooRealVar &sigma = *ws.var("sigma");
+   RooAbsPdf &model = *ws.pdf("model");
+
+   const double meanOrigVal = mean.getVal();
+   const double sigmaOrigVal = sigma.getVal();
+
+   std::unique_ptr<RooDataSet> data{model.generate(x, 0)};
+   std::unique_ptr<RooDataHist> dataHist{data->binnedClone()};
+
+   {
+      // We expect errors in the Hessian calculation because the likelihood is
+      // constant.
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
+
+      model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
+   }
+
+   EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
+   EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
+
+   // Reset the parameters for the check with the RooDataHist
+   mean.setVal(meanOrigVal);
+   sigma.setVal(sigmaOrigVal);
+   mean.setError(0.0);
+   sigma.setError(0.0);
+
+   {
+      // We expect errors in the Hessian calculation because the likelihood is
+      // constant (same as above for the RooDataSet).
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
+
+      model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
+   }
+
+   EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
+   EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
 }
 
 TEST(RooChi2Var, IntegrateBins)
@@ -587,11 +640,11 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EV
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
                          testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
-                                          testing::Values(false, true),   // unbinned or binned
-                                          testing::Values(false, true),   // extended fit
-                                          testing::Values(false, true),   // use sumW2
-                                          testing::Values(false, true),   // wrap in a RooSimultaneous
-                                          testing::Values(false)          // binned likelihood code path
+                                          testing::Values(false, true),          // unbinned or binned
+                                          testing::Values(false, true),          // extended fit
+                                          testing::Values(false, true),          // use sumW2
+                                          testing::Values(false, true),          // wrap in a RooSimultaneous
+                                          testing::Values(false)                 // binned likelihood code path
                                           ),
                          [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
@@ -606,11 +659,11 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVarBinnedL, OffsetBinTest,
                          testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
-                                          testing::Values(true),          // unbinned or binned
-                                          testing::Values(false),         // extended fit
-                                          testing::Values(false),         // use sumW2
-                                          testing::Values(false, true),   // wrap in a RooSimultaneous
-                                          testing::Values(true)           // binned likelihood code path
+                                          testing::Values(true),                 // unbinned or binned
+                                          testing::Values(false),                // extended fit
+                                          testing::Values(false),                // use sumW2
+                                          testing::Values(false, true),          // wrap in a RooSimultaneous
+                                          testing::Values(true)                  // binned likelihood code path
                                           ),
                          [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
                             std::stringstream ss;

@@ -47,14 +47,19 @@ void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size
    batches._output = output;
 }
 
-void fillArrays(Batch *arrays, const VarVector &vars, double *buffer, double *bufferDevice)
+void fillArrays(Batch *arrays, const VarVector &vars, double *buffer, double *bufferDevice, std::size_t nEvents)
 {
    for (int i = 0; i < vars.size(); i++) {
       const std::span<const double> &span = vars[i];
-      if (span.size() == 1) {
+      if (!span.empty() && span.size() < nEvents) {
+         // In the scalar case, the value is not on the GPU yet, so we have to
+         // copy the value to the GPU buffer.
          buffer[i] = span[0];
          arrays[i].set(bufferDevice + i, false);
       } else {
+         // In the vector input cases, they are already on the GPU, so we can
+         // fill be buffer with some dummy value and set the input span
+         // directly.
          buffer[i] = 0.0;
          arrays[i].set(span.data(), true);
       }
@@ -132,7 +137,7 @@ public:
       auto extraArgsDevice = reinterpret_cast<double *>(scalarBufferDevice + vars.size());
 
       fillBatches(*batches, output, nEvents, vars.size(), extraArgs.size());
-      fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice);
+      fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice, nEvents);
       batches->_arrays = arraysDevice;
 
       if (!extraArgs.empty()) {
@@ -255,6 +260,8 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
 
 double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n)
 {
+   if (n == 0)
+      return 0.0;
    const int gridSize = getGridSize(n);
    cudaStream_t stream = *cfg.cudaStream();
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
@@ -270,6 +277,9 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
                                                 std::span<const double> weights, std::span<const double> offsetProbas)
 {
    ReduceNLLOutput out;
+   if (probas.empty()) {
+      return out;
+   }
    const int gridSize = getGridSize(probas.size());
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
    cudaStream_t stream = *cfg.cudaStream();
