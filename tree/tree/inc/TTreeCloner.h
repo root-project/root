@@ -55,7 +55,7 @@ class TTreeCloner {
    UInt_t     fCloneMethod;      ///< Indicates which cloning method was selected.
    Long64_t   fToStartEntries;   ///< Number of entries in the target tree before any addition.
 
-   Int_t           fCacheSize;   ///< Requested size of the file cache
+   Long64_t        fCacheSize;   ///< Requested size of the file cache
    TFileCacheRead *fFileCache;   ///< File Cache used to reduce the number of individual reads
    TFileCacheRead *fPrevCache;   ///< Cache that set before the TTreeCloner ctor for the 'from' TTree if any.
 
@@ -119,7 +119,7 @@ public:
    bool   Exec();
    bool   IsValid() { return fIsValid; }
    bool   NeedConversion() { return fNeedConversion; }
-   void   SetCacheSize(Int_t size);
+   void   SetCacheSize(Long64_t size);
    void   SortBaskets();
    void   WriteBaskets();
 

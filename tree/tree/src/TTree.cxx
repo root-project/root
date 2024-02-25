@@ -3553,7 +3553,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
       onIndexError = kBuild;
    }
    Ssiz_t cacheSizeLoc = opt.Index("cachesize=");
-   Int_t cacheSize = -1;
+   Long64_t cacheSize = -1;
    if (cacheSizeLoc != TString::kNPOS) {
       // If the parse faile, cacheSize stays at -1.
       Ssiz_t cacheSizeEnd = opt.Index(" ",cacheSizeLoc+10) - (cacheSizeLoc+10);
@@ -3569,7 +3569,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
          Warning("CopyEntries","The cachesize option is too large: %s (%g%s max). The default size will be used.",cacheSizeStr.String().Data(),m,munit);
       }
    }
-   if (gDebug > 0 && cacheSize != -1) Info("CopyEntries","Using Cache size: %d\n",cacheSize);
+   if (gDebug > 0 && cacheSize != -1) Info("CopyEntries","Using Cache size: %lld\n",cacheSize);
 
    Long64_t nbytes = 0;
    Long64_t treeEntries = tree->GetEntriesFast();
@@ -8670,6 +8670,8 @@ void TTree::SetBranchStyle(Int_t style)
 /// - if cachesize = -1 (default) it is set to the AutoFlush value when writing
 ///    the Tree (default is 30 MBytes).
 ///
+/// The cacheSize might be clamped, see TFileCacheRead::SetBufferSize
+///
 /// Returns:
 /// - 0 size set, cache was created if possible
 /// - -1 on error
@@ -8694,6 +8696,8 @@ Int_t TTree::SetCacheSize(Long64_t cacheSize)
 /// If autocache is false:
 /// this is a user requested cache. cacheSize is used to size the cache.
 /// This cache should never be automatically adjusted.
+///
+/// The cacheSize might be clamped, see TFileCacheRead::SetBufferSize
 ///
 /// Returns:
 /// - 0 size set, or existing autosized cache almost large enough.
@@ -8778,6 +8782,7 @@ Int_t TTree::SetCacheSizeAux(bool autocache /* = true */, Long64_t cacheSize /* 
          if (res < 0) {
             return -1;
          }
+         cacheSize = pf->GetBufferSize(); // update after potential clamp
       }
    } else {
       // no existing cache

@@ -351,12 +351,13 @@ bool TTreeCacheUnzip::FillBuffer()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the underlying buffer size of the cache.
+/// The buffersize might be clamped, see TFileCacheRead::SetBufferSize
 /// Returns:
 ///  - 0 if the buffer content is still available
 ///  - 1 if some or all of the buffer content has been made unavailable
 ///  - -1 on error
 
-Int_t TTreeCacheUnzip::SetBufferSize(Int_t buffersize)
+Int_t TTreeCacheUnzip::SetBufferSize(Long64_t buffersize)
 {
    Int_t res = TTreeCache::SetBufferSize(buffersize);
    if (res < 0) {

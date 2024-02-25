@@ -644,12 +644,16 @@ void TTreeCloner::ImportClusterRanges()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the TFile cache size to be used.
+/// Set the cache size used by the matching TFile.
 /// Note that the default is to use the same size as the default TTreeCache for
 /// the input tree.
-/// \param size Size of the cache. Zero disable the use of the cache.
+/// \param size Size of the cache.
+/// \note If size=0, or if it does not match the fileCache buffer size, 
+/// the fileCache will be deleted so that it be created later with the right size
+/// (or not created if the size is 0) at the beginning of Exec.
 
-void TTreeCloner::SetCacheSize(Int_t size)
+
+void TTreeCloner::SetCacheSize(Long64_t size)
 {
    fCacheSize = size;
    if (IsValid() && fFileCache) {
