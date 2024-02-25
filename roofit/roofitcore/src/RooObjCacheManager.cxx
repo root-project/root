@@ -60,7 +60,7 @@ RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsAr
   RooCacheManager<RooAbsCacheElement>(other,owner),
   _clearOnRedirect(other._clearOnRedirect),
   _allowOptimize(other._allowOptimize),
-  _optCacheModeSeen(false) // cache mode properties are not transferred in copy ctor
+  _optCacheModeSeen(false) // cache mode properties are not transferred in copy constructor
 {
 }
 

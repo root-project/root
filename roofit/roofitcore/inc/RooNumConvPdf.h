@@ -58,7 +58,7 @@ public:
 protected:
 
   // WVE Store all properties of RooNumConvolution here so that can be take
-  // along in the copy ctor.
+  // along in the copy constructor.
 
   RooNumConvolution& conv() const { if (!_init) initialize() ; return *_conv ; }
 
