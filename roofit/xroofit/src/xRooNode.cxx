@@ -5214,9 +5214,9 @@ xRooNode xRooNode::vars() const
       // we want
       // ensure all globs appear after robs, as we rely on this ordering for picking "x" var in "reduced" method
       xRooNode _globs;
-      RooArgSet allLeafs;
-      p->leafNodeServerList(&allLeafs);
-      for (auto &c : allLeafs) {
+      RooArgSet allLeaves;
+      p->leafNodeServerList(&allLeaves);
+      for (auto &c : allLeaves) {
          if (c->isFundamental() || (dynamic_cast<RooConstVar *>(c) && !TString(c->GetName()).IsFloat())) {
             if (!c->getAttribute("global")) {
                out.get<RooArgList>()->add(*c);

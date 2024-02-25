@@ -55,7 +55,7 @@ generate_1D_gaussian_pdf_nll(RooWorkspace &ws, unsigned long nEvents)
 }
 
 // return two unique_ptrs, the first because nll is a pointer,
-// the second because RooArgSet doesn't have a move ctor
+// the second because RooArgSet doesn't have a move constructor
 std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
 generate_ND_gaussian_pdf_nll(RooWorkspace &ws, unsigned int n, unsigned long nEvents, RooFit::EvalBackend evalBackend)
 {
