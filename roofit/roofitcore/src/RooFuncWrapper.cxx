@@ -100,10 +100,10 @@ void RooFuncWrapper::loadParamsAndData(RooAbsArg const *head, RooArgSet const &p
    _gradientVarBuffer.resize(_params.size());
 
    if (head) {
-      _nodeOutputSizes =
-         RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(*head, [&spans](RooFit::Detail::DataKey key) {
+      _nodeOutputSizes = RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(
+         *head, [&spans](RooFit::Detail::DataKey key) -> int {
             auto found = spans.find(key);
-            return found != spans.end() ? found->second.size() : 0;
+            return found != spans.end() ? found->second.size() : -1;
          });
    }
 }
