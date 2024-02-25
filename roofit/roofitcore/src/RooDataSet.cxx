@@ -919,7 +919,7 @@ std::span<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_
 
   std::size_t nEntries = this->numEntries(); // for the casting to std::size_t
 
-  if(first >= nEntries || (first + len) > nEntries) {
+  if(first + len > nEntries) {
     throw std::runtime_error("RooDataSet::getWeightBatch(): requested range not valid for dataset.");
   }
 

@@ -41,8 +41,7 @@ getDataSpans(RooAbsData const &data, std::string const &rangeName, RooSimultaneo
              bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers);
 
 std::map<RooFit::Detail::DataKey, std::size_t>
-determineOutputSizes(RooAbsArg const &topNode,
-                     std::function<std::size_t(RooFit::Detail::DataKey)> const &inputSizeFunc);
+determineOutputSizes(RooAbsArg const &topNode, std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc);
 
 } // namespace BatchModeDataHelpers
 } // namespace Detail

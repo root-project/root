@@ -262,30 +262,27 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
          info.outputSize = inputArray.size();
          if (_useGPU) {
 #ifdef ROOFIT_CUDA
-            if (info.outputSize == 1) {
-               // Scalar observables from the data don't need to be copied to the GPU
+            if (info.outputSize <= 1) {
+               // Empty or scalar observables from the data don't need to be
+               // copied to the GPU.
                _dataMapCPU.set(info.absArg, inputArray);
                _dataMapCUDA.set(info.absArg, inputArray);
             } else {
-               if (_useGPU) {
-                  // For simplicity, we put the data on both host and device for
-                  // now. This could be optimized by inspecting the clients of the
-                  // variable.
-                  if (isOnDevice) {
-                     _dataMapCUDA.set(info.absArg, inputArray);
-                     auto gpuSpan = _dataMapCUDA.at(info.absArg);
-                     info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
-                     CudaInterface::copyDeviceToHost(gpuSpan.data(), info.buffer->cpuWritePtr(), gpuSpan.size());
-                     _dataMapCPU.set(info.absArg, {info.buffer->cpuReadPtr(), gpuSpan.size()});
-                  } else {
-                     _dataMapCPU.set(info.absArg, inputArray);
-                     auto cpuSpan = _dataMapCPU.at(info.absArg);
-                     info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
-                     CudaInterface::copyHostToDevice(cpuSpan.data(), info.buffer->gpuWritePtr(), cpuSpan.size());
-                     _dataMapCUDA.set(info.absArg, {info.buffer->gpuReadPtr(), cpuSpan.size()});
-                  }
+               // For simplicity, we put the data on both host and device for
+               // now. This could be optimized by inspecting the clients of the
+               // variable.
+               if (isOnDevice) {
+                  _dataMapCUDA.set(info.absArg, inputArray);
+                  auto gpuSpan = _dataMapCUDA.at(info.absArg);
+                  info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
+                  CudaInterface::copyDeviceToHost(gpuSpan.data(), info.buffer->cpuWritePtr(), gpuSpan.size());
+                  _dataMapCPU.set(info.absArg, {info.buffer->cpuReadPtr(), gpuSpan.size()});
                } else {
                   _dataMapCPU.set(info.absArg, inputArray);
+                  auto cpuSpan = _dataMapCPU.at(info.absArg);
+                  info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
+                  CudaInterface::copyHostToDevice(cpuSpan.data(), info.buffer->gpuWritePtr(), cpuSpan.size());
+                  _dataMapCUDA.set(info.absArg, {info.buffer->gpuReadPtr(), cpuSpan.size()});
                }
             }
 #endif
@@ -313,9 +310,9 @@ void Evaluator::updateOutputSizes()
    }
 
    auto outputSizeMap =
-      RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(_topNode, [&](RooFit::Detail::DataKey key) {
+      RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(_topNode, [&](RooFit::Detail::DataKey key) -> int {
          auto found = sizeMap.find(key);
-         return found != sizeMap.end() ? found->second : 0;
+         return found != sizeMap.end() ? found->second : -1;
       });
 
    for (auto &info : _nodes) {
