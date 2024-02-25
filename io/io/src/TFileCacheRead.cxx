@@ -31,6 +31,7 @@
 #include "TFileCacheWrite.h"
 #include "TFilePrefetch.h"
 #include "TMathBase.h"
+#include <limits>
 
 ClassImp(TFileCacheRead);
 
@@ -701,15 +702,17 @@ void TFileCacheRead::WaitFinishPrefetch()
 /// If the current prefetch list is too large to fit in
 /// the new buffer some or all of the prefetch blocks are dropped. The
 /// requested buffersize must be greater than zero.
+/// It will be automatically clamped to minimum 100000 (if <= 10000) and maximum INT_MAX
 /// Return values:
 ///   - 0 if the prefetch block lists remain unchanged
 ///   - 1 if some or all blocks have been removed from the prefetch list
 ///   - -1 on error
 
-Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
+Int_t TFileCacheRead::SetBufferSize(Long64_t buffersize)
 {
    if (buffersize <= 0) return -1;
    if (buffersize <=10000) buffersize = 100000;
+   if (buffersize > std::numeric_limits<Int_t>::max()) buffersize = std::numeric_limits<Int_t>::max();
 
    if (buffersize == fBufferSize) {
       fBufferSizeMin = buffersize;

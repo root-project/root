@@ -141,7 +141,7 @@ public:
    Int_t          GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, bool *free) override;
    Int_t          GetUnzipGroupSize() { return fUnzipGroupSize; }
    void           ResetCache() override;
-   Int_t          SetBufferSize(Int_t buffersize) override;
+   Int_t          SetBufferSize(Long64_t buffersize) override;
    void           SetUnzipBufferSize(Long64_t bufferSize);
    void           SetUnzipGroupSize(Int_t groupSize) { fUnzipGroupSize = groupSize; }
    static void    SetUnzipRelBufferSize(Float_t relbufferSize);
