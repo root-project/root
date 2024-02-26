@@ -841,6 +841,7 @@ User defined C++ classes are supported with the following limitations
   - All persistent members and base classes must be themselves types with RNTuple I/O support
   - Transient members must be marked by a `//!` comment
   - The class must not be in the `std` namespace
+  - The class must be empty or splittable (e.g., the class must not provide a custom streamer)
   - There is no support for polymorphism,
     i.e. a field of class `A` cannot store class `B` that derives from `A`
 
