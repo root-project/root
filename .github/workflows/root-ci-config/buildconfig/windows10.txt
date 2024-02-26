@@ -18,7 +18,6 @@ builtin_zstd=ON
 cudnn=OFF
 davix=OFF
 fftw3=OFF
-gfal=OFF
 llvm13_broken_tests=OFF
 minuit2_mpi=OFF
 minuit2_omp=OFF

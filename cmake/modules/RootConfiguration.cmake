@@ -215,11 +215,6 @@ set(glewlibdir ${GLEW_LIBRARY_DIR})
 set(glewlibs ${GLEW_LIBRARIES})
 set(glewincdir ${GLEW_INCLUDE_DIR})
 
-set(buildgfal ${value${gfal}})
-set(gfallibdir ${GFAL_LIBRARY_DIR})
-set(gfallib ${GFAL_LIBRARY})
-set(gfalincdir ${GFAL_INCLUDE_DIR})
-
 set(buildarrow ${value${arrow}})
 set(arrowlibdir ${ARROW_LIBRARY_DIR})
 set(arrowlib ${ARROW_LIBRARY})
