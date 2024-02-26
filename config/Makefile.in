@@ -196,10 +196,6 @@ ifeq ($(BUILDGLEW), yes)
 GLEWCPPFLAGS   := -DBUILTIN_GLEW
 endif
 
-BUILDGFAL      := @buildgfal@
-GFALLIBDIR     := @gfallibdir@
-GFALCLILIB     := @gfallib@
-GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 

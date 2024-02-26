@@ -650,7 +650,7 @@ namespace descriptor ends with - the namespace is not a part of the
 filename. Extend in private .rootrc with a +Url.Special line.
 
 ``` {.cpp}
-Url.Special:             file: rfio: hpss: castor: gfal: dcache:
+Url.Special:             file: rfio: hpss: castor: dcache:
 +Url.Special:            /alien/- /castor/
 ```
 
