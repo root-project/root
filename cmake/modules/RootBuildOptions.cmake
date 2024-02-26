@@ -147,7 +147,6 @@ ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
 ROOT_BUILD_OPTION(mysql ON "Enable support for MySQL databases")
 ROOT_BUILD_OPTION(odbc OFF "Enable support for ODBC databases (requires libiodbc or libodbc)")
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
-ROOT_BUILD_OPTION(oracle OFF "Enable support for Oracle databases (requires Oracle Instant Client) (deprecated)")
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
 ROOT_BUILD_OPTION(proof OFF "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
@@ -241,7 +240,6 @@ if(all)
  set(mysql_defvalue ON)
  set(odbc_defvalue ON)
  set(opengl_defvalue ON)
- set(oracle_defvalue ON)
  set(pgsql_defvalue ON)
  set(proof_defvalue OFF)
  set(pythia6_defvalue ON)
@@ -404,17 +402,17 @@ if(NOT webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad
-        gfal glite globus gsl_shared hdfs ios jemalloc krb5 ldap memstat
-        monalisa pyroot_legacy qt qtgsi rfio ruby sapdb srp table tcmalloc
-        python vmc xproofd pyroot-python2 exceptions)
+foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17
+        exceptions geocad gfal glite globus gsl_shared hdfs ios jemalloc krb5
+        ldap memstat monalisa oracle pyroot-python2 pyroot_legacy python qt
+        qtgsi rfio ruby sapdb srp table tcmalloc vmc xproofd)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules oracle pythia6 pythia6_nolink)
+foreach(opt cxxmodules pythia6 pythia6_nolink)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
