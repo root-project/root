@@ -72,7 +72,6 @@ TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
 {
    fTaskContainer = other.fTaskContainer;
    other.fTaskContainer = nullptr;
-   fCanRun.store(other.fCanRun);
    return *this;
 }
 
@@ -91,9 +90,7 @@ TTaskGroup::~TTaskGroup()
 void TTaskGroup::Cancel()
 {
 #ifdef R__USE_IMT
-   fCanRun = false;
    CastToTG(fTaskContainer)->cancel();
-   fCanRun = true;
 #endif
 }
 
@@ -108,9 +105,6 @@ void TTaskGroup::Cancel()
 void TTaskGroup::Run(const std::function<void(void)> &closure)
 {
 #ifdef R__USE_IMT
-   while (!fCanRun)
-      /* empty */;
-
    CastToTG(fTaskContainer)->run(closure);
 #else
    closure();
@@ -123,9 +117,7 @@ void TTaskGroup::Run(const std::function<void(void)> &closure)
 void TTaskGroup::Wait()
 {
 #ifdef R__USE_IMT
-   fCanRun = false;
    CastToTG(fTaskContainer)->wait();
-   fCanRun = true;
 #endif
 }
 } // namespace Experimental
