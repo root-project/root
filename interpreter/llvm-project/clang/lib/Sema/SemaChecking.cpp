@@ -2143,6 +2143,25 @@ static bool checkFPMathBuiltinElementType(Sema &S, SourceLocation Loc,
   return false;
 }
 
+#if defined(MAC_SDK_WORKAROUND)
+/// Checks that __builtin_popcountg was called with a single argument, which is
+/// an integer.
+static bool SemaBuiltinPopcountg(Sema &S, CallExpr *TheCall) {
+  if (checkArgCount(S, TheCall, 1))
+    return true;
+
+  Expr *Arg = TheCall->getArg(0);
+  QualType ArgTy = Arg->getType();
+
+  if (!ArgTy->isIntegerType()) {
+    S.Diag(Arg->getBeginLoc(), diag::err_builtin_invalid_arg_type)
+        << 1 << /*integer ty*/ 7 << ArgTy;
+    return true;
+  }
+  return false;
+}
+#endif
+
 ExprResult
 Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
                                CallExpr *TheCall) {
@@ -2900,7 +2919,14 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
            diag::err_hip_invalid_args_builtin_mangled_name);
       return ExprError();
     }
+    break;
   }
+#if defined(MAC_SDK_WORKAROUND)
+  case Builtin::BI__builtin_popcountg:
+    if (SemaBuiltinPopcountg(*this, TheCall))
+      return ExprError();
+    break;
+#endif
   }
 
   // Since the target specific builtins for each arch overlap, only check those
