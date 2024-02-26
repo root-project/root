@@ -726,20 +726,6 @@ if(fcgi)
 endif()
 
 
-#---Check for Oracle-------------------------------------------------------------------
-if(oracle)
-  message(STATUS "Looking for Oracle")
-  find_package(Oracle)
-  if(NOT ORACLE_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Oracle libraries not found and they are required (orable option enabled)")
-    else()
-      message(STATUS "Oracle not found. Switching off oracle option")
-      set(oracle OFF CACHE BOOL "Disabled because Oracle not found (${oracle_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for ODBC-------------------------------------------------------------------
 if(odbc)
   message(STATUS "Looking for ODBC")
