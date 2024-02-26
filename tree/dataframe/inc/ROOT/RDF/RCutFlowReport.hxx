@@ -32,9 +32,9 @@ class TCutInfo {
    friend class ROOT::Detail::RDF::RFilterBase;
 
 private:
-   const std::string fName;
-   const ULong64_t fPass;
-   const ULong64_t fAll;
+   std::string fName;
+   ULong64_t fPass;
+   ULong64_t fAll;
    TCutInfo(const std::string &name, ULong64_t pass, ULong64_t all) : fName(name), fPass(pass), fAll(all) {}
 
 public:
