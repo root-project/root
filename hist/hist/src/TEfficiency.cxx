@@ -3764,7 +3764,7 @@ Bool_t TEfficiency::SetTotalEvents(Int_t bin, Double_t events)
       return true;
    }
    else {
-      Error("SetTotalEvents(Int_t,Double_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %i",fPassedHistogram->GetBinContent(bin),bin,events);
+      Error("SetTotalEvents(Int_t,Double_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %.1lf",fPassedHistogram->GetBinContent(bin),bin,events);
       return false;
    }
 }
