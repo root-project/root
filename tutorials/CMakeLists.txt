@@ -316,11 +316,8 @@ else()
 
 endif()
 
-if (NOT ROOT_pythia6_FOUND)
-  set(pythia_veto pythia/pythiaExample.C)
-endif()
 if (NOT ROOT_pythia8_FOUND)
-  set(pythia_veto ${pythia_veto} pythia/pythia8.C)
+  set(pythia_veto pythia/pythia8.C)
 else()
   if("$ENV{PYTHIA8}" STREQUAL "")
     get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)

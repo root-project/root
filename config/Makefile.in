@@ -210,11 +210,6 @@ ASINCDIR       := $(filter-out /usr/include, @asimageincdir@)
 ASLIB          := @asimagelib@
 ASLIBDIR       := @asimagelibdir@
 
-BUILDFPYTHIA6    := @buildpythia6@
-FPYTHIA6LIBDIR   := @pythia6libdir@
-FPYTHIA6LIB      := @pythia6lib@
-FPYTHIA6CPPFLAGS := @pythia6cppflags@
-
 BUILDFPYTHIA8    := @buildpythia8@
 FPYTHIA8INCDIR   := $(filter-out /usr/include, @pythia8incdir@)
 FPYTHIA8LIBDIR   := @pythia8libdir@

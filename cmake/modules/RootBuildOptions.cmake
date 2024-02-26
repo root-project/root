@@ -149,8 +149,6 @@ ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGL
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
 ROOT_BUILD_OPTION(proof OFF "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
-ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library (deprecated)")
-ROOT_BUILD_OPTION(pythia6 OFF "Enable support for Pythia 6.x [unlicensed] (deprecated)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
 ROOT_BUILD_OPTION(qt5web OFF "Enable support for Qt5 web-based display (requires Qt5::WebEngine and Qt5::WebEngineWidgets)")
 ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires Qt6::WebEngineCore and Qt6::WebEngineWidgets)")
@@ -239,7 +237,6 @@ if(all)
  set(opengl_defvalue ON)
  set(pgsql_defvalue ON)
  set(proof_defvalue OFF)
- set(pythia6_defvalue ON)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
  set(qt5web_defvalue ON)
@@ -399,15 +396,16 @@ endif()
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17
         exceptions geocad gfal glite globus gsl_shared hdfs ios jemalloc krb5
-        ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy python qt
-        qtgsi rfio ruby sapdb srp table tcmalloc vmc xproofd)
+        ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
+        pythia6 pythia6_nolink python qt qtgsi rfio ruby sapdb srp table
+        tcmalloc vmc xproofd)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules pythia6 pythia6_nolink)
+foreach(opt cxxmodules)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
