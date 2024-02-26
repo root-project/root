@@ -140,7 +140,6 @@ ROOT_BUILD_OPTION(libcxx OFF "Build using libc++")
 ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
 ROOT_BUILD_OPTION(mathmore OFF "Build libMathMore extended math library (requires GSL) [GPL]")
 ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before process termination (experimental, used for leak checking)")
-ROOT_BUILD_OPTION(minuit2 IGNORE "Build Minuit2 minimization library (deprecated, Minuit2 is always built)")
 ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
 ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
@@ -403,7 +402,7 @@ endif()
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17
         exceptions geocad gfal glite globus gsl_shared hdfs ios jemalloc krb5
-        ldap memstat monalisa oracle pyroot-python2 pyroot_legacy python qt
+        ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy python qt
         qtgsi rfio ruby sapdb srp table tcmalloc vmc xproofd)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
@@ -417,7 +416,7 @@ foreach(opt cxxmodules pythia6 pythia6_nolink)
   endif()
 endforeach()
 
-foreach(opt builtin_afterimage minuit2)
+foreach(opt builtin_afterimage)
   if(NOT ${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated: in the future it will always be set to ON. In the next release of ROOT, you will no longer be able to disable this feature. Please contact root-dev@cern.ch should you still need disabling it.")
   endif()
