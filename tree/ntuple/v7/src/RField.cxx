@@ -1482,6 +1482,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       throw RException(
          R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
    }
+   // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
+   if (!fClass->CanSplit() && fClass->Size() > 1) {
+      throw RException(R__FAIL(std::string(className) + " cannot be split"));
+   }
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
