@@ -35,16 +35,23 @@ public:
       kOn,
       kDefault = kOn,
    };
+   enum class EImplicitMT {
+      kOff,
+      kDefault,
+   };
 
 private:
    EClusterCache fClusterCache = EClusterCache::kDefault;
    unsigned int fClusterBunchSize = 1;
+   EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
 
 public:
    EClusterCache GetClusterCache() const { return fClusterCache; }
    void SetClusterCache(EClusterCache val) { fClusterCache = val; }
    unsigned int GetClusterBunchSize() const { return fClusterBunchSize; }
    void SetClusterBunchSize(unsigned int val) { fClusterBunchSize = val; }
+   EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
+   void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
 };
 
 } // namespace Experimental
