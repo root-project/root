@@ -35,6 +35,12 @@ All page sink classes need to support the common options.
 */
 // clang-format on
 class RNTupleWriteOptions {
+public:
+   enum class EImplicitMT {
+      kOff,
+      kDefault,
+   };
+
 protected:
    int fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
    /// Approximation of the target compressed cluster size
@@ -48,6 +54,7 @@ protected:
    /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
    std::size_t fApproxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
+   EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
    /// but it can result in smaller file sizes for data sets with many collections and lz4 or no compression.
    bool fHasSmallClusters = false;
@@ -79,6 +86,9 @@ public:
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
+
+   EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
+   void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
 
    bool GetHasSmallClusters() const { return fHasSmallClusters; }
    void SetHasSmallClusters(bool val) { fHasSmallClusters = val; }

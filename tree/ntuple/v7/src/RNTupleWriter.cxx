@@ -34,7 +34,8 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
    : fFillContext(std::move(model), std::move(sink)), fMetrics("RNTupleWriter")
 {
 #ifdef R__USE_IMT
-   if (IsImplicitMTEnabled()) {
+   if (IsImplicitMTEnabled() &&
+       fFillContext.fSink->GetWriteOptions().GetUseImplicitMT() == RNTupleWriteOptions::EImplicitMT::kDefault) {
       fZipTasks = std::make_unique<Internal::RNTupleImtTaskScheduler>();
       fFillContext.fSink->SetTaskScheduler(fZipTasks.get());
    }

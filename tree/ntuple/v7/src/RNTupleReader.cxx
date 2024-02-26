@@ -46,7 +46,8 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 void ROOT::Experimental::RNTupleReader::InitPageSource()
 {
 #ifdef R__USE_IMT
-   if (IsImplicitMTEnabled()) {
+   if (IsImplicitMTEnabled() &&
+       fSource->GetReadOptions().GetUseImplicitMT() == RNTupleReadOptions::EImplicitMT::kDefault) {
       fUnzipTasks = std::make_unique<Internal::RNTupleImtTaskScheduler>();
       fSource->SetTaskScheduler(fUnzipTasks.get());
    }
