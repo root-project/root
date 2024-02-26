@@ -336,7 +336,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &
    PrintRecord(field);
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitTObjectField(const RTObjectField &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitTObjectField(const RField<TObject> &field)
 {
    PrintRecord(field);
 }

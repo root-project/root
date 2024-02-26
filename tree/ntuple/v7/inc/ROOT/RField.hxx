@@ -817,44 +817,6 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
 
-/// TObject requires special handling of the fBits and fUniqueID members
-class RTObjectField : public RFieldBase {
-   class RTObjectDeleter : public RDeleter {
-   public:
-      void operator()(void *objPtr, bool dtorOnly) final;
-   };
-
-   static TClass *GetClass();
-   static std::size_t GetOffsetOfMember(const char *name);
-   static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
-   static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
-
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTObjectDeleter>(); }
-
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-
-   void OnConnectPageSource() final;
-
-public:
-   RTObjectField(std::string_view fieldName);
-   RTObjectField(RTObjectField &&other) = default;
-   RTObjectField &operator=(RTObjectField &&other) = default;
-   ~RTObjectField() override = default;
-
-   std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final;
-   std::uint32_t GetTypeVersion() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-};
-
 /// The field for an unscoped or scoped enum with dictionary
 class REnumField : public RFieldBase {
 private:
@@ -2463,6 +2425,47 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+/// TObject requires special handling of the fBits and fUniqueID members
+template <>
+class RField<TObject> final : public RFieldBase {
+   class RTObjectDeleter : public RDeleter {
+   public:
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   static TClass *GetClass();
+   static std::size_t GetOffsetOfMember(const char *name);
+   static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
+   static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
+   void ConstructValue(void *where) const override;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTObjectDeleter>(); }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+   void OnConnectPageSource() final;
+
+public:
+   static std::string TypeName() { return "TObject"; }
+
+   RField(std::string_view fieldName);
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   std::uint32_t GetTypeVersion() const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
 template <typename ItemT, std::size_t N>
 class RField<std::array<ItemT, N>> : public RArrayField {
    using ContainerT = typename std::array<ItemT, N>;
@@ -2880,16 +2883,6 @@ class RField<std::atomic<ItemT>> final : public RAtomicField {
 public:
    static std::string TypeName() { return "std::atomic<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RAtomicField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-};
-
-template <>
-class RField<TObject> final : public RTObjectField {
-public:
-   static std::string TypeName() { return "TObject"; }
-   explicit RField(std::string_view name) : RTObjectField(name) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
