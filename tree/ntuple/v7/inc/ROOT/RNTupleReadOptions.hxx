@@ -30,7 +30,7 @@ All page source classes need to support the common options.
 // clang-format on
 class RNTupleReadOptions {
 public:
-   enum EClusterCache {
+   enum class EClusterCache {
       kOff,
       kOn,
       kDefault = kOn,
