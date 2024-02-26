@@ -127,7 +127,6 @@ ROOT_BUILD_OPTION(test_distrdf_dask OFF "Enable distributed RDataFrame tests tha
 ROOT_BUILD_OPTION(davix ON "Enable support for Davix (HTTP/WebDAV access)")
 ROOT_BUILD_OPTION(dcache OFF "Enable support for dCache (requires libdcap from DESY)")
 ROOT_BUILD_OPTION(dev OFF "Enable recommended developer compilation flags, reduce exposed includes")
-ROOT_BUILD_OPTION(exceptions IGNORE "Enable compiler exception handling (flag is deprecated, exceptions are always enabled)")
 ROOT_BUILD_OPTION(fftw3 OFF "Enable support for FFTW3 [GPL]")
 ROOT_BUILD_OPTION(fitsio ON "Enable support for reading FITS images")
 ROOT_BUILD_OPTION(fortran OFF "Build Fortran components of ROOT")
@@ -405,15 +404,17 @@ if(NOT webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad gfal glite globus gsl_shared hdfs ios
-        jemalloc krb5 ldap memstat monalisa pyroot_legacy qt qtgsi rfio ruby sapdb srp table tcmalloc python vmc xproofd pyroot-python2)
+foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad
+        gfal glite globus gsl_shared hdfs ios jemalloc krb5 ldap memstat
+        monalisa pyroot_legacy qt qtgsi rfio ruby sapdb srp table tcmalloc
+        python vmc xproofd pyroot-python2 exceptions)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules exceptions oracle pythia6 pythia6_nolink)
+foreach(opt cxxmodules oracle pythia6 pythia6_nolink)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
