@@ -38,6 +38,8 @@ private:
    TCutInfo(const std::string &name, ULong64_t pass, ULong64_t all) : fName(name), fPass(pass), fAll(all) {}
 
 public:
+   // Default constructor for the I/O
+   TCutInfo() = default;
    const std::string &GetName() const { return fName; }
    ULong64_t GetAll() const { return fAll; }
    ULong64_t GetPass() const { return fPass; }
