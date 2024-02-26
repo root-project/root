@@ -71,8 +71,6 @@ public:
    class RTaskScheduler {
    public:
       virtual ~RTaskScheduler() = default;
-      /// Start a new set of tasks
-      virtual void Reset() = 0;
       /// Take a callable that represents a task
       virtual void AddTask(const std::function<void(void)> &taskFunc) = 0;
       /// Blocks until all scheduled tasks finished
@@ -119,7 +117,6 @@ protected:
       if (!fTaskScheduler)
          return;
       fTaskScheduler->Wait();
-      fTaskScheduler->Reset();
    }
 
 public:

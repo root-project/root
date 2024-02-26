@@ -650,7 +650,6 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::
 void ROOT::Experimental::Internal::RPageSourceFile::UnzipClusterImpl(RCluster *cluster)
 {
    Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-   fTaskScheduler->Reset();
 
    const auto clusterId = cluster->GetId();
    auto descriptorGuard = GetSharedDescriptorGuard();
