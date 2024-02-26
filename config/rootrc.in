@@ -489,7 +489,7 @@ TS3WebFile.Root.MultiRangeServer:  Huawei OBS
 # In case the file namespace descriptor ends with - the namespace
 # is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
-Url.Special:         file: hpss: gfal: dcache:
+Url.Special:         file: hpss: dcache:
 +Url.Special:        /alien/-
 
 # PROOF XRD client variables

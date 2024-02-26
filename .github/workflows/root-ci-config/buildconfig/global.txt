@@ -54,7 +54,6 @@ fftw3=ON
 fitsio=ON
 fortran=OFF
 gdml=ON
-gfal=OFF
 gminimal=OFF
 gnuinstall=OFF
 gsl_shared=OFF

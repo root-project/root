@@ -1021,22 +1021,6 @@ if(arrow)
 
 endif()
 
-#---Check for gfal-------------------------------------------------------------------
-if(gfal)
-  find_package(GFAL)
-  if(NOT GFAL_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Gfal library not found and is required (gfal option enabled)")
-    else()
-      message(STATUS "GFAL library not found. Set variable GFAL_DIR to point to your gfal installation
-                      and the variable SRM_IFCE_DIR to the srm_ifce installation")
-      message(STATUS "For the time being switching OFF 'gfal' option")
-      set(gfal OFF CACHE BOOL "Disabled because GFAL not found (${gfal_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-
 #---Check for dCache-------------------------------------------------------------------
 if(dcache)
   find_package(DCAP)
