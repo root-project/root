@@ -628,7 +628,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } else if (canonicalType == "std::string") {
       result = std::make_unique<RField<std::string>>(fieldName);
    } else if (canonicalType == "TObject") {
-      result = std::make_unique<RTObjectField>(fieldName);
+      result = std::make_unique<RField<TObject>>(fieldName);
    } else if (canonicalType == "std::vector<bool>") {
       result = std::make_unique<RField<std::vector<bool>>>(fieldName);
    } else if (canonicalType.substr(0, 12) == "std::vector<") {
@@ -1754,12 +1754,12 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 
 //------------------------------------------------------------------------------
 
-TClass *ROOT::Experimental::RTObjectField::GetClass()
+TClass *ROOT::Experimental::RField<TObject>::GetClass()
 {
    return TClass::GetClass("TObject");
 }
 
-std::size_t ROOT::Experimental::RTObjectField::GetOffsetOfMember(const char *name)
+std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *name)
 {
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*GetClass()->GetListOfDataMembers())) {
       if (strcmp(name, dataMember->GetName()) == 0)
@@ -1768,7 +1768,7 @@ std::size_t ROOT::Experimental::RTObjectField::GetOffsetOfMember(const char *nam
    throw RException(R__FAIL("invalid data member"));
 }
 
-ROOT::Experimental::RTObjectField::RTObjectField(std::string_view fieldName)
+ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
    : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
 {
    R__ASSERT(GetClass()->GetClassVersion() == 1);
@@ -1783,14 +1783,14 @@ ROOT::Experimental::RTObjectField::RTObjectField(std::string_view fieldName)
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RTObjectField::CloneImpl(std::string_view newName) const
+ROOT::Experimental::RField<TObject>::CloneImpl(std::string_view newName) const
 {
-   auto result = std::make_unique<RTObjectField>(newName);
+   auto result = std::make_unique<RField<TObject>>(newName);
    SyncFieldIDs(*this, *result);
    return result;
 }
 
-std::size_t ROOT::Experimental::RTObjectField::AppendImpl(const void *from)
+std::size_t ROOT::Experimental::RField<TObject>::AppendImpl(const void *from)
 {
    // Cf. TObject::Streamer()
 
@@ -1809,7 +1809,7 @@ std::size_t ROOT::Experimental::RTObjectField::AppendImpl(const void *from)
    return nbytes;
 }
 
-void ROOT::Experimental::RTObjectField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    // Cf. TObject::Streamer()
 
@@ -1827,31 +1827,31 @@ void ROOT::Experimental::RTObjectField::ReadGlobalImpl(NTupleSize_t globalIndex,
    *reinterpret_cast<UInt_t *>(reinterpret_cast<unsigned char *>(to) + GetOffsetBits()) = bits;
 }
 
-void ROOT::Experimental::RTObjectField::OnConnectPageSource()
+void ROOT::Experimental::RField<TObject>::OnConnectPageSource()
 {
    if (GetTypeVersion() != 1) {
       throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
    }
 }
 
-std::uint32_t ROOT::Experimental::RTObjectField::GetTypeVersion() const
+std::uint32_t ROOT::Experimental::RField<TObject>::GetTypeVersion() const
 {
    return GetClass()->GetClassVersion();
 }
 
-void ROOT::Experimental::RTObjectField::ConstructValue(void *where) const
+void ROOT::Experimental::RField<TObject>::ConstructValue(void *where) const
 {
    GetClass()->New(where);
 }
 
-void ROOT::Experimental::RTObjectField::RTObjectDeleter::operator()(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RField<TObject>::RTObjectDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    GetClass()->Destructor(objPtr, true /* dtorOnly */);
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
-ROOT::Experimental::RTObjectField::SplitValue(const RValue &value) const
+ROOT::Experimental::RField<TObject>::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
    auto basePtr = value.GetPtr<unsigned char>().get();
@@ -1862,17 +1862,17 @@ ROOT::Experimental::RTObjectField::SplitValue(const RValue &value) const
    return result;
 }
 
-size_t ROOT::Experimental::RTObjectField::GetValueSize() const
+size_t ROOT::Experimental::RField<TObject>::GetValueSize() const
 {
    return sizeof(TObject);
 }
 
-size_t ROOT::Experimental::RTObjectField::GetAlignment() const
+size_t ROOT::Experimental::RField<TObject>::GetAlignment() const
 {
    return alignof(TObject);
 }
 
-void ROOT::Experimental::RTObjectField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<TObject>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitTObjectField(*this);
 }
