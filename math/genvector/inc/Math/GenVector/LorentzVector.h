@@ -263,6 +263,14 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 
        // ------ Individual element access, in various coordinate systems ------
 
+       /**
+          dimension
+       */
+       unsigned int Dimension() const
+       {
+          return fDimension;
+       };
+
        // individual coordinate accessors in various coordinate systems
 
        /**
@@ -675,7 +683,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
     private:
 
        CoordSystem  fCoordinates;    // internal coordinate system
-
+       static constexpr unsigned int fDimension = CoordinateType::Dimension;
 
     };  // LorentzVector<>
 

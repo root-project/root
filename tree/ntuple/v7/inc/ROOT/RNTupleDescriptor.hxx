@@ -44,9 +44,9 @@ class RFieldBase;
 class RNTupleDescriptor;
 class RNTupleModel;
 
-namespace Detail {
+namespace Internal {
 class RColumnElementBase;
-} // namespace Detail
+} // namespace Internal
 
 namespace Internal {
 class RColumnDescriptorBuilder;
@@ -244,7 +244,17 @@ public:
    };
 
    /// Records the parition of data into pages for a particular column in a particular cluster
-   struct RPageRange {
+   class RPageRange {
+      friend class Internal::RClusterDescriptorBuilder;
+      /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to
+      /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
+      /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
+      /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
+      /// \return The number of column elements covered by the synthesized RPageInfos
+      std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Internal::RColumnElementBase &element,
+                                         std::size_t pageSize);
+
+   public:
       /// We do not need to store the element size / uncompressed page size because we know to which column
       /// the page belongs
       struct RPageInfo {
@@ -292,14 +302,6 @@ public:
       bool operator==(const RPageRange &other) const {
          return fPhysicalColumnId == other.fPhysicalColumnId && fPageInfos == other.fPageInfos;
       }
-
-      /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to
-      /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
-      /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
-      /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
-      /// \return The number of column elements covered by the synthesized RPageInfos
-      std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Detail::RColumnElementBase &element,
-                                         std::size_t pageSize);
    };
 
 private:

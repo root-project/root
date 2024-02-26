@@ -47,6 +47,7 @@ class Polar3D {
 public :
 
    typedef T Scalar;
+   static constexpr unsigned int Dimension = 3U;
 
    /**
       Default constructor with r=theta=phi=0

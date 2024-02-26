@@ -135,6 +135,7 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1DTwice)
    EXPECT_EQ(nll0, nll1.Sum());
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
 {
    using namespace RooFit;
@@ -152,6 +153,7 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
    EXPECT_EQ(nll0, nll1.Sum());
    //   printf("%a =?= %a\n", nll0, nll1.Sum());
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
 {
@@ -415,12 +417,18 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
    EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
-   // a variation to test some additional parameters (ConstrainedParameters and offsetting)
+   // A variation to test some additional parameters (ConstrainedParameters and offsetting)
+
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
                                                     RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true))};
+                                                    RooFit::Offset(true), RooFit::EvalBackend::Legacy())};
 
    // --------
 
@@ -453,6 +461,7 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
    EXPECT_EQ(nll0, nll2);
    EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
 {
@@ -476,12 +485,18 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
 class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTest,
                                      public testing::WithParamInterface<std::tuple<std::size_t, std::size_t>> {};
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
 {
-   // based on ConstrainedAndOffset, this test tests different parallelization strategies
+   // Based on ConstrainedAndOffset, this test tests different parallelization strategies
+
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
                                                     RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true))};
+                                                    RooFit::Offset(true), RooFit::EvalBackend::Legacy())};
 
    // --------
 
@@ -518,6 +533,7 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
    EXPECT_EQ(nll0, nll2);
    EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 INSTANTIATE_TEST_SUITE_P(SplitStrategies, LikelihoodJobSplitStrategies,
                          testing::Combine(

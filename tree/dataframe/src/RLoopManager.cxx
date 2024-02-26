@@ -37,7 +37,6 @@
 
 #ifdef R__HAS_ROOT7
 #include "ROOT/RNTuple.hxx"
-#include "ROOT/RPageStorage.hxx"
 #include "ROOT/RNTupleDS.hxx"
 #endif
 
@@ -1030,6 +1029,8 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
       name = fDataSource->GetLabel();
    } else if (fTree) {
       name = fTree->GetName();
+      if (name.empty())
+         name = fTree->ClassName();
    } else {
       name = "Empty source\\nEntries: " + std::to_string(GetNEmptyEntries());
    }
@@ -1129,7 +1130,7 @@ std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
                                      : fileNameGlob};
 
    ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
-   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBAL_REGISTRATION")};
+   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};
    if (!inFile || inFile->IsZombie())
       throw std::invalid_argument("RDataFrame: could not open file \"" + fileToOpen + "\".");
 
@@ -1177,8 +1178,7 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string_view fileNameGlob,
                                        const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
-   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(datasetName, fileNameGlob);
-   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(std::move(pageSource));
+   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(datasetName, fileNameGlob);
    auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }

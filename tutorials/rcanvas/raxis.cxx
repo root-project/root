@@ -17,11 +17,6 @@
 
 #include "TDatime.h"
 
-// macro must be here while cling is not capable to load
-// library automatically for outlined function see ROOT-10336
-R__LOAD_LIBRARY(libROOTGpadv7)
-
-
 void raxis()
 {
    using namespace ROOT::Experimental;

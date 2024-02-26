@@ -1,4 +1,4 @@
-import { clone, create, createHistogram, setHistogramTitle, isFunc, gStyle, clTList, clTH1I, clTH2, clTH2I, kNoZoom, kNoStats } from '../core.mjs';
+import { clone, create, createHistogram, setHistogramTitle, gStyle, clTList, clTH1I, clTH2, clTH2I, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
@@ -42,12 +42,26 @@ class THStackPainter extends ObjectPainter {
       lst.Add(clone(stack.fHists.arr[0]), stack.fHists.opt[0]);
       for (let i = 1; i < nhists; ++i) {
          const hnext = clone(stack.fHists.arr[i]),
-             hnextopt = stack.fHists.opt[i],
-             hprev = lst.arr[i-1];
+               hnextopt = stack.fHists.opt[i],
+               hprev = lst.arr[i-1],
+               xnext = hnext.fXaxis, xprev = hprev.fXaxis;
 
-         if ((hnext.fNbins !== hprev.fNbins) ||
-             (hnext.fXaxis.fXmin !== hprev.fXaxis.fXmin) ||
-             (hnext.fXaxis.fXmax !== hprev.fXaxis.fXmax)) {
+         let match = (xnext.fNbins === xprev.fNbins) &&
+                     (xnext.fXmin === xprev.fXmin) &&
+                     (xnext.fXmax === xprev.fXmax);
+
+         if (!match && (xnext.fNbins > 0) && (xnext.fNbins < xprev.fNbins) && (xnext.fXmin === xprev.fXmin) &&
+             (Math.abs((xnext.fXmax - xnext.fXmin)/xnext.fNbins - (xprev.fXmax - xprev.fXmin)/xprev.fNbins) < 0.0001)) {
+            // simple extension of histogram to make sum
+            const arr = new Array(hprev.fNcells).fill(0);
+            for (let n = 1; n <= xnext.fNbins; ++n)
+               arr[n] = hnext.fArray[n];
+            hnext.fNcells = hprev.fNcells;
+            Object.assign(xnext, xprev);
+            hnext.fArray = arr;
+            match = true;
+         }
+         if (!match) {
             console.warn(`When drawing THStack, cannot sum-up histograms ${hnext.fName} and ${hprev.fName}`);
             lst.Clear();
             return false;
@@ -170,6 +184,8 @@ class THStackPainter extends ObjectPainter {
          hopt += ' ' + this.options.hopt;
       if (this.options.draw_errors && !hopt)
          hopt = 'E';
+      if (!this.options.pads)
+         hopt += ' same nostat' + this.options.auto;
       return hopt;
    }
 
@@ -186,17 +202,6 @@ class THStackPainter extends ObjectPainter {
             subid = this.options.nostack ? `hists_${rindx}` : `stack_${rindx}`,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, hlst.opt[rindx]);
-      let exec = '';
-
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor(nhists);
-            if (this.options._pfc) { hist.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
-            if (this.options._plc) { hist.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
-            if (this.options._pmc) { hist.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
-         }
-      }
 
       // handling of 'pads' draw option
       if (pad_painter) {
@@ -209,7 +214,6 @@ class THStackPainter extends ObjectPainter {
          return this.hdraw_func(subpad_painter.getDom(), hist, hopt).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
-               subp._auto_exec = exec;
                this.painters.push(subp);
             }
             subpad_painter.selectCurrentPad(prev_name);
@@ -221,8 +225,11 @@ class THStackPainter extends ObjectPainter {
       // also used to provide tooltips
       if ((rindx > 0) && !this.options.nostack)
          hist.$baseh = hlst.arr[rindx - 1];
+      // this number used for auto colors creation
+      if (this.options.auto)
+         hist.$num_histos = nhists;
 
-      return this.hdraw_func(this.getDom(), hist, hopt + ' same nostat').then(subp => {
+      return this.hdraw_func(this.getDom(), hist, hopt).then(subp => {
           subp.setSecondaryId(this, subid);
           this.painters.push(subp);
           return this.drawNextHisto(indx+1, pad_painter);
@@ -232,7 +239,7 @@ class THStackPainter extends ObjectPainter {
    /** @summary Decode draw options of THStack painter */
    decodeOptions(opt) {
       if (!this.options) this.options = {};
-      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '' });
+      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '', auto: '' });
 
       const stack = this.getObject(),
             hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null),
@@ -266,9 +273,7 @@ class THStackPainter extends ObjectPainter {
 
       d.check('NOCLEAR'); // ignore noclear option
 
-      this.options._pfc = d.check('PFC');
-      this.options._plc = d.check('PLC');
-      this.options._pmc = d.check('PMC');
+      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) this.options.auto += ' ' + f; });
 
       this.options.pads = d.check('PADS');
       if (this.options.pads) this.options.nostack = true;
@@ -368,10 +373,11 @@ class THStackPainter extends ObjectPainter {
             nhists = hlst?.arr?.length ?? 0;
 
       if (nhists !== this.painters.length) {
+         this.did_update = 1;
          this.getPadPainter()?.cleanPrimitives(objp => this.painters.indexOf(objp) >= 0);
          this.painters = [];
-         this.did_update = true;
       } else {
+         this.did_update = 2;
          for (let indx = 0; indx < nhists; ++indx) {
             const rindx = this.options.horder ? indx : nhists - indx - 1,
                   hist = hlst.arr[rindx];
@@ -384,10 +390,18 @@ class THStackPainter extends ObjectPainter {
 
    /** @summary Redraw THStack
      * @desc Do something if previous update had changed number of histograms */
-   redraw() {
-      if (this.did_update) {
+   redraw(reason) {
+      if (this.did_update === 1) {
          delete this.did_update;
          return this.drawNextHisto(0, this.options.pads ? this.getPadPainter() : null);
+      } else if (this.did_update === 2) {
+         delete this.did_update;
+         const redrawSub = indx => {
+            if (indx >= this.painters.length)
+               return Promise.resolve(this);
+            return this.painters[indx].redraw(reason).then(() => redrawSub(indx+1));
+         };
+         return redrawSub(0);
       }
    }
 

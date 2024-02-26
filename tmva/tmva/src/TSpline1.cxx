@@ -38,11 +38,12 @@ Linear interpolation of TGraph
 ClassImp(TMVA::TSpline1);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor from TGraph
+/// constructor from TGraph pointer (not owned by TSpline1)
 /// TSpline is a TNamed object
 
-TMVA::TSpline1::TSpline1( const TString& title, TGraph* theGraph )
-: fGraph( theGraph )
+TMVA::TSpline1::TSpline1( const TString& title, const TGraph *theGraph )
+: fX(theGraph->GetX(), theGraph->GetX() + theGraph->GetN()),
+  fY(theGraph->GetY(), theGraph->GetY() + theGraph->GetN())
 {
    SetNameTitle( title, title );
 }
@@ -50,35 +51,29 @@ TMVA::TSpline1::TSpline1( const TString& title, TGraph* theGraph )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::TSpline1::~TSpline1( void )
-{
-   if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
-}
+TMVA::TSpline1::~TSpline1( void ) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns linearly interpolated TGraph entry around x
 
 Double_t TMVA::TSpline1::Eval( Double_t x ) const
 {
-   Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
-                                     fGraph->GetX(),
-                                     x );
-   Int_t nbin = fGraph->GetN();
-
+   Int_t N = fX.size();
+   Int_t ibin = std::distance(fX.begin(), TMath::BinarySearch(fX.begin(), fX.end(), x));
    // sanity checks
-   if (ibin < 0    ) ibin = 0;
-   if (ibin >= nbin) ibin = nbin - 1;
+   if (ibin < 0 ) ibin = 0;
+   if (ibin >= N) ibin = N - 1;
 
    Int_t nextbin = ibin;
-   if ((x > fGraph->GetX()[ibin] && ibin != nbin-1) || ibin == 0)
+   if ((x > fX[ibin] && ibin != N-1) || ibin == 0)
       nextbin++;
    else
       nextbin--;
 
    // linear interpolation
-   Double_t dx = fGraph->GetX()[ibin] - fGraph->GetX()[nextbin];
-   Double_t dy = fGraph->GetY()[ibin] - fGraph->GetY()[nextbin];
-   return fGraph->GetY()[ibin] + (x - fGraph->GetX()[ibin]) * dy/dx;
+   Double_t dx = fX[ibin] - fX[nextbin];
+   Double_t dy = fY[ibin] - fY[nextbin];
+   return fY[ibin] + (x - fX[ibin]) * dy/dx;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

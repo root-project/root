@@ -20,12 +20,12 @@
 
 #include <TError.h>
 
-ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
+ROOT::Experimental::Internal::RColumn::RColumn(const RColumnModel &model, std::uint32_t index)
    : fModel(model), fIndex(index)
 {
 }
 
-ROOT::Experimental::Detail::RColumn::~RColumn()
+ROOT::Experimental::Internal::RColumn::~RColumn()
 {
    if (!fWritePage[0].IsNull())
       fPageSink->ReleasePage(fWritePage[0]);
@@ -39,37 +39,33 @@ ROOT::Experimental::Detail::RColumn::~RColumn()
       fPageSource->DropColumn(fHandleSource);
 }
 
-void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage,
-                                                  NTupleSize_t firstElementIndex)
+void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink,
+                                                            NTupleSize_t firstElementIndex)
 {
-   switch (pageStorage->GetType()) {
-   case EPageStorageType::kSink:
-      fFirstElementIndex = firstElementIndex;
-      fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fWritePage on AddColumn
-      fHandleSink = fPageSink->AddColumn(fieldId, *this);
-      fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
-      if (fApproxNElementsPerPage < 2)
-         throw RException(R__FAIL("page size too small for writing"));
-      // We now have 0 < fApproxNElementsPerPage / 2 < fApproxNElementsPerPage
-      fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
-      fWritePage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
-      break;
-   case EPageStorageType::kSource:
-      fPageSource = static_cast<RPageSource*>(pageStorage);
-      fHandleSource = fPageSource->AddColumn(fieldId, *this);
-      fNElements = fPageSource->GetNElements(fHandleSource);
-      fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
-      {
-         auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-         fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fColumnIdSource).GetFirstElementIndex();
-      }
-      break;
-   default:
-      R__ASSERT(false);
+   fPageSink = &pageSink; // the page sink initializes fWritePage on AddColumn
+   fFirstElementIndex = firstElementIndex;
+   fHandleSink = fPageSink->AddColumn(fieldId, *this);
+   fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
+   if (fApproxNElementsPerPage < 2)
+      throw RException(R__FAIL("page size too small for writing"));
+   // We now have 0 < fApproxNElementsPerPage / 2 < fApproxNElementsPerPage
+   fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
+   fWritePage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
+}
+
+void ROOT::Experimental::Internal::RColumn::ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource)
+{
+   fPageSource = &pageSource;
+   fHandleSource = fPageSource->AddColumn(fieldId, *this);
+   fNElements = fPageSource->GetNElements(fHandleSource);
+   fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
+   {
+      auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fColumnIdSource).GetFirstElementIndex();
    }
 }
 
-void ROOT::Experimental::Detail::RColumn::Flush()
+void ROOT::Experimental::Internal::RColumn::Flush()
 {
    auto otherIdx = 1 - fWritePageIdx;
    if (fWritePage[fWritePageIdx].IsEmpty() && fWritePage[otherIdx].IsEmpty())
@@ -89,7 +85,7 @@ void ROOT::Experimental::Detail::RColumn::Flush()
    fWritePage[fWritePageIdx].Reset(fNElements);
 }
 
-void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
+void ROOT::Experimental::Internal::RColumn::MapPage(const NTupleSize_t index)
 {
    fPageSource->ReleasePage(fReadPage);
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
@@ -99,7 +95,7 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
    R__ASSERT(fReadPage.Contains(index));
 }
 
-void ROOT::Experimental::Detail::RColumn::MapPage(RClusterIndex clusterIndex)
+void ROOT::Experimental::Internal::RColumn::MapPage(RClusterIndex clusterIndex)
 {
    fPageSource->ReleasePage(fReadPage);
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case

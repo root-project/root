@@ -46,3 +46,18 @@ TEST(testSparse, LwbInit)
 
   EXPECT_EQ(m1, m2);
 }
+
+TEST(testSparse, Transpose)
+{
+   Int_t nr = 4;
+   Int_t row[] = {0, 0, 1, 2};
+   Int_t col[] = {1, 0, 1, 0};
+   Double_t data[] = {1, 2, 3, 4};
+
+   TMatrixDSparse m1(0, 2, 0, 1, nr, row, col, data);
+   TMatrixDSparse m2(0, 1, 0, 2, nr, col, row, data);
+
+   m1.T();
+
+   EXPECT_EQ(m1, m2);
+}

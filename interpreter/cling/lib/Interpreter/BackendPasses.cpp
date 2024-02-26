@@ -53,7 +53,7 @@ namespace {
       if (!GV.hasName())
         return false;
 
-      if (GV.getName().startswith(".str"))
+      if (GV.getName().starts_with(".str"))
         return false;
 
       llvm::GlobalValue::LinkageTypes LT = GV.getLinkage();
@@ -137,7 +137,7 @@ namespace {
       if (GV.getLinkage() != llvm::GlobalValue::ExternalLinkage)
         return false;
 
-      if (GV.getName().startswith("_ZT")) {
+      if (GV.getName().starts_with("_ZT")) {
         // Currently, if Cling sees the "key function" of a virtual class, it
         // emits typeinfo and vtable variables in every transaction llvm::Module
         // that reference them. Turn them into weak linkage to avoid duplicate
@@ -378,12 +378,18 @@ void BackendPasses::CreatePasses(int OptLevel, llvm::ModulePassManager& MPM,
           P.equals("ModuleInlinerPass") || P.equals("InlinerPass") ||
           P.equals("InlineAdvisorAnalysis") ||
           P.equals("PartiallyInlineLibCallsPass") ||
+          P.equals("RelLookupTableConverterPass") ||
           P.equals("InlineCostAnnotationPrinterPass") ||
           P.equals("InlineSizeEstimatorAnalysisPrinterPass") ||
           P.equals("InlineSizeEstimatorAnalysis"))
         return false;
 
       return true;
+    });
+  } else {
+    // Register a callback for disabling RelLookupTableConverterPass.
+    PIC.registerShouldRunOptionalPassCallback([](StringRef P, Any) {
+      return !P.equals("RelLookupTableConverterPass");
     });
   }
 

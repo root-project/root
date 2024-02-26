@@ -45,6 +45,7 @@ The following people have contributed to this new version:
   Please use the RooDataSet constructors that take RooFit command arguments instead
 - ROOT does not longer support Python 2. The minimum required Python version to build ROOT is 3.8.
 - Support for wildcard imports like `from ROOT import *` is dropped from PyROOT
+- Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
 
 ## Core Libraries
 
@@ -73,6 +74,19 @@ This grabs all the root files in subdirectories that have a name starting with `
 
 
 ## RooFit Libraries
+
+### New CPU likelihood evaluation backend by default
+
+The new vectorizing CPU evaluation backend is not the default for RooFit likelihoods.
+Likelihood minimization is now up to 10x faster on a single CPU core.
+
+If you experience unexpected problems related to the likelihood evaluation, you
+can revert back to the old backend by passing `RooFit::EvalBackend("legacy")`
+to `RooAbsPdf::fitTo()` or `RooAbsPdf::createNLL()`.
+
+In case you observe any slowdowns with the new likelihood evaluation, please
+open a GitHub issue about this, as such a performance regression is considered
+a bug.
 
 ### Compile your code with memory safe interfaces
 

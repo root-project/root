@@ -689,6 +689,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
             << node->GetName() << endl ;
       }
       _allOwnedNodes.addOwned(std::unique_ptr<RooAbsArg>{node});
+      node->setWorkspace(*this);
       if (_openTrans) {
         _sandboxNodes.add(*node) ;
       } else {
@@ -1532,9 +1533,9 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     return true ;
   }
 
-  // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
-  // (We also need a default ctor of abstract classes, but cannot check that through is interface
-  //  as TClass::HasDefaultCtor only returns true for callable default ctors)
+  // Require that class meets technical criteria to be persistable (i.e it has a default constructor)
+  // (We also need a default constructor of abstract classes, but cannot check that through is interface
+  //  as TClass::HasDefaultCtor only returns true for callable default constructors)
   if (!(tc->Property() & kIsAbstract) && !tc->HasDefaultConstructor()) {
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class "
                 << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;

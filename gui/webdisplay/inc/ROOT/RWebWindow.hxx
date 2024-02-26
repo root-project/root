@@ -71,6 +71,7 @@ private:
       bool fHeadlessMode{false};           ///<! indicate if connection represent batch job
       std::string fKey;                    ///<! key value supplied to the window (when exists)
       int fKeyUsed{0};                     ///<! key value used to verify connection
+      std::string fNewKey;                 ///<! new key if connection request reload
       std::unique_ptr<RWebDisplayHandle> fDisplayHandle;  ///<! handle assigned with started web display (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
       timestamp_t fSendStamp;              ///<! last server operation, always used from window thread
@@ -83,6 +84,8 @@ private:
       int fSendCredits{0};                 ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0};               ///<! number of credits received from client
       bool fDoingSend{false};              ///<! true when performing send operation
+      unsigned long fRecvSeq{0};           ///<! sequence id of last received packet
+      unsigned long fSendSeq{1};           ///<! sequence id of last send packet
       std::queue<QueueItem> fQueue;        ///<! output queue
       std::map<int,std::shared_ptr<RWebWindow>> fEmbed; ///<! map of embed window for that connection, key value is channel id
       WebConn() = default;
@@ -105,6 +108,8 @@ private:
          fDoingSend = false;
          fSendCredits = 0;
          fClientCredits = 0;
+         fRecvSeq = 0;
+         fSendSeq = 1;
          while (!fQueue.empty())
             fQueue.pop();
       }
@@ -138,6 +143,7 @@ private:
    bool fUseProcessEvents{false};                   ///<! all window functionality will run through process events
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
+   bool fRequireAuthKey{true};                      ///<! defines if authentication key always required when connect to the widget
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
    ConnectionsList_t fPendingConn;                  ///<! list of pending connection with pre-assigned keys
@@ -176,14 +182,14 @@ private:
 
    ConnectionsList_t GetWindowConnections(unsigned connid = 0, bool only_active = false) const;
 
-   std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
-
    /// Find connection with specified websocket id
-   std::shared_ptr<WebConn> FindConnection(unsigned wsid) { return FindOrCreateConnection(wsid, false, nullptr); }
+   std::shared_ptr<WebConn> FindConnection(unsigned wsid);
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
    std::shared_ptr<WebConn> _FindConnWithKey(const std::string &key) const;
+
+   bool _CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool test_first_time);
 
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 
@@ -198,6 +204,8 @@ private:
    void CheckDataToSend(bool only_once = false);
 
    bool HasKey(const std::string &key) const;
+
+   void RemoveKey(const std::string &key);
 
    std::string GenerateKey() const;
 
@@ -228,6 +236,8 @@ private:
    static std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> gStartDialogFunc;
 
    static void SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)>);
+
+   static std::string HMAC(const std::string &key, const std::string &sessionKey, const char *msg, int msglen);
 
 public:
 
@@ -301,6 +311,14 @@ public:
    /////////////////////////////////////////////////////////////////////////
    /// returns true if only native (own-created) connections are allowed
    bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Configure if authentication key in connection string is required
+   void SetRequireAuthKey(bool on) { fRequireAuthKey = on; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns true if authentication string is required
+   bool IsRequireAuthKey() const { return fRequireAuthKey; }
 
    void SetClientVersion(const std::string &vers);
 

@@ -26,8 +26,11 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
 
-# STL vector pythonizations
+# STL containers pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
+if(NOT MSVC OR win_broken_tests)
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_set stl_set.py)
+endif()
 
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)

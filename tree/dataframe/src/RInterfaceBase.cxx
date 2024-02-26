@@ -48,7 +48,10 @@ std::string ROOT::RDF::RInterfaceBase::DescribeDataset() const
       const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
       const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
       std::stringstream ss;
-      ss << "Dataframe from " << treeType << " " << treeName;
+      ss << "Dataframe from " << treeType;
+      if (*treeName != 0) {
+         ss << " " << treeName;
+      }
       if (isInMemory) {
          ss << " (in-memory)";
       } else {

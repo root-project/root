@@ -31,11 +31,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RColumn
+\class ROOT::Internal::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 */
@@ -112,11 +112,12 @@ public:
    RColumn &operator =(const RColumn&) = delete;
    ~RColumn();
 
-   /// Connect the column to a page storage.  If `pageStorage` is a page sink, `firstElementIndex` can be used to
-   /// specify the first column element index with backing storage for this column.  On read back, elements before
-   /// `firstElementIndex` will cause the zero page to be mapped.
-   /// TODO(jalopezg): at this point it would be nicer to distinguish between connecting a page sink and a page source
-   void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage, NTupleSize_t firstElementIndex = 0U);
+   /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
+   /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
+   /// to be mapped.
+   void ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink, NTupleSize_t firstElementIndex = 0U);
+   /// Connect the column to a page source.
+   void ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource);
 
    void Append(const void *from)
    {
@@ -330,10 +331,9 @@ public:
    RPageSink *GetPageSink() const { return fPageSink; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
-};
+}; // class RColumn
 
-} // namespace Detail
-
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

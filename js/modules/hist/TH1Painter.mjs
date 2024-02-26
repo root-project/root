@@ -23,7 +23,7 @@ class TH1Painter extends TH1Painter2D {
       if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
       } else {
-         this.deleteAttr();
+         this.createHistDrawAttributes(true);
 
          this.scanContent(true); // may be required for axis drawings
 

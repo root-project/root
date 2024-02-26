@@ -59,7 +59,7 @@ TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
 {
-   ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit> element;
+   ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -92,7 +92,7 @@ TEST(Packing, Bitfield)
 
 TEST(Packing, HalfPrecisionFloat)
 {
-   ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element;
+   ROOT::Experimental::Internal::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -117,8 +117,8 @@ TEST(Packing, HalfPrecisionFloat)
 
 TEST(Packing, RColumnSwitch)
 {
-   ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch,
-                                              ROOT::Experimental::EColumnType::kSwitch>
+   ROOT::Experimental::Internal::RColumnElement<ROOT::Experimental::RColumnSwitch,
+                                                ROOT::Experimental::EColumnType::kSwitch>
       element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
@@ -137,7 +137,7 @@ TYPED_TEST(PackingReal, SplitReal)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Detail::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -162,7 +162,7 @@ TYPED_TEST(PackingInt, SplitInt)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Detail::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -184,7 +184,7 @@ TYPED_TEST(PackingIndex, SplitIndex)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
+   ROOT::Experimental::Internal::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 

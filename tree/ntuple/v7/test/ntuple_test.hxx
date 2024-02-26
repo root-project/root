@@ -6,14 +6,18 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriteOptionsDaos.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
@@ -55,7 +59,6 @@
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
-using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
@@ -93,17 +96,17 @@ using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
-using RPage = ROOT::Experimental::Detail::RPage;
+using RPage = ROOT::Experimental::Internal::RPage;
 using RPageAllocatorHeap = ROOT::Experimental::Internal::RPageAllocatorHeap;
 using RPageDeleter = ROOT::Experimental::Internal::RPageDeleter;
 using RPagePool = ROOT::Experimental::Internal::RPagePool;
-using RPageSink = ROOT::Experimental::Detail::RPageSink;
-using RPageSinkBuf = ROOT::Experimental::Detail::RPageSinkBuf;
-using RPageSinkFile = ROOT::Experimental::Detail::RPageSinkFile;
-using RPageSource = ROOT::Experimental::Detail::RPageSource;
-using RPageSourceFile = ROOT::Experimental::Detail::RPageSourceFile;
-using RPageSourceFriends = ROOT::Experimental::Detail::RPageSourceFriends;
-using RPageStorage = ROOT::Experimental::Detail::RPageStorage;
+using RPageSink = ROOT::Experimental::Internal::RPageSink;
+using RPageSinkBuf = ROOT::Experimental::Internal::RPageSinkBuf;
+using RPageSinkFile = ROOT::Experimental::Internal::RPageSinkFile;
+using RPageSource = ROOT::Experimental::Internal::RPageSource;
+using RPageSourceFile = ROOT::Experimental::Internal::RPageSourceFile;
+using RPageSourceFriends = ROOT::Experimental::Internal::RPageSourceFriends;
+using RPageStorage = ROOT::Experimental::Internal::RPageStorage;
 using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
 using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;

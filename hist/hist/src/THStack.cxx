@@ -59,7 +59,7 @@ The specific stack's drawing options are:
   - **NOSTACK** If option "nostack" is specified, histograms are all painted in the same pad
     as if the option "same" had been specified.
 
-  - **NOSTACKB** If the option "nostackb" is specified histograms are all painted in the same pad
+  - **NOSTACKB** If the option "nostackb" is specified histograms are all painted on the same pad
     next to each other as bar plots.
 
   - **PADS** if option "pads" is specified, the current pad/canvas is subdivided into
@@ -67,10 +67,9 @@ The specific stack's drawing options are:
     is painted into a separate pad.
 
   - **NOCLEAR** By default the background of the histograms is erased before drawing the
-    histograms. The option "noclear" avoid this behaviour. This is useful
-    when drawing a THStack on top of an other plot. If the patterns used to
-    draw the histograms in the stack are transparents, then the plot behind
-    will be visible.
+    histograms. The option "noclear" avoids this behavior. This is useful when drawing a
+    THStack on top of another plot. If the patterns used to draw the histograms in the
+    stack are transparent, then the plot behind will be visible.
 
 See the THistPainter class for the list of valid histograms' painting options.
 
@@ -488,16 +487,16 @@ TH1 *THStack::GetHistogram() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  returns the maximum of all added histograms
-///  returns the maximum of all histograms if option "nostack".
+///  returns the maximum of all added histograms smaller than maxval.
+///  returns the maximum of all histograms, smaller than maxval, if option "nostack".
 
-Double_t THStack::GetMaximum(Option_t *option)
+Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 {
    TString opt = option;
    opt.ToLower();
    Bool_t lerr = kFALSE;
    if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them=0, themax = -1e300, c1, e1;
+   Double_t them = 0, themax = -std::numeric_limits<Double_t>::max(), c1, e1;
    if (!fHists) return 0;
    Int_t nhists = fHists->GetSize();
    TH1 *h;
@@ -508,13 +507,13 @@ Double_t THStack::GetMaximum(Option_t *option)
       h = (TH1*)fStack->At(nhists-1);
       if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
                                               fHistogram->GetXaxis()->GetLast());
-      themax = h->GetMaximum();
+      themax = h->GetMaximum(maxval);
    } else {
       for (Int_t i=0;i<nhists;i++) {
          h = (TH1*)fHists->At(i);
          if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
                                                  fHistogram->GetXaxis()->GetLast());
-         them = h->GetMaximum();
+         them = h->GetMaximum(maxval);
          if (fHistogram) h->GetXaxis()->SetRange(0,0);
          if (them > themax) themax = them;
       }
@@ -537,16 +536,16 @@ Double_t THStack::GetMaximum(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  returns the minimum of all added histograms
-///  returns the minimum of all histograms if option "nostack".
+///  Returns the minimum of all added histograms larger than minval.
+///  Returns the minimum of all histograms, larger than minval, if option "nostack".
 
-Double_t THStack::GetMinimum(Option_t *option)
+Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 {
    TString opt = option;
    opt.ToLower();
    Bool_t lerr = kFALSE;
    if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them=0, themin = 1e300, c1, e1;
+   Double_t them = 0, themin = std::numeric_limits<Double_t>::max(), c1, e1;
    if (!fHists) return 0;
    Int_t nhists = fHists->GetSize();
    Int_t first,last;
@@ -555,11 +554,11 @@ Double_t THStack::GetMinimum(Option_t *option)
    if (!opt.Contains("nostack")) {
       BuildStack();
       h = (TH1*)fStack->At(nhists-1);
-      themin = h->GetMinimum();
+      themin = h->GetMinimum(minval);
    } else {
       for (Int_t i=0;i<nhists;i++) {
          h = (TH1*)fHists->At(i);
-         them = h->GetMinimum();
+         them = h->GetMinimum(minval);
          if (them <= 0 && gPad && gPad->GetLogy()) them = h->GetMinimum(0);
          if (them < themin) themin = them;
       }

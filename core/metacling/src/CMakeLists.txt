@@ -135,6 +135,12 @@ if(MSVC)
     )
   endif()
 
+  if(MSVC_VERSION GREATER_EQUAL 1939)
+    set(cling_exports ${cling_exports}
+      _Thrd_sleep_for
+    )
+  endif()
+
   set(cling_exports ${cling_exports}
     _Smtx_lock_shared
     _Smtx_unlock_shared

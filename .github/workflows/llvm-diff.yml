@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out ROOT
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: root
       - name: Determine tag in fork of monorepo
@@ -19,7 +19,7 @@ jobs:
           echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
           rm $tag_file
       - name: Check out llvm-project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: root-project/llvm-project
           ref: ${{ steps.determine-tag.outputs.tag }}

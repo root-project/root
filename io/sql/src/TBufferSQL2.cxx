@@ -1504,7 +1504,7 @@ void TBufferSQL2::WriteArray(const Double_t *d, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Bool_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Bool_t *b, Int_t n)
+void TBufferSQL2::WriteFastArray(const Bool_t *b, Long64_t n)
 {
    SqlWriteArray(b, n);
 }
@@ -1513,7 +1513,7 @@ void TBufferSQL2::WriteFastArray(const Bool_t *b, Int_t n)
 /// Write array of Char_t to buffer
 /// it will be reproduced as CharStar node with string as attribute
 
-void TBufferSQL2::WriteFastArray(const Char_t *c, Int_t n)
+void TBufferSQL2::WriteFastArray(const Char_t *c, Long64_t n)
 {
    Bool_t usedefault = (n == 0);
 
@@ -1540,7 +1540,7 @@ void TBufferSQL2::WriteFastArray(const Char_t *c, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of UChar_t to buffer
 
-void TBufferSQL2::WriteFastArray(const UChar_t *c, Int_t n)
+void TBufferSQL2::WriteFastArray(const UChar_t *c, Long64_t n)
 {
    SqlWriteArray(c, n);
 }
@@ -1548,7 +1548,7 @@ void TBufferSQL2::WriteFastArray(const UChar_t *c, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Short_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Short_t *h, Int_t n)
+void TBufferSQL2::WriteFastArray(const Short_t *h, Long64_t n)
 {
    SqlWriteArray(h, n);
 }
@@ -1556,7 +1556,7 @@ void TBufferSQL2::WriteFastArray(const Short_t *h, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of UShort_t to buffer
 
-void TBufferSQL2::WriteFastArray(const UShort_t *h, Int_t n)
+void TBufferSQL2::WriteFastArray(const UShort_t *h, Long64_t n)
 {
    SqlWriteArray(h, n);
 }
@@ -1564,7 +1564,7 @@ void TBufferSQL2::WriteFastArray(const UShort_t *h, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Int_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Int_t *i, Int_t n)
+void TBufferSQL2::WriteFastArray(const Int_t *i, Long64_t n)
 {
    SqlWriteArray(i, n);
 }
@@ -1572,7 +1572,7 @@ void TBufferSQL2::WriteFastArray(const Int_t *i, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of UInt_t to buffer
 
-void TBufferSQL2::WriteFastArray(const UInt_t *i, Int_t n)
+void TBufferSQL2::WriteFastArray(const UInt_t *i, Long64_t n)
 {
    SqlWriteArray(i, n);
 }
@@ -1580,7 +1580,7 @@ void TBufferSQL2::WriteFastArray(const UInt_t *i, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Long_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Long_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const Long_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1588,7 +1588,7 @@ void TBufferSQL2::WriteFastArray(const Long_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of ULong_t to buffer
 
-void TBufferSQL2::WriteFastArray(const ULong_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const ULong_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1596,7 +1596,7 @@ void TBufferSQL2::WriteFastArray(const ULong_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Long64_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Long64_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const Long64_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1604,7 +1604,7 @@ void TBufferSQL2::WriteFastArray(const Long64_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of ULong64_t to buffer
 
-void TBufferSQL2::WriteFastArray(const ULong64_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const ULong64_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1612,7 +1612,7 @@ void TBufferSQL2::WriteFastArray(const ULong64_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Float_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Float_t *f, Int_t n)
+void TBufferSQL2::WriteFastArray(const Float_t *f, Long64_t n)
 {
    SqlWriteArray(f, n);
 }
@@ -1620,7 +1620,7 @@ void TBufferSQL2::WriteFastArray(const Float_t *f, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Double_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Double_t *d, Int_t n)
+void TBufferSQL2::WriteFastArray(const Double_t *d, Long64_t n)
 {
    SqlWriteArray(d, n);
 }
@@ -1629,7 +1629,7 @@ void TBufferSQL2::WriteFastArray(const Double_t *d, Int_t n)
 /// Write array of n characters into the I/O buffer.
 /// Used only by TLeafC, just dummy implementation here
 
-void TBufferSQL2::WriteFastArrayString(const Char_t *c, Int_t n)
+void TBufferSQL2::WriteFastArrayString(const Char_t *c, Long64_t n)
 {
    SqlWriteArray(c, n);
 }
@@ -1640,7 +1640,7 @@ void TBufferSQL2::WriteFastArrayString(const Char_t *c, Int_t n)
 /// buf.StreamObject(obj, cl). In that case it is easy to understand where
 /// object data is started and finished
 
-void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer)
+void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Long64_t n, TMemberStreamer *streamer)
 {
    if (streamer) {
       StreamObjectExtra(start, streamer, cl, 0);
@@ -1663,7 +1663,7 @@ void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMember
 /// buf.StreamObject(obj, cl). In that case it is easy to understand where
 /// object data is started and finished
 
-Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
+Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Long64_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
 
    Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/O actions for kSTLp

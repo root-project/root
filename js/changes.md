@@ -17,11 +17,33 @@
 14. Handle TCanvas IsEdiatable flag to disable some interactive features
 15. Support PDF creation using jsPDF and svg2pdf.js - in browser and node.js
 16. Implement custom fonts support in TWebCanvas
-17. Fix - do not add `THStack` and `TMultiGraph` to legend
-18. Fix - correctly use margin in `TPaveText` class
-19. Fix - correctly draw endcaps in legend errors
-20. Fix - correctly read leaf with fixed-size array
-21. Fix - vertical position of up elements like {M}^{2} in TLatex
+17. List of ROOT/JSON files on server with `&dir=<path>` URL parameter #283
+18. Load TGaxis function from the file #282
+19. Let display progress messages in modal element #285
+20. Fix - do not add `THStack` and `TMultiGraph` to legend
+21. Fix - correctly use margin in `TPaveText` class
+22. Fix - correctly draw endcaps in legend errors
+23. Fix - vertical position of up elements like {M}^{2} in TLatex
+24. Fix - let draw THStack with diff binning hists
+25. Fix - better tooltip name for the items
+
+
+## Changes in 7.5.4
+1. Fix - catch exception when parsing TF1 formula
+2. Fix - properly check THStack histograms axes when doing sum
+3. Fix - correctly handle negative offset on time axis
+4. Fix - do not use `inset` because of old Chrome browsers
+5. Fix - properly provide object hints
+
+
+## Changes in 7.5.3
+1. Fix - draw histograms with negative bins #276
+2. Fix - correctly read TLeaf with fixed-size array
+3. Fix - bug in options handling in startGUI
+4. Fix - greyscale support in TLegend drawing
+5. Fix - correctly use text font for TGaxis title
+6. Fix - preserve auto colors in THStack #277
+7. Fix - correctly set pave name #278
 
 
 ## Changes in 7.5.2

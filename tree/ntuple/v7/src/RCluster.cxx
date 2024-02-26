@@ -20,21 +20,16 @@
 #include <iterator>
 #include <utility>
 
-
-ROOT::Experimental::Detail::ROnDiskPageMap::~ROnDiskPageMap() = default;
-
+ROOT::Experimental::Internal::ROnDiskPageMap::~ROnDiskPageMap() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-ROOT::Experimental::Detail::ROnDiskPageMapHeap::~ROnDiskPageMapHeap() = default;
-
+ROOT::Experimental::Internal::ROnDiskPageMapHeap::~ROnDiskPageMapHeap() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-const ROOT::Experimental::Detail::ROnDiskPage *
-ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key) const
+const ROOT::Experimental::Internal::ROnDiskPage *
+ROOT::Experimental::Internal::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key) const
 {
    const auto itr = fOnDiskPages.find(key);
    if (itr != fOnDiskPages.end())
@@ -42,7 +37,7 @@ ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key)
    return nullptr;
 }
 
-void ROOT::Experimental::Detail::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap> pageMap)
+void ROOT::Experimental::Internal::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap> pageMap)
 {
    auto &pages = pageMap->fOnDiskPages;
    fOnDiskPages.insert(std::make_move_iterator(pages.begin()), std::make_move_iterator(pages.end()));
@@ -50,8 +45,7 @@ void ROOT::Experimental::Detail::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap>
    fPageMaps.emplace_back(std::move(pageMap));
 }
 
-
-void ROOT::Experimental::Detail::RCluster::Adopt(RCluster &&other)
+void ROOT::Experimental::Internal::RCluster::Adopt(RCluster &&other)
 {
    R__ASSERT(fClusterId == other.fClusterId);
 
@@ -66,7 +60,7 @@ void ROOT::Experimental::Detail::RCluster::Adopt(RCluster &&other)
    other.fPageMaps.clear();
 }
 
-void ROOT::Experimental::Detail::RCluster::SetColumnAvailable(DescriptorId_t physicalColumnId)
+void ROOT::Experimental::Internal::RCluster::SetColumnAvailable(DescriptorId_t physicalColumnId)
 {
    fAvailPhysicalColumns.insert(physicalColumnId);
 }

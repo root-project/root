@@ -17,7 +17,6 @@
 #define ROOT7_RNTupleInspector
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include <TFile.h>
@@ -25,12 +24,20 @@
 #include <THStack.h>
 
 #include <cstdlib>
+#include <iostream>
 #include <memory>
+#include <numeric>
 #include <regex>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+class RNTuple;
+
+namespace Internal {
+class RPageSource;
+} // namespace Internal
 
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
@@ -125,7 +132,7 @@ public:
    };
 
 private:
-   std::unique_ptr<Detail::RPageSource> fPageSource;
+   std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
    int fCompressionSettings = -1;
    std::uint64_t fCompressedSize = 0;
@@ -134,7 +141,7 @@ private:
    std::map<int, RColumnInspector> fColumnInfo;
    std::map<int, RFieldTreeInspector> fFieldTreeInfo;
 
-   RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
+   RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Gather column-level and RNTuple-level information.

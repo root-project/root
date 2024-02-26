@@ -9533,6 +9533,10 @@ void THistPainter::PaintTriangles(Option_t *option)
       fYbuf[1] = rmax[1];
       fXbuf[2] = rmin[2];
       fYbuf[2] = rmax[2];
+      fH->SetMaximum(rmax[2]);
+      fH->SetMinimum(rmin[2]);
+      fH->GetXaxis()->SetRangeUser(rmin[0],rmax[0]);
+      fH->GetYaxis()->SetRangeUser(rmin[1],rmax[1]);
    } else {
       fXbuf[0] = Hparam.xmin;
       fYbuf[0] = Hparam.xmax;

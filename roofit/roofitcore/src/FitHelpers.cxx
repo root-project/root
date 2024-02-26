@@ -324,9 +324,6 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
                                          double integrateOverBinsPrecision, RooFit::OffsetMode offset)
 {
    if (constraints) {
-      // Redirect the global observables to the ones from the dataset if applicable.
-      constraints->setData(data, false);
-
       // The computation graph for the constraints is very small, no need to do
       // the tracking of clean and dirty nodes here.
       constraints->setOperMode(RooAbsArg::ADirty);
@@ -741,8 +738,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       } else {
          auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, evalBackend == RooFit::EvalBackend::Value::Cuda);
          nllWrapper = std::make_unique<RooEvaluatorWrapper>(*nll, std::move(evaluator), rangeName ? rangeName : "",
-                                                            dynamic_cast<RooSimultaneous *>(pdfClone.get()),
-                                                            takeGlobalObservablesFromData);
+                                                            pdfClone.get(), takeGlobalObservablesFromData);
          nllWrapper->setData(data, false);
       }
 

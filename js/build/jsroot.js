@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '21/11/2023',
+version_date = '20/02/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -221,7 +221,7 @@ settings = {
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
-   /** @summary Show progress box */
+   /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
    ToolBar: nodejs ? false : 'popup',
@@ -1105,7 +1105,7 @@ function create$1(typename, target) {
          create$1(clTBox, obj);
          extend$1(obj, { fX1NDC: 0, fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
                        fBorderSize: 0, fInit: 1, fShadowColor: 1,
-                       fCornerRadius: 0, fOption: 'brNDC', fName: 'title' });
+                       fCornerRadius: 0, fOption: 'brNDC', fName: '' });
          break;
       case clTAttText:
          extend$1(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42 });
@@ -1125,7 +1125,7 @@ function create$1(typename, target) {
       case clTLegend:
          create$1(clTPave, obj);
          create$1(clTAttText, obj);
-         extend$1(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create$1(clTList),
+         extend$1(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create$1(clTList), fName: clTPave,
                        fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
          break;
       case clTPaletteAxis:
@@ -2394,7 +2394,7 @@ const radians = Math.PI / 180;
 const degrees$1 = 180 / Math.PI;
 
 // https://observablehq.com/@mbostock/lab-and-rgb
-const K = 18,
+const K$1 = 18,
     Xn = 0.96422,
     Yn = 1,
     Zn = 0.82521,
@@ -2431,10 +2431,10 @@ function Lab(l, a, b, opacity) {
 
 define(Lab, lab, extend(Color$1, {
   brighter(k) {
-    return new Lab(this.l + K * (k == null ? 1 : k), this.a, this.b, this.opacity);
+    return new Lab(this.l + K$1 * (k == null ? 1 : k), this.a, this.b, this.opacity);
   },
   darker(k) {
-    return new Lab(this.l - K * (k == null ? 1 : k), this.a, this.b, this.opacity);
+    return new Lab(this.l - K$1 * (k == null ? 1 : k), this.a, this.b, this.opacity);
   },
   rgb() {
     var y = (this.l + 16) / 116,
@@ -2495,10 +2495,10 @@ function hcl2lab(o) {
 
 define(Hcl, hcl, extend(Color$1, {
   brighter(k) {
-    return new Hcl(this.h, this.c, this.l + K * (k == null ? 1 : k), this.opacity);
+    return new Hcl(this.h, this.c, this.l + K$1 * (k == null ? 1 : k), this.opacity);
   },
   darker(k) {
-    return new Hcl(this.h, this.c, this.l - K * (k == null ? 1 : k), this.opacity);
+    return new Hcl(this.h, this.c, this.l - K$1 * (k == null ? 1 : k), this.opacity);
   },
   rgb() {
     return hcl2lab(this).rgb();
@@ -8002,23 +8002,27 @@ class FontHandler {
    }
 
    /** @summary Assigns font-related attributes */
-   setFont(selection) {
-      if (this.base64 && this.painter) {
-         const svg = this.painter.getCanvSvg(),
-               clname = 'custom_font_' + this.name,
-               fmt = 'ttf';
-         let defs = svg.selectChild('.canvas_defs');
-         if (defs.empty())
-            defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
-         const entry = defs.selectChild('.' + clname);
-         if (entry.empty()) {
-            defs.append('style')
-                .attr('type', 'text/css')
-                .attr('class', clname)
-                .property('$fonthandler', this)
-                .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url('data:application/font-${fmt};charset=utf-8;base64,${this.base64}') }`);
-         }
+   addCustomFontToSvg(svg) {
+      if (!this.base64 || !this.name)
+         return;
+      const clname = 'custom_font_' + this.name, fmt = 'ttf';
+      let defs = svg.selectChild('.canvas_defs');
+      if (defs.empty())
+         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+      const entry = defs.selectChild('.' + clname);
+      if (entry.empty()) {
+         console.log('Adding style entry for class', clname);
+         defs.append('style')
+               .attr('class', clname)
+               .property('$fonthandler', this)
+               .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url(data:application/font-${fmt};charset=utf-8;base64,${this.base64}); }`);
       }
+   }
+
+   /** @summary Assigns font-related attributes */
+   setFont(selection) {
+      if (this.base64 && this.painter)
+         this.addCustomFontToSvg(this.painter.getCanvSvg());
 
       selection.attr('font-family', this.name)
                .attr('font-size', this.size)
@@ -8091,6 +8095,12 @@ function addCustomFont(index, name, format, base64) {
       root_fonts[index] = { n: name, format, base64 };
 }
 
+/** @summary Return handle with custom font
+  * @private */
+function getCustomFont(name) {
+   return root_fonts.find(h => (h?.n === name) && h?.base64);
+}
+
 /** @summary Try to detect and create font handler for SVG text node
   * @private */
 function detectFont(node) {
@@ -8133,12 +8143,11 @@ function detectFont(node) {
 }
 
 const symbols_map = {
-   // greek letters
+   // greek letters from symbols.ttf
    '#alpha': '\u03B1',
    '#beta': '\u03B2',
    '#chi': '\u03C7',
    '#delta': '\u03B4',
-   '#digamma': '\u03DD',
    '#varepsilon': '\u03B5',
    '#phi': '\u03C6',
    '#gamma': '\u03B3',
@@ -8146,8 +8155,6 @@ const symbols_map = {
    '#iota': '\u03B9',
    '#varphi': '\u03C6',
    '#kappa': '\u03BA',
-   '#koppa': '\u03DF',
-   '#sampi': '\u03E1',
    '#lambda': '\u03BB',
    '#mu': '\u03BC',
    '#nu': '\u03BD',
@@ -8156,13 +8163,9 @@ const symbols_map = {
    '#theta': '\u03B8',
    '#rho': '\u03C1',
    '#sigma': '\u03C3',
-   '#stigma': '\u03DB',
-   '#san': '\u03FB',
-   '#sho': '\u03F8',
    '#tau': '\u03C4',
    '#upsilon': '\u03C5',
    '#varomega': '\u03D6',
-   '#varcoppa': '\u03D9',
    '#omega': '\u03C9',
    '#xi': '\u03BE',
    '#psi': '\u03C8',
@@ -8171,7 +8174,6 @@ const symbols_map = {
    '#Beta': '\u0392',
    '#Chi': '\u03A7',
    '#Delta': '\u0394',
-   '#Digamma': '\u03DC',
    '#Epsilon': '\u0395',
    '#Phi': '\u03A6',
    '#Gamma': '\u0393',
@@ -8179,9 +8181,6 @@ const symbols_map = {
    '#Iota': '\u0399',
    '#vartheta': '\u03D1',
    '#Kappa': '\u039A',
-   '#Koppa': '\u03DE',
-   '#varKoppa': '\u03D8',
-   '#Sampi': '\u03E0',
    '#Lambda': '\u039B',
    '#Mu': '\u039C',
    '#Nu': '\u039D',
@@ -8190,9 +8189,6 @@ const symbols_map = {
    '#Theta': '\u0398',
    '#Rho': '\u03A1',
    '#Sigma': '\u03A3',
-   '#Stigma': '\u03DA',
-   '#San': '\u03FA',
-   '#Sho': '\u03F7',
    '#Tau': '\u03A4',
    '#Upsilon': '\u03A5',
    '#varsigma': '\u03C2',
@@ -8202,16 +8198,8 @@ const symbols_map = {
    '#Zeta': '\u0396',
    '#varUpsilon': '\u03D2',
    '#epsilon': '\u03B5',
-   '#P': '\u00B6',
 
-   // only required for MathJax to provide correct replacement
-   '#sqrt': '\u221A',
-   '#bar': '',
-   '#overline': '',
-   '#underline': '',
-   '#strike': '',
-
-   // from TLatex tables #2 & #3
+    // second set from symbols.ttf
    '#leq': '\u2264',
    '#/': '\u2044',
    '#infty': '\u221E',
@@ -8225,9 +8213,8 @@ const symbols_map = {
    '#uparrow': '\u2191',
    '#rightarrow': '\u2192',
    '#downarrow': '\u2193',
-   '#circ': '\u02C6', // ^
+   '#circ': '\u2E30',
    '#pm': '\xB1',
-   '#mp': '\u2213',
    '#doublequote': '\u2033',
    '#geq': '\u2265',
    '#times': '\xD7',
@@ -8251,12 +8238,11 @@ const symbols_map = {
    '#oslash': '\u2205',
    '#cap': '\u2229',
    '#cup': '\u222A',
-   '#supseteq': '\u2287',
    '#supset': '\u2283',
+   '#supseteq': '\u2287',
    '#notsubset': '\u2284',
-   '#subseteq': '\u2286',
    '#subset': '\u2282',
-   '#int': '\u222B',
+   '#subseteq': '\u2286',
    '#in': '\u2208',
    '#notin': '\u2209',
    '#angle': '\u2220',
@@ -8266,7 +8252,7 @@ const symbols_map = {
    '#trademark': '\u2122',
    '#prod': '\u220F',
    '#surd': '\u221A',
-   '#upoint': '\u02D9',
+   '#upoint': '\u2027',
    '#corner': '\xAC',
    '#wedge': '\u2227',
    '#vee': '\u2228',
@@ -8275,24 +8261,45 @@ const symbols_map = {
    '#Uparrow': '\u21D1',
    '#Rightarrow': '\u21D2',
    '#Downarrow': '\u21D3',
+   '#void2': '', // dummy, placeholder
    '#LT': '\x3C',
    '#void1': '\xAE',
    '#copyright': '\xA9',
-   '#void3': '\u2122',
+   '#void3': '\u2122',  // it is dummy placeholder, TM
    '#sum': '\u2211',
    '#arctop': '\u239B',
-   '#lbar': '\u23B8',
+   '#lbar': '\u23A2',
    '#arcbottom': '\u239D',
-   '#void8': '',
+   '#void4': '', // dummy, placeholder
+   '#void8': '\u23A2', // same as lbar
    '#bottombar': '\u230A',
    '#arcbar': '\u23A7',
    '#ltbar': '\u23A8',
    '#AA': '\u212B',
-   '#aa': '\u00E5',
+   '#aa': '\xE5',
    '#void06': '',
    '#GT': '\x3E',
+   '#int': '\u222B',
    '#forall': '\u2200',
    '#exists': '\u2203',
+   // here ends second set from symbols.ttf
+
+   // more greek symbols
+   '#koppa': '\u03DF',
+   '#sampi': '\u03E1',
+   '#stigma': '\u03DB',
+   '#san': '\u03FB',
+   '#sho': '\u03F8',
+   '#varcoppa': '\u03D9',
+   '#digamma': '\u03DD',
+   '#Digamma': '\u03DC',
+   '#Koppa': '\u03DE',
+   '#varKoppa': '\u03D8',
+   '#Sampi': '\u03E0',
+   '#Stigma': '\u03DA',
+   '#San': '\u03FA',
+   '#Sho': '\u03F7',
+
    '#vec': '',
    '#dot': '\u22C5',
    '#hat': '\xB7',
@@ -8310,12 +8317,25 @@ const symbols_map = {
    '#odot': '\u2299',
    '#left': '',
    '#right': '',
-   '{}': ''
+   '{}': '',
+
+   '#mp': '\u2213',
+
+   '#P': '\u00B6', // paragraph
+
+    // only required for MathJax to provide correct replacement
+   '#sqrt': '\u221A',
+   '#bar': '',
+   '#overline': '',
+   '#underline': '',
+   '#strike': ''
 },
 
-/** @summary Create a single regex to detect any symbol to replace
+
+
+/** @summary Create a single regex to detect any symbol to replace, apply longer symbols first
   * @private */
-symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').replace(/\\\{/g, '{').replace(/\\\}/g, '}') + ')', 'g'),
+symbolsRegexCache = new RegExp(Object.keys(symbols_map).sort((a, b) => (a.length < b.length ? 1 : (a.length > b.length ? -1 : 0))).join('|'), 'g'),
 
 /** @summary Simple replacement of latex letters
   * @private */
@@ -8392,15 +8412,86 @@ const latex_features = [
    { name: '#(){', braces: '()' },
    { name: '#{}{', braces: '{}' },
    { name: '#||{', braces: '||' }
-];
+],
 
 // taken from: https://sites.math.washington.edu/~marshall/cxseminar/symbol.htm, starts from 33
 // eslint-disable-next-line
-const symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993];
+symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993],
 
 // taken from http://www.alanwood.net/demos/wingdings.html, starts from 33
 // eslint-disable-next-line
-const wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505];
+wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505],
+
+symbolsPdfMap = {};
+
+/** @summary Return code for symbols from symbols.ttf
+ * @desc Used in PDF generation
+ * @private */
+function remapSymbolTtfCode(code) {
+   if (!symbolsPdfMap[0x3B1]) {
+      let cnt = 0;
+      for (const key in symbols_map) {
+         const symbol = symbols_map[key];
+         if (symbol.length === 1) {
+            let letter = 0;
+            if (cnt < 54) {
+               const opGreek = cnt;
+               // see code in TLatex.cxx, line 1302
+               letter = 97 + opGreek;
+               if (opGreek > 25) letter -= 58;
+               if (opGreek === 52) letter = 0o241; // varUpsilon
+               if (opGreek === 53) letter = 0o316; // epsilon
+            } else {
+               // see code in TLatex.cxx, line 1323
+               const opSpec = cnt - 54;
+               letter = 0o243 + opSpec;
+               switch (opSpec) {
+                  case 75: letter = 0o305; break; // AA Angstroem
+                  case 76: letter = 0o345; break; // aa Angstroem
+                  case 80: letter = 0o42; break; // #forall
+                  case 81: letter = 0o44; break; // #exists
+               }
+            }
+            const code = symbol.charCodeAt(0);
+            if (code > 0x80)
+               symbolsPdfMap[code] = letter;
+         }
+         if (++cnt > 54 + 82) break;
+      }
+   }
+   return symbolsPdfMap[code] ?? code;
+}
+
+
+/** @summary Reformat text node if it includes greek or special symbols
+ * @desc Used in PDF generation where greek symbols are not available
+ * @private */
+function replaceSymbolsInTextNode(node) {
+   if (node.childNodes.length !== 1)
+      return false;
+   const txt = node.textContent;
+   if (!txt)
+      return false;
+   let new_html = '', lasti = -1;
+   for (let i = 0; i < txt.length; i++) {
+      const code = txt.charCodeAt(i),
+            newcode = remapSymbolTtfCode(code);
+      if (code !== newcode) {
+         new_html += txt.slice(lasti+1, i) + '<tspan font-family="symbol" font-style="normal" font-weight="normal">'+String.fromCharCode(newcode)+'</tspan>';
+         lasti = i;
+      }
+   }
+
+   if (lasti < 0)
+      return false;
+
+   if (lasti < txt.length-1)
+      new_html += txt.slice(lasti+1, txt.length);
+
+   node.$originalHTML = node.innerHTML;
+   node.innerHTML = new_html;
+   return true;
+}
 
 function replaceSymbols(s, kind) {
    const m = (kind === 'Wingdings') ? wingdingsMap : symbolsMap;
@@ -10118,7 +10209,7 @@ class BasePainter {
          enlarge = select(doc.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; top: 1px; bottom: 1px; right: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          const rect1 = getElementRect(main),
                rect2 = getElementRect(enlarge);
@@ -10223,12 +10314,13 @@ function addHighlightStyle(elem, drag) {
   * @private */
 async function svgToPDF(args, as_buffer) {
    const nodejs = isNodeJs();
-   let _jspdf, _svg2pdf;
+   let _jspdf, _svg2pdf, need_symbols = false;
 
    const pr = nodejs
       ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(h => { _jspdf = h; return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }); }).then(h => { _svg2pdf = h.default; })
       : loadScript(exports.source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(exports.source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
-        restore_fonts = [], restore_dominant = [], node_transform = args.node.getAttribute('transform'), custom_fonts = {};
+        restore_fonts = [], restore_dominant = [], restore_text = [],
+        node_transform = args.node.getAttribute('transform'), custom_fonts = {};
 
    if (args.reset_tranform)
       args.node.removeAttribute('transform');
@@ -10251,17 +10343,25 @@ async function svgToPDF(args, as_buffer) {
             if (!args.can_modify) restore_dominant.push(this); // keep to restore it
          } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
             this.setAttribute('dy', '.2em'); // better allignment in PDF
+
+         if (replaceSymbolsInTextNode(this)) {
+            need_symbols = true;
+            if (!args.can_modify) restore_text.push(this); // keep to restore it
+         }
       });
 
       if (nodejs) {
          const doc = internals.nodejs_document;
          doc.oldFunc = doc.createElementNS;
          globalThis.document = doc;
+         globalThis.CSSStyleSheet = internals.nodejs_window.CSSStyleSheet;
+         globalThis.CSSStyleRule = internals.nodejs_window.CSSStyleRule;
          doc.createElementNS = function(ns, kind) {
             const res = doc.oldFunc(ns, kind);
             res.getBBox = function() {
                let width = 50, height = 10;
                if (this.tagName === 'text') {
+                  // TODO: use jsDOC fonts for label width estimation
                   const font = detectFont(this);
                   width = approximateLabelWidth(this.textContent, font);
                   height = font.size;
@@ -10286,11 +10386,38 @@ async function svgToPDF(args, as_buffer) {
          if (!fh || custom_fonts[fh.name] || (fh.format !== 'ttf')) return;
          const filename = fh.name.toLowerCase().replace(/\s/g, '') + '.ttf';
          doc.addFileToVFS(filename, fh.base64);
-         doc.addFont(filename, fh.name, 'normal');
+         doc.addFont(filename, fh.name, 'normal', 'normal', (fh.name === 'symbol') ? 'StandardEncoding' : 'Identity-H');
          custom_fonts[fh.name] = true;
       });
 
-      return _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height })
+      let pr2 = Promise.resolve(true);
+
+      if (need_symbols && !custom_fonts.symbol) {
+         if (!getCustomFont('symbol')) {
+            pr2 = nodejs
+              ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(fs => {
+                 const base64 = fs.readFileSync('../../fonts/symbol.ttf').toString('base64');
+                 console.log('reading symbol.ttf', base64.length);
+                 addCustomFont(25, 'symbol', 'ttf', base64);
+              })
+              : httpRequest(exports.source_dir+'fonts/symbol.ttf', 'bin').then(buf => {
+               const base64 = btoa_func(buf);
+               addCustomFont(25, 'symbol', 'ttf', base64);
+            });
+         }
+
+         pr2 = pr2.then(() => {
+            const fh = getCustomFont('symbol'),
+                  handler = new FontHandler(1242, 10);
+            handler.name = 'symbol';
+            handler.base64 = fh.base64;
+            handler.addCustomFontToSvg(select(args.node));
+            doc.addFileToVFS('symbol.ttf', fh.base64);
+            doc.addFont('symbol.ttf', 'symbol', 'normal', 'normal', 'StandardEncoding' /* 'WinAnsiEncoding' */);
+         });
+      }
+
+      return pr2.then(() => _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height }))
          .then(() => {
             if (args.reset_tranform && !args.can_modify && node_transform)
                args.node.setAttribute('transform', node_transform);
@@ -10300,13 +10427,18 @@ async function svgToPDF(args, as_buffer) {
                node.setAttribute('dominant-baseline', 'middle');
                node.removeAttribute('dy');
             });
+
+            restore_text.forEach(node => { node.innerHTML = node.$originalHTML; });
+
             const res = as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
             if (nodejs) {
                globalThis.document = undefined;
+               globalThis.CSSStyleSheet = undefined;
+               globalThis.CSSStyleRule = undefined;
                internals.nodejs_document.createElementNS = internals.nodejs_document.oldFunc;
                if (as_buffer) return Buffer.from(res);
             }
-            return res;
+             return res;
          });
    });
 }
@@ -10325,16 +10457,14 @@ async function svgToImage(svg, image_format, as_buffer) {
    if (image_format === 'pdf')
       return svgToPDF(svg, as_buffer);
 
-   if (!isNodeJs()) {
-      // required with df104.py/df105.py example with RCanvas
-      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-      svg = encodeURIComponent(doctype + svg);
-      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
-          const c = String.fromCharCode('0x'+p1);
-          return c === '%' ? '%25' : c;
-      });
-      svg = decodeURIComponent(svg);
-   }
+   // required with df104.py/df105.py example with RCanvas or any special symbols in TLatex
+   const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+   svg = encodeURIComponent(doctype + svg);
+   svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+       const c = String.fromCharCode('0x'+p1);
+       return c === '%' ? '%25' : c;
+   });
+   svg = decodeURIComponent(svg);
 
    const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
 
@@ -12052,8 +12182,10 @@ class ObjectPainter extends BasePainter {
      * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    getObjectHint() {
-      const hint = this.getItemName() || this.getObjectName() || this.getClassName() || '';
-      return (hint.length <= 20) ? hint : hint.slice(0, 17) + '...';
+      const iname = this.getItemName();
+      if (iname)
+         return (iname.length > 20) ? '...' + iname.slice(iname.length - 17) : iname;
+      return this.getObjectName() || this.getClassName() || '';
    }
 
    /** @summary returns color from current list of colors
@@ -58444,42 +58576,54 @@ tgamma: gamma
   * @desc Previous message will be overwritten
   * if no argument specified, any shown messages will be removed
   * @param {string} msg - message to display
-  * @param {number} tmout - optional timeout in milliseconds, after message will disappear
+  * @param {number} [tmout] - optional timeout in milliseconds, after message will disappear
+  * @param {function} [click_handle] - optional handle to process click events
   * @private */
-function showProgress(msg, tmout) {
+function showProgress(msg, tmout, click_handle) {
    if (isBatchMode() || (typeof document === 'undefined'))
       return;
-   const id = 'jsroot_progressbox';
+
+   const id = 'jsroot_progressbox', modal = (settings.ProgressBox === 'modal') && isFunc(internals._modalProgress) ? internals._modalProgress : null;
    let box = select('#' + id);
 
-   if (!settings.ProgressBox)
+   if (!settings.ProgressBox) {
+      if (modal) modal();
       return box.remove();
+   }
 
    if ((arguments.length === 0) || !msg) {
       if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
+      if (modal) modal();
       return;
    }
 
-   if (box.empty()) {
-      box = select(document.body)
-              .append('div').attr('id', id)
-              .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
-      box.append('p');
+   if (modal) {
+      box.remove();
+      modal(msg, click_handle);
+   } else {
+      if (box.empty()) {
+         box = select(document.body)
+               .append('div').attr('id', id)
+               .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
+         box.append('p');
+      }
+
+      box.property('with_timeout', false);
+
+      const p = box.select('p');
+
+      if (isStr(msg)) {
+         p.html(msg)
+          .on('click', isFunc(click_handle) ? click_handle : null)
+          .attr('title', isFunc(click_handle) ? 'Click element to abort current operation' : '');
+      }
+
+      p.attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
    }
-
-   box.property('with_timeout', false);
-
-   if (isStr(msg))
-      box.select('p').html(msg);
-    else {
-      box.html('');
-      box.node().appendChild(msg);
-   }
-
-   box.select('p').attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
-      box.property('with_timeout', true);
+      if (!box.empty())
+         box.property('with_timeout', true);
       setTimeout(() => showProgress('', -1), tmout);
    }
 }
@@ -59707,7 +59851,9 @@ class JSRootMenu {
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
-      this.addchk(settings.ProgressBox, 'Progress box', flag => { settings.ProgressBox = flag; });
+      this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
+         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+      });
       this.add('endsub:');
 
       this.add('sub:Drawing');
@@ -60319,18 +60465,21 @@ class StandaloneMenu extends JSRootMenu {
    }
 
    /** @summary Run modal elements with standalone code */
-   async runModal(title, main_content, args) {
+   createModal(title, main_content, args) {
       if (!args) args = {};
-      const dlg_id = this.menuname + '_dialog';
+
+      if (!args.Ok) args.Ok = 'Ok';
+
+      const modal = { args }, dlg_id = (this?.menuname ?? 'root_modal') + '_dialog';
       select(`#${dlg_id}`).remove();
       select(`#${dlg_id}_block`).remove();
 
-      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth)),
-          block = select('body').append('div')
+      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth));
+      modal.block = select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
-          element = select('body')
+                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
+      modal.element = select('body')
                       .append('div')
                       .attr('id', dlg_id)
                       .attr('class', 'jsroot_dialog')
@@ -60345,37 +60494,60 @@ class StandaloneMenu extends JSRootMenu {
            `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
            '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>'+
-              '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Ok</button>'+
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>`+
               (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
          '</div></div>');
 
-      return new Promise(resolveFunc => {
-         element.on('keyup', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-               resolveFunc(evnt.code === 'Enter' ? element.node() : null);
-               element.remove();
-               block.remove();
-            }
-         });
-         element.on('keydown', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-            }
-         });
-         element.selectAll('.jsroot_dialog_button').on('click', evnt => {
-            resolveFunc(args.btns && (select(evnt.target).text() === 'Ok') ? element.node() : null);
-            element.remove();
-            block.remove();
-         });
+      modal.done = function(res) {
+         if (this._done) return;
+         this._done = true;
+         if (isFunc(this.call_back))
+            this.call_back(res);
+         this.element.remove();
+         this.block.remove();
+      };
 
-         let f = element.select('.jsroot_dialog_content').select('input');
-         if (f.empty()) f = element.select('.jsroot_dialog_footer').select('button');
-         if (!f.empty()) f.node().focus();
+      modal.setContent = function(content, btn_text) {
+         if (!this._done) {
+            this.element.select('.jsroot_dialog_content').html(content);
+            if (btn_text) {
+               this.args.Ok = btn_text;
+               this.element.select('.jsroot_dialog_button').text(btn_text);
+            }
+         }
+      };
+
+      modal.element.on('keyup', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            modal.done(evnt.code === 'Enter' ? modal.element.node() : null);
+         }
+      });
+      modal.element.on('keydown', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+         }
+      });
+      modal.element.selectAll('.jsroot_dialog_button').on('click', evnt => {
+         modal.done(args.btns && (select(evnt.target).text() === args.Ok) ? modal.element.node() : null);
+      });
+
+      let f = modal.element.select('.jsroot_dialog_content').select('input');
+      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
+      if (!f.empty()) f.node().focus();
+      return modal;
+   }
+
+   /** @summary Run modal elements with standalone code */
+   async runModal(title, main_content, args) {
+      const modal = this.createModal(title, main_content, args);
+      return new Promise(resolveFunc => {
+         modal.call_back = resolveFunc;
       });
    }
+
 
 } // class StandaloneMenu
 
@@ -60422,6 +60594,23 @@ function showPainterMenu(evnt, painter, kind) {
    }).then(menu => menu.show());
 }
 
+/** @summary Internal method to implement modal progress
+  * @private */
+internals._modalProgress = function(msg, click_handle) {
+   if (!msg || !isStr(msg)) {
+      internals.modal?.done();
+      delete internals.modal;
+      return;
+   }
+
+   if (!internals.modal)
+      internals.modal = StandaloneMenu.prototype.createModal('Progress', msg);
+
+   internals.modal.setContent(msg, click_handle ? 'Abort' : 'Ok');
+
+   internals.modal.call_back = click_handle;
+};
+
 /** @summary Assign handler for context menu for painter draw element
   * @private */
 function assignContextMenu(painter, kind) {
@@ -60450,7 +60639,7 @@ function getTimeOffset(axis) {
       sof = sof.slice(pos + 1);
       if (!Number.isInteger(val) || (val < min) || (val > max)) return min;
       return val;
-   }, year = next('-', 1970, 2300),
+   }, year = next('-', 1900, 2900),
       month = next('-', 1, 12) - 1,
       day = next(' ', 1, 31),
       hour = next(':', 0, 23),
@@ -61259,29 +61448,29 @@ class TAxisPainter extends ObjectPainter {
          title_g.property('shift_x', new_x)
                 .property('shift_y', new_y);
 
-         const axis = this.getObject(), abits = EAxisBits,
-               axis2 = this.source_axis,
-               set_bit = (bit, on) => {
-                  if (axis.TestBit(bit) !== on) axis.InvertBit(bit);
+         const axis = this.getObject(), axis2 = this.source_axis,
+               setBit = (bit, on) => {
+                  if (axis && axis.TestBit(bit) !== on) axis.InvertBit(bit);
                   if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
                };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
-         axis.fTitleOffset = this.titleOffset / this.offsetScaling / this.titleSize;
-         if (axis2) axis2.fTitleOffset = axis.fTitleOffset;
+         const offset = this.titleOffset / this.offsetScaling / this.titleSize;
+         if (axis) axis.fTitleOffset = offset;
+         if (axis2) axis2.fTitleOffset = offset;
 
          if (curr_indx === 1) {
-            set_bit(abits.kCenterTitle, true); this.titleCenter = true;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, true); this.titleCenter = true;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          } else if (curr_indx === 0) {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, true); this.titleOpposite = true;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, true); this.titleOpposite = true;
          } else {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          }
 
-         this.submitAxisExec(`SetTitleOffset(${axis.fTitleOffset});;SetBit(${abits.kCenterTitle},${this.titleCenter?1:0})`);
+         this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
 
          drag_rect.remove();
          drag_rect = null;
@@ -61732,12 +61921,12 @@ class TAxisPainter extends ObjectPainter {
 
             title_shift_x = Math.round(title_offest_k * this.titleOffset);
 
-            if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
-               // special handling for color palette labels - draw them always on right side
-               const rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.width - this.ticksSize)
-                  title_shift_x = Math.round(rect.width - this.ticksSize);
-            }
+            // if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
+            //    // special handling for color palette labels - draw them always on right side
+            //   const rect = axis_g.node().getBoundingClientRect();
+            //   if (title_shift_x < rect.width - this.ticksSize)
+            //      title_shift_x = Math.round(rect.width - this.ticksSize);
+            // }
 
             title_shift_y = Math.round(this.titleCenter ? h/2 : (xor_reverse ? h : 0));
 
@@ -62211,6 +62400,19 @@ const TooltipHandler = {
          }
       }
 
+      let path_name = null, same_path = hints.length > 1;
+      for (let n = 0; n < hints.length; ++n) {
+         const hint = hints[n], p = hint?.lines ? hint.lines[0]?.lastIndexOf('/') : -1;
+         if (p > 0) {
+            const path = hint.lines[0].slice(0, p + 1);
+            if (path_name === null)
+               path_name = path;
+            else if (path_name !== path)
+               same_path = false;
+         } else
+            same_path = false;
+      }
+
       const layer = this.hints_layer(),
             show_only_best = nhints > 15,
             coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
@@ -62305,24 +62507,14 @@ const TooltipHandler = {
           gapminx = -1111, gapmaxx = -1111;
       const minhinty = -frame_shift.y,
             cp = this.getCanvPainter(),
-            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y,
-      FindPosInGap = y => {
-         for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
-            const hint = hints[n];
-            if (!hint) continue;
-            if ((hint.y >= y - 5) && (hint.y <= y + hint.height + 5)) {
-               y = hint.y + 10;
-               n = -1;
-            }
-         }
-         return y;
-      };
+            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y;
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n],
-            group = hintsg.selectChild(`.painter_hint_${n}`);
+             group = hintsg.selectChild(`.painter_hint_${n}`);
 
-         if (show_only_best && (hint !== best_hint)) hint = null;
+         if (show_only_best && (hint !== best_hint))
+            hint = null;
 
          if (hint === null) {
             group.remove();
@@ -62342,16 +62534,23 @@ const TooltipHandler = {
          if (viewmode === 'single')
             curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
           else {
-            gapy = FindPosInGap(gapy);
+            for (let n = 0; (n < hints.length) && (gapy < maxhinty); ++n) {
+               const hint = hints[n];
+               if (!hint) continue;
+               if ((hint.y >= gapy - 5) && (hint.y <= gapy + hint.height + 5)) {
+                  gapy = hint.y + 10;
+                  n = -1;
+               }
+            }
             if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
             gapmaxx = Math.min(gapmaxx, hint.x);
          }
 
          group.attr('x', posx)
-            .attr('y', curry)
-            .property('curry', curry)
-            .property('gapy', gapy);
+              .attr('y', curry)
+              .property('curry', curry)
+              .property('gapy', gapy);
 
          curry += hint.height + 5;
          gapy += hint.height + 5;
@@ -62360,7 +62559,7 @@ const TooltipHandler = {
             group.selectAll('*').remove();
 
          group.attr('width', 60)
-            .attr('height', hint.height);
+              .attr('height', hint.height);
 
          const r = group.append('rect')
             .attr('x', 0)
@@ -62377,8 +62576,11 @@ const TooltipHandler = {
          }
          r.attr('stroke-width', hint.exact ? 3 : 1);
 
-         for (let l = 0; l < (hint.lines ? hint.lines.length : 0); l++) {
-            if (hint.lines[l] !== null) {
+         for (let l = 0; l < (hint.lines?.length ?? 0); l++) {
+            let line = hint.lines[l];
+            if (l === 0 && path_name && same_path)
+               line = line.slice(path_name.length);
+            if (line) {
                const txt = group.append('svg:text')
                   .attr('text-anchor', 'start')
                   .attr('x', wmargin)
@@ -62387,9 +62589,8 @@ const TooltipHandler = {
                   .style('fill', 'black')
                   .style('pointer-events', 'none')
                   .call(font.func)
-                  .text(hint.lines[l]),
-
-                box = getElementRect(txt, 'bbox');
+                  .text(line),
+               box = getElementRect(txt, 'bbox');
 
                actualw = Math.max(actualw, box.width);
             }
@@ -65396,7 +65597,7 @@ class TabsDisplay extends MDIDisplay {
 
       if (top.empty()) {
          top = dom.append('div').attr('class', 'jsroot_tabs')
-                  .attr('style', 'display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px');
+                  .attr('style', 'display: flex; flex-direction: column; position: absolute; overflow: hidden; left: 0px; top: 0px; bottom: 0px; right: 0px;');
          labels = top.append('div').attr('class', 'jsroot_tabs_labels')
                      .attr('style', 'white-space: nowrap; position: relative; overflow-x: auto');
          main = top.append('div').attr('class', 'jsroot_tabs_main')
@@ -65443,7 +65644,7 @@ class TabsDisplay extends MDIDisplay {
       const draw_frame = main.append('div')
                            .attr('frame_title', title)
                            .attr('class', 'jsroot_tabs_draw')
-                           .attr('style', 'overflow: hidden; position: absolute; inset: 0px')
+                           .attr('style', 'overflow: hidden; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px;')
                            .property('frame_id', frame_id);
 
       this.modifyTabsFrame(frame_id, 'activate');
@@ -66010,7 +66211,7 @@ class BrowserLayout {
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
       injectStyle(
-         '.jsroot_browser { pointer-events: none; position: absolute; inset: 0px; margin: 0px; border: 0px; overflow: hidden; }'+
+         '.jsroot_browser { pointer-events: none; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; margin: 0px; border: 0px; overflow: hidden; }'+
          `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }`+
          `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }`+
          `.jsroot_browser_area input { ${input_style} }`+
@@ -66032,7 +66233,7 @@ class BrowserLayout {
       main.append('div').attr('id', this.drawing_divid())
                         .classed('jsroot_draw_area', true)
                         .style('position', 'absolute')
-                        .style('inset', '0px');
+                        .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
 
       if (with_browser)
          main.append('div').classed('jsroot_browser', true);
@@ -66779,6 +66980,7 @@ class TPadPainter extends ObjectPainter {
       delete this._snap_primitives;
       delete this._last_grayscale;
       delete this._custom_colors;
+      delete this._custom_palette_indexes;
       delete this._custom_palette_colors;
       delete this.root_colors;
 
@@ -66893,6 +67095,33 @@ class TPadPainter extends ObjectPainter {
      * @private */
    getNumPainters() { return this.painters.length; }
 
+   /** @summary Provides automatic color
+    * @desc Uses ROOT colors palette if possible
+    * @private */
+   getAutoColor(numprimitives) {
+      if (!numprimitives)
+         numprimitives = this._num_primitives || 5;
+      if (numprimitives < 2) numprimitives = 2;
+
+      let indx = this._auto_color ?? 0;
+      this._auto_color = (indx + 1) % numprimitives;
+      if (indx >= numprimitives) indx = numprimitives - 1;
+
+      const indexes = this._custom_palette_indexes || this.getCanvPainter()?._custom_palette_indexes;
+
+      if (indexes?.length) {
+         const p = Math.round(indx * (indexes.length - 3) / (numprimitives - 1));
+         return indexes[p];
+      }
+
+      if (!this._auto_palette)
+         this._auto_palette = getColorPalette(settings.Palette, this.isGrayscale());
+      const palindx = Math.round(indx * (this._auto_palette.getLength()-3) / (numprimitives-1)),
+            colvalue = this._auto_palette.getColor(palindx);
+
+      return this.addColor(colvalue);
+   }
+
    /** @summary Call function for each painter in pad
      * @param {function} userfunc - function to call
      * @param {string} kind - 'all' for all objects (default), 'pads' only pads and subpads, 'objects' only for object in current pad
@@ -66956,7 +67185,7 @@ class TPadPainter extends ObjectPainter {
 
       const cp = this.getCanvPainter();
 
-      let lineatt = this.is_active_pad && (cp?.highlight_gpad !== false) ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
+      let lineatt = this.is_active_pad && cp?.highlight_gpad ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
 
       if (!lineatt) lineatt = new TAttLineHandler({ color: 'none' });
 
@@ -67107,7 +67336,7 @@ class TPadPainter extends ObjectPainter {
       if (this._fixed_size)
          svg.attr('width', rect.width).attr('height', rect.height);
       else
-         svg.style('width', '100%').style('height', '100%').style('inset', '0px');
+         svg.style('width', '100%').style('height', '100%').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
 
       svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 
@@ -67397,7 +67626,7 @@ class TPadPainter extends ObjectPainter {
       if ((obj._typename === clTObjArray) && (obj.name === 'ListOfColors')) {
          if (this.options?.CreatePalette) {
             let arr = [];
-            for (let n = obj.arr.length - this.options.CreatePalette; n<obj.arr.length; ++n) {
+            for (let n = obj.arr.length - this.options.CreatePalette; n < obj.arr.length; ++n) {
                const col = getRGBfromTColor(obj.arr[n]);
                if (!col) { console.log('Fail to create color for palette'); arr = null; break; }
                arr.push(col);
@@ -67414,18 +67643,22 @@ class TPadPainter extends ObjectPainter {
       }
 
       if ((obj._typename === clTObjArray) && (obj.name === 'CurrentColorPalette')) {
-         const arr = [];
+         const arr = [], indx = [];
          let missing = false;
          for (let n = 0; n < obj.arr.length; ++n) {
             const col = obj.arr[n];
-            if (col?._typename === clTColor)
+            if (col?._typename === clTColor) {
+               indx[n] = col.fNumber;
                arr[n] = getRGBfromTColor(col);
-             else {
-               console.log(`Missing color with index ${n}`); missing = true;
+            } else {
+               console.log(`Missing color with index ${n}`);
+               missing = true;
             }
          }
 
-         this._custom_palette_colors = (!this.options || (!missing && !this.options.IgnorePalette)) ? arr : null;
+         const apply = (!this.options || (!missing && !this.options.IgnorePalette));
+         this._custom_palette_indexes = apply ? indx : null;
+         this._custom_palette_colors = apply ? arr : null;
 
          return true;
       }
@@ -67897,7 +68130,7 @@ class TPadPainter extends ObjectPainter {
       for (let k = 0; k < this.painters.length; ++k) {
          const painter = this.painters[k],
                obj = painter.getObject();
-         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.isSecondary() ||
+         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.draw_content === false ||
               obj._typename === clTLegend || obj._typename === clTHStack || obj._typename === clTMultiGraph)
             continue;
 
@@ -68001,13 +68234,16 @@ class TPadPainter extends ObjectPainter {
 
       // set palette
       if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
-         const palette = [];
-         for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
-            palette[n] = colors[Math.round(snap.fSnapshot.fBuf[n])];
-
+         const indexes = [], palette = [];
+         for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n) {
+            indexes[n] = Math.round(snap.fSnapshot.fBuf[n]);
+            palette[n] = colors[indexes[n]];
+         }
+         this._custom_palette_indexes = indexes;
          this._custom_palette_colors = palette;
          this.custom_palette = new ColorPalette(palette, greyscale);
       } else {
+         delete this._custom_palette_indexes;
          delete this._custom_palette_colors;
          delete this.custom_palette;
       }
@@ -70616,11 +70852,12 @@ class TPavePainter extends ObjectPainter {
          axis.fTitle = zaxis.fTitle;
          axis.fTitleSize = zaxis.fTitleSize;
          axis.fTitleOffset = zaxis.fTitleOffset;
-         axis.fTitleColor = zaxis.fTitleColor;
+         axis.fTextColor = zaxis.fTitleColor;
+         axis.fTextFont = zaxis.fTitleFont;
          axis.fLineColor = zaxis.fAxisColor;
-         axis.fTextSize = zaxis.fLabelSize;
-         axis.fTextColor = zaxis.fLabelColor;
-         axis.fTextFont = zaxis.fLabelFont;
+         axis.fLabelSize = zaxis.fLabelSize;
+         axis.fLabelColor = zaxis.fLabelColor;
+         axis.fLabelFont = zaxis.fLabelFont;
          axis.fLabelOffset = zaxis.fLabelOffset;
          this.z_handle.setHistPainter(main, 'z');
          this.z_handle.source_axis = zaxis;
@@ -71244,7 +71481,7 @@ class THistDrawOptions {
               Mode3D: false, x3dscale: 1, y3dscale: 1,
               Render3D: constants$1.Render3D.Default,
               FrontBox: true, BackBox: true,
-              _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
+              need_fillcol: false,
               minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
    }
 
@@ -71581,9 +71818,12 @@ class THistDrawOptions {
       if ((hdim === 3) && d.check('FB')) this.FrontBox = false;
       if ((hdim === 3) && d.check('BB')) this.BackBox = false;
 
-      this._pfc = d.check('PFC');
-      this._plc = d.check('PLC') || this.AutoColor;
-      this._pmc = d.check('PMC');
+      if (d.check('PFC') && !this._pfc)
+         this._pfc = 2;
+      if ((d.check('PLC') || this.AutoColor) && !this._plc)
+         this._plc = 2;
+      if (d.check('PMC') && !this._pmc)
+         this._pmc = 2;
 
       if (d.check('L')) { this.Line = true; this.Hist = false; this.Error = false; }
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
@@ -72119,49 +72359,27 @@ class THistPainter extends ObjectPainter {
          this.check_pad_range = use_pad ? 'pad_range' : true;
    }
 
-   /** @summary Generates automatic color for some objects painters */
-   createAutoColor(numprimitives) {
-      if (!numprimitives)
-         numprimitives = this.getPadPainter()?.getRootPad(true)?.fPrimitves?.arr?.length || 5;
-
-      let indx = this._auto_color || 0;
-      this._auto_color = indx + 1;
-
-      const pal = this.getHistPalette();
-
-      if (pal) {
-         if (numprimitives < 2) numprimitives = 2;
-         if (indx >= numprimitives) indx = numprimitives - 1;
-         const palindx = Math.round(indx * (pal.getLength()-3) / (numprimitives-1)),
-               colvalue = pal.getColor(palindx);
-
-         return this.addColor(colvalue);
-      }
-
-      this._auto_color = this._auto_color % 8;
-      return indx+2;
-   }
-
    /** @summary Create necessary histogram draw attributes */
-   createHistDrawAttributes() {
-      const histo = this.getHisto();
+   createHistDrawAttributes(only_check_auto) {
+      const histo = this.getHisto(), o = this.options;
 
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor();
-            let exec = '';
-            if (this.options._pfc) { histo.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
-            if (this.options._plc) { histo.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
-            if (this.options._pmc) { histo.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
-            this.options._pfc = this.options._plc = this.options._pmc = false;
-            this._auto_exec = exec; // can be reused when sending option back to server
+      if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
+         const pp = this.getPadPainter();
+         if (isFunc(pp?.getAutoColor)) {
+            const icolor = pp.getAutoColor(histo.$num_histos);
+            this._auto_exec = ''; // can be reused when sending option back to server
+            if (o._pfc > 1) { o._pfc = 1; histo.fFillColor = icolor; this._auto_exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
+            if (o._plc > 1) { o._plc = 1; histo.fLineColor = icolor; this._auto_exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
+            if (o._pmc > 1) { o._pmc = 1; histo.fMarkerColor = icolor; this._auto_exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
          }
       }
 
-      this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
-
-      this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+      if (only_check_auto)
+         this.deleteAttr();
+      else {
+         this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
+         this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+      }
    }
 
    /** @summary Update axes attributes in target histogram
@@ -72204,7 +72422,8 @@ class THistPainter extends ObjectPainter {
    updateObject(obj, opt) {
       const histo = this.getHisto(),
             fp = this.getFramePainter(),
-            pp = this.getPadPainter();
+            pp = this.getPadPainter(),
+            o = this.options;
 
       if (obj !== histo) {
          if (!this.matchObjectType(obj)) return false;
@@ -72222,14 +72441,22 @@ class THistPainter extends ObjectPainter {
          }
 
          // special treatment for webcanvas - also name can be changed
-         if (this.snapid !== undefined)
+         if (this.snapid !== undefined) {
             histo.fName = obj.fName;
+            o._pfc = o._plc = o._pmc = 0; // auto colors should be processed in web canvas
+         }
 
-         histo.fFillColor = obj.fFillColor;
+         if (!o._pfc)
+            histo.fFillColor = obj.fFillColor;
          histo.fFillStyle = obj.fFillStyle;
-         histo.fLineColor = obj.fLineColor;
+         if (!o._plc)
+            histo.fLineColor = obj.fLineColor;
          histo.fLineStyle = obj.fLineStyle;
          histo.fLineWidth = obj.fLineWidth;
+         if (!o._pmc)
+            histo.fMarkerColor = obj.fMarkerColor;
+         histo.fMarkerSize = obj.fMarkerSize;
+         histo.fMarkerStyle = obj.fMarkerStyle;
 
          histo.fEntries = obj.fEntries;
          histo.fTsumw = obj.fTsumw;
@@ -72260,7 +72487,7 @@ class THistPainter extends ObjectPainter {
          histo.fSumw2 = obj.fSumw2;
 
          if (this.getDimension() === 1)
-            this.options.decodeSumw2(histo);
+            o.decodeSumw2(histo);
 
          if (this.isTProfile())
             histo.fBinEntries = obj.fBinEntries;
@@ -72276,14 +72503,14 @@ class THistPainter extends ObjectPainter {
          const changed_opt = (histo.fOption !== obj.fOption);
          histo.fOption = obj.fOption;
 
-         if (((opt !== undefined) && (this.options.original !== opt)) || changed_opt)
+         if (((opt !== undefined) && (o.original !== opt)) || changed_opt)
             this.decodeOptions(opt || histo.fOption);
       }
 
-      if (!this.options.ominimum)
-         this.options.minimum = histo.fMinimum;
-      if (!this.options.omaximum)
-         this.options.maximum = histo.fMaximum;
+      if (!o.ominimum)
+         o.minimum = histo.fMinimum;
+      if (!o.omaximum)
+         o.maximum = histo.fMaximum;
 
       if (this.snapid || !fp || !fp.zoomChangedInteractive())
          this.checkPadRange();
@@ -72450,7 +72677,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Fill option object used in TWebCanvas */
    fillWebObjectOptions(res) {
-      if (this._auto_exec) {
+      if (this._auto_exec && res) {
          res.fcust = 'auto_exec:' + this._auto_exec;
          delete this._auto_exec;
       }
@@ -79474,8 +79701,10 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             path_err += `M${midx-dlw},${my-yerr1+dend}h${2*dlw}m${-dlw},0v${yerr1+yerr2-2*dend}m${-dlw},0h${2*dlw}`;
          else
             path_err += `M${midx},${my-yerr1+dend}v${yerr1+yerr2-2*dend}`;
-         if (hints_err !== null)
-            hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
+         if (hints_err !== null) {
+            const he1 = Math.max(yerr1, 5), he2 = Math.max(yerr2, 5);
+            hints_err += `M${midx-edx},${my-he1}h${2*edx}v${he1+he2}h${-2*edx}z`;
+         }
       }, draw_bin = bin => {
          if (extract_bin(bin)) {
             if (show_text) {
@@ -80161,7 +80390,7 @@ class TH1Painter extends TH1Painter$2 {
       if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
       } else {
-         this.deleteAttr();
+         this.createHistDrawAttributes(true);
 
          this.scanContent(true); // may be required for axis drawings
 
@@ -80431,7 +80660,7 @@ class TH2Painter extends TH2Painter$2 {
          if (logz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
-         this.deleteAttr();
+         this.createHistDrawAttributes(true);
 
          if (is_main) {
             assignFrame3DMethods(main);
@@ -80542,6 +80771,7 @@ function proivdeEvalPar(obj, check_save) {
                 .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
                 .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
+                .replace(/\bsqrt\(/g, 'Math.sqrt(')
                 .replace(/\bxygaus\(/g, 'this.$math.gausxy(this, x, y, ')
                 .replace(/\bgaus\(/g, 'this.$math.gaus(this, x, ')
                 .replace(/\bgausn\(/g, 'this.$math.gausn(this, x, ')
@@ -80625,14 +80855,20 @@ function _getTF1Save(func, x) {
   * @desc First try evaluate, if not possible - check saved buffer
   * @private */
 function getTF1Value(func, x, skip_eval = undefined) {
-   let y = 0;
+   let y = 0, iserr = false;
    if (!func)
       return 0;
 
-   if (!skip_eval && !func.evalPar)
-      proivdeEvalPar(func);
+   if (!skip_eval && !func.evalPar) {
+      try {
+         if (!proivdeEvalPar(func))
+            iserr = true;
+      } catch {
+         iserr = true;
+      }
+   }
 
-   if (func.evalPar) {
+   if (func.evalPar && !iserr) {
       try {
          y = func.evalPar(x);
          return y;
@@ -80749,8 +80985,14 @@ class TF1Painter extends TH1Painter$2 {
          const np = Math.max(tf1.fNpx, 100);
          let iserror = false;
 
-         if (!tf1.evalPar && !proivdeEvalPar(tf1))
-            iserror = true;
+         if (!tf1.evalPar) {
+            try {
+               if (!proivdeEvalPar(tf1))
+                  iserror = true;
+            } catch {
+               iserror = true;
+            }
+         }
 
          ensureBins(np);
 
@@ -97731,8 +97973,10 @@ class TFile {
 
                const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
                xhr.addEventListener('progress', oEvent => {
-                  if (oEvent.lengthComputable)
-                     progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
+                  if (oEvent.lengthComputable) {
+                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
+                        xhr.abort();
+                  }
                });
             } else if (first_block_retry && isFunc(xhr.addEventListener)) {
                xhr.addEventListener('progress', oEvent => {
@@ -100172,7 +100416,7 @@ class TDrawSelector extends TSelector {
          const now = new Date().getTime();
          if (now - this.lasttm > this.monitoring) {
             this.lasttm = now;
-            if (this.progress_callback)
+            if (isFunc(this.progress_callback))
                this.progress_callback(this.hist);
          }
       }
@@ -100993,7 +101237,7 @@ async function treeProcess(tree, selector, args) {
 
          const portion = (handle.staged_prev + value * (handle.staged_now - handle.staged_prev)) /
                          (handle.process_max - handle.process_min);
-         handle.selector.ShowProgress(portion);
+        return handle.selector.ShowProgress(portion);
       }
 
       function ProcessBlobs(blobs, places) {
@@ -101152,7 +101396,10 @@ async function treeProcess(tree, selector, args) {
       if (handle.process_max > handle.process_min)
          portion = (handle.staged_prev - handle.process_min) / (handle.process_max - handle.process_min);
 
-      handle.selector.ShowProgress(portion);
+      if (handle.selector.ShowProgress(portion) === 'break') {
+         handle.selector.Terminate(true);
+         return resolveFunc(handle.selector);
+      }
 
       handle.progress_showtm = new Date().getTime();
 
@@ -101906,7 +102153,10 @@ async function draw(dom, obj, opt) {
          promise = getPromise(handle.func(dom, obj, opt));
 
       return promise.then(p => {
-         if (!painter) painter = p;
+         if (!painter)
+            painter = p;
+         if (painter === false)
+            return null;
          if (!painter)
              throw Error(`Fail to draw object ${type_info}`);
          if (isObject(painter) && !painter.options)
@@ -102994,19 +103244,19 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Create file hierarchy
      * @private */
-   fileHierarchy(file) {
-      const painter = this,
+   fileHierarchy(file, folder) {
+      const painter = this;
+      if (!folder) folder = {};
 
-       folder = {
-         _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`,
-         _kind: kindTFile,
-         _file: file,
-         _fullurl: file.fFullURL,
-         _localfile: file.fLocalFile,
-         _had_direct_read: false,
-         // this is central get method, item or itemname can be used, returns promise
-         _get(item, itemname) {
+      folder._name = file.fFileName;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`;
+      folder._kind = kindTFile;
+      folder._file = file;
+      folder._fullurl = file.fFullURL;
+      folder._localfile = file.fLocalFile;
+      folder._had_direct_read = false;
+      // this is central get method, item or itemname can be used, returns promise
+      folder._get = function(item, itemname) {
             if (item?._readobj)
                return Promise.resolve(item._readobj);
 
@@ -103051,8 +103301,7 @@ class HierarchyPainter extends BasePainter {
             if (this._localfile) return openFile(this._localfile).then(f => readFileObject(f));
             if (this._fullurl) return openFile(this._fullurl).then(f => readFileObject(f));
             return Promise.resolve(null);
-         }
-      };
+         };
 
       keysHierarchy(folder, file.fKeys, file, '');
 
@@ -103538,7 +103787,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          const pr = this.expandItem(this.itemFullName(hitem));
-         if (isPromise(pr))
+         if (isPromise(pr) && isObject(promises))
             promises.push(pr);
          if (hitem._childs !== undefined) hitem._isopen = true;
          return hitem._isopen;
@@ -104834,6 +105083,7 @@ class HierarchyPainter extends BasePainter {
       if (isfileopened) return;
 
       return httpRequest(filepath, 'object').then(res => {
+         if (!res) return;
          const h1 = { _jsonfile: filepath, _kind: prROOT + res._typename, _jsontmp: res, _name: filepath.split('/').pop() };
          if (res.fTitle) h1._title = res.fTitle;
          h1._get = function(item /* ,itemname */) {
@@ -104908,6 +105158,61 @@ class HierarchyPainter extends BasePainter {
             setTimeout(() => select('#gui_fileCORS').style('background', ''), 5000);
          return false;
       }).finally(() => showProgress());
+   }
+
+   /** @summary Create list of files for specified directory */
+   async listServerDir(dirname) {
+      return httpRequest(dirname, 'text').then(res => {
+         if (!res) return false;
+         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true };
+         let p = 0;
+         while (p < res.length) {
+            p = res.indexOf('a href="', p+1);
+            if (p < 0) break;
+            p += 8;
+            const p2 = res.indexOf('"', p+1);
+            if (p2 < 0) break;
+
+            const fname = res.slice(p, p2);
+            p = p2 + 1;
+            if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
+                  _click_action: 'expand', _more: true, _obj: {},
+                  _expand: item => {
+                     return openFile(item._url).then(file => {
+                        if (!file) return false;
+                        delete item._exapnd;
+                        delete item._more;
+                        delete item._click_action;
+                        delete item._obj;
+                        item._isopen = true;
+                        this.fileHierarchy(file, item);
+                        this.updateTreeNode(item);
+                     });
+                  }
+               });
+            } else if (((fname.lastIndexOf('.json.gz') === fname.length - 8) && (fname.length > 8)) ||
+                       ((fname.lastIndexOf('.json') === fname.length - 5) && (fname.length > 5))) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _jsonfile: dirname + fname, _can_draw: true,
+                  _get: item => {
+                     return httpRequest(item._jsonfile, 'object').then(res => {
+                        if (res) {
+                          item._kind = prROOT + res._typename;
+                          item._jsontmp = res;
+                          this.updateTreeNode(item);
+                        }
+                        return res;
+                     });
+                  }
+               });
+            }
+         }
+         if (h._childs.length > 0)
+            this.h = h;
+         return true;
+      });
    }
 
    /** @summary Apply loaded TStyle object
@@ -105534,6 +105839,7 @@ class HierarchyPainter extends BasePainter {
 
       let prereq = getOption('prereq') || '',
           load = getOption('load'),
+          dir = getOption('dir'),
           inject = getOption('inject'),
           filesarr = getOptionAsArray('#file;files'),
           itemsarr = getOptionAsArray('#item;items'),
@@ -105648,7 +105954,9 @@ class HierarchyPainter extends BasePainter {
             promise = this.openJsonFile(jsonarr.shift());
          else if (filesarr.length > 0)
             promise = this.openRootFile(filesarr.shift());
-         else if (expanditems.length > 0)
+         else if (dir) {
+            promise = this.listServerDir(dir); dir = '';
+         } else if (expanditems.length > 0)
             promise = this.expandItem(expanditems.shift());
          else if (style.length > 0)
             promise = this.applyStyle(style.shift());
@@ -106099,10 +106407,13 @@ function readStyleFromURL(url) {
 
    const d = decodeUrl(url);
 
-   function get_bool(name, field) {
+   function get_bool(name, field, special) {
       if (d.has(name)) {
          const val = d.get(name);
-         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
+         if (special && (val === special))
+            settings[field] = special;
+         else
+            settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -106176,7 +106487,11 @@ function readStyleFromURL(url) {
       settings.Latex = constants$1.Latex.fromString(latex);
 
    if (d.has('nomenu')) settings.ContextMenu = false;
-   if (d.has('noprogress')) settings.ProgressBox = false;
+   if (d.has('noprogress'))
+      settings.ProgressBox = false;
+   else
+      get_bool('progress', 'ProgressBox', 'modal');
+
    if (d.has('notouch')) browser.touches = false;
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
@@ -106273,7 +106588,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       else {
          select('html').style('height', '100%');
          select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
+         myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
       }
    }
 
@@ -106967,9 +107282,12 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       if (d.check('POS3D_', true)) res.pos3d = d.partAsInt() - 0.5;
 
-      res._pfc = d.check('PFC');
-      res._plc = d.check('PLC');
-      res._pmc = d.check('PMC');
+      if (d.check('PFC') && !res._pfc)
+         res._pfc = 2;
+      if (d.check('PLC') && !res._plc)
+         res._plc = 2;
+      if (d.check('PMC') && !res._pmc)
+         res._pmc = 2;
 
       if (d.check('A')) res.Axis = d.check('I') ? 'A;' : _a; // I means invisible axis
       if (d.check('X+')) { res.Axis += 'X+'; res.second_x = has_main; }
@@ -107686,6 +108004,28 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       console.log('Load ./hist/TGraphPainter.mjs to draw graph in 3D');
    }
 
+   /** @summary Create necessary histogram draw attributes */
+   createGraphDrawAttributes(only_check_auto) {
+      const graph = this.getGraph(), o = this.options;
+      if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
+         const pp = this.getPadPainter();
+         if (isFunc(pp?.getAutoColor)) {
+            const icolor = pp.getAutoColor(graph.$num_graphs);
+            this._auto_exec = ''; // can be reused when sending option back to server
+            if (o._pfc > 1) { o._pfc = 1; graph.fFillColor = icolor; this._auto_exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
+            if (o._plc > 1) { o._plc = 1; graph.fLineColor = icolor; this._auto_exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
+            if (o._pmc > 1) { o._pmc = 1; graph.fMarkerColor = icolor; this._auto_exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
+         }
+      }
+
+      if (only_check_auto)
+         this.deleteAttr();
+      else {
+         this.createAttLine({ attr: graph, can_excl: true });
+         this.createAttFill({ attr: graph });
+      }
+   }
+
    /** @summary draw TGraph */
    drawGraph() {
       const pmain = this.get_main(),
@@ -107703,19 +108043,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       this.createG(!pmain.pad_layer);
 
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor();
-            if (this.options._pfc) { graph.fFillColor = icolor; delete this.fillatt; }
-            if (this.options._plc) { graph.fLineColor = icolor; delete this.lineatt; }
-            if (this.options._pmc) { graph.fMarkerColor = icolor; delete this.markeratt; }
-            this.options._pfc = this.options._plc = this.options._pmc = false;
-         }
-      }
-
-      this.createAttLine({ attr: graph, can_excl: true });
-      this.createAttFill({ attr: graph });
+      this.createGraphDrawAttributes();
 
       this.fillatt.used = false; // mark used only when really used
 
@@ -108151,6 +108479,14 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          this.submitCanvExec(exec);
    }
 
+   /** @summary Fill option object used in TWebCanvas */
+   fillWebObjectOptions(res) {
+      if (this._auto_exec && res) {
+         res.fcust = 'auto_exec:' + this._auto_exec;
+         delete this._auto_exec;
+      }
+   }
+
    /** @summary Fill context menu */
    fillContextMenuItems(menu) {
       if (!this.snapid)
@@ -108173,8 +108509,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          if (method.fName === 'InsertPoint') {
             if (pnt) {
                const funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-                   userx = funcs.revertAxis('x', pnt.x) ?? 0,
-                   usery = funcs.revertAxis('y', pnt.y) ?? 0;
+                     userx = funcs.revertAxis('x', pnt.x) ?? 0,
+                     usery = funcs.revertAxis('y', pnt.y) ?? 0;
                this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, method.$execid);
             }
          } else if (method.$execid && (hint?.binindx !== undefined))
@@ -108197,6 +108533,23 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       graph.fNpoints = obj.fNpoints;
       graph.fMinimum = obj.fMinimum;
       graph.fMaximum = obj.fMaximum;
+
+      const o = this.options;
+
+      if (this.snapid !== undefined)
+         o._pfc = o._plc = o._pmc = 0; // auto colors should be processed in web canvas
+
+      if (!o._pfc)
+         graph.fFillColor = obj.fFillColor;
+      graph.fFillStyle = obj.fFillStyle;
+      if (!o._plc)
+         graph.fLineColor = obj.fLineColor;
+      graph.fLineStyle = obj.fLineStyle;
+      graph.fLineWidth = obj.fLineWidth;
+      if (!o._pmc)
+         graph.fMarkerColor = obj.fMarkerColor;
+      graph.fMarkerSize = obj.fMarkerSize;
+      graph.fMarkerStyle = obj.fMarkerStyle;
    }
 
    /** @summary Update TGraph object */
@@ -108363,6 +108716,8 @@ class TGraphPainter extends TGraphPainter$1 {
       if (fp.zoom_xmin !== fp.zoom_xmax)
         if ((this.options.pos3d < fp.zoom_xmin) || (this.options.pos3d > fp.zoom_xmax)) return;
 
+      this.createGraphDrawAttributes(true);
+
       const drawbins = this.optimizeBins(1000);
       let first = 0, last = drawbins.length-1;
 
@@ -108491,60 +108846,38 @@ async function drawPolyMarker3D$1() {
    });
 }
 
-function treeShowProgress(handle, str) {
-   if (isBatchMode() || (typeof document === 'undefined')) return;
-
-   if (!str)
-      return showProgress();
-
-   const main_box = document.createElement('p'),
-         text_node = document.createTextNode(str);
-
-   main_box.appendChild(text_node);
-   main_box.title = 'Click on element to break';
-
-   main_box.onclick = () => {
-      if (!handle._break) handle._break = 0;
-
-      if (++handle._break < 3) {
-         main_box.title = 'Will break after next I/O operation';
-         text_node.nodeValue = 'Breaking ... ';
-         return;
-      }
-      if (isFunc(handle.Abort))
-         handle.Abort();
-      showProgress();
-   };
-
-   showProgress(main_box);
-}
-
-
 /** @summary Show TTree::Draw progress during processing
   * @private */
 TDrawSelector.prototype.ShowProgress = function(value) {
+   let msg, ret;
    if ((value === undefined) || !Number.isFinite(value))
-      return showProgress();
+      msg = ret = '';
+   else if (this._break) {
+      msg = 'Breaking ... ';
+      ret = 'break';
+   } else {
+      if (this.last_progress !== value) {
+         const diff = value - this.last_progress;
+         if (!this.aver_diff) this.aver_diff = diff;
+         this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      }
 
-   if (this.last_progress !== value) {
-      const diff = value - this.last_progress;
-      if (!this.aver_diff) this.aver_diff = diff;
-      this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      this.last_progress = value;
+
+      let ndig = 0;
+      if (this.aver_diff <= 0)
+         ndig = 0;
+      else if (this.aver_diff < 0.0001)
+         ndig = 3;
+      else if (this.aver_diff < 0.001)
+         ndig = 2;
+      else if (this.aver_diff < 0.01)
+         ndig = 1;
+      msg = `TTree draw ${(value * 100).toFixed(ndig)} % `;
    }
 
-   this.last_progress = value;
-
-   let ndig = 0;
-   if (this.aver_diff <= 0)
-      ndig = 0;
-   else if (this.aver_diff < 0.0001)
-      ndig = 3;
-   else if (this.aver_diff < 0.001)
-      ndig = 2;
-   else if (this.aver_diff < 0.01)
-      ndig = 1;
-
-   treeShowProgress(this, `TTree draw ${(value * 100).toFixed(ndig)} % `);
+   showProgress(msg, -1, () => { this._break = 1; });
+   return ret;
 };
 
 /** @summary Draw result of tree drawing
@@ -108605,18 +108938,21 @@ async function treeDrawProgress(obj, final) {
 
    if (!this.last_pr) this.last_pr = Promise.resolve(true);
 
-    return this.last_pr.then(() => {
-       if (this.obj_painter)
-          this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
-       else {
-          this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
-             this.obj_painter = p;
-             if (!final) this.last_pr = null;
-             return p; // return painter for histogram
-          });
-       }
+   return this.last_pr.then(() => {
+      if (this.obj_painter)
+         this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
+      else if (!obj) {
+         if (final) console.log('no result after tree drawing');
+         this.last_pr = false; // return false indicating no drawing is done
+      } else {
+         this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
+            this.obj_painter = p;
+            if (!final) this.last_pr = null;
+            return p; // return painter for histogram
+         });
+      }
 
-       return final ? this.last_pr : null;
+      return final ? this.last_pr : null;
    });
 }
 
@@ -108949,7 +109285,7 @@ async function drawTree(dom, obj, opt) {
    let pr;
    if (args.expr === 'testio') {
       args.testio = true;
-      args.showProgress = msg => treeShowProgress(args, msg);
+      args.showProgress = msg => showProgress(msg, -1, () => { args._break = 1; });
       pr = treeIOTest(tree, args);
    } else if (args.expr || args.branch)
       pr = treeDraw(tree, args);
@@ -109003,12 +109339,26 @@ class THStackPainter extends ObjectPainter {
       lst.Add(clone(stack.fHists.arr[0]), stack.fHists.opt[0]);
       for (let i = 1; i < nhists; ++i) {
          const hnext = clone(stack.fHists.arr[i]),
-             hnextopt = stack.fHists.opt[i],
-             hprev = lst.arr[i-1];
+               hnextopt = stack.fHists.opt[i],
+               hprev = lst.arr[i-1],
+               xnext = hnext.fXaxis, xprev = hprev.fXaxis;
 
-         if ((hnext.fNbins !== hprev.fNbins) ||
-             (hnext.fXaxis.fXmin !== hprev.fXaxis.fXmin) ||
-             (hnext.fXaxis.fXmax !== hprev.fXaxis.fXmax)) {
+         let match = (xnext.fNbins === xprev.fNbins) &&
+                     (xnext.fXmin === xprev.fXmin) &&
+                     (xnext.fXmax === xprev.fXmax);
+
+         if (!match && (xnext.fNbins > 0) && (xnext.fNbins < xprev.fNbins) && (xnext.fXmin === xprev.fXmin) &&
+             (Math.abs((xnext.fXmax - xnext.fXmin)/xnext.fNbins - (xprev.fXmax - xprev.fXmin)/xprev.fNbins) < 0.0001)) {
+            // simple extension of histogram to make sum
+            const arr = new Array(hprev.fNcells).fill(0);
+            for (let n = 1; n <= xnext.fNbins; ++n)
+               arr[n] = hnext.fArray[n];
+            hnext.fNcells = hprev.fNcells;
+            Object.assign(xnext, xprev);
+            hnext.fArray = arr;
+            match = true;
+         }
+         if (!match) {
             console.warn(`When drawing THStack, cannot sum-up histograms ${hnext.fName} and ${hprev.fName}`);
             lst.Clear();
             return false;
@@ -109131,6 +109481,8 @@ class THStackPainter extends ObjectPainter {
          hopt += ' ' + this.options.hopt;
       if (this.options.draw_errors && !hopt)
          hopt = 'E';
+      if (!this.options.pads)
+         hopt += ' same nostat' + this.options.auto;
       return hopt;
    }
 
@@ -109147,17 +109499,6 @@ class THStackPainter extends ObjectPainter {
             subid = this.options.nostack ? `hists_${rindx}` : `stack_${rindx}`,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, hlst.opt[rindx]);
-      let exec = '';
-
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor(nhists);
-            if (this.options._pfc) { hist.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
-            if (this.options._plc) { hist.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
-            if (this.options._pmc) { hist.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
-         }
-      }
 
       // handling of 'pads' draw option
       if (pad_painter) {
@@ -109170,7 +109511,6 @@ class THStackPainter extends ObjectPainter {
          return this.hdraw_func(subpad_painter.getDom(), hist, hopt).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
-               subp._auto_exec = exec;
                this.painters.push(subp);
             }
             subpad_painter.selectCurrentPad(prev_name);
@@ -109182,8 +109522,11 @@ class THStackPainter extends ObjectPainter {
       // also used to provide tooltips
       if ((rindx > 0) && !this.options.nostack)
          hist.$baseh = hlst.arr[rindx - 1];
+      // this number used for auto colors creation
+      if (this.options.auto)
+         hist.$num_histos = nhists;
 
-      return this.hdraw_func(this.getDom(), hist, hopt + ' same nostat').then(subp => {
+      return this.hdraw_func(this.getDom(), hist, hopt).then(subp => {
           subp.setSecondaryId(this, subid);
           this.painters.push(subp);
           return this.drawNextHisto(indx+1, pad_painter);
@@ -109193,7 +109536,7 @@ class THStackPainter extends ObjectPainter {
    /** @summary Decode draw options of THStack painter */
    decodeOptions(opt) {
       if (!this.options) this.options = {};
-      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '' });
+      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '', auto: '' });
 
       const stack = this.getObject(),
             hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null),
@@ -109227,9 +109570,7 @@ class THStackPainter extends ObjectPainter {
 
       d.check('NOCLEAR'); // ignore noclear option
 
-      this.options._pfc = d.check('PFC');
-      this.options._plc = d.check('PLC');
-      this.options._pmc = d.check('PMC');
+      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) this.options.auto += ' ' + f; });
 
       this.options.pads = d.check('PADS');
       if (this.options.pads) this.options.nostack = true;
@@ -109329,10 +109670,11 @@ class THStackPainter extends ObjectPainter {
             nhists = hlst?.arr?.length ?? 0;
 
       if (nhists !== this.painters.length) {
+         this.did_update = 1;
          this.getPadPainter()?.cleanPrimitives(objp => this.painters.indexOf(objp) >= 0);
          this.painters = [];
-         this.did_update = true;
       } else {
+         this.did_update = 2;
          for (let indx = 0; indx < nhists; ++indx) {
             const rindx = this.options.horder ? indx : nhists - indx - 1,
                   hist = hlst.arr[rindx];
@@ -109345,10 +109687,18 @@ class THStackPainter extends ObjectPainter {
 
    /** @summary Redraw THStack
      * @desc Do something if previous update had changed number of histograms */
-   redraw() {
-      if (this.did_update) {
+   redraw(reason) {
+      if (this.did_update === 1) {
          delete this.did_update;
          return this.drawNextHisto(0, this.options.pads ? this.getPadPainter() : null);
+      } else if (this.did_update === 2) {
+         delete this.did_update;
+         const redrawSub = indx => {
+            if (indx >= this.painters.length)
+               return Promise.resolve(this);
+            return this.painters[indx].redraw(reason).then(() => redrawSub(indx+1));
+         };
+         return redrawSub(0);
       }
    }
 
@@ -111906,6 +112256,8 @@ __proto__: null,
 TScatterPainter: TScatterPainter
 });
 
+const kLineNDC = BIT(14);
+
 class TLinePainter extends ObjectPainter {
 
    /** @summary Start interactive moving */
@@ -111944,14 +112296,16 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Calculate line coordinates */
    prepareDraw() {
-      const line = this.getObject(), kLineNDC = BIT(14);
+      const line = this.getObject();
 
       this.isndc = line.TestBit(kLineNDC);
 
-      this.x1 = this.axisToSvg('x', line.fX1, this.isndc, true);
-      this.y1 = this.axisToSvg('y', line.fY1, this.isndc, true);
-      this.x2 = this.axisToSvg('x', line.fX2, this.isndc, true);
-      this.y2 = this.axisToSvg('y', line.fY2, this.isndc, true);
+      const func = this.getAxisToSvgFunc(this.isndc, true);
+
+      this.x1 = func.x(line.fX1);
+      this.y1 = func.y(line.fY1);
+      this.x2 = func.x(line.fX2);
+      this.y2 = func.y(line.fY2);
 
       this.createAttLine({ attr: line });
    }
@@ -111967,9 +112321,9 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Redraw line */
    redraw() {
-      this.prepareDraw();
-
       this.createG();
+
+      this.prepareDraw();
 
       const elem = this.draw_g.append('svg:path')
                        .attr('d', this.createPath())
@@ -112200,7 +112554,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       const ngr = Math.min(graphs.arr.length, this.painters.length);
 
       for (let i = 0; i < ngr; ++i) {
-         if (this.painters[i].updateObject(graphs.arr[i], graphs.opt[i]))
+         if (this.painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this._restopt) + this._auto))
             isany = true;
       }
 
@@ -112376,37 +112730,27 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
    }
 
    /** @summary method draws next graph  */
-   async drawNextGraph(indx, opt) {
+   async drawNextGraph(indx) {
       const graphs = this.getObject().fGraphs;
-      let exec = '';
 
       // at the end of graphs drawing draw functions (if any)
-      if (indx >= graphs.arr.length) {
-         this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
+      if (indx >= graphs.arr.length)
          return this;
-      }
 
-      const gr = graphs.arr[indx], o = graphs.opt[indx] || opt || '';
+      const gr = graphs.arr[indx],
+            draw_opt = (graphs.opt[indx] || this._restopt) + this._auto;
 
-      // if there is auto colors assignment, try to provide it
-      if (this._pfc || this._plc || this._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor(graphs.arr.length);
-            if (this._pfc) { gr.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
-            if (this._plc) { gr.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
-            if (this._pmc) { gr.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
-         }
-      }
+      // used in automatic colors numbering
+      if (this._auto)
+         gr.$num_graphs = graphs.arr.length;
 
-      return this.drawGraph(gr, o, graphs.arr.length - indx).then(subp => {
+      return this.drawGraph(gr, draw_opt, graphs.arr.length - indx).then(subp => {
          if (subp) {
             subp.setSecondaryId(this, `graphs_${indx}`);
             this.painters.push(subp);
-            subp._auto_exec = exec;
          }
 
-         return this.drawNextGraph(indx+1, opt);
+         return this.drawNextGraph(indx+1);
       });
    }
 
@@ -112416,13 +112760,14 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       const d = new DrawOptions(opt);
 
       painter._3d = d.check('3D');
-      painter._pfc = d.check('PFC');
-      painter._plc = d.check('PLC');
-      painter._pmc = d.check('PMC');
+      painter._auto = ''; // extra options for auto colors
+      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) painter._auto += ' ' + f; });
 
       let hopt = '';
       if (d.check('FB') && painter._3d) hopt += 'FB'; // will be directly combined with LEGO
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+
+      painter._restopt = d.remain();
 
       let promise = Promise.resolve(true);
       if (d.check('A') || !painter.getMainPainter()) {
@@ -112437,7 +112782,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
 
       return promise.then(() => {
          painter.addToPadPrimitives();
-         return painter.drawNextGraph(0, d.remain());
+         return painter.drawNextGraph(0);
       }).then(() => {
          const handler = new FunctionsHandler(painter, painter.getPadPainter(), painter.getObject().fFunctions, true);
          return handler.drawNext(0); // returns painter
@@ -113826,15 +114171,30 @@ class TGaxisPainter extends TAxisPainter {
    }
 
    /** @summary Check if there is function for TGaxis can be found */
-   checkFuncion() {
+   async checkFuncion() {
       const gaxis = this.getObject();
-      if (!gaxis.fFunctionName)
+      if (!gaxis.fFunctionName) {
          this.axis_func = null;
-      else
-         this.axis_func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
+         return;
+      }
+      const func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
 
-      if (this.axis_func)
-         proivdeEvalPar(this.axis_func);
+      let promise = Promise.resolve(func);
+      if (!func) {
+         const h = getHPainter(),
+               item = h?.findItem({ name: gaxis.fFunctionName, check_keys: true });
+         if (item) {
+            promise = h.getObject({ item }).then(res => {
+               return res?.obj?._typename === clTF1 ? res.obj : null;
+            });
+         }
+      }
+
+      return promise.then(f => {
+         this.axis_func = f;
+         if (f)
+            proivdeEvalPar(f);
+      });
    }
 
    /** @summary Create handle for custom function in the axis */
@@ -113891,9 +114251,8 @@ class TGaxisPainter extends TAxisPainter {
 
       return ensureTCanvas(painter, false).then(() => {
          if (opt) painter.convertTo(opt);
-         painter.checkFuncion();
-         return painter.redraw();
-      });
+         return painter.checkFuncion();
+      }).then(() => painter.redraw());
    }
 
 } // class TGaxisPainter
@@ -117317,7 +117676,7 @@ class RPadPainter extends RObjectPainter {
            .style('width', '100%')
            .style('height', '100%')
            .style('position', 'absolute')
-           .style('inset', '0px');
+           .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
       }
 
       svg.style('filter', settings.DarkMode ? 'invert(100%)' : null);
@@ -118524,6 +118883,295 @@ class RPadPainter extends RObjectPainter {
 } // class RPadPainter
 
 /**
+ * [js-sha256]{@link https://github.com/emn178/js-sha256}
+ *
+ * @version 0.10.1
+ * @author Chen, Yi-Cyuan [emn178@gmail.com]
+ * @copyright Chen, Yi-Cyuan 2014-2023
+ * @license MIT
+ */
+
+const HEX_CHARS = '0123456789abcdef'.split(''),
+      EXTRA = [-2147483648, 8388608, 32768, 128],
+      SHIFT = [24, 16, 8, 0],
+      K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+           0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+           0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+           0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+           0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+           0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+           0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+           0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+
+
+class Sha256 {
+
+  constructor(is224) {
+    this.blocks = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    if (is224) {
+      this.h0 = 0xc1059ed8;
+      this.h1 = 0x367cd507;
+      this.h2 = 0x3070dd17;
+      this.h3 = 0xf70e5939;
+      this.h4 = 0xffc00b31;
+      this.h5 = 0x68581511;
+      this.h6 = 0x64f98fa7;
+      this.h7 = 0xbefa4fa4;
+    } else { // 256
+      this.h0 = 0x6a09e667;
+      this.h1 = 0xbb67ae85;
+      this.h2 = 0x3c6ef372;
+      this.h3 = 0xa54ff53a;
+      this.h4 = 0x510e527f;
+      this.h5 = 0x9b05688c;
+      this.h6 = 0x1f83d9ab;
+      this.h7 = 0x5be0cd19;
+    }
+
+    this.block = this.start = this.bytes = this.hBytes = 0;
+    this.finalized = this.hashed = false;
+    this.first = true;
+    this.is224 = is224;
+  }
+
+  /** One can use only string or Uint8Array */
+  update(message) {
+    if (this.finalized)
+      return;
+
+    const notString = (typeof message !== 'string'),
+          length = message.length, blocks = this.blocks;
+
+    let code, index = 0, i;
+
+    while (index < length) {
+      if (this.hashed) {
+        this.hashed = false;
+        blocks[0] = this.block;
+        blocks[16] = blocks[1] = blocks[2] = blocks[3] =
+          blocks[4] = blocks[5] = blocks[6] = blocks[7] =
+          blocks[8] = blocks[9] = blocks[10] = blocks[11] =
+          blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+      }
+
+      if (notString) {
+        for (i = this.start; index < length && i < 64; ++index)
+          blocks[i >> 2] |= message[index] << SHIFT[i++ & 3];
+      } else {
+        for (i = this.start; index < length && i < 64; ++index) {
+          code = message.charCodeAt(index);
+          if (code < 0x80)
+            blocks[i >> 2] |= code << SHIFT[i++ & 3];
+          else if (code < 0x800) {
+            blocks[i >> 2] |= (0xc0 | (code >> 6)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
+          } else if (code < 0xd800 || code >= 0xe000) {
+            blocks[i >> 2] |= (0xe0 | (code >> 12)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
+          } else {
+            code = 0x10000 + (((code & 0x3ff) << 10) | (message.charCodeAt(++index) & 0x3ff));
+            blocks[i >> 2] |= (0xf0 | (code >> 18)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | ((code >> 12) & 0x3f)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
+            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
+          }
+        }
+      }
+
+      this.lastByteIndex = i;
+      this.bytes += i - this.start;
+      if (i >= 64) {
+        this.block = blocks[16];
+        this.start = i - 64;
+        this.hash();
+        this.hashed = true;
+      } else
+        this.start = i;
+    }
+    if (this.bytes > 4294967295) {
+      this.hBytes += this.bytes / 4294967296 << 0;
+      this.bytes = this.bytes % 4294967296;
+    }
+    return this;
+  }
+
+  finalize() {
+    if (this.finalized)
+      return;
+    this.finalized = true;
+    const blocks = this.blocks,
+          i = this.lastByteIndex;
+    blocks[16] = this.block;
+    blocks[i >> 2] |= EXTRA[i & 3];
+    this.block = blocks[16];
+    if (i >= 56) {
+      if (!this.hashed)
+        this.hash();
+      blocks[0] = this.block;
+      blocks[16] = blocks[1] = blocks[2] = blocks[3] =
+      blocks[4] = blocks[5] = blocks[6] = blocks[7] =
+      blocks[8] = blocks[9] = blocks[10] = blocks[11] =
+      blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
+    }
+    blocks[14] = this.hBytes << 3 | this.bytes >>> 29;
+    blocks[15] = this.bytes << 3;
+    this.hash();
+  }
+
+  hash() {
+    const blocks = this.blocks;
+    let a = this.h0, b = this.h1, c = this.h2, d = this.h3, e = this.h4, f = this.h5, g = this.h6,
+        h = this.h7, j, s0, s1, maj, t1, t2, ch, ab, da, cd, bc;
+
+    for (j = 16; j < 64; ++j) {
+      // rightrotate
+      t1 = blocks[j - 15];
+      s0 = ((t1 >>> 7) | (t1 << 25)) ^ ((t1 >>> 18) | (t1 << 14)) ^ (t1 >>> 3);
+      t1 = blocks[j - 2];
+      s1 = ((t1 >>> 17) | (t1 << 15)) ^ ((t1 >>> 19) | (t1 << 13)) ^ (t1 >>> 10);
+      blocks[j] = blocks[j - 16] + s0 + blocks[j - 7] + s1 << 0;
+    }
+
+    bc = b & c;
+    for (j = 0; j < 64; j += 4) {
+      if (this.first) {
+        if (this.is224) {
+          ab = 300032;
+          t1 = blocks[0] - 1413257819;
+          h = t1 - 150054599 << 0;
+          d = t1 + 24177077 << 0;
+        } else {
+          ab = 704751109;
+          t1 = blocks[0] - 210244248;
+          h = t1 - 1521486534 << 0;
+          d = t1 + 143694565 << 0;
+        }
+        this.first = false;
+      } else {
+        s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        ab = a & b;
+        maj = ab ^ (a & c) ^ bc;
+        ch = (e & f) ^ (~e & g);
+        t1 = h + s1 + ch + K[j] + blocks[j];
+        t2 = s0 + maj;
+        h = d + t1 << 0;
+        d = t1 + t2 << 0;
+      }
+      s0 = ((d >>> 2) | (d << 30)) ^ ((d >>> 13) | (d << 19)) ^ ((d >>> 22) | (d << 10));
+      s1 = ((h >>> 6) | (h << 26)) ^ ((h >>> 11) | (h << 21)) ^ ((h >>> 25) | (h << 7));
+      da = d & a;
+      maj = da ^ (d & b) ^ ab;
+      ch = (h & e) ^ (~h & f);
+      t1 = g + s1 + ch + K[j + 1] + blocks[j + 1];
+      t2 = s0 + maj;
+      g = c + t1 << 0;
+      c = t1 + t2 << 0;
+      s0 = ((c >>> 2) | (c << 30)) ^ ((c >>> 13) | (c << 19)) ^ ((c >>> 22) | (c << 10));
+      s1 = ((g >>> 6) | (g << 26)) ^ ((g >>> 11) | (g << 21)) ^ ((g >>> 25) | (g << 7));
+      cd = c & d;
+      maj = cd ^ (c & a) ^ da;
+      ch = (g & h) ^ (~g & e);
+      t1 = f + s1 + ch + K[j + 2] + blocks[j + 2];
+      t2 = s0 + maj;
+      f = b + t1 << 0;
+      b = t1 + t2 << 0;
+      s0 = ((b >>> 2) | (b << 30)) ^ ((b >>> 13) | (b << 19)) ^ ((b >>> 22) | (b << 10));
+      s1 = ((f >>> 6) | (f << 26)) ^ ((f >>> 11) | (f << 21)) ^ ((f >>> 25) | (f << 7));
+      bc = b & c;
+      maj = bc ^ (b & d) ^ cd;
+      ch = (f & g) ^ (~f & h);
+      t1 = e + s1 + ch + K[j + 3] + blocks[j + 3];
+      t2 = s0 + maj;
+      e = a + t1 << 0;
+      a = t1 + t2 << 0;
+      this.chromeBugWorkAround = true;
+    }
+
+    this.h0 = this.h0 + a << 0;
+    this.h1 = this.h1 + b << 0;
+    this.h2 = this.h2 + c << 0;
+    this.h3 = this.h3 + d << 0;
+    this.h4 = this.h4 + e << 0;
+    this.h5 = this.h5 + f << 0;
+    this.h6 = this.h6 + g << 0;
+    this.h7 = this.h7 + h << 0;
+  }
+
+  digest() {
+    this.finalize();
+
+    const h0 = this.h0, h1 = this.h1, h2 = this.h2, h3 = this.h3, h4 = this.h4, h5 = this.h5,
+          h6 = this.h6, h7 = this.h7,
+    arr = [
+      (h0 >> 24) & 0xFF, (h0 >> 16) & 0xFF, (h0 >> 8) & 0xFF, h0 & 0xFF,
+      (h1 >> 24) & 0xFF, (h1 >> 16) & 0xFF, (h1 >> 8) & 0xFF, h1 & 0xFF,
+      (h2 >> 24) & 0xFF, (h2 >> 16) & 0xFF, (h2 >> 8) & 0xFF, h2 & 0xFF,
+      (h3 >> 24) & 0xFF, (h3 >> 16) & 0xFF, (h3 >> 8) & 0xFF, h3 & 0xFF,
+      (h4 >> 24) & 0xFF, (h4 >> 16) & 0xFF, (h4 >> 8) & 0xFF, h4 & 0xFF,
+      (h5 >> 24) & 0xFF, (h5 >> 16) & 0xFF, (h5 >> 8) & 0xFF, h5 & 0xFF,
+      (h6 >> 24) & 0xFF, (h6 >> 16) & 0xFF, (h6 >> 8) & 0xFF, h6 & 0xFF
+    ];
+    if (!this.is224)
+      arr.push((h7 >> 24) & 0xFF, (h7 >> 16) & 0xFF, (h7 >> 8) & 0xFF, h7 & 0xFF);
+    return arr;
+  }
+
+  hex() {
+    const d = this.digest();
+    let res = '';
+    for (let i = 0; i < d.length; ++i)
+       res += HEX_CHARS[(d[i] >> 4) & 0xF] + HEX_CHARS[d[i] & 0xF];
+    return res;
+  }
+
+  toString() {
+    return this.hex();
+  }
+
+} // class Sha256
+
+function sha256(message, as_hex) {
+  const m = new Sha256(false);
+  m.update(message);
+  return as_hex ? m.hex() : m.digest();
+}
+
+function sha256_2(message, arr, as_hex) {
+  const m = new Sha256(false);
+  m.update(message);
+  m.update(arr);
+  return as_hex ? m.hex() : m.digest();
+}
+
+// secret session key used for hashing connections keys
+// only if set, all messages from and to server signed with HMAC hash
+let sessionKey = '';
+
+/** @summary HMAC implementation
+ * @desc see https://en.wikipedia.org/wiki/HMAC for more details
+ * @private */
+function HMAC(key, m, o) {
+   const kbis = sha256(sessionKey + key),
+         block_size = 64,
+         opad = 0x5c, ipad = 0x36,
+         ko = [], ki = [];
+   while (kbis.length < block_size)
+      kbis.push(0);
+   for (let i = 0; i < kbis.length; ++i) {
+      const code = kbis[i];
+      ko.push(code ^ opad);
+      ki.push(code ^ ipad);
+   }
+
+   const hash = sha256_2(ki, (o === undefined) ? m : new Uint8Array(m, o));
+
+   return sha256_2(ko, hash, true);
+}
+
+/**
  * @summary Class emulating web socket with long-poll http requests
  *
  * @private
@@ -118531,12 +119179,13 @@ class RPadPainter extends RObjectPainter {
 
 class LongPollSocket {
 
-   constructor(addr, _raw, _args) {
+   constructor(addr, _raw, _handle, _counter) {
       this.path = addr;
       this.connid = null;
       this.req = null;
       this.raw = _raw;
-      this.args = _args;
+      this.handle = _handle;
+      this.counter = _counter;
 
       this.nextRequest('', 'connect');
    }
@@ -118546,18 +119195,20 @@ class LongPollSocket {
       let url = this.path, reqmode = 'buf', post = null;
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
-         if (this.args) url += '&' + this.args;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          console.log(`longpoll connect ${url} raw = ${this.raw}`);
          this.connid = 'connect';
       } else if (kind === 'close') {
          if ((this.connid === null) || (this.connid === 'close')) return;
          url += `?connection=${this.connid}&close`;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
          if (!browser.qt5) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          if (kind === 'dummy') url += '&dummy';
       }
 
@@ -118766,6 +119417,8 @@ class WebWindowHandle {
       this.credits = credits || 10;
       this.cansend = this.credits;
       this.ackn = this.credits;
+      this.send_seq = 1; // sequence counter of send messages
+      this.recv_seq = 0; // sequence counter of received messages
    }
 
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
@@ -118911,11 +119564,15 @@ class WebWindowHandle {
 
       if (this.cansend <= 0) console.error(`should be queued before sending cansend: ${this.cansend}`);
 
-      const prefix = `${this.ackn}:${this.cansend}:${chid}:`;
+      const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`;
       this.ackn = 0;
       this.cansend--; // decrease number of allowed send packets
 
-      this._websocket.send(prefix + msg);
+      let hash = 'none';
+      if (this.key && sessionKey)
+         hash = HMAC(this.key, `${prefix}${msg}`);
+
+      this._websocket.send(`${hash}:${prefix}${msg}`);
 
       if ((this.kind === 'websocket') || (this.kind === 'longpoll')) {
          if (this.timerid) clearTimeout(this.timerid);
@@ -119007,9 +119664,14 @@ class WebWindowHandle {
    setHRef(path) {
       if (isStr(path) && (path.indexOf('?') > 0)) {
          this.href = path.slice(0, path.indexOf('?'));
-         this.key = decodeUrl(path).get('key');
-      } else
+         const d = decodeUrl(path);
+         this.key = d.get('key');
+         this.token = d.get('token');
+      } else {
          this.href = path;
+         delete this.key;
+         delete this.token;
+      }
    }
 
    /** @summary Return href part
@@ -119028,17 +119690,28 @@ class WebWindowHandle {
       return addr;
    }
 
+   /** @summary provide connection args for the web socket
+    * @private */
+   getConnArgs(ntry) {
+      let args = '';
+      if (this.key) {
+         const k = HMAC(this.key, `attempt_${ntry}`);
+         args += `key=${k}&ntry=${ntry}`;
+      }
+      if (this.token) {
+         if (args) args += '&';
+         args += `token=${this.token}`;
+      }
+      return args;
+   }
+
    /** @summary Create configured socket for current object.
      * @private */
    connect(href) {
       this.close();
       if (!href && this.href) href = this.href;
 
-      let ntry = 0, args = (this.key ? ('key=' + this.key) : '');
-      if (this.token) {
-         if (args) args += '&';
-         args += 'token=' + this.token;
-      }
+      let ntry = 0;
 
       const retry_open = first_time => {
          if (this.state !== 0) return;
@@ -119070,13 +119743,13 @@ class WebWindowHandle {
             console.log(`configure protocol log ${path}`);
          } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            if (args) path += '?' + args;
+            path += '?' + this.getConnArgs(ntry);
             console.log(`configure websocket ${path}`);
             this._websocket = new WebSocket(path);
          } else {
             path += 'root.longpoll';
             console.log(`configure longpoll ${path}`);
-            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), args);
+            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this, ntry);
          }
 
          if (!this._websocket) return;
@@ -119094,18 +119767,39 @@ class WebWindowHandle {
             let msg = e.data;
 
             if (this.next_binary) {
-               const binchid = this.next_binary;
+               const binchid = this.next_binary,
+                     server_hash = this.next_binary_hash;
                delete this.next_binary;
+               delete this.next_binary_hash;
 
                if (msg instanceof Blob) {
                   // convert Blob object to BufferArray
                   const reader = new FileReader(), qitem = this.reserveQueueItem();
                   // The file's text will be printed here
-                  reader.onload = event => this.markQueueItemDone(qitem, event.target.result, 0);
+                  reader.onload = event => {
+                     let result = event.target.result;
+                     if (this.key && sessionKey) {
+                        const hash = HMAC(this.key, result, 0);
+                        if (hash !== server_hash) {
+                           console.log('Discard binary buffer because of HMAC mismatch');
+                           result = new ArrayBuffer(0);
+                        }
+                     }
+
+                     this.markQueueItemDone(qitem, result, 0);
+                  };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // this is from CEF or LongPoll handler
-                  this.provideData(binchid, msg, e.offset || 0);
+                  let result = msg;
+                  if (this.key && sessionKey) {
+                     const hash = HMAC(this.key, result, e.offset || 0);
+                     if (hash !== server_hash) {
+                        console.log('Discard binary buffer because of HMAC mismatch');
+                        result = new ArrayBuffer(0);
+                     }
+                  }
+                  this.provideData(binchid, result, e.offset || 0);
                }
 
                return;
@@ -119114,17 +119808,34 @@ class WebWindowHandle {
             if (!isStr(msg))
                return console.log(`unsupported message kind: ${typeof msg}`);
 
-            const i1 = msg.indexOf(':'),
-                  credit = parseInt(msg.slice(0, i1)),
+            const i0 = msg.indexOf(':'),
+                  server_hash = msg.slice(0, i0),
+                  i1 = msg.indexOf(':', i0 + 1),
+                  seq_id = Number.parseInt(msg.slice(i0 + 1, i1)),
                   i2 = msg.indexOf(':', i1 + 1),
-                  // cansend = parseInt(msg.slice(i1 + 1, i2)),  // TODO: take into account when sending messages
+                  credit = Number.parseInt(msg.slice(i1 + 1, i2)),
                   i3 = msg.indexOf(':', i2 + 1),
-                  chid = parseInt(msg.slice(i2 + 1, i3));
+                  // cansend = parseInt(msg.slice(i2 + 1, i3)),  // TODO: take into account when sending messages
+                  i4 = msg.indexOf(':', i3 + 1),
+                  chid = Number.parseInt(msg.slice(i3 + 1, i4));
 
+            // for authentication HMAC checksum and sequence id is important
+            // HMAC used to authenticate server
+            // sequence id is necessary to exclude submission of same packet again
+            if (this.key && sessionKey) {
+               const client_hash = HMAC(this.key, msg.slice(i0+1));
+               if (server_hash !== client_hash)
+                  return console.log(`Failure checking server md5 sum ${server_hash}`);
+            }
+
+            if (seq_id <= this.recv_seq)
+               return console.log(`Failure with packet sequence ${seq_id} <= ${this.recv_seq}`);
+
+            this.recv_seq = seq_id; // sequence id of received packet
             this.ackn++;            // count number of received packets,
             this.cansend += credit; // how many packets client can send
 
-            msg = msg.slice(i3 + 1);
+            msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
                console.log(`GET chid=0 message ${msg}`);
@@ -119134,13 +119845,19 @@ class WebWindowHandle {
                } else if (msg.indexOf('NEW_KEY=') === 0) {
                   const newkey = msg.slice(8);
                   this.close(true);
-                  if (typeof sessionStorage !== 'undefined')
+                  let href = (typeof document !== 'undefined') ? document.URL : null;
+                  if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
+                     const p = href.indexOf('?key=');
+                     if (p > 0) href = href.slice(0, p);
+                     window.history.replaceState(window.history.state, undefined, `${href}?key=${newkey}`);
+                  } else if (typeof sessionStorage !== 'undefined')
                      sessionStorage.setItem('RWebWindow_Key', newkey);
                   location.reload(true);
                }
-            } else if (msg === '$$binary$$')
+            } else if (msg.slice(0, 10) === '$$binary$$') {
                this.next_binary = chid;
-            else if (msg === '$$nullbinary$$')
+               this.next_binary_hash = msg.slice(10);
+            } else if (msg === '$$nullbinary$$')
                this.provideData(chid, new ArrayBuffer(0), 0);
             else
                this.provideData(chid, msg);

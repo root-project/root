@@ -125,6 +125,9 @@ public:
    /// Returns window name used to display canvas
    std::string GetWindowAddr() const;
 
+   /// Returns window URL which can be used for connection
+   std::string GetWindowUrl(bool remote);
+
    /// Hide all canvas displays
    void Hide();
 

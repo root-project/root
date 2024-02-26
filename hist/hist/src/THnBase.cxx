@@ -318,7 +318,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
    // Create the corresponding THnSparse, depending on the storage
    // type of the TH1. The class name will be "TH??\0" where the first
    // ? is 1,2 or 3 and the second ? indicates the storage as C, S,
-   // I, F or D.
+   // I, L, F or D.
    THnBase* s = nullptr;
    const char* cname( h->ClassName() );
    if (cname[0] == 'T' && cname[1] == 'H'
@@ -338,6 +338,7 @@ break;
          case 'F': R__THNBCASE(F);
          case 'D': R__THNBCASE(D);
          case 'I': R__THNBCASE(I);
+         case 'L': R__THNBCASE(L);
          case 'S': R__THNBCASE(S);
          case 'C': R__THNBCASE(C);
       }
@@ -399,11 +400,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
          else if (hn->InheritsFrom(THnC::Class())) bintype = 'C';
          else if (hn->InheritsFrom(THnS::Class())) bintype = 'S';
          else if (hn->InheritsFrom(THnI::Class())) bintype = 'I';
-         else if (hn->InheritsFrom(THnL::Class())) bintype = 'L';
-         else if (hn->InheritsFrom(THnL64::Class())) {
-            hn->Error("CreateHnAny", "Type THnSparse with Long64_t bins is not available!");
-            return nullptr;
-         }
+         else if (hn->InheritsFrom(THnL::Class()) || hn->InheritsFrom(THnL64::Class())) bintype = 'L';
          if (bintype) {
             type = TClass::GetClass(TString::Format("THnSparse%c", bintype));
          }

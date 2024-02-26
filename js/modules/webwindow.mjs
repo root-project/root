@@ -1,7 +1,33 @@
 import { httpRequest, createHttpRequest, loadScript, decodeUrl,
          browser, setBatchMode, isBatchMode, isObject, isFunc, isStr, btoa_func } from './core.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
+import { sha256, sha256_2 } from './base/sha256.mjs';
 
+
+// secret session key used for hashing connections keys
+// only if set, all messages from and to server signed with HMAC hash
+let sessionKey = '';
+
+/** @summary HMAC implementation
+ * @desc see https://en.wikipedia.org/wiki/HMAC for more details
+ * @private */
+function HMAC(key, m, o) {
+   const kbis = sha256(sessionKey + key),
+         block_size = 64,
+         opad = 0x5c, ipad = 0x36,
+         ko = [], ki = [];
+   while (kbis.length < block_size)
+      kbis.push(0);
+   for (let i = 0; i < kbis.length; ++i) {
+      const code = kbis[i];
+      ko.push(code ^ opad);
+      ki.push(code ^ ipad);
+   }
+
+   const hash = sha256_2(ki, (o === undefined) ? m : new Uint8Array(m, o));
+
+   return sha256_2(ko, hash, true);
+}
 
 /**
  * @summary Class emulating web socket with long-poll http requests
@@ -11,12 +37,13 @@ import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
 
 class LongPollSocket {
 
-   constructor(addr, _raw, _args) {
+   constructor(addr, _raw, _handle, _counter) {
       this.path = addr;
       this.connid = null;
       this.req = null;
       this.raw = _raw;
-      this.args = _args;
+      this.handle = _handle;
+      this.counter = _counter;
 
       this.nextRequest('', 'connect');
    }
@@ -26,18 +53,20 @@ class LongPollSocket {
       let url = this.path, reqmode = 'buf', post = null;
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
-         if (this.args) url += '&' + this.args;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          console.log(`longpoll connect ${url} raw = ${this.raw}`);
          this.connid = 'connect';
       } else if (kind === 'close') {
          if ((this.connid === null) || (this.connid === 'close')) return;
          url += `?connection=${this.connid}&close`;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
          if (!browser.qt5) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          if (kind === 'dummy') url += '&dummy';
       }
 
@@ -246,6 +275,8 @@ class WebWindowHandle {
       this.credits = credits || 10;
       this.cansend = this.credits;
       this.ackn = this.credits;
+      this.send_seq = 1; // sequence counter of send messages
+      this.recv_seq = 0; // sequence counter of received messages
    }
 
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
@@ -391,11 +422,15 @@ class WebWindowHandle {
 
       if (this.cansend <= 0) console.error(`should be queued before sending cansend: ${this.cansend}`);
 
-      const prefix = `${this.ackn}:${this.cansend}:${chid}:`;
+      const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`;
       this.ackn = 0;
       this.cansend--; // decrease number of allowed send packets
 
-      this._websocket.send(prefix + msg);
+      let hash = 'none';
+      if (this.key && sessionKey)
+         hash = HMAC(this.key, `${prefix}${msg}`);
+
+      this._websocket.send(`${hash}:${prefix}${msg}`);
 
       if ((this.kind === 'websocket') || (this.kind === 'longpoll')) {
          if (this.timerid) clearTimeout(this.timerid);
@@ -487,9 +522,14 @@ class WebWindowHandle {
    setHRef(path) {
       if (isStr(path) && (path.indexOf('?') > 0)) {
          this.href = path.slice(0, path.indexOf('?'));
-         this.key = decodeUrl(path).get('key');
-      } else
+         const d = decodeUrl(path);
+         this.key = d.get('key');
+         this.token = d.get('token');
+      } else {
          this.href = path;
+         delete this.key;
+         delete this.token;
+      }
    }
 
    /** @summary Return href part
@@ -508,17 +548,28 @@ class WebWindowHandle {
       return addr;
    }
 
+   /** @summary provide connection args for the web socket
+    * @private */
+   getConnArgs(ntry) {
+      let args = '';
+      if (this.key) {
+         const k = HMAC(this.key, `attempt_${ntry}`);
+         args += `key=${k}&ntry=${ntry}`;
+      }
+      if (this.token) {
+         if (args) args += '&';
+         args += `token=${this.token}`;
+      }
+      return args;
+   }
+
    /** @summary Create configured socket for current object.
      * @private */
    connect(href) {
       this.close();
       if (!href && this.href) href = this.href;
 
-      let ntry = 0, args = (this.key ? ('key=' + this.key) : '');
-      if (this.token) {
-         if (args) args += '&';
-         args += 'token=' + this.token;
-      }
+      let ntry = 0;
 
       const retry_open = first_time => {
          if (this.state !== 0) return;
@@ -550,13 +601,13 @@ class WebWindowHandle {
             console.log(`configure protocol log ${path}`);
          } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            if (args) path += '?' + args;
+            path += '?' + this.getConnArgs(ntry);
             console.log(`configure websocket ${path}`);
             this._websocket = new WebSocket(path);
          } else {
             path += 'root.longpoll';
             console.log(`configure longpoll ${path}`);
-            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), args);
+            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this, ntry);
          }
 
          if (!this._websocket) return;
@@ -574,18 +625,39 @@ class WebWindowHandle {
             let msg = e.data;
 
             if (this.next_binary) {
-               const binchid = this.next_binary;
+               const binchid = this.next_binary,
+                     server_hash = this.next_binary_hash;
                delete this.next_binary;
+               delete this.next_binary_hash;
 
                if (msg instanceof Blob) {
                   // convert Blob object to BufferArray
                   const reader = new FileReader(), qitem = this.reserveQueueItem();
                   // The file's text will be printed here
-                  reader.onload = event => this.markQueueItemDone(qitem, event.target.result, 0);
+                  reader.onload = event => {
+                     let result = event.target.result;
+                     if (this.key && sessionKey) {
+                        const hash = HMAC(this.key, result, 0);
+                        if (hash !== server_hash) {
+                           console.log('Discard binary buffer because of HMAC mismatch');
+                           result = new ArrayBuffer(0);
+                        }
+                     }
+
+                     this.markQueueItemDone(qitem, result, 0);
+                  };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // this is from CEF or LongPoll handler
-                  this.provideData(binchid, msg, e.offset || 0);
+                  let result = msg;
+                  if (this.key && sessionKey) {
+                     const hash = HMAC(this.key, result, e.offset || 0);
+                     if (hash !== server_hash) {
+                        console.log('Discard binary buffer because of HMAC mismatch');
+                        result = new ArrayBuffer(0);
+                     }
+                  }
+                  this.provideData(binchid, result, e.offset || 0);
                }
 
                return;
@@ -594,17 +666,34 @@ class WebWindowHandle {
             if (!isStr(msg))
                return console.log(`unsupported message kind: ${typeof msg}`);
 
-            const i1 = msg.indexOf(':'),
-                  credit = parseInt(msg.slice(0, i1)),
+            const i0 = msg.indexOf(':'),
+                  server_hash = msg.slice(0, i0),
+                  i1 = msg.indexOf(':', i0 + 1),
+                  seq_id = Number.parseInt(msg.slice(i0 + 1, i1)),
                   i2 = msg.indexOf(':', i1 + 1),
-                  // cansend = parseInt(msg.slice(i1 + 1, i2)),  // TODO: take into account when sending messages
+                  credit = Number.parseInt(msg.slice(i1 + 1, i2)),
                   i3 = msg.indexOf(':', i2 + 1),
-                  chid = parseInt(msg.slice(i2 + 1, i3));
+                  // cansend = parseInt(msg.slice(i2 + 1, i3)),  // TODO: take into account when sending messages
+                  i4 = msg.indexOf(':', i3 + 1),
+                  chid = Number.parseInt(msg.slice(i3 + 1, i4));
 
+            // for authentication HMAC checksum and sequence id is important
+            // HMAC used to authenticate server
+            // sequence id is necessary to exclude submission of same packet again
+            if (this.key && sessionKey) {
+               const client_hash = HMAC(this.key, msg.slice(i0+1));
+               if (server_hash !== client_hash)
+                  return console.log(`Failure checking server md5 sum ${server_hash}`);
+            }
+
+            if (seq_id <= this.recv_seq)
+               return console.log(`Failure with packet sequence ${seq_id} <= ${this.recv_seq}`);
+
+            this.recv_seq = seq_id; // sequence id of received packet
             this.ackn++;            // count number of received packets,
             this.cansend += credit; // how many packets client can send
 
-            msg = msg.slice(i3 + 1);
+            msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
                console.log(`GET chid=0 message ${msg}`);
@@ -614,13 +703,19 @@ class WebWindowHandle {
                } else if (msg.indexOf('NEW_KEY=') === 0) {
                   const newkey = msg.slice(8);
                   this.close(true);
-                  if (typeof sessionStorage !== 'undefined')
+                  let href = (typeof document !== 'undefined') ? document.URL : null;
+                  if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
+                     const p = href.indexOf('?key=');
+                     if (p > 0) href = href.slice(0, p);
+                     window.history.replaceState(window.history.state, undefined, `${href}?key=${newkey}`);
+                  } else if (typeof sessionStorage !== 'undefined')
                      sessionStorage.setItem('RWebWindow_Key', newkey);
                   location.reload(true);
                }
-            } else if (msg === '$$binary$$')
+            } else if (msg.slice(0, 10) === '$$binary$$') {
                this.next_binary = chid;
-            else if (msg === '$$nullbinary$$')
+               this.next_binary_hash = msg.slice(10);
+            } else if (msg === '$$nullbinary$$')
                this.provideData(chid, new ArrayBuffer(0), 0);
             else
                this.provideData(chid, msg);
@@ -700,34 +795,63 @@ async function connectWebWindow(arg) {
    else if (!isObject(arg))
       arg = {};
 
-   const d = decodeUrl();
-   let new_key;
+   let d_key, d_token, new_key;
 
-   if (typeof sessionStorage !== 'undefined') {
-      new_key = sessionStorage.getItem('RWebWindow_Key');
-      sessionStorage.removeItem('RWebWindow_Key');
-      if (new_key) console.log(`Use key ${new_key} from session storage`);
+   if (!arg.href) {
+      let href = (typeof document !== 'undefined') ? document.URL : '';
+      const p = href.indexOf('#');
+      if (p > 0) {
+         sessionKey = href.slice(p+1);
+         href = href.slice(0, p);
+      }
+
+      const d = decodeUrl(href);
+      d_key = d.get('key');
+      d_token = d.get('token');
+
+      if (typeof sessionStorage !== 'undefined') {
+         new_key = sessionStorage.getItem('RWebWindow_Key');
+         sessionStorage.removeItem('RWebWindow_Key');
+         if (new_key) console.log(`Use key ${new_key} from session storage`);
+
+         if (sessionKey)
+            sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
+         else
+            sessionKey = sessionStorage.getItem('RWebWindow_SessionKey') || '';
+      }
+
+      // hide key and any following parameters from URL, chrome do not allows to close browser with changed URL
+      if (d_key && !d.has('headless') && isStr(href) && (typeof window !== 'undefined') && window?.history) {
+         const p = href.indexOf('?key=');
+         if (p > 0) window.history.replaceState(window.history.state, undefined, href.slice(0, p));
+      }
+
+      // special holder script, prevents headless chrome browser from too early exit
+      if (d.has('headless') && d_key && (browser.isChromeHeadless || browser.isChrome) && !arg.ignore_chrome_batch_holder)
+         loadScript('root_batch_holder.js?key=' + (new_key || d_key));
+
+      if (!arg.platform)
+         arg.platform = d.get('platform');
+
+      if (arg.platform === 'qt5')
+         browser.qt5 = true;
+      else if (arg.platform === 'cef3')
+         browser.cef3 = true;
+
+      if (arg.batch === undefined)
+         arg.batch = d.has('headless');
+
+      if (arg.batch) setBatchMode(true);
+
+      if (!arg.socket_kind)
+         arg.socket_kind = d.get('ws');
+
+      if (!new_key && arg.winW && arg.winH && !isBatchMode() && isFunc(window?.resizeTo))
+         window.resizeTo(arg.winW, arg.winH);
+
+      if (!new_key && arg.winX && arg.winY && !isBatchMode() && isFunc(window?.moveTo))
+         window.moveTo(arg.winX, arg.winY);
    }
-
-   // special holder script, prevents headless chrome browser from too early exit
-   if (d.has('headless') && d.get('key') && (browser.isChromeHeadless || browser.isChrome) && !arg.ignore_chrome_batch_holder)
-      loadScript('root_batch_holder.js?key=' + (new_key || d.get('key')));
-
-   if (!arg.platform)
-      arg.platform = d.get('platform');
-
-   if (arg.platform === 'qt5')
-      browser.qt5 = true;
-   else if (arg.platform === 'cef3')
-      browser.cef3 = true;
-
-   if (arg.batch === undefined)
-      arg.batch = d.has('headless');
-
-   if (arg.batch) setBatchMode(true);
-
-   if (!arg.socket_kind)
-      arg.socket_kind = d.get('ws');
 
    if (!arg.socket_kind) {
       if (browser.qt5)
@@ -738,27 +862,24 @@ async function connectWebWindow(arg) {
          arg.socket_kind = 'websocket';
    }
 
-   if (!new_key && arg.winW && arg.winH && !isBatchMode() && isFunc(window?.resizeTo))
-      window.resizeTo(arg.winW, arg.winH);
-
-   if (!new_key && arg.winX && arg.winY && !isBatchMode() && isFunc(window?.moveTo))
-      window.moveTo(arg.winX, arg.winY);
-
    // only for debug purposes
    // arg.socket_kind = 'longpoll';
 
    const main = new Promise(resolveFunc => {
       const handle = new WebWindowHandle(arg.socket_kind, arg.credits);
       handle.setUserArgs(arg.user_args);
-      if (arg.href) handle.setHRef(arg.href); // apply href now  while connect can be called from other place
+      if (arg.href)
+         handle.setHRef(arg.href); // apply href now  while connect can be called from other place
+      else {
+         handle.key = new_key || d_key;
+         handle.token = d_token;
+      }
 
       if (window) {
          window.onbeforeunload = () => handle.close(true);
          if (browser.qt5) window.onqt5unload = window.onbeforeunload;
       }
 
-      handle.key = new_key || d.get('key');
-      handle.token = d.get('token');
 
       if (arg.receiver) {
          // when receiver exists, it handles itself callbacks

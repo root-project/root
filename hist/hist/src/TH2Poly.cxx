@@ -178,6 +178,12 @@ TH2Poly::TH2Poly(const char *name,const char *title,
    SetFloat(kFALSE);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+TH2Poly::TH2Poly(const TH2Poly & rhs) : TH2() {
+    rhs.Copy(*this);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -189,6 +195,63 @@ TH2Poly::~TH2Poly()
    // delete at the end the bin List since it owns the objects
    delete fBins;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+TH2Poly & TH2Poly::operator=(const TH2Poly & rhs) {
+   if (this != &rhs)
+       rhs.Copy(*this);
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy function for TH2Poly
+
+void TH2Poly::Copy(TObject &newobj) const
+{
+   // copy first TH2 information
+   TH2::Copy(newobj);
+   auto & newth2p = dynamic_cast<TH2Poly &>(newobj);
+   newth2p.SetName(GetName());
+   newth2p.SetTitle(GetTitle());
+
+   newth2p.fCellX = fCellX;
+   newth2p.fCellY = fCellY;
+   newth2p.fNCells = fNCells;
+   newth2p.fStepX = fStepX;
+   newth2p.fStepY = fStepY;
+
+   // allocate arrays
+   newth2p.fCells  = new TList [fNCells];
+   newth2p.fIsEmpty = new Bool_t [fNCells]; // Empty partition
+   newth2p.fCompletelyInside = new Bool_t [fNCells]; // Cell is completely inside bin
+   // Initializes the flags
+   for (int i = 0; i<fNCells; i++) {
+      newth2p.fIsEmpty[i] = fIsEmpty[i];
+      newth2p.fCompletelyInside[i] = fCompletelyInside[i];
+   }
+   // need to use Clone to copy the contained bin list
+   newth2p.fBins = dynamic_cast<TList *>(fBins->Clone());
+   if (!newth2p.fBins)
+      Error("Copy","Error cloning the TH2Poly bin list");
+   else {
+      // add bins in the fCells partition. We need to add the TH2PolyBin objects
+      // of the new copied histograms. For this we call AddBinToPartition
+      // we could probably optimize this by implementing a copy of the partition
+      for (auto bin : *(newth2p.fBins)) {
+         newth2p.AddBinToPartition(dynamic_cast<TH2PolyBin*>(bin));
+      }
+   }
+   // copy overflow contents
+   for(int i = 0; i < kNOverflow; i++ ) {
+      newth2p.fOverflow[i] = fOverflow[i];
+   }
+   // copy other data members
+   newth2p.fFloat = fFloat;
+   newth2p.fNewBinAdded = fNewBinAdded;
+   newth2p.fBinContentChanged = fBinContentChanged;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create appropriate histogram bin.
@@ -752,7 +815,8 @@ Double_t TH2Poly::Integral(Option_t* option) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the content of the input bin
-/// For the overflow/underflow/sea bins:
+/// Bin numbers are from [1,nbins] and
+/// for the overflow/underflow/sea bins the range is [-9,-1]:
 ///~~~ {.cpp}
 /// -1 | -2 | -3
 /// ---+----+----
@@ -793,6 +857,16 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
    }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
    return TMath::Sqrt(error2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of bins :
+/// it should be the size of the bin list
+Int_t  TH2Poly::GetNumberOfBins() const {
+   Int_t nbins =  fNcells-kNOverflow;
+   if (nbins != fBins->GetSize())
+      Fatal("GetNumberOfBins","Object has an invalid number of bins");
+   return nbins;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

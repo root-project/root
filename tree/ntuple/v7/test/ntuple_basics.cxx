@@ -147,6 +147,48 @@ TEST(RNTuple, WriteRead)
    EXPECT_STREQ("abc", rdKlass->s.c_str());
 }
 
+TEST(RNTuple, WriteReadInlinedModel)
+{
+   FileRaii fileGuard("test_ntuple_writeread_inlinedmodel.root");
+
+   {
+      auto writer = RNTupleWriter::Recreate(
+         {
+            {"std::uint32_t", "id"},
+            {"std::vector<float>", "vpx"},
+            {"std::vector<float>", "vpy"},
+            {"std::vector<float>", "vpz"},
+         },
+         "NTuple", fileGuard.GetPath());
+
+      auto entry = writer->CreateEntry();
+      *entry->GetPtr<std::uint32_t>("id") = 1;
+      *entry->GetPtr<std::vector<float>>("vpx") = {1.0, 1.1, 1.2};
+      *entry->GetPtr<std::vector<float>>("vpy") = {2.0, 2.1, 2.2};
+      *entry->GetPtr<std::vector<float>>("vpz") = {3.0, 3.1, 3.2};
+
+      writer->Fill(*entry);
+   }
+
+   auto reader = RNTupleReader::Open("NTuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   auto readid = reader->GetModel().GetDefaultEntry().GetPtr<std::uint32_t>("id");
+   EXPECT_EQ(1, *readid);
+   auto readvpx = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vpx");
+   EXPECT_FLOAT_EQ(1.0, (*readvpx)[0]);
+   EXPECT_FLOAT_EQ(1.1, (*readvpx)[1]);
+   EXPECT_FLOAT_EQ(1.2, (*readvpx)[2]);
+   auto readvpy = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vpy");
+   EXPECT_FLOAT_EQ(2.0, (*readvpy)[0]);
+   EXPECT_FLOAT_EQ(2.1, (*readvpy)[1]);
+   EXPECT_FLOAT_EQ(2.2, (*readvpy)[2]);
+   auto readvpz = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vpz");
+   EXPECT_FLOAT_EQ(3.0, (*readvpz)[0]);
+   EXPECT_FLOAT_EQ(3.1, (*readvpz)[1]);
+   EXPECT_FLOAT_EQ(3.2, (*readvpz)[2]);
+}
+
 TEST(RNTuple, FileAnchor)
 {
    FileRaii fileGuard("test_ntuple_file_anchor.root");
@@ -480,7 +522,7 @@ TEST(RNTuple, ModelId)
    auto m1 = RNTupleModel::Create();
    auto m2 = RNTupleModel::Create();
    EXPECT_FALSE(m1->IsFrozen());
-   EXPECT_EQ(m1->GetModelId(), m2->GetModelId());
+   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
 
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
@@ -498,18 +540,14 @@ TEST(RNTuple, ModelId)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
 
-   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
    // Freeze() should be idempotent call
    auto id = m1->GetModelId();
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
    EXPECT_EQ(id, m1->GetModelId());
 
-   m2->Freeze();
-   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
-
    auto m2c = m2->Clone();
-   EXPECT_EQ(m2->GetModelId(), m2c->GetModelId());
+   EXPECT_NE(m2->GetModelId(), m2c->GetModelId());
 }
 
 TEST(RNTuple, Entry)
@@ -672,6 +710,47 @@ TEST(RNTuple, FillBytesWritten)
    checkFillReturnValue(optsSmall);
 }
 
+TEST(RNTuple, FillBytesWrittenCollections)
+{
+   FileRaii fileGuard("test_ntuple_fillbytes_collections.root");
+
+   auto eventModel = RNTupleModel::Create();
+   auto fldPt = eventModel->MakeField<float>("pt", 0.0);
+
+   auto hitModel = RNTupleModel::Create();
+   auto fldHitX = hitModel->MakeField<float>("x", 0.0);
+   auto fldHitY = hitModel->MakeField<float>("y", 0.0);
+
+   auto trackModel = RNTupleModel::Create();
+   auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
+
+   auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
+   auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
+
+   {
+      RNTupleWriteOptions options;
+      options.SetApproxZippedClusterSize(1024 * 1024);
+      auto writer = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath(), options);
+
+      for (unsigned i = 0; i < 30000; ++i) {
+         for (unsigned t = 0; t < 3; ++t) {
+            for (unsigned h = 0; h < 2; ++h) {
+               *fldHitX = 4.0;
+               *fldHitY = 8.0;
+               EXPECT_EQ(4 + 4, fldHits->Fill());
+            }
+            *fldTrackEnergy = i * t;
+            EXPECT_EQ(2 * (4 + 4) + 8 + 4, fldTracks->Fill());
+         }
+         *fldPt = float(i);
+         EXPECT_EQ(3 * (2 * (4 + 4) + 8 + 4) + 8 + 4, writer->Fill());
+      }
+   }
+
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetDescriptor().GetNClusters(), 2);
+}
+
 TEST(RNTuple, RValue)
 {
    auto f1 = RFieldBase::Create("f1", "CustomStruct").Unwrap();
@@ -691,4 +770,58 @@ TEST(RNTuple, RValue)
    f3 = nullptr;
 
    // The deleters are called in the destructors of the values
+}
+
+TEST(REntry, Basics)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("pt");
+   model->Freeze();
+
+   auto e = model->CreateEntry();
+   EXPECT_EQ(e->GetModelId(), model->GetModelId());
+   for (const auto &v : *e) {
+      EXPECT_STREQ("pt", v.GetField().GetFieldName().c_str());
+   }
+
+   EXPECT_THROW(e->GetToken(""), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
+
+   std::shared_ptr<float> ptrPt;
+   e->BindValue("pt", ptrPt);
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<float>("pt").get());
+
+   auto model2 = model->Clone();
+   EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::Experimental::RException);
+   std::shared_ptr<double> ptrDouble;
+   EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::Experimental::RException);
+
+   float pt;
+   e->BindRawPtr("pt", &pt);
+   EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
+
+   e->EmplaceNewValue("pt");
+   EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
+}
+
+TEST(RFieldBase, CreateObject)
+{
+   auto ptrInt = RField<int>("name").CreateObject<int>();
+   EXPECT_EQ(0, *ptrInt);
+
+   void *rawPtr = RField<int>("name").CreateObject<void>().release();
+   EXPECT_EQ(0, *static_cast<int *>(rawPtr));
+   delete static_cast<int *>(rawPtr);
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kWarning, "[ROOT.NTuple]", "possibly leaking", false /* matchFullMessage */);
+      auto p = RField<int>("name").CreateObject<void>();
+      delete static_cast<int *>(p.get()); // avoid release
+   }
+
+   EXPECT_THROW(RField<int>("name").CreateObject<float>(), RException);
+
+   auto ptrClass = RField<LowPrecisionFloats>("name").CreateObject<LowPrecisionFloats>();
+   EXPECT_DOUBLE_EQ(1.0, ptrClass->b);
 }

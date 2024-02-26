@@ -15,10 +15,11 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleImporter.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+#include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <string_view>
@@ -54,6 +55,10 @@ public:
          return;
       std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
       fNbytesNext += gUpdateFrequencyBytes;
+      if (nbytesWritten > fNbytesNext) {
+         // If we already passed the next threshold, increase by a sensible amount.
+         fNbytesNext = nbytesWritten + gUpdateFrequencyBytes;
+      }
    }
 
    void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
@@ -135,7 +140,6 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDestination(std::string_view destFileName)
 {
    fDestFileName = destFileName;
-   fWriteOptions.SetCompression(kDefaultCompressionSettings);
    fDestFile = std::unique_ptr<TFile>(TFile::Open(fDestFileName.c_str(), "UPDATE"));
    if (!fDestFile || fDestFile->IsZombie()) {
       return R__FAIL("cannot open dest file " + std::string(fDestFileName));
@@ -334,7 +338,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       for (auto idx : c.fImportFieldIndexes) {
          const auto name = fImportFields[idx].fField->GetFieldName();
          auto projectedField =
-            RFieldBase::Create(name, "ROOT::RVec<" + fImportFields[idx].fField->GetTypeName() + ">").Unwrap();
+            RFieldBase::Create(name, "ROOT::VecOps::RVec<" + fImportFields[idx].fField->GetTypeName() + ">").Unwrap();
+         R__ASSERT(dynamic_cast<RRVecField *>(projectedField.get()));
          fModel->AddProjectedField(std::move(projectedField), [&name, &c](const std::string &fieldName) {
             if (fieldName == name)
                return c.fFieldName;
@@ -373,9 +378,14 @@ void ROOT::Experimental::RNTupleImporter::Import()
 
    PrepareSchema();
 
-   auto sink = std::make_unique<Detail::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
+   std::unique_ptr<Internal::RPageSink> sink =
+      std::make_unique<Internal::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
+
+   if (fWriteOptions.GetUseBufferedWrite()) {
+      sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
+   }
 
    auto ntplWriter = Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
    // The guard needs to be destructed before the writer goes out of scope
@@ -399,7 +409,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
                if (!result)
                   throw RException(R__FORWARD_ERROR(result));
             }
-            c.fCollectionWriter->Fill(c.fCollectionEntry.get());
+            c.fCollectionWriter->Fill(*c.fCollectionEntry);
          }
          for (auto &t : c.fTransformations)
             t->ResetEntry();

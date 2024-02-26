@@ -27,6 +27,7 @@
 // needed only for template instantiations of THnSparseT:
 #include "TArrayF.h"
 #include "TArrayL.h"
+#include "TArrayL64.h"
 #include "TArrayI.h"
 #include "TArrayS.h"
 #include "TArrayC.h"
@@ -107,7 +108,7 @@ class THnSparse: public THnBase {
    void SetBinContent(Long64_t bin, Double_t v) override;
    void SetBinError2(Long64_t bin, Double_t e2) override;
 
-   /// Forwards to THnBase::SetBinContent().
+   /// Forwards to THnBase::AddBinContent().
    /// Non-virtual, CINT-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
       THnBase::AddBinContent(idx, v);
@@ -182,14 +183,14 @@ class THnSparse: public THnBase {
 
  Typedefs exist for template parameters with ROOT's generic types:
 
- Templated name      |    Typedef   |    Bin content type
- --------------------|--------------|--------------------
- THnSparseT<TArrayC> |  THnSparseC  |  Char_t
- THnSparseT<TArrayS> |  THnSparseS  |  Short_t
- THnSparseT<TArrayI> |  THnSparseI  |  Int_t
- THnSparseT<TArrayL> |  THnSparseL  |  Long_t
- THnSparseT<TArrayF> |  THnSparseF  |  Float_t
- THnSparseT<TArrayD> |  THnSparseD  |  Double_t
+ Templated name        |    Typedef    |    Bin content type
+ ----------------------|---------------|--------------------
+ THnSparseT<TArrayC>   |  THnSparseC   |  Char_t
+ THnSparseT<TArrayS>   |  THnSparseS   |  Short_t
+ THnSparseT<TArrayI>   |  THnSparseI   |  Int_t
+ THnSparseT<TArrayL64> |  THnSparseL   |  Long64_t
+ THnSparseT<TArrayF>   |  THnSparseF   |  Float_t
+ THnSparseT<TArrayD>   |  THnSparseD   |  Double_t
 
  We recommend to use THnSparseC wherever possible, and to map its value space
  of 256 possible values to e.g. float values outside the class. This saves an
@@ -218,7 +219,7 @@ class THnSparseT: public THnSparse {
 
 typedef THnSparseT<TArrayD> THnSparseD;
 typedef THnSparseT<TArrayF> THnSparseF;
-typedef THnSparseT<TArrayL> THnSparseL;
+typedef THnSparseT<TArrayL64> THnSparseL;
 typedef THnSparseT<TArrayI> THnSparseI;
 typedef THnSparseT<TArrayS> THnSparseS;
 typedef THnSparseT<TArrayC> THnSparseC;

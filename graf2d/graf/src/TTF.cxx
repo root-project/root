@@ -570,8 +570,10 @@ void TTF::SetTextSize(Float_t textsize)
    }
 
    Int_t tsize = (Int_t)(textsize*kScale+0.5) << 6;
-   if (FT_Set_Char_Size(fgFace[fgCurFontIdx], tsize, tsize, 72, 72))
-      Error("TTF::SetTextSize", "error in FT_Set_Char_Size");
+   FT_Error err = FT_Set_Char_Size(fgFace[fgCurFontIdx], tsize, tsize, 72, 72);
+   if (err)
+      Error("TTF::SetTextSize", "error in FT_Set_Char_Size: 0x%x (input size %f, calc. size 0x%x)", err, textsize,
+            tsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
