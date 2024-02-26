@@ -3263,7 +3263,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
    << std::endl;
    out << indent << name << "->SetBetaBeta(" << fBeta_beta << ");" << std::endl;
    out << indent << name << "->SetWeight(" << fWeight << ");" << std::endl;
-   out << indent << name << "->SetStatisticOption(" << fStatisticOption << ");"
+   out << indent << name << "->SetStatisticOption(static_cast<EStatOption>(" << fStatisticOption << "));"
    << std::endl;
    out << indent << name << "->SetPosteriorMode(" << TestBit(kPosteriorMode) << ");" << std::endl;
    out << indent << name << "->SetShortestInterval(" << TestBit(kShortestInterval) << ");" << std::endl;
