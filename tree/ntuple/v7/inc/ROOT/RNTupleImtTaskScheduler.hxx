@@ -22,26 +22,22 @@
 #include <ROOT/TTaskGroup.hxx>
 
 #include <functional>
-#include <memory>
 #include <utility>
 
 namespace ROOT {
 namespace Experimental {
 
-class TTaskGroup;
-
 namespace Internal {
 
 class RNTupleImtTaskScheduler : public RPageStorage::RTaskScheduler {
 private:
-   std::unique_ptr<TTaskGroup> fTaskGroup;
+   TTaskGroup fTaskGroup;
 
 public:
-   RNTupleImtTaskScheduler() { Reset(); }
+   RNTupleImtTaskScheduler() = default;
    ~RNTupleImtTaskScheduler() override = default;
-   void Reset() final { fTaskGroup = std::make_unique<TTaskGroup>(); }
-   void AddTask(const std::function<void(void)> &taskFunc) final { fTaskGroup->Run(taskFunc); }
-   void Wait() final { fTaskGroup->Wait(); }
+   void AddTask(const std::function<void(void)> &taskFunc) final { fTaskGroup.Run(taskFunc); }
+   void Wait() final { fTaskGroup.Wait(); }
 };
 
 } // namespace Internal
