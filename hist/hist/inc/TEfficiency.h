@@ -154,7 +154,7 @@ public:
                             const Double_t *zBins);
 
       void          SetTitle(const char* title) override;
-      Bool_t        SetTotalEvents(Int_t bin,Int_t events);
+      Bool_t        SetTotalEvents(Int_t bin, Double_t events);
       Bool_t        SetTotalHistogram(const TH1& rTotal,Option_t* opt);
       void          SetUseWeightedEvents(Bool_t on = kTRUE);
       void          SetWeight(Double_t weight);
