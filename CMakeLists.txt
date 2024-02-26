@@ -125,7 +125,7 @@ function(relatedrepo_GetClosestMatch)
 
   # Otherwise, try to use a branch that matches `current_head` in the fork repository
   execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
-                  ${__ORIGIN_PREFIX}/${__REPO_NAME} ${current_head} OUTPUT_VARIABLE matching_refs)
+                  ${__ORIGIN_PREFIX}/${__REPO_NAME} ${current_head} OUTPUT_VARIABLE matching_refs ERROR_QUIET)
   if(NOT "${matching_refs}" STREQUAL "")
     set(${__FETCHURL_VARIABLE} ${__ORIGIN_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
     return()
@@ -644,8 +644,12 @@ if(testing)
     endif()
     if(DEFINED repo_dir)
       execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${repo_dir}/.git
-                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
-
+                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE
+                      RESULT_VARIABLE query_result
+                      ERROR_VARIABLE query_error)
+      if(NOT query_result EQUAL 0)
+        message(STATUS "Searching for \"origin\" repo of roottest: ${query_error}")
+      endif()
     else()
        # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
        # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
@@ -657,7 +661,7 @@ if(testing)
                          remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
        endif()
     endif()
-    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix ${originurl})
+    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix "${originurl}")
     relatedrepo_GetClosestMatch(REPO_NAME roottest
                                 ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
                                 FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
