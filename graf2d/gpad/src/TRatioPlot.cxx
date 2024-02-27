@@ -607,8 +607,15 @@ void TRatioPlot::Draw(Option_t *option)
    fConfidenceInterval2->SetFillColor(fCi2Color);
 
    if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
-      TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
-
+      // use last function in the list
+      TF1 * func = nullptr;
+      for (int i = fH1->GetListOfFunctions()->GetSize()-1; i >= 0; i--) {
+         auto obj = fH1->GetListOfFunctions()->At(i);
+         if (obj->InheritsFrom(TF1::Class()) ) {
+            func = dynamic_cast<TF1*>(obj);
+            break;
+         }
+      }
       if (!func) {
          // this is checked in constructor and should thus not occur
          Error("BuildLowerPlot", "h1 does not have a fit function");
@@ -1014,9 +1021,9 @@ Int_t TRatioPlot::BuildLowerPlot()
       Double_t x;
       Double_t val;
 
-      for (Int_t i=0; i<=fH1->GetNbinsX();++i) {
+      for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
          val = fH1->GetBinContent(i);
-         x = fH1->GetBinCenter(i+1);
+         x = fH1->GetBinCenter(i);
 
          if (fErrorMode == TRatioPlot::ErrorMode::kErrorAsymmetric) {
 
@@ -1051,9 +1058,9 @@ Int_t TRatioPlot::BuildLowerPlot()
             ((TGraphAsymmErrors*)fRatioGraph)->SetPointError(ipoint,  fH1->GetBinWidth(i)/2., fH1->GetBinWidth(i)/2., 0.5, 0.5);
 
             fConfidenceInterval1->SetPoint(ipoint, x, 0);
-            fConfidenceInterval1->SetPointError(ipoint, x, i < (Int_t)ci1.size() ? ci1[i] / error : 0);
+            fConfidenceInterval1->SetPointError(ipoint, x, i <= (Int_t)ci1.size() ? ci1[i-1] / error : 0);
             fConfidenceInterval2->SetPoint(ipoint, x, 0);
-            fConfidenceInterval2->SetPointError(ipoint, x, i < (Int_t)ci2.size() ? ci2[i] / error : 0);
+            fConfidenceInterval2->SetPointError(ipoint, x, i <= (Int_t)ci2.size() ? ci2[i-1] / error : 0);
 
             ++ipoint;
 
