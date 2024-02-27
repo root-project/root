@@ -1761,9 +1761,8 @@ TClass *ROOT::Experimental::RField<TObject>::GetClass()
 
 std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *name)
 {
-   for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*GetClass()->GetListOfDataMembers())) {
-      if (strcmp(name, dataMember->GetName()) == 0)
-         return dataMember->GetOffset();
+   if (auto dataMember = GetClass()->GetDataMember(name)) {
+      return dataMember->GetOffset();
    }
    throw RException(R__FAIL('\'' + std::string(name) + '\'' + "is an invalid data member"));
 }
