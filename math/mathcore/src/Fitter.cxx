@@ -152,8 +152,9 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
          return false;
       }
    }
-   fBinFit = (fitType == 1 || fitType == 3);
    fFitType = fitType;
+   fBinFit = (fFitType == ROOT::Math::FitMethodFunction::kLeastSquare || fFitType == ROOT::Math::FitMethodFunction::kPoissonLikelihood);
+
    fDataSize = dataSize;
 
    // store external provided FCN without cloning it
@@ -606,7 +607,7 @@ bool Fitter::CalculateMinosErrors() {
        return false;
    }
 
-   if (fFitType == 2 && fConfig.UseWeightCorrection() ) {
+   if (fFitType == ROOT::Math::FitMethodFunction::kLogLikelihood && fConfig.UseWeightCorrection() ) {
       MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Computation of MINOS errors not implemented for weighted likelihood fits");
       return false;
    }
