@@ -10,12 +10,8 @@
 
 target_sources(Core PRIVATE src/ZipLZMA.c)
 
-target_link_libraries(Core PRIVATE ${LIBLZMA_LIBRARIES})
+target_link_libraries(Core PRIVATE LibLZMA::LibLZMA)
 
-target_include_directories(Core
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-    $<BUILD_INTERFACE:${LIBLZMA_INCLUDE_DIR}>
-)
+target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
 
 ROOT_INSTALL_HEADERS()
