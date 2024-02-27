@@ -475,10 +475,10 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 /// |      1      |   Free Serif Italic       |    Times-Italic               |
 /// |      2      |   Free Serif Bold         |    Times-Bold                 |
 /// |      3      |   Free Serif Bold Italic  |    Times-BoldItalic           |
-/// |      4      |   Free Sans               |    Helvetica                  |
-/// |      5      |   Free Sans Oblique       |    Helvetica-Oblique          |
-/// |      6      |   Free Sans Bold          |    Helvetica-Bold             |
-/// |      7      |   Free Sans Bold Oblique  |    Helvetica-BoldOblique      |
+/// |      4      |   Tex Gyre Regular        |    Helvetica                  |
+/// |      5      |   Tex Gyre Italic         |    Helvetica-Oblique          |
+/// |      6      |   Tex Gyre Bold           |    Helvetica-Bold             |
+/// |      7      |   Tex Gyre Bold Italic    |    Helvetica-BoldOblique      |
 /// |      8      |   Free Mono               |    Courier                    |
 /// |      9      |   Free Mono Oblique       |    Courier-Oblique            |
 /// |     10      |   Free Mono Bold          |    Courier-Bold               |
@@ -497,10 +497,10 @@ void TTF::SetTextFont(Font_t fontnumber)
      { "Root.TTFont.1", "FreeSerifItalic.otf" },
      { "Root.TTFont.2", "FreeSerifBold.otf" },
      { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
-     { "Root.TTFont.4", "FreeSans.otf" },
-     { "Root.TTFont.5", "FreeSansOblique.otf" },
-     { "Root.TTFont.6", "FreeSansBold.otf" },
-     { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
+     { "Root.TTFont.4", "texgyreheros-regular.otf" },
+     { "Root.TTFont.5", "texgyreheros-italic.otf" },
+     { "Root.TTFont.6", "texgyreheros-bold.otf" },
+     { "Root.TTFont.7", "texgyreheros-bolditalic.otf" },
      { "Root.TTFont.8", "FreeMono.otf" },
      { "Root.TTFont.9", "FreeMonoOblique.otf" },
      { "Root.TTFont.10", "FreeMonoBold.otf" },
