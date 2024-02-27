@@ -37,7 +37,7 @@ std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
 
 \class TLinearFitter
 
-\legacy{TLinearFitter, Consider switching to ROOT::Fit::Fitter, calling the LinearFit() method.}
+\note An alternative to this class is to use ROOT::Fit::Fitter, calling the LinearFit() method.}
 
 \ingroup MinuitOld
 
