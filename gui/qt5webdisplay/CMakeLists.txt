@@ -8,10 +8,6 @@
 # CMakeLists.txt file for building ROOT gui/qt5webdisplay package
 ############################################################################
 
-if(POLICY CMP0071)
-  cmake_policy(SET CMP0071 NEW)
-endif()
-
 find_package(Qt5 COMPONENTS Core WebEngine WebEngineWidgets CONFIG)
 
 if(NOT Qt5_FOUND)
