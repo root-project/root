@@ -172,6 +172,15 @@ struct RNTupleLocator {
    }
 };
 
+namespace Internal {
+template <typename T>
+auto MakeAliasedSharedPtr(T *rawPtr)
+{
+   const static std::shared_ptr<T> fgRawPtrCtrlBlock;
+   return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
+}
+} // namespace Internal
+
 } // namespace Experimental
 } // namespace ROOT
 

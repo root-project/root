@@ -340,10 +340,9 @@ ROOT::Experimental::RFieldBase::RColumnRepresentations::RColumnRepresentations(
 
 void ROOT::Experimental::RFieldBase::RValue::BindRawPtr(void *rawPtr)
 {
-   /// Empty shared pointer, used as the basis for the aliasing shared pointer constructor around rawPtr.
-   /// Note that as a result of BindRawPtr, fObjPtr will be non-empty but have use count zero.
-   static std::shared_ptr<void> fgRawPtrCtrlBlock;
-   fObjPtr = std::shared_ptr<void>(fgRawPtrCtrlBlock, rawPtr);
+   // Set fObjPtr to an aliased shared_ptr of the input raw pointer. Note that
+   // fObjPtr will be non-empty but have use count zero.
+   fObjPtr = ROOT::Experimental::Internal::MakeAliasedSharedPtr(rawPtr);
 }
 
 //------------------------------------------------------------------------------

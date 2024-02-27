@@ -228,3 +228,13 @@ const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::RNTupleReader::
       fCachedDescriptor = descriptorGuard->Clone();
    return *fCachedDescriptor;
 }
+
+ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleReader::RetrieveFieldId(std::string_view fieldName) const
+{
+   auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
+   if (fieldId == kInvalidDescriptorId) {
+      throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
+                               fSource->GetSharedDescriptorGuard()->GetName() + "'"));
+   }
+   return fieldId;
+}
