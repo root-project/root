@@ -1771,7 +1771,7 @@ std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *n
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
    : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
 {
-   R__ASSERT(GetClass()->GetClassVersion() == 1);
+   assert(GetClass()->GetClassVersion() == 1);
 
    if (!(GetClass()->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
