@@ -14,7 +14,6 @@
 
 #include "TVirtualPad.h"
 #include "TAttBBox2D.h"
-#include "TMath.h"
 #include <vector>
 
 class TVirtualViewer3D;
@@ -326,7 +325,7 @@ public:
    void              SetCrosshair(Int_t crhair=1) override; // *TOGGLE*
    void              SetCursor(ECursor cursor) override;
    void              SetDoubleBuffer(Int_t mode=1) override;
-   void              SetDrawOption(Option_t *option="") override;
+   void              SetDrawOption(Option_t * = "") override {}
    void              SetEditable(Bool_t mode=kTRUE) override; // *TOGGLE*
    void              SetFixedAspectRatio(Bool_t fixed = kTRUE) override;  // *TOGGLE*
    void              SetGrid(Int_t valuex = 1, Int_t valuey = 1) override { fGridx = valuex; fGridy = valuey; Modified(); }
@@ -367,8 +366,8 @@ public:
    void              Update() override;
    void              UpdateAsync() override;
 
-   Int_t             UtoAbsPixel(Double_t u) const override { return TMath::Nint(fUtoAbsPixelk + u*fUtoPixel); }
-   Int_t             VtoAbsPixel(Double_t v) const override { return TMath::Nint(fVtoAbsPixelk + v*fVtoPixel); }
+   Int_t             UtoAbsPixel(Double_t u) const override;
+   Int_t             VtoAbsPixel(Double_t v) const override;
    Int_t             UtoPixel(Double_t u) const override;
    Int_t             VtoPixel(Double_t v) const override;
    TObject          *WaitPrimitive(const char *pname="", const char *emode="") override;
@@ -415,135 +414,6 @@ public:
 
    ClassDefOverride(TPad,13)  //A Graphics pad
 };
-
-
-//______________________________________________________________________________
-inline void TPad::Modified(Bool_t flag)
-{
-   if (!fModified && flag) Emit("Modified()");
-   fModified = flag;
-}
-
-
-//______________________________________________________________________________
-inline void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
-{
-   x = AbsPixeltoX(xpixel);
-   y = AbsPixeltoY(ypixel);
-}
-
-
-//______________________________________________________________________________
-inline Double_t TPad::PixeltoX(Int_t px)
-{
-   if (fAbsCoord) return fAbsPixeltoXk + px*fPixeltoX;
-   else           return fPixeltoXk    + px*fPixeltoX;
-}
-
-
-//______________________________________________________________________________
-inline Double_t TPad::PixeltoY(Int_t py)
-{
-   if (fAbsCoord) return fAbsPixeltoYk + py*fPixeltoY;
-   else           return fPixeltoYk    + py*fPixeltoY;
-}
-
-
-//______________________________________________________________________________
-inline void TPad::PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
-{
-   x = PixeltoX(xpixel);
-   y = PixeltoY(ypixel);
-}
-
-
-//______________________________________________________________________________
-inline Int_t TPad::UtoPixel(Double_t u) const
-{
-   Double_t val;
-   if (fAbsCoord) val = fUtoAbsPixelk + u*fUtoPixel;
-   else           val = u*fUtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
-}
-
-
-//______________________________________________________________________________
-inline Int_t TPad::VtoPixel(Double_t v) const
-{
-   Double_t val;
-   if (fAbsCoord) val = fVtoAbsPixelk + v*fVtoPixel;
-   else           val = fVtoPixelk    + v*fVtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
-}
-
-
-//______________________________________________________________________________
-inline Int_t TPad::XtoAbsPixel(Double_t x) const
-{
-   Double_t val = fXtoAbsPixelk + x*fXtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
-}
-
-
-//______________________________________________________________________________
-inline Int_t TPad::XtoPixel(Double_t x) const
-{
-   Double_t val;
-   if (fAbsCoord) val = fXtoAbsPixelk + x*fXtoPixel;
-   else           val = fXtoPixelk    + x*fXtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
-}
-
-
-//______________________________________________________________________________
-inline Int_t TPad::YtoAbsPixel(Double_t y) const
-{
-   Double_t val = fYtoAbsPixelk + y*fYtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
-}
-
-
-//______________________________________________________________________________
-inline Int_t TPad::YtoPixel(Double_t y) const
-{
-   Double_t val;
-   if (fAbsCoord) val = fYtoAbsPixelk + y*fYtoPixel;
-   else           val = fYtoPixelk    + y*fYtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
-}
-
-
-//______________________________________________________________________________
-inline void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
-{
-   xpixel = XtoAbsPixel(x);
-   ypixel = YtoAbsPixel(y);
-}
-
-
-//______________________________________________________________________________
-inline void TPad::XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
-{
-   xpixel = XtoPixel(x);
-   ypixel = YtoPixel(y);
-}
-
-
-//______________________________________________________________________________
-inline void TPad::SetDrawOption(Option_t *)
-{ }
 
 #endif
 
