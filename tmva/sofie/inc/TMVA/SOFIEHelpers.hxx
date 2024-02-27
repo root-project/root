@@ -36,7 +36,10 @@ public:
       fInput.resize(nslots);
       fSessions.reserve(nslots);
       for (unsigned int i = 0; i < nslots; i++) {
-         fSessions.emplace_back(filename);
+         if (filename.empty())
+            fSessions.emplace_back();
+         else
+            fSessions.emplace_back(filename);
       }
    }
 
