@@ -352,6 +352,11 @@ if(builtin_lzma)
     )
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
+
+  add_library(LibLZMA STATIC IMPORTED GLOBAL)
+  add_library(LibLZMA::LibLZMA ALIAS LibLZMA)
+  target_include_directories(LibLZMA INTERFACE ${LIBLZMA_INCLUDE_DIR})
+  set_target_properties(LibLZMA PROPERTIES IMPORTED_LOCATION ${LIBLZMA_LIBRARIES})
 endif()
 
 #---Check for xxHash-----------------------------------------------------------------
