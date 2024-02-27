@@ -376,7 +376,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
       } else if (!strcmp(argv[i], "-a")) {
-         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.");
+         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.\n");
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
