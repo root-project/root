@@ -5538,7 +5538,7 @@ void TPad::ResizePad(Option_t *option)
    Double_t pyrange = -fAbsHNDC*wh;
 
    // Linear X axis
-   Double_t rounding = 0.00005;
+   Double_t rounding = 0.; // was used before to adjust somehow wrong int trunctation by coordiantes transformation
    Double_t xrange  = fX2 - fX1;
    fXtoAbsPixelk = rounding + pxlow - pxrange*fX1/xrange;      //origin at left
    fXtoPixelk = rounding +  -pxrange*fX1/xrange;
