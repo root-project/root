@@ -2,6 +2,7 @@
 
 #include <TObject.h>
 #include <TRef.h>
+#include <TVector2.h>
 
 #include <sstream>
 
@@ -138,4 +139,28 @@ TEST(RTNuple, TObject)
    std::ostringstream os;
    reader->Show(0, os);
    EXPECT_EQ(expected, os.str());
+}
+
+TEST(RTNuple, TObjectDerived)
+{
+   FileRaii fileGuard("test_ntuple_tobject_derived.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrVector2 = model->MakeField<TVector2>("vector2");
+      ptrVector2->SetX(1.0);
+      ptrVector2->SetY(2.0);
+      ptrVector2->SetUniqueID(137);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+
+   auto ptrVector2 = reader->GetModel().GetDefaultEntry().GetPtr<TVector2>("vector2");
+   reader->LoadEntry(0);
+   EXPECT_DOUBLE_EQ(1.0, ptrVector2->X());
+   EXPECT_DOUBLE_EQ(2.0, ptrVector2->Y());
+   EXPECT_EQ(137u, ptrVector2->GetUniqueID());
 }
