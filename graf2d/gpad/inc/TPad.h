@@ -14,6 +14,7 @@
 
 #include "TVirtualPad.h"
 #include "TAttBBox2D.h"
+#include "TMath.h"
 #include <vector>
 
 class TVirtualViewer3D;
@@ -366,8 +367,8 @@ public:
    void              Update() override;
    void              UpdateAsync() override;
 
-   Int_t             UtoAbsPixel(Double_t u) const override { return Int_t(fUtoAbsPixelk + u*fUtoPixel); }
-   Int_t             VtoAbsPixel(Double_t v) const override { return Int_t(fVtoAbsPixelk + v*fVtoPixel); }
+   Int_t             UtoAbsPixel(Double_t u) const override { return TMath::Nint(fUtoAbsPixelk + u*fUtoPixel); }
+   Int_t             VtoAbsPixel(Double_t v) const override { return TMath::Nint(fVtoAbsPixelk + v*fVtoPixel); }
    Int_t             UtoPixel(Double_t u) const override;
    Int_t             VtoPixel(Double_t v) const override;
    TObject          *WaitPrimitive(const char *pname="", const char *emode="") override;
@@ -464,7 +465,7 @@ inline Int_t TPad::UtoPixel(Double_t u) const
    else           val = u*fUtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
-   return Int_t(val);
+   return TMath::Nint(val);
 }
 
 
@@ -476,7 +477,7 @@ inline Int_t TPad::VtoPixel(Double_t v) const
    else           val = fVtoPixelk    + v*fVtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
-   return Int_t(val);
+   return TMath::Nint(val);
 }
 
 
@@ -486,7 +487,7 @@ inline Int_t TPad::XtoAbsPixel(Double_t x) const
    Double_t val = fXtoAbsPixelk + x*fXtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
-   return Int_t(val);
+   return TMath::Nint(val);
 }
 
 
@@ -498,7 +499,7 @@ inline Int_t TPad::XtoPixel(Double_t x) const
    else           val = fXtoPixelk    + x*fXtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
-   return Int_t(val);
+   return TMath::Nint(val);
 }
 
 
@@ -508,7 +509,7 @@ inline Int_t TPad::YtoAbsPixel(Double_t y) const
    Double_t val = fYtoAbsPixelk + y*fYtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
-   return Int_t(val);
+   return TMath::Nint(val);
 }
 
 
@@ -520,7 +521,7 @@ inline Int_t TPad::YtoPixel(Double_t y) const
    else           val = fYtoPixelk    + y*fYtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
-   return Int_t(val);
+   return TMath::Nint(val);
 }
 
 
