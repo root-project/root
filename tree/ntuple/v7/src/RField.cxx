@@ -1576,6 +1576,9 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    if (fClass->Property() & kIsDefinedInStd) {
       throw RException(R__FAIL(std::string(className) + " is not supported"));
    }
+   if (className == "TObject") {
+      throw RException(R__FAIL("TObject is only supported through RField<TObject>"));
+   }
    if (fClass->GetCollectionProxy()) {
       throw RException(
          R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
