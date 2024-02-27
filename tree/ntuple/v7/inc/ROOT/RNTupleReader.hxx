@@ -97,6 +97,8 @@ private:
    RNTupleReader *GetDisplayReader();
    void InitPageSource();
 
+   DescriptorId_t RetrieveFieldId(std::string_view fieldName) const;
+
 public:
    // Browse through the entries
    class RIterator {
@@ -270,20 +272,27 @@ public:
    /// }
    /// ~~~
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName)
+   RNTupleView<T, false> GetView(std::string_view fieldName)
    {
-      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
-      if (fieldId == kInvalidDescriptorId) {
-         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
-                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
-      }
-      return GetView<T>(fieldId);
+      return GetView<T>(RetrieveFieldId(fieldName));
    }
 
    template <typename T>
-   RNTupleView<T> GetView(DescriptorId_t fieldId)
+   RNTupleView<T, true> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
-      return RNTupleView<T>(fieldId, fSource.get());
+      return GetView<T>(RetrieveFieldId(fieldName), objPtr);
+   }
+
+   template <typename T>
+   RNTupleView<T, false> GetView(DescriptorId_t fieldId)
+   {
+      return RNTupleView<T, false>(fieldId, fSource.get());
+   }
+
+   template <typename T>
+   RNTupleView<T, true> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   {
+      return RNTupleView<T, true>(fieldId, fSource.get(), objPtr);
    }
 
    /// Raises an exception if:
