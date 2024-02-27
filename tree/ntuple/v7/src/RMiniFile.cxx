@@ -1242,7 +1242,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Write(
    R__ASSERT(fFile);
    fFile->Seek(offset);
    bool rv = fFile->WriteBuffer((char *)(buffer), nbytes);
-   if (!rv)
+   if (rv)
       throw RException(R__FAIL("WriteBuffer failed."));
 }
 

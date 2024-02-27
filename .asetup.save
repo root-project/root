@@ -1,0 +1,51 @@
+#Release cmake
+
+export LANG="C.utf8"
+export LC_ALL="C.utf8"
+export COOL_ORA_ENABLE_ADAPTIVE_OPT="Y"
+export ASETUP_PRINTLEVEL="0"
+export BINARY_TAG="x86_64-el9-gcc13-opt"
+export CMTCONFIG="x86_64-el9-gcc13-opt"
+if [ -n "${MAKEFLAGS:+x}" ]; then
+    asetup_flags=`echo ${MAKEFLAGS} | \grep ' -l'`
+    if [ -z "${asetup_flags}" ]; then
+        export MAKEFLAGS="${MAKEFLAGS} -l16"
+    fi
+else
+    export MAKEFLAGS="-j16 -l16"
+fi
+source /cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0/x86_64-el9/setup.sh
+if [ -z "${CC:+x}" ]; then
+    export CC=`\env which gcc 2>/dev/null`
+    [[ -z "$CC" ]] && unset CC
+fi
+if [ -z "${CXX:+x}" ]; then
+    export CXX=`\env which g++ 2>/dev/null`
+    [[ -z "$CXX" ]] && unset CXX
+fi
+if [ -z "${CUDAHOSTCXX:+x}" ]; then
+    export CUDAHOSTCXX=`\env which g++ 2>/dev/null`
+    [[ -z "$CUDAHOSTCXX" ]] && unset CUDAHOSTCXX
+fi
+if [ -z "${FC:+x}" ]; then
+    export FC=`\env which gfortran 2>/dev/null`
+    [[ -z "$FC" ]] && unset FC
+fi
+export CMAKE_NO_VERBOSE="1"
+type lsetup >/dev/null 2>/dev/null
+if [ $? -ne 0 ]; then
+   source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
+fi
+source $ATLAS_LOCAL_ROOT_BASE/packageSetups/localSetup.sh --quiet cmake
+if [ -z "${AtlasSetup:+x}" ]; then
+    export AtlasSetup="/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/x86_64/AtlasSetup/V02-02-10/AtlasSetup"
+    export AtlasSetupVersion="AtlasSetup-02-02-10"
+fi
+
+# Execute user-specified epilog
+
+source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/swConfig/asetup/asetupEpilog.sh
+script_status=$?
+if [ ${script_status} -ne 0 ]; then
+    \echo "AtlasSetup(ERROR): User-specified epilog (source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/swConfig/asetup/asetupEpilog.sh) reported failure (error ${script_status})"
+fi
