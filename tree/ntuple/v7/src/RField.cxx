@@ -1756,7 +1756,7 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 
 TClass *ROOT::Experimental::RField<TObject>::GetClass()
 {
-   return TClass::GetClass("TObject");
+   return TObject::Class();
 }
 
 std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *name)
