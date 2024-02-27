@@ -38,11 +38,6 @@ if(unuran)
   add_definitions(-DHAVE_UNURAN)
 endif()
 
-if(minuit2)
-  list(APPEND TestSource fit/testMinim.cxx)
-  list(APPEND Libraries Minuit2)
-endif()
-
 #some tests requires directly gsl
 include_directories(${GSL_INCLUDE_DIR})
 add_definitions(-DHAVE_ROOTLIBS)
