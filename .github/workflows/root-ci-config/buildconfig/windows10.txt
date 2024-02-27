@@ -35,6 +35,7 @@ ssl=OFF
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 unuran=ON
+unfold=ON
 vdt=OFF
 x11=OFF
 xml=OFF
