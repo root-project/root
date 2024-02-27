@@ -4,6 +4,7 @@
 #include <TRef.h>
 #include <TVector2.h>
 
+#include <memory>
 #include <sstream>
 
 namespace {
@@ -72,6 +73,8 @@ TEST(RNTuple, DiamondInheritance)
 
 TEST(RTNuple, TObject)
 {
+   EXPECT_THROW(std::make_unique<ROOT::Experimental::RClassField>("obj", "TObject"), RException);
+
    FileRaii fileGuard("test_ntuple_tobject.root");
    {
       auto model = RNTupleModel::Create();
