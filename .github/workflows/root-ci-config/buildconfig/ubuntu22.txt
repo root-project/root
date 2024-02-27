@@ -1,3 +1,13 @@
 builtin_vdt=ON
 pythia8=OFF
-
+builtin_gsl=On
+builtin_fftw3=On
+builtin_unuran=On
+fftw3=On
+unfold=On
+unuran=On
+mathmore=On
+tmva-cpu=On
+tmva-pymva=On
+tmva-sofie=Off
+r=ON
