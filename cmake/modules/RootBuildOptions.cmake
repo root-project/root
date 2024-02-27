@@ -216,7 +216,6 @@ endif()
 
 #--- The 'all' option switches ON major options---------------------------------------------------
 if(all)
- set(alien_defvalue ON)
  set(arrow_defvalue ON)
  set(asimage_defvalue ON)
  set(cefweb_defvalue ON)
