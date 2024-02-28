@@ -192,6 +192,11 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
                 result = (PTR) mdp -> breakval;
                 mdp -> breakval += size;
               }
+            else
+              {
+                fprintf(stderr, "mmap_morecore unexpected mmap result: mapto=%p vs top=%p mapbytes=%ld offset=%ld\n",
+                        mapto, mdp -> top, (long)mapbytes, (long)foffset);
+              }
           }
         }
       else
