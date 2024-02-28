@@ -449,7 +449,7 @@ async function createRender3D(width, height, render3d, args) {
          args.canvas.addEventListener = () => {}; // dummy
          args.canvas.removeEventListener = () => {}; // dummy
          args.canvas.style = {};
-         return import('gl');
+         return import('jsroot-gl');
       }).then(node_gl => {
          const gl = node_gl.default(width, height, { preserveDrawingBuffer: true });
          if (!gl) throw Error('Fail to create headless-gl');

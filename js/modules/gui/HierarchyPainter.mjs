@@ -5,7 +5,7 @@ import { version, gStyle, httpRequest, create, createHttpRequest, loadScript, de
 import { select as d3_select } from '../d3.mjs';
 import { openFile, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, addUserStreamer } from '../io.mjs';
 import { getRGBfromTColor } from '../base/colors.mjs';
-import { BasePainter, getElementRect, _loadJSDOM } from '../base/BasePainter.mjs';
+import { BasePainter, getElementRect, _loadJSDOM, convertDate } from '../base/BasePainter.mjs';
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
@@ -784,7 +784,7 @@ class HierarchyPainter extends BasePainter {
       if (!folder) folder = {};
 
       folder._name = file.fFileName;
-      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(file.fDatimeM.getDate())}`;
       folder._kind = kindTFile;
       folder._file = file;
       folder._fullurl = file.fFullURL;
@@ -2659,6 +2659,18 @@ class HierarchyPainter extends BasePainter {
                func(item);
          }
       }
+   }
+
+   /** @summary Find ROOT file which corresponds to provided item name
+     * @private */
+   findRootFileForItem(itemname) {
+      let item = this.findItem(itemname);
+      while (item) {
+         if ((item._kind === kindTFile) && item._fullurl && item._file)
+            return item;
+         item = item?._parent;
+      }
+      return null;
    }
 
    /** @summary Open ROOT file

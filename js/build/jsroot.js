@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.5.99
+// https://root.cern/js/ v7.6.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '20/02/2024',
+version_date = '28/02/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -296,7 +296,9 @@ settings = {
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
    StripAxisLabels: true,
    /** @summary Draw TF1 by default as curve or line */
-   FuncAsCurve: false
+   FuncAsCurve: false,
+   /** @summary Time zone used for date/time display of file time */
+   TimeZone: ''
 },
 
 /** @namespace
@@ -10506,6 +10508,20 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
+/** @summary Convert Date object into string used preconfigured time zone
+ * @desc Time zone stored in settings.TimeZone */
+function convertDate(dt) {
+   let res = '';
+   if (settings.TimeZone && isStr(settings.TimeZone)) {
+     try {
+        res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
+     } catch (err) {
+        res = '';
+     }
+   }
+   return res || dt.toLocaleString('en-GB');
+}
+
 const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient',
       kWhite = 0, kBlack = 1;
 
@@ -12417,18 +12433,22 @@ class ObjectPainter extends BasePainter {
      * Only can be used for painting in the pad, means CreateG() should be called without arguments
      * @param {boolean} isndc - if NDC coordinates will be used
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
+     * @param {boolean} [use_frame_coordinates] - use frame coordinates even when drawing on the pad
      * @protected */
-   getAxisToSvgFunc(isndc, nornd) {
+   getAxisToSvgFunc(isndc, nornd, use_frame_coordinates) {
       const func = { isndc, nornd },
             use_frame = this.draw_g?.property('in_frame');
-      if (use_frame) func.main = this.getFramePainter();
+      if (use_frame || (use_frame_coordinates && !isndc))
+         func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
+         func.x0 = (use_frame_coordinates && !isndc) ? func.main.getFrameX() : 0;
+         func.y0 = (use_frame_coordinates && !isndc) ? func.main.getFrameY() : 0;
          if (nornd) {
-            func.x = function(x) { return this.main.grx(x); };
-            func.y = function(y) { return this.main.gry(y); };
+            func.x = function(x) { return this.x0 + this.main.grx(x); };
+            func.y = function(y) { return this.y0 + this.main.gry(y); };
          } else {
-            func.x = function(x) { return Math.round(this.main.grx(x)); };
-            func.y = function(y) { return Math.round(this.main.gry(y)); };
+            func.x = function(x) { return this.x0 + Math.round(this.main.grx(x)); };
+            func.y = function(y) { return this.y0 + Math.round(this.main.gry(y)); };
          }
       } else if (!use_frame) {
          const pp = this.getPadPainter();
@@ -59892,8 +59912,9 @@ class JSRootMenu {
       const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
             addStyleIntField = (name, field, arr) => {
          this.add('sub:' + name);
+         const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
          for (let v = 0; v < arr.length; ++v)
-            this.addchk(gStyle[field] === v, arr[v], `${v}${field}`, setStyleField);
+            this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
          this.add('endsub:');
       };
 
@@ -59901,8 +59922,9 @@ class JSRootMenu {
 
       this.add('sub:Canvas');
       this.addColorMenu('Color', gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
-      this.addchk(gStyle.fOptDate, 'Draw date', flag => { gStyle.fOptDate = flag ? 1 : 0; });
-      this.addchk(gStyle.fOptFile, 'Draw item', flag => { gStyle.fOptFile = flag ? 1 : 0; });
+      addStyleIntField('Draw date', 'fOptDate', ['Off', 'Current time', 'File create time', 'File modify time']);
+      this.add(`Time zone: ${settings.TimeZone}`, () => this.input('Input time zone like UTC. empty string - local timezone', settings.TimeZone, 'string').then(val => { settings.TimeZone = val; }));
+      addStyleIntField('Draw file', 'fOptFile', ['Off', 'File name', 'Full file URL', 'Item name']);
       this.addSizeMenu('Date X', 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, 'configure gStyle.fDateX for date/item name drawings');
       this.addSizeMenu('Date Y', 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, 'configure gStyle.fDateY for date/item name drawings');
       this.add('endsub:');
@@ -61665,9 +61687,10 @@ class TAxisPainter extends ObjectPainter {
 
             this.drawText(arg);
 
-            if (lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
+            // workaround for symlog where labels can be compressed to close
+            if (this.symlog && lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
                const axis_step = Math.abs(pos - lastpos);
-               textscale = Math.min(textscale, 0.9*axis_step/labelsFont.size);
+               textscale = Math.min(textscale, 1.1*axis_step/labelsFont.size);
             }
 
             lastpos = pos;
@@ -61719,9 +61742,11 @@ class TAxisPainter extends ObjectPainter {
    /** @summary Extract major draw attributes, which are also used in interactive operations
      * @private  */
    extractDrawAttributes(scalingSize, w, h) {
-      const axis = this.getObject(),
-            pp = this.getPadPainter(),
-            pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
+      const axis = this.getObject();
+      let pp = this.getPadPainter();
+      if (axis.$use_top_pad)
+         pp = pp?.getPadPainter(); // workaround for ratio plot
+      const pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
             pad_h = pp?.getPadHeight() || scalingSize || h/0.8;
       let tickSize = 0, tickScalingSize = 0, titleColor, titleFontId, offset;
 
@@ -63759,7 +63784,7 @@ class TFramePainter extends ObjectPainter {
           umax = pad[`fU${name}max`],
           eps = 1e-7;
 
-      if (name === 'x') {
+            if (name === 'x') {
          if ((Math.abs(pad.fX1) > eps) || (Math.abs(pad.fX2 - 1) > eps)) {
             const dx = pad.fX2 - pad.fX1;
             umin = pad.fX1 + dx*pad.fLeftMargin;
@@ -63782,12 +63807,12 @@ class TFramePainter extends ObjectPainter {
 
       let aname = name;
       if (this.swap_xy) aname = (name === 'x') ? 'y' : 'x';
-      const smin = `scale_${aname}min`,
-          smax = `scale_${aname}max`;
+      const smin = this[`scale_${aname}min`],
+            smax = this[`scale_${aname}max`];
 
-      eps = (this[smax] - this[smin]) * 1e-7;
+      eps = (smax - smin) * 1e-7;
 
-      if ((Math.abs(umin - this[smin]) > eps) || (Math.abs(umax - this[smax]) > eps)) {
+      if ((Math.abs(umin - smin) > eps) || (Math.abs(umax - smax) > eps)) {
          this[`zoom_${aname}min`] = umin;
          this[`zoom_${aname}max`] = umax;
       }
@@ -63856,6 +63881,9 @@ class TFramePainter extends ObjectPainter {
          if (opts.ndim > 1) this.applyAxisZoom('y');
          if (opts.ndim > 2) this.applyAxisZoom('z');
 
+         // TODO: extraction of PAD ranges must be done much earlier in hist painter
+         // normally histogram MUST set this ranges
+         // to be fixed after 7.6.0 release
          if (opts.check_pad_range === 'pad_range') {
             const canp = this.getCanvPainter();
             // ignore range set in the online canvas
@@ -63912,7 +63940,7 @@ class TFramePainter extends ObjectPainter {
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
-                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
+                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz <= this.ymax) ? 0.5*opts.ymin_nz : 0,
                                         logminfactor: logminfactorY });
 
       this.y_handle.assignFrameMembers(this, 'y');
@@ -63987,7 +64015,7 @@ class TFramePainter extends ObjectPainter {
                                            log: this.swap_xy ? pad.fLogx : pad.fLogy,
                                            noexp_changed: this.y2_noexp_changed,
                                            logcheckmin: (opts.ndim < 2) || this.swap_xy,
-                                           log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.y2max) ? 0.3 * opts.ymin_nz : 0,
+                                           log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.y2max) ? 0.5 * opts.ymin_nz : 0,
                                            logminfactor: logminfactorY });
 
          this.y2_handle.assignFrameMembers(this, 'y2');
@@ -67368,21 +67396,26 @@ class TPadPainter extends ObjectPainter {
       if (!gStyle.fOptDate)
          dt.remove();
        else {
-         if (dt.empty()) dt = info.append('text').attr('class', 'canvas_date');
-         const date = new Date(),
-               posy = Math.round(rect.height * (1 - gStyle.fDateY));
+         if (dt.empty())
+             dt = info.append('text').attr('class', 'canvas_date');
+         const posy = Math.round(rect.height * (1 - gStyle.fDateY)),
+               date = new Date();
          let posx = Math.round(rect.width * gStyle.fDateX);
-         if (!is_batch && (posx < 25)) posx = 25;
-         if (gStyle.fOptDate > 1) date.setTime(gStyle.fOptDate*1000);
+         if (!is_batch && (posx < 25))
+            posx = 25;
+         if (gStyle.fOptDate > 3)
+            date.setTime(gStyle.fOptDate*1000);
+
          makeTranslate(dt, posx, posy)
             .style('text-anchor', 'start')
-            .text(date.toLocaleString('en-GB'));
+            .text(convertDate(date));
       }
 
-      if (!gStyle.fOptFile || !this.getItemName())
+      const iname = this.getItemName();
+      if (iname)
+         this.drawItemNameOnCanvas(iname);
+      else if (!gStyle.fOptFile)
          info.selectChild('.canvas_item').remove();
-      else
-         this.drawItemNameOnCanvas(this.getItemName());
 
       return true;
    }
@@ -67392,14 +67425,22 @@ class TPadPainter extends ObjectPainter {
    drawItemNameOnCanvas(item_name) {
       const info = this.getLayerSvg('info_layer', this.this_pad_name);
       let df = info.selectChild('.canvas_item');
-      if (!gStyle.fOptFile || !item_name)
+      const fitem = getHPainter().findRootFileForItem(item_name),
+            fname = (gStyle.fOptFile === 3) ? item_name : ((gStyle.fOptFile === 2) ? fitem?._fullurl : fitem?._name);
+
+      if (!gStyle.fOptFile || !fname)
          df.remove();
        else {
-         if (df.empty()) df = info.append('text').attr('class', 'canvas_item');
+         if (df.empty())
+            df = info.append('text').attr('class', 'canvas_item');
          const rect = this.getPadRect();
          makeTranslate(df, Math.round(rect.width * (1 - gStyle.fDateX)), Math.round(rect.height * (1 - gStyle.fDateY)))
             .style('text-anchor', 'end')
-            .text(item_name);
+            .text(fname);
+      }
+      if (((gStyle.fOptDate === 2) || (gStyle.fOptDate === 3)) && fitem?._file) {
+         info.selectChild('.canvas_date')
+             .text(convertDate(gStyle.fOptDate === 2 ? fitem._file.fDatimeC.getDate() : fitem._file.fDatimeM.getDate()));
       }
    }
 
@@ -70509,8 +70550,9 @@ class TPavePainter extends ObjectPainter {
                   // individual positioning
                   const align = entry.fTextAlign || this.textatt.align,
                         halign = Math.floor(align/10),
+                        valign = align % 10,
                         x = entry.fX ? entry.fX*width : (halign === 1 ? margin_x : (halign === 2 ? width / 2 : width - margin_x)),
-                        y = entry.fY ? (1 - entry.fY)*height : texty,
+                        y = entry.fY ? (1 - entry.fY)*height : (texty + (valign === 2 ? stepy / 2 : (valign === 3 ? stepy : 0))),
                         sub_g = text_g.append('svg:g');
 
                   this.startTextDrawing(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pad_height), sub_g);
@@ -70522,7 +70564,7 @@ class TPavePainter extends ObjectPainter {
                } else {
                   // default position
                   if (num_default++ === 0)
-                     this.startTextDrawing(this.textatt.font, height/(nlines * 1.2), text_g, max_font_size);
+                     this.startTextDrawing(this.textatt.font, 0.85*height/nlines, text_g, max_font_size);
 
                   this.drawText({ x: margin_x, y: texty, width: width - 2*margin_x, height: stepy,
                                   align: entry.fTextAlign || this.textatt.align,
@@ -71825,7 +71867,7 @@ class THistDrawOptions {
       if (d.check('PMC') && !this._pmc)
          this._pmc = 2;
 
-      if (d.check('L')) { this.Line = true; this.Hist = false; this.Error = false; }
+      if (d.check('L')) { this.Line = true; this.Hist = false; }
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
 
       if (d.check('A')) this.Axis = -1;
@@ -79214,13 +79256,12 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
-      this.stat_entries = hsum;
-      if (histo.fEntries > 1) this.stat_entries = histo.fEntries;
+      this.stat_entries = (histo.fEntries > 1) ? histo.fEntries : hsum;
 
       this.hmin = hmin;
       this.hmax = hmax;
 
-      this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
+      // this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
 
       if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300) && (Math.abs(hmax) < 1e-300)))
          this.draw_content = false;
@@ -79237,10 +79278,16 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                this.ymin = 0; this.ymax = hmin * 2;
             }
          } else {
-            const dy = (hmax - hmin) * gStyle.fHistTopMargin;
-            this.ymin = hmin - dy;
-            if ((this.ymin < 0) && (hmin >= 0)) this.ymin = 0;
-            this.ymax = hmax + dy;
+            const pad = this.getPadPainter()?.getRootPad(),
+                  pad_logy = (this.options.BarStyle >= 20) ? pad.fLogx : (pad?.fLogv ?? pad?.fLogy);
+            if (pad_logy) {
+               this.ymin = (hmin_nz || hmin) * 0.5;
+               this.ymax = hmax*2*(0.9/0.95);
+            } else {
+               this.ymin = hmin - (hmax - hmin) * gStyle.fHistTopMargin;
+               if ((this.ymin < 0) && (hmin >= 0)) this.ymin = 0;
+               this.ymax = hmax + (hmax - this.ymin) * gStyle.fHistTopMargin;
+            }
          }
       }
 
@@ -79591,13 +79638,13 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             xaxis = histo.fXaxis,
             exclude_zero = !this.options.Zero,
             show_errors = this.options.Error,
-            show_line = this.options.Line,
             show_curve = this.options.Curve,
             show_text = this.options.Text,
             text_profile = show_text && (this.options.TextKind === 'E') && this.isTProfile() && histo.fBinEntries,
             grpnts = [];
       let res = '', lastbin = false,
           show_markers = this.options.Mark,
+          show_line = this.options.Line,
           startx, startmidx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           path_fill = null, path_err = null, path_marker = null, path_line = '',
           hints_err = null, hints_marker = null, hsz = 5,
@@ -79611,7 +79658,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       if (this.options.ErrorKind === 2) {
          if (this.fillatt.empty()) show_markers = true;
                               else path_fill = '';
-      } else if (this.options.Error) {
+      } else if (show_errors) {
+         show_line = false;
          path_err = '';
          hints_err = want_tooltip ? '' : null;
          do_err = true;
@@ -95715,6 +95763,18 @@ function addUserStreamer(type, user_streamer) {
    CustomStreamers[type] = user_streamer;
 }
 
+function getTDatimeDate() {
+   const res = new Date();
+   res.setFullYear((this.fDatime >>> 26) + 1995);
+   res.setMonth(((this.fDatime << 6) >>> 28) - 1);
+   res.setDate((this.fDatime << 10) >>> 27);
+   res.setHours((this.fDatime << 15) >>> 27);
+   res.setMinutes((this.fDatime << 20) >>> 26);
+   res.setSeconds((this.fDatime << 26) >>> 26);
+   res.setMilliseconds(0);
+   return res;
+}
+
 
 /** @summary these are streamers which do not handle version regularly
   * @desc used for special classes like TRef or TBasket
@@ -95728,17 +95788,7 @@ const DirectStreamers = {
 
    TDatime(buf, obj) {
       obj.fDatime = buf.ntou4();
-      //  obj.GetDate = function() {
-      //  let res = new Date();
-      //  res.setFullYear((this.fDatime >>> 26) + 1995);
-      //  res.setMonth((this.fDatime << 6) >>> 28);
-      //  res.setDate((this.fDatime << 10) >>> 27);
-      //  res.setHours((this.fDatime << 15) >>> 27);
-      //  res.setMinutes((this.fDatime << 20) >>> 26);
-      //  res.setSeconds((this.fDatime << 26) >>> 26);
-      //  res.setMilliseconds(0);
-      //  return res;
-      //  }
+      obj.getDate = getTDatimeDate;
    },
 
    TKey(buf, key) {
@@ -103249,7 +103299,7 @@ class HierarchyPainter extends BasePainter {
       if (!folder) folder = {};
 
       folder._name = file.fFileName;
-      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(file.fDatimeM.getDate())}`;
       folder._kind = kindTFile;
       folder._file = file;
       folder._fullurl = file.fFullURL;
@@ -105124,6 +105174,18 @@ class HierarchyPainter extends BasePainter {
       }
    }
 
+   /** @summary Find ROOT file which corresponds to provided item name
+     * @private */
+   findRootFileForItem(itemname) {
+      let item = this.findItem(itemname);
+      while (item) {
+         if ((item._kind === kindTFile) && item._fullurl && item._file)
+            return item;
+         item = item?._parent;
+      }
+      return null;
+   }
+
    /** @summary Open ROOT file
      * @param {string} filepath - URL to ROOT file, argument for openFile
      * @return {Promise} when file is opened */
@@ -106543,6 +106605,14 @@ function readStyleFromURL(url) {
    get_int_style('optdate', 'fOptDate', 1);
    get_int_style('optfile', 'fOptFile', 1);
    get_int_style('opttitle', 'fOptTitle', 1);
+   if (d.has('utc'))
+      settings.TimeZone = 'UTC';
+   else if (d.has('timezone')) {
+      settings.TimeZone = d.get('timezone');
+      if ((settings.TimeZone === 'default') || (settings.TimeZone === 'dflt'))
+         settings.TimeZone = '';
+   }
+
    gStyle.fStatFormat = d.get('statfmt', gStyle.fStatFormat);
    gStyle.fFitFormat = d.get('fitfmt', gStyle.fFitFormat);
 }
@@ -112300,7 +112370,7 @@ class TLinePainter extends ObjectPainter {
 
       this.isndc = line.TestBit(kLineNDC);
 
-      const func = this.getAxisToSvgFunc(this.isndc, true);
+      const func = this.getAxisToSvgFunc(this.isndc, true, true);
 
       this.x1 = func.x(line.fX1);
       this.y1 = func.y(line.fY1);
@@ -112364,10 +112434,16 @@ class TRatioPlotPainter extends ObjectPainter {
       if (xmin === xmax) {
          const x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad)?.getFramePainter()?.x_handle;
          if (!x_handle) return;
-         xmin = x_handle.full_min;
-         xmax = x_handle.full_max;
+         if (xmin === 0) {
+            // in case of unzoom full range should be used
+            xmin = x_handle.full_min;
+            xmax = x_handle.full_max;
+         } else {
+            // in case of y-scale zooming actual range has to be used
+            xmin = x_handle.scale_min;
+            xmax = x_handle.scale_max;
+         }
       }
-
       ratio.fGridlines.forEach(line => {
          line.fX1 = xmin;
          line.fX2 = xmax;
@@ -112387,20 +112463,18 @@ class TRatioPlotPainter extends ObjectPainter {
             low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
             low_main = low_p?.getMainPainter(),
             low_fp = low_p?.getFramePainter();
-      let lbl_size = 20, promise_up = Promise.resolve(true);
+      let promise_up = Promise.resolve(true);
 
       if (up_p && up_main && up_fp && low_fp && !up_p._ratio_configured) {
          up_p._ratio_configured = true;
+
          up_main.options.Axis = 0; // draw both axes
 
-         lbl_size = up_main.getHisto().fYaxis.fLabelSize;
-         if (lbl_size < 1) lbl_size = Math.round(lbl_size*Math.min(up_p.getPadWidth(), up_p.getPadHeight()));
-
          const h = up_main.getHisto();
+
+         h.fYaxis.$use_top_pad = true; // workaround to use same scaling
          h.fXaxis.fLabelSize = 0; // do not draw X axis labels
          h.fXaxis.fTitle = ''; // do not draw X axis title
-         h.fYaxis.fLabelSize = lbl_size;
-         h.fYaxis.fTitleSize = lbl_size;
 
          up_p.getRootPad().fTicky = 1;
 
@@ -112424,7 +112498,7 @@ class TRatioPlotPainter extends ObjectPainter {
                this._ratio_low_fp.fX2NDC = this.fX2NDC;
                this._ratio_low_fp.o_sizeChanged();
             };
-            return true;
+            return this;
          });
       }
 
@@ -112436,10 +112510,9 @@ class TRatioPlotPainter extends ObjectPainter {
          low_main.options.Axis = 0; // draw both axes
          const h = low_main.getHisto();
          h.fXaxis.fTitle = 'x';
-         h.fXaxis.fLabelSize = lbl_size;
-         h.fXaxis.fTitleSize = lbl_size;
-         h.fYaxis.fLabelSize = lbl_size;
-         h.fYaxis.fTitleSize = lbl_size;
+
+         h.fXaxis.$use_top_pad = true;
+         h.fYaxis.$use_top_pad = true;
          low_p.getRootPad().fTicky = 1;
 
          low_p.forEachPainterInPad(objp => {
@@ -116423,7 +116496,7 @@ class RFramePainter extends RObjectPainter {
                                         log: this.swap_xy ? this.logx : this.logy,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
-                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
+                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.ymax) ? 0.5 * opts.ymin_nz : 0,
                                         logminfactor: 3e-4 });
 
       this.y_handle.assignFrameMembers(this, 'y');
@@ -125741,6 +125814,7 @@ exports.cleanup = cleanup;
 exports.clone = clone;
 exports.compressSVG = compressSVG;
 exports.constants = constants$1;
+exports.convertDate = convertDate;
 exports.create = create$1;
 exports.createGeoPainter = createGeoPainter;
 exports.createHistogram = createHistogram;

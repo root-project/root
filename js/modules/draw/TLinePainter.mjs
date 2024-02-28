@@ -49,7 +49,7 @@ class TLinePainter extends ObjectPainter {
 
       this.isndc = line.TestBit(kLineNDC);
 
-      const func = this.getAxisToSvgFunc(this.isndc, true);
+      const func = this.getAxisToSvgFunc(this.isndc, true, true);
 
       this.x1 = func.x(line.fX1);
       this.y1 = func.y(line.fY1);

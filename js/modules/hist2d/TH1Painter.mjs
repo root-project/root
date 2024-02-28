@@ -85,13 +85,12 @@ class TH1Painter extends THistPainter {
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
-      this.stat_entries = hsum;
-      if (histo.fEntries > 1) this.stat_entries = histo.fEntries;
+      this.stat_entries = (histo.fEntries > 1) ? histo.fEntries : hsum;
 
       this.hmin = hmin;
       this.hmax = hmax;
 
-      this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
+      // this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
 
       if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300) && (Math.abs(hmax) < 1e-300)))
          this.draw_content = false;
@@ -108,10 +107,16 @@ class TH1Painter extends THistPainter {
                this.ymin = 0; this.ymax = hmin * 2;
             }
          } else {
-            const dy = (hmax - hmin) * gStyle.fHistTopMargin;
-            this.ymin = hmin - dy;
-            if ((this.ymin < 0) && (hmin >= 0)) this.ymin = 0;
-            this.ymax = hmax + dy;
+            const pad = this.getPadPainter()?.getRootPad(),
+                  pad_logy = (this.options.BarStyle >= 20) ? pad.fLogx : (pad?.fLogv ?? pad?.fLogy);
+            if (pad_logy) {
+               this.ymin = (hmin_nz || hmin) * 0.5;
+               this.ymax = hmax*2*(0.9/0.95);
+            } else {
+               this.ymin = hmin - (hmax - hmin) * gStyle.fHistTopMargin;
+               if ((this.ymin < 0) && (hmin >= 0)) this.ymin = 0;
+               this.ymax = hmax + (hmax - this.ymin) * gStyle.fHistTopMargin;
+            }
          }
       }
 
@@ -462,13 +467,13 @@ class TH1Painter extends THistPainter {
             xaxis = histo.fXaxis,
             exclude_zero = !this.options.Zero,
             show_errors = this.options.Error,
-            show_line = this.options.Line,
             show_curve = this.options.Curve,
             show_text = this.options.Text,
             text_profile = show_text && (this.options.TextKind === 'E') && this.isTProfile() && histo.fBinEntries,
             grpnts = [];
       let res = '', lastbin = false,
           show_markers = this.options.Mark,
+          show_line = this.options.Line,
           startx, startmidx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           path_fill = null, path_err = null, path_marker = null, path_line = '',
           hints_err = null, hints_marker = null, hsz = 5,
@@ -482,7 +487,8 @@ class TH1Painter extends THistPainter {
       if (this.options.ErrorKind === 2) {
          if (this.fillatt.empty()) show_markers = true;
                               else path_fill = '';
-      } else if (this.options.Error) {
+      } else if (show_errors) {
+         show_line = false;
          path_err = '';
          hints_err = want_tooltip ? '' : null;
          do_err = true;
