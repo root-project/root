@@ -19,13 +19,13 @@ Most classes in the storage layer and the primitives layer are in the `ROOT::Int
 with the notable exception of the descriptor classes (`RNTupleDescriptor`, `RFieldDescriptor`, etc.).
 Most classes in the upper layers provide public interfaces.
 
-| Layer      | Description                                                         | Example of classes                                   |
-|------------|---------------------------------------------------------------------|------------------------------------------------------|
-| Storage    | Read and write pages (physical: file, DAOS; virtual: e.g. buffered) | RPage{Source,Sink}, RNTupleDescriptor, RClusterPool  |
-| Primitives | Storage-backed columns of simple types                              | RColumn, RColumnElement, RPage                       |
-| Logical    | Mapping of C++ types onto columns                                   | RField, RNTupleModel, REntry                         |
+| Layer      | Description                                                         | Example of classes                                          |
+|------------|---------------------------------------------------------------------|-------------------------------------------------------------|
+| Storage    | Read and write pages (physical: file, DAOS; virtual: e.g. buffered) | RPage{Source,Sink}, RNTupleDescriptor, RClusterPool         |
+| Primitives | Storage-backed columns of simple types                              | RColumn, RColumnElement, RPage                              |
+| Logical    | Mapping of C++ types onto columns                                   | RField, RNTupleModel, REntry                                |
 | Iteration  | Reading and writing events / properties                             | RNTuple{Reader,Writer}, RNTupleView, RNTupleDS (RDataFrame) |
-| Tooling    | Higher-level, RNTuple related utility classes                       | RNTupleMerger, RNTupleImporter, RNTupleInspector     |
+| Tooling    | Higher-level, RNTuple related utility classes                       | RNTupleMerger, RNTupleImporter, RNTupleInspector            |
 
 The RNTuple classes are, unless explicitly stated otherwise, conditionally thread safe.
 
@@ -217,6 +217,16 @@ Frozen models can create entries.
 Every model has a unique model ID, which is used to identify the entries created from this model.
 Unless a model is created as "bare model", it owns a default entry that is used by default by the `RNTupleReader` and the `RNTupleWriter`.
 
+A model can add _projected fields_.
+Projected fields map existing physical fields to a different type.
+For instance, a `std::vector<Event>` can be projected onto a `std::vector<float>` for a float member of `Event`.
+Projected fields are stored as header meta-data.
+
+Fields can be added to a model after the writing process has started (cf. `RNTupleWriter::CreateModelUpdater()`).
+This is called _late model extension_.
+Addition of fields invalidates previously created entries.
+The values of deferred fields for the already written entries is set to the default constructed type of the field.
+
 ### REntry
 The REntry represents a row/entry in an RNTuple.
 It contains a list of `RValue` objects that correspond to the top-level fields of the originating model.
@@ -234,7 +244,7 @@ The RNTupleWriter is the primary interface to create an RNTuple.
 The writer takes ownership of a given model.
 The writer can either add an RNTuple to an existing ROOT file (`RNTupleWriter::Append()`) or create a new ROOT file with an RNTuple (`RNTupleWriter::Recreate()`).
 Once created, entries are added to an RNTuple either serially (`RNTupleWriter::Fill()`) or in concurrently in multiple threads with the `RNTupleParallelWriter`.
-Once committed (e.g. by releasing the RNTupleWriter), the RNTuple is immutable and cannot be appended.
+Once committed (e.g. by releasing the RNTupleWriter), the RNTuple is immutable and cannot be ammended.
 An RNTuple that is currently being written cannot be read.
 
 ### RNTupleReader
@@ -362,9 +372,9 @@ By default, the page source uses an `RClusterPool` to asynchronously read-ahead 
 When a page of a certain cluster is required, the cluster pool reads pages of _active_ columns.
 For instance, if only certain fields are used (e.g., through an imposed model), only the pages of columns connected to those fields are read.
 Columns can be dynamically added (e.g. during event iteration, a new field view is created in a reader).
-The page pool reads ahead a limited number of clusters given by the _cluster bunch size_ option (default = 1).
+The cluster pool reads ahead a limited number of clusters given by the _cluster bunch size_ option (default = 1).
 The read-ahead uses vector reads.
-For the file backend, it additionally coalesces close read requests and uses uring reads when it is available.
+For the file backend, it additionally coalesces close read requests and uses uring reads when available.
 
 The page source can be restricted to a certain entry range.
 This allows for optimizing the page lists that are being read.
@@ -376,7 +386,6 @@ Storage Backends
 Support for storage backends is implemented through derived classes of `RPageSink` and `RPageSource`.
 The `RPage{Sink,Source}File` class provides a storage backend for RNTuple data in ROOT files, local or remote.
 The `RPage{Sink,Source}Daos` class provides a storage backend for RNTuple data in the DAOS object store.
-An S3 backend is planned.
 
 Every new storage backend needs to define
   1) The RNTuple embedding: how are RNTuple data blobs stored, e.g. in keys of ROOT files, or in objects of object stores
@@ -391,13 +400,13 @@ They are not meant to be extended by users.
 Multi-Threading
 ---------------
 
-The following options exist in RNTuple for multi-threaded data processing.
+The following options exist in RNTuple for multithreaded data processing.
 
 ### Implicit Multi-Threading
 When `ROOT::EnableImplicitMT()` is used, RNTuple uses ROOT's task arena to compress and decompress pages.
 That requires writes to be buffered and reads uses the cluster pool resp.
 The RNTuple data source for RDataFrame lets RDataFrame full control of the thread pool.
-That means that RDataFrame uses a separate data source for every thread, each of the data sources runs in serial mode.
+That means that RDataFrame uses a separate data source for every thread, each of the data sources runs in sequential mode.
 
 ### Concurrent Readers
 Multiple readers can read the same RNTuple concurrently as long as access to every individual reader is sequential.
@@ -409,7 +418,7 @@ The actual reading and writing of entries (`RNTupleReader::LoadEntry()`, `RNTupl
 This is considered "mild scalability parallelization" in RNTuple.
 
 ### RNTupleParallelWriter
-The parallel writer offers the most scalable writing interface.
+The parallel writer offers the most scalable parallel writing interface.
 Multiple _fill contexts_ can concurrently serialize and compress data.
 Every fill context prepares a set of entire clusters in the final on-disk layout.
 When a fill context flushes data,
@@ -437,9 +446,9 @@ The RBrowser uses RNTuple classes to display RNTuple dataset information.
 Future Features
 ---------------
 
-The following feature a planned for after the first RNTuple production version:
-  - RNTupleProcessor: advanced RNTupleReader that allows for free combination of chains and (indexed) friends
-  - Horizontal merging: persistified friends, analogous to classical merge being a persistified chain
+The following features are planned for after the first RNTuple production version:
+  - RNTupleProcessor: advanced RNTupleReader that allows for free combination of chains and (indexed/unaligned) friends
+  - Horizontal merging: persistified friends, analogous to a classical merge being a persistified chain
   - An interface for bulk writing
   - Meta-data: RNTuple-specific and user-provided meta-data storage, such as file provenance, scale factors, or varied columns
   - C library interface
