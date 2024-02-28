@@ -104,6 +104,7 @@ tmva-pymva=ON
 tmva-rmva=OFF
 tmva-sofie=OFF
 tmva=ON
+unfold=ON
 unuran=OFF
 uring=OFF
 vc=OFF
