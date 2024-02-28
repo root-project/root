@@ -162,41 +162,6 @@ void ROOT::Experimental::Internal::RPageSource::UnzipCluster(RCluster *cluster)
       UnzipClusterImpl(cluster);
 }
 
-ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
-                                                      DescriptorId_t physicalColumnId)
-{
-   // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
-   // large enough to hold `sealedPage.fNElements`
-   if (sealedPage.fBuffer == RPage::GetPageZeroBuffer()) {
-      auto page = RPage::MakePageZero(physicalColumnId, element.GetSize());
-      page.GrowUnchecked(sealedPage.fNElements);
-      return page;
-   }
-
-   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
-   using Allocator_t = RPageAllocatorHeap;
-   auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
-   if (sealedPage.fSize != bytesPacked) {
-      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, page.GetBuffer());
-   } else {
-      // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
-      // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
-      // Note that usually pages are compressed.
-      memcpy(page.GetBuffer(), sealedPage.fBuffer, bytesPacked);
-   }
-
-   if (!element.IsMappable()) {
-      auto tmp = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
-      element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.fNElements);
-      Allocator_t::DeletePage(page);
-      page = tmp;
-   }
-
-   page.GrowUnchecked(sealedPage.fNElements);
-   return page;
-}
-
 void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
    std::function<void(DescriptorId_t, NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)> perPageFunc)
@@ -314,6 +279,40 @@ void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::
          })});
 }
 
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
+                                                      DescriptorId_t physicalColumnId)
+{
+   // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
+   // large enough to hold `sealedPage.fNElements`
+   if (sealedPage.fBuffer == RPage::GetPageZeroBuffer()) {
+      auto page = RPage::MakePageZero(physicalColumnId, element.GetSize());
+      page.GrowUnchecked(sealedPage.fNElements);
+      return page;
+   }
+
+   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
+   using Allocator_t = RPageAllocatorHeap;
+   auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
+   if (sealedPage.fSize != bytesPacked) {
+      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, page.GetBuffer());
+   } else {
+      // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
+      // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
+      // Note that usually pages are compressed.
+      memcpy(page.GetBuffer(), sealedPage.fBuffer, bytesPacked);
+   }
+
+   if (!element.IsMappable()) {
+      auto tmp = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
+      element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.fNElements);
+      Allocator_t::DeletePage(page);
+      page = tmp;
+   }
+
+   page.GrowUnchecked(sealedPage.fNElements);
+   return page;
+}
 
 //------------------------------------------------------------------------------
 
