@@ -178,7 +178,8 @@ Upon connecting a field to a page source or page sink,
 fields create `RColumn` objects and register them with the page source/sink.
 When reading and writing data, the field maps the in-memory information of an object to read/write calls on its columns.
 For instance, when writing a `std::vector<float>`,
-the field writes to an index column (storing information about the size of the vector), and to a float column (the actual values).
+the field writes to an index column (storing information about the size of the vector).
+Its subfield writes the actual values to a float column.
 
 During its lifetime, a field undergoes the following possible state transitions:
 ```
@@ -420,6 +421,7 @@ For these cases, RNTuple depends on the `RRawFile` class and its XRootD and Davi
 
 For user-defined classes as well as sets and maps, RNTuple uses `TClass`.
 Simple types and other stdlib classes are natively supported and do not require dictionaries.
+See the format specification for an exhaustive list of types supported in RNTuple.
 
 Integration to RDataFrame is provided through an RNTuple data source.
 A universal RDataFrame constructor can create a data frame from either a TTree or an RNTuple with the same syntax.
@@ -430,7 +432,7 @@ Future Features
 ---------------
 
 The following feature a planned for after the first RNTuple production version:
-  - RNTupleMT: advanced RNTupleReader that allows for free combination of chains and (indexed) friends
+  - RNTupleProcessor: advanced RNTupleReader that allows for free combination of chains and (indexed) friends
   - Horizontal merging: persistified friends, analogous to classical merge being a persistified chain
   - An interface for bulk writing
   - Meta-data: RNTuple-specific and user-provided meta-data storage, such as file provenance, scale factors, or varied columns
@@ -438,8 +440,8 @@ The following feature a planned for after the first RNTuple production version:
   - S3 storage backend (page source / page sink)
 
 
-Semantics of reading a non-trivial objects
-==========================================
+Semantics of Reading Non-Trivial Objects
+========================================
 
 Reading an object with RNTuple should be seen as _overwriting_ its persistent data members.
 Given a properly constructed and valid object, the object must ensure that it stays valid when overwriting its persistent data members.
