@@ -103,7 +103,7 @@ auto ptrPt = model->MakeField<float>("pt");
 auto file = TFile::Open("data.root", "APPEND");
 // The writer creates a page sink and connects the model's fields to it
 auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
-ptrPt = 1.0;
+*ptrPt = 1.0;
 // Append the model's default entry
 writer->Fill();
 // Commit the dataset by destructing the writer
