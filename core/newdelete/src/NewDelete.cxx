@@ -370,34 +370,6 @@ void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noex
    return ::operator new(size, al);
 }
 
-#ifndef R__PLACEMENTINLINE
-////////////////////////////////////////////////////////////////////////////////
-/// Custom new() operator with placement argument.
-
-void *operator new(size_t size, void *vp)
-{
-   static const char *where = "operator new(void *at)";
-
-   if (!gNewInit) {
-      TStorage::SetCustomNewDelete();
-      gNewInit++;
-   }
-
-   if (vp == 0) {
-      void *vp;
-      if (ROOT::Internal::gMmallocDesc)
-         vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size, __STDCPP_DEFAULT_NEW_ALIGNMENT__), sizeof(char));
-      else
-         vp = ::calloc(RealSize(size, __STDCPP_DEFAULT_NEW_ALIGNMENT__), sizeof(char));
-      if (vp == 0)
-         Fatal(where, gSpaceErr, RealSize(size, __STDCPP_DEFAULT_NEW_ALIGNMENT__));
-      StoreSizeMagic(vp, size, where);
-      return ExtStart(vp, al);
-   }
-   return vp;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom delete() operator.
 
@@ -480,16 +452,6 @@ void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t &nt)
 {
    return ::operator new(size, al, nt);
 }
-
-#ifndef R__PLACEMENTINLINE
-////////////////////////////////////////////////////////////////////////////////
-/// Custom vector new() operator with placement argument.
-
-void *operator new[](size_t size, void *vp)
-{
-   return ::operator new(size, vp);
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
