@@ -15,7 +15,7 @@ which depends on the RNTuple library.
 
 The RNTuple classes are organized in layers:
 the storage layer, the primitives layer, the logical layer and the event iteration layer.
-Most classes in the storage layer and the primitives layer are in the `ROOT::Internal` namespace,
+Most classes in the storage layer and the primitives layer are in the `ROOT::Internal` namespace (non-public interfaces),
 with the notable exception of the descriptor classes (`RNTupleDescriptor`, `RFieldDescriptor`, etc.).
 Most classes in the upper layers provide public interfaces.
 
@@ -39,7 +39,7 @@ Walkthrough: Reading Data
 -------------------------
 
 ```c++
-auto file = TFile::Open("data.root");
+auto file = std::make_unique<TFile>("data.root");
 auto ntuple = file->Get<RNTuple>("ntpl");
 
 // Option 1: entire row
@@ -101,7 +101,7 @@ auto model = RNTupleModel::Create();
 // Add a field to the model and return the shared pointer for that field in the model's default entry.
 auto ptrPt = model->MakeField<float>("pt");
 
-auto file = TFile::Open("data.root", "APPEND");
+auto file = std::make_unique<TFile>("data.root", "APPEND");
 // The writer creates a page sink and connects the model's fields to it
 auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
 *ptrPt = 1.0;
@@ -327,7 +327,8 @@ Ownership Model
 
 By default, objects involved in RNTuple I/O (objects read from disk or written to disk) are passed to RNTuple as shared pointers.
 Both RNTuple or the application may create the object.
-Raw pointers to objects can be passed to RNTuple -- such objects are considered as owned by the application with a sufficiently long lifetime.
+Raw pointers to objects can be passed to RNTuple -- such objects are considered as owned by the application.
+The caller has to ensure that the lifetime of the object lasts during the I/O operations.
 
 An RNTuple writer that is constructed without a `TFile` object (`RNTupleWriter::Recreate()`) assumes exclusive access to the underlying file.
 An RNTuple writer that uses a `TFile` for writing (`RNTupleWriter::Append()`) assumes that the `TFile` object outlives the writer's lifetime.
