@@ -1,4 +1,3 @@
-builtin_afterimage=ON
 builtin_cfitsio=ON
 builtin_cppzmq=ON
 builtin_davix=ON
@@ -27,12 +26,10 @@ ccache=ON
 cocoa=ON
 mysql=OFF
 pgsql=OFF
-pythia6=OFF
 pythia8=OFF
 unfold=ON
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 tmva-cpu=OFF
-tmva-pymva=ON
 tmva-sofie=ON
 x11=OFF
