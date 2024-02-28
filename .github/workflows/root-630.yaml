@@ -29,7 +29,7 @@ on:
 
 jobs:
   call-workflow-passing-data:
-    uses: root-project/root/.github/workflows/root-ci.yaml@workflow-call
+    uses: root-project/root/.github/workflows/root-ci.yaml
     with:
       head_ref: v6-30-00-patches
       base_ref: v6-30-00-patches
