@@ -6,9 +6,7 @@ on:
 
 jobs:
   call-root-ci-with-parameters:
-    uses: octo-org/example-repo/.github/workflows/root-ci.yaml@workflow-call
+    uses: root-project/root/.github/workflows/root-ci.yaml@workflow-call
     with:
       head_ref: v6-30-00-patches
       base_ref: v6-30-00-patches
-    secrets:
-      secrets: inherit
