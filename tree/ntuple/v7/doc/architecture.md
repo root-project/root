@@ -195,7 +195,7 @@ The RField class hierarchy is fixed and not meant to be extended by user classes
 The `RValue` class makes the connection between an object in memory and the corresponding field used for I/O.
 It contains a shared pointer of the object, i.e. RNTuple and the application share ownership of objects.
 The object in an RValue can either be created by an RNTuple field (cf. `RField<T>::CreateValue()` method)
-or provided by the application (cf. `RField<T>::BindValue` method).
+or provided by the application (cf. `RField<T>::BindValue()` method).
 Raw pointers can be passed with the understanding that the raw pointer is owned by the application and are kept alive during I/O operations.
 
 `RValue` objects can only be created from fields, and they are linked to their originating field.
