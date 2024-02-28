@@ -21,7 +21,7 @@ Most classes in the upper layers provide public interfaces.
 
 | Layer      | Description                                                         | Example of classes                                          |
 |------------|---------------------------------------------------------------------|-------------------------------------------------------------|
-| Storage    | Read and write pages (physical: file, DAOS; virtual: e.g. buffered) | RPage{Source,Sink}, RNTupleDescriptor, RClusterPool         |
+| Storage    | Read and write pages (physical: file, object store; virtual: e.g. buffered) | RPage{Source,Sink}, RNTupleDescriptor, RClusterPool         |
 | Primitives | Storage-backed columns of simple types                              | RColumn, RColumnElement, RPage                              |
 | Logical    | Mapping of C++ types onto columns                                   | RField, RNTupleModel, REntry                                |
 | Iteration  | Reading and writing events / properties                             | RNTuple{Reader,Writer}, RNTupleView, RNTupleDS (RDataFrame) |
