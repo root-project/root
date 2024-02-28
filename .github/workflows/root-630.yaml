@@ -3,9 +3,32 @@ name: ROOT 6.30
 on:
   schedule:
     - cron: '0 1 * * *'
+  # Enables manual start of workflow
+  workflow_dispatch:
+    inputs:
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
 
 jobs:
-  call-root-ci-with-parameters:
+  call-workflow-passing-data:
     uses: root-project/root/.github/workflows/root-ci.yaml@workflow-call
     with:
       head_ref: v6-30-00-patches
