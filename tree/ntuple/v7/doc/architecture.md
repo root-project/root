@@ -65,7 +65,7 @@ auto pt = viewPt(0);
 
 In the above cases, RNTuple creates the objects being read into.
 It is also possible to bind already existing objects.
-This is shown for entries and works similarly for views.
+This is shown below for entries and works similarly for views.
 
 ```c++
 // A bare entry is an entry that has initially no bindings (all top-level fields need to be bound by the caller)
