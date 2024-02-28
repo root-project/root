@@ -186,7 +186,7 @@ jobs:
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ github.ref_name }}
+                    --base_ref       ${{ inputs.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
