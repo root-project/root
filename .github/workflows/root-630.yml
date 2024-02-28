@@ -1,6 +1,10 @@
+
 name: 'ROOT 6.30'
 
 on:
+  schedule:
+    - cron: '0 2 * * *'
+
   workflow_dispatch:
     inputs:
       incremental:
@@ -23,8 +27,6 @@ on:
         - MinSizeRel
         default: Debug
         required: true
-  schedule:
-    - cron: '31 12 * * *'
 
 jobs:
   call-workflow-passing-data:
