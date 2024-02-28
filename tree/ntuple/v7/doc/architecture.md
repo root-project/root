@@ -98,7 +98,7 @@ Walkthrough: Writing Data
 ```c++
 auto model = RNTupleModel::Create();
 // Add a field to the model and return the shared pointer for that field in the model's default entry.
-auto ptrPt = model->MakeField<float>(pt);
+auto ptrPt = model->MakeField<float>("pt");
 
 auto file = TFile::Open("data.root", "APPEND");
 // The writer creates a page sink and connects the model's fields to it
