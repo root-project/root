@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '40 11 * * *'
 
-    jobs:
+jobs:
   call-workflow-passing-data:
     uses: root-project/root/.github/workflows/root-ci.yaml
     with:
