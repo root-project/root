@@ -7,9 +7,9 @@ on:
 
 jobs:
   call-workflow-passing-data:
-    uses: root-project/root/.github/workflows/root-ci.yaml@master
+    uses: root-project/root/.github/workflows/root-ci.yml@master
+          root-project/root/
     with:
       head_ref: 'v6-30-00-patches'
       base_ref: 'v6-30-00-patches'
     secrets: inherit
-    
