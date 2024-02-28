@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Results                                                               *
- *                                             *
+ *                                                                                *
  *                                                                                *
  * Description:                                                                   *
  *      Base-class for result-vectors                                             *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (see tmva/doc/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                                         *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Results
@@ -33,7 +33,7 @@
 //                                                                      //
 // Results                                                              //
 //                                                                      //
-// Class that is the base-class for a vector of result                  //
+// Class that is the base-class for a vector of results                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
