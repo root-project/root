@@ -1,5 +1,3 @@
 builtin_nlohmannjson=ON
 builtin_vdt=On
-builtin_unuran=On
-unuran=On
 tmva-sofie=On
