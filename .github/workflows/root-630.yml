@@ -3,7 +3,7 @@ name: 'ROOT 6.30'
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '3 14 * * *'
 
   workflow_dispatch:
     inputs:
@@ -29,9 +29,8 @@ on:
         required: true
 
 jobs:
-  call-workflow-passing-data:
+  run_nightlies:
     uses: root-project/root/.github/workflows/root-ci.yml@master
     with:
-      head_ref: 'v6-30-00-patches'
       base_ref: 'v6-30-00-patches'
     secrets: inherit
