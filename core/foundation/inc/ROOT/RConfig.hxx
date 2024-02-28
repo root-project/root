@@ -325,12 +325,6 @@
 #ifdef __GNUC__
 #   define R__GNU
 #   define ANSICPP
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
-#      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   endif
-#   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
-#      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   endif
 #   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ > 1)
 #      define R__PRAGMA_DIAGNOSTIC
 #   endif
@@ -359,13 +353,11 @@
 
 #ifdef __INTEL_COMPILER
 #   define R__INTEL_COMPILER
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define ANSICPP
 #endif
 
 #ifdef __HP_aCC
 #   define R__ACC
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   if __HP_aCC <= 015000
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
@@ -421,7 +413,6 @@
 #     define NEED_SNPRINTF
 #   endif
 #   define ANSICPP
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   if _MSC_VER >= 1400
 #     define DONTNEED_VSNPRINTF
 #   endif
