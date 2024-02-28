@@ -2,42 +2,9 @@ name: ROOT 6.30
 
 on:
   schedule:
-    - cron: '0 1 * * *'
-  # Enables manual start of workflow
-  workflow_dispatch:
-    inputs:
-      head_ref:
-        description: rebase from ...
-        type: string
-        required: true
-        default: v6-30-00-patches
-      base_ref:
-        description: ... to ... (can have same value)
-        type: string
-        required: true
-        default: v6-30-00-patches
-      incremental:
-        description: 'Do incremental build'
-        type: boolean
-        required: true
-        default: true
-      binaries:
-        description: Create binary packages and upload them as artifacts
-        type: boolean
-        required: true
-        default: false
-      buildtype:
-        description: The CMAKE_BUILD_TYPE to use for non-Windows.
-        type: choice
-        options:
-        - Debug
-        - RelWithDebInfo
-        - Release
-        - MinSizeRel
-        default: Debug
-        required: true
+    - cron: '40 1 * * *'
 
-jobs:
+    jobs:
   call-workflow-passing-data:
     uses: root-project/root/.github/workflows/root-ci.yaml
     with:
