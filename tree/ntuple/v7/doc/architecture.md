@@ -245,7 +245,7 @@ The reader can create `RBulk` objects for bulk reading of individual fields.
 Additionally, the reader provides access to a cached copy of the descriptor.
 It can display individual entries (`RNTupleReader::Show()`) and summary information (`RNTupleReader::PrintInfo()`).
 
-### RNTupleView
+### RNTupleView<T>
 RNTuple views provide read access to individual fields.
 Views are created from an RNTupleReader.
 Views are templated; for simple types (e.g., `float`, `int`), views provide read-only access directly to an RNTuple page in memory.
