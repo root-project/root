@@ -81,7 +81,7 @@ namespace TMVA {
 
       // delete all stored data
 //       using TObject::Delete;
-      virtual void Delete(Option_t *option="");
+      void Delete(Option_t *option="") override;
 
       virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const = 0;
 
@@ -94,7 +94,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
    public:
 
-       ClassDef(Results,1);
+       ClassDefOverride(Results,2);
 
    };
 }
