@@ -216,7 +216,7 @@ def print_trace():
     build_utils.log.print()
 
 def remove_gpl_options(options_dict: dict):
-    gpl_options = ['fftw3', 'mathmore', 'pythia6', 'pythia8', 'unuran']
+    gpl_options = ['builtin_fftw3', 'builtin_gsl', 'builtin_unuran', 'fftw3', 'mathmore', 'pythia6', 'pythia8', 'unuran']
     for opt in gpl_options:
         options_dict[opt] = 'off'
     return options_dict
