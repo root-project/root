@@ -1193,7 +1193,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
 /// Check illegal overlaps for volume VOL within a limit OVLP by sampling npoints
 /// inside the volume shape.
 
-void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, Int_t npoints) const
+void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t npoints) const
 {
    Int_t nd = vol->GetNdaughters();
    if (nd < 2)
@@ -1268,7 +1268,7 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
          }
          // The point is inside 2 or more daughters, check safety
          safe = shape->Safety(local, kTRUE);
-         //         if (safe < ovlp) continue;
+         if (safe < ovlp) continue;
          // We really have found an overlap -> store the point in a container
          iovlp++;
          if (!novlps) {
