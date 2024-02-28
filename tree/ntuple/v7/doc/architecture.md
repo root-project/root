@@ -361,7 +361,7 @@ For the file backend, it additionally coalesces close read requests and uses uri
 
 The page source can be restricted to a certain entry range.
 This allows for optimizing the page lists that are being read.
-And it allows for optimizing the cluster pool to not read-ahead beyond the limits.
+Additionally, it allows for optimizing the cluster pool to not read-ahead beyond the limits.
 
 Storage Backends
 ----------------
@@ -393,7 +393,7 @@ The RNTuple data source for RDataFrame lets RDataFrame full control of the threa
 That means that RDataFrame uses a separate data source for every thread, each of the data sources runs in serial mode.
 
 ### Concurrent Readers
-Multiple readers and read the same RNTuple concurrently as long as access to every individual reader is sequential.
+Multiple readers can read the same RNTuple concurrently as long as access to every individual reader is sequential.
 
 ### Parallel REntry Preparation
 Multiple `REntry` object can be concurrently prepared by multiple threads.
