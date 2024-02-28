@@ -1054,9 +1054,10 @@ class TAxisPainter extends ObjectPainter {
 
             this.drawText(arg);
 
-            if (lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
+            // workaround for symlog where labels can be compressed to close
+            if (this.symlog && lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
                const axis_step = Math.abs(pos - lastpos);
-               textscale = Math.min(textscale, 0.9*axis_step/labelsFont.size);
+               textscale = Math.min(textscale, 1.1*axis_step/labelsFont.size);
             }
 
             lastpos = pos;
@@ -1108,9 +1109,11 @@ class TAxisPainter extends ObjectPainter {
    /** @summary Extract major draw attributes, which are also used in interactive operations
      * @private  */
    extractDrawAttributes(scalingSize, w, h) {
-      const axis = this.getObject(),
-            pp = this.getPadPainter(),
-            pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
+      const axis = this.getObject();
+      let pp = this.getPadPainter();
+      if (axis.$use_top_pad)
+         pp = pp?.getPadPainter(); // workaround for ratio plot
+      const pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
             pad_h = pp?.getPadHeight() || scalingSize || h/0.8;
       let tickSize = 0, tickScalingSize = 0, titleColor, titleFontId, offset;
 

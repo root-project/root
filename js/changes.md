@@ -1,6 +1,13 @@
 # JSROOT changelog
 
 ## Changes in dev
+1. Use own "jsroot-gl" package from npm because of gcc13 problems
+2. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
+3. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
+4. Improve TRatioPlot axis and lines drawing
+
+
+## Changes in 7.6.0
 1. Implement "tickz" draw option, used for color palette ticks
 2. Implement skewness and kurtosis calculations for histogram stats box
 3. Introduce "logv" draw option for `TH3`, configures logarithmic scale for box volume
@@ -26,6 +33,7 @@
 23. Fix - vertical position of up elements like {M}^{2} in TLatex
 24. Fix - let draw THStack with diff binning hists
 25. Fix - better tooltip name for the items
+26. Fix - better logy scale selection
 
 
 ## Changes in 7.5.4

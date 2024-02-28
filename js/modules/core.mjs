@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '20/02/2024',
+version_date = '28/02/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -290,7 +290,9 @@ settings = {
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
    StripAxisLabels: true,
    /** @summary Draw TF1 by default as curve or line */
-   FuncAsCurve: false
+   FuncAsCurve: false,
+   /** @summary Time zone used for date/time display of file time */
+   TimeZone: ''
 },
 
 /** @namespace

@@ -384,7 +384,7 @@ class THistDrawOptions {
       if (d.check('PMC') && !this._pmc)
          this._pmc = 2;
 
-      if (d.check('L')) { this.Line = true; this.Hist = false; this.Error = false; }
+      if (d.check('L')) { this.Line = true; this.Hist = false; }
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
 
       if (d.check('A')) this.Axis = -1;

@@ -486,6 +486,18 @@ function addUserStreamer(type, user_streamer) {
    CustomStreamers[type] = user_streamer;
 }
 
+function getTDatimeDate() {
+   const res = new Date();
+   res.setFullYear((this.fDatime >>> 26) + 1995);
+   res.setMonth(((this.fDatime << 6) >>> 28) - 1);
+   res.setDate((this.fDatime << 10) >>> 27);
+   res.setHours((this.fDatime << 15) >>> 27);
+   res.setMinutes((this.fDatime << 20) >>> 26);
+   res.setSeconds((this.fDatime << 26) >>> 26);
+   res.setMilliseconds(0);
+   return res;
+}
+
 
 /** @summary these are streamers which do not handle version regularly
   * @desc used for special classes like TRef or TBasket
@@ -499,17 +511,7 @@ const DirectStreamers = {
 
    TDatime(buf, obj) {
       obj.fDatime = buf.ntou4();
-      //  obj.GetDate = function() {
-      //  let res = new Date();
-      //  res.setFullYear((this.fDatime >>> 26) + 1995);
-      //  res.setMonth((this.fDatime << 6) >>> 28);
-      //  res.setDate((this.fDatime << 10) >>> 27);
-      //  res.setHours((this.fDatime << 15) >>> 27);
-      //  res.setMinutes((this.fDatime << 20) >>> 26);
-      //  res.setSeconds((this.fDatime << 26) >>> 26);
-      //  res.setMilliseconds(0);
-      //  return res;
-      //  }
+      obj.getDate = getTDatimeDate;
    },
 
    TKey(buf, key) {
