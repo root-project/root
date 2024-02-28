@@ -5,10 +5,10 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : ResultsRegression                                                     *
- *                                             *
+ *                                                                                *
  *                                                                                *
  * Description:                                                                   *
- *      Base-class for result-vectors                                             *
+ *      Derived-class for result-vectors                                          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (see tmva/doc/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                                         *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_ResultsRegression
@@ -33,7 +33,7 @@
 //                                                                      //
 // ResultsRegression                                                    //
 //                                                                      //
-// Class that is the base-class for a vector of result                  //
+// Class that is the derived-class for a vector of results              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
