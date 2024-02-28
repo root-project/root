@@ -226,6 +226,9 @@ It also provides functionality to bind application-provided pointers.
 An REntry can be passed to `RNTupleWriter::Fill()` and `RNTupleReader::LoadEntry()`.
 Otherwise, the reader/writer uses the default entry of its model.
 
+An entry can safely outlive its originating model.
+New objects cannot anymore be created (`EmplaceNewValue` will throw an exception), but the entry is still properly destructed.
+
 ### RNTupleWriter, RNTupleParallelWriter
 The RNTupleWriter is the primary interface to create an RNTuple.
 The writer takes ownership of a given model.
@@ -254,6 +257,9 @@ Complex types and void views require additional memory copies to populate an obj
 
 A view can iterate over the entry range, over the field range, and over the range of a collection within an entry.
 For instance, for a field `std::vector<float> pt`, a view can iterate over all `pt` values of all entries, or over the `pt` values of a particular entry.
+
+A view can safely outlive its originating reader.
+Once the reader is deconstructed, any attempt to read data will throw an exception, but the view is still properly destructed.
 
 Internal Classes
 ----------------
