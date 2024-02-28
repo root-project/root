@@ -58,7 +58,7 @@ public:
    virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *particle) = 0;
    virtual void AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset = kFALSE) = 0;
    virtual void BombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
-   virtual void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "") = 0;
+   virtual void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.) = 0;
    virtual void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option) = 0;
    virtual void CheckBoundaryErrors(Int_t ntracks = 1000000, Double_t radius = -1.) = 0;
    virtual void CheckBoundaryReference(Int_t icheck = -1) = 0;
