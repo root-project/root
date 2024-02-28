@@ -63,14 +63,14 @@ namespace TMVA {
       void     SetValue( std::vector<Float_t>& value, Int_t ievt );
       void     Resize( Int_t entries )  { fMultiClassValues.resize( entries ); }
       using TObject::Clear;
-      virtual void     Clear(Option_t *)  { fMultiClassValues.clear(); }
+      void     Clear(Option_t *) override { fMultiClassValues.clear(); }
 
       // getters
       Long64_t GetSize() const        { return fMultiClassValues.size(); }
-      virtual const std::vector< Float_t >&  operator[] ( Int_t ievt ) const { return fMultiClassValues.at(ievt); }
+      const std::vector< Float_t >&  operator[] ( Int_t ievt ) const override { return fMultiClassValues.at(ievt); }
       std::vector<std::vector< Float_t> >* GetValueVector()  { return &fMultiClassValues; }
 
-      Types::EAnalysisType  GetAnalysisType() { return Types::kMulticlass; }
+      Types::EAnalysisType  GetAnalysisType() override { return Types::kMulticlass; }
       Float_t GetAchievableEff(UInt_t cls){return fAchievableEff.at(cls);}
       Float_t GetAchievablePur(UInt_t cls){return fAchievablePur.at(cls);}
       std::vector<Float_t>& GetAchievableEff(){return fAchievableEff;}
@@ -82,7 +82,7 @@ namespace TMVA {
       void CreateMulticlassPerformanceHistos(TString prefix);
       void     CreateMulticlassHistos( TString prefix, Int_t nbins, Int_t nbins_high);
 
-      Double_t EstimatorFunction( std::vector<Double_t> & );
+      Double_t EstimatorFunction( std::vector<Double_t> & ) override;
       std::vector<Double_t> GetBestMultiClassCuts(UInt_t targetClass);
 
    private:
@@ -102,7 +102,7 @@ namespace TMVA {
 
    protected:
 
-       ClassDef(ResultsMulticlass,2);
+       ClassDefOverride(ResultsMulticlass,3);
 
    };
 

@@ -61,15 +61,15 @@ namespace TMVA {
          fMvaValuesTypes.resize(entries);
       }
       using TObject::Clear;
-      virtual void     Clear(Option_t *)                   { fMvaValues.clear(); fMvaValuesTypes.clear(); }
+      void     Clear(Option_t *) override                   { fMvaValues.clear(); fMvaValuesTypes.clear(); }
 
       // getters
       Long64_t GetSize()                  const { return fMvaValues.size(); }
-      virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const { fRet[0] = fMvaValues[ievt]; return  fRet; }
+      const std::vector< Float_t >&  operator []( Int_t ievt ) const override { fRet[0] = fMvaValues[ievt]; return  fRet; }
       std::vector<Float_t>* GetValueVector()    { return &fMvaValues; }
       std::vector<Bool_t>*  GetValueVectorTypes()    { return &fMvaValuesTypes; }
 
-      Types::EAnalysisType  GetAnalysisType() { return Types::kClassification; }
+      Types::EAnalysisType  GetAnalysisType() override { return Types::kClassification; }
 
 
    private:
@@ -81,7 +81,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
    protected:
 
-       ClassDef(Results,2);
+       ClassDefOverride(ResultsClassification,3);
 
    };
 }

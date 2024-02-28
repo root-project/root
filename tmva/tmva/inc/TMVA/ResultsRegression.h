@@ -61,18 +61,18 @@ namespace TMVA {
       void     Resize( Int_t entries )  { fRegValues.resize( entries ); }
 
       using TObject::Clear;
-      virtual void     Clear(Option_t *)  { fRegValues.clear(); }
+      void     Clear(Option_t *) override { fRegValues.clear(); }
 
       // getters
       Long64_t GetSize() const        { return fRegValues.size(); }
-      virtual const std::vector< Float_t >& operator [] ( Int_t ievt ) const { return fRegValues.at(ievt); }
+      const std::vector< Float_t >& operator [] ( Int_t ievt ) const override { return fRegValues.at(ievt); }
       std::vector<std::vector< Float_t> >* GetValueVector()  { return &fRegValues; }
 
       TH2F*  DeviationAsAFunctionOf( UInt_t varNum, UInt_t tgtNum );
       TH1F*  QuadraticDeviation( UInt_t tgtNum, Bool_t truncate = false, Double_t truncvalue = 0. );
       void   CreateDeviationHistograms( TString prefix );
 
-      Types::EAnalysisType  GetAnalysisType() { return Types::kRegression; }
+      Types::EAnalysisType  GetAnalysisType() override { return Types::kRegression; }
 
 
    private:
@@ -82,7 +82,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
    protected:
 
-       ClassDef(ResultsRegression,2);
+       ClassDefOverride(ResultsRegression,3);
 
    };
 }
