@@ -352,6 +352,7 @@ The following steps are taken to write RNTuple data to disk:
      e.g. information from a single entry can span multiple pages.
       1. The page is _packed_:
          depending on the type of the page, a light encoding is applied to facilitate compression, e.g., byte splitting (`RColumnElement`).
+         Big-endian / little-endian conversion takes place here.
       2. The packed page is _compressed_ according to the user-provided compression settings (default: zstd).
          A packed and compressed page is _sealed_.
       3. The sealed page is written to the storage backend.
