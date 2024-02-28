@@ -57,6 +57,7 @@ auto reader = RNTupleReader::Open(std::move(model), ntuple);
 reader->LoadEntry(0);
 
 // Option 3: through views
+// Each view will only trigger reading of the related field, without reading other fields at the same entry number.
 auto reader = RNTupleReader::Open(ntuple);
 auto viewPt = reader->GetView<float>("pt");
 // Load the pt from the first entry
