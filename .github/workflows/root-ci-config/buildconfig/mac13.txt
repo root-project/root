@@ -27,7 +27,6 @@ ccache=ON
 cocoa=ON
 cudnn=OFF
 mysql=OFF
-oracle=OFF
 pgsql=OFF
 pythia6=OFF
 pythia8=OFF

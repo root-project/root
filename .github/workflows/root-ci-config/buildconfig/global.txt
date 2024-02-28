@@ -72,7 +72,6 @@ mpi=OFF
 mysql=ON
 odbc=OFF
 opengl=ON
-oracle=OFF
 pgsql=ON
 pyroot=ON
 pythia6=OFF
