@@ -1,4 +1,4 @@
-import { internals, settings, httpRequest, isBatchMode, isFunc, isStr, create, toJSON,
+import { internals, httpRequest, isBatchMode, isFunc, isStr, create, toJSON,
          prROOT, clTObjString, clTGraph, clTPolyMarker3D, clTH1, clTH2, clTH3 } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { kTString, kObject, kAnyP } from '../io.mjs';

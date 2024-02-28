@@ -448,18 +448,22 @@ class ObjectPainter extends BasePainter {
      * Only can be used for painting in the pad, means CreateG() should be called without arguments
      * @param {boolean} isndc - if NDC coordinates will be used
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
+     * @param {boolean} [use_frame_coordinates] - use frame coordinates even when drawing on the pad
      * @protected */
-   getAxisToSvgFunc(isndc, nornd) {
+   getAxisToSvgFunc(isndc, nornd, use_frame_coordinates) {
       const func = { isndc, nornd },
             use_frame = this.draw_g?.property('in_frame');
-      if (use_frame) func.main = this.getFramePainter();
+      if (use_frame || (use_frame_coordinates && !isndc))
+         func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
+         func.x0 = (use_frame_coordinates && !isndc) ? func.main.getFrameX() : 0;
+         func.y0 = (use_frame_coordinates && !isndc) ? func.main.getFrameY() : 0;
          if (nornd) {
-            func.x = function(x) { return this.main.grx(x); };
-            func.y = function(y) { return this.main.gry(y); };
+            func.x = function(x) { return this.x0 + this.main.grx(x); };
+            func.y = function(y) { return this.y0 + this.main.gry(y); };
          } else {
-            func.x = function(x) { return Math.round(this.main.grx(x)); };
-            func.y = function(y) { return Math.round(this.main.gry(y)); };
+            func.x = function(x) { return this.x0 + Math.round(this.main.grx(x)); };
+            func.y = function(y) { return this.y0 + Math.round(this.main.gry(y)); };
          }
       } else if (!use_frame) {
          const pp = this.getPadPainter();

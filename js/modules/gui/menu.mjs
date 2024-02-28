@@ -748,8 +748,9 @@ class JSRootMenu {
       const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
             addStyleIntField = (name, field, arr) => {
          this.add('sub:' + name);
+         const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
          for (let v = 0; v < arr.length; ++v)
-            this.addchk(gStyle[field] === v, arr[v], `${v}${field}`, setStyleField);
+            this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
          this.add('endsub:');
       };
 
@@ -757,8 +758,9 @@ class JSRootMenu {
 
       this.add('sub:Canvas');
       this.addColorMenu('Color', gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
-      this.addchk(gStyle.fOptDate, 'Draw date', flag => { gStyle.fOptDate = flag ? 1 : 0; });
-      this.addchk(gStyle.fOptFile, 'Draw item', flag => { gStyle.fOptFile = flag ? 1 : 0; });
+      addStyleIntField('Draw date', 'fOptDate', ['Off', 'Current time', 'File create time', 'File modify time']);
+      this.add(`Time zone: ${settings.TimeZone}`, () => this.input('Input time zone like UTC. empty string - local timezone', settings.TimeZone, 'string').then(val => { settings.TimeZone = val; }));
+      addStyleIntField('Draw file', 'fOptFile', ['Off', 'File name', 'Full file URL', 'Item name']);
       this.addSizeMenu('Date X', 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, 'configure gStyle.fDateX for date/item name drawings');
       this.addSizeMenu('Date Y', 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, 'configure gStyle.fDateY for date/item name drawings');
       this.add('endsub:');
