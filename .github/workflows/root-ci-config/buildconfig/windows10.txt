@@ -1,4 +1,3 @@
-CMAKE_CXX_STANDARD=17
 builtin_cfitsio=ON
 builtin_freetype=ON
 builtin_ftgl=ON
