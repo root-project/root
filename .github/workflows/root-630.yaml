@@ -1,0 +1,14 @@
+name: ROOT 6.30
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  call-root-ci-with-parameters:
+    uses: octo-org/example-repo/.github/workflows/root-ci.yaml@workflow-call
+    with:
+      head_ref: v6-30-00-patches
+      base_ref: v6-30-00-patches
+    secrets:
+      secrets: inherit
