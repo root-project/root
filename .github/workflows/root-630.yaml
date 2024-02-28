@@ -1,12 +1,13 @@
-name: ROOT 6.30
+name: 'ROOT 6.30'
 
 on:
   schedule:
-    - cron: '40 11 * * *'
+    - cron: '59 11 * * *'
 
 jobs:
   call-workflow-passing-data:
-    uses: root-project/root/.github/workflows/root-ci.yaml
+    uses: root-project/root/.github/workflows/root-ci.yaml@master
     with:
       head_ref: v6-30-00-patches
       base_ref: v6-30-00-patches
+    secrets: inherit
