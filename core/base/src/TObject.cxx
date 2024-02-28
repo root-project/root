@@ -1142,7 +1142,6 @@ std::string cling::printValue(TObject *val)
    return strm.str();
 }
 
-#ifdef R__PLACEMENTDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Only called by placement new when throwing an exception.
 
@@ -1158,4 +1157,3 @@ void TObject::operator delete[](void *ptr, void *vp)
 {
    TStorage::ObjectDealloc(ptr, vp);
 }
-#endif
