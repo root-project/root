@@ -11,7 +11,7 @@ General Principles
 The RNTuple classes provide the functionality to read, write, and describe RNTuple datasets.
 The core classes, such as `RNTupleReader` and `RNTupleWriter`, are part of the RNTuple library.
 Additional tools, such as the `RNTupleImporter` and the `RNTupleInspector`, are part of the RNTupleUtils library,
-that depends on the RNTuple library.
+which depends on the RNTuple library.
 
 The RNTuple classes are organized in layers:
 the storage layer, the primitives layer, the logical layer and the event iteration.
