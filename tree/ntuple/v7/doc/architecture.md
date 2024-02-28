@@ -302,7 +302,7 @@ It is part of the `ROOTNTupleUtil` library.
 
 ### RNTupleInspector
 The RNTupleInspector provides insights of an RNTuple, e.g. the distribution of data volume wrt. column types.
-It is part of the RNTupleUtil library.
+It is part of the `ROOTNTupleUtil` library.
 
 Ownership Model
 ---------------
