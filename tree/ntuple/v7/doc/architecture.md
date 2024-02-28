@@ -298,7 +298,7 @@ The RNTupler merger is used by the `TFileMerger` and thus provides RNTuple merge
 
 ### RNTupleImporter
 The RNTupleImporter creates RNTuple data sets from ROOT trees.
-It is part of the RNTupleUtil library.
+It is part of the `ROOTNTupleUtil` library.
 
 ### RNTupleInspector
 The RNTupleInspector provides insights of an RNTuple, e.g. the distribution of data volume wrt. column types.
