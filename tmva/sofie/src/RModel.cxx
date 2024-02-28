@@ -209,7 +209,6 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
    DynamicTensorInfo new_tensor {type, shape};
    fDynamicTensorInfos[tensor_name] = new_tensor;
    // store shape parameter if not existing
-   int i = 0;
    for (auto &d : shape) {
       if (d.isParam) {
          if (fShapeParams.count(d.param) == 0) {
@@ -220,7 +219,6 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
             }
          }
       }
-      i++;
    }
 }
 
