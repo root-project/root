@@ -116,7 +116,7 @@ Creation of the RNTuple model can use runtime type information:
 
 ```c++
 auto model = RNTupleModel::Create();
-model->AddField(RFieldBase::Create("pt", "float"));
+model->AddField(RFieldBase::Create("pt", "float").Unwrap());
 ```
 
 
