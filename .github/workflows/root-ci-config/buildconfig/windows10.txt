@@ -23,7 +23,6 @@ minuit2_mpi=OFF
 minuit2_omp=OFF
 mysql=OFF
 odbc=ON
-oracle=OFF
 pgsql=OFF
 pyroot2=OFF
 pyroot3=ON
