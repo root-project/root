@@ -72,7 +72,6 @@
 #   define R__UNIX
 #   define ANSICPP
 #   define R__SEEK64
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define NEED_STRCASECMP
 #endif
 
@@ -112,7 +111,6 @@
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
@@ -295,7 +293,6 @@
 #   define R__UNIX
 #   if defined(__xlC__) || defined(__xlc__)
 #      define ANSICPP
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if defined(__ppc64__)
 #      define R__B64      /* enable when 64 bit machine */
@@ -332,9 +329,6 @@
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
-#   if __GNUC__ >= 3 || ( __GNUC__ == 2 && __GNUC_MINOR__ >= 95)
-#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   endif
 #   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
@@ -369,14 +363,12 @@
 #   define R__INTEL_COMPILER
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define ANSICPP
 #endif
 
 #ifdef __HP_aCC
 #   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   if __HP_aCC <= 015000
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
@@ -435,7 +427,6 @@
 #   define ANSICPP
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   if _MSC_VER >= 1400
 #     define DONTNEED_VSNPRINTF
 #   endif
