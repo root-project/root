@@ -1,7 +1,5 @@
 builtin_nlohmannjson=ON
 builtin_vdt=On
-builtin_gsl=On
-builtin_fftw3=On
 builtin_unuran=On
 unfold=On
 unuran=On
