@@ -58,7 +58,7 @@ reader->LoadEntry(0);
 
 // Option 3: through views
 auto reader = RNTupleReader::Open(ntuple);
-auto viewPt = reader->GetView("pt");
+auto viewPt = reader->GetView<float>("pt");
 // Load the pt from the first entry
 auto pt = viewPt(0);
 ```
