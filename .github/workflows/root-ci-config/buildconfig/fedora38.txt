@@ -6,7 +6,5 @@ test_distrdf_pyspark=OFF
 builtin_gsl=On
 builtin_fftw3=On
 builtin_unuran=On
-fftw3=On
 unfold=On
 unuran=On
-mathmore=On
