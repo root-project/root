@@ -30,4 +30,5 @@ pythia8=OFF
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 tmva-sofie=ON
+unuran=ON
 x11=OFF
