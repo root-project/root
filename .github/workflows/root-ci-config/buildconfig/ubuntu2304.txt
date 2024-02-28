@@ -1,6 +1,4 @@
 pythia8=OFF
-builtin_gsl=On
-builtin_fftw3=On
 builtin_unuran=On
 unfold=On
 unuran=On
