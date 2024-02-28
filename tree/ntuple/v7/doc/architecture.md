@@ -259,7 +259,7 @@ Internal Classes
 
 ### RNTupleDS
 The `RNTupleDS` class is an internal class that provides an RNTuple data source for RDataFrame.
-It is part of the dataframe library.
+It is part of the `ROOTDataFrame` library.
 The RNTuple data source supports chains with a constructor that takes a list of input files.
 The RNTuple data source also supports multi-threaded dataframes, parallelized on the file and cluster level.
 
