@@ -242,7 +242,7 @@ class HeadNode(Node, ABC):
         # Set the value of every action node
         for node, value in zip(local_nodes, final_values):
             Utils.set_value_on_node(value, node, self.backend)
-
+            
     def GetColumnNames(self) -> Iterable[str]:
         return self._localdf.GetColumnNames()
 
@@ -261,20 +261,45 @@ def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
     except TypeError:
         raise TypeError(("The arguments provided are not accepted by any RDataFrame constructor. "
                          "See the RDataFrame documentation for the accepted constructor argument types."))
-
+        
     firstarg = args[0]
     if isinstance(firstarg, int):
         # RDataFrame(ULong64_t numEntries)
         return EmptySourceHeadNode(backend, npartitions, localdf, firstarg)
-    elif isinstance(firstarg, (ROOT.TTree, str)):
-        # RDataFrame(std::string_view treeName, filenameglob, defaultBranches = {})
-        # RDataFrame(std::string_view treename, filenames, defaultBranches = {})
-        # RDataFrame(std::string_view treeName, dirPtr, defaultBranches = {})
-        # RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
-        return TreeHeadNode(backend, npartitions, localdf, *args)
+    elif isinstance(firstarg, (ROOT.TTree)):
+    #     # RDataFrame(std::string_view treeName, filenameglob, defaultBranches = {})
+    #     # RDataFrame(std::string_view treename, filenames, defaultBranches = {})
+    #     # RDataFrame(std::string_view treeName, dirPtr, defaultBranches = {})
+    #     # RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
+        return TreeHeadNode(backend, npartitions, localdf, *args) 
+    elif isinstance(firstarg, str):
+        # if first argument is a string, we want to check if the second argument
+        # which is a ROOT file holds a TTree or RNTuple
+        secondarg = args[1]
+               
+        if (isinstance (secondarg, (str, ROOT.std.string, ROOT.std.string_view))):
+            wildcards = ["[", "]", "*", "?"]
+            if (any(wildcard in secondarg for wildcard in wildcards)):
+                path = ROOT.Internal.TreeUtils.ExpandGlob(secondarg)[0]
+            else:
+                path = secondarg
+        else:
+            path = secondarg[0]
+
+        with ROOT.TDirectory.TContext(), ROOT.TFile.Open(path, "READ_WITHOUT_GLOBALREGISTRATION") as f:
+                dataset = f.Get(firstarg)
+                if isinstance(dataset, ROOT.TTree):
+                    return TreeHeadNode(backend, npartitions, localdf, *args) 
+        
+                elif isinstance(dataset, ROOT.Experimental.RNTuple):
+                    return RNTupleHeadNode(backend, npartitions, localdf, *args)
+            
+                else:
+                    raise RuntimeError("")
+            
     elif isinstance(firstarg, ROOT.RDF.Experimental.RDatasetSpec):
-       # RDataFrame(rdatasetspec)
-       return RDatasetSpecHeadNode(backend, npartitions, localdf, *args)
+        # RDataFrame(rdatasetspec)
+        return RDatasetSpecHeadNode(backend, npartitions, localdf, *args)      
     else:
         raise RuntimeError(
             ("First argument {} of type {} is not recognised as a supported "
@@ -588,8 +613,7 @@ class TreeHeadNode(HeadNode):
                                f"but {entries_in_trees.processed_entries} were processed.")
 
         return values.mergeables
-
-
+    
 class RDatasetSpecHeadNode(HeadNode):
     """
     The head node of a computation graph where the RDataFrame data source is
@@ -781,3 +805,64 @@ class RDatasetSpecHeadNode(HeadNode):
                                f"but {entries_in_trees.processed_entries} were processed.")
 
         return values.mergeables
+    
+class RNTupleHeadNode(HeadNode):
+    """
+    The head node of a computation graph where the RDataFrame data source is
+    an RNtuple.
+    """
+
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], localdf: ROOT.RDataFrame, *args):
+        """
+        Creates a new RDataFrame instance for the given arguments.
+
+        Args:
+            *args (iterable): Iterable with the arguments to the RDataFrame constructor.
+
+            npartitions (int): The number of partitions the dataset will be
+                split in for distributed execution.
+        """
+        super().__init__(backend, npartitions, localdf)
+
+        self.mainntuplename = args[0]
+        self.inputfiles = args[1]
+        self.subnames = [self.mainntuplename] * len(self.inputfiles)
+
+    def _build_ranges(self) -> List[Ranges.DataRange]:
+        # """Build the ranges for this dataset."""
+        return Ranges.get_ntuple_ranges(self.subnames, self.inputfiles, self.npartitions, self.exec_id)
+    
+    def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
+        """
+        Generates a function that is responsible for building an instance of
+        RDataFrame on a distributed mapper for a given entry range. Specific for
+        the RNtuple data source.
+        """
+
+        def build_rdf_from_range(current_range: Ranges.get_ntuple_ranges) -> TaskObjects:
+            """
+            Builds an RDataFrame instance for a distributed mapper.
+
+            The function creates a TChain from the information contained in the
+            input range object. If the chain cannot be built, returns None.
+            """
+            ntuplename, filenames = current_range.ntuplename, current_range.filenames            
+            if not filenames:
+                return TaskObjects(None, None)
+            
+            rdf_toprocess = ROOT.RDF.Experimental.FromRNTuple(ntuplename, filenames)
+            return TaskObjects(rdf_toprocess, None)
+
+        return build_rdf_from_range
+
+    def _handle_returned_values(self, values: TaskResult) -> Iterable:
+        """
+        Handle values returned after distributed execution. When the data source
+        is an RNtuple, check that exactly the input files and all the entries in
+        the dataset were processed during distributed execution.
+        """
+        if values.mergeables is None:
+            raise RuntimeError("The distributed execution returned no values. "
+                               "This can happen if all files in your dataset contain empty trees.")
+
+        return values.mergeables        
