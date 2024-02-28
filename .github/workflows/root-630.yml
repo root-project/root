@@ -3,7 +3,7 @@ name: 'ROOT 6.30'
 on:
   workflow_dispatch:
   schedule:
-    - cron: '59 11 * * *'
+    - cron: '31 12 * * *'
 
 jobs:
   call-workflow-passing-data:
