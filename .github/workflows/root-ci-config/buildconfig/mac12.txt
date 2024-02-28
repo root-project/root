@@ -27,7 +27,6 @@ cocoa=ON
 mysql=OFF
 pgsql=OFF
 pythia8=OFF
-unfold=ON
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 x11=OFF
