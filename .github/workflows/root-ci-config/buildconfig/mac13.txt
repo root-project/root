@@ -25,7 +25,6 @@ builtin_zeromq=ON
 builtin_zstd=ON
 ccache=ON
 cocoa=ON
-cudnn=OFF
 mysql=OFF
 pgsql=OFF
 pythia6=OFF

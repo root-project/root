@@ -15,7 +15,6 @@ builtin_unuran=ON
 builtin_xxhash=ON
 builtin_zlib=ON
 builtin_zstd=ON
-cudnn=OFF
 davix=OFF
 fftw3=OFF
 llvm13_broken_tests=OFF
