@@ -14,7 +14,7 @@ Additional tools, such as the `RNTupleImporter` and the `RNTupleInspector`, are 
 which depends on the RNTuple library.
 
 The RNTuple classes are organized in layers:
-the storage layer, the primitives layer, the logical layer and the event iteration.
+the storage layer, the primitives layer, the logical layer and the event iteration layer.
 Most classes in the storage layer and the primitives layer are in the `ROOT::Internal` namespace,
 with the notable exception of the descriptor classes (`RNTupleDescriptor`, `RFieldDescriptor`, etc.).
 Most classes in the upper layers provide public interfaces.
