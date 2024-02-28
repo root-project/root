@@ -265,7 +265,7 @@ The RNTuple data source also supports multi-threaded dataframes, parallelized on
 
 The data source exposes inner fields of complex collections.
 For instance, if the data model contains a vector of `Event` classes, where each `Event` has `pt` and `eta` floats,
-the data frame can use the event vector itself (`Event` column) as well as the `float` columns `Event.pt` and `Event.eta`.
+the dataframe can use the event vector itself (`Event` column) as well as the `float` columns `Event.pt` and `Event.eta`.
 
 ### RClusterPool
 The RClusterPool is an internal class owned be a page source.
