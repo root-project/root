@@ -429,7 +429,6 @@ void operator delete(void *ptr, std::size_t, std::align_val_t al) noexcept
 }
 #endif
 
-#ifdef R__VECNEWDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom vector new operator.
 
@@ -476,8 +475,6 @@ void operator delete[](void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    ::operator delete(ptr, al);
 }
-#endif
-
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
