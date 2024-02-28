@@ -245,7 +245,7 @@ The RNTupleWriter is the primary interface to create an RNTuple.
 The writer takes ownership of a given model.
 The writer can either add an RNTuple to an existing ROOT file (`RNTupleWriter::Append()`) or create a new ROOT file with an RNTuple (`RNTupleWriter::Recreate()`).
 Once created, entries are added to an RNTuple either serially (`RNTupleWriter::Fill()`) or in concurrently in multiple threads with the `RNTupleParallelWriter`.
-Once committed (e.g. by releasing the RNTupleWriter), the RNTuple is immutable and cannot be ammended.
+Once committed (e.g. by releasing the RNTupleWriter), the RNTuple is immutable and cannot be amended.
 An RNTuple that is currently being written cannot be read.
 
 ### RNTupleReader
