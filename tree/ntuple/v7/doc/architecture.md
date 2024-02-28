@@ -51,7 +51,7 @@ std::shared_ptr<float> pt = reader->GetDefaultEntry().GetPtr<float>("pt");
 
 // Option 2: imposed model
 auto model = RNTupleModel::Create();
-model->MakeField<float>("pt");
+auto pt = model->MakeField<float>("pt");
 // The reader checks the passed model for compatibility; only the subset of fields defined in the model is read
 auto reader = RNTupleReader::Open(std::move(model), ntuple);
 reader->LoadEntry(0);
