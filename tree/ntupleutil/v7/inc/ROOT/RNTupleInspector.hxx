@@ -138,8 +138,8 @@ private:
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
-   std::map<int, RColumnInspector> fColumnInfo;
-   std::map<int, RFieldTreeInspector> fFieldTreeInfo;
+   std::unordered_map<int, RColumnInspector> fColumnInfo;
+   std::unordered_map<int, RFieldTreeInspector> fFieldTreeInfo;
 
    RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
 
