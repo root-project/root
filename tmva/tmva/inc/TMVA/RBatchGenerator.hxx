@@ -161,8 +161,6 @@ public:
 
    void LoadChunks()
    {
-      ROOT::EnableThreadSafety();
-
       for (std::size_t current_chunk = 0; ((current_chunk < fMaxChunks) || fUseWholeFile) && fCurrentRow < fNumEntries;
            current_chunk++) {
 
