@@ -102,12 +102,12 @@ robust Streamer mechanism I opted for 3).
 
 #include <cmath>
 
-#if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
+#if defined(R__UNIX) && !defined(R__WINGCC)
 #define HAVE_SEMOP
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#ifndef WIN32
+#if !defined(WIN32) && !defined(R__MACOSX)
 union semun {
    int val;                      // value for SETVAL
    struct semid_ds *buf;         // buffer for IPC_STAT & IPC_SET
