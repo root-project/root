@@ -15,6 +15,7 @@
 
 #ifdef R__USE_IMT
 #include "TROOT.h"
+#define TBB_PREVIEW_ISOLATED_TASK_GROUP 1
 #include "tbb/task_group.h"
 #include "tbb/task_arena.h"
 #endif
@@ -37,10 +38,10 @@ namespace ROOT {
 namespace Internal {
 
 #ifdef R__USE_IMT
-tbb::task_group *CastToTG(void* p) {
-   return (tbb::task_group *) p;
+tbb::isolated_task_group *CastToTG(void *p)
+{
+   return (tbb::isolated_task_group *)p;
 }
-
 #endif
 
 } // namespace Internal
@@ -59,7 +60,7 @@ TTaskGroup::TTaskGroup()
    if (!ROOT::IsImplicitMTEnabled()) {
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
-   fTaskContainer = ((void *)new tbb::task_group());
+   fTaskContainer = ((void *)new tbb::isolated_task_group());
 #endif
 }
 
