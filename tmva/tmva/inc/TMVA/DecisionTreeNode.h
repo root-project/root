@@ -181,89 +181,89 @@ namespace TMVA {
       /// return the RMS of the response of the node (for regression)
       Float_t GetRMS( void ) const { return fRMS;}
 
-      /// set the sum of the signal weights in the node
-      void SetNSigEvents( Float_t s ) { fTrainInfo->fNSigEvents = s; }
+      /// set the sum of the signal weights in the node, if traininfo defined
+      void SetNSigEvents( Float_t s ) { if(fTrainInfo) fTrainInfo->fNSigEvents = s; }
 
-      /// set the sum of the backgr weights in the node
-      void SetNBkgEvents( Float_t b ) { fTrainInfo->fNBkgEvents = b; }
+      /// set the sum of the backgr weights in the node, if traininfo defined
+      void SetNBkgEvents( Float_t b ) { if(fTrainInfo) fTrainInfo->fNBkgEvents = b; }
 
-      /// set the number of events that entered the node (during training)
-      void SetNEvents( Float_t nev ){ fTrainInfo->fNEvents =nev ; }
+      /// set the number of events that entered the node (during training), if traininfo defined
+      void SetNEvents( Float_t nev ){ if(fTrainInfo) fTrainInfo->fNEvents =nev ; }
 
-      /// set the sum of the unweighted signal events in the node
-      void SetNSigEvents_unweighted( Float_t s ) { fTrainInfo->fNSigEvents_unweighted = s; }
+      /// set the sum of the unweighted signal events in the node, if traininfo defined
+      void SetNSigEvents_unweighted( Float_t s ) { if(fTrainInfo) fTrainInfo->fNSigEvents_unweighted = s; }
 
-      /// set the sum of the unweighted backgr events in the node
-      void SetNBkgEvents_unweighted( Float_t b ) { fTrainInfo->fNBkgEvents_unweighted = b; }
+      /// set the sum of the unweighted backgr events in the node, if traininfo defined
+      void SetNBkgEvents_unweighted( Float_t b ) { if(fTrainInfo) fTrainInfo->fNBkgEvents_unweighted = b; }
 
-      /// set the number of unweighted events that entered the node (during training)
-      void SetNEvents_unweighted( Float_t nev ){ fTrainInfo->fNEvents_unweighted =nev ; }
+      /// set the number of unweighted events that entered the node (during training), if traininfo defined
+      void SetNEvents_unweighted( Float_t nev ){ if(fTrainInfo) fTrainInfo->fNEvents_unweighted =nev ; }
 
-      /// set the sum of the unboosted signal events in the node
-      void SetNSigEvents_unboosted( Float_t s ) { fTrainInfo->fNSigEvents_unboosted = s; }
+      /// set the sum of the unboosted signal events in the node, if traininfo defined
+      void SetNSigEvents_unboosted( Float_t s ) { if(fTrainInfo) fTrainInfo->fNSigEvents_unboosted = s; }
 
-      /// set the sum of the unboosted backgr events in the node
-      void SetNBkgEvents_unboosted( Float_t b ) { fTrainInfo->fNBkgEvents_unboosted = b; }
+      /// set the sum of the unboosted backgr events in the node, if traininfo defined
+      void SetNBkgEvents_unboosted( Float_t b ) { if(fTrainInfo) fTrainInfo->fNBkgEvents_unboosted = b; }
 
-      /// set the number of unboosted events that entered the node (during training)
-      void SetNEvents_unboosted( Float_t nev ){ fTrainInfo->fNEvents_unboosted =nev ; }
+      /// set the number of unboosted events that entered the node (during training), if traininfo defined
+      void SetNEvents_unboosted( Float_t nev ){ if(fTrainInfo) fTrainInfo->fNEvents_unboosted =nev ; }
 
-      /// increment the sum of the signal weights in the node
-      void IncrementNSigEvents( Float_t s ) { fTrainInfo->fNSigEvents += s; }
+      /// increment the sum of the signal weights in the node, if traininfo defined
+      void IncrementNSigEvents( Float_t s ) { if(fTrainInfo) fTrainInfo->fNSigEvents += s; }
 
-      /// increment the sum of the backgr weights in the node
-      void IncrementNBkgEvents( Float_t b ) { fTrainInfo->fNBkgEvents += b; }
+      /// increment the sum of the backgr weights in the node, if traininfo defined
+      void IncrementNBkgEvents( Float_t b ) { if(fTrainInfo) fTrainInfo->fNBkgEvents += b; }
 
-      // increment the number of events that entered the node (during training)
-      void IncrementNEvents( Float_t nev ){ fTrainInfo->fNEvents +=nev ; }
+      // increment the number of events that entered the node (during training), if traininfo defined
+      void IncrementNEvents( Float_t nev ){ if(fTrainInfo) fTrainInfo->fNEvents +=nev ; }
 
-      /// increment the sum of the signal weights in the node
-      void IncrementNSigEvents_unweighted( ) { fTrainInfo->fNSigEvents_unweighted += 1; }
+      /// increment the sum of the signal weights in the node, if traininfo defined
+      void IncrementNSigEvents_unweighted( ) { if(fTrainInfo) fTrainInfo->fNSigEvents_unweighted += 1; }
 
-      /// increment the sum of the backgr weights in the node
-      void IncrementNBkgEvents_unweighted( ) { fTrainInfo->fNBkgEvents_unweighted += 1; }
+      /// increment the sum of the backgr weights in the node, if traininfo defined
+      void IncrementNBkgEvents_unweighted( ) { if(fTrainInfo) fTrainInfo->fNBkgEvents_unweighted += 1; }
 
-      /// increment the number of events that entered the node (during training)
-      void IncrementNEvents_unweighted( ){ fTrainInfo->fNEvents_unweighted +=1 ; }
+      /// increment the number of events that entered the node (during training), if traininfo defined
+      void IncrementNEvents_unweighted( ){ if(fTrainInfo) fTrainInfo->fNEvents_unweighted +=1 ; }
 
-      /// return the sum of the signal weights in the node
-      Float_t GetNSigEvents( void ) const  { return fTrainInfo->fNSigEvents; }
+      /// return the sum of the signal weights in the node, or -1 if traininfo undefined
+      Float_t GetNSigEvents( void ) const  { return fTrainInfo ? fTrainInfo->fNSigEvents : -1.; }
 
-      /// return the sum of the backgr weights in the node
-      Float_t GetNBkgEvents( void ) const  { return fTrainInfo->fNBkgEvents; }
+      /// return the sum of the backgr weights in the node, or -1 if traininfo undefined
+      Float_t GetNBkgEvents( void ) const  { return fTrainInfo ? fTrainInfo->fNBkgEvents : -1.; }
 
-      /// return  the number of events that entered the node (during training)
-      Float_t GetNEvents( void ) const  { return fTrainInfo->fNEvents; }
+      /// return  the number of events that entered the node (during training), or -1 if traininfo undefined
+      Float_t GetNEvents( void ) const  { return fTrainInfo ? fTrainInfo->fNEvents : -1.; }
 
-      // return the sum of unweighted signal weights in the node
-      Float_t GetNSigEvents_unweighted( void ) const  { return fTrainInfo->fNSigEvents_unweighted; }
+      // return the sum of unweighted signal weights in the node, or -1 if traininfo undefined
+      Float_t GetNSigEvents_unweighted( void ) const  { return fTrainInfo ? fTrainInfo->fNSigEvents_unweighted : -1.; }
 
-      /// return the sum of unweighted backgr weights in the node
-      Float_t GetNBkgEvents_unweighted( void ) const  { return fTrainInfo->fNBkgEvents_unweighted; }
+      /// return the sum of unweighted backgr weights in the node, or -1 if traininfo undefined
+      Float_t GetNBkgEvents_unweighted( void ) const  { return fTrainInfo ? fTrainInfo->fNBkgEvents_unweighted : -1.; }
 
-      /// return  the number of unweighted events that entered the node (during training)
-      Float_t GetNEvents_unweighted( void ) const  { return fTrainInfo->fNEvents_unweighted; }
+      /// return  the number of unweighted events that entered the node (during training), or -1 if traininfo undefined
+      Float_t GetNEvents_unweighted( void ) const  { return fTrainInfo ? fTrainInfo->fNEvents_unweighted : -1.; }
 
-      /// return the sum of unboosted signal weights in the node
-      Float_t GetNSigEvents_unboosted( void ) const  { return fTrainInfo->fNSigEvents_unboosted; }
+      /// return the sum of unboosted signal weights in the node, or -1 if traininfo undefined
+      Float_t GetNSigEvents_unboosted( void ) const  { return fTrainInfo ? fTrainInfo->fNSigEvents_unboosted : -1.; }
 
-      /// return the sum of unboosted backgr weights in the node
-      Float_t GetNBkgEvents_unboosted( void ) const  { return fTrainInfo->fNBkgEvents_unboosted; }
+      /// return the sum of unboosted backgr weights in the node, or -1 if traininfo undefined
+      Float_t GetNBkgEvents_unboosted( void ) const  { return fTrainInfo ? fTrainInfo->fNBkgEvents_unboosted : -1.; }
 
-      /// return  the number of unboosted events that entered the node (during training)
-      Float_t GetNEvents_unboosted( void ) const  { return fTrainInfo->fNEvents_unboosted; }
+      /// return  the number of unboosted events that entered the node (during training), or -1 if traininfo undefined
+      Float_t GetNEvents_unboosted( void ) const  { return fTrainInfo ? fTrainInfo->fNEvents_unboosted : -1.; }
 
-      /// set the chosen index, measure of "purity" (separation between S and B) AT this node
-      void SetSeparationIndex( Float_t sep ){ fTrainInfo->fSeparationIndex =sep ; }
+      /// set the chosen index, measure of "purity" (separation between S and B) AT this node, if traininfo defined
+      void SetSeparationIndex( Float_t sep ){ if(fTrainInfo) fTrainInfo->fSeparationIndex =sep ; }
 
-      /// return the separation index AT this node
-      Float_t GetSeparationIndex( void ) const  { return fTrainInfo->fSeparationIndex; }
+      /// return the separation index AT this node, or 0 if traininfo undefined
+      Float_t GetSeparationIndex( void ) const  { return fTrainInfo ? fTrainInfo->fSeparationIndex : -1.; }
 
-      /// set the separation, or information gained BY this nodes selection
-      void SetSeparationGain( Float_t sep ){ fTrainInfo->fSeparationGain =sep ; }
+      /// set the separation, or information gained BY this node's selection, if traininfo defined
+      void SetSeparationGain( Float_t sep ){ if(fTrainInfo) fTrainInfo->fSeparationGain =sep ; }
 
-      /// return the gain in separation obtained by this nodes selection
-      Float_t GetSeparationGain( void ) const  { return fTrainInfo->fSeparationGain; }
+      /// return the gain in separation obtained by this node's selection, or -1 if traininfo undefined
+      Float_t GetSeparationGain( void ) const  { return fTrainInfo ? fTrainInfo->fSeparationGain : -1.; }
 
       // printout of the node
       virtual void Print( std::ostream& os ) const;
@@ -289,41 +289,56 @@ namespace TMVA {
       inline virtual void SetRight (Node* r) { fRight  = r;}
       inline virtual void SetParent(Node* p) { fParent = p;}
 
-      // the node resubstitution estimate, R(t), for Cost Complexity pruning
-      inline void SetNodeR( Double_t r ) { fTrainInfo->fNodeR = r;    }
-      inline Double_t GetNodeR( ) const  { return fTrainInfo->fNodeR; }
+      /// set the node resubstitution estimate, R(t), for Cost Complexity pruning, if traininfo defined
+      inline void SetNodeR( Double_t r ) { if(fTrainInfo) fTrainInfo->fNodeR = r;    }
+      /// return the node resubstitution estimate, R(t), for Cost Complexity pruning, or -1 if traininfo undefined
+      inline Double_t GetNodeR( ) const  { return fTrainInfo ? fTrainInfo->fNodeR : -1.; }
 
-      // the resubstitution estimate, R(T_t), of the tree rooted at this node
-      inline void SetSubTreeR( Double_t r ) { fTrainInfo->fSubTreeR = r;    }
-      inline Double_t GetSubTreeR( ) const  { return fTrainInfo->fSubTreeR; }
+      /// set the resubstitution estimate, R(T_t), of the tree rooted at this node, if traininfo defined
+      inline void SetSubTreeR( Double_t r ) { if(fTrainInfo) fTrainInfo->fSubTreeR = r;    }
+      /// return the resubstitution estimate, R(T_t), of the tree rooted at this node, or -1 if traininfo undefined
+      inline Double_t GetSubTreeR( ) const  { return fTrainInfo ? fTrainInfo->fSubTreeR : -1.; }
 
       //                             R(t) - R(T_t)
       // the critical point alpha =  -------------
       //                              |~T_t| - 1
-      inline void SetAlpha( Double_t alpha ) { fTrainInfo->fAlpha = alpha; }
-      inline Double_t GetAlpha( ) const      { return fTrainInfo->fAlpha;  }
+      /// set the critical point alpha, if traininfo defined
+      inline void SetAlpha( Double_t alpha ) { if(fTrainInfo) fTrainInfo->fAlpha = alpha; }
+      /// return the critical point alpha, or -1 if traininfo undefined
+      inline Double_t GetAlpha( ) const      { return fTrainInfo ? fTrainInfo->fAlpha : -1.;  }
 
-      // the minimum alpha in the tree rooted at this node
-      inline void SetAlphaMinSubtree( Double_t g ) { fTrainInfo->fG = g;    }
-      inline Double_t GetAlphaMinSubtree( ) const  { return fTrainInfo->fG; }
+      /// set the minimum alpha in the tree rooted at this node, if traininfo defined
+      inline void SetAlphaMinSubtree( Double_t g ) { if(fTrainInfo) fTrainInfo->fG = g;    }
+      /// return the minimum alpha in the tree rooted at this node, or -1 if traininfo undefined
+      inline Double_t GetAlphaMinSubtree( ) const  { return fTrainInfo ? fTrainInfo->fG : -1.; }
 
-      // number of terminal nodes in the subtree rooted here
-      inline void SetNTerminal( Int_t n ) { fTrainInfo->fNTerminal = n;    }
-      inline Int_t GetNTerminal( ) const  { return fTrainInfo->fNTerminal; }
+      /// set number of terminal nodes in the subtree rooted here, if traininfo defined
+      inline void SetNTerminal( Int_t n ) { if(fTrainInfo) fTrainInfo->fNTerminal = n;    }
+      /// return number of terminal nodes in the subtree rooted here, or -1 if traininfo undefined
+      inline Int_t GetNTerminal( ) const  { return fTrainInfo ? fTrainInfo->fNTerminal : -1.; }
 
-      // number of background/signal events from the pruning validation sample
-      inline void SetNBValidation( Double_t b ) { fTrainInfo->fNB = b; }
-      inline void SetNSValidation( Double_t s ) { fTrainInfo->fNS = s; }
-      inline Double_t GetNBValidation( ) const  { return fTrainInfo->fNB; }
-      inline Double_t GetNSValidation( ) const  { return fTrainInfo->fNS; }
+      /// set number of background events from the pruning validation sample, if traininfo defined
+      inline void SetNBValidation( Double_t b ) { if(fTrainInfo) fTrainInfo->fNB = b; }
+      /// set number of signal events from the pruning validation sample, if traininfo defined
+      inline void SetNSValidation( Double_t s ) { if(fTrainInfo) fTrainInfo->fNS = s; }
+      /// return number of background events from the pruning validation sample, or -1 if traininfo undefined
+      inline Double_t GetNBValidation( ) const  { return fTrainInfo ? fTrainInfo->fNB : -1.; }
+      /// return number of signal events from the pruning validation sample, or -1 if traininfo undefined
+      inline Double_t GetNSValidation( ) const  { return fTrainInfo ? fTrainInfo->fNS : -1.; }
 
-      inline void SetSumTarget(Float_t t)  {fTrainInfo->fSumTarget = t; }
-      inline void SetSumTarget2(Float_t t2){fTrainInfo->fSumTarget2 = t2; }
+      /// set sum target, if traininfo defined
+      inline void SetSumTarget(Float_t t)  {if(fTrainInfo) fTrainInfo->fSumTarget = t; }
+      /// set sum target 2, if traininfo defined
+      inline void SetSumTarget2(Float_t t2){if(fTrainInfo) fTrainInfo->fSumTarget2 = t2; }
 
-      inline void AddToSumTarget(Float_t t)  {fTrainInfo->fSumTarget += t; }
-      inline void AddToSumTarget2(Float_t t2){fTrainInfo->fSumTarget2 += t2; }
+      /// add to sum target, if traininfo defined
+      inline void AddToSumTarget(Float_t t)  {if(fTrainInfo) fTrainInfo->fSumTarget += t; }
+      /// add to sum target 2, if traininfo defined
+      inline void AddToSumTarget2(Float_t t2){if(fTrainInfo) fTrainInfo->fSumTarget2 += t2; }
 
+      /// return sum target, or -9999 if traininfo undefined
       inline Float_t GetSumTarget()  const {return fTrainInfo? fTrainInfo->fSumTarget : -9999;}
+      /// return sum target 2, or -9999 if traininfo undefined
       inline Float_t GetSumTarget2() const {return fTrainInfo? fTrainInfo->fSumTarget2: -9999;}
 
 
@@ -337,6 +352,7 @@ namespace TMVA {
       void PrintRecPrune( std::ostream& os ) const;
 
       void     SetCC(Double_t cc);
+      /// return CC, or -1 if traininfo undefined
       Double_t GetCC() const {return (fTrainInfo? fTrainInfo->fCC : -1.);}
 
       Float_t GetSampleMin(UInt_t ivar) const;
