@@ -86,6 +86,8 @@ namespace clang {
     const SourceLocation ThisDeclLoc;
 
     using RecordData = ASTReader::RecordData;
+    using LazySpecializationInfo =
+        RedeclarableTemplateDecl::LazySpecializationInfo;
 
     TypeID DeferredTypeID = 0;
     unsigned AnonymousDeclNumber;
@@ -132,9 +134,16 @@ namespace clang {
       return Record.readString();
     }
 
-    void readDeclIDList(SmallVectorImpl<DeclID> &IDs) {
+    LazySpecializationInfo ReadLazySpecializationInfo() {
+      DeclID ID = readDeclID();
+      unsigned Hash = Record.readInt();
+      bool IsPartial = Record.readInt();
+      return LazySpecializationInfo(ID, Hash, IsPartial);
+    }
+
+    void readDeclIDList(SmallVectorImpl<LazySpecializationInfo> &IDs) {
       for (unsigned I = 0, Size = Record.readInt(); I != Size; ++I)
-        IDs.push_back(readDeclID());
+        IDs.push_back(ReadLazySpecializationInfo());
     }
 
     Decl *readDecl() {
@@ -260,9 +269,9 @@ namespace clang {
         : Reader(Reader), Record(Record), Loc(Loc), ThisDeclID(thisDeclID),
           ThisDeclLoc(ThisDeclLoc) {}
 
-    template <typename T> static
-    void AddLazySpecializations(T *D,
-                                SmallVectorImpl<serialization::DeclID>& IDs) {
+    template <typename T>
+    static void
+    AddLazySpecializations(T *D, SmallVectorImpl<LazySpecializationInfo> &IDs) {
       if (IDs.empty())
         return;
 
@@ -272,12 +281,11 @@ namespace clang {
       auto *&LazySpecializations = D->getCommonPtr()->LazySpecializations;
 
       if (auto &Old = LazySpecializations) {
-        IDs.insert(IDs.end(), Old + 1, Old + 1 + Old[0]);
+        IDs.insert(IDs.end(), Old + 1, Old + 1 + Old[0].DeclID);
         llvm::sort(IDs);
         IDs.erase(std::unique(IDs.begin(), IDs.end()), IDs.end());
       }
-
-      auto *Result = new (C) serialization::DeclID[1 + IDs.size()];
+      auto *Result = new (C) LazySpecializationInfo[1 + IDs.size()];
       *Result = IDs.size();
       std::copy(IDs.begin(), IDs.end(), Result + 1);
 
@@ -315,7 +323,7 @@ namespace clang {
     void ReadFunctionDefinition(FunctionDecl *FD);
     void Visit(Decl *D);
 
-    void UpdateDecl(Decl *D, SmallVectorImpl<serialization::DeclID> &);
+    void UpdateDecl(Decl *D, llvm::SmallVectorImpl<LazySpecializationInfo> &);
 
     static void setNextObjCCategory(ObjCCategoryDecl *Cat,
                                     ObjCCategoryDecl *Next) {
@@ -421,6 +429,9 @@ namespace clang {
     void VisitLifetimeExtendedTemporaryDecl(LifetimeExtendedTemporaryDecl *D);
 
     std::pair<uint64_t, uint64_t> VisitDeclContext(DeclContext *DC);
+
+    void ReadSpecializations(ModuleFile &M, Decl *D,
+                             llvm::BitstreamCursor &Cursor);
 
     template<typename T>
     RedeclarableResult VisitRedeclarable(Redeclarable<T> *D);
@@ -2300,6 +2311,14 @@ void ASTDeclReader::VisitImplicitConceptSpecializationDecl(
 void ASTDeclReader::VisitRequiresExprBodyDecl(RequiresExprBodyDecl *D) {
 }
 
+void ASTDeclReader::ReadSpecializations(ModuleFile &M, Decl *D,
+                                        llvm::BitstreamCursor &DeclsCursor) {
+  uint64_t Offset = ReadLocalOffset();
+  bool Failed = Reader.ReadSpecializations(M, DeclsCursor, Offset, D);
+  (void)Failed;
+  assert(!Failed);
+}
+
 ASTDeclReader::RedeclarableResult
 ASTDeclReader::VisitRedeclarableTemplateDecl(RedeclarableTemplateDecl *D) {
   RedeclarableResult Redecl = VisitRedeclarable(D);
@@ -2338,9 +2357,10 @@ void ASTDeclReader::VisitClassTemplateDecl(ClassTemplateDecl *D) {
   if (ThisDeclID == Redecl.getFirstID()) {
     // This ClassTemplateDecl owns a CommonPtr; read it to keep track of all of
     // the specializations.
-    SmallVector<serialization::DeclID, 32> SpecIDs;
+    SmallVector<LazySpecializationInfo, 32> SpecIDs;
     readDeclIDList(SpecIDs);
     ASTDeclReader::AddLazySpecializations(D, SpecIDs);
+    ReadSpecializations(*Loc.F, D, Loc.F->DeclsCursor);
   }
 
   if (D->getTemplatedDecl()->TemplateOrInstantiation) {
@@ -2366,7 +2386,7 @@ void ASTDeclReader::VisitVarTemplateDecl(VarTemplateDecl *D) {
   if (ThisDeclID == Redecl.getFirstID()) {
     // This VarTemplateDecl owns a CommonPtr; read it to keep track of all of
     // the specializations.
-    SmallVector<serialization::DeclID, 32> SpecIDs;
+    SmallVector<LazySpecializationInfo, 32> SpecIDs;
     readDeclIDList(SpecIDs);
     ASTDeclReader::AddLazySpecializations(D, SpecIDs);
   }
@@ -2476,9 +2496,11 @@ void ASTDeclReader::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
 
   if (ThisDeclID == Redecl.getFirstID()) {
     // This FunctionTemplateDecl owns a CommonPtr; read it.
-    SmallVector<serialization::DeclID, 32> SpecIDs;
+    SmallVector<LazySpecializationInfo, 32> SpecIDs;
     readDeclIDList(SpecIDs);
     ASTDeclReader::AddLazySpecializations(D, SpecIDs);
+    ReadSpecializations(*Loc.F, D, Loc.F->DeclsCursor);
+    ReadSpecializations(*Loc.F, D, Loc.F->DeclsCursor);
   }
 }
 
@@ -3676,6 +3698,7 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
   switch ((DeclCode)MaybeDeclCode.get()) {
   case DECL_CONTEXT_LEXICAL:
   case DECL_CONTEXT_VISIBLE:
+  case DECL_SPECIALIZATIONS:
     llvm_unreachable("Record cannot be de-serialized with readDeclRecord");
   case DECL_TYPEDEF:
     D = TypedefDecl::CreateDeserialized(Context, ID);
@@ -4048,7 +4071,9 @@ void ASTReader::loadDeclUpdateRecords(PendingUpdateRecord &Record) {
   ProcessingUpdatesRAIIObj ProcessingUpdates(*this);
   DeclUpdateOffsetsMap::iterator UpdI = DeclUpdateOffsets.find(ID);
 
-  SmallVector<serialization::DeclID, 8> PendingLazySpecializationIDs;
+  using LazySpecializationInfo =
+      RedeclarableTemplateDecl::LazySpecializationInfo;
+  llvm::SmallVector<LazySpecializationInfo, 8> PendingLazySpecializationIDs;
 
   if (UpdI != DeclUpdateOffsets.end()) {
     auto UpdateOffsets = std::move(UpdI->second);
@@ -4103,12 +4128,14 @@ void ASTReader::loadDeclUpdateRecords(PendingUpdateRecord &Record) {
   assert((PendingLazySpecializationIDs.empty() || isa<ClassTemplateDecl>(D) ||
           isa<FunctionTemplateDecl, VarTemplateDecl>(D)) &&
          "Must not have pending specializations");
+  /*
   if (auto *CTD = dyn_cast<ClassTemplateDecl>(D))
     ASTDeclReader::AddLazySpecializations(CTD, PendingLazySpecializationIDs);
   else if (auto *FTD = dyn_cast<FunctionTemplateDecl>(D))
     ASTDeclReader::AddLazySpecializations(FTD, PendingLazySpecializationIDs);
   else if (auto *VTD = dyn_cast<VarTemplateDecl>(D))
     ASTDeclReader::AddLazySpecializations(VTD, PendingLazySpecializationIDs);
+  */
   PendingLazySpecializationIDs.clear();
 
   // Load the pending visible updates for this decl context, if it has any.
@@ -4123,6 +4150,16 @@ void ASTReader::loadDeclUpdateRecords(PendingUpdateRecord &Record) {
           Update.Mod, Update.Data,
           reader::ASTDeclContextNameLookupTrait(*this, *Update.Mod));
     DC->setHasExternalVisibleStorage(true);
+  }
+
+  // Load the pending specializations update for this decl, if it has any.
+  if (auto I = PendingSpecializationsUpdates.find(ID);
+      I != PendingSpecializationsUpdates.end()) {
+    auto SpecializationUpdates = std::move(I->second);
+    PendingSpecializationsUpdates.erase(I);
+
+    for (const auto &Update : SpecializationUpdates)
+      AddSpecializations(D, Update.Data, *Update.Mod);
   }
 }
 
@@ -4318,8 +4355,9 @@ static void forAllLaterRedecls(DeclT *D, Fn F) {
   }
 }
 
-void ASTDeclReader::UpdateDecl(Decl *D,
-   llvm::SmallVectorImpl<serialization::DeclID> &PendingLazySpecializationIDs) {
+void ASTDeclReader::UpdateDecl(
+    Decl *D,
+    SmallVectorImpl<LazySpecializationInfo> &PendingLazySpecializationIDs) {
   while (Record.getIdx() < Record.size()) {
     switch ((DeclUpdateKind)Record.readInt()) {
     case UPD_CXX_ADDED_IMPLICIT_MEMBER: {
@@ -4336,7 +4374,7 @@ void ASTDeclReader::UpdateDecl(Decl *D,
 
     case UPD_CXX_ADDED_TEMPLATE_SPECIALIZATION:
       // It will be added to the template's lazy specialization set.
-      PendingLazySpecializationIDs.push_back(readDeclID());
+      PendingLazySpecializationIDs.push_back(ReadLazySpecializationInfo());
       break;
 
     case UPD_CXX_ADDED_ANONYMOUS_NAMESPACE: {
