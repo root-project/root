@@ -3340,7 +3340,7 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
       break;
     }
 
-    case UPDATE_SPECIALIZATION: {
+    case CXX_ADDED_TEMPLATE_SPECIALIZATION: {
       unsigned Idx = 0;
       serialization::DeclID ID = ReadDeclID(F, Record, Idx);
       auto *Data = (const unsigned char *)Blob.data();
@@ -7805,7 +7805,7 @@ void ASTReader::LoadExternalSpecializations(
     return;
 
   Deserializing LookupResults(this);
-  auto HashValue = TemplateArgumentList::ComputeODRHash(TemplateArgs);
+  auto HashValue = TemplateArgumentList::ComputeStableHash(TemplateArgs);
 
   // Get Decl may violate the iterator from SpecializationsLookups
   llvm::SmallVector<serialization::reader::LazySpecializationInfo, 8> Infos;

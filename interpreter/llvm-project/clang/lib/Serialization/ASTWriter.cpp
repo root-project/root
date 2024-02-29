@@ -3941,7 +3941,7 @@ unsigned CalculateODRHashForSpecs(const Decl *Spec) {
   else
     llvm_unreachable("New Specialization Kind?");
 
-  return TemplateArgumentList::ComputeODRHash(Args);
+  return TemplateArgumentList::ComputeStableHash(Args);
 }
 } // namespace
 
@@ -5311,7 +5311,7 @@ ASTFileSignature ASTWriter::WriteASTCore(Sema &SemaRef, StringRef isysroot,
 
 void ASTWriter::WriteSpecializationsUpdates() {
   auto Abv = std::make_shared<llvm::BitCodeAbbrev>();
-  Abv->Add(llvm::BitCodeAbbrevOp(UPDATE_SPECIALIZATION));
+  Abv->Add(llvm::BitCodeAbbrevOp(CXX_ADDED_TEMPLATE_SPECIALIZATION));
   Abv->Add(llvm::BitCodeAbbrevOp(llvm::BitCodeAbbrevOp::VBR, 6));
   Abv->Add(llvm::BitCodeAbbrevOp(llvm::BitCodeAbbrevOp::Blob));
   auto UpdateSpecializationAbbrev = Stream.EmitAbbrev(std::move(Abv));
@@ -5324,7 +5324,8 @@ void ASTWriter::WriteSpecializationsUpdates() {
                                           LookupTable);
 
     // Write the lookup table
-    RecordData::value_type Record[] = {UPDATE_SPECIALIZATION, getDeclID(D)};
+    RecordData::value_type Record[] = {CXX_ADDED_TEMPLATE_SPECIALIZATION,
+                                       getDeclID(D)};
     Stream.EmitRecordWithBlob(UpdateSpecializationAbbrev, Record, LookupTable);
   }
 }
@@ -5358,25 +5359,6 @@ void ASTWriter::WriteDeclUpdatesBlocks(RecordDataImpl &OffsetsRecord) {
         assert(Update.getDecl() && "no decl to add?");
         Record.push_back(GetDeclRef(Update.getDecl()));
         break;
-      case UPD_CXX_ADDED_TEMPLATE_SPECIALIZATION: {
-        const Decl *Spec = Update.getDecl();
-        assert(Spec && "no decl to add?");
-        Record.push_back(GetDeclRef(Spec));
-        ArrayRef<TemplateArgument> Args;
-        if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(Spec))
-          Args = CTSD->getTemplateArgs().asArray();
-        else if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(Spec))
-          Args = VTSD->getTemplateArgs().asArray();
-        else if (auto *FD = dyn_cast<FunctionDecl>(Spec))
-          Args = FD->getTemplateSpecializationArgs()->asArray();
-        assert(Args.size());
-        Record.push_back(TemplateArgumentList::ComputeODRHash(Args));
-        bool IsPartialSpecialization =
-            isa<ClassTemplatePartialSpecializationDecl>(Spec) ||
-            isa<VarTemplatePartialSpecializationDecl>(Spec);
-        Record.push_back(IsPartialSpecialization);
-        break;
-      }
       case UPD_CXX_ADDED_FUNCTION_DEFINITION:
         break;
 
