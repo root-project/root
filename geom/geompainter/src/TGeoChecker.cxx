@@ -1689,7 +1689,7 @@ void TGeoChecker::PrintOverlaps() const
 /// Generates a report regarding the path to the node containing this point and the distance to
 /// the closest boundary.
 
-void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
+void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *, Double_t safety)
 {
    Double_t point[3];
    Double_t local[3];
@@ -1712,7 +1712,7 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
    if (node)
       vol = node->GetVolume();
    // compute safety distance (distance to boundary ignored)
-   Double_t close = fGeoManager->Safety();
+   Double_t close = (safety > 0.) ? safety : fGeoManager->Safety();
    printf("Safety radius : %f\n", close);
    if (close > 1E-4) {
       TGeoVolume *sph = fGeoManager->MakeSphere("SAFETY", vol->GetMedium(), 0, close, 0, 180, 0, 360);
