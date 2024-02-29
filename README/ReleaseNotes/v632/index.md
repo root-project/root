@@ -72,6 +72,8 @@ This grabs all the root files in subdirectories that have a name starting with `
 
 ## Math Libraries
 
+## Parallelism
+  - The ROOT::Experimental::TFuture template has been removed.
 
 ## RooFit Libraries
 
