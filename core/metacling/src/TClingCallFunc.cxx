@@ -1421,12 +1421,6 @@ void TClingCallFunc::exec(void *address, void *ret)
             return;
          }
 
-
-      //
-      //  Convert the arguments from cling::Value to their
-      //  actual type and store them in a holder for passing to the
-      //  wrapper function by pointer to value.
-      //
       vp_ary.reserve(num_args);
       for (unsigned i = 0; i < num_args; ++i) {
          QualType QT;
@@ -1450,24 +1444,20 @@ void TClingCallFunc::exec(void *address, void *ret)
             // Check if arguments need readjusting. This can happen if we called
             // cling::Value::Create which instantiates to say double but the
             // function signature requires a float.
-            // FIXME: This is a cheap operation but it could be done in SetArg
-            // but there we are not guaranteed to have the function signature.
-            if (QT->isBuiltinType()) {
-               ASTContext &C = FD->getASTContext();
-               if (!C.hasSameType(QT, fArgVals[i].getType())) {
-                  switch(QT->getAs<BuiltinType>()->getKind()) {
-                  default:
+            ASTContext &C = FD->getASTContext();
+            if (QT->isBuiltinType() && !C.hasSameType(QT, fArgVals[i].getType())) {
+               switch(QT->getAs<BuiltinType>()->getKind()) {
+               default:
+                  ROOT::TMetaUtils::Error("TClingCallFunc::exec", "Unknown builtin type!");
 #ifndef NDEBUG
-                     QT->dump();
+                  QT->dump();
 #endif // NDEBUG
-                     assert(false && "Type not supported");
-                     return;
-#define X(type, name)                                   \
-                     case BuiltinType::name: fArgVals[i] = cling::Value::Create(*fInterp, fArgVals[i].castAs<type>()); break;
-                     CLING_VALUE_BUILTIN_TYPES
+                  break;
+#define X(type, name)                                                   \
+                  case BuiltinType::name: fArgVals[i] = cling::Value::Create(*fInterp, fArgVals[i].castAs<type>()); break;
+                  CLING_VALUE_BUILTIN_TYPES
 #undef X
-                  }
-               }
+              }
             }
             vp_ary.push_back(fArgVals[i].getPtrAddress());
          }
