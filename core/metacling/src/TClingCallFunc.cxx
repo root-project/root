@@ -1446,8 +1446,31 @@ void TClingCallFunc::exec(void *address, void *ret)
             // the argument is already a pointer value (points to the same thing
             // as the reference or pointing to object passed by value.
             vp_ary.push_back(fArgVals[i].getPtr());
-         } else
+         } else {
+            // Check if arguments need readjusting. This can happen if we called
+            // cling::Value::Create which instantiates to say double but the
+            // function signature requires a float.
+            // FIXME: This is a cheap operation but it could be done in SetArg
+            // but there we are not guaranteed to have the function signature.
+            if (QT->isBuiltinType()) {
+               ASTContext &C = FD->getASTContext();
+               if (!C.hasSameType(QT, fArgVals[i].getType())) {
+                  switch(QT->getAs<BuiltinType>()->getKind()) {
+                  default:
+#ifndef NDEBUG
+                     QT->dump();
+#endif // NDEBUG
+                     assert(false && "Type not supported");
+                     return;
+#define X(type, name)                                   \
+                     case BuiltinType::name: fArgVals[i] = cling::Value::Create(*fInterp, fArgVals[i].castAs<type>()); break;
+                     CLING_VALUE_BUILTIN_TYPES
+#undef X
+                  }
+               }
+            }
             vp_ary.push_back(fArgVals[i].getPtrAddress());
+         }
       }
    } // End of scope holding the lock
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
