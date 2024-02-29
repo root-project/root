@@ -449,6 +449,10 @@ TEST(RPageSinkBuf, ParallelZip) {
       EXPECT_EQ((std::vector<float>(3, fi)), viewKlassVec(i).at(0).v2.at(0));
       EXPECT_EQ("hi" + std::to_string(i), viewKlassVec(i).at(0).s);
    }
+
+#ifdef R__USE_IMT
+   ROOT::DisableImplicitMT();
+#endif
 }
 
 TEST(RPageSinkBuf, CommitSealedPageV)
@@ -456,9 +460,6 @@ TEST(RPageSinkBuf, CommitSealedPageV)
    RNTupleWriteOptions options;
    options.SetApproxUnzippedPageSize(16);
 
-#ifdef R__USE_IMT
-   ROOT::DisableImplicitMT();
-#endif
    {
       std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
@@ -499,6 +500,10 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       EXPECT_EQ(0, counters.fNCommitSealedPage);
       EXPECT_EQ(1, counters.fNCommitSealedPageV);
    }
+
+#ifdef R__USE_IMT
+   ROOT::DisableImplicitMT();
+#endif
 }
 
 TEST(RPageSink, Empty)
