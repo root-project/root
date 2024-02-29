@@ -198,3 +198,6 @@ endif()
 
 # TComplex pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
+
+# Test pass-by-value semantics for types with a deleted copy-constructor
+ROOT_ADD_PYUNITTEST(callfuncwrappers callfuncwrappers.py)

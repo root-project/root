@@ -300,3 +300,41 @@ TEST(TClingCallFunc, ROOT_6523) {
     break;
   }
 }
+
+TEST(TClingCallFunc, FunctionWrapperUniquePtr)
+{
+   gInterpreter->Declare(R"cpp(
+      struct FunctionWrapperUniquePtr{
+         int mVal{42};
+         FunctionWrapperUniquePtr() {}
+         FunctionWrapperUniquePtr(int val): mVal(val) {}
+      };
+      int foo_uniqueptr(
+         std::unique_ptr<FunctionWrapperUniquePtr> ptr = std::make_unique<FunctionWrapperUniquePtr>())
+      {
+             return ptr->mVal;
+      }
+  )cpp");
+
+   CallFuncRAII CfRAII("", "foo_uniqueptr", "std::unique_ptr<FunctionWrapperUniquePtr>");
+   std::string wrapper = CfRAII.GetWrapper();
+   ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
+}
+
+TEST(TClingCallFunc, FunctionWrapperTemplatedMoveConstructor)
+{
+   gInterpreter->Declare(R"cpp(
+      struct FunctionWrapperTemplatedMoveConstructor{
+         int mVal{42};
+         FunctionWrapperTemplatedMoveConstructor() {}
+         FunctionWrapperTemplatedMoveConstructor(const FunctionWrapperTemplatedMoveConstructor&) = delete;
+         template<typename T = int>
+         FunctionWrapperTemplatedMoveConstructor(FunctionWrapperTemplatedMoveConstructor &&) {}
+      };
+      int foo_templatedmove(FunctionWrapperTemplatedMoveConstructor a = FunctionWrapperTemplatedMoveConstructor{}) { return a.mVal; }
+  )cpp");
+
+   CallFuncRAII CfRAII("", "foo_templatedmove", "FunctionWrapperTemplatedMoveConstructor");
+   std::string wrapper = CfRAII.GetWrapper();
+   ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
+}
