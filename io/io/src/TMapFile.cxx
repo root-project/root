@@ -647,7 +647,18 @@ void TMapFile::Update(TObject *obj)
          TBufferFile *b;
          if (!mr->fBufSize) {
             b = new TBufferFile(TBuffer::kWrite, GetBestBuffer());
-            mr->fClassName = StrDup(mr->fObject->ClassName());
+
+            // Disable the mmap allocations while we create core/meta objects
+            ROOT::Internal::gMmallocDesc = nullptr;
+            const char *cname = mr->fObject->ClassName();
+            // This is not quite sufficient :(, if the object has (directly or
+            // indirectly) polymorphic pointers, we can not capture all the
+            // StreamerInfo (even if we were transversing the tree here).
+            // So for now just do one level.
+            mr->fObject->IsA()->GetStreamerInfo();
+            ROOT::Internal::gMmallocDesc = fMmallocDesc;
+
+            mr->fClassName = StrDup(cname);
          } else
             b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer);
          b->MapObject(mr->fObject);  //register obj in map to handle self reference
