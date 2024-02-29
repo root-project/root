@@ -11,6 +11,7 @@
 
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::RField;
+using ROOT::Experimental::RFieldBase;
 using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
@@ -198,6 +199,28 @@ TEST(RNTupleInspector, SizeEmpty)
 
    EXPECT_EQ(0, inspector->GetCompressedSize());
    EXPECT_EQ(0, inspector->GetUncompressedSize());
+}
+
+TEST(RNTupleInspector, SizeProjectedFields)
+{
+   FileRaii fileGuard("test_ntuple_inspector_size_projected_fields.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto muonPt = model->MakeField<std::vector<float>>("muonPt");
+      muonPt->emplace_back(1.0);
+      muonPt->emplace_back(2.0);
+
+      auto nMuons = RFieldBase::Create("nMuons", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+      model->AddProjectedField(std::move(nMuons), [](const std::string &) { return "muonPt"; });
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+
+   EXPECT_EQ(inspector->GetFieldTreeInspector("muonPt").GetUncompressedSize(), inspector->GetUncompressedSize());
+   EXPECT_EQ(inspector->GetFieldTreeInspector("muonPt").GetCompressedSize(), inspector->GetCompressedSize());
 }
 
 TEST(RNTupleInspector, ColumnInfoCompressed)
