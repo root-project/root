@@ -89,7 +89,7 @@ public:
                           const Double_t *vertex = nullptr) override;
    void CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const override;
    void CheckEdit();
-   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "") override;
+   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.) override;
    void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option) override;
    void CheckOverlaps(const TGeoVolume *vol, Double_t ovlp = 0.1, Option_t *option = "") const override;
    Int_t CountNodes(TGeoVolume *vol, Int_t level) const;

@@ -239,9 +239,9 @@ void TGeoPainter::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
 ////////////////////////////////////////////////////////////////////////////////
 /// Check current point in the geometry.
 
-void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
+void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option, Double_t safety)
 {
-   fChecker->CheckPoint(x, y, z, option);
+   fChecker->CheckPoint(x, y, z, option, safety);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
