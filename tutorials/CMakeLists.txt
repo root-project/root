@@ -255,6 +255,12 @@ endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
   set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT win_broken_tests)
+    # std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(500));
+    # fails on Windows 32 bit and Visual Studio v17.9 with the following error:
+    # IncrementalExecutor::executeFunction: symbol '_Thrd_sleep_for@4' unresolved while linking [cling interface function]!
+    set(imt_veto ${imt_veto} multicore/mt201_parallelHistoFill.C)
+  endif()
 endif()
 
 if(ROOT_CLASSIC_BUILD)
