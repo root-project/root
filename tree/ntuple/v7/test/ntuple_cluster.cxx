@@ -6,16 +6,21 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <string_view>
+#ifdef R__USE_IMT
+#include <TROOT.h>
+#include <ROOT/TThreadExecutor.hxx>
+#endif
 
 #include <cstdint>
 #include <memory>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -380,3 +385,30 @@ TEST(PageStorageFile, LoadClusters)
    EXPECT_EQ(1U, clusters[1]->GetId());
    EXPECT_EQ(1U, clusters[1]->GetNOnDiskPages());
 }
+
+#ifdef R__USE_IMT
+TEST(PageStorageFile, LoadClustersIMT)
+{
+   ROOT::EnableImplicitMT(2);
+
+   FileRaii fileGuard("test_pagestoragefile_loadclustersimt.root");
+
+   {
+      auto model = ROOT::Experimental::RNTupleModel::Create();
+      auto wrPt = model->MakeField<float>("pt", 42.0);
+
+      auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   ROOT::TThreadExecutor ex(2);
+   ex.Foreach(
+      [&]() {
+         auto reader = ROOT::Experimental::RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+         reader->LoadEntry(0);
+      },
+      2);
+
+   ROOT::DisableImplicitMT();
+}
+#endif

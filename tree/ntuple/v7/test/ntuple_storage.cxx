@@ -2,6 +2,10 @@
 #include <TRandom3.h>
 #include <TMemFile.h>
 
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#endif
+
 #include <ROOT/RPageNullSink.hxx>
 using ROOT::Experimental::Internal::RPageNullSink;
 
@@ -454,6 +458,44 @@ TEST(RPageSinkBuf, ParallelZip) {
    ROOT::DisableImplicitMT();
 #endif
 }
+
+#ifdef R__USE_IMT
+TEST(RPageSinkBuf, ParallelZipIMT)
+{
+   ROOT::EnableImplicitMT(2);
+
+   ROOT::TThreadExecutor ex(2);
+   ex.Foreach(
+      [&](int i) {
+         std::string filename = "test_ntuple_sinkbuf_pzip.";
+         filename += std::to_string(i);
+         filename += ".root";
+         FileRaii fileGuard(filename);
+
+         auto model = ROOT::Experimental::RNTupleModel::Create();
+         auto wrPt = model->MakeField<float>("pt", 42.0);
+
+         RNTupleWriteOptions options;
+         options.SetApproxUnzippedPageSize(8);
+         options.SetUseBufferedWrite(true);
+         auto writer =
+            ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
+         for (int c = 0; c < 2; c++) {
+            writer->Fill();
+            writer->Fill();
+            // The first page is full now.
+            writer->Fill();
+            writer->Fill();
+            // The second page is full now.
+            writer->Fill();
+            writer->CommitCluster();
+         }
+      },
+      {1, 2});
+
+   ROOT::DisableImplicitMT();
+}
+#endif
 
 TEST(RPageSinkBuf, CommitSealedPageV)
 {
