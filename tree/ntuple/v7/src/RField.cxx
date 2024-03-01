@@ -1630,12 +1630,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 
       std::unique_ptr<RFieldBase> subField;
 
-      const char *dmComment = dataMember->GetTitle();
-      if (dmComment && (strlen(dmComment) >= 2) && (strncmp("||", dmComment, 2) == 0)) {
-         subField = std::make_unique<RUnsplitField>(dataMember->GetName(), typeName, typeAlias);
-      } else {
-         subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
-      }
+      subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
       fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
