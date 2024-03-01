@@ -50,9 +50,11 @@ class REntry {
 
 public:
    /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
-   /// methods, e.g. BindValue
+   /// methods, e.g. BindValue. The field token can also be created by the model.
    class RFieldToken {
       friend class REntry;
+      friend class RNTupleModel;
+
       std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
       std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
       RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
