@@ -399,9 +399,10 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100;
+            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
          delete firstInput;
-      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100; // default compression level.
+      } else
+         newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
