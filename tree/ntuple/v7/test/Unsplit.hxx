@@ -3,9 +3,14 @@
 
 #include <vector>
 
-struct UnsplitMember {
-   float a = 0.0;
-   std::vector<UnsplitMember> v; //|| Don't split
+struct CyclicMember {
+   float fB = 0.0;
+   std::vector<CyclicMember> fV;
+};
+
+struct ClassWithUnsplitMember {
+   float fA = 0.0;
+   CyclicMember fUnsplit; // in the unit test, we set the "rntuple.unsplit" class attribute of CyclicMember
 };
 
 #endif // ROOT7_RNTuple_Test_Unsplit
