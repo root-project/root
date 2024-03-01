@@ -108,23 +108,26 @@ TRatioPlot::TRatioPlot()
 
 TRatioPlot::~TRatioPlot()
 {
-
-   gROOT->GetListOfCleanups()->Remove(this);
-
    auto safeDelete = [](TObject *obj) {
       if (obj && !ROOT::Detail::HasBeenDeleted(obj))
          delete obj;
    };
 
+   safeDelete(fSharedXAxis);
+   safeDelete(fUpYaxis);
+   safeDelete(fLowYaxis);
+
+   // if objects are drawn, they will be handled by the pad destructor
+   if (fIsObjectsDrawn)
+      return;
+
    safeDelete(fRatioGraph);
    safeDelete(fConfidenceInterval1);
    safeDelete(fConfidenceInterval2);
 
-   for (unsigned int i=0;i<fGridlines.size();++i) {
-      delete (fGridlines[i]);
-   }
+   for (auto &line : fGridlines)
+      safeDelete(line);
 
-   safeDelete(fSharedXAxis);
    safeDelete(fUpperGXaxis);
    safeDelete(fLowerGXaxis);
    safeDelete(fUpperGYaxis);
@@ -133,9 +136,6 @@ TRatioPlot::~TRatioPlot()
    safeDelete(fLowerGXaxisMirror);
    safeDelete(fUpperGYaxisMirror);
    safeDelete(fLowerGYaxisMirror);
-
-   safeDelete(fUpYaxis);
-   safeDelete(fLowYaxis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,10 +186,13 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
    // build ratio, everything is ready
    if (!BuildLowerPlot()) return;
 
+   // some created objects not yet drawn and need to be deleted at the end
+   fIsObjectsDrawn = kFALSE;
+
    // taking x axis information from h1 by cloning it x axis
-   fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
-   fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
-   fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
+   fSharedXAxis = (TAxis *)(fH1->GetXaxis()->Clone());
+   fUpYaxis = (TAxis *)(fH1->GetYaxis()->Clone());
+   fLowYaxis = (TAxis *)(fRatioGraph->GetYaxis()->Clone());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,8 +205,6 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
    : fGridlines()
 {
-   gROOT->GetListOfCleanups()->Add(this);
-
    if (!h1 || !h2) {
       Warning("TRatioPlot", "Need two histograms.");
       return;
@@ -269,14 +270,12 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
    : fH1(h1),
      fGridlines()
 {
-   gROOT->GetListOfCleanups()->Add(this);
-
    if (!fH1) {
       Warning("TRatioPlot", "Need a histogram.");
       return;
    }
 
-   Bool_t h1IsTH1=fH1->IsA()->InheritsFrom(TH1::Class());
+   Bool_t h1IsTH1 = fH1->IsA()->InheritsFrom(TH1::Class());
 
    if (!h1IsTH1) {
       Warning("TRatioPlot", "Need a histogram deriving from TH2 or TH3.");
@@ -313,6 +312,9 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
    fOption = optionString;
 
    if (!BuildLowerPlot()) return;
+
+   // some created objects not yet drawn and need to be deleted at the end
+   fIsObjectsDrawn = kFALSE;
 
    // emulate option behaviour of TH1
    if (fH1->GetSumw2N() > 0) {
@@ -663,6 +665,8 @@ void TRatioPlot::Draw(Option_t *option)
 
    padsav->cd();
    AppendPad();
+
+   fIsObjectsDrawn = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -866,16 +870,20 @@ void TRatioPlot::SyncAxesRanges()
 Int_t TRatioPlot::BuildLowerPlot()
 {
    // Clear and delete the graph if not exists
-   if (fRatioGraph) {
-      fRatioGraph->IsA()->Destructor(fRatioGraph);
-      fRatioGraph = nullptr;
+   if (fRatioGraph && !ROOT::Detail::HasBeenDeleted(fRatioGraph))
+      delete fRatioGraph;
+
+   fRatioGraph = nullptr;
+
+   if (!fConfidenceInterval1) {
+      fConfidenceInterval1 = new TGraphErrors();
+      fConfidenceInterval1->SetBit(kCanDelete);
    }
 
-   if (!fConfidenceInterval1)
-      fConfidenceInterval1 = new TGraphErrors();
-
-   if (!fConfidenceInterval2)
+   if (!fConfidenceInterval2) {
       fConfidenceInterval2 = new TGraphErrors();
+      fConfidenceInterval2->SetBit(kCanDelete);
+   }
 
    static Double_t divideGridlines[] = {0.7, 1.0, 1.3};
    static Double_t diffGridlines[] = {0.0};
@@ -1094,6 +1102,7 @@ Int_t TRatioPlot::BuildLowerPlot()
       Error("BuildLowerPlot", "Error creating lower graph");
       return 0;
    }
+   fRatioGraph->SetBit(kCanDelete);
 
    fRatioGraph->SetTitle("");
    fConfidenceInterval1->SetTitle("");
@@ -1182,21 +1191,25 @@ void TRatioPlot::CreateVisualAxes()
    // only actually create them once, reuse otherwise b/c memory
    if (!fUpperGXaxis) {
       fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U"+xopt);
+      fUpperGXaxis->SetBit(kCanDelete);
       fUpperGXaxis->Draw();
    }
 
    if (!fUpperGYaxis) {
       fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S"+upyopt);
+      fUpperGYaxis->SetBit(kCanDelete);
       fUpperGYaxis->Draw();
    }
 
    if (!fLowerGXaxis) {
       fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S"+xopt);
+      fLowerGXaxis->SetBit(kCanDelete);
       fLowerGXaxis->Draw();
    }
 
    if (!fLowerGYaxis) {
       fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S"+lowyopt);
+      fLowerGYaxis->SetBit(kCanDelete);
       fLowerGYaxis->Draw();
    }
 
@@ -1292,86 +1305,93 @@ void TRatioPlot::CreateVisualAxes()
    if (axistop || axisright) {
 
       // only actually create them once, reuse otherwise b/c memory
-      if (!fUpperGXaxisMirror) {
-         fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone();
-         if (axistop) fUpperGXaxisMirror->Draw();
+      if (!fUpperGXaxisMirror && axistop) {
+         fUpperGXaxisMirror = (TGaxis *)fUpperGXaxis->Clone();
+         fUpperGXaxisMirror->SetBit(kCanDelete);
+         fUpperGXaxisMirror->Draw();
       }
 
-      if (!fLowerGXaxisMirror) {
-         fLowerGXaxisMirror = (TGaxis*)fLowerGXaxis->Clone();
-         if (axistop) fLowerGXaxisMirror->Draw();
+      if (!fLowerGXaxisMirror && axistop) {
+         fLowerGXaxisMirror = (TGaxis *)fLowerGXaxis->Clone();
+         fLowerGXaxisMirror->SetBit(kCanDelete);
+         fLowerGXaxisMirror->Draw();
       }
 
-      if (!fUpperGYaxisMirror) {
+      if (!fUpperGYaxisMirror && axisright) {
          fUpperGYaxisMirror = (TGaxis*)fUpperGYaxis->Clone();
-         if (axisright) fUpperGYaxisMirror->Draw();
+         fUpperGYaxisMirror->SetBit(kCanDelete);
+         fUpperGYaxisMirror->Draw();
       }
 
-      if (!fLowerGYaxisMirror) {
+      if (!fLowerGYaxisMirror && axisright) {
          fLowerGYaxisMirror = (TGaxis*)fLowerGYaxis->Clone();
-         if (axisright) fLowerGYaxisMirror->Draw();
+         fLowerGYaxisMirror->SetBit(kCanDelete);
+         fLowerGYaxisMirror->Draw();
       }
-
-      // import attributes from shared axes
-      ImportAxisAttributes(fUpperGXaxisMirror, GetUpperRefXaxis());
-      ImportAxisAttributes(fUpperGYaxisMirror, GetUpperRefYaxis());
-      ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
-      ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
-
-      // remove titles
-      fUpperGXaxisMirror->SetTitle("");
-      fUpperGYaxisMirror->SetTitle("");
-      fLowerGXaxisMirror->SetTitle("");
-      fLowerGYaxisMirror->SetTitle("");
 
       // move them about and set required positions
-      fUpperGXaxisMirror->SetX1(upLM);
-      fUpperGXaxisMirror->SetX2(1-upRM);
-      fUpperGXaxisMirror->SetY1((1-upTM)*(1-sf)+sf);
-      fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
-      fUpperGXaxisMirror->SetWmin(first);
-      fUpperGXaxisMirror->SetWmax(last);
+      if (fUpperGXaxisMirror) {
+         ImportAxisAttributes(fUpperGXaxisMirror, GetUpperRefXaxis());
+         fUpperGXaxisMirror->SetTitle("");
+         fUpperGXaxisMirror->SetX1(upLM);
+         fUpperGXaxisMirror->SetX2(1-upRM);
+         fUpperGXaxisMirror->SetY1((1-upTM)*(1-sf)+sf);
+         fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
+         fUpperGXaxisMirror->SetWmin(first);
+         fUpperGXaxisMirror->SetWmax(last);
 
-      fUpperGYaxisMirror->SetX1(1-upRM);
-      fUpperGYaxisMirror->SetX2(1-upRM);
-      fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
-      fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
-      fUpperGYaxisMirror->SetWmin(upYFirst);
-      fUpperGYaxisMirror->SetWmax(upYLast);
+         fUpperGXaxisMirror->SetOption("-S"+xopt);
+         fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+         fUpperGXaxisMirror->SetLabelSize(0.);
+      }
 
-      fLowerGXaxisMirror->SetX1(lowLM);
-      fLowerGXaxisMirror->SetX2(1-lowRM);
-      fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
-      fLowerGXaxisMirror->SetY2((1-lowTM)*sf);
-      fLowerGXaxisMirror->SetWmin(first);
-      fLowerGXaxisMirror->SetWmax(last);
+      if (fUpperGYaxisMirror) {
+         ImportAxisAttributes(fUpperGYaxisMirror, GetUpperRefYaxis());
+         fUpperGYaxisMirror->SetTitle("");
+         fUpperGYaxisMirror->SetX1(1-upRM);
+         fUpperGYaxisMirror->SetX2(1-upRM);
+         fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
+         fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
+         fUpperGYaxisMirror->SetWmin(upYFirst);
+         fUpperGYaxisMirror->SetWmax(upYLast);
 
-      fLowerGYaxisMirror->SetX1(1-lowRM);
-      fLowerGYaxisMirror->SetX2(1-lowRM);
-      fLowerGYaxisMirror->SetY1(lowBM*sf);
-      fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
-      fLowerGYaxisMirror->SetWmin(lowYFirst);
-      fLowerGYaxisMirror->SetWmax(lowYLast);
+         fUpperGYaxisMirror->SetOption("+S"+upyopt);
+         fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
+         fUpperGYaxisMirror->SetLabelSize(0.);
+      }
 
-      // also needs normalized tick size
-      fLowerGYaxisMirror->SetTickSize(ticksize);
+      if (fLowerGXaxisMirror) {
+         ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
+         fLowerGXaxisMirror->SetTitle("");
+         fLowerGXaxisMirror->SetX1(lowLM);
+         fLowerGXaxisMirror->SetX2(1-lowRM);
+         fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
+         fLowerGXaxisMirror->SetY2((1-lowTM)*sf);
+         fLowerGXaxisMirror->SetWmin(first);
+         fLowerGXaxisMirror->SetWmax(last);
 
-      fUpperGXaxisMirror->SetOption("-S"+xopt);
-      fUpperGYaxisMirror->SetOption("+S"+upyopt);
-      fLowerGXaxisMirror->SetOption("-S"+xopt);
-      fLowerGYaxisMirror->SetOption("+S"+lowyopt);
+         fLowerGXaxisMirror->SetOption("-S"+xopt);
+         fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+         fLowerGXaxisMirror->SetLabelSize(0.);
+      }
 
-      fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
-      fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
-      fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
-      fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
+      if  (fLowerGYaxisMirror) {
+         ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
+         fLowerGYaxisMirror->SetTitle("");
+         fLowerGYaxisMirror->SetX1(1-lowRM);
+         fLowerGYaxisMirror->SetX2(1-lowRM);
+         fLowerGYaxisMirror->SetY1(lowBM*sf);
+         fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
+         fLowerGYaxisMirror->SetWmin(lowYFirst);
+         fLowerGYaxisMirror->SetWmax(lowYLast);
 
-      fUpperGXaxisMirror->SetLabelSize(0.);
-      fLowerGXaxisMirror->SetLabelSize(0.);
-      fUpperGYaxisMirror->SetLabelSize(0.);
-      fLowerGYaxisMirror->SetLabelSize(0.);
+         // also needs normalized tick size
+         fLowerGYaxisMirror->SetTickSize(ticksize);
+         fLowerGYaxisMirror->SetOption("+S"+lowyopt);
+         fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
+         fLowerGYaxisMirror->SetLabelSize(0.);
+      }
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

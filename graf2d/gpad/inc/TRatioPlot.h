@@ -139,6 +139,8 @@ protected:
    Bool_t fIsUpdating = kFALSE; ///< Keeps track of whether its currently updating to reject other calls until done
    Bool_t fIsPadUpdating = kFALSE; ///< Keeps track whether pads are updating during resizing
 
+   Bool_t fIsObjectsDrawn = kTRUE; ///<! if created objects are drawn. If not - one have to delete some of them
+
    virtual void SyncAxesRanges();
    virtual void SetupPads();
    virtual void CreateVisualAxes();
