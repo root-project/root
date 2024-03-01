@@ -1,6 +1,7 @@
 #include "ntuple_test.hxx"
 
-#include "TFileMerger.h"
+#include <TFileMerger.h>
+#include <ROOT/TBufferMerger.hxx>
 
 namespace {
 
@@ -547,4 +548,35 @@ TEST(RNTupleMerger, MergeThroughTFileMerger)
       ASSERT_EQ(*foo2, *foo3);
       ASSERT_EQ(*bar2, *bar3);
    }
+}
+
+TEST(RNTupleMerger, MergeThroughTBufferMerger)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.optionalDiag(kWarning, "RPageSinkFile", "The RNTuple file format will change.", false);
+   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
+   diags.requiredDiag(kWarning, "TFileMerger", "Merging RNTuples is experimental");
+   diags.requiredDiag(kWarning, "TBufferMergerFile", "not attached to the directory", false);
+
+   FileRaii fileGuard("test_ntuple_merge_TBufferMerger.root");
+
+   static constexpr int NumFiles = 10;
+   {
+      ROOT::TBufferMerger merger(fileGuard.GetPath().c_str());
+
+      for (int i = 0; i < NumFiles; i++) {
+         auto file1 = merger.GetFile();
+
+         auto model = RNTupleModel::Create();
+         auto pt = model->MakeField<float>("pt", 42.0);
+         auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file1);
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   // FIXME: The merged file is incomplete and only references the entries from the last TBufferMergerFile; it should
+   // have more than one cluster with one entry!
+   EXPECT_EQ(reader->GetDescriptor().GetNClusters(), 1);
+   EXPECT_EQ(reader->GetNEntries(), 1);
 }
