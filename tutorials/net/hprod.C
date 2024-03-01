@@ -18,8 +18,8 @@
    // opened in an other process on the same machine and the objects
    // stored in it can be accessed.
 
-   TMapFile::SetMapAddress(0xb46a5000);
-   mfile = TMapFile::Create("hsimple.map","RECREATE", 1000000,
+   TMapFile::SetMapAddress(0x125000000);
+   mfile = TMapFile::Create("hsimple.map", "RECREATE", 1000000,
                             "Demo memory mapped file with histograms");
 
    // Create a 1d, a 2d and a profile histogram. These objects will
