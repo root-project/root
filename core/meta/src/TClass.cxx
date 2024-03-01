@@ -2959,11 +2959,11 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning pointer to TClass of the specified class name.
-/// If load is true an attempt is made to obtain the class by loading
+/// If load is true, an attempt is made to obtain the class by loading
 /// the appropriate shared library (directed by the rootmap file).
 /// If silent is 'true', do not warn about missing dictionary for the class.
-/// (typically used for class that are used only for transient members)
-/// Returns 0 in case class is not found.
+/// (typically used for classes that are used only for transient members)
+/// Returns `nullptr` in case class is not found.
 
 TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
