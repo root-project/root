@@ -27,7 +27,7 @@ enum class CustomEnumInt64 : long int {};
 enum class CustomEnumUInt64 : unsigned long int {};
 
 struct CustomStruct {
-   float a = 0.0;
+   float a = 0.0; // The most important member of this struct.
    std::vector<float> v1;
    std::vector<std::vector<float>> v2;
    std::string s;

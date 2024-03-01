@@ -939,8 +939,6 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
 
    if (fColumnRepresentative)
       throw RException(R__FAIL("fixed column representative only valid when connecting to a page sink"));
-   if (!fDescription.empty())
-      throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
    for (auto &f : fSubFields) {
       if (f->GetOnDiskId() == kInvalidDescriptorId) {
@@ -1518,6 +1516,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
             typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
       }
       auto subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
+      subField->SetDescription(dataMember->GetTitle());
       fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
