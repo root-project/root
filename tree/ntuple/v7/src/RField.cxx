@@ -29,6 +29,7 @@
 #include <TClassEdit.h>
 #include <TCollection.h>
 #include <TDataMember.h>
+#include <TDictAttributeMap.h>
 #include <TEnum.h>
 #include <TError.h>
 #include <TList.h>
@@ -748,7 +749,12 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
             } else {
                createContextGuard.AddClassToStack(canonicalType);
-               result = std::make_unique<RClassField>(fieldName, canonicalType);
+               auto am = cl->GetAttributeMap();
+               if (am && am->HasKey("rntuple.unsplit")) {
+                  result = std::make_unique<RUnsplitField>(fieldName, canonicalType);
+               } else {
+                  result = std::make_unique<RClassField>(fieldName, canonicalType);
+               }
             }
          }
       }
