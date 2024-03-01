@@ -308,6 +308,8 @@ public:
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
    std::unique_ptr<REntry> CreateBareEntry() const;
+   /// Creates a token to be used in REntry methods to address a top-level field
+   REntry::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
    RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 

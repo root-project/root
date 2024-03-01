@@ -786,6 +786,7 @@ TEST(REntry, Basics)
 
    EXPECT_THROW(e->GetToken(""), ROOT::Experimental::RException);
    EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
+   EXPECT_THROW(model->GetToken("eta"), ROOT::Experimental::RException);
 
    std::shared_ptr<float> ptrPt;
    e->BindValue("pt", ptrPt);
@@ -800,7 +801,7 @@ TEST(REntry, Basics)
    e->BindRawPtr("pt", &pt);
    EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
 
-   e->EmplaceNewValue("pt");
+   e->EmplaceNewValue(model->GetToken("pt"));
    EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
 }
 
