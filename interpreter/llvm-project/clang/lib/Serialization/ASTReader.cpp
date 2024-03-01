@@ -1187,14 +1187,14 @@ ModuleFile *LazySpecializationInfoLookupTrait::ReadFileRef(const unsigned char *
   using namespace llvm::support;
 
   uint32_t ModuleFileID =
-      endian::readNext<uint32_t, llvm::endianness::little, unaligned>(d);
+      endian::readNext<uint32_t, endianness::little, unaligned>(d);
   return Reader.getLocalModuleFile(F, ModuleFileID);
 }
 
 LazySpecializationInfoLookupTrait::internal_key_type
 LazySpecializationInfoLookupTrait::ReadKey(const unsigned char *d, unsigned) {
   using namespace llvm::support;
-  return endian::readNext<uint32_t, llvm::endianness::little, unaligned>(d);
+  return endian::readNext<uint32_t, endianness::little, unaligned>(d);
 }
 
 std::pair<unsigned, unsigned>
@@ -1211,9 +1211,9 @@ void LazySpecializationInfoLookupTrait::ReadDataInto(internal_key_type,
   for (unsigned NumDecls = DataLen / serialization::reader::LazySpecializationInfo::Length;
        NumDecls; --NumDecls) {
     uint32_t LocalID =
-        endian::readNext<uint32_t, llvm::endianness::little, unaligned>(d);
+        endian::readNext<uint32_t, endianness::little, unaligned>(d);
     const bool IsPartial =
-        endian::readNext<bool, llvm::endianness::little, unaligned>(d);
+        endian::readNext<bool, endianness::little, unaligned>(d);
     Val.insert({Reader.getGlobalDeclID(F, LocalID), IsPartial});
   }
 }

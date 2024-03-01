@@ -566,6 +566,7 @@ private:
   unsigned DeclEnumAbbrev = 0;
   unsigned DeclObjCIvarAbbrev = 0;
   unsigned DeclCXXMethodAbbrev = 0;
+  unsigned DeclSpecializationsAbbrev = 0;
 
   unsigned DeclRefExprAbbrev = 0;
   unsigned CharacterLiteralAbbrev = 0;

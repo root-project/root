@@ -3895,7 +3895,7 @@ public:
 
     using namespace llvm::support;
     endian::write<uint32_t>(Out, Writer.getChain()->getModuleFileID(F),
-                            llvm::endianness::little);
+                            endianness::little);
   }
 
   std::pair<unsigned, unsigned> EmitKeyDataLength(raw_ostream &Out,
@@ -3911,7 +3911,7 @@ public:
   void EmitKey(raw_ostream &Out, key_type HashValue, unsigned) {
     using namespace llvm::support;
 
-    endian::Writer LE(Out, llvm::endianness::little);
+    endian::Writer LE(Out, endianness::little);
     LE.write<uint32_t>(HashValue);
   }
 
@@ -3919,7 +3919,7 @@ public:
                 unsigned DataLen) {
     using namespace llvm::support;
 
-    endian::Writer LE(Out, llvm::endianness::little);
+    endian::Writer LE(Out, endianness::little);
     uint64_t Start = Out.tell();
     (void)Start;
     for (unsigned I = Lookup.first, N = Lookup.second; I != N; ++I) {
