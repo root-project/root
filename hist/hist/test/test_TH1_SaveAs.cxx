@@ -13,7 +13,7 @@ struct TestSaveAs {
    static constexpr Int_t N = Nbins + 2; // 0 and N are the under/overflow bins, resp.
    TString fnam = "H1dump.";
 
-   void SaveHist(const TString &myext, const TString &myoption = "")
+   void SaveHist(const TString &myext, const TString &myOption = "")
    {
       // Bin contents and bin errors
       Double_t binc[N] = {5.2, 0, 10.8, 12.3, 9.5, 7.3, 15.2};
@@ -25,8 +25,14 @@ struct TestSaveAs {
          h.SetBinContent(i, binc[i]);
          h.SetBinError(i, bine[i]);
       }
+
       TString filename{fnam + myext};
-      h.SaveAs(filename.Data(), myoption.Data());
+
+      if (myOption.IsNull()) {
+         h.SaveAs(filename.Data());
+      } else {
+         h.SaveAs(filename.Data(), myOption.Data());
+      }
    }
 
    bool IsGood_csv()
