@@ -390,6 +390,21 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    return entry;
 }
 
+ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetToken(std::string_view fieldName) const
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get field token of unfrozen model"));
+
+   const auto &topLevelFields = fFieldZero->GetSubFields();
+   auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
+                          [&fieldName](const RFieldBase *f) { return f->GetFieldName() == fieldName; });
+
+   if (it == topLevelFields.end()) {
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   }
+   return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fModelId);
+}
+
 ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
 {
    if (!IsFrozen())
