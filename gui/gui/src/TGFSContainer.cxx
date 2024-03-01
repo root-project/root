@@ -813,7 +813,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
    if (gSystem->GetPathInfo(name, sbuf)) {
       if (sbuf.fIsLink) {
          Info("AddFile", "Broken symlink of %s.", name);
-      } else {
+      } else if (errno != ENOENT) {
          TString msg;
          msg.Form("Can't read file attributes of \"%s\": %s.",
                   name, gSystem->GetError());
