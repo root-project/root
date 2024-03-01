@@ -7164,7 +7164,6 @@ void TH1::SaveAs(const char *filename, Option_t *option) const
       }
    }
    if (!del) {
-      Info("SaveAs", "The file extension is not any of '.csv', '.tsv', '.txt'. Falling back to TObject::SaveAs");
       TObject::SaveAs(filename, option);
       return;
    }
