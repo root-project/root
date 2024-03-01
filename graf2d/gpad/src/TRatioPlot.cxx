@@ -779,56 +779,45 @@ void TRatioPlot::CreateGridline()
 
    TVirtualPad::TContext ctxt(fLowerPad, kTRUE);
 
-   unsigned int dest = fGridlinePositions.size();
+   // remove unused lines
+   while (fGridlines.size() > fGridlinePositions.size()) {
+      delete fGridlines.back();
+      fGridlines.pop_back();
+   }
+
+   // create missing lines
+   while (fGridlinePositions.size() > fGridlines.size()) {
+      TLine *newline = new TLine(0, 0, 0, 0);
+      newline->SetBit(kCanDelete);
+      newline->SetLineStyle(2);
+      newline->Draw();
+      fGridlines.emplace_back(newline);
+   }
 
    Double_t lowYFirst = fLowerPad->GetUymin();
    Double_t lowYLast = fLowerPad->GetUymax();
 
-   double y;
-   int outofrange = 0;
-   for (unsigned int i=0;i<fGridlinePositions.size();++i) {
-      y = fGridlinePositions.at(i);
-
-      if (y < lowYFirst || lowYLast < y) {
-         ++outofrange;
-      }
-   }
-
-   dest = dest - outofrange;
-
-   // clear all
-   for (unsigned int i=0;i<fGridlines.size();++i) {
-      delete fGridlines.at(i);
-   }
-
-   fGridlines.erase(fGridlines.begin(), fGridlines.end());
-
-   for (unsigned int i=0;i<dest;++i) {
-      TLine *newline = new TLine(0, 0, 0, 0);
-      newline->SetLineStyle(2);
-      newline->Draw();
-      fGridlines.push_back(newline);
-   }
-
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   unsigned int skipped = 0;
-   for (unsigned int i=0;i<fGridlinePositions.size();++i) {
-      y = fGridlinePositions[i];
+   for (unsigned int i = 0; i < fGridlinePositions.size(); ++i) {
+      double y = fGridlinePositions[i];
+      auto line = fGridlines[i];
 
       if (y < lowYFirst || lowYLast < y) {
          // this is one of the ones that was out of range
-         ++skipped;
-         continue;
+         line->SetLineWidth(0);
+         line->SetX1(0);
+         line->SetX2(0);
+         line->SetY1(0);
+         line->SetY2(0);
+      } else {
+         line->SetLineWidth(1);
+         line->SetX1(first);
+         line->SetX2(last);
+         line->SetY1(y);
+         line->SetY2(y);
       }
-
-      auto line = fGridlines.at(i-skipped);
-
-      line->SetX1(first);
-      line->SetX2(last);
-      line->SetY1(y);
-      line->SetY2(y);
    }
 }
 
@@ -839,7 +828,7 @@ void TRatioPlot::Paint(Option_t * /*opt*/)
 {
    // create the visual axes
    CreateVisualAxes();
-   CreateGridline();
+   // CreateGridline();
 
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
