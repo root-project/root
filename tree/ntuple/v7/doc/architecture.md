@@ -272,6 +272,8 @@ For instance, for a field `std::vector<float> pt`, a view can iterate over all `
 A view can safely outlive its originating reader.
 Once the reader is deconstructed, any attempt to read data will throw an exception, but the view is still properly destructed.
 
+Views that originate from the same reader _cannot_ be used concurrently by different threads.
+
 Internal Classes
 ----------------
 
