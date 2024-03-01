@@ -66,7 +66,7 @@ public:
    virtual Double_t GetXmax()  const {return fXmax;}
    void     Paint(Option_t *option="") override;
    virtual Double_t Eval(Double_t x) const=0;
-   void     SaveAs(const char * /*filename*/,Option_t * /*option*/) const override {}
+   void     SaveAs(const char * /*filename*/ = "",Option_t * /*option*/ = "") const override {}
    void             SetNpx(Int_t n) {fNpx=n;}
 
    ClassDefOverride(TSpline,2) // Spline base class
@@ -243,7 +243,7 @@ public:
       b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
       {x=fPoly[i].X(); y=fPoly[i].Y();}
-    void     SaveAs(const char *filename,Option_t *option="") const override;
+    void     SaveAs(const char *filename="",Option_t *option="") const override;
     void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    virtual  void     SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d);
@@ -306,7 +306,7 @@ public:
       e=fPoly[i].E();f=fPoly[i].F();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
       {x=fPoly[i].X(); y=fPoly[i].Y();}
-    void     SaveAs(const char *filename,Option_t *option="") const override;
+    void     SaveAs(const char *filename="",Option_t *option="") const override;
     void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    virtual  void     SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
