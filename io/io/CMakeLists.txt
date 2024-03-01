@@ -84,6 +84,7 @@ endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
   ROOT/RRawFile.hxx
+  ROOT/RRawFileTFile.hxx
   ${rawfile_local_headers}
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
