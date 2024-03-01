@@ -1767,7 +1767,7 @@ std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *n
    if (auto dataMember = GetClass()->GetDataMember(name)) {
       return dataMember->GetOffset();
    }
-   throw RException(R__FAIL('\'' + std::string(name) + '\'' + "is an invalid data member"));
+   throw RException(R__FAIL('\'' + std::string(name) + '\'' + " is an invalid data member"));
 }
 
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
