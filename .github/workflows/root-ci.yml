@@ -30,6 +30,10 @@ on:
         type: string
         required: true
         default: master
+      ref_name:
+        type: string
+        required: true
+        default: master
 
   # Enables manual start of workflow
   workflow_dispatch:
