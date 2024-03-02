@@ -34,4 +34,5 @@ jobs:
     with:
       base_ref: 'v6-30-00-patches'
       head_ref: 'v6-30-00-patches'
+      ref_name: 'v6-30-00-patches'
     secrets: inherit
