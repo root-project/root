@@ -186,7 +186,7 @@ jobs:
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ github.base_ref }}
+                    --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
@@ -195,7 +195,7 @@ jobs:
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
-                    --base_ref       ${{ github.base_ref }}
+                    --base_ref       ${{ github.ref_name }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
@@ -297,7 +297,7 @@ jobs:
                     --platform     windows10
                     --incremental  false
                     --binaries     true
-                    --base_ref     ${{ github.base_ref }}
+                    --base_ref     ${{ github.ref_name }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}"
 
@@ -309,7 +309,7 @@ jobs:
                     --buildtype    ${{ matrix.config }}
                     --platform     windows10
                     --incremental  false
-                    --base_ref     ${{ github.base_ref }}
+                    --base_ref     ${{ github.ref_name }}
                     --binaries     ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}"
@@ -473,7 +473,7 @@ jobs:
                     --platform       ${{ matrix.image }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ github.base_ref }}
+                    --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
@@ -483,7 +483,7 @@ jobs:
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
                     --incremental    false
-                    --base_ref       ${{ github.base_ref }}
+                    --base_ref       ${{ github.ref_name }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
