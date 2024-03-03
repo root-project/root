@@ -71,4 +71,6 @@
 #pragma read sourceClass = "StructWithIORules" source = "float a;float b" version = "[1-]" targetClass = \
    "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"
 
+#pragma link C++ class Cyclic + ;
+
 #endif

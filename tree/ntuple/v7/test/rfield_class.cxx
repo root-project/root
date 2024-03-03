@@ -7,6 +7,7 @@ class RNoDictionary {};
 TEST(RNTuple, TClass) {
    auto modelFail = RNTupleModel::Create();
    EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), ROOT::Experimental::RException);
+   EXPECT_THROW(modelFail->MakeField<Cyclic>("cyclic"), ROOT::Experimental::RException);
 
    auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
