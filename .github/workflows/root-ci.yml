@@ -2,9 +2,6 @@
 name: 'ROOT CI'
 
 on:
-  schedule:
-    - cron: '0 1 * * *'
-
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
   pull_request:
     branches:
