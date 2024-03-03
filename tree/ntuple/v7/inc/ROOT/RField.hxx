@@ -719,6 +719,31 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+/// Used in RFieldBase::Check() to record field creation failures.
+class RInvalidField final : public RFieldBase {
+   std::string fError;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RInvalidField>(newName, GetTypeName(), fError);
+   }
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+   void ConstructValue(void *) const final {}
+
+public:
+   RInvalidField(std::string_view name, std::string_view type, std::string_view error)
+      : RFieldBase(name, type, ENTupleStructure::kLeaf, false /* isSimple */), fError(error)
+   {
+   }
+
+   std::string GetError() const { return fError; }
+
+   size_t GetValueSize() const final { return 0; }
+   size_t GetAlignment() const final { return 0; }
+}; // RInvalidField
+
 /// The field for a class with dictionary
 class RClassField : public RFieldBase {
 private:
