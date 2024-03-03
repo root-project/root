@@ -190,7 +190,7 @@ jobs:
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ github.ref_name }}
+                    --base_ref       ${{ inputs.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
@@ -301,7 +301,7 @@ jobs:
                     --platform     windows10
                     --incremental  false
                     --binaries     true
-                    --base_ref     ${{ github.ref_name }}
+                    --base_ref     ${{ inputs.ref_name }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}"
 
@@ -477,7 +477,7 @@ jobs:
                     --platform       ${{ matrix.image }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ github.ref_name }}
+                    --base_ref       ${{ inputs.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
