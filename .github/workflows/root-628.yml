@@ -1,0 +1,38 @@
+
+name: 'ROOT 6.28'
+
+on:
+  schedule:
+    - cron: '20 17 * * *'
+
+  workflow_dispatch:
+    inputs:
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
+
+jobs:
+  run_nightlies:
+    uses: root-project/root/.github/workflows/root-ci.yml@master
+    with:
+      base_ref: 'v6-28-00-patches'
+      head_ref: 'v6-28-00-patches'
+      ref_name: 'v6-28-00-patches'
+    secrets: inherit
