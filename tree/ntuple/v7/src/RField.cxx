@@ -205,6 +205,36 @@ std::string GetNormalizedTypeName(const std::string &typeName)
    return normalizedType;
 }
 
+/// Used as a thread local context storage for Create(); steers the behavior of the Create() call stack
+class CreateContextGuard;
+class CreateContext {
+   friend class CreateContextGuard;
+   /// All classes that were defined by Create() calls higher up in the stack. Finds cyclic type definitions.
+   std::vector<std::string> fClassesOnStack;
+
+public:
+   CreateContext() = default;
+};
+
+/// RAII for modifications of CreateContext
+class CreateContextGuard {
+   CreateContext &fCreateContext;
+   std::size_t fNOriginalClassesOnStack;
+
+public:
+   CreateContextGuard(CreateContext &ctx) : fCreateContext(ctx), fNOriginalClassesOnStack(ctx.fClassesOnStack.size()) {}
+   ~CreateContextGuard() { fCreateContext.fClassesOnStack.resize(fNOriginalClassesOnStack); }
+
+   void AddClassToStack(const std::string &cl)
+   {
+      if (std::find(fCreateContext.fClassesOnStack.begin(), fCreateContext.fClassesOnStack.end(), cl) !=
+          fCreateContext.fClassesOnStack.end()) {
+         throw ROOT::Experimental::RException(R__FAIL("cyclic class definition: " + cl));
+      }
+      fCreateContext.fClassesOnStack.emplace_back(cl);
+   }
+};
+
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
 /// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
 std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
@@ -498,6 +528,9 @@ ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
                                        const std::string &typeAlias)
 {
+   thread_local CreateContext createContext;
+   CreateContextGuard createContextGuard(createContext);
+
    if (canonicalType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
 
@@ -658,10 +691,12 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    if (!result) {
       auto cl = TClass::GetClass(canonicalType.c_str());
       if (cl != nullptr) {
-         if (cl->GetCollectionProxy())
+         if (cl->GetCollectionProxy()) {
             result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
-         else
+         } else {
+            createContextGuard.AddClassToStack(canonicalType);
             result = std::make_unique<RClassField>(fieldName, canonicalType);
+         }
       }
    }
 
