@@ -7785,15 +7785,15 @@ void ASTReader::LoadExternalSpecializations(const Decl *D, bool OnlyPartial) {
        It->second.Table.findAll())
     Infos.push_back(Info);
 
-  Deserializing LookupResults(this);
-  for (auto &Info : Infos)
-    if (!OnlyPartial || Info.IsPartial)
-      GetDecl(Info.ID);
-
   // Since we've loaded all the specializations, we can erase it from
   // the lookup table.
   if (!OnlyPartial)
     SpecializationsLookups.erase(It);
+
+  Deserializing LookupResults(this);
+  for (auto &Info : Infos)
+    if (!OnlyPartial || Info.IsPartial)
+      GetDecl(Info.ID);
 }
 
 void ASTReader::LoadExternalSpecializations(
