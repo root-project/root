@@ -1,7 +1,9 @@
 # JSROOT changelog
 
-## Changes in 7.5.x
+## Changes in 7.5.5
 1. Fix - abort tree draw operation faster
+2. Fix - support plain TRI option for TGraph2D
+3. Fix - use latest npm "gl" module
 
 
 ## Changes in 7.5.4
