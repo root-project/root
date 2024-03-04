@@ -29,8 +29,6 @@ so that they can contain data for every kind of compute function.
 
 namespace RooBatchCompute {
 
-constexpr std::size_t bufferSize = 64;
-
 namespace RF_ARCH {
 
 class Batch {

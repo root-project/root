@@ -36,6 +36,7 @@ it can define.
 
 #include "TError.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 
@@ -139,10 +140,14 @@ void RooPolyVar::computeBatchImpl(RooAbsArg const* caller, double *output, size_
    // Fill the coefficients for the skipped orders. By a conventions started in
    // RooPolynomial, if the zero-th order is skipped, it implies a coefficient
    // for the constant term of one.
-   const double zero = 1.0;
-   const double one = 1.0;
+   std::array<double, RooBatchCompute::bufferSize> zeros;
+   std::array<double, RooBatchCompute::bufferSize> ones;
+   std::fill_n(zeros.data(), zeros.size(), 0.0);
+   std::fill_n(ones.data(), ones.size(), 1.0);
+   std::span<const double> zerosSpan{zeros.data(), 1};
+   std::span<const double> onesSpan{ones.data(), 1};
    for (int i = lowestOrder - 1; i >= 0; --i) {
-      vars.push_back(i == 0 ? std::span<const double>{&one, 1} : std::span<const double>{&zero, 1});
+      vars.push_back(i == 0 ? onesSpan : zerosSpan);
    }
 
    for (RooAbsArg *coef : coefs) {
