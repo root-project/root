@@ -143,18 +143,17 @@ double RooAddition::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddition::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAddition::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-  RooBatchCompute::VarVector pdfs;
-  RooBatchCompute::ArgVector coefs;
-  pdfs.reserve(_set.size());
-  coefs.reserve(_set.size());
-  for (const auto arg : _set)
-  {
-    pdfs.push_back(dataMap.at(arg));
-    coefs.push_back(1.0);
-  }
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+   std::vector<std::span<const double>> pdfs;
+   std::vector<double> coefs;
+   pdfs.reserve(_set.size());
+   coefs.reserve(_set.size());
+   for (const auto arg : _set) {
+      pdfs.push_back(dataMap.at(arg));
+      coefs.push_back(1.0);
+   }
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

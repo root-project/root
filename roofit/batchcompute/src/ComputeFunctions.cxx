@@ -32,6 +32,8 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 
 #include <RooHeterogeneousMath.h>
 
+#include <vector>
+
 #ifdef __CUDACC__
 #define BEGIN blockDim.x *blockIdx.x + threadIdx.x
 #define STEP blockDim.x *gridDim.x

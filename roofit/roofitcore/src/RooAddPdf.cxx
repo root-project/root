@@ -574,8 +574,8 @@ void RooAddPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::Dat
     _coefCache[i] = coefVals[0];
   }
 
-  RooBatchCompute::VarVector pdfs;
-  RooBatchCompute::ArgVector coefs;
+  std::vector<std::span<const double>> pdfs;
+  std::vector<double> coefs;
   AddCacheElem* cache = getProjCache(nullptr);
   // We don't sync the coefficient values from the _coefList to the _coefCache
   // because we have already done it using the dataMap.
