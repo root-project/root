@@ -532,8 +532,8 @@ protected:
    /// normalized type name and type alias
    /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
    /// single type name
-   static RResult<std::unique_ptr<RFieldBase>>
-   Create(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias);
+   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &canonicalType,
+                                                      const std::string &typeAlias, bool fContinueOnError = false);
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order

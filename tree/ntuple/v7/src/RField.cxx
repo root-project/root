@@ -211,19 +211,33 @@ class CreateContext {
    friend class CreateContextGuard;
    /// All classes that were defined by Create() calls higher up in the stack. Finds cyclic type definitions.
    std::vector<std::string> fClassesOnStack;
+   /// If set to true, Create() will create an RInvalidField on error instead of throwing an exception.
+   /// This is used in RFieldBase::Check() to identify unsupported sub fields.
+   bool fContinueOnError = false;
 
 public:
    CreateContext() = default;
+   bool GetContinueOnError() const { return fContinueOnError; }
 };
 
 /// RAII for modifications of CreateContext
 class CreateContextGuard {
    CreateContext &fCreateContext;
    std::size_t fNOriginalClassesOnStack;
+   bool fOriginalContinueOnError;
 
 public:
-   CreateContextGuard(CreateContext &ctx) : fCreateContext(ctx), fNOriginalClassesOnStack(ctx.fClassesOnStack.size()) {}
-   ~CreateContextGuard() { fCreateContext.fClassesOnStack.resize(fNOriginalClassesOnStack); }
+   CreateContextGuard(CreateContext &ctx)
+      : fCreateContext(ctx),
+        fNOriginalClassesOnStack(ctx.fClassesOnStack.size()),
+        fOriginalContinueOnError(ctx.fContinueOnError)
+   {
+   }
+   ~CreateContextGuard()
+   {
+      fCreateContext.fClassesOnStack.resize(fNOriginalClassesOnStack);
+      fCreateContext.fContinueOnError = fOriginalContinueOnError;
+   }
 
    void AddClassToStack(const std::string &cl)
    {
@@ -233,6 +247,8 @@ public:
       }
       fCreateContext.fClassesOnStack.emplace_back(cl);
    }
+
+   void SetConinueOnError(bool value) { fCreateContext.fContinueOnError = value; }
 };
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
@@ -526,10 +542,12 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
-                                       const std::string &typeAlias)
+                                       const std::string &typeAlias, bool continueOnError)
 {
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
+   if (continueOnError)
+      createContextGuard.SetConinueOnError(true);
 
    if (canonicalType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
