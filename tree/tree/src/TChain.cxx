@@ -1273,6 +1273,22 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
    return 0;
 }
 
+namespace ROOT::Internal::TChain {
+class TTreeIMTSetterRAII {
+private:
+   TTree *&fTree;
+   bool fIsIMTEnabled = false;
+public:
+   TTreeIMTSetterRAII(TTree *&tree, bool isIMTEnabled) : fTree(tree), fIsIMTEnabled(isIMTEnabled) {}
+   ~TTreeIMTSetterRAII()
+   {
+      if (fTree) {
+         fTree->SetImplicitMT(fIsIMTEnabled);
+      }
+   }
+};
+} // namespace ROOT::Internal::TChain
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the tree which contains entry, and set it as the current tree.
 ///
@@ -1297,6 +1313,10 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 ///
 Long64_t TChain::LoadTree(Long64_t entry)
 {
+
+   // At exit, if the tree is available, we propagate the IMT setting to it
+   ROOT::Internal::TChain::TTreeIMTSetterRAII treeImtSetterRAAI(fTree, fIMTEnabled);
+
    // We already have been visited while recursively looking
    // through the friends tree, let's return.
    if (kLoadTree & fFriendLockStatus) {
