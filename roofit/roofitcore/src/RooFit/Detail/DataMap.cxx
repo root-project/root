@@ -16,17 +16,50 @@
 #include <RooBatchCompute.h>
 #include <RooRealVar.h>
 
+#include <algorithm>
+
+namespace {
+
+// To avoid deleted move assignment.
+template <class T>
+void assignSpan(std::span<T> &to, std::span<T> const &from)
+{
+   to = from;
+}
+
+} // namespace
+
 namespace RooFit {
 namespace Detail {
 
 std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*caller*/)
 {
+   std::span<const double> out;
+
    if (!arg->hasDataToken()) {
       auto var = static_cast<RooRealVar const *>(arg);
-      return {&var->_value, 1};
+      assignSpan(out, {&var->_value, 1});
+   } else {
+      std::size_t idx = arg->dataToken();
+      out = _dataMap[idx];
    }
-   std::size_t idx = arg->dataToken();
-   return _dataMap[idx];
+
+   if (!_enableVectorBuffers || out.size() != 1) {
+      return out;
+   }
+
+   if (_bufferIdx == _buffers.size()) {
+      _buffers.emplace_back(RooBatchCompute::bufferSize);
+   }
+
+   double *buffer = _buffers[_bufferIdx].data();
+
+   std::fill_n(buffer, RooBatchCompute::bufferSize, out[0]);
+   assignSpan(out, {buffer, 1});
+
+   ++_bufferIdx;
+
+   return out;
 }
 
 void DataMap::setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config)

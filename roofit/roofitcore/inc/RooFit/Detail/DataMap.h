@@ -82,10 +82,7 @@ namespace Detail {
 
 class DataMap {
 public:
-   auto size() const
-   {
-      return _dataMap.size();
-   }
+   auto size() const { return _dataMap.size(); }
    void resize(std::size_t n);
 
    inline void set(RooAbsArg const *arg, std::span<const double> const &span)
@@ -119,8 +116,14 @@ public:
 
    RooBatchCompute::Config config(RooAbsArg const *arg) const;
 
+   void enableVectorBuffers(bool enable) { _enableVectorBuffers = enable; }
+   void resetVectorBuffers() { _bufferIdx = 0; }
+
 private:
    std::vector<std::span<const double>> _dataMap;
+   bool _enableVectorBuffers = false;
+   std::vector<std::vector<double>> _buffers;
+   std::size_t _bufferIdx = 0;
    std::vector<RooBatchCompute::Config> _cfgs;
 };
 

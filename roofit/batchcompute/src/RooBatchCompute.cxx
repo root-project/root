@@ -51,20 +51,10 @@ void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size
    batches._output = output;
 }
 
-void fillArrays(std::vector<Batch> &arrays, VarSpan vars, double *buffer, std::size_t nEvents)
+void fillArrays(std::span<Batch> arrays, VarSpan vars, std::size_t nEvents)
 {
-
-   arrays.resize(vars.size());
-   for (size_t i = 0; i < vars.size(); i++) {
-      const std::span<const double> &span = vars[i];
-      if (!span.empty() && span.size() < nEvents) {
-         // In the scalar case, copy the value to each element of vector input
-         // buffer.
-         std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
-         arrays[i].set(&buffer[i * bufferSize], false);
-      } else {
-         arrays[i].set(span.data(), true);
-      }
+   for (std::size_t i = 0; i < vars.size(); i++) {
+      arrays[i].set(vars[i].data(), vars[i].empty() || vars[i].size() >= nEvents);
    }
 }
 
@@ -112,9 +102,6 @@ public:
    void compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
                 ArgSpan extraArgs) override
    {
-      static std::vector<double> buffer;
-      buffer.resize(vars.size() * bufferSize);
-
       if (ROOT::IsImplicitMTEnabled()) {
          ROOT::Internal::TExecutor ex;
          std::size_t nThreads = ex.GetPoolSize();
@@ -128,9 +115,9 @@ public:
             // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
             // Then advance every object but the first to split the work between threads
             Batches batches;
-            std::vector<Batch> arrays;
+            std::vector<Batch> arrays(vars.size());
             fillBatches(batches, output, nEventsPerThread, vars.size(), extraArgs);
-            fillArrays(arrays, vars, buffer.data(), nEvents);
+            fillArrays(arrays, vars, nEvents);
             batches._arrays = arrays.data();
             batches.advance(batches.getNEvents() * idx);
 
@@ -160,9 +147,9 @@ public:
          // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
          // Then advance every object but the first to split the work between threads
          Batches batches;
-         std::vector<Batch> arrays;
+         std::vector<Batch> arrays(vars.size());
          fillBatches(batches, output, nEvents, vars.size(), extraArgs);
-         fillArrays(arrays, vars, buffer.data(), nEvents);
+         fillArrays(arrays, vars, nEvents);
          batches._arrays = arrays.data();
 
          std::size_t events = batches.getNEvents();
