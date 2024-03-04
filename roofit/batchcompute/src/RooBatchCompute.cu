@@ -25,6 +25,7 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include <TError.h>
 
 #include <algorithm>
+#include <vector>
 
 #ifndef RF_ARCH
 #error "RF_ARCH should always be defined"
@@ -47,7 +48,7 @@ void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size
    batches._output = output;
 }
 
-void fillArrays(Batch *arrays, const VarVector &vars, double *buffer, double *bufferDevice, std::size_t nEvents)
+void fillArrays(Batch *arrays, VarSpan vars, double *buffer, double *bufferDevice, std::size_t nEvents)
 {
    for (int i = 0; i < vars.size(); i++) {
       const std::span<const double> &span = vars[i];
@@ -114,10 +115,10 @@ public:
    \param computer An enum specifying the compute function to be used.
    \param output The array where the computation results are stored.
    \param nEvents The number of events to be processed.
-   \param vars A std::vector containing pointers to the variables involved in the computation.
-   \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(RooBatchCompute::Config const &cfg, Computer computer, RestrictArr output, size_t nEvents,
-                const VarVector &vars, ArgVector &extraArgs) override
+   \param vars A std::span containing pointers to the variables involved in the computation.
+   \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
+   void compute(RooBatchCompute::Config const &cfg, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
+                ArgSpan extraArgs) override
    {
       using namespace RooFit::Detail::CudaInterface;
 

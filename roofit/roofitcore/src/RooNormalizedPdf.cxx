@@ -13,6 +13,8 @@
 #include "RooNormalizedPdf.h"
 #include "RooBatchCompute.h"
 
+#include <array>
+
 /**
  * \class RooNormalizedPdf
  *
@@ -26,7 +28,7 @@ void RooNormalizedPdf::computeBatch(double *output, size_t nEvents, RooFit::Deta
    auto integralSpan = dataMap.at(_normIntegral);
 
    // We use the extraArgs as output parameter to count evaluation errors.
-   RooBatchCompute::ArgVector extraArgs{0.0, 0.0, 0.0};
+   std::array<double, 3> extraArgs{0.0, 0.0, 0.0};
 
    RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::NormalizedPdf, output, nEvents, {nums, integralSpan},
                             extraArgs);

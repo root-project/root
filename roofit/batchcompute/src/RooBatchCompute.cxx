@@ -31,6 +31,7 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include <algorithm>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 #ifndef RF_ARCH
 #error "RF_ARCH should always be defined"
@@ -41,7 +42,7 @@ namespace RF_ARCH {
 
 namespace {
 
-void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, ArgVector &extraArgs)
+void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, ArgSpan extraArgs)
 {
    batches._extraArgs = extraArgs.data();
    batches._nEvents = nEvents;
@@ -50,7 +51,7 @@ void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size
    batches._output = output;
 }
 
-void fillArrays(std::vector<Batch> &arrays, const VarVector &vars, double *buffer, std::size_t nEvents)
+void fillArrays(std::vector<Batch> &arrays, VarSpan vars, double *buffer, std::size_t nEvents)
 {
 
    arrays.resize(vars.size());
@@ -106,10 +107,10 @@ public:
    \param computer An enum specifying the compute function to be used.
    \param output The array where the computation results are stored.
    \param nEvents The number of events to be processed.
-   \param vars A std::vector containing pointers to the variables involved in the computation.
-   \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
-                ArgVector &extraArgs) override
+   \param vars A std::span containing pointers to the variables involved in the computation.
+   \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
+   void compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
+                ArgSpan extraArgs) override
    {
       static std::vector<double> buffer;
       buffer.resize(vars.size() * bufferSize);

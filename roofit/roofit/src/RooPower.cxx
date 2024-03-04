@@ -26,8 +26,9 @@ RooPower implements a power law PDF of the form
 
 #include <TError.h>
 
-#include <cmath>
+#include <array>
 #include <cassert>
+#include <cmath>
 #include <sstream>
 
 ClassImp(RooPower);
@@ -84,7 +85,7 @@ RooPower::RooPower(const RooPower &other, const char *name)
 /// Compute multiple values of Power distribution.
 void RooPower::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-    RooBatchCompute::VarVector vars;
+    std::vector<std::span<const double>> vars;
     vars.reserve(2 *  _coefList.size() + 1);
     vars.push_back(dataMap.at(_x));
 
@@ -95,8 +96,7 @@ void RooPower::computeBatch(double *output, size_t nEvents, RooFit::Detail::Data
      vars.push_back(dataMap.at(&_expList[i]));
    }
 
-    RooBatchCompute::ArgVector args;
-    args.push_back(_coefList.size());
+   std::array<double, 1> args{static_cast<double>(_coefList.size())};
 
    RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Power, output, nEvents, vars, args);
 }

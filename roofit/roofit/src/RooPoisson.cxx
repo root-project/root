@@ -22,6 +22,8 @@ Poisson pdf
 #include "RooFit/Detail/EvaluateFuncs.h"
 #include "Math/ProbFuncMathCore.h"
 
+#include <array>
+
 ClassImp(RooPoisson);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +80,7 @@ void RooPoisson::translate(RooFit::Detail::CodeSquashContext &ctx) const
 void RooPoisson::computeBatch(double *output, size_t nEvents,
                               RooFit::Detail::DataMap const &dataMap) const
 {
-   RooBatchCompute::ArgVector extraArgs{static_cast<double>(_protectNegative), static_cast<double>(_noRounding)};
+   std::array<double, 2> extraArgs{static_cast<double>(_protectNegative), static_cast<double>(_noRounding)};
    RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Poisson, output, nEvents,
                             {dataMap.at(x), dataMap.at(mean)}, extraArgs);
 }

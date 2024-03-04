@@ -62,9 +62,10 @@ have to appear in any specific place in the list.
 #include "RooFitImplHelpers.h"
 #include "strtok.h"
 
+#include <algorithm>
+#include <array>
 #include <cstring>
 #include <sstream>
-#include <algorithm>
 
 #ifndef _WIN32
 #include <strings.h>
@@ -418,13 +419,13 @@ void RooProdPdf::calculateBatch(RooAbsArg const *caller, const RooProdPdf::Cache
       RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Ratio, output, nEvents,
                                {numerator, denominator});
    } else {
-      RooBatchCompute::VarVector factors;
+      std::vector<std::span<const double>> factors;
       factors.reserve(cache._partList.size());
       for (const RooAbsArg *i : cache._partList) {
          auto span = dataMap.at(i);
          factors.push_back(span);
       }
-      RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
+      std::array<double, 1> special{static_cast<double>(factors.size())};
       RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::ProdPdf, output, nEvents, factors, special);
    }
 }

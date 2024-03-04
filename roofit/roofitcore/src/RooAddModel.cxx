@@ -397,8 +397,8 @@ void RooAddModel::computeBatch(double *output, size_t nEvents, RooFit::Detail::D
       _coefCache[i] = coefVals[0];
    }
 
-   RooBatchCompute::VarVector pdfs;
-   RooBatchCompute::ArgVector coefs;
+   std::vector<std::span<const double>> pdfs;
+   std::vector<double> coefs;
    AddCacheElem *cache = getProjCache(nullptr);
    updateCoefficients(*cache, nullptr);
 

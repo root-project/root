@@ -38,6 +38,7 @@ functions used in D mixing have been hand coded for increased execution speed.
 #include <TError.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 
@@ -265,7 +266,7 @@ void RooTruthModel::computeBatch(double *output, size_t nEvents, RooFit::Detail:
    auto param2Vals = param2 ? dataMap.at(param2) : std::span<const double>{};
 
    // Return desired basis function
-   RooBatchCompute::ArgVector extraArgs{basisSign};
+   std::array<double, 1> extraArgs{basisSign};
    switch (basisType) {
    case expBasis: {
       RooBatchCompute::compute(config, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals},
