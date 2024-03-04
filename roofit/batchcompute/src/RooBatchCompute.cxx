@@ -44,29 +44,39 @@ namespace {
 
 void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, ArgSpan extraArgs)
 {
-   batches._extraArgs = extraArgs.data();
-   batches._nEvents = nEvents;
-   batches._nBatches = nBatches;
-   batches._nExtraArgs = extraArgs.size();
-   batches._output = output;
+   batches.extra = extraArgs.data();
+   batches.nEvents = nEvents;
+   batches.nBatches = nBatches;
+   batches.nExtra = extraArgs.size();
+   batches.output = output;
 }
 
 void fillArrays(std::span<Batch> arrays, VarSpan vars, std::size_t nEvents)
 {
    for (std::size_t i = 0; i < vars.size(); i++) {
-      arrays[i].set(vars[i].data(), vars[i].empty() || vars[i].size() >= nEvents);
+      arrays[i]._array = vars[i].data();
+      arrays[i]._isVector = vars[i].empty() || vars[i].size() >= nEvents;
    }
+}
+
+inline void advance(Batches &batches, std::size_t nEvents)
+{
+   for (std::size_t i = 0; i < batches.nBatches; i++) {
+      Batch &arg = batches.args[i];
+      arg._array += arg._isVector * nEvents;
+   }
+   batches.output += nEvents;
 }
 
 } // namespace
 
-std::vector<void (*)(BatchesHandle)> getFunctions();
+std::vector<void (*)(Batches &)> getFunctions();
 
 /// This class overrides some RooBatchComputeInterface functions, for the
 /// purpose of providing a CPU specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
 private:
-   const std::vector<void (*)(BatchesHandle)> _computeFunctions;
+   const std::vector<void (*)(Batches &)> _computeFunctions;
 
 public:
    RooBatchComputeClass() : _computeFunctions(getFunctions())
@@ -118,22 +128,22 @@ public:
             std::vector<Batch> arrays(vars.size());
             fillBatches(batches, output, nEventsPerThread, vars.size(), extraArgs);
             fillArrays(arrays, vars, nEvents);
-            batches._arrays = arrays.data();
-            batches.advance(batches.getNEvents() * idx);
+            batches.args = arrays.data();
+            advance(batches, batches.nEvents * idx);
 
             // Set the number of events of the last Batches object as the remaining events
             if (idx == nThreads - 1) {
-               batches.setNEvents(nEvents - idx * batches.getNEvents());
+               batches.nEvents = nEvents - idx * batches.nEvents;
             }
 
-            std::size_t events = batches.getNEvents();
-            batches.setNEvents(bufferSize);
+            std::size_t events = batches.nEvents;
+            batches.nEvents = bufferSize;
             while (events > bufferSize) {
                _computeFunctions[computer](batches);
-               batches.advance(bufferSize);
+               advance(batches, bufferSize);
                events -= bufferSize;
             }
-            batches.setNEvents(events);
+            batches.nEvents = events;
             _computeFunctions[computer](batches);
             return 0;
          };
@@ -150,16 +160,16 @@ public:
          std::vector<Batch> arrays(vars.size());
          fillBatches(batches, output, nEvents, vars.size(), extraArgs);
          fillArrays(arrays, vars, nEvents);
-         batches._arrays = arrays.data();
+         batches.args = arrays.data();
 
-         std::size_t events = batches.getNEvents();
-         batches.setNEvents(bufferSize);
+         std::size_t events = batches.nEvents;
+         batches.nEvents = bufferSize;
          while (events > bufferSize) {
             _computeFunctions[computer](batches);
-            batches.advance(bufferSize);
+            advance(batches, bufferSize);
             events -= bufferSize;
          }
-         batches.setNEvents(events);
+         batches.nEvents = events;
          _computeFunctions[computer](batches);
       }
    }
