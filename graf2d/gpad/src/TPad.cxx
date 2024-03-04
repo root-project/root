@@ -3427,6 +3427,18 @@ void TPad::DrawCollideGrid()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Short cut to call Modified() and Update() in a single call.
+/// On Mac with Cocoa, it performs an additional ProcessEvents().
+
+void TPad::ModifiedUpdate()
+{
+   Modified();
+   Update();
+#ifdef R__HAS_COCOA
+   gSystem->ProcessEvents();
+#endif
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert x from pad to X.
