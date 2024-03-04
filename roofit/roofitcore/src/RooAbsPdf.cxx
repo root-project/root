@@ -853,18 +853,19 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * <tr><td> `EvalBackend(std::string const&)` <td> Choose a likelihood evaluation backend:
  *   <table>
  *   <tr><th> Backend <th> Description
- *   <tr><td> **legacy** - *default* <td> The original likelihood evaluation method.
- *                                        Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
- *                                        This is the default if `EvalBackend()` is not passed.
- *   <tr><td> **cpu** <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation.
- *                         If all RooAbsArg objects in the model support it, likelihood computations are 2 to 10 times faster,
- *                         unless your dataset is so small that the vectorization is not worth it.
- *                         The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than \f$10^{-12}\f$,
+ *   <tr><td> **cpu** - *default* <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation.
+ *                         Since ROOT 6.23, this is the default if `EvalBackend()` is not passed, succeeding the **legacy** backend.
+ *                         If all RooAbsArg objects in the model support vectorized evaluation,
+ *                         likelihood computations are 2 to 10 times faster than with the **legacy** backend
+ *                         - unless your dataset is so small that the vectorization is not worth it.
+ *                         The relative difference of the single log-likelihoods with respect to the legacy mode is usually better than \f$10^{-12}\f$,
  *                         and for fit parameters it's usually better than \f$10^{-6}\f$. In past ROOT releases, this backend could be activated with the now deprecated `BatchMode()` option.
  *   <tr><td> **cuda** <td> Evaluate the likelihood on a GPU that supports CUDA.
  *                          This backend re-uses code from the **cpu** backend, but compiled in CUDA kernels.
  *                          Hence, the results are expected to be identical, modulo some numerical differences that can arise from the different order in which the GPU is summing the log probabilities.
  *                          This backend can drastically speed up the fit if all RooAbsArg object in the model support it.
+ *   <tr><td> **legacy** <td> The original likelihood evaluation method.
+ *                            Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
  *   <tr><td> **codegen** <td> **Experimental** - Generates and compiles minimal C++ code for the NLL on-the-fly and wraps it in the returned RooAbsReal.
  *                             Also generates and compiles the code for the gradient using Automatic Differentiation (AD) with [Clad](https://github.com/vgvassilev/clad).
  *                             This analytic gradient is passed to the minimizer, which can result in significant speedups for many-parameter fits,
