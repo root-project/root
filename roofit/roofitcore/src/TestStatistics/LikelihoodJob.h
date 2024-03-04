@@ -25,11 +25,18 @@
 namespace RooFit {
 namespace TestStatistics {
 
+class LikelihoodSerial;
+
 class LikelihoodJob : public MultiProcess::Job, public LikelihoodWrapper {
 public:
    LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood,
                  std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean /*, RooMinimizer *minimizer*/);
+   LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood,
+                 std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                 std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                 std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save);
    LikelihoodJob *clone() const override;
+   LikelihoodJob(const LikelihoodJob &other);
 
    void init_vars();
 
@@ -69,7 +76,6 @@ private:
    RooArgList vars_;      // Variables
    RooArgList save_vars_; // Copy of variables
 
-   LikelihoodType likelihood_type_;
    std::size_t n_tasks_at_workers_ = 0;
 
    // warning: don't use the following values directly, use the getters instead!
@@ -77,6 +83,9 @@ private:
    std::size_t n_component_tasks_;
    std::size_t getNEventTasks();
    std::size_t getNComponentTasks();
+
+   std::vector<ROOT::Math::KahanSum<double>> offsets_previous_;
+   std::unique_ptr<LikelihoodSerial> likelihood_serial_;
 };
 
 std::ostream &operator<<(std::ostream &out, const LikelihoodJob::update_state_mode value);

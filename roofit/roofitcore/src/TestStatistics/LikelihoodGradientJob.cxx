@@ -39,9 +39,25 @@ LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood
    minuit_internal_x_.reserve(N_dim);
 }
 
+LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood,
+                                             std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                                             std::size_t N_dim, RooMinimizer *minimizer,
+                                             std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                                             std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save)
+   : LikelihoodGradientWrapper(std::move(likelihood), std::move(calculation_is_clean), N_dim, minimizer, std::move(offsets), std::move(offsets_save)),
+   grad_(N_dim), N_tasks_(N_dim)
+{
+    // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
+    // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
+    // should also somehow be updated in this class.
+    minuit_internal_x_.reserve(N_dim);
+
+    offsets_previous_ = *component_offsets_;
+}
+
 LikelihoodGradientJob::LikelihoodGradientJob(const LikelihoodGradientJob &other)
    : MultiProcess::Job(other), LikelihoodGradientWrapper(other), grad_(other.grad_), gradf_(other.gradf_),
-     N_tasks_(other.N_tasks_), minuit_internal_x_(other.minuit_internal_x_)
+     N_tasks_(other.N_tasks_), minuit_internal_x_(other.minuit_internal_x_), offsets_previous_(other.offsets_previous_)
 {
 }
 
@@ -135,8 +151,16 @@ void LikelihoodGradientJob::update_workers_state()
    zmq::message_t gradient_message(grad_.begin(), grad_.end());
    zmq::message_t minuit_internal_x_message(minuit_internal_x_.begin(), minuit_internal_x_.end());
    ++state_id_;
-   get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_, std::move(gradient_message),
-                                                             std::move(minuit_internal_x_message));
+
+   if (component_offsets_ != nullptr && *component_offsets_ != offsets_previous_) {
+      zmq::message_t offsets_message(component_offsets_->begin(), component_offsets_->end());
+      get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_, std::move(gradient_message),
+                                                                std::move(minuit_internal_x_message), std::move(offsets_message));
+      offsets_previous_ = *component_offsets_;
+   } else {
+      get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_, std::move(gradient_message),
+                                                                std::move(minuit_internal_x_message));
+   }
 }
 
 void LikelihoodGradientJob::update_workers_state_isCalculating()
@@ -162,12 +186,24 @@ void LikelihoodGradientJob::update_state()
       std::copy(gradient_message_begin, gradient_message_end, grad_.begin());
 
       auto minuit_internal_x_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
-      assert(!more);
       auto minuit_internal_x_message_begin = minuit_internal_x_message.data<double>();
       auto minuit_internal_x_message_end =
          minuit_internal_x_message_begin + minuit_internal_x_message.size() / sizeof(double);
       std::copy(minuit_internal_x_message_begin, minuit_internal_x_message_end, minuit_internal_x_.begin());
 
+      if (more) {
+         // offsets also incoming
+         auto offsets_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+         assert(!more);
+         auto offsets_message_begin = offsets_message.data<ROOT::Math::KahanSum<double>>();
+         std::size_t N_offsets = offsets_message.size() / sizeof(ROOT::Math::KahanSum<double>);
+         component_offsets_->reserve(N_offsets);
+         auto offsets_message_end = offsets_message_begin + N_offsets;
+         std::copy(offsets_message_begin, offsets_message_end, component_offsets_->begin());
+      }
+
+      // note: the next call must stay after the (possible) update of the offset, because it
+      // calls the likelihood function, so the offset must be correct at this point
       gradf_.SetupDifferentiate(minimizer_->getMultiGenFcn(), minuit_internal_x_.data(),
                                 minimizer_->fitter()->Config().ParamsSettings());
    }

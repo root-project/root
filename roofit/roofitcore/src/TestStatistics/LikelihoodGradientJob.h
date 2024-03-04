@@ -30,6 +30,11 @@ public:
    LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood,
                          std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim,
                          RooMinimizer *minimizer);
+   LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood,
+                         std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim,
+                         RooMinimizer *minimizer,
+                         std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                         std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save);
    LikelihoodGradientJob *clone() const override;
    LikelihoodGradientJob(const LikelihoodGradientJob &other);
 
@@ -87,6 +92,8 @@ private:
    std::vector<double> minuit_internal_x_;
 
    mutable bool isCalculating_ = false;
+
+   std::vector<ROOT::Math::KahanSum<double>> offsets_previous_;
 };
 
 } // namespace TestStatistics

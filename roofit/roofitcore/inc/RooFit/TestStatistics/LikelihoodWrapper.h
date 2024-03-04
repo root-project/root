@@ -60,11 +60,19 @@ class LikelihoodWrapper {
 public:
    LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood,
                      std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
+   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood,
+                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                     std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                     std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save);
    virtual ~LikelihoodWrapper() = default;
    virtual LikelihoodWrapper *clone() const = 0;
 
    static std::unique_ptr<LikelihoodWrapper> create(LikelihoodMode likelihoodMode, std::shared_ptr<RooAbsL> likelihood,
                                                     std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean);
+   static std::unique_ptr<LikelihoodWrapper> create(LikelihoodMode likelihoodMode, std::shared_ptr<RooAbsL> likelihood,
+                                                    std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean,
+                                                    std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                                                    std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save);
 
    /// \brief Triggers (possibly asynchronous) evaluation of the likelihood
    ///
@@ -95,19 +103,21 @@ public:
    inline virtual bool isOffsetting() const { return do_offset_; }
    virtual void enableOffsetting(bool flag);
    void setOffsettingMode(OffsettingMode mode);
-   inline ROOT::Math::KahanSum<double> offset() const { return offset_; }
+   inline std::vector<ROOT::Math::KahanSum<double>> offsets() const { return *component_offsets_; }
    void setApplyWeightSquared(bool flag);
 
 protected:
    std::shared_ptr<RooAbsL> likelihood_;
+   LikelihoodType likelihood_type_;
    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean_;
 
    bool do_offset_ = false;
-   ROOT::Math::KahanSum<double> offset_;
-   ROOT::Math::KahanSum<double> offset_save_ {0.}; ///<!
+   std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> component_offsets_;
+   std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> component_offsets_save_;
+   void calculate_offsets();
+   void clearOffsets();
    OffsettingMode offsetting_mode_ = OffsettingMode::legacy;
-   ROOT::Math::KahanSum<double> applyOffsetting(ROOT::Math::KahanSum<double> current_value);
-   void swapOffsets();
+   void swapOffsets(const std::vector<std::size_t>& component_indices);
 };
 
 } // namespace TestStatistics
