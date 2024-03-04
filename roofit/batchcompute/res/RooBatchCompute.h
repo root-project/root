@@ -45,6 +45,8 @@ typedef std::span<double> ArgSpan;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
 
+constexpr std::size_t bufferSize = 64;
+
 void init();
 
 /// Minimal configuration struct to steer the evaluation of a single node with
