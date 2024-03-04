@@ -384,7 +384,12 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       buffer = info.buffer->cpuWritePtr();
    }
    _dataMapCPU.set(node, {buffer, nOut});
+   if (nOut > 1) {
+      _dataMapCPU.enableVectorBuffers(true);
+   }
    nodeAbsReal->computeBatch(buffer, nOut, _dataMapCPU);
+   _dataMapCPU.resetVectorBuffers();
+   _dataMapCPU.enableVectorBuffers(false);
 #ifdef ROOFIT_CUDA
    if (info.copyAfterEvaluation) {
       _dataMapCUDA.set(node, {info.buffer->gpuReadPtr(), nOut});
