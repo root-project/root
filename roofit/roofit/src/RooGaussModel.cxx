@@ -34,6 +34,8 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 
 #include <RooHeterogeneousMath.h>
 
+#include <array>
+
 namespace {
 
 enum RooGaussBasis {
@@ -190,7 +192,7 @@ void RooGaussModel::computeBatch(double *output, size_t size,
    // arises, they can be implemented following this example. Remember to also
    // adapt RooGaussModel::canComputeBatchWithCuda().
    if (basisType == expBasis) {
-      RooBatchCompute::ArgVector extraArgs{basisSign};
+      std::array<double, 1> extraArgs{basisSign};
       RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::GaussModelExpBasis, output, size,
                         {xVals, meanVals, meanSfVals, sigmaVals, sigmaSfVals, param1Vals}, extraArgs);
       return;

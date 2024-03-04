@@ -26,8 +26,6 @@ Class RooPolyvar implements analytical integrals of all polynomials
 it can define.
 **/
 
-#include <cmath>
-
 #include "RooPolyVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
@@ -37,6 +35,9 @@ it can define.
 #include <RooFit/Detail/EvaluateFuncs.h>
 
 #include "TError.h"
+
+#include <array>
+#include <cmath>
 
 ClassImp(RooPolyVar);
 
@@ -132,7 +133,7 @@ void RooPolyVar::computeBatchImpl(RooAbsArg const* caller, double *output, size_
       return;
    }
 
-   RooBatchCompute::VarVector vars;
+   std::vector<std::span<const double>> vars;
    vars.reserve(coefs.size() + 2);
 
    // Fill the coefficients for the skipped orders. By a conventions started in
@@ -148,7 +149,7 @@ void RooPolyVar::computeBatchImpl(RooAbsArg const* caller, double *output, size_
       vars.push_back(dataMap.at(coef));
    }
    vars.push_back(dataMap.at(&x));
-   RooBatchCompute::ArgVector extraArgs{double(vars.size() - 1)};
+   std::array<double, 1> extraArgs{double(vars.size() - 1)};
    RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Polynomial, output, nEvents, vars, extraArgs);
 }
 

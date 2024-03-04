@@ -23,10 +23,8 @@
 
 #include <DllImport.h> //for R__EXTERN, needed for windows
 
-#include <cassert>
-#include <functional>
+#include <initializer_list>
 #include <string>
-#include <vector>
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
@@ -42,8 +40,8 @@
  */
 namespace RooBatchCompute {
 
-typedef std::vector<std::span<const double>> VarVector;
-typedef std::vector<double> ArgVector;
+typedef std::span<const std::span<const double>> VarSpan;
+typedef std::span<double> ArgSpan;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
 
@@ -140,12 +138,7 @@ struct ReduceNLLOutput {
 class RooBatchComputeInterface {
 public:
    virtual ~RooBatchComputeInterface() = default;
-   virtual void compute(Config const &cfg, Computer, RestrictArr, size_t, const VarVector &, ArgVector &) = 0;
-   inline void compute(Config const &cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
-   {
-      ArgVector extraArgs{};
-      compute(cfg, comp, output, size, vars, extraArgs);
-   }
+   virtual void compute(Config const &cfg, Computer, RestrictArr, size_t, VarSpan, ArgSpan) = 0;
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
    virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weights,
@@ -182,18 +175,20 @@ inline bool hasCuda()
    return dispatchCUDA;
 }
 
-inline void
-compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars, ArgVector &extraArgs)
+inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size, VarSpan vars, ArgSpan extraArgs = {})
 {
    init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    dispatch->compute(cfg, comp, output, size, vars, extraArgs);
 }
 
-inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
+/// It is not possible to construct a std::span directly from an initializer
+/// list (probably it will be with C++26). That's why we need an explicit
+/// overload for this.
+inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size,
+                    std::initializer_list<std::span<const double>> vars, ArgSpan extraArgs = {})
 {
-   ArgVector extraArgs{};
-   compute(cfg, comp, output, size, vars, extraArgs);
+   compute(cfg, comp, output, size, VarSpan{vars.begin(), vars.end()}, extraArgs);
 }
 
 inline double reduceSum(Config cfg, InputArr input, size_t n)
