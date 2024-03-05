@@ -1264,84 +1264,83 @@ void TRatioPlot::CreateVisualAxes()
    if (axistop || axisright) {
 
       // only actually create them once, reuse otherwise b/c memory
-      if (!fUpperGXaxisMirror) {
-         fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone();
-         if (axistop) fUpperGXaxisMirror->Draw();
+      if (!fUpperGXaxisMirror && axistop) {
+         fUpperGXaxisMirror = static_cast<TGaxis *>(fUpperGXaxis->Clone());
+         fUpperGXaxisMirror->Draw();
       }
 
-      if (!fLowerGXaxisMirror) {
-         fLowerGXaxisMirror = (TGaxis*)fLowerGXaxis->Clone();
-         if (axistop) fLowerGXaxisMirror->Draw();
+      if (!fLowerGXaxisMirror && axistop) {
+         fLowerGXaxisMirror = static_cast<TGaxis *>(fLowerGXaxis->Clone());
+         fLowerGXaxisMirror->Draw();
       }
 
-      if (!fUpperGYaxisMirror) {
-         fUpperGYaxisMirror = (TGaxis*)fUpperGYaxis->Clone();
-         if (axisright) fUpperGYaxisMirror->Draw();
+      if (!fUpperGYaxisMirror && axisright) {
+         fUpperGYaxisMirror = static_cast<TGaxis *>(fUpperGYaxis->Clone());
+         fUpperGYaxisMirror->Draw();
       }
 
-      if (!fLowerGYaxisMirror) {
-         fLowerGYaxisMirror = (TGaxis*)fLowerGYaxis->Clone();
-         if (axisright) fLowerGYaxisMirror->Draw();
+      if (!fLowerGYaxisMirror && axisright) {
+         fLowerGYaxisMirror = static_cast<TGaxis *>(fLowerGYaxis->Clone());
+         fLowerGYaxisMirror->Draw();
       }
-
-      // import attributes from shared axes
-      ImportAxisAttributes(fUpperGXaxisMirror, GetUpperRefXaxis());
-      ImportAxisAttributes(fUpperGYaxisMirror, GetUpperRefYaxis());
-      ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
-      ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
-
-      // remove titles
-      fUpperGXaxisMirror->SetTitle("");
-      fUpperGYaxisMirror->SetTitle("");
-      fLowerGXaxisMirror->SetTitle("");
-      fLowerGYaxisMirror->SetTitle("");
 
       // move them about and set required positions
-      fUpperGXaxisMirror->SetX1(upLM);
-      fUpperGXaxisMirror->SetX2(1-upRM);
-      fUpperGXaxisMirror->SetY1((1-upTM)*(1-sf)+sf);
-      fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
-      fUpperGXaxisMirror->SetWmin(first);
-      fUpperGXaxisMirror->SetWmax(last);
+      if (fUpperGXaxisMirror) {
+         ImportAxisAttributes(fUpperGXaxisMirror, GetUpperRefXaxis());
+         fUpperGXaxisMirror->SetTitle("");
+         fUpperGXaxisMirror->SetX1(upLM);
+         fUpperGXaxisMirror->SetX2(1-upRM);
+         fUpperGXaxisMirror->SetY1((1-upTM)*(1-sf)+sf);
+         fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
+         fUpperGXaxisMirror->SetWmin(first);
+         fUpperGXaxisMirror->SetWmax(last);
+         fUpperGXaxisMirror->SetOption("-S"+xopt);
+         fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+         fUpperGXaxisMirror->SetLabelSize(0.);
+      }
 
-      fUpperGYaxisMirror->SetX1(1-upRM);
-      fUpperGYaxisMirror->SetX2(1-upRM);
-      fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
-      fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
-      fUpperGYaxisMirror->SetWmin(upYFirst);
-      fUpperGYaxisMirror->SetWmax(upYLast);
+      if (fUpperGYaxisMirror) {
+         ImportAxisAttributes(fUpperGYaxisMirror, GetUpperRefYaxis());
+         fUpperGYaxisMirror->SetTitle("");
+         fUpperGYaxisMirror->SetX1(1-upRM);
+         fUpperGYaxisMirror->SetX2(1-upRM);
+         fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
+         fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
+         fUpperGYaxisMirror->SetWmin(upYFirst);
+         fUpperGYaxisMirror->SetWmax(upYLast);
+         fUpperGYaxisMirror->SetOption("+S"+upyopt);
+         fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
+         fUpperGYaxisMirror->SetLabelSize(0.);
+      }
 
-      fLowerGXaxisMirror->SetX1(lowLM);
-      fLowerGXaxisMirror->SetX2(1-lowRM);
-      fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
-      fLowerGXaxisMirror->SetY2((1-lowTM)*sf);
-      fLowerGXaxisMirror->SetWmin(first);
-      fLowerGXaxisMirror->SetWmax(last);
+      if (fLowerGXaxisMirror) {
+         ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
+         fLowerGXaxisMirror->SetTitle("");
+         fLowerGXaxisMirror->SetX1(lowLM);
+         fLowerGXaxisMirror->SetX2(1-lowRM);
+         fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
+         fLowerGXaxisMirror->SetY2((1-lowTM)*sf);
+         fLowerGXaxisMirror->SetWmin(first);
+         fLowerGXaxisMirror->SetWmax(last);
+         fLowerGXaxisMirror->SetOption("-S"+xopt);
+         fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+         fLowerGXaxisMirror->SetLabelSize(0.);
+      }
 
-      fLowerGYaxisMirror->SetX1(1-lowRM);
-      fLowerGYaxisMirror->SetX2(1-lowRM);
-      fLowerGYaxisMirror->SetY1(lowBM*sf);
-      fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
-      fLowerGYaxisMirror->SetWmin(lowYFirst);
-      fLowerGYaxisMirror->SetWmax(lowYLast);
-
-      // also needs normalized tick size
-      fLowerGYaxisMirror->SetTickSize(ticksize);
-
-      fUpperGXaxisMirror->SetOption("-S"+xopt);
-      fUpperGYaxisMirror->SetOption("+S"+upyopt);
-      fLowerGXaxisMirror->SetOption("-S"+xopt);
-      fLowerGYaxisMirror->SetOption("+S"+lowyopt);
-
-      fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
-      fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
-      fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
-      fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
-
-      fUpperGXaxisMirror->SetLabelSize(0.);
-      fLowerGXaxisMirror->SetLabelSize(0.);
-      fUpperGYaxisMirror->SetLabelSize(0.);
-      fLowerGYaxisMirror->SetLabelSize(0.);
+      if (fLowerGYaxisMirror) {
+         ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
+         fLowerGYaxisMirror->SetTitle("");
+         fLowerGYaxisMirror->SetX1(1-lowRM);
+         fLowerGYaxisMirror->SetX2(1-lowRM);
+         fLowerGYaxisMirror->SetY1(lowBM*sf);
+         fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
+         fLowerGYaxisMirror->SetWmin(lowYFirst);
+         fLowerGYaxisMirror->SetWmax(lowYLast);
+         fLowerGYaxisMirror->SetOption("+S"+lowyopt);
+         fLowerGYaxisMirror->SetTickSize(ticksize);
+         fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
+         fLowerGYaxisMirror->SetLabelSize(0.);
+      }
    }
 
 }
