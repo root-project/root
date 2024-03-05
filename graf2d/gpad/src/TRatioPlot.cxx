@@ -381,14 +381,6 @@ void TRatioPlot::SetupPads()
    SetPadMargins();
 
    // connect to the pads signal
-   fUpperPad->Connect("RangeAxisChanged()", "TRatioPlot", this, "RangeAxisChanged()");
-   fLowerPad->Connect("RangeAxisChanged()", "TRatioPlot", this, "RangeAxisChanged()");
-
-   fUpperPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
-   fLowerPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
-
-   fUpperPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
-   fLowerPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
 
    if (fTopPad) {
       delete fTopPad;
@@ -399,7 +391,31 @@ void TRatioPlot::SetupPads()
 
    fTopPad->SetBit(kCannotPick);
 
+   ConnectPadsSignals();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Connect some signals from the pads to handle them
+/// Allows correctly work also after reading ratioplot from the file
+
+void TRatioPlot::ConnectPadsSignals()
+{
+   static const char *rangeSignal = "RangeAxisChanged()";
+
+   if (fUpperPad->HasConnection(rangeSignal) && fLowerPad->HasConnection(rangeSignal))
+      return;
+
+   fUpperPad->Connect(rangeSignal, ClassName(), this, "RangeAxisChanged()");
+   fLowerPad->Connect(rangeSignal, ClassName(), this, "RangeAxisChanged()");
+
+   fUpperPad->Connect("UnZoomed()", ClassName(), this, "UnZoomed()");
+   fLowerPad->Connect("UnZoomed()", ClassName(), this, "UnZoomed()");
+
+   fUpperPad->Connect("Resized()", ClassName(), this, "SubPadResized()");
+   fLowerPad->Connect("Resized()", ClassName(), this, "SubPadResized()");
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse.
@@ -801,7 +817,8 @@ void TRatioPlot::UpdateGridlines()
 
 void TRatioPlot::Paint(Option_t * /*opt*/)
 {
-   // create the visual axes
+   ConnectPadsSignals();
+
    UpdateVisualAxes();
    UpdateGridlines();
 
@@ -1425,9 +1442,8 @@ void TRatioPlot::RangeAxisChanged()
    }
 
    // Only run this concurrently once, in case it's called async
-   if (fIsUpdating) {
+   if (fIsUpdating)
       return;
-   }
 
    fIsUpdating = kTRUE;
 
@@ -1442,9 +1458,11 @@ void TRatioPlot::RangeAxisChanged()
       }
    }
 
-   // set log to pad
-   fUpperPad->SetLogx(fParentPad->GetLogx());
-   fLowerPad->SetLogx(fParentPad->GetLogx());
+   // set log to pads
+   if (fUpperPad->GetLogx() != fParentPad->GetLogx())
+      fUpperPad->SetLogx(fParentPad->GetLogx());
+   if (fLowerPad->GetLogx() != fParentPad->GetLogx())
+      fLowerPad->SetLogx(fParentPad->GetLogx());
 
    // get axis ranges for upper and lower
    TAxis *uprefx = GetUpperRefXaxis();
