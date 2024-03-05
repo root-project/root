@@ -117,12 +117,16 @@ TRatioPlot::~TRatioPlot()
       delete fConfidenceInterval1;
       delete fConfidenceInterval2;
    }
+
+   // special case when fH1 created from the stack but not drawn - need to delete it
+   if ((fMode != TRatioPlot::CalculationMode::kFitResidual) && fHistDrawProxyStack)
+      delete fH1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal method that shares constructor logic
 
-void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
+void TRatioPlot::Init(TH1* h1, TH1* h2, Option_t *option)
 {
 
    fH1 = h1;
@@ -130,7 +134,7 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
 
    SetupPads();
 
-   TString optionString = TString(option);
+   TString optionString = option;
 
    if (optionString.Contains("divsym")) {
       optionString.ReplaceAll("divsym", "");
@@ -168,9 +172,9 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
    if (!BuildLowerPlot()) return;
 
    // taking x axis information from h1 by cloning it x axis
-   fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
-   fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
-   fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
+   fSharedXAxis = static_cast<TAxis *>(fH1->GetXaxis()->Clone());
+   fUpYaxis = static_cast<TAxis *>(fH1->GetYaxis()->Clone());
+   fLowYaxis = static_cast<TAxis *>(fRatioGraph->GetYaxis()->Clone());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,15 +185,14 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
 /// \param option Steers the error calculation, as well as ratio / difference
 
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
-   : fGridlines()
 {
    if (!h1 || !h2) {
       Warning("TRatioPlot", "Need two histograms.");
       return;
    }
 
-   Bool_t h1IsTH1=h1->IsA()->InheritsFrom(TH1::Class());
-   Bool_t h2IsTH1=h2->IsA()->InheritsFrom(TH1::Class());
+   Bool_t h1IsTH1 = h1->IsA()->InheritsFrom(TH1::Class());
+   Bool_t h2IsTH1 = h2->IsA()->InheritsFrom(TH1::Class());
 
    if (!h1IsTH1 && !h2IsTH1) {
       Warning("TRatioPlot", "Need two histograms deriving from TH2 or TH3.");
@@ -210,7 +213,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
 /// \param h2 The other histogram
 /// \param option Steers the calculation of the lower plot
 
-TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option)
+TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option)
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
@@ -224,14 +227,15 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option)
       return;
    }
 
-   TH1* tmpHist = (TH1*)stackHists->At(0)->Clone();
+   auto tmpHist = static_cast<TH1 *>(stackHists->At(0)->Clone());
    tmpHist->Reset();
 
-   for (int i=0;i<stackHists->GetSize();++i) {
-      tmpHist->Add((TH1*)stackHists->At(i));
+   for (int i = 0; i < stackHists->GetSize(); ++i) {
+      tmpHist->Add(static_cast<TH1 *>(stackHists->At(i)));
    }
 
    fHistDrawProxy = st;
+   fHistDrawProxyStack = kTRUE;
 
    Init(tmpHist, h2, option);
 
@@ -244,16 +248,15 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option)
 /// \param option Steers the error calculation
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 
-TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
-   : fH1(h1),
-     fGridlines()
+TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres)
+   : fH1(h1)
 {
    if (!fH1) {
       Warning("TRatioPlot", "Need a histogram.");
       return;
    }
 
-   Bool_t h1IsTH1=fH1->IsA()->InheritsFrom(TH1::Class());
+   Bool_t h1IsTH1 = fH1->IsA()->InheritsFrom(TH1::Class());
 
    if (!h1IsTH1) {
       Warning("TRatioPlot", "Need a histogram deriving from TH2 or TH3.");
@@ -274,7 +277,7 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
 
    fMode = TRatioPlot::CalculationMode::kFitResidual;
 
-   TString optionString = TString(option);
+   TString optionString = option;
 
    // determine which error style
    if (optionString.Contains("errasym")) {
@@ -322,7 +325,7 @@ void TRatioPlot::SetH1DrawOpt(Option_t *opt)
 
 void TRatioPlot::SetH2DrawOpt(Option_t *opt)
 {
-   TString optString = TString(opt);
+   TString optString = opt;
    optString.ReplaceAll("same", "");
    optString.ReplaceAll("SAME", "");
 
@@ -348,8 +351,8 @@ void TRatioPlot::SetFitDrawOpt(Option_t *opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup the pads.
 
-void TRatioPlot::SetupPads() {
-
+void TRatioPlot::SetupPads()
+{
    // this method will delete all the pads before recreating them
 
    if (fUpperPad) {
@@ -585,7 +588,7 @@ void TRatioPlot::Draw(Option_t *option)
 
    if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
       // use last function in the list
-      TF1 * func = nullptr;
+      TF1 *func = nullptr;
       for (int i = fH1->GetListOfFunctions()->GetSize()-1; i >= 0; i--) {
          auto obj = fH1->GetListOfFunctions()->At(i);
          if (obj->InheritsFrom(TF1::Class()) ) {
@@ -595,7 +598,7 @@ void TRatioPlot::Draw(Option_t *option)
       }
       if (!func) {
          // this is checked in constructor and should thus not occur
-         Error("BuildLowerPlot", "h1 does not have a fit function");
+         Error("Draw", "h1 does not have a fit function");
          return;
       }
 
@@ -614,10 +617,8 @@ void TRatioPlot::Draw(Option_t *option)
    } else {
 
       if (fHistDrawProxy) {
-         if (fHistDrawProxy->InheritsFrom(TH1::Class())) {
-            ((TH1*)fHistDrawProxy)->Draw("A"+fH1DrawOpt);
-         } else if (fHistDrawProxy->InheritsFrom(THStack::Class())) {
-            ((THStack*)fHistDrawProxy)->Draw("A"+fH1DrawOpt);
+         if (fHistDrawProxyStack || fHistDrawProxy->InheritsFrom(TH1::Class())) {
+            fHistDrawProxy->Draw("A"+fH1DrawOpt);
          } else {
             Warning("Draw", "Draw proxy not of type TH1 or THStack, not drawing it");
          }
@@ -1088,7 +1089,7 @@ void TRatioPlot::CreateVisualAxes()
    TVirtualPad::TContext ctxt(fTopPad, kTRUE);
 
    // this is for errors
-   TString thisfunc = "CreateVisualAxes";
+   static const char *thisfunc = "CreateVisualAxes";
 
    // figure out where the axis has to go.
    // Implicit assumption is, that the top pad spans the full other pads

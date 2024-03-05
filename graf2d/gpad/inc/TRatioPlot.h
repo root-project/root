@@ -79,6 +79,7 @@ protected:
    TH1 *fH1 = nullptr; ///< Stores the primary histogram
    TH1 *fH2 = nullptr; ///< Stores the secondary histogram, if there is one
    TObject *fHistDrawProxy = nullptr; ///< The object which is actually drawn, this might be TH1 or THStack
+   Bool_t fHistDrawProxyStack = kFALSE; ///< If stack was assigned as proxy
 
    Int_t fMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
    Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
@@ -261,7 +262,7 @@ public:
    void SetC1(Double_t c1) { fC1 = c1; }
    void SetC2(Double_t c2) { fC2 = c2; }
 
-   ClassDefOverride(TRatioPlot, 1)  //A ratio of histograms
+   ClassDefOverride(TRatioPlot, 2)  //A ratio of histograms
 };
 
 #endif
