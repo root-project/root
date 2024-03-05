@@ -142,6 +142,7 @@ protected:
 
    virtual void SyncAxesRanges();
    virtual void SetupPads();
+   virtual void ConnectPadsSignals();
    virtual void CreateVisualAxes();
    virtual void UpdateVisualAxes();
    virtual Bool_t SyncPadMargins();
