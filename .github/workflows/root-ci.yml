@@ -21,13 +21,13 @@ on:
     inputs:
       head_ref:
         type: string
-        default: v6-30-00-patches
+        default: master
       base_ref:
         type: string
-        default: v6-30-00-patches
+        default: master
       ref_name:
         type: string
-        default: v6-30-00-patches
+        default: master
 
   # Enables manual start of workflow
   workflow_dispatch:
