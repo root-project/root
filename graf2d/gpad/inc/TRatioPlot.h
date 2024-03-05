@@ -145,7 +145,8 @@ protected:
    virtual void CreateVisualAxes();
    virtual Bool_t SyncPadMargins();
    void SetPadMargins();
-   void CreateGridline();
+   void CreateGridlines();
+   void UpdateGridlines();
    Int_t BuildLowerPlot();
 
    void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
