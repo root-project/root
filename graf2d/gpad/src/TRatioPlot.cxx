@@ -1366,67 +1366,49 @@ void TRatioPlot::SetPadMargins()
 
 Bool_t TRatioPlot::SyncPadMargins()
 {
-
-   Bool_t changed = kFALSE;
+   Bool_t horizontalChanged = kFALSE, verticalChanged = kFALSE;
 
    if (fUpperPad->GetLeftMargin() != fLeftMargin) {
       fLeftMargin = fUpperPad->GetLeftMargin();
-      changed = kTRUE;
-   }
-   else if (fLowerPad->GetLeftMargin() != fLeftMargin) {
+      horizontalChanged = kTRUE;
+   } else if (fLowerPad->GetLeftMargin() != fLeftMargin) {
       fLeftMargin = fLowerPad->GetLeftMargin();
-      changed = kTRUE;
+      horizontalChanged = kTRUE;
    }
 
    if (fUpperPad->GetRightMargin() != fRightMargin) {
       fRightMargin = fUpperPad->GetRightMargin();
-      changed = kTRUE;
-   }
-   else if (fLowerPad->GetRightMargin() != fRightMargin) {
+      horizontalChanged = kTRUE;
+   } else if (fLowerPad->GetRightMargin() != fRightMargin) {
       fRightMargin = fLowerPad->GetRightMargin();
-      changed = kTRUE;
+      horizontalChanged = kTRUE;
    }
 
-   // only reset margins, if any of the margins changed
-   if (changed) {
-      SetPadMargins();
-   }
-
-   Bool_t verticalChanged = kFALSE;
 
    if (fUpperPad->GetBottomMargin() != fUpBottomMargin) {
-
-      verticalChanged = kTRUE;
       fUpBottomMargin = fUpperPad->GetBottomMargin();
-
+      verticalChanged = kTRUE;
    }
 
    if (fLowerPad->GetTopMargin() != fLowTopMargin) {
-
-      verticalChanged = kTRUE;
       fLowTopMargin = fLowerPad->GetTopMargin();
-
+      verticalChanged = kTRUE;
    }
 
    if (fLowerPad->GetBottomMargin() != fLowBottomMargin) {
-
       fLowBottomMargin = fLowerPad->GetBottomMargin();
-
+      verticalChanged = kTRUE;
    }
 
    if (fUpperPad->GetTopMargin() != fUpTopMargin) {
-
       fUpTopMargin = fUpperPad->GetTopMargin();
-
    }
 
    // only reset margins, if any of the margins changed
-   if (verticalChanged) {
+   if (horizontalChanged || verticalChanged)
       SetPadMargins();
-   }
 
-   return changed || verticalChanged;
-
+   return horizontalChanged || verticalChanged;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1483,28 +1465,18 @@ void TRatioPlot::RangeAxisChanged()
    if (upFirst != globFirst || upLast != globLast) {
       fSharedXAxis->SetRangeUser(upFirst, upLast);
       upChanged = kTRUE;
-   }
-   else if (lowFirst != globFirst || lowLast != globLast) {
+   } else if (lowFirst != globFirst || lowLast != globLast) {
       fSharedXAxis->SetRangeUser(lowFirst, lowLast);
       lowChanged = kTRUE;
    }
 
-   if (upChanged || lowChanged) {
+   if (upChanged || lowChanged)
       SyncAxesRanges();
-      UpdateVisualAxes();
-      UpdateGridlines();
-
-      // @TODO: Updating is not working when zooming on the lower plot. Axes update, but upper hist only on resize
-      fUpperPad->Modified();
-      fLowerPad->Modified();
-      fTopPad->Modified();
-      fParentPad->Modified();
-   }
 
    // sync the margins in case the user has dragged one of them
    Bool_t marginsChanged = SyncPadMargins();
 
-   if (marginsChanged) {
+   if (upChanged || lowChanged || marginsChanged) {
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
