@@ -191,8 +191,8 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
       return;
    }
 
-   Bool_t h1IsTH1 = h1->IsA()->InheritsFrom(TH1::Class());
-   Bool_t h2IsTH1 = h2->IsA()->InheritsFrom(TH1::Class());
+   Bool_t h1IsTH1 = h1->InheritsFrom(TH1::Class());
+   Bool_t h2IsTH1 = h2->InheritsFrom(TH1::Class());
 
    if (!h1IsTH1 && !h2IsTH1) {
       Warning("TRatioPlot", "Need two histograms deriving from TH2 or TH3.");
@@ -256,7 +256,7 @@ TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres)
       return;
    }
 
-   Bool_t h1IsTH1 = fH1->IsA()->InheritsFrom(TH1::Class());
+   Bool_t h1IsTH1 = fH1->InheritsFrom(TH1::Class());
 
    if (!h1IsTH1) {
       Warning("TRatioPlot", "Need a histogram deriving from TH2 or TH3.");
@@ -302,9 +302,9 @@ TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres)
    }
    fGraphDrawOpt = "LX"; // <- default
 
-   fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
-   fUpYaxis     = (TAxis*)(fH1->GetYaxis()->Clone());
-   fLowYaxis    = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
+   fSharedXAxis = static_cast<TAxis *>(fH1->GetXaxis()->Clone());
+   fUpYaxis     = static_cast<TAxis *>(fH1->GetYaxis()->Clone());
+   fLowYaxis    = static_cast<TAxis *>(fRatioGraph->GetYaxis()->Clone());
 
    //SyncAxesRanges();
 
@@ -854,7 +854,7 @@ Int_t TRatioPlot::BuildLowerPlot()
 
    // Clear and delete the graph if not exists
    if (fRatioGraph) {
-      fRatioGraph->IsA()->Destructor(fRatioGraph);
+      delete fRatioGraph;
       fRatioGraph = nullptr;
    }
 
