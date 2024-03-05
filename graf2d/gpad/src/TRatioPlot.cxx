@@ -96,6 +96,7 @@ is responsible for the range, which enables you to modify the range.
 \image html gpad_ratioplot.png
 */
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot default constructor
 
@@ -108,34 +109,9 @@ TRatioPlot::TRatioPlot()
 
 TRatioPlot::~TRatioPlot()
 {
-
-   gROOT->GetListOfCleanups()->Remove(this);
-
-   auto safeDelete = [](TObject *obj) {
-      if (obj && !ROOT::Detail::HasBeenDeleted(obj))
-         delete obj;
-   };
-
-   safeDelete(fRatioGraph);
-   safeDelete(fConfidenceInterval1);
-   safeDelete(fConfidenceInterval2);
-
-   for (unsigned int i=0;i<fGridlines.size();++i) {
-      delete (fGridlines[i]);
-   }
-
-   safeDelete(fSharedXAxis);
-   safeDelete(fUpperGXaxis);
-   safeDelete(fLowerGXaxis);
-   safeDelete(fUpperGYaxis);
-   safeDelete(fLowerGYaxis);
-   safeDelete(fUpperGXaxisMirror);
-   safeDelete(fLowerGXaxisMirror);
-   safeDelete(fUpperGYaxisMirror);
-   safeDelete(fLowerGYaxisMirror);
-
-   safeDelete(fUpYaxis);
-   safeDelete(fLowYaxis);
+   delete fSharedXAxis;
+   delete fUpYaxis;
+   delete fLowYaxis;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,8 +178,6 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
    : fGridlines()
 {
-   gROOT->GetListOfCleanups()->Add(this);
-
    if (!h1 || !h2) {
       Warning("TRatioPlot", "Need two histograms.");
       return;
@@ -269,8 +243,6 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
    : fH1(h1),
      fGridlines()
 {
-   gROOT->GetListOfCleanups()->Add(this);
-
    if (!fH1) {
       Warning("TRatioPlot", "Need a histogram.");
       return;
