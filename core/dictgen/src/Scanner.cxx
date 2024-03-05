@@ -58,8 +58,6 @@ inline static bool IsElementPresent(const std::vector<const T*> &v, T *el){
 using namespace ROOT;
 using namespace clang;
 
-extern cling::Interpreter *gInterp;
-
 const char* RScanner::fgClangDeclKey = "ClangDecl"; // property key used for connection with Clang objects
 const char* RScanner::fgClangFuncKey = "ClangFunc"; // property key for demangled names
 
@@ -1058,6 +1056,8 @@ void RScanner::Scan(const clang::ASTContext &C)
    if (fVerboseLevel > 0 && fSelectionRules.GetHasFileNameRule())  {
       std::cout<<"File name detected"<<std::endl;
    }
+
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter *>(&fInterpreter));
 
    if (fScanType == EScanType::kTwoPasses)
       TraverseDecl(C.getTranslationUnitDecl());
