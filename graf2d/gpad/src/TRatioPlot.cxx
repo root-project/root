@@ -637,7 +637,7 @@ void TRatioPlot::Draw(Option_t *option)
    // the visual axes will be created on paint
    SyncAxesRanges();
 
-   CreateGridline();
+   CreateGridlines();
 
    padsav->cd();
    AppendPad();
@@ -743,68 +743,58 @@ TAxis* TRatioPlot::GetUpperRefYaxis() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a grid line
+/// Create a grid lines
 
-void TRatioPlot::CreateGridline()
+void TRatioPlot::CreateGridlines()
 {
 
    if (!fShowGridlines)
       return; // don't draw them
 
-   TVirtualPad::TContext ctxt(fLowerPad, kTRUE);
+   while (fGridlines.size() < fGridlinePositions.size()) {
+      TLine *newline = new TLine(0, 0, 0, 0);
+      newline->SetLineStyle(2);
+      fLowerPad->GetListOfPrimitives()->Add(newline);
+      fGridlines.emplace_back(newline);
+   }
 
-   unsigned int dest = fGridlinePositions.size();
+   UpdateGridlines();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update positions of grid lines
+
+void TRatioPlot::UpdateGridlines()
+{
+   Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+   Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
    Double_t lowYFirst = fLowerPad->GetUymin();
    Double_t lowYLast = fLowerPad->GetUymax();
 
-   double y;
-   int outofrange = 0;
-   for (unsigned int i=0;i<fGridlinePositions.size();++i) {
-      y = fGridlinePositions.at(i);
-
-      if (y < lowYFirst || lowYLast < y) {
-         ++outofrange;
-      }
-   }
-
-   dest = dest - outofrange;
-
-   // clear all
-   for (unsigned int i=0;i<fGridlines.size();++i) {
-      delete fGridlines.at(i);
-   }
-
-   fGridlines.erase(fGridlines.begin(), fGridlines.end());
-
-   for (unsigned int i=0;i<dest;++i) {
-      TLine *newline = new TLine(0, 0, 0, 0);
-      newline->SetLineStyle(2);
-      newline->Draw();
-      fGridlines.push_back(newline);
-   }
-
-   Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
-   Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
-
-   unsigned int skipped = 0;
-   for (unsigned int i=0;i<fGridlinePositions.size();++i) {
-      y = fGridlinePositions[i];
-
-      if (y < lowYFirst || lowYLast < y) {
-         // this is one of the ones that was out of range
-         ++skipped;
-         continue;
+   for (size_t i = 0; i < fGridlines.size(); ++i) {
+      auto line = fGridlines.at(i);
+      Bool_t visible = kFALSE;
+      Double_t y = 0.;
+      if (i < fGridlinePositions.size()) {
+         y = fGridlinePositions[i];
+         visible = (y >= lowYFirst && y <= lowYLast);
       }
 
-      auto line = fGridlines.at(i-skipped);
-
-      line->SetX1(first);
-      line->SetX2(last);
-      line->SetY1(y);
-      line->SetY2(y);
+      if (visible) {
+         line->SetX1(first);
+         line->SetX2(last);
+         line->SetY1(y);
+         line->SetY2(y);
+      } else {
+         line->SetX1(first);
+         line->SetX2(first);
+         line->SetY1(lowYFirst);
+         line->SetY2(lowYFirst);
+      }
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the visual axes when painting.
@@ -813,7 +803,7 @@ void TRatioPlot::Paint(Option_t * /*opt*/)
 {
    // create the visual axes
    CreateVisualAxes();
-   CreateGridline();
+   UpdateGridlines();
 
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
@@ -1499,7 +1489,7 @@ void TRatioPlot::RangeAxisChanged()
    if (upChanged || lowChanged) {
       SyncAxesRanges();
       CreateVisualAxes();
-      CreateGridline();
+      UpdateGridlines();
 
       // @TODO: Updating is not working when zooming on the lower plot. Axes update, but upper hist only on resize
       fUpperPad->Modified();
@@ -1519,7 +1509,7 @@ void TRatioPlot::RangeAxisChanged()
    }
 
    CreateVisualAxes();
-   CreateGridline();
+   UpdateGridlines();
    fIsUpdating = kFALSE;
 }
 
@@ -1665,9 +1655,8 @@ void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 {
    fGridlinePositions.clear();
 
-   for (Int_t i=0;i<numGridlines;++i) {
-      fGridlinePositions.push_back(gridlines[i]);
-   }
+   for (Int_t i = 0; i < numGridlines; ++i)
+      fGridlinePositions.emplace_back(gridlines[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
