@@ -121,10 +121,12 @@ void MultiplexExternalSemaSource::LoadExternalSpecializations(
     Sources[i]->LoadExternalSpecializations(D, OnlyPartial);
 }
 
-void MultiplexExternalSemaSource::LoadExternalSpecializations(
+bool MultiplexExternalSemaSource::LoadExternalSpecializations(
     const Decl *D, ArrayRef<TemplateArgument> TemplateArgs) {
+  bool AnySpecsLoaded = false;
   for (size_t i = 0; i < Sources.size(); ++i)
-    Sources[i]->LoadExternalSpecializations(D, TemplateArgs);
+    AnySpecsLoaded |= Sources[i]->LoadExternalSpecializations(D, TemplateArgs);
+  return AnySpecsLoaded;
 }
 
 void MultiplexExternalSemaSource::completeVisibleDeclsMap(const DeclContext *DC){

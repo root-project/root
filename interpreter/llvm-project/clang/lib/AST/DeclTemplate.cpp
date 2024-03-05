@@ -311,14 +311,28 @@ void RedeclarableTemplateDecl::loadLazySpecializationsImpl(
   return;
 }
 
-void RedeclarableTemplateDecl::loadLazySpecializationsImpl(
+bool RedeclarableTemplateDecl::loadLazySpecializationsImpl(
     ArrayRef<TemplateArgument> Args, TemplateParameterList *TPL) const {
   auto *ExternalSource = getASTContext().getExternalSource();
   if (!ExternalSource)
-    return;
+    return false;
 
-  ExternalSource->LoadExternalSpecializations(this->getCanonicalDecl(), Args);
-  return;
+  return ExternalSource->LoadExternalSpecializations(this->getCanonicalDecl(), Args);
+}
+
+template<class EntryType, typename... ProfileArguments>
+static
+typename RedeclarableTemplateDecl::SpecEntryTraits<EntryType>::DeclType *
+findSpecializationLocally(llvm::FoldingSetVector<EntryType> &Specs, void *&InsertPos,
+    ASTContext& Context,
+    ProfileArguments&&... ProfileArgs) {
+  using SETraits = RedeclarableTemplateDecl::SpecEntryTraits<EntryType>;
+
+  llvm::FoldingSetNodeID ID;
+  EntryType::Profile(ID, std::forward<ProfileArguments>(ProfileArgs)...,
+                     Context);
+  EntryType *Entry = Specs.FindNodeOrInsertPos(ID, InsertPos);
+  return Entry ? SETraits::getDecl(Entry)->getMostRecentDecl() : nullptr;
 }
 
 template<class EntryType, typename... ProfileArguments>
@@ -326,15 +340,17 @@ typename RedeclarableTemplateDecl::SpecEntryTraits<EntryType>::DeclType *
 RedeclarableTemplateDecl::findSpecializationImpl(
     llvm::FoldingSetVector<EntryType> &Specs, void *&InsertPos,
     ProfileArguments&&... ProfileArgs) {
-  using SETraits = SpecEntryTraits<EntryType>;
+  if (auto *Found = findSpecializationLocally(Specs, InsertPos, getASTContext(),
+      std::forward<ProfileArguments>(ProfileArgs)...))
+    return Found;
 
-  loadLazySpecializationsImpl(std::forward<ProfileArguments>(ProfileArgs)...);
+  // Try to load external specializations if we can't find the specialization
+  // locally.
+  if (!loadLazySpecializationsImpl(std::forward<ProfileArguments>(ProfileArgs)...))
+    return nullptr;
 
-  llvm::FoldingSetNodeID ID;
-  EntryType::Profile(ID, std::forward<ProfileArguments>(ProfileArgs)...,
-                     getASTContext());
-  EntryType *Entry = Specs.FindNodeOrInsertPos(ID, InsertPos);
-  return Entry ? SETraits::getDecl(Entry)->getMostRecentDecl() : nullptr;
+  return findSpecializationLocally(Specs, InsertPos, getASTContext(),
+      std::forward<ProfileArguments>(ProfileArgs)...);
 }
 
 template<class Derived, class EntryType>

@@ -152,10 +152,10 @@ namespace cling {
       m_Source->LoadExternalSpecializations(D, OnlyPartial);
     }
 
-    void
+    bool
     LoadExternalSpecializations(const Decl *D,
                                 ArrayRef<TemplateArgument> TemplateArgs) override {
-      m_Source->LoadExternalSpecializations(D, TemplateArgs);
+      return m_Source->LoadExternalSpecializations(D, TemplateArgs);
     }
 
     virtual void completeVisibleDeclsMap(const DeclContext* DC) override {

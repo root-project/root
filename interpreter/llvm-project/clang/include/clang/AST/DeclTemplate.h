@@ -823,7 +823,7 @@ protected:
 
   void loadLazySpecializationsImpl(bool OnlyPartial = false) const;
 
-  void loadLazySpecializationsImpl(llvm::ArrayRef<TemplateArgument> Args,
+  bool loadLazySpecializationsImpl(llvm::ArrayRef<TemplateArgument> Args,
                                    TemplateParameterList *TPL = nullptr) const;
 
   template <class EntryType, typename ...ProfileArguments>

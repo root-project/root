@@ -7780,10 +7780,8 @@ void ASTReader::LoadExternalSpecializations(const Decl *D, bool OnlyPartial) {
     return;
 
   // Get Decl may violate the iterator from SpecializationsLookups
-  llvm::SmallVector<serialization::reader::LazySpecializationInfo, 8> Infos;
-  for (serialization::reader::LazySpecializationInfo Info :
-       It->second.Table.findAll())
-    Infos.push_back(Info);
+  llvm::SmallVector<serialization::reader::LazySpecializationInfo, 8> Infos
+    = It->second.Table.findAll();
 
   // Since we've loaded all the specializations, we can erase it from
   // the lookup table.
@@ -7796,25 +7794,31 @@ void ASTReader::LoadExternalSpecializations(const Decl *D, bool OnlyPartial) {
       GetDecl(Info.ID);
 }
 
-void ASTReader::LoadExternalSpecializations(
+bool ASTReader::LoadExternalSpecializations(
     const Decl *D, ArrayRef<TemplateArgument> TemplateArgs) {
   assert(D);
 
   auto It = SpecializationsLookups.find(D);
   if (It == SpecializationsLookups.end())
-    return;
+    return false;
 
   Deserializing LookupResults(this);
   auto HashValue = TemplateArgumentList::ComputeStableHash(TemplateArgs);
 
   // Get Decl may violate the iterator from SpecializationsLookups
-  llvm::SmallVector<serialization::reader::LazySpecializationInfo, 8> Infos;
-  for (serialization::reader::LazySpecializationInfo Info :
-       It->second.Table.find(HashValue))
-    Infos.push_back(Info);
+  llvm::SmallVector<serialization::reader::LazySpecializationInfo, 8> Infos
+    = It->second.Table.find(HashValue);
 
-  for (auto &Info : Infos)
+  bool AnyNewDeclsFound = false;
+  for (auto &Info : Infos) {
+    if (GetExistingDecl(Info.ID))
+      continue;
+
+    AnyNewDeclsFound = true;
     GetDecl(Info.ID);
+  }
+
+  return AnyNewDeclsFound;
 }
 
 void ASTReader::FindExternalLexicalDecls(

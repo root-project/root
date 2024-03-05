@@ -157,7 +157,9 @@ public:
 
   /// Load all the specializations for the Decl \param D with the same template
   /// args specified by \param TemplateArgs.
-  virtual void
+  ///
+  /// Return true if any external specialization loaded. Return false otherwise.
+  virtual bool
   LoadExternalSpecializations(const Decl *D,
                               ArrayRef<TemplateArgument> TemplateArgs);
 
