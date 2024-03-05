@@ -3,7 +3,7 @@ name: 'ROOT Main'
 
 on:
   schedule:
-    - cron: '0 1 * * *'
+    - cron: '0 1,13 * * *'
 
   workflow_dispatch:
     inputs:
@@ -31,8 +31,4 @@ on:
 jobs:
   run_nightlies:
     uses: root-project/root/.github/workflows/root-ci.yml@master
-    with:
-      base_ref: 'master'
-      head_ref: 'master'
-      ref_name: 'master'
     secrets: inherit
