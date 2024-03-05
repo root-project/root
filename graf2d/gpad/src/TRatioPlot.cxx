@@ -112,6 +112,11 @@ TRatioPlot::~TRatioPlot()
    delete fSharedXAxis;
    delete fUpYaxis;
    delete fLowYaxis;
+
+   if ((fMode != TRatioPlot::CalculationMode::kFitResidual) || !fShowConfidenceIntervals) {
+      delete fConfidenceInterval1;
+      delete fConfidenceInterval2;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
