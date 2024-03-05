@@ -21,15 +21,12 @@ on:
     inputs:
       head_ref:
         type: string
-        required: true
         default: master
       base_ref:
         type: string
-        required: true
         default: master
       ref_name:
         type: string
-        required: true
         default: master
 
   # Enables manual start of workflow
