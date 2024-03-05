@@ -637,6 +637,8 @@ void TRatioPlot::Draw(Option_t *option)
    // the visual axes will be created on paint
    SyncAxesRanges();
 
+   CreateVisualAxes();
+
    CreateGridlines();
 
    padsav->cd();
@@ -802,7 +804,7 @@ void TRatioPlot::UpdateGridlines()
 void TRatioPlot::Paint(Option_t * /*opt*/)
 {
    // create the visual axes
-   CreateVisualAxes();
+   UpdateVisualAxes();
    UpdateGridlines();
 
    if (fIsUpdating) fIsUpdating = kFALSE;
@@ -1071,15 +1073,76 @@ Int_t TRatioPlot::BuildLowerPlot()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// (Re-)Creates the TGAxis objects that are used for consistent display of the
-/// axes.
+/// Creates the TGaxis objects that are used for consistent display of the axes.
 
 void TRatioPlot::CreateVisualAxes()
 {
-   TVirtualPad::TContext ctxt(fTopPad, kTRUE);
+   Bool_t mirroredAxes = fParentPad->GetFrameFillStyle() == 0;
+   Bool_t axistop = fParentPad->GetTickx() == 1 || mirroredAxes;
+   Bool_t axisright = fParentPad->GetTicky() == 1 || mirroredAxes;
 
+   Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+   Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
+
+   Double_t upYFirst = fUpperPad->GetUymin();
+   Double_t upYLast = fUpperPad->GetUymax();
+   Double_t lowYFirst = fLowerPad->GetUymin();
+   Double_t lowYLast = fLowerPad->GetUymax();
+
+   if (!fUpperGXaxis) {
+      fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U");
+      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxis);
+   }
+
+   if (!fUpperGYaxis) {
+      fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S");
+      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxis);
+   }
+
+   if (!fLowerGXaxis) {
+      fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S");
+      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxis);
+   }
+
+   if (!fLowerGYaxis) {
+      fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S");
+      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxis);
+   }
+
+   // Create the axes on the other sides of the graphs
+   // This is steered by an option on the containing pad or self
+
+   if (!fUpperGXaxisMirror && axistop) {
+      fUpperGXaxisMirror = static_cast<TGaxis *>(fUpperGXaxis->Clone());
+      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxisMirror);
+   }
+
+   if (!fLowerGXaxisMirror && axistop) {
+      fLowerGXaxisMirror = static_cast<TGaxis *>(fLowerGXaxis->Clone());
+      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxisMirror);
+   }
+
+   if (!fUpperGYaxisMirror && axisright) {
+      fUpperGYaxisMirror = static_cast<TGaxis *>(fUpperGYaxis->Clone());
+      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxisMirror);
+   }
+
+   if (!fLowerGYaxisMirror && axisright) {
+      fLowerGYaxisMirror = static_cast<TGaxis *>(fLowerGYaxis->Clone());
+      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxisMirror);
+   }
+
+   UpdateVisualAxes();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update TGaxis attributes
+
+void TRatioPlot::UpdateVisualAxes()
+{
    // this is for errors
-   static const char *thisfunc = "CreateVisualAxes";
+   static const char *thisMethod = "UpdateVisualAxes";
 
    // figure out where the axis has to go.
    // Implicit assumption is, that the top pad spans the full other pads
@@ -1103,11 +1166,6 @@ void TRatioPlot::CreateVisualAxes()
 
    Float_t sf = fSplitFraction;
 
-   // check if gPad has the all sides axis set
-   Bool_t mirroredAxes = fParentPad->GetFrameFillStyle() == 0;
-   Bool_t axistop = fParentPad->GetTickx() == 1 || mirroredAxes;
-   Bool_t axisright = fParentPad->GetTicky() == 1 || mirroredAxes;
-
    Bool_t logx = fUpperPad->GetLogx() || fLowerPad->GetLogx();
    Bool_t uplogy = fUpperPad->GetLogy();
    Bool_t lowlogy = fLowerPad->GetLogy();
@@ -1118,7 +1176,7 @@ void TRatioPlot::CreateVisualAxes()
       upYLast = TMath::Power(10, upYLast);
 
       if (upYFirst <= 0 || upYLast <= 0) {
-         Error(thisfunc, "Cannot set upper Y axis to log scale");
+         Error(thisMethod, "Cannot set upper Y axis to log scale");
       }
    }
 
@@ -1127,7 +1185,7 @@ void TRatioPlot::CreateVisualAxes()
       lowYLast = TMath::Power(10, lowYLast);
 
       if (lowYFirst <= 0 || lowYLast <= 0) {
-         Error(thisfunc, "Cannot set lower Y axis to log scale");
+         Error(thisMethod, "Cannot set lower Y axis to log scale");
       }
 
    }
@@ -1135,38 +1193,14 @@ void TRatioPlot::CreateVisualAxes()
    // this is different than in y, y already has pad coords converted, x not...
    if (logx) {
       if (first <= 0 || last <= 0) {
-         Error(thisfunc, "Cannot set X axis to log scale");
+         Error(thisMethod, "Cannot set X axis to log scale");
       }
    }
 
    // determine axes options to create log axes if needed
-   TString xopt = "";
-   if (logx) xopt.Append("G");
-   TString upyopt = "";
-   if (uplogy) upyopt.Append("G");
-   TString lowyopt = "";
-   if (lowlogy) lowyopt.Append("G");
-
-   // only actually create them once, reuse otherwise b/c memory
-   if (!fUpperGXaxis) {
-      fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U"+xopt);
-      fUpperGXaxis->Draw();
-   }
-
-   if (!fUpperGYaxis) {
-      fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S"+upyopt);
-      fUpperGYaxis->Draw();
-   }
-
-   if (!fLowerGXaxis) {
-      fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S"+xopt);
-      fLowerGXaxis->Draw();
-   }
-
-   if (!fLowerGYaxis) {
-      fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S"+lowyopt);
-      fLowerGYaxis->Draw();
-   }
+   TString xopt = logx ? "G" : "";
+   TString upyopt = uplogy ? "G" : "";
+   TString lowyopt = lowlogy ? "G" : "";
 
    // import infos from TAxis
    ImportAxisAttributes(fUpperGXaxis, GetUpperRefXaxis());
@@ -1255,88 +1289,62 @@ void TRatioPlot::CreateVisualAxes()
       }
    }
 
-   // Create the axes on the other sides of the graphs
-   // This is steered by an option on the containing pad or self
-   if (axistop || axisright) {
+   // move them about and set required positions
+   if (fUpperGXaxisMirror) {
+      ImportAxisAttributes(fUpperGXaxisMirror, GetUpperRefXaxis());
+      fUpperGXaxisMirror->SetTitle("");
+      fUpperGXaxisMirror->SetX1(upLM);
+      fUpperGXaxisMirror->SetX2(1-upRM);
+      fUpperGXaxisMirror->SetY1((1-upTM)*(1-sf)+sf);
+      fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
+      fUpperGXaxisMirror->SetWmin(first);
+      fUpperGXaxisMirror->SetWmax(last);
+      fUpperGXaxisMirror->SetOption("-S"+xopt);
+      fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+      fUpperGXaxisMirror->SetLabelSize(0.);
+   }
 
-      // only actually create them once, reuse otherwise b/c memory
-      if (!fUpperGXaxisMirror && axistop) {
-         fUpperGXaxisMirror = static_cast<TGaxis *>(fUpperGXaxis->Clone());
-         fUpperGXaxisMirror->Draw();
-      }
+   if (fUpperGYaxisMirror) {
+      ImportAxisAttributes(fUpperGYaxisMirror, GetUpperRefYaxis());
+      fUpperGYaxisMirror->SetTitle("");
+      fUpperGYaxisMirror->SetX1(1-upRM);
+      fUpperGYaxisMirror->SetX2(1-upRM);
+      fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
+      fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
+      fUpperGYaxisMirror->SetWmin(upYFirst);
+      fUpperGYaxisMirror->SetWmax(upYLast);
+      fUpperGYaxisMirror->SetOption("+S"+upyopt);
+      fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
+      fUpperGYaxisMirror->SetLabelSize(0.);
+   }
 
-      if (!fLowerGXaxisMirror && axistop) {
-         fLowerGXaxisMirror = static_cast<TGaxis *>(fLowerGXaxis->Clone());
-         fLowerGXaxisMirror->Draw();
-      }
+   if (fLowerGXaxisMirror) {
+      ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
+      fLowerGXaxisMirror->SetTitle("");
+      fLowerGXaxisMirror->SetX1(lowLM);
+      fLowerGXaxisMirror->SetX2(1-lowRM);
+      fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
+      fLowerGXaxisMirror->SetY2((1-lowTM)*sf);
+      fLowerGXaxisMirror->SetWmin(first);
+      fLowerGXaxisMirror->SetWmax(last);
+      fLowerGXaxisMirror->SetOption("-S"+xopt);
+      fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+      fLowerGXaxisMirror->SetLabelSize(0.);
+   }
 
-      if (!fUpperGYaxisMirror && axisright) {
-         fUpperGYaxisMirror = static_cast<TGaxis *>(fUpperGYaxis->Clone());
-         fUpperGYaxisMirror->Draw();
-      }
-
-      if (!fLowerGYaxisMirror && axisright) {
-         fLowerGYaxisMirror = static_cast<TGaxis *>(fLowerGYaxis->Clone());
-         fLowerGYaxisMirror->Draw();
-      }
-
-      // move them about and set required positions
-      if (fUpperGXaxisMirror) {
-         ImportAxisAttributes(fUpperGXaxisMirror, GetUpperRefXaxis());
-         fUpperGXaxisMirror->SetTitle("");
-         fUpperGXaxisMirror->SetX1(upLM);
-         fUpperGXaxisMirror->SetX2(1-upRM);
-         fUpperGXaxisMirror->SetY1((1-upTM)*(1-sf)+sf);
-         fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
-         fUpperGXaxisMirror->SetWmin(first);
-         fUpperGXaxisMirror->SetWmax(last);
-         fUpperGXaxisMirror->SetOption("-S"+xopt);
-         fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
-         fUpperGXaxisMirror->SetLabelSize(0.);
-      }
-
-      if (fUpperGYaxisMirror) {
-         ImportAxisAttributes(fUpperGYaxisMirror, GetUpperRefYaxis());
-         fUpperGYaxisMirror->SetTitle("");
-         fUpperGYaxisMirror->SetX1(1-upRM);
-         fUpperGYaxisMirror->SetX2(1-upRM);
-         fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
-         fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
-         fUpperGYaxisMirror->SetWmin(upYFirst);
-         fUpperGYaxisMirror->SetWmax(upYLast);
-         fUpperGYaxisMirror->SetOption("+S"+upyopt);
-         fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
-         fUpperGYaxisMirror->SetLabelSize(0.);
-      }
-
-      if (fLowerGXaxisMirror) {
-         ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
-         fLowerGXaxisMirror->SetTitle("");
-         fLowerGXaxisMirror->SetX1(lowLM);
-         fLowerGXaxisMirror->SetX2(1-lowRM);
-         fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
-         fLowerGXaxisMirror->SetY2((1-lowTM)*sf);
-         fLowerGXaxisMirror->SetWmin(first);
-         fLowerGXaxisMirror->SetWmax(last);
-         fLowerGXaxisMirror->SetOption("-S"+xopt);
-         fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
-         fLowerGXaxisMirror->SetLabelSize(0.);
-      }
-
-      if (fLowerGYaxisMirror) {
-         ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
-         fLowerGYaxisMirror->SetTitle("");
-         fLowerGYaxisMirror->SetX1(1-lowRM);
-         fLowerGYaxisMirror->SetX2(1-lowRM);
-         fLowerGYaxisMirror->SetY1(lowBM*sf);
-         fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
-         fLowerGYaxisMirror->SetWmin(lowYFirst);
-         fLowerGYaxisMirror->SetWmax(lowYLast);
-         fLowerGYaxisMirror->SetOption("+S"+lowyopt);
-         fLowerGYaxisMirror->SetTickSize(ticksize);
-         fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
-         fLowerGYaxisMirror->SetLabelSize(0.);
-      }
+   if (fLowerGYaxisMirror) {
+      ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
+      fLowerGYaxisMirror->SetTitle("");
+      fLowerGYaxisMirror->SetX1(1-lowRM);
+      fLowerGYaxisMirror->SetX2(1-lowRM);
+      fLowerGYaxisMirror->SetY1(lowBM*sf);
+      fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
+      fLowerGYaxisMirror->SetWmin(lowYFirst);
+      fLowerGYaxisMirror->SetWmax(lowYLast);
+      fLowerGYaxisMirror->SetOption("+S"+lowyopt);
+      fLowerGYaxisMirror->SetTickSize(ticksize);
+      fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
+      fLowerGYaxisMirror->SetLabelSize(0.);
    }
 
 }
@@ -1488,7 +1496,7 @@ void TRatioPlot::RangeAxisChanged()
 
    if (upChanged || lowChanged) {
       SyncAxesRanges();
-      CreateVisualAxes();
+      UpdateVisualAxes();
       UpdateGridlines();
 
       // @TODO: Updating is not working when zooming on the lower plot. Axes update, but upper hist only on resize
@@ -1508,7 +1516,7 @@ void TRatioPlot::RangeAxisChanged()
       fParentPad->Modified();
    }
 
-   CreateVisualAxes();
+   UpdateVisualAxes();
    UpdateGridlines();
    fIsUpdating = kFALSE;
 }
@@ -1561,7 +1569,7 @@ void TRatioPlot::SubPadResized()
    }
 
    if (changed) {
-      CreateVisualAxes();
+      UpdateVisualAxes();
    }
 
    fIsPadUpdating = kFALSE;
