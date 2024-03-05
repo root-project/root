@@ -2929,7 +2929,7 @@ void TH2C::AddBinContent(Int_t bin)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w.
+/// Increment bin content by Int_t(w).
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH2C::AddBinContent(Int_t bin, Double_t w)
@@ -3192,7 +3192,7 @@ void TH2S::AddBinContent(Int_t bin)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w.
+/// Increment bin content by Int_t(w).
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH2S::AddBinContent(Int_t bin, Double_t w)
@@ -3455,7 +3455,7 @@ void TH2I::AddBinContent(Int_t bin)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w.
+/// Increment bin content by Long64_t(w).
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH2I::AddBinContent(Int_t bin, Double_t w)
@@ -3674,6 +3674,7 @@ TH2L::TH2L(const TH2L &h2l) : TH2(), TArrayL64()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2L::AddBinContent(Int_t bin)
 {
@@ -3682,7 +3683,8 @@ void TH2L::AddBinContent(Int_t bin)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w.
+/// Increment bin content by Long64_t(w).
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2L::AddBinContent(Int_t bin, Double_t w)
 {

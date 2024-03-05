@@ -9509,7 +9509,7 @@ void TH1C::AddBinContent(Int_t bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w.
+/// Increment bin content by Int_t(w).
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1C::AddBinContent(Int_t bin, Double_t w)
@@ -9694,7 +9694,7 @@ void TH1S::AddBinContent(Int_t bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w
+/// Increment bin content by Int_t(w)
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1S::AddBinContent(Int_t bin, Double_t w)
@@ -9880,7 +9880,7 @@ void TH1I::AddBinContent(Int_t bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w
+/// Increment bin content by Long64_t(w)
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1I::AddBinContent(Int_t bin, Double_t w)
@@ -10067,7 +10067,7 @@ void TH1L::AddBinContent(Int_t bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w
+/// Increment bin content by Long64_t(w)
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1L::AddBinContent(Int_t bin, Double_t w)
