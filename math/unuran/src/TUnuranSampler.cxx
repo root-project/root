@@ -54,7 +54,7 @@ bool TUnuranSampler::Init(const char * algo) {
    // try to initialize Unuran
    if (NDim() == 0)  {
       ret = fUnuran->Init(algo,"");
-      if (!ret) { 
+      if (!ret) {
          Error("TUnuranSampler::Init",
          "Unuran initialization string is invalid or the Distribution function has not been set and one needs to call SetFunction first.");
          return false;
@@ -62,7 +62,7 @@ bool TUnuranSampler::Init(const char * algo) {
       int ndim = fUnuran->GetDimension();
       assert(ndim > 0);
       fOneDim = (ndim == 1);
-      fDiscrete = fUnuran->IsDistDiscrete(); 
+      fDiscrete = fUnuran->IsDistDiscrete();
       DoSetDimension(ndim);
       return true;
    }
@@ -123,17 +123,17 @@ bool TUnuranSampler::Init(const ROOT::Math::DistSamplerOptions & opt ) {
       for ( auto & name : names) {
          std::string value = opts->NamedValue(name.c_str());
          appendOption(name,value);
-      } 
+      }
       names = opts->GetAllIntKeys();
       for ( auto & name : names) {
          std::string value = ROOT::Math::Util::ToString(opts->IValue(name.c_str()));
          appendOption(name,value);
-      } 
+      }
       names = opts->GetAllRealKeys();
       for ( auto & name : names) {
          std::string value = ROOT::Math::Util::ToString(opts->RValue(name.c_str()));
          appendOption(name,value);
-      } 
+      }
    }
    Info("Init","Initialize UNU.RAN with Method option string: %s",optionStr.c_str());
    return Init(optionStr.c_str() );
@@ -235,11 +235,6 @@ bool TUnuranSampler::DoInitND(const char * method) {
       std::vector<double> xmax(range.NDim() );
       range.GetRange(&xmin[0],&xmax[0]);
       dist.SetDomain(&xmin.front(),&xmax.front());
-//       std::cout << " range is min = ";
-//       for (int j = 0; j < NDim(); ++j) std::cout << xmin[j] << "   ";
-//       std::cout << " max = ";
-//       for (int j = 0; j < NDim(); ++j) std::cout << xmax[j] << "   ";
-//       std::cout << std::endl;
    }
    fOneDim = false;
    if (fHasMode && fNDMode.size() == dist.NDim())
@@ -297,7 +292,7 @@ void TUnuranSampler::SetMode(const std::vector<double> &mode)
    if (mode.size() == ParentPdf().NDim()) {
       if (mode.size() == 1)
          fMode = mode[0];
-      else 
+      else
          fNDMode = mode;
 
       fHasMode = true;
@@ -315,7 +310,7 @@ void TUnuranSampler::SetCdf(const ROOT::Math::IGenFunction &cdf) {
    if (NDim() == 0) DoSetDimension(1);
 }
 
-void TUnuranSampler::SetDPdf(const ROOT::Math::IGenFunction &dpdf) { 
+void TUnuranSampler::SetDPdf(const ROOT::Math::IGenFunction &dpdf) {
    fDPDF = &dpdf;
    // in case dimension has not been defined ( a pdf is not provided)
    if (NDim() == 0) DoSetDimension(1);
