@@ -630,7 +630,7 @@ public:
    TH1F& operator=(const TH1F &h1);
    ~TH1F() override;
 
-   void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   void     AddBinContent(Int_t bin) override {if (fArray[bin] < 16777216.f) ++fArray[bin];}
    void     AddBinContent(Int_t bin, Double_t w) override
                           { fArray[bin] += Float_t (w); }
    void     Copy(TObject &hnew) const override;
@@ -673,7 +673,7 @@ public:
    TH1D& operator=(const TH1D &h1);
    ~TH1D() override;
 
-   void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   void     AddBinContent(Int_t bin) override {if (fArray[bin] < 9007199254740992.) ++fArray[bin];}
    void     AddBinContent(Int_t bin, Double_t w) override
                           {fArray[bin] += Double_t (w);}
    void     Copy(TObject &hnew) const override;
