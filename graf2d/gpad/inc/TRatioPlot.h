@@ -82,7 +82,7 @@ protected:
    Bool_t fHistDrawProxyStack = kFALSE; ///< If stack was assigned as proxy
 
    Int_t fMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
-   Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
+   Int_t fErrorMode = ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
    TString fOption = ""; ///< Stores the option which is given in the constructor as a string
    TString fH1DrawOpt = ""; ///< Stores draw option for h1 given in constructor
    TString fH2DrawOpt = ""; ///< Stores draw option for h2 given in constructor
@@ -123,7 +123,7 @@ protected:
    std::vector<TLine*> fGridlines; ///< Keeps TLine objects for the gridlines
    std::vector<double> fGridlinePositions; ///< Stores the y positions for the gridlines
    Bool_t fShowGridlines = kTRUE; ///< Stores whether to show the gridlines at all
-   Int_t fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; ///< Stores which label to hide if the margin is to narrow, if at all
+   Int_t fHideLabelMode = HideLabelMode::kHideLow; ///< Stores which label to hide if the margin is to narrow, if at all
 
    // store margins to be able do determine
    // what has changed when user drags
