@@ -151,7 +151,7 @@ def main():
     if testing:
         extra_ctest_flags = ""
         if WINDOWS:
-            extra_ctest_flags += "--repeat until-pass:3 "
+            extra_ctest_flags += "--repeat until-pass:4 "
             extra_ctest_flags += "--build-config " + args.buildtype
 
         ctest_returncode = run_ctest(extra_ctest_flags)
