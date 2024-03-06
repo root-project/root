@@ -607,10 +607,8 @@ TObjArray *THStack::GetStack()
 
 TAxis *THStack::GetXaxis() const
 {
-   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return nullptr;
-   return h->GetXaxis();
+   return h ? h->GetXaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,10 +620,8 @@ TAxis *THStack::GetXaxis() const
 
 TAxis *THStack::GetYaxis() const
 {
-   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return nullptr;
-   return h->GetYaxis();
+   return h ? h->GetYaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,7 +633,6 @@ TAxis *THStack::GetYaxis() const
 
 TAxis *THStack::GetZaxis() const
 {
-   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
    if (!h) return nullptr;
    if (h->GetDimension() == 1)
