@@ -826,11 +826,14 @@ class RNTupleHeadNode(HeadNode):
 
         self.mainntuplename = args[0]
         self.inputfiles = args[1]
+        # Keep this in accordance with the implementation of TTree for now
         self.subnames = [self.mainntuplename] * len(self.inputfiles)
 
     def _build_ranges(self) -> List[Ranges.DataRange]:
         # """Build the ranges for this dataset."""
-        return Ranges.get_ntuple_ranges(self.subnames, self.inputfiles, self.npartitions, self.exec_id)
+        # For the moment, we explicitly pass only one "subname", since there is
+        # only one name possible for the whole RNTuple
+        return Ranges.get_ntuple_ranges(self.mainntuplename, self.inputfiles, self.npartitions, self.exec_id)
     
     def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
