@@ -390,8 +390,6 @@ void TRatioPlot::SetupPads()
    fTopPad = new TPad("top_pad", "", pm*f, pm, 1-pm*f, 1-pm);
 
    fTopPad->SetBit(kCannotPick);
-
-   ConnectPadsSignals();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -577,8 +575,11 @@ void TRatioPlot::Draw(Option_t *option)
       return;
    }
 
-   TVirtualPad *padsav = gPad;
    fParentPad = gPad;
+
+   // draw ratio plot as very first object
+   // when painting one can update all attributes before other objects are painted
+   AppendPad();
 
    fUpperPad->SetLogy(fParentPad->GetLogy());
    fUpperPad->SetLogx(fParentPad->GetLogx());
@@ -657,8 +658,11 @@ void TRatioPlot::Draw(Option_t *option)
 
    CreateGridlines();
 
-   padsav->cd();
-   AppendPad();
+   // restore active pad at the end
+   fParentPad->cd();
+
+   // only after object drawn connect signals
+   ConnectPadsSignals();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -813,10 +817,14 @@ void TRatioPlot::UpdateGridlines()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates the visual axes when painting.
+/// Update the visual axes and grid lines when painting
 
 void TRatioPlot::Paint(Option_t * /*opt*/)
 {
+   // painting invoked before object drawn to the end - just ignore here
+   if (!fUpperGXaxis)
+      return;
+
    ConnectPadsSignals();
 
    UpdateVisualAxes();
@@ -841,7 +849,6 @@ void TRatioPlot::SyncAxesRanges()
    ref->SetRangeUser(first, last);
 
    GetUpperRefXaxis()->SetRangeUser(first, last);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
