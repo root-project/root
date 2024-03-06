@@ -319,7 +319,7 @@ public:
 
            /// Increment bin content by 1.
            /// Passing an out-of-range bin leads to undefined behavior
-           void      AddBinContent(Int_t bin) override {if (fArray[bin] < 16777216.f) ++fArray[bin];}
+           void      AddBinContent(Int_t bin) override {if (fArray[bin] < 2/FLT_EPSILON) ++fArray[bin];}
            /// Increment bin content by a weight Float_t(w).
            /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
@@ -362,7 +362,7 @@ public:
 
            /// Increment bin content by 1.
            /// Passing an out-of-range bin leads to undefined behavior
-           void      AddBinContent(Int_t bin) override {if (fArray[bin] < 9007199254740992.) ++fArray[bin];}
+           void      AddBinContent(Int_t bin) override {++fArray[bin];}
            /// Increment bin content by a weight w
            /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
