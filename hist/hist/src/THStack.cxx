@@ -989,13 +989,9 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
 
 void THStack::Print(Option_t *option) const
 {
-   TH1 *h;
-   if (fHists) {
-      TIter   next(fHists);
-      while ((h = (TH1*) next())) {
-         h->Print(option);
-      }
-   }
+   TIter   next(fHists);
+   while (auto h = next())
+      h->Print(option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
