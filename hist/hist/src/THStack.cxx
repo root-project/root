@@ -347,11 +347,14 @@ THStack::THStack(const THStack &hstack) :
    fMaximum(hstack.fMaximum),
    fMinimum(hstack.fMinimum)
 {
-   if (hstack.GetHists()) {
-      TIter next(hstack.GetHists());
-      TH1 *h;
-      while ((h=(TH1*)next())) Add(h);
+   {
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
    }
+
+   TIter next(hstack.GetHists());
+   while (auto h = static_cast<TH1 *>(next()))
+      Add(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
