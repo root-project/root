@@ -52,6 +52,7 @@ Global auxiliary applications and data treatment routines.
 #include "TList.h"
 #include "TSpline.h"
 #include "TVector.h"
+#include "TDecompChol.h"
 #include "TMatrixD.h"
 #include "TMatrixDSymEigen.h"
 #include "TVectorD.h"
@@ -270,52 +271,26 @@ void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vec
 
 TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
 {
-   Int_t n = symMat->GetNrows();
-
-   // compute eigenvectors
-   TMatrixDSymEigen* eigen = new TMatrixDSymEigen( *symMat );
-
-   // D = ST C S
-   TMatrixD* si = new TMatrixD( eigen->GetEigenVectors() );
-   TMatrixD* s  = new TMatrixD( *si ); // copy
-   si->Transpose( *si ); // invert (= transpose)
-
-   // diagonal matrices
-   TMatrixD* d = new TMatrixD( n, n);
-   d->Mult( (*si), (*symMat) ); (*d) *= (*s);
-
-   // sanity check: matrix must be diagonal and positive definit
-   Int_t i, j;
-   Double_t epsilon = 1.0e-8;
-   for (i=0; i<n; i++) {
-      for (j=0; j<n; j++) {
-         if ((i != j && TMath::Abs((*d)(i,j))/TMath::Sqrt((*d)(i,i)*(*d)(j,j)) > epsilon) ||
-             (i == j && (*d)(i,i) < 0)) {
-            //d->Print();
-            Log() << kWARNING << "<GetSQRootMatrix> error in matrix diagonalization; printed S and B" << Endl;
-         }
-      }
+   TDecompChol chol(*symMat);
+   if (!chol.Decompose())
+   {
+      Log() << kWARNING << "<GetSQRootMatrix> matrix not positive definite; printed S and B" << Endl;
    }
 
-   // make exactly diagonal
-   for (i=0; i<n; i++) for (j=0; j<n; j++) if (j != i) (*d)(i,j) = 0;
+   TMatrixDSymEigen eigen = TMatrixDSymEigen(*symMat);
+   TMatrixD s = eigen.GetEigenVectors();
+   TMatrixDSym d_sqrt(symMat->GetNrows());
+   TMatrixDDiag d_diag(d_sqrt);
+   d_diag = eigen.GetEigenValues();
+   d_sqrt.Sqrt();
 
-   // compute the square-root C' of covariance matrix: C = C'*C'
-   for (i=0; i<n; i++) (*d)(i,i) = TMath::Sqrt((*d)(i,i));
-
-   TMatrixD* sqrtMat = new TMatrixD( n, n );
-   sqrtMat->Mult( (*s), (*d) );
-   (*sqrtMat) *= (*si);
+   // s d s^T
+   d_sqrt.Similarity(s);
 
    // invert square-root matrices
-   sqrtMat->Invert();
+   d_sqrt.Invert();
 
-   delete eigen;
-   delete s;
-   delete si;
-   delete d;
-
-   return sqrtMat;
+   return new TMatrixD(d_sqrt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
