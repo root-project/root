@@ -331,7 +331,8 @@ void FilterTutorial()
       FILE *cn = fopen("CleanNamespaces.sh", "a");
       string name = gMacroName;
       ReplaceAll(name,".py","");
-      if (cn) fprintf(cn,"./modifyNamespacesWebpage.sh %s\n",name.c_str());
+      if (cn)
+         fprintf(cn,"./modifyNamespacesWebpage.sh %s\n",name.c_str());
       fclose(cn);
    }
 
