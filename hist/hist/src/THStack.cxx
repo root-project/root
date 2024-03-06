@@ -719,19 +719,16 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
       if (l3) memcpy(l3,"   ",3);
       TString ws = option;
       if (ws.IsWhitespace()) strncpy(option,"\0",1);
-      TH1* hAti;
-      TH1* hsAti;
       Int_t nhists = fHists->GetSize();
-      Int_t ic;
       gPad->IncrementPaletteColor(nhists, opt1);
-      for (Int_t i=0;i<nhists;i++) {
-         ic = gPad->NextPaletteColor();
-         hAti = (TH1F*)(fHists->At(i));
+      for (Int_t i = 0; i < nhists; i++) {
+         auto ic = gPad->NextPaletteColor();
+         auto hAti = static_cast<TH1 *>(fHists->At(i));
          if (l1) hAti->SetFillColor(ic);
          if (l2) hAti->SetLineColor(ic);
          if (l3) hAti->SetMarkerColor(ic);
          if (fStack) {
-            hsAti = (TH1*)fStack->At(i);
+            auto hsAti = static_cast<TH1 *>(fStack->At(i));
             if (l1) hsAti->SetFillColor(ic);
             if (l2) hsAti->SetLineColor(ic);
             if (l3) hsAti->SetMarkerColor(ic);
@@ -757,9 +754,8 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
       TVirtualPad *padsav = gPad;
       //if pad is not already divided into subpads, divide it
       Int_t nps = 0;
-      TObject *obj;
       TIter nextp(padsav->GetListOfPrimitives());
-      while ((obj = nextp())) {
+      while (auto obj = nextp()) {
          if (obj->InheritsFrom(TVirtualPad::Class())) nps++;
       }
       if (nps < npads) {
