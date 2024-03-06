@@ -414,16 +414,6 @@ void TRatioPlot::ConnectPadsSignals()
 
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Browse.
-
-void TRatioPlot::Browse(TBrowser *b)
-{
-   Draw(b ? b->GetDrawOption() : "");
-   gPad->Update();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the top margin of the upper pad.
 ///
@@ -1547,7 +1537,6 @@ void TRatioPlot::UnZoomed()
 
 void TRatioPlot::SubPadResized()
 {
-
    if (fIsUpdating)
       return;
 
@@ -1574,7 +1563,6 @@ void TRatioPlot::SubPadResized()
       UpdateVisualAxes();
 
    fIsUpdating = kFALSE;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1584,6 +1572,11 @@ void TRatioPlot::SetSplitFraction(Float_t sf)
 {
    if (!fParentPad) {
       Warning("SetSplitFraction", "Can only be used after TRatioPlot has been drawn.");
+      return;
+   }
+
+   if ((sf < 0.0001) || (sf > 0.9999)) {
+      Warning("SetSplitFraction", "Value %f is out of allowed range", sf);
       return;
    }
 
