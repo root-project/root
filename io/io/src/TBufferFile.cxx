@@ -1995,19 +1995,19 @@ void TBufferFile::WriteFastArray(const Char_t *c, Long64_t n)
 
 void TBufferFile::WriteFastArrayString(const Char_t *c, Long64_t n)
 {
-   if (n < 255) {
-      *this << (UChar_t)n;
-   } else {
-      *this << (UChar_t)255;
-      *this << n;
-   }
-
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Char_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
       Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
       return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
+
+   if (n < 255) {
+      *this << (UChar_t)n;
+   } else {
+      *this << (UChar_t)255;
+      *this << (Int_t)n;
    }
 
    Int_t l = sizeof(Char_t)*n;
