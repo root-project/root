@@ -41,6 +41,7 @@
 #include <new>
 #include <set>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <typeinfo>
 #include <variant>
@@ -617,6 +618,11 @@ public:
    /// Factory method to resurrect a field from the stored on-disk type information
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &typeName);
+   /// Checks if the given type name is supported by RNTuple. In case of success, the result vector is empty.
+   /// Otherwise there is an error message for each failing sub field (sub type) of the form
+   /// (qualified field name, type name, error).
+   static std::vector<std::tuple<std::string, std::string, std::string>>
+   Check(const std::string &fieldName, const std::string &typeName);
    /// Check whether a given string is a valid field name
    static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 

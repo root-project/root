@@ -4,9 +4,11 @@
 #include <RtypesCore.h> // for Double32_t
 #include <TRootIOCtor.h>
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <random>
 #include <string>
 #include <variant>
 #include <vector>
@@ -206,6 +208,14 @@ struct StructWithIORules : StructWithIORulesBase {
 
 class Cyclic {
    std::vector<Cyclic> fMember;
+};
+
+class Unsupported {
+   float a;
+   std::chrono::time_point<std::chrono::system_clock> timestamp;
+   float b;
+   std::random_device rd;
+   float z;
 };
 
 #endif

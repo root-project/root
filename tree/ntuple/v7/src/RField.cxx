@@ -540,6 +540,27 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias));
 }
 
+std::vector<std::tuple<std::string, std::string, std::string>>
+ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::string &typeName)
+{
+   auto typeAlias = GetNormalizedTypeName(typeName);
+   auto canonicalType = GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
+
+   RFieldZero fieldZero;
+   fieldZero.Attach(RFieldBase::Create(fieldName, canonicalType, typeAlias, true /* continueOnError */).Unwrap());
+
+   std::vector<std::tuple<std::string, std::string, std::string>> result;
+   for (const auto &f : fieldZero) {
+      auto invalidField = dynamic_cast<const RInvalidField *>(&f);
+      if (!invalidField)
+         continue;
+
+      result.emplace_back(
+         std::make_tuple(invalidField->GetQualifiedFieldName(), invalidField->GetTypeName(), invalidField->GetError()));
+   }
+   return result;
+}
+
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
                                        const std::string &typeAlias, bool continueOnError)
@@ -549,8 +570,16 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    if (continueOnError)
       createContextGuard.SetConinueOnError(true);
 
+   auto fnFail = [&fieldName, &canonicalType](const std::string &errMsg) -> RResult<std::unique_ptr<RFieldBase>> {
+      if (createContext.GetContinueOnError()) {
+         return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, canonicalType, errMsg));
+      } else {
+         return R__FAIL(errMsg);
+      }
+   };
+
    if (canonicalType.empty())
-      return R__FAIL("no type name specified for Field " + fieldName);
+      return R__FORWARD_RESULT(fnFail("no type name specified for field '" + fieldName + "'"));
 
    if (auto [arrayBaseType, arraySizes] = ParseArrayType(canonicalType); !arraySizes.empty()) {
       std::unique_ptr<RFieldBase> arrayField = Create("_0", arrayBaseType).Unwrap();
@@ -609,7 +638,9 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       result = std::make_unique<RRVecField>(fieldName, itemField.Unwrap());
    } else if (canonicalType.substr(0, 11) == "std::array<") {
       auto arrayDef = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
-      R__ASSERT(arrayDef.size() == 2);
+      if (arrayDef.size() != 2) {
+         return R__FORWARD_RESULT(fnFail("the template list for std::array must have exactly two elements"));
+      }
       auto arrayLength = std::stoi(arrayDef[1]);
       auto itemField = Create("_0", arrayDef[0]);
       result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
@@ -622,8 +653,9 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       result = std::make_unique<RVariantField>(fieldName, items);
    } else if (canonicalType.substr(0, 10) == "std::pair<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(10, canonicalType.length() - 11));
-      if (innerTypes.size() != 2)
-         return R__FAIL("the type list for std::pair must have exactly two elements");
+      if (innerTypes.size() != 2) {
+         return R__FORWARD_RESULT(fnFail("the type list for std::pair must have exactly two elements"));
+      }
       std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
                                                        Create("_1", innerTypes[1]).Unwrap()};
       result = std::make_unique<RPairField>(fieldName, items);
@@ -657,8 +689,9 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                                            std::move(itemField));
    } else if (canonicalType.substr(0, 9) == "std::map<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(9, canonicalType.length() - 10));
-      if (innerTypes.size() != 2)
-         return R__FAIL("the type list for std::map must have exactly two elements");
+      if (innerTypes.size() != 2) {
+         return R__FORWARD_RESULT(fnFail("the type list for std::map must have exactly two elements"));
+      }
 
       auto normalizedKeyTypeName = GetNormalizedTypeName(innerTypes[0]);
       auto normalizedValueTypeName = GetNormalizedTypeName(innerTypes[1]);
@@ -670,7 +703,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } else if (canonicalType.substr(0, 19) == "std::unordered_map<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(19, canonicalType.length() - 20));
       if (innerTypes.size() != 2)
-         return R__FAIL("the type list for std::unordered_map must have exactly two elements");
+         return R__FORWARD_RESULT(fnFail("the type list for std::unordered_map must have exactly two elements"));
 
       auto normalizedKeyTypeName = GetNormalizedTypeName(innerTypes[0]);
       auto normalizedValueTypeName = GetNormalizedTypeName(innerTypes[1]);
@@ -689,32 +722,41 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } else if (canonicalType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(39, canonicalType.length() - 40));
       if (innerTypes.size() != 1)
-         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + canonicalType);
+         return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
       if (innerTypes[0] == "std::uint32_t") {
          result = std::make_unique<RField<RNTupleCardinality<std::uint32_t>>>(fieldName);
       } else if (innerTypes[0] == "std::uint64_t") {
          result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
       } else {
-         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + canonicalType);
+         return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
       }
    }
 
-   if (!result) {
-      auto e = TEnum::GetEnum(canonicalType.c_str());
-      if (e != nullptr) {
-         result = std::make_unique<REnumField>(fieldName, canonicalType);
-      }
-   }
-
-   if (!result) {
-      auto cl = TClass::GetClass(canonicalType.c_str());
-      if (cl != nullptr) {
-         if (cl->GetCollectionProxy()) {
-            result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
-         } else {
-            createContextGuard.AddClassToStack(canonicalType);
-            result = std::make_unique<RClassField>(fieldName, canonicalType);
+   try {
+      if (!result) {
+         auto e = TEnum::GetEnum(canonicalType.c_str());
+         if (e != nullptr) {
+            result = std::make_unique<REnumField>(fieldName, canonicalType);
          }
+      }
+
+      if (!result) {
+         auto cl = TClass::GetClass(canonicalType.c_str());
+         if (cl != nullptr) {
+            if (cl->GetCollectionProxy()) {
+               result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
+            } else {
+               createContextGuard.AddClassToStack(canonicalType);
+               result = std::make_unique<RClassField>(fieldName, canonicalType);
+            }
+         }
+      }
+   } catch (RException &e) {
+      auto error = e.GetError();
+      if (createContext.GetContinueOnError()) {
+         std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, canonicalType, error.GetReport()));
+      } else {
+         return error;
       }
    }
 
@@ -723,7 +765,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result->fTypeAlias = typeAlias;
       return result;
    }
-   return R__FAIL(std::string("Field ") + fieldName + " has unknown type " + canonicalType);
+   return R__FORWARD_RESULT(fnFail("unknown type: " + canonicalType));
 }
 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RFieldBase::EnsureValidFieldName(std::string_view fieldName)
