@@ -2,7 +2,7 @@
 // Author: Paul Gessinger   25/08/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -763,6 +763,34 @@ TAxis *TRatioPlot::GetUpperRefYaxis() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Gets the x axis of the lower ref graph.
+/// Shortcut for:
+///
+/// ~~~{.cpp}
+/// rp->GetLowerRefGraph()->GetXaxis();
+/// ~~~
+
+TAxis *TRatioPlot::GetLowerRefXaxis() const
+{
+   auto gr = GetLowerRefGraph();
+   return gr ? gr->GetXaxis() : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Gets the y axis of the lower ref graph.
+/// Shortcut for:
+///
+/// ~~~{.cpp}
+/// rp->GetLowerRefGraph()->GetYaxis();
+/// ~~~
+
+TAxis *TRatioPlot::GetLowerRefYaxis() const
+{
+   auto gr = GetLowerRefGraph();
+   return gr ? gr->GetYaxis() : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create a grid lines
 
 void TRatioPlot::CreateGridlines()
@@ -830,7 +858,8 @@ void TRatioPlot::Paint(Option_t * /*opt*/)
    UpdateVisualAxes();
    UpdateGridlines();
 
-   if (fIsUpdating) fIsUpdating = kFALSE;
+   // in any case reset flag after painting
+   fIsUpdating = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1424,12 +1453,6 @@ Bool_t TRatioPlot::SyncPadMargins()
 
 void TRatioPlot::RangeAxisChanged()
 {
-   // check if the ratio plot is already drawn.
-   if (!IsDrawn()) {
-      // not drawn yet
-       return;
-   }
-
    // Only run this concurrently once, in case it's called async
    if (fIsUpdating)
       return;
@@ -1496,11 +1519,16 @@ void TRatioPlot::RangeAxisChanged()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot for the UnZoomed signal that was introduced to TAxis.
+/// Slot for the UnZoomed signal that was introduced to TPad.
 /// Unzoom both pads
 
 void TRatioPlot::UnZoomed()
 {
+   if (fIsUpdating)
+      return;
+
+   fIsUpdating = kTRUE;
+
    // this is what resets the range
    fSharedXAxis->SetRange(0, 0);
    SyncAxesRanges();
@@ -1510,6 +1538,8 @@ void TRatioPlot::UnZoomed()
    fLowerPad->Modified();
    fTopPad->Modified();
    fParentPad->Modified();
+
+   fIsUpdating = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1518,11 +1548,10 @@ void TRatioPlot::UnZoomed()
 void TRatioPlot::SubPadResized()
 {
 
-   if (fIsPadUpdating) {
+   if (fIsUpdating)
       return;
-   }
 
-   fIsPadUpdating = kTRUE;
+   fIsUpdating = kTRUE;
 
    Float_t upylow = fUpperPad->GetYlowNDC();
    Float_t lowylow = fLowerPad->GetYlowNDC();
@@ -1535,28 +1564,17 @@ void TRatioPlot::SubPadResized()
       // up changed
       SetSplitFraction(upylow);
       changed = kTRUE;
-   }
-   else if (lowyup != fSplitFraction) {
+   } else if (lowyup != fSplitFraction) {
       // low changed
       SetSplitFraction(lowyup);
       changed = kTRUE;
    }
 
-   if (changed) {
+   if (changed)
       UpdateVisualAxes();
-   }
 
-   fIsPadUpdating = kFALSE;
+   fIsUpdating = kFALSE;
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if ... is drawn.
-
-Bool_t TRatioPlot::IsDrawn()
-{
-   TList *siblings = fParentPad->GetListOfPrimitives();
-   return siblings->FindObject(this) != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
