@@ -321,16 +321,15 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
 
 THStack::~THStack()
 {
-
    {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
-   if (!fHists) return;
-
-   fHists->Clear("nodelete");
-   delete fHists;
-   fHists = nullptr;
+   if (fHists) {
+      fHists->Clear("nodelete");
+      delete fHists;
+      fHists = nullptr;
+   }
    if (fStack) {
       fStack->Delete();
       delete fStack;
