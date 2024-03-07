@@ -374,17 +374,18 @@ std::string AnnotatedRecordDecl::BuildDemangledTypeInfo(const clang::RecordDecl 
 /// There is no requested type name.
 /// Still let's normalized the actual name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
-                                         const clang::RecordDecl *decl,
-                                         bool rStreamerInfo,
-                                         bool rNoStreamer,
-                                         bool rRequestNoInputOperator,
-                                         bool rRequestOnlyTClass,
-                                         int rRequestedVersionNumber,
-                                         const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber)
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo,
+                                         bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass,
+                                         int rRequestedVersionNumber, int rRequestedRNTupleSplitMode,
+                                         const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestedVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
 {
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
    fDemangledTypeInfo = BuildDemangledTypeInfo(decl, fNormalizedName);
@@ -393,20 +394,20 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
-                                         const clang::Type *requestedType,
-                                         const clang::RecordDecl *decl,
-                                         const char *requestName,
-                                         unsigned int nTemplateArgsToSkip,
-                                         bool rStreamerInfo,
-                                         bool rNoStreamer,
-                                         bool rRequestNoInputOperator,
-                                         bool rRequestOnlyTClass,
-                                         int rRequestVersionNumber,
-                                         const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl,
+                                         const char *requestName, unsigned int nTemplateArgsToSkip, bool rStreamerInfo,
+                                         bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass,
+                                         int rRequestVersionNumber, int rRequestedRNTupleSplitMode,
+                                         const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -423,19 +424,20 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
-                                         const clang::Type *requestedType,
-                                         const clang::RecordDecl *decl,
-                                         const char *requestName,
-                                         bool rStreamerInfo,
-                                         bool rNoStreamer,
-                                         bool rRequestNoInputOperator,
-                                         bool rRequestOnlyTClass,
-                                         int rRequestVersionNumber,
-                                         const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl,
+                                         const char *requestName, bool rStreamerInfo, bool rNoStreamer,
+                                         bool rRequestNoInputOperator, bool rRequestOnlyTClass,
+                                         int rRequestVersionNumber, int rRequestedRNTupleSplitMode,
+                                         const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -448,17 +450,20 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
-                                         const clang::RecordDecl *decl,
-                                         const char *requestName,
-                                         bool rStreamerInfo,
-                                         bool rNoStreamer,
-                                         bool rRequestNoInputOperator,
-                                         bool rRequestOnlyTClass,
-                                         int rRequestVersionNumber,
-                                         const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer), fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName,
+                                         bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator,
+                                         bool rRequestOnlyTClass, int rRequestVersionNumber,
+                                         int rRequestedRNTupleSplitMode, const cling::Interpreter &interpreter,
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
    // if (tmplt_specialization) {
@@ -1982,6 +1987,17 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
 
       needCollectionProxy = true;
+   }
+   if (cl.RequestedRNTupleSplitMode() != 0) {
+      finalString << "      instance.GetClass()->CreateAttributeMap();\n";
+      if (cl.RequestedRNTupleSplitMode() == 1) {
+         finalString << "      instance.GetClass()->GetAttributeMap()->AddProperty(\"rntuple.split\", \"true\");\n";
+      } else if (cl.RequestedRNTupleSplitMode() == -1) {
+         finalString << "      instance.GetClass()->GetAttributeMap()->AddProperty(\"rntuple.split\", \"false\");\n";
+      } else {
+         // invalid RNTuple split mode
+         assert(false);
+      }
    }
 
    //---------------------------------------------------------------------------
