@@ -3619,7 +3619,7 @@ public:
       // If we build a I/O requiring module implicitly we should display
       // an error unless the -mByproduct was specified.
       bool isByproductModule
-         = module && std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) != gOptModuleByproducts.end();
+         = module && (module->IsSystem || std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) != gOptModuleByproducts.end());
       if (!isByproductModule)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
