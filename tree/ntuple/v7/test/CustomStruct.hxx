@@ -206,11 +206,11 @@ struct StructWithIORules : StructWithIORulesBase {
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
 };
 
-class Cyclic {
+struct Cyclic {
    std::vector<Cyclic> fMember;
 };
 
-class Unsupported {
+struct Unsupported {
    float a;
    std::chrono::time_point<std::chrono::system_clock> timestamp;
    float b;
