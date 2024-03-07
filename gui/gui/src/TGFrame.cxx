@@ -3439,7 +3439,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< std::endl;
    out << std::endl;
 
-   out << "#if defined (__MAKECINT__)" << std::endl << std::endl;
+   out << std::endl << std::endl;
 
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {
@@ -3453,7 +3453,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       }
    }
    out << std::endl << "#include " << quote << "Riostream.h" << quote << std::endl;
-   out << std::endl << "#endif" << std::endl;
+   out << std::endl << std::endl;
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
