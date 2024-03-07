@@ -376,6 +376,11 @@ int main( int argc, char **argv )
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
+   Int_t indirectFilesCount =
+      0; // This will count only valid subfiles within the indirect file, if provided, for later calculating the number
+         // of parallel processes. The scope below will not error out if a subfilename listed within it does not exist.
+         // The program will later try to process all files (valid or not), in sequential or parallel mode, and raise an
+         // error when opening the subfile as TFile if it does not exist.
    if (newcomp == -1) {
       if (useFirstInputCompression || keepCompressionAsIs) {
          // grab from the first file.
@@ -388,9 +393,12 @@ int main( int argc, char **argv )
             }
             std::string line;
             while( indirect_file ){
-               if( std::getline(indirect_file, line) && line.length() ) {
-                  firstInput = TFile::Open(line.c_str());
-                  break;
+               if (std::getline(indirect_file, line) && line.length() && TString(line).EndsWith(".root") &&
+                   gSystem->AccessPathName(line.c_str(), kReadPermission) == kFALSE) {
+                  indirectFilesCount++;
+                  if (!firstInput) {
+                     firstInput = TFile::Open(line.c_str());
+                  }
                }
             }
          } else {
@@ -401,8 +409,23 @@ int main( int argc, char **argv )
          else
             newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
          delete firstInput;
-      } else
+      } else {
          newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
+         if (argv[ffirst] && argv[ffirst][0] == '@') {
+            std::ifstream indirect_file(argv[ffirst] + 1);
+            if (!indirect_file.is_open()) {
+               std::cerr << "hadd could not open indirect file " << (argv[ffirst] + 1) << std::endl;
+               return 1;
+            }
+            std::string line;
+            while (indirect_file) {
+               if (std::getline(indirect_file, line) && line.length() && TString(line).EndsWith(".root") &&
+                   gSystem->AccessPathName(line.c_str(), kReadPermission) == kFALSE) {
+                  indirectFilesCount++;
+               }
+            }
+         }
+      }
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
@@ -421,7 +444,7 @@ int main( int argc, char **argv )
       exit(1);
    }
 
-   auto filesToProcess = argc - ffirst;
+   auto filesToProcess = indirectFilesCount == 0 ? argc - ffirst : indirectFilesCount;
    auto step = (filesToProcess + nProcesses - 1) / nProcesses;
    if (multiproc && step < 3) {
       // At least 3 files per process
