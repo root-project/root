@@ -20,4 +20,13 @@ struct CustomStreamer {
    ClassDefNV(CustomStreamer, 1);
 };
 
+struct CustomStreamerForceSplit {
+   float a;
+   ClassDefNV(CustomStreamerForceSplit, 1);
+};
+
+struct CustomStreamerForceUnsplit {
+   float a;
+};
+
 #endif // ROOT7_RNTuple_Test_Unsplit
