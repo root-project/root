@@ -24,7 +24,10 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include "Batches.h"
 
 #include <ROOT/RConfig.hxx>
+
+#ifdef ROOBATCHCOMPUTE_USE_IMT
 #include <ROOT/TExecutor.hxx>
+#endif
 
 #include <Math/Util.h>
 
@@ -75,9 +78,6 @@ std::vector<void (*)(Batches &)> getFunctions();
 /// This class overrides some RooBatchComputeInterface functions, for the
 /// purpose of providing a CPU specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
-private:
-   const std::vector<void (*)(Batches &)> _computeFunctions;
-
 public:
    RooBatchComputeClass() : _computeFunctions(getFunctions())
    {
@@ -96,88 +96,124 @@ public:
       std::string out = _QUOTEVAL_(RF_ARCH);
 #undef _QUOTEVAL_
       std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
-      ;
       return out;
    };
 
-   /** Compute multiple values using optimized functions.
-   This method creates a Batches object and passes it to the correct compute function.
-   In case Implicit Multithreading is enabled, the events to be processed are equally
-   divided among the tasks to be generated and computed in parallel.
-   \param computer An enum specifying the compute function to be used.
-   \param output The array where the computation results are stored.
-   \param nEvents The number of events to be processed.
-   \param vars A std::span containing pointers to the variables involved in the computation.
-   \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
    void compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
-                ArgSpan extraArgs) override
-   {
-      if (ROOT::IsImplicitMTEnabled()) {
-         ROOT::Internal::TExecutor ex;
-         std::size_t nThreads = ex.GetPoolSize();
-
-         std::size_t nEventsPerThread = nEvents / nThreads + (nEvents % nThreads > 0);
-
-         // Reset the number of threads to the number we actually need given nEventsPerThread
-         nThreads = nEvents / nEventsPerThread + (nEvents % nEventsPerThread > 0);
-
-         auto task = [&](std::size_t idx) -> int {
-            // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
-            // Then advance every object but the first to split the work between threads
-            Batches batches;
-            std::vector<Batch> arrays(vars.size());
-            fillBatches(batches, output, nEventsPerThread, vars.size(), extraArgs);
-            fillArrays(arrays, vars, nEvents);
-            batches.args = arrays.data();
-            advance(batches, batches.nEvents * idx);
-
-            // Set the number of events of the last Batches object as the remaining events
-            if (idx == nThreads - 1) {
-               batches.nEvents = nEvents - idx * batches.nEvents;
-            }
-
-            std::size_t events = batches.nEvents;
-            batches.nEvents = bufferSize;
-            while (events > bufferSize) {
-               _computeFunctions[computer](batches);
-               advance(batches, bufferSize);
-               events -= bufferSize;
-            }
-            batches.nEvents = events;
-            _computeFunctions[computer](batches);
-            return 0;
-         };
-
-         std::vector<std::size_t> indices(nThreads);
-         for (unsigned int i = 1; i < nThreads; i++) {
-            indices[i] = i;
-         }
-         ex.Map(task, indices);
-      } else {
-         // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
-         // Then advance every object but the first to split the work between threads
-         Batches batches;
-         std::vector<Batch> arrays(vars.size());
-         fillBatches(batches, output, nEvents, vars.size(), extraArgs);
-         fillArrays(arrays, vars, nEvents);
-         batches.args = arrays.data();
-
-         std::size_t events = batches.nEvents;
-         batches.nEvents = bufferSize;
-         while (events > bufferSize) {
-            _computeFunctions[computer](batches);
-            advance(batches, bufferSize);
-            events -= bufferSize;
-         }
-         batches.nEvents = events;
-         _computeFunctions[computer](batches);
-      }
-   }
-   /// Return the sum of an input array
+                ArgSpan extraArgs) override;
    double reduceSum(Config const &, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
                              std::span<const double> offsetProbas) override;
-}; // End class RooBatchComputeClass
+
+private:
+#ifdef ROOBATCHCOMPUTE_USE_IMT
+   void computeIMT(Computer computer, RestrictArr output, size_t nEvents, VarSpan vars, ArgSpan extraArgs);
+#endif
+
+   const std::vector<void (*)(Batches &)> _computeFunctions;
+};
+
+#ifdef ROOBATCHCOMPUTE_USE_IMT
+void RooBatchComputeClass::computeIMT(Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
+                                      ArgSpan extraArgs)
+{
+   ROOT::Internal::TExecutor ex;
+   std::size_t nThreads = ex.GetPoolSize();
+
+   std::size_t nEventsPerThread = nEvents / nThreads + (nEvents % nThreads > 0);
+
+   // Reset the number of threads to the number we actually need given nEventsPerThread
+   nThreads = nEvents / nEventsPerThread + (nEvents % nEventsPerThread > 0);
+
+   auto task = [&](std::size_t idx) -> int {
+      // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
+      // Then advance every object but the first to split the work between threads
+      Batches batches;
+      std::vector<Batch> arrays(vars.size());
+      fillBatches(batches, output, nEventsPerThread, vars.size(), extraArgs);
+      fillArrays(arrays, vars, nEvents);
+      batches.args = arrays.data();
+      advance(batches, batches.nEvents * idx);
+
+      // Set the number of events of the last Batches object as the remaining events
+      if (idx == nThreads - 1) {
+         batches.nEvents = nEvents - idx * batches.nEvents;
+      }
+
+      std::size_t events = batches.nEvents;
+      batches.nEvents = bufferSize;
+      while (events > bufferSize) {
+         _computeFunctions[computer](batches);
+         advance(batches, bufferSize);
+         events -= bufferSize;
+      }
+      batches.nEvents = events;
+      _computeFunctions[computer](batches);
+      return 0;
+   };
+
+   std::vector<std::size_t> indices(nThreads);
+   for (unsigned int i = 1; i < nThreads; i++) {
+      indices[i] = i;
+   }
+   ex.Map(task, indices);
+}
+#endif
+
+/** Compute multiple values using optimized functions.
+This method creates a Batches object and passes it to the correct compute function.
+In case Implicit Multithreading is enabled, the events to be processed are equally
+divided among the tasks to be generated and computed in parallel.
+\param computer An enum specifying the compute function to be used.
+\param output The array where the computation results are stored.
+\param nEvents The number of events to be processed.
+\param vars A std::span containing pointers to the variables involved in the computation.
+\param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
+void RooBatchComputeClass::compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
+                                   ArgSpan extraArgs)
+{
+   // In the original implementation of this library, the evaluation was done
+   // multi-threaded in implicit multi-threading was enabled in ROOT with
+   // ROOT::EnableImplicitMT().
+   //
+   // However, this multithreaded mode was not carefully validated and is
+   // therefore not production ready. One would first have to study the
+   // overhead for different numbers of cores, number of events, and model
+   // complexity. The, we should only consider implicit multithreading here if
+   // there is no performance penalty for any scenario, to not surprise the
+   // users with unexpected slowdows!
+   //
+   // Note that the priority of investigating this is not high, because RooFit
+   // R & D efforts currently go in the direction of parallelization at the
+   // level of the gradient components, or achieving single-threaded speedup
+   // with automatic differentiation. Furthermore, the single-threaded
+   // performance of the new CPU evaluation backend with the RooBatchCompute
+   // library, is generally much faster than the legacy evaluation backend
+   // already, even if the latter uses multi-threading.
+#ifdef ROOBATCHCOMPUTE_USE_IMT
+   if (ROOT::IsImplicitMTEnabled()) {
+      computeIMT(computer, output, nEvents, vars, extraArgs);
+   }
+#endif
+
+   // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
+   // Then advance every object but the first to split the work between threads
+   Batches batches;
+   std::vector<Batch> arrays(vars.size());
+   fillBatches(batches, output, nEvents, vars.size(), extraArgs);
+   fillArrays(arrays, vars, nEvents);
+   batches.args = arrays.data();
+
+   std::size_t events = batches.nEvents;
+   batches.nEvents = bufferSize;
+   while (events > bufferSize) {
+      _computeFunctions[computer](batches);
+      advance(batches, bufferSize);
+      events -= bufferSize;
+   }
+   batches.nEvents = events;
+   _computeFunctions[computer](batches);
+}
 
 namespace {
 
