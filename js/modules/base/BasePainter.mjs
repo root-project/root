@@ -2,6 +2,7 @@ import { select as d3_select } from '../d3.mjs';
 import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument, source_dir, loadScript, httpRequest } from '../core.mjs';
 import { detectFont, addCustomFont, getCustomFont, FontHandler } from './FontHandler.mjs';
 import { approximateLabelWidth, replaceSymbolsInTextNode } from './latex.mjs';
+import { getColor } from './colors.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -169,7 +170,19 @@ class DrawOptions {
          this.part = this.opt.slice(pos, pos2);
          this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
       }
-      return true;
+
+      if (postpart !== 'color')
+         return true;
+
+      this.color = this.partAsInt(1) - 1;
+      if (this.color >= 0) return true;
+      for (let col = 0; col < 8; ++col) {
+         if (getColor(col).toUpperCase() === this.part) {
+            this.color = col;
+            return true;
+         }
+      }
+      return false;
    }
 
    /** @summary Returns remaining part of found option as integer. */
