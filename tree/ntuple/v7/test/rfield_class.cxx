@@ -89,6 +89,8 @@ TEST(RTNuple, TObject)
       entry->BindRawPtr("obj", heapObj.get());
       writer->Fill(*entry);
 
+      // Saving a destructed object is here to verify that the RNTuple serialization does the same than
+      // the TObject custom streamer (i.e., ignoring the kNotDeleted flag)
       heapObj->~TObject();
       EXPECT_FALSE(heapObj->TestBit(TObject::kNotDeleted));
       writer->Fill(*entry);
