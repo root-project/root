@@ -271,9 +271,10 @@ class RFramePainter extends RObjectPainter {
             this.scale_ymax += (this.scale_ymax - this.scale_ymin)*0.1;
       }
 
-      // if (opts.check_pad_range) {
-         // take zooming out of pad or axis attributes - skip!
-      // }
+      if ((opts.zoom_xmin !== opts.zoom_xmax) && ((this.zoom_xmin === this.zoom_xmax) || !this.zoomChangedInteractive('x'))) {
+         this.zoom_xmin = opts.zoom_xmin;
+         this.zoom_xmax = opts.zoom_xmax;
+      }
 
       if ((opts.zoom_ymin !== opts.zoom_ymax) && ((this.zoom_ymin === this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;

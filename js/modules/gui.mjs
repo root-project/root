@@ -1,17 +1,21 @@
 import { decodeUrl, settings, constants, gStyle, internals, browser, findFunction, parse, isFunc, isStr, isObject } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
-import { readSettings, readStyle } from './gui/utils.mjs';
+import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
 
 
 /** @summary Read style and settings from URL
   * @private */
 function readStyleFromURL(url) {
    // first try to read settings from coockies
+   const d = decodeUrl(url),
+         prefix = d.get('storage_prefix');
+
+   if (isStr(prefix) && prefix)
+      setStoragePrefix(prefix);
+
    readSettings();
    readStyle();
-
-   const d = decodeUrl(url);
 
    function get_bool(name, field, special) {
       if (d.has(name)) {
