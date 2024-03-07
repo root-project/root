@@ -55,3 +55,19 @@ TEST(RField, UnsplitMember)
    EXPECT_FLOAT_EQ(3.0, ptrClassWithUnsplitMember->fUnsplit.fV.at(0).fB);
    EXPECT_EQ(0u, ptrClassWithUnsplitMember->fUnsplit.fV.at(0).fV.size());
 }
+
+TEST(RField, ForceSplit)
+{
+   auto model = RNTupleModel::Create();
+
+   auto cl = TClass::GetClass("CustomStreamer");
+
+   EXPECT_FALSE(cl->CanSplit());
+   EXPECT_THROW(model->MakeField<CustomStreamer>("f1"), RException);
+
+   cl->CreateAttributeMap();
+   cl->GetAttributeMap()->AddProperty("rntuple.split", "true");
+
+   // No exception
+   model->MakeField<CustomStreamer>("f2");
+}
