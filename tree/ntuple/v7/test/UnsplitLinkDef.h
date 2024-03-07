@@ -5,5 +5,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class ClassWithUnsplitMember + ;
+#pragma link C++ class CustomStreamer - ;
 
 #endif
