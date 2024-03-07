@@ -327,6 +327,14 @@ void FilterTutorial()
    gMacroName  = gFileName.substr(i1,i2-i1+1);
    gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
    gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
+   if (gPython) {
+      FILE *cn = fopen("CleanNamespaces.sh", "a");
+      string name = gMacroName;
+      ReplaceAll(name,".py","");
+      if (cn)
+         fprintf(cn,"./modifyNamespacesWebpage.sh %s\n",name.c_str());
+      fclose(cn);
+   }
 
    // Parse the source and generate the image if needed
    while (fgets(gLine,255,f)) {

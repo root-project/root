@@ -63,8 +63,7 @@ doxygen: filter pyzdoc
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
 	doxygen
-	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
-	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.qch
+	bash ./CleanNamespaces.sh
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
 	rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
 	rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
@@ -89,4 +88,4 @@ rootWork: tutorialWorklist_root
 	xargs -L 1 -P 12 root < $<
 
 clean:
-	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY) tutorialWorklist_py tutorialWorklist_root
+	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY) tutorialWorklist_py tutorialWorklist_root CleanNamespaces.sh
