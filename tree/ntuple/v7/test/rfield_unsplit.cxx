@@ -29,7 +29,7 @@ TEST(RField, UnsplitMember)
 {
    auto cl = TClass::GetClass("CyclicMember");
    cl->CreateAttributeMap();
-   cl->GetAttributeMap()->AddProperty("rntuple.unsplit", "");
+   cl->GetAttributeMap()->AddProperty("rntuple.split", "false");
 
    FileRaii fileGuard("test_ntuple_rfield_unsplit_member.root");
    {
