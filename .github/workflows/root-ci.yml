@@ -99,15 +99,13 @@ jobs:
         include:
           - platform: mac12
             arch: X64
+            overrides: ["CMAKE_CXX_STANDARD=17"]
           - platform: mac13   
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17"]
           - platform: mac14
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-#          - platform: mac-beta
-#            arch: X64
-#            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -352,19 +350,19 @@ jobs:
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
           - image: fedora39
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17"]
           - image: fedora38
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17", "CMAKE_BUILD_TYPE=Debug"]
           - image: alma8
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17"]
           - image: alma9
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu20
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17"]
           - image: ubuntu22
-            overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2310
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=17"]
 
     runs-on:
       - self-hosted
