@@ -5,6 +5,7 @@
 
 #include <string>
 #include <cstdio>
+#include <cstdint>
 #include <fstream>
 #include <streambuf>
 
@@ -54,4 +55,44 @@ TEST(TSystem, TempFileSuffix)
    EXPECT_STREQ(content.c_str(), str.c_str());
 
    gSystem->Unlink(fname);
+}
+
+TEST(TSystem, CryptoRandom)
+{
+   // test with 512 bits, longer keys may not work
+
+   const int len = 64;
+   uint8_t buf[64];
+
+   for (int n = 0; n < len; n++)
+      buf[n] = 0;
+
+   auto res = gSystem->GetCryptoRandom(buf, len);
+
+   EXPECT_EQ(res, len);
+
+   int nmatch = 0;
+
+   for (int n = 0; n < len; n++)
+      if (buf[n] == 0)
+         nmatch++;
+
+   // check that values in buffer changed
+   EXPECT_TRUE(nmatch != len);
+
+   for (int n = 0; n < len; n++)
+      buf[n] = n;
+
+   res = gSystem->GetCryptoRandom(buf, len);
+
+   EXPECT_EQ(res, len);
+
+   nmatch = 0;
+
+   for (int n = 0; n < len; n++)
+      if (buf[n] == n)
+         nmatch++;
+
+   // check that values in buffer changed
+   EXPECT_TRUE(nmatch != len);
 }
