@@ -553,27 +553,15 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
    }
 
    if (has_attr_name) {
-      fSelectedClasses.emplace_back(selected->GetIndex() + indexOffset,
-                                    req_type,
-                                    recordDecl,
-                                    attr_name.c_str(),
-                                    selected->RequestStreamerInfo(),
-                                    selected->RequestNoStreamer(),
-                                    selected->RequestNoInputOperator(),
-                                    selected->RequestOnlyTClass(),
-                                    selected->RequestedVersionNumber(),
-                                    fInterpreter,
-                                    fNormCtxt);
+      fSelectedClasses.emplace_back(
+         selected->GetIndex() + indexOffset, req_type, recordDecl, attr_name.c_str(), selected->RequestStreamerInfo(),
+         selected->RequestNoStreamer(), selected->RequestNoInputOperator(), selected->RequestOnlyTClass(),
+         selected->RequestedVersionNumber(), selected->RequestedRNTupleSplitMode(), fInterpreter, fNormCtxt);
    } else {
-      fSelectedClasses.emplace_back(selected->GetIndex() + indexOffset,
-                                    recordDecl,
-                                    selected->RequestStreamerInfo(),
-                                    selected->RequestNoStreamer(),
-                                    selected->RequestNoInputOperator(),
-                                    selected->RequestOnlyTClass(),
-                                    selected->RequestedVersionNumber(),
-                                    fInterpreter,
-                                    fNormCtxt);
+      fSelectedClasses.emplace_back(selected->GetIndex() + indexOffset, recordDecl, selected->RequestStreamerInfo(),
+                                    selected->RequestNoStreamer(), selected->RequestNoInputOperator(),
+                                    selected->RequestOnlyTClass(), selected->RequestedVersionNumber(),
+                                    selected->RequestedRNTupleSplitMode(), fInterpreter, fNormCtxt);
    }
 
    if (fVerboseLevel > 0) {
