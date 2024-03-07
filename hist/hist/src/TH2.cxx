@@ -3701,6 +3701,7 @@ TH2L::TH2L(const TH2L &h2l) : TH2(), TArrayL64()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2L::AddBinContent(Int_t bin)
 {
@@ -3710,6 +3711,7 @@ void TH2L::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2L::AddBinContent(Int_t bin, Double_t w)
 {
