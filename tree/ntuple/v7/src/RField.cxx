@@ -352,6 +352,28 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
       free(begin);
 }
 
+/// Possible settings for the "rntuple.split" class attribute in the dictionary.
+enum class ERNTupleUnsplitSetting { kForceSplit, kForceUnsplit, kUnset };
+
+ERNTupleUnsplitSetting GetRNTupleUnsplitSetting(TClass *cl)
+{
+   auto am = cl->GetAttributeMap();
+   if (!am || !am->HasKey("rntuple.split"))
+      return ERNTupleUnsplitSetting::kUnset;
+
+   std::string value = am->GetPropertyAsString("rntuple.split");
+   std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+   if (value == "TRUE") {
+      return ERNTupleUnsplitSetting::kForceSplit;
+   } else if (value == "FALSE") {
+      return ERNTupleUnsplitSetting::kForceUnsplit;
+   } else {
+      R__LOG_WARNING(ROOT::Experimental::NTupleLog())
+         << "invalid setting for 'rntuple.split' class attribute: " << am->GetPropertyAsString("rntuple.split");
+      return ERNTupleUnsplitSetting::kUnset;
+   }
+}
+
 } // anonymous namespace
 
 void ROOT::Experimental::Internal::CallCommitClusterOnField(RFieldBase &field)
@@ -752,8 +774,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
             } else {
-               auto am = cl->GetAttributeMap();
-               if (am && am->HasKey("rntuple.unsplit")) {
+               if (GetRNTupleUnsplitSetting(cl) == ERNTupleUnsplitSetting::kForceUnsplit) {
                   result = std::make_unique<RUnsplitField>(fieldName, canonicalType);
                } else {
                   result = std::make_unique<RClassField>(fieldName, canonicalType);
