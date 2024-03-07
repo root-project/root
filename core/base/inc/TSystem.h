@@ -349,6 +349,7 @@ public:
    void                    SetErrorStr(const char *errstr);
    const char             *GetErrorStr() const { return GetLastErrorString(); }
    virtual const char     *GetError();
+   virtual Int_t           GetCryptoRandom(void *buf, Int_t len);
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();
    virtual void            NotifyApplicationCreated();
