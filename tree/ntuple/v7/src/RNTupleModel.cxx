@@ -186,9 +186,8 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
       nameValid.Throw();
    }
    auto fieldNameStr = std::string(fieldName);
-   if (fFieldNames.insert(fieldNameStr).second == false) {
+   if (fFieldNames.count(fieldNameStr) > 0)
       throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists in NTuple model"));
-   }
 }
 
 void ROOT::Experimental::RNTupleModel::EnsureNotFrozen() const
@@ -281,6 +280,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<RFieldBase> fiel
 
    if (fDefaultEntry)
       fDefaultEntry->AddValue(field->CreateValue());
+   fFieldNames.insert(field->GetFieldName());
    fFieldZero->Attach(std::move(field));
 }
 
@@ -308,9 +308,9 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    EnsureValidFieldName(fieldName);
    auto result = fProjectedFields->Add(std::move(field), fieldMap);
    if (!result) {
-      fFieldNames.erase(fieldName);
       return R__FORWARD_ERROR(result);
    }
+   fFieldNames.insert(fieldName);
    return RResult<void>::Success();
 }
 
@@ -332,6 +332,7 @@ ROOT::Experimental::RNTupleModel::MakeCollection(std::string_view fieldName,
    if (fDefaultEntry)
       fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(collectionWriter->GetOffsetPtr(), [](void *) {})));
 
+   fFieldNames.insert(field->GetFieldName());
    fFieldZero->Attach(std::move(field));
    return collectionWriter;
 }

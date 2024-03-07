@@ -351,15 +351,7 @@ TEST(RNTupleModel, EnforceValidFieldNames)
 {
    auto model = RNTupleModel::Create();
 
-   auto field = model->MakeField<float>("pt", 42.0);
-
    // MakeField
-   try {
-      auto field2 = model->MakeField<float>("pt", 42.0);
-      FAIL() << "repeated field names should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
-   }
    try {
       auto field3 = model->MakeField<float>("", 42.0);
       FAIL() << "empty string as field name should throw";
@@ -373,9 +365,19 @@ TEST(RNTupleModel, EnforceValidFieldNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain dot characters '.'"));
    }
 
+   // Previous failures to create 'pt' should not block the name
+   auto field = model->MakeField<float>("pt", 42.0);
+
+   try {
+      auto field2 = model->MakeField<float>("pt", 42.0);
+      FAIL() << "repeated field names should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
+   }
+
    // AddField
    try {
-      model->AddField(std::make_unique<RField<float>>(RField<float>("pt")));
+      model->AddField(std::make_unique<RField<float>>("pt"));
       FAIL() << "repeated field names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));

@@ -277,6 +277,7 @@ public:
       std::shared_ptr<T> ptr;
       if (fDefaultEntry)
          ptr = fDefaultEntry->AddValue<T>(*field, std::forward<ArgsT>(args)...);
+      fFieldNames.insert(field->GetFieldName());
       fFieldZero->Attach(std::move(field));
       return ptr;
    }
