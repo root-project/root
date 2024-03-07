@@ -529,6 +529,7 @@ class RPadPainter extends RObjectPainter {
          svg_rect = svg_pad.selectChild('.root_pad_border');
          if (!this.isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
+         this.addPadInteractive(true);
       } else {
          svg_pad = svg_parent.selectChild('.primitives_layer')
              .append('svg:svg') // here was g before, svg used to blend all drawin outside
@@ -596,6 +597,17 @@ class RPadPainter extends RObjectPainter {
       if (this.alignButtons && btns) this.alignButtons(btns, w, h);
 
       return pad_visible;
+   }
+
+   /** @summary Add pad interactive features like dragging and resize
+    * @private */
+   addPadInteractive(cleanup = false) {
+      if (isFunc(this.$userInteractive)) {
+         this.$userInteractive();
+         delete this.$userInteractive;
+      }
+      // if (this.isBatchMode())
+      //   return;
    }
 
    /** @summary returns true if any objects beside sub-pads exists in the pad */
@@ -793,6 +805,7 @@ class RPadPainter extends RObjectPainter {
 
          return redrawNext(0);
       }).then(() => {
+         this.addPadInteractive();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
          this.confirmDraw();
@@ -1032,6 +1045,7 @@ class RPadPainter extends RObjectPainter {
          const prev_name = padpainter.selectCurrentPad(padpainter.this_pad_name);
 
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
+            padpainter.addPadInteractive();
             padpainter.selectCurrentPad(prev_name);
             return this.drawNextSnap(lst, indx);
          });
@@ -1199,9 +1213,9 @@ class RPadPainter extends RObjectPainter {
          // cannot preserve ROOT6 frame - it must be recreated
          if (fp?.is_root6()) fp = null;
          for (let k = 0; k < this.painters.length; ++k) {
- if (fp !== this.painters[k])
+            if (fp !== this.painters[k])
                this.painters[k].cleanup();
-}
+         }
          this.painters = [];
          delete this.main_painter_ref;
          if (fp) {
@@ -1209,13 +1223,15 @@ class RPadPainter extends RObjectPainter {
             fp.cleanFrameDrawings();
             fp.redraw(); // need to create all layers again
          }
-         if (this.removePadButtons) this.removePadButtons();
+         if (isFunc(this.removePadButtons))
+            this.removePadButtons();
          this.addPadButtons(true);
       }
 
       const prev_name = this.selectCurrentPad(this.this_pad_name);
 
       return this.drawNextSnap(snap.fPrimitives).then(() => {
+         this.addPadInteractive();
          this.selectCurrentPad(prev_name);
 
          if (getActivePad() === this)
@@ -1621,6 +1637,7 @@ class RPadPainter extends RObjectPainter {
 
       // flag used to prevent immediate pad redraw during first draw
       return painter.drawPrimitives().then(() => {
+         painter.addPadInteractive();
          painter.showPadButtons();
          // we restore previous pad name
          painter.selectCurrentPad(prev_name);

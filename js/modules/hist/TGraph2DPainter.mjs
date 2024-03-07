@@ -878,15 +878,23 @@ class TGraph2DPainter extends ObjectPainter {
       if (!this.options)
          this.options = {};
 
-      const res = this.options;
+      const res = this.options, gr2d = this.getObject();
+
+      if (d.check('FILL_', 'color') && gr2d)
+         gr2d.fFillColor = d.color;
+
+      if (d.check('LINE_', 'color') && gr2d)
+         gr2d.fLineColor = d.color;
 
       d.check('SAME');
       if (d.check('TRI1'))
          res.Triangles = 11; // wireframe and colors
       else if (d.check('TRI2'))
          res.Triangles = 10; // only color triangles
-      else if (d.check('TRIW') || d.check('TRI'))
+      else if (d.check('TRIW'))
          res.Triangles = 1;
+      else if (d.check('TRI'))
+         res.Triangles = 2;
       else
          res.Triangles = 0;
       res.Line = d.check('LINE');
@@ -1018,8 +1026,9 @@ class TGraph2DPainter extends ObjectPainter {
       if (!dulaunay) return;
 
       const main_grz = !fp.logz ? fp.grz : value => (value < fp.scale_zmin) ? -0.1 : fp.grz(value),
-            do_faces = this.options.Triangles >= 10,
-            do_lines = this.options.Triangles % 10 === 1,
+            plain_mode = this.options.Triangles === 2,
+            do_faces = (this.options.Triangles >= 10) || plain_mode,
+            do_lines = (this.options.Triangles % 10 === 1) || (plain_mode && (graph.fLineColor !== graph.fFillColor)),
             triangles = new Triangles3DHandler(levels, main_grz, 0, 2*fp.size_z3d, do_lines);
 
       for (triangles.loop = 0; triangles.loop < 2; ++triangles.loop) {
@@ -1053,8 +1062,8 @@ class TGraph2DPainter extends ObjectPainter {
 
       triangles.callFuncs((lvl, pos) => {
          const geometry = createLegoGeom(this.getMainPainter(), pos, null, 100, 100),
-             color = palette.calcColor(lvl, levels.length),
-             material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false })),
+               color = plain_mode ? this.getColor(graph.fFillColor) : palette.calcColor(lvl, levels.length),
+               material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false })),
 
           mesh = new Mesh(geometry, material);
 
@@ -1165,7 +1174,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
-      if (this.options.Color || this.options.Triangles) {
+      if (this.options.Color || (this.options.Triangles >= 10)) {
          levels = main.getContourLevels(true);
          palette = main.getHistPalette();
       }
