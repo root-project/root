@@ -1997,11 +1997,11 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    char quote = '"';
 
    // Writes include.
-   out << "#if defined (__MAKECINT__)" << std::endl << std::endl;
+   out << std::endl << std::endl;
    out << "#ifndef ROOT_TStyle" << std::endl;
    out << "#include " << quote << "TStyle.h" << quote << std::endl;
    out << "#endif" << std::endl;
-   out << std::endl << "#endif" << std::endl;
+   out << std::endl << std::endl;
 
    // Writes the macro entry point equal to the fname
    out << std::endl;

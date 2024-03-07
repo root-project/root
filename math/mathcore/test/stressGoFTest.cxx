@@ -551,7 +551,7 @@ Int_t stressGoFTest(Int_t argc = 1 , Char_t* argv[] = nullptr) {
    return RunTests(argc, argv);
 }
 
-#if !defined(__MAKECINT__)
+#if !defined(__CLING__)
 Int_t main(Int_t argc, Char_t* argv[]) {
    return RunTests(argc, argv);
 }
