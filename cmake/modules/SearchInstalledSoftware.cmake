@@ -1984,8 +1984,8 @@ if(webgui)
   endif()
   ExternalProject_Add(
     RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.1.tar.gz
-    URL_HASH SHA256=2cb8c722193ae0ddffde3b1c4b24fc877c9bb2c9ebacdaa6f3860b81991e8737
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.2.tar.gz
+    URL_HASH SHA256=a02bafaf2fa84977f70622370be6b37c36dcf4811cd20ffddad2e686220a1e85
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
