@@ -9,7 +9,6 @@ ROOT_LINKER_LIBRARY(RooBatchCompute
   DEPENDENCIES
     Core
     MathCore
-    Imt
     ${CudaDependencies}
 )
 
