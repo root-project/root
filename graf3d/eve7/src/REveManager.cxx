@@ -20,6 +20,7 @@
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/REveSystem.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -607,6 +608,16 @@ TGeoManager *REveManager::GetDefaultGeometry()
 REveViewer *REveManager::GetDefaultViewer() const
 {
    return dynamic_cast<REveViewer*>(fViewers->FirstChild());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Enable multiple connections. Disable loopback.
+/// Keep connection key but disable mandatory authentification key.
+///
+void REveManager::AllowMultipleRemoteConnections()
+{
+   ROOT::RWebWindowsManager::SetLoopbackMode(false);
+   fWebWindow->SetRequireAuthKey(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
