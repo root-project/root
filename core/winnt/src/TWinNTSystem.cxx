@@ -62,6 +62,7 @@
 #include <shlobj.h>
 #include <conio.h>
 #include <time.h>
+#include <bcrypt.h>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -1259,6 +1260,17 @@ const char *TWinNTSystem::GetError()
       return error_msg;
    }
    return sys_errlist[err];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return cryptographic random number
+/// Fill provided buffer with random values
+/// Returns number of bytes written to buffer or -1 in case of error
+
+Int_t TWinNTSystem::GetCryptoRandom(void *buf, Int_t len)
+{
+   auto res = BCryptGenRandom((BCRYPT_ALG_HANDLE) NULL, (PUCHAR) buf, (ULONG) len, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+   return !res ? len : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

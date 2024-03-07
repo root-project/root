@@ -109,6 +109,7 @@ public:
    const char       *BaseName(const char *name) override;
    void              SetProgname(const char *name) override;
    const char       *GetError() override;
+   Int_t             GetCryptoRandom(void *buf, Int_t len) override;
    const char       *HostName() override;
    void             *GetGUIThreadHandle() const {return fGUIThreadHandle;}
    ULong_t           GetGUIThreadId() const {return fGUIThreadId;}
