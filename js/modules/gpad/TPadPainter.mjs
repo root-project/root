@@ -890,7 +890,12 @@ class TPadPainter extends ObjectPainter {
    /** @summary Add pad interactive features like dragging and resize
      * @private */
    addPadInteractive(cleanup = false) {
-      if (this.iscan || this.isBatchMode())
+      if (isFunc(this.$userInteractive)) {
+         this.$userInteractive();
+         delete this.$userInteractive;
+      }
+
+      if (this.isBatchMode() || this.iscan)
          return;
 
       const svg_can = this.getCanvSvg(),
@@ -1674,6 +1679,9 @@ class TPadPainter extends ObjectPainter {
          padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
          padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
 
+         if (subpad.$disable_drawing)
+            padpainter.pad_draw_disabled = true;
+
          padpainter.processSpecialSnaps(snap.fPrimitives); // need to process style and colors before creating graph elements
 
          padpainter.createPadSvg();
@@ -2432,6 +2440,9 @@ class TPadPainter extends ObjectPainter {
          // pad painter will be registered in the canvas painters list
          painter.addToPadPrimitives(painter.pad_name);
       }
+
+      if (pad?.$disable_drawing)
+         painter.pad_draw_disabled = true;
 
       painter.createPadSvg();
 

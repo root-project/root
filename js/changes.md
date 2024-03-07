@@ -1,10 +1,13 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Use own "jsroot-gl" package from npm because of gcc13 problems
-2. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
-3. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
-4. Improve TRatioPlot axis and lines drawing
+1. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
+2. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
+3. Improve TRatioPlot axis and lines drawing
+4. Use localStorage to preserve custom settings and gStyle
+5. Let configure custom storage prefix with `&storage_prefix=name` URL #290
+6. Let customize URL for "Show in new tab" menu command
+7. Support both new and old TRatioPlot drawings
 
 
 ## Changes in 7.6.0
@@ -34,6 +37,12 @@
 24. Fix - let draw THStack with diff binning hists
 25. Fix - better tooltip name for the items
 26. Fix - better logy scale selection
+
+
+## Changes in 7.5.5
+1. Fix - abort tree draw operation faster
+2. Fix - support plain TRI option for TGraph2D
+3. Fix - use latest npm "gl" module
 
 
 ## Changes in 7.5.4

@@ -78,10 +78,13 @@ class TLinePainter extends ObjectPainter {
                        .attr('d', this.createPath())
                        .call(this.lineatt.func);
 
-      this.addExtras(elem);
-
-      addMoveHandler(this);
-      assignContextMenu(this, kToFront);
+      if (this.getObject()?.$do_not_draw)
+         elem.remove();
+      else {
+         this.addExtras(elem);
+         addMoveHandler(this);
+         assignContextMenu(this, kToFront);
+      }
 
       return this;
    }

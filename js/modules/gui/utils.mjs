@@ -426,51 +426,49 @@ function selectgStyle(name) {
    }
 }
 
-/** @summary Save object as a cookie
+let _storage_prefix = 'jsroot_';
+
+/** @summary Set custom prefix for the local storage
   * @private */
-function saveCookie(obj, expires, name) {
-   const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-         d = new Date();
-   d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   if (typeof document !== 'undefined')
-      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+function setStoragePrefix(prefix) {
+   _storage_prefix = prefix || 'jsroot_';
+}
+
+/** @summary Save object in local storage
+  * @private */
+function saveLocalStorage(obj, expires, name) {
+   if (typeof localStorage === 'undefined')
+      return;
+   if (Number.isFinite(expires) && (expires < 0))
+      localStorage.removeItem(_storage_prefix + name);
+   else
+      localStorage.setItem(_storage_prefix + name, btoa_func(JSON.stringify(obj)));
 }
 
 /** @summary Read cookie with specified name
   * @private */
-function readCookie(name) {
-   if (typeof document === 'undefined')
+function readLocalStorage(name) {
+   if (typeof localStorage === 'undefined')
       return null;
-   const decodedCookie = decodeURIComponent(document.cookie),
-         ca = decodedCookie.split(';');
-   name += '=';
-   for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === ' ')
-        c = c.substring(1);
-      if (c.indexOf(name) === 0) {
-         const s = JSON.parse(atob_func(c.substring(name.length, c.length)));
-
-         return isObject(s) ? s : null;
-      }
-   }
-   return null;
+   const v = localStorage.getItem(_storage_prefix + name),
+         s = v ? JSON.parse(atob_func(v)) : null;
+   return isObject(s) ? s : null;
 }
 
 /** @summary Save JSROOT settings as specified cookie parameter
   * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
   * @param {String} name - cookie parameter name
   * @private */
-function saveSettings(expires = 365, name = 'jsroot_settings') {
-   saveCookie(settings, expires, name);
+function saveSettings(expires = 365, name = 'settings') {
+   saveLocalStorage(settings, expires, name);
 }
 
 /** @summary Read JSROOT settings from specified cookie parameter
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
   * @param {String} name - cookie parameter name
   * @private */
-function readSettings(only_check = false, name = 'jsroot_settings') {
-   const s = readCookie(name);
+function readSettings(only_check = false, name = 'settings') {
+   const s = readLocalStorage(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(settings, s);
@@ -481,16 +479,16 @@ function readSettings(only_check = false, name = 'jsroot_settings') {
   * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
   * @param {String} name - cookie parameter name
   * @private */
-function saveStyle(expires = 365, name = 'jsroot_style') {
-   saveCookie(gStyle, expires, name);
+function saveStyle(expires = 365, name = 'style') {
+   saveLocalStorage(gStyle, expires, name);
 }
 
 /** @summary Read JSROOT gStyle object specified cookie parameter
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
   * @param {String} name - cookie parameter name
   * @private */
-function readStyle(only_check = false, name = 'jsroot_style') {
-   const s = readCookie(name);
+function readStyle(only_check = false, name = 'style') {
+   const s = readLocalStorage(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(gStyle, s);
@@ -584,5 +582,5 @@ function getColorExec(col, method) {
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
-         selectgStyle, saveSettings, readSettings, saveStyle, readStyle,
+         selectgStyle, setStoragePrefix, saveSettings, readSettings, saveStyle, readStyle,
          saveFile, setSaveFile, getBinFileContent, getColorExec };

@@ -1917,6 +1917,11 @@ class TFramePainter extends ObjectPainter {
          }
       }
 
+      if ((opts.zoom_xmin !== opts.zoom_xmax) && ((this.zoom_xmin === this.zoom_xmax) || !this.zoomChangedInteractive('x'))) {
+         this.zoom_xmin = opts.zoom_xmin;
+         this.zoom_xmax = opts.zoom_xmax;
+      }
+
       if ((opts.zoom_ymin !== opts.zoom_ymax) && ((this.zoom_ymin === this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;

@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '28/02/2024',
+version_date = '7/03/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -292,7 +292,13 @@ settings = {
    /** @summary Draw TF1 by default as curve or line */
    FuncAsCurve: false,
    /** @summary Time zone used for date/time display of file time */
-   TimeZone: ''
+   TimeZone: '',
+   /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
+   NewTabUrl: '',
+   /** @summary Extra parameters which will be append to the url when item shown in new tab */
+   NewTabUrlPars: '',
+   /** @summary Export different settings in output URL */
+   NewTabUrlExportSettings: false
 },
 
 /** @namespace

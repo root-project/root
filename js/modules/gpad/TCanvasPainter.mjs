@@ -616,6 +616,8 @@ class TCanvasPainter extends TPadPainter {
    completeCanvasSnapDrawing() {
       if (!this.pad) return;
 
+      this.addPadInteractive();
+
       if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
          document.title = this.pad.fTitle;
 
@@ -822,6 +824,7 @@ class TCanvasPainter extends TPadPainter {
       selectActivePad({ pp: painter, active: true });
 
       return painter.drawPrimitives().then(() => {
+         painter.addPadInteractive();
          painter.showPadButtons();
          return painter;
       });
