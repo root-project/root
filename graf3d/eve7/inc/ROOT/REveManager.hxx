@@ -190,6 +190,8 @@ public:
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
    REveScene  *SpawnNewScene (const char *name, const char *title = "");
 
+   void AllowMultipleRemoteConnections();
+
    void BeginChange();
    void EndChange();
 
