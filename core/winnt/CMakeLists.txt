@@ -25,6 +25,7 @@ target_link_libraries(Core PRIVATE
   WSock32.lib
   Oleaut32.lib
   Iphlpapi.lib
+  Bcrypt.lib
 )
 
 target_include_directories(Core PRIVATE inc)
