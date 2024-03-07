@@ -1,8 +1,9 @@
 #include "ntuple_test.hxx"
 
+#include <TMath.h>
 #include <TObject.h>
 #include <TRef.h>
-#include <TVector2.h>
+#include <TRotation.h>
 
 #include <memory>
 #include <sstream>
@@ -152,10 +153,9 @@ TEST(RTNuple, TObjectDerived)
 
    {
       auto model = RNTupleModel::Create();
-      auto ptrVector2 = model->MakeField<TVector2>("vector2");
-      ptrVector2->SetX(1.0);
-      ptrVector2->SetY(2.0);
-      ptrVector2->SetUniqueID(137);
+      auto ptrRotation = model->MakeField<TRotation>("rotation");
+      ptrRotation->RotateX(TMath::Pi());
+      ptrRotation->SetUniqueID(137);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
    }
@@ -163,9 +163,8 @@ TEST(RTNuple, TObjectDerived)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    EXPECT_EQ(1u, reader->GetNEntries());
 
-   auto ptrVector2 = reader->GetModel().GetDefaultEntry().GetPtr<TVector2>("vector2");
+   auto ptrRotation = reader->GetModel().GetDefaultEntry().GetPtr<TRotation>("rotation");
    reader->LoadEntry(0);
-   EXPECT_DOUBLE_EQ(1.0, ptrVector2->X());
-   EXPECT_DOUBLE_EQ(2.0, ptrVector2->Y());
-   EXPECT_EQ(137u, ptrVector2->GetUniqueID());
+   EXPECT_DOUBLE_EQ(1.0, ptrRotation->XX());
+   EXPECT_EQ(137u, ptrRotation->GetUniqueID());
 }
