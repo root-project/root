@@ -162,6 +162,14 @@ extern "C" {
 };
 #endif
 
+#if defined(R__ARC4_STDLIB)
+// do nothing, stdlib.h already included
+#elif defined(R__ARC4_BSDLIB)
+#include <bsd/stdlib.h>
+#elif defined(R__GETRANDOM_CLIB)
+#include <sys/random.h>
+#endif
+
 #ifdef HAVE_UTMPX_H
 #include <utmpx.h>
 #define STRUCT_UTMP struct utmpx
@@ -721,6 +729,24 @@ const char *TUnixSystem::GetError()
    if (err < 0 || err >= sys_nerr)
       return Form("errno out of range %d", err);
    return sys_errlist[err];
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return cryptographic random number
+/// Fill provided buffer with random values
+/// Returns number of bytes written to buffer or -1 in case of error
+
+Int_t TUnixSystem::GetCryptoRandom(void *buf, Int_t len)
+{
+#if defined(R__ARC4_STDLIB) || defined(R__ARC4_BSDLIB)
+   arc4random_buf(buf, len);
+   return len;
+#elif defined(R__GETRANDOM_CLIB)
+   return getrandom(buf, len, GRND_NONBLOCK);
+#else
+#error "Reliable cryptographic random function not defined"
+   return -1;
 #endif
 }
 
