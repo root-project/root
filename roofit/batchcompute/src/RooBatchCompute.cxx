@@ -117,6 +117,8 @@ private:
 void RooBatchComputeClass::computeIMT(Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
                                       ArgSpan extraArgs)
 {
+   if (nEvents == 0)
+      return;
    ROOT::Internal::TExecutor ex;
    std::size_t nThreads = ex.GetPoolSize();
 
