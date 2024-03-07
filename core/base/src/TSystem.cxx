@@ -259,6 +259,18 @@ const char *TSystem::GetError()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return cryptographic random number
+/// Fill provided buffer with random values
+/// Returns number of bytes written to buffer or -1 in case of error
+
+Int_t TSystem::GetCryptoRandom(void * /* buf */, Int_t /* len */)
+{
+   Error("GetCryptoRandom", "Not implemented");
+   return -1;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function returning system error number.
 
 Int_t TSystem::GetErrno()
