@@ -62,6 +62,8 @@ doxygen: filter pyzdoc
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
+	$(call MkDir,$(DOXYGEN_IMAGE_PATH))
+	bash ./touch_images.sh $(DOXYGEN_SOURCE_DIRECTORY) $(DOXYGEN_IMAGE_PATH)
 	doxygen
 	bash ./CleanNamespaces.sh
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
