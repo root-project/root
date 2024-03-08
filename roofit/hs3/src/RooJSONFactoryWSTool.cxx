@@ -1047,9 +1047,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       child["distributions"].set_seq();
       for (auto const &item : simPdf->indexCat()) {
 	const auto* pdf = simPdf->getPdf(item.first.c_str());
-	if(!pdf){
-	  std::cerr << "unable to access category pdf '" << item.first.c_str() << "' from '" << simPdf->GetName() << std::endl;
-	} else {
+	if(pdf){
 	  child["distributions"].append_child() << pdf->GetName();
 	}
       }
