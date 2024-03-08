@@ -130,11 +130,6 @@ void StandardFeldmanCousinsDemo(const char *infile = "", const char *workspaceNa
          cout << "Not sure what to do about this model" << endl;
    }
 
-   // We can use PROOF to speed things along in parallel
-   //  ProofConfig pc(*w, 1, "workers=4", kFALSE);
-   //  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
-   //  toymcsampler->SetProofConfig(&pc); // enable proof
-
    // Now get the interval
    PointSetInterval *interval = fc.GetInterval();
    ConfidenceBelt *belt = fc.GetConfidenceBelt();

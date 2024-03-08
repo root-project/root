@@ -146,10 +146,6 @@ public:
    /// set numerical error in test statistic evaluation (default is zero)
    void SetNumErr(double err) { fNumErr = err; }
 
-   /// set flag to close proof for every new run
-   static void SetCloseProof(bool flag);
-
-
 protected:
 
    /// copy c-tor
@@ -174,7 +170,6 @@ private:
    static double fgCLAccuracy;
    static double fgAbsAccuracy;
    static double fgRelAccuracy;
-   static bool fgCloseProof;
    static std::string fgAlgo;
 
    // graph, used to compute the limit, not just for plotting!
