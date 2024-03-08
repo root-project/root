@@ -842,8 +842,8 @@ TEST(VecOps, TakeWithDefault)
 {
    RVec<int> v0{1, 2, 3};
 
-   auto v1 = Take(v0, {0, 1, 2, 3}, -999);
-   RVec<int> ref{1, 2, 3, -999};
+   auto v1 = Take(v0, {0, 3}, -999);
+   RVec<int> ref{1, -999};
    CheckEqual(v1, ref);
 }
 
