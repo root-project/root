@@ -25,7 +25,7 @@ class TestGaussPlusPoisson : public PDFTest
 {
   protected:
     TestGaussPlusPoisson() :
-      PDFTest("Gauss + Poisson", 100000)
+      PDFTest("Gauss + Poisson")
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = std::make_unique<RooRealVar>("x", "x", -1.5, 40.5);
@@ -78,7 +78,7 @@ class TestGaussPlusGaussPlusExp : public PDFTest
 {
   protected:
     TestGaussPlusGaussPlusExp() :
-      PDFTest("Gauss + Gauss + Exp", 100001)
+      PDFTest("Gauss + Gauss + Exp")
     {
       auto x = std::make_unique<RooRealVar>("x", "x", 0., 100.);
 

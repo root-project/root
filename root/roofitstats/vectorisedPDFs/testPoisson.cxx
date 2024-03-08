@@ -23,7 +23,7 @@ class TestPoisson : public PDFTest
 {
   protected:
     TestPoisson() :
-      PDFTest("Poisson", 100000)
+      PDFTest("Poisson")
   {
       auto x = std::make_unique<RooRealVar>("x", "x", -10, 100);
       auto mean = std::make_unique<RooRealVar>("mean", "Mean of Poisson", 2., 0., 50);
@@ -43,7 +43,7 @@ class TestPoissonOddMean : public PDFTest
 {
   protected:
     TestPoissonOddMean() :
-      PDFTest("PoissonOddMean", 100000)
+      PDFTest("PoissonOddMean")
   {
       auto x = std::make_unique<RooRealVar>("x", "x", -10, 50);
       auto mean = std::make_unique<RooRealVar>("mean", "Mean of Poisson", 7.5, 0., 50);
@@ -63,7 +63,7 @@ class TestPoissonOddMeanNoRounding : public PDFTest
 {
   protected:
     TestPoissonOddMeanNoRounding() :
-      PDFTest("PoissonOddMeanNoRounding", 100000)
+      PDFTest("PoissonOddMeanNoRounding")
   {
       auto x = std::make_unique<RooRealVar>("x", "x", 0., 100);
       auto mean = std::make_unique<RooRealVar>("mean", "Mean of Poisson", 7.8529298854862928, 0., 10);

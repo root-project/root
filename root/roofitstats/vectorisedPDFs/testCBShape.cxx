@@ -21,7 +21,7 @@ class TestCBShape : public PDFTest
 {
   protected:
     TestCBShape() :
-      PDFTest("CBShape", 100000)
+      PDFTest("CBShape")
   {
         auto m = std::make_unique<RooRealVar>("m", "m", -10, 10);
         auto m0 = std::make_unique<RooRealVar>("m0", "m0", 1, -7, 7);

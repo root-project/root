@@ -25,7 +25,7 @@ class TestExponential : public PDFTest
 {
   protected:
     TestExponential() :
-      PDFTest("Exp(x, c1)", 100000)
+      PDFTest("Exp(x, c1)")
   {
       //Beyond ~19, the VDT polynomials break down when c1 is very negative
       auto x = std::make_unique<RooRealVar>("x", "x", 0.001, 18.);

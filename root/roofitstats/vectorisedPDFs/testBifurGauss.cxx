@@ -22,7 +22,7 @@ class TestBifurGauss : public PDFTest
 {
   protected:
     TestBifurGauss() :
-      PDFTest("BifurGauss", 100000)
+      PDFTest("BifurGauss")
   { 
     auto x = std::make_unique<RooRealVar>("x", "x", 300.0, 100.0, 800.0);
     auto mean = std::make_unique<RooRealVar>("mean", "mean", 350.0, 250.0, 500.0);

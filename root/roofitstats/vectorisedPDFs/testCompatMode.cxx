@@ -182,7 +182,7 @@ class TestNonVecGauss : public PDFTest
 {
   protected:
     TestNonVecGauss() :
-      PDFTest("GaussNoBatches", 200000) {
+      PDFTest("GaussNoBatches") {
       auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
       auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 1, -10, 10);
       auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 1, 0.1, 10);

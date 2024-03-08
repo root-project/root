@@ -22,7 +22,7 @@ class TestGamma : public PDFTest
 {
   protected:
     TestGamma() :
-      PDFTest("Gamma", 100000)
+      PDFTest("Gamma")
   {
     auto x = std::make_unique<RooRealVar>("x", "x", 5, 4, 10);
     auto gamma = std::make_unique<RooRealVar>("gamma", "N+1", 6, 4, 8);

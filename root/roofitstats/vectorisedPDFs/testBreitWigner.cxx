@@ -21,7 +21,7 @@ class TestBreitWigner : public PDFTest
 {
   protected:
     TestBreitWigner() :
-      PDFTest("BreitWigner", 100000)
+      PDFTest("BreitWigner")
   {
         auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
         auto mean = std::make_unique<RooRealVar>("mean", "mean", 1, -7, 7);

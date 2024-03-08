@@ -21,7 +21,7 @@ class TestVoigtian : public PDFTest
 {
   protected:
     TestVoigtian() :
-      PDFTest("Voigtian", 100000)
+      PDFTest("Voigtian")
   {
         auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
         auto mean = std::make_unique<RooRealVar>("mean", "mean", 1, 0.1, 10);
@@ -56,7 +56,7 @@ class TestVoigtianInXandMean : public PDFTest
 {
   protected:
     TestVoigtianInXandMean() :
-      PDFTest("Voigtian(x,m)", 100000)
+      PDFTest("Voigtian(x,m)")
   {
         auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
         auto mean = std::make_unique<RooRealVar>("mean", "mean", 1, 0.1, 10);

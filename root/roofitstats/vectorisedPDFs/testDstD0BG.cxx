@@ -22,7 +22,7 @@ class TestDstD0BG : public PDFTest
 {
   protected:
     TestDstD0BG() :
-      PDFTest("DstD0BG", 100000)
+      PDFTest("DstD0BG")
   { 
       auto m = std::make_unique<RooRealVar>("m", "m", 2.0, 1.61, 3);
       auto m0 = new RooRealVar("m0", "m0", 1.6);

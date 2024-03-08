@@ -23,7 +23,7 @@ class TestProdPdf : public PDFTest
 {
   protected:
     TestProdPdf() :
-      PDFTest("Gauss(x) * Gauss(y)", 75000)
+      PDFTest("Gauss(x) * Gauss(y)")
   {
       auto x = std::make_unique<RooRealVar>("x", "x", 1, -7, 7);
       auto m1 = std::make_unique<RooRealVar>("m1", "m1", -0.3 , -5., 5.);

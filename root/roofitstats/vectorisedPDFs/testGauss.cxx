@@ -23,7 +23,7 @@ class TestGauss : public PDFTest
 {
   protected:
     TestGauss() :
-      PDFTest("Gauss", 200000)
+      PDFTest("Gauss")
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
         auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
@@ -61,7 +61,7 @@ class TestGaussWeighted : public PDFTestWeightedData
 {
   protected:
     TestGaussWeighted() :
-      PDFTestWeightedData("GaussWithWeights", 100000)
+      PDFTestWeightedData("GaussWithWeights")
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
@@ -122,7 +122,7 @@ class TestGaussWithFormulaParameters : public PDFTest
 {
   protected:
     TestGaussWithFormulaParameters() :
-      PDFTest("Gauss(x, mean)", 50000)
+      PDFTest("Gauss(x, mean)")
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = std::make_unique<RooRealVar>("x", "x", 0, 30);
