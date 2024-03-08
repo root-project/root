@@ -1,0 +1,129 @@
+From 24b94cde0a5fa6b46be05359b7218af9bb295d87 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Tue, 12 Mar 2024 01:59:37 +0100
+Subject: [PATCH] [CPyCppyy] Adapt to no `std::` in ROOT
+
+---
+ .../pyroot/cppyy/CPyCppyy/src/Converters.cxx  | 20 +++++++++++--------
+ .../pyroot/cppyy/CPyCppyy/src/Executors.cxx   |  2 ++
+ .../pyroot/cppyy/CPyCppyy/src/Pythonize.cxx   |  8 ++++----
+ 3 files changed, 18 insertions(+), 12 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+index efd404aebe..4ac294745c 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+@@ -3164,7 +3164,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
+     }
+ 
+ //-- special case: initializer list
+-    if (realType.compare(0, 21, "std::initializer_list") == 0) {
++    if (realType.compare(0, 16, "initializer_list") == 0) {
+     // get the type of the list and create a converter (TODO: get hold of value_type?)
+         auto pos = realType.find('<');
+         std::string value_type = realType.substr(pos+1, realType.size()-pos-2);
+@@ -3175,8 +3175,9 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
+     bool control = cpd == "&" || isConst;
+ 
+ //-- special case: std::function
+-    auto pos = resolvedType.find("std::function<");
+-    if (pos == 0 /* std:: */ || pos == 6 /* const std:: */ ) {
++    auto pos = resolvedType.find("function<");
++    if (pos == 0 /* no std:: */ || pos == 5 /* with std:: */ ||
++        pos == 6 /* const no std:: */ || pos == 11 /* const with std:: */ ) {
+ 
+     // get actual converter for normal passing
+         Converter* cnv = selectInstanceCnv(
+@@ -3184,14 +3185,14 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
+ 
+         if (cnv) {
+         // get the type of the underlying (TODO: use target_type?)
+-            auto pos1 = resolvedType.find("(", pos+14);
++            auto pos1 = resolvedType.find("(", pos+9);
+             auto pos2 = resolvedType.rfind(")");
+             if (pos1 != std::string::npos && pos2 != std::string::npos) {
+-                auto sz1 = pos1-pos-14;
+-                if (resolvedType[pos+14+sz1-1] == ' ') sz1 -= 1;
++                auto sz1 = pos1-pos-9;
++                if (resolvedType[pos+9+sz1-1] == ' ') sz1 -= 1;
+ 
+                 return new StdFunctionConverter(cnv,
+-                    resolvedType.substr(pos+14, sz1), resolvedType.substr(pos1, pos2-pos1+1));
++                    resolvedType.substr(pos+9, sz1), resolvedType.substr(pos1, pos2-pos1+1));
+             } else if (cnv->HasState())
+                 delete cnv;
+         }
+@@ -3301,7 +3302,7 @@ std::string::size_type dims2stringsz(cdims_t d) {
+     return (d && d.ndim() != UNKNOWN_SIZE) ? d[0] : std::string::npos;
+ }
+ 
+-#define STRINGVIEW "std::basic_string_view<char>"
++#define STRINGVIEW "basic_string_view<char,char_traits<char> >"
+ #define WSTRING1 "std::basic_string<wchar_t>"
+ #define WSTRING2 "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t>>"
+ 
+@@ -3484,7 +3485,10 @@ public:
+         gf["char ptr"] =                    gf["char*[]"];
+         gf["std::string"] =                 (cf_t)+[](cdims_t) { return new STLStringConverter{}; };
+         gf["const std::string&"] =          gf["std::string"];
++        gf["string"] =                      gf["std::string"];
++        gf["const string&"] =               gf["std::string"];
+         gf["std::string&&"] =               (cf_t)+[](cdims_t) { return new STLStringMoveConverter{}; };
++        gf["string&&"] =                    gf["std::string&&"];
+ #if __cplusplus > 201402L
+         gf["std::string_view"] =            (cf_t)+[](cdims_t) { return new STLStringViewConverter{}; };
+         gf[STRINGVIEW] =                    gf["std::string_view"];
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
+index 9692fc8535..70d8f72596 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
+@@ -1088,7 +1088,9 @@ public:
+         gf["char16_t*"] =                   (ef_t)+[](cdims_t) { static CString16Executor e{};   return &e;};
+         gf["char32_t*"] =                   (ef_t)+[](cdims_t) { static CString32Executor e{};   return &e;};
+         gf["std::string"] =                 (ef_t)+[](cdims_t) { static STLStringExecutor e{};   return &e; };
++        gf["string"] =                      gf["std::string"];
+         gf["std::string&"] =                (ef_t)+[](cdims_t) { return new STLStringRefExecutor{}; };
++        gf["string&"] =                     gf["std::string&"];
+         gf["std::wstring"] =                (ef_t)+[](cdims_t) { static STLWStringExecutor e{};  return &e; };
+         gf[WSTRING1] =                      gf["std::wstring"];
+         gf[WSTRING2] =                      gf["std::wstring"];
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+index c1720cf3f2..ae0e31cac8 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+@@ -67,7 +67,7 @@ PyObject* GetAttrDirect(PyObject* pyclass, PyObject* pyname) {
+ inline bool IsTemplatedSTLClass(const std::string& name, const std::string& klass) {
+ // Scan the name of the class and determine whether it is a template instantiation.
+     auto pos = name.find(klass);
+-    return pos == 5 && name.rfind("std::", 0, 5) == 0  && name.find("::", name.rfind(">")) == std::string::npos;
++    return (pos == 0 || pos == 5) && name.find("::", name.rfind(">")) == std::string::npos;
+ }
+ 
+ // to prevent compiler warnings about const char* -> char*
+@@ -1873,7 +1873,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+         Utility::AddToClass(pyclass, "__iter__", (PyCFunction)PyObject_SelfIter, METH_NOARGS);
+     }
+ 
+-    else if (name == "std::string") { // TODO: ask backend as well
++    else if (name == "string" || name == "std::string") { // TODO: ask backend as well
+         Utility::AddToClass(pyclass, "__repr__",      (PyCFunction)STLStringRepr,       METH_NOARGS);
+         Utility::AddToClass(pyclass, "__str__",       (PyCFunction)STLStringStr,        METH_NOARGS);
+         Utility::AddToClass(pyclass, "__bytes__",     (PyCFunction)STLStringBytes,      METH_NOARGS);
+@@ -1894,12 +1894,12 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+         ((PyTypeObject*)pyclass)->tp_hash = (hashfunc)STLStringHash;
+     }
+ 
+-    else if (name == "std::basic_string_view<char>") {
++    else if (name == "basic_string_view<char>" || name == "std::basic_string_view<char>") {
+         Utility::AddToClass(pyclass, "__real_init", "__init__");
+         Utility::AddToClass(pyclass, "__init__", (PyCFunction)StringViewInit, METH_VARARGS | METH_KEYWORDS);
+     }
+ 
+-    else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >") {
++    else if (name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >" || name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >") {
+         Utility::AddToClass(pyclass, "__repr__",  (PyCFunction)STLWStringRepr,       METH_NOARGS);
+         Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLWStringStr,        METH_NOARGS);
+         Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLWStringBytes,      METH_NOARGS);
+-- 
+2.44.0
+

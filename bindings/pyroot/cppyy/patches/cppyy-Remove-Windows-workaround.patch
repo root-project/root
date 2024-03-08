@@ -1,0 +1,27 @@
+From c5c0a50babb33db7f0b193fc824fca2b02ed6b41 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Tue, 12 Mar 2024 09:39:45 +0100
+Subject: [PATCH] [cppyy] Remove unneeded `std::endl` workaround for Windows
+
+---
+ bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
+index 2a169cadee..957443289d 100644
+--- a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
++++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
+@@ -430,10 +430,3 @@ def multi(*bases):      # after six, see also _typemap.py
+         def __new__(cls, name, this_bases, d):
+             return nc_meta(name, bases, d)
+     return type.__new__(faux_meta, 'faux_meta', (), {})
+-
+-
+-#- workaround (TODO: may not be needed with Clang9) --------------------------
+-if 'win32' in sys.platform:
+-    cppdef("""template<>
+-    std::basic_ostream<char, std::char_traits<char>>& __cdecl std::endl<char, std::char_traits<char>>(
+-        std::basic_ostream<char, std::char_traits<char>>&);""")
+-- 
+2.44.0
+
