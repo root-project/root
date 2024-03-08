@@ -26,6 +26,10 @@ int d_overload::get_int(ns_b_overload::a_overload* a) { return a->i1; }
 int d_overload::get_int(ns_a_overload::a_overload* a) { return a->i1; }
 int d_overload::get_int(a_overload* a)                { return a->i1; }
 
+class bb_ol {};
+bb_ol* get_bb_ol() { return new bb_ol{}; }
+class dd_ol {};
+dd_ol* get_dd_ol() { return new dd_ol{}; }
 
 more_overloads::more_overloads() {}
 std::string more_overloads::call(const aa_ol&) { return "aa_ol"; }
@@ -54,3 +58,10 @@ double calc_mean(long n, const double* a)    { return calc_mean<double>(n, a); }
 double calc_mean(long n, const int* a)       { return calc_mean<int>(n, a); }
 double calc_mean(long n, const short* a)     { return calc_mean<short>(n, a); }
 double calc_mean(long n, const long* a)      { return calc_mean<long>(n, a); }
+
+
+std::string more_overloads3::slice(size_t) const { return "const"; }
+std::string more_overloads3::slice(size_t) { return "non-const"; }
+std::string more_overloads3::slice(size_t, size_t) const { return "const"; }
+std::string more_overloads3::slice(size_t, size_t) { return "non-const"; }
+

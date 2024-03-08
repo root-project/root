@@ -39,7 +39,7 @@ if os.path.exists(fn+'Dict.dll'):
         os.remove(fg)
 
 def _get_config_exec():
-        return [sys.executable, '-m', 'cppyy_backend._cling_config']
+    return [sys.executable, '-m', 'cppyy_backend._cling_config']
 
 def get_config(what):
     config_exec_args = _get_config_exec()
@@ -78,7 +78,7 @@ else:
 cppflags = get_config('cppflags')
 if uses_python_capi:
     cppflags += ' -I"' + get_python_include_dir() + '"'
-BUILDOBJ_CMD_PART = "cl -O2 -nologo -TP -c -nologo " + cppflags + " -FIsehmap.h -Zc:__cplusplus -MD -GR -D_WINDOWS -DWIN32 " + PLATFORMFLAG + " -EHsc- -W3 -wd4141 -wd4291 -wd4244 -wd4049 -D_XKEYCHECK_H -D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS {fn}.cxx -Fo{fn}.obj"
+BUILDOBJ_CMD_PART = "cl -O2 -nologo -TP -c -nologo " + cppflags + " -FIsehmap.h -MD -GR -D_WINDOWS -DWIN32 " + PLATFORMFLAG + " -EHsc- -W3 -wd4141 -wd4291 -wd4244 -wd4049 -D_XKEYCHECK_H -D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS {fn}.cxx -Fo{fn}.obj"
 BUILDOBJ_CMD = BUILDOBJ_CMD_PART.format(fn=fn)
 if os.system(BUILDOBJ_CMD):
     sys.exit(1)

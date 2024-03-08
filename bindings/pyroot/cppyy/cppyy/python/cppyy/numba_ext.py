@@ -16,7 +16,10 @@ import numba.core.types as nb_types
 import numba.core.typing as nb_typing
 
 from llvmlite import ir
-
+from numba.extending import make_attribute_wrapper
+import itertools
+import re
+import inspect
 
 # setuptools entry point for Numba
 def _init_extension():
@@ -26,10 +29,12 @@ def _init_extension():
 class Qualified:
     default   = 0
     value     = 1
+    instance  = 2
 
-ir_voidptr  = ir.PointerType(ir.IntType(8))  # by convention
-ir_byteptr  = ir_voidptr
-ir_intptr_t = ir.IntType(cppyy.sizeof('void*')*8)     # use MACHINE_BITS?
+ir_byte     = ir.IntType(8)
+ir_voidptr  = ir.PointerType(ir_byte)                 # by convention
+ir_byteptr  = ir_voidptr                              # for clarity
+ir_intptr_t = ir.IntType(cppyy.sizeof('void*')*8)
 
 # special case access to unboxing/boxing APIs
 cppyy_as_voidptr   = cppyy.addressof('Instance_AsVoidPtr')
@@ -43,7 +48,6 @@ _cpp2numba = {
     'uint8_t'                : nb_types.uint8,
     'short'                  : nb_types.short,
     'unsigned short'         : nb_types.ushort,
-    'internal_enum_type_t'   : nb_types.intc,
     'int'                    : nb_types.intc,
     'unsigned int'           : nb_types.uintc,
     'int32_t'                : nb_types.int32,
@@ -52,28 +56,81 @@ _cpp2numba = {
     'uint64_t'               : nb_types.uint64,
     'long'                   : nb_types.long_,
     'unsigned long'          : nb_types.ulong,
-    'Long64_t'               : nb_types.longlong,   # Note: placed above long long as the last value is used in numba2cpp
-    'long long'              : nb_types.longlong,   # this value will be used in numba2cpp
+    'long long'              : nb_types.longlong,
     'unsigned long long'     : nb_types.ulonglong,
     'float'                  : nb_types.float32,
-    'long double'            : nb_types.float64,    # Note: see Long64_t
-    'double'                 : nb_types.float64,    # this value will be used in numba2cpp
+    'double'                 : nb_types.float64,
+    'char'                   : nb_types.char,
+    'unsigned char'          : nb_types.uchar,
+    'char*'                  : nb_types.unicode_type
 }
+
+def resolve_std_vector(val):
+    return re.match(r'std::vector<(.+?)>', val).group(1)
+
+def resolve_const_types(val):
+    return re.match(r'const\s+(.+)\s*\*', val).group(1)
 
 def cpp2numba(val):
     if type(val) != str:
         # TODO: distinguish ptr/ref/byval
+        # TODO: Only metaclasses/proxies end up here since
+        #  ref cases makes the RETURN_TYPE from reflex a string
         return typeof_scope(val, nb_typing.typeof.Purpose.argument, Qualified.value)
+    elif val.startswith("std::vector"):
+        type_arr = getattr(numba, str(cpp2numba(resolve_std_vector(val))))[:]
+        return type_arr
+    elif val[-1] == '*' or val[-1] == '&':
+        if val.startswith('const'):
+            return nb_types.CPointer(cpp2numba(resolve_const_types(val)))
+        return nb_types.CPointer(_cpp2numba[val[:-1]])
     return _cpp2numba[val]
 
 _numba2cpp = dict()
 for key, value in _cpp2numba.items():
     _numba2cpp[value] = key
+# prefer "int" in the case of intc over "int32_t"
+_numba2cpp[nb_types.intc] = 'int'
 
 def numba2cpp(val):
     if hasattr(val, 'literal_type'):
         val = val.literal_type
-    return _numba2cpp[val]
+        if val == nb_types.int64:      # Python int
+            # TODO: this is only necessary until "best matching" is in place
+            val = nb_types.intc        # more likely match candidate
+    elif isinstance(val, numba.types.CPointer):
+        return _numba2cpp[val.dtype]
+    elif isinstance(val, numba.types.RawPointer):
+        return _numba2cpp[nb_types.voidptr]
+    elif isinstance(val, numba.types.Array):
+        return "std::vector<" + _numba2cpp[val.dtype] + ">"
+    elif isinstance(val, CppClassNumbaType):
+        return val._scope.__cpp_name__
+    else:
+        try:
+            return _numba2cpp[val]
+        except:
+            raise RuntimeError("Type mapping failed from Numba to C++ for ", val)
+
+def numba_arg_convertor(args):
+    args_cpp = []
+    for i, arg in enumerate(list(args)):
+        # If the user explicitly passes an argument using numba CPointer, the regex match is used
+        # to detect the pass by reference since the dispatcher always returns typeref[val*]
+        match = re.search(r"typeref\[(.*?)\*\]", str(arg))
+        if match:
+            literal_val = match.group(1)
+            arg_type = numba.typeof(eval(literal_val))
+            args_cpp.append(to_ref(numba2cpp(arg_type)))
+        else:
+            args_cpp.append(numba2cpp(arg))
+    return tuple(args_cpp)
+
+def to_ref(type_list):
+    ref_list = []
+    for i, l in enumerate(type_list):
+        ref_list.append(l + '&')
+    return ref_list
 
 # TODO: looks like Numba treats unsigned types as signed when lowering,
 # which seems to work as they're just reinterpret_casts
@@ -83,7 +140,6 @@ _cpp2ir = {
     'uint8_t'                : ir.IntType(8),
     'short'                  : ir.IntType(nb_types.short.bitwidth),
     'unsigned short'         : ir.IntType(nb_types.ushort.bitwidth),
-    'internal_enum_type_t'   : ir.IntType(nb_types.intc.bitwidth),
     'int'                    : ir.IntType(nb_types.intc.bitwidth),
     'unsigned int'           : ir.IntType(nb_types.uintc.bitwidth),
     'int32_t'                : ir.IntType(32),
@@ -99,8 +155,19 @@ _cpp2ir = {
 }
 
 def cpp2ir(val):
-    return _cpp2ir[val]
-
+    try:
+        return _cpp2ir[val]
+    except KeyError:
+        if val.startswith("std::vector"):
+            ## TODO should be possible to obtain the vector length from the CPPDataMember val
+            type_arr = ir.VectorType(cpp2ir(resolve_std_vector(val)), 3)
+            return type_arr
+        elif val != "char*" and val[-1] == "*":
+            if val.startswith('const'):
+                return ir.PointerType(cpp2ir(resolve_const_types(val)))
+            else:
+                type_2 = _cpp2ir[val[:-1]]
+                return ir.PointerType(type_2)
 
 #
 # C++ function pointer -> Numba
@@ -118,6 +185,8 @@ class CppFunctionNumbaType(nb_types.Callable):
 
         self._signatures = list()
         self._impl_keys = dict()
+        self._arg_set_matched = tuple()
+        self.ret_type = None
 
     def is_precise(self):
         return True          # by definition
@@ -128,28 +197,36 @@ class CppFunctionNumbaType(nb_types.Callable):
         except KeyError:
             pass
 
-        ol = CppFunctionNumbaType(self._func.__overload__(tuple(numba2cpp(x) for x in args)), self._is_method)
+        ol = CppFunctionNumbaType(self._func.__overload__(numba_arg_convertor(args)), self._is_method)
 
+        thistype = None
         if self._is_method:
-            args = (nb_types.voidptr, *args)
+            thistype = nb_types.voidptr
 
+        self.ret_type = cpp2numba(ol._func.__cpp_reflex__(cpp_refl.RETURN_TYPE))
         ol.sig = nb_typing.Signature(
-            return_type=cpp2numba(ol._func.__cpp_reflex__(cpp_refl.RETURN_TYPE)),
+            return_type=self.ret_type,
             args=args,
-            recvr=None)  # this pointer
+            recvr=thistype)
+
+        extsig = ol.sig
+        if self._is_method:
+            self.ret_type = ol.sig.return_type
+            args = (nb_types.voidptr, *args)
+            extsig = nb_typing.Signature(
+                return_type=ol.sig.return_type, args=args, recvr=None)
 
         self._impl_keys[args] = ol
+        self._arg_set_matched = numba_arg_convertor(args)
+
 
         @nb_iutils.lower_builtin(ol, *args)
         def lower_external_call(context, builder, sig, args,
-                ty=nb_types.ExternalFunctionPointer(ol.sig, ol.get_pointer), pyval=self._func):
+                ty=nb_types.ExternalFunctionPointer(extsig, ol.get_pointer), pyval=self._func, is_method=self._is_method):
             ptrty = context.get_function_pointer_type(ty)
             ptrval = context.add_dynamic_addr(
                 builder, ty.get_pointer(pyval), info=str(pyval))
             fptr = builder.bitcast(ptrval, ptrty)
-            if hasattr(context, 'cppyy_currentcall_this'):
-                args = [context.cppyy_currentcall_this]+args
-                del context.cppyy_currentcall_this
             return context.call_function_pointer(builder, fptr, args)
 
         return ol.sig
@@ -160,9 +237,12 @@ class CppFunctionNumbaType(nb_types.Callable):
     def get_impl_key(self, sig):
         return self._impl_keys[sig.args]
 
+    #TODO : Remove the redundancy of __overload__ matching and use this function to only obtain the address given the matched overload
     def get_pointer(self, func):
         if func is None: func = self._func
-        ol = func.__overload__(tuple(numba2cpp(x) for x in self.sig.args[int(self._is_method):]))
+
+        ol = func.__overload__(numba_arg_convertor(self.sig.args))
+
         address = cppyy.addressof(ol)
         if not address:
             raise RuntimeError("unresolved address for %s" % str(ol))
@@ -216,10 +296,19 @@ class CppDataMemberInfo(object):
 #
 class CppClassNumbaType(CppFunctionNumbaType):
     def __init__(self, scope, qualifier):
+        addr = None
+        cppinstance_val = None
+        if qualifier == Qualified.instance:
+            addr = cppyy.addressof(scope)
+            cppinstance_val = scope
+            scope = type(scope)
+            qualifier = Qualified.default
         super(CppClassNumbaType, self).__init__(scope.__init__)
         self.name = 'CppClass(%s)' % scope.__cpp_name__    # overrides value in Type
         self._scope     = scope
         self._qualifier = qualifier
+        self._cppinstanceval = cppinstance_val
+        self._addr = addr
 
     def get_scope(self):
         return self._scope
@@ -238,6 +327,7 @@ class CppClassNumbaType(CppFunctionNumbaType):
     @property
     def key(self):
         return (self._scope, self._qualifier)
+
 
 @nb_tmpl.infer_getattr
 class CppClassFieldResolver(nb_tmpl.AttributeTemplate):
@@ -286,7 +376,6 @@ def cppclass_getattr_impl(context, builder, typ, val, attr):
             return builder.load(pf)
 
         elif q == Qualified.value:
-            # TODO: access members of by value returns
             model = nb_dm.default_manager.lookup(typ)
             return model.get(builder, val, attr)
 
@@ -302,22 +391,70 @@ def cppclass_getattr_impl(context, builder, typ, val, attr):
   # assume this is a method
     q = typ.get_qualifier()
     if q == Qualified.default:
-        context.cppyy_currentcall_this = builder.bitcast(val, ir_voidptr)
+        return builder.bitcast(val, ir_voidptr)
 
     elif q == Qualified.value:
-        # TODO: take address of by value returns
-        context.cppyy_currentcall_this = None
+        return None
 
-    else:
-        assert not "unknown qualified type"
+    assert not "unknown qualified type"
+    return None
 
-    return context.cppyy_currentcall_this
+
+class ImplAggregateValueModel(nb_dm.models.StructModel):
+    def get(self, builder, val, pos):
+        """Get a field at the given position/field name"""
+
+        if isinstance(pos, str):
+            pos = self.get_field_position(pos)
+
+      # Use the offsets for direct addressing, rather than getting the elements
+      # from the struct type.
+        dmi = self._data_members[pos]
+
+        stack = nb_cgu.alloca_once(builder, self.get_data_type())
+        builder.store(val, stack)
+
+        llval = builder.bitcast(stack, ir_byteptr)
+        pfc = builder.gep(llval, [ir.Constant(ir_intptr_t, dmi.f_offset)])
+        pf = builder.bitcast(pfc, ir.PointerType(dmi.f_irtype))
+
+        return builder.load(pf)
+
+class ImplClassValueModel(ImplAggregateValueModel):
+  # TODO : Should the address have to be passed here and stored in meminfo
+  # value: representation inside function body. Maybe stored in stack.
+  #        The representation here are flexible.
+    def get_value_type(self):
+        return self.get_data_type()
+
+  # data: representation used when storing into containers (e.g. arrays).
+    def get_data_type(self):
+      # The struct model relies on data being a POD, but for C++ objects, there
+      # can be hidden data (e.g. vtable, thunks, or simply private members), and
+      # the alignment of Cling and Numba also need not be the same. Therefore, the
+      # struct is split in a series of byte members to get the total size right
+      # and to allow addressing at the correct offsets.
+        if self._data_type is None:
+            self._data_type = ir.LiteralStructType([ir_byte for i in range(self._sizeof)], packed=True)
+        return self._data_type
+
+  # return: representation used for return argument.
+    def get_return_type(self):
+        return self.get_data_type()
 
 
 scope_numbatypes = (dict(), dict())
 
 @nb_ext.typeof_impl.register(cpp_types.Scope)
 def typeof_scope(val, c, q = Qualified.default):
+    is_instance = False
+    cppinstance_val = None
+    if q == Qualified.instance:
+        cppinstance_val = val
+        val = type(val)
+        q = Qualified.default
+        is_instance = True
+
     global scope_numbatypes
 
     try:
@@ -333,16 +470,24 @@ def typeof_scope(val, c, q = Qualified.default):
     class ImplClassType(CppClassNumbaType):
         pass
 
-    cnt = ImplClassType(val, q)
+    if is_instance:
+        cnt = ImplClassType(cppinstance_val, Qualified.instance)
+    else:
+        cnt = ImplClassType(val, q)
+
     scope_numbatypes[q][val] = cnt
 
   # declare data members to Numba
     data_members = list()
+    member_methods = dict()
+
     for name, field in val.__dict__.items():
         if type(field) == cpp_types.DataMember:
             data_members.append(CppDataMemberInfo(
                 name, field.__cpp_reflex__(cpp_refl.OFFSET), field.__cpp_reflex__(cpp_refl.TYPE))
             )
+        elif type(field) == cpp_types.Function:
+            member_methods[name] = field.__cpp_reflex__(cpp_refl.RETURN_TYPE)
 
   # TODO: this refresh is needed b/c the scope type is registered as a
   # callable after the tracing started; no idea of the side-effects ...
@@ -354,6 +499,7 @@ def typeof_scope(val, c, q = Qualified.default):
         class ImplClassModel(nb_dm.models.StructModel):
             def __init__(self, dmm, fe_type):
                 self._data_members = data_members
+                self._member_methods = member_methods
 
               # TODO: eventually we need not derive from StructModel
                 members = [(dmi.f_name, dmi.f_nbtype) for dmi in data_members]
@@ -379,10 +525,13 @@ def typeof_scope(val, c, q = Qualified.default):
               # as a pointer to POD to allow indexing by Numba for data member type checking, but the
               # address offsetting for loading data member values is independent (see get(), below),
               # so the exact layout need not match a POD
+
+              # TODO: this doesn't work for real PODs, b/c those are unpacked into their elements and
+              # passed through registers
                 return ir.PointerType(super(ImplClassModel, self).get_value_type())
 
           # argument: representation used for function argument. Needs to be builtin type,
-          #           but unlike other Numba composites, C++ proxies are no flattened.
+          #           but unlike other Numba composites, C++ proxies are not flattened.
             def get_argument_type(self):
                 return self.get_value_type()
 
@@ -398,20 +547,39 @@ def typeof_scope(val, c, q = Qualified.default):
           # access to public data members
             def get(self, builder, val, pos):
                 """Get a field at the given position/field name"""
+
                 if isinstance(pos, str):
                     pos = self.get_field_position(pos)
+
                 dmi = self._data_members[pos]
+
                 llval = builder.bitcast(val, ir_byteptr)
                 pfc = builder.gep(llval, [ir.Constant(ir_intptr_t, dmi.f_offset)])
                 pf = builder.bitcast(pfc, ir.PointerType(dmi.f_irtype))
+
                 return builder.load(pf)
 
     elif q == Qualified.value:
-        @nb_ext.register_model(ImplClassType)
-        class ImplClassModel(nb_dm.models.StructModel):
-            def __init__(self, dmm, fe_type):
-                members = [(dmi.f_name, dmi.f_nbtype) for dmi in data_members]
-                nb_dm.models.StructModel.__init__(self, dmm, fe_type, members)
+        if val.__cpp_reflex__(cpp_refl.IS_AGGREGATE):
+            @nb_ext.register_model(ImplClassType)
+            class ImplClassModel(ImplAggregateValueModel):
+                pass
+        else:
+            @nb_ext.register_model(ImplClassType)
+            class ImplClassModel(ImplClassValueModel):
+                pass
+
+        def init(self, dmm, fe_type, sz = cppyy.sizeof(val)):
+            self._data_members = data_members
+            self._member_methods = member_methods
+            self._sizeof = sz
+
+          # TODO: this code exists purely to be able to use the indexing and hierarchy
+          # of the base class StructModel, which isn't much of a reason
+            members = [(dmi.f_name, dmi.f_nbtype) for dmi in data_members]
+            nb_dm.models.StructModel.__init__(self, dmm, fe_type, members)
+
+        ImplClassModel.__init__ = init
 
     else:
         assert not "unknown qualified type"
@@ -431,27 +599,44 @@ def typeof_scope(val, c, q = Qualified.default):
 
         return nb_ext.NativeValue(pobj, is_error=None, cleanup=None)
 
+    def make_implclass(context, builder, typ, **kwargs):
+        return nb_cgu.create_struct_proxy(typ)(context, builder, **kwargs)
+
   # C++ object to Python proxy wrapping for returns from Numba trace
     @nb_ext.box(ImplClassType)
     def box_instance(typ, val, c):
         assert not "requires object model and passing of intact object, not memberwise copy"
+
         global cppyy_from_voidptr
 
-        ir_pyobj = c.context.get_argument_type(nb_types.pyobject)
-        ir_int   = cpp2ir('int')
+        if type(val) == ir.Constant:
+            if val.constant == ir.Undefined:
+                assert not "Value passed to instance boxing is undefined"
+                return NULL
 
-        ptrty = ir.PointerType(ir.FunctionType(ir_pyobj, [ir_voidptr, cpp2ir('char*'), ir_int]))
-        ptrval = c.context.add_dynamic_addr(c.builder, cppyy_from_voidptr, info='Instance_FromVoidPtr')
-        fp = c.builder.bitcast(ptrval, ptrty)
+        implclass = make_implclass(c.context, c.builder, typ)
+        classobj = c.pyapi.unserialize(c.pyapi.serialize_object(cpp_types.Instance))
+        pyobj = c.context.get_argument_type(nb_types.pyobject)
 
-        module = c.builder.basic_block.function.module
-        clname = c.context.insert_const_string(module, typ._scope.__cpp_name__)
+        box_list = []
 
-        NULL = c.context.get_constant_null(nb_types.voidptr)     # TODO: get the real thing
-        return c.context.call_function_pointer(c.builder, fp, [NULL, clname, ir_int(0)])
+        model = implclass._datamodel
+        cfr = CppClassFieldResolver(c.context)
+
+        for i in typ._scope.__dict__:
+            if isinstance(cfr.generic_resolve(typ, i), nb_types.Type):
+                box_list.append(c.box(cfr.generic_resolve(typ, i), getattr(implclass, i)))
+
+        box_res = c.pyapi.call_function_objargs(
+            classobj, tuple(box_list)
+        )
+        # Required for nopython mode, numba nrt requres each member box call to decref since it steals the reference
+        for i in box_list:
+            c.pyapi.decref(i)
+
+        return box_res
 
     return cnt
-
 
 #
 # C++ instance -> Numba
@@ -464,5 +649,5 @@ def typeof_instance(val, c):
         return scope_numbatypes[Qualified.default][type(val)]
     except KeyError:
         pass
-
-    return typeof_scope(type(val), c, Qualified.default)
+    # Pass the val itself to obtain Cling address of the CPPInstance for reference to C++ objects
+    return typeof_scope(val, c, Qualified.instance)

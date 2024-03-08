@@ -15,7 +15,7 @@ public:
     virtual PyCallable* Clone() { return new CPPSetItem(*this); }
 
 protected:
-    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
+    virtual bool ProcessArgs(PyCallArgs& args);
     virtual bool InitExecutor_(Executor*&, CallContext* ctxt = nullptr);
 };
 
@@ -27,7 +27,7 @@ public:
     virtual PyCallable* Clone() { return new CPPGetItem(*this); }
 
 protected:
-    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
+    virtual bool ProcessArgs(PyCallArgs& args);
 };
 
 } // namespace CPyCppyy

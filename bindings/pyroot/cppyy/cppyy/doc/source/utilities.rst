@@ -52,6 +52,17 @@ to locate those library dependencies.
 Alternatively, you can add the additional libraries to load to the mapping
 files of the class loader (see below).
 
+.. note::
+
+    The JIT needs to resolve linker symbols in order to call them through
+    generated wrappers.
+    Thus, any classes, functions, and data that will be used in Python need
+    to be exported.
+    This is the default behavior on Mac and Linux, but not on Windows.
+    On that platform, use ``__declspec(dllexport)`` to explicitly export the
+    classes and function you expect to call.
+    CMake has simple `support for exporting all`_ C++ symbols.
+
 In tandem with any dictionary, a pre-compiled module (.pcm) file will be
 generated.
 C++ modules are still on track for inclusion in the C++20 standard and most
@@ -211,7 +222,7 @@ Once support for C++ modules is fully fleshed out, access to the header file
 will no longer be needed.
 
 .. _`rootcling manual`: https://root.cern.ch/root/html/guides/users-guide/AddingaClass.html#the-linkdef.h-file
-.. _`helper script`: https://bitbucket.org/wlav/cppyy/src/master/test/make_dict_win32.py
+.. _`helper script`: https://github.com/wlav/cppyy/blob/master/test/make_dict_win32.py
 
 
 Class loader
@@ -267,3 +278,6 @@ cppyy-supported bindings::
 
 This utility is mainly used as part of the
 :doc:`CMake interface <cmake_interface>`.
+
+
+.. _`support for exporting all`: https://cmake.org/cmake/help/latest/prop_tgt/WINDOWS_EXPORT_ALL_SYMBOLS.html

@@ -1,4 +1,4 @@
-import os
+import py, os
 from pytest import mark, raises
 from .support import setup_make
 
@@ -15,10 +15,12 @@ for p in inc_paths:
 @mark.skipif(eigen_path is None, reason="Eigen not found")
 class TestEIGEN:
     def setup_class(cls):
-        import cppyy
+        import cppyy, warnings
 
         cppyy.add_include_path(eigen_path)
-        cppyy.include('Eigen/Dense')
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            cppyy.include('Eigen/Dense')
 
     def test01_simple_matrix_and_vector(self):
         """Basic creation of an Eigen::Matrix and Eigen::Vector"""
@@ -140,3 +142,25 @@ class TestEIGEN:
 
         a.__assign__(b)
         assert a.size() == 9
+
+
+@mark.skipif(eigen_path is None, reason="Eigen not found")
+class TestEIGEN_REGRESSIOn:
+    def setup_class(cls):
+        import cppyy, warnings
+
+        cppyy.add_include_path(eigen_path)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            cppyy.include('Eigen/Dense')
+
+    def test01_use_of_Map(self):
+        """Use of Map (used to crash)"""
+
+        import cppyy
+        from cppyy.gbl import Eigen
+
+        assert Eigen.VectorXd
+        assert Eigen.Map
+
+        assert Eigen.Map[Eigen.VectorXd]    # used to crash

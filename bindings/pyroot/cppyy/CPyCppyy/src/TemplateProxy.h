@@ -32,17 +32,14 @@ public:
     ~TemplateInfo();
 
 public:
-    PyObject* fCppName;
-    PyObject* fPyName;
-    PyObject* fPyClass;
+    std::string  fCppName;
+    PyObject*    fPyClass;
     CPPOverload* fNonTemplated;   // holder for non-template overloads
     CPPOverload* fTemplated;      // holder for templated overloads
     CPPOverload* fLowPriority;    // low priority overloads such as void*/void**
-    PyObject* fWeakrefList;
 
     TP_DispatchMap_t fDispatchMap;
-
-    uint64_t fFlags;              // collective for all methods
+    PyObject* fDoc;
 };
 
 typedef std::shared_ptr<TemplateInfo> TP_TInfo_t;
@@ -58,6 +55,9 @@ public:                 // public, as the python C-API works with C structs
     PyObject* fSelf;              // must be first (same layout as CPPOverload)
     PyObject* fTemplateArgs;
     PyObject* fWeakrefList;
+#if PY_VERSION_HEX >= 0x03080000
+    vectorcallfunc fVectorCall;
+#endif
     TP_TInfo_t fTI;
 
 public:
@@ -65,7 +65,7 @@ public:
     void AdoptMethod(PyCallable* pc);
     void AdoptTemplate(PyCallable* pc);
     PyObject* Instantiate(const std::string& fname,
-        PyObject* tmplArgs, Utility::ArgPreference, int* pcnt = nullptr);
+        CPyCppyy_PyArgs_t tmplArgs, size_t nargsf, Utility::ArgPreference, int* pcnt = nullptr);
 
 private:                // private, as the python C-API will handle creation
     TemplateProxy() = delete;

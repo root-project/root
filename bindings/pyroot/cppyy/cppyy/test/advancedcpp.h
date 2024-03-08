@@ -292,6 +292,8 @@ public:
 };
 extern some_int_holder my_global_int_holders[5];
 
+extern some_abstract_class* g_abstract_ptr;
+
 
 //===========================================================================
 class some_class_with_data {       // for life-line and identity testing

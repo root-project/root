@@ -1,14 +1,13 @@
 import py, pytest, os, sys, math, warnings
 from support import setup_make
 
-
 setup_make("functioncallsDict.so")
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("functioncallsDict.so"))
 
 import cppyy
-cppyy.load_reflection_info(test_dct)
+
+cppyy.load_library("functioncalls")
+cppyy.load_library("functioncallsDict")
 
 import py_functioncalls
 

@@ -57,17 +57,17 @@ typedef stringy_class<std::wstring> wstringy_class_t;
 
 //- class that has an STL-like interface
 class no_dict_available;
-    
+
 template<class T>
 class stl_like_class {
-public: 
+public:
     no_dict_available* begin() { return 0; }
     no_dict_available* end() { return (no_dict_available*)1; }
     int size() { return 4; }
     int operator[](int i) { return i; }
     std::string operator[](double) { return "double"; }
     std::string operator[](const std::string&) { return "string"; }
-};      
+};
 
 namespace {
     stl_like_class<int> stlc_1;
@@ -148,6 +148,28 @@ public:
 };
 
 
+// similar, but now with a base/derives split
+class stl_like_class_base {
+protected:
+    std::vector<double> fVec;
+
+public:
+    void push_back(double d) { fVec.push_back(d); }
+    std::vector<double>::size_type size() { return fVec.size(); }
+};
+
+class stl_like_class8 : public stl_like_class_base {
+public:
+    double& operator[](int idx) { return fVec[idx]; }
+};
+
+class stl_like_class9 : public stl_like_class_base {
+public:
+    double* begin() { return fVec.data(); }
+    double* end() { return fVec.data() + fVec.size(); }
+};
+
+
 //- helpers for testing array
 namespace ArrayTest {
 
@@ -205,9 +227,6 @@ public:
 public:
     explicit MyError(const std::string& msg);
     MyError(const MyError&);
-#ifndef WIN32
-    MyError(const MyError&&) = delete;
-#endif
     virtual ~MyError();
     MyError& operator=(const MyError&) = default;
     const char* what() const throw() override;

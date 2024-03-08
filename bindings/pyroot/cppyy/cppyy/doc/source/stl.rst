@@ -40,8 +40,8 @@ The rest of this section shows examples of how STL containers can be used in
 a natural, pythonistic, way.
 
 
-`vector`
---------
+`std::vector`
+-------------
 
 A ``std::vector`` is the most commonly used C++ container type because it is
 more efficient and performant than specialized types such as ``list`` and
@@ -55,12 +55,19 @@ In practice, it can interplay well with all these containers, but e.g.
 efficiency and performance can differ significantly.
 
 A vector can be instantiated from any sequence, including generators, and
-vectors of objects can be recursively constructed:
+vectors of objects can be recursively constructed.
+If the template type is to be inferred from the argument to the constructor,
+the first element needs to be accessible, which precludes generators.
 
   .. code-block:: python
 
     >>> from cppyy.gbl.std import vector, pair
-    >>> v = vector[int](range(10))
+    >>> v = vector[int](range(10))          # from generator
+    >>> len(v)
+    10
+    >>> v = vector([x for x in range(10)])  # type inferred
+    >>> type(v)
+    <class cppyy.gbl.std.vector<int> at 0x12d226f00>
     >>> len(v)
     10
     >>> vp = vector[pair[int, int]](((1, 2), (3, 4)))
@@ -71,7 +78,7 @@ vectors of objects can be recursively constructed:
     >>>
 
 To extend a vector in-place with another sequence object, use ``+=``, just as
-would work for Python's list:
+for Python's ``list``:
 
   .. code-block:: python
 
@@ -79,10 +86,9 @@ would work for Python's list:
     >>> len(v)
     20
     >>>
-    
-The easiest way to print the full contents of a vector, is by using a list
-and printing that instead.
-Indexing and slicing of a vector follows the normal Python slicing rules:
+
+Indexing and slicing of a vector follows the normal Python slicing rules;
+printing a vector prints all its elements:
 
   .. code-block:: python
 
@@ -92,12 +98,12 @@ Indexing and slicing of a vector follows the normal Python slicing rules:
     19
     >>> v[-4:]
     <cppyy.gbl.std.vector<int> object at 0x7f9051057650>
-    >>> list(v[-4:])
-    [16, 17, 18, 19]
+    >>> print(v[-4:])
+    { 6, 7, 8, 9 }
     >>>
 
 The usual iteration operations work on vector, but the C++ rules still apply,
-so a vector that is being iterated over can `not` be modified in the loop
+so a vector that is being iterated over can *not* be modified in the loop
 body.
 (On the plus side, this makes it much faster to iterate over a vector than,
 say, a numpy ndarray.)
@@ -207,6 +213,69 @@ implicit instantiation in the following example:
 To be sure, the code is `too` strict in the simplistic example above, and
 with a future version of Cling it should be possible to lift some of these
 restrictions without causing incorrect results.
+
+
+`std::map`
+----------
+
+C++'s ``map`` is an associative container similar to Python's ``dict``,
+albeit one that has stronger type constraints.
+A ``map`` can be instantiated from a ``dict`` (and types can be inferred) or
+from a collection of ``pair`` mappings.
+
+  .. code-block:: python
+
+    >>> from cppyy.gbl.std import map
+    >>> m = map[str, int](*("one", 1), ("two", 2)))  # type explicit, from pairs
+    >>> print(m)
+    { "one" => 1, "two" => 2 }
+    >>> m = map({1: "one", 2: "two"})                # type implicit, from dict
+    >>> type(m)
+    <class cppyy.gbl.std.map<int,std::string> at 0x12d068d60>
+    >>> print(m)
+    { 1 => "one", 2 => "two" }
+    >>>
+
+
+`std::string`
+-------------
+
+Python's `str` is a unicode type since Python3, whereas ``std::string`` is
+single-byte char-based.
+Having the two correctly interact therefore deserves it's own
+:doc:`chapter <strings>`.
+
+
+`std::tuple`
+------------
+
+C++ ``tuple`` is supported but it should be noted that its use, and in
+particular instantiating (heavily overloaded) ``get<>`` functions for member
+access is inefficient.
+They are really only meant for use when you have to pass a ``tuple`` to C++
+code; and if returned from a C++ function, it is easier to simply unpack them.
+In all other cases, prefer Python's builtin ``tuple``.
+Example usage:
+
+  .. code-block:: python
+
+    >>> from cppyy.gbl.std import make_tuple, get
+    >>> t = make_tuple(1, '2', 5.)
+    >>> print(t)
+    <cppyy.gbl.std.tuple<int,std::string,double> object at 0x12033ee70>
+    >>> len(t)
+    3
+    >>> get[0](t)            # access with templated std::get<>
+    1
+    >>> get[1](t)
+    b'2'
+    >>> get[2](t)
+    5.0
+    >>> a, b, c = t          # unpack through iteration
+    >>> print(a, b, c)
+    1 2 5.0
+    >>>
+
 
 .. rubric:: Footnotes
 

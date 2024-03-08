@@ -55,4 +55,16 @@
   <function name="call_void_sf" />
   <class name="StoreCallable_sf" />
 
+  <namespace name="ArrayOfStruct" />
+  <class pattern="ArrayOfStruct::*" />
+
+  <namespace name="ArrayOfCStrings" />
+  <function pattern="ArrayOfCStrings::*" />
+
+  <namespace name="AggregateTest" />
+  <struct pattern="AggregateTest::*" />
+
+  <namespace name="MultiDimArrays" />
+  <struct name="MultiDimArrays::DataHolder" />
+
 </lcgdict>

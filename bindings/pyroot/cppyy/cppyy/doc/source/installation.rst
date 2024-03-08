@@ -8,9 +8,15 @@ When installing through `conda-forge`_, ``conda`` will install the compiler
 for you, to match the other conda-forge packages.
 When using ``pip`` and the wheels from `PyPI`_, you minimally need gcc5,
 clang5, or MSVC'17.
-When installing from source, the only requirement is full support for C++11
-(e.g. minimum gcc 4.8.1 on GNU/Linux), but older compilers than the ones
-listed for the wheels have not been tested.
+
+.. note::
+
+    On Windows, a command prompt from which to run Python (or Python run
+    directly) needs to be opened from within an environment with MSVC setup,
+    otherwise the compiler will not be accessible.
+
+When installing from source, the only requirement is a compiler that supports
+C++14, this in order to build LLVM.
 
 With CPython on Linux or MacOS, probably by far the easiest way to install
 cppyy, is through conda-forge on `Anaconda`_ (or `miniconda`_).
@@ -29,15 +35,29 @@ and install from the conda-forge channel::
   (WORK) $ conda install -c conda-forge cppyy
   (WORK) [current compiler] $
 
-To install with ``pip`` through `PyPI`_, it is recommend to use
-`virtualenv`_ (or module `venv`_ for modern pythons).
-The use of virtualenv prevents pollution of any system directories and allows
-you to wipe out the full installation simply by removing the virtualenv
+
+To install with ``pip`` through `PyPI`_, use `venv`.
+The use of virtual environment (`venv`) prevents pollution of any system directories and allows
+you to wipe out the full installation simply by removing the virtual environment (`venv`)
 created directory ("WORK" in this example)::
 
-  $ virtualenv WORK
-  $ source WORK/bin/activate
+  $ python -m venv WORK 
+  $ WORK\Scripts\activate
   (WORK) $ python -m pip install cppyy
+  (WORK) $
+
+.. note::  
+  If you are using python version less than 3.3, you should use `virtualenv` instead of `venv`.
+  First install virtualenv package that allows you to create virtual environment.
+
+  $ python -m pip install virtualenv 
+
+  $ virtualenv WORK
+
+  $ source WORK/bin/activate
+
+  (WORK) $ python -m pip install cppyy
+
   (WORK) $
 
 If you use the ``--user`` option to ``pip`` and use ``pip`` directly on the
@@ -57,15 +77,7 @@ Wheels on PyPI
 
 Wheels for the backend (``cppyy-cling``) are available on PyPI for GNU/Linux,
 MacOS-X, and MS Windows (both 32b and 64b).
-
-The Linux wheels are built on manylinux, but with gcc 5.5, not the 4.8.2 that
-ships with manylinux1, since cppyy exposes C++ APIs and g++ introduced
-ABI incompatibilities starting with its 5 series forward.
-Using 4.8.2 would have meant that any software using cppyy would have to
-be (re)compiled for the older gcc ABI, which the odds don't favor.
-Note that building cppyy fully with 4.8.2 (and requiring the old ABI across
-the board) does work.
-
+The Linux wheels are built for manylinux2014, but with the dual ABI enabled.
 The wheels for MS Windows were build with MSVC Community Edition 2017.
 
 There are no wheels for the ``CPyCppyy`` and ``cppyy`` packages, to allow
@@ -112,13 +124,14 @@ enough, the following can be made to work::
 C++ standard with pip
 ---------------------
 
-The C++17 standard is the default for Mac and Linux (both PyPI and
-conda-forge); but it is C++14 for MS Windows (compiler limitation).
+The C++20 standard is the default on all systems as of release 3.0.1 (both
+PyPI and conda-forge); it is C++17 for older releases.
 When installing from PyPI using ``pip``, you can control the standard
-selection by setting the ``STDCXX`` envar to '17', '14', or '11' (for Linux,
-the backend does not need to be recompiled).
-Note that the build will lower your choice if the compiler used does not
-support a newer standard.
+selection by setting the ``STDCXX`` envar to '20', '17', or '14' (for Linux,
+the backend does not need to be recompiled) for the 3.x releases; '17', '14',
+or '11' for the 2.x releases.
+Note that the build will automatically lower your choice if the compiler used
+does not support a newer standard.
 
 
 Install from source
@@ -129,7 +142,7 @@ To build an existing release from source, tell ``pip`` to not download any
 binary wheels.
 Build-time only dependencies are ``cmake`` (for general build), ``python``
 (obviously, but also for LLVM), and a modern C++ compiler (one that supports
-at least C++11).
+at least C++14).
 Use the envar ``STDCXX`` to control the C++ standard version; ``MAKE`` to
 change the ``make`` command, ``MAKE_NPROCS`` to control the maximum number of
 parallel jobs allowed, and ``VERBOSE=1`` to see full build/compile commands.
@@ -207,6 +220,11 @@ You can then select the appropriate PCH with the ``CLING_STANDARD_PCH`` envar::
  $ export CLING_STANDARD_PCH=/full/path/to/target/location/for/PCH/allDict.cxx.pch
 
 Or disable it completely by setting that envar to "none".
+
+.. note::
+
+    Without the PCH, the default C++ standard will be the one with which
+    ``cppyy-cling`` was built.
 
 
 .. _`conda-forge`: https://anaconda.org/conda-forge/cppyy

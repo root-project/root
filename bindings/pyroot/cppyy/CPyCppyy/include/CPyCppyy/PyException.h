@@ -28,6 +28,7 @@
 
 // Standard
 #include <exception>
+#include <string>
 
 // Bindings
 #include "CPyCppyy/CommonDefs.h"
@@ -42,6 +43,12 @@ public:
 
 // give reason for raised exception
     virtual const char* what() const noexcept;
+
+// clear Python error, to allow full error handling C++ side
+    void clear() const noexcept;
+
+private:
+    std::string fMsg;
 };
 
 } // namespace CPyCppyy

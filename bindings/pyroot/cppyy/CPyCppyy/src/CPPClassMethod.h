@@ -12,8 +12,8 @@ public:
     using CPPMethod::CPPMethod;
 
     virtual PyCallable* Clone() { return new CPPClassMethod(*this); }
-    virtual PyObject* Call(
-        CPPInstance*&, PyObject* args, PyObject* kwds, CallContext* ctxt = nullptr);
+    virtual PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
 };
 
 } // namespace CPyCppyy

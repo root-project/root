@@ -43,7 +43,7 @@ following structure::
 
                (A) _cppyy (PyPy)
            /                        \
- (1) cppyy                            (3) cling-backend -- (4) cppyy-cling
+ (1) cppyy                            (3) cppyy-backend -- (4) cppyy-cling
            \                        /
              (2) CPyCppyy (CPython)
 

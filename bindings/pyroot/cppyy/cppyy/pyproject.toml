@@ -1,0 +1,4 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+backend-path = ["installer"]
+build-backend = "cppyy_monkey_patch:main"

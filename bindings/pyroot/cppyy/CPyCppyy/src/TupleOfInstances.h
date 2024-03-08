@@ -1,6 +1,10 @@
 #ifndef CPYCPPYY_TUPLEOFINSTANCES_H
 #define CPYCPPYY_TUPLEOFINSTANCES_H
 
+// Bindings
+#include "Dimensions.h"
+
+
 namespace CPyCppyy {
 
 /** Representation of C-style array of instances
@@ -26,7 +30,7 @@ inline bool TupleOfInstances_CheckExact(T* object)
 }
 
 PyObject* TupleOfInstances_New(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, dim_t ndims, dims_t dims);
+    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, cdims_t dims);
 
 } // namespace CPyCppyy
 

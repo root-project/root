@@ -19,6 +19,7 @@ public:
 public:
     virtual PyObject* GetSignature(bool show_formalargs = true) = 0;
     virtual PyObject* GetPrototype(bool show_formalargs = true) = 0;
+    virtual PyObject* GetTypeName() { return GetPrototype(false); }
     virtual PyObject* GetDocString() { return GetPrototype(); }
     virtual PyObject* Reflex(Cppyy::Reflex::RequestId_t request,
                              Cppyy::Reflex::FormatId_t format = Cppyy::Reflex::OPTIMAL) {
@@ -31,9 +32,9 @@ public:
 
     virtual int GetMaxArgs() = 0;
     virtual PyObject* GetCoVarNames() = 0;
-    virtual PyObject* GetArgDefault(int /* iarg */) = 0;
+    virtual PyObject* GetArgDefault(int /* iarg */, bool silent=true) = 0;
     virtual bool IsConst() { return false; }
-    
+
     virtual PyObject* GetScopeProxy() = 0;
     virtual Cppyy::TCppFuncAddr_t GetFunctionAddress() = 0;
 
@@ -42,8 +43,8 @@ public:
     virtual int GetArgMatchScore(PyObject* /* args_tuple */) { return INT_MAX; }
 
 public:
-    virtual PyObject* Call(
-        CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt = nullptr) = 0;
+    virtual PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) = 0;
 };
 
 } // namespace CPyCppyy

@@ -6,7 +6,7 @@
 #include <sstream>
 #include <vector>
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <cxxabi.h>
 inline std::string demangle_it(const char* name, const char* errmsg) {
     int status;
@@ -83,8 +83,13 @@ int global_some_foo(T) {
     return 42;
 }
 
+template <int T>
+int global_some_bar() {
+    return T;
+}
+
 template <typename T>
-int global_some_bar(T) {
+int global_some_bar_var(T) {
     return 13;
 }
 
@@ -128,6 +133,7 @@ struct select_template_arg {};
 template <typename T0, typename... T>
 struct select_template_arg<0, T0, T...> {
     typedef T0 type;
+    typedef type argument;
 };
 
 template <int N, typename T0, typename... T>
@@ -149,6 +155,13 @@ template <int T>
 int some_bar() {
     return T;
 }
+
+struct SomeStruct {
+    template <int T>
+    static int some_bar() {
+        return T;
+    }
+};
 
 inline std::string tuplify(std::ostringstream& out) {
     out << "NULL)";
@@ -291,6 +304,12 @@ public:
     using _Mybase::get3;
 };
 
+template <class T> class Foo { T x; };
+
+namespace Bar {
+    using ::using_problem::Foo;
+}
+
 } // namespace using_problem
 
 
@@ -310,8 +329,12 @@ bool is_valid(T&& new_value) {
 // variadic templates
 namespace some_variadic {
 
-#ifdef WIN32
+#ifdef _WIN32
+#ifdef __CLING__
 extern __declspec(dllimport) std::string gTypeName;
+#else
+extern __declspec(dllexport) std::string gTypeName;
+#endif
 #else
 extern std::string gTypeName;
 #endif
@@ -409,8 +432,12 @@ T fn_T(Args&&... args) {
 // template with empty body
 namespace T_WithEmptyBody {
 
-#ifdef WIN32
+#ifdef _WIN32
+#ifdef __CLING__
 extern __declspec(dllimport) std::string side_effect;
+#else
+extern __declspec(dllexport) std::string side_effect;
+#endif
 #else
 extern std::string side_effect;
 #endif
@@ -477,5 +504,46 @@ public:
 };
 
 } // namespace TemplateWithSetItem
+
+
+//===========================================================================
+// type reduction examples on gmpxx-like template expressions
+namespace TypeReduction {
+
+template <typename T>
+struct BinaryExpr;
+
+template <typename T>
+struct Expr {
+    Expr() {}
+    Expr(const BinaryExpr<T>&) {}
+};
+
+template <typename T>
+struct BinaryExpr {
+    BinaryExpr(const Expr<T>&, const Expr<T>&) {}
+};
+
+template<typename T>
+BinaryExpr<T> operator+(const Expr<T>& e1, const Expr<T>& e2) {
+    return BinaryExpr<T>(e1, e2);
+}
+
+} // namespace TypeReduction
+
+
+//===========================================================================
+// type deduction examples
+namespace FailedTypeDeducer {
+
+template<class T>
+class B {
+public:
+    auto result() { return 5.; }
+};
+
+extern template class B<int>;
+
+}
 
 #endif // !CPPYY_TEST_TEMPLATES_H

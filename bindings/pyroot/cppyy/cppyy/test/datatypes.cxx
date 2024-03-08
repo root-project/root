@@ -35,6 +35,7 @@ CppyyTestData::CppyyTestData() : m_const_int(17), m_owns_arrays(false)
     m_ldouble  = -88.l;
     m_complex  = {99., 101.};
     m_icomplex = {121, 141};
+    m_ccomplex = {151., 161.};
     m_enum     = kNothing;
     m_voidp    = (void*)0;
 
@@ -44,6 +45,8 @@ CppyyTestData::CppyyTestData() : m_const_int(17), m_owns_arrays(false)
 #if __cplusplus > 201402L
     m_byte_array2     = new std::byte[N];
 #endif
+    m_int8_array2     = new int8_t[N];
+    m_uint8_array2    = new uint8_t[N];
     m_short_array2    = new short[N];
     m_ushort_array2   = new unsigned short[N];
     m_int_array2      = new int[N];
@@ -54,6 +57,7 @@ CppyyTestData::CppyyTestData() : m_const_int(17), m_owns_arrays(false)
     m_float_array2    = new float[N];
     m_double_array2   = new double[N];
     m_complex_array2  = new complex_t[N];
+    m_ccomplex_array2 = new ccomplex_t[N];
 
     for (int i = 0; i < N; ++i) {
         m_bool_array[i]      =  bool(i%2);
@@ -64,24 +68,29 @@ CppyyTestData::CppyyTestData() : m_const_int(17), m_owns_arrays(false)
         m_byte_array[i]      =   (std::byte)(3u*i);
         m_byte_array2[i]     =   (std::byte)(4u*i);
 #endif
-        m_short_array[i]     =  -1*i;
-        m_short_array2[i]    =  -2*i;
-        m_ushort_array[i]    =   3u*i;
-        m_ushort_array2[i]   =   4u*i;
-        m_int_array[i]       =  -5*i;
-        m_int_array2[i]      =  -6*i;
-        m_uint_array[i]      =   7u*i;
-        m_uint_array2[i]     =   8u*i;
-        m_long_array[i]      =  -9l*i;
-        m_long_array2[i]     = -10l*i;
-        m_ulong_array[i]     =  11ul*i;
-        m_ulong_array2[i]    =  12ul*i;
+        m_int8_array[i]      = - 1*i;
+        m_int8_array2[i]     = - 2*i;
+        m_uint8_array[i]     =   3u*i;
+        m_uint8_array2[i]    =   4u*i;
+        m_short_array[i]     = - 5*i;
+        m_short_array2[i]    = - 6*i;
+        m_ushort_array[i]    =   7u*i;
+        m_ushort_array2[i]   =   8u*i;
+        m_int_array[i]       = - 9*i;
+        m_int_array2[i]      = -10*i;
+        m_uint_array[i]      =  11u*i;
+        m_uint_array2[i]     =  23u*i;
+        m_long_array[i]      = -13l*i;
+        m_long_array2[i]     = -14l*i;
+        m_ulong_array[i]     =  15ul*i;
+        m_ulong_array2[i]    =  18ul*i;
 
         m_float_array[i]     = -13.f*i;
         m_float_array2[i]    = -14.f*i;
         m_double_array[i]    = -15.*i;
         m_double_array2[i]   = -16.*i;
         m_complex_array2[i]  = {17.*i, 18.*i};
+        m_ccomplex_array2[i] = {19.*i, 20.*i};
     }
 
     m_owns_arrays = true;
@@ -104,6 +113,8 @@ void CppyyTestData::destroy_arrays() {
 #if __cplusplus > 201402L
         delete[] m_byte_array2;
 #endif
+        delete[] m_int8_array2;
+        delete[] m_uint8_array2;
         delete[] m_short_array2;
         delete[] m_ushort_array2;
         delete[] m_int_array2;
@@ -114,6 +125,7 @@ void CppyyTestData::destroy_arrays() {
         delete[] m_float_array2;
         delete[] m_double_array2;
         delete[] m_complex_array2;
+        delete[] m_ccomplex_array2;
 
         m_owns_arrays = false;
     }
@@ -148,6 +160,7 @@ long double          CppyyTestData::get_ldouble()  { return m_ldouble; }
 long double          CppyyTestData::get_ldouble_def(long double ld) { return ld; }
 complex_t            CppyyTestData::get_complex()  { return m_complex; }
 icomplex_t           CppyyTestData::get_icomplex() { return m_icomplex; }
+ccomplex_t           CppyyTestData::get_ccomplex() { return m_ccomplex; }
 CppyyTestData::EWhat CppyyTestData::get_enum()     { return m_enum; }
 void*                CppyyTestData::get_voidp()    { return m_voidp; }
 
@@ -161,6 +174,10 @@ unsigned char*  CppyyTestData::get_uchar_array2()  { return m_uchar_array2; }
 std::byte*      CppyyTestData::get_byte_array()    { return m_byte_array; }
 std::byte*      CppyyTestData::get_byte_array2()   { return m_byte_array2; }
 #endif
+int8_t*         CppyyTestData::get_int8_array()    { return m_int8_array; }
+int8_t*         CppyyTestData::get_int8_array2()   { return m_int8_array2; }
+uint8_t*        CppyyTestData::get_uint8_array()   { return m_uint8_array; }
+uint8_t*        CppyyTestData::get_uint8_array2()  { return m_uint8_array2; }
 short*          CppyyTestData::get_short_array()   { return m_short_array; }
 short*          CppyyTestData::get_short_array2()  { return m_short_array2; }
 unsigned short* CppyyTestData::get_ushort_array()  { return m_ushort_array; }
@@ -180,6 +197,8 @@ double*     CppyyTestData::get_double_array()    { return m_double_array; }
 double*     CppyyTestData::get_double_array2()   { return m_double_array2; }
 complex_t*  CppyyTestData::get_complex_array()   { return m_complex_array; }
 complex_t*  CppyyTestData::get_complex_array2()  { return m_complex_array2; }
+ccomplex_t* CppyyTestData::get_ccomplex_array()  { return m_ccomplex_array; }
+ccomplex_t* CppyyTestData::get_ccomplex_array2() { return m_ccomplex_array2; }
 
 CppyyTestPod   CppyyTestData::get_pod_val()     { return m_pod; }
 CppyyTestPod*  CppyyTestData::get_pod_val_ptr() { return &m_pod; }
@@ -216,6 +235,7 @@ const double&               CppyyTestData::get_double_cr()   { return m_double; 
 const long double&          CppyyTestData::get_ldouble_cr()  { return m_ldouble; }
 const complex_t&            CppyyTestData::get_complex_cr()  { return m_complex; }
 const icomplex_t&           CppyyTestData::get_icomplex_cr() { return m_icomplex; }
+const ccomplex_t&           CppyyTestData::get_ccomplex_cr() { return m_ccomplex; }
 const CppyyTestData::EWhat& CppyyTestData::get_enum_cr()     { return m_enum; }
 
 //- getters ref -------------------------------------------------------------
@@ -246,6 +266,7 @@ double&               CppyyTestData::get_double_r()   { return m_double; }
 long double&          CppyyTestData::get_ldouble_r()  { return m_ldouble; }
 complex_t&            CppyyTestData::get_complex_r()  { return m_complex; }
 icomplex_t&           CppyyTestData::get_icomplex_r() { return m_icomplex; }
+ccomplex_t&           CppyyTestData::get_ccomplex_r() { return m_ccomplex; }
 CppyyTestData::EWhat& CppyyTestData::get_enum_r()     { return m_enum; }
 
 //- setters -----------------------------------------------------------------
@@ -276,6 +297,7 @@ void CppyyTestData::set_double(double d)                   { m_double   = d; }
 void CppyyTestData::set_ldouble(long double ld)            { m_ldouble  = ld; }
 void CppyyTestData::set_complex(complex_t cd)              { m_complex  = cd; }
 void CppyyTestData::set_icomplex(icomplex_t ci)            { m_icomplex = ci; }
+void CppyyTestData::set_ccomplex(ccomplex_t cd)            { m_ccomplex = cd; }
 void CppyyTestData::set_enum(EWhat w)                      { m_enum     = w; }
 void CppyyTestData::set_voidp(void* p)                     { m_voidp    = p; }
 
@@ -319,6 +341,7 @@ void CppyyTestData::set_double_cr(const double& d)               { m_double   = 
 void CppyyTestData::set_ldouble_cr(const long double& ld)        { m_ldouble  = ld; }
 void CppyyTestData::set_complex_cr(const complex_t& cd)          { m_complex  = cd; }
 void CppyyTestData::set_icomplex_cr(const icomplex_t& ci)        { m_icomplex = ci; }
+void CppyyTestData::set_ccomplex_cr(const ccomplex_t& cd)        { m_ccomplex = cd; }
 void CppyyTestData::set_enum_cr(const EWhat& w)                  { m_enum     = w; }
 
 //- setters ref -------------------------------------------------------------
@@ -355,6 +378,8 @@ void CppyyTestData::set_uchar_p(unsigned char* uc)        { *uc = 'd'; }
 #if __cplusplus > 201402L
 void CppyyTestData::set_byte_p(std::byte* b)              { *b = (std::byte)'e'; }
 #endif
+void CppyyTestData::set_int8_p(int8_t* i8)                { *i8 = -27; }
+void CppyyTestData::set_uint8_p(uint8_t* ui8)             { *ui8 = 28; }
 void CppyyTestData::set_short_p(short* s)                 { *s = -1; }
 void CppyyTestData::set_ushort_p(unsigned short* us)      { *us = 2; }
 void CppyyTestData::set_int_p(int* i)                     { *i = -3; }
@@ -402,6 +427,14 @@ void CppyyTestData::set_byte_ppa(std::byte** b) {
     (*b)[0] = (std::byte)'n'; (*b)[1] = (std::byte)'o'; (*b)[2] = (std::byte)'p';
 }
 #endif
+void CppyyTestData::set_int8_ppa(int8_t** i8) {
+    (*i8) = new int8_t[3];
+    (*i8)[0] = -27; (*i8)[1] = -28; (*i8)[2] = -29;
+}
+void CppyyTestData::set_uint8_ppa(uint8_t** ui8) {
+    (*ui8) = new uint8_t[3];
+    (*ui8)[0] = 28; (*ui8)[1] = 29; (*ui8)[2] = 30;
+}
 void CppyyTestData::set_short_ppa(short** s) {
     (*s) = new short[3];
     (*s)[0] = -1; (*s)[1] = -2; (*s)[2] = -3;
@@ -518,6 +551,7 @@ void CppyyTestData::set_double_rv(double&& d)               { m_double   = d; }
 void CppyyTestData::set_ldouble_rv(long double&& ld)        { m_ldouble  = ld; }
 void CppyyTestData::set_complex_rv(complex_t&& cd)          { m_complex  = cd; }
 void CppyyTestData::set_icomplex_rv(icomplex_t&& ci)        { m_icomplex = ci; }
+void CppyyTestData::set_ccomplex_rv(ccomplex_t&& cd)        { m_ccomplex = cd; }
 void CppyyTestData::set_enum_rv(EWhat&& w)                  { m_enum     = w; }
 
 //- passers -----------------------------------------------------------------
@@ -531,6 +565,7 @@ unsigned long*  CppyyTestData::pass_array(unsigned long* a)  { return a; }
 float*          CppyyTestData::pass_array(float* a)          { return a; }
 double*         CppyyTestData::pass_array(double* a)         { return a; }
 complex_t*      CppyyTestData::pass_array(complex_t* a)      { return a; }
+ccomplex_t*     CppyyTestData::pass_array(ccomplex_t* a)     { return a; }
 
 //- static data members -----------------------------------------------------
 bool                 CppyyTestData::s_bool     = false;
@@ -560,8 +595,11 @@ double               CppyyTestData::s_double   = -707.;
 long double          CppyyTestData::s_ldouble  = -808.l;
 complex_t            CppyyTestData::s_complex  = {909., -909.};
 icomplex_t           CppyyTestData::s_icomplex = {979, -979};
+ccomplex_t           CppyyTestData::s_ccomplex = {919., -919.};
 CppyyTestData::EWhat CppyyTestData::s_enum     = CppyyTestData::kNothing;
 void*                CppyyTestData::s_voidp    = (void*)0;
+std::string          CppyyTestData::s_strv     = "Hello";
+std::string*         CppyyTestData::s_strp     = nullptr;
 
 //- strings -----------------------------------------------------------------
 const char*     CppyyTestData::get_valid_string(const char* in) { return in; }
@@ -619,6 +657,7 @@ double             g_double   = -688.;
 long double        g_ldouble  = -788.l;
 complex_t          g_complex  = {808., -808.};
 icomplex_t         g_icomplex = {909,  -909};
+ccomplex_t         g_ccomplex = {858., -858.};
 EFruit             g_enum     = kBanana;
 void*              g_voidp    = nullptr;
 
@@ -779,4 +818,229 @@ void StoreCallable_sf::set_callable(const std::function<double(double, double)>&
 
 double StoreCallable_sf::operator()(double d1, double d2) {
     return fF(d1, d2);
+}
+
+
+//= array of C strings passing ==============================================
+std::vector<std::string> ArrayOfCStrings::takes_array_of_cstrings(const char* args[], int len)
+{
+    std::vector<std::string> v;
+    v.reserve(len);
+    for (int i = 0; i < len; ++i)
+        v.emplace_back(args[i]);
+
+    return v;
+}
+
+
+//= aggregate testing ======================================================
+int AggregateTest::Aggregate1::sInt = 17;
+int AggregateTest::Aggregate2::sInt = 27;
+
+
+//= multi-dim arrays =======================================================
+namespace MultiDimArrays {
+
+template<typename T>
+static inline T** allocate_2d(size_t N, size_t M) {
+    T** arr = (T**)malloc(sizeof(void*)*N);
+    for (size_t i = 0; i < N; ++i)
+        arr[i] = (T*)malloc(sizeof(T)*M);
+    return arr;
+}
+
+static inline void free_2d(void** arr, size_t N) {
+    if (arr) {
+        for (size_t i = 0; i < N; ++i)
+            free(arr[i]);
+        free(arr);
+    }
+}
+
+template<typename T>
+static inline T*** allocate_3d(size_t N, size_t M, size_t K) {
+    T*** arr = (T***)malloc(sizeof(void*)*N);
+    for (size_t i = 0; i < N; ++i) {
+        arr[i] = (T**)malloc(sizeof(void*)*M);
+        for (size_t j = 0; j < M; ++j)
+            arr[i][j] = (T*)malloc(sizeof(T)*K);
+    }
+    return arr;
+}
+
+static inline void free_3d(void*** arr, size_t N, size_t M) {
+    if (arr) {
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < M; ++j)
+                free(arr[i][j]);
+            free(arr[i]);
+        }
+        free(arr);
+    }
+}
+
+} // namespace MultiDimArrays
+
+MultiDimArrays::DataHolder::DataHolder() {
+    m_short2a                = allocate_2d<short>(5, 7);
+    m_unsigned_short2a       = allocate_2d<unsigned short>(5, 7);
+    m_int2a                  = allocate_2d<int>(5, 7);
+    m_unsigned_int2a         = allocate_2d<unsigned int>(5, 7);
+    m_long2a                 = allocate_2d<long>(5, 7);
+    m_unsigned_long2a        = allocate_2d<unsigned long>(5, 7);
+    m_long_long2a            = allocate_2d<long long>(5, 7);
+    m_unsigned_long_long2a   = allocate_2d<unsigned long long>(5, 7);
+    m_float2a                = allocate_2d<float>(5, 7);
+    m_double2a               = allocate_2d<double>(5, 7);
+
+    for (size_t i = 0; i < 5; ++i) {
+        for (size_t j = 0; j < 7; ++j) {
+            size_t val = 5*i+j;
+            m_short2a[i][j]                 = (short)val;
+            m_unsigned_short2a[i][j]        = (unsigned short)val;
+            m_int2a[i][j]                   = (int)val;
+            m_unsigned_int2a[i][j]          = (unsigned int)val;
+            m_long2a[i][j]                  = (long)val;
+            m_unsigned_long2a[i][j]         = (unsigned long)val;
+            m_long_long2a[i][j]             = (long long)val;
+            m_unsigned_long_long2a[i][j]    = (unsigned long long)val;
+            m_float2a[i][j]                 = (float)val;
+            m_double2a[i][j]                = (double)val;
+        }
+    }
+
+    m_short2b              =   nullptr;
+    m_unsigned_short2b       = nullptr;
+    m_int2b                  = nullptr;
+    m_unsigned_int2b         = nullptr;
+    m_long2b                 = nullptr;
+    m_unsigned_long2b        = nullptr;
+    m_long_long2b            = nullptr;
+    m_unsigned_long_long2b   = nullptr;
+    m_float2b                = nullptr;
+    m_double2b               = nullptr;
+
+    for (size_t i = 0; i < 3; ++i) {
+        for (size_t j = 0; j < 5; ++j) {
+            size_t val = 3*i+j;
+            m_short2c[i][j]                 = (short)val;
+            m_unsigned_short2c[i][j]        = (unsigned short)val;
+            m_int2c[i][j]                   = (int)val;
+            m_unsigned_int2c[i][j]          = (unsigned int)val;
+            m_long2c[i][j]                  = (long)val;
+            m_unsigned_long2c[i][j]         = (unsigned long)val;
+            m_long_long2c[i][j]             = (long long)val;
+            m_unsigned_long_long2c[i][j]    = (unsigned long long)val;
+            m_float2c[i][j]                 = (float)val;
+            m_double2c[i][j]                = (double)val;
+
+            for (size_t k = 0; k < 7; ++k) {
+                val = 3*i+2*j+k;
+                m_short3c[i][j][k]               = (short)val;
+                m_unsigned_short3c[i][j][k]      = (unsigned short)val;
+                m_int3c[i][j][k]                 = (int)val;
+                m_unsigned_int3c[i][j][k]        = (unsigned int)val;
+                m_long3c[i][j][k]                = (long)val;
+                m_unsigned_long3c[i][j][k]       = (unsigned long)val;
+                m_long_long3c[i][j][k]           = (long long)val;
+                m_unsigned_long_long3c[i][j][k]  = (unsigned long long)val;
+                m_float3c[i][j][k]               = (float)val;
+                m_double3c[i][j][k]              = (double)val;
+            }
+        }
+    }
+
+    m_short3a                = allocate_3d<short>(5, 7, 11);
+    m_unsigned_short3a       = allocate_3d<unsigned short>(5, 7, 11);
+    m_int3a                  = allocate_3d<int>(5, 7, 11);
+    m_unsigned_int3a         = allocate_3d<unsigned int>(5, 7, 11);
+    m_long3a                 = allocate_3d<long>(5, 7, 11);
+    m_unsigned_long3a        = allocate_3d<unsigned long>(5, 7, 11);
+    m_long_long3a            = allocate_3d<long long>(5, 7, 11);
+    m_unsigned_long_long3a   = allocate_3d<unsigned long long>(5, 7, 11);
+    m_float3a                = allocate_3d<float>(5, 7, 11);
+    m_double3a               = allocate_3d<double>(5, 7, 11);
+
+    for (size_t i = 0; i < 5; ++i) {
+        for (size_t j = 0; j < 7; ++j) {
+            for (size_t k = 0; k < 11; ++k) {
+                size_t val = 7*i+3*j+k;
+                m_short3a[i][j][k]               = (short)val;
+                m_unsigned_short3a[i][j][k]      = (unsigned short)val;
+                m_int3a[i][j][k]                 = (int)val;
+                m_unsigned_int3a[i][j][k]        = (unsigned int)val;
+                m_long3a[i][j][k]                = (long)val;
+                m_unsigned_long3a[i][j][k]       = (unsigned long)val;
+                m_long_long3a[i][j][k]           = (long long)val;
+                m_unsigned_long_long3a[i][j][k]  = (unsigned long long)val;
+                m_float3a[i][j][k]               = (float)val;
+                m_double3a[i][j][k]              = (double)val;
+            }
+        }
+    }
+}
+
+MultiDimArrays::DataHolder::~DataHolder() {
+    free_2d((void**)m_short2a, 5);
+    free_2d((void**)m_unsigned_short2a, 5);
+    free_2d((void**)m_int2a, 5);
+    free_2d((void**)m_unsigned_int2a, 5);
+    free_2d((void**)m_long2a, 5);
+    free_2d((void**)m_unsigned_long2a, 5);
+    free_2d((void**)m_long_long2a, 5);
+    free_2d((void**)m_unsigned_long_long2a, 5);
+    free_2d((void**)m_float2a, 5);
+    free_2d((void**)m_double2a, 5);
+
+    free_2d((void**)m_short2b, 5);
+    free_2d((void**)m_unsigned_short2b, 5);
+    free_2d((void**)m_int2b, 5);
+    free_2d((void**)m_unsigned_int2b, 5);
+    free_2d((void**)m_long2b, 5);
+    free_2d((void**)m_unsigned_long2b, 5);
+    free_2d((void**)m_long_long2b, 5);
+    free_2d((void**)m_unsigned_long_long2b, 5);
+    free_2d((void**)m_float2b, 5);
+    free_2d((void**)m_double2b, 5);
+
+    free_3d((void***)m_short3a, 5, 7);
+    free_3d((void***)m_unsigned_short3a, 5, 7);
+    free_3d((void***)m_int3a, 5, 7);
+    free_3d((void***)m_unsigned_int3a, 5, 7);
+    free_3d((void***)m_long3a, 5, 7);
+    free_3d((void***)m_unsigned_long3a, 5, 7);
+    free_3d((void***)m_long_long3a, 5, 7);
+    free_3d((void***)m_unsigned_long_long3a, 5, 7);
+    free_3d((void***)m_float3a, 5, 7);
+    free_3d((void***)m_double3a, 5, 7);
+}
+
+#define MULTIDIM_ARRAYS_NEW2D(type, name)                                   \
+type** MultiDimArrays::DataHolder::new_##name##2d(int N, int M) {           \
+    type** arr = allocate_2d<type>(N, M);                                   \
+    for (size_t i = 0; i < N; ++i) {                                        \
+        for (size_t j = 0; j < M; ++j) {                                    \
+            size_t val = 7*i+j;                                             \
+            arr [i][j] = (type)val;                                         \
+        }                                                                   \
+    }                                                                       \
+    return arr;                                                             \
+}
+
+MULTIDIM_ARRAYS_NEW2D(short, short)
+MULTIDIM_ARRAYS_NEW2D(unsigned short, ushort)
+MULTIDIM_ARRAYS_NEW2D(int, int)
+MULTIDIM_ARRAYS_NEW2D(unsigned int, uint)
+MULTIDIM_ARRAYS_NEW2D(long, long)
+MULTIDIM_ARRAYS_NEW2D(unsigned long, ulong)
+MULTIDIM_ARRAYS_NEW2D(long long, llong)
+MULTIDIM_ARRAYS_NEW2D(unsigned long long, ullong)
+MULTIDIM_ARRAYS_NEW2D(float, float)
+MULTIDIM_ARRAYS_NEW2D(double, double)
+
+
+//===========================================================================
+namespace Int8_Uint8_Arrays {
+     int8_t  test[6] = {-0x12, -0x34, -0x56, -0x78};
+    uint8_t utest[6] = { 0x12,  0x34,  0x56,  0x78};
 }
