@@ -27,6 +27,17 @@ packaging and CMake where CMake provides:
 * An facility for CMake-based projects to automate the entire bindings
   generation process, including basic automated tests.
 
+.. note::
+
+    The JIT needs to resolve linker symbols in order to call them through
+    generated wrappers.
+    Thus, any classes, functions, and data that will be used in Python need
+    to be exported.
+    This is the default behavior on Mac and Linux, but not on Windows.
+    On that platform, use ``__declspec(dllexport)`` to explicitly export the
+    classes and function you expect to call.
+    CMake has simple `support for exporting all`_ C++ symbols.
+
 
 Python packaging
 ----------------
@@ -77,7 +88,7 @@ variables:
     Cppyy_FOUND - set to true if Cppyy is found
     Cppyy_DIR - the directory where Cppyy is installed
     Cppyy_EXECUTABLE - the path to the Cppyy executable
-    Cppyy_INCLUDE_DIRS - Where to find the ROOT header files.
+    Cppyy_INCLUDE_DIRS - Where to find the Cppyy header files.
     Cppyy_VERSION - the version number of the Cppyy backend.
 
 and also defines the following functions::
@@ -159,8 +170,7 @@ The bindings are generated/built/packaged using 3 environments:
 +----------------------+---------------------------------------------------------------------------------------------+
 |GENERATE_OPTIONS optio| Options which are to be passed into the rootcling                                           |
 |                      | command. For example, bindings which depend on Qt                                           |
-|                      | may need "-D__PIC__;-Wno-macro-redefined" as per                                            |
-|                      | https://sft.its.cern.ch/jira/browse/ROOT-8719.                                              |
+|                      | may need "-D__PIC__;-Wno-macro-redefined".                                                  |
 +----------------------+---------------------------------------------------------------------------------------------+
 |LINKDEFS def          | Files or lines which contain extra #pragma content                                          |
 |                      | for the linkdef.h file used by rootcling. See                                               |
@@ -228,13 +238,11 @@ Examples::
       H_DIRS ${_H_DIRS}
       H_FILES "dcrawinfocontainer.h;kdcraw.h;rawdecodingsettings.h;rawfiles.h")
 
-There is a fuller example of embedding the use of cppyy_add_bindings for a
-large set of bindings::
-
-  https://cgit.kde.org/pykde5.git/plain/KF5/CMakeLists.txt?h=include_qt_binding
-
 
 cppyy_find_pips
 ^^^^^^^^^^^^^^^
 
 Return a list of available pip programs.
+
+
+.. _`support for exporting all`: https://cmake.org/cmake/help/latest/prop_tgt/WINDOWS_EXPORT_ALL_SYMBOLS.html

@@ -2,7 +2,6 @@ import codecs, glob, os, sys, subprocess
 from setuptools import setup, find_packages, Extension
 from distutils import log
 
-from setuptools.dist import Distribution
 from distutils.command.build_ext import build_ext as _build_ext
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -10,12 +9,7 @@ try:
 except ImportError:
     has_wheel = False
 
-force_bdist = False
-if '--force-bdist' in sys.argv:
-    force_bdist = True
-    sys.argv.remove('--force-bdist')
-
-requirements = ['cppyy-cling==6.18.2.*', 'cppyy-backend==1.10.*']
+requirements = ['cppyy-cling==6.30.0', 'cppyy-backend==1.15.2']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -28,18 +22,9 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 #
 # platform-dependent helpers
 #
-def is_manylinux():
-    try:
-        for line in open('/etc/redhat-release').readlines():
-            if 'CentOS release 6.10 (Final)' in line:
-                return True
-    except (OSError, IOError):
-        pass
-    return False
-
 def _get_link_libraries():
     if 'win32' in sys.platform:
-        return ['libcppyy_backend', 'libCore']
+        return ['libcppyy_backend', 'libCoreLegacy']
     return []
 
 def _get_link_dirs():
@@ -93,32 +78,9 @@ cmdclass = {
     'build_ext': my_build_extension }
 
 
-#
-# customized distribition to disable binaries
-#
-class MyDistribution(Distribution):
-    def run_commands(self):
-        # pip does not resolve dependencies before building binaries, so unless
-        # packages are installed one-by-one, on old install is used or the build
-        # will simply fail hard. The following is not completely quiet, but at
-        # least a lot less conspicuous.
-        if not is_manylinux() and not force_bdist:
-            disabled = set((
-                'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
-            for cmd in self.commands:
-                if not cmd in disabled:
-                    self.run_command(cmd)
-                else:
-                    log.info('Command "%s" is disabled', cmd)
-                    cmd_obj = self.get_command_obj(cmd)
-                    cmd_obj.get_outputs = lambda: None
-        else:
-            return Distribution.run_commands(self)
-
-
 setup(
     name='CPyCppyy',
-    version='1.10.2',
+    version='1.12.16',
     description='Cling-based Python-C++ bindings for CPython',
     long_description=long_description,
 
@@ -140,11 +102,12 @@ setup(
 
         'License :: OSI Approved :: BSD License',
 
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Programming Language :: C',
         'Programming Language :: C++',
 
@@ -165,7 +128,6 @@ setup(
     headers=glob.glob(os.path.join('include', 'CPyCppyy', '*.h')),
 
     cmdclass=cmdclass,
-    distclass=MyDistribution,
 
     zip_safe=False,
 )
