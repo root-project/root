@@ -36,6 +36,7 @@ elements into pages, without actually writing them onto disk or even serializing
 class RPageNullSink : public RPageSink {
    RPageAllocatorHeap fPageAllocator{};
    DescriptorId_t fNColumns = 0;
+   std::uint64_t fNBytesCurrentCluster = 0;
 
 public:
    RPageNullSink(std::string_view ntupleName, const RNTupleWriteOptions &options) : RPageSink(ntupleName, options) {}
@@ -65,11 +66,23 @@ public:
       ConnectFields(changeset.fAddedFields, firstEntry);
    }
 
-   void CommitPage(ColumnHandle_t, const RPage &) final {}
-   void CommitSealedPage(DescriptorId_t, const RSealedPage &) final {}
-   void CommitSealedPageV(std::span<RSealedPageGroup>) final {}
+   void CommitPage(ColumnHandle_t, const RPage &page) final { fNBytesCurrentCluster += page.GetNBytes(); }
+   void CommitSealedPage(DescriptorId_t, const RSealedPage &page) final { fNBytesCurrentCluster += page.fSize; }
+   void CommitSealedPageV(std::span<RSealedPageGroup> ranges) final
+   {
+      for (auto &range : ranges) {
+         for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+            fNBytesCurrentCluster += sealedPageIt->fSize;
+         }
+      }
+   }
 
-   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   std::uint64_t CommitCluster(NTupleSize_t) final
+   {
+      std::uint64_t bytes = fNBytesCurrentCluster;
+      fNBytesCurrentCluster = 0;
+      return bytes;
+   }
    void CommitClusterGroup() final {}
    void CommitDataset() final {}
 };
