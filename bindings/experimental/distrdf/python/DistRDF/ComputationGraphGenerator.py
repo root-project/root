@@ -215,7 +215,7 @@ def trigger_computation_graph(
         list: A list of objects that can be either used as or converted into
             mergeable values.
     """
-    if exec_id not in _ACTIONS_REGISTER:
+    if exec_id not in _ACTIONS_REGISTER or exec_id.rdf_uuid == "RNTuple":
         # Fill the cache with the future results
         actions = generate_computation_graph(graph, starting_node, range_id)
         _ACTIONS_REGISTER[exec_id] = actions

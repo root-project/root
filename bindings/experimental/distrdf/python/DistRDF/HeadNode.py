@@ -833,6 +833,11 @@ class RNTupleHeadNode(HeadNode):
         # """Build the ranges for this dataset."""
         # For the moment, we explicitly pass only one "subname", since there is
         # only one name possible for the whole RNTuple
+        # TODO: implement action cloning for RNTuple
+        # Inject a sentinel flag in the execution identifier to specify this
+        # RDataFrame instance is going to process RNTuple data and the computation
+        # graph needs to be recreated at every task
+        self.exec_id = _graph_cache.ExecutionIdentifier("RNTuple", self.exec_id.graph_uuid)
         return Ranges.get_ntuple_ranges(self.mainntuplename, self.inputfiles, self.npartitions, self.exec_id)
     
     def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
@@ -852,7 +857,7 @@ class RNTupleHeadNode(HeadNode):
             ntuplename, filenames = current_range.ntuplename, current_range.filenames            
             if not filenames:
                 return TaskObjects(None, None)
-            
+
             rdf_toprocess = ROOT.RDF.Experimental.FromRNTuple(ntuplename, filenames)
             return TaskObjects(rdf_toprocess, None)
 
