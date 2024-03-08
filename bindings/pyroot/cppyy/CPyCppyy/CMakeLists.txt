@@ -5,12 +5,12 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 set(headers
-    inc/CPyCppyy/API.h
-    inc/CPyCppyy/Reflex.h
-    inc/CPyCppyy/PyResult.h
-    inc/CPyCppyy/CommonDefs.h
-    inc/CPyCppyy/PyException.h
-    inc/CPyCppyy/DispatchPtr.h
+    include/CPyCppyy/API.h
+    include/CPyCppyy/Reflex.h
+    include/CPyCppyy/PyResult.h
+    include/CPyCppyy/CommonDefs.h
+    include/CPyCppyy/PyException.h
+    include/CPyCppyy/DispatchPtr.h
 )
 
 set(sources
@@ -20,10 +20,12 @@ set(sources
     src/CPPClassMethod.cxx
     src/CPPConstructor.cxx
     src/CPPDataMember.cxx
+    src/CPPEnum.cxx
     src/CPPExcInstance.cxx
     src/CPPFunction.cxx
     src/CPPInstance.cxx
     src/CPPMethod.cxx
+    src/CPPOperator.cxx
     src/CPPOverload.cxx
     src/CPPScope.cxx
     src/CPPGetSetItem.cxx
@@ -64,8 +66,7 @@ else()
 endif()
 
 if(NOT MSVC)
-  target_compile_options(${libname} PRIVATE
-    -Wno-shadow -Wno-strict-aliasing)
+  target_compile_options(${libname} PRIVATE -Wno-strict-aliasing)
 endif()
 if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND NOT MSVC)
   target_compile_options(${libname} PRIVATE
@@ -77,10 +78,15 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} V
   target_compile_options(${libname} PRIVATE -Wno-cast-function-type)
 endif()
 
-# Disables warnings due to new field tp_vectorcall in Python 3.8
-if(NOT MSVC AND PYTHON_VERSION_STRING VERSION_GREATER_EQUAL 3.8)
+# Disables warnings in Python 3.8 caused by the temporary extra filed for tp_print compatibility
+# (see https://github.com/python/cpython/blob/3.8/Include/cpython/object.h#L260).
+# Note that Python 3.8 is the lowers Python version that is still supported by
+# ROOT, so this compile option can be completely removed soon.
+if(NOT MSVC AND PYTHON_VERSION_STRING VERSION_LESS 3.9)
   target_compile_options(${libname} PRIVATE -Wno-missing-field-initializers)
 endif()
+
+target_compile_definitions(${libname} PRIVATE NO_CPPYY_LEGACY_NAMESPACE)
 
 target_include_directories(${libname}
     SYSTEM PUBLIC ${PYTHON_INCLUDE_DIRS})
@@ -89,7 +95,7 @@ target_include_directories(${libname}
     PRIVATE
       ${CMAKE_BINARY_DIR}/ginclude
     PUBLIC
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})

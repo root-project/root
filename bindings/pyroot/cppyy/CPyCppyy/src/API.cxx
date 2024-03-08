@@ -59,14 +59,14 @@ static bool Initialize()
 #endif
 #if PY_VERSION_HEX >= 0x03020000
 #if PY_VERSION_HEX < 0x03090000
-	PyEval_InitThreads();
+        PyEval_InitThreads();
 #endif
 #endif
 
     // try again to see if the interpreter is initialized
         if (!Py_IsInitialized()) {
         // give up ...
-            std::cerr << "Error: python has not been intialized; returning." << std::endl;
+            std::cerr << "Error: python has not been initialized; returning." << std::endl;
             return false;
         }
 
@@ -79,6 +79,7 @@ static bool Initialize()
 #if PY_VERSION_HEX < 0x03080000
         PySys_SetArgv(sizeof(argv)/sizeof(argv[0]), argv);
 #endif
+
     // force loading of the cppyy module
         PyRun_SimpleString(const_cast<char*>("import cppyy"));
     }
@@ -183,7 +184,7 @@ bool CPyCppyy::Instance_CheckExact(PyObject* pyobject)
 //-----------------------------------------------------------------------------
 bool CPyCppyy::Instance_IsLively(PyObject* pyobject)
 {
-// Test whether the given instance can safely return to C++, or whether
+// Test whether the given instance can safely return to C++
     if (!CPPInstance_Check(pyobject))
         return true;    // simply don't know
 
@@ -314,7 +315,7 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
         oldargv = l;
     }
 
-// create and set (add progam name) the new command line
+// create and set (add program name) the new command line
 #if PY_VERSION_HEX < 0x03000000
     int argc = args.size() + 1;
     const char** argv = new const char*[argc];
@@ -385,7 +386,7 @@ const CPyCppyy::PyResult CPyCppyy::Eval(const std::string& expr)
         return PyResult();
     }
 
-// results that require no convserion
+// results that require no conversion
     if (result == Py_None || CPPInstance_Check(result) ||
             PyBytes_Check(result) ||
             PyFloat_Check(result) || PyLong_Check(result) || PyInt_Check(result))

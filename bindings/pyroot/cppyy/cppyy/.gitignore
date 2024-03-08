@@ -4,6 +4,10 @@
 
 # dictionary products
 *.so
+*.dll
+*.lib
+*.def
+*.exp
 *.pcm
 *.rootmap
 *_rflx.cpp
@@ -36,6 +40,7 @@ doc/tutorial/gsl_selection.xml
 
 # saved log files of benches
 bench/logs
+bench/*.log
 bench/swig_*.py
 bench/*_wrap.cxx
 bench/*_main

@@ -67,31 +67,40 @@ function ``GetLength`` and replaces it with Python's ``__len__``:
 
 .. code-block:: python
 
-    import cppyy
+    >>> import cppyy
+    >>>
+    >>> def replace_getlength(klass, name):
+    ...    try:
+    ...        klass.__len__ = klass.__dict__['GetLength']
+    ...        del klass.GetLength
+    ...    except KeyError:
+    ...        pass
+    ...
+    >>> cppyy.py.add_pythonization(replace_getlength, 'MyNamespace')
+    >>>
+    >>> cppyy.cppdef("""
+    ... namespace MyNamespace {
+    ... class MyClass {
+    ... public:
+    ...     MyClass(int i) : fInt(i) {}
+    ...     int GetLength() { return fInt; }
+    ... 
+    ... private:
+    ...     int fInt;
+    ... };
+    ... }""")
+    True
+    >>> m = cppyy.gbl.MyNamespace.MyClass(42)
+    >>> len(m)
+    42
+    >>> m.GetLength()
+    Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+    AttributeError: 'MyClass' object has no attribute 'GetLength'
+    >>>
 
-    def replace_getlength(klass, name):
-        try:
-            klass.__len__ = klass.__dict__['GetLength']
-        except KeyError:
-            pass
-
-    cppyy.py.add_pythonization(replace_getlength, 'MyNamespace')
-
-    cppyy.cppdef("""
-    namespace MyNamespace {
-    class MyClass {
-    public:
-        MyClass(int i) : fInt(i) {}
-        int GetLength() { return fInt; }
-
-    private:
-        int fInt;
-    };
-    }""")
-
-    m = cppyy.gbl.MyNamespace.MyClass(42)
-    assert len(m) == 42
-
+The deletion of ``GetLength`` method with ``del`` can be omitted
+if both ``MyClass.GetLength`` and ``MyClass.__len__`` should be valid.
 
 C++ callbacks
 -------------
@@ -118,5 +127,46 @@ which is also called for all derived classes.
 Just as with the Python callbacks, the first argument will be the Python
 class proxy, the second the C++ name, for easy filtering.
 When called, cppyy will be completely finished with the class proxy, so any
-and all changes, including such low-level ones such as the replacement of
-iteration or buffer protocols, are fair game.
+and all changes are fair game, including the low-level ones such as the replacement of
+iteration or buffer protocols.
+
+An example pythonization replacing ``MyClass.GetLength`` method with Python's ``__len__``
+done with the C++ callbacks:
+
+.. code-block:: python
+
+    >>> import cppyy
+    >>> 
+    >>> cppyy.cppdef("""
+    ... #include <Python.h>
+    ...
+    ... namespace MyNamespace {
+    ... class MyClass {
+    ... public:
+    ...     MyClass(int i) : fInt(i) {}
+    ...     int GetLength() { return fInt; }
+    ... 
+    ... private:
+    ...     int fInt;
+    ... 
+    ... // pythonizations
+    ... public:
+    ...     static void __cppyy_pythonize__(PyObject* klass, const std::string&){
+    ...         auto cppName = "GetLength";
+    ...         auto pythonizationName = "__len__";
+    ...         auto* methodObject = PyObject_GetAttrString(klass, cppName);
+    ...         PyObject_SetAttrString(klass, pythonizationName, methodObject);
+    ...         Py_DECREF(methodObject);
+    ...         PyObject_DelAttrString(klass, cppName);
+    ...     }
+    ... };
+    ... }""")
+    True 
+    >>> m = cppyy.gbl.MyNamespace.MyClass(42)
+    >>> len(m)
+    42
+    >>> m.GetLength()
+    Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+    AttributeError: 'MyClass' object has no attribute 'GetLength'
+    >>>

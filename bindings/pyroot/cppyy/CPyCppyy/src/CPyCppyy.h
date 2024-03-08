@@ -31,44 +31,22 @@
 
 #endif // linux
 
-
+#define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include <sys/types.h>
 
-// selected ROOT types from RtypesCore.h
-#ifdef R__INT16
-typedef long           Int_t;       //Signed integer 4 bytes
-typedef unsigned long  UInt_t;      //Unsigned integer 4 bytes
-#else
-typedef int            Int_t;       //Signed integer 4 bytes (int)
-typedef unsigned int   UInt_t;      //Unsigned integer 4 bytes (unsigned int)
-#endif
-#ifdef R__B64    // Note: Long_t and ULong_t are currently not portable types
-typedef long           Long_t;      //Signed long integer 8 bytes (long)
-typedef unsigned long  ULong_t;     //Unsigned long integer 8 bytes (unsigned long)
-#else
-typedef long           Long_t;      //Signed long integer 4 bytes (long)
-typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned long)
-#endif
-typedef float          Float16_t;   //Float 4 bytes written with a truncated mantissa
-typedef double         Double32_t;  //Double 8 bytes in memory, written as a 4 bytes float
-typedef long double    LongDouble_t;//Long Double
-#ifdef _WIN32
-typedef __int64          Long64_t;  //Portable signed long integer 8 bytes
-typedef unsigned __int64 ULong64_t; //Portable unsigned long integer 8 bytes
-#else
-typedef long long          Long64_t; //Portable signed long integer 8 bytes
-typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes
-#endif
-
-typedef Py_ssize_t dim_t;
-typedef dim_t* dims_t;
+namespace CPyCppyy {
+    typedef Py_ssize_t dim_t;
+} // namespace CPyCppyy
 
 // for 3.3 support
 #if PY_VERSION_HEX < 0x03030000
    typedef PyDictEntry* (*dict_lookup_func)(PyDictObject*, PyObject*, long);
 #else
-#if PY_VERSION_HEX >= 0x03060000
+#if PY_VERSION_HEX >= 0x030b0000
+   typedef Py_ssize_t (*dict_lookup_func)(
+       PyDictObject*, PyObject*, Py_hash_t, PyObject**);
+#elif PY_VERSION_HEX >= 0x03060000
    typedef Py_ssize_t (*dict_lookup_func)(
        PyDictObject*, PyObject*, Py_hash_t, PyObject***, Py_ssize_t*);
 #else
@@ -84,6 +62,7 @@ typedef dim_t* dims_t;
 #define PyBytes_CheckExact             PyString_CheckExact
 #define PyBytes_AS_STRING              PyString_AS_STRING
 #define PyBytes_AsString               PyString_AsString
+#define PyBytes_AsStringAndSize        PyString_AsStringAndSize
 #define PyBytes_GET_SIZE               PyString_GET_SIZE
 #define PyBytes_Size                   PyString_Size
 #define PyBytes_FromFormat             PyString_FromFormat
@@ -297,6 +276,14 @@ inline Py_ssize_t PyNumber_AsSsize_t(PyObject* obj, PyObject*) {
 #define Py_RETURN_FALSE return Py_INCREF(Py_False), Py_False
 #endif
 
+#if PY_VERSION_HEX >= 0x03000000 && PY_VERSION_HEX < 0x03010000
+#define CPyCppyy_PyBuffer PyBuffer_Release
+#else
+inline void CPyCppyy_PyBuffer_Release(PyObject* /* unused */, Py_buffer* view) {
+    PyBuffer_Release(view);
+}
+#endif
+
 // vector call support
 #if PY_VERSION_HEX >= 0x03090000
 #define CPyCppyy_PyCFunction_Call PyObject_Call
@@ -304,16 +291,81 @@ inline Py_ssize_t PyNumber_AsSsize_t(PyObject* obj, PyObject*) {
 #define CPyCppyy_PyCFunction_Call PyCFunction_Call
 #endif
 
-// Py_TYPE is changed to an inline static function in 3.11
+// vector call support
+#if PY_VERSION_HEX >= 0x03080000
+typedef PyObject* const* CPyCppyy_PyArgs_t;
+static inline PyObject* CPyCppyy_PyArgs_GET_ITEM(CPyCppyy_PyArgs_t args, Py_ssize_t i) {
+    return args[i];
+}
+static inline PyObject* CPyCppyy_PyArgs_SET_ITEM(CPyCppyy_PyArgs_t args, Py_ssize_t i, PyObject* item) {
+    return ((PyObject**)args)[i] = item;
+}
+static inline Py_ssize_t CPyCppyy_PyArgs_GET_SIZE(CPyCppyy_PyArgs_t, size_t nargsf) {
+    return PyVectorcall_NARGS(nargsf);
+}
+static inline CPyCppyy_PyArgs_t CPyCppyy_PyArgs_New(Py_ssize_t N) {
+    return (CPyCppyy_PyArgs_t)PyMem_Malloc(N*sizeof(PyObject*));
+}
+static inline void CPyCppyy_PyArgs_DEL(CPyCppyy_PyArgs_t args) {
+    PyMem_Free((void*)args);
+}
+#if PY_VERSION_HEX >= 0x03090000
+#define CPyCppyy_PyObject_Call  PyObject_Vectorcall
+#else
+#define CPyCppyy_PyObject_Call _PyObject_Vectorcall
+#endif
+inline PyObject* CPyCppyy_tp_call(
+        PyObject* cb, CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds) {
+    Py_ssize_t offset = Py_TYPE(cb)->tp_vectorcall_offset;
+    vectorcallfunc func = *(vectorcallfunc*)(((char*)cb) + offset);
+    return func(cb, args, nargsf, kwds);
+}
+
+#ifndef Py_TPFLAGS_HAVE_VECTORCALL
+#define Py_TPFLAGS_HAVE_VECTORCALL _Py_TPFLAGS_HAVE_VECTORCALL
+#endif
+
+#else
+
+typedef PyObject* CPyCppyy_PyArgs_t;
+static inline PyObject* CPyCppyy_PyArgs_GET_ITEM(CPyCppyy_PyArgs_t args, Py_ssize_t i) {
+    return PyTuple_GET_ITEM(args, i);
+}
+static inline PyObject* CPyCppyy_PyArgs_SET_ITEM(CPyCppyy_PyArgs_t args, Py_ssize_t i, PyObject* item) {
+    return PyTuple_SET_ITEM(args, i, item);
+}
+static inline Py_ssize_t CPyCppyy_PyArgs_GET_SIZE(CPyCppyy_PyArgs_t args, size_t) {
+    return PyTuple_GET_SIZE(args);
+}
+static inline CPyCppyy_PyArgs_t CPyCppyy_PyArgs_New(Py_ssize_t N) {
+    return PyTuple_New(N);
+}
+static inline void CPyCppyy_PyArgs_DEL(CPyCppyy_PyArgs_t args) {
+    Py_DECREF(args);
+}
+inline PyObject* CPyCppyy_PyObject_Call(PyObject* cb, PyObject* args, size_t, PyObject* kwds) {
+    return PyObject_Call(cb, args, kwds);
+}
+inline PyObject* CPyCppyy_tp_call(PyObject* cb, PyObject* args, size_t, PyObject* kwds) {
+    return Py_TYPE(cb)->tp_call(cb, args, kwds);
+}
+#endif
+
+// Py_TYPE as inline function
 #if PY_VERSION_HEX < 0x030900A4 && !defined(Py_SET_TYPE)
 static inline
 void _Py_SET_TYPE(PyObject *ob, PyTypeObject *type) { ob->ob_type = type; }
 #define Py_SET_TYPE(ob, type) _Py_SET_TYPE((PyObject*)(ob), type)
 #endif
 
+// py39 gained several faster (through vector call) equivalent method call API
 #if PY_VERSION_HEX < 0x03090000
 static inline PyObject* PyObject_CallMethodNoArgs(PyObject* obj, PyObject* name) {
     return PyObject_CallMethodObjArgs(obj, name, nullptr);
+}
+
+static inline PyObject* PyObject_CallMethodOneArg(PyObject* obj, PyObject* name, PyObject* arg) {
+    return PyObject_CallMethodObjArgs(obj, name, arg, nullptr);
 }
 #endif
 

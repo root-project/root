@@ -2,36 +2,28 @@ import codecs, glob, os, sys, re
 from setuptools import setup, find_packages, Extension
 from distutils import log
 
-from setuptools.dist import Distribution
 from setuptools.command.install import install as _install
 
-force_bdist = False
-if '--force-bdist' in sys.argv:
-    force_bdist = True
-    sys.argv.remove('--force-bdist')
-
-add_pkg = ['cppyy']
+add_pkg = ['cppyy', 'cppyy.__pyinstaller']
 try:
     import __pypy__, sys
     version = sys.pypy_version_info
-    requirements = ['cppyy-backend']
+    requirements = ['cppyy-backend==1.15.2', 'cppyy-cling==6.30.0']
     if version[0] == 5:
         if version[1] <= 9:
-            requirements = ['cppyy-cling<6.12', 'cppyy-backend<0.3']
+            requirements = ['cppyy-backend<0.3', 'cppyy-cling<6.12']
             add_pkg += ['cppyy_compat']
         elif version[1] <= 10:
-            requirements = ['cppyy-cling<=6.15', 'cppyy-backend<0.4']
+            requirements = ['cppyy-backend<0.4', 'cppyy-cling<=6.15']
     elif version[0] == 6:
         if version[1] <= 0:
-            requirements = ['cppyy-cling<=6.15', 'cppyy-backend<1.1']
+            requirements = ['cppyy-backend<1.1', 'cppyy-cling<=6.15']
     elif version[0] == 7:
-        if version[1] <= 2:
-            requirements = ['cppyy-cling<=6.18.2.3', 'cppyy-backend<=1.10']
-        else:
-            requirements = ['cppyy-cling<=6.18.2.7', 'cppyy-backend<=1.10']
+        if version[1] <= 3 and version[2] <= 3:
+            requirements = ['cppyy-backend<=1.10', 'cppyy-cling<=6.18.2.3']
 except ImportError:
     # CPython
-    requirements = ['cppyy-cling==6.18.2.7', 'cppyy-backend==1.10.8', 'CPyCppyy==1.10.2']
+    requirements = ['CPyCppyy==1.12.16', 'cppyy-backend==1.15.2', 'cppyy-cling==6.30.0']
 
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
@@ -56,22 +48,22 @@ def find_version(*file_paths):
 
 
 #
-# platform-dependent helpers
-#
-def is_manylinux():
-    try:
-       for line in open('/etc/redhat-release').readlines():
-           if 'CentOS release 6.10 (Final)' in line:
-               return True
-    except (OSError, IOError):
-        pass
-    return False
-
-
-#
 # customized commands
 #
 class my_install(_install):
+    def __init__(self, *args, **kwds):
+        if 0x3000000 <= sys.hexversion:
+            super(_install, self).__init__(*args, **kwds)
+        else:
+          # b/c _install is a classobj, not type
+            _install.__init__(self, *args, **kwds)
+
+        try:
+            import cppyy_backend as cpb
+            self._pchname = 'allDict.cxx.pch.' + str(cpb.__version__)
+        except (ImportError, AttributeError):
+            self._pchname = None
+
     def run(self):
         # base install
         _install.run(self)
@@ -79,50 +71,29 @@ class my_install(_install):
         # force build of the .pch underneath the cppyy package if not available yet
         install_path = os.path.join(os.getcwd(), self.install_libbase, 'cppyy')
 
-        try:
-            import cppyy_backend as cpb
-            if not os.path.exists(os.path.join(cpb.__file__, 'etc', 'allDict.cxx.pch')):
-                log.info("installing pre-compiled header in %s", install_path)
-                cpb.loader.set_cling_compile_options(True)
-                cpb.loader.ensure_precompiled_header(install_path, 'allDict.cxx.pch')
-        except (ImportError, AttributeError):
-            # ImportError may occur with wrong pip requirements resolution (unlikely)
-            # AttributeError will occur with (older) PyPy as it relies on older backends
-            pass
+        if self._pchname:
+            try:
+                import cppyy_backend as cpb
+                if not os.path.exists(os.path.join(cpb.__file__, 'etc', self._pchname)):
+                    log.info("installing pre-compiled header in %s", install_path)
+                    cpb.loader.set_cling_compile_options(True)
+                    cpb.loader.ensure_precompiled_header(install_path, self._pchname)
+            except (ImportError, AttributeError):
+                # ImportError may occur with wrong pip requirements resolution (unlikely)
+                # AttributeError will occur with (older) PyPy as it relies on older backends
+                self._pchname = None
 
     def get_outputs(self):
         outputs = _install.get_outputs(self)
-        # pre-emptively add allDict.cxx.pch, which may or may not be created; need full
-        # path to make sure the final relative path is correct
-        outputs.append(os.path.join(os.getcwd(), self.install_libbase, 'cppyy', 'allDict.cxx.pch'))
+        if self._pchname:
+            # pre-emptively add allDict.cxx.pch, which may or may not be created; need full
+            # path to make sure the final relative path is correct
+            outputs.append(os.path.join(os.getcwd(), self.install_libbase, 'cppyy', self._pchname))
         return outputs
 
 
 cmdclass = {
         'install': my_install }
-
-
-#
-# customized distribition to disable binaries
-#
-class MyDistribution(Distribution):
-    def run_commands(self):
-        # pip does not resolve dependencies before building binaries, so unless
-        # packages are installed one-by-one, on old install is used or the build
-        # will simply fail hard. The following is not completely quiet, but at
-        # least a lot less conspicuous.
-        if not is_manylinux() and not force_bdist:
-            disabled = set((
-                'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
-            for cmd in self.commands:
-                if not cmd in disabled:
-                    self.run_command(cmd)
-                else:
-                    log.info('Command "%s" is disabled', cmd)
-                    cmd_obj = self.get_command_obj(cmd)
-                    cmd_obj.get_outputs = lambda: None
-        else:
-            return Distribution.run_commands(self)
 
 
 setup(
@@ -149,12 +120,13 @@ setup(
 
         'License :: OSI Approved :: BSD License',
 
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: C',
         'Programming Language :: C++',
 
@@ -166,11 +138,23 @@ setup(
 
     keywords='C++ bindings data science calling language integration',
 
+    include_package_data=True,
+    package_data={'': ['installer/cppyy_monkey_patch.py']},
+
     package_dir={'': 'python'},
     packages=find_packages('python', include=add_pkg),
 
+    # TODO: numba_extensions will load all extensions even if the package
+    # itself is not otherwise imported, just installed; in the case of cppyy,
+    # that is currently too heavy (and breaks on conda)
+
+    #entry_points={
+    #    'numba_extensions': [
+    #        'init = cppyy.numba_ext:_init_extension',
+    #    ],
+    #},
+
     cmdclass=cmdclass,
-    distclass=MyDistribution,
 
     zip_safe=False,
 )
