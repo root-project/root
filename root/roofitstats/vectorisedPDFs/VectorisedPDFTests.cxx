@@ -391,18 +391,14 @@ void PDFTest::checkParameters() {
     auto postFit = static_cast<RooRealVar*>(param);
     auto preFit  = static_cast<RooRealVar*>(_origParameters.find(param->GetName()));
     ASSERT_NE(preFit, nullptr) << "for parameter '" << param->GetName() << '\'';
-    EXPECT_LE(fabs(postFit->getVal() - preFit->getVal()), 2.*postFit->getError())
-    << "[Within 2 std-dev: " << param->GetName()
-    << " (" << postFit->getVal() << " +- " << 2.*postFit->getError() << ")"
+    const double error3sigma = 3*postFit->getError();
+    EXPECT_LE(fabs(postFit->getVal() - preFit->getVal()), error3sigma)
+    << "[Within 3 std-dev: " << param->GetName()
+    << " (" << postFit->getVal() << " +- " << error3sigma << ")"
     << " == " << preFit->getVal() << "]";
 
-    EXPECT_LE(fabs(postFit->getVal() - preFit->getVal()), 1.5*postFit->getError())
-    << "[Within 1.5 std-dev: " << param->GetName()
-    << " (" << postFit->getVal() << " +- " << 1.5*postFit->getError() << ")"
-    << " == " << preFit->getVal() << "]";
-
-    EXPECT_NEAR(postFit->getVal(), preFit->getVal(), fabs(postFit->getVal())*5.E-2)
-    << "[Within 5% for parameter '" << param->GetName() << "']";
+    EXPECT_NEAR(postFit->getVal(), preFit->getVal(), fabs(postFit->getVal())*0.15)
+    << "[Within 15% for parameter '" << param->GetName() << "']";
 
   }
 

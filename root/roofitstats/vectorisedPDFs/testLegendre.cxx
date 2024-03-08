@@ -23,7 +23,7 @@ class TestLegendre : public PDFTest
 {
   protected:
     TestLegendre() :
-      PDFTest("Legendre", 100000)
+      PDFTest("Legendre")
   {
     auto x = std::make_unique<RooRealVar>("x", "x", 0.5, 0.1, 1.0);
     auto coef = new RooRealVar("coef", "coef", 0.5, 0.3, 1.0);

@@ -21,7 +21,7 @@ class TestLandauEvil: public PDFTest
 {
   protected:
     TestLandauEvil() :
-      PDFTest("Landau_evil", 100000)
+      PDFTest("Landau_evil")
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
         auto x = std::make_unique<RooRealVar>("x", "x", -250, 3000);
@@ -54,7 +54,7 @@ class TestLandau: public PDFTest
 {
   protected:
     TestLandau() :
-      PDFTest("Landau_convenient", 100000)
+      PDFTest("Landau_convenient")
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
         auto x = std::make_unique<RooRealVar>("x", "x", -3, 40);

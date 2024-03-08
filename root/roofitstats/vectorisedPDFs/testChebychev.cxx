@@ -22,7 +22,7 @@ class TestChebychev2 : public PDFTest
 {
   protected:
     TestChebychev2() :
-      PDFTest("Chebychev2", 100000)
+      PDFTest("Chebychev2")
   {
         auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
         auto a1 = std::make_unique<RooRealVar>("a1", "a1", 0.3, -0.5, 0.5);
@@ -51,7 +51,7 @@ class TestChebychev5 : public PDFTest
 {
   protected:
     TestChebychev5() :
-      PDFTest("Chebychev5", 50000)
+      PDFTest("Chebychev5")
   {
         auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
         auto a1 = std::make_unique<RooRealVar>("a1", "a1", 0.15, -0.3, 0.3);

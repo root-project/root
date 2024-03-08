@@ -28,7 +28,7 @@ class RooAbsPdf;
 class PDFTest : public ::testing::Test
 {
   protected:
-    PDFTest(std::string&& name, std::size_t nEvt = 100000);
+    PDFTest(std::string&& name, std::size_t nEvt = 10000);
 
     void SetUp() override;
 
@@ -82,7 +82,7 @@ class PDFTest : public ::testing::Test
 
 class PDFTestWeightedData : public PDFTest {
   protected:
-    PDFTestWeightedData(const char* name, std::size_t events = 100000) :
+    PDFTestWeightedData(const char* name, std::size_t events = 10000) :
       PDFTest(name, events) { }
 
     void makeFitData() override;

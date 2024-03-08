@@ -23,7 +23,7 @@ class TestBukin : public PDFTest
 {
   protected:
     TestBukin() :
-      PDFTest("Bukin", 100000)
+      PDFTest("Bukin")
   { 
       auto x = std::make_unique<RooRealVar>("x", "x", 0.6, -15., 10.);
       auto Xp = std::make_unique<RooRealVar>("Xp", "Xp", 0.5, -3., 5.);

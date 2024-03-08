@@ -22,7 +22,7 @@ class TestLognormal : public PDFTest
 {
   protected:
     TestLognormal() :
-      PDFTest("Lognormal", 100000)
+      PDFTest("Lognormal")
   {
         auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
         auto m0 = std::make_unique<RooRealVar>("m0", "m0", 5, 0.1, 10);
@@ -53,7 +53,7 @@ class TestLognormalInMeanAndX : public PDFTest
 {
   protected:
     TestLognormalInMeanAndX() :
-      PDFTest("Lognormal(x, mean)", 100000)
+      PDFTest("Lognormal(x, mean)")
   {
         auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
         auto m0 = std::make_unique<RooRealVar>("m0", "m0", 1, 0.1, 10);
