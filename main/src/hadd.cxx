@@ -376,7 +376,7 @@ int main( int argc, char **argv )
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
-   Int_t indirectFilesCount = 0; // This will count only valid files within the indirect file, if provided, for later calculating the number of processes. It will not error out if a filename listed within it does not exist. The error will happen at a later stage when opening the TFile.
+   Int_t indirectFilesCount = 0; // This will count only valid subfiles within the indirect file, if provided, for later calculating the number of parallel processes. The scope below will not error out if a subfilename listed within it does not exist. The program will later try to process all files (valid or not), in sequential or parallel mode, and raise an error when opening the subfile as TFile if it does not exist.
    if (newcomp == -1) {
       if (useFirstInputCompression || keepCompressionAsIs) {
          // grab from the first file.
