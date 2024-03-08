@@ -1,3 +1,4 @@
+CMAKE_CXX_STANDARD=17
 alien=OFF
 all=OFF
 arrow=OFF
