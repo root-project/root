@@ -492,6 +492,7 @@ int main( int argc, char **argv )
    auto sequentialMerge = [&](TFileMerger &merger, int start, int nFiles) {
 
       for (auto i = start; i < (start + nFiles); i++) {
+         if(i >= (int)allSubfiles.size()) break;
          if (!merger.AddFile(allSubfiles[i].c_str())) {
             if (skip_errors) {
                std::cerr << "hadd skipping file with error: " << allSubfiles[i] << std::endl;
