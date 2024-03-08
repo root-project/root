@@ -95,6 +95,9 @@ some_int_holder my_global_int_holders[5] = {
     some_int_holder(13), some_int_holder(42), some_int_holder(88),
     some_int_holder(-1), some_int_holder(17) };
 
+some_abstract_class* g_abstract_ptr = nullptr;
+
+
 // for life-line and identity testing
 int some_class_with_data::some_data::s_num_data = 0;
 

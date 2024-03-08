@@ -1,34 +1,42 @@
+#if __cplusplus >= 201103L
+
 #include <functional>
 #include <memory>
 #include <vector>
 
 
 //===========================================================================
-class TestSharedPtr {        // for std::shared_ptr<> testing
+class TestSmartPtr {         // for std::shared/unique_ptr<> testing
 public:
     static int s_counter;
 
 public:
-    TestSharedPtr() { ++s_counter; }
-    TestSharedPtr(const TestSharedPtr&) { ++s_counter; }
-    virtual ~TestSharedPtr() { --s_counter; }
+    TestSmartPtr() { ++s_counter; }
+    TestSmartPtr(const TestSmartPtr&) { ++s_counter; }
+    virtual ~TestSmartPtr() { --s_counter; }
 
 public:
     virtual int get_value();
 };
 
-std::shared_ptr<TestSharedPtr> create_shared_ptr_instance();
+std::shared_ptr<TestSmartPtr> create_shared_ptr_instance();
+std::unique_ptr<TestSmartPtr> create_unique_ptr_instance();
 
-class DerivedTestSharedPtr : TestSharedPtr {
+class DerivedTestSmartPtr : TestSmartPtr {
 public:
-    DerivedTestSharedPtr(int i) : m_int(i) {}
+    DerivedTestSmartPtr(int i) : m_int(i) {}
     virtual int get_value();
 
 public:
     int m_int;
 };
 
-int pass_shared_ptr(std::shared_ptr<TestSharedPtr> p);
+int pass_shared_ptr(std::shared_ptr<TestSmartPtr> p);
+int move_shared_ptr(std::shared_ptr<TestSmartPtr>&& p);
+int move_unique_ptr(std::unique_ptr<TestSmartPtr>&& p);
+int move_unique_ptr_derived(std::unique_ptr<DerivedTestSmartPtr>&& p);
+
+TestSmartPtr create_TestSmartPtr_by_value();
 
 
 //===========================================================================
@@ -66,12 +74,12 @@ void implicit_converion_move(TestMoving2&&);
 
 //===========================================================================
 struct TestData {            // for initializer list construction
-    TestData(int i) : m_int(i) {}
+    TestData(int i=0) : m_int(i) {}
     int m_int;
 };
 
 struct TestData2 {
-    TestData2(int i) : m_int(i) {}
+    TestData2(int i=0) : m_int(i) {}
     virtual ~TestData2() {}
     int m_int;
 };
@@ -112,3 +120,5 @@ namespace std {
         size_t operator()(const StructWithHash&) const { return 17; }
     };
 } // namespace std
+
+#endif // c++11 and later

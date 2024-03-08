@@ -83,7 +83,7 @@ def initialize(backend):
 
     # integer types
     int_tm = _create_mapper(int)
-    for tp in ['short', 'unsigned short', 'int']:
+    for tp in ['int8_t', 'uint8_t', 'short', 'unsigned short', 'int']:
         tm[tp] = int_tm
 
     if sys.hexversion < 0x3000000:

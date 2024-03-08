@@ -62,3 +62,8 @@ void fragile::sigabort() {
     assert(0);
 }
 
+
+// for duplicate testing
+int fragile::add42(int i) {
+    return i + 42;
+}

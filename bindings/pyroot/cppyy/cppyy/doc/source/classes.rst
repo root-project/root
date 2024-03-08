@@ -84,12 +84,19 @@ will result in a Python ``ReferenceError`` exception.
 `Destructors`
 -------------
 
-There should not be a reason to call a destructor directly in CPython, but
+There should no be reason to call a destructor directly in CPython, but e.g.
 PyPy uses a garbage collector and that makes it sometimes useful to destruct
-a C++ object where you want it destroyed.
-Destructors are accessible through the conventional ``__destruct__`` method.
-Accessing an object after it has been destroyed will result in a Python
-``ReferenceError`` exception.
+a C++ object exactly when you want it destroyed.
+Destructors are by convention accessible through the ``__destruct__`` method
+(since "~" can not be part of a Python method name).
+If a Python-side derived class overrides ``__destruct__``, that method will
+be called when the instance gets deleted in C++.
+The Python destructor, ``__del__``, gets called when the Python proxy goes
+away, which will only delete the C++ instance if owned by Python.
+Note that ``__del__`` is not guaranteed to be called, it may e.g. be skipped
+on program shutdown or because of an outstanding exception.
+Accessing an object after it has been destroyed using ``__destruct__`` will
+result in a Python ``ReferenceError`` exception.
 
 
 `Inheritance`
@@ -139,7 +146,7 @@ Example:
     >>> from cppyy.gbl import Abstract, call_abstract_method
     >>> class PyConcrete(Abstract):
     ...     def abstract_method(self):
-    ...         print("Hello, Python World!\n")
+    ...         return "Hello, Python World!\n"
     ...     def concrete_method(self):
     ...         pass
     ...
@@ -151,6 +158,49 @@ Example:
 Note that it is not necessary to provide a constructor (``__init__``), but
 if you do, you *must* call the base class constructor through the ``super``
 mechanism.
+
+
+`Multiple cross-inheritance`
+----------------------------
+
+Python requires that any multiple inheritance (also in pure Python) has an
+unambiguous method resolution order (mro), including for classes and thus
+also for meta-classes.
+In Python2, it was possible to resolve any mro conflicts automatically, but
+meta-classes in Python3, although syntactically richer, have functionally
+become far more limited.
+In particular, the mro is checked in the builtin class builder, instead of
+in the meta-class of the meta-class (which in Python3 is the builtin ``type``
+rather than the meta-class itself as in Python2, another limitation, and
+which actually checks the mro a second time for no reason).
+The upshot is that a helper is required (``cppyy.multi``) to resolve the mro
+to support Python3.
+The helper is written to also work in Python2.
+Example:
+
+  .. code-block:: python
+
+    >>> class PyConcrete(cppyy.multi(cppyy.gbl.Abstract1, cppyy.gbl.Abstract2)):
+    ...     def abstract_method1(self):
+    ...         return "first message"
+    ...     def abstract_method2(self):
+    ...         return "second message"
+    ...
+    >>> pc = PyConcrete()
+    >>> cppyy.gbl.call_abstract_method1(pc)
+    first message
+    >>> cppyy.gbl/call_abstract_method2(pc)
+    second message
+    >>>
+
+Contrary to multiple inheritance in Python, in C++ there are no two separate
+instances representing the base classes.
+Thus, a single ``__init__`` call needs to construct and initialize all bases,
+rather than calling ``__init__`` on each base independently.
+To support this syntax, the arguments to each base class should be grouped
+together in a tuple.
+If there are no arguments, provide an empty tuple (or omit them altogether,
+if these arguments apply to the right-most base(s)).
 
 
  .. _sec-methods-label:
@@ -229,6 +279,44 @@ behave as expected:
 
 
  .. _sec-operators-label:
+
+
+`Structs/Unions`
+----------------
+
+Structs and unions are both supported, named or anonymous.
+If the latter, the field are accessible through the parent scope by their
+declared name.
+For example:
+
+  .. code-block:: python
+
+    >>> cppyy.cppdef("""\
+    ... struct PointXYZ {
+    ...   PointXYZI() : intensity(5.) {}
+    ...   double x, y, z;
+    ...   union {
+    ...     int offset1;
+    ...     struct {
+    ...       int offset2;
+    ...       float intensity;
+    ...     };
+    ...     float data_c[4];
+    ...   };
+    ... };""")
+    True
+    >>> p = cppyy.gbl.PointXYZI()
+    >>> type(p.x)
+    <class 'float'>
+    >>> p.intensity
+    5.0
+    >>> type(p.data_c[1])
+    <class 'float'>
+    >>> p.data_c[1] = 3.0
+    >>> p.intensity
+    3.0
+    >>>
+
 
 `Operators`
 -----------

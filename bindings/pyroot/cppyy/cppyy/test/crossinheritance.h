@@ -95,6 +95,41 @@ public:
     static int s_count;
 };
 
+class Component {
+public:
+    Component();
+    Component(const Component&) = delete;
+    Component& operator=(const Component&) = delete;
+    virtual ~Component();
+
+    static int get_count();
+
+private:
+    static int s_count;
+};
+
+Component* build_component(int value);
+Component* cycle_component(Component* c);
+
 } // namespace CrossInheritance
+
+
+//===========================================================================
+namespace AccessProtected {  // for protected member testing
+
+class MyBase {
+public:
+    MyBase();
+    virtual ~MyBase();
+
+protected:
+    virtual int get_data_v();
+    int get_data();
+
+protected:
+    int my_data;
+};
+
+} // AccessProtected
 
 #endif // !CPPYY_TEST_CROSSINHERITANCE_H
