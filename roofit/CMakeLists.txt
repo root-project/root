@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(roofit_legacy_eval_backend ON)
+set(roofit_legacy_eval_backend ON CACHE BOOL "" FORCE)
 
 add_subdirectory(batchcompute)
 if (roofit_multiprocess)
