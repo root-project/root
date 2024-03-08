@@ -2318,7 +2318,7 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i, const
    RVec<T> r(isize);
    for (size_type k = 0; k < isize; k++)
    {
-      if (k < v.size()){
+      if (i[k] < v.size() && i[k]>=0){
          r[k] = v[i[k]];
       }
       else {
