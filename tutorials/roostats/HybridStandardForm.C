@@ -185,12 +185,6 @@ void HybridStandardForm(int ntoys = 6000)
    // of the current threshold on messages.
    RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
 
-   // Use PROOF-lite on multi-core machines
-   ProofConfig *pc = NULL;
-   // uncomment below if you want to use PROOF
-   pc = new ProofConfig(*w, 4, "workers=4", kFALSE); // machine with 4 cores
-   //  pc = new ProofConfig(*w, 2, "workers=2", kFALSE); // machine with 2 cores
-
    //-----------------------------------------------
    // P A R T   3  :  A N A L Y T I C   R E S U L T
    // ==============================================
@@ -325,10 +319,6 @@ void HybridStandardForm(int ntoys = 6000)
    //  hc1.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
    // ~~~
 
-   // enable proof
-   // proof not enabled for this test statistic
-   //  if(pc) toymcs1->SetProofConfig(pc);
-
    // these lines save current msg level and then kill any messages below ERROR
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
    // Get the result
@@ -378,10 +368,6 @@ void HybridStandardForm(int ntoys = 6000)
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
    // ~~~
-
-   // enable proof
-   if (pc)
-      toymcs2->SetProofConfig(pc);
 
    // these lines save current msg level and then kill any messages below ERROR
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);

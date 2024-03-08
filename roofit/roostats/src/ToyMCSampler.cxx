@@ -23,10 +23,6 @@ at each call to nextPoint(...).
 ToyMCSampler is an implementation of the TestStatSampler interface.
 It generates Toy Monte Carlo for a given parameter point and evaluates a
 TestStatistic.
-
-For parallel runs, ToyMCSampler can be given an instance of ProofConfig
-and then run in parallel using proof or proof-lite. Internally, it uses
-ToyMCStudy with the RooStudyManager.
 */
 
 #include "RooStats/ToyMCSampler.h"
@@ -42,7 +38,6 @@ ToyMCStudy with the RooStudyManager.
 #include "RooRandom.h"
 
 #include "RooStudyManager.h"
-#include "RooStats/ToyMCStudy.h"
 #include "RooStats/DetailedOutputAggregator.h"
 #include "RooStats/RooStatsUtils.h"
 #include "RooSimultaneous.h"
@@ -265,57 +260,12 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
 
 RooDataSet* ToyMCSampler::GetSamplingDistributions(RooArgSet& paramPointIn)
 {
-
    // ======= S I N G L E   R U N ? =======
-   if(!fProofConfig)
-      return GetSamplingDistributionsSingleWorker(paramPointIn);
-
-   // ======= P A R A L L E L   R U N =======
-   if (!CheckConfig()){
-      oocoutE(nullptr, InputArguments)
-         << "Bad COnfiguration in ToyMCSampler "
-         << endl;
-      return nullptr;
-   }
-
-   // turn adaptive sampling off if given
-   if(fToysInTails) {
-      fToysInTails = 0;
-      oocoutW(nullptr, InputArguments)
-         << "Adaptive sampling in ToyMCSampler is not supported for parallel runs."
-         << endl;
-   }
-
-   // adjust number of toys on the slaves to keep the total number of toys constant
-   Int_t totToys = fNToys;
-   fNToys = (int)ceil((double)fNToys / (double)fProofConfig->GetNExperiments()); // round up
-
-   // create the study instance for parallel processing
-   ToyMCStudy toymcstudy{};
-   toymcstudy.SetToyMCSampler(*this);
-   toymcstudy.SetParamPoint(paramPointIn);
-   toymcstudy.SetRandomSeed(RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) );
-
-   // temporary workspace for proof to avoid messing with TRef
-   RooWorkspace w(fProofConfig->GetWorkspace());
-   RooStudyManager studymanager(w, toymcstudy);
-   studymanager.runProof(fProofConfig->GetNExperiments(), fProofConfig->GetHost(), fProofConfig->GetShowGui());
-
-   RooDataSet* output = toymcstudy.merge();
-
-   // reset the number of toys
-   fNToys = totToys;
-
-   return output;
+   return GetSamplingDistributionsSingleWorker(paramPointIn);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This is the main function for serial runs. It is called automatically
-/// from inside GetSamplingDistribution when no ProofConfig is given.
-/// You should not call this function yourself. This function should
-/// be used by ToyMCStudy on the workers (ie. when you explicitly want
-/// a serial run although ProofConfig is present).
-///
+/// This is the main function for serial runs.
 
 RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramPointIn)
 {
