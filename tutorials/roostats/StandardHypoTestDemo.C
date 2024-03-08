@@ -70,7 +70,6 @@ struct HypoTestOptions {
    double poiValue = -1;       // change poi snapshot value for S+B model (needed for expected p0 values)
    int printLevel = 0;
    bool generateBinned = false;       // for binned generation
-   bool useProof = false;             // use Proof
    bool enableDetailedOutput = false; // for detailed output
 };
 
@@ -88,7 +87,6 @@ void StandardHypoTestDemo(const char *infile = "", const char *workspaceName = "
    double poiValue = optHT.poiValue;     // change poi snapshot value for S+B model (needed for expected p0 values)
    int printLevel = optHT.printLevel;
    bool generateBinned = optHT.generateBinned; // for binned generation
-   bool useProof = optHT.useProof;             // use Proof
    bool enableDetOutput = optHT.enableDetailedOutput;
 
    // Other Parameter to pass in tutorial
@@ -371,12 +369,6 @@ void StandardHypoTestDemo(const char *infile = "", const char *workspaceName = "
       }
       if (generateBinned)
          sampler->SetGenerateBinned(generateBinned);
-
-      // use PROOF
-      if (useProof) {
-         ProofConfig pc(*w, 0, "", kFALSE);
-         sampler->SetProofConfig(&pc); // enable proof
-      }
 
       // set the test statistic
       if (testStatType == 0)

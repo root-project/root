@@ -199,7 +199,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooProduct.h
     RooProfileLL.h
     RooProjectedPdf.h
-    RooProofDriverSelector.h
     RooPullVar.h
     RooQuasiRandomGenerator.h
     RooRandom.h
@@ -400,7 +399,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooProduct.cxx
     src/RooProfileLL.cxx
     src/RooProjectedPdf.cxx
-    src/RooProofDriverSelector.cxx
     src/RooPullVar.cxx
     src/RooQuasiRandomGenerator.cxx
     src/RooRandom.cxx
