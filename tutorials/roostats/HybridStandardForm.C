@@ -134,12 +134,13 @@ protected:
 
 ClassImp(BinCountTestStat)
 
-   //-----------------------------
-   // The Actual Tutorial Macro
-   //-----------------------------
+//-----------------------------
+// The Actual Tutorial Macro
+//-----------------------------
 
-   void HybridStandardForm()
+void HybridStandardForm(int ntoys = 6000)
 {
+   double nToysRatio = 20;      // ratio Ntoys Null/ntoys ALT
 
    // This tutorial has 6 parts
    // Table of Contents
@@ -174,8 +175,8 @@ ClassImp(BinCountTestStat)
    // w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
    // with one in standard form.  Now x is encoded in event count
    w->factory("Uniform::f(m[0,1])"); // m is a dummy discriminating variable
-   w->factory("ExtendPdf::px(f,sum::splusb(s[0,0,100],b[100,0,300]))");
-   w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
+   w->factory("ExtendPdf::px(f,sum::splusb(s[0,0,100],b[100,0.1,300]))");
+   w->factory("Poisson::py(y[100,0.1,500],prod::taub(tau[1.],b))");
    w->factory("PROD::model(px,py)");
    w->factory("Uniform::prior_b(b)");
 
@@ -310,7 +311,7 @@ ClassImp(BinCountTestStat)
    //  toymcs1->SetNEventsPerToy(1); // because the model is in number counting form
    toymcs1->SetTestStatistic(&eventCount); // set the test statistic
    //  toymcs1->SetGenerateBinned();
-   hc1.SetToys(30000, 1000);
+   hc1.SetToys(ntoys, ntoys / nToysRatio);
    hc1.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc1.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
@@ -364,7 +365,7 @@ ClassImp(BinCountTestStat)
    //  toymcs2->SetNEventsPerToy(1);
    toymcs2->SetTestStatistic(&slrts);
    //  toymcs2->SetGenerateBinned();
-   hc2.SetToys(20000, 1000);
+   hc2.SetToys(ntoys, ntoys / nToysRatio);
    hc2.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc2.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead

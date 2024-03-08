@@ -111,11 +111,12 @@ protected:
 
 ClassImp(BinCountTestStat)
 
-   // ----------------------------------
-   // The Actual Tutorial Macro
+// ----------------------------------
+// The Actual Tutorial Macro
 
-   void HybridInstructional()
+void HybridInstructional(int ntoys = 6000)
 {
+   double nToysRatio = 20;      // ratio Ntoys Null/ntoys ALT
 
    // This tutorial has 6 parts
    // Table of Contents
@@ -144,8 +145,8 @@ ClassImp(BinCountTestStat)
    // $Pois(x | s+b) * Pois(y | tau b )$
    // for Z_Gamma, use uniform prior on b.
    RooWorkspace *w = new RooWorkspace("w");
-   w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
-   w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
+   w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0.1,300]))");
+   w->factory("Poisson::py(y[100,0.1,500],prod::taub(tau[1.],b))");
    w->factory("PROD::model(px,py)");
    w->factory("Uniform::prior_b(b)");
 
@@ -318,7 +319,7 @@ ClassImp(BinCountTestStat)
    ToyMCSampler *toymcs1 = (ToyMCSampler *)hc1.GetTestStatSampler();
    toymcs1->SetNEventsPerToy(1);         // because the model is in number counting form
    toymcs1->SetTestStatistic(&binCount); // set the test statistic
-   hc1.SetToys(20000, 1000);
+   hc1.SetToys(ntoys, ntoys / nToysRatio);
    hc1.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc1.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
@@ -371,7 +372,7 @@ ClassImp(BinCountTestStat)
    ToyMCSampler *toymcs2 = (ToyMCSampler *)hc2.GetTestStatSampler();
    toymcs2->SetNEventsPerToy(1);
    toymcs2->SetTestStatistic(&slrts);
-   hc2.SetToys(20000, 1000);
+   hc2.SetToys(ntoys, ntoys / nToysRatio);
    hc2.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc2.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
@@ -480,7 +481,7 @@ ClassImp(BinCountTestStat)
    ToyMCSampler *toymcs3 = (ToyMCSampler *)hc3.GetTestStatSampler();
    toymcs3->SetNEventsPerToy(1);
    toymcs3->SetTestStatistic(&slrts);
-   hc3.SetToys(30000, 1000);
+   hc3.SetToys(ntoys, ntoys / nToysRatio);
    hc3.ForcePriorNuisanceAlt(*w->pdf("gamma_y0"));
    hc3.ForcePriorNuisanceNull(*w->pdf("gamma_y0"));
    // if you wanted to use the ad hoc Gaussian prior instead
