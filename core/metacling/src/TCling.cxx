@@ -630,9 +630,9 @@ extern "C" int TCling__AutoParseCallback(const char* className)
    return ((TCling*)gCling)->AutoParse(className);
 }
 
-extern "C" const char* TCling__GetClassSharedLibs(const char* className)
+extern "C" const char* TCling__GetClassSharedLibs(const char* className, bool skipCore)
 {
-   return ((TCling*)gCling)->GetClassSharedLibs(className);
+   return ((TCling*)gCling)->GetClassSharedLibs(className, skipCore);
 }
 
 // Returns 0 for failure 1 for success
@@ -6942,7 +6942,7 @@ const char* TCling::GetSharedLibs()
    return fSharedLibs;
 }
 
-static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHelper &LH)
+static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHelper &LH, bool skipCore)
 {
    if (!cls || !*cls)
       return {};
@@ -7019,6 +7019,9 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
          // link declaration.
          if (!M->LinkLibraries.size())
             continue;
+         // We have preloaded the Core module thus libCore.so
+         if (M->Name == "Core" && skipCore)
+            continue;
          assert(M->LinkLibraries.size() == 1);
          if (!result.empty())
             result += ' ';
@@ -7034,8 +7037,10 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
 /// The first library in the list is the one containing the class, the
 /// others are the libraries the first one depends on. Returns 0
 /// in case the library is not found.
+/// \param cls the name of the class
+/// \param skipCore if true (default), remove "Core" from the returned list
 
-const char* TCling::GetClassSharedLibs(const char* cls)
+const char* TCling::GetClassSharedLibs(const char* cls, bool skipCore)
 {
    if (fCxxModulesEnabled) {
       // Lock the interpreter mutex before interacting with cling.
@@ -7054,7 +7059,7 @@ const char* TCling::GetClassSharedLibs(const char* cls)
       // Limit the recursion which can be induced by GetClassSharedLibsForModule.
       SuspendAutoLoadingRAII AutoLoadingDisabled(this);
       cling::LookupHelper &LH = fInterpreter->getLookupHelper();
-      std::string libs = GetClassSharedLibsForModule(cls, LH);
+      std::string libs = GetClassSharedLibsForModule(cls, LH, skipCore);
       if (!libs.empty()) {
          fAutoLoadLibStorage.push_back(libs);
          return fAutoLoadLibStorage.back().c_str();
