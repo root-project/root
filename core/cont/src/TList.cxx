@@ -81,8 +81,6 @@ LastLink() and lnk->Prev() or by using the Before() member.
 
 #include <string>
 
-using namespace std;
-
 ClassImp(TList);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1205,7 +1203,7 @@ void TList::Streamer(TBuffer &b)
          TObject::Streamer(b);
          fName.Streamer(b);
          b >> nobjects;
-         string readOption;
+         std::string readOption;
          for (Int_t i = 0; i < nobjects; i++) {
             b >> obj;
             b >> nch;
