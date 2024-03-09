@@ -29,7 +29,7 @@
 
 #include "TSpinLockGuard.h"
 
-using namespace std;
+using std::string, std::string_view, std::vector, std::set;
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = nullptr;

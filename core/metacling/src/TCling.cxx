@@ -257,7 +257,7 @@ R__DLLEXPORT bool TCling__TEST_isInvalidDecl(ClassInfo_t *input) {
    return info->GetDecl()->isInvalidDecl();
 }
 
-using namespace std;
+using std::string, std::vector;
 using namespace clang;
 using namespace ROOT;
 
