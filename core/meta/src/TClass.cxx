@@ -124,7 +124,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TRef.h"
 #include "TRefArray.h"
 
-using namespace std;
+using std::multimap, std::make_pair, std::string;
 
 // Mutex to protect CINT and META operations
 // (exported to be used for similar cases in related classes)

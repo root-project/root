@@ -20,7 +20,7 @@
 
 #include <string>
 
-using namespace std;
+using std::string;
 
 void std_string_streamer(TBuffer &b, void *objadd)
 {

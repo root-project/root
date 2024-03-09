@@ -3327,7 +3327,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // FIXME: Switch to generic polymorphic when we make c++14 default.
    auto ForeachSharedLibDep = [](const char *lib, std::function<bool(const char *)> f) {
-      using namespace std;
+      using std::string, std::vector, std::istringstream, std::istream_iterator;
       string deps = gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/ true);
       istringstream iss(deps);
       vector<string> libs{istream_iterator<std::string>{iss}, istream_iterator<string>{}};

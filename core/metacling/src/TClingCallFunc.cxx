@@ -74,7 +74,7 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 using namespace ROOT;
 using namespace llvm;
 using namespace clang;
-using namespace std;
+using std::string, std::map, std::ostringstream, std::make_pair;
 
 static unsigned long long gWrapperSerial = 0LL;
 static const string kIndentString("   ");

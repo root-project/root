@@ -40,8 +40,6 @@ but the type metadata comes from the Clang C++ compiler, not CINT.
 #include <cstdio>
 #include <string>
 
-using namespace std;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 TClingTypeInfo::TClingTypeInfo(cling::Interpreter *interp, const char *name)
