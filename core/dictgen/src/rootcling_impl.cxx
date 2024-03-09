@@ -135,9 +135,8 @@ const ROOT::Internal::RootCling::DriverConfig* gDriverConfig = nullptr;
 using HeadersDeclsMap_t = std::map<std::string, std::list<std::string>>;
 
 using namespace ROOT;
-using namespace TClassEdit;
 
-using namespace std;
+using std::string, std::map, std::ifstream, std::ofstream, std::endl, std::ios, std::vector;
 
 namespace genreflex {
    bool verbose = false;
