@@ -30,5 +30,4 @@ pythia8=OFF
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 tmva-cpu=OFF
-tmva-sofie=ON
 x11=OFF
