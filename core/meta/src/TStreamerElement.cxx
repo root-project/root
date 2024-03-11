@@ -30,6 +30,7 @@
 #include "ThreadLocalStorage.h"
 #include "TList.h"
 #include "TRef.h"
+#include "TRefArray.h"
 #include "TInterpreter.h"
 #include "TError.h"
 #include "TObjArray.h"
@@ -287,7 +288,7 @@ Bool_t TStreamerElement::CannotSplit() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a pointer to the TClass of this element.
+/// Returns a pointer to the TClass of this element and updates fClassObject.
 
 TClass *TStreamerElement::GetClassPointer() const
 {
@@ -306,8 +307,9 @@ TClass *TStreamerElement::GetClassPointer() const
 Int_t TStreamerElement::GetExecID() const
 {
    //check if element is a TRef or TRefArray
-   if (strncmp(fTypeName.Data(),"TRef",4) != 0) return 0;
-
+   const TString clName = ExtractClassName(fTypeName);
+   if (clName != "TRef" && clName != "TRefArray") return 0;
+   
    //if the UniqueID of this element has already been set, we assume
    //that it contains the exec id of a TRef object.
    if (GetUniqueID()) return GetUniqueID();
