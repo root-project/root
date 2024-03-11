@@ -13,6 +13,11 @@
 \file TFile.cxx
 \class TFile
 \ingroup IO
+\brief A ROOT file is an on-disk file, usually with extension .root, that stores objects in a file-system-like logical structure, possibly including subdirectory hierarchies.
+\sa \ref IO
+
+<details>
+<summary>ROOT file data format specification</summary>
 
 A ROOT file is composed of a header, followed by consecutive data records
 (`TKey` instances) with a well defined format.
@@ -21,6 +26,7 @@ The first data record starts at byte fBEGIN (currently set to kBEGIN).
 Bytes 1->kBEGIN contain the file description, when fVersion >= 1000000
 it is a large file (> 2 GB) and the offsets will be 8 bytes long and
 fUnits will be set to 8:
+
 Byte Range      | Record Name | Description
 ----------------|-------------|------------
 1->4            | "root"      | Root file identifier
@@ -69,7 +75,10 @@ Byte Range      | Member Name | Description
 Begin_Macro
 ../../../tutorials/io/file.C
 End_Macro
+
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
+
+</details>
 */
 
 #include <ROOT/RConfig.hxx>
