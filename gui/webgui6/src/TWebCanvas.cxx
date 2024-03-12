@@ -166,9 +166,9 @@ TWebCanvas::~TWebCanvas()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add font to static list of fonts upported by the canvas
-/// Name specifies name of the font, second is font file with .ttf or .woff2 extension 
+/// Name specifies name of the font, second is font file with .ttf or .woff2 extension
 /// Only True Type Fonts (ttf) are supported by PDF
-/// Returns font index which can be used in 
+/// Returns font index which can be used in
 ///   auto font_indx = TWebCanvas::AddFont("test", "test.ttf", 2);
 ///   gStyle->SetStatFont(font_indx);
 
@@ -219,7 +219,7 @@ Font_t TWebCanvas::AddFont(const char *name, const char *fontfile, Int_t precisi
    TString base64 = TBase64::Encode(res.c_str(), res.length());
 
    maxindx++;
-   
+
    gWebFonts.emplace_back(maxindx, name, fmt, base64);
 
    return precision > 0 ? maxindx*10 + precision : maxindx;
@@ -1324,7 +1324,9 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          }
       }
 
-      if (r.active && (pad != gPad)) gPad = pad;
+      // only if get OPTIONS message from client allow to change gPad
+      if (r.active && (pad != gPad) && process_execs)
+         gPad = pad;
 
       if ((pad->GetTickx() != r.tickx) || (pad->GetTicky() != r.ticky))
          pad->SetTicks(r.tickx, r.ticky);
