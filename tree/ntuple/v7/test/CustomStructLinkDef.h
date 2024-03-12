@@ -1,9 +1,5 @@
 #ifdef __CINT__
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
-
 #pragma link C++ enum CustomEnum;
 #pragma link C++ enum CustomEnumInt8;
 #pragma link C++ enum CustomEnumUInt8;
@@ -82,5 +78,8 @@
 #pragma link C++ class DuplicateBaseB + ;
 #pragma link C++ class DuplicateBaseC + ;
 #pragma link C++ class DuplicateBaseD + ;
+
+#pragma link C++ class Left + ;
+#pragma link C++ class DerivedFromLeftAndTObject + ;
 
 #endif

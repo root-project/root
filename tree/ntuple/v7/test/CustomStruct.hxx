@@ -2,6 +2,7 @@
 #define ROOT7_RNTuple_Test_CustomStruct
 
 #include <RtypesCore.h> // for Double32_t
+#include <TObject.h>
 #include <TRootIOCtor.h>
 #include <TVirtualCollectionProxy.h>
 
@@ -280,6 +281,19 @@ struct DuplicateBaseC : public BaseA {
 
 struct DuplicateBaseD : public DuplicateBaseB, public DuplicateBaseC {
    float d = 0.0;
+};
+
+class Left {
+public:
+   float x = 1.0;
+   virtual ~Left() = default;
+   ClassDef(Left, 1)
+};
+
+class DerivedFromLeftAndTObject : public Left, public TObject {
+public:
+   virtual ~DerivedFromLeftAndTObject() = default;
+   ClassDef(DerivedFromLeftAndTObject, 1)
 };
 
 #endif
