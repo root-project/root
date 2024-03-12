@@ -1007,6 +1007,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    R.addDecl(Result);
 
    // Raise a warning when trying to use implicit auto injection feature.
+   SemaRef.getDiagnostics().setSeverity(diag::warn_deprecated_message, diag::Severity::Warning, SourceLocation());
    SemaRef.Diag(Loc, diag::warn_deprecated_message)
       << "declaration without the 'auto' keyword" << DC << Loc << FixItHint::CreateInsertion(Loc, "auto ");
 
