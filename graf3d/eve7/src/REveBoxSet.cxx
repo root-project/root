@@ -434,8 +434,10 @@ unsigned int REveBoxSet::GetColorFromDigit(REveDigitSet::DigitBase_t &digi)
 
 float REveBoxSet::GetColorFromDigitAsFloat(REveDigitSet::DigitBase_t &digit)
 {
-   unsigned int c = GetColorFromDigit(digit);
-   return *reinterpret_cast<float*>(&c);
+   uint32_t c = GetColorFromDigit(digit);
+   // this line required to avoid strict-aliasing rules warning
+   auto pc = (float *) &c;
+   return *pc;
 }
 
 
