@@ -156,6 +156,8 @@ TEST(RTNuple, TObjectDerived)
       auto ptrRotation = model->MakeField<TRotation>("rotation");
       ptrRotation->RotateX(TMath::Pi());
       ptrRotation->SetUniqueID(137);
+      auto ptrMultiple = model->MakeField<DerivedFromLeftAndTObject>("derived");
+      ptrMultiple->SetUniqueID(137);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
    }
@@ -164,7 +166,12 @@ TEST(RTNuple, TObjectDerived)
    EXPECT_EQ(1u, reader->GetNEntries());
 
    auto ptrRotation = reader->GetModel().GetDefaultEntry().GetPtr<TRotation>("rotation");
+   auto ptrMultiple = reader->GetModel().GetDefaultEntry().GetPtr<DerivedFromLeftAndTObject>("derived");
    reader->LoadEntry(0);
+
    EXPECT_DOUBLE_EQ(1.0, ptrRotation->XX());
    EXPECT_EQ(137u, ptrRotation->GetUniqueID());
+
+   EXPECT_FLOAT_EQ(1.0, ptrMultiple->x);
+   EXPECT_EQ(137u, ptrMultiple->GetUniqueID());
 }
