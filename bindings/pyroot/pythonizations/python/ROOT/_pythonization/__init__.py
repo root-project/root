@@ -242,7 +242,8 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
     for var_name, var_value in ns_vars.items():
         if str(var_value).startswith('<class cppyy.gbl.'):
             # It's a class proxy, check if name matches
-            parsed_var_name = _get_class_name(var_name)
+
+            parsed_var_name = var_name.split("::")[-1]
             if passes_filter(parsed_var_name):
                 # Pythonize right away!
                 _invoke(user_pythonizor, npars, var_value, var_value.__cpp_name__)
@@ -273,51 +274,6 @@ def _find_namespace(ns):
         ns_obj = getattr(ns_obj, ns)
 
     return ns_obj
-
-def _get_class_name(fqn):
-    '''
-    Parses and returns the class name in `fqn`.
-    Example: if `fqn` is "NS1::NS2::C", "C" is returned.
-
-    Args:
-        fqn (string): fully-qualified class name.
-
-    Returns:
-        string: class name in `fqn`.
-    '''
-
-    pos = _find_namespace_end(fqn)
-    if pos < 0: # no namespace found
-        return fqn
-    else:
-        return fqn[pos+2:]
-
-def _find_namespace_end(fqn):
-    '''
-    Find the position where the namespace in `fqn` ends.
-
-    Args:
-        fqn (string): fully-qualified class name.
-
-    Returns:
-        integer: position where the namespace in `fqn` ends, i.e. the position
-            of the last '::', or -1 if there is no '::' in `fqn`.
-    '''
-
-    last_found = -1
-    prev_c = ''
-    pos = 0
-    for c in fqn:
-        if c == ':' and prev_c == ':':
-            last_found = pos - 1
-        elif c == '<':
-            # If we found a template, this is already the class name,
-            # so we're done!
-            break
-        prev_c = c
-        pos += 1
-
-    return last_found
 
 def _register_pythonizations():
     '''
