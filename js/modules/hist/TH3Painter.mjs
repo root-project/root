@@ -7,7 +7,7 @@ import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { createLineSegments, PointsCreator, Box3D } from '../base/base3d.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { assignFrame3DMethods } from './hist3d.mjs';
-import { proivdeEvalPar, getTF1Value } from './TF1Painter.mjs';
+import { proivdeEvalPar, getTF1Value } from '../base/func.mjs';
 
 
 /**

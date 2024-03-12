@@ -6,7 +6,7 @@ import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
 import { getHPainter } from '../gui/display.mjs';
-import { proivdeEvalPar } from '../hist/TF1Painter.mjs';
+import { proivdeEvalPar } from '../base/func.mjs';
 
 
 /** @summary Drawing TGaxis
