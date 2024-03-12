@@ -2120,8 +2120,8 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    << "        for (k = 3; k <= power; k++) { " << std::endl
    << "          p3 = p2 * v;" << std::endl;
    if (fPolyType == kLegendre)
-      outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)"
-      << " / (i - 1);" << std::endl;
+      outFile << "          p3 = ((2 * k - 3) * p2 * v - (k - 2) * p1)"
+      << " / (k - 1);" << std::endl;
    if (fPolyType == kChebyshev)
       outFile << "          p3 = 2 * v * p2 - p1; " << std::endl;
    outFile << "          p1 = p2; p2 = p3; " << std::endl << "        }" << std::endl
