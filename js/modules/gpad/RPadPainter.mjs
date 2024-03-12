@@ -128,6 +128,9 @@ class RPadPainter extends RObjectPainter {
    /** @summary get pad height */
    getPadHeight() { return this._pad_height || 0; }
 
+   /** @summary return pad log state x or y are allowed */
+   getPadLog(name) { return false; }
+
    /** @summary get pad rect */
    getPadRect() {
       return {

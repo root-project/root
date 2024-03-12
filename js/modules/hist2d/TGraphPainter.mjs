@@ -314,10 +314,12 @@ class TGraphPainter extends ObjectPainter {
           minimum = ymin - dy, maximum = ymax + dy;
 
       if (!this._not_adjust_hrange) {
+         const pad_logx = this.getPadPainter()?.getPadLog('x');
+
          if ((uxmin < 0) && (xmin >= 0))
-            uxmin = xmin * (1 - margin);
+            uxmin = pad_logx ? xmin * (1 - margin) : 0;
          if ((uxmax > 0) && (xmax <= 0))
-            uxmax = 0;
+            uxmax = pad_logx ? (1 + margin) * xmax : 0;
       }
 
       const minimum0 = minimum, maximum0 = maximum;

@@ -2,6 +2,7 @@ import { gStyle, settings, clTF1, kNoZoom, kInspect, isFunc } from '../core.mjs'
 import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
+import { getTF1Value } from '../base/func.mjs';
 
 
 const PadDrawOptions = ['LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOGV', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
@@ -44,7 +45,9 @@ class TH1Painter extends THistPainter {
          this.extractAxesProperties(1);
 
       const left = this.getSelectIndex('x', 'left'),
-            right = this.getSelectIndex('x', 'right');
+            right = this.getSelectIndex('x', 'right'),
+            pad_logy = this.getPadPainter()?.getPadLog(this.options.BarStyle >= 20 ? 'x' : 'y'),
+            f1 = this.options.Func ? this.findFunction(clTF1) : null;
 
       if (when_axis_changed && (left === this.scan_xleft) && (right === this.scan_xright))
          return;
@@ -77,6 +80,17 @@ class TH1Painter extends THistPainter {
 
          hmin = Math.min(hmin, value - err);
          hmax = Math.max(hmax, value + err);
+
+         if (f1) {
+            // similar code as in THistPainter, line 7196
+            const x = histo.fXaxis.GetBinCenter(i + 1),
+                  v = getTF1Value(f1, x);
+            if (v !== undefined) {
+               hmax = Math.max(hmax, v);
+               if (pad_logy && (value > 0) && (v > 0.3 * value))
+                  hmin_nz = Math.min(hmin_nz, v);
+            }
+         }
       }
 
       // account overflow/underflow bins
@@ -107,17 +121,27 @@ class TH1Painter extends THistPainter {
                this.ymin = 0; this.ymax = hmin * 2;
             }
          } else {
-            const pad = this.getPadPainter()?.getRootPad(),
-                  pad_logy = (this.options.BarStyle >= 20) ? pad.fLogx : (pad?.fLogv ?? pad?.fLogy);
             if (pad_logy) {
                this.ymin = (hmin_nz || hmin) * 0.5;
                this.ymax = hmax*2*(0.9/0.95);
             } else {
-               this.ymin = hmin - (hmax - hmin) * gStyle.fHistTopMargin;
-               if ((this.ymin < 0) && (hmin >= 0)) this.ymin = 0;
-               this.ymax = hmax + (hmax - this.ymin) * gStyle.fHistTopMargin;
+               this.ymin = hmin;
+               this.ymax = hmax;
             }
          }
+      }
+
+      // final adjustment like in THistPainter.cxx line 7309
+      if (!this._exact_y_range && !pad_logy) {
+         if ((this.options.BaseLine !== false) && (this.ymin >= 0))
+            this.ymin = 0;
+         else {
+            const positive = (this.ymin >= 0);
+            this.ymin -= gStyle.fHistTopMargin*(this.ymax-this.ymin);
+            if (positive && (this.ymin < 0))
+               this.ymin = 0;
+         }
+         this.ymax += gStyle.fHistTopMargin*(this.ymax-this.ymin);
       }
 
       hmin = this.options.minimum;
@@ -430,27 +454,25 @@ class TH1Painter extends THistPainter {
 
    /** @summary Draw histogram as filled errors */
    drawFilledErrors(funcs) {
-      const left = this.getSelectIndex('x', 'left', -1),
-            right = this.getSelectIndex('x', 'right', 1),
-            histo = this.getHisto(), xaxis = histo.fXaxis,
-            bins1 = [], bins2 = [];
-      let i, x, grx, y, yerr;
+      const left = this.getSelectIndex('x', 'left', 0),
+            right = this.getSelectIndex('x', 'right', 0),
+            histo = this.getHisto(), bins1 = [], bins2 = [];
 
-      for (i = left; i < right; ++i) {
-         x = xaxis.GetBinCoord(i+0.5);
+      for (let i = left; i < right; ++i) {
+         const x = histo.fXaxis.GetBinCoord(i+0.5);
          if (funcs.logx && (x <= 0)) continue;
-         grx = Math.round(funcs.grx(x));
-
-         y = histo.getBinContent(i+1);
-         yerr = histo.getBinError(i+1);
+         const grx = Math.round(funcs.grx(x)),
+               y = histo.getBinContent(i+1),
+               yerr = histo.getBinError(i+1);
          if (funcs.logy && (y-yerr < funcs.scale_ymin)) continue;
 
          bins1.push({ grx, gry: Math.round(funcs.gry(y + yerr)) });
          bins2.unshift({ grx, gry: Math.round(funcs.gry(y - yerr)) });
       }
 
-      const path1 = buildSvgCurve(bins1, { line: this.options.ErrorKind !== 4 }),
-            path2 = buildSvgCurve(bins2, { line: this.options.ErrorKind !== 4, cmd: 'L' });
+      const line = this.options.ErrorKind !== 4,
+            path1 = buildSvgCurve(bins1, { line }),
+            path2 = buildSvgCurve(bins2, { line, cmd: 'L' });
 
       this.draw_g.append('svg:path')
                  .attr('d', path1 + path2 + 'Z')
