@@ -145,6 +145,10 @@ else()
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       list(APPEND roofit_veto roofit/rf409_NumPyPandasToRooFit.py)
     endif()
+    # The following tutorials are failing with this error:
+    # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
+    # with Visual Studio v17.8
+    list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
   endif()
 endif()
 
