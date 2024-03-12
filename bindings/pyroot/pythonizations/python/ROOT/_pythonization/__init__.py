@@ -238,15 +238,31 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
         # Namespace has not been used yet, no need to inspect more
         return
 
+    def pythonize_if_match(name, klass):
+        # Check if name matches, excluding the namespace
+        if passes_filter(name.split("::")[-1]):
+            # Pythonize right away!
+            _invoke(user_pythonizor, npars, klass, klass.__cpp_name__)
+
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
         if str(var_value).startswith('<class cppyy.gbl.'):
-            # It's a class proxy, check if name matches
+            # It's a class proxy
+            pythonize_if_match(var_name, var_value)
 
-            parsed_var_name = var_name.split("::")[-1]
-            if passes_filter(parsed_var_name):
-                # Pythonize right away!
-                _invoke(user_pythonizor, npars, var_value, var_value.__cpp_name__)
+        if str(var_value).startswith('<cppyy.Template'):
+            # If this is a template, pythonize the instances. Note that in
+            # older cppyy, template instanciations are cached by
+            # fully-qualified name directly in the namespace, so they are
+            # covered by the code branch above.
+            instantiations = getattr(var_value, "_instantiations", {})
+            for args, instance in instantiations.items():
+                # Make sure we don't do any redundant pythonization, e.g. if we
+                # use a version of cppyy that caches both in the namespace and
+                # in the _instantiations attribute.
+                if not instance in ns_vars:
+                    instance_name = var_name + "<" + ",".join(args) + ">"
+                    pythonize_if_match(instance_name, instance)
 
 def _find_namespace(ns):
     '''
