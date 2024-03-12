@@ -205,6 +205,11 @@ IF (EXISTS ${TBB_INCLUDE_DIR}/oneapi)
   SET (_TBB_VERSION_HEADER ${TBB_INCLUDE_DIR}/oneapi/tbb/version.h)
 ELSE (EXISTS ${TBB_INCLUDE_DIR}/oneapi)
   SET (_TBB_VERSION_HEADER ${TBB_INCLUDE_DIR}/tbb/version.h)
+  # ROOT requires at least TBB 2020, but we must be able to determine older
+  # versions in order to properly warn the user.
+  IF (NOT EXISTS ${_TBB_VERSION_HEADER})
+    SET (_TBB_VERSION_HEADER ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h)
+  ENDIF (NOT EXISTS ${_TBB_VERSION_HEADER})
 ENDIF (EXISTS ${TBB_INCLUDE_DIR}/oneapi)
 
 IF (EXISTS ${_TBB_VERSION_HEADER})
