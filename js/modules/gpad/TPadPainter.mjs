@@ -322,14 +322,24 @@ class TPadPainter extends ObjectPainter {
       };
    }
 
+   /** @summary return pad log state x or y are allowed */
+   getPadLog(name) {
+      const pad = this.getRootPad();
+      if (name === 'x')
+         return pad?.fLogx;
+      if (name === 'y')
+         return pad?.fLogv ?? pad?.fLogy;
+      return false;
+   }
+
    /** @summary Returns frame coordiantes - also when frame is not drawn */
    getFrameRect() {
       const fp = this.getFramePainter();
       if (fp) return fp.getFrameRect();
 
       const w = this.getPadWidth(),
-          h = this.getPadHeight(),
-          rect = {};
+            h = this.getPadHeight(),
+            rect = {};
 
       if (this.pad) {
          rect.szx = Math.round(Math.max(0, 0.5 - Math.max(this.pad.fLeftMargin, this.pad.fRightMargin))*w);
