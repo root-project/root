@@ -306,9 +306,10 @@ TClass *TStreamerElement::GetClassPointer() const
 
 Int_t TStreamerElement::GetExecID() const
 {
-   //check if element is a TRef or TRefArray
+   //check if element is a TRef or TRefArray; or if it inherits from them and class was preloaded
    const TString clName = ExtractClassName(fTypeName);
-   if (clName != "TRef" && clName != "TRefArray") return 0;
+   TClass* const type = TClass::GetClass(clName, kFALSE, kTRUE); // do NOT update fClassObject via GetClassPointer ! and do NOT call GetClass with load=true, otherwise you'll get several failing roottests. Do NOT call TRef::Class() or TRefArray::Class() either
+   if (clName != "TRef" && clName != "TRefArray" && (!type || !(type->InheritsFrom(TClass::GetClass("TRef", kFALSE, kTRUE)) || type->InheritsFrom(TClass::GetClass("TRefArray", kFALSE, kTRUE))))) return 0;
    
    //if the UniqueID of this element has already been set, we assume
    //that it contains the exec id of a TRef object.
