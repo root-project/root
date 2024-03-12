@@ -611,13 +611,15 @@ REveViewer *REveManager::GetDefaultViewer() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Enable multiple connections. Disable loopback.
-/// Keep connection key but disable mandatory authentification key.
-///
-void REveManager::AllowMultipleRemoteConnections()
+/// Utility function to allow remote RWebWindow connections.
+/// Disable loopback when use remote client.
+/// Authentification key has to be disabled in the case of multiple connections.
+/// The default arguments prevent remote connections for the security reasons.
+//
+void REveManager::AllowMultipleRemoteConnections(bool loopBack, bool requireAuthKey)
 {
-   ROOT::RWebWindowsManager::SetLoopbackMode(false);
-   fWebWindow->SetRequireAuthKey(false);
+   ROOT::RWebWindowsManager::SetLoopbackMode(loopBack);
+   fWebWindow->SetRequireAuthKey(requireAuthKey);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
