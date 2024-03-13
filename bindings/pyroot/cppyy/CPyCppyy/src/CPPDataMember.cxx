@@ -155,7 +155,7 @@ static CPPDataMember* pp_new(PyTypeObject* pytype, PyObject*, PyObject*)
 static void pp_dealloc(CPPDataMember* pyprop)
 {
 // Deallocate memory held by this descriptor.
-    using namespace std;
+    using std::string;
     if (pyprop->fConverter && pyprop->fConverter->HasState()) delete pyprop->fConverter;
     Py_XDECREF(pyprop->fName);    // never exposed so no GC necessary
 

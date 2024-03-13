@@ -231,8 +231,6 @@ void TGLPlotPainter::Paint()
 
 void TGLPlotPainter::PrintPlot()const
 {
-   using namespace std;
-
    TGLOutput::StartEmbeddedPS();
 
    FILE *output = fopen(gVirtualPS->GetName(), "a");

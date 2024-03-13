@@ -34,7 +34,6 @@ class StackOverflow {
 };
 class StackError {
 };
-//  using namespace std;
 
 /** StackAllocator controls the memory allocation/deallocation of Minuit. If
     _MN_NO_THREAD_SAVE_ is defined, memory is taken from a pre-allocated piece

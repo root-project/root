@@ -8,7 +8,7 @@
 #include "TStopwatch.h"
 #include <cmath>
 
-using namespace std;
+using std::string, std::cout, std::endl;
 
 const double XMIN = 0, XMAX = 2*TMath::Pi() + 1.E-15;  // add an eps to avoid failing the search
 const Int_t NB = 100;
