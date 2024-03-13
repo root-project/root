@@ -100,7 +100,11 @@ public:
       operator const RooFitResult *() const;
       void Draw(Option_t *opt = "");
 
-      xRooNLLVar nll();
+      std::shared_ptr<xRooNLLVar> nll() const
+      {
+         return fNll;
+      }
+
       RooArgList poi()
       {
          return get()

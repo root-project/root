@@ -996,7 +996,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             }
          }
 
-         // NOTE: minuit2 seems to distort the tolerance in a weird way, so that tol becomes 100 times smaller than
+         // NOTE: minuit2 seems to distort the tolerance in a weird way, so that tol becomes 1000 times smaller than
          // specified Also note that if fits are failing because of edm over max, it can be a good idea to activate the
          // Offset option when building nll
          if (printLevel >= -1) {
