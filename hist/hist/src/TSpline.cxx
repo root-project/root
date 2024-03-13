@@ -555,8 +555,12 @@ TSpline3& TSpline3::operator=(const TSpline3& sp3)
 {
    if(this!=&sp3) {
       TSpline::operator=(sp3);
-      if (fPoly) delete [] fPoly;
-      if (fNp > 0) fPoly = new TSplinePoly3[fNp];
+      if (fPoly) {
+         delete[] fPoly;
+         fPoly = nullptr;
+      }
+      if (fNp > 0)
+         fPoly = new TSplinePoly3[fNp];
       for (Int_t i=0; i<fNp; ++i)
          fPoly[i] = sp3.fPoly[i];
 
