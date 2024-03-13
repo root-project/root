@@ -414,6 +414,10 @@ int main( int argc, char **argv )
             allSubfiles.emplace_back(line);
       }
    }
+   if (allSubfiles.empty()) {
+      std::cerr<< "hadd could not find any valid input file " << std::endl;
+      return 1;
+   }
    // The next snippet determines the output compression if unset
    if (newcomp == -1) {
       if (useFirstInputCompression || keepCompressionAsIs) {
