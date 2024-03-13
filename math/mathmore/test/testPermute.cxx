@@ -24,9 +24,9 @@ const int maxsize = 12;
 const int maxint = 5000;
 const int arraysize = (maxsize-minsize) + 1;
 
-using namespace std;
+using std::ostream, std::cout, std::cerr, std::endl, std::vector;
 
- ostream& operator <<(ostream& os, const vector<Int_t>& v)
+ostream& operator <<(ostream& os, const vector<Int_t>& v)
 {
    os << "[ ";
    for ( vector<Int_t>::const_iterator i = v.begin(); i != v.end() ; ++i) {

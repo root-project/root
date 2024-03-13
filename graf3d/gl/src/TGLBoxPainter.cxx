@@ -204,7 +204,7 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
 
 void TGLBoxPainter::AddOption(const TString &option)
 {
-   using namespace std;//isdigit must be in std. But ...
+   using std::isdigit;
 
    const Ssiz_t boxPos = option.Index("box");//"box" _already_ _exists_ in a string.
    if (boxPos + 3 < option.Length() && isdigit(option[boxPos + 3]))

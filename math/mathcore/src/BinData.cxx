@@ -16,8 +16,6 @@
 #include <cassert>
 #include <cmath>
 
-using namespace std;
-
 namespace ROOT {
 
    namespace Fit

@@ -45,8 +45,6 @@
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdClient/XrdClientVector.hh"
 
-using namespace std;
-
 class XrdClientInputBuffer {
 
 private:
@@ -72,7 +70,7 @@ public:
 
    inline bool     IsMexEmpty() { return (MexSize() == 0); }
    inline bool     IsSemEmpty() { return (SemSize() == 0); }
-   inline int      MexSize() { 
+   inline int      MexSize() {
                        XrdSysMutexHelper mtx(fMutex);
                        return fMsgQue.GetSize();
                        }

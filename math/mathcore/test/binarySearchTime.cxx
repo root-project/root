@@ -14,7 +14,7 @@
 #include <TLegend.h>
 #include <TAxis.h>
 
-using namespace std;
+using std::vector, std::cout, std::cerr, std::endl;
 
 const int npass0 = 200000;
 const int maxint = 100;//20;

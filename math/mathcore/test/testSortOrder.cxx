@@ -6,7 +6,7 @@
 #include "TMath.h"
 #include "TRandom2.h"
 
-using namespace std;
+using std::vector, std::cout, std::cerr, std::endl;
 
 const int maxint = 20;
 

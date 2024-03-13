@@ -115,7 +115,7 @@ CreateHistogramOfMigrations(). Possible bug fix with NaN in GetGlobalBinNUmber()
 
 // #define DEBUG
 
-using namespace std;
+using std::ostream;
 
 ClassImp(TUnfoldBinning);
 

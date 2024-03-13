@@ -31,7 +31,7 @@
 #include <set>
 #include <sstream>
 
-using namespace std;
+using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 
 #ifdef WIN32
 #pragma optimize("",off)

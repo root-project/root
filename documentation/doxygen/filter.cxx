@@ -81,7 +81,7 @@
 #include <stdarg.h>
 #include <memory>
 
-using namespace std;
+using std::string, std::ios_base, std::unique_ptr;
 
 // Auxiliary functions
 void   FilterClass();

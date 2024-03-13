@@ -8,7 +8,7 @@
 #include <algorithm>
 
 using namespace ROOT::Math;
-using namespace std;
+using std::vector, std::complex;
 
 class QuarticPolynomial : public ::testing::Test {
 

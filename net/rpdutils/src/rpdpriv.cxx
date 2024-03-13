@@ -29,7 +29,7 @@
 #include <pwd.h>
 #include <errno.h>
 #include <iostream>
-using namespace std;
+using std::cout, std::endl;
 
 #define NOUC ((uid_t)(-1))
 #define NOGC ((gid_t)(-1))

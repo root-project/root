@@ -133,7 +133,7 @@ scheme consists of two two-dimensional distributions, signal and background.
 
 // #define DEBUG
 
-using namespace std;
+using std::ofstream, std::stringstream;
 
 ClassImp(TUnfoldBinningXML);
 

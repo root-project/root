@@ -39,7 +39,7 @@
 #define COMMIT_FILE        ".rootcommit"
 #define JUPYTER_CONFIG     "jupyter_notebook_config.py"
 
-using namespace std;
+using std::string, std::ifstream, std::ofstream, std::ios, std::endl;
 
 #ifdef WIN32
 #include <process.h>

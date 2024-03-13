@@ -25,7 +25,7 @@
 #include "Fit/BinData.h"
 #include "Fit/SparseData.h"
 
-using namespace std;
+using std::cout, std::endl, std::vector, std::list, std::ostream, std::ostream_iterator;
 
 namespace ROOT {
 
