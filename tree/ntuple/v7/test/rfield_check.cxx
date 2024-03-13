@@ -1,7 +1,5 @@
 #include <ROOT/RField.hxx>
 
-#include <tuple>
-
 #include "CustomStruct.hxx"
 
 #include "gmock/gmock.h"
@@ -18,38 +16,34 @@ TEST(RField, Check)
 
    report = RFieldBase::Check("f", "");
    EXPECT_EQ(1u, report.size());
-   auto [fieldName, typeName, errMsg] = report[0];
-   EXPECT_EQ("f", fieldName);
-   EXPECT_EQ("", typeName);
-   EXPECT_THAT(errMsg, testing::HasSubstr("no type name"));
+   EXPECT_EQ("f", report[0].fFieldName);
+   EXPECT_EQ("", report[0].fTypeName);
+   EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("no type name"));
 
    report = RFieldBase::Check("f", "std::array<>");
    EXPECT_EQ(1u, report.size());
-   std::tie(fieldName, typeName, errMsg) = report[0];
-   EXPECT_EQ("f", fieldName);
-   EXPECT_EQ("std::array<>", typeName);
-   EXPECT_THAT(errMsg, testing::HasSubstr("exactly two elements"));
+   EXPECT_EQ("f", report[0].fFieldName);
+   EXPECT_EQ("std::array<>", report[0].fTypeName);
+   EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("exactly two elements"));
 
    report = RFieldBase::Check("f", "NoDict");
    EXPECT_EQ(1u, report.size());
-   std::tie(fieldName, typeName, errMsg) = report[0];
-   EXPECT_EQ("f", fieldName);
-   EXPECT_EQ("NoDict", typeName);
-   EXPECT_THAT(errMsg, testing::HasSubstr("unknown type"));
+   EXPECT_EQ("f", report[0].fFieldName);
+   EXPECT_EQ("NoDict", report[0].fTypeName);
+   EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("unknown type"));
 
    report = RFieldBase::Check("f", "Unsupported");
    EXPECT_EQ(2u, report.size());
-   std::tie(fieldName, typeName, errMsg) = report[0];
-   EXPECT_EQ("f.timestamp", fieldName);
-   EXPECT_THAT(typeName, testing::HasSubstr("chrono::time_point"));
-   EXPECT_THAT(errMsg, testing::HasSubstr("unknown type"));
-   std::tie(fieldName, typeName, errMsg) = report[1];
-   EXPECT_EQ("f.rd", fieldName);
-   EXPECT_THAT(typeName, testing::HasSubstr("random_device"));
-   EXPECT_THAT(errMsg, testing::HasSubstr("unknown type"));
+   EXPECT_EQ("f.timestamp", report[0].fFieldName);
+   EXPECT_THAT(report[0].fTypeName, testing::HasSubstr("chrono::time_point"));
+   EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("unknown type"));
+   EXPECT_EQ("f.rd", report[1].fFieldName);
+   EXPECT_THAT(report[1].fTypeName, testing::HasSubstr("random_device"));
+   EXPECT_THAT(report[1].fErrMsg, testing::HasSubstr("unknown type"));
 
    report = RFieldBase::Check("f", "long double");
    EXPECT_EQ(1u, report.size());
-   std::tie(fieldName, typeName, errMsg) = report[0];
-   EXPECT_THAT(errMsg, testing::HasSubstr("unknown type"));
+   EXPECT_EQ("f", report[0].fFieldName);
+   EXPECT_EQ("long double", report[0].fTypeName);
+   EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("unknown type"));
 }

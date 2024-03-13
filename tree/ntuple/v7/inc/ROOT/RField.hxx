@@ -601,6 +601,13 @@ public:
       using deleter = std::default_delete<T>;
    };
 
+   /// Used in the return value of the Check() method
+   struct RCheckResult {
+      std::string fFieldName; ///< Qualified field name causing the error
+      std::string fTypeName;  ///< Type name corresponding to the (sub) field
+      std::string fErrMsg;    ///< Cause of the failure, e.g. unsupported type
+   };
+
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
    /// If `isSimple` is `true`, the trait `kTraitMappable` is automatically set on construction. However, the
    /// field might be demoted to non-simple if a post-read callback is set.
@@ -619,10 +626,8 @@ public:
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &typeName);
    /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
-   /// Otherwise there is an error message for each failing sub field (sub type) of the form
-   /// (qualified field name, type name, error).
-   static std::vector<std::tuple<std::string, std::string, std::string>>
-   Check(const std::string &fieldName, const std::string &typeName);
+   /// Otherwise there is an error record for each failing sub field (sub type).
+   static std::vector<RCheckResult> Check(const std::string &fieldName, const std::string &typeName);
    /// Check whether a given string is a valid field name
    static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 
