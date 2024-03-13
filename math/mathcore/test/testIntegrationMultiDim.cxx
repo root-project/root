@@ -32,7 +32,7 @@
 bool showGraphics = false;
 bool verbose = false;
 
-using namespace std;
+using std::cout, std::cerr, std::endl;
 
 int NMAX = 6; //maximum dimension
 

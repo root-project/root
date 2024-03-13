@@ -25,8 +25,6 @@
 
 #include <cstdio>
 
-using namespace std;
-
 Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
 {
 
