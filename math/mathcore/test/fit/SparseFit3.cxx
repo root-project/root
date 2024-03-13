@@ -23,7 +23,7 @@
 #include <cmath>
 #include <cassert>
 
-using namespace std;
+using std::cout, std::cerr, std::endl, std::ostream, std::ostream_iterator, std::vector;
 
 bool showGraphics = false;
 

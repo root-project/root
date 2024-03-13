@@ -15,7 +15,7 @@
 #include <TAxis.h>
 //#include <TSystem.h>
 
-using namespace std;
+using std::vector, std::cout, std::cerr, std::endl;
 
 const int npass0 = 200000;
 const int maxint = 20;

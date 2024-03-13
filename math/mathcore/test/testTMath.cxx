@@ -6,7 +6,7 @@
 
 #include <TMath.h>
 
-using namespace std;
+using std::cout, std::endl, std::vector, std::sort;
 using namespace TMath;
 
 bool showVector = true;

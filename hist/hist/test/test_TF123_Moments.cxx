@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-using namespace std;
+using std::sqrt;
 
 bool debug = false;
 
