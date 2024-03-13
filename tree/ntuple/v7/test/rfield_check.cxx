@@ -47,4 +47,9 @@ TEST(RField, Check)
    EXPECT_EQ("f.rd", fieldName);
    EXPECT_THAT(typeName, testing::HasSubstr("random_device"));
    EXPECT_THAT(errMsg, testing::HasSubstr("unknown type"));
+
+   report = RFieldBase::Check("f", "long double");
+   EXPECT_EQ(1u, report.size());
+   std::tie(fieldName, typeName, errMsg) = report[0];
+   EXPECT_THAT(errMsg, testing::HasSubstr("unknown type"));
 }
