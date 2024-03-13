@@ -16,6 +16,30 @@
 The xRooNode class is designed to wrap over a TObject and provide functionality to aid with interacting with that
 object, particularly in the case where the object is a RooFit class instance. It is a smart pointer to the object, so
 you have access to all the methods of the object too.
+
+xRooNode is designed to work in both python and C++, but examples below are given in python because that is imagined
+  be the most common way to use the xRooFit API.
+
+-# [Exploring workspaces](\ref exploring-workspaces)
+
+\anchor exploring-workspaces
+## Exploring workspaces
+
+An existing workspace file (either a ROOT file containing a RooWorkspace, or a json HS3 file) can be opened using
+ xRooNode like this:
+
+\code{.py}
+from ROOT.Experimental import XRooFit
+w = XRooFit.xRooNode("workspace.root") # or can use workspace.json for HS3
+\endcode
+
+ You can explore the content of the workspace somewhat like you would a file system: each node contains sub-nodes,
+ which you can interact with to explore ever deeper. The most relevant methods for navigating the workspace and exploring
+ the content are:
+
+
+
+
  */
 
 #include "RVersion.h"
@@ -183,6 +207,8 @@ auto GETLISTTREE(TGFileBrowser *b)
 #include "RooNaNPacker.h"
 #endif
 
+
+
 BEGIN_XROOFIT_NAMESPACE;
 
 xRooNode::InteractiveObject *xRooNode::gIntObj = nullptr;
@@ -200,6 +226,14 @@ const T &_or_func(const T &a, const T &b)
       return a;
    return b;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create new object of type classname, with given name and title, and own-wrap it
+/// i.e. the xRooNode will delete the object when the node (and any that reference it) is destroyed
+///
+/// \param classname : the type of the object to create
+/// \param name : the name to give the object
+/// \param title : the title to give the object
 
 xRooNode::xRooNode(const char *classname, const char *name, const char *title)
    : xRooNode(name, std::shared_ptr<TObject>(TClass::GetClass(classname)
@@ -1495,7 +1529,8 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             return xRooNode(*_ws->data(asi.first->GetName()), fParent);
          }
 
-         auto _obs = fParent->obs().argList();
+         auto parentObs = fParent->obs(); // may own globs so keep alive
+         auto _obs = parentObs.argList();
          // put globs in a snapshot
          std::unique_ptr<RooAbsCollection> _globs(_obs.selectByAttrib("global", true));
          // RooArgSet _tmp; _tmp.add(*_globs);_ws->saveSnapshot(child.GetName(),_tmp);
@@ -2015,9 +2050,18 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
    } else if (auto w = get<RooWorkspace>(); w) {
       child.convertForAcquisition(*this);
       if (child.get()) {
-         auto out = acquire(child.fComp);
-         if (out)
-            return xRooNode(child.GetName(), out, *this);
+         if(auto _d = child.get<RooAbsData>()) {
+            // don't use acquire method to import, because that adds datasets as Embeddded
+            if (!w->import(*_d)) {
+               return xRooNode(child.GetName(), *w->data(child.GetName()),*this);
+            } else {
+               throw std::runtime_error(TString::Format("Could not import dataset %s into workspace %s",child.GetName(),w->GetName()).Data());
+            }
+         } else {
+            auto out = acquire(child.fComp);
+            if (out)
+               return xRooNode(child.GetName(), out, *this);
+         }
       }
 
       if (!child.empty() || child.fFolder == "!models") {
@@ -4061,6 +4105,9 @@ std::shared_ptr<xRooNode> xRooNode::at(const std::string &name, bool browseResul
    return res;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// The RooWorkspace this node belong to, if any
+
 RooWorkspace *xRooNode::ws() const
 {
    if (auto _w = get<RooWorkspace>(); _w)
@@ -5077,6 +5124,9 @@ xRooNode &xRooNode::browse()
    return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List of observables (global and regular) of this node.
+
 xRooNode xRooNode::obs() const
 {
    xRooNode out(".obs", std::make_shared<RooArgList>(), *this);
@@ -5089,6 +5139,9 @@ xRooNode xRooNode::obs() const
    }
    return out;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// List of global observables of this node.
 
 xRooNode xRooNode::globs() const
 {
@@ -5103,6 +5156,9 @@ xRooNode xRooNode::globs() const
    return out;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List of regular observables of this node.
+
 xRooNode xRooNode::robs() const
 {
    xRooNode out(".robs", std::make_shared<RooArgList>(), *this);
@@ -5115,6 +5171,9 @@ xRooNode xRooNode::robs() const
    }
    return out;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// List of parameters (non-observables) of this node.
 
 xRooNode xRooNode::pars() const
 {
@@ -5129,6 +5188,9 @@ xRooNode xRooNode::pars() const
    return out;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List of parameters that are currently constant
+
 xRooNode xRooNode::consts() const
 {
    xRooNode out(".consts", std::make_shared<RooArgList>(), *this);
@@ -5141,6 +5203,10 @@ xRooNode xRooNode::consts() const
    }
    return out;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// List of parameters that are currently non-constant
+/// These parameters do not have the "Constant" attribute
 
 xRooNode xRooNode::floats() const
 {
@@ -5155,6 +5221,10 @@ xRooNode xRooNode::floats() const
    return out;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List of parameters of interest: parameters marked as "of interest"
+/// These parameters have the "poi" attribute
+
 xRooNode xRooNode::poi() const
 {
    xRooNode out(".poi", std::make_shared<RooArgList>(), *this);
@@ -5167,6 +5237,10 @@ xRooNode xRooNode::poi() const
    }
    return out;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// List of nuisance parameters: non-constant parameters that are not marked of interest,
+///  as well as any parameters that have been marked by the "np" attribute
 
 xRooNode xRooNode::np() const
 {
@@ -5183,6 +5257,9 @@ xRooNode xRooNode::np() const
    return out;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List of prespecified parameters: non-floatable parameters
+
 xRooNode xRooNode::pp() const
 {
    xRooNode out(".pp", std::make_shared<RooArgList>(), *this);
@@ -5196,6 +5273,9 @@ xRooNode xRooNode::pp() const
    }
    return out;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// List of variables (observables and parameters) of this node
 
 xRooNode xRooNode::vars() const
 {
@@ -5433,6 +5513,9 @@ xRooNode xRooNode::components() const
    return out;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// bins of a channel or sample, or channels of a multi-channel pdf
+
 xRooNode xRooNode::bins() const
 {
    xRooNode out(".bins", nullptr, *this);
@@ -5620,7 +5703,8 @@ xRooNode xRooNode::factors() const
       // if workspace, return all functions (not pdfs) that have a RooProduct as one of their clients
       // or not clients
       // exclude obs and globs
-      auto _obs = obs().argList();
+      auto oo = obs(); // need to keep alive as may contain owning globs
+      auto& _obs = *(oo.get<RooArgList>());
       for (auto a : w->allFunctions()) {
          if (_obs.contains(*a))
             continue;
@@ -5760,7 +5844,8 @@ xRooNode xRooNode::datasets() const
           (!get() && fParent &&
            fParent->get<RooAbsPdf>())) { // second condition handles 'bins' nodes of pdf, which have null ptr
          // only add datasets that have observables that cover all our observables
-         RooArgSet _obs(obs().argList());
+         auto oo = obs(); // must keep alive in case is owning the globs
+         RooArgSet _obs(*oo.get<RooArgList>());
          //_obs.add(coords(true).argList(), true); // include coord observables too, and current xaxis if there's one -
          // added in loop below
 
@@ -5797,14 +5882,14 @@ xRooNode xRooNode::datasets() const
                   hasMissing = true;
                } else {
                   if (extraCut != "")
-                     extraCut += " && ";
+                     extraCut += " || ";
                   extraCut += TString::Format("%s==%d", s->indexCat().GetName(), cat.second);
                }
             }
             if (hasMissing) {
                if (cut != "")
                   cut += " && ";
-               cut += extraCut;
+               cut += "(" + extraCut + ")";
                cutobs.add(s->indexCat());
             }
          }
@@ -5823,9 +5908,9 @@ xRooNode xRooNode::datasets() const
                   // TODO: Could consider using a 'filter' node (see filter() method) applied to the dataset instead
                   // of creating and using a reduced dataset here
                   out.emplace_back(std::make_shared<xRooNode>(
-                     std::shared_ptr<RooAbsData>(d->get<RooAbsData>()->reduce(cutFormula)), *this));
+                     std::shared_ptr<RooAbsData>(d->get<RooAbsData>()->reduce(*std::unique_ptr<RooAbsCollection>(d->robs().get<RooArgList>()->selectCommon(_obs)),cutFormula)), *this));
                   // put a subset of the globs in the returned dataset too
-                  out.back()->get<RooAbsData>()->setGlobalObservables(*globs().get<RooArgList>());
+                  out.back()->get<RooAbsData>()->setGlobalObservables(*std::unique_ptr<RooAbsCollection>(d->globs().get<RooArgList>()->selectCommon(*globs().get<RooArgList>())));
                   if (d->get()->TestBit(1 << 20))
                      out.back()->get()->SetBit(1 << 20);
                   // need to attach the original dataset so that things like SetBinContent can interact with it
@@ -5897,10 +5982,18 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
                      theHist->GetXaxis()->SetBinLabel(i + 1, cat->getLabel());
                   }
                } else {
-                  theHist = new TH1D(
-                     TString::Format("%s_%s", GetName(), vo->GetName()),
-                     TString::Format("my temp hist;%s", strlen(vo->GetTitle()) ? vo->GetTitle() : vo->GetName()),
-                     v->numBins(), v->getBinningPtr(nullptr)->lowBound(), v->getBinningPtr(nullptr)->highBound());
+                  auto _binning = v->getBinningPtr(nullptr);
+                  if(_binning->isUniform()) {
+                     theHist = new TH1D(
+                        TString::Format("%s_%s", GetName(), vo->GetName()),
+                        TString::Format("my temp hist;%s", strlen(vo->GetTitle()) ? vo->GetTitle() : vo->GetName()),
+                        v->numBins(), _binning->lowBound(), _binning->highBound());
+                  } else {
+                     theHist = new TH1D(
+                        TString::Format("%s_%s", GetName(), vo->GetName()),
+                        TString::Format("my temp hist;%s", strlen(vo->GetTitle()) ? vo->GetTitle() : vo->GetName()),
+                        v->numBins(), _binning->array());
+                  }
                }
             } else {
                throw std::runtime_error("Cannot draw dataset without parent PDF");
@@ -6008,7 +6101,8 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
                                 (xvar && val) ? xPos->GetBinContent(i + 1) : theHist->GetBinCenter(i + 1), val);
 
             // x-error will be the (weighted) standard deviation of the x values ...
-            double xErr = sqrt(xPos2->GetBinContent(i + 1) - pow(xPos->GetBinContent(i + 1), 2));
+            double xErr = xPos2->GetBinContent(i + 1) - pow(xPos->GetBinContent(i + 1), 2);
+            xErr = (xErr <= 0) ? 0. : sqrt(xErr); // protects against floating point rounding effects
 
             if (xErr || val) {
                dataGraph->SetPointError(dataGraph->GetN() - 1, xErr, xErr,
@@ -10559,6 +10653,34 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
          res *= ax->GetBinWidth(bin);
       }
       out.push_back(res);
+   }
+
+   return out;
+}
+
+
+   std::string cling::printValue( const xRooNode *v ) {
+   if(!v) return "nullptr\n";
+   if(!v->empty()) {
+      std::string out;
+      size_t left = v->size();
+      for(auto n : *v) {
+         left--;
+         if(!out.empty()) out += ","; else out += "{";
+         out += n->GetName();
+         if(out.length()>100 && left > 0) {
+            out += TString::Format(",... and %lu more",left);
+            break;
+         }
+      }
+      out += "}\n";
+      return out;
+   }
+   std::string out;
+   if(!(*v)) {
+      return "<empty node>";
+   } else {
+      return Form("Name: %s",v->GetName());
    }
 
    return out;
