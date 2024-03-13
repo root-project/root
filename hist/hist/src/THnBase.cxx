@@ -1412,12 +1412,13 @@ void THnBase::PrintEntries(Long64_t from /*=0*/, Long64_t howmany /*=-1*/,
       }
 
       for (Long64_t i = 0; i < howmany; ++i) {
-         if (!PrintBin(-1, bin, options))
+         if (!PrintBin(-1, bin, options) || !strchr(options, '0'))
             ++howmany;
-         // Advance to next bin:
+         // Advance to next bin in last dimension:
          ++bin[fNdimensions - 1];
+         // If overflow, fix it by adding to previous dimension
          for (Int_t dim = fNdimensions - 1; dim >= 0; --dim) {
-            if (bin[dim] >= nbins[dim]) {
+            if (bin[dim] >= nbins[dim] + 2) { // include under/overflow bins
                bin[dim] = 0;
                if (dim > 0) {
                   ++bin[dim - 1];
