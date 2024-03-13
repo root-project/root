@@ -159,18 +159,29 @@ void RWebWindowsManager::SetUseSessionKey(bool on)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Static method to generate kryptographic key
+/// Static method to generate cryptographic key
+/// Parameter keylen defines length of cryptographic key in bytes
+/// Output string will be hex formatted and includes "-" separator after every 4 bytes
+/// Example for 16 bytes: "fca45856-41bee066-ff74cc96-9154d405"
 
 std::string RWebWindowsManager::GenerateKey(int keylen)
 {
-   // try to randomize??
-   gRandom->SetSeed();
+   std::vector<unsigned char> buf(keylen, 0);
+   auto res = gSystem->GetCryptoRandom(buf.data(), keylen);
+
+   R__ASSERT(res == keylen && "Error in gSystem->GetCryptoRandom");
+
    std::string key;
-   for(int n = 0; n < keylen; n++)
-      key.append(TString::Itoa(gRandom->Integer(0xFFFFFFF), 16).Data());
+   for (int n = 0; n < keylen; n++) {
+      if ((n > 0) && (n % 4 == 0))
+         key.append("-");
+      auto t = TString::Itoa(buf[n], 16);
+      if (t.Length() == 1)
+         key.append("0");
+      key.append(t.Data());
+   }
    return key;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
@@ -178,7 +189,7 @@ std::string RWebWindowsManager::GenerateKey(int keylen)
 
 RWebWindowsManager::RWebWindowsManager()
 {
-   fSessionKey = GenerateKey(8);
+   fSessionKey = GenerateKey(32);
    fUseSessionKey = gWebWinUseSessionKey;
 
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
