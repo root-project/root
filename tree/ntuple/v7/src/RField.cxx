@@ -248,7 +248,7 @@ public:
       fCreateContext.fClassesOnStack.emplace_back(cl);
    }
 
-   void SetConinueOnError(bool value) { fCreateContext.fContinueOnError = value; }
+   void SetContinueOnError(bool value) { fCreateContext.fContinueOnError = value; }
 };
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
@@ -568,7 +568,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
    if (continueOnError)
-      createContextGuard.SetConinueOnError(true);
+      createContextGuard.SetContinueOnError(true);
 
    auto fnFail = [&fieldName, &canonicalType](const std::string &errMsg) -> RResult<std::unique_ptr<RFieldBase>> {
       if (createContext.GetContinueOnError()) {
