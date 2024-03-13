@@ -535,16 +535,12 @@ TSpline3::TSpline3(const TH1 *h, const char *opt,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TSpline3::TSpline3(const TSpline3& sp3) :
-  TSpline(sp3),
-  fPoly(nullptr),
-  fValBeg(sp3.fValBeg),
-  fValEnd(sp3.fValEnd),
-  fBegCond(sp3.fBegCond),
-  fEndCond(sp3.fEndCond)
+TSpline3::TSpline3(const TSpline3 &sp3)
+   : TSpline(sp3), fValBeg(sp3.fValBeg), fValEnd(sp3.fValEnd), fBegCond(sp3.fBegCond), fEndCond(sp3.fEndCond)
 {
-   if (fNp > 0) fPoly = new TSplinePoly3[fNp];
-   for (Int_t i=0; i<fNp; ++i)
+   if (fNp > 0)
+      fPoly = new TSplinePoly3[fNp];
+   for (Int_t i = 0; i < fNp; ++i)
       fPoly[i] = sp3.fPoly[i];
 }
 
@@ -1417,14 +1413,12 @@ TSpline5::TSpline5(const TH1 *h,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TSpline5::TSpline5(const TSpline5& sp5) :
-  TSpline(sp5),
-  fPoly(nullptr)
+TSpline5::TSpline5(const TSpline5 &sp5) : TSpline(sp5)
 {
-   if (fNp > 0) fPoly = new TSplinePoly5[fNp];
-   for (Int_t i=0; i<fNp; ++i) {
+   if (fNp > 0)
+      fPoly = new TSplinePoly5[fNp];
+   for (Int_t i = 0; i < fNp; ++i)
       fPoly[i] = sp5.fPoly[i];
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
