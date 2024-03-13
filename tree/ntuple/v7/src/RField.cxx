@@ -540,7 +540,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias));
 }
 
-std::vector<std::tuple<std::string, std::string, std::string>>
+std::vector<ROOT::Experimental::RFieldBase::RCheckResult>
 ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::string &typeName)
 {
    auto typeAlias = GetNormalizedTypeName(typeName);
@@ -549,14 +549,14 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
    RFieldZero fieldZero;
    fieldZero.Attach(RFieldBase::Create(fieldName, canonicalType, typeAlias, true /* continueOnError */).Unwrap());
 
-   std::vector<std::tuple<std::string, std::string, std::string>> result;
+   std::vector<RCheckResult> result;
    for (const auto &f : fieldZero) {
       auto invalidField = dynamic_cast<const RInvalidField *>(&f);
       if (!invalidField)
          continue;
 
       result.emplace_back(
-         std::make_tuple(invalidField->GetQualifiedFieldName(), invalidField->GetTypeName(), invalidField->GetError()));
+         RCheckResult{invalidField->GetQualifiedFieldName(), invalidField->GetTypeName(), invalidField->GetError()});
    }
    return result;
 }
