@@ -376,6 +376,9 @@ int main( int argc, char **argv )
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
+   // The following section will collect all input filenames into a vector,
+   // including those listed within an indirect file.
+   // If any file can not be accessed, it will error out, unless skip_errors is true
    std::vector<std::string> allSubfiles;
    for( int a = ffirst; a < argc; ++a ) {
       if (a == outputPlace)
@@ -384,17 +387,19 @@ int main( int argc, char **argv )
          std::ifstream indirect_file(argv[a]+1);
          if( ! indirect_file.is_open() ) {
             std::cerr<< "hadd could not open indirect file " << (argv[a]+1) << std::endl;
-            return 1;
+            if (!skip_errors) return 1;
          }
-         std::string line;
-         while( indirect_file ) {
-            if( std::getline(indirect_file, line) && line.length() ) {
-               if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE || (!TString(line).EndsWith(".root"))) {
-                  std::cerr<< "hadd could not validate subfile " << line << " within indirect file " << (argv[a]+1) << std::endl;
-                  if (!skip_errors) return 1;
+         else {
+            std::string line;
+            while( indirect_file ) {
+               if( std::getline(indirect_file, line) && line.length() ) {
+                  if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE || (!TString(line).EndsWith(".root"))) {
+                     std::cerr<< "hadd could not validate subfile " << line << " within indirect file " << (argv[a]+1) << std::endl;
+                     if (!skip_errors) return 1;
+                  }
+                  else
+                     allSubfiles.emplace_back(line);
                }
-               else
-                  allSubfiles.emplace_back(line);
             }
          }
       }
@@ -409,6 +414,7 @@ int main( int argc, char **argv )
             allSubfiles.emplace_back(line);
       }
    }
+   // The next snippet determines the output compression if unset
    if (newcomp == -1) {
       if (useFirstInputCompression || keepCompressionAsIs) {
          // grab from the first file.
