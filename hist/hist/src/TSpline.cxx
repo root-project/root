@@ -1430,15 +1430,18 @@ TSpline5::TSpline5(const TSpline5& sp5) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
 
-TSpline5& TSpline5::operator=(const TSpline5& sp5)
+TSpline5 &TSpline5::operator=(const TSpline5 &sp5)
 {
-   if(this!=&sp5) {
+   if (this != &sp5) {
       TSpline::operator=(sp5);
-      fPoly=nullptr;
-      if (fNp > 0) fPoly = new TSplinePoly5[fNp];
-      for (Int_t i=0; i<fNp; ++i) {
-         fPoly[i] = sp5.fPoly[i];
+      if (fPoly) {
+         delete[] fPoly;
+         fPoly = nullptr;
       }
+      if (fNp > 0)
+         fPoly = new TSplinePoly5[fNp];
+      for (Int_t i = 0; i < fNp; ++i)
+         fPoly[i] = sp5.fPoly[i];
    }
    return *this;
 }
