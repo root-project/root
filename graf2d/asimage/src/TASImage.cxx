@@ -61,36 +61,38 @@ ROOT tutorials: `$ROOTSYS/tutorials/image/`
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 
+#include "RConfigure.h"
+#include "TArrayD.h"
+#include "TArrayL.h"
 #include "TASImage.h"
 #include "TASImagePlugin.h"
-#include "TROOT.h"
 #include "TBuffer.h"
-#include "TMath.h"
-#include "TSystem.h"
-#include "TVirtualX.h"
-#include "TVirtualPad.h"
-#include "TArrayD.h"
-#include "TVectorD.h"
-#include "TVirtualPS.h"
-#include "TGaxis.h"
 #include "TColor.h"
-#include "TObjArray.h"
-#include "TArrayL.h"
-#include "TPoint.h"
-#include "TFrame.h"
-#include "TTF.h"
-#include "TRandom.h"
-#include <iostream>
-#include "THashTable.h"
-#include "TPluginManager.h"
 #include "TEnv.h"
+#include "TFrame.h"
+#include "TGaxis.h"
+#include "THashTable.h"
+#include "TImageDump.h"
+#include "TMath.h"
+#include "TObjArray.h"
+#include "TPluginManager.h"
+#include "TPoint.h"
+#include "TRandom.h"
+#include "TROOT.h"
 #include "TStyle.h"
+#include "TSystem.h"
 #include "TText.h"
-#include "RConfigure.h"
+#include "TTF.h"
+#include "TVectorD.h"
+#include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
-#include "snprintf.h"
+#include "TVirtualPS.h"
+#include "TVirtualX.h"
 
+#include <iostream>
 #include <memory>
+
+#include "snprintf.h"
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA
@@ -1095,7 +1097,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    if (gROOT->IsBatch()) { // in batch mode
       TVirtualPS *psave = gVirtualPS;
-      gVirtualPS = (TVirtualPS*)gROOT->ProcessLineFast("new TImageDump()");
+      gVirtualPS = new TImageDump();
       gVirtualPS->Open(pad->GetName(), 114); // in memory
       gVirtualPS->SetBit(BIT(11)); //kPrintingPS
 
