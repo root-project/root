@@ -33,6 +33,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
   DEPENDENCIES
     Core
     Graf
+    Postscript
   BUILTINS
     AFTERIMAGE
 )
