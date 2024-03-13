@@ -76,9 +76,32 @@ def getFilteredLines(fileName):
 
     return filteredLines
 
+# Workaround to support nbconvert versions >= 7.14 . See #14303
+def patchForNBConvert714(outNBLines):
+    newOutNBLines = []
+    toReplace = '''      "1\\n"\n'''
+    replacement = [
+'''      "1"\n''',
+'''     ]\n''',
+'''    },\n''',
+'''    {\n''',
+'''     "name": "stdout",\n''',
+'''     "output_type": "stream",\n''',
+'''     "text": [\n''',
+'''      "\\n"\n''']
+
+    for line in outNBLines:
+        if line == toReplace:
+            newOutNBLines.extend(replacement)
+        else:
+            newOutNBLines.append(line)
+    return newOutNBLines
+
 def compareNotebooks(inNBName,outNBName):
     inNBLines = getFilteredLines(inNBName)
+    inNBLines = patchForNBConvert714(inNBLines)
     outNBLines = getFilteredLines(outNBName)
+    outNBLines = patchForNBConvert714(outNBLines)
     areDifferent = False
     for line in difflib.unified_diff(inNBLines, outNBLines, fromfile=inNBName, tofile=outNBName):
         areDifferent = True
