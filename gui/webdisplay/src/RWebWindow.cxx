@@ -619,7 +619,7 @@ std::string RWebWindow::GenerateKey() const
    std::string key;
 
    do {
-      key = RWebWindowsManager::GenerateKey(8);
+      key = RWebWindowsManager::GenerateKey(32);
    } while ((--ntry > 0) && (HasKey(key) || (key == fMgr->fSessionKey)));
 
 
