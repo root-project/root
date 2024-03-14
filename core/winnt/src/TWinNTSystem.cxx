@@ -63,6 +63,8 @@
 #include <conio.h>
 #include <time.h>
 #include <bcrypt.h>
+#include <chrono>
+#include <thread>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -1130,6 +1132,7 @@ Bool_t TWinNTSystem::Init()
       if (buf[0]) AddDynamicPath(buf);
    }
    delete [] buf;
+   std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(10));
    SetConsoleWindowName();
    fGroupsInitDone = kFALSE;
 
@@ -4579,7 +4582,7 @@ TTime TWinNTSystem::Now()
 
 void TWinNTSystem::Sleep(UInt_t milliSec)
 {
-   ::Sleep(milliSec);
+   std::this_thread::sleep_for(std::chrono::milliseconds(milliSec));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
