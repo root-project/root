@@ -16,7 +16,7 @@ target_include_directories(${libname} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/>
   $<INSTALL_INTERFACE:./>
   )
-target_link_libraries(${libname} PUBLIC Core gtest)
+target_link_libraries(${libname} PRIVATE Core GTest::gtest)
 
 # Installation of header and library:
 set_target_properties(${libname} PROPERTIES PUBLIC_HEADER inc/${header_dir}/TestSupport.hxx)

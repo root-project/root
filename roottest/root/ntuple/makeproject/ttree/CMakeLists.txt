@@ -49,11 +49,11 @@ endif()
 ROOTTEST_GENERATE_EXECUTABLE(
   read_ttree
   read_ttree.cxx
-  LIBRARIES ${ROOT_LIBRARIES} gtest gtest_main gmock gmock_main ${TTREESTLTESTLIB}
+  LIBRARIES ${ROOT_LIBRARIES} GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main ${TTREESTLTESTLIB}
   FIXTURES_REQUIRED makeproject_ttree_called
   FIXTURES_SETUP read_ttree_executable
 )
-target_include_directories(read_ttree PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR})
+target_include_directories(read_ttree PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_directories(read_ttree PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libttreestltest)
 
 # Need to also explicitly set the LD_LIBRARY_PATH (at least on MacOS), so that
