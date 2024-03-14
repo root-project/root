@@ -1561,17 +1561,20 @@ TObject *TROOT::GetFunction(const char *name) const
    if (!name || !*name)
       return nullptr;
 
-   static bool _init_standard = false;
-
    auto f1 = fFunctions->FindObject(name);
-   if (f1 || _init_standard)
+   if (f1)
       return f1;
 
-   _init_standard = true;
+   auto init_funcs = [&f1, name, this]() {
+      gROOT->ProcessLine("TF1::InitStandardFunctions();");
+      f1 = fFunctions->FindObject(name);
+      return true;
+   };
 
-   gROOT->ProcessLine("TF1::InitStandardFunctions();");
+   // load libHist and call only once
+   [[maybe_unused]] static bool _init = init_funcs();
 
-   return fFunctions->FindObject(name);
+   return f1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
