@@ -10,7 +10,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
 endif()
 
 add_library(VectorisedPDFTests STATIC VectorisedPDFTests.cxx)
-target_link_libraries(VectorisedPDFTests PUBLIC gtest ROOT::Gpad ROOT::RooFitCore ROOT::RooFit)
+target_link_libraries(VectorisedPDFTests PUBLIC ROOT::Gpad ROOT::RooFitCore ROOT::RooFit GTest::gtest)
 
 ROOT_ADD_GTEST(testCompatMode testCompatMode.cxx
               LIBRARIES VectorisedPDFTests)

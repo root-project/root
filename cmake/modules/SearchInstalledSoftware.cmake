@@ -2022,6 +2022,15 @@ if (builtin_gtest)
 
 endif()
 
+# Starting from cmake 3.23, the GTest targets will have stable names.
+# ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
+foreach(LIBNAME gtest_main gmock_main gtest gmock)
+  if(NOT TARGET GTest::${LIBNAME} AND TARGET ${LIBNAME})
+    add_library(GTest::${LIBNAME} ALIAS ${LIBNAME})
+  endif()
+endforeach()
+
+#------------------------------------------------------------------------------------
 if(webgui AND NOT builtin_openui5)
   ROOT_CHECK_CONNECTION("builtin_openui5=ON")
   if(NO_CONNECTION)
