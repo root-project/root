@@ -429,9 +429,11 @@ void TASPaletteEditor::Save()
    if (!fi.fFilename)
       return;
 
-   if (strcmp(".pal.txt", fi.fFilename + strlen(fi.fFilename) - 8) == 0) {
+   TString fn = fi.fFilename;
+
+   if (fn.EndsWith(".pal.txt")) {
       // write into an ASCII file
-      FILE *fl = fopen(fi.fFilename, "w");
+      FILE *fl = fopen(fn.Data(), "w");
       if (!fl) return;
       fprintf(fl, "%u\n", fPalette->fNumPoints);
       for (Int_t pt = 0; pt < Int_t(fPalette->fNumPoints); pt++)
@@ -444,13 +446,10 @@ void TASPaletteEditor::Save()
       fclose(fl);
    } else {
       // write into a ROOT file
-      char fn[512];
-      if (strcmp(".pal.root", fi.fFilename + strlen(fi.fFilename) - 9) != 0)
-         snprintf(fn,512, "%s%s", fi.fFilename, ".pal.root");
-      else
-         strlcpy(fn, fi.fFilename,512);
+      if (!fn.EndsWith(".pal.root"))
+         fn.Append(".pal.root");
 
-      gROOT->ProcessLine(TString::Format("gROOT->SaveObjectAs((TASPaletteEditor*)0x%zx,\"%s\",\"%s\");",(size_t)this,fn,"q"));
+      gROOT->SaveObjectAs(fPalette, fn.Data(), "q");
    }
 }
 
