@@ -32,7 +32,7 @@ be analytically convolved with any RooResolutionModel implementation.
 
 #include "TError.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 ClassImp(RooBDecay);
 

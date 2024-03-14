@@ -89,8 +89,6 @@ credible interval from the given function.
 
 ClassImp(RooStats::BayesianCalculator);
 
-using namespace std;
-
 namespace RooStats {
 
 

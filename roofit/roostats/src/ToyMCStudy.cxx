@@ -33,7 +33,7 @@ ClassImp(RooStats::ToyMCStudy);
 
 ClassImp(RooStats::ToyMCPayload);
 
-using namespace std;
+using std::endl;
 
 
 namespace RooStats {

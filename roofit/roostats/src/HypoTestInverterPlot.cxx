@@ -41,8 +41,6 @@ hypotheses.
 
 #include <cmath>
 
-using namespace std;
-
 ClassImp(RooStats::HypoTestInverterPlot);
 
 using namespace RooStats;

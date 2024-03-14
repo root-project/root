@@ -49,7 +49,7 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 
 
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooExtendPdf);
 

@@ -39,7 +39,7 @@
 #include "RooLinearVar.h"
 #include "RooProduct.h"
 #include <string>
-using namespace std;
+using std::string;
 
 
 ClassImp(RooSecondMoment);

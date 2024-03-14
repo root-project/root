@@ -31,10 +31,9 @@ uncertainty or the functional form of constraints on nuisance parameters.
 #include <algorithm>
 #include <sys/stat.h>
 
+using std::ofstream;
 
-using namespace std;
-
-ClassImp(RooStats::HistFactory::Measurement); ;
+ClassImp(RooStats::HistFactory::Measurement);
 
 /// Standard constructor
 RooStats::HistFactory::Measurement::Measurement()

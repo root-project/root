@@ -41,7 +41,7 @@ to test that assumption.
 
 
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooDLLSignificanceMCSModule);
 

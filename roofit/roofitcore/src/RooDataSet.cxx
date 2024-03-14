@@ -117,7 +117,7 @@ the new `RooAbsData::uniqueId()`.
 #include <fstream>
 
 
-using namespace std;
+using std::endl, std::string, std::map, std::list, std::ifstream, std::ofstream, std::ostream;
 
 ClassImp(RooDataSet);
 

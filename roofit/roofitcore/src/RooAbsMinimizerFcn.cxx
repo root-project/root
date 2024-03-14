@@ -37,7 +37,7 @@
 #include <fstream>
 #include <iomanip>
 
-using namespace std;
+using std::endl, std::ofstream, std::cout;
 
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context) : _context(context)
 {

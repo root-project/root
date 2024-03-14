@@ -40,7 +40,7 @@ supercategory will propagate to its input categories.
 #include "TString.h"
 #include "TClass.h"
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooSuperCategory);
 

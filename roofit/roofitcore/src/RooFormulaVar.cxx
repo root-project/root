@@ -58,7 +58,7 @@
 #include "RooChi2Var.h"
 #endif
 
-using namespace std;
+using std::cout,std::endl, std::ostream, std::istream, std::list;
 
 ClassImp(RooFormulaVar);
 

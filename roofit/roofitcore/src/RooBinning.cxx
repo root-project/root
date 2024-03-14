@@ -39,7 +39,7 @@ uniformly spaced boundaries.
 #include <algorithm>
 #include <cmath>
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooBinning);
 

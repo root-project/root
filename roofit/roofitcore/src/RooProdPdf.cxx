@@ -71,7 +71,7 @@ have to appear in any specific place in the list.
 #include <strings.h>
 #endif
 
-using namespace std;
+using std::endl, std::string, std::vector, std::list, std::ostream, std::map, std::ostringstream;
 
 ClassImp(RooProdPdf);
 

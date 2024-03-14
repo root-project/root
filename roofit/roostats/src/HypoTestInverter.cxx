@@ -71,7 +71,7 @@ call HypoTestInverter::UseCLs().
 ClassImp(RooStats::HypoTestInverter);
 
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 // static variable definitions
 double HypoTestInverter::fgCLAccuracy = 0.005;

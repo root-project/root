@@ -76,7 +76,7 @@ See RooAbsData::plotOn().
 #include "TMath.h"
 #include "Math/Util.h"
 
-using namespace std;
+using std::cout, std::endl, std::string, std::ostream;
 
 ClassImp(RooDataHist);
 

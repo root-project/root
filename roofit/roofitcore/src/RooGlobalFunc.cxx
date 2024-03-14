@@ -33,7 +33,7 @@
 
 #include <algorithm>
 
-using namespace std;
+using std::ostream;
 
 namespace RooFit {
 

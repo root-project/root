@@ -34,7 +34,7 @@ equivalent of a plot. To create a table use the RooDataSet::table() method.
 #include <iostream>
 #include <iomanip>
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::setw, std::setfill;
 
 ClassImp(Roo1DTable);
 
@@ -109,7 +109,7 @@ void Roo1DTable::fill(RooAbsCategory& cat, double weight)
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
     if (cat.getCurrentIndex()==entry->getVal()) {
-      _count[i] += weight ; ;
+      _count[i] += weight ;
       //found=true ;
       return;
     }

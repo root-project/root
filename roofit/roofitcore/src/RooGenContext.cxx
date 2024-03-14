@@ -44,7 +44,7 @@ use a RooAcceptReject sampling technique.
 #include "TString.h"
 
 
-using namespace std;
+using std::endl, std::string, std::ostream;
 
 ClassImp(RooGenContext);
 

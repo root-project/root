@@ -39,7 +39,7 @@ subsequently explicitly smeared with the resolution model distribution.
 #include "Riostream.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(RooConvGenContext);
 

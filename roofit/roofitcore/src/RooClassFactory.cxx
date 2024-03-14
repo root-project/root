@@ -47,7 +47,7 @@ instantiate objects.
 #include <fstream>
 #include <mutex>
 
-using namespace std;
+using std::endl, std::vector, std::string;
 
 namespace {
 

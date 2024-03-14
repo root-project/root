@@ -22,7 +22,6 @@ by moving only in one coordinate (chosen randomly) at each step
 #include <RooRandom.h>
 #include <RooStats/RooStatsUtils.h>
 
-using namespace std;
 
 ClassImp(RooStats::SequentialProposal);
 

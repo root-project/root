@@ -86,7 +86,7 @@ ClassImp(RooStats::MCMCInterval);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 

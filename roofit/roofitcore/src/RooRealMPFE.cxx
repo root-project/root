@@ -89,7 +89,7 @@ RooMPSentinel& RooMPSentinel::instance() {
 }
 
 
-using namespace std;
+using std::cout, std::endl, std::string, std::ostringstream, std::list, std::pair;
 using namespace RooFit;
 
 ClassImp(RooRealMPFE);

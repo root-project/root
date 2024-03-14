@@ -29,8 +29,6 @@ that models a non-relativistic Breit-Wigner shape
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 
-using namespace std;
-
 ClassImp(RooBreitWigner);
 
 ////////////////////////////////////////////////////////////////////////////////

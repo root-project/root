@@ -66,11 +66,11 @@ construction by:
 #include "TMath.h"
 #include "TH1F.h"
 
-ClassImp(RooStats::NeymanConstruction); ;
+ClassImp(RooStats::NeymanConstruction);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl, std::string;
 
 
 ////////////////////////////////////////////////////////////////////////////////

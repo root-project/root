@@ -66,7 +66,7 @@ Check the tutorial rf506_msgservice.C for details.
 #include <sstream>
 #include <cctype>
 
-using namespace std;
+using std::sregex_iterator, std::ostream;
 
 namespace {
 

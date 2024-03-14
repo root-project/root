@@ -26,7 +26,7 @@ A real-to-category mapping defined by a series of thresholds.
 #include "RooThresholdCategory.h"
 #include "RooMsgService.h"
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooThresholdCategory);
 

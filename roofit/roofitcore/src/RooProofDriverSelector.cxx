@@ -36,7 +36,7 @@
 #include "RooGlobalFunc.h"
 
 using namespace RooFit;
-using namespace std;
+using std::cout, std::endl;
 
 void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
 {

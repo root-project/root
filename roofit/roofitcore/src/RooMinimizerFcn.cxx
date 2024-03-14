@@ -34,7 +34,7 @@
 #include <fstream>
 #include <iomanip>
 
-using namespace std;
+using std::cout, std::endl, std::setprecision;
 
 namespace {
 

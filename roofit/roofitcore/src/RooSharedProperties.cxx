@@ -31,11 +31,7 @@ that can be stored in RooSharedPropertiesList.
 using std::cout ;
 using std::endl ;
 
-using namespace std;
-
 ClassImp(RooSharedProperties);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -43,7 +43,7 @@ Use RooAbsCollection derived objects for public use
 #include <memory>
 #include <vector>
 
-using namespace std;
+using std::cout, std::endl;
 
 ClassImp(RooLinkedList);
 

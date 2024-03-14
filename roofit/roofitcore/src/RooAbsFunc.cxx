@@ -30,21 +30,4 @@ the getMinLimit() and getMaxLimit() methods.
 
 #include "RooAbsFunc.h"
 
-using namespace std;
-
 ClassImp(RooAbsFunc);
-;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

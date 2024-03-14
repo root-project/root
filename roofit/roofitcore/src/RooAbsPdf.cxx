@@ -212,7 +212,7 @@ inline double getLog(double prob, RooAbsReal const *caller)
 
 } // namespace
 
-using namespace std;
+using std::endl, std::string, std::ostream, std::vector, std::pair, std::make_pair;
 
 using RooHelpers::getColonSeparatedNameString;
 

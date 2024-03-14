@@ -21,7 +21,7 @@
 #include "RooAbsCategory.h"
 #include "TF3.h"
 
-using namespace std;
+using std::ostream;
 
 ClassImp(RooTFnBinding);
 

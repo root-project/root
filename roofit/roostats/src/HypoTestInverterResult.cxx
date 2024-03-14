@@ -45,8 +45,6 @@ ClassImp(RooStats::HypoTestInverterResult);
 
 using namespace RooStats;
 using namespace RooFit;
-using namespace std;
-
 
 // initialize static value
 double HypoTestInverterResult::fgAsymptoticMaxSigma      = 5;

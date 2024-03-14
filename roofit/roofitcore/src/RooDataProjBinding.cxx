@@ -41,7 +41,7 @@ constructed from all the categories in the dataset
 #include <iostream>
 #include <cassert>
 
-using namespace std;
+using std::cout, std::endl;
 
 ClassImp(RooDataProjBinding);
 

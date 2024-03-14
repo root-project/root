@@ -59,7 +59,7 @@ to the fractions of the various functions. **This requires setting the last argu
 #include <memory>
 #include <stdexcept>
 
-using namespace std;
+using std::list, std::endl, std::ostream;
 
 ClassImp(RooRealSumPdf);
 

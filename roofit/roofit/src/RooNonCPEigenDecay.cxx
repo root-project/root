@@ -50,7 +50,7 @@ where Q denotes the charge of the \f$\rho\f$ meson.
 #include "TMath.h"
 #include "RooRealIntegral.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 ClassImp(RooNonCPEigenDecay);
 

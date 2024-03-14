@@ -64,7 +64,7 @@ parallelized calculation of test statistics.
 
 #include "ROOT/StringUtils.hxx"
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooAbsOptTestStatistic);
 

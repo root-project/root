@@ -35,10 +35,9 @@ when any of the parameters of the input p.d.f. has changed.
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
 
-using namespace std;
+using std::cout, std::endl, std::string;
 
 ClassImp(RooNumRunningInt);
-  ;
 
 
 

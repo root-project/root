@@ -31,7 +31,7 @@ e.g. the binning of class RooBinning.
 #include "Riostream.h"
 
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooUniformBinning);
 

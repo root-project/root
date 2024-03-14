@@ -46,7 +46,7 @@ typename Collection::const_iterator findVar(Collection const& coll, const char *
 }
 
 
-using namespace std;
+using std::cout, std::endl;
 
 ClassImp(RooCmdConfig);
 

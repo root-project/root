@@ -42,7 +42,7 @@ in the input dataset.
 
 #include "TError.h"
 
-using namespace std;
+using std::cout, std::endl, std::string, std::vector, std::pair, std::map;
 
 ClassImp(RooNDKeysPdf);
 

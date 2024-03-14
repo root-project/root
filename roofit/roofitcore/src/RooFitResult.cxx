@@ -54,7 +54,7 @@
 #include "RooMultiVarGaussian.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::string, std::pair, std::vector, std::setw;
 
 ClassImp(RooFitResult);
 

@@ -33,7 +33,6 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 #include "RooBatchCompute.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooBukinPdf);
 

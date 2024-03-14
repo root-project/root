@@ -30,8 +30,6 @@ PDF implementing the Crystal Ball line shape.
 
 #include <cmath>
 
-using namespace std;
-
 ClassImp(RooCBShape);
 
 ////////////////////////////////////////////////////////////////////////////////

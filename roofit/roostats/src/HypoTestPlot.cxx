@@ -23,7 +23,6 @@ HypoTestCalculatorGeneric (e.g. HybridCalculator or FrequentistCalculator)  clas
 ClassImp(RooStats::HypoTestPlot);
 
 using namespace RooStats;
-using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 

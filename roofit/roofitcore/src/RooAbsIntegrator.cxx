@@ -29,7 +29,7 @@ functions that implement the RooAbsFunc interface.
 #include "RooMsgService.h"
 #include "TClass.h"
 
-using namespace std;
+using std::endl;
 
 RooAbsIntegrator::RooAbsIntegrator() = default;
 
