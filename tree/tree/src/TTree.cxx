@@ -5998,13 +5998,13 @@ Long64_t TTree::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read entry corresponding to major and minor number.
 ///
-///  The function returns the total number of bytes read.
+///  The function returns the total number of bytes read; -1 if entry not found.
 ///  If the Tree has friend trees, the corresponding entry with
 ///  the index values (major,minor) is read. Note that the master Tree
 ///  and its friend may have different entry serial numbers corresponding
 ///  to (major,minor).
 
-Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
+Int_t TTree::GetEntryWithIndex(Long64_t major, Long64_t minor)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let's return.
