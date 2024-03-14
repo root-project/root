@@ -1154,8 +1154,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
   endif()
 
   add_executable(${binary} ${unittests_SRC})
-  target_include_directories(${binary} PRIVATE ${GTEST_INCLUDE_DIR})
-  target_link_libraries(${binary} gtest gtest_main ${libraries})
+  target_link_libraries(${binary} PRIVATE GTest::gtest GTest::gtest_main ${libraries})
 
   if(MSVC AND DEFINED ROOT_SOURCE_DIR)
     if(TARGET ROOTStaticSanitizerConfig)
