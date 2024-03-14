@@ -663,7 +663,7 @@ public:
        *   nomap: (ignored by roocling; prevents entry in ROOT's rootmap file)
        *   stub: (ignored by rootcling was a directly for CINT code generation)
        *   version(x): sets the version number of the class to x
-       *   rntuple[un]splitmode: enforce split/unsplit encoding in RNTuple
+       *   rntuple[un]split: enforce split/unsplit encoding in RNTuple
        */
 
       // We assume that the first toke in option or options
