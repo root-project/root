@@ -1558,15 +1558,21 @@ TStyle *TROOT::GetStyle(const char *name) const
 
 TObject *TROOT::GetFunction(const char *name) const
 {
-   if (name == nullptr || name[0] == 0) {
+   if (!name || !*name)
       return nullptr;
-   }
 
    {
       R__LOCKGUARD(gROOTMutex);
       TObject *f1 = fFunctions->FindObject(name);
       if (f1) return f1;
    }
+
+   static bool _init_standard = false;
+
+   if (_init_standard)
+      return nullptr;
+
+   _init_standard = true;
 
    gROOT->ProcessLine("TF1::InitStandardFunctions();");
 
