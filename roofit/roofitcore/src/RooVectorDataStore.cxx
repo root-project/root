@@ -47,7 +47,7 @@ which returns spans pointing directly to the data.
 #include "TBuffer.h"
 
 #include <iomanip>
-using namespace std;
+using std::string, std::vector, std::cout, std::endl, std::list;
 
 ClassImp(RooVectorDataStore);
 ClassImp(RooVectorDataStore::RealVector);

@@ -31,7 +31,7 @@
 using namespace RooStats;
 using namespace HistFactory;
 
-using namespace std;
+using std::string, std::cerr, std::cout, std::endl, std::vector;
 
 namespace {
 

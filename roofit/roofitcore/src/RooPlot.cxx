@@ -69,7 +69,7 @@ object onto a one-dimensional plot.
 #include <cstring>
 #include <iostream>
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooPlot);
 

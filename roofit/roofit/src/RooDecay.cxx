@@ -36,8 +36,6 @@ for the analytical convolution with a RooResolutionModel. See RooAbsAnaConvPdf.
 
 #include "TError.h"
 
-using namespace std;
-
 ClassImp(RooDecay);
 
 ////////////////////////////////////////////////////////////////////////////////

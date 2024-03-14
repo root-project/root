@@ -32,7 +32,6 @@ Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration
 #include "TMath.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooNovosibirsk);
 

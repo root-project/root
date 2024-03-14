@@ -33,7 +33,7 @@ Efficient implementation of the generator context specific for binned pdfs.
 #include "RooDataSet.h"
 #include "RooRandom.h"
 
-using namespace std;
+using std::endl, std::vector, std::ostream;
 
 ClassImp(RooBinnedGenContext);
 

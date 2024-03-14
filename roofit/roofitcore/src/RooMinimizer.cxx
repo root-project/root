@@ -71,10 +71,9 @@ automatic PDF optimization.
 #include <iostream>
 #include <stdexcept> // logic_error
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooMinimizer);
-;
 
 std::unique_ptr<ROOT::Fit::Fitter> RooMinimizer::_theFitter = {};
 

@@ -39,7 +39,7 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 #include <cmath>
 
 
-using namespace std;
+using std::endl;
 
 
 // Register this class with RooNumIntFactory
