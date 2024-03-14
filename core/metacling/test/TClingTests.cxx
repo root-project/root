@@ -239,6 +239,19 @@ TEST_F(TClingTests, GetSharedLibDeps)
 }
 #endif
 
+// Check that a warning message is generated when using auto-injection.
+TEST_F(TClingTests, WarningAutoInjection)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "cling", "declaration without the 'auto' keyword is deprecated",
+                      /*matchFullMessage=*/false);
+
+   gInterpreter->ProcessLine("/* no auto */ t = new int;");
+
+   auto t = gInterpreter->GetDataMember(nullptr, "t");
+   EXPECT_TRUE(t != nullptr);
+}
+
 // Check the interface which interacts with the cling::LookupHelper.
 TEST_F(TClingTests, ClingLookupHelper) {
   // Exception spec evaluation.
