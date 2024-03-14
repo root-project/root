@@ -54,7 +54,7 @@ combined in the main thread.
 #include <string>
 #include <stdexcept>
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooAbsTestStatistic);
 

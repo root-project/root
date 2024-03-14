@@ -49,7 +49,7 @@ the names of the arguments are not hard coded.
 #include "RooArgList.h"
 #include "RooFormula.h"
 
-using namespace std;
+using std::istream, std::ostream, std::endl;
 
 ClassImp(RooGenericPdf);
 

@@ -68,7 +68,7 @@
 #include "RooResolutionModel.h"
 #include "RooMsgService.h"
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooResolutionModel);
 

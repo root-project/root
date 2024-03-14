@@ -88,7 +88,7 @@ in calculation speed.
 #include "RooDataHist.h"
 #include "TH1.h"
 
-using namespace std;
+ using std::flush, std::endl;
 
 ClassImp(RooIntegralMorph);
 

@@ -30,7 +30,7 @@
 #include "TMath.h"
 #include "TH1.h"
 
-using namespace std;
+using std::cout, std::endl, std::string, std::vector;
 
 ClassImp(RooMomentMorphFunc)
 

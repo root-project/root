@@ -35,7 +35,7 @@ Multivariate Gaussian p.d.f. with correlations
 #include "TDecompChol.h"
 #include "RooFitResult.h"
 
-using namespace std;
+using std::string, std::list, std::map, std::vector, std::cout, std::endl;
 
 ClassImp(RooMultiVarGaussian);
 

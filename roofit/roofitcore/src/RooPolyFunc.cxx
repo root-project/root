@@ -33,7 +33,7 @@ part of the RooFit computation graph.
 
 #include <utility>
 
-using namespace std;
+using std::endl;
 using namespace RooFit;
 
 ClassImp(RooPolyFunc);

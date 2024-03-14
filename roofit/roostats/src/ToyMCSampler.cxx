@@ -52,7 +52,7 @@ ToyMCStudy with the RooStudyManager.
 
 
 using namespace RooFit;
-using namespace std;
+using std::endl;
 
 
 ClassImp(RooStats::ToyMCSampler);

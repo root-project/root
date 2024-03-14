@@ -40,7 +40,6 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 #include "TMath.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooBernstein);
 

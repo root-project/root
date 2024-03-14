@@ -99,7 +99,7 @@ bool isCacheSet(std::string const& setName) {
 
 } // namespace
 
-using namespace std;
+using std::string, std::list, std::cout, std::endl, std::map, std::vector, std::ifstream, std::ofstream, std::fstream, std::make_unique;
 
 ClassImp(RooWorkspace);
 

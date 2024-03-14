@@ -174,7 +174,7 @@
 #endif
 
 
-using namespace std;
+using std::endl, std::ostream, std::string;
 
 
 namespace {
