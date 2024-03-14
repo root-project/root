@@ -18,6 +18,7 @@
 #include "RWebWindowWSHandler.hxx"
 #include "THttpCallArg.h"
 #include "TUrl.h"
+#include "TError.h"
 #include "TROOT.h"
 #include "TSystem.h"
 
@@ -614,19 +615,9 @@ void RWebWindow::RemoveKey(const std::string &key)
 
 std::string RWebWindow::GenerateKey() const
 {
-   int ntry = 100000;
+   auto key = RWebWindowsManager::GenerateKey(32);
 
-   std::string key;
-
-   do {
-      key = RWebWindowsManager::GenerateKey(32);
-   } while ((--ntry > 0) && (HasKey(key) || (key == fMgr->fSessionKey)));
-
-
-   if (ntry <= 0) {
-      R__LOG_ERROR(WebGUILog()) << "Fail to generate new connection key";
-      key.clear();
-   }
+   R__ASSERT((!HasKey(key) && (key != fMgr->fSessionKey)) && "Fail to generate window connection key");
 
    return key;
 }
