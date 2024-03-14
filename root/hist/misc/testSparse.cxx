@@ -1,3 +1,5 @@
+// This script is mostly based on Wile's one from https://root-forum.cern.ch/t/reading-and-writing-thnsparse-to-file-with-variable-bin-size/15365
+
 #include "TCanvas.h"
 #include "TFile.h"
 #include "THnSparse.h"
