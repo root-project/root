@@ -32,7 +32,7 @@ a specified area of a Poisson or Binomail error distribution.
 #include "Riostream.h"
 #include <cassert>
 
-using namespace std;
+using std::endl;
 
 
 ////////////////////////////////////////////////////////////////////////////////

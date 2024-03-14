@@ -67,7 +67,7 @@ void removeConstantParameters(RooAbsCollection &coll)
 
 } // namespace
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 namespace RooStats {
 

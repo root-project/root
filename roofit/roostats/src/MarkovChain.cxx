@@ -29,8 +29,6 @@ MarkovChain.
 #include "RooDataHist.h"
 #include "THnSparse.h"
 
-using namespace std;
-
 ClassImp(RooStats::MarkovChain);
 
 using namespace RooFit;

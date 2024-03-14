@@ -96,7 +96,7 @@ for single nodes.
 #include <fstream>
 #include <sstream>
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::string, std::set, std::map, std::istream, std::pair, std::ofstream, std::make_pair;
 
 ClassImp(RooAbsArg);
 

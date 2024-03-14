@@ -93,10 +93,9 @@ and there is no guarantee that this works.
 #include "TClass.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::setw, std::hex, std::dec, std::map, std::string;
 
 ClassImp(RooTrace);
-;
 
 RooTrace* RooTrace::_instance=nullptr ;
 

@@ -38,7 +38,7 @@
 #include <cmath>
 #include <algorithm>
 
-using namespace std;
+using std::endl, std::cout;
 
 ClassImp(PiecewiseInterpolation);
 

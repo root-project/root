@@ -551,12 +551,12 @@ double RooGExpModel::calcDecayConv(double sign, double tau, double sig, double r
     if (expArg1<300) {
       term1 = exp(expArg1) *RooMath::erfc(sig/(root2*tau)-sign*xp/(root2*sig)) ;
     } else {
-      term1 = exp(expArg1+logErfC(sig/(root2*tau)-sign*xp/(root2*sig))) ; ;
+      term1 = exp(expArg1+logErfC(sig/(root2*tau)-sign*xp/(root2*sig))) ;
     }
     if (expArg2<300) {
       term2 = exp(expArg2) *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)) ;
     } else {
-      term2 = exp(expArg2+logErfC(sig/(root2*rtau)+xp/(root2*sig))) ; ;
+      term2 = exp(expArg2+logErfC(sig/(root2*rtau)+xp/(root2*sig))) ;
     }
 
     cFly=(term1+sign*term2)/(2*(tau+sign*rtau));

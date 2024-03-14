@@ -14,8 +14,6 @@
 #include "RooStats/Heaviside.h"
 #include "RooAbsReal.h"
 
-using namespace std;
-
 /** \class RooStats::Heaviside
     \ingroup Roostats
 

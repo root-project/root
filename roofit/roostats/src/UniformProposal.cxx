@@ -29,8 +29,6 @@ converge as quickly as other proposal functions.
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 
-using namespace std;
-
 ClassImp(RooStats::UniformProposal);
 
 using namespace RooFit;

@@ -37,7 +37,7 @@ objects.
 ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl, std::string;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistPlot default constructor with bin size
