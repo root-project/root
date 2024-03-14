@@ -1023,9 +1023,9 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
 /// If the Tree has friend trees, the corresponding entry with
 /// the index values (major,minor) is read. Note that the master Tree
 /// and its friend may have different entry serial numbers corresponding
-/// to (major,minor).
+/// to (major,minor). Internally: val = major<<31 + minor;
 
-Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
+Int_t TChain::GetEntryWithIndex(Long64_t major, Long64_t minor)
 {
    Long64_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;

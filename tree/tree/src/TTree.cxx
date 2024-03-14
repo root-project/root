@@ -5923,9 +5923,9 @@ Long64_t TTree::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 ///  If the Tree has friend trees, the corresponding entry with
 ///  the index values (major,minor) is read. Note that the master Tree
 ///  and its friend may have different entry serial numbers corresponding
-///  to (major,minor).
+///  to (major,minor). Internally: val = major<<31 + minor;
 
-Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
+Int_t TTree::GetEntryWithIndex(Long64_t major, Long64_t minor)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let's return.
