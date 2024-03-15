@@ -1562,15 +1562,26 @@ TObject *TROOT::GetFunction(const char *name) const
       return nullptr;
 
    static std::atomic<bool> isInited = false;
+
+   // Capture the state before calling FindObject as it could change
+   // between the end of FindObject and the if statement
    bool wasInited = isInited.load();
 
    auto f1 = fFunctions->FindObject(name);
    if (f1 || wasInited)
       return f1;
 
-   // load libHist and call only once
-   gROOT->ProcessLine("TF1::InitStandardFunctions();");
-   isInited = true;
+   // If 2 threads gets here at the same time, the static initialization "lock"
+   // will stall one of them until ProcessLine is finished and both will return the
+   // correct answer.
+   // Note: if one (or more) thread(s) is suspended right after the 'isInited.load()`
+   // and restart after this thread has finished the initialization (i.e. a rare case),
+   // the only penalty we pay is a spurious 2nd lookup for an unknown function.
+   [[maybe_unused]] static const auto _res = []() {
+      gROOT->ProcessLine("TF1::InitStandardFunctions();");
+      isInited = true;
+      return true;
+   }();
    return fFunctions->FindObject(name);
 }
 
