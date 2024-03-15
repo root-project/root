@@ -34,6 +34,26 @@
             "n"
         ]
     },
+    "crystalball_doublesided_dist": {
+        "class": "RooCrystalBall",
+        "arguments": [
+            "m",
+            "m0",
+            "sigma_L",
+            "sigma_R",	    
+            "alpha_L",
+            "n_L",
+            "alpha_R",
+            "n_R"
+        ]
+    },    
+    "integral": {
+        "class": "RooRealIntegral",
+        "arguments": [
+            "integrand",
+	    "variables"
+	]
+    },
     "gamma_dist": {
         "class": "RooGamma",
         "arguments": [

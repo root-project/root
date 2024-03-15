@@ -1046,7 +1046,10 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       exportCategory(simPdf->indexCat(), child);
       child["distributions"].set_seq();
       for (auto const &item : simPdf->indexCat()) {
-         child["distributions"].append_child() << simPdf->getPdf(item.first.c_str())->GetName();
+	const auto* pdf = simPdf->getPdf(item.first.c_str());
+	if(pdf){
+	  child["distributions"].append_child() << pdf->GetName();
+	}
       }
 
       return;
@@ -1114,15 +1117,22 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       return;
    }
 
+ 
    elem["type"] << dict->second.type;
 
+   bool exportVerbose = dict->second.verbose;
+   if(exportVerbose) std::cout << "handling  '" << dict->second.type << "' via export keys" << std::endl;
    size_t nprox = func.numProxies();
-
+   
    for (size_t i = 0; i < nprox; ++i) {
       RooAbsProxy *p = func.getProxy(i);
-
+      if(!p) continue;
+     
       // some proxies start with a "!". This is a magic symbol that we don't want to stream
       std::string pname(p->name());
+      if(exportVerbose){
+	std::cout << "encountered proxy '" << pname << "'" << std::endl;
+      }      
       if (pname[0] == '!')
          pname.erase(0, 1);
 
@@ -1134,23 +1144,46 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       }
 
       // empty string is interpreted as an instruction to ignore this value
-      if (k->second.empty())
-         continue;
+      if (k->second.empty()){
+	if(exportVerbose){
+	  std::cout << "skipping proxy '" << k->first << "': empty" << std::endl;
+	}
+	continue;
+      }
 
       if (auto l = dynamic_cast<RooListProxy *>(p)) {
+         if(exportVerbose){
+	   std::cout << "exporting sequence for '" << k->first << "': empty" << std::endl;
+	 }	
          fillSeq(elem[k->second], *l);
-      }
-      if (auto r = dynamic_cast<RooArgProxy *>(p)) {
+      } else if (auto s = dynamic_cast<RooSetProxy *>(p)) {
+         if(exportVerbose){
+	   std::cout << "exporting sequence for '" << k->first << "': empty" << std::endl;
+	 }	
+         fillSeq(elem[k->second], *s);	 
+      } else  if (auto r = dynamic_cast<RooArgProxy *>(p)) {
          if (isLiteralConstVar(*r->absArg())) {
+	    if(exportVerbose){
+	      std::cout << "exporting constant value for '" << k->first << "'" << std::endl;
+	    }	
             elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
-         } else {
+         } else
+	    if(exportVerbose){
+	      std::cout << "exporting name for '" << k->first << "'" << std::endl;
+	    }		   {
             elem[k->second] << r->absArg()->GetName();
          }
+      } else {
+         std::cerr << "failed to find class for proxy '" << pname << "', encountered in '" << func.GetName() << "', skipping" << std::endl;
       }
    }
 
    // export all the servers of a given RooAbsArg
    for (RooAbsArg *s : func.servers()) {
+      if(!s){
+	std::cerr << "unable to locate server of " << func.GetName() << std::endl;
+	continue;
+      }
       this->exportObject(*s, exportedObjectNames);
    }
 }

@@ -64,10 +64,12 @@ public:
 };
 struct ExportKeys {
    std::string type;
+   bool verbose = false;
    std::map<std::string, std::string> proxies;
 };
 struct ImportExpression {
    TClass const *tclass = nullptr;
+   bool verbose = false;  
    std::vector<std::string> arguments;
 };
 
