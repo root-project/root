@@ -416,7 +416,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 
 
     //Getting the ONNX graph from model using the dummy inputs and example outputs
-    PyRunString("_set_onnx_shape_inference(True)",fGlobalNS,fLocalNS);
+    //PyRunString("_set_onnx_shape_inference(True)",fGlobalNS,fLocalNS);
     PyRunString("graph=_model_to_graph(model,dummyInputs)",fGlobalNS,fLocalNS);
 
 
