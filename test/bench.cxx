@@ -30,7 +30,7 @@
 
 #include "TBench.h"
 
-using namespace std;
+using std::vector;
 
 struct TBenchData {
    TBenchData() : cp1(0), nbytes1(0), cp2w(0), cp2r(0), cx3(0), nbytes3(0), cp3w(0), cp3r(0)  {}

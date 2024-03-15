@@ -28,10 +28,7 @@
 #include "TMath.h"
 
 #include <cmath>
-#include <string>
 #include <algorithm>
-
-using namespace std;
 
 ClassImp(RooLegendre);
 

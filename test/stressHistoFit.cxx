@@ -131,7 +131,7 @@ extern "C" {
 #endif
 
 #include "Riostream.h"
-using namespace std;
+using std::string, std::vector, std::cout, std::endl;
 
 
 unsigned int __DRAW__ = 0;

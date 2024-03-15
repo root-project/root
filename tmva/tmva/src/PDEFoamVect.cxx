@@ -38,9 +38,9 @@
 #include <iostream>
 #include <iomanip>
 
-using namespace std;
-
 //#define SW2 std::setw(12)
+
+using std::streamsize;
 
 ClassImp(TMVA::PDEFoamVect);
 

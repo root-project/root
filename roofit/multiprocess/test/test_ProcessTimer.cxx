@@ -18,7 +18,8 @@
 #include <chrono>
 #include <thread>
 
-using namespace std;
+using std::list;
+namespace chrono = std::chrono; // alias
 
 /// It's not easy to guarantee that this test always passes. It is not
 /// deterministic because we time something across multiple processes and

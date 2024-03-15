@@ -35,7 +35,7 @@
 #include "TMVA/TSpline2.h"
 #include "TMVA/Types.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 

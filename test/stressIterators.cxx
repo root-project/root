@@ -44,7 +44,7 @@
 
 const char * const cszValue("value");
 
-using namespace std;
+using std::ostringstream, std::cout, std::endl, std::cerr, std::exception;
 
 template<class __T>
 void fill_container(__T* _container, Int_t _count)
