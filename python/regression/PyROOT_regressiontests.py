@@ -84,8 +84,16 @@ class Regression02PyException(MyTestCase):
          with self.assertRaisesRegex(SyntaxError, "test error message"):
             ROOT.ThrowPyException()
 
-         # test of overloaded function
-         with self.assertRaisesRegex(SyntaxError, "overloaded int test error message"):
+         # test of overloaded function. Note that there are two overloads of
+         # ThrowPyException, and cppyy will summarize what happens for all of
+         # the overloads in a TypeError that looks like this:
+         #
+         #    TypeError: none of the 2 overloaded methods succeeded. Full details:
+         #      static void MyThrowingClass::ThrowPyException(int) =>
+         #        SyntaxError: overloaded int test error message
+         #      static void MyThrowingClass::ThrowPyException(double) =>
+         #        SyntaxError: overloaded double test error message
+         with self.assertRaisesRegex(TypeError, "none of the 2 overloaded methods succeeded. Full details:"):
             ROOT.MyThrowingClass.ThrowPyException(1)
 
 
