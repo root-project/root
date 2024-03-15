@@ -88,11 +88,11 @@ class TTreeBranchAttr(unittest.TestCase):
         f,t,c = self.get_tree_and_chain()
 
         for ds in t,c:
-            self.assertEqual(ds.chararrayb, 'one')
+            self.assertEqual(ds.chararrayb.as_string(), 'one')
 
             ds.GetEntry(1)
 
-            self.assertEqual(ds.chararrayb, 'onetwo')
+            self.assertEqual(ds.chararrayb.as_string(), 'onetwo')
 
     def test_vector_branch(self):
         f,t,c = self.get_tree_and_chain()
