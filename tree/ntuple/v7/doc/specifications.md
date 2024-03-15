@@ -412,6 +412,11 @@ Zigzag + split
 : Used on signed integers only; it maps $x$ to $2x$ if $x$ is positive and to $-(2x+1)$ if $x$ is negative.
   Followed by split encoding.
 
+For `Index32` and `Index64`, the "counting is relative to the cluster" applies to each page individually. For
+example, if you have 18 elements in total and they are grouped as (3 elements,4 elements) in the first page 
+and (5 elements, 6 elements) in the second page, the `Index` pages would
+read: `[3, 4], [12, 6]` instead of `[3, 4], [5, 6]`.
+
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
 Old readers need to ignore these columns and fields constructed from such columns.
