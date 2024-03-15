@@ -1465,12 +1465,13 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             npt++;
          }
          if (i == nloop) {
-            ComputeLogs(npt, optionZ);
+            if (optionFill) ComputeLogs(nloop, optionZ);
+            else            ComputeLogs(npt, optionZ);
             Int_t bord = gStyle->GetDrawBorder();
             if (optionR) {
                if (optionFill) {
                   gPad->PaintFillArea(npt,gyworkl.data(),gxworkl.data());
-                  if (bord) gPad->PaintPolyLine(npt,gyworkl.data(),gxworkl.data());
+                  if (bord) gPad->PaintPolyLine(nloop,gyworkl.data(),gxworkl.data());
                }
                if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gyworkl.data(), gxworkl.data());
@@ -1479,7 +1480,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             } else {
                if (optionFill) {
                   gPad->PaintFillArea(npt,gxworkl.data(),gyworkl.data());
-                  if (bord) gPad->PaintPolyLine(npt,gxworkl.data(),gyworkl.data());
+                  if (bord) gPad->PaintPolyLine(nloop,gxworkl.data(),gyworkl.data());
                }
                if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gxworkl.data(), gyworkl.data());

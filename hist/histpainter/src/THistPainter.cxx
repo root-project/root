@@ -9748,12 +9748,12 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
          g->TAttFill::Modify();
          if (line) {
             Int_t fs = g->GetFillStyle();
-            Int_t fc = g->GetFillColor();
+            Int_t db = gStyle->GetDrawBorder();
             g->SetFillStyle(0);
-            g->SetFillColor(g->GetLineColor());
+            gStyle->SetDrawBorder(1);
             g->Paint("F");
+            gStyle->SetDrawBorder(db);
             g->SetFillStyle(fs);
-            g->SetFillColor(fc);
          }
          if (fill) g->Paint("F");
          if (mark) g->Paint("P");
@@ -9772,12 +9772,12 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
             g->TAttFill::Modify();
             if (line) {
                Int_t fs = g->GetFillStyle();
-               Int_t fc = g->GetFillColor();
+               Int_t db = gStyle->GetDrawBorder();
                g->SetFillStyle(0);
-               g->SetFillColor(g->GetLineColor());
+               gStyle->SetDrawBorder(1);
                g->Paint("F");
+               gStyle->SetDrawBorder(db);
                g->SetFillStyle(fs);
-               g->SetFillColor(fc);
             }
             if (fill) g->Paint("F");
             if (mark) g->Paint("P");
