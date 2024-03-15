@@ -77,7 +77,7 @@ class NumbaDeclareSimple(unittest.TestCase):
 
         self.assertTrue(hasattr(fn1, "__cpp_wrapper__"))
         self.assertTrue(type(fn1.__cpp_wrapper__) == str)
-        self.assertEqual(sys.getrefcount(fn1.__cpp_wrapper__), 2)
+        self.assertEqual(sys.getrefcount(fn1.__cpp_wrapper__), 3)
 
         self.assertTrue(hasattr(fn1, "__py_wrapper__"))
         self.assertTrue(type(fn1.__py_wrapper__) == str)
