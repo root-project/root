@@ -2133,6 +2133,9 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 /// to evaluate the sum than would be the straightforward sum calculation
 /// for _n_ smaller than 12 either method is acceptable ("Numerical Recipes")
 ///
+/// Note this function is not exactly implementing the cumulative or the complement of the cumulative of the
+/// Binomial distrinution. It is equivalent to ROOT::Math::binomial_cdf_c(k-1,p,n)
+///
 /// \author Anna Kreshuk
 
 Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
@@ -2277,8 +2280,9 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the cumulative distribution function of F-distribution,
-/// this function occurs in the statistical test of whether two observed
+/// Calculates the cumulative distribution function of F-distribution
+/// (see ROOT::Math::fdistribution_cdf).
+/// This function occurs in the statistical test of whether two observed
 /// samples have the same variance. For this test a certain statistic F,
 /// the ratio of observed dispersion of the first sample to that of the
 /// second sample, is calculated. N and M stand for numbers of degrees
@@ -2635,6 +2639,7 @@ Double_t TMath::Student(Double_t T, Double_t ndf)
 /// not for the number of samples
 /// if x has Student's t-distribution, the function returns the probability of
 /// x being less than T.
+/// This is equivalent to ROOT::Math::tdistribution_cdf(T,ndf)
 ///
 /// \author Anna Kreshuk
 
