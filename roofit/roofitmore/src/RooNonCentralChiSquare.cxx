@@ -53,7 +53,7 @@ http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/
 
 #include "TError.h"
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooNonCentralChiSquare);
 
