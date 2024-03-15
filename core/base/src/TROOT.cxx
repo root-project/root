@@ -1561,20 +1561,17 @@ TObject *TROOT::GetFunction(const char *name) const
    if (!name || !*name)
       return nullptr;
 
+   static std::atomic<bool> isInited = false;
+   bool wasInited = isInited.load();
+
    auto f1 = fFunctions->FindObject(name);
-   if (f1)
+   if (f1 || wasInited)
       return f1;
 
-   auto init_funcs = [&f1, name, this]() {
-      gROOT->ProcessLine("TF1::InitStandardFunctions();");
-      f1 = fFunctions->FindObject(name);
-      return true;
-   };
-
    // load libHist and call only once
-   [[maybe_unused]] static bool _init = init_funcs();
-
-   return f1;
+   gROOT->ProcessLine("TF1::InitStandardFunctions();");
+   isInited = true;
+   return fFunctions->FindObject(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
