@@ -284,13 +284,13 @@ void MethodPyRandomForest::ProcessOptions()
    pNjobs = Eval(Form("%i", fNjobs));
    PyDict_SetItemString(fLocalNS, "nJobs", pNjobs);
 
-   pBootstrap = Eval(Form("%i", UInt_t(fBootstrap)));
+   pBootstrap = (fBootstrap) ? Eval("True") : Eval("False");
    PyDict_SetItemString(fLocalNS, "bootstrap", pBootstrap);
-   pOobScore = Eval(Form("%i", UInt_t(fOobScore)));
+   pOobScore = (fOobScore) ? Eval("True") : Eval("False");
    PyDict_SetItemString(fLocalNS, "oobScore", pOobScore);
    pVerbose = Eval(Form("%i", fVerbose));
    PyDict_SetItemString(fLocalNS, "verbose", pVerbose);
-   pWarmStart = Eval(Form("%i", UInt_t(fWarmStart)));
+   pWarmStart = (fWarmStart) ? Eval("True") : Eval("False");
    PyDict_SetItemString(fLocalNS, "warmStart", pWarmStart);
 
    // If no filename is given, set default
