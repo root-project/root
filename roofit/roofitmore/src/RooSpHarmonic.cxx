@@ -53,8 +53,6 @@ integrals, using the orthogonality properties of \f$Y_l^m\f$...
 #include "Math/SpecFunc.h"
 #include "TMath.h"
 
-using namespace std;
-
 ClassImp(RooSpHarmonic);
 
 ////////////////////////////////////////////////////////////////////////////////
