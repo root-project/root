@@ -231,7 +231,7 @@ void MethodPyAdaBoost::Train()
    }
 
    // Create classifier object
-   PyRunString("classifier = sklearn.ensemble.AdaBoostClassifier(base_estimator=baseEstimator, n_estimators=nEstimators, learning_rate=learningRate, algorithm=algorithm, random_state=randomState)",
+   PyRunString("classifier = sklearn.ensemble.AdaBoostClassifier(estimator=baseEstimator, n_estimators=nEstimators, learning_rate=learningRate, algorithm=algorithm, random_state=randomState)",
       "Failed to setup classifier");
 
    // Fit classifier
