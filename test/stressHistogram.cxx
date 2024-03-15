@@ -97,7 +97,7 @@
 #include <random>
 #include <cassert>
 
-using namespace std;
+using std::ostringstream, std::cout, std::endl, std::string;
 
 const unsigned int __DRAW__ = 0;
 

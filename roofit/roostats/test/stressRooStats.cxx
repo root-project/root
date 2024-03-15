@@ -34,7 +34,7 @@
 // Tests file
 #include "stressRooStats_tests.h"
 
-using namespace std;
+using std::cout, std::endl, std::string, std::list, std::setw, std::setfill, std::left;
 using namespace RooFit;
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//

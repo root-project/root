@@ -57,7 +57,7 @@ reached
 #include <cfloat>
 #include <cmath>
 
-using namespace std;
+using std::endl;
 
 /// \cond ROOFIT_INTERNAL
 

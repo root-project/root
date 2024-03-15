@@ -86,16 +86,14 @@ PDEFoamEventDensity.
 
 #include <cassert>
 #include <fstream>
-#include <iostream>
 #include <limits>
-#include <sstream>
 
 ClassImp(TMVA::PDEFoam);
 
 static const Float_t kHigh= FLT_MAX;
 static const Float_t kVlow=-FLT_MAX;
 
-using namespace std;
+using std::numeric_limits, std::nothrow, std::map;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.

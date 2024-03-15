@@ -63,7 +63,7 @@ Global auxiliary applications and data treatment routines.
 #include <cstdlib>
 #include <iomanip>
 
-using namespace std;
+using std::vector, std::setw, std::istream, std::ostream;
 
 std::atomic<TMVA::Tools*> TMVA::Tools::fgTools{0};
 
