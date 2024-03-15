@@ -269,7 +269,8 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
     Cppyy::TCppIndex_t nData = Cppyy::GetNumDatamembers(baseType);
     if (nData) code << "public:\n";
     for (Cppyy::TCppIndex_t idata = 0; idata < nData; ++idata) {
-        if (Cppyy::IsProtectedData(baseType, idata)) {
+        if (Cppyy::IsProtectedData(baseType, idata)
+            && !Cppyy::IsEnumData(baseType, idata)) {
             const std::string dm_name = Cppyy::GetDatamemberName(baseType, idata);
             if (dm_name != "_internal_self") {
                 protected_names.insert(dm_name);

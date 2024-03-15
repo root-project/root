@@ -132,6 +132,29 @@ long TClingTypeInfo::Property() const
       const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(tagQT->getDecl());
       if (!TD)
          return property;
+      switch (TD->getAccess()) {
+         case clang::AS_public:
+            property |= kIsPublic;
+            break;
+         case clang::AS_protected:
+            property |= kIsProtected | kIsNotReacheable;
+            break;
+         case clang::AS_private:
+            property |= kIsPrivate | kIsNotReacheable;
+            break;
+         case clang::AS_none:
+            if (TD->getDeclContext()->isNamespace())
+               property |= kIsPublic;
+            break;
+         default:
+            // IMPOSSIBLE
+            assert(false && "Unexpected value for the access property value in Clang");
+            break;
+      }
+      if (!(property & kIsNotReacheable)) {
+         if (! ROOT::TMetaUtils::IsDeclReacheable(*TD))
+            property |= kIsNotReacheable;
+      }
       if (TD->isEnum()) {
          property |= kIsEnum;
       } else {
