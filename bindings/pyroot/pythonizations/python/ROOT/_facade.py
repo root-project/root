@@ -307,13 +307,13 @@ class ROOTFacade(types.ModuleType):
 
             ns.FromNumpy = MakeNumpyDataFrameCopy
 
-            # make a RDataFrame from a panda dataframe
-            def MakePandaDataFrame(df):
+            # make a RDataFrame from a Pandas dataframe
+            def MakePandasDataFrame(df):
                 np_dict = {}
                 for key in df.columns:
                     np_dict[key] = df[key].to_numpy()
                 return MakeNumpyDataFrame(np_dict)
-            ns.FromPandas = MakePandaDataFrame
+            ns.FromPandas = MakePandasDataFrame
 
             try:
                 # Inject Experimental.Distributed package into namespace RDF if available
