@@ -3985,8 +3985,9 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
 /// Set pointer to the TClingClassInfo in TClass.
 /// If 'reload' is true, (attempt to) generate a new ClassInfo even if we
 /// already have one.
+/// \param decl pointer to decl if already found one by CheckClassInfo
 
-void TCling::SetClassInfo(TClass* cl, Bool_t reload)
+void TCling::SetClassInfo(TClass* cl, Bool_t reload, TDictionary::DeclId_t decl)
 {
    // We are shutting down, there is no point in reloading, it only triggers
    // redundant deserializations.
@@ -4046,7 +4047,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    // that is currently in the caller (like SetUnloaded) that disable AutoLoading and AutoParsing and
    // code is in the callee (disabling template instantiation) and end up with a more explicit class:
    //      TClingClassInfoReadOnly.
-   TClingClassInfo* info = new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
+   TClingClassInfo* info = (decl && !static_cast<const clang::Decl *>(decl)->isInvalidDecl()) ? new TClingClassInfo(GetInterpreterImpl(), decl) : new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
    if (!info->IsValid()) {
       SetWithoutClassInfoState(cl);
       delete info;
@@ -4121,9 +4122,11 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 /// specifically check that each level of nesting is already loaded.
 /// In case of templates the idea is that everything between the outer
 /// '<' and '>' has to be skipped, e.g.: `aap<pippo<noot>::klaas>::a_class`
+///
+/// \param decl parameter passed by reference and set to the found decl, if any
 
 TInterpreter::ECheckClassInfo
-TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
+TCling::CheckClassInfo(const char *name, TDictionary::DeclId_t &decl, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
 {
    R__LOCKGUARD(gInterpreterMutex);
    static const char *anonEnum = "anonymous enum ";
@@ -4191,19 +4194,18 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
    // this forward declaration.
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::Type *type = nullptr;
-   const clang::Decl *decl
+   decl
       = lh.findScope(classname,
                      gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                      : cling::LookupHelper::NoDiagnostics,
-                     &type, /* intantiateTemplate= */ false );
+                     &type, /* instantiateTemplate= */ false);
    if (!decl) {
       std::string buf = TClassEdit::InsertStd(classname);
       decl = lh.findScope(buf,
                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                           : cling::LookupHelper::NoDiagnostics,
-                          &type,false);
+                          &type, /* instantiateTemplate= */ false);
    }
-
    if (type) {
       // If decl==0 and the type is valid, then we have a forward declaration.
       if (!decl) {

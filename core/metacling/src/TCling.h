@@ -270,9 +270,9 @@ public: // Public Interface
    void    UpdateListOfGlobals() final;
    void    UpdateListOfGlobalFunctions() final;
    void    UpdateListOfTypes() final;
-   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE) final;
+   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE, TDictionary::DeclId_t decl = nullptr) final;
 
-   ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) final;
+   ECheckClassInfo CheckClassInfo(const char *name, TDictionary::DeclId_t &decl, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) final;
 
    Bool_t  CheckClassTemplate(const char *name) final;
    Longptr_t Calc(const char* line, EErrorCode* error = nullptr) final;
