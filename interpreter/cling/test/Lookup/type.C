@@ -13,8 +13,6 @@
 #include "cling/Interpreter/LookupHelper.h"
 #include "clang/AST/Type.h"
 
-using namespace std;
-
 //
 //  Test Data.
 //

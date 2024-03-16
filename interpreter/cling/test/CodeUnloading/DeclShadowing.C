@@ -29,7 +29,7 @@ void g() {}
 // ==== Test UsingDirectiveDecl/UsingDecl
 // These should not be nested into a `__cling_N5xxx' namespace (but placed at
 // the TU scope) so that the declaration they name is globally available.
-using namespace std;
+using std::string;
 namespace NS { string baz("Cling"); }
 using NS::baz;
 baz

@@ -16,7 +16,6 @@
 
 #include <cstdio>
 
-using namespace std;
 using namespace llvm;
 using namespace cling;
 

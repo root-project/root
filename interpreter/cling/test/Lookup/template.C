@@ -18,7 +18,6 @@
 #include <cstdio>
 #include <vector>
 
-using namespace std;
 using namespace llvm;
 
 .rawInput 1

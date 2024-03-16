@@ -21,7 +21,6 @@
 #include <cstdio>
 #include <string>
 
-using namespace std;
 using namespace llvm;
 
 //

@@ -19,7 +19,6 @@
 #include <cstdio>
 #include <string>
 
-using namespace std;
 using namespace llvm;
 
 void dumpDecl(const char* title, const clang::Decl* D) {
