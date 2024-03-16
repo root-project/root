@@ -60,7 +60,7 @@ RooAbsData::convertToVectorStore().
 #include "TROOT.h"
 
 #include <iomanip>
-using namespace std ;
+using std::endl, std::list, std::string;
 
 ClassImp(RooTreeDataStore);
 

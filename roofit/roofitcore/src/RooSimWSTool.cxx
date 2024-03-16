@@ -115,7 +115,7 @@
 #include "RooFracRemainder.h"
 #include "RooFactoryWSTool.h"
 
-using namespace std ;
+using std::string, std::endl, std::map, std::list, std::pair, std::cout, std::vector;
 
 namespace {
 

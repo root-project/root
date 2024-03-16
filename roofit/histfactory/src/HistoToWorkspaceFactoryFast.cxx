@@ -91,8 +91,8 @@ std::vector<double> histToVector(TH1 const &hist)
 }
 
 // use this order for safety on library loading
-using namespace RooStats ;
-using namespace std ;
+using namespace RooStats;
+using std::cout, std::endl, std::string, std::vector, std::make_unique, std::pair, std::unique_ptr, std::map;
 
 using namespace RooStats::HistFactory::Detail;
 using namespace RooStats::HistFactory::Detail::MagicConstants;

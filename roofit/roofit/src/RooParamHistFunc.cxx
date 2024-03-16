@@ -32,7 +32,7 @@
 #include "TMath.h"
 
 
-using namespace std ;
+using std::list;
 
 ClassImp(RooParamHistFunc);
 

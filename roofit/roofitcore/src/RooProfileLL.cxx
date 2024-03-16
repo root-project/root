@@ -30,7 +30,7 @@ as a MIGRAD minimization step is executed for each function evaluation
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 
-using namespace std ;
+using std::endl;
 
 ClassImp(RooProfileLL);
 

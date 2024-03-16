@@ -29,7 +29,7 @@ fast searches and comparisons.
 
 #include <iostream>
 #include <memory>
-using namespace std ;
+using std::make_unique;
 
 
 RooNameReg::RooNameReg() :
