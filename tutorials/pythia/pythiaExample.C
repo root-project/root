@@ -85,7 +85,7 @@
 #include "TCanvas.h"
 #include "Riostream.h"
 #include <cstdlib>
-using namespace std;
+using std::cout, std::endl;
 
 
 #define FILENAME   "pythia.root"
