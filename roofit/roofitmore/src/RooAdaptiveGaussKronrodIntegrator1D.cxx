@@ -55,7 +55,7 @@ can be selected to speed up the convergence of these integrals.
 #include "TMath.h"
 #include "RooMsgService.h"
 
-using namespace std ;
+using std::endl;
 
 
 // --- From GSL_MATH.h -------------------------------------------

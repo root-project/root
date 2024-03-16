@@ -39,7 +39,7 @@ repeated applications of generate-and-fit operations on a workspace
 #include "TMath.h"
 #include "TEnv.h"
 
-using namespace std ;
+using std::list, std::cout, std::endl, std::string;
 
 ClassImp(RooStudyPackage);
 

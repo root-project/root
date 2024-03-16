@@ -66,7 +66,7 @@
 #include <iomanip>
 #include <stdexcept>
 
-using namespace std ;
+using std::istream, std::ostream, std::ifstream, std::ofstream, std::endl;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );
