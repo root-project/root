@@ -160,8 +160,6 @@ private:
 
 } // namespace
 
-using namespace std ;
-
 ClassImp(RooAbsReal)
 
 bool RooAbsReal::_globalSelectComp = false;

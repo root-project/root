@@ -31,7 +31,7 @@ The class supports merging.
 #include <iostream>
 #include <cmath>
 #include <limits>
-using namespace std ;
+using std::numeric_limits;
 
 ClassImp(RooStats::SamplingDistribution);
 
