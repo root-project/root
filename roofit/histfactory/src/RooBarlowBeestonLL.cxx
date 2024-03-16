@@ -39,7 +39,7 @@
 
 #include <TMath.h>
 
-using namespace std ;
+using std::runtime_error;
 
 ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 
