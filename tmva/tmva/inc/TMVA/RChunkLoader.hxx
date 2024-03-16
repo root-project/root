@@ -115,7 +115,7 @@ class RChunkLoader {
 
 private:
    std::string fTreeName;
-   std::string fFileName;
+   std::vector<std::string> fFileNames;
    std::size_t fChunkSize;
    std::size_t fNumColumns;
 
@@ -134,11 +134,11 @@ public:
    /// \param filters
    /// \param vecSizes
    /// \param vecPadding
-   RChunkLoader(const std::string &treeName, const std::string &fileName, const std::size_t chunkSize,
+   RChunkLoader(const std::string &treeName, const std::vector<std::string> &fileNames, const std::size_t chunkSize,
                 const std::vector<std::string> &cols, const std::string &filters = "",
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
       : fTreeName(treeName),
-        fFileName(fileName),
+        fFileNames(fileNames),
         fChunkSize(chunkSize),
         fCols(cols),
         fFilters(filters),
@@ -162,7 +162,7 @@ public:
       long long start_l = currentRow;
       ROOT::RDF::Experimental::RDatasetSpec x_spec =
          ROOT::RDF::Experimental::RDatasetSpec()
-            .AddSample({"", fTreeName, fFileName})
+            .AddSample({"", fTreeName, fFileNames})
             .WithGlobalRange({start_l, std::numeric_limits<Long64_t>::max()});
 
       ROOT::RDataFrame x_rdf(x_spec);

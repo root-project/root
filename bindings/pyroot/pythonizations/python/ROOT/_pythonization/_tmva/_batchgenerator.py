@@ -13,7 +13,7 @@ class BaseGenerator:
     def get_template(
         self,
         tree_name: str,
-        file_name: str,
+        file_names: list[str],
         columns: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
     ) -> Tuple[str, list[int]]:
@@ -22,7 +22,7 @@ class BaseGenerator:
         RDataFrame and columns.
 
         Args:
-            file_name (str): name of the root file.
+            file_names (list[str]): names of the root files.
             tree_name (str): name of the tree in the root file.
             columns (list[str]): Columns that should be loaded.
                                  Defaults to loading all columns
@@ -36,7 +36,7 @@ class BaseGenerator:
         # from cppyy.gbl.ROOT import RDataFrame
         from ROOT import RDataFrame
 
-        x_rdf = RDataFrame(tree_name, file_name)
+        x_rdf = RDataFrame(tree_name, file_names)
 
         if not columns:
             columns = x_rdf.GetColumnNames()
@@ -112,7 +112,7 @@ class BaseGenerator:
     def __init__(
         self,
         tree_name: str,
-        file_name: str,
+        file_names: str|list[str],
         batch_size: int,
         chunk_size: int,
         columns: list[str] = list(),
@@ -130,7 +130,7 @@ class BaseGenerator:
 
         Args:
             tree_name (str): Name of the tree in the ROOT file
-            file_name (str): Path to the ROOT file
+            file_names (str|list[str]): names of the root files
             batch_size (int): Size of the returned chunks.
             chunk_size (int):
                 The size of the chunks loaded from the ROOT file. Higher chunk
@@ -183,6 +183,9 @@ class BaseGenerator:
                 f"The validation_split has to be in range [0.0, 1.0] \n \
                     given value is {validation_split}"
             )
+        
+        if isinstance(file_names, str):
+            file_names = [file_names]
 
         # TODO: better linking when importing into ROOT
         # ROOT.gInterpreter.ProcessLine(
@@ -192,7 +195,7 @@ class BaseGenerator:
         self.weights_column = weights
 
         template, max_vec_sizes_list = self.get_template(
-            tree_name, file_name, columns, max_vec_sizes
+            tree_name, file_names, columns, max_vec_sizes
         )
 
         self.num_columns = len(self.all_columns)
@@ -236,7 +239,7 @@ class BaseGenerator:
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
             tree_name,
-            file_name,
+            file_names,
             chunk_size,
             batch_size,
             self.given_columns,
@@ -615,7 +618,7 @@ class ValidationRBatchGenerator:
 
 def CreateNumPyGenerators(
     tree_name: str,
-    file_name: str,
+    file_names: str|list[str],
     batch_size: int,
     chunk_size: int,
     columns: list[str] = list(),
@@ -636,7 +639,7 @@ def CreateNumPyGenerators(
 
     Args:
         tree_name (str): Name of the tree in the ROOT file
-        file_name (str): Path to the ROOT file
+        file_names (str|list[str]): Path(s) to the ROOT file(s)
         batch_size (int): Size of the returned chunks.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
@@ -675,7 +678,7 @@ def CreateNumPyGenerators(
     """
     base_generator = BaseGenerator(
         tree_name,
-        file_name,
+        file_names,
         batch_size,
         chunk_size,
         columns,
@@ -702,7 +705,7 @@ def CreateNumPyGenerators(
 
 def CreateTFGenerators(
     tree_name: str,
-    file_name: str,
+    file_names: str|list[str],
     batch_size: int,
     chunk_size: int,
     columns: list[str] = list(),
@@ -723,7 +726,7 @@ def CreateTFGenerators(
 
     Args:
         tree_name (str): Name of the tree in the ROOT file
-        file_name (str): Path to the ROOT file
+        file_names (str|list[str]): Path(s) to the ROOT file(s)
         batch_size (int): Size of the returned chunks.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
@@ -762,7 +765,7 @@ def CreateTFGenerators(
     """
     base_generator = BaseGenerator(
         tree_name,
-        file_name,
+        file_names,
         batch_size,
         chunk_size,
         columns,
@@ -789,7 +792,7 @@ def CreateTFGenerators(
 
 def CreatePyTorchGenerators(
     tree_name: str,
-    file_name: str,
+    file_names: str|list[str],
     batch_size: int,
     chunk_size: int,
     columns: list[str] = list(),
@@ -810,7 +813,7 @@ def CreatePyTorchGenerators(
 
     Args:
         tree_name (str): Name of the tree in the ROOT file
-        file_name (str): Path to the ROOT file
+        file_names (str|list[str]): Path(s) to the ROOT file(s)
         batch_size (int): Size of the returned chunks.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
@@ -849,7 +852,7 @@ def CreatePyTorchGenerators(
     """
     base_generator = BaseGenerator(
         tree_name,
-        file_name,
+        file_names,
         batch_size,
         chunk_size,
         columns,
