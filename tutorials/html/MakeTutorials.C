@@ -17,7 +17,7 @@
 #include <iostream>
 #include <fstream>
 
-using namespace std;
+using std::ostream, std::ofstream, std::cout, std::endl;
 
 void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk);
 

@@ -82,7 +82,6 @@
  */
 
 #include <iostream>
-#include <map>
 #include <cmath>
 #include <TMath.h>
 #include <TFile.h>
@@ -92,7 +91,7 @@
 #include <TXMLDocument.h>
 #include "TUnfoldBinningXML.h"
 
-using namespace std;
+using std::cout;
 
 
 void testUnfold7b()
