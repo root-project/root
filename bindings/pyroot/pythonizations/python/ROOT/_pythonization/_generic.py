@@ -41,14 +41,8 @@ def pythonize_generic(klass, name):
     # Add pretty printing via setting the __str__ special function
 
     # Exclude classes which have the method __str__ already defined in C++
-    # Since version 1.12.11, CPyCppyy is internally renaming any direct C++
-    # __str__ attribute to __cpp_str and replaces __str__ with a pythonic
-    # wrapper. Therefore, the "CPPOverload" name check below doesn't work
-    # anymore with that version. Fortunately, we can just check if the
-    # __cpp_str attribute exists instead. Still, this code does both checks for
-    # maximum compatibility.
     m = getattr(klass, '__str__', None)
-    has_cpp_str = type(m).__name__ == "CPPOverload" or hasattr(klass, "__cpp_str")
+    has_cpp_str = True if m is not None and type(m).__name__ == 'CPPOverload' else False
 
     # Exclude std::string with its own pythonization from cppyy
     exclude = [ 'std::string' ]
