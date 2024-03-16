@@ -56,7 +56,7 @@
 
 #include "TUnfoldDensity.h"
 
-using namespace std;
+using std::cout;
 
 TRandom *rnd=nullptr;
 
@@ -97,8 +97,8 @@ void testUnfold4(bool printInfo = false)
 {
 
    // switch off printing Info messages
-   if (!printInfo) gErrorIgnoreLevel = kWarning; 
-   
+   if (!printInfo) gErrorIgnoreLevel = kWarning;
+
   // switch on histogram errors
   TH1::SetDefaultSumw2();
 

@@ -40,7 +40,7 @@
 #include <TXMLDocument.h>
 #include "TUnfoldBinningXML.h"
 
-using namespace std;
+using std::cout, std::vector, std::map, std::setw;
 
 void PrintBinMap(TUnfoldBinning *binning,const char * where,
                  const Int_t *binMap);

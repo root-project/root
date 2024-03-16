@@ -63,14 +63,13 @@
 /// \author Stefan Schmitt DESY, 14.10.2008
 
 #include <iostream>
-#include <map>
 #include <cmath>
 #include <TMath.h>
 #include <TRandom3.h>
 #include <TFile.h>
 #include <TTree.h>
 
-using namespace std;
+using std::cout;
 
 TRandom *g_rnd=nullptr;
 

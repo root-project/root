@@ -37,7 +37,7 @@
 #include "TMVA/DataLoader.h"//required to load dataset
 #include "TMVA/Reader.h"
 
-using namespace std;
+using std::vector, std::cout, std::endl;
 
 using namespace TMVA;
 

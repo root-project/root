@@ -68,7 +68,7 @@
 #include "TUnfoldBinningXML.h"
 #include <TF2.h>
 
-using namespace std;
+using std::ofstream;
 
 void testUnfold5b()
 {

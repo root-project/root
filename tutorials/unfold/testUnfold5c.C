@@ -68,7 +68,6 @@
 
 
 #include <iostream>
-#include <map>
 #include <cmath>
 #include <TMath.h>
 #include <TFile.h>
@@ -82,7 +81,7 @@
 #include "TUnfoldBinning.h"
 #endif
 
-using namespace std;
+using std::cout;
 
 
 void testUnfold5c()

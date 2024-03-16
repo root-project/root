@@ -72,7 +72,7 @@ enum ETestCommandIdentifiers {
    HSId1
 };
 
-using namespace std;
+using std::map, std::vector, std::cout, std::endl;
 using namespace RooFit;
 using namespace RooStats;
 

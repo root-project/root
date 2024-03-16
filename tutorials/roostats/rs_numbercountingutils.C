@@ -41,7 +41,7 @@
 
 using namespace RooFit;
 using namespace RooStats; // the utilities are in the RooStats namespace
-using namespace std;
+using std::cout, std::endl;
 
 void rs_numbercountingutils()
 {

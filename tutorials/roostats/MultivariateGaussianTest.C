@@ -49,7 +49,7 @@
 #include "RooStats/LikelihoodIntervalPlot.h"
 #include "RooStats/LikelihoodInterval.h"
 
-using namespace std;
+using std::cout, std::endl;
 using namespace RooFit;
 using namespace RooStats;
 

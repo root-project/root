@@ -25,7 +25,7 @@
 #include "TThread.h"
 
 //=============================================================================
-using namespace std;
+using std::vector, std::cout, std::endl;
 //=============================================================================
 const size_t g_sleeptime = 10000000; // in nanosecs.
 const size_t g_multTasks = 32;

@@ -20,7 +20,7 @@
 /// Further details can  be found in talk by S.Schmitt at:
 ///
 ///   XII Quark Confinement and the Hadron Spectrum
-///   29.8. - 3.9.2016	Thessaloniki, Greece
+///   29.8. - 3.9.2016  Thessaloniki, Greece
 ///   statictics session (+proceedings)
 ///
 /// The example comprises several macros
@@ -91,7 +91,7 @@
 #include <TRandom3.h>
 #include "TUnfoldDensity.h"
 
-using namespace std;
+using std::vector, std::pair, std::cout;
 
 // #define PRINT_MATRIX_L
 

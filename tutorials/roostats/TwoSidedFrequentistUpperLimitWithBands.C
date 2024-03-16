@@ -121,7 +121,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl;
 
 bool useProof = false; // flag to control whether to use Proof
 int nworkers = 0;      // number of workers (default use all available cores)

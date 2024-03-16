@@ -79,8 +79,6 @@
 #include <TGraph.h>
 #include "TUnfold.h"
 
-using namespace std;
-
 
 TRandom *rnd=nullptr;
 

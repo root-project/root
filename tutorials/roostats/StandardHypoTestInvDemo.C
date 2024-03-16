@@ -68,7 +68,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl;
 
 // structure defining the options
 struct HypoTestInvOptions {

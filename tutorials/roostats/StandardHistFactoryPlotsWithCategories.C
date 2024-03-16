@@ -54,7 +54,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl;
 
 void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char *workspaceName = "combined",
                                             const char *modelConfigName = "ModelConfig",

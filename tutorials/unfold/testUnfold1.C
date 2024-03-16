@@ -105,8 +105,6 @@
 
 // #define VERBOSE_LCURVE_SCAN
 
-using namespace std;
-
 TRandom *rnd=nullptr;
 
 TH2 *gHistInvEMatrix;
