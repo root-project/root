@@ -416,7 +416,10 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const
 {
    if (fN == 0) return -1;
-
+   if ((minor > 0x7fffffff && major != 0) || major > 1ffffffff) {
+      Error("TreeIndex","Wrong major (%ldd) minor (%ldd) combination", major, minor);
+      return -1;
+   }
    Long64_t pos = FindValues(major, minor);
    if( pos < fN && fIndexValues[pos] == major && fIndexValuesMinor[pos] == minor )
       return fIndex[pos];
@@ -441,7 +444,10 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor)
 Long64_t TTreeIndex::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 {
    if (fN == 0) return -1;
-
+   if ((minor > 0x7fffffff && major != 0) || major > 1ffffffff) {
+      Error("TreeIndex","Wrong major (%ldd) minor (%ldd) combination", major, minor);
+      return -1;
+   }
    Long64_t pos = FindValues(major, minor);
    if( pos < fN && fIndexValues[pos] == major && fIndexValuesMinor[pos] == minor )
       return fIndex[pos];
