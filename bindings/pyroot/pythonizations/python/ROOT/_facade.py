@@ -312,6 +312,9 @@ class ROOTFacade(types.ModuleType):
                 np_dict = {}
                 for key in df.columns:
                     np_dict[key] = df[key].to_numpy()
+                # Attach the array dict as a member to the dataframe, to see if
+                # the Windows crashes are due to lifetime issues.
+                setattr(df, "_np_dict", np_dict)
                 return MakeNumpyDataFrameCopy(np_dict)
             ns.FromPandas = MakePandasDataFrame
 
