@@ -312,7 +312,7 @@ class ROOTFacade(types.ModuleType):
                 np_dict = {}
                 for key in df.columns:
                     np_dict[key] = df[key].to_numpy()
-                return MakeNumpyDataFrame(np_dict)
+                return MakeNumpyDataFrameCopy(np_dict)
             ns.FromPandas = MakePandasDataFrame
 
             try:
