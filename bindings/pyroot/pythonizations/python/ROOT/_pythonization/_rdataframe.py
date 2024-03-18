@@ -172,12 +172,15 @@ df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 \anchor reference
 */
 '''
-import sys
+
+from __future__ import annotations
 from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
+from typing import Iterable
 
 
-def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
+def RDataFrameAsNumpy(df: ROOT.RDataFrame, columns: Iterable[str] | None = None, exclude: Iterable[str] | None = None,
+                      lazy: bool = False):
     """Read-out the RDataFrame as a collection of numpy arrays.
 
     The values of the dataframe are read out as numpy array of the respective type
@@ -195,6 +198,7 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     event-loop.
 
     Parameters:
+        df: The RDataFrame to read out.
         columns: If None return all branches as columns, otherwise specify names in iterable.
         exclude: Exclude branches from selection.
         lazy: Determines whether this action is instant (False, default) or lazy (True).
@@ -206,14 +210,14 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     """
     # Sanitize input arguments
     if isinstance(columns, str):
-        raise TypeError("The columns argument requires a list of strings")
+        raise TypeError("The columns argument requires an iterable of strings")
     if isinstance(exclude, str):
-        raise TypeError("The exclude argument requires a list of strings")
+        raise TypeError("The exclude argument requires an iterable of strings")
 
     # Early check for numpy
     try:
         import numpy
-    except:
+    except ImportError:
         raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
     # Find all column names in the dataframe if no column are specified
@@ -221,9 +225,9 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
         columns = [str(c) for c in df.GetColumnNames()]
 
     # Exclude the specified columns
-    if exclude == None:
+    if exclude is None:
         exclude = []
-    columns = [col for col in columns if not col in exclude]
+    columns = [col for col in columns if col not in exclude]
 
     # Register Take action for each column
     result_ptrs = {}
@@ -252,6 +256,7 @@ class AsNumpyResult(object):
         _result_ptrs (dict): results of the AsNumpy action. The key is the
             column name, the value is the result pointer for that column.
     """
+
     def __init__(self, result_ptrs, columns):
         """Constructs an AsNumpyResult object.
 
@@ -266,7 +271,7 @@ class AsNumpyResult(object):
         self._columns = columns
         self._py_arrays = None
 
-    def GetValue(self):
+    def GetValue(self) -> dict:
         """Triggers, if necessary, the event loop to run the Take actions for
         the requested columns and produce the NumPy arrays as result.
 
@@ -277,19 +282,24 @@ class AsNumpyResult(object):
 
         if self._py_arrays is None:
             import numpy
-            from ROOT._pythonization._rdf_utils import ndarray
+            from ROOT._pythonization._rdf_utils import ndarray, all_same_length, is_templated_instance
 
             # Convert the C++ vectors to numpy arrays
             self._py_arrays = {}
             for column in self._columns:
                 cpp_reference = self._result_ptrs[column].GetValue()
                 if hasattr(cpp_reference, "__array_interface__"):
-                    tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
+                    tmp = numpy.asarray(cpp_reference)  # This adopts the memory of the C++ object.
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
                 else:
                     tmp = numpy.empty(len(cpp_reference), dtype=object)
                     for i, x in enumerate(cpp_reference):
-                        tmp[i] = x # This creates only the wrapping of the objects and does not copy.
+                        if any(is_templated_instance(x, class_name) for class_name in
+                               ["cppyy.gbl.std.vector", "cppyy.gbl.ROOT.VecOps.RVec"]) and all_same_length(x):
+                            tmp[i] = numpy.asarray(x)
+                        else:
+                            tmp[i] = x
+
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
 
         return self._py_arrays
@@ -380,7 +390,7 @@ class HistoProfileWrapper(MethodTemplateWrapper):
             else:
                 # Covers the case of the overloads with only model passed
                 # as argument
-               res = self._original_method(model)
+                res = self._original_method(model)
         # If the first argument is not a tuple, nothing to do, just call
         # the original implementation
         else:
@@ -402,12 +412,12 @@ def pythonize_rdataframe(klass):
     # Replace the implementation of the following RDF methods
     # to convert a tuple argument into a model object
     methods_with_TModel = {
-            'Histo1D' : RDF.TH1DModel,
-            'Histo2D' : RDF.TH2DModel,
-            'Histo3D' : RDF.TH3DModel,
-            'Profile1D' : RDF.TProfile1DModel,
-            'Profile2D' : RDF.TProfile2DModel
-            }
+        'Histo1D': RDF.TH1DModel,
+        'Histo2D': RDF.TH2DModel,
+        'Histo3D': RDF.TH3DModel,
+        'Profile1D': RDF.TProfile1DModel,
+        'Profile2D': RDF.TProfile2DModel
+    }
 
     for method_name, model_class in methods_with_TModel.items():
         # Replace the original implementation of the method

@@ -8,7 +8,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+from __future__ import annotations
+from typing import Iterable
 import numpy
+import re
 
 
 class ndarray(numpy.ndarray):
@@ -19,6 +22,7 @@ class ndarray(numpy.ndarray):
     https://docs.scipy.org/doc/numpy/user/basics.subclassing.html for more
     information on subclassing numpy arrays.
     """
+
     def __new__(cls, numpy_array, result_ptr):
         """
         Dunder method invoked at the creation of an instance of this class. It
@@ -33,5 +37,31 @@ class ndarray(numpy.ndarray):
         """
         Dunder method that fills in the instance default `result_ptr` value.
         """
-        if obj is None: return
+        if obj is None:
+            return
         self.result_ptr = getattr(obj, "result_ptr", None)
+
+
+def all_same_length(iterable: Iterable) -> bool:
+    """
+    Check if all elements in the given iterable have the same length. Returns True if the iterable is empty.
+    """
+    try:
+        if len(iterable) == 0:
+            return True
+    except TypeError:
+        return True
+
+    reference = len(next(iter(iterable)))
+    return all(len(item) == reference for item in iterable)
+
+
+def is_templated_instance(obj, class_name: str) -> bool:
+    """
+    Check if the given object is a templated instance.
+    """
+    # check if it matches the pattern
+    # <class cppyy.gbl.ROOT.VecOps.RVec<float> at 0x13150a350>
+
+    regex = re.compile(rf'<class {class_name}<.*> at 0x[0-9a-f]+>')
+    return bool(regex.match(str(type(obj))))

@@ -2,6 +2,8 @@ import unittest
 import ROOT
 import numpy as np
 import pickle
+import tempfile
+from pathlib import Path
 
 
 def make_tree(*dtypes):
@@ -69,6 +71,7 @@ class RDataFrameAsNumpy(unittest.TestCase):
     """
     Testing of RDataFrame.AsNumpy pythonization
     """
+
     def test_branch_dtypes(self):
         """
         Test supported data-types for read-out
@@ -130,11 +133,11 @@ class RDataFrameAsNumpy(unittest.TestCase):
         }
         """)
         df = ROOT.ROOT.RDataFrame(5).Define("x",
-                                       "create_vector_constantsize(rdfentry_)")
+                                            "create_vector_constantsize(rdfentry_)")
         npy = df.AsNumpy()
         self.assertEqual(npy["x"].size, 5)
         self.assertEqual(list(npy["x"][0]), [0, 0, 0])
-        self.assertIn("vector<unsigned int>", str(type(npy["x"][0])))
+        self.assertTrue(isinstance(npy["x"], np.ndarray))
 
     def test_read_vector_variablesize(self):
         """
@@ -146,11 +149,11 @@ class RDataFrameAsNumpy(unittest.TestCase):
         }
         """)
         df = ROOT.ROOT.RDataFrame(5).Define("x",
-                                       "create_vector_variablesize(rdfentry_)")
+                                            "create_vector_variablesize(rdfentry_)")
         npy = df.AsNumpy()
         self.assertEqual(npy["x"].size, 5)
         self.assertEqual(list(npy["x"][3]), [0, 0, 0])
-        self.assertIn("vector<unsigned int>", str(type(npy["x"][0])))
+        self.assertTrue(isinstance(npy["x"], np.ndarray))
 
     def test_read_tlorentzvector(self):
         """
@@ -307,6 +310,56 @@ class RDataFrameAsNumpy(unittest.TestCase):
         cpparr = pyarr.result_ptr.GetValue()
         pyarr[0][0] = 42
         self.assertTrue(cpparr[0][0] == pyarr[0][0])
+
+    def test_rdataframe_as_numpy_array_regular(self):
+        column_name = "vector"
+        n = 10
+        for from_file in [False, True]:
+            for shape, declaration in [
+                ((n, 3), "std::vector<int>{1,2,3}"),
+                ((n, 3), "std::vector<float>{1,2,3}"),
+                ((n, 3), "std::vector<double>{1,2,3}"),
+                ((n, 4), "std::vector<char>{'a','b','c','d'}"),
+                ((n, 3, 2), "std::vector<std::vector<int>>{{1,2},{3,4},{5,6}}"),
+            ]:
+                df = ROOT.RDataFrame(10).Define(column_name, declaration)
+                temp_file_path = None
+                if from_file:
+                    # save to disk and read back
+                    temp_file = tempfile.NamedTemporaryFile(delete=False)
+                    temp_file_path = Path(temp_file.name)
+                    temp_file.close()
+
+                    df.Snapshot("tree", str(temp_file_path))
+                    df = ROOT.RDataFrame("tree", str(temp_file_path))
+
+                array = df.AsNumpy([column_name])[column_name]
+                self.assertTrue(isinstance(array, np.ndarray))
+                # self.assertEqual(array.shape, shape) # when we implement regular array handling
+                self.assertTrue(array.shape[0] == n)
+                self.assertTrue(all(x.shape[0] == shape[1] for x in array))
+
+                if from_file:
+                    temp_file_path.unlink()
+
+    def test_rdataframe_as_numpy_array_jagged(self):
+        jagged_array = ROOT.std.vector(float)()
+        column_name = "jagged_array"
+        tree = ROOT.TTree("tree", "Tree with Jagged Array")
+        tree.Branch(column_name, jagged_array)
+        n = 10
+        for i in range(n):
+            jagged_array.clear()
+            for j in range(i):
+                jagged_array.push_back(j)
+            tree.Fill()
+
+        df = ROOT.RDataFrame(tree)
+        array = df.AsNumpy([column_name])[column_name]
+        self.assertTrue(isinstance(array, np.ndarray))
+        self.assertTrue(array.shape[0] == n)
+        self.assertTrue(all(isinstance(x, np.ndarray) for x in array))
+        self.assertTrue(all(len(x) == i for i, x in enumerate(array)))
 
 
 if __name__ == '__main__':
