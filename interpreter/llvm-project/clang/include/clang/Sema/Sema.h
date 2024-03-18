@@ -1075,38 +1075,21 @@ public:
   class ContextAndScopeRAII {
   private:
     Sema &S;
-    DeclContext *SavedContext;
+    ContextRAII SavedContext;
     Scope *SavedScope;
-    ProcessingContextState SavedContextState;
-    QualType SavedCXXThisTypeOverride;
-    unsigned SavedFunctionScopesStart;
-    unsigned SavedInventedParameterInfosStart;
 
   public:
     ContextAndScopeRAII(Sema &S, DeclContext *ContextToPush, Scope *ScopeToPush)
-        : S(S), SavedContext(S.CurContext), SavedScope(S.CurScope),
-          SavedContextState(S.DelayedDiagnostics.pushUndelayed()),
-          SavedCXXThisTypeOverride(S.CXXThisTypeOverride),
-          SavedFunctionScopesStart(S.FunctionScopesStart),
-          SavedInventedParameterInfosStart(S.InventedParameterInfosStart) {
-      assert(ContextToPush && "pushing null context");
-      S.CurContext = ContextToPush;
+        : S(S), SavedContext(S, ContextToPush), SavedScope(S.CurScope) {
       S.CurScope = ScopeToPush;
-      // Any saved FunctionScopes do not refer to this context.
-      S.FunctionScopesStart = S.FunctionScopes.size();
-      S.InventedParameterInfosStart = S.InventedParameterInfos.size();
     }
 
     void pop() {
-      if (!SavedContext) return;
-      S.CurContext = SavedContext;
+      SavedContext.pop();
+      if (!SavedScope)
+        return;
       S.CurScope = SavedScope;
-      S.DelayedDiagnostics.popUndelayed(SavedContextState);
-      S.CXXThisTypeOverride = SavedCXXThisTypeOverride;
-      S.FunctionScopesStart = SavedFunctionScopesStart;
-      S.InventedParameterInfosStart = SavedInventedParameterInfosStart;
-      SavedContext = 0;
-      SavedScope = 0;
+      SavedScope = nullptr;
     }
 
     ~ContextAndScopeRAII() {
