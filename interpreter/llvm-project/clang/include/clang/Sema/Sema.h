@@ -13547,15 +13547,22 @@ public:
     Scope *SavedScope;
     ProcessingContextState SavedContextState;
     QualType SavedCXXThisTypeOverride;
+    unsigned SavedFunctionScopesStart;
+    unsigned SavedInventedParameterInfosStart;
 
   public:
     ContextAndScopeRAII(Sema &S, DeclContext *ContextToPush, Scope *ScopeToPush)
         : S(S), SavedContext(S.CurContext), SavedScope(S.CurScope),
           SavedContextState(S.DelayedDiagnostics.pushUndelayed()),
-          SavedCXXThisTypeOverride(S.CXXThisTypeOverride) {
+          SavedCXXThisTypeOverride(S.CXXThisTypeOverride),
+          SavedFunctionScopesStart(S.FunctionScopesStart),
+          SavedInventedParameterInfosStart(S.InventedParameterInfosStart) {
       assert(ContextToPush && "pushing null context");
       S.CurContext = ContextToPush;
       S.CurScope = ScopeToPush;
+      // Any saved FunctionScopes do not refer to this context.
+      S.FunctionScopesStart = S.FunctionScopes.size();
+      S.InventedParameterInfosStart = S.InventedParameterInfos.size();
     }
 
     void pop() {
@@ -13565,6 +13572,8 @@ public:
       S.CurScope = SavedScope;
       S.DelayedDiagnostics.popUndelayed(SavedContextState);
       S.CXXThisTypeOverride = SavedCXXThisTypeOverride;
+      S.FunctionScopesStart = SavedFunctionScopesStart;
+      S.InventedParameterInfosStart = SavedInventedParameterInfosStart;
       SavedContext = 0;
       SavedScope = 0;
     }
