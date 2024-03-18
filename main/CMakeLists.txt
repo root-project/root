@@ -42,6 +42,11 @@ ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 #---ReadSpeed-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES RIO Tree TreePlayer ReadSpeed)
 
+#---ttree2rntuple----------------------------------------------------------------------------------
+if (root7)
+  ROOT_EXECUTABLE(ttree2rntuple src/ttree2rntuple.cxx LIBRARIES RIO Tree ROOTNTuple ROOTNTupleUtil)
+endif()
+
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
   ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py

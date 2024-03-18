@@ -20,4 +20,5 @@ if(MSVC)
 endif()
 
 ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTNTupleUtil CustomStructUtil)
+ROOT_ADD_GTEST(ntuple_importer_cli ntuple_importer_cli.cxx LIBRARIES ROOTNTupleUtil)
 ROOT_ADD_GTEST(ntuple_inspector ntuple_inspector.cxx LIBRARIES ROOTNTupleUtil)
