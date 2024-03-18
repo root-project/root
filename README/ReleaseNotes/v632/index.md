@@ -224,6 +224,48 @@ Please use the higher-level functions `RooAbsPdf::createNLL()` and `RooAbsPdf::c
 ## PROOF Libraries
 
 
+## PyROOT
+
+
+### Rebase of PyROOT on the current cppyy
+
+PyROOT was rebased on the latest version of the [cppyy library](https://cppyy.readthedocs.io/en/latest/).
+This means PyROOT benefits from many upstream improvements and fixes, for example related to the conversion of NumPy arrays to vectors, implicit conversion from nested Python tuples to nested initializer lists, and improved overload resolution.
+
+Related to this cppyy upgrade, there is one change in PyROOT behavior.
+A static size character buffer of type `char[n]` is not converted to a Python string anymore. 
+The reason for this: since it was previously assumed the string was
+null-terminated, there was no way to get the bytes after a `null`, even if you
+wanted to.
+
+```
+import ROOT
+
+ROOT.gInterpreter.Declare("""
+struct Struct { char char_buffer[5] {}; }; // struct with char[n]
+void fill_char_buffer(Struct & st) {
+    std::string foo{"foo"};
+    std::memcpy(st.char_buffer, foo.data(), foo.size());
+}
+""")
+
+struct = ROOT.Struct()
+ROOT.fill_char_buffer(struct)
+char_buffer = struct.char_buffer
+
+# With thew new cppyy, you get access to the lower level buffer instead of a
+# Python string:
+print("struct.char_buffer            : ", char_buffer)
+
+# However, you can turn the buffer into a string very easily with as_string():
+print("struct.char_buffer.as_string(): ", char_buffer.as_string())
+```
+The output of this script with ROOT 6.32:
+```
+struct.char_buffer            :  <cppyy.LowLevelView object at 0x74c7a2682fb0>
+struct.char_buffer.as_string():  foo
+```
+
 ## Language Bindings
 
 
