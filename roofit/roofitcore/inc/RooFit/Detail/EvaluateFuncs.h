@@ -248,6 +248,24 @@ inline double effProdEvaluate(double eff, double pdf) {
    return eff * pdf;
 }
 
+inline double nllEvaluate(double pdf, double weight, int binnedL, int doBinOffset)
+{
+   if (binnedL) {
+      // Special handling of this case since log(Poisson(0,0)=0 but can't be
+      // calculated with usual log-formula since log(mu)=0. No update of result
+      // is required since term=0.
+      if (std::abs(pdf) < 1e-10 && std::abs(weight) < 1e-10) {
+         return 0.0;
+      }
+      if (doBinOffset) {
+         return pdf - weight - weight * (std::log(pdf) - std::log(weight));
+      }
+      return pdf - weight * std::log(pdf) + TMath::LnGamma(weight + 1);
+   } else {
+      return -weight * std::log(pdf);
+   }
+}
+
 } // namespace EvaluateFuncs
 
 } // namespace Detail
