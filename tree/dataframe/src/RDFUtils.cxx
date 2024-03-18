@@ -393,8 +393,8 @@ void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info 
    };
 
    if (diffTypes && !inheritedType()) {
-      const auto tName = TypeID2TypeName(requestedType);
-      const auto colTypeName = TypeID2TypeName(colType);
+      const auto tName = ROOT::Internal::GetDemangledTypeName(requestedType);
+      const auto colTypeName = ROOT::Internal::GetDemangledTypeName(colType);
       std::string errMsg = "RDataFrame: type mismatch: column \"" + colName + "\" is being used as ";
       if (tName.empty()) {
          errMsg += requestedType.name();
