@@ -28,6 +28,7 @@
 #include <xxhash.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -36,7 +37,6 @@
 #include <string>
 #include <utility>
 #include <chrono>
-#include <errno.h>
 
 namespace {
 
@@ -1195,7 +1195,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(
       retval = fseek(fFile, offset, SEEK_SET);
 #endif
       if (retval)
-         throw RException(R__FAIL(std::string("Seek failed: ")+strerror(errno)));
+         throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
       fFilePos = offset;
    }
    retval = fwrite(buffer, 1, nbytes, fFile);
