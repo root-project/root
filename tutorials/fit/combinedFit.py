@@ -122,14 +122,16 @@ ROOT.gStyle.SetOptFit(1111)
 fB.SetFitResult(result, iparB)
 fB.SetRange(rangeB().first, rangeB().second)
 fB.SetLineColor(ROOT.kBlue)
-hB.GetListOfFunctions().Add(fB)
+# The function list takes ownership of the added elements, so we are cloning
+# the function to avoid a double delete.
+hB.GetListOfFunctions().Add(fB.Clone())
 hB.Draw()
 
 c1.cd(2)
 fSB.SetFitResult(result, iparSB)
 fSB.SetRange(rangeSB().first, rangeSB().second)
 fSB.SetLineColor(ROOT.kRed)
-hSB.GetListOfFunctions().Add(fSB)
+hSB.GetListOfFunctions().Add(fSB.Clone())
 hSB.Draw()
 
 c1.SaveAs("combinedFit.png")

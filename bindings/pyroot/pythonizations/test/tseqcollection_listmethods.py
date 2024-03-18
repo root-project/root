@@ -15,9 +15,15 @@ class TSeqCollectionListMethods(unittest.TestCase):
     # Helpers
     def create_tseqcollection(self):
         sc = ROOT.TList()
+        sc_pylist = []
         for i in reversed(range(self.num_elems)):
-            sc.Add(ROOT.TObjString(str(i)))
+            sc_pylist.append(ROOT.TObjString(str(i)))
+            sc.Add(sc_pylist[-1])
 
+        # A TList is by default non-owning. To make sure that the objects live
+        # long enough, we attach then as an attribute of the output list, such
+        # that the Python reference counter doesn't hit zero.
+        sc.owning_pylist = sc_pylist
         return sc
 
     # Tests
@@ -25,10 +31,10 @@ class TSeqCollectionListMethods(unittest.TestCase):
         sc = self.create_tseqcollection()
 
         # Insert with positive index
-        o = ROOT.TObject()
-        sc.insert(1, o)
+        o1 = ROOT.TObject()
+        sc.insert(1, o1)
         self.assertEqual(sc.GetEntries(), self.num_elems + 1)
-        self.assertEqual(sc.At(1), o)
+        self.assertEqual(sc.At(1), o1)
 
         # Insert with negative index (starts from end)
         o2 = ROOT.TObject()
@@ -84,7 +90,8 @@ class TSeqCollectionListMethods(unittest.TestCase):
             sc2.pop(1.0)
 
         # Pop a repeated element
-        sc2.append(ROOT.TObjString('2'))
+        o1 = ROOT.TObjString('2')
+        sc2.append(o1)
         elem = sc2.pop()
         self.assertEqual(sc2.At(0), elem)
 
@@ -145,9 +152,9 @@ class TSeqCollectionListMethods(unittest.TestCase):
             self.assertEqual(sc.index(elem), i)
 
         # Check element not in collection
-        o = ROOT.TObjString(str(self.num_elems))
+        o1 = ROOT.TObjString(str(self.num_elems))
         with self.assertRaises(ValueError):
-            sc.index(o)
+            sc.index(o1)
 
 
 if __name__ == '__main__':
