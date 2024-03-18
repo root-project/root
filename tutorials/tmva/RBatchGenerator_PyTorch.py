@@ -58,7 +58,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 # Loop through the training set and train model
 for i, (x_train, y_train) in enumerate(gen_train):
     # Make prediction and calculate loss
-    pred = model(x_train).view(-1)
+    pred = model(x_train)
     loss = loss_fn(pred, y_train)
 
     # improve model
@@ -78,7 +78,7 @@ for i, (x_train, y_train) in enumerate(gen_train):
 # Evaluate the model on the validation set
 for i, (x_train, y_train) in enumerate(gen_validation):
     # Make prediction and calculate accuracy
-    pred = model(x_train).view(-1)
+    pred = model(x_train)
     accuracy = calc_accuracy(y_train, pred)
 
     print(f"Validation => accuracy: {accuracy}")
