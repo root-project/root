@@ -3,11 +3,15 @@
 ## Changes in dev
 1. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
 2. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
-3. Improve TRatioPlot axis and lines drawing
-4. Use localStorage to preserve custom settings and gStyle
-5. Let configure custom storage prefix with `&storage_prefix=name` URL #290
-6. Let customize URL for "Show in new tab" menu command
-7. Support both new and old TRatioPlot drawings
+3. Let define date and file name position with `&datex=0.03&datey=0.03` URL parameters
+4. Improve TRatioPlot axis and lines drawing
+5. Use localStorage to preserve custom settings and gStyle
+6. Let configure custom storage prefix with `&storage_prefix=name` URL #290
+7. Let customize URL for "Show in new tab" menu command
+8. Support both new and old TRatioPlot drawings
+9. Fully integrate svg2pdf.js into jsroot repo
+10. Synchronize X/Y range selection with native ROOT
+11. Proper handle attributes from TH2Poly bins, support "p" for markers drawing
 
 
 ## Changes in 7.6.0
