@@ -1878,6 +1878,10 @@ class HierarchyPainter extends BasePainter {
                      arg0 += '&utc';
                   else if (settings.TimeZone)
                      arg0 += `&timezone='${settings.TimeZone}'`;
+                  if (Math.abs(gStyle.fDateX - 0.01) > 1e-3)
+                     arg0 += `&datex=${gStyle.fDateX.toFixed(3)}`;
+                  if (Math.abs(gStyle.fDateY - 0.01) > 1e-3)
+                     arg0 += `&datey=${gStyle.fDateY.toFixed(3)}`;
                   if (gStyle.fHistMinimumZero)
                      arg0 += '&histzero';
                   if (settings.DarkMode)

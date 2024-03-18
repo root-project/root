@@ -503,7 +503,8 @@ class THistDrawOptions {
          } else if (this.Line) {
             res += 'L';
             if (this.Fill) res += 'F';
-         }
+         } else if (this.Off)
+            res = '][';
 
          if (this.Cjust) res += ' CJUST';
 
@@ -513,8 +514,9 @@ class THistDrawOptions {
             res += this.TextKind;
          }
       }
-
-      if (is_main_hist && res) {
+      if (this.Same)
+         res += this.ForceStat ? 'SAMES' : 'SAME';
+      else if (is_main_hist && res) {
          if (this.ForceStat || (this.StatEnabled === true))
             res += '_STAT';
          else if (this.NoStat || (this.StatEnabled === false))
@@ -2351,8 +2353,6 @@ class THistPainter extends ObjectPainter {
          if (painter.isTH2Poly()) {
             if (painter.options.Mode3D)
                painter.options.Lego = 12; // lego always 12
-            else if (!painter.options.Color)
-               painter.options.Color = true; // default is color
          }
 
          painter.checkPadRange();
