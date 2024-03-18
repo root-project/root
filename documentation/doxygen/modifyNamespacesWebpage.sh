@@ -9,5 +9,9 @@ fi
 
 sed -i -e /namespace$1.html/d $HTMLPATH/namespaces_dup.js
 sed -i -e /namespace$1.html/d $HTMLPATH/namespaces.html
-rm $HTMLPATH/namespace$1.html
 sed -i -e "/memberdecls/,+5d" $HTMLPATH/$1_8py.html
+
+FILE=$HTMLPATH/namespace$1.html
+if test -f "$FILE"; then
+   rm $FILE
+fi
