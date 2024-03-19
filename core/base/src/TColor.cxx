@@ -96,7 +96,7 @@ A new color can be created the following way:
 
 ~~~ {.cpp}
    Int_t ci = 1756; // color index
-   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+   auto color = new TColor(ci, 0.1, 0.2, 0.3);
 ~~~
 
 \since **6.07/07:**
@@ -105,7 +105,7 @@ unused color index:
 
 ~~~ {.cpp}
    Int_t ci = TColor::GetFreeColorIndex();
-   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+   auto color = new TColor(ci, 0.1, 0.2, 0.3);
 ~~~
 
 Two sets of colors are initialized;
@@ -154,7 +154,7 @@ to use these keywords in user code instead of hardcoded color numbers, e.g.:
 
 Begin_Macro(source)
 {
-   TColorWheel *w = new TColorWheel();
+   auto w  = new TColorWheel();
    auto cw = new TCanvas("cw","cw",0,0,400,400);
    w->SetCanvas(cw);
    w->Draw();
@@ -204,7 +204,7 @@ image below shows the ROOT color wheel in grayscale mode.
 
 Begin_Macro(source)
 {
-   TColorWheel *w = new TColorWheel();
+   auto w  = new TColorWheel();
    auto cw = new TCanvas("cw","cw",0,0,400,400);
    cw->GetCanvas()->SetGrayscale();
    w->SetCanvas(cw);
@@ -996,7 +996,7 @@ A new color can be created transparent the following way:
 
 ~~~ {.cpp}
    Int_t ci = 1756;
-   TColor *color = new TColor(ci, 0.1, 0.2, 0.3, "", 0.5); // alpha = 0.5
+   auto color = new TColor(ci, 0.1, 0.2, 0.3, "", 0.5); // alpha = 0.5
 ~~~
 
 An example of transparency usage with parallel coordinates can be found
@@ -2239,7 +2239,7 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
 ///
 /// ~~~ {.cpp}
 ///   Int_t ci = TColor::GetFreeColorIndex();
-///   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+///   auto color = new TColor(ci, 0.1, 0.2, 0.3);
 /// ~~~
 
 Int_t TColor::GetFreeColorIndex()
