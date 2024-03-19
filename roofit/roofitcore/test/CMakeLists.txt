@@ -48,7 +48,14 @@ if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testRooRealIntegral testRooRealIntegral.cxx LIBRARIES RooFitCore)
 endif()
 if(clad)
-  ROOT_ADD_GTEST(testRooFuncWrapper testRooFuncWrapper.cxx LIBRARIES RooFitCore RooFit HistFactory)
+  if(NOT MSVC OR win_broken_tests)
+    # Disabled on Windows because it causes the following error:
+    # Assertion failed: Ctx->isFileContext() && "We should have been looking
+    # only at file context here already.", file
+    # C:\build\workspace\root-pullrequests-build\root\interpreter\llvm-project\clang\lib\Sema\SemaLookup.cpp,
+    # line 1492
+    ROOT_ADD_GTEST(testRooFuncWrapper testRooFuncWrapper.cxx LIBRARIES RooFitCore RooFit HistFactory)
+  endif()
 endif()
 ROOT_ADD_GTEST(testTestStatistics testTestStatistics.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testGlobalObservables testGlobalObservables.cxx LIBRARIES RooFitCore)
