@@ -66,8 +66,8 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 '''
 
 from . import pythonization
-from libROOTPythonizations import GetEndianess
 import cppyy
+import sys
 
 
 _array_interface_dtype_map = {
@@ -88,7 +88,7 @@ def get_array_interface(self):
         if cppname.endswith("<{}>".format(dtype)):
             dtype_numpy = _array_interface_dtype_map[dtype]
             dtype_size = cppyy.sizeof(dtype)
-            endianess = GetEndianess()
+            endianness = "<" if sys.byteorder == "little" else ">"
             size = self.size()
             # Numpy breaks for data pointer of 0 even though the array is empty.
             # We set the pointer to 1 but the value itself is arbitrary and never accessed.
@@ -98,7 +98,7 @@ def get_array_interface(self):
                 pointer = cppyy.ll.addressof(self.data())
             return {
                 "shape": (size, ),
-                "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
+                "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),
                 "version": 3,
                 "data": (pointer, False)
             }
