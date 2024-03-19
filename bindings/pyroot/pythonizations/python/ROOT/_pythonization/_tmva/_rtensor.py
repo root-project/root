@@ -10,8 +10,8 @@
 
 from .. import pythonization
 from .._rvec import _array_interface_dtype_map
-from libROOTPythonizations import GetEndianess
 import cppyy
+import sys
 
 def get_array_interface(self):
     """
@@ -28,7 +28,7 @@ def get_array_interface(self):
     dtype = cppname[idx1 + 8 : idx2]
     dtype_numpy = _array_interface_dtype_map[dtype]
     dtype_size = cppyy.sizeof(dtype)
-    endianess = GetEndianess()
+    endianness = "<" if sys.byteorder == "little" else ">"
     shape = self.GetShape()
     strides = self.GetStrides()
     # Numpy breaks for data pointer of 0 even though the array is empty.
@@ -39,7 +39,7 @@ def get_array_interface(self):
     return {
         "shape": tuple(s for s in shape),
         "strides": tuple(s * dtype_size for s in strides),
-        "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
+        "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),
         "version": 3,
         "data": (pointer, False),
     }

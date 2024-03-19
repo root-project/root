@@ -119,7 +119,6 @@ set(cpp_sources
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
     src/PyzCppHelpers.cxx
-    src/PyzPythonHelpers.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx
     inc/TPyDispatcher.h
