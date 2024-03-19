@@ -1029,7 +1029,6 @@ FILE_PATTERNS          = *.c \
                          *.qsf \
                          *.as \
                          *.js \
-                         *.json \
                          *.pyzdoc
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
