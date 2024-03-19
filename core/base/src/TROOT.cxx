@@ -1558,19 +1558,30 @@ TStyle *TROOT::GetStyle(const char *name) const
 
 TObject *TROOT::GetFunction(const char *name) const
 {
-   if (name == nullptr || name[0] == 0) {
+   if (!name || !*name)
       return nullptr;
-   }
 
-   {
-      R__LOCKGUARD(gROOTMutex);
-      TObject *f1 = fFunctions->FindObject(name);
-      if (f1) return f1;
-   }
+   static std::atomic<bool> isInited = false;
 
-   gROOT->ProcessLine("TF1::InitStandardFunctions();");
+   // Capture the state before calling FindObject as it could change
+   // between the end of FindObject and the if statement
+   bool wasInited = isInited.load();
 
-   R__LOCKGUARD(gROOTMutex);
+   auto f1 = fFunctions->FindObject(name);
+   if (f1 || wasInited)
+      return f1;
+
+   // If 2 threads gets here at the same time, the static initialization "lock"
+   // will stall one of them until ProcessLine is finished and both will return the
+   // correct answer.
+   // Note: if one (or more) thread(s) is suspended right after the 'isInited.load()`
+   // and restart after this thread has finished the initialization (i.e. a rare case),
+   // the only penalty we pay is a spurious 2nd lookup for an unknown function.
+   [[maybe_unused]] static const auto _res = []() {
+      gROOT->ProcessLine("TF1::InitStandardFunctions();");
+      isInited = true;
+      return true;
+   }();
    return fFunctions->FindObject(name);
 }
 
