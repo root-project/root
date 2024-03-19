@@ -52,7 +52,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Fully enable the use of TTree::Branch from Python"},
    {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
     (char *)"Add pretty printing pythonization"},
-   {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS, (char *)"Get endianess of the system"},
    {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O, (char *)"Get object with array interface as RVec"},
 #ifdef R__HAS_DATAFRAME
    {(char *)"AsRTensor", (PyCFunction)PyROOT::AsRTensor, METH_O, (char *)"Get object with array interface as RTensor"},
