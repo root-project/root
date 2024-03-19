@@ -119,7 +119,7 @@ The following image displays the 50 basic colors.
 
 Begin_Macro(source)
 {
-   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
+   auto c = new TCanvas("c","Fill Area colors",0,0,500,200);
    c->DrawColorTable();
    return c;
 }
@@ -155,7 +155,7 @@ to use these keywords in user code instead of hardcoded color numbers, e.g.:
 Begin_Macro(source)
 {
    TColorWheel *w = new TColorWheel();
-   cw = new TCanvas("cw","cw",0,0,400,400);
+   auto cw = new TCanvas("cw","cw",0,0,400,400);
    w->SetCanvas(cw);
    w->Draw();
 }
@@ -205,7 +205,7 @@ image below shows the ROOT color wheel in grayscale mode.
 Begin_Macro(source)
 {
    TColorWheel *w = new TColorWheel();
-   cw = new TCanvas("cw","cw",0,0,400,400);
+   auto cw = new TCanvas("cw","cw",0,0,400,400);
    cw->GetCanvas()->SetGrayscale();
    w->SetCanvas(cw);
    w->Draw();
@@ -228,7 +228,7 @@ example demonstrates how to define and use the color palette:
 
 Begin_Macro(source)
 {
-   TCanvas *c1  = new TCanvas("c1","c1",0,0,600,400);
+   auto c1 = new TCanvas("c1","c1",0,0,600,400);
    TF2 *f1 = new TF2("f1","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
    Int_t palette[5];
    palette[0] = 15;
@@ -248,7 +248,7 @@ The following example demonstrates how to proceed:
 
 Begin_Macro(source)
 {
-   TCanvas *c2  = new TCanvas("c2","c2",0,0,600,400);
+   auto c2 = new TCanvas("c2","c2",0,0,600,400);
    auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
    const Int_t Number = 3;
    Double_t Red[Number]    = { 1.00, 0.00, 0.00};
