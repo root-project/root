@@ -12,6 +12,8 @@
 ## Systematic errors for the MC scale factors are computed and the Vary function of RDataFrame is used for plotting.
 ## The analysis is translated to an RDataFrame workflow processing about 300 MB of simulated events and data.
 ##
+## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
+##
 ## \macro_image
 ## \macro_code
 ## \macro_output
@@ -168,7 +170,7 @@ class VaryHelper
     const std::vector<double> x{5.50e3, 5.52e3, 12.54e3, 17.43e3, 22.40e3, 27.48e3, 30e3, 10000e3};
     const std::vector<double> y{0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
     TGraph graph;
-    
+
 public:
     VaryHelper() : graph(x.size(), x.data(), y.data()) {}
     RVec<double> operator()(const double &w, const RVecF &pt, const RVec<unsigned int> &type)
