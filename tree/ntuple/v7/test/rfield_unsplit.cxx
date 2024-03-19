@@ -3,6 +3,7 @@
 #include <TDictAttributeMap.h>
 
 #include "Unsplit.hxx"
+#include "UnsplitXML.h"
 
 TEST(RField, UnsplitDirect)
 {
@@ -69,13 +70,27 @@ TEST(RField, ForceSplitMode)
    // No exception
    RFieldBase::Create("f", "CustomStreamer").Unwrap();
 
+   // "Force Split" attribute set by Linkdef
    cl = TClass::GetClass("CustomStreamerForceSplit");
    EXPECT_FALSE(cl->CanSplit());
    // No exception
    RFieldBase::Create("f", "CustomStreamerForceSplit");
 
+   // "Force Split" attribute set by selection XML
+   cl = TClass::GetClass("ForceSplitXML");
+   EXPECT_FALSE(cl->CanSplit());
+   // No exception
+   RFieldBase::Create("f", "ForceSplitXML");
+
+   // "Force Unsplit" attribute set by Linkdef
    cl = TClass::GetClass("CustomStreamerForceUnsplit");
    EXPECT_TRUE(cl->CanSplit());
    auto f = RFieldBase::Create("f", "CustomStreamerForceUnsplit").Unwrap();
+   EXPECT_TRUE(dynamic_cast<ROOT::Experimental::RUnsplitField *>(f.get()) != nullptr);
+
+   // "Force Unsplit" attribute set by selection XML
+   cl = TClass::GetClass("ForceUnsplitXML");
+   EXPECT_TRUE(cl->CanSplit());
+   f = RFieldBase::Create("f", "ForceUnsplitXML").Unwrap();
    EXPECT_TRUE(dynamic_cast<ROOT::Experimental::RUnsplitField *>(f.get()) != nullptr);
 }
