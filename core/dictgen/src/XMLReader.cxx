@@ -940,6 +940,20 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                     }
                   }
 
+                  // request RNTuple split mode
+                  if (tagKind == kClass && csr && "rntupleSplit" == iAttrName) {
+                     if (iAttrValue == "true") {
+                        csr->SetRequestedRNTupleSplitMode(1);
+                     } else if (iAttrValue == "false") {
+                        csr->SetRequestedRNTupleSplitMode(-1);
+                     } else {
+                        ROOT::TMetaUtils::Error(
+                           nullptr,
+                           "XML at line %s: class attribute 'rntupleSplit' must be 'true' or 'false' (it was %s)\n",
+                           lineNumCharp, iAttrValue.c_str());
+                     }
+                  }
+
                   // request no input operator
                   if (tagKind == kClass && csr && "noInputOperator" == iAttrName){
                     if (iAttrValue == "true") {

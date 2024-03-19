@@ -36,6 +36,25 @@ if(MSVC)
                                      ${CMAKE_CURRENT_BINARY_DIR}/libUnsplit.dll)
 endif()
 
+if(MSV)
+  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex.exe)
+  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${genreflex})
+else()
+  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex)
+  set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
+              "ROOTIGNOREPREFIX=1" ${genreflex})
+endif()
+
+configure_file(UnsplitXML.h . COPYONLY)
+configure_file(UnsplitSelection.xml . COPYONLY)
+add_custom_command(OUTPUT UnsplitXMLDict.cxx UnsplitXMLDict_rdict.pcm
+                   COMMAND ${command} UnsplitXML.h -o UnsplitXMLDict.cxx -s UnsplitSelection.xml
+                   DEPENDS rootcling ${genreflex} UnsplitXML.h UnsplitSelection.xml)
+add_library(UnsplitXML SHARED UnsplitXMLDict.cxx UnsplitXML.cxx)
+set_target_properties(UnsplitXML PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
+ROOT_ADD_INCLUDE_DIRECTORIES(UnsplitXML)
+target_link_libraries(UnsplitXML PUBLIC RIO)
+
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
@@ -66,7 +85,7 @@ ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_check rfield_check.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_class rfield_class.cxx LIBRARIES ROOTNTuple CustomStruct Physics)
 ROOT_ADD_GTEST(rfield_string rfield_string.cxx LIBRARIES ROOTNTuple CustomStruct)
-ROOT_ADD_GTEST(rfield_unsplit rfield_unsplit.cxx LIBRARIES ROOTNTuple Unsplit)
+ROOT_ADD_GTEST(rfield_unsplit rfield_unsplit.cxx LIBRARIES ROOTNTuple Unsplit UnsplitXML)
 ROOT_ADD_GTEST(rfield_variant rfield_variant.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
