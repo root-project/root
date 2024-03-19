@@ -439,7 +439,8 @@ if(MSVC AND NOT llvm13_broken_tests)
       v7/perfcomp.cxx
       dataframe/df002_dataModel.py
       dataframe/df016_vecOps.py
-      dataframe/df017_vecOpsHEP.py)
+      dataframe/df017_vecOpsHEP.py
+      dataframe/df035_RDFFromPandas.py)
 endif()
 
 set(all_veto hsimple.C
