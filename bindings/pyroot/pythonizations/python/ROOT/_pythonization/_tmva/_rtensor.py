@@ -10,8 +10,9 @@
 
 from .. import pythonization
 from .._rvec import _array_interface_dtype_map
-from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
+from libROOTPythonizations import GetEndianess
 import cppyy
+from cppyy import ll
 
 def get_array_interface(self):
     """
@@ -27,13 +28,13 @@ def get_array_interface(self):
     idx2 = cppname.find(",", idx1)
     dtype = cppname[idx1 + 8 : idx2]
     dtype_numpy = _array_interface_dtype_map[dtype]
-    dtype_size = GetSizeOfType(dtype)
+    dtype_size = cppyy.sizeof(dtype)
     endianess = GetEndianess()
     shape = self.GetShape()
     strides = self.GetStrides()
     # Numpy breaks for data pointer of 0 even though the array is empty.
     # We set the pointer to 1 but the value itself is arbitrary and never accessed.
-    pointer = GetDataPointer(self, cppname, "GetData")
+    pointer = ll.addressof(self.GetData())
     if pointer == 0:
         pointer == 1
     return {
