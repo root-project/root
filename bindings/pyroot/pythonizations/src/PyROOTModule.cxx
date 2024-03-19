@@ -53,9 +53,6 @@ static PyMethodDef gPyROOTMethods[] = {
    {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
     (char *)"Add pretty printing pythonization"},
    {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS, (char *)"Get endianess of the system"},
-   {(char *)"GetDataPointer", (PyCFunction)PyROOT::GetDataPointer, METH_VARARGS,
-    (char *)"Get pointer to data of a C++ object"},
-   {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS, (char *)"Get size of data-type"},
    {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O, (char *)"Get object with array interface as RVec"},
 #ifdef R__HAS_DATAFRAME
    {(char *)"AsRTensor", (PyCFunction)PyROOT::AsRTensor, METH_O, (char *)"Get object with array interface as RTensor"},
