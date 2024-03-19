@@ -33,6 +33,7 @@ computation times.
 #include <RooRealVar.h>
 #include <RooSetProxy.h>
 #include "RooFit/Detail/Buffers.h"
+#include <RooFit/Detail/EvaluateFuncs.h>
 
 #include "RooFitImplHelpers.h"
 
@@ -213,35 +214,19 @@ double RooNLLVarNew::computeBatchBinnedL(std::span<const double> preds, std::spa
 
    for (std::size_t i = 0; i < preds.size(); ++i) {
 
-      double eventWeight = weights[i];
-
       // Calculate log(Poisson(N|mu) for this bin
-      double N = eventWeight;
+      double N = weights[i];
       double mu = preds[i];
       if (!predsAreYields) {
          mu *= _binw[i];
       }
 
       if (mu <= 0 && N > 0) {
-
          // Catch error condition: data present where zero events are predicted
          logEvalError(Form("Observed %f events in bin %lu with zero event yield", N, (unsigned long)i));
-
-      } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
-
-         // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
-         // since log(mu)=0. No update of result is required since term=0.
-
       } else {
-
-         double term = 0.0;
-         if (_doBinOffset) {
-            term -= -mu + N + N * (std::log(mu) - std::log(N));
-         } else {
-            term -= -mu + N * std::log(mu) - TMath::LnGamma(N + 1);
-         }
-         result += term;
-         sumWeightKahanSum += eventWeight;
+         result += RooFit::Detail::EvaluateFuncs::nllEvaluate(mu, N, true, _doBinOffset);
+         sumWeightKahanSum += N;
       }
    }
 
@@ -364,6 +349,15 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
+   if (_binnedL && !_pdf->getAttribute("BinnedLikelihoodActiveYields")) {
+      std::stringstream errorMsg;
+      errorMsg << "RooNLLVarNew::translate(): binned likelihood optimization is only supported when raw pdf "
+                  "values can be interpreted as yields."
+               << " This is not the case for HistFactory models written with ROOT versions before 6.26.00";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+
    std::string weightSumName = RooFit::Detail::makeValidVarName(GetName()) + "WeightSum";
    std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
    ctx.addResult(this, resName);
@@ -386,25 +380,8 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(this);
-      std::string const &weight = ctx.getResult(_weightVar.arg());
-      std::string const &pdfName = ctx.getResult(_pdf.arg());
-
-      if (_binnedL) {
-         // Since we only support uniform binning, bin width is the same for all.
-         if (!_pdf->getAttribute("BinnedLikelihoodActiveYields")) {
-            std::stringstream errorMsg;
-            errorMsg << "RooNLLVarNew::translate(): binned likelihood optimization is only supported when raw pdf "
-                        "values can be interpreted as yields."
-                     << " This is not the case for HistFactory models written with ROOT versions before 6.26.00";
-            coutE(InputArguments) << errorMsg.str() << std::endl;
-            throw std::runtime_error(errorMsg.str());
-         }
-         std::string muName = pdfName;
-         ctx.addToCodeBody(this, resName + " +=  -1 * (-" + muName + " + " + weight + " * std::log(" + muName +
-                                    ") - TMath::LnGamma(" + weight + "+ 1));\n");
-      } else {
-         ctx.addToCodeBody(this, resName + " -= " + weight + " * std::log(" + pdfName + ");\n");
-      }
+      std::string term = ctx.buildCall("RooFit::Detail::EvaluateFuncs::nllEvaluate", _pdf, _weightVar, _binnedL, 0);
+      ctx.addToCodeBody(this, resName + " += " + term + ";");
    }
    if (_expectedEvents) {
       std::string expected = ctx.getResult(**_expectedEvents);
