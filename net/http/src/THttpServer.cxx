@@ -195,11 +195,12 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
    TRootSniffer *sniff = nullptr;
    if (basic_sniffer) {
-      sniff = new TRootSniffer("sniff");
+      sniff = new TRootSniffer();
       sniff->SetScanGlobalDir(kFALSE);
       sniff->CreateOwnTopFolder(); // use dedicated folder
    } else {
-      sniff = (TRootSniffer *)gROOT->ProcessLineSync("new TRootSnifferFull(\"sniff\");");
+      static const TClass *snifferClass = TClass::GetClass("TRootSnifferFull");
+      sniff = (TRootSniffer *)snifferClass->New();
    }
 
    SetSniffer(sniff);
