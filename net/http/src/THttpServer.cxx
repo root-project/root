@@ -819,7 +819,7 @@ std::string THttpServer::BuildWSEntryPage()
          if (arr.length() > 1)
             arr.append(", ");
 
-         arr.append(Form("{ name: \"%s\", title: \"%s\" }", ws->GetName(), ws->GetTitle()));
+         arr.append(TString::Format("{ name: \"%s\", title: \"%s\" }", ws->GetName(), ws->GetTitle()).Data());
       }
    }
 
@@ -1126,7 +1126,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       // only for binary data master version is important
       // it allows to detect if streamer info was modified
       const char *parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
-      arg->AddHeader(parname, Form("%u", (unsigned)fSniffer->GetStreamerInfoHash()));
+      arg->AddHeader(parname, TString::Format("%u", (unsigned)fSniffer->GetStreamerInfoHash()).Data());
    }
 
    // try to avoid caching on the browser
