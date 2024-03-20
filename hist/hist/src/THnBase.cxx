@@ -24,6 +24,8 @@
 #include "TMath.h"
 #include "TRandom.h"
 #include "TVirtualPad.h"
+#include "TCollection.h"
+#include "TObjString.h"
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
