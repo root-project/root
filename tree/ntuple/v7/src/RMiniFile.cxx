@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RError.hxx>
 
 #include "ROOT/RMiniFile.hxx"
 
@@ -27,6 +28,7 @@
 #include <xxhash.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -1192,11 +1194,13 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(
 #else
       retval = fseek(fFile, offset, SEEK_SET);
 #endif
-      R__ASSERT(retval == 0);
+      if (retval)
+         throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
       fFilePos = offset;
    }
    retval = fwrite(buffer, 1, nbytes, fFile);
-   R__ASSERT(retval == nbytes);
+   if (retval != nbytes)
+      throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
    fFilePos += nbytes;
 }
 
@@ -1238,7 +1242,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Write(
    R__ASSERT(fFile);
    fFile->Seek(offset);
    bool rv = fFile->WriteBuffer((char *)(buffer), nbytes);
-   R__ASSERT(!rv);
+   if (rv)
+      throw RException(R__FAIL("WriteBuffer failed."));
 }
 
 
