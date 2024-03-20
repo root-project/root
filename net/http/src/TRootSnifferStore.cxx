@@ -60,7 +60,7 @@ void TRootSnifferStoreXml::SetField(Int_t, const char *field, const char *value,
    } else {
       fBuf.Append(TString::Format(" %s=\"", field));
       const char *v = value;
-      while (*v != 0) {
+      while (*v) {
          switch (*v) {
          case '<': fBuf.Append("&lt;"); break;
          case '>': fBuf.Append("&gt;"); break;
@@ -124,13 +124,15 @@ void TRootSnifferStoreJson::CreateNode(Int_t lvl, const char *nodename)
 void TRootSnifferStoreJson::SetField(Int_t lvl, const char *field, const char *value, Bool_t with_quotes)
 {
    fBuf.Append(",");
-   if (!fCompact) fBuf.Append("\n");
+   if (!fCompact)
+      fBuf.Append("\n");
    fBuf.Append(TString::Format("%*s\"%s\"%s", fCompact ? 0 : lvl * 4 + 2, "", field, (fCompact ? ":" : " : ")));
    if (!with_quotes) {
       fBuf.Append(value);
    } else {
       fBuf.Append("\"");
-      for (const char *v = value; *v != 0; v++) switch (*v) {
+      for (const char *v = value; *v != 0; v++)
+         switch (*v) {
          case '\n': fBuf.Append("\\n"); break;
          case '\t': fBuf.Append("\\t"); break;
          case '\"': fBuf.Append("\\\""); break;

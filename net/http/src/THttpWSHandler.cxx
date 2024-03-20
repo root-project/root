@@ -279,7 +279,7 @@ Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
       // now we should wait until next polling requests is processed
       // or when connection is closed or handler is shutdown
 
-      Int_t sendcnt = fSendCnt, loopcnt(0);
+      Int_t sendcnt = fSendCnt, loopcnt = 0;
 
       while (!IsDisabled() && !engine->fDisabled) {
          gSystem->ProcessEvents();
