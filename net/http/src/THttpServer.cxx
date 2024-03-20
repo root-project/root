@@ -564,7 +564,7 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
 
    Int_t level = 0;
 
-   while (*fname != 0) {
+   while (*fname) {
 
       // find next slash or backslash
       const char *next = strpbrk(fname, "/\\");
