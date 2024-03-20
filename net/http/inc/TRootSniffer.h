@@ -182,7 +182,7 @@ protected:
    ProduceMulti(const std::string &path, const std::string &options, std::string &res, Bool_t asjson = kTRUE);
 
 public:
-   TRootSniffer(const char *name, const char *objpath = "Objects");
+   TRootSniffer(const char *name = "sniff", const char *objpath = "Objects");
    virtual ~TRootSniffer();
 
    /** When readonly on (default), sniffer is not allowed to change ROOT structures
