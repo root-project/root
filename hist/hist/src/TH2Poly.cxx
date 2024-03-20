@@ -1684,7 +1684,7 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 {
-   Error("Add","Not implement for TH2Poly");
+   Error("Add", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
@@ -1692,7 +1692,7 @@ Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 {
-   Error("Add","Not implement for TH2Poly");
+   Error("Add", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
@@ -1700,7 +1700,7 @@ Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Divide(TF1 *, Double_t)
 {
-   Error("Divide","Not implement for TH2Poly");
+   Error("Divide", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
@@ -1708,34 +1708,34 @@ Bool_t TH2Poly::Divide(TF1 *, Double_t)
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Multiply(TF1 *, Double_t)
 {
-   Error("Multiply","Not implement for TH2Poly");
+   Error("Multiply", "Not implemented for TH2Poly");
    return kFALSE;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 Double_t TH2Poly::ComputeIntegral(Bool_t )
 {
-   Error("ComputeIntegral","Not implement for TH2Poly");
+   Error("ComputeIntegral", "Not implemented for TH2Poly");
    return TMath::QuietNaN();
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 TH1 * TH2Poly::FFT(TH1*, Option_t * )
 {
-   Error("FFT","Not implement for TH2Poly");
+   Error("FFT", "Not implemented for TH2Poly");
    return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 TH1 * TH2Poly::GetAsymmetry(TH1* , Double_t,  Double_t)
 {
-   Error("GetAsymmetry","Not implement for TH2Poly");
+   Error("GetAsymmetry", "Not implemented for TH2Poly");
    return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 Double_t TH2Poly::Interpolate(Double_t, Double_t)
 {
-   Error("Interpolate","Not implement for TH2Poly");
+   Error("Interpolate", "Not implemented for TH2Poly");
    return TMath::QuietNaN();
 }

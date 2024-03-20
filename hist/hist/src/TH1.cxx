@@ -2524,14 +2524,15 @@ void TH1::ClearUnderflowAndOverflow()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Compute integral (cumulative sum of bins)
-///  The result stored in fIntegral is used by the GetRandom functions.
+///  Compute integral (normalized cumulative sum of bins) w/o under/overflows
+///  The result is stored in fIntegral and used by the GetRandom functions.
 ///  This function is automatically called by GetRandom when the fIntegral
 ///  array does not exist or when the number of entries in the histogram
 ///  has changed since the previous call to GetRandom.
-///  The resulting integral is normalized to 1
+///  The resulting integral is normalized to 1.
 ///  If the routine is called with the onlyPositive flag set an error will
 ///  be produced in case of negative bin content and a NaN value returned
+///  \return 1 if success, 0 if integral is zero, NAN if onlyPositive-test fails
 
 Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
 {
@@ -2566,7 +2567,8 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
 
    //   - Normalize integral to 1
    if (fIntegral[nbins] == 0 ) {
-      Error("ComputeIntegral", "Integral = zero"); return 0;
+      Error("ComputeIntegral", "Integral = 0, no hits in regular bins (non over/underflow).");
+      return 0;
    }
    for (Int_t bin=1; bin <= nbins; ++bin)  fIntegral[bin] /= fIntegral[nbins];
    fIntegral[nbins+1] = fEntries;

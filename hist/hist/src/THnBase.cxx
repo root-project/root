@@ -1313,7 +1313,13 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate the integral of the histogram
+///  Compute integral (normalized cumulative sum of bins) w/o under/overflows
+///  The result is stored in fIntegral and used by the GetRandom functions.
+///  This function is automatically called by GetRandom when the fIntegral
+///  array does not exist or when the number of entries in the histogram
+///  has changed since the previous call to GetRandom.
+///  The resulting integral is normalized to 1.
+///  \return 1 if success, 0 if integral is zero
 
 Double_t THnBase::ComputeIntegral()
 {
@@ -1349,7 +1355,7 @@ Double_t THnBase::ComputeIntegral()
          }
       }
 
-      // if outlayer, count it with zero weight
+      // if outlier, count it with zero weight
       if (!regularBin) v = 0.;
 
       fIntegral[i + 1] = fIntegral[i] + v;
@@ -1358,14 +1364,14 @@ Double_t THnBase::ComputeIntegral()
 
    // check sum of weights
    if (fIntegral[GetNbins()] == 0.) {
-      Error("ComputeIntegral", "No hits in regular bins (non over/underflow).");
+      Error("ComputeIntegral", "Integral = 0, no hits in regular bins (non over/underflow).");
       fIntegral.clear();
       return 0.;
    }
 
    // normalize the integral array
    for (Long64_t j = 0; j <= GetNbins(); ++j)
-      fIntegral[j] = fIntegral[j] / fIntegral[GetNbins()];
+      fIntegral[j] /= fIntegral[GetNbins()];
 
    // set status to valid
    fIntegralStatus = kValidInt;
