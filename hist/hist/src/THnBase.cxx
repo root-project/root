@@ -195,13 +195,20 @@ void THnBase::Init(const char* name, const char* title,
                    Int_t chunkSize /*= 1024 * 16*/)
 {
    SetNameTitle(name, title);
-
+   if (!axes) {
+      ::Error("THnBase::Init", "axes is null");
+      return;
+   }
    TIter iAxis(axes);
    const TAxis* axis = nullptr;
    Int_t pos = 0;
    Int_t *nbins = new Int_t[axes->GetEntriesFast()];
    while ((axis = (TAxis*)iAxis())) {
       TAxis* reqaxis = new TAxis(*axis);
+      if (!reqaxis) {
+         ::Error("THnBase::Init", "reqaxis %d is null", d);
+         continue;
+      }
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = axis->GetFirst();
          // The lowest egde of the underflow is meaningless.
@@ -243,6 +250,10 @@ void THnBase::Init(const char* name, const char* title,
 TH1* THnBase::CreateHist(const char* name, const char* title,
                          const TObjArray* axes,
                          Bool_t keepTargetAxis ) const {
+   if (!axes) {
+      ::Error("THnBase::CreateHist", "axes is null");
+      return nullptr;
+   }
    const int ndim = axes->GetSize();
 
    TH1* hist = nullptr;
@@ -261,6 +272,10 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
    TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
    for (Int_t d = 0; d < ndim; ++d) {
       TAxis* reqaxis = (TAxis*)(*axes)[d];
+      if (!reqaxis) {
+         ::Error("THnBase::CreateHist", "reqaxis %d is null", d);
+         continue;
+      }
       hax[d]->SetTitle(reqaxis->GetTitle());
       if (!keepTargetAxis && reqaxis->TestBit(TAxis::kAxisRange)) {
          // axis cannot extend to underflow/overflows (fix ROOT-8781)
@@ -282,6 +297,17 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
             // uniform bins:
             hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXmin(), reqaxis->GetXmax());
          }
+         // Copy the axis labels if needed.
+         THashList* labels = reqaxis->GetLabels();
+         if (labels) {
+            TIter iL(labels);
+            TObjString* lb;
+            Int_t i = 1;
+            while ((lb=(TObjString*)iL())) {
+               hax[d]->SetBinLabel(i,lb->String().Data());
+               i++;
+            }
+         }
       }
    }
 
@@ -296,6 +322,10 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
 THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const TH1* h, Bool_t sparse, Int_t chunkSize)
 {
+   if (!h) {
+      ::Error("THnBase::CreateHnAny", "h is null");
+      return nullptr;
+   }
    // Get the dimension of the TH1
    int ndim = h->GetDimension();
 
@@ -373,6 +403,10 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const THnBase* hn, Bool_t sparse,
                               Int_t chunkSize /*= 1024 * 16*/)
 {
+   if (!hn) {
+      ::Error("THnBase::CreateHnAny", "hn is null");
+      return nullptr;
+   }
    TClass* type = nullptr;
    if (hn->InheritsFrom(THnSparse::Class())) {
       if (sparse) type = hn->IsA();
@@ -431,6 +465,10 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 
 void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 {
+   if (!hist) {
+      ::Error("THnBase::Add", "hn is null");
+      return nullptr;
+   }
    Long64_t nbins = hist->GetNcells();
    int x[3] = {0,0,0};
    for (int i = 0; i < nbins; ++i) {
