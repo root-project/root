@@ -22,7 +22,7 @@ void ProcessData(unsigned connid, const std::string &arg)
 
    if (arg == "get_text") {
       // send arbitrary text message
-      window->Send(connid, Form("Message%d", counter));
+      window->Send(connid, TString::Format("Message%d", counter).Data());
    } else if (arg == "get_binary") {
       // send float array as binary
       float arr[10];
@@ -40,9 +40,18 @@ void server()
    // create window
    window = ROOT::RWebWindow::Create();
 
+   // Detect macro file location to specify full path to the HTML file
+   std::string fname = __FILE__;
+   auto pos = fname.find("server.cxx");
+   if (pos > 0)
+      fname.resize(pos);
+   else
+      fname.clear();
+   fname.append("client.html");
+
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix
-   window->SetDefaultPage("file:client.html");
+   window->SetDefaultPage("file:" + fname);
 
    // this is call-back, invoked when message received from client
    window->SetDataCallBack(ProcessData);
