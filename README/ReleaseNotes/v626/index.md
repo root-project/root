@@ -1060,8 +1060,19 @@ Published on November 28, 2023
 This release also addresses a security issue.
 More details will follow.
 
+## Release 6.26/16
+
+Published on March 20, 2024
+
+### Bugs and Issues fixed in this release
+
+The latest Apple operating sytstem supported is Monterey (macOS version 12).
+
+* [[#14458](https://github.com/root-project/root/issues/14458)] - Crash when doing Weighted Likelihood fit
+* [[#14508](https://github.com/root-project/root/issues/14508)] - Using LZMA compression with RNTupleWriter leads to memory corruption
+
 ## HEAD of the v6-26-00-patches branch
 
-These changes will be part of a future 6.26/16.
+These changes will be part of a future 6.26/18.
 
 - None so far.
