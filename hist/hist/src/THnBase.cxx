@@ -206,7 +206,7 @@ void THnBase::Init(const char* name, const char* title,
    while ((axis = (TAxis*)iAxis())) {
       TAxis* reqaxis = new TAxis(*axis);
       if (!reqaxis) {
-         ::Error("THnBase::Init", "reqaxis %d is null", d);
+         ::Error("THnBase::Init", "reqaxis is null");
          continue;
       }
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
