@@ -1,3 +1,4 @@
+/// \file
 /// \brief This file contains a specialised ROOT message handler to test for diagnostic in unit tests.
 ///
 /// \author Stephan Hageboeck <stephan.hageboeck@cern.ch>
