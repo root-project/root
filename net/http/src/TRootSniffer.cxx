@@ -1887,7 +1887,7 @@ const char *TRootSniffer::GetItemField(const char *fullname, const char *name)
 
 Bool_t TRootSniffer::RegisterCommand(const char *cmdname, const char *method, const char *icon)
 {
-   CreateItem(cmdname, Form("command %s", method));
+   CreateItem(cmdname, TString::Format("command %s", method).Data());
    SetItemField(cmdname, "_kind", "Command");
    if (icon) {
       if (strncmp(icon, "button;", 7) == 0) {
