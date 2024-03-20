@@ -476,6 +476,12 @@ RSA.KeyType:  1
 # Enable cross-protocol redirects
 TFile.CrossProtocolRedirects:  yes
 
+# Force the producing of files forward compatible with (unpatched) version
+# of ROOT older than v6.30 by recording the internal bits kIsOnHeap and
+# kNotDeleted; Older releases were not explicitly setting those bits to the
+# correct value but instead used verbatim the value stored in the file.
+# TFile.v630forwardCompatibility: no
+
 # List of S3 servers known to support multi-range HTTP GET requests.
 # This is the value sent back by the S3 server in the 'Server:' header
 # of the HTTP response.

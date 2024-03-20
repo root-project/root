@@ -814,6 +814,11 @@ void TFile::Init(Bool_t create)
       //*-* -------------attempt recovering the file
       Bool_t tryrecover = (gEnv->GetValue("TFile.Recover", 1) == 1) ? kTRUE : kFALSE;
 
+      //*-* -------------Check if we need to enable forward compatible with version
+      //*-* -------------prior to v6.30
+      if (gEnv->GetValue("TFile.v630forwardCompatibility", 0) == 1)
+         SetBit(k630forwardCompatibility);
+
       //*-* -------------Read keys of the top directory
       if (fSeekKeys > fBEGIN && fEND <= size) {
          //normal case. Recover only if file has no keys
