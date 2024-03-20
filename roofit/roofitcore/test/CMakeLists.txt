@@ -48,8 +48,8 @@ if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testRooRealIntegral testRooRealIntegral.cxx LIBRARIES RooFitCore)
 endif()
 if(clad)
-  if(NOT MSVC OR win_broken_tests)
-    # Disabled on Windows because it causes the following error:
+  if(NOT MSVC OR MSVC_VERSION GREATER_EQUAL 1938)
+    # Disabled on Windows with Visual Studio before v17.8 because it causes the following error:
     # Assertion failed: Ctx->isFileContext() && "We should have been looking
     # only at file context here already.", file
     # C:\build\workspace\root-pullrequests-build\root\interpreter\llvm-project\clang\lib\Sema\SemaLookup.cpp,
