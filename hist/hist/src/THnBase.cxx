@@ -468,8 +468,8 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 {
    if (!hist) {
-      ::Error("THnBase::Add", "hn is null");
-      return nullptr;
+      ::Error("THnBase::Add", "hist is null");
+      return;
    }
    Long64_t nbins = hist->GetNcells();
    int x[3] = {0,0,0};
