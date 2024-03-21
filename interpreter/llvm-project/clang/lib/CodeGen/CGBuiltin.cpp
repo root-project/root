@@ -3130,36 +3130,92 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
   case Builtin::BI__builtin_ctzs:
   case Builtin::BI__builtin_ctz:
   case Builtin::BI__builtin_ctzl:
+#if defined(MAC_SDK_WORKAROUND)
+  case Builtin::BI__builtin_ctzll:
+  case Builtin::BI__builtin_ctzg: {
+    bool HasFallback = BuiltinIDIfNoAsmLabel == Builtin::BI__builtin_ctzg &&
+                       E->getNumArgs() > 1;
+
+    Value *ArgValue =
+        HasFallback ? EmitScalarExpr(E->getArg(0))
+                    : EmitCheckedArgForBuiltin(E->getArg(0), BCK_CTZPassedZero);
+#else
   case Builtin::BI__builtin_ctzll: {
     Value *ArgValue = EmitCheckedArgForBuiltin(E->getArg(0), BCK_CTZPassedZero);
 
+#endif
     llvm::Type *ArgType = ArgValue->getType();
     Function *F = CGM.getIntrinsic(Intrinsic::cttz, ArgType);
 
     llvm::Type *ResultType = ConvertType(E->getType());
+#if defined(MAC_SDK_WORKAROUND)
+    Value *ZeroUndef =
+        Builder.getInt1(HasFallback || getTarget().isCLZForZeroUndef());
+#else
     Value *ZeroUndef = Builder.getInt1(getTarget().isCLZForZeroUndef());
+#endif
     Value *Result = Builder.CreateCall(F, {ArgValue, ZeroUndef});
     if (Result->getType() != ResultType)
       Result = Builder.CreateIntCast(Result, ResultType, /*isSigned*/true,
                                      "cast");
+#if defined(MAC_SDK_WORKAROUND)
+    if (!HasFallback)
+      return RValue::get(Result);
+
+    Value *Zero = Constant::getNullValue(ArgType);
+    Value *IsZero = Builder.CreateICmpEQ(ArgValue, Zero, "iszero");
+    Value *FallbackValue = EmitScalarExpr(E->getArg(1));
+    Value *ResultOrFallback =
+        Builder.CreateSelect(IsZero, FallbackValue, Result, "ctzg");
+    return RValue::get(ResultOrFallback);
+#else
     return RValue::get(Result);
+#endif
   }
   case Builtin::BI__builtin_clzs:
   case Builtin::BI__builtin_clz:
   case Builtin::BI__builtin_clzl:
+#if defined(MAC_SDK_WORKAROUND)
+  case Builtin::BI__builtin_clzll:
+  case Builtin::BI__builtin_clzg: {
+    bool HasFallback = BuiltinIDIfNoAsmLabel == Builtin::BI__builtin_clzg &&
+                       E->getNumArgs() > 1;
+
+    Value *ArgValue =
+        HasFallback ? EmitScalarExpr(E->getArg(0))
+                    : EmitCheckedArgForBuiltin(E->getArg(0), BCK_CLZPassedZero);
+#else
   case Builtin::BI__builtin_clzll: {
     Value *ArgValue = EmitCheckedArgForBuiltin(E->getArg(0), BCK_CLZPassedZero);
 
+#endif
     llvm::Type *ArgType = ArgValue->getType();
     Function *F = CGM.getIntrinsic(Intrinsic::ctlz, ArgType);
 
     llvm::Type *ResultType = ConvertType(E->getType());
+#if defined(MAC_SDK_WORKAROUND)
+    Value *ZeroUndef =
+        Builder.getInt1(HasFallback || getTarget().isCLZForZeroUndef());
+#else
     Value *ZeroUndef = Builder.getInt1(getTarget().isCLZForZeroUndef());
+#endif
     Value *Result = Builder.CreateCall(F, {ArgValue, ZeroUndef});
     if (Result->getType() != ResultType)
       Result = Builder.CreateIntCast(Result, ResultType, /*isSigned*/true,
                                      "cast");
+#if defined(MAC_SDK_WORKAROUND)
+    if (!HasFallback)
+      return RValue::get(Result);
+
+    Value *Zero = Constant::getNullValue(ArgType);
+    Value *IsZero = Builder.CreateICmpEQ(ArgValue, Zero, "iszero");
+    Value *FallbackValue = EmitScalarExpr(E->getArg(1));
+    Value *ResultOrFallback =
+        Builder.CreateSelect(IsZero, FallbackValue, Result, "clzg");
+    return RValue::get(ResultOrFallback);
+#else
     return RValue::get(Result);
+#endif
   }
   case Builtin::BI__builtin_ffs:
   case Builtin::BI__builtin_ffsl:
