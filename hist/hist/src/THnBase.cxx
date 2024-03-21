@@ -304,7 +304,7 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
          if (labels) {
             TIter iL(labels);
             Int_t i = 1;
-            for (auto lb = static_cast<TObjString *>(iL())) {
+            while (auto lb = static_cast<TObjString *>(iL())) {
                hax[d]->SetBinLabel(i,lb->String().Data());
                i++;
             }
