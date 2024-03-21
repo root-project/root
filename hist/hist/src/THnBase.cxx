@@ -198,7 +198,7 @@ void THnBase::Init(const char* name, const char* title,
 {
    SetNameTitle(name, title);
    if (!axes) {
-      ::Error("THnBase::Init", "axes is null");
+      ::Error("THnBase::Init", "Input parameter `axes` is null, no axes were provided at initialization");
       return;
    }
    TIter iAxis(axes);
@@ -206,11 +206,11 @@ void THnBase::Init(const char* name, const char* title,
    Int_t pos = 0;
    Int_t *nbins = new Int_t[axes->GetEntriesFast()];
    while ((axis = (TAxis*)iAxis())) {
-      TAxis* reqaxis = new TAxis(*axis);
-      if (!reqaxis) {
-         ::Error("THnBase::Init", "reqaxis is null");
+      if (!axis) {
+         ::Error("THnBase::Init", "Input parameter `axes` has a null element in the array, cannot create new axis");
          continue;
       }
+      TAxis* reqaxis = new TAxis(*axis);
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = axis->GetFirst();
          // The lowest egde of the underflow is meaningless.
@@ -253,7 +253,7 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
                          const TObjArray* axes,
                          Bool_t keepTargetAxis ) const {
    if (!axes) {
-      ::Error("THnBase::CreateHist", "axes is null");
+      ::Error("THnBase::CreateHist", "Input parameter `axes` is null, no axes were provided at creation");
       return nullptr;
    }
    const int ndim = axes->GetSize();
@@ -275,7 +275,7 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
    for (Int_t d = 0; d < ndim; ++d) {
       TAxis* reqaxis = (TAxis*)(*axes)[d];
       if (!reqaxis) {
-         ::Error("THnBase::CreateHist", "reqaxis %d is null", d);
+         ::Error("THnBase::CreateHist", "Input parameter `axes` has a null element in the position %d of the array, cannot create new axis", d);
          continue;
       }
       hax[d]->SetTitle(reqaxis->GetTitle());
@@ -303,9 +303,8 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
          THashList* labels = reqaxis->GetLabels();
          if (labels) {
             TIter iL(labels);
-            TObjString* lb;
             Int_t i = 1;
-            while ((lb=(TObjString*)iL())) {
+            for (auto lb = static_cast<TObjString *>(iL())) {
                hax[d]->SetBinLabel(i,lb->String().Data());
                i++;
             }
@@ -325,7 +324,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const TH1* h, Bool_t sparse, Int_t chunkSize)
 {
    if (!h) {
-      ::Error("THnBase::CreateHnAny", "h is null");
+      ::Error("THnBase::CreateHnAny", "Input parameter `h` is null, no histogram was provided upon creation");
       return nullptr;
    }
    // Get the dimension of the TH1
@@ -406,7 +405,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               Int_t chunkSize /*= 1024 * 16*/)
 {
    if (!hn) {
-      ::Error("THnBase::CreateHnAny", "hn is null");
+      ::Error("THnBase::CreateHnAny", "Input parameter `hn` is null, no histogram was provided upon creation");
       return nullptr;
    }
    TClass* type = nullptr;
@@ -468,7 +467,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 {
    if (!hist) {
-      ::Error("THnBase::Add", "hist is null");
+      ::Error("THnBase::Add", "Input parameter `hist` is null, no histogram was provided");
       return;
    }
    Long64_t nbins = hist->GetNcells();
