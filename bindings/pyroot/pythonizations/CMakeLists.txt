@@ -15,8 +15,6 @@ if(dataframe)
         ROOT/_pythonization/_rdfdescription.py
         ROOT/_pythonization/_rdf_conversion_maps.py
         ROOT/_pythonization/_rdf_pyz.py)
-    list(APPEND PYROOT_EXTRA_HEADERS
-        inc/RNumpyDS.hxx)
 endif()
 
 if(roofit)
