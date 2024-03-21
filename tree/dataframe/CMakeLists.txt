@@ -39,6 +39,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
     ROOT/RCsvDS.hxx
+    ROOT/RVecDS.hxx
     ROOT/RDataFrame.hxx
     ROOT/RDataSource.hxx
     ROOT/RDFHelpers.hxx

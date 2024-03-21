@@ -51,7 +51,6 @@ class DataFrameFromNumpy(unittest.TestCase):
 
         df = ROOT.RDF.FromNumpy(data)
         gc.collect()
-        self.assertTrue(hasattr(df, "__data__"))
         self.assertEqual(sys.getrefcount(df), 2)
 
         self.assertEqual(sys.getrefcount(data["x"]), 3)
