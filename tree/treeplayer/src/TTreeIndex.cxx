@@ -315,8 +315,11 @@ void TTreeIndex::Append(const TVirtualIndex *add, bool delaySort )
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// conversion from old 64bit indexes
-/// return true if index was converted
+/// Conversion from old 64bit indexes.
+/// Before, major and minor were stored as a single 64-bit register, with
+/// bits [0,30] for minor and bits [31,64] for major.
+/// Now, both minor and major have their own 64-bit register.
+/// \return true if index was converted
 
 bool TTreeIndex::ConvertOldToNew()
 {
