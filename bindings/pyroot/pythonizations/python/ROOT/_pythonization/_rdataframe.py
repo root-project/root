@@ -425,6 +425,27 @@ def pythonize_rdataframe(klass):
     klass.Define = _PyDefine
 
 
+def _make_name_rvec_pair(key, value):
+    import ROOT
+
+    # Get name of key
+    if not isinstance(key, str):
+        raise RuntimeError("Object not convertible: Dictionary key is not convertible to a string.")
+
+    # Convert value to RVec and attach to dictionary
+    pyvec = ROOT.VecOps.AsRVec(value)
+    if not pyvec:
+        raise RuntimeError("Object not convertible: Dictionary entry " + key + " is not convertible with AsRVec.")
+
+    # Add pairs of column name and associated RVec to signature
+    return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
+
+
+# For refernces to keep alive the NumPy arrays that are read by
+# MakeNumpyDataFrame.
+_numpy_data = {}
+
+
 def _MakeNumpyDataFrame(np_dict):
     """
     Make an RDataFrame from a dictionary of numpy arrays
@@ -436,8 +457,6 @@ def _MakeNumpyDataFrame(np_dict):
     using the keys as column names and the numpy arrays as data.
     """
     import ROOT
-    import cppyy
-    import platform
 
     if not isinstance(np_dict, dict):
         raise RuntimeError("Object not convertible: Python object is not a dictionary.")
@@ -445,47 +464,27 @@ def _MakeNumpyDataFrame(np_dict):
     if len(np_dict) == 0:
         raise RuntimeError("Object not convertible: Dictionary is empty.")
 
-    address_prefix = "0x" if platform.system() == "Windows" else ""
+    args = (_make_name_rvec_pair(key, value) for key, value in np_dict.items())
 
-    pyvecs = dict()
+    # How we keep the NumPy arrays around as long as the RDataSource is alive:
+    #
+    #  1. Cache a container with references to the NumPy arrays in a global
+    #     dictionary. Note that we use a copy of the original dict as the
+    #     container, because otherwise the caller of _MakeNumpyDataFrame can
+    #     invalidate our cache by mutating the np_dict after the call.
+    #
+    # 2. Together with the array data, store a deleter function to delete the
+    #    cache element in the cache itself.
+    #
+    # 3. The C++ side gets a reference to the deleter function via
+    #    std::function. Note that the C++ side can only get a non-owning
+    #    reference to the Python function, which is the reason why we have to
+    #    keep the deleter alive in the cache itself.
+    #
+    # 4. The RDataSource calls the deleter in its destructor.
 
-    # Add PyObject (dictionary) holding RVecs to data source
-    code = "ROOT::Internal::RDF::MakeNumpyDataFrame("
-    code += f"reinterpret_cast<PyObject*>({address_prefix}{id(pyvecs)}), "
-
-    def write_vec_code(key, value):
-        # Get name of key
-        if not isinstance(key, str):
-            raise RuntimeError("Object not convertible: Dictionary key is not convertible to a string.")
-
-        # Convert value to RVec and attach to dictionary
-        pyvec = ROOT.VecOps.AsRVec(value)
-        if not pyvec:
-            raise RuntimeError("Object not convertible: Dictionary entry " + key + " is not convertible with AsRVec.")
-
-        pyvecs[key] = pyvec
-
-        # Add pairs of column name and associated RVec to signature
-        vectype = type(pyvec).__cpp_name__
-        vecaddress = cppyy.addressof(pyvec)
-        code = "std::pair<std::string, " + vectype + '*>("' + key
-        code += '", reinterpret_cast<' + vectype + f"*>({address_prefix}{vecaddress}))"
-
-        return code
-
-    # Iterate over dictionary, convert numpy arrays to RVecs and put together interpreter code
-    code += ", ".join([write_vec_code(key, value) for key, value in np_dict.items()]) + ")"
-
-    # Create RDataFrame and build Python proxy
-    err = ROOT.gInterpreter.Declare('#include "ROOT/RNumpyDS.hxx"')
-    if not err:
-        raise RuntimeError('Failed to find "ROOT/RNumpyDS.hxx".')
-
-    address = ROOT.gInterpreter.Calc(code)
-    rdf = cppyy.bind_object(address, "ROOT::RDataFrame")
-    ROOT.SetOwnership(rdf, True)
-
-    # Bind pyobject holding adopted memory to the RVec
-    rdf.__data__ = pyvecs
-
-    return rdf
+    np_dict_copy = dict(**np_dict)
+    key = id(np_dict_copy)
+    _numpy_data[key] = (lambda: _numpy_data.pop(key), np_dict_copy)
+    deleter = ROOT.std.function["void()"](_numpy_data[key][0])
+    return ROOT.Internal.RDF.MakeRVecDataFrame(deleter, *args)
