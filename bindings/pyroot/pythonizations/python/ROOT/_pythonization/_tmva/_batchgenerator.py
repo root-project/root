@@ -124,7 +124,7 @@ class BaseGenerator:
         validation_split: float = 0.0,
         max_chunks: int = 0,
         shuffle: bool = True,
-        #drop_remainder: bool = True,
+        drop_remainder: bool = True,
     ):
         """Wrapper around the Cpp RBatchGenerator
 
@@ -601,7 +601,7 @@ def CreateNumPyGenerators(
     validation_split: float = 0.0,
     max_chunks: int = 0,
     shuffle: bool = True,
-    #drop_remainder = True,
+    drop_remainder = True,
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two batch generators based on the given ROOT file and tree.
@@ -661,7 +661,7 @@ def CreateNumPyGenerators(
         validation_split,
         max_chunks,
         shuffle,
-        #drop_remainder,
+        drop_remainder,
     )
 
     train_generator = TrainRBatchGenerator(
@@ -688,7 +688,7 @@ def CreateTFDatasets(
     validation_split: float = 0.0,
     max_chunks: int = 0,
     shuffle: bool = True,
-    #drop_remainder = True,
+    drop_remainder = True,
 ) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree
@@ -750,7 +750,7 @@ def CreateTFDatasets(
         validation_split,
         max_chunks,
         shuffle,
-        #drop_remainder,
+        drop_remainder,
     )
 
     train_generator = TrainRBatchGenerator(
@@ -820,7 +820,7 @@ def CreatePyTorchGenerators(
     validation_split: float = 0.0,
     max_chunks: int = 0,
     shuffle: bool = True,
-    #drop_remainder = True,
+    drop_remainder = True,
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree
@@ -880,7 +880,7 @@ def CreatePyTorchGenerators(
         validation_split,
         max_chunks,
         shuffle,
-        #drop_remainder,
+        drop_remainder,
     )
 
     train_generator = TrainRBatchGenerator(
