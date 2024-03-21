@@ -1998,8 +1998,10 @@ Int_t TColor::GetColorByName(const char *colorname)
 
    for (Int_t i = 0; i<ncolors; i++) {
       color = (TColor*)colors->At(i);
-      colname = color->GetName();
-      if (!colname.CompareTo(colorname)) return i;
+      if (color) {
+         colname = color->GetName();
+         if (!colname.CompareTo(colorname)) return i;
+      }
    }
 
    return -1;
