@@ -444,6 +444,7 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor)
 Long64_t TTreeIndex::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 {
    if (fN == 0) return -1;
+   
    Long64_t pos = FindValues(major, minor);
    if( pos < fN && fIndexValues[pos] == major && fIndexValuesMinor[pos] == minor )
       return fIndex[pos];
