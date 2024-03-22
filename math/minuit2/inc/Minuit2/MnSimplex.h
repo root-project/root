@@ -36,20 +36,20 @@ class MnSimplex : public MnApplication {
 
 public:
    /// construct from FCNBase + std::vector for parameters and errors
-   MnSimplex(const FCNBase &fcn, const std::vector<double> &par, const std::vector<double> &err, unsigned int stra = 1)
+   MnSimplex(const FCNBase &fcn, std::span<const double> par, std::span<const double> err, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
    {
    }
 
    /// construct from FCNBase + std::vector for parameters and covariance
-   MnSimplex(const FCNBase &fcn, const std::vector<double> &par, unsigned int nrow, const std::vector<double> &cov,
+   MnSimplex(const FCNBase &fcn, std::span<const double> par, unsigned int nrow, std::span<const double> cov,
              unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
    {
    }
 
    /// construct from FCNBase + std::vector for parameters and MnUserCovariance
-   MnSimplex(const FCNBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov, unsigned int stra = 1)
+   MnSimplex(const FCNBase &fcn, std::span<const double> par, const MnUserCovariance &cov, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
    {
    }
