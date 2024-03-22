@@ -13,7 +13,6 @@
 
 #include "TMVA/RTensor.hxx"
 #include "TMVA/Tools.h"
-#include "TRandom3.h"
 
 namespace TMVA {
 namespace Experimental {
@@ -26,7 +25,6 @@ private:
    std::size_t fMaxBatches;
 
    bool fIsActive = false;
-   TMVA::RandomGenerator<TRandom3> fRng = TMVA::RandomGenerator<TRandom3>(0);
 
    std::mutex fBatchLock;
    std::condition_variable fBatchCondition;
@@ -202,13 +200,11 @@ public:
 
    /// \brief Create training batches from the given chunk of data based on the given event indices
    /// Batches are added to the training queue of batches
-   /// The eventIndices can be shuffled to ensure random order for each epoch
    /// \param chunkTensor
    /// \param eventIndices
-   /// \param shuffle
    std::size_t CreateTrainingBatches(const TMVA::Experimental::RTensor<float> &chunkTensor,
                               TMVA::Experimental::RTensor<float> &remainderTensor, std::size_t remainderTensorRow,
-                              std::vector<std::size_t> eventIndices, const bool shuffle = true)
+                              std::vector<std::size_t> eventIndices)
    {
       // Wait until less than a full chunk of batches are in the queue before loading splitting the next chunk into
       // batches
@@ -218,9 +214,6 @@ public:
          if (!fIsActive)
             return 0;
       }
-
-      if (shuffle)
-         std::shuffle(eventIndices.begin(), eventIndices.end(), fRng); // Shuffle the order of idx
 
       std::vector<std::unique_ptr<TMVA::Experimental::RTensor<float>>> batches;
 
