@@ -51,7 +51,6 @@ private:
    bool fUseWholeFile = true;
 
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
-   std::unique_ptr<TMVA::Experimental::RTensor<float>> fCurrentBatch;//delete this one as it is not used
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fTrainingRemainder;
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fValidationRemainder;
 
