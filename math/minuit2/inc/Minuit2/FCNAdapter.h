@@ -12,6 +12,8 @@
 
 #include "Minuit2/FCNBase.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -37,7 +39,7 @@ public:
 
    ~FCNAdapter() override {}
 
-   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
+   double operator()(std::span<const double> v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
    double Up() const override { return fUp; }
 

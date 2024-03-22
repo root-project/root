@@ -16,6 +16,8 @@
 #include "Math/IFunction.h"
 #include "Math/MinimizerOptions.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <string>
 #include <limits>
 #include <cmath>
@@ -159,7 +161,7 @@ public:
    virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func) = 0;
 
    /// set the function implementing Hessian computation (re-implemented by Minimizer using it)
-   virtual void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> ) {}
+   virtual void SetHessianFunction(std::function<bool(std::span<const double>, double *)> ) {}
 
    /// add variables  . Return number of variables successfully added
    template<class VariableIterator>

@@ -82,7 +82,7 @@ public:
 
    **/
 
-   virtual void EvaluateAll(const std::vector<double> &par) = 0;
+   virtual void EvaluateAll(std::span<const double> par) = 0;
 
    /**
       Return cached Value of objective function estimated previously using the  FumiliFCNBase::EvaluateAll method
@@ -96,7 +96,7 @@ public:
    **/
 
    virtual const std::vector<double> &Gradient() const { return fGradient; }
-   std::vector<double> Gradient(const std::vector<double> &) const override { return fGradient;}
+   std::vector<double> Gradient(std::span<const double>) const override { return fGradient;}
 
    /**
       Return Value of the i-th j-th element of the Hessian matrix estimated previously using the
@@ -105,7 +105,7 @@ public:
       @param col col Index of the matrix
    **/
 
-   std::vector<double> Hessian(const std::vector<double> &) const override { return fHessian;}
+   std::vector<double> Hessian(std::span<const double>) const override { return fHessian;}
    virtual double Hessian(unsigned int row, unsigned int col) const
    {
       assert(row < fGradient.size() && col < fGradient.size());

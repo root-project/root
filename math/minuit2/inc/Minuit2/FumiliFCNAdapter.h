@@ -50,13 +50,13 @@ public:
 
    ~FumiliFCNAdapter() override {}
 
-   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
+   double operator()(std::span<const double> v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
    double Up() const override { return fUp; }
 
    void SetErrorDef(double up) override { fUp = up; }
 
-   // virtual std::vector<double> Gradient(const std::vector<double>&) const;
+   // virtual std::vector<double> Gradient(std::span<const double> ) const;
 
    // forward interface
    // virtual double operator()(int npar, double* params,int iflag = 4) const;
@@ -64,7 +64,7 @@ public:
    /**
        evaluate gradient hessian and function value needed by fumili
      */
-   void EvaluateAll(const std::vector<double> &v) override;
+   void EvaluateAll(std::span<const double> v) override;
 
 private:
    // data member
@@ -74,7 +74,7 @@ private:
 };
 
 template <class Function>
-void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
+void FumiliFCNAdapter<Function>::EvaluateAll(std::span<const double> v)
 {
    MnPrint print("FumiliFCNAdapter");
 

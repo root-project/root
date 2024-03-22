@@ -39,6 +39,16 @@ endfunction()
 # This file adds copy_standalone
 include(copy_standalone.cmake)
 
+# We need the std::span backport. This can be removed once the minimum C++
+# standard gets raised to C++20, which should happen if also the minimum C++
+# standard of ROOT gets raised and the std::span backport in RSpan is removed.
+include_directories(../../core/foundation/inc/)
+set(SPAN_HEADERS RSpan.hxx span.hxx)
+copy_standalone(SOURCE ../../core/foundation/inc/ROOT DESTINATION . OUTPUT SPAN_HEADERS
+                FILES ${SPAN_HEADERS})
+install(FILES ${SPAN_HEADERS} DESTINATION include/ROOT)
+
+
 # Copy these files in if needed
 copy_standalone(SOURCE ../../core/foundation/inc/ROOT DESTINATION . OUTPUT VERSION_FILE
                 FILES RVersion.hxx)

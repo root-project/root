@@ -11,6 +11,9 @@
 #define ROOT_Minuit2_MnUserCovariance
 
 #include "Minuit2/MnConfig.h"
+
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 #include <cassert>
 
@@ -29,7 +32,7 @@ public:
    MnUserCovariance() : fData(std::vector<double>()), fNRow(0) {}
 
    // safe constructor using std::vector
-   MnUserCovariance(const std::vector<double> &data, unsigned int nrow) : fData(data), fNRow(nrow)
+   MnUserCovariance(std::span<const double> data, unsigned int nrow) : fData(data.begin(), data.end()), fNRow(nrow)
    {
       assert(data.size() == nrow * (nrow + 1) / 2);
    }

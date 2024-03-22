@@ -726,7 +726,7 @@ bool Fitter::DoInitMinimizer() {
          const ROOT::Math::FitMethodGradFunction *fitGradFcn =
             dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(gradfcn);
          if (fitGradFcn && fitGradFcn->HasHessian()) {
-            auto hessFcn = [=](const std::vector<double> &x, double *hess) {
+            auto hessFcn = [=](std::span<const double> x, double *hess) {
                unsigned int ndim = x.size();
                unsigned int nh = ndim * (ndim + 1) / 2;
                std::vector<double> h(nh);

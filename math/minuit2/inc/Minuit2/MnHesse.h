@@ -13,6 +13,8 @@
 #include "Minuit2/MnConfig.h"
 #include "Minuit2/MnStrategy.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -55,14 +57,14 @@ public:
    /// low-level API
    ///
    /// FCN + parameters + errors
-   MnUserParameterState operator()(const FCNBase &, const std::vector<double> &, const std::vector<double> &,
+   MnUserParameterState operator()(const FCNBase &, std::span<const double>, std::span<const double>,
                                    unsigned int maxcalls = 0) const;
    /// FCN + parameters + covariance
-   MnUserParameterState operator()(const FCNBase &, const std::vector<double> &, unsigned int nrow,
-                                   const std::vector<double> &, unsigned int maxcalls = 0) const;
+   MnUserParameterState operator()(const FCNBase &, std::span<const double>, unsigned int nrow,
+                                   std::span<const double>, unsigned int maxcalls = 0) const;
    /// FCN + parameters + MnUserCovariance
    MnUserParameterState
-   operator()(const FCNBase &, const std::vector<double> &, const MnUserCovariance &, unsigned int maxcalls = 0) const;
+   operator()(const FCNBase &, std::span<const double>, const MnUserCovariance &, unsigned int maxcalls = 0) const;
    ///
    /// high-level API
    ///

@@ -84,7 +84,7 @@ public:
 
    */
 
-   virtual std::vector<double> Elements(const std::vector<double> &par) const = 0;
+   virtual std::vector<double> Elements(std::span<const double> par) const = 0;
 
    /**
 
@@ -126,7 +126,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::span<const double> par) const override
    {
 
       double sumoflogs = 0.0;
