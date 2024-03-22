@@ -33,6 +33,18 @@ class RRawFile;
 namespace RDF {
 
 class RCsvDS final : public ROOT::RDF::RDataSource {
+public:
+   /// Options that control how the CSV file is parsed
+   struct ROptions {
+      bool fReadHeaders = true;          ///< The first line defines the column name
+      char fDelimiter = ',';             ///< Column delimiter character
+      bool fTrimLines = true;            ///< Leading and trailing whitespaces should be removed
+      bool fCommentCharacter = '\0';     ///< Lines starting with this character are ignored
+      std::int64_t fLinesChunkSize = -1; ///< Number of lines to read, -1 to read all
+      /// Specify custom column types, accepts an unordered map with keys being column name, values being type alias
+      /// ('O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string)
+      std::unordered_map<std::string, char> fColTypes;
+   };
 
 private:
    // Possible values are D, O, L, T. This is possible only because we treat double, bool, Long64_t and string
@@ -42,12 +54,10 @@ private:
    // Regular expressions for type inference
    static const TRegexp fgIntRegex, fgDoubleRegex1, fgDoubleRegex2, fgDoubleRegex3, fgTrueRegex, fgFalseRegex;
 
+   ROptions fOptions;
    std::uint64_t fDataPos = 0;
-   bool fReadHeaders = false;
    unsigned int fNSlots = 0U;
    std::unique_ptr<ROOT::Internal::RRawFile> fCsvFile;
-   const char fDelimiter;
-   const Long64_t fLinesChunkSize;
    ULong64_t fEntryRangesRequested = 0ULL;
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
    std::vector<std::string> fHeaders; // the column names

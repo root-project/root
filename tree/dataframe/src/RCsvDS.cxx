@@ -83,6 +83,7 @@ Empty cells and explicit `nan`-s inside columns of type Long64_t/bool are stored
 #include <ROOT/RRawFile.hxx>
 #include <TError.h>
 
+#include <cinttypes>
 #include <algorithm>
 #include <memory>
 #include <sstream>
@@ -205,7 +206,7 @@ void RCsvDS::ValidateColTypes(std::vector<std::string> &columns) const
    for (const auto &col : fColTypes) {
       if (!HasColumn(col.first)) {
          std::string msg = "There is no column with name \"" + col.first + "\".";
-         if (!fReadHeaders) {
+         if (!fOptions.fReadHeaders) {
             msg += "\nSince the input csv file does not contain headers, valid column names";
             msg += " are [\"Col0\", ..., \"Col" + std::to_string(columns.size() - 1) + "\"].";
          }
@@ -291,7 +292,7 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
    const size_t prevPos = i; // used to check if cell is empty
 
    for (; i < line.size(); ++i) {
-      if (line[i] == fDelimiter && !quoted) {
+      if (line[i] == fOptions.fDelimiter && !quoted) {
          break;
       } else if (line[i] == '"') {
          // Keep just one quote for escaped quotes, none for the normal quotes
@@ -312,7 +313,7 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 
    // if the line ends with the delimiter, we need to append the default column value
    // for the _next_, last column that won't be parsed (because we are out of characters)
-   if (i == line.size() - 1 && line[i] == fDelimiter)
+   if (i == line.size() - 1 && line[i] == fOptions.fDelimiter)
       columns.emplace_back("nan");
 
    return i;
@@ -330,13 +331,16 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 ///                     Long64_t, 'T' for std::string)
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
                std::unordered_map<std::string, char> &&colTypes)
-   : fReadHeaders(readHeaders), fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fDelimiter(delimiter),
-     fLinesChunkSize(linesChunkSize), fColTypes(std::move(colTypes))
+   : fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fColTypes(std::move(colTypes))
 {
+   fOptions.fReadHeaders = readHeaders;
+   fOptions.fDelimiter = delimiter;
+   fOptions.fLinesChunkSize = linesChunkSize;
+
    std::string line;
 
    // Read the headers if present
-   if (fReadHeaders) {
+   if (fOptions.fReadHeaders) {
       if (fCsvFile->Readln(line)) {
          FillHeaders(line);
       } else {
@@ -355,7 +359,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       auto columns = ParseColumns(line);
 
       // Generate headers if not present
-      if (!fReadHeaders) {
+      if (!fOptions.fReadHeaders) {
          GenerateHeaders(columns.size());
       }
 
@@ -426,11 +430,11 @@ const std::vector<std::string> &RCsvDS::GetColumnNames() const
 std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
 {
    // Read records and store them in memory
-   auto linesToRead = fLinesChunkSize;
+   auto linesToRead = fOptions.fLinesChunkSize;
    FreeRecords();
 
    std::string line;
-   while ((-1LL == fLinesChunkSize || 0 != linesToRead) && fCsvFile->Readln(line)) {
+   while ((-1LL == fOptions.fLinesChunkSize || 0 != linesToRead) && fCsvFile->Readln(line)) {
       if (line.empty()) continue; // skip empty lines
       fRecords.emplace_back();
       FillRecord(line, fRecords.back());
@@ -450,10 +454,11 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
    }
 
    if (gDebug > 0) {
-      if (fLinesChunkSize == -1LL) {
+      if (fOptions.fLinesChunkSize == -1LL) {
          Info("GetEntryRanges", "Attempted to read entire CSV file into memory, %zu lines read", fRecords.size());
       } else {
-         Info("GetEntryRanges", "Attempted to read chunk of %lld lines of CSV file into memory, %zu lines read", fLinesChunkSize, fRecords.size());
+         Info("GetEntryRanges", "Attempted to read chunk of %" PRId64 " lines of CSV file into memory, %zu lines read",
+              fOptions.fLinesChunkSize, fRecords.size());
       }
    }
 
@@ -505,7 +510,7 @@ bool RCsvDS::HasColumn(std::string_view colName) const
 bool RCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    // Here we need to normalise the entry to the number of lines we already processed.
-   const auto offset = (fEntryRangesRequested - 1) * fLinesChunkSize;
+   const auto offset = (fEntryRangesRequested - 1) * fOptions.fLinesChunkSize;
    const auto recordPos = entry - offset;
    int colIndex = 0;
    for (auto &colType : fColTypesList) {
