@@ -403,22 +403,84 @@ class BaseGenerator:
 
     def ConvertBatchToTF(self, batch: Any) -> np.ndarray:
         """
-        PLACEHOLDER: at this moment this function only calls the
-        ConvertBatchToNumpy function. In the Future this function can be
-        used to convert to TF tensors directly
+        Convert a RTensor into a TensorFlow tensor
 
         Args:
             batch (RTensor): Batch returned from the RBatchGenerator
 
         Returns:
-            np.ndarray: converted batch
+            tensorflow.Tensor: converted batch
         """
-        # import tensorflow as tf
+        # TODO: convert the rtensor data straight to tensorflow and create columns in tf frame
 
-        batch = self.ConvertBatchToNumpy(batch)
+        import tensorflow as tf
+        try:
+            import numpy as np
+        except ImportError:
+            raise ImportError("Failed to import numpy in batchgenerator init")
+    
+        data = batch.GetData()
 
-        # TODO: improve this by returning tensorflow tensors
-        return batch
+        if tuple(batch.GetShape()) != (self.batch_size,self.num_columns):
+            batch_size, num_columns = tuple(batch.GetShape())
+        else:
+            batch_size = self.batch_size
+            num_columns = self.num_columns
+        
+        data.reshape((batch_size * num_columns,))
+
+        return_data = tf.constant(data, shape=(batch_size, num_columns))
+
+        # Splice target column from the data if weight is given
+        if self.target_given:
+            target_data = return_data[:, self.target_index]
+            return_data = tf.stack([return_data[:, : self.target_index], return_data[:, self.target_index + 1 :]], axis=1)
+
+            # Splice weights column from the data if weight is given
+            if self.weights_given:
+                if self.target_index < self.weights_index:
+                    self.weights_index -= 1
+
+                weights_data = return_data[:, self.weights_index]
+                return_data = tf.stack([return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]], axis=1)
+
+                return return_data, target_data, weights_data
+
+            return return_data, target_data
+
+        return return_data
+
+        print("tested")
+
+        return_data = np.array(data).reshape(batch_size, num_columns)
+
+        # Splice target column from the data if weight is given
+        # if self.target_given:
+        #     target_data = return_data[:, self.target_index]
+        #     return_data = np.column_stack(
+        #         (
+        #             return_data[:, : self.target_index],
+        #             return_data[:, self.target_index + 1 :],
+        #         )
+        #     )
+
+        #     # Splice weights column from the data if weight is given
+        #     if self.weights_given:
+        #         if self.target_index < self.weights_index:
+        #             self.weights_index -= 1
+
+        #         weights_data = return_data[:, self.weights_index]
+        #         return_data = np.column_stack(
+        #             (
+        #                 return_data[:, : self.weights_index],
+        #                 return_data[:, self.weights_index + 1 :],
+        #             )
+        #         )
+        #         return tf.convert_to_tensor(return_data), tf.convert_to_tensor(target_data), tf.convert_to_tensor(weights_data)
+
+        #     return tf.convert_to_tensor(return_data), tf.convert_to_tensor(target_data)
+
+        # return tf.convert_to_tensor(return_data)
 
     # Return a batch when available
     def GetTrainBatch(self) -> Any:
@@ -774,50 +836,7 @@ def CreateTFDatasets(
         base_generator, base_generator.ConvertBatchToTF
     )
 
-    num_columns = len(train_generator.train_columns)
-
-    # No target and weights given
-    if target == "":
-        batch_signature = tf.TensorSpec(
-            shape=(batch_size, num_columns), dtype=tf.float32
-        )
-
-    # Target given, no weights given
-    elif weights == "":
-        batch_signature = (
-            tf.TensorSpec(shape=(batch_size, num_columns), dtype=tf.float32),
-            tf.TensorSpec(shape=(batch_size,), dtype=tf.float32),
-        )
-
-    # Target and weights given
-    else:
-        batch_signature = (
-            tf.TensorSpec(shape=(batch_size, num_columns), dtype=tf.float32),
-            tf.TensorSpec(shape=(batch_size,), dtype=tf.float32),
-            tf.TensorSpec(shape=(batch_size,), dtype=tf.float32),
-        )
-
-    ds_train = tf.data.Dataset.from_generator(
-        train_generator, output_signature=batch_signature
-    )
-
-    # Give access to the columns function of the training set
-    setattr(ds_train, "columns", train_generator.columns)
-    setattr(ds_train, "train_columns", train_generator.train_columns)
-    setattr(ds_train, "target_column", train_generator.target_column)
-    setattr(ds_train, "weights_column", train_generator.weights_column)
-
-    ds_validation = tf.data.Dataset.from_generator(
-        validation_generator, output_signature=batch_signature
-    )
-
-    # Give access to the columns function of the validation set
-    setattr(ds_validation, "columns", train_generator.columns)
-    setattr(ds_validation, "train_columns", train_generator.train_columns)
-    setattr(ds_validation, "target_column", train_generator.target_column)
-    setattr(ds_validation, "weights_column", train_generator.weights_column)
-
-    return ds_train, ds_validation
+    return train_generator, validation_generator
 
 
 def CreatePyTorchGenerators(
