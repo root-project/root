@@ -311,9 +311,16 @@ class BaseGenerator:
             raise ImportError("Failed to import numpy in batchgenerator init")
 
         data = batch.GetData()
-        data.reshape((self.batch_size * self.num_columns,))
 
-        return_data = np.array(data).reshape(self.batch_size, self.num_columns)
+        if tuple(batch.GetShape()) != (self.batch_size,self.num_columns):
+            batch_size, num_columns = tuple(batch.GetShape())
+        else:
+            batch_size = self.batch_size
+            num_columns = self.num_columns
+
+        data.reshape((batch_size * num_columns,))
+
+        return_data = np.array(data).reshape(batch_size, num_columns)
 
         # Splice target column from the data if weight is given
         if self.target_given:
@@ -355,9 +362,16 @@ class BaseGenerator:
         import torch
 
         data = batch.GetData()
-        data.reshape((self.batch_size * self.num_columns,))
 
-        return_data = torch.Tensor(data).reshape(self.batch_size, self.num_columns)
+        if tuple(batch.GetShape()) != (self.batch_size,self.num_columns):
+            batch_size, num_columns = tuple(batch.GetShape())
+        else:
+            batch_size = self.batch_size
+            num_columns = self.num_columns
+
+        data.reshape((batch_size * num_columns,))
+
+        return_data = torch.Tensor(data).reshape(batch_size, num_columns)
 
         # Splice target column from the data if weight is given
         if self.target_given:
