@@ -325,11 +325,7 @@ class BaseGenerator:
         # Splice target column from the data if weight is given
         if self.target_given:
             target_data = return_data[:, self.target_index]
-            return_data = np.column_stack(
-                (
-                    return_data[:, : self.target_index],
-                    return_data[:, self.target_index + 1 :],
-                )
+            return_data = np.column_stack((return_data[:, : self.target_index], return_data[:, self.target_index + 1 :])
             )
 
             # Splice weights column from the data if weight is given
@@ -338,12 +334,7 @@ class BaseGenerator:
                     self.weights_index -= 1
 
                 weights_data = return_data[:, self.weights_index]
-                return_data = np.column_stack(
-                    (
-                        return_data[:, : self.weights_index],
-                        return_data[:, self.weights_index + 1 :],
-                    )
-                )
+                return_data = np.column_stack((return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]))
                 return return_data, target_data, weights_data
 
             return return_data, target_data
@@ -376,12 +367,7 @@ class BaseGenerator:
         # Splice target column from the data if weight is given
         if self.target_given:
             target_data = return_data[:, self.target_index]
-            return_data = torch.column_stack(
-                (
-                    return_data[:, : self.target_index],
-                    return_data[:, self.target_index + 1 :],
-                )
-            )
+            return_data = torch.column_stack((return_data[:, : self.target_index], return_data[:, self.target_index + 1 :]))
 
             # Splice weights column from the data if weight is given
             if self.weights_given:
@@ -389,12 +375,8 @@ class BaseGenerator:
                     self.weights_index -= 1
 
                 weights_data = return_data[:, self.weights_index]
-                return_data = torch.column_stack(
-                    (
-                        return_data[:, : self.weights_index],
-                        return_data[:, self.weights_index + 1 :],
-                    )
-                )
+                return_data = torch.column_stack((return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]))
+
                 return return_data, target_data, weights_data
 
             return return_data, target_data
@@ -434,7 +416,7 @@ class BaseGenerator:
         # Splice target column from the data if weight is given
         if self.target_given:
             target_data = return_data[:, self.target_index]
-            return_data = tf.stack([return_data[:, : self.target_index], return_data[:, self.target_index + 1 :]], axis=1)
+            return_data = tf.concat([return_data[:, : self.target_index], return_data[:, self.target_index + 1 :]], axis=1)
 
             # Splice weights column from the data if weight is given
             if self.weights_given:
@@ -442,45 +424,13 @@ class BaseGenerator:
                     self.weights_index -= 1
 
                 weights_data = return_data[:, self.weights_index]
-                return_data = tf.stack([return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]], axis=1)
+                return_data = tf.concat([return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]], axis=1)
 
                 return return_data, target_data, weights_data
 
             return return_data, target_data
 
         return return_data
-
-        print("tested")
-
-        return_data = np.array(data).reshape(batch_size, num_columns)
-
-        # Splice target column from the data if weight is given
-        # if self.target_given:
-        #     target_data = return_data[:, self.target_index]
-        #     return_data = np.column_stack(
-        #         (
-        #             return_data[:, : self.target_index],
-        #             return_data[:, self.target_index + 1 :],
-        #         )
-        #     )
-
-        #     # Splice weights column from the data if weight is given
-        #     if self.weights_given:
-        #         if self.target_index < self.weights_index:
-        #             self.weights_index -= 1
-
-        #         weights_data = return_data[:, self.weights_index]
-        #         return_data = np.column_stack(
-        #             (
-        #                 return_data[:, : self.weights_index],
-        #                 return_data[:, self.weights_index + 1 :],
-        #             )
-        #         )
-        #         return tf.convert_to_tensor(return_data), tf.convert_to_tensor(target_data), tf.convert_to_tensor(weights_data)
-
-        #     return tf.convert_to_tensor(return_data), tf.convert_to_tensor(target_data)
-
-        # return tf.convert_to_tensor(return_data)
 
     # Return a batch when available
     def GetTrainBatch(self) -> Any:
@@ -750,7 +700,7 @@ def CreateNumPyGenerators(
     return train_generator, validation_generator
 
 
-def CreateTFDatasets(
+def CreateTFGenerators(
     tree_name: str,
     file_name: str,
     batch_size: int,
