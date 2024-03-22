@@ -22,7 +22,7 @@
 
 **/
 
-#include<TROOT.h>
+#include <TROOT.h>
 
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
@@ -33,6 +33,7 @@
 
 #include "TFile.h"
 #include "TTree.h"
+
 
 ///  Helper function to generate the time data set
 ///  make some time data but not of fixed length.
@@ -450,8 +451,6 @@ the option string
          }
       }
    }
-#else
-   useKeras = false
 #endif
       
    // use BDT in case not using Keras or TMVA DL
