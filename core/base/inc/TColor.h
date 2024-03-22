@@ -88,6 +88,7 @@ public:
    static Int_t   GetColorBright(Int_t color);
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
+   static Int_t   GetColorByName(const char *colorname);
    static Int_t   GetFreeColorIndex();
    static const TArrayI& GetPalette();
    static Int_t   GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
@@ -103,6 +104,7 @@ public:
    static Bool_t  DefinedColors(Int_t set_always_on = 0);
    static void    InvertPalette();
    static Bool_t  IsGrayscale();
+   static void    ListColors(Int_t ci1=0, Int_t ci2 = 0, Bool_t showEmpty = kFALSE);
    static void    SetGrayscale(Bool_t set = kTRUE);
    static void    SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha=1.);
 
