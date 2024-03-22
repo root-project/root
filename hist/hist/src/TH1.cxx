@@ -2567,7 +2567,7 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
 
    //   - Normalize integral to 1
    if (fIntegral[nbins] == 0 ) {
-      Error("ComputeIntegral", "Integral = 0, no hits in regular bins (non over/underflow).");
+      Error("ComputeIntegral", "Integral = 0, no hits in histogram bins (excluding over/underflow).");
       return 0;
    }
    for (Int_t bin=1; bin <= nbins; ++bin)  fIntegral[bin] /= fIntegral[nbins];

@@ -1364,7 +1364,7 @@ Double_t THnBase::ComputeIntegral()
 
    // check sum of weights
    if (fIntegral[GetNbins()] == 0.) {
-      Error("ComputeIntegral", "Integral = 0, no hits in regular bins (non over/underflow).");
+      Error("ComputeIntegral", "Integral = 0, no hits in histogram bins (excluding over/underflow).");
       fIntegral.clear();
       return 0.;
    }
