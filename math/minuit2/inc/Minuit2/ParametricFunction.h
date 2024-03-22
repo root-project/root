@@ -52,7 +52,7 @@ public:
 
    */
 
-   ParametricFunction(const std::vector<double> &params) : par(params) {}
+   ParametricFunction(std::span<const double> params) : par(params.begin(), params.end()) {}
 
    /**
 
@@ -75,11 +75,11 @@ public:
 
    */
 
-   virtual void SetParameters(const std::vector<double> &params) const
+   virtual void SetParameters(std::span<const double> params) const
    {
 
       assert(params.size() == par.size());
-      par = params;
+      par.assign(params.begin(), params.end());
    }
 
    /**
@@ -115,7 +115,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &x) const override = 0;
+   double operator()(std::span<const double> x) const override = 0;
 
    /**
 
@@ -134,7 +134,7 @@ public:
 
    */
 
-   virtual double operator()(const std::vector<double> &x, const std::vector<double> &params) const
+   virtual double operator()(std::span<const double> x, std::span<const double> params) const
    {
       SetParameters(params);
       return operator()(x);
@@ -153,7 +153,7 @@ public:
 
    */
 
-   virtual std::vector<double> GetGradient(const std::vector<double> &x) const;
+   virtual std::vector<double> GetGradient(std::span<const double> x) const;
 
 protected:
    /**

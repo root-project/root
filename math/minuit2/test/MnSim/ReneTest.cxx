@@ -26,11 +26,11 @@ using namespace ROOT::Minuit2;
 class ReneFcn : public FCNBase {
 
 public:
-   ReneFcn(const std::vector<double> &meas) : fMeasurements(meas) {}
+   ReneFcn(std::span<const double> meas) : fMeasurements(meas.begin(), meas.end()) {}
 
    ~ReneFcn() override {}
 
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::span<const double> par) const override
    {
       double a = par[2];
       double b = par[1];
@@ -77,11 +77,11 @@ class ReneFcn : public FCNBase {
 
 public:
 
-  ReneFcn(const std::vector<double>& meas) : fMeasurements(meas) {}
+  ReneFcn(std::span<const double> meas) : fMeasurements(meas) {}
 
   virtual ~ReneFcn() {}
 
-  virtual double operator()(const std::vector<double>& par) const {
+  virtual double operator()(std::span<const double> par) const {
     double mypar[6];
     for(std::vector<double>::const_iterator ipar = par.begin();
         ipar != par.end(); ipar++)

@@ -33,13 +33,13 @@ class MnMigrad : public MnApplication {
 
 public:
    /// construct from FCNBase + std::vector for parameters and errors
-   MnMigrad(const FCNBase &fcn, const std::vector<double> &par, const std::vector<double> &err, unsigned int stra = 1)
+   MnMigrad(const FCNBase &fcn, std::span<const double> par, std::span<const double> err, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
    {
    }
 
    /// construct from FCNBase + std::vector for parameters and covariance
-   MnMigrad(const FCNBase &fcn, const std::vector<double> &par, unsigned int nrow, const std::vector<double> &cov,
+   MnMigrad(const FCNBase &fcn, std::span<const double> par, unsigned int nrow, std::span<const double> cov,
             unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)),
         fMinimizer(VariableMetricMinimizer())
@@ -47,7 +47,7 @@ public:
    }
 
    /// construct from FCNBase + std::vector for parameters and MnUserCovariance
-   MnMigrad(const FCNBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov, unsigned int stra = 1)
+   MnMigrad(const FCNBase &fcn, std::span<const double> par, const MnUserCovariance &cov, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
    {
    }
@@ -73,22 +73,22 @@ public:
    // constructs from gradient FCN
 
    /// construct from FCNGradientBase + std::vector for parameters and errors
-   MnMigrad(const FCNGradientBase &fcn, const std::vector<double> &par, const std::vector<double> &err,
+   MnMigrad(const FCNGradientBase &fcn, std::span<const double> par, std::span<const double> err,
             unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
    {
    }
 
    /// construct from FCNGradientBase + std::vector for parameters and covariance
-   MnMigrad(const FCNGradientBase &fcn, const std::vector<double> &par, unsigned int nrow,
-            const std::vector<double> &cov, unsigned int stra = 1)
+   MnMigrad(const FCNGradientBase &fcn, std::span<const double> par, unsigned int nrow,
+            std::span<const double> cov, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)),
         fMinimizer(VariableMetricMinimizer())
    {
    }
 
    /// construct from FCNGradientBase + std::vector for parameters and MnUserCovariance
-   MnMigrad(const FCNGradientBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov,
+   MnMigrad(const FCNGradientBase &fcn, std::span<const double> par, const MnUserCovariance &cov,
             unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
    {
