@@ -311,7 +311,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
       // parameters) The training string must be concatenates with the `|` delimiter
       TString trainingString1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
                               "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-                              "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+                              "MaxEpochs=10,WeightDecay=1e-4,Regularization=None,"
                               "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.");
 
       TString trainingStrategyString("TrainingStrategy=");
@@ -379,7 +379,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
       // Training strategies.
       TString trainingString1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
                               "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-                              "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+                              "MaxEpochs=10,WeightDecay=1e-4,Regularization=None,"
                               "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.0");
 
       TString trainingStrategyString("TrainingStrategy=");
@@ -416,6 +416,11 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 
    **/
 
+#ifdef R__HAS_PYMVA
+   // The next section uses Python packages, execute it only if PyMVA is available
+   TString tmva_python_exe{TMVA::Python_Executable()};
+   TString python_exe = tmva_python_exe.IsNull() ? "python" : tmva_python_exe;
+
    if (useKerasCNN) {
 
       Info("TMVA_CNN_Classification", "Building convolutional keras model");
@@ -446,7 +451,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 
       m.SaveSource("make_cnn_model.py");
       // execute
-      gSystem->Exec(TMVA::Python_Executable() + " make_cnn_model.py");
+      gSystem->Exec(python_exe + " make_cnn_model.py");
 
       if (gSystem->AccessPathName("model_cnn.h5")) {
          Warning("TMVA_CNN_Classification", "Error creating Keras model file - skip using Keras");
@@ -456,7 +461,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
          factory.BookMethod(
             loader, TMVA::Types::kPyKeras, "PyKeras",
             "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:tf.keras:"
-            "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=20:BatchSize=100:"
+            "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=10:BatchSize=100:"
             "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
       }
    }
@@ -466,18 +471,19 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
       Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
       TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/tmva/PyTorch_Generate_CNN_Model.py");
       // check that pytorch can be imported and file defining the model and used later when booking the method is existing
-      if (gSystem->Exec(TMVA::Python_Executable() + " -c 'import torch'")  || gSystem->AccessPathName(pyTorchFileName) ) {
+      if (gSystem->Exec(python_exe + " -c 'import torch'")  || gSystem->AccessPathName(pyTorchFileName) ) {
          Warning("TMVA_CNN_Classification", "PyTorch is not installed or model building file is not existing - skip using PyTorch");
       }
       else {
          // book PyTorch method only if PyTorch model could be created
          Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
          TString methodOpt = "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
-                             "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=20:BatchSize=100";
+                             "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=10:BatchSize=100";
          methodOpt += TString(":UserCode=") + pyTorchFileName;
          factory.BookMethod(loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
       }
    }
+#endif
 
 
    ////  ## Train Methods

@@ -148,7 +148,7 @@ void TMVA_RNN_Classification(int use_type = 1)
    const int ninput = 30;
    const int ntime = 10;
    const int batchSize = 100;
-   const int maxepochs = 20;
+   const int maxepochs = 10;
 
    int nTotEvts = 10000; // total events to be generated for signal or background
 
@@ -361,7 +361,7 @@ the option string
       // Training strategies.
       TString trainingString1("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
                         "ConvergenceSteps=10,BatchSize=256,TestRepetitions=1,"
-                        "WeightDecay=1e-4,Regularization=None,MaxEpochs=20"
+                        "WeightDecay=1e-4,Regularization=None,MaxEpochs=10"
                         "DropConfig=0.0+0.+0.+0.,Optimizer=ADAM");
       TString trainingStrategyString("TrainingStrategy=");
       trainingStrategyString += trainingString1; // + "|" + trainingString2
@@ -390,6 +390,7 @@ the option string
 
    **/
 
+#ifdef R__HAS_PYMVA
    if (useKeras) {
 
       for (int i = 0; i < 3; i++) {
@@ -449,7 +450,10 @@ the option string
          }
       }
    }
-
+#else
+   useKeras = false
+#endif
+      
    // use BDT in case not using Keras or TMVA DL
    if (!useKeras || !useTMVA_BDT)
       useTMVA_BDT = true;
