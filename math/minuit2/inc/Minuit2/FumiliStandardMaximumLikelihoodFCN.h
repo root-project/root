@@ -45,7 +45,7 @@ public:
 
    */
 
-   FumiliStandardMaximumLikelihoodFCN(const ParametricFunction &modelFCN, const std::vector<double> &pos)
+   FumiliStandardMaximumLikelihoodFCN(const ParametricFunction &modelFCN, std::span<const double> pos)
    {
       this->SetModelFunction(modelFCN);
       unsigned int n = pos.size();
@@ -68,10 +68,10 @@ public:
 
    */
 
-   FumiliStandardMaximumLikelihoodFCN(const ParametricFunction &modelFCN, const std::vector<std::vector<double>> &pos)
+   FumiliStandardMaximumLikelihoodFCN(const ParametricFunction &modelFCN, std::span<const std::vector<double>> pos)
    {
       this->SetModelFunction(modelFCN);
-      fPositions = pos;
+      fPositions.assign(pos.begin(), pos.end());
    }
 
    ~FumiliStandardMaximumLikelihoodFCN() override {}
@@ -88,7 +88,7 @@ public:
 
    */
 
-   std::vector<double> Elements(const std::vector<double> &par) const override;
+   std::vector<double> Elements(std::span<const double> par) const override;
 
    /**
 
@@ -123,7 +123,7 @@ public:
 
    **/
 
-   void EvaluateAll(const std::vector<double> &par) override;
+   void EvaluateAll(std::span<const double> par) override;
 
 private:
    std::vector<std::vector<double>> fPositions;

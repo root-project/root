@@ -11,6 +11,9 @@
 #define ROOT_Minuit2_MnFunctionCross
 
 #include "Minuit2/MnConfig.h"
+
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -36,7 +39,7 @@ public:
 
    ~MnFunctionCross() {}
 
-   MnCross operator()(const std::vector<unsigned int> &, const std::vector<double> &, const std::vector<double> &,
+   MnCross operator()(std::span<const unsigned int> , std::span<const double>, std::span<const double>,
                       double, unsigned int) const;
 
 private:

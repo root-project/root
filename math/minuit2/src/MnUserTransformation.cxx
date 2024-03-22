@@ -37,7 +37,7 @@ private:
    const std::string &fName;
 };
 
-MnUserTransformation::MnUserTransformation(const std::vector<double> &par, const std::vector<double> &err)
+MnUserTransformation::MnUserTransformation(std::span<const double> par, std::span<const double> err)
    : fPrecision(MnMachinePrecision()), fParameters(std::vector<MinuitParameter>()),
      fExtOfInt(std::vector<unsigned int>()), fDoubleLimTrafo(SinParameterTransformation()),
      fUpperLimTrafo(SqrtUpParameterTransformation()), fLowerLimTrafo(SqrtLowParameterTransformation()),
@@ -254,8 +254,9 @@ std::vector<double> MnUserTransformation::Errors() const
    // return std::vector of double with parameter errors
    std::vector<double> result;
    result.reserve(fParameters.size());
-   for (std::vector<MinuitParameter>::const_iterator ipar = Parameters().begin(); ipar != Parameters().end(); ++ipar)
-      result.push_back((*ipar).Error());
+   for (auto const &ipar : Parameters()) {
+      result.push_back(ipar.Error());
+   }
 
    return result;
 }
