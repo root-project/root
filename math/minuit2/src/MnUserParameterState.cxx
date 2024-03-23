@@ -29,7 +29,7 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, std::spa
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
    : fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
      fParameters(par), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()),
-     fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance())
+     fIntParameters(), fIntCovariance(MnUserCovariance())
 {
    // construct from user parameters (before minimization)
 
@@ -85,7 +85,7 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, const Mn
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const MnUserCovariance &cov)
    : fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()),
+     fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(),
      fIntCovariance(cov)
 {
    // construct from user parameters + errors (before minimization) using
@@ -112,7 +112,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const Mn
 MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, const MnUserTransformation &trafo)
    : fValid(st.IsValid()), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(st.Fval()), fEDM(st.Edm()),
      fNFcn(st.NFcn()), fParameters(MnUserParameters()), fCovariance(MnUserCovariance()),
-     fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance())
+     fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(), fIntCovariance(MnUserCovariance())
 {
    //
    // construct from internal parameters (after minimization)
@@ -164,9 +164,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
    if (fCovarianceValid) {
       fCovariance = trafo.Int2extCovariance(st.Vec(), st.Error().InvHessian());
       fIntCovariance =
-         MnUserCovariance(std::vector<double>(st.Error().InvHessian().Data(),
-                                              st.Error().InvHessian().Data() + st.Error().InvHessian().size()),
-                          st.Error().InvHessian().Nrow());
+         MnUserCovariance({st.Error().InvHessian().Data(), st.Error().InvHessian().size()}, st.Error().InvHessian().Nrow());
       fCovariance.Scale(2. * up);
       fGlobalCC = MnGlobalCorrelationCoeff(st.Error().InvHessian());
       fGCCValid = fGlobalCC.IsValid();
