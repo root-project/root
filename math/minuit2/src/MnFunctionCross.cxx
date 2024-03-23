@@ -18,6 +18,8 @@
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPrint.h"
 
+#include <array>
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -51,7 +53,8 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    // std::cout<<"aim= "<<aim<<std::endl;
    double aopt = 0.;
    bool limset = false;
-   std::vector<double> alsb(3, 0.), flsb(3, 0.);
+   std::array<double, 3> alsb{0., 0., 0.};
+   std::array<double, 3> flsb{0., 0., 0.};
 
    MnPrint print("MnFunctionCross");
 
