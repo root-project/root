@@ -162,9 +162,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
    if (fCovarianceValid) {
       fCovariance = trafo.Int2extCovariance(st.Vec(), st.Error().InvHessian());
       fIntCovariance =
-         MnUserCovariance(std::vector<double>(st.Error().InvHessian().Data(),
-                                              st.Error().InvHessian().Data() + st.Error().InvHessian().size()),
-                          st.Error().InvHessian().Nrow());
+         MnUserCovariance({st.Error().InvHessian().Data(), st.Error().InvHessian().size()}, st.Error().InvHessian().Nrow());
       fCovariance.Scale(2. * up);
       fGlobalCC = MnGlobalCorrelationCoeff(st.Error().InvHessian());
       fGCCValid = fGlobalCC.IsValid();
