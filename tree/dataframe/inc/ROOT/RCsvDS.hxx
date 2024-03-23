@@ -73,6 +73,8 @@ private:
    // work given that the pointer to the boolean in that case cannot be taken
    std::vector<std::deque<bool>> fBoolEvtValues; // one per column per slot
 
+   void Construct();
+
    void FillHeaders(const std::string &);
    void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
@@ -89,6 +91,7 @@ protected:
    std::string AsString() final;
 
 public:
+   RCsvDS(std::string_view fileName, const ROptions &options);
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
           std::unordered_map<std::string, char> &&colTypes = {});
    void Finalize() final;
@@ -102,6 +105,12 @@ public:
    void SetNSlots(unsigned int nSlots) final;
    std::string GetLabel() final;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Factory method to create a CSV RDataFrame.
+/// \param[in] fileName Path of the CSV file.
+/// \param[in] options File parsing settings.
+RDataFrame FromCSV(std::string_view fileName, const RCsvDS::ROptions &options);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Factory method to create a CSV RDataFrame.

@@ -319,24 +319,8 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
    return i;
 }
 
-////////////////////////////////////////////////////////////////////////
-/// Constructor to create a CSV RDataSource for RDataFrame.
-/// \param[in] fileName Path or URL of the CSV file.
-/// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
-///                        (default `true`).
-/// \param[in] delimiter Delimiter character (default ',').
-/// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
-/// \param[in] colTypes Allows users to manually specify column types. Accepts an unordered map with keys being
-///                     column names, values being type specifiers ('O' for boolean, 'D' for double, 'L' for
-///                     Long64_t, 'T' for std::string)
-RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
-               std::unordered_map<std::string, char> &&colTypes)
-   : fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fColTypes(std::move(colTypes))
+void RCsvDS::Construct()
 {
-   fOptions.fReadHeaders = readHeaders;
-   fOptions.fDelimiter = delimiter;
-   fOptions.fLinesChunkSize = linesChunkSize;
-
    std::string line;
 
    // Read the headers if present
@@ -345,7 +329,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
          FillHeaders(line);
       } else {
          std::string msg = "Error reading headers of CSV file ";
-         msg += fileName;
+         msg += fCsvFile->GetUrl();
          throw std::runtime_error(msg);
       }
    }
@@ -373,9 +357,42 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       fCsvFile->Seek(fDataPos);
    } else {
       std::string msg = "Could not infer column types of CSV file ";
-      msg += fileName;
+      msg += fCsvFile->GetUrl();
       throw std::runtime_error(msg);
    }
+}
+
+////////////////////////////////////////////////////////////////////////
+/// Constructor to create a CSV RDataSource for RDataFrame.
+/// \param[in] fileName Path or URL of the CSV file.
+/// \param[in] options File parsing settings
+RCsvDS::RCsvDS(std::string_view fileName, const ROptions &options)
+   : fOptions(options), fCsvFile(ROOT::Internal::RRawFile::Create(fileName))
+{
+   std::swap(fColTypes, fOptions.fColTypes);
+
+   Construct();
+}
+
+////////////////////////////////////////////////////////////////////////
+/// Constructor to create a CSV RDataSource for RDataFrame.
+/// \param[in] fileName Path or URL of the CSV file.
+/// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
+///                        (default `true`).
+/// \param[in] delimiter Delimiter character (default ',').
+/// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
+/// \param[in] colTypes Allows users to manually specify column types. Accepts an unordered map with keys being
+///                     column names, values being type specifiers ('O' for boolean, 'D' for double, 'L' for
+///                     Long64_t, 'T' for std::string)
+RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
+               std::unordered_map<std::string, char> &&colTypes)
+   : fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fColTypes(std::move(colTypes))
+{
+   fOptions.fReadHeaders = readHeaders;
+   fOptions.fDelimiter = delimiter;
+   fOptions.fLinesChunkSize = linesChunkSize;
+
+   Construct();
 }
 
 void RCsvDS::FreeRecords()
@@ -558,6 +575,12 @@ void RCsvDS::SetNSlots(unsigned int nSlots)
 std::string RCsvDS::GetLabel()
 {
    return "RCsv";
+}
+
+RDataFrame FromCSV(std::string_view fileName, const RCsvDS::ROptions &options)
+{
+   ROOT::RDataFrame rdf(std::make_unique<RCsvDS>(fileName, options));
+   return rdf;
 }
 
 RDataFrame FromCSV(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
