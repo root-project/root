@@ -83,8 +83,10 @@ Empty cells and explicit `nan`-s inside columns of type Long64_t/bool are stored
 #include <ROOT/RRawFile.hxx>
 #include <TError.h>
 
-#include <cinttypes>
 #include <algorithm>
+#include <cctype>
+#include <cinttypes>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -108,6 +110,39 @@ const TRegexp RCsvDS::fgFalseRegex("^false$");
 
 const std::unordered_map<RCsvDS::ColType_t, std::string>
    RCsvDS::fgColTypeMap({{'O', "bool"}, {'D', "double"}, {'L', "Long64_t"}, {'T', "std::string"}});
+
+bool RCsvDS::Readln(std::string &line)
+{
+   auto fnTrim = [](std::string &s) {
+      if (s.empty())
+         return;
+
+      auto start = s.begin();
+      for (; start != s.end() && std::isspace(*start); ++start)
+         ;
+
+      auto end = s.end() - 1;
+      for (; start != end && std::isspace(*end); --end)
+         ;
+
+      s = std::string(start, end + 1);
+   };
+
+   while (true) {
+      bool eof = !fCsvFile->Readln(line);
+      if (eof)
+         return false;
+
+      if (fOptions.fTrimLines)
+         fnTrim(line);
+      if (fOptions.fSkipEmptyLines && line.empty())
+         continue;
+      if (fOptions.fCommentCharacter && !line.empty() && line[0] == fOptions.fCommentCharacter)
+         continue;
+
+      return true;
+   }
+}
 
 void RCsvDS::FillHeaders(const std::string &line)
 {
@@ -234,7 +269,7 @@ void RCsvDS::InferColTypes(std::vector<std::string> &columns)
       // read <=10 extra lines until a non-empty cell on this column is found, so that type is determined
       for (auto extraRowsRead = 0u; extraRowsRead < 10u && columns[i] == "nan"; ++extraRowsRead) {
          std::string line;
-         if (!fCsvFile->Readln(line))
+         if (!Readln(line))
             break; // EOF
          const auto temp_columns = ParseColumns(line);
          if (temp_columns[i] != "nan")
@@ -325,7 +360,7 @@ void RCsvDS::Construct()
 
    // Read the headers if present
    if (fOptions.fReadHeaders) {
-      if (fCsvFile->Readln(line)) {
+      if (Readln(line)) {
          FillHeaders(line);
       } else {
          std::string msg = "Error reading headers of CSV file ";
@@ -335,11 +370,7 @@ void RCsvDS::Construct()
    }
 
    fDataPos = fCsvFile->GetFilePos();
-   bool eof = false;
-   do {
-      eof = !fCsvFile->Readln(line);
-   } while (line.empty() && !eof);
-   if (!eof) {
+   if (Readln(line)) {
       auto columns = ParseColumns(line);
 
       // Generate headers if not present
@@ -451,8 +482,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
    FreeRecords();
 
    std::string line;
-   while ((-1LL == fOptions.fLinesChunkSize || 0 != linesToRead) && fCsvFile->Readln(line)) {
-      if (line.empty()) continue; // skip empty lines
+   while ((-1LL == fOptions.fLinesChunkSize || 0 != linesToRead) && Readln(line)) {
       fRecords.emplace_back();
       FillRecord(line, fRecords.back());
       --linesToRead;
