@@ -522,6 +522,9 @@ class TrainRBatchGenerator:
         return self
 
     def __next__(self):
+        if not hasattr(self, '_callable'):
+            self._callable = self.__call__()
+        
         batch = self._callable.__next__()
 
         if batch is None:
@@ -586,6 +589,9 @@ class ValidationRBatchGenerator:
         return self
 
     def __next__(self):
+        if not hasattr(self, '_callable'):
+            self._callable = self.__call__()
+
         batch = self._callable.__next__()
 
         if batch is None:

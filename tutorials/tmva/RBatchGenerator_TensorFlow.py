@@ -21,7 +21,7 @@ chunk_size = 5_000
 target = "Type"
 
 # Returns two TF.Dataset for training and validation batches.
-ds_train, ds_valid = ROOT.TMVA.Experimental.CreateTFDatasets(
+ds_train, ds_valid = ROOT.TMVA.Experimental.CreateTFGenerators(
     tree_name,
     file_name,
     batch_size,
