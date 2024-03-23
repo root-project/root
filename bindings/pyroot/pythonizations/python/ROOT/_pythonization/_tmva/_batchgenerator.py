@@ -393,14 +393,8 @@ class BaseGenerator:
         Returns:
             tensorflow.Tensor: converted batch
         """
-        # TODO: convert the rtensor data straight to tensorflow and create columns in tf frame
-
         import tensorflow as tf
-        try:
-            import numpy as np
-        except ImportError:
-            raise ImportError("Failed to import numpy in batchgenerator init")
-    
+
         data = batch.GetData()
 
         if tuple(batch.GetShape()) != (self.batch_size,self.num_columns):
