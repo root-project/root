@@ -38,7 +38,8 @@ public:
    struct ROptions {
       bool fReadHeaders = true;          ///< The first line defines the column name
       char fDelimiter = ',';             ///< Column delimiter character
-      bool fTrimLines = true;            ///< Leading and trailing whitespaces should be removed
+      bool fTrimLines = false;           ///< Leading and trailing whitespaces should be removed
+      bool fSkipEmptyLines = true;       ///< Ignore empty lines (after trimming, if trimming is enabled)
       bool fCommentCharacter = '\0';     ///< Lines starting with this character are ignored
       std::int64_t fLinesChunkSize = -1; ///< Number of lines to read, -1 to read all
       /// Specify custom column types, accepts an unordered map with keys being column name, values being type alias
@@ -75,6 +76,7 @@ private:
 
    void Construct();
 
+   bool Readln(std::string &line);
    void FillHeaders(const std::string &);
    void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
