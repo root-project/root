@@ -79,7 +79,7 @@ class BaseGenerator:
             name_str = str(name)
             self.given_columns.append(name_str)
             column_type = template_dict[str(x_rdf.GetColumnType(name_str))]
-            template_string += column_type + ","
+            template_string = f"{template_string}{column_type},"
 
             if column_type in [
                 "ROOT::RVec<bool>",
