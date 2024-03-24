@@ -416,11 +416,10 @@ foreach(opt cxxmodules pythia6 pythia6_nolink)
   endif()
 endforeach()
 
-foreach(opt builtin_afterimage)
-  if(NOT ${opt})
-    message(DEPRECATION ">>> Option '${opt}' is deprecated: in the future it will always be set to ON. In the next release of ROOT, you will no longer be able to disable this feature. Please contact root-dev@cern.ch should you still need disabling it.")
-  endif()
-endforeach()
+
+if(cocoa OR x11 AND  NOT builtin_afterimage)
+  message(DEPRECATION ">>> Option builtin_afterimage is deprecated: in the future it will always be set to ON. In the next release of ROOT, you will no longer be able to disable this feature. Please contact root-dev@cern.ch should you still need disabling it.")
+endif()
 
 foreach(opt minuit2_omp minuit2_mpi)
   if(${opt})
