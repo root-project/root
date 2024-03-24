@@ -113,39 +113,62 @@ const std::unordered_map<RCsvDS::ColType_t, std::string>
 
 bool RCsvDS::Readln(std::string &line)
 {
-   auto fnTrim = [](std::string &s) {
-      if (s.empty())
-         return;
-
-      auto start = s.begin();
-      for (; start != s.end() && std::isspace(*start); ++start)
+   auto fnLeftTrim = [](std::string &s) {
+      const auto N = s.size();
+      std::size_t idxStart = 0;
+      for (; idxStart < N && std::isspace(s[idxStart]); ++idxStart)
          ;
+      if (idxStart)
+         s.erase(0, idxStart);
+   };
 
-      auto end = s.end() - 1;
-      for (; start != end && std::isspace(*end); --end)
+   auto fnRightTrim = [](std::string &s) {
+      size_t nTrim = 0;
+      for (auto itr = s.rbegin(); itr != s.rend() && std::isspace(*itr); ++itr, ++nTrim)
          ;
-
-      s = std::string(start, end + 1);
+      if (nTrim)
+         s.resize(s.size() - nTrim);
    };
 
    while (true) {
-      bool eof = !fCsvFile->Readln(line);
+      const bool eof = !fCsvFile->Readln(line);
       if (eof)
          return false;
+      fLineNumber++;
+      if ((fMaxLineNumber >= 0) && (fLineNumber > fMaxLineNumber))
+         return false;
 
-      if (fOptions.fTrimLines)
-         fnTrim(line);
-      if (fOptions.fSkipEmptyLines && line.empty())
-         continue;
-      if (fOptions.fCommentCharacter && !line.empty() && line[0] == fOptions.fCommentCharacter)
+      if (fOptions.fLeftTrim)
+         fnLeftTrim(line);
+      if (fOptions.fComment) {
+         auto idxComment = line.find(fOptions.fComment);
+         if (idxComment == 0)
+            continue;
+         if (idxComment != std::string::npos)
+            line.resize(idxComment);
+      }
+      if (fOptions.fRightTrim)
+         fnRightTrim(line);
+      if (fOptions.fSkipBlankLines && line.empty())
          continue;
 
       return true;
    }
 }
 
+void RCsvDS::RewindToData()
+{
+   fCsvFile->Seek(fDataPos);
+   fLineNumber = fDataLineNumber;
+}
+
 void RCsvDS::FillHeaders(const std::string &line)
 {
+   if (!fOptions.fColumnNames.empty()) {
+      std::swap(fHeaders, fOptions.fColumnNames);
+      return;
+   }
+
    auto columns = ParseColumns(line);
    fHeaders.reserve(columns.size());
    for (auto &col : columns) {
@@ -198,6 +221,11 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
 
 void RCsvDS::GenerateHeaders(size_t size)
 {
+   if (!fOptions.fColumnNames.empty()) {
+      std::swap(fHeaders, fOptions.fColumnNames);
+      return;
+   }
+
    fHeaders.reserve(size);
    for (size_t i = 0u; i < size; ++i) {
       fHeaders.push_back("Col" + std::to_string(i));
@@ -241,7 +269,7 @@ void RCsvDS::ValidateColTypes(std::vector<std::string> &columns) const
    for (const auto &col : fColTypes) {
       if (!HasColumn(col.first)) {
          std::string msg = "There is no column with name \"" + col.first + "\".";
-         if (!fOptions.fReadHeaders) {
+         if (!fOptions.fHeaders) {
             msg += "\nSince the input csv file does not contain headers, valid column names";
             msg += " are [\"Col0\", ..., \"Col" + std::to_string(columns.size() - 1) + "\"].";
          }
@@ -358,8 +386,29 @@ void RCsvDS::Construct()
 {
    std::string line;
 
+   if (fOptions.fSkipLastNLines) {
+      // It is possible to not read the file twice, but the implementation would be more complicated
+      std::int64_t nLines = 0;
+      std::string tmp;
+      while (fCsvFile->Readln(tmp))
+         nLines++;
+      if (nLines < fOptions.fSkipLastNLines) {
+         std::string msg = "Error: too many footer lines to skip in CSV file ";
+         msg += fCsvFile->GetUrl();
+         throw std::runtime_error(msg);
+      }
+      fCsvFile->Seek(0);
+      fMaxLineNumber = nLines - fOptions.fSkipLastNLines;
+   }
+
+   for (std::int64_t i = 0; i < fOptions.fSkipFirstNLines; ++i) {
+      if (!fCsvFile->Readln(line))
+         break;
+      fLineNumber++;
+   }
+
    // Read the headers if present
-   if (fOptions.fReadHeaders) {
+   if (fOptions.fHeaders) {
       if (Readln(line)) {
          FillHeaders(line);
       } else {
@@ -370,11 +419,12 @@ void RCsvDS::Construct()
    }
 
    fDataPos = fCsvFile->GetFilePos();
+   fDataLineNumber = fLineNumber;
    if (Readln(line)) {
       auto columns = ParseColumns(line);
 
       // Generate headers if not present
-      if (!fOptions.fReadHeaders) {
+      if (!fOptions.fHeaders) {
          GenerateHeaders(columns.size());
       }
 
@@ -385,7 +435,7 @@ void RCsvDS::Construct()
       InferColTypes(columns);
 
       // rewind
-      fCsvFile->Seek(fDataPos);
+      RewindToData();
    } else {
       std::string msg = "Could not infer column types of CSV file ";
       msg += fCsvFile->GetUrl();
@@ -400,7 +450,7 @@ void RCsvDS::Construct()
 RCsvDS::RCsvDS(std::string_view fileName, const ROptions &options)
    : fOptions(options), fCsvFile(ROOT::Internal::RRawFile::Create(fileName))
 {
-   std::swap(fColTypes, fOptions.fColTypes);
+   std::swap(fColTypes, fOptions.fColumnTypes);
 
    Construct();
 }
@@ -419,7 +469,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
                std::unordered_map<std::string, char> &&colTypes)
    : fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fColTypes(std::move(colTypes))
 {
-   fOptions.fReadHeaders = readHeaders;
+   fOptions.fHeaders = readHeaders;
    fOptions.fDelimiter = delimiter;
    fOptions.fLinesChunkSize = linesChunkSize;
 
@@ -464,7 +514,7 @@ RCsvDS::~RCsvDS()
 
 void RCsvDS::Finalize()
 {
-   fCsvFile->Seek(fDataPos);
+   RewindToData();
    fProcessedLines = 0ULL;
    fEntryRangesRequested = 0ULL;
    FreeRecords();

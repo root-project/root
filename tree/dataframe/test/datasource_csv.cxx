@@ -13,6 +13,7 @@ auto fileName1 = "RCsvDS_test_noheaders.csv";
 auto fileName2 = "RCsvDS_test_empty.csv";
 auto fileName3 = "RCsvDS_test_win.csv";
 auto fileName4 = "RCsvDS_test_NaNs.csv";
+auto fileName5 = "RCsvDS_test_parsing.csv";
 
 // must use http: we cannot use https on macOS until we upgrade to the newest Davix
 // and turn on the macOS SecureTransport layer.
@@ -227,6 +228,25 @@ TEST(RCsvDS, FromARDF)
    EXPECT_EQ(6U, *c);
    EXPECT_DOUBLE_EQ(200.5, *max);
    EXPECT_DOUBLE_EQ(.7, *min);
+}
+
+TEST(RCsvDS, Parsing)
+{
+   RCsvDS::ROptions options;
+   options.fDelimiter = ' ';
+   options.fLeftTrim = true;
+   options.fRightTrim = true;
+   options.fSkipFirstNLines = 1;
+   options.fSkipLastNLines = 2;
+   options.fComment = '#';
+   options.fColumnNames = {"FirstName", "LastName"};
+
+   std::unique_ptr<RDataSource> ds(new RCsvDS(fileName5, options));
+   ROOT::RDataFrame df(std::move(ds));
+
+   EXPECT_EQ(1U, *df.Count());
+   EXPECT_EQ(std::string("Harry"), df.Take<std::string>("FirstName")->at(0));
+   EXPECT_EQ(std::string("Smith"), df.Take<std::string>("LastName")->at(0));
 }
 
 TEST(RCsvDS, FromARDFWithJitting)

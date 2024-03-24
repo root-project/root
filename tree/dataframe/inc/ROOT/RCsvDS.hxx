@@ -36,15 +36,27 @@ class RCsvDS final : public ROOT::RDF::RDataSource {
 public:
    /// Options that control how the CSV file is parsed
    struct ROptions {
-      bool fReadHeaders = true;          ///< The first line defines the column name
+      /// The first line describes the columns. The names are used as RDF column names
+      /// unless fColumnNames is not empty, in which case it replaces the given names.
+      /// If both, fHeaders is false and fColumnNames is empty, generic column names Col1.n.Col$n$ are used.
+      bool fHeaders = true;
       char fDelimiter = ',';             ///< Column delimiter character
-      bool fTrimLines = false;           ///< Leading and trailing whitespaces should be removed
-      bool fSkipEmptyLines = true;       ///< Ignore empty lines (after trimming, if trimming is enabled)
-      bool fCommentCharacter = '\0';     ///< Lines starting with this character are ignored
+      bool fLeftTrim = false;            ///< Leading whitespaces are removed
+      bool fRightTrim = false;           ///< Trailing whitespaces are removed
+      bool fSkipBlankLines = true;       ///< Ignore empty lines (after trimming, if trimming is enabled)
+      std::int64_t fSkipFirstNLines = 0; ///< Ignore the first N lines of the file
+      std::int64_t fSkipLastNLines = 0;  ///< Ignore the last N lines of the file
       std::int64_t fLinesChunkSize = -1; ///< Number of lines to read, -1 to read all
+      /// Character indicating that the remainder of the line should be ignored, if different from '\0'.
+      /// If it is the first character of the line (after trimming), the line is ignored altogether.
+      /// Note that the comment character must not be part of the data, e.g. in strings.
+      char fComment = '\0';
+      /// Impose column names. This can be used if a header is missing or if the header has unparsable or
+      /// unwanted column names.
+      std::vector<std::string> fColumnNames;
       /// Specify custom column types, accepts an unordered map with keys being column name, values being type alias
       /// ('O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string)
-      std::unordered_map<std::string, char> fColTypes;
+      std::unordered_map<std::string, char> fColumnTypes;
    };
 
 private:
@@ -57,6 +69,9 @@ private:
 
    ROptions fOptions;
    std::uint64_t fDataPos = 0;
+   std::int64_t fDataLineNumber = 0;
+   std::int64_t fLineNumber = 0;     // used to skip the last lines
+   std::int64_t fMaxLineNumber = -1; // set to non-negative if fOptions.fSkipLastNLines is set
    unsigned int fNSlots = 0U;
    std::unique_ptr<ROOT::Internal::RRawFile> fCsvFile;
    ULong64_t fEntryRangesRequested = 0ULL;
@@ -77,6 +92,7 @@ private:
    void Construct();
 
    bool Readln(std::string &line);
+   void RewindToData();
    void FillHeaders(const std::string &);
    void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
