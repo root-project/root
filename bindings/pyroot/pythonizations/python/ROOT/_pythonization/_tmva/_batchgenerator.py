@@ -760,8 +760,6 @@ def CreateTFGenerators(
             are loaded during the training. Before training, the validation
             generator will return no batches.
     """
-    import tensorflow as tf
-
     base_generator = BaseGenerator(
         tree_name,
         file_name,
