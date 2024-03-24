@@ -198,6 +198,22 @@ public:
       }
    }
 
+   /// @brief save to remaining data when the whole chunk has to be saved
+   /// @param chunkTensor 
+   /// @param remainderTensor 
+   /// @param remainderTensorRow 
+   /// @param eventIndices 
+   void SaveRemainingData(const TMVA::Experimental::RTensor<float> &chunkTensor,
+                        TMVA::Experimental::RTensor<float> &remainderTensor,
+                        const std::size_t remainderTensorRow,
+                        std::vector<std::size_t> eventIndices){
+      for (std::size_t i = 0; i < eventIndices.size(); i++){
+         std::copy(chunkTensor.GetData() + eventIndices[i] * fNumColumns, chunkTensor.GetData() + (eventIndices[i] + 1) * fNumColumns,
+                   remainderTensor.GetData() + (i + remainderTensorRow) * fNumColumns);
+      }
+   }
+
+
    /// \brief Create training batches from the given chunk of data based on the given event indices
    /// Batches are added to the training queue of batches
    /// \param chunkTensor
@@ -217,7 +233,14 @@ public:
 
       std::vector<std::unique_ptr<TMVA::Experimental::RTensor<float>>> batches;
 
-      batches.emplace_back(CreateFirstBatch(chunkTensor, remainderTensor, remainderTensorRow, eventIndices));
+      if (eventIndices.size() + remainderTensorRow >= fBatchSize){
+         batches.emplace_back(CreateFirstBatch(chunkTensor, remainderTensor, remainderTensorRow, eventIndices));
+      }
+      else{
+         SaveRemainingData(chunkTensor, remainderTensor, remainderTensorRow, eventIndices);
+         fBatchCondition.notify_one();
+         return remainderTensorRow + eventIndices.size();
+      }
 
       // Create tasks of fBatchSize until all idx are used
       std::size_t start = fBatchSize - remainderTensorRow;
@@ -257,7 +280,16 @@ public:
                                 std::size_t remainderTensorRow,
                                 const std::vector<std::size_t> eventIndices)
    {  
-      fValidationBatches.emplace_back(CreateFirstBatch(chunkTensor, remainderTensor, remainderTensorRow, eventIndices));
+      if (eventIndices.size() + remainderTensorRow >= fBatchSize){
+         std::unique_ptr<TMVA::Experimental::RTensor<float>> batch = CreateFirstBatch(chunkTensor, remainderTensor, remainderTensorRow, eventIndices);
+         std::unique_lock<std::mutex> lock(fBatchLock);
+         fValidationBatches.emplace_back(std::move(batch));
+      }
+      else{
+         SaveRemainingData(chunkTensor, remainderTensor, remainderTensorRow, eventIndices);
+         fBatchCondition.notify_one();
+         return remainderTensorRow + eventIndices.size();
+      }
 
       // Create tasks of fBatchSize untill all idx are used
       std::size_t start = fBatchSize - remainderTensorRow;
