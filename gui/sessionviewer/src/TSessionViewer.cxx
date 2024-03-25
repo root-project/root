@@ -67,6 +67,8 @@ queries construction and results handling.
 #include "TSelector.h"
 #include "TFileCollection.h"
 #include "TVirtualX.h"
+#include "HelpText.h"
+#include "TRootHelpDialog.h"
 #include "snprintf.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -5816,19 +5818,14 @@ Bool_t TSessionViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 
                   case kHelpAbout:
                      {
-#ifdef R__UNIX
-		         TString rootx = TROOT::GetBinDir() + "/root -a &";
-                        gSystem->Exec(rootx);
-#else
 #ifdef WIN32
                         new TWin32SplashThread(kTRUE);
 #else
                         char str[32];
-                        sprintf(str, "About ROOT %s...", gROOT->GetVersion());
+                        snprintf(str, 32, "About ROOT %s...", gROOT->GetVersion());
                         TRootHelpDialog *hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
 #endif
                      }
                      break;

@@ -476,10 +476,6 @@ Bool_t TGHtmlBrowserTest::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr
 
                   case M_HELP_ABOUT:
                      {
-#ifdef R__UNIX
-                        TString rootx = TROOT::GetBinDir() + "/root -a &";
-                        gSystem->Exec(rootx);
-#else
 #ifdef WIN32
                         new TWin32SplashThread(kTRUE);
 #else
@@ -489,7 +485,6 @@ Bool_t TGHtmlBrowserTest::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr
                                                                   600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
 #endif
                      }
                      break;

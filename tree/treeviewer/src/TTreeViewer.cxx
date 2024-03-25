@@ -2060,10 +2060,6 @@ bool TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2
                      break;
                   case kHelpAbout:
                      {
-#ifdef R__UNIX
-                        TString rootx = TROOT::GetBinDir() + "/root -a &";
-                        gSystem->Exec(rootx);
-#else
 #ifdef WIN32
                         new TWin32SplashThread(true);
 #else
@@ -2072,7 +2068,6 @@ bool TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
 #endif
                      }
                      break;
