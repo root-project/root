@@ -175,10 +175,3 @@ t.Stop()
 t.Print()
 
 dataCanvas.SaveAs("rs101_limitexample.png")
-
-# TODO: The MCMCCalculator has to be destructed first. Otherwise, we can get
-# segmentation faults depending on the destruction order, which is random in
-# Python. Probably the issue is that some object has a non-owning pointer to
-# another object, which it uses in its destructor. This should be fixed either
-# in the design of RooStats in C++, or with phythonizations.
-del mc
