@@ -43,7 +43,6 @@
 #endif
 #ifdef HAVE_JPEG
 /* Include file for users of jpg library. */
-# undef HAVE_STDLIB_H
 # ifndef X_DISPLAY_MISSING
 #  include <X11/Xmd.h>
 # endif
