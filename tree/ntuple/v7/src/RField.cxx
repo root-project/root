@@ -1757,14 +1757,9 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 
 //------------------------------------------------------------------------------
 
-TClass *ROOT::Experimental::RField<TObject>::GetClass()
-{
-   return TObject::Class();
-}
-
 std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *name)
 {
-   if (auto dataMember = GetClass()->GetDataMember(name)) {
+   if (auto dataMember = TObject::Class()->GetDataMember(name)) {
       return dataMember->GetOffset();
    }
    throw RException(R__FAIL('\'' + std::string(name) + '\'' + " is an invalid data member"));
@@ -1773,11 +1768,11 @@ std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *n
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
    : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
 {
-   assert(GetClass()->GetClassVersion() == 1);
+   assert(TObject::Class()->GetClassVersion() == 1);
 
-   if (!(GetClass()->ClassProperty() & kClassHasExplicitCtor))
+   if (!(TObject::Class()->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
-   if (!(GetClass()->ClassProperty() & kClassHasExplicitDtor))
+   if (!(TObject::Class()->ClassProperty() & kClassHasExplicitDtor))
       fTraits |= kTraitTriviallyDestructible;
 
    Attach(std::make_unique<RField<UInt_t>>("fUniqueID"));
@@ -1838,17 +1833,17 @@ void ROOT::Experimental::RField<TObject>::OnConnectPageSource()
 
 std::uint32_t ROOT::Experimental::RField<TObject>::GetTypeVersion() const
 {
-   return GetClass()->GetClassVersion();
+   return TObject::Class()->GetClassVersion();
 }
 
 void ROOT::Experimental::RField<TObject>::ConstructValue(void *where) const
 {
-   GetClass()->New(where);
+   TObject::Class()->New(where);
 }
 
 void ROOT::Experimental::RField<TObject>::RTObjectDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   GetClass()->Destructor(objPtr, true /* dtorOnly */);
+   TObject::Class()->Destructor(objPtr, true /* dtorOnly */);
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
