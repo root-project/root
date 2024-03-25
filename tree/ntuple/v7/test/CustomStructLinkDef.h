@@ -74,4 +74,12 @@
 #pragma link C++ class Cyclic + ;
 #pragma link C++ class Unsupported + ;
 
+#pragma link C++ class DiamondA + ;
+#pragma link C++ class DiamondVirtualB + ;
+#pragma link C++ class DiamondVirtualC + ;
+#pragma link C++ class DiamondVirtualD + ;
+#pragma link C++ class DiamondB + ;
+#pragma link C++ class DiamondC + ;
+#pragma link C++ class DiamondD + ;
+
 #endif
