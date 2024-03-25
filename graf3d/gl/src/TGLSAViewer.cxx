@@ -669,19 +669,14 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
       case kCM_MENU:
          switch (parm1) {
          case kGLHelpAbout: {
-#ifdef R__UNIX
-            TString rootx = TROOT::GetBinDir() + "/root -a &";
-            gSystem->Exec(rootx);
-#else
 #ifdef WIN32
             new TWin32SplashThread(kTRUE);
 #else
             char str[32];
             snprintf(str,32, "About ROOT %s...", gROOT->GetVersion());
-            hd = new TRootHelpDialog(this, str, 600, 400);
+            TRootHelpDialog * hd = new TRootHelpDialog(fFrame, str, 600, 400);
             hd->SetText(gHelpAbout);
             hd->Popup();
-#endif
 #endif
             break;
          }
