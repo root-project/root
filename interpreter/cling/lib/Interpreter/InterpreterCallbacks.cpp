@@ -148,6 +148,16 @@ namespace cling {
       return m_Source->FindExternalVisibleDeclsByName(DC, Name);
     }
 
+    void LoadExternalSpecializations(const Decl *D, bool OnlyPartial) override {
+      m_Source->LoadExternalSpecializations(D, OnlyPartial);
+    }
+
+    bool
+    LoadExternalSpecializations(const Decl *D,
+                                ArrayRef<TemplateArgument> TemplateArgs) override {
+      return m_Source->LoadExternalSpecializations(D, TemplateArgs);
+    }
+
     virtual void completeVisibleDeclsMap(const DeclContext* DC) override {
       m_Source->completeVisibleDeclsMap(DC);
     }
