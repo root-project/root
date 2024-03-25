@@ -8,30 +8,29 @@
 #
 # \author Lorenzo Moneta
 
-from ROOT import RooWorkspace, kRed, kGreen, kBlue, kYellow, kDashed, kDotted
-from ROOT.RooFit import MarkerColor, LineColor, LineStyle
+import ROOT
 
-w = RooWorkspace("w")
+ws = ROOT.RooWorkspace("w")
 # k <2, must use sum
-w.factory("NonCentralChiSquare::nc(x[0,50],k[1.99,0,5],lambda[5])")
+ws.factory("NonCentralChiSquare::nc(x[0,50],k[1.99,0,5],lambda[5])")
 # kk > 2 can use bessel
-w.factory("NonCentralChiSquare::ncc(x,kk[2.01,0,5],lambda)")
+ws.factory("NonCentralChiSquare::ncc(x,kk[2.01,0,5],lambda)")
 # kk > 2, force sum
-w.factory("NonCentralChiSquare::nccc(x,kk,lambda)")
-w.pdf("nccc").SetForceSum(True)
+ws.factory("NonCentralChiSquare::nccc(x,kk,lambda)")
+ws["nccc"].SetForceSum(True)
 
 # a normal "central" chi-square for comparison when lambda->0
-w.factory("ChiSquarePdf::cs(x,k)")
+ws.factory("ChiSquarePdf::cs(x,k)")
 
 # w.var("kk").setVal(4.) # test a large kk
 
-ncdata = w.pdf("nc").generate(w.var("x"), 100)
-csdata = w.pdf("cs").generate(w.var("x"), 100)
-plot = w.var("x").frame()
-ncdata.plotOn(plot, MarkerColor(kRed))
-csdata.plotOn(plot, MarkerColor(kBlue))
-w.pdf("nc").plotOn(plot, LineColor(kRed))
-w.pdf("ncc").plotOn(plot, LineColor(kGreen))
-w.pdf("nccc").plotOn(plot, LineColor(kYellow), LineStyle(kDashed))
-w.pdf("cs").plotOn(plot, LineColor(kBlue), LineStyle(kDotted))
+ncdata = ws["nc"].generate(ws["x"], 100)
+csdata = ws["cs"].generate(ws["x"], 100)
+plot = ws["x"].frame()
+ncdata.plotOn(plot, MarkerColor="r")
+csdata.plotOn(plot, MarkerColor="b")
+ws["nc"].plotOn(plot, LineColor="r")
+ws["ncc"].plotOn(plot, LineColor="g")
+ws["nccc"].plotOn(plot, LineColor="y", LineStyle="--")
+ws["cs"].plotOn(plot, LineColor="b", LineStyle=":")
 plot.Draw()
