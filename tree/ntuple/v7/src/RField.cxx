@@ -1768,12 +1768,13 @@ std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *n
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
    : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
 {
-   assert(TObject::Class()->GetClassVersion() == 1);
-
-   if (!(TObject::Class()->ClassProperty() & kClassHasExplicitCtor))
-      fTraits |= kTraitTriviallyConstructible;
-   if (!(TObject::Class()->ClassProperty() & kClassHasExplicitDtor))
-      fTraits |= kTraitTriviallyDestructible;
+#ifndef NDEBUG
+   static const auto cl = TObject::Class();
+#endif
+   assert(cl->GetClassVersion() == 1);
+   assert(cl->ClassProperty() & kClassHasExplicitCtor);
+   assert(cl->ClassProperty() & kClassHasExplicitDtor);
+   fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
    Attach(std::make_unique<RField<UInt_t>>("fUniqueID"));
    Attach(std::make_unique<RField<UInt_t>>("fBits"));
@@ -1838,12 +1839,12 @@ std::uint32_t ROOT::Experimental::RField<TObject>::GetTypeVersion() const
 
 void ROOT::Experimental::RField<TObject>::ConstructValue(void *where) const
 {
-   TObject::Class()->New(where);
+   new (where) TObject();
 }
 
 void ROOT::Experimental::RField<TObject>::RTObjectDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   TObject::Class()->Destructor(objPtr, true /* dtorOnly */);
+   static_cast<TObject *>(objPtr)->~TObject();
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
