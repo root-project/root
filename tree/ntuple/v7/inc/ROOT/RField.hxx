@@ -2433,7 +2433,6 @@ class RField<TObject> final : public RFieldBase {
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
-   static TClass *GetClass();
    static std::size_t GetOffsetOfMember(const char *name);
    static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
    static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
