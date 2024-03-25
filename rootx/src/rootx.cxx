@@ -17,7 +17,6 @@
 
 #include "RConfigure.h"
 #include "Rtypes.h"
-#include "strlcpy.h"
 #include "snprintf.h"
 #include "rootCommandLineOptionsHelp.h"
 
@@ -51,34 +50,6 @@
 #define ROOTBINARY "root.exe"
 #endif
 
-extern void PopupLogo(bool);
-extern void WaitLogo();
-extern void PopdownLogo();
-extern void CloseDisplay();
-
-
-static bool gNoLogo = true;
-      //const  int  kMAXPATHLEN = 8192; defined in Rtypes.h
-
-
-//Part for Cocoa - requires external linkage.
-namespace ROOT {
-namespace ROOTX {
-
-//This had internal linkage before, now must be accessible from rootx-cocoa.mm.
-int gChildpid = -1;
-
-}
-}
-
-
-#ifdef R__HAS_COCOA
-
-using ROOT::ROOTX::gChildpid;
-
-#else
-
-
 static int gChildpid;
 static int GetErrno()
 {
@@ -89,8 +60,6 @@ static void ResetErrno()
 {
    errno = 0;
 }
-
-#endif
 
 static const char *GetExePath()
 {
@@ -134,9 +103,8 @@ static void SetRootSys()
 {
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
-      int l1 = strlen(exepath)+1;
-      char *ep = new char[l1];
-      strlcpy(ep, exepath, l1);
+      std::string epStr{exepath};
+      char *ep = epStr.data();
       char *s;
       if ((s = strrchr(ep, '/'))) {
          *s = 0;
@@ -148,7 +116,6 @@ static void SetRootSys()
             putenv(env); // NOLINT: allocated memory now used by environment variable
          }
       }
-      delete [] ep;
    }
 }
 
@@ -221,16 +188,7 @@ static void SetLibraryPath()
 #endif
 
 extern "C" {
-   static void SigUsr1(int);
    static void SigTerm(int);
-}
-
-static void SigUsr1(int)
-{
-   // When we get SIGUSR1 from child (i.e. ROOT) then pop down logo.
-
-   if (!gNoLogo)
-      PopdownLogo();
 }
 
 static void SigTerm(int sig)
@@ -238,24 +196,6 @@ static void SigTerm(int sig)
    // When we get terminated, terminate child, too.
    kill(gChildpid, sig);
 }
-
-//ifdefs for Cocoa/other *xes.
-
-#ifdef R__HAS_COCOA
-
-namespace ROOT {
-namespace ROOTX {
-
-//Before it had internal linkage, now must be external,
-//add namespaces!
-void WaitChild();
-
-}
-}
-
-using ROOT::ROOTX::WaitChild;
-
-#else
 
 static void WaitChild()
 {
@@ -285,8 +225,6 @@ static void WaitChild()
    exit(0);
 }
 
-#endif
-
 static void PrintUsage()
 {
    fprintf(stderr, kCommandLineOptionsHelp);
@@ -314,7 +252,6 @@ int main(int argc, char **argv)
 
    // In batch mode don't show splash screen, idem for no logo mode,
    // in about mode show always splash screen
-   bool batch = false, about = false;
    int i;
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
@@ -322,39 +259,12 @@ int main(int argc, char **argv)
          PrintUsage();
          return 0;
       }
-      if (!strcmp(argv[i], "-b"))         batch    = true;
-      if (!strcmp(argv[i], "-l"))         gNoLogo  = true;
-      if (!strcmp(argv[i], "-ll"))        gNoLogo  = true;
-      if (!strcmp(argv[i], "-a"))         about    = true;
-      if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
-      if (!strcmp(argv[i], "--version"))  gNoLogo  = true;
-   }
-
-#ifndef R__HAS_COCOA
-   if (!getenv("DISPLAY")) {
-      gNoLogo = true;
-   }
-#endif
-   if (batch)
-      gNoLogo = true;
-   if (about) {
-      batch   = false;
-      gNoLogo = false;
-   }
-
-   if (!batch) {
-      if (about) {
-         PopupLogo(true);
-         WaitLogo();
-         return 0;
-      } else if (!gNoLogo)
-         PopupLogo(false);
    }
 
    // Ignore SIGINT and SIGQUIT. Install handler for SIGUSR1.
 
-   struct sigaction ignore, actUsr1, actTerm,
-      saveintr, savequit, saveusr1, saveterm;
+   struct sigaction ignore, actTerm,
+      saveintr, savequit, saveterm;
 
 #if defined(__sun) && !defined(__i386) && !defined(__SVR4)
    ignore.sa_handler = (void (*)())SIG_IGN;
@@ -366,29 +276,22 @@ int main(int argc, char **argv)
    sigemptyset(&ignore.sa_mask);
    ignore.sa_flags = 0;
 
-   actUsr1 = ignore;
    actTerm = ignore;
 #if defined(__sun) && !defined(__i386) && !defined(__SVR4)
-   actUsr1.sa_handler = (void (*)())SigUsr1;
    actTerm.sa_handler = (void (*)())SigTerm;
 #elif defined(__sun) && defined(__SVR4)
-   actUsr1.sa_handler = SigUsr1;
    actTerm.sa_handler = SigTerm;
 #elif (defined(__sgi) && !defined(__KCC)) || defined(__Lynx__)
 #   if defined(IRIX64) || (__GNUG__>=3)
-   actUsr1.sa_handler = SigUsr1;
    actTerm.sa_handler = SigTerm;
 #   else
-   actUsr1.sa_handler = (void (*)(...))SigUsr1;
    actTerm.sa_handler = (void (*)(...))SigTerm;
 #   endif
 #else
-   actUsr1.sa_handler = SigUsr1;
    actTerm.sa_handler = SigTerm;
 #endif
    sigaction(SIGINT,  &ignore, &saveintr);
    sigaction(SIGQUIT, &ignore, &savequit);
-   sigaction(SIGUSR1, &actUsr1, &saveusr1);
    sigaction(SIGTERM, &actTerm, &saveterm);
 
    // Create child...
@@ -397,8 +300,6 @@ int main(int argc, char **argv)
       fprintf(stderr, "%s: error forking child\n", argv[0]);
       return 1;
    } else if (gChildpid > 0) {
-      if (!gNoLogo)
-         WaitLogo();
       WaitChild();
    }
 
@@ -407,16 +308,12 @@ int main(int argc, char **argv)
    // Restore original signal actions
    sigaction(SIGINT,  &saveintr, 0);
    sigaction(SIGQUIT, &savequit, 0);
-   sigaction(SIGUSR1, &saveusr1, 0);
    sigaction(SIGTERM, &saveterm, 0);
-
-   // Close X display connection
-   CloseDisplay();
 
    // Child is going to overlay itself with the actual ROOT module...
 
    // Build argv vector
-   argvv = new char* [argc+2];
+   argvv = new char* [argc+1];
 #ifdef ROOTBINDIR
    if (getenv("ROOTIGNOREPREFIX"))
 #endif
@@ -426,11 +323,10 @@ int main(int argc, char **argv)
       snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTBINARY);
 #endif
    argvv[0] = arg0;
-   argvv[1] = (char *) "-splash";
 
    for (i = 1; i < argc; i++)
-      argvv[1+i] = argv[i];
-   argvv[1+i] = 0;
+      argvv[i] = argv[i];
+   argvv[i] = 0;
 
 #ifndef IS_RPATH_BUILD
    // Make sure library path is set

@@ -400,10 +400,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       } else if (!strcmp(argv[i], "-x")) {
          fExitOnException = kExit;
          argv[i] = null;
-      } else if (!strcmp(argv[i], "-splash")) {
-         // used when started by front-end program to signal that
-         // splash screen can be popped down (TRint::PrintLogo())
-         argv[i] = null;
       } else if (strncmp(argv[i], "--web", 5) == 0) {
          // the web mode is requested
          const char *opt = argv[i] + 5;
