@@ -293,7 +293,7 @@ public:
 class DerivedFromLeftAndTObject : public Left, public TObject {
 public:
    virtual ~DerivedFromLeftAndTObject() = default;
-   ClassDef(DerivedFromLeftAndTObject, 1)
+   ClassDefOverride(DerivedFromLeftAndTObject, 1)
 };
 
 #endif
