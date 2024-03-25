@@ -154,6 +154,8 @@ TEST(RTNuple, TObjectDerived)
 
    {
       auto model = RNTupleModel::Create();
+      // The choice of TRotation is arbitrary; it is a simple, existing class that inherits from TObject
+      // and is supported by RNTuple
       auto ptrRotation = model->MakeField<TRotation>("rotation");
       ptrRotation->RotateX(TMath::Pi());
       ptrRotation->SetUniqueID(137);
