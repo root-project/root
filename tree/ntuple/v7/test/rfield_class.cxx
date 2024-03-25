@@ -101,9 +101,6 @@ TEST(RTNuple, TObject)
       EXPECT_FALSE(stackObj.TestBit(TObject::kIsOnHeap));
       entry->BindRawPtr("obj", &stackObj);
       writer->Fill(*entry);
-
-      stackObj.SetBit(TObject::kIsReferenced);
-      EXPECT_THROW(writer->Fill(*entry), RException);
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
@@ -129,10 +126,44 @@ TEST(RTNuple, TObject)
    EXPECT_EQ(0u, heapObj->GetUniqueID());
    EXPECT_TRUE(heapObj->TestBit(TObject::kIsOnHeap));
    EXPECT_TRUE(heapObj->TestBit(TObject::kNotDeleted));
+}
 
-   heapObj->SetBit(TObject::kIsReferenced);
-   EXPECT_THROW(reader->LoadEntry(2, *entry), RException);
+TEST(RTNuple, TObjectReferenced)
+{
+   // RNTuple does not support reading nor writing of TObject objects that are marked as referenced
+   FileRaii fileGuard("test_ntuple_tobject_referenced.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrObject = model->MakeField<TObject>("obj");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
 
+      ptrObject->SetBit(TObject::kIsReferenced);
+      EXPECT_THROW(writer->Fill(), RException);
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+   auto ptrObject = reader->GetModel().GetDefaultEntry().GetPtr<TObject>("obj");
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(0u, ptrObject->GetUniqueID());
+   ptrObject->SetBit(TObject::kIsReferenced);
+   EXPECT_THROW(reader->LoadEntry(0), RException);
+}
+
+TEST(RTNuple, TObjectShow)
+{
+   FileRaii fileGuard("test_ntuple_tobject_show.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrObject = model->MakeField<TObject>("obj");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrObject->SetUniqueID(137);
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    // clang-format off
    std::string expected{
       "{\n"
