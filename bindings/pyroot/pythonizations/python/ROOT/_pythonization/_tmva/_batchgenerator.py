@@ -335,9 +335,9 @@ class BaseGenerator:
 
                 weights_data = return_data[:, self.weights_index]
                 return_data = np.column_stack((return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]))
-                return return_data, target_data, weights_data
+                return return_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
 
-            return return_data, target_data
+            return return_data, target_data.reshape(-1,1)
 
         return return_data
 
@@ -377,9 +377,9 @@ class BaseGenerator:
                 weights_data = return_data[:, self.weights_index]
                 return_data = torch.column_stack((return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]))
 
-                return return_data, target_data, weights_data
+                return return_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
 
-            return return_data, target_data
+            return return_data, target_data.reshape(-1,1)
 
         return return_data
 
@@ -420,9 +420,9 @@ class BaseGenerator:
                 weights_data = return_data[:, self.weights_index]
                 return_data = tf.concat([return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]], axis=1)
 
-                return return_data, target_data, weights_data
+                return return_data, tf.expand_dims(target_data,axis=1), tf.expand_dims(weights_data,axis=1)
 
-            return return_data, target_data
+            return return_data, tf.expand_dims(target_data,axis=1)
 
         return return_data
 
