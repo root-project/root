@@ -839,11 +839,12 @@ The behavior depends on whether the class has an associated collection proxy.
 User defined C++ classes are supported with the following limitations
   - The class must have a dictionary
   - All persistent members and base classes must be themselves types with RNTuple I/O support
-  - Transient members must be marked by a `//!` comment
+  - Transient members must be marked, e.g. by a `//!` comment
   - The class must not be in the `std` namespace
   - The class must be empty or splittable (e.g., the class must not provide a custom streamer)
   - There is no support for polymorphism,
     i.e. a field of class `A` cannot store class `B` that derives from `A`
+  - Virtual inheritance is unsupported
 
 User classes are stored as a record mother field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.

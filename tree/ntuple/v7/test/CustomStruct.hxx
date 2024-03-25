@@ -218,15 +218,15 @@ struct Unsupported {
    float z;
 };
 
-struct DiamondA {
+struct BaseA {
    float a = 0.0;
 };
 
-struct DiamondVirtualB : virtual public DiamondA {
+struct DiamondVirtualB : virtual public BaseA {
    float b = 0.0;
 };
 
-struct DiamondVirtualC : virtual public DiamondA {
+struct DiamondVirtualC : virtual public BaseA {
    float c = 0.0;
 };
 
@@ -234,15 +234,15 @@ struct DiamondVirtualD : public DiamondVirtualB, public DiamondVirtualC {
    float d = 0.0;
 };
 
-struct DiamondB : public DiamondA {
+struct DuplicateBaseB : public BaseA {
    float b = 0.0;
 };
 
-struct DiamondC : public DiamondA {
+struct DuplicateBaseC : public BaseA {
    float c = 0.0;
 };
 
-struct DiamondD : public DiamondB, public DiamondC {
+struct DuplicateBaseD : public DuplicateBaseB, public DuplicateBaseC {
    float d = 0.0;
 };
 

@@ -1589,6 +1589,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 
    int i = 0;
    for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
+      if (baseClass->GetDelta() < 0) {
+         throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + std::string(className) +
+                                  " virtually inherits from " + baseClass->GetName()));
+      }
       TClass *c = baseClass->GetClassPointer();
       auto subField =
          RFieldBase::Create(std::string(kPrefixInherited) + "_" + std::to_string(i), c->GetName()).Unwrap();
