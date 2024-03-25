@@ -13,7 +13,7 @@ An extensive Users Guide is available from that site (see below).
 	parser.add_argument('-t', help='Enable thread-safety and implicit multi-threading (IMT)')
 	parser.add_argument('-q', help='Exit after processing command line macro files')
 	parser.add_argument('-l', help='Do not show the ROOT banner')
-	parser.add_argument('-a', help='Show the ROOT splash screen')
+	parser.add_argument('-a', help='Show the ROOT splash screen (Windows only)')
 	parser.add_argument('-config', help='print ./configure options')
 	parser.add_argument('-h','-?', '--help', help='Show summary of options')
 	parser.add_argument('--version', help='Show the ROOT version')
