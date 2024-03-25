@@ -218,4 +218,32 @@ struct Unsupported {
    float z;
 };
 
+struct DiamondA {
+   float a = 0.0;
+};
+
+struct DiamondVirtualB : virtual public DiamondA {
+   float b = 0.0;
+};
+
+struct DiamondVirtualC : virtual public DiamondA {
+   float c = 0.0;
+};
+
+struct DiamondVirtualD : public DiamondVirtualB, public DiamondVirtualC {
+   float d = 0.0;
+};
+
+struct DiamondB : public DiamondA {
+   float b = 0.0;
+};
+
+struct DiamondC : public DiamondA {
+   float c = 0.0;
+};
+
+struct DiamondD : public DiamondB, public DiamondC {
+   float d = 0.0;
+};
+
 #endif
