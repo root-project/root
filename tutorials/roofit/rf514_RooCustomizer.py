@@ -91,5 +91,3 @@ print(
     "\nThe following leafs have been used while customising\n\t(partial overlap with the set of automatically created leaves.\n\ta new customiser for a different PDF could reuse them if necessary.):"
 )
 allCustomiserNodes.Print("V")
-
-del cust
