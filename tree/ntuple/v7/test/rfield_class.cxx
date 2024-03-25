@@ -74,6 +74,7 @@ TEST(RNTuple, DiamondInheritance)
 
 TEST(RTNuple, TObject)
 {
+   // Ensure that TObject cannot be accidentally handled through the generic RClassField field
    EXPECT_THROW(std::make_unique<ROOT::Experimental::RClassField>("obj", "TObject"), RException);
 
    FileRaii fileGuard("test_ntuple_tobject.root");
