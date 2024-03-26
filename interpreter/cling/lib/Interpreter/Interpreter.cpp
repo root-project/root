@@ -220,6 +220,9 @@ namespace cling {
     if (!m_IncrParser->isValid(false))
       return;
 
+    // Load any requested plugins.
+    getCI()->LoadRequestedPlugins();
+
     // Initialize the opt level to what CodeGenOpts says.
     if (m_OptLevel == -1)
       setDefaultOptLevel(getCI()->getCodeGenOpts().OptimizationLevel);
