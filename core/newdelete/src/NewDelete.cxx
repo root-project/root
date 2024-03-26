@@ -508,10 +508,14 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    RemoveStatMagic(ovp, where);
    void *vp;
    std::align_val_t al = RequestedAlignment(ovp);
-   if (ROOT::Internal::gMmallocDesc)
-      vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size, al));
-   else
-      vp = ::realloc((char *)RealStart(ovp), RealSize(size, al));
+   void *realstart = RealStart(ovp);
+   void *localMallocDesc = nullptr;
+   if (ROOT::Internal::gGetMapFileMallocDesc &&
+       (localMallocDesc = ROOT::Internal::gGetMapFileMallocDesc(realstart))) {
+      vp = ::mrealloc(localMallocDesc, realstart, RealSize(size, al));
+   } else {
+      vp = ::realloc((char *)realstart, RealSize(size, al));
+   }
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size, al));
    if (size > oldsize)
