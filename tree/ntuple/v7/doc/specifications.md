@@ -412,6 +412,9 @@ Zigzag + split
 : Used on signed integers only; it maps $x$ to $2x$ if $x$ is positive and to $-(2x+1)$ if $x$ is negative.
   Followed by split encoding.
 
+**Note**: these encodings always happen within each page, thus decoding should be done page-wise,
+not cluster-wise.
+
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
 Old readers need to ignore these columns and fields constructed from such columns.
