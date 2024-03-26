@@ -733,14 +733,14 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
           evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
          bool createGradient = evalBackend == RooFit::EvalBackend::Value::Codegen;
          auto simPdf = dynamic_cast<RooSimultaneous const *>(pdfClone.get());
-         nllWrapper = std::make_unique<RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper", *nll, &data,
-                                                       simPdf, true);
-         if(createGradient) static_cast<RooFuncWrapper&>(*nllWrapper).createGradient();
+         nllWrapper =
+            std::make_unique<RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper", *nll, &data, simPdf, true);
+         if (createGradient)
+            static_cast<RooFuncWrapper &>(*nllWrapper).createGradient();
       } else {
-         auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, evalBackend == RooFit::EvalBackend::Value::Cuda);
-         nllWrapper = std::make_unique<RooEvaluatorWrapper>(*nll, std::move(evaluator), rangeName ? rangeName : "",
-                                                            pdfClone.get(), takeGlobalObservablesFromData);
-         nllWrapper->setData(data, false);
+         nllWrapper = std::make_unique<RooEvaluatorWrapper>(
+            *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
+            takeGlobalObservablesFromData);
       }
 
       nllWrapper->addOwnedComponents(std::move(nll));

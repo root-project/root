@@ -17,10 +17,11 @@
 
 #include <RooAbsData.h>
 #include <RooFit/EvalContext.h>
+#include <RooFit/Evaluator.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooRealProxy.h>
-#include <RooFit/Evaluator.h>
+#include <RooSetProxy.h>
 
 #include "RooFit/Detail/BatchModeDataHelpers.h"
 #include "RooFit/Detail/Buffers.h"
@@ -35,7 +36,7 @@ class RooAbsPdf;
 
 class RooEvaluatorWrapper final : public RooAbsReal {
 public:
-   RooEvaluatorWrapper(RooAbsReal &topNode, std::unique_ptr<RooFit::Evaluator> evaluator, std::string const &rangeName,
+   RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, bool useGPU, std::string const &rangeName,
                        RooAbsPdf const *simPdf, bool takeGlobalObservablesFromData);
 
    RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const char *name = nullptr);
@@ -68,7 +69,7 @@ private:
    std::shared_ptr<RooFit::Evaluator> _evaluator;
    RooRealProxy _topNode;
    RooAbsData *_data = nullptr;
-   RooArgSet _parameters;
+   RooSetProxy _paramSet;
    std::string _rangeName;
    RooAbsPdf const *_pdf = nullptr;
    const bool _takeGlobalObservablesFromData;
