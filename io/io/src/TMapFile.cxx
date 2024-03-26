@@ -138,6 +138,17 @@ namespace {
       }
       return false;
    }
+
+/// Return the memory mapped start location corresponding to the user pointer
+/// if any. Return `nullptr` otherwise.
+   static void *GetMapFileMallocDesc(void *userptr)
+   {
+      if (TMapFile *mf = TMapFile::WhichMapFile(userptr))
+      {
+         return mf->GetMmallocDesc();
+      }
+      return nullptr;
+   }
 }
 
 
@@ -147,9 +158,11 @@ namespace {
 struct SetFreeIfTMapFile_t {
    SetFreeIfTMapFile_t() {
       ROOT::Internal::gFreeIfTMapFile = FreeIfTMapFile;
+      ROOT::Internal::gGetMapFileMallocDesc = GetMapFileMallocDesc;
    }
    ~SetFreeIfTMapFile_t() {
       ROOT::Internal::gFreeIfTMapFile = nullptr;
+      ROOT::Internal::gGetMapFileMallocDesc = nullptr;
    }
 } gSetFreeIfTMapFile;
 
