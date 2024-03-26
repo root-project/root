@@ -4,10 +4,15 @@ namespace {
 class RNoDictionary {};
 } // namespace
 
+namespace ROOT::Experimental {
+template <>
+struct IsCollectionProxy<CyclicCollectionProxy> : std::true_type {
+};
+} // namespace ROOT::Experimental
+
 TEST(RNTuple, TClass) {
    auto modelFail = RNTupleModel::Create();
    EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), ROOT::Experimental::RException);
-   EXPECT_THROW(modelFail->MakeField<Cyclic>("cyclic"), ROOT::Experimental::RException);
 
    auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
@@ -17,6 +22,17 @@ TEST(RNTuple, TClass) {
 
    FileRaii fileGuard("test_ntuple_tclass.root");
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+}
+
+TEST(RNTuple, CyclicClass)
+{
+   auto modelFail = RNTupleModel::Create();
+   EXPECT_THROW(modelFail->MakeField<Cyclic>("cyclic"), ROOT::Experimental::RException);
+
+   CyclicCollectionProxy ccp;
+   auto cl = TClass::GetClass("CyclicCollectionProxy");
+   cl->CopyCollectionProxy(ccp);
+   EXPECT_THROW(RFieldBase::Create("f", "CyclicCollectionProxy").Unwrap(), ROOT::Experimental::RException);
 }
 
 TEST(RNTuple, DiamondInheritance)
