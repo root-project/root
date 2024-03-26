@@ -217,6 +217,7 @@ if(NOT ROOT_mathmore_FOUND)
       math/tStudent.C
       math/normalDist.C
       roostats/TestNonCentral.C
+      roostats/TestNonCentral.py
       math/Legendre.py
       math/Bessel.py
       math/tStudent.py)
