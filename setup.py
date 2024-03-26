@@ -5,7 +5,6 @@ https://packaging.python.org/guides/distributing-packages-using-setuptools/
 https://github.com/pypa/sampleproject
 """
 
-# Always prefer setuptools over distutils
 from setuptools import setup, find_packages, Extension
 import pathlib
 import shutil
@@ -26,6 +25,9 @@ SOURCE_DIR = os.getcwd()
 BUILD_DIR = tempfile.mkdtemp()
 INSTALL_DIR = tempfile.mkdtemp()
 
+# SOURCE_DIR = os.path.join(os.sep, *"host/home/vpadulan/Programs/rootproject/rootsrc".split("/"))
+# BUILD_DIR = os.path.join(os.sep, *"host/home/vpadulan/Programs/rootproject/pip-tests/build".split("/"))
+# INSTALL_DIR = os.path.join(os.sep, *"host/home/vpadulan/Programs/rootproject/pip-tests/install".split("/"))
 
 class my_cmake_build(_build):
     def run(self):
@@ -42,7 +44,10 @@ class my_cmake_build(_build):
             os.makedirs(INSTALL_DIR)
 
         base_opts = shlex.split("cmake -GNinja -Dccache=ON")
-        mode_opts = shlex.split("-Dminimal=ON -Drpath=ON -Dpyroot=ON -Druntime_cxxmodules=ON")
+        mode_opts = shlex.split(
+            "-Dgminimal=ON -Dasimage=ON -Drpath=ON -Dpyroot=ON "
+            "-Druntime_cxxmodules=ON -Ddataframe=ON -Dxrootd=ON -Dimt=ON "
+            "-Droofit=ON")
         dirs_opts = shlex.split(
             f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR}")
         configure_command = base_opts + mode_opts + dirs_opts
@@ -77,20 +82,20 @@ class my_install(_install):
         install_path = self._get_install_path()
 
         lib_dir = os.path.join(INSTALL_DIR, "lib")
-        install_libdir = os.path.join(install_path, "ROOT", "lib")
 
-        self.copy_tree(os.path.join(INSTALL_DIR, "lib"), os.path.join(install_path, "ROOT", "lib"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "include"), os.path.join(install_path, "ROOT", "include"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "bin"), os.path.join(install_path, "ROOT", "bin"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "etc"), os.path.join(install_path, "ROOT", "etc"))
+        # Copy ROOT installation tree to the ROOT package directory in the pip installation path
+        self.copy_tree(INSTALL_DIR, os.path.join(install_path, "ROOT"))
+        # self.copy_tree(os.path.join(INSTALL_DIR, "lib"), os.path.join(install_path, "ROOT", "lib"))
+        # self.copy_tree(os.path.join(INSTALL_DIR, "include"), os.path.join(install_path, "ROOT", "include"))
+        # self.copy_tree(os.path.join(INSTALL_DIR, "bin"), os.path.join(install_path, "ROOT", "bin"))
+        # self.copy_tree(os.path.join(INSTALL_DIR, "etc"), os.path.join(install_path, "ROOT", "etc"))
 
         self.copy_tree(os.path.join(lib_dir, "cppyy"),
                        os.path.join(install_path, "cppyy"))
         self.copy_tree(os.path.join(lib_dir, "cppyy_backend"),
                        os.path.join(install_path, "cppyy_backend"))
 
-        libs_version = f"{sys.version_info.major}_{sys.version_info.minor}"
-        extlibs = [f"libcppyy{libs_version}.so", f"libcppyy_backend{libs_version}.so", f"libROOTPythonizations{libs_version}.so"]
+        extlibs = ["libcppyy.so", "libcppyy_backend.so", "libROOTPythonizations.so"]
         for ext in extlibs:
             self.copy_file(os.path.join(lib_dir, ext), install_path)
 
@@ -131,6 +136,6 @@ s = setup(
 )
 
 
-# Cleanup temporary directories
-shutil.rmtree(BUILD_DIR)
-shutil.rmtree(INSTALL_DIR)
+# # Cleanup temporary directories
+# shutil.rmtree(BUILD_DIR)
+# shutil.rmtree(INSTALL_DIR)
