@@ -3,6 +3,7 @@
 
 #include <RtypesCore.h> // for Double32_t
 #include <TRootIOCtor.h>
+#include <TVirtualCollectionProxy.h>
 
 #include <chrono>
 #include <cstddef>
@@ -208,6 +209,41 @@ struct StructWithIORules : StructWithIORulesBase {
 
 struct Cyclic {
    std::vector<Cyclic> fMember;
+};
+
+// Test cyclic collection proxy: we set up this class such that is its own collection proxy inner class.
+// This does not actually need to be a working collection proxy.
+struct CyclicCollectionProxy : TVirtualCollectionProxy {
+   // The following three functions are required by RProxiedCollectionField
+   static void Func_CreateIterators(void *, void **, void **, TVirtualCollectionProxy *) {}
+   static void *Func_Next(void *, const void *) { return nullptr; }
+   static void Func_DeleteTwoIterators(void *, void *) {}
+
+public:
+   CyclicCollectionProxy();
+   TVirtualCollectionProxy *Generate() const final { return new CyclicCollectionProxy(); }
+   Int_t GetCollectionType() const final { return 0; }
+   ULong_t GetIncrement() const final { return 0; }
+   UInt_t Sizeof() const final { return 0; }
+   bool HasPointers() const final { return false; }
+   TClass *GetValueClass() const final;
+   EDataType GetType() const final { return EDataType::kOther_t; }
+   void PushProxy(void *) final {}
+   void PopProxy() final {}
+   void *At(UInt_t) final { return nullptr; }
+   void Clear(const char * = "") final {}
+   UInt_t Size() const final { return 0; }
+   void *Allocate(UInt_t, bool) final { return nullptr; }
+   void Commit(void *) final {}
+   void Insert(const void *, void *, size_t) final {}
+   TStreamerInfoActions::TActionSequence *GetConversionReadMemberWiseActions(TClass *, Int_t) final { return nullptr; }
+   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t) final { return nullptr; }
+   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() final { return nullptr; }
+   CreateIterators_t GetFunctionCreateIterators(bool = true) final { return &Func_CreateIterators; }
+   CopyIterator_t GetFunctionCopyIterator(bool = true) final { return nullptr; }
+   Next_t GetFunctionNext(bool = true) final { return &Func_Next; }
+   DeleteIterator_t GetFunctionDeleteIterator(bool = true) final { return nullptr; }
+   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(bool = true) final { return &Func_DeleteTwoIterators; }
 };
 
 struct Unsupported {
