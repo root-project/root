@@ -743,10 +743,10 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       if (!result) {
          auto cl = TClass::GetClass(canonicalType.c_str());
          if (cl != nullptr) {
+            createContextGuard.AddClassToStack(canonicalType);
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
             } else {
-               createContextGuard.AddClassToStack(canonicalType);
                result = std::make_unique<RClassField>(fieldName, canonicalType);
             }
          }

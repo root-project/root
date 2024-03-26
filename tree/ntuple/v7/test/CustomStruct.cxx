@@ -1,34 +1,43 @@
 #include "CustomStruct.hxx"
 
+#include <TClass.h>
+
 int ComplexStruct::gNCallConstructor = 0;
 int ComplexStruct::gNCallDestructor = 0;
 
 ComplexStruct::ComplexStruct()
 {
-    gNCallConstructor++;
+   gNCallConstructor++;
 }
 
 ComplexStruct::~ComplexStruct()
 {
-    gNCallDestructor++;
+   gNCallDestructor++;
 }
 
 int ComplexStruct::GetNCallConstructor()
 {
-    return gNCallConstructor;
+   return gNCallConstructor;
 }
 
 int ComplexStruct::GetNCallDestructor()
 {
-    return gNCallDestructor;
+   return gNCallDestructor;
 }
 
 void ComplexStruct::SetNCallConstructor(int n)
 {
-    gNCallConstructor = n;
+   gNCallConstructor = n;
 }
 
 void ComplexStruct::SetNCallDestructor(int n)
 {
-    gNCallDestructor = n;
+   gNCallDestructor = n;
+}
+
+CyclicCollectionProxy::CyclicCollectionProxy() : TVirtualCollectionProxy(TClass::GetClass("CyclicCollectionProxy")){};
+
+TClass *CyclicCollectionProxy::GetValueClass() const
+{
+   return TClass::GetClass("CyclicCollectionProxy");
 }
