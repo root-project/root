@@ -31,12 +31,7 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &
    : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}
 {
    if (useEvaluator) {
-      auto absReal =
-         std::make_unique<RooEvaluatorWrapper>(obj, std::make_unique<RooFit::Evaluator>(obj), "", simPdf, false);
-      if (data) {
-         absReal->setData(const_cast<RooAbsData &>(*data), false);
-      }
-      _absReal = std::move(absReal);
+      _absReal = std::make_unique<RooEvaluatorWrapper>(obj, const_cast<RooAbsData *>(data), false, "", simPdf, false);
    }
 
    std::string func;

@@ -279,12 +279,6 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
    finalizeResult(ctx, {nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
 }
 
-void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
-{
-   // strip away the special variables
-   params->remove(RooArgList{*_weightVar, *_weightSquaredVar}, true, true);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the prefix for the special variables of this NLL, like weights or bin
 /// volumes.
