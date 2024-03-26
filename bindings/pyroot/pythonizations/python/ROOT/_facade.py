@@ -337,6 +337,25 @@ class ROOTFacade(types.ModuleType):
         try:
             from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
+            # Provide a FromCSV factory method that uses keyword arguments instead of the ROptions config struct.
+            # In Python, the RCsvDS::ROptions struct members are available without the leading 'f' and in camelCase,
+            # e.g. fDelimiter --> delimiter.
+            # We need to keep the parameters of the old FromCSV signature for backward compatibility.
+            ns._FromCSV = ns.FromCSV
+            def MakeCSVDataFrame(
+                    fileName, readHeaders = True, delimiter = ',', linesChunkSize = -1, colTypes = {}, **kwargs):
+                options = ns.RCsvDS.ROptions()
+                options.fHeaders = readHeaders
+                options.fDelimiter = delimiter
+                options.fLinesChunkSize = linesChunkSize
+                options.fColumnTypes = colTypes
+                for key, val in kwargs.items():
+                    structMemberName = 'f' + key[0].upper() + key[1:]
+                    if hasattr(options, structMemberName):
+                        setattr(options, structMemberName, val)
+                return ns._FromCSV(fileName, options)
+            ns.FromCSV = MakeCSVDataFrame
+
             # Make a copy of the arrays that have strides to make sure we read the correct values
             # TODO a cleaner fix
             def MakeNumpyDataFrameCopy(np_dict):
