@@ -580,6 +580,9 @@ TMapFile::~TMapFile()
 
    Close("dtor");
 
+   // Tell TMapFile::operator delete which memory address to detach
+   // The detaching must be done after the whole object has been tear down
+   // (including base classes).
    fgMmallocDesc = fMmallocDesc;
 
    delete [] fName; fName = nullptr;
@@ -614,8 +617,6 @@ void TMapFile::Add(const TObject *obj, const char *name)
    if (lock)
       AcquireSemaphore();
 
-   ROOT::Internal::gMmallocDesc = fMmallocDesc;
-
    const char *n;
    if (name && *name)
       n = name;
@@ -626,7 +627,10 @@ void TMapFile::Add(const TObject *obj, const char *name)
       //Warning("Add", "replaced object with same name %s", n);
    }
 
+   ROOT::Internal::gMmallocDesc = fMmallocDesc;
    TMapRec *mr = new TMapRec(n, obj, 0, 0);
+   ROOT::Internal::gMmallocDesc = nullptr;
+
    if (!fFirst) {
       fFirst = mr;
       fLast  = mr;
@@ -635,10 +639,17 @@ void TMapFile::Add(const TObject *obj, const char *name)
       fLast        = mr;
    }
 
-   ROOT::Internal::gMmallocDesc = nullptr;
 
    if (lock)
       ReleaseSemaphore();
+}
+
+namespace {
+   // Wrapper around TStorage::ReAlloc to update the signature.
+   char *MemMapAllocFunc(char *oldptr, size_t newsize, size_t oldsize)
+   {
+      return reinterpret_cast<char*>(TStorage::ReAlloc(oldptr, newsize, oldsize));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -650,8 +661,6 @@ void TMapFile::Update(TObject *obj)
 
    AcquireSemaphore();
 
-   ROOT::Internal::gMmallocDesc = fMmallocDesc;
-
    Bool_t all = (obj == 0) ? kTRUE : kFALSE;
 
    TMapRec *mr = fFirst;
@@ -659,24 +668,18 @@ void TMapFile::Update(TObject *obj)
       if (all || mr->fObject == obj) {
          TBufferFile *b;
          if (!mr->fBufSize) {
-            b = new TBufferFile(TBuffer::kWrite, GetBestBuffer());
-
-            // Disable the mmap allocations while we create core/meta objects
-            ROOT::Internal::gMmallocDesc = nullptr;
             const char *cname = mr->fObject->ClassName();
-            // This is not quite sufficient :(, if the object has (directly or
-            // indirectly) polymorphic pointers, we can not capture all the
-            // StreamerInfo (even if we were transversing the tree here).
-            // So for now just do one level.
-            mr->fObject->IsA()->GetStreamerInfo();
-            ROOT::Internal::gMmallocDesc = fMmallocDesc;
+            mr->fBufSize = GetBestBuffer();
 
+            ROOT::Internal::gMmallocDesc = fMmallocDesc;
+            mr->fBuffer = new char[mr->fBufSize];
             mr->fClassName = StrDup(cname);
-         } else
-            b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer);
+            ROOT::Internal::gMmallocDesc = nullptr;
+         }
+         b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer, kFALSE, MemMapAllocFunc);
          b->MapObject(mr->fObject);  //register obj in map to handle self reference
          mr->fObject->Streamer(*b);
-         mr->fBufSize = b->BufferSize();
+         mr->fBufSize = b->BufferSize() + 8; // extra space at end of buffer (used for free block count) there on
          mr->fBuffer  = b->Buffer();
          SumBuffer(b->Length());
          b->DetachBuffer();
@@ -684,8 +687,6 @@ void TMapFile::Update(TObject *obj)
       }
       mr = mr->fNext;
    }
-
-   ROOT::Internal::gMmallocDesc = nullptr;
 
    ReleaseSemaphore();
 }
