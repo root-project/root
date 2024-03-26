@@ -580,6 +580,8 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // If this folder is a onlyListed object, merge everything inside.
       if (onlyListed) type &= ~kOnlyListed;
       status = MergeRecursive(newdir, sourcelist, type);
+      // Delete newdir directory after having written it (merged)
+      if (!(type&kIncremental)) delete newdir;
       if (onlyListed) type |= kOnlyListed;
       if (!status) return kFALSE;
    } else if (!cl->IsTObject() && cl->GetMerge()) {
