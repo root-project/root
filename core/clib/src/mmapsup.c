@@ -306,7 +306,7 @@ int mmalloc_update_mapping(PTR md)
 #endif
 
   oldtop = mdp->top;
-  top    = ((struct mdesc *)mdp->base)->top;
+  top    = ((struct mdesc *)(mdp->base + mdp->offset))->top;
 
   if (oldtop == top) return 0;
 
