@@ -3,7 +3,7 @@ requires = ["cmake", "setuptools", "wheel", "ninja", "numpy"]
 
 [project]
 name = "root-cern"
-version = "0.1a3"
+version = "0.1a4"
 
 requires-python = ">=3.8"
 authors = [
@@ -23,3 +23,9 @@ root = "ROOT._rootcli:main"
 # Increase pip debugging output
 build-verbosity = 1
 build="cp3{8,9,10,11,12}-manylinux_x86_64"
+#build="cp312-manylinux_x86_64"
+manylinux-x86_64-image = "manylinux_2_28"
+
+# Install system library
+[tool.cibuildwheel.linux]
+before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel tbb tbb-devel xrootd-client xrootd-client-devel"
