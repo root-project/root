@@ -95,17 +95,6 @@ if (NOT dataframe)
     list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
     # RooFit tutorial depending on RDataFrame
     list(APPEND dataframe_veto roofit/rf408*)
-elseif(MSVC AND NOT win_broken_tests)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      list(APPEND dataframe_veto dataframe/df002_dataModel.py)
-      list(APPEND dataframe_veto dataframe/df016_vecOps.py)
-      list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.py)
-    endif()
-
-    # Why do we need to veto these tutorials on Windows with C++17?
-    list(APPEND dataframe_veto dataframe/df032_RDFFromNumpy.py)
-    list(APPEND dataframe_veto dataframe/df033_Describe.py)
-
 endif()
 
 if(NOT sqlite)
@@ -123,12 +112,6 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
    list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
-if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
-    list(APPEND dataframe_veto dataframe/df002_dataModel.C)
-    list(APPEND dataframe_veto dataframe/df016_vecOps.C)
-    list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
-endif()
-
 if(NOT ROOT_proof_FOUND)
    set(proof_veto roostats/StandardFrequentistDiscovery.C)
 endif()
@@ -142,16 +125,11 @@ if(NOT ROOT_roofit_FOUND)
                   roostats/*.C roostats/*.py
                   histfactory/*.C histfactory/*.py)
 else()
-  if(MSVC AND NOT win_broken_tests)
-    set(roofit_veto roofit/rf401_importttreethx.py roofit/rf708_bphysics.py roofit/rf501_simultaneouspdf.py)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      list(APPEND roofit_veto roofit/rf409_NumPyPandasToRooFit.py)
-    else()
-      # The following tutorials are failing with this error:
-      # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
-      # on Windows 32 bit and Visual Studio v17.8
-      list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
-    endif()
+  if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT llvm13_broken_tests)
+    # The following tutorials are failing with this error:
+    # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
+    # on Windows 32 bit and Visual Studio v17.8
+    list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
   endif()
 endif()
 
@@ -417,31 +395,23 @@ set(extra_veto
   r/rootlogon.C)
 
 if(MSVC AND NOT llvm13_broken_tests)
- list(APPEND extra_veto
-      dataframe/df002_dataModel.C
-      dataframe/df007_snapshot.C
-      dataframe/df016_vecOps.C
-      dataframe/df017_vecOpsHEP.C
-      fit/NumericalMinimization.C
-      fit/fit2.C
-      fit/fit2a.C
-      fit/fit2dHist.C
-      graphics/earth.C
-      graphs/motorcycle.C
-      math/exampleFunction.py
-      math/multidimSampling.C
-      math/multivarGaus.C
-      tree/basic.C
-      unfold/testUnfold5b.C
-      unfold/testUnfold5c.C
-      unfold/testUnfold5d.C
-      unuran/unuranDemo.C
-      v7/ntuple/ntpl001_staff.C
-      v7/perfcomp.cxx
-      dataframe/df002_dataModel.py
-      dataframe/df016_vecOps.py
-      dataframe/df017_vecOpsHEP.py
-      dataframe/df035_RDFFromPandas.py)
+  list(APPEND extra_veto
+       math/exampleFunction.py
+       dataframe/df002_dataModel.C
+       dataframe/df016_vecOps.C
+       dataframe/df017_vecOpsHEP.C
+       dataframe/df002_dataModel.py
+       dataframe/df016_vecOps.py
+       dataframe/df017_vecOpsHEP.py
+       dataframe/df032_RDFFromNumpy.py
+       dataframe/df035_RDFFromPandas.py)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    list(APPEND extra_veto
+         dataframe/df007_snapshot.C
+         graphics/earth.C
+         graphs/motorcycle.C
+         v7/ntuple/ntpl001_staff.C)
+  endif()
 endif()
 
 set(all_veto hsimple.C
