@@ -30,6 +30,7 @@ rebase_topic () {
 rebase_topic guitargeek/exceptions
 rebase_topic guitargeek/converter_control
 rebase_topic guitargeek/string_converters
+rebase_topic guitargeek/py12_warnings
 
 cd ..
 
