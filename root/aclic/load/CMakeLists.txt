@@ -4,12 +4,10 @@ ROOTTEST_ADD_TEST(autoload
                   OUTREF execautoload.ref
                   DEPENDS autoloadtest.C)
 
-if(NOT MSVC OR llvm13_broken_tests)
-    ROOTTEST_ADD_TEST(reload
-                      COPY_TO_BUILDDIR Reload.root
-                      MACRO assertReload.C
-                      OUTREF assertReload.ref)
-endif()
+ROOTTEST_ADD_TEST(reload
+                  COPY_TO_BUILDDIR Reload.root
+                  MACRO assertReload.C
+                  OUTREF assertReload.ref)
 
 ROOTTEST_ADD_TEST(linktest
                   MACRO execlinktest.C
