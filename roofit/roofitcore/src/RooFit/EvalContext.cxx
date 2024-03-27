@@ -17,6 +17,7 @@
 #include <RooRealVar.h>
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace {
 
@@ -82,6 +83,32 @@ void EvalContext::resize(std::size_t n)
 {
    _cfgs.resize(n);
    _ctx.resize(n);
+}
+
+/// \brief Sets the output value with an offset.
+///
+/// This function sets the output value with an offset for the given argument.
+/// It should only be used in reducer nodes. Depending on the current
+/// OffsetMode, the result will either be just the value, the value minus the
+/// offset, of just the offset.
+///
+/// \param arg Pointer to the RooAbsArg object.
+/// \param val The value to be set.
+/// \param offset The offset value.
+///
+/// \throws std::runtime_error if the argument is not a reducer node.
+void EvalContext::setOutputWithOffset(RooAbsArg const *arg, ROOT::Math::KahanSum<double> val,
+                                      ROOT::Math::KahanSum<double> const &offset)
+{
+   if (!arg->isReducerNode()) {
+      throw std::runtime_error("You can only use setOutputWithOffset() in reducer nodes!");
+   }
+   if (_offsetMode == OffsetMode::WithOffset) {
+      val -= offset;
+   } else if (_offsetMode == OffsetMode::OnlyOffset) {
+      val = offset;
+   }
+   const_cast<double *>(_ctx[arg->dataToken()].data())[0] = val.Sum();
 }
 
 } // namespace RooFit

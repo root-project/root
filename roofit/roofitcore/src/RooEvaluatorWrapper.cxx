@@ -57,6 +57,17 @@ RooEvaluatorWrapper::RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const
 {
 }
 
+double RooEvaluatorWrapper::evaluate() const
+{
+   if (!_evaluator)
+      return 0.0;
+
+   _evaluator->setOffsetMode(hideOffset() ? RooFit::EvalContext::OffsetMode::WithoutOffset
+                                          : RooFit::EvalContext::OffsetMode::WithOffset);
+
+   return _evaluator->run()[0];
+}
+
 bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
                                         bool /*stripDisconnected*/) const
 {

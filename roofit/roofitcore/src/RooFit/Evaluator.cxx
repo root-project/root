@@ -684,4 +684,28 @@ RooArgSet Evaluator::getParameters() const
    return parameters;
 }
 
+/// \brief Sets the offset mode for evaluation.
+///
+/// This function sets the offset mode for evaluation to the specified mode.
+/// It updates the offset mode for both CPU and CUDA evaluation contexts.
+///
+/// \param mode The offset mode to be set.
+///
+/// \note This function marks reducer nodes as dirty if the offset mode is
+///       changed, because only reducer nodes can use offsetting.
+void Evaluator::setOffsetMode(RooFit::EvalContext::OffsetMode mode)
+{
+   if (mode == _evalContextCPU._offsetMode)
+      return;
+
+   _evalContextCPU._offsetMode = mode;
+   _evalContextCUDA._offsetMode = mode;
+
+   for (auto &nodeInfo : _nodes) {
+      if (nodeInfo.absArg->isReducerNode()) {
+         nodeInfo.isDirty = true;
+      }
+   }
+}
+
 } // namespace RooFit
