@@ -26,7 +26,6 @@
 
 // needed only for template instantiations of THnSparseT:
 #include "TArrayF.h"
-#include "TArrayL.h"
 #include "TArrayL64.h"
 #include "TArrayI.h"
 #include "TArrayS.h"
@@ -163,6 +162,7 @@ class THnSparse: public THnBase {
       return (THnSparse*) RebinBase(group);
    }
 
+   void Scale(Double_t c) override;
    void Reset(Option_t* option = "") override;
    void Sumw2() override;
 
