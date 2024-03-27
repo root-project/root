@@ -14,3 +14,6 @@ ROOT_ADD_GTEST(TROMemFile TROMemFileTests.cxx LIBRARIES RIO Tree)
 if(uring AND NOT DEFINED ENV{ROOTTEST_IGNORE_URING})
   ROOT_ADD_GTEST(RIoUring RIoUring.cxx LIBRARIES RIO)
 endif()
+
+ROOT_EXECUTABLE(TMapFileTest TMapFileTest.cxx LIBRARIES RIO Hist New)
+ROOT_ADD_TEST(io-io-test-TMapFileTest COMMAND TMapFileTest complete)
