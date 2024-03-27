@@ -8,7 +8,7 @@ include(ExternalProject)
 
 find_package(OpenSSL REQUIRED)
 
-set(XROOTD_VERSION "5.5.2")
+set(XROOTD_VERSION "5.6.9")
 set(XROOTD_VERSIONNUM 500050002 CACHE INTERNAL "" FORCE)
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
@@ -17,10 +17,6 @@ message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
 
 # Guess under which directory XRootD will install its libraires
 set(XROOTD_LIBDIR "lib")
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND ${CMAKE_SIZEOF_VOID_P} EQUAL 8
-AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
-  set(XROOTD_LIBDIR "lib64")
-endif()
 
 foreach(lib XrdUtils XrdCl)
   set(libname ${CMAKE_SHARED_LIBRARY_PREFIX}${lib}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -34,7 +30,7 @@ endif()
 ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=ec4e0490b8ee6a3254a4ea4449342aa364bc95b78dc9a8669151be30353863c6
+    URL_HASH SHA256=44196167fbcf030d113e3749dfdecab934c43ec15e38e77481e29aac191ca3a8
     INSTALL_DIR ${XROOTD_PREFIX}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
