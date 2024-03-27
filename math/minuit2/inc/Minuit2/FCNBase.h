@@ -12,9 +12,11 @@
 
 #include "Minuit2/MnConfig.h"
 
-#include <vector>
-
 #include "Minuit2/GenericFunction.h"
+
+#include <ROOT/RSpan.hxx>
+
+#include <vector>
 
 namespace ROOT {
 
@@ -69,7 +71,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &v) const override = 0;
+   double operator()(std::span<const double> v) const override = 0;
 
    /**
 

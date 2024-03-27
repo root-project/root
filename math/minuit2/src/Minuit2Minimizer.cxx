@@ -409,7 +409,7 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
    }
 }
 
-void Minuit2Minimizer::SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc)
+void Minuit2Minimizer::SetHessianFunction(std::function<bool(std::span<const double>, double *)> hfunc)
 {
    // for Fumili not supported for the time being
    if (fUseFumili) return;
@@ -595,7 +595,7 @@ bool Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min)
    int debugLevel = PrintLevel();
    if (debugLevel >= 3) {
 
-      const std::vector<ROOT::Minuit2::MinimumState> &iterationStates = min.States();
+      std::span<const ROOT::Minuit2::MinimumState> iterationStates = min.States();
       std::cout << "Number of iterations " << iterationStates.size() << std::endl;
       for (unsigned int i = 0; i < iterationStates.size(); ++i) {
          // std::cout << iterationStates[i] << std::endl;
@@ -663,7 +663,7 @@ bool Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min)
       PrintResults();
 
    // set the minimum values in the fValues vector
-   const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
+   std::span<const MinuitParameter> paramsObj = fState.MinuitParameters();
    if (paramsObj.empty())
       return false;
    assert(fDim == paramsObj.size());
@@ -713,7 +713,7 @@ void Minuit2Minimizer::PrintResults()
 const double *Minuit2Minimizer::Errors() const
 {
    // return error at minimum (set to zero for fixed and constant params)
-   const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
+   std::span<const MinuitParameter> paramsObj = fState.MinuitParameters();
    if (paramsObj.empty())
       return nullptr;
    assert(fDim == paramsObj.size());

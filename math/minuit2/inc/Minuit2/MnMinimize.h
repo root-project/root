@@ -31,20 +31,20 @@ class MnMinimize : public MnApplication {
 
 public:
    /// construct from FCNBase + std::vector for parameters and errors
-   MnMinimize(const FCNBase &fcn, const std::vector<double> &par, const std::vector<double> &err, unsigned int stra = 1)
+   MnMinimize(const FCNBase &fcn, std::span<const double> par, std::span<const double> err, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(CombinedMinimizer())
    {
    }
 
    /// construct from FCNBase + std::vector for parameters and covariance
-   MnMinimize(const FCNBase &fcn, const std::vector<double> &par, unsigned int nrow, const std::vector<double> &cov,
+   MnMinimize(const FCNBase &fcn, std::span<const double> par, unsigned int nrow, std::span<const double> cov,
               unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(CombinedMinimizer())
    {
    }
 
    /// construct from FCNBase + std::vector for parameters and MnUserCovariance
-   MnMinimize(const FCNBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov, unsigned int stra = 1)
+   MnMinimize(const FCNBase &fcn, std::span<const double> par, const MnUserCovariance &cov, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(CombinedMinimizer())
    {
    }
@@ -70,21 +70,21 @@ public:
    // interfaces using FCNGradientBase
 
    /// construct from FCNGradientBase + std::vector for parameters and errors
-   MnMinimize(const FCNGradientBase &fcn, const std::vector<double> &par, const std::vector<double> &err,
+   MnMinimize(const FCNGradientBase &fcn, std::span<const double> par, std::span<const double> err,
               unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(CombinedMinimizer())
    {
    }
 
    /// construct from FCNGradientBase + std::vector for parameters and covariance
-   MnMinimize(const FCNGradientBase &fcn, const std::vector<double> &par, unsigned int nrow,
-              const std::vector<double> &cov, unsigned int stra = 1)
+   MnMinimize(const FCNGradientBase &fcn, std::span<const double> par, unsigned int nrow,
+              std::span<const double> cov, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(CombinedMinimizer())
    {
    }
 
    /// construct from FCNGradientBase + std::vector for parameters and MnUserCovariance
-   MnMinimize(const FCNGradientBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov,
+   MnMinimize(const FCNGradientBase &fcn, std::span<const double> par, const MnUserCovariance &cov,
               unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(CombinedMinimizer())
    {

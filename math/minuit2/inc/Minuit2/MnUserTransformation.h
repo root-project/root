@@ -18,6 +18,8 @@
 #include "Minuit2/SqrtLowParameterTransformation.h"
 #include "Minuit2/SqrtUpParameterTransformation.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 #include <string>
 #include <cassert>
@@ -46,7 +48,7 @@ public:
    {
    }
 
-   MnUserTransformation(const std::vector<double> &, const std::vector<double> &);
+   MnUserTransformation(std::span<const double>, std::span<const double>);
 
    ~MnUserTransformation() {}
 

@@ -34,8 +34,8 @@ namespace Minuit2 {
 
 // #include "Minuit2/MnUserParametersPrint.h"
 
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const std::vector<double> &par,
-                                                   const std::vector<double> &err, unsigned int stra,
+FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, std::span<const double> par,
+                                                   std::span<const double> err, unsigned int stra,
                                                    unsigned int maxfcn, double toler) const
 {
    // minimize from FCNBase and std::vector of double's for parameter values and errors (step sizes)
@@ -44,8 +44,8 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const std
    return Minimize(fcn, st, strategy, maxfcn, toler);
 }
 
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const std::vector<double> &par,
-                                                   const std::vector<double> &err, unsigned int stra,
+FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, std::span<const double> par,
+                                                   std::span<const double> err, unsigned int stra,
                                                    unsigned int maxfcn, double toler) const
 {
    // minimize from FCNGradientBase (use analytical gradient provided in FCN)
@@ -56,8 +56,8 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, c
 }
 
 // move nrow before cov to avoid ambiguities when using default parameters
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const std::vector<double> &par,
-                                                   unsigned int nrow, const std::vector<double> &cov, unsigned int stra,
+FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, std::span<const double> par,
+                                                   unsigned int nrow, std::span<const double> cov, unsigned int stra,
                                                    unsigned int maxfcn, double toler) const
 {
    // minimize from FCNBase using std::vector for parameter error and
@@ -68,8 +68,8 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const std
    return Minimize(fcn, st, strategy, maxfcn, toler);
 }
 
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const std::vector<double> &par,
-                                                   unsigned int nrow, const std::vector<double> &cov, unsigned int stra,
+FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, std::span<const double> par,
+                                                   unsigned int nrow, std::span<const double> cov, unsigned int stra,
                                                    unsigned int maxfcn, double toler) const
 {
    // minimize from FCNGradientBase (use analytical gradient provided in FCN)

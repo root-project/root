@@ -42,7 +42,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 }
 
 // comment it, because it was added
-FunctionGradient Numerical2PGradientCalculator::operator()(const std::vector<double> &params) const
+FunctionGradient Numerical2PGradientCalculator::operator()(std::span<const double> params) const
 {
    // calculate gradient from an std;:vector of paramteters
 

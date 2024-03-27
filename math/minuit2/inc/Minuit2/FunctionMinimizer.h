@@ -11,6 +11,9 @@
 #define ROOT_Minuit2_FunctionMinimizer
 
 #include "Minuit2/MnConfig.h"
+
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -37,22 +40,22 @@ public:
    virtual ~FunctionMinimizer() {}
 
    // starting values for parameters and errors
-   virtual FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &par, const std::vector<double> &err,
+   virtual FunctionMinimum Minimize(const FCNBase &, std::span<const double> par, std::span<const double> err,
                                     unsigned int strategy, unsigned int maxfcn, double toler) const = 0;
 
    // starting values for parameters and errors and FCN with Gradient
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &par,
-                                    const std::vector<double> &err, unsigned int strategy, unsigned int maxfcn,
+   virtual FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double> par,
+                                    std::span<const double> err, unsigned int strategy, unsigned int maxfcn,
                                     double toler) const = 0;
 
    // starting values for parameters and covariance matrix
-   virtual FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &par, unsigned int nrow,
-                                    const std::vector<double> &cov, unsigned int strategy, unsigned int maxfcn,
+   virtual FunctionMinimum Minimize(const FCNBase &, std::span<const double> par, unsigned int nrow,
+                                    std::span<const double> cov, unsigned int strategy, unsigned int maxfcn,
                                     double toler) const = 0;
 
    // starting values for parameters and covariance matrix and FCN with Gradient
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &par, unsigned int nrow,
-                                    const std::vector<double> &cov, unsigned int strategy, unsigned int maxfcn,
+   virtual FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double> par, unsigned int nrow,
+                                    std::span<const double> cov, unsigned int strategy, unsigned int maxfcn,
                                     double toler) const = 0;
 };
 

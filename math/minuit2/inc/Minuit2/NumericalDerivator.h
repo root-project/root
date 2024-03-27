@@ -20,12 +20,15 @@
 
 #include <Math/IFunctionfwd.h>
 
-#include <vector>
 #include "Fit/ParameterSettings.h"
 #include "Minuit2/SinParameterTransformation.h"
 #include "Minuit2/SqrtUpParameterTransformation.h"
 #include "Minuit2/SqrtLowParameterTransformation.h"
 #include "Minuit2/MnMachinePrecision.h"
+
+#include <ROOT/RSpan.hxx>
+
+#include <vector>
 
 namespace ROOT {
 namespace Minuit2 {
@@ -45,19 +48,19 @@ public:
                       bool always_exactly_mimic_minuit2 = true);
 
    void SetupDifferentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
-                           const std::vector<ROOT::Fit::ParameterSettings> &parameters);
+                           std::span<const ROOT::Fit::ParameterSettings> parameters);
    std::vector<DerivatorElement> Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-                                               const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                               const std::vector<DerivatorElement> &previous_gradient);
+                                               std::span<const ROOT::Fit::ParameterSettings> parameters,
+                                               std::span<const DerivatorElement> previous_gradient);
 
    DerivatorElement PartialDerivative(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-                                      const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                      std::span<const ROOT::Fit::ParameterSettings> parameters,
                                       unsigned int i_component, DerivatorElement previous);
    DerivatorElement FastPartialDerivative(const ROOT::Math::IBaseFunctionMultiDim *function,
-                                          const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                          std::span<const ROOT::Fit::ParameterSettings> parameters,
                                           unsigned int i_component, const DerivatorElement &previous);
    DerivatorElement operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-                               const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component,
+                               std::span<const ROOT::Fit::ParameterSettings> parameters, unsigned int i_component,
                                const DerivatorElement &previous);
 
    double GetValue() const { return fVal; }
@@ -71,7 +74,7 @@ public:
    double DInt2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
 
    void SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *function,
-                           const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                           std::span<const ROOT::Fit::ParameterSettings> parameters,
                            std::vector<DerivatorElement> &gradient);
 
    inline bool AlwaysExactlyMimicMinuit2() const { return fAlwaysExactlyMimicMinuit2; }
