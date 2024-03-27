@@ -27,10 +27,22 @@ ds_train, ds_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
 )
 
 # Loop through training set
-for i, b in enumerate(ds_train):
-    print(f"Training batch {i} => {b.shape}")
+i = 1
+while True:
+    try:
+        b = next(ds_train)
+        print(f"Training batch {i} => {b.shape}")
+        i+=1
+    except StopIteration:
+        break
 
 
 # Loop through Validation set
-for i, b in enumerate(ds_validation):
-    print(f"Validation batch {i} => {b.shape}")
+i = 1
+while True:
+    try:
+        b = next(ds_validation)
+        print(f"Validation batch {i} => {b.shape}")
+        i+=1
+    except StopIteration:
+        break
