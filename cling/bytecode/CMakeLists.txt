@@ -9,10 +9,8 @@ ROOTTEST_ADD_TEST(runcomplex
                   OUTREF complex.ref
                   LABELS roottest regression cling)
 
-if(NOT MSVC OR llvm13_broken_tests)
-  ROOTTEST_ADD_TEST(runhenry
-                    COPY_TO_BUILDDIR henry.dat
-                    MACRO runhenry.C
-                    OUTREF henry.ref
-                    LABELS roottest regression cling)
-endif()
+ROOTTEST_ADD_TEST(runhenry
+                  COPY_TO_BUILDDIR henry.dat
+                  MACRO runhenry.C
+                  OUTREF henry.ref
+                  LABELS roottest regression cling)
