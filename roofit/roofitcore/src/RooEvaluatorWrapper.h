@@ -62,7 +62,7 @@ public:
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
 protected:
-   double evaluate() const override { return _evaluator ? _evaluator->run()[0] : 0.0; }
+   double evaluate() const override;
 
 private:
    std::shared_ptr<RooFit::Evaluator> _evaluator;

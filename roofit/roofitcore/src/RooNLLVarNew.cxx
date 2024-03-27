@@ -208,7 +208,8 @@ void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgS
    }
 }
 
-double RooNLLVarNew::doEvalBinnedL(std::span<const double> preds, std::span<const double> weights) const
+void RooNLLVarNew::doEvalBinnedL(RooFit::EvalContext &ctx, std::span<const double> preds,
+                                 std::span<const double> weights) const
 {
    ROOT::Math::KahanSum<double> result{0.0};
    ROOT::Math::KahanSum<double> sumWeightKahanSum{0.0};
@@ -233,19 +234,16 @@ double RooNLLVarNew::doEvalBinnedL(std::span<const double> preds, std::span<cons
       }
    }
 
-   return finalizeResult(result, sumWeightKahanSum.Sum());
+   finalizeResult(ctx, result, sumWeightKahanSum.Sum());
 }
 
 void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
 {
-   std::span<double> output = ctx.output();
-
    std::span<const double> weights = ctx.at(_weightVar);
    std::span<const double> weightsSumW2 = ctx.at(_weightSquaredVar);
 
    if (_binnedL) {
-      output[0] = doEvalBinnedL(ctx.at(&*_pdf), _weightSquared ? weightsSumW2 : weights);
-      return;
+      return doEvalBinnedL(ctx, ctx.at(&*_pdf), _weightSquared ? weightsSumW2 : weights);
    }
 
    auto config = ctx.config(this);
@@ -278,7 +276,7 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
       nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected[0], _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
    }
 
-   output[0] = finalizeResult({nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
+   finalizeResult(ctx, {nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
 }
 
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
@@ -320,7 +318,7 @@ void RooNLLVarNew::enableOffsetting(bool flag)
    _offset = ROOT::Math::KahanSum<double>{};
 }
 
-double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const
+void RooNLLVarNew::finalizeResult(RooFit::EvalContext &ctx, ROOT::Math::KahanSum<double> result, double weightSum) const
 {
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
@@ -336,13 +334,8 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
       if (_offset.Sum() == 0 && _offset.Carry() == 0 && (result.Sum() != 0 || result.Carry() != 0)) {
          _offset = result;
       }
-
-      // Subtract offset
-      if (!RooAbsReal::hideOffset()) {
-         result -= _offset;
-      }
    }
-   return result.Sum();
+   ctx.setOutputWithOffset(this, result, _offset);
 }
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
