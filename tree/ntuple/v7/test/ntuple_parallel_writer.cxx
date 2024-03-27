@@ -78,29 +78,25 @@ TEST(RNTupleParallelWriter, Basics)
       auto writer = RNTupleParallelWriter::Append(std::move(model), "f", *file);
       test(std::move(writer));
    }
-}
 
-TEST(RNTupleParallelWriter, Options)
-{
-   FileRaii fileGuard("test_ntuple_parallel_options.root");
-
-   RNTupleWriteOptions options;
-   options.SetUseBufferedWrite(false);
-
-   try {
+   {
       auto model = RNTupleModel::CreateBare();
-      RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
-      FAIL() << "should require buffered writing";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("parallel writing requires buffering"));
+      model->MakeField<float>("pt");
+
+      RNTupleWriteOptions options;
+      options.SetUseBufferedWrite(false);
+      auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      test(std::move(writer));
    }
 
-   try {
-      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   {
       auto model = RNTupleModel::CreateBare();
-      RNTupleParallelWriter::Append(std::move(model), "f", *file, options);
-      FAIL() << "should require buffered writing";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("parallel writing requires buffering"));
+      model->MakeField<float>("pt");
+
+      RNTupleWriteOptions options;
+      options.SetUseBufferedWrite(false);
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleParallelWriter::Append(std::move(model), "f", *file, options);
+      test(std::move(writer));
    }
 }

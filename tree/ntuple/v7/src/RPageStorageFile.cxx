@@ -86,8 +86,8 @@ void ROOT::Experimental::Internal::RPageSinkFile::InitImpl(unsigned char *serial
 }
 
 inline ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Internal::RPageSinkFile::WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
-                                                             std::size_t bytesPacked)
+ROOT::Experimental::Internal::RPageSinkFile::WriteSealedPageImpl(const RPageStorage::RSealedPage &sealedPage,
+                                                                 std::size_t bytesPacked)
 {
    std::uint64_t offsetData;
    {
@@ -115,7 +115,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitPageImpl(ColumnHandle_t colum
    }
 
    fCounters->fSzZip.Add(page.GetNBytes());
-   return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
+   return WriteSealedPageImpl(sealedPage, element->GetPackedSize(page.GetNElements()));
 }
 
 ROOT::Experimental::RNTupleLocator
@@ -126,7 +126,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
       fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetModel().GetType());
    const auto bytesPacked = (bitsOnStorage * sealedPage.fNElements + 7) / 8;
 
-   return WriteSealedPage(sealedPage, bytesPacked);
+   return WriteSealedPageImpl(sealedPage, bytesPacked);
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
