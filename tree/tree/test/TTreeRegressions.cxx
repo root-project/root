@@ -115,3 +115,33 @@ TEST(TTreeRegressions, GetLeafAndFriends)
    EXPECT_EQ(t.GetLeaf("asdklj", "x"), nullptr);
    EXPECT_EQ(t.GetLeaf("asdklj", "vec"), nullptr);
 }
+
+// PR #14887
+TEST(TTreeRegressions, LeafLongString)
+{
+   TTree t("t", "t");
+   char s[1000];
+   memset(s, 'a', 999);
+   s[999] = 0;
+   t.Branch("s", &s, "s/C");
+
+   s[254] = 0;
+   t.Fill();
+   s[254] = 'a';
+   s[255] = 0;
+   t.Fill();
+   s[255] = 'a';
+   t.Fill();
+
+   s[0] = 0;
+   t.GetEntry(0);
+   EXPECT_EQ(strlen(s), 254);
+
+   s[0] = 0;
+   t.GetEntry(1);
+   EXPECT_EQ(strlen(s), 255);
+
+   s[0] = 0;
+   t.GetEntry(2);
+   EXPECT_EQ(strlen(s), 999);
+}
