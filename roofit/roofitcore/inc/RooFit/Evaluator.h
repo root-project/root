@@ -47,6 +47,8 @@ public:
    RooArgSet getParameters() const;
    void print(std::ostream &os);
 
+   void setOffsetMode(RooFit::EvalContext::OffsetMode);
+
 private:
    void processVariable(NodeInfo &nodeInfo);
    void setClientsDirty(NodeInfo &nodeInfo);
