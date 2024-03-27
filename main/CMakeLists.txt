@@ -64,15 +64,22 @@ foreach(rawUtilName ${utils})
   else()
     set(python python)
   endif()
-  configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
-  install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
-                               DESTINATION ${CMAKE_INSTALL_BINDIR}
-                               RENAME ${utilName}
-                               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                                           GROUP_EXECUTE GROUP_READ
-                                           WORLD_EXECUTE WORLD_READ
-                               COMPONENT applications)
+  # Needed by the tests
+  install(FILES ${rawUtilName}
+          DESTINATION ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+          RENAME ${utilName}
+          PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                      GROUP_EXECUTE GROUP_READ
+                      WORLD_EXECUTE WORLD_READ)
+
+  install(FILES ${rawUtilName}
+          DESTINATION ${CMAKE_INSTALL_BINDIR}
+          RENAME ${utilName}
+          PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                      GROUP_EXECUTE GROUP_READ
+                      WORLD_EXECUTE WORLD_READ
+          COMPONENT applications)
 endforeach()
 
 install(FILES python/cmdLineUtils.py DESTINATION ${runtimedir})
