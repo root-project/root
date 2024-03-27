@@ -384,8 +384,8 @@ Int_t TDiamond::IsInside(Double_t x, Double_t y) const
    Double_t xd[4], yd[4];
 
    xd[0] = fX1;
-   yd[0] = (fY2+fY1)/2.;
-   xd[1] = (fX2+fX1)/2.;
+   yd[0] = (fY2 + fY1) / 2.;
+   xd[1] = (fX2 + fX1) / 2.;
    yd[1] = fY1;
    xd[2] = fX2;
    yd[2] = yd[0];
