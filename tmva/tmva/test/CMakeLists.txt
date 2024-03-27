@@ -27,10 +27,8 @@ if(dataframe)
     # RReader
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # Tree inference system and user interface
-    if(NOT MSVC OR llvm13_broken_tests)
-        ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
-        ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
-    endif()
+    ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
+    ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
 endif()
 
 if(dataframe)
