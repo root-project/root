@@ -59,9 +59,9 @@ public:
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
-   double finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const;
+   void finalizeResult(RooFit::EvalContext &, ROOT::Math::KahanSum<double> result, double weightSum) const;
    void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables);
-   double doEvalBinnedL(std::span<const double> preds, std::span<const double> weights) const;
+   void doEvalBinnedL(RooFit::EvalContext &, std::span<const double> preds, std::span<const double> weights) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooTemplateProxy<RooAbsReal> _weightVar;

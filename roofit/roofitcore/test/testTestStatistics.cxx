@@ -631,6 +631,31 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
    EXPECT_DOUBLE_EQ(prodNllVal, simNllVal);
 }
 
+// Make sure that the offset is correctly hidden for the likelihoods, even if
+// we evaluated the same likelihood without hiding before. This is tested
+// because it was fragile before: a change in offset hiding was not considered
+// in the dirty state propagation in the new CPU backend.
+TEST_P(TestStatisticTest, HideOffset)
+{
+   RooWorkspace ws;
+   ws.factory("Gaussian::model(x[0, 10], mean[6, 0, 10], sigma[2.0, 0.01, 10.0])");
+
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("model");
+
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
+   std::unique_ptr<RooAbsReal> nllNoOffset{model.createNLL(*data, _evalBackend)};
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, RooFit::Offset("initial"), _evalBackend)};
+
+   bool hideOffsetOrig = RooAbsReal::hideOffset();
+   RooAbsReal::setHideOffset(false);
+   EXPECT_FLOAT_EQ(nll->getVal(), 0.);
+   RooAbsReal::setHideOffset(true);
+   EXPECT_FLOAT_EQ(nll->getVal(), nllNoOffset->getVal());
+
+   RooAbsReal::setHideOffset(hideOffsetOrig);
+}
+
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
                             std::stringstream ss;

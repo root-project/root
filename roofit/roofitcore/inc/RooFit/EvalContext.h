@@ -20,6 +20,8 @@
 #include <TNamed.h>
 #include <TObject.h>
 
+#include <Math/Util.h>
+
 #include <map>
 #include <stdexcept>
 #include <sstream>
@@ -81,6 +83,8 @@ namespace RooFit {
 
 class EvalContext {
 public:
+   enum class OffsetMode { WithoutOffset, WithOffset, OnlyOffset };
+
    auto size() const { return _ctx.size(); }
    void resize(std::size_t n);
 
@@ -107,10 +111,13 @@ public:
    void resetVectorBuffers() { _bufferIdx = 0; }
    std::span<double> output() { return _currentOutput; }
 
-private:
+   void setOutputWithOffset(RooAbsArg const *arg, ROOT::Math::KahanSum<double> val,
+                            ROOT::Math::KahanSum<double> const &offset);
 
+private:
    friend class Evaluator;
 
+   OffsetMode _offsetMode = OffsetMode::WithoutOffset;
    std::span<double> _currentOutput;
    std::vector<std::span<const double>> _ctx;
    bool _enableVectorBuffers = false;
