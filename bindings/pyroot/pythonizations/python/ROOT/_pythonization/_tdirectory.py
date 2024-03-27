@@ -17,26 +17,26 @@ r"""
 \endhtmlonly
 ## PyROOT
 
-From Python, it is possible to inspect the content of a TDirectory object
-as if the subdirectories and objects it contains were its attributes.
+It is possible to retrieve the content of a TDirectory object
+just like getting items from a Python dictionary.
 Moreover, once a subdirectory or object is accessed for the first time,
 it is cached for later use.
 For example, assuming `d` is a TDirectory instance:
 \code{.py}
 # Access a subdirectory
-d.subdir
+d["subdir"]
 
 # We can go further down in the hierarchy of directories
-d.subdir.subsubdir
+d["subdir"]["subsubdir"]
 
 # Access an object (e.g. a histogram) in the directory
-d.obj
+d["obj"]
 
 # ... or in a subdirectory
-d.subdir.obj
+d["subdir"]["obj"]
 
-# Wrong attribute: raises AttributeError
-d.wrongAttr
+# Wrong key: raises KeyError
+d["wrongAttr"]
 \endcode
 
 Furthermore, TDirectory implements a `WriteObject` Python method which relies
