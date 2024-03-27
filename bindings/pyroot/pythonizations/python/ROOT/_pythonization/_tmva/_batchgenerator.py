@@ -332,9 +332,9 @@ class BaseGenerator:
                         return_data[:, self.weights_index + 1 :],
                     )
                 )
-                return return_data, target_data, weights_data
+                return return_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
 
-            return return_data, target_data
+            return return_data, target_data.reshape(-1,1)
 
         return return_data
 
@@ -376,9 +376,9 @@ class BaseGenerator:
                         return_data[:, self.weights_index + 1 :],
                     )
                 )
-                return return_data, target_data, weights_data
+                return return_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
 
-            return return_data, target_data
+            return return_data, target_data.reshape(-1,1)
 
         return return_data
 
@@ -755,15 +755,15 @@ def CreateTFDatasets(
     elif weights == "":
         batch_signature = (
             tf.TensorSpec(shape=(batch_size, num_columns), dtype=tf.float32),
-            tf.TensorSpec(shape=(batch_size,), dtype=tf.float32),
+            tf.TensorSpec(shape=(batch_size,1), dtype=tf.float32),
         )
 
     # Target and weights given
     else:
         batch_signature = (
             tf.TensorSpec(shape=(batch_size, num_columns), dtype=tf.float32),
-            tf.TensorSpec(shape=(batch_size,), dtype=tf.float32),
-            tf.TensorSpec(shape=(batch_size,), dtype=tf.float32),
+            tf.TensorSpec(shape=(batch_size,1), dtype=tf.float32),
+            tf.TensorSpec(shape=(batch_size,1), dtype=tf.float32),
         )
 
     ds_train = tf.data.Dataset.from_generator(
