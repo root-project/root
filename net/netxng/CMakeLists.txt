@@ -20,25 +20,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
     src/TNetXNGFileStager.cxx
     src/TNetXNGSystem.cxx
     src/RRawFileNetXNG.cxx
-  LIBRARIES
-    ${XROOTD_CLIENT_LIBRARIES}
-    ${XROOTD_UTILS_LIBRARIES}
   DEPENDENCIES
     Net
     RIO
     Thread
-  BUILTINS
-    XROOTD
 )
 
-target_include_directories(NetxNG SYSTEM PRIVATE ${XROOTD_INCLUDE_DIRS})
-# The generated dictionary source file G__NetxNG.cxx, compiled into the OBJECT
-# library G__NetxNG, depends on XRootD headers via our TNetXNGFile.h. To avoid
-# warnings, the XRootD include directories must be added as SYSTEM. We cannot do
-# this automatically in the macros as CMake has no target property to find out
-# SYSTEM include directories, so we must do it manually here.
-target_include_directories(G__NetxNG SYSTEM PRIVATE ${XROOTD_INCLUDE_DIRS})
-
+target_link_libraries(NetxNG PRIVATE ROOT::XRootD)
 target_compile_options(NetxNG PRIVATE -Wno-shadow)
+
+# When linking against the XRootD target, XRootD includes become "-isystem".
+# By linking explicitly here, we suppress a warning during dictionary compilation.
+target_link_libraries(G__NetxNG PRIVATE ROOT::XRootD)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
