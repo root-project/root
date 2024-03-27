@@ -24,10 +24,12 @@
 #include <ROOT/RNTupleModel.hxx>
 
 #include <TBaseClass.h>
+#include <TBufferFile.h>
 #include <TClass.h>
 #include <TClassEdit.h>
 #include <TCollection.h>
 #include <TDataMember.h>
+#include <TDictAttributeMap.h>
 #include <TEnum.h>
 #include <TError.h>
 #include <TList.h>
@@ -347,6 +349,28 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
       free(begin);
+}
+
+/// Possible settings for the "rntuple.split" class attribute in the dictionary.
+enum class ERNTupleUnsplitSetting { kForceSplit, kForceUnsplit, kUnset };
+
+ERNTupleUnsplitSetting GetRNTupleUnsplitSetting(TClass *cl)
+{
+   auto am = cl->GetAttributeMap();
+   if (!am || !am->HasKey("rntuple.split"))
+      return ERNTupleUnsplitSetting::kUnset;
+
+   std::string value = am->GetPropertyAsString("rntuple.split");
+   std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+   if (value == "TRUE") {
+      return ERNTupleUnsplitSetting::kForceSplit;
+   } else if (value == "FALSE") {
+      return ERNTupleUnsplitSetting::kForceUnsplit;
+   } else {
+      R__LOG_WARNING(ROOT::Experimental::NTupleLog())
+         << "invalid setting for 'rntuple.split' class attribute: " << am->GetPropertyAsString("rntuple.split");
+      return ERNTupleUnsplitSetting::kUnset;
+   }
 }
 
 } // anonymous namespace
@@ -747,7 +771,11 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
             } else {
                createContextGuard.AddClassToStack(canonicalType);
-               result = std::make_unique<RClassField>(fieldName, canonicalType);
+               if (GetRNTupleUnsplitSetting(cl) == ERNTupleUnsplitSetting::kForceUnsplit) {
+                  result = std::make_unique<RUnsplitField>(fieldName, canonicalType);
+               } else {
+                  result = std::make_unique<RClassField>(fieldName, canonicalType);
+               }
             }
          }
       }
@@ -1578,7 +1606,9 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
    }
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
-   if (!fClass->CanSplit() && fClass->Size() > 1) {
+   // Can be overwritten with the "rntuple.split=true" class attribute
+   if (!fClass->CanSplit() && fClass->Size() > 1 &&
+       GetRNTupleUnsplitSetting(fClass) != ERNTupleUnsplitSetting::kForceSplit) {
       throw RException(R__FAIL(std::string(className) + " cannot be split"));
    }
 
@@ -1614,12 +1644,16 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 
       std::string typeName{GetNormalizedTypeName(dataMember->GetTrueTypeName())};
       std::string typeAlias{GetNormalizedTypeName(dataMember->GetFullTypeName())};
+
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
          for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
             typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
       }
-      auto subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
+
+      std::unique_ptr<RFieldBase> subField;
+
+      subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
       fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
@@ -1747,6 +1781,114 @@ std::uint32_t ROOT::Experimental::RClassField::GetTypeVersion() const
 void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className,
+                                                 std::string_view typeAlias)
+   : RUnsplitField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+{
+   fTypeAlias = typeAlias;
+}
+
+ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp)
+   : ROOT::Experimental::RFieldBase(fieldName, className, ENTupleStructure::kUnsplit, false /* isSimple */),
+     fClass(classp),
+     fIndex(0)
+{
+   if (fClass == nullptr) {
+      throw RException(R__FAIL("RUnsplitField: no I/O support for type " + std::string(className)));
+   }
+
+   if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
+      fTraits |= kTraitTriviallyConstructible;
+   if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
+      fTraits |= kTraitTriviallyDestructible;
+}
+
+std::unique_ptr<ROOT::Experimental::RFieldBase>
+ROOT::Experimental::RUnsplitField::CloneImpl(std::string_view newName) const
+{
+   return std::unique_ptr<RUnsplitField>(new RUnsplitField(newName, GetTypeName(), fClass));
+}
+
+std::size_t ROOT::Experimental::RUnsplitField::AppendImpl(const void *from)
+{
+   TBufferFile buffer(TBuffer::kWrite, GetValueSize());
+   fClass->Streamer(const_cast<void *>(from), buffer);
+
+   auto nbytes = buffer.Length();
+   fColumns[1]->AppendV(buffer.Buffer(), buffer.Length());
+   fIndex += nbytes;
+   fColumns[0]->Append(&fIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
+}
+
+void ROOT::Experimental::RUnsplitField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+{
+   RClusterIndex collectionStart;
+   ClusterSize_t nbytes;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
+
+   TBufferFile buffer(TBuffer::kRead, nbytes);
+   fColumns[1]->ReadV(collectionStart, nbytes, buffer.Buffer());
+   fClass->Streamer(to, buffer);
+}
+
+const ROOT::Experimental::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RUnsplitField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex64, EColumnType::kByte},
+                                                  {EColumnType::kIndex64, EColumnType::kByte},
+                                                  {EColumnType::kSplitIndex32, EColumnType::kByte},
+                                                  {EColumnType::kIndex32, EColumnType::kByte}},
+                                                 {});
+   return representations;
+}
+
+void ROOT::Experimental::RUnsplitField::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+   fColumns.emplace_back(Internal::RColumn::Create<std::byte>(RColumnModel(GetColumnRepresentative()[1]), 1));
+}
+
+void ROOT::Experimental::RUnsplitField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
+   fColumns.emplace_back(Internal::RColumn::Create<std::byte>(RColumnModel(onDiskTypes[1]), 1));
+}
+
+void ROOT::Experimental::RUnsplitField::ConstructValue(void *where) const
+{
+   fClass->New(where);
+}
+
+void ROOT::Experimental::RUnsplitField::RUnsplitDeleter::operator()(void *objPtr, bool dtorOnly)
+{
+   fClass->Destructor(objPtr, true /* dtorOnly */);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::size_t ROOT::Experimental::RUnsplitField::GetAlignment() const
+{
+   return std::min(alignof(std::max_align_t), GetValueSize()); // TODO(jblomer): fix me
+}
+
+std::size_t ROOT::Experimental::RUnsplitField::GetValueSize() const
+{
+   return fClass->GetClassSize();
+}
+
+std::uint32_t ROOT::Experimental::RUnsplitField::GetTypeVersion() const
+{
+   return fClass->GetClassVersion();
+}
+
+void ROOT::Experimental::RUnsplitField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitUnsplitField(*this);
 }
 
 //------------------------------------------------------------------------------
