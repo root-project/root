@@ -928,7 +928,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"       klow = int((x-fXmin)/fDelta);\n");
    nch = strlen(buffer); f->write(buffer,nch);
-   snprintf(buffer,512,"       if (klow < fNp-1) klow = fNp-1;\n");
+   snprintf(buffer,512,"       if (klow > fNp-1) klow = fNp-1;\n");
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"     } else {\n");
    nch = strlen(buffer); f->write(buffer,nch);
