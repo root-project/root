@@ -45,6 +45,7 @@ public:
    void                 Draw(Option_t *option="") override;
    virtual TEllipse    *DrawEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");
    void                 ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   Int_t                IsInside(Double_t x, Double_t y) const;
    Double_t             GetX1() const {return fX1;}
    Double_t             GetY1() const {return fY1;}
    Double_t             GetR1() const {return fR1;}
