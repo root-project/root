@@ -72,6 +72,7 @@
    "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"
 
 #pragma link C++ class Cyclic + ;
+#pragma link C++ class CyclicCollectionProxy + ;
 #pragma link C++ class Unsupported + ;
 
 #pragma link C++ class BaseA + ;
