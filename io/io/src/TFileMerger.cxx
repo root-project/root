@@ -917,8 +917,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 ///   kSkipListed     : skip objects specified in fObjectNames list
 ///   kKeepCompression: keep compression level unchanged for each input
 ///
-/// If the type is set to kIncremental the output file is done deleted at the end of
-/// this operation.  If the type is not set to kIncremental, the output file is closed.
+/// If the type is not set to kIncremental, the output file is deleted at the end of this operation.
 
 Bool_t TFileMerger::PartialMerge(Int_t in_type)
 {
