@@ -149,6 +149,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
 #include "ThreadLocalStorage.h"
+#include "TVirtualMapFile.h"
 #include "TVirtualRWMutex.h"
 #include "TVirtualX.h"
 
@@ -1072,6 +1073,7 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 }
 
 namespace {
+   template <typename Content>
    static void R__ListSlowClose(TList *files)
    {
       // Routine to close a list of files using the 'slow' techniques
@@ -1080,7 +1082,7 @@ namespace {
       static TObject harmless;
       TObjLink *cursor = files->FirstLink();
       while (cursor) {
-         TDirectory *dir = static_cast<TDirectory*>( cursor->GetObject() );
+         Content *dir = static_cast<Content*>( cursor->GetObject() );
          if (dir) {
             // In order for the iterator to stay valid, we must
             // prevent the removal of the object (dir) from the list
@@ -1142,7 +1144,7 @@ void TROOT::CloseFiles()
    // Close files without deleting the objects (`ResetGlobals` will be called
    // next; see `EndOfProcessCleanups()` below.)
    if (fFiles && fFiles->First()) {
-      R__ListSlowClose(static_cast<TList*>(fFiles));
+      R__ListSlowClose<TDirectory>(static_cast<TList*>(fFiles));
    }
    // and Close TROOT itself.
    Close("nodelete");
@@ -1208,7 +1210,7 @@ void TROOT::CloseFiles()
       gInterpreter->CallFunc_Delete(socketCloser);
    }
    if (fMappedFiles && fMappedFiles->First()) {
-      R__ListSlowClose(static_cast<TList*>(fMappedFiles));
+      R__ListSlowClose<TVirtualMapFile>(static_cast<TList*>(fMappedFiles));
    }
 
 }
