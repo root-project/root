@@ -7643,6 +7643,9 @@ Double_t TH1::GetSkewness(Int_t axis) const
 
       Double_t mean = GetMean(axis);
       Double_t stddev = GetStdDev(axis);
+      if (stddev == 0) {
+	Fatal("GetSkewness", "illegal value of stdev (division by zero)");
+      }
       Double_t stddev3 = stddev*stddev*stddev;
 
       Int_t firstBinX = fXaxis.GetFirst();
@@ -7668,8 +7671,8 @@ Double_t TH1::GetSkewness(Int_t axis) const
       }
 
       Double_t x = 0;
-      Double_t sum=0;
-      Double_t np=0;
+      Double_t sum = 0;
+      Double_t np = 0;
       for (Int_t  binx = firstBinX; binx <= lastBinX; binx++) {
          for (Int_t biny = firstBinY; biny <= lastBinY; biny++) {
             for (Int_t binz = firstBinZ; binz <= lastBinZ; binz++) {
@@ -7715,6 +7718,9 @@ Double_t TH1::GetKurtosis(Int_t axis) const
 
       Double_t mean = GetMean(axis);
       Double_t stddev = GetStdDev(axis);
+      if (stddev == 0) {
+	Fatal("GetKurtosis", "illegal value of stdev (division by zero)");
+      }
       Double_t stddev4 = stddev*stddev*stddev*stddev;
 
       Int_t firstBinX = fXaxis.GetFirst();
