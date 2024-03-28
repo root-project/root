@@ -483,7 +483,6 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    }
    // Check if only the listed objects are to be merged
    if (type & kOnlyListed) {
-      onlyListed = kFALSE;
       oldkeyname = keyname;
       oldkeyname += " ";
       onlyListed = fObjectNames.Contains(oldkeyname);
