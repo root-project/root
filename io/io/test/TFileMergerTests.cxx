@@ -52,7 +52,8 @@ TEST(TFileMerger, CreateWithTFilePointer)
    merger.AddFile(&a, false);
    merger.AddFile(&b, false);
    // FIXME: Calling merger.Merge() will call Close() and *delete* output.
-   merger.PartialMerge();
+   success = merger.PartialMerge();
+   ASSERT_TRUE(success);
 
    auto &result = *static_cast<TMemFile *>(merger.GetOutputFile());
    CheckTree(result, "a_tree", 1);
@@ -93,7 +94,8 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    merger.AddObjectNames("hist2");
    merger.AddFile(&a, false);
    const Int_t mode = (TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kOnlyListed);
-   merger.PartialMerge(mode);
+   success = merger.PartialMerge(mode);
+   ASSERT_TRUE(success);
 
    auto result = static_cast<TMemFile *>(merger.GetOutputFile());
    ASSERT_TRUE(result && result->GetListOfKeys());
