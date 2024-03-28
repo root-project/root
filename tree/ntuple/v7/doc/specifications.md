@@ -686,8 +686,9 @@ Every inner item (that describes a page) has the following structure:
 ```
 
 Followed by a locator for the page.
-_C(hecksum)_: If set, an XxHash-3 64bit checksum of the uncompressed page data is stored just after the page.
-This bit should be interpreted as the sign bit of the size, i.e. negative values indicate pages with checksums.
+_C(hecksum)_: If set, an XxHash-3 64bit checksum of the compressed page data is stored just after the page.
+This bit should be interpreted as the sign bit of the number of elements, i.e. negative values indicate pages with checksums.
+Note that the page size stored in the locator does _not_ include the checksum.
 
 Depending on the number of pages per column per cluster, every page induces
 a total of 28-36 Bytes of data to be stored in the page list envelope.
