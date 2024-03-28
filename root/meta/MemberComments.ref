@@ -534,9 +534,13 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	operator delete	 : 0
       void TObject::operator delete(void* ptr)
  OBJ: TMethod	operator delete	 : 0
+      void TObject::operator delete(void*, size_t)
+ OBJ: TMethod	operator delete	 : 0
       void TObject::operator delete(void* ptr, void* vp)
  OBJ: TMethod	operator delete[]	 : 0
       void TObject::operator delete[](void* ptr)
+ OBJ: TMethod	operator delete[]	 : 0
+      void TObject::operator delete[](void*, size_t)
  OBJ: TMethod	operator delete[]	 : 0
       void TObject::operator delete[](void* ptr, void* vp)
  OBJ: TMethod	operator new	 : 0
