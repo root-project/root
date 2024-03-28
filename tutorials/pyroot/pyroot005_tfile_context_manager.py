@@ -57,7 +57,7 @@ print(" Accessing 'histo_2' gives: '{}'.\n".format(histo_2))
 with TFile.Open("pyroot005_file_1.root", "read") as f:
     # Retrieve histogram using the name given to f.WriteObject in the previous
     # with statement
-    histo_2_fromfile = f.my_histogram
+    histo_2_fromfile = f["my_histogram"]
     print("Retrieved '{}' histogram from file '{}'.\n".format(histo_2_fromfile.GetName(), f.GetName()))
 
 # Cleanup the file created for this tutorial

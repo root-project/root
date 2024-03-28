@@ -18,9 +18,9 @@ r'''
 \endhtmlonly
 ## PyROOT
 
-In the same way as for TDirectory, it is possible to inspect the content of a
-TFile object from Python as if the directories and objects it contains were its
-attributes. For more information, please refer to the TDirectory documentation.
+In the same way as for TDirectory, it is possible to get the content of a
+TFile object with the familiar item-getting syntax.
+For more information, please refer to the TDirectory documentation.
 
 In addition, TFile instances can be inspected via the `Get` method, a feature
 that is inherited from TDirectoryFile (please see the documentation of

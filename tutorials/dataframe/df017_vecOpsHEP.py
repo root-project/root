@@ -25,7 +25,7 @@ def WithPyROOT(filename):
     from math import sqrt
     f = ROOT.TFile(filename)
     h = ROOT.TH1F("pt", "With PyROOT", 16, 0, 4)
-    for event in f.myDataset:
+    for event in f[treename]:
         for E, px, py in zip(event.E, event.px, event.py):
             if (E > 100):
                h.Fill(sqrt(px*px + py*py))
