@@ -86,7 +86,7 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    a.Write();
    
    TFileMerger merger;
-   auto output = std::unique_ptr<TMemFile>(new TMemFile("SingleOnlyListed.root", "CREATE"));
+   auto output = std::unique_ptr<TFile>(new TFile("SingleOnlyListed.root", "RECREATE"));
    bool success = merger.OutputFile(std::move(output));
    ASSERT_TRUE(success);
    
@@ -94,11 +94,10 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    merger.AddObjectNames("hist2");
    merger.AddFile(&a, false);
    const Int_t mode = (TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kOnlyListed);
-   success = merger.PartialMerge(mode);
+   success = merger.PartialMerge(mode); // This will delete fOutputFile as we are not using kIncremental, so merger.GetOutputFile() will return a nullptr
    ASSERT_TRUE(success);
 
-   auto result = static_cast<TMemFile *>(merger.GetOutputFile());
-   ASSERT_TRUE(result && result->GetListOfKeys());
-   EXPECT_EQ(result->GetListOfKeys()->GetSize(), 2);
-   delete result;
+   output = std::unique_ptr<TFile>(TFile::Open("SingleOnlyListed.root"));
+   ASSERT_TRUE(output.get() && output->GetListOfKeys());
+   EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
 }
