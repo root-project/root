@@ -45,7 +45,8 @@
       hpx    = (TH1F *) mfile->Get("hpx", hpx);
       hpxpy  = (TH2F *) mfile->Get("hpxpy", hpxpy);
       hprof  = (TProfile *) mfile->Get("hprof", hprof);
-      if (hpx->GetEntries() == oldentries) break;
+      if (!hpx || !hpxpy || !hprof || hpx->GetEntries() == oldentries)
+         break;
       oldentries = hpx->GetEntries();
       if (!gROOT->IsBatch()) {
          pad1->cd();
@@ -57,7 +58,8 @@
          c1->Modified();
          c1->Update();
       } else {
-         printf("Entries, hpx=%d, Mean=%g, RMS=%g\n",hpx->GetEntries(),hpx->GetMean(),hpx->GetRMS());
+         printf("Entries, hpx=%lld, Mean=%g, RMS=%g\n",
+                (Long64_t)hpx->GetEntries(),hpx->GetMean(),hpx->GetRMS());
       }
       gSystem->Sleep(100);   // sleep for 0.1 seconds
       if (gSystem->ProcessEvents())

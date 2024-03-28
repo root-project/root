@@ -102,12 +102,12 @@ robust Streamer mechanism I opted for 3).
 
 #include <cmath>
 
-#if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
+#if defined(R__UNIX) && !defined(R__WINGCC)
 #define HAVE_SEMOP
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#ifndef WIN32
+#if !defined(WIN32) && !defined(R__MACOSX)
 union semun {
    int val;                      // value for SETVAL
    struct semid_ds *buf;         // buffer for IPC_STAT & IPC_SET
@@ -138,6 +138,17 @@ namespace {
       }
       return false;
    }
+
+/// Return the memory mapped start location corresponding to the user pointer
+/// if any. Return `nullptr` otherwise.
+   static void *GetMapFileMallocDesc(void *userptr)
+   {
+      if (TMapFile *mf = TMapFile::WhichMapFile(userptr))
+      {
+         return mf->GetMmallocDesc();
+      }
+      return nullptr;
+   }
 }
 
 
@@ -147,9 +158,11 @@ namespace {
 struct SetFreeIfTMapFile_t {
    SetFreeIfTMapFile_t() {
       ROOT::Internal::gFreeIfTMapFile = FreeIfTMapFile;
+      ROOT::Internal::gGetMapFileMallocDesc = GetMapFileMallocDesc;
    }
    ~SetFreeIfTMapFile_t() {
       ROOT::Internal::gFreeIfTMapFile = nullptr;
+      ROOT::Internal::gGetMapFileMallocDesc = nullptr;
    }
 } gSetFreeIfTMapFile;
 
@@ -510,7 +523,7 @@ zombie:
 /// of TMapFile in the memory mapped heap. It's main purpose is to
 /// correctly create the string data members.
 
-TMapFile::TMapFile(const TMapFile &f, Longptr_t offset) : TObject(f)
+TMapFile::TMapFile(const TMapFile &f, Longptr_t offset) : TVirtualMapFile(f)
 {
    fFd          = f.fFd;
    fVersion     = f.fVersion;
@@ -567,6 +580,9 @@ TMapFile::~TMapFile()
 
    Close("dtor");
 
+   // Tell TMapFile::operator delete which memory address to detach
+   // The detaching must be done after the whole object has been tear down
+   // (including base classes).
    fgMmallocDesc = fMmallocDesc;
 
    delete [] fName; fName = nullptr;
@@ -601,8 +617,6 @@ void TMapFile::Add(const TObject *obj, const char *name)
    if (lock)
       AcquireSemaphore();
 
-   ROOT::Internal::gMmallocDesc = fMmallocDesc;
-
    const char *n;
    if (name && *name)
       n = name;
@@ -613,7 +627,10 @@ void TMapFile::Add(const TObject *obj, const char *name)
       //Warning("Add", "replaced object with same name %s", n);
    }
 
+   ROOT::Internal::gMmallocDesc = fMmallocDesc;
    TMapRec *mr = new TMapRec(n, obj, 0, 0);
+   ROOT::Internal::gMmallocDesc = nullptr;
+
    if (!fFirst) {
       fFirst = mr;
       fLast  = mr;
@@ -622,10 +639,17 @@ void TMapFile::Add(const TObject *obj, const char *name)
       fLast        = mr;
    }
 
-   ROOT::Internal::gMmallocDesc = nullptr;
 
    if (lock)
       ReleaseSemaphore();
+}
+
+namespace {
+   // Wrapper around TStorage::ReAlloc to update the signature.
+   char *MemMapAllocFunc(char *oldptr, size_t newsize, size_t oldsize)
+   {
+      return reinterpret_cast<char*>(TStorage::ReAlloc(oldptr, newsize, oldsize));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,8 +661,6 @@ void TMapFile::Update(TObject *obj)
 
    AcquireSemaphore();
 
-   ROOT::Internal::gMmallocDesc = fMmallocDesc;
-
    Bool_t all = (obj == 0) ? kTRUE : kFALSE;
 
    TMapRec *mr = fFirst;
@@ -646,13 +668,18 @@ void TMapFile::Update(TObject *obj)
       if (all || mr->fObject == obj) {
          TBufferFile *b;
          if (!mr->fBufSize) {
-            b = new TBufferFile(TBuffer::kWrite, GetBestBuffer());
-            mr->fClassName = StrDup(mr->fObject->ClassName());
-         } else
-            b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer);
+            const char *cname = mr->fObject->ClassName();
+            mr->fBufSize = GetBestBuffer();
+
+            ROOT::Internal::gMmallocDesc = fMmallocDesc;
+            mr->fBuffer = new char[mr->fBufSize];
+            mr->fClassName = StrDup(cname);
+            ROOT::Internal::gMmallocDesc = nullptr;
+         }
+         b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer, kFALSE, MemMapAllocFunc);
          b->MapObject(mr->fObject);  //register obj in map to handle self reference
          mr->fObject->Streamer(*b);
-         mr->fBufSize = b->BufferSize();
+         mr->fBufSize = b->BufferSize() + 8; // extra space at end of buffer (used for free block count) there on
          mr->fBuffer  = b->Buffer();
          SumBuffer(b->Length());
          b->DetachBuffer();
@@ -660,8 +687,6 @@ void TMapFile::Update(TObject *obj)
       }
       mr = mr->fNext;
    }
-
-   ROOT::Internal::gMmallocDesc = nullptr;
 
    ReleaseSemaphore();
 }
