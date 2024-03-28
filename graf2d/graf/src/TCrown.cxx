@@ -174,6 +174,45 @@ void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return 1 if the point (x,y) is inside the polygon defined by
+/// the crown 0 otherwise.
+
+Int_t TCrown::IsInside(Double_t x, Double_t y) const
+{
+
+   const Double_t kPI = TMath::Pi();
+   const Int_t np = 40;
+   static Double_t xc[2 * np + 3], yc[2 * np +3];
+
+   Double_t angle, dx, dy;
+   Double_t dphi = (fPhimax - fPhimin) * kPI / (180 * np);
+   Double_t ct = TMath::Cos(kPI * fTheta / 180);
+   Double_t st = TMath::Sin(kPI * fTheta / 180);
+   Int_t i;
+
+   // compute outer points
+   for (i = 0; i <= np; i++) {
+      angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
+      dx = fR2 * TMath::Cos(angle);
+      dy = fR2 * TMath::Sin(angle);
+      xc[i] = fX1 + dx * ct - dy * st;
+      yc[i] = fY1 + dx * st + dy * ct;
+   }
+   // compute inner points
+   for (i = 0; i <= np; i++) {
+      angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
+      dx = fR1 * TMath::Cos(angle);
+      dy = fR1 * TMath::Sin(angle);
+      xc[2 * np - i + 1]  = fX1 + dx * ct - dy * st;
+      yc[2 * np - i + 1]  = fY1 + dx * st + dy * ct;
+   }
+   xc[2 * np + 2] = xc[0];
+   yc[2 * np + 2] = yc[0];
+
+   return (Int_t)TMath::IsInside(x, y, 2 * np + 3, xc, yc);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint this crown with its current attributes.
 
 void TCrown::Paint(Option_t *)
@@ -182,47 +221,47 @@ void TCrown::Paint(Option_t *)
 
    const Double_t kPI = TMath::Pi();
    const Int_t np = 40;
-   static Double_t x[2*np+3], y[2*np+3];
+   static Double_t x[2 * np + 3], y[2 * np + 3];
    TAttLine::Modify();
    TAttFill::Modify();
 
    Double_t angle,dx,dy;
-   Double_t dphi = (fPhimax-fPhimin)*kPI/(180*np);
-   Double_t ct   = TMath::Cos(kPI*fTheta/180);
-   Double_t st   = TMath::Sin(kPI*fTheta/180);
+   Double_t dphi = (fPhimax - fPhimin) * kPI / (180 * np);
+   Double_t ct = TMath::Cos(kPI * fTheta / 180);
+   Double_t st = TMath::Sin(kPI * fTheta / 180);
    Int_t i;
-   //compute outer points
-   for (i=0;i<=np;i++) {
-      angle = fPhimin*kPI/180 + Double_t(i)*dphi;
-      dx    = fR2*TMath::Cos(angle);
-      dy    = fR2*TMath::Sin(angle);
-      x[i]  = fX1 + dx*ct - dy*st;
-      y[i]  = fY1 + dx*st + dy*ct;
+   // compute outer points
+   for (i = 0; i <= np; i++) {
+      angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
+      dx = fR2 * TMath::Cos(angle);
+      dy = fR2 * TMath::Sin(angle);
+      x[i] = fX1 + dx * ct - dy * st;
+      y[i] = fY1 + dx * st + dy * ct;
    }
-   //compute inner points
-   for (i=0;i<=np;i++) {
-      angle = fPhimin*kPI/180 + Double_t(i)*dphi;
-      dx    = fR1*TMath::Cos(angle);
-      dy    = fR1*TMath::Sin(angle);
-      x[2*np-i+1]  = fX1 + dx*ct - dy*st;
-      y[2*np-i+1]  = fY1 + dx*st + dy*ct;
+   // compute inner points
+   for (i = 0; i <= np; i++) {
+      angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
+      dx = fR1 * TMath::Cos(angle);
+      dy = fR1 * TMath::Sin(angle);
+      x[2 * np - i + 1]  = fX1 + dx * ct - dy * st;
+      y[2 * np - i + 1]  = fY1 + dx * st + dy * ct;
    }
-   x[2*np+2]  = x[0];
-   y[2*np+2]  = y[0];
-   if (fPhimax-fPhimin >= 360 ) {
+   x[2 * np + 2] = x[0];
+   y[2 * np + 2] = y[0];
+   if (fPhimax - fPhimin >= 360 ) {
       // a complete filled crown
       if (GetFillColor()  && GetFillStyle()) {
-         gPad->PaintFillArea(2*np+2,x,y);
+         gPad->PaintFillArea(2 * np + 2,x,y);
       }
       // a complete empty crown
       if (GetLineStyle()) {
-         gPad->PaintPolyLine(np+1,x,y);
-         gPad->PaintPolyLine(np+1,&x[np+1],&y[np+1]);
+         gPad->PaintPolyLine(np + 1,x,y);
+         gPad->PaintPolyLine(np + 1,&x[np + 1],&y[np + 1]);
       }
    } else {
       //crown segment
-      if (GetFillColor()  && GetFillStyle()) gPad->PaintFillArea(2*np+2,x,y);
-      if (GetLineStyle()) gPad->PaintPolyLine(2*np+3,x,y);
+      if (GetFillColor()  && GetFillStyle()) gPad->PaintFillArea(2 * np + 2,x,y);
+      if (GetLineStyle()) gPad->PaintPolyLine(2 * np + 3,x,y);
    }
 }
 

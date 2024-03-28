@@ -23,6 +23,7 @@ public:
    ~TDiamond() override;
    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
    void  Draw(Option_t *option="") override;
+   Int_t IsInside(Double_t x, Double_t y) const override;
    void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    void  Paint(Option_t *option="") override;
    void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
@@ -31,4 +32,3 @@ public:
 };
 
 #endif
-
