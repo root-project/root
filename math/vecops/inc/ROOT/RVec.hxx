@@ -2987,17 +2987,18 @@ Common_t DeltaR(T0 eta1, T1 eta2, T2 phi1, T3 phi2, const Common_t c = M_PI)
 ///
 /// The function computes the invariant mass of two particles with the four-vectors
 /// (pt1, eta2, phi1, mass1) and (pt2, eta2, phi2, mass2).
-template <typename T>
-RVec<T> InvariantMasses(
-        const RVec<T>& pt1, const RVec<T>& eta1, const RVec<T>& phi1, const RVec<T>& mass1,
-        const RVec<T>& pt2, const RVec<T>& eta2, const RVec<T>& phi2, const RVec<T>& mass2)
+template <typename T0, typename T1, typename T2, typename T3, typename T4,
+          typename T5, typename T6, typename T7, typename Common_t = std::common_type_t<T0, T1, T2, T3, T4, T5, T6, T7>>
+RVec<Common_t> InvariantMasses(
+   const RVec<T0>& pt1, const RVec<T1>& eta1, const RVec<T2>& phi1, const RVec<T3>& mass1,
+   const RVec<T4>& pt2, const RVec<T5>& eta2, const RVec<T6>& phi2, const RVec<T7>& mass2)
 {
    std::size_t size = pt1.size();
 
    R__ASSERT(eta1.size() == size && phi1.size() == size && mass1.size() == size);
    R__ASSERT(pt2.size() == size && phi2.size() == size && mass2.size() == size);
 
-   RVec<T> inv_masses(size);
+   RVec<Common_t> inv_masses(size);
 
    for (std::size_t i = 0u; i < size; ++i) {
       // Conversion from (pt, eta, phi, mass) to (x, y, z, e) coordinate system
@@ -3029,17 +3030,17 @@ RVec<T> InvariantMasses(
 ///
 /// The function computes the invariant mass of multiple particles with the
 /// four-vectors (pt, eta, phi, mass).
-template <typename T>
-T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const RVec<T>& mass)
+template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+Common_t InvariantMass(const RVec<T0>& pt, const RVec<T1>& eta, const RVec<T2>& phi, const RVec<T3>& mass)
 {
    const std::size_t size = pt.size();
 
    R__ASSERT(eta.size() == size && phi.size() == size && mass.size() == size);
 
-   T x_sum = 0.;
-   T y_sum = 0.;
-   T z_sum = 0.;
-   T e_sum = 0.;
+   Common_t x_sum = 0.;
+   Common_t y_sum = 0.;
+   Common_t z_sum = 0.;
+   Common_t e_sum = 0.;
 
    for (std::size_t i = 0u; i < size; ++ i) {
       // Convert to (e, x, y, z) coordinate system and update sums
