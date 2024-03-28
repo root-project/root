@@ -401,11 +401,6 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
       jm["c"] = meth->GetClass()->GetName();
       j["fPublicFunctions"].push_back(jm);
 
-      if (m.Contains("charge"))
-      {
-         printf("FOUND chargw methos %s %d\n\n", m.Data(), cnt);
-      }
-
       cnt++;
    }
 }
