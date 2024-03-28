@@ -5,6 +5,7 @@ import ROOT
 from array import array
 import subprocess
 import os
+import numpy
 
 def create_check_backend():
     opts = ROOT.RDF.RSnapshotOptions()
@@ -111,3 +112,27 @@ def create_rungraphs():
                                 .Define("b2", "42")\
                                 .Define("b3", "42")\
                                 .Snapshot(treename, filename, ["b1", "b2", "b3"], opts)
+
+
+def create_cloned_actions():
+    # 20 cluster boundaries of variable distance
+    clusters = [
+        66, 976, 1542, 1630, 2477, 3566, 4425, 4980, 5109, 5381, 5863, 6533, 6590,
+        6906, 8312, 8361, 8900, 8952, 9144, 9676
+    ]
+    datasetname = "Events"
+    filename = "distrdf_roottest_check_cloned_actions_asnumpy.root"
+
+    with ROOT.TDirectory.TContext(), ROOT.TFile(filename, "recreate") as f:
+        t = ROOT.TTree(datasetname, datasetname)
+
+        event = numpy.array([0], dtype=numpy.int64)
+        t.Branch("event", event, "event/L")
+
+        for i in range(10000):
+            event[0] = i
+            # Flush a cluster of entries at the defined cluster boundaries
+            if i in clusters:
+                t.FlushBaskets()
+            t.Fill()
+        f.WriteObject(t, t.GetName())
