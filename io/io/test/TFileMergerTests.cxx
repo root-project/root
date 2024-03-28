@@ -68,3 +68,34 @@ TEST(TFileMerger, CreateWithUnwritableTFilePointer)
    ROOT_EXPECT_ERROR(merger.OutputFile(std::move(output)), "TFileMerger::OutputFile",
                      "output file output.root is not writable");
 }
+
+TEST(TFileMerger, MergeSingleOnlyListed)
+{
+   TMemFile a("hist4.root", "CREATE");
+
+   auto hist1 = new TH1F("hist1", "hist1", 1 , 0 , 2);
+   auto hist2 = new TH1F("hist2", "hist2", 1 , 0 , 2);
+   auto hist3 = new TH1F("hist3", "hist3", 1 , 0 , 2);
+   auto hist4 = new TH1F("hist4", "hist4", 1 , 0 , 2);
+   hist1->Fill(1);
+   hist2->Fill(1);   hist2->Fill(2);
+   hist3->Fill(1);   hist3->Fill(1);   hist3->Fill(1);
+   hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);
+   a.Write();
+   
+   TFileMerger merger;
+   auto output = std::unique_ptr<TMemFile>(new TMemFile("SingleOnlyListed.root", "CREATE"));
+   bool success = merger.OutputFile(std::move(output));
+   ASSERT_TRUE(success);
+   
+   merger.AddObjectNames("hist1");
+   merger.AddObjectNames("hist2");
+   merger.AddFile(&a, false);
+   const Int_t mode = (TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kOnlyListed);
+   merger.PartialMerge(mode);
+
+   auto result = static_cast<TMemFile *>(merger.GetOutputFile());
+   ASSERT_TRUE(result && result->GetListOfKeys());
+   EXPECT_EQ(result->GetListOfKeys()->GetSize(), 2);
+   delete result;
+}
