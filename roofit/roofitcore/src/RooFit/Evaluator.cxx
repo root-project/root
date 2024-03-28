@@ -571,7 +571,7 @@ void Evaluator::assignToGPU(NodeInfo &info)
                                              : _bufferManager->makeGpuBuffer(nOut);
       buffer = info.buffer->gpuWritePtr();
    }
-   _evalContextCUDA._currentOutput = std::span<double>{buffer, nOut};
+   assignSpan(_evalContextCUDA._currentOutput, {buffer, nOut});
    _evalContextCUDA.set(node, _evalContextCUDA._currentOutput);
    node->doEval(_evalContextCUDA);
    CudaInterface::cudaEventRecord(*info.event, *info.stream);
