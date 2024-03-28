@@ -345,6 +345,21 @@ class AsNumpyResult(object):
         self._py_arrays = state
 
 
+def _clone_asnumpyresult(res: AsNumpyResult) -> AsNumpyResult:
+    """
+    Clones the internal actions held by the input result and returns a new
+    result.
+    """
+    import ROOT
+    return AsNumpyResult(
+        {
+            col: ROOT.Internal.RDF.CloneResultAndAction(ptr)
+            for (col, ptr) in res._result_ptrs.items()
+        },
+        res._columns
+    )
+
+
 class HistoProfileWrapper(MethodTemplateWrapper):
     """
     Subclass of MethodTemplateWrapper that pythonizes HistoXD and ProfileXD
