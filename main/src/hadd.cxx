@@ -469,7 +469,7 @@ int main( int argc, char **argv )
    if (multiproc) {
       auto uuid = TUUID();
       auto partialTail = uuid.AsString();
-      for (auto i = 0; (i * step) < filesToProcess; i++) {
+      for (auto i = 0; (i * step) < allSubfiles.size(); i++) {
          std::stringstream buffer;
          buffer << workingDir << "/partial" << i << "_" << partialTail << ".root";
          partialFiles.emplace_back(buffer.str());
