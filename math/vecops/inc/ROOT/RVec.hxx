@@ -2872,10 +2872,10 @@ RVec<Common_t> Concatenate(const RVec<T0> &v0, const RVec<T1> &v1)
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T>
-T DeltaPhi(T v1, T v2, const T c = M_PI)
+template <typename T0, typename T1, typename Common_t = std::common_type_t<T0, T1>>
+Common_t DeltaPhi(T0 v1, T1 v2, const Common_t c = M_PI)
 {
-   static_assert(std::is_floating_point<T>::value,
+   static_assert(std::is_floating_point<T0>::value && std::is_floating_point<T1>::value,
                  "DeltaPhi must be called with floating point values.");
    auto r = std::fmod(v2 - v1, 2.0 * c);
    if (r < -c) {
@@ -2893,12 +2893,12 @@ T DeltaPhi(T v1, T v2, const T c = M_PI)
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T>
-RVec<T> DeltaPhi(const RVec<T>& v1, const RVec<T>& v2, const T c = M_PI)
+template <typename T0, typename T1, typename Common_t = typename std::common_type_t<T0, T1>>
+RVec<Common_t> DeltaPhi(const RVec<T0>& v1, const RVec<T1>& v2, const Common_t c = M_PI)
 {
-   using size_type = typename RVec<T>::size_type;
+   using size_type = typename RVec<T0>::size_type;
    const size_type size = v1.size();
-   auto r = RVec<T>(size);
+   auto r = RVec<Common_t>(size);
    for (size_type i = 0; i < size; i++) {
       r[i] = DeltaPhi(v1[i], v2[i], c);
    }
@@ -2911,12 +2911,12 @@ RVec<T> DeltaPhi(const RVec<T>& v1, const RVec<T>& v2, const T c = M_PI)
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T>
-RVec<T> DeltaPhi(const RVec<T>& v1, T v2, const T c = M_PI)
+template <typename T0, typename T1, typename Common_t = typename std::common_type_t<T0, T1>>
+RVec<Common_t> DeltaPhi(const RVec<T0>& v1, T1 v2, const Common_t c = M_PI)
 {
-   using size_type = typename RVec<T>::size_type;
+   using size_type = typename RVec<T0>::size_type;
    const size_type size = v1.size();
-   auto r = RVec<T>(size);
+   auto r = RVec<Common_t>(size);
    for (size_type i = 0; i < size; i++) {
       r[i] = DeltaPhi(v1[i], v2, c);
    }
@@ -2929,12 +2929,12 @@ RVec<T> DeltaPhi(const RVec<T>& v1, T v2, const T c = M_PI)
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T>
-RVec<T> DeltaPhi(T v1, const RVec<T>& v2, const T c = M_PI)
+template <typename T0, typename T1, typename Common_t = typename std::common_type_t<T0, T1>>
+RVec<Common_t> DeltaPhi(T0 v1, const RVec<T1>& v2, const Common_t c = M_PI)
 {
-   using size_type = typename RVec<T>::size_type;
+   using size_type = typename RVec<T1>::size_type;
    const size_type size = v2.size();
-   auto r = RVec<T>(size);
+   auto r = RVec<Common_t>(size);
    for (size_type i = 0; i < size; i++) {
       r[i] = DeltaPhi(v1, v2[i], c);
    }
