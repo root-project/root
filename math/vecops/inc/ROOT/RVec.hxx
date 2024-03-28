@@ -2948,8 +2948,8 @@ RVec<Common_t> DeltaPhi(T0 v1, const RVec<T1>& v2, const Common_t c = M_PI)
 /// of the given collections eta1, eta2, phi1 and phi2. The angle \f$\phi\f$ can
 /// be set to radian or degrees using the optional argument c, see the documentation
 /// of the DeltaPhi helper.
-template <typename T>
-RVec<T> DeltaR2(const RVec<T>& eta1, const RVec<T>& eta2, const RVec<T>& phi1, const RVec<T>& phi2, const T c = M_PI)
+template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+RVec<Common_t> DeltaR2(const RVec<T0>& eta1, const RVec<T1>& eta2, const RVec<T2>& phi1, const RVec<T3>& phi2, const Common_t c = M_PI)
 {
    const auto dphi = DeltaPhi(phi1, phi2, c);
    return (eta1 - eta2) * (eta1 - eta2) + dphi * dphi;
@@ -2962,8 +2962,8 @@ RVec<T> DeltaR2(const RVec<T>& eta1, const RVec<T>& eta2, const RVec<T>& phi1, c
 /// of the given collections eta1, eta2, phi1 and phi2. The angle \f$\phi\f$ can
 /// be set to radian or degrees using the optional argument c, see the documentation
 /// of the DeltaPhi helper.
-template <typename T>
-RVec<T> DeltaR(const RVec<T>& eta1, const RVec<T>& eta2, const RVec<T>& phi1, const RVec<T>& phi2, const T c = M_PI)
+template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+RVec<Common_t> DeltaR(const RVec<T0>& eta1, const RVec<T1>& eta2, const RVec<T2>& phi1, const RVec<T3>& phi2, const Common_t c = M_PI)
 {
    return sqrt(DeltaR2(eta1, eta2, phi1, phi2, c));
 }
@@ -2975,8 +2975,8 @@ RVec<T> DeltaR(const RVec<T>& eta1, const RVec<T>& eta2, const RVec<T>& phi1, co
 /// of the given scalars eta1, eta2, phi1 and phi2. The angle \f$\phi\f$ can
 /// be set to radian or degrees using the optional argument c, see the documentation
 /// of the DeltaPhi helper.
-template <typename T>
-T DeltaR(T eta1, T eta2, T phi1, T phi2, const T c = M_PI)
+template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+Common_t DeltaR(T0 eta1, T1 eta2, T2 phi1, T3 phi2, const Common_t c = M_PI)
 {
    const auto dphi = DeltaPhi(phi1, phi2, c);
    return std::sqrt((eta1 - eta2) * (eta1 - eta2) + dphi * dphi);
