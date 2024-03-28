@@ -523,7 +523,7 @@ zombie:
 /// of TMapFile in the memory mapped heap. It's main purpose is to
 /// correctly create the string data members.
 
-TMapFile::TMapFile(const TMapFile &f, Longptr_t offset) : TObject(f)
+TMapFile::TMapFile(const TMapFile &f, Longptr_t offset) : TVirtualMapFile(f)
 {
    fFd          = f.fFd;
    fVersion     = f.fVersion;
