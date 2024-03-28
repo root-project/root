@@ -220,4 +220,6 @@
 
 #pragma link C++ class TVirtualFFT;
 
+#pragma link C++ class TVirtualMapFile+;
+
 #endif
