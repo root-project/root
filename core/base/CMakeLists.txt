@@ -101,6 +101,7 @@ set(BASE_HEADERS
   TVirtualFFT.h
   TVirtualGL.h
   TVirtualMonitoring.h
+  TVirtualMapFile.h
   TVirtualMutex.h
   TVirtualPadEditor.h
   TVirtualPad.h
