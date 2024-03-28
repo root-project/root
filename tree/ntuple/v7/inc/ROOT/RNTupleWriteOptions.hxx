@@ -64,6 +64,8 @@ protected:
    /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
    /// but it can result in smaller file sizes for data sets with many collections and lz4 or no compression.
    bool fHasSmallClusters = false;
+   /// If set, checksums will be calculated and written for every page.
+   bool fEnablePageChecksums = true;
 
 public:
    /// A maximum size of 512MB still allows for a vector of bool to be stored in a small cluster.  This is the
@@ -101,6 +103,9 @@ public:
 
    bool GetHasSmallClusters() const { return fHasSmallClusters; }
    void SetHasSmallClusters(bool val) { fHasSmallClusters = val; }
+
+   bool GetEnablePageChecksums() const { return fEnablePageChecksums; }
+   void SetEnablePageChecksums(bool val) { fEnablePageChecksums = val; }
 };
 
 } // namespace Experimental
