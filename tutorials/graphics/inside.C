@@ -8,7 +8,7 @@
 ///
 /// \author Olivier Couet
 
-void inside(){
+void inside() {
    auto el = new TEllipse(0.75, 0.25, .2,.15,45,315,62);
    el->Draw();
 
