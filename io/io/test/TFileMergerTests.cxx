@@ -4,6 +4,7 @@
 
 #include "TMemFile.h"
 #include "TTree.h"
+#include "TH1.h"
 
 static void CreateATuple(TMemFile &file, const char *name, double value)
 {
