@@ -17,26 +17,26 @@ r"""
 \endhtmlonly
 ## PyROOT
 
-From Python, it is possible to inspect the content of a TDirectory object
-as if the subdirectories and objects it contains were its attributes.
+It is possible to retrieve the content of a TDirectory object
+just like getting items from a Python dictionary.
 Moreover, once a subdirectory or object is accessed for the first time,
 it is cached for later use.
 For example, assuming `d` is a TDirectory instance:
 \code{.py}
 # Access a subdirectory
-d.subdir
+d["subdir"]
 
 # We can go further down in the hierarchy of directories
-d.subdir.subsubdir
+d["subdir"]["subsubdir"]
 
 # Access an object (e.g. a histogram) in the directory
-d.obj
+d["obj"]
 
 # ... or in a subdirectory
-d.subdir.obj
+d["subdir"]["obj"]
 
-# Wrong attribute: raises AttributeError
-d.wrongAttr
+# Wrong key: raises KeyError
+d["wrongAttr"]
 \endcode
 
 Furthermore, TDirectory implements a `WriteObject` Python method which relies
@@ -53,10 +53,10 @@ for more information.
 import cppyy
 
 
-def _TDirectory_getattr(self, attr):
-    """Injection of TDirectory.__getattr__ that raises AttributeError on failure.
+def _TDirectory_getitem(self, key):
+    """Injection of TDirectory.__getitem__ that raises AttributeError on failure.
 
-    Method that is assigned to TDirectory.__getattr__. It relies on Get to
+    Method that is assigned to TDirectory.__getitem__. It relies on Get to
     obtain the object from the TDirectory and adds on top:
     - Raising an AttributeError if the object does not exist
     - Caching the result of a successful get for future re-attempts.
@@ -68,9 +68,36 @@ def _TDirectory_getattr(self, attr):
     myfile.mydir.mysubdir.myHist.Draw()
     ```
     """
+    if not hasattr(self, "_cached_items"):
+        self._cached_items = dict()
+
+    if key in self._cached_items:
+        return self._cached_items[key]
+
+    result = self.Get(key)
+    if not result:
+        raise KeyError(f"{repr(self)} object has no key '{key}'")
+
+    # Caching behavior seems to be more clear to the user; can always override said
+    # behavior (i.e. re-read from file) with an explicit Get() call
+    self._cached_items[key] = result
+    return result
+
+
+def _TDirectory_getattr(self, attr):
+    """For temporary backwards compatibility."""
+    import warnings
+
     result = self.Get(attr)
     if not result:
         raise AttributeError(f"{repr(self)} object has no attribute '{attr}'")
+
+    cl_name = type(self).__cpp_name__
+    warnings.warn(
+        f'The attribute syntax for {cl_name} is deprecated and will be removed in ROOT 6.34. Please use {cl_name}["{attr}"] instead of {cl_name}.{attr}',
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Caching behavior seems to be more clear to the user; can always override said
     # behavior (i.e. re-read from file) with an explicit Get() call
@@ -98,6 +125,7 @@ def _TDirectory_WriteObject(self, obj, *args):
 
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
+    klass.__getitem__ = _TDirectory_getitem
     klass.__getattr__ = _TDirectory_getattr
     klass._WriteObject = klass.WriteObject
     klass.WriteObject = _TDirectory_WriteObject
