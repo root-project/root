@@ -26,7 +26,7 @@ if(MSVC)
       /STACK:4000000 setargv.obj")
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
   add_custom_command(TARGET root.exe POST_BUILD
-                     COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
+                     COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${ROOT_BINARY_DIR}/bin/root.exe)
 endif()
 if(proof)
   ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
@@ -44,8 +44,8 @@ ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES RIO Tree TreePlayer Re
 
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
-  ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/haddCommandLineOptionsHelp.h
+  ${ROOT_SOURCE_DIR}/main/src/hadd-argparse.py
+  ${ROOT_BINARY_DIR}/ginclude/haddCommandLineOptionsHelp.h
 )
 
 if(fortran AND CMAKE_Fortran_COMPILER)
@@ -64,9 +64,9 @@ foreach(rawUtilName ${utils})
   else()
     set(python python)
   endif()
-  configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
+  configure_file(${rawUtilName} ${ROOT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
-  install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
+  install(FILES ${ROOT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
                                DESTINATION ${CMAKE_INSTALL_BINDIR}
                                RENAME ${utilName}
                                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
@@ -99,9 +99,9 @@ ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
 add_dependencies(rootcling complexDict)
 
 target_include_directories(rootcling PRIVATE
-        ${CMAKE_SOURCE_DIR}/core/metacling/res
-        ${CMAKE_SOURCE_DIR}/core/dictgen/res
-        ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+        ${ROOT_SOURCE_DIR}/core/metacling/res
+        ${ROOT_SOURCE_DIR}/core/dictgen/res
+        ${ROOT_SOURCE_DIR}/io/rootpcm/res)
 set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
