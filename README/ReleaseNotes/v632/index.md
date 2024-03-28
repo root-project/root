@@ -266,6 +266,37 @@ struct.char_buffer            :  <cppyy.LowLevelView object at 0x74c7a2682fb0>
 struct.char_buffer.as_string():  foo
 ```
 
+### Deprecate the attribute pythonization of `TDirectory` in favor of item-getting syntax
+
+The new recommended way to get objects from a `TFile` or any `TDirectory` in general is now via `__getitem__`:
+
+```python
+tree = my_file["my_tree"] # instead of my_file.my_tree
+```
+
+This is more consistent with other Python collections (like dictionaries), makes sure that member functions can't be confused with branch names, and easily allows you to use string variables as keys.
+
+With the new dictionary-like syntax, you can also get objects with names that don't qualify as a Python variable. Here is a short demo:
+```python
+import ROOT
+
+with ROOT.TFile.Open("my_file.root", "RECREATE") as my_file:
+
+    # Populate the TFile with simple objects.
+    my_file.WriteObject(ROOT.std.string("hello world"), "my_string")
+    my_file.WriteObject(ROOT.vector["int"]([1, 2, 3]), "my vector")
+
+    print(my_file["my_string"])  # new syntax
+    print(my_file.my_string)  # old deprecated syntax
+
+    # With the dictionary syntax, you can also use names that don't qualify as
+    # a Python variable:
+    print(my_file["my vector"])
+    # print(my_file.my vector) # the old syntax would not work here!
+```
+
+The old pythonization with the `__getattr__` syntax still works, but emits a deprecation warning and will be removed from ROOT 6.34.
+
 ## Language Bindings
 
 
