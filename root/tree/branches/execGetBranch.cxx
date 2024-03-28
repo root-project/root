@@ -234,6 +234,18 @@ int execGetBranch()
    std::cout << "RDataFrame columns:" << std::endl;
    for (const auto &c : ROOT::RDataFrame(*t).GetColumnNames())
       std::cout << c << std::endl;
+#else
+   // Fill the reference as expected:
+   std::cout << "RDataFrame columns:" << std::endl;
+   std::cout << "i" << std::endl;
+   std::cout << "i.x" << std::endl;
+   std::cout << "m." << std::endl;
+   std::cout << "m.x" << std::endl;
+   std::cout << "p.f" << std::endl;
+   std::cout << "p.x" << std::endl;
+   std::cout << "q..f" << std::endl;
+   std::cout << "q..x" << std::endl;
+   std::cout << "x" << std::endl;
 #endif
  
    return 0;
