@@ -449,12 +449,11 @@ int main( int argc, char **argv )
       exit(1);
    }
 
-   auto filesToProcess = allSubfiles.size();
-   auto step = (filesToProcess + nProcesses - 1) / nProcesses;
+   auto step = (allSubfiles.size() + nProcesses - 1) / nProcesses;
    if (multiproc && step < 3) {
       // At least 3 files per process
       step = 3;
-      nProcesses = (filesToProcess + step - 1) / step;
+      nProcesses = (allSubfiles.size() + step - 1) / step;
       std::cout << "Each process should handle at least 3 files for efficiency.";
       std::cout << " Setting the number of processes to: " << nProcesses << std::endl;
    }
@@ -540,7 +539,7 @@ int main( int argc, char **argv )
 #ifndef R__WIN32
    if (multiproc) {
       ROOT::TProcessExecutor p(nProcesses);
-      auto res = p.Map(parallelMerge, ROOT::TSeqI(0, filesToProcess, step));
+      auto res = p.Map(parallelMerge, ROOT::TSeqI(0, allSubfiles.size(), step));
       status = std::accumulate(res.begin(), res.end(), 0U) == partialFiles.size();
       if (status) {
          status = reductionFunc();
@@ -553,21 +552,21 @@ int main( int argc, char **argv )
          }
       }
    } else {
-      status = sequentialMerge(fileMerger, 0, filesToProcess);
+      status = sequentialMerge(fileMerger, 0, allSubfiles.size());
    }
 #else
-   status = sequentialMerge(fileMerger, 0, filesToProcess);
+   status = sequentialMerge(fileMerger, 0, allSubfiles.size());
 #endif
 
    if (status) {
       if (verbosity == 1) {
-         std::cout << "hadd merged " << filesToProcess << " (" << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname
+         std::cout << "hadd merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname
                    << ".\n";
       }
       return 0;
    } else {
       if (verbosity == 1) {
-         std::cout << "hadd failure during the merge of " << filesToProcess << " (" << fileMerger.GetMergeList()->GetEntries()
+         std::cout << "hadd failure during the merge of " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
                    << ") input (partial) files into " << targetname << ".\n";
       }
       return 1;
