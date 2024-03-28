@@ -5,7 +5,6 @@
 
 #include "TMapFile.h"
 
-#include "TApplication.h"
 #include "TError.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -260,6 +259,7 @@ int TMapFileTest(int maxiterations = 1000000)
    gRunRead = false;
 
    auto res = result.get();
+
    return res;
 }
 
@@ -277,8 +277,6 @@ void error_help(int argc, char **argv)
 #ifndef __CLING__
 int main(int argc, char **argv)
 {
-   TApplication app("TMapFileTest", 0, nullptr);
-
    gExecLocation = argv[0];
 
    int maxiterations = 1000000;
