@@ -107,7 +107,7 @@ public:
    virtual Int_t       ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Int_t       SetBufferSize(Int_t buffersize);
+   virtual Int_t       SetBufferSize(Long64_t buffersize);
    virtual void        SetFile(TFile *file, TFile::ECacheAction action = TFile::kDisconnect);
    virtual void        SetSkipZip(Bool_t /*skip*/ = kTRUE) {} // This function is only used by TTreeCacheUnzip (ignore it)
    virtual void        Sort();
