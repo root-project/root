@@ -49,7 +49,7 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
 
 # will be set again in case NOT builtin_llvm
-set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm")
+set(LLVM_DIR "${ROOT_BINARY_DIR}/interpreter/llvm-project/llvm")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
@@ -229,8 +229,8 @@ if(builtin_llvm)
     add_subdirectory(llvm-project/llvm EXCLUDE_FROM_ALL)
   endif()
 
-  set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/llvm/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/include
+  set(LLVM_INCLUDE_DIRS ${ROOT_SOURCE_DIR}/interpreter/llvm-project/llvm/include
+    ${ROOT_BINARY_DIR}/interpreter/llvm-project/llvm/include
     CACHE STRING "LLVM include directories."
     )
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/cmake/modules")
@@ -460,11 +460,11 @@ if (builtin_clang)
     # For builtin LLVM this is set in interpreter/llvm-project/llvm/CMakeLists.txt
     set(Clang_DIR "${LLVM_BINARY_DIR}/tools/clang/")
   else()
-    set(Clang_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm-project/clang/")
+    set(Clang_DIR "${ROOT_BINARY_DIR}/interpreter/llvm-project/clang/")
     set(Clang_Config_ExtraPathHints "${Clang_DIR}cmake/modules/CMakeFiles")
   endif()
   set(CLANG_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/clang/include
+    ${ROOT_SOURCE_DIR}/interpreter/llvm-project/clang/include
     ${Clang_DIR}/include
     CACHE STRING "Clang include directories.")
 else()
@@ -512,7 +512,7 @@ if (builtin_cling)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
-  set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
+  set(CLING_INCLUDE_DIRS ${ROOT_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
 
 
 
