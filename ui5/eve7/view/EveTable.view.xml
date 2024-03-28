@@ -17,7 +17,6 @@
     </Toolbar>
     <m:FlexBox direction="Column" height="100%">
     <layout:VerticalLayout id="header" width="100%" >
-      <m:Label text="Choose Collection:" />
       <layout:HorizontalLayout id="gedHeader">
         <m:ComboBox id="ccombo" change="collectionChanged"
                     items="{
@@ -26,7 +25,7 @@
           <core:Item key="{collections>key}" text="{collections>text}" />
         </m:ComboBox>
 
-        <m:Label text="Edit table:" labelFor="toggleButtonId"/>
+        <m:Label text="Edit columns:" labelFor="toggleButtonId"/>
         <m:Button icon="sap-icon://edit" id="toggleButtonId" press="toggleTableEdit" tooltip="toggle table edit"/>
       </layout:HorizontalLayout  >
     </layout:VerticalLayout >
