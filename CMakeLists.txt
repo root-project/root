@@ -72,7 +72,7 @@ set(ROOTSYS ${ROOT_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${ROOT_BINARY_DIR}/include)
 
 #---Set the ROOT version--------------------------------------------------------------------
-include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/SetROOTVersion.cmake)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/SetROOTVersion.cmake")
 
 message(STATUS "Building ROOT version ${ROOT_FULL_VERSION}")
 
