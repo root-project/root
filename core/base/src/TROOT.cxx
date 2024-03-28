@@ -869,6 +869,13 @@ TROOT::~TROOT()
 
    if (gROOTLocal == this) {
 
+      // TMapFile must be closed before they are deleted, so run CloseFiles
+      // (possibly a second time if the application has an explicit TApplication
+      // object, but in that this is a no-op).  TMapFile needs the slow close
+      // so that the custome operator delete can properly find out whether the
+      // memory being 'freed' is part of a memory mapped file or not.
+      CloseFiles();
+
       // If the interpreter has not yet been initialized, don't bother
       gGetROOT = &GetROOT1;
 
