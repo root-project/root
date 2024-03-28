@@ -50,6 +50,7 @@
 
 class TClass;
 class TEnum;
+class TObject;
 
 namespace ROOT {
 
@@ -2421,6 +2422,46 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+/// TObject requires special handling of the fBits and fUniqueID members
+template <>
+class RField<TObject> final : public RFieldBase {
+   class RTObjectDeleter : public RDeleter {
+   public:
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   static std::size_t GetOffsetOfMember(const char *name);
+   static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
+   static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
+   void ConstructValue(void *where) const override;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTObjectDeleter>(); }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+   void OnConnectPageSource() final;
+
+public:
+   static std::string TypeName() { return "TObject"; }
+
+   RField(std::string_view fieldName);
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   std::uint32_t GetTypeVersion() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 

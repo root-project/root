@@ -31,6 +31,7 @@
 #include <TEnum.h>
 #include <TError.h>
 #include <TList.h>
+#include <TObject.h>
 #include <TObjArray.h>
 #include <TObjString.h>
 #include <TRealData.h>
@@ -626,6 +627,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       return result;
    } else if (canonicalType == "std::string") {
       result = std::make_unique<RField<std::string>>(fieldName);
+   } else if (canonicalType == "TObject") {
+      result = std::make_unique<RField<TObject>>(fieldName);
    } else if (canonicalType == "std::vector<bool>") {
       result = std::make_unique<RField<std::vector<bool>>>(fieldName);
    } else if (canonicalType.substr(0, 12) == "std::vector<") {
@@ -1573,6 +1576,9 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    if (fClass->Property() & kIsDefinedInStd) {
       throw RException(R__FAIL(std::string(className) + " is not supported"));
    }
+   if (className == "TObject") {
+      throw RException(R__FAIL("TObject is only supported through RField<TObject>"));
+   }
    if (fClass->GetCollectionProxy()) {
       throw RException(
          R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
@@ -1747,6 +1753,126 @@ std::uint32_t ROOT::Experimental::RClassField::GetTypeVersion() const
 void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *name)
+{
+   if (auto dataMember = TObject::Class()->GetDataMember(name)) {
+      return dataMember->GetOffset();
+   }
+   throw RException(R__FAIL('\'' + std::string(name) + '\'' + " is an invalid data member"));
+}
+
+ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
+   : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
+{
+#ifndef NDEBUG
+   static const auto cl = TObject::Class();
+#endif
+   assert(cl->GetClassVersion() == 1);
+   assert(cl->ClassProperty() & kClassHasExplicitCtor);
+   assert(cl->ClassProperty() & kClassHasExplicitDtor);
+   fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+
+   Attach(std::make_unique<RField<UInt_t>>("fUniqueID"));
+   Attach(std::make_unique<RField<UInt_t>>("fBits"));
+}
+
+std::unique_ptr<ROOT::Experimental::RFieldBase>
+ROOT::Experimental::RField<TObject>::CloneImpl(std::string_view newName) const
+{
+   auto result = std::make_unique<RField<TObject>>(newName);
+   SyncFieldIDs(*this, *result);
+   return result;
+}
+
+std::size_t ROOT::Experimental::RField<TObject>::AppendImpl(const void *from)
+{
+   // Cf. TObject::Streamer()
+
+   auto *obj = static_cast<const TObject *>(from);
+   if (obj->TestBit(TObject::kIsReferenced)) {
+      throw RException(R__FAIL("RNTuple I/O on referenced TObject is unsupported"));
+   }
+
+   std::size_t nbytes = 0;
+   nbytes += CallAppendOn(*fSubFields[0], reinterpret_cast<const unsigned char *>(from) + GetOffsetUniqueID());
+
+   UInt_t bits = *reinterpret_cast<const UInt_t *>(reinterpret_cast<const unsigned char *>(from) + GetOffsetBits());
+   bits &= (~TObject::kIsOnHeap & ~TObject::kNotDeleted);
+   nbytes += CallAppendOn(*fSubFields[1], &bits);
+
+   return nbytes;
+}
+
+void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+{
+   // Cf. TObject::Streamer()
+
+   auto *obj = static_cast<TObject *>(to);
+   if (obj->TestBit(TObject::kIsReferenced)) {
+      throw RException(R__FAIL("RNTuple I/O on referenced TObject is unsupported"));
+   }
+
+   CallReadOn(*fSubFields[0], globalIndex, static_cast<unsigned char *>(to) + GetOffsetUniqueID());
+
+   const UInt_t bitIsOnHeap = obj->TestBit(TObject::kIsOnHeap) ? TObject::kIsOnHeap : 0;
+   UInt_t bits;
+   CallReadOn(*fSubFields[1], globalIndex, &bits);
+   bits |= bitIsOnHeap | TObject::kNotDeleted;
+   *reinterpret_cast<UInt_t *>(reinterpret_cast<unsigned char *>(to) + GetOffsetBits()) = bits;
+}
+
+void ROOT::Experimental::RField<TObject>::OnConnectPageSource()
+{
+   if (GetTypeVersion() != 1) {
+      throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
+   }
+}
+
+std::uint32_t ROOT::Experimental::RField<TObject>::GetTypeVersion() const
+{
+   return TObject::Class()->GetClassVersion();
+}
+
+void ROOT::Experimental::RField<TObject>::ConstructValue(void *where) const
+{
+   new (where) TObject();
+}
+
+void ROOT::Experimental::RField<TObject>::RTObjectDeleter::operator()(void *objPtr, bool dtorOnly)
+{
+   static_cast<TObject *>(objPtr)->~TObject();
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::vector<ROOT::Experimental::RFieldBase::RValue>
+ROOT::Experimental::RField<TObject>::SplitValue(const RValue &value) const
+{
+   std::vector<RValue> result;
+   auto basePtr = value.GetPtr<unsigned char>().get();
+   result.emplace_back(
+      fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetUniqueID())));
+   result.emplace_back(
+      fSubFields[1]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetBits())));
+   return result;
+}
+
+size_t ROOT::Experimental::RField<TObject>::GetValueSize() const
+{
+   return sizeof(TObject);
+}
+
+size_t ROOT::Experimental::RField<TObject>::GetAlignment() const
+{
+   return alignof(TObject);
+}
+
+void ROOT::Experimental::RField<TObject>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitTObjectField(*this);
 }
 
 //------------------------------------------------------------------------------
