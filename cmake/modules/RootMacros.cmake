@@ -1242,17 +1242,17 @@ function(ROOT_INSTALL_HEADERS)
       ${d}/*.h ${d}/*.hxx ${d}/*.icc )
     foreach (include_file ${include_files})
       set (src ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${include_file})
-      set (dst ${CMAKE_BINARY_DIR}/include/${include_file})
+      set (dst ${ROOT_BINARY_DIR}/include/${include_file})
       add_custom_command(
         OUTPUT ${dst}
         COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
-        COMMENT "Copying header ${src} to ${CMAKE_BINARY_DIR}/include"
+        COMMENT "Copying header ${src} to ${ROOT_BINARY_DIR}/include"
         DEPENDS ${src})
       list(APPEND dst_list ${dst})
     endforeach()
   endforeach()
   if (dst_list)
-    string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
+    string(REPLACE ${ROOT_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
     string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
     set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
     add_custom_target(${tgt} DEPENDS ${dst_list})
