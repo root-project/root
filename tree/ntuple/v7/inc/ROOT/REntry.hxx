@@ -47,6 +47,7 @@ class REntry {
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class RNTupleFillContext;
+   friend class RNTupleProcessor;
 
 public:
    /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
@@ -81,6 +82,10 @@ private:
       fValues.emplace_back(field.BindValue(ptr));
       return ptr;
    }
+
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
+
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
 
    void Read(NTupleSize_t index)
    {
