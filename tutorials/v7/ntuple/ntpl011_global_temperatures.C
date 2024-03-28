@@ -89,7 +89,11 @@ void Ingest()
    // In return, get a unique pointer to a fillable ntuple (first compress the file).
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName);
 
-   auto file = RRawFile::Create(kRawDataUrl);
+   // Download data in 4MB blocks
+   RRawFile::ROptions options;
+   options.fBlockSize = 4'000'000;
+
+   auto file = RRawFile::Create(kRawDataUrl, options);
    std::string record;
    constexpr int kMaxCharsPerLine = 128;
    while (file->Readln(record)) {
