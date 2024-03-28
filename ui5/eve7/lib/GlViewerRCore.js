@@ -132,8 +132,8 @@ sap.ui.define([
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
          if (eveView.BlackBg)
          {
-            this.fgCol =  new RC.Color(0,0,0);
-            this.bgCol = new RC.Color(1,1,1);
+            this.bgCol =  new RC.Color(0,0,0);
+            this.fgCol = new RC.Color(1,1,1);
          }
          else
          {
