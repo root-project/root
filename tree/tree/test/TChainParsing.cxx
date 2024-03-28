@@ -5,6 +5,8 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TROOT.h"
+#include "TPluginManager.h"
 
 #include "ROOT/InternalTreeUtils.hxx"
 #include <ROOT/FoundationUtils.hxx>
@@ -278,6 +280,13 @@ TEST(TChainParsing, RecursiveGlob)
 // No XRootD support on Windows
 TEST(TChainParsing, RemoteGlob)
 {
+
+   // Check if xrootd is enabled.
+   if (nullptr == TClass::GetClass(gROOT->GetPluginManager()->FindHandler("TFile", "root://")->GetClass()))
+   {
+      GTEST_SKIP();
+   }
+
    TChain c;
    c.Add("root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run*");
    const auto *chainFiles = c.GetListOfFiles();
@@ -297,6 +306,11 @@ TEST(TChainParsing, RemoteGlob)
 
 TEST(TChainParsing, DoubleSlash)
 {
+   // Check if xrootd is enabled.
+   if (nullptr == TClass::GetClass(gROOT->GetPluginManager()->FindHandler("TFile", "root://")->GetClass()))
+   {
+      GTEST_SKIP();
+   }
    // Tests #7159
    TChain c("Events");
    c.Add("root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod//ZZTo2e2mu.root");
