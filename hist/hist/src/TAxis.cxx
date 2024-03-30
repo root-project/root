@@ -1033,7 +1033,6 @@ void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t la
 ///
 ///  \param first First bin of the range.
 ///  \param last  Last bin of the range.
-///  \note This will also restrict the fitting range
 ///  To set a range using the axis coordinates, use TAxis::SetRangeUser.
 ///
 ///  If `first == last == 0` or if `first > last` or if the range specified does
@@ -1049,6 +1048,7 @@ void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t la
 ///  \note For historical reasons, SetRange(0,0) resets the range even though bin 0 is
 ///       technically reserved for the underflow; in order to set the range of the axis
 ///       so that it only includes the underflow, use `SetRange(-1,0)`.
+///  \note This function will also restrict the fitting range
 
 void TAxis::SetRange(Int_t first, Int_t last)
 {
@@ -1076,8 +1076,8 @@ void TAxis::SetRange(Int_t first, Int_t last)
 ////////////////////////////////////////////////////////////////////////////////
 ///  Set the viewing range for the axis from ufirst to ulast (in user coordinates,
 ///  that is, the "natural" axis coordinates).
-///  \note This will also restrict the fitting range
 ///  To set a range using the axis bin numbers, use TAxis::SetRange.
+///  \note This function will also restrict the fitting range
 
 void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 {
