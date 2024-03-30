@@ -2492,7 +2492,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute and return the chisquare of this histogram with respect to a function
 /// The chisquare is computed by weighting each histogram point by the bin error
-/// By default the full range of the histogram is used.
+/// By default the full range of the histogram is used, unless TAxis::SetRange or TAxis::SetRangeUser was called before.
 /// Use option "R" for restricting the chisquare calculation to the given range of the function
 /// Use option "L" for using the chisquare based on the poisson likelihood (Baker-Cousins Chisquare)
 /// Use option "P" for using the Pearson chisquare based on the expected bin errors
@@ -3976,7 +3976,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// The default fitting of an histogram (when no option is given) is perfomed as following:
 ///   - a chi-square fit (see below Chi-square Fits) computed using the bin histogram errors and excluding bins with zero errors (empty bins);
-///   - the full range of the histogram is used;
+///   - the full range of the histogram is used, unless TAxis::SetRange or TAxis::SetRangeUser was called before;
 ///   - the default Minimizer with its default configuration is used (see below Minimizer Configuration) except for linear function;
 ///   - for linear functions (`polN`, `chenbyshev` or formula expressions combined using operator `++`) a linear minimization is used.
 ///   - only the status of the fit is returned;
