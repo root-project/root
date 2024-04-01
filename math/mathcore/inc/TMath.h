@@ -442,6 +442,10 @@ struct Limits {
    template <typename T> Long64_t  LocMax(Long64_t n, const T *a);
    template <typename Iterator> Iterator LocMax(Iterator first, Iterator last);
 
+   // Derivatives of an array
+   template <typename T> T *Gradient(Long64_t n, T *f, double h = 1);
+   template <typename T> T *Laplacian(Long64_t n, T *f, double h = 1);
+
    // Hashing
    ULong_t Hash(const void *txt, Int_t ntxt);
    ULong_t Hash(const char *str);
@@ -1000,6 +1004,82 @@ template <typename Iterator>
 Iterator TMath::LocMin(Iterator first, Iterator last) {
 
    return std::min_element(first, last);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Calculate the one-dimensional gradient of an array with length n.
+/// The first value in the returned array is a forward difference,
+/// the next n-2 values are central differences, and the last is a backward difference.
+///
+/// \note Function leads to undefined behavior if n does not match the length of f
+/// \param n the number of points in the array
+/// \param f the array of points.
+/// \param h the step size. The default step size is 1.
+/// \return an array of size n with the gradient. Returns nullptr if n < 2 or f empty. Ownership is transferred to the
+/// caller.
+
+template <typename T>
+T *TMath::Gradient(const Long64_t n, T *f, const double h)
+{
+   if (!f) {
+      ::Error("TMath::Gradient", "Input parameter f is empty.");
+      return nullptr;
+   } else if (n < 2) {
+      ::Error("TMath::Gradient", "Input parameter n=%lld is smaller than 2.", n);
+      return nullptr;
+   }
+   Long64_t i = 1;
+   T *result = new T[n];
+
+   // Forward difference
+   result[0] = (f[1] - f[0]) / h;
+
+   // Central difference
+   while (i < n - 1) {
+      result[i] = (f[i + 1] - f[i - 1]) / (2 * h);
+      i++;
+   }
+   // Backward difference
+   result[i] = (f[i] - f[i - 1]) / h;
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Calculate the Laplacian of an array with length n.
+/// The first value in the returned array is a forward difference,
+/// the next n-2 values are central differences, and the last is a backward difference.
+///
+/// \note Function leads to undefined behavior if n does not match the length of f
+/// \param n the number of points in the array
+/// \param f the array of points.
+/// \param h the step size. The default step size is 1.
+/// \return an array of size n with the laplacian. Returns nullptr if n < 4 or f empty. Ownership is transferred to the
+/// caller.
+
+template <typename T>
+T *TMath::Laplacian(const Long64_t n, T *f, const double h)
+{
+   if (!f) {
+      ::Error("TMath::Laplacian", "Input parameter f is empty.");
+      return nullptr;
+   } else if (n < 4) {
+      ::Error("TMath::Laplacian", "Input parameter n=%lld is smaller than 4.", n);
+      return nullptr;
+   }
+   Long64_t i = 1;
+   T *result = new T[n];
+
+   // Forward difference
+   result[0] = (4 * f[2] + 2 * f[0] - 5 * f[1] - f[3]) / (4 * h * h);
+
+   // Central difference
+   while (i < n - 1) {
+      result[i] = (f[i + 1] + f[i - 1] - 2 * f[i]) / (4 * h * h);
+      i++;
+   }
+   // Backward difference
+   result[i] = (2 * f[i] - 5 * f[i - 1] + 4 * f[i - 2] - f[i - 3]) / (4 * h * h);
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
