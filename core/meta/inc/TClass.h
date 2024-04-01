@@ -102,8 +102,7 @@ public:
       /* had kIsEmulation = BIT(19), // Deprecated */
       kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
       kWarned      = BIT(21),
-      kHasNameMapNode = BIT(22),
-      kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+      kHasNameMapNode = BIT(22)
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ECheckSum {
@@ -244,12 +243,14 @@ private:
    Int_t               fSizeof;         //Sizeof the class.
 
    std::atomic<Char_t> fCanSplit;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
- 
-   // Bit field
 
+   // Bit field
    /// Indicates whether this class represents a pair and was not created from a dictionary nor interpreter info but has
    /// compiler compatible offset and size (and all the info is in the StreamerInfo per se)
    Bool_t fIsSyntheticPair : 1;  //!
+
+   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   Bool_t fHasCustomStreamerMember : 1; //!
 
    mutable std::atomic<Long_t> fProperty; //!Property See TClass::Property() for details
    mutable Long_t     fClassProperty;     //!C++ Property of the class (is abstract, has virtual table, etc.)
@@ -503,6 +504,8 @@ public:
          SetRuntimeProperties();
       return fRuntimeProperties.load() & ERuntimeProperties::kConsistentHash;
    }
+   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   Bool_t             HasCustomStreamerMember() const { return fHasCustomStreamerMember; }
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
    Bool_t             HasLocalHashMember() const;

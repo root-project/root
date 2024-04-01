@@ -2444,7 +2444,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
          Error("Bronch", "TClonesArray with no dictionary defined in branch: %s", name);
          return nullptr;
       }
-      bool hasCustomStreamer = clones->GetClass()->TestBit(TClass::kHasCustomStreamerMember);
+      bool hasCustomStreamer = clones->GetClass()->HasCustomStreamerMember();
       if (splitlevel > 0) {
          if (hasCustomStreamer)
             Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", clones->GetClass()->GetName());
@@ -2473,7 +2473,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
                Error("Bronch", "Container with no dictionary defined in branch: %s", name);
                return nullptr;
             }
-            if (inklass->TestBit(TClass::kHasCustomStreamerMember)) {
+            if (inklass->HasCustomStreamerMember()) {
                Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", inklass->GetName());
             }
          }
@@ -2503,7 +2503,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       return nullptr;
    }
 
-   if (!cl->GetCollectionProxy() && cl->TestBit(TClass::kHasCustomStreamerMember)) {
+   if (!cl->GetCollectionProxy() && cl->HasCustomStreamerMember()) {
       // Not an STL container and the linkdef file had a "-" after the class name.
       hasCustomStreamer = true;
    }
