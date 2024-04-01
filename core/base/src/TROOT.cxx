@@ -73,6 +73,7 @@ of a main program creating an interactive version is shown below:
 #include "RConfigOptions.h"
 #include <string>
 #include <map>
+#include <set>
 #include <cstdlib>
 #ifdef WIN32
 #include <io.h>
@@ -1066,17 +1067,35 @@ void TROOT::Browse(TBrowser *b)
    }
 }
 
+namespace {
+   std::set<TClass *> &GetClassSavedSet()
+   {
+      static thread_local std::set<TClass*> gClassSaved;
+      return gClassSaved;
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
-/// return class status bit kClassSaved for class cl
+/// return class status 'ClassSaved' for class cl
 /// This function is called by the SavePrimitive functions writing
 /// the C++ code for an object.
 
 Bool_t TROOT::ClassSaved(TClass *cl)
 {
-   if (cl == nullptr) return kFALSE;
-   if (cl->TestBit(TClass::kClassSaved)) return kTRUE;
-   cl->SetBit(TClass::kClassSaved);
-   return kFALSE;
+   if (cl == nullptr)
+      return kFALSE;
+
+   auto result = GetClassSavedSet().insert(cl);
+
+   // Return false on the first insertion only.
+   return !result.second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the ClassSaved status of all classes
+void TROOT::ResetClassSaved()
+{
+   GetClassSavedSet().clear();
 }
 
 namespace {
