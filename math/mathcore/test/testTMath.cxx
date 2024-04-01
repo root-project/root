@@ -36,6 +36,32 @@ void testNormCross()
    << endl;
 }
 
+template <typename T>
+void testArrayDerivatives()
+{
+   const Long64_t n = 10;
+   const double h = 0.1;
+   T sa[n] = {18, 47, 183, 98, 56, 74, 28, 75, 10, 89};
+   T *gradient = TMath::Gradient(n, sa, h);
+   T *laplacian = TMath::Laplacian(n, sa, h);
+
+   const T gradienta[n] = {290, 825, 255, -635, -120, -140, 5, -90, 70, 790};
+   const T laplaciana[n] = {10875, 2675, -5525, 1075, 1500, -1600, 2325, -2800, 3600, 10000};
+
+   // test results
+
+   for (Long64_t i = 0; i < n; i++) {
+      if (gradient[i] != gradienta[i])
+         Error("testArrayDerivatives", "For Gradient, different values found at i = %lld", i);
+
+      if (laplacian[i] != laplaciana[i])
+         Error("testArrayDerivatives", "For Laplacian, different values found at i = %lld", i);
+   }
+
+   delete [] gradient;
+   delete [] laplacian;
+
+}
 
 template <typename T, typename U>
 void testArrayFunctions()
@@ -173,6 +199,15 @@ void testTMath()
    testArrayFunctions<Double_t,Int_t>();
    testArrayFunctions<Long_t,Long64_t>();
    testArrayFunctions<Long64_t,Long64_t>();
+
+   cout << "\nArray derivative tests: " << endl;
+
+   testArrayDerivatives<Short_t>();
+   testArrayDerivatives<Int_t>();
+   testArrayDerivatives<Float_t>();
+   testArrayDerivatives<Double_t>();
+   testArrayDerivatives<Long_t>();
+   testArrayDerivatives<Long64_t>();
 
    cout << "\nIterator functions tests: " << endl;
 
