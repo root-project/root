@@ -638,11 +638,7 @@ void REveManager::RegisterGeometryAlias(const TString &alias, const TString &fil
 
 void REveManager::ClearROOTClassSaved()
 {
-   TIter nextcl(gROOT->GetListOfClasses());
-   TClass *cls;
-   while ((cls = (TClass *)nextcl())) {
-      cls->ResetBit(TClass::kClassSaved);
-   }
+   gROOT->ResetClassSaved();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
