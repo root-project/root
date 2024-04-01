@@ -356,7 +356,7 @@ namespace TStreamerInfoActions
           && config->fInfo->GetStreamMemberWise()
           && cl->CanSplit()
           && !(strspn(config->fCompInfo->fElem->GetTitle(),"||") == 2)
-          && !(vClass->TestBit(TClass::kHasCustomStreamerMember)) ) {
+          && !(vClass->HasCustomStreamerMember()) ) {
          // Let's save the collection member-wise.
 
          UInt_t pos = buf.WriteVersionMemberWise(config->fInfo->IsA(),kTRUE);
