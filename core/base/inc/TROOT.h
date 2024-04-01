@@ -312,6 +312,7 @@ public:
    TObject          *Remove(TObject*) override;
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
+   void              ResetClassSaved();
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
    /// Set the "Batch mode".  If the argument evaluates to `true`, the session does not use interactive graphics.
