@@ -1819,12 +1819,8 @@ void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 {
-   //    reset bit TClass::kClassSaved for all classes
-   TIter next(gROOT->GetListOfClasses());
-   TClass *cl;
-   while((cl = (TClass*)next())) {
-      cl->ResetBit(TClass::kClassSaved);
-   }
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
 
    char quote = '"';
    std::ofstream out;
@@ -1949,11 +1945,8 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    out.close();
    Info("SaveSource","C++ Macro file: %s has been generated", fname.Data());
 
-   //    reset bit TClass::kClassSaved for all classes
-   next.Reset();
-   while((cl = (TClass*)next())) {
-      cl->ResetBit(TClass::kClassSaved);
-   }
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
