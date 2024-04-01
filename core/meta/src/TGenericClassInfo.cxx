@@ -261,7 +261,7 @@ namespace Internal {
                                           GetDeclFileLine(),
                                           GetImplFileLine());
          if (fPragmaBits & TClassTable::kHasCustomStreamerMember) {
-            fClass->SetBit(TClass::kHasCustomStreamerMember);
+            fClass->fHasCustomStreamerMember = true;
          }
          fClass->SetNew(fNew);
          fClass->SetNewArray(fNewArray);
