@@ -99,7 +99,7 @@ public:
                               // loaded and has been unloaded from memory.
       kIsTObject = BIT(17),
       kIsForeign   = BIT(18),
-      kIsEmulation = BIT(19), // Deprecated
+      /* had kIsEmulation = BIT(19), // Deprecated */
       kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
       kWarned      = BIT(21),
       kHasNameMapNode = BIT(22),

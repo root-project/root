@@ -4114,7 +4114,6 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    if (cl->fState != TClass::kHasTClassInit) {
       if (cl->fClassInfo) {
          cl->fState = TClass::kInterpreted;
-         cl->ResetBit(TClass::kIsEmulation);
       } else {
 //         if (TClassEdit::IsSTLCont(cl->GetName()) {
 //            There will be an emulated collection proxy, is that the same?
@@ -4548,7 +4547,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
    R__LOCKGUARD(gInterpreterMutex);
    TClass *cl = new TClass(classname, version, silent);
    if (emulation) {
-      cl->SetBit(TClass::kIsEmulation);
+      // cl->SetBit(TClass::kIsEmulation);
    } else {
       // Set the class version if the class is versioned.
       // Note that we cannot just call CLASS::Class_Version() as we might not have
@@ -4673,7 +4672,6 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
       if (cl == nullptr) {
          int version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
          cl = new TClass(classinfo, version, nullptr, nullptr, -1, -1, silent);
-         cl->SetBit(TClass::kIsEmulation);
       }
    } else {
       // For regular class, just create a TClass on the fly ...
@@ -6644,7 +6642,6 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alia
          if (cl->fState != TClass::kHasTClassInit) {
             // if (!cl->fClassInfo->IsValid()) cl->fState = TClass::kForwardDeclared; else
             cl->fState = TClass::kInterpreted;
-            cl->ResetBit(TClass::kIsEmulation);
          }
          TClass::AddClassToDeclIdMap(((TClingClassInfo *)(cl->fClassInfo))->GetDeclId(), cl);
       } else {

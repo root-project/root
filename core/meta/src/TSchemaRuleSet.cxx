@@ -115,7 +115,8 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
      R__LOCKGUARD(gInterpreterMutex);
      streamerInfosTest = (fClass->GetStreamerInfos()==nullptr || fClass->GetStreamerInfos()->IsEmpty());
    }
-   if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
+   if (rule->GetTarget()  && fClass->GetState() > TClass::kEmulated && streamerInfosTest)
+   {
       TObjArrayIter titer( rule->GetTarget() );
       TObject* obj;
       while( (obj = titer.Next()) ) {
