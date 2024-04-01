@@ -731,7 +731,7 @@ namespace Internal {
 
             // Check class inside container and create a descriptor or add a reader
             if (cl) {
-               if (cl->TestBit(TClass::kIsEmulation) || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
+               if (cl->GetState() == TClass::kEmulated || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
                   TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
                   TVirtualStreamerInfo *beinfo = (be && isclones == kOut)
                      ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
