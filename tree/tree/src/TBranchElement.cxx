@@ -2560,11 +2560,9 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
 
          if (fID < 0) {
             cl = new TClass(fBranchClass.GetClassName(), fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          } else {
             cl = new TClass(className, fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          }
       }
