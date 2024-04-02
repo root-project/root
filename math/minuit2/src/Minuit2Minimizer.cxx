@@ -703,7 +703,7 @@ void Minuit2Minimizer::PrintResults()
             std::cout << "+/-  " << par.Error() << std::endl;
       }
    } else {
-      std::cout << "Minuit2Minimizer : Invalid Minimum - status = " << fStatus << std::endl;
+      std::cout << "Minuit2Minimizer : Invalid minimum - status = " << fStatus << std::endl;
       std::cout << "FVAL  = " << fState.Fval() << std::endl;
       std::cout << "Edm   = " << fState.Edm() << std::endl;
       std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
