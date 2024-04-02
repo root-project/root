@@ -217,6 +217,9 @@ public:
 
    bool IsInitialized() const { return fIsInitialized; }
 
+   /// Return the RNTupleDescriptor being constructed.
+   virtual const RNTupleDescriptor &GetDescriptor() const = 0;
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
    void Init(RNTupleModel &model)
@@ -363,6 +366,8 @@ public:
                                             const RNTupleWriteOptions &options = RNTupleWriteOptions());
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
+   const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
