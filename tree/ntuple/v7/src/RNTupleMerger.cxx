@@ -101,15 +101,14 @@ void ROOT::Experimental::Internal::RNTupleMerger::ValidateColumns(
 
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo>
-ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RPageSource &source, bool firstSource)
+ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RNTupleDescriptor &descriptor)
 {
-   auto desc = source.GetSharedDescriptorGuard();
    std::vector<RColumnInfo> columns;
    // Here we recursively find the columns and fill the RColumnInfo vector
-   AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldZero());
+   AddColumnsFromField(columns, descriptor, descriptor.GetFieldZero());
    // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
    // In either case, we also assign the output ids here
-   if (firstSource) {
+   if (fOutputIdMap.empty()) {
       BuildColumnIdMap(columns);
    } else {
       ValidateColumns(columns);
@@ -146,12 +145,12 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
          continue;
       }
 
-      // Collect all the columns
-      // The column name : output column id map is only built once
-      auto columns = CollectColumns(*source, isFirstSource);
-
       // Get a handle on the descriptor (metadata)
       auto descriptor = source->GetSharedDescriptorGuard();
+
+      // Collect all the columns
+      // The column name : output column id map is only built once
+      auto columns = CollectColumns(descriptor.GetRef());
 
       // Create sink from the input model of the very first input file
       if (isFirstSource) {
