@@ -196,6 +196,10 @@ protected:
    static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting, void *buf,
                                bool allowAlias = true);
 
+private:
+   /// Flag if sink was initialized
+   bool fIsInitialized = false;
+
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
@@ -211,9 +215,23 @@ public:
 
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
+   bool IsInitialized() const { return fIsInitialized; }
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
-   virtual void Init(RNTupleModel &model) = 0;
+   void Init(RNTupleModel &model)
+   {
+      if (fIsInitialized) {
+         throw RException(R__FAIL("already initialized"));
+      }
+      fIsInitialized = true;
+      InitImpl(model);
+   }
+
+protected:
+   virtual void InitImpl(RNTupleModel &model) = 0;
+
+public:
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
@@ -347,7 +365,7 @@ public:
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
-   void Init(RNTupleModel &model) final;
+   void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
