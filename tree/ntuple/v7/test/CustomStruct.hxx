@@ -213,7 +213,7 @@ struct Cyclic {
 
 // Test cyclic collection proxy: we set up this class such that it is its own collection proxy inner class.
 // This does not actually need to be a working collection proxy.
-struct CyclicCollectionProxy : TVirtualCollectionProxy {
+struct CyclicCollectionProxy : public TVirtualCollectionProxy {
    // The following three functions are required by RProxiedCollectionField
    static void Func_CreateIterators(void *, void **, void **, TVirtualCollectionProxy *) {}
    static void *Func_Next(void *, const void *) { return nullptr; }
