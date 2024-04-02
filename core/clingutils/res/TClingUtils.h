@@ -197,12 +197,14 @@ private:
    std::string fRequestedName;
    std::string fNormalizedName;
    std::string fDemangledTypeInfo;
+   // clang-format off
    bool fRequestStreamerInfo;
    bool fRequestNoStreamer;
    bool fRequestNoInputOperator;
    bool fRequestOnlyTClass;
    int  fRequestedVersionNumber;
-   int fRequestedRNTupleSplitMode;
+   int  fRequestedRNTupleSplitMode;
+   // clang-format on
 
 public:
    enum ERootFlag {
@@ -213,26 +215,57 @@ public:
       kHasVersion      = 0x08
    };
 
-   AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer,
-                       bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber,
-                       int rRequestedRNTupleSplitMode, const cling::Interpreter &interpret,
+   // clang-format off
+   AnnotatedRecordDecl(long index,
+                       const clang::RecordDecl *decl,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
+                       const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
-   AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo,
-                       bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass,
-                       int rRequestedVersionNumber, int rRequestedRNTupleSplitMode, const cling::Interpreter &interpret,
+   AnnotatedRecordDecl(long index,
+                       const clang::RecordDecl *decl,
+                       const char *requestName,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
+                       const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
-   AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl,
-                       const char *requestedName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator,
-                       bool rRequestOnlyTClass, int rRequestedVersionNumber, int rRequestedRNTupleSplitMode,
-                       const cling::Interpreter &interpret, const TNormalizedCtxt &normCtxt);
-
-   AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl,
-                       const char *requestedName, unsigned int nTemplateArgsToSkip, bool rStreamerInfo,
-                       bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass,
-                       int rRequestedVersionNumber, int rRequestedRNTupleSplitMode, const cling::Interpreter &interpret,
+   AnnotatedRecordDecl(long index,
+                       const clang::Type *requestedType,
+                       const clang::RecordDecl *decl,
+                       const char *requestedName,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
+                       const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
+
+   AnnotatedRecordDecl(long index,
+                       const clang::Type *requestedType,
+                       const clang::RecordDecl *decl,
+                       const char *requestedName,
+                       unsigned int nTemplateArgsToSkip,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
+                       const cling::Interpreter &interpret,
+                       const TNormalizedCtxt &normCtxt);
+   // clang-format on
 
    ~AnnotatedRecordDecl() {
       // Nothing to do we do not own the pointer;
@@ -249,11 +282,13 @@ public:
       // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT
       return fRequestStreamerInfo;
    }
+   // clang-format off
    bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
    bool RequestNoStreamer() const { return fRequestNoStreamer; }
    bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
    int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
-   int RequestedRNTupleSplitMode() const { return fRequestedRNTupleSplitMode; }
+   int  RequestedRNTupleSplitMode() const { return fRequestedRNTupleSplitMode; }
+   // clang-format on
    int  RootFlag() const {
       // Return the request (streamerInfo, has_version, etc.) combined in a single
       // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
