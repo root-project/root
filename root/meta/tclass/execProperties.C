@@ -1,9 +1,9 @@
 bool testing(TClass *cl, bool expected_value)
 {
-   if (expected_value == cl->TestBit(TClass::kHasCustomStreamerMember) ) {
+   if (expected_value == cl->HasCustomStreamerMember() ) {
       return true;
    } else {
-      fprintf(stdout,"For %s we found %d rather than %d\n",cl->GetName(),cl->TestBit(TClass::kHasCustomStreamerMember),expected_value);
+      fprintf(stdout,"For %s we found %d rather than %d\n",cl->GetName(),cl->HasCustomStreamerMember(),expected_value);
       return false;
    }
 }
