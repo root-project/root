@@ -139,7 +139,7 @@ endforeach()
 add_custom_target(ROOTPythonizationsPySources ALL DEPENDS ${py_sources_in_localruntimedir})
 
 # Copy headers inside build_dir/include/ROOT
-file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
+file(COPY ${ROOT_headers_dir}/ DESTINATION ${ROOT_BINARY_DIR}/include/ROOT)
 
 set(libname ROOTPythonizations)
 

@@ -163,7 +163,7 @@ if(ROOT_opengl_FOUND)
     configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
   endif()
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
-  ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
+  ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${ROOT_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressgraphics-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressgraphics )
 endif()
@@ -267,13 +267,13 @@ ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
 
 #--stressProof-------------------------------------------------------------------------------
 if(proof AND NOT WIN32)
-  add_custom_target(TestData COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
+  add_custom_target(TestData COMMAND ${CMAKE_COMMAND} -DDST=${ROOT_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
   ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-  ROOT_ADD_TEST(test-stressproof PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TestData
+  ROOT_ADD_TEST(test-stressproof PRECMD ${CMAKE_COMMAND} --build ${ROOT_BINARY_DIR} --target TestData
                                  COMMAND stressProof lite://
-                                         -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
+                                         -h1 ${ROOT_SOURCE_DIR}/files/h1 -event ${ROOT_SOURCE_DIR}/files/event
                                          -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
-                                         ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                                         ENVIRONMENT PATH=${ROOT_BINARY_DIR}/bin:$ENV{PATH}
                                          FAILREGEX "FAILED|Error in")
 endif()
 
@@ -371,7 +371,7 @@ if (NOT cxxmodules)
     ROOT_ADD_TEST(test-periodic-build
       COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
         --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
+        --build-options -DCMAKE_PREFIX_PATH=${ROOT_BINARY_DIR}
     )
   else()
     ROOT_ADD_TEST(test-periodic-build
@@ -379,7 +379,7 @@ if (NOT cxxmodules)
         env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
         ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
         --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
+        --build-options -DCMAKE_PREFIX_PATH=${ROOT_BINARY_DIR}
     )
   endif()
 endif()

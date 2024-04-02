@@ -129,7 +129,7 @@ if(clingtest)
   if (NOT builtin_llvm)
     set(CLINGTEST_EXECUTABLE CLING=${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/${CMAKE_CFG_INTDIR}/bin/cling)
   endif()
-  ROOT_ADD_TEST(clingtest-check-cling COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target check-cling
+  ROOT_ADD_TEST(clingtest-check-cling COMMAND ${CMAKE_COMMAND} --build ${ROOT_BINARY_DIR} --target check-cling
                                        ENVIRONMENT ${CLINGTEST_EXECUTABLE})
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
