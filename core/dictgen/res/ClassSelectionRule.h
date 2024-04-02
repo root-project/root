@@ -37,6 +37,7 @@ private:
    std::list<FunctionSelectionRule> fMethodSelectionRules;
    bool fIsInheritable;
 
+   // clang-format off
    bool fRequestStreamerInfo;    // for linkdef.h: true if we had '+' at the end of a class name
    bool fRequestNoStreamer;      // for linkdef.h: true if we had '-' or "-!" at the end of a class name
    bool fRequestNoInputOperator; // for linkdef.h: true if we had '!' at the end of a class name
@@ -44,7 +45,8 @@ private:
    bool fRequestProtected;       // Explicit request to be able to access protected member from the interpreter.
    bool fRequestPrivate;         // Explicit request to be able to access private member from the interpreter.
    int  fRequestedVersionNumber; // Explicit request for a specific version number (default to no request with -1).
-   int fRequestedRNTupleSplitMode = 0; // Explicit request for unsplit (-1) or split (=1), defaults to unset (=0)
+   int  fRequestedRNTupleSplitMode = 0; // Explicit request for unsplit (-1) or split (=1), defaults to unset (=0)
+   // clang-format on
 
 public:
 
