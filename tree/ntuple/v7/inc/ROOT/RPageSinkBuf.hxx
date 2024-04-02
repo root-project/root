@@ -144,7 +144,7 @@ public:
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
-   void Init(RNTupleModel &model) final;
+   void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
