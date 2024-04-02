@@ -1215,15 +1215,13 @@ TEST(VecOps, DeltaPhi)
 
    // Checks that calling with different argument types works and yields the
    // expected return types and values
-   static_assert(std::is_same_v<decltype(DeltaPhi(0.f, 0.0)), double>,
-                 "DeltaPhi should return double if one of the arguments is double");
+   EXPECT_TRUE((std::is_same_v<decltype(DeltaPhi(0.f, 0.0)), double>)) << "DeltaPhi should return double if one of the arguments is double";
    EXPECT_EQ(DeltaPhi(0.f, 2.0), 2.0);
    EXPECT_EQ(DeltaPhi(1.0, 0.0, 180.f), -1.0);
 
    RVec<double> v1d = {0.0, 1.0, -0.5, 0.0, 0.0, 0.0, 0.0};
    auto dphiMixed = DeltaPhi(v1d, v2);
-   static_assert(std::is_same_v<decltype(dphiMixed), RVec<double>>,
-                 "DeltaPhi should return double if one of the arguments is double");
+   EXPECT_TRUE((std::is_same_v<decltype(dphiMixed), RVec<double>>)) << "DeltaPhi should return double if one of the arguments is double";
    const RVec<double> r1d = {2.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0};
    for (size_t i = 0; i < dphiMixed.size(); ++i) {
       // We use the full double result here as reference and allow for some
@@ -1289,8 +1287,7 @@ TEST(VecOps, InvariantMass)
    RVec<float> pt1f =   {0.f, 5.f, 5.f, 10.f, 10.f};
    RVec<float> eta2f =  {0.f, 0.f, 0.5f, 0.4f, 1.2f};
    const auto invMassF = InvariantMasses(pt1f, eta1, phi1, mass1, pt2, eta2f, phi2, mass2);
-   static_assert(std::is_same_v<decltype(invMassF), const RVec<double>>,
-                 "InvariantMasses should return double if one of the arguments is double");
+   EXPECT_TRUE((std::is_same_v<decltype(invMassF), const RVec<double>>)) << "InvariantMasses should return double if one of the arguments is double";
    for (size_t i = 0; i < invMass.size(); ++i) {
       // We use the full double result here as reference and allow for some
       // jitter introduced by the floating point promotion that happens along
@@ -1300,8 +1297,7 @@ TEST(VecOps, InvariantMass)
    }
 
    const auto invMass2F = InvariantMass(pt1f, eta1, phi1, mass1);
-   static_assert(std::is_same_v<decltype(invMass2F), const double>,
-                 "InvariantMass should return double if one of the arguments is double");
+   EXPECT_TRUE((std::is_same_v<decltype(invMass2F), const double>)) << "InvariantMass should return double if one of the arguments is double";
    EXPECT_EQ(invMass2F, invMass2);
 }
 
@@ -1333,8 +1329,7 @@ TEST(VecOps, DeltaR)
    // expected return types and values
    RVec<float> etaf = {0.1f, -1.f, -1.f, 0.5f, -2.5f};
    auto drf = DeltaR(etaf, eta2, phi1, phi2);
-   static_assert(std::is_same_v<decltype(drf), RVec<double>>,
-                 "DeltaR should return double if one of the arguments is double");
+   EXPECT_TRUE((std::is_same_v<decltype(drf), RVec<double>>)) << "DeltaR should return double if one of the arguments is double";
    for (std::size_t i = 0; i < etaf.size(); ++i) {
       // We use the full double result here as reference and allow for some
       // jitter introduced by the floating point promotion that happens along
