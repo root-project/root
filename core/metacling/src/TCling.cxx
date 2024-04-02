@@ -7419,6 +7419,7 @@ int TCling::DisplayIncludePath(FILE *fout) const
 
 void* TCling::FindSym(const char* entry) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return fInterpreter->getAddressOfGlobal(entry);
 }
 
