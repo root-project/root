@@ -20,10 +20,11 @@ TMVA.PyMethodBase.PyInitialize()
 reader = TMVA.Reader("Color:!Silent")
 
 # Load data
-if not isfile('tmva_class_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_class_example.root'])
+TFile.SetCacheFileDir(".")
+data = TFile.Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+if data is None:
+    raise FileNotFoundError("Input file cannot be downloaded - exit")
 
-data = TFile.Open('tmva_class_example.root')
 signal = data.Get('TreeS')
 background = data.Get('TreeB')
 

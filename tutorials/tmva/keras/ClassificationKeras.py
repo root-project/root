@@ -22,15 +22,15 @@ from tensorflow.keras.optimizers import SGD
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
+output = TFile.Open('TMVA_Classification_Keras..root', 'RECREATE')
 factory = TMVA.Factory('TMVAClassification', output,
                        '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Classification')
 
 # Load data
-if not isfile('tmva_class_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_class_example.root'])
-
-data = TFile.Open('tmva_class_example.root')
+TFile.SetCacheFileDir(".")
+data = TFile.Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD")
+if data is None:
+    raise FileNotFoundError("Input file cannot be downloaded - exit")
 signal = data.Get('TreeS')
 background = data.Get('TreeB')
 
