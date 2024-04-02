@@ -1283,6 +1283,26 @@ TEST(VecOps, InvariantMass)
    }
 
    EXPECT_NEAR(p5.M(), invMass3, 1e-4);
+
+   // Check that calling with different argument types works and yields the
+   // expected return types and values
+   RVec<float> pt1f =   {0.f, 5.f, 5.f, 10.f, 10.f};
+   RVec<float> eta2f =  {0.f, 0.f, 0.5f, 0.4f, 1.2f};
+   const auto invMassF = InvariantMasses(pt1f, eta1, phi1, mass1, pt2, eta2f, phi2, mass2);
+   static_assert(std::is_same_v<decltype(invMassF), const RVec<double>>,
+                 "InvariantMasses should return double if one of the arguments is double");
+   for (size_t i = 0; i < invMass.size(); ++i) {
+      // We use the full double result here as reference and allow for some
+      // jitter introduced by the floating point promotion that happens along
+      // the way (in deterministic but different places depending on the types
+      // of the arguments)
+      EXPECT_NEAR(invMassF[i], invMass[i], 1e-7);
+   }
+
+   const auto invMass2F = InvariantMass(pt1f, eta1, phi1, mass1);
+   static_assert(std::is_same_v<decltype(invMass2F), const double>,
+                 "InvariantMass should return double if one of the arguments is double");
+   EXPECT_EQ(invMass2F, invMass2);
 }
 
 TEST(VecOps, DeltaR)
