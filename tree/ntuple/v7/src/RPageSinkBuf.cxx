@@ -81,7 +81,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector
    fBufferedColumns.resize(fNColumns);
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::Init(RNTupleModel &model)
+void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
 {
    ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
 

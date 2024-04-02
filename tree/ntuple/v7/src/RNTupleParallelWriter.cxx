@@ -68,7 +68,7 @@ public:
    RPageSynchronizingSink &operator=(const RPageSynchronizingSink &) = delete;
 
    ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &) final { return {}; }
-   void Init(RNTupleModel &) final {}
+   void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
