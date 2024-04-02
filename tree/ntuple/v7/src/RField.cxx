@@ -1924,7 +1924,7 @@ ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RUnsplitField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<RUnsplitField>(new RUnsplitField(newName, GetTypeName(), fClass));
+   return std::unique_ptr<RUnsplitField>(new RUnsplitField(newName, GetTypeName(), GetTypeAlias()));
 }
 
 std::size_t ROOT::Experimental::RUnsplitField::AppendImpl(const void *from)
