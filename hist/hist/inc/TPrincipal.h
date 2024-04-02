@@ -56,6 +56,7 @@ public:
    virtual void       AddRow(const Double_t *x);
    void       Browse(TBrowser *b) override;
    void       Clear(Option_t *option="") override;
+   /// Return the covariance matrix. \note Only the lower diagonal of the covariance matrix is computed by the class
    const TMatrixD    *GetCovarianceMatrix() const {return &fCovarianceMatrix;}
    const TVectorD    *GetEigenValues() const      {return &fEigenValues;}
    const TMatrixD    *GetEigenVectors() const     {return &fEigenVectors;}
