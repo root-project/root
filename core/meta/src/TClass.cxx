@@ -5827,7 +5827,7 @@ void TClass::LoadClassInfo() const
 
    // Return if another thread already loaded the info
    // while we were waiting for the lock
-   if (!fCanLoadClassInfo)
+   if (!fCanLoadClassInfo || TestBit(kLoading))
       return;
 
    bool autoParse = !gInterpreter->IsAutoParsingSuspended();
