@@ -17,7 +17,6 @@
 #include "../../cppyy/CPyCppyy/src/CustomPyTypes.h"
 
 #include "PyROOTPythonize.h"
-#include "PyzCppHelpers.hxx"
 #include "TBufferFile.h"
 
 using namespace CPyCppyy;
@@ -79,7 +78,7 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
    if (selfClass == s_bfClass) {
       buff = (TBufferFile *)CPyCppyy::Instance_AsVoidPtr(self);
    } else {
-      auto className = GetScopedFinalNameFromPyObject(self);
+      auto className = Cppyy::GetScopedFinalName(selfClass);
       if (className.find("__cppyy_internal::Dispatcher") == 0) {
          PyErr_Format(PyExc_IOError, "generic streaming of Python objects whose class derives from a C++ class is not supported. "
                                      "Please refer to the Python pickle documentation for instructions on how to define "
@@ -94,7 +93,7 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
       if (s_buff.WriteObjectAny(CPyCppyy::Instance_AsVoidPtr(self),
                                 TClass::GetClass(className.c_str())) != 1) {
          PyErr_Format(PyExc_IOError, "could not stream object of type %s",
-                      GetScopedFinalNameFromPyObject(self).c_str());
+                      Cppyy::GetScopedFinalName(selfClass).c_str());
          return 0;
       }
       buff = &s_buff;
@@ -104,7 +103,7 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
    // on reading back in (see CPPInstanceExpand defined above)
    PyObject *res2 = PyTuple_New(2);
    PyTuple_SET_ITEM(res2, 0, PyBytes_FromStringAndSize(buff->Buffer(), buff->Length()));
-   PyTuple_SET_ITEM(res2, 1, PyBytes_FromString(GetScopedFinalNameFromPyObject(self).c_str()));
+   PyTuple_SET_ITEM(res2, 1, PyBytes_FromString(Cppyy::GetScopedFinalName(selfClass).c_str()));
 
    PyObject *result = PyTuple_New(2);
    Py_INCREF(s_expand);

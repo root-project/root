@@ -24,7 +24,6 @@
 #include "CPyCppyy/API.h"
 
 #include "PyROOTPythonize.h"
-#include "PyzCppHelpers.hxx"
 
 // ROOT
 #include "TClass.h"
@@ -37,6 +36,16 @@
 #include "TLeafObject.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+
+namespace {
+
+// Get the TClass of the C++ object proxied by pyobj
+TClass *GetTClass(const PyObject *pyobj)
+{
+   return TClass::GetClass(Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance*)pyobj)->ObjectIsA()).c_str());
+}
+
+} // namespace
 
 using namespace CPyCppyy;
 
