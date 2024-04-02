@@ -1308,6 +1308,20 @@ TEST(VecOps, DeltaR)
       auto dr4 = DeltaR(eta1[i], eta2[i], phi1[i], phi2[i]);
       EXPECT_NEAR(dr3, dr4, 1e-6);
    }
+
+   // Check that calling with different argument types works and yields the
+   // expected return types and values
+   RVec<float> etaf = {0.1f, -1.f, -1.f, 0.5f, -2.5f};
+   auto drf = DeltaR(etaf, eta2, phi1, phi2);
+   static_assert(std::is_same_v<decltype(drf), RVec<double>>,
+                 "DeltaR should return double if one of the arguments is double");
+   for (std::size_t i = 0; i < etaf.size(); ++i) {
+      // We use the full double result here as reference and allow for some
+      // jitter introduced by the floating point promotion that happens along
+      // the way (in deterministic but different places depending on the types
+      // of the arguments)
+      EXPECT_NEAR(dr[i], drf[i], 1e-7);
+   }
 }
 
 TEST(VecOps, Map)
