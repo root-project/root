@@ -14,16 +14,25 @@
 #include "CPyCppyy/API.h"
 
 #include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 #include "../../cppyy/CPyCppyy/src/Utility.h"
 
 #include "PyROOTPythonize.h"
-#include "PyzCppHelpers.hxx"
 
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
 
 #include <map>
+
+namespace {
+
+std::string GetScopedFinalNameFromPyObject(const PyObject *pyobj)
+{
+   return Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance *)pyobj)->ObjectIsA());
+}
+
+} // namespace
 
 using namespace CPyCppyy;
 

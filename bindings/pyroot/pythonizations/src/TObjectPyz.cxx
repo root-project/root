@@ -17,10 +17,31 @@
 #include "../../cppyy/CPyCppyy/src/Utility.h"
 
 #include "PyROOTPythonize.h"
-#include "PyzCppHelpers.hxx"
 
 // ROOT
 #include "TObject.h"
+
+namespace {
+
+// Convert generic python object into a boolean value
+PyObject *BoolNot(PyObject *value)
+{
+   if (PyObject_IsTrue(value) == 1) {
+      Py_DECREF(value);
+      Py_RETURN_FALSE;
+   } else {
+      Py_XDECREF(value);
+      Py_RETURN_TRUE;
+   }
+}
+
+// Call method with signature: obj->meth(arg1)
+PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1)
+{
+   return PyObject_CallMethod(obj, meth, "O", arg1);
+}
+
+} // namespace
 
 using namespace CPyCppyy;
 
