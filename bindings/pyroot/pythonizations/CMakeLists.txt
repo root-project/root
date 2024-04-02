@@ -112,7 +112,6 @@ set(cpp_sources
     src/TMemoryRegulator.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
-    src/PyzCppHelpers.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx
     inc/TPyDispatcher.h
