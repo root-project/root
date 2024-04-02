@@ -94,3 +94,13 @@ TEST(RField, ForceSplitMode)
    f = RFieldBase::Create("f", "ForceUnsplitXML").Unwrap();
    EXPECT_TRUE(dynamic_cast<ROOT::Experimental::RUnsplitField *>(f.get()) != nullptr);
 }
+
+TEST(RField, IgnoreUnsplitComment)
+{
+   auto fieldClass = RFieldBase::Create("f", "IgnoreUnsplitComment").Unwrap();
+
+   // Only one member, so we know that it is first sub field
+   const auto fieldMember = fieldClass->GetSubFields()[0];
+   EXPECT_EQ(std::string("v"), fieldMember->GetFieldName());
+   EXPECT_EQ(nullptr, dynamic_cast<const ROOT::Experimental::RUnsplitField *>(fieldMember));
+}
