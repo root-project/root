@@ -375,6 +375,27 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return 1 if the point (x,y) is inside the polygon defined by
+/// the diamond 0 otherwise.
+
+Int_t TDiamond::IsInside(Double_t x, Double_t y) const
+{
+
+   Double_t xd[4], yd[4];
+
+   xd[0] = fX1;
+   yd[0] = (fY2 + fY1) / 2.;
+   xd[1] = (fX2 + fX1) / 2.;
+   yd[1] = fY1;
+   xd[2] = fX2;
+   yd[2] = yd[0];
+   xd[3] = xd[1];
+   yd[3] = fY2;
+
+   return (Int_t)TMath::IsInside(x, y, 4, xd, yd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint this diamond with its current attributes.
 
 void TDiamond::Paint(Option_t *)

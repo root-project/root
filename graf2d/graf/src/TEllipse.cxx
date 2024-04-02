@@ -21,7 +21,7 @@
 #include "TVirtualX.h"
 
 
-const Double_t kPI = 3.14159265358979323846;
+constexpr Double_t kPI = TMath::Pi();
 
 ClassImp(TEllipse);
 
@@ -506,6 +506,38 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return 1 if the point (x,y) is inside the polygon defined by
+/// the ellipse 0 otherwise.
+/// Author: Ole Hansen (ole@jlab.org)
+Int_t TEllipse::IsInside(Double_t x, Double_t y) const
+{
+   x -= fX1;
+   y -= fY1;
+   Double_t th = fTheta * TMath::DegToRad();
+   Double_t st = TMath::Sin(th);
+   Double_t ct = TMath::Cos(th);
+   Double_t xx =  ct * x + st * y;
+   Double_t yy = -st * x + ct * y;
+
+   if (TMath::Abs(xx) > fR1 || TMath::Abs(yy) > fR2)
+      return 0;
+   Double_t xn = xx / fR1;
+   Double_t yn = yy / fR2;
+   if (xn * xn + yn * yn > 1.)
+      return 0;
+   if (fPhimax - fPhimin >= 360.)
+      return 1;
+   Double_t phimin = std::fmod(fPhimin, 360.);
+   Double_t phimax = std::fmod(fPhimax, 360.);
+   Double_t phi = TMath::RadToDeg()*(TMath::Pi() + TMath::ATan2(-yy * fR1 / fR2, -xx));
+   if (phi < phimin || phi > phimax)
+      return 0;
+
+   return 1;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// List this ellipse with its attributes.
