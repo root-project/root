@@ -243,8 +243,9 @@ private:
    ClassConvStreamerFunc_t fConvStreamerFunc;   //Wrapper around this class custom conversion Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
+   std::atomic<Char_t> fCanSplit;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
+ 
    // Bit field
-   Int_t fCanSplit : 3;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
 
    /// Indicates whether this class represents a pair and was not created from a dictionary nor interpreter info but has
    /// compiler compatible offset and size (and all the info is in the StreamerInfo per se)
