@@ -53,6 +53,8 @@ private:
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fTrainingRemainder;
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fValidationRemainder;
+   
+   ROOT::RDataFrame f_rdf;
 
    std::vector<std::vector<std::size_t>> fTrainingIdxs;
    std::vector<std::vector<std::size_t>> fValidationIdxs;
@@ -68,13 +70,15 @@ private:
    float fVecPadding;
 
 public:
-   RBatchGenerator(const std::string &treeName, const std::vector<std::string> &fileNames, const std::size_t chunkSize,
+   RBatchGenerator(/*const std::string &treeName, const std::vector<std::string> &fileNames,*/
+                   ROOT::RDataFrame rdf, const std::size_t chunkSize,
                    const std::size_t batchSize, const std::vector<std::string> &cols, const std::string &filters = "",
                    const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0,
                    const float validationSplit = 0.0, const std::size_t maxChunks = 0, const std::size_t numColumns = 0,
                    bool shuffle = true, bool dropRemainder = true)
-      : fTreeName(treeName),
-        fFileNames(fileNames),
+      : /*fTreeName(treeName),
+        fFileNames(fileNames),*/
+        f_rdf(rdf),
         fChunkSize(chunkSize),
         fBatchSize(batchSize),
         fCols(cols),
@@ -92,15 +96,17 @@ public:
       fMaxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
 
       // get the number of fNumEntries in the dataframe
-      fNumEntries = 0;
-      for (int i=0; i<fFileNames.size(); i++){
-         std::unique_ptr<TFile> f{TFile::Open(fFileNames[i].c_str())};
-         std::unique_ptr<TTree> t{f->Get<TTree>(fTreeName.c_str())};
-         fNumEntries += t->GetEntries();
-      }
+      // fNumEntries = 0;
+      // for (int i=0; i<fFileNames.size(); i++){
+      //    std::unique_ptr<TFile> f{TFile::Open(fFileNames[i].c_str())};
+      //    std::unique_ptr<TTree> t{f->Get<TTree>(fTreeName.c_str())};
+      //    fNumEntries += t->GetEntries();
+      // }
+
+      fNumEntries = f_rdf.Count().GetValue();
 
       fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
-         fTreeName, fFileNames, fChunkSize, fCols, fFilters, fVecSizes, fVecPadding);
+         /*fTreeName, fFileNames,*/ f_rdf, fChunkSize, fCols, fFilters, fVecSizes, fVecPadding);
       fBatchLoader = std::make_unique<TMVA::Experimental::Internal::RBatchLoader>(fBatchSize, fNumColumns, fMaxBatches);
 
       // Create tensor to load the chunk into

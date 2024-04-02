@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any, Callable, Tuple, TYPE_CHECKING
 import atexit
 
+#from ROOT import RDataFrame
+
 if TYPE_CHECKING:
     import numpy as np
     import tensorflow as tf
@@ -12,8 +14,9 @@ if TYPE_CHECKING:
 class BaseGenerator:
     def get_template(
         self,
-        tree_name: str,
-        file_names: list[str],
+        # tree_name: str,
+        # file_names: list[str],
+        x_rdf: RDataFrame,
         columns: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
     ) -> Tuple[str, list[int]]:
@@ -32,11 +35,7 @@ class BaseGenerator:
         Returns:
             template (str): Template for the RBatchGenerator
         """
-
-        # from cppyy.gbl.ROOT import RDataFrame
-        from ROOT import RDataFrame
-
-        x_rdf = RDataFrame(tree_name, file_names)
+        #x_rdf = RDataFrame(tree_name, file_names)
 
         if not columns:
             columns = x_rdf.GetColumnNames()
@@ -44,6 +43,7 @@ class BaseGenerator:
         template_dict = {
             "Bool_t": "bool&",
             "Double_t": "double&",
+            "double": "double&",
             "Double32_t": "double&",
             "Float_t": "float&",
             "Float16_t": "float&",
@@ -111,8 +111,9 @@ class BaseGenerator:
 
     def __init__(
         self,
-        tree_name: str,
-        file_names: str|list[str],
+        # tree_name: str,
+        # file_names: str|list[str],
+        rdataframe: RDataFrame,
         batch_size: int,
         chunk_size: int,
         columns: list[str] = list(),
@@ -184,8 +185,8 @@ class BaseGenerator:
                     given value is {validation_split}"
             )
         
-        if isinstance(file_names, str):
-            file_names = [file_names]
+        # if isinstance(file_names, str):
+        #     file_names = [file_names]
 
         # TODO: better linking when importing into ROOT
         # ROOT.gInterpreter.ProcessLine(
@@ -195,7 +196,7 @@ class BaseGenerator:
         self.weights_column = weights
 
         template, max_vec_sizes_list = self.get_template(
-            tree_name, file_names, columns, max_vec_sizes
+            rdataframe, columns, max_vec_sizes
         )
 
         self.num_columns = len(self.all_columns)
@@ -238,8 +239,7 @@ class BaseGenerator:
         expanded_filter = " && ".join(["(" + fltr + ")" for fltr in filters])
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
-            tree_name,
-            file_names,
+            rdataframe,
             chunk_size,
             batch_size,
             self.given_columns,
@@ -617,8 +617,9 @@ class ValidationRBatchGenerator:
 
 
 def CreateNumPyGenerators(
-    tree_name: str,
-    file_names: str|list[str],
+    # tree_name: str,
+    # file_names: str|list[str],
+    rdataframe: RDataFrame,
     batch_size: int,
     chunk_size: int,
     columns: list[str] = list(),
@@ -677,8 +678,9 @@ def CreateNumPyGenerators(
             generator will return no batches.
     """
     base_generator = BaseGenerator(
-        tree_name,
-        file_names,
+        # tree_name,
+        # file_names,
+        rdataframe,
         batch_size,
         chunk_size,
         columns,
@@ -704,8 +706,9 @@ def CreateNumPyGenerators(
 
 
 def CreateTFGenerators(
-    tree_name: str,
-    file_names: str|list[str],
+    # tree_name: str,
+    # file_names: str|list[str],
+    rdataframe: RDataFrame,
     batch_size: int,
     chunk_size: int,
     columns: list[str] = list(),
@@ -764,8 +767,9 @@ def CreateTFGenerators(
             generator will return no batches.
     """
     base_generator = BaseGenerator(
-        tree_name,
-        file_names,
+        # tree_name,
+        # file_names,
+        rdataframe,
         batch_size,
         chunk_size,
         columns,
@@ -791,8 +795,9 @@ def CreateTFGenerators(
 
 
 def CreatePyTorchGenerators(
-    tree_name: str,
-    file_names: str|list[str],
+    # tree_name: str,
+    # file_names: str|list[str],
+    rdataframe: RDataFrame,
     batch_size: int,
     chunk_size: int,
     columns: list[str] = list(),
@@ -851,8 +856,9 @@ def CreatePyTorchGenerators(
             generator will return no batches.
     """
     base_generator = BaseGenerator(
-        tree_name,
-        file_names,
+        # tree_name,
+        # file_names,
+        rdataframe,
         batch_size,
         chunk_size,
         columns,

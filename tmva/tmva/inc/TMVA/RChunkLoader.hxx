@@ -125,6 +125,8 @@ private:
    std::vector<std::size_t> fVecSizes;
    std::size_t fVecPadding;
 
+   ROOT::RDataFrame f_rdf;
+
 public:
    /// \brief Constructor for the RChunkLoader
    /// \param treeName
@@ -134,11 +136,13 @@ public:
    /// \param filters
    /// \param vecSizes
    /// \param vecPadding
-   RChunkLoader(const std::string &treeName, const std::vector<std::string> &fileNames, const std::size_t chunkSize,
+   RChunkLoader(/*const std::string &treeName, const std::vector<std::string> &fileNames,*/
+                const ROOT::RDataFrame &rdf, const std::size_t chunkSize,
                 const std::vector<std::string> &cols, const std::string &filters = "",
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
-      : fTreeName(treeName),
-        fFileNames(fileNames),
+      : /*fTreeName(treeName),
+        fFileNames(fileNames),*/
+        f_rdf(rdf),
         fChunkSize(chunkSize),
         fCols(cols),
         fFilters(filters),
@@ -159,21 +163,21 @@ public:
 
       // Create TDataFrame of the chunk
       // Use RDatasetSpec to start reading at the current row
-      long long start_l = currentRow;
+      /*long long start_l = currentRow;
       ROOT::RDF::Experimental::RDatasetSpec x_spec =
          ROOT::RDF::Experimental::RDatasetSpec()
             .AddSample({"", fTreeName, fFileNames})
             .WithGlobalRange({start_l, std::numeric_limits<Long64_t>::max()});
-
-      ROOT::RDataFrame x_rdf(x_spec);
+            
+      ROOT::RDataFrame x_rdf(x_spec);*/
 
       // Load events if filters are given
       if (fFilters.size() > 0) {
-         return loadFiltered(x_rdf, func);
+         return loadFiltered(f_rdf, func, currentRow);
       }
 
       // load events if no filters are given
-      return loadNonFiltered(x_rdf, func);
+      return loadNonFiltered(f_rdf, func, currentRow);
    }
 
 private:
@@ -181,13 +185,13 @@ private:
    /// \param x_rdf
    /// \param func
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadFiltered(ROOT::RDataFrame &x_rdf, RChunkLoaderFunctor<Args...> &func)
+   std::pair<std::size_t, std::size_t> loadFiltered(ROOT::RDataFrame &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {
       // Add the given filters to the RDataFrame
       auto x_filter = x_rdf.Filter(fFilters, "RBatchGenerator_Filter");
 
       // add range to the DataFrame
-      auto x_ranged = x_filter.Range(fChunkSize);
+      auto x_ranged = x_filter.Range(currentRow, currentRow + fChunkSize);
       auto myReport = x_ranged.Report();
 
       // load data
@@ -207,10 +211,10 @@ private:
    /// \param x_rdf
    /// \param func
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadNonFiltered(ROOT::RDataFrame &x_rdf, RChunkLoaderFunctor<Args...> &func)
+   std::pair<std::size_t, std::size_t> loadNonFiltered(ROOT::RDataFrame &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {
       // add range
-      auto x_ranged = x_rdf.Range(fChunkSize);
+      auto x_ranged = x_rdf.Range(currentRow, currentRow + fChunkSize);
       // auto x_ranged = x_rdf.Range(currentRow, currentRow + fChunkSize);
       auto myCount = x_ranged.Count();
 
