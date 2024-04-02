@@ -833,6 +833,8 @@ private:
    ClusterSize_t fIndex; ///< number of bytes written in the current cluster
 
 private:
+   // Note that className may be different from classp->GetName(), e.g. through different canonicalization of RNTuple
+   // vs. TClass. Also, classp may be nullptr for types unsupported by the ROOT I/O.
    RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp);
 
 protected:
