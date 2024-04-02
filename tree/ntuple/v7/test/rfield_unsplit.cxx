@@ -104,3 +104,10 @@ TEST(RField, IgnoreUnsplitComment)
    EXPECT_EQ(std::string("v"), fieldMember->GetFieldName());
    EXPECT_EQ(nullptr, dynamic_cast<const ROOT::Experimental::RUnsplitField *>(fieldMember));
 }
+
+TEST(RField, UnsupportedUnsplit)
+{
+   using ROOT::Experimental::RUnsplitField;
+   auto success = std::make_unique<RUnsplitField>("name", "std::vector<int>");
+   EXPECT_THROW(std::make_unique<RUnsplitField>("name", "int"), RException); // no TClass of fundamental types
+}
