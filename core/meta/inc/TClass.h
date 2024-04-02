@@ -431,7 +431,7 @@ public:
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
    ClassInfo_t       *GetClassInfo() const {
-      if (fCanLoadClassInfo && !TestBit(kLoading))
+      if (fCanLoadClassInfo)
          LoadClassInfo();
       return fClassInfo;
    }
