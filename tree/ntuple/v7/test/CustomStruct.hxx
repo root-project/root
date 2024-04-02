@@ -211,7 +211,7 @@ struct Cyclic {
    std::vector<Cyclic> fMember;
 };
 
-// Test cyclic collection proxy: we set up this class such that is its own collection proxy inner class.
+// Test cyclic collection proxy: we set up this class such that it is its own collection proxy inner class.
 // This does not actually need to be a working collection proxy.
 struct CyclicCollectionProxy : TVirtualCollectionProxy {
    // The following three functions are required by RProxiedCollectionField
