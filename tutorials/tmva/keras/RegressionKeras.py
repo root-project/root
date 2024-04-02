@@ -22,15 +22,16 @@ from tensorflow.keras.optimizers import SGD
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
+output = TFile.Open('TMVA_Regression_Keras.root', 'RECREATE')
 factory = TMVA.Factory('TMVARegression', output,
         '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
 # Load data
-if not isfile('tmva_reg_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
+TFile.SetCacheFileDir(".")
+data = TFile.Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD")
+if data is None:
+    raise FileNotFoundError("Input file cannot be downloaded - exit")
 
-data = TFile.Open('tmva_reg_example.root')
 tree = data.Get('TreeR')
 
 dataloader = TMVA.DataLoader('dataset')
