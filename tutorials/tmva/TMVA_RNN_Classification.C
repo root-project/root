@@ -55,9 +55,9 @@ void MakeTimeData(int n, int ntime, int ndim )
    auto f1 = new TF1("f1", "gaus");
    auto f2 = new TF1("f2", "gaus");
 
+   TFile f(fname, "RECREATE");
    TTree sgn("sgn", "sgn");
    TTree bkg("bkg", "bkg");
-   TFile f(fname, "RECREATE");
 
    std::vector<std::vector<float>> x1(ntime);
    std::vector<std::vector<float>> x2(ntime);
@@ -192,8 +192,10 @@ void TMVA_RNN_Classification(int nevts = 2000, int use_type = 1)
 #endif
 
 #ifdef R__USE_IMT
-   int num_threads = 4;   // use by default all threads
-   gSystem->Setenv("OMP_NUM_THREADS", "1"); // switch off MT in OpenBLAS
+   int num_threads = 4; // use max 4 threads
+   // switch off MT in OpenBLAS to avoid conflict with tbb
+   gSystem->Setenv("OMP_NUM_THREADS", "1");
+
    // do enable MT running
    if (num_threads >= 0) {
       ROOT::EnableImplicitMT(num_threads);
