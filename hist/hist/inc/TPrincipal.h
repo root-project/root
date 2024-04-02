@@ -51,7 +51,7 @@ protected:
 public:
    TPrincipal();
    ~TPrincipal() override;
-   TPrincipal(Int_t nVariables, Option_t *opt="ND");
+   TPrincipal(Long64_t nVariables, Option_t *opt="ND");
 
    virtual void       AddRow(const Double_t *x);
    void       Browse(TBrowser *b) override;
@@ -62,7 +62,7 @@ public:
    const TMatrixD    *GetEigenVectors() const     {return &fEigenVectors;}
    TList             *GetHistograms() const {return fHistograms;}
    const TVectorD    *GetMeanValues() const       {return &fMeanValues;}
-   const Double_t    *GetRow(Int_t row);
+   const Double_t    *GetRow(Long64_t row);
    const TVectorD    *GetSigmas() const           {return &fSigmas;}
    const TVectorD    *GetUserData() const         {return &fUserData;}
    Bool_t             IsFolder() const override { return kTRUE;}
