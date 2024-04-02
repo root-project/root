@@ -1768,13 +1768,7 @@ std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *n
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
    : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
 {
-#ifndef NDEBUG
-   static const auto cl = TObject::Class();
-#endif
-   assert(cl->GetClassVersion() == 1);
-   assert(cl->ClassProperty() & kClassHasExplicitCtor);
-   assert(cl->ClassProperty() & kClassHasExplicitDtor);
-   fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   assert(TObject::Class()->GetClassVersion() == 1);
 
    Attach(std::make_unique<RField<UInt_t>>("fUniqueID"));
    Attach(std::make_unique<RField<UInt_t>>("fBits"));
