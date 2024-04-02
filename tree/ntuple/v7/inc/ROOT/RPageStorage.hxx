@@ -373,6 +373,9 @@ public:
    void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
 
+   /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
+   void InitFromDescriptor(const RNTupleDescriptor &descriptor);
+
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;

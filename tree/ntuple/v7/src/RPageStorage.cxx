@@ -484,6 +484,41 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    fDescriptorBuilder.BeginHeaderExtension();
 }
 
+void ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTupleDescriptor &descriptor)
+{
+   {
+      auto model = descriptor.CreateModel();
+      Init(*model.get());
+   }
+
+   auto clusterId = descriptor.FindClusterId(0, 0);
+
+   while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
+      auto &cluster = descriptor.GetClusterDescriptor(clusterId);
+      auto nEntries = cluster.GetNEntries();
+
+      RClusterDescriptorBuilder clusterBuilder;
+      clusterBuilder.ClusterId(fDescriptorBuilder.GetDescriptor().GetNActiveClusters())
+         .FirstEntryIndex(fPrevClusterNEntries)
+         .NEntries(nEntries);
+
+      for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+         R__ASSERT(fOpenColumnRanges[i].fPhysicalColumnId == i);
+         const auto &columnRange = cluster.GetColumnRange(i);
+         R__ASSERT(columnRange.fPhysicalColumnId == i);
+         const auto &pageRange = cluster.GetPageRange(i);
+         R__ASSERT(pageRange.fPhysicalColumnId == i);
+         clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex, columnRange.fCompressionSettings,
+                                          pageRange);
+         fOpenColumnRanges[i].fFirstElementIndex += columnRange.fNElements;
+      }
+      fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+      fPrevClusterNEntries += nEntries;
+
+      clusterId = descriptor.FindNextClusterId(clusterId);
+   }
+}
+
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).fNElements += page.GetNElements();

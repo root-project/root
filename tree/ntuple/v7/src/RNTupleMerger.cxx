@@ -20,7 +20,9 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include "TFile.h"
+#include <TError.h>
+#include <TFile.h>
+#include <TKey.h>
 
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 {
@@ -38,9 +40,31 @@ Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo 
    TFile *outFile = dynamic_cast<TFile *>(itr());
    if (!outFile)
       return -1;
+
+   // Check if the output file already has a key with that name
+   TKey *outKey = outFile->FindKey(ntupleName.c_str());
+   RNTuple *outNTuple = nullptr;
+   if (outKey) {
+      outNTuple = outKey->ReadObject<RNTuple>();
+      if (!outNTuple) {
+         Error("RNTuple::Merge", "Output file already has key, but not of type RNTuple!");
+         return -1;
+      }
+      // In principle, we should already be working on the RNTuple object from the output file, but just continue with
+      // pointer we just got.
+   }
+
    RNTupleWriteOptions writeOpts;
    writeOpts.SetUseBufferedWrite(false);
    auto destination = std::make_unique<Internal::RPageSinkFile>(ntupleName, *outFile, writeOpts);
+
+   // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
+   if (outNTuple) {
+      auto source = Internal::RPageSourceFile::CreateFromAnchor(*outNTuple);
+      source->Attach();
+      auto desc = source->GetSharedDescriptorGuard();
+      destination->InitFromDescriptor(desc.GetRef());
+   }
 
    // The remaining entries are the input files
    std::vector<std::unique_ptr<Internal::RPageSourceFile>> sources;
@@ -135,8 +159,11 @@ void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(
 ////////////////////////////////////////////////////////////////////////////////
 void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination)
 {
+   if (destination.IsInitialized()) {
+      CollectColumns(destination.GetDescriptor());
+   }
+
    // Append the sources to the destination one-by-one
-   bool isFirstSource = true;
    for (const auto &source : sources) {
       source->Attach();
 
@@ -152,11 +179,10 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       // The column name : output column id map is only built once
       auto columns = CollectColumns(descriptor.GetRef());
 
-      // Create sink from the input model of the very first input file
-      if (isFirstSource) {
+      // Create sink from the input model if not initialized
+      if (!destination.IsInitialized()) {
          auto model = descriptor->CreateModel();
          destination.Init(*model.get());
-         isFirstSource = false;
       }
 
       // Now loop over all clusters in this file
