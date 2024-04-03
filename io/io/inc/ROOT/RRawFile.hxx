@@ -113,7 +113,7 @@ private:
    /// An active buffer and a shadow buffer, which supports "jumping back" to a previously used location in the file
    RBlockBuffer fBlockBuffers[kNumBlockBuffers];
    /// Memory block containing the block buffers consecutively
-   unsigned char *fBufferSpace;
+   std::unique_ptr<unsigned char[]> fBufferSpace;
    /// The cached file size
    std::uint64_t fFileSize;
    /// Files are opened lazily and only when required; the open state is kept by this flag
@@ -149,7 +149,7 @@ public:
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
    RRawFile &operator=(const RRawFile &) = delete;
-   virtual ~RRawFile();
+   virtual ~RRawFile() = default;
 
    /// Create a new RawFile that accesses the same resource.  The file pointer is reset to zero.
    virtual std::unique_ptr<RRawFile> Clone() const = 0;
