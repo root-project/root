@@ -10,9 +10,11 @@
 #---------------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------------
-# Package up needed system libraries - only for WIN32?
+# Package up needed system libraries - except for WIN32
 #
-include(InstallRequiredSystemLibraries)
+if(NOT WIN32)
+  include(InstallRequiredSystemLibraries)
+endif()
 
 #----------------------------------------------------------------------------------------------------
 # General packaging setup - variable relavant to all package formats
