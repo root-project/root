@@ -8,7 +8,7 @@
 
 # disable tests which are failing on Windows because of their PATH being too long
 # (>260 characters) when run in the CI (Jenkins)
-if(NOT MSVC OR win_broken_tests)
+if(NOT MSVC OR NOT DEFINED ENV{JENKINS_HOME} OR win_broken_tests)
   ROOTTEST_GENERATE_REFLEX_DICTIONARY(FullheaderParsingOnDemand
                                       FullheaderParsingOnDemand.h
                                       SELECTION FullheaderParsingOnDemand_selection.xml
