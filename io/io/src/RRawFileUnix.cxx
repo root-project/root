@@ -34,10 +34,7 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // If fstat() does not provide a block size hint, use this value instead
 } // anonymous namespace
 
-ROOT::Internal::RRawFileUnix::RRawFileUnix(std::string_view url, ROptions options)
-   : RRawFile(url, options), fFileDes(-1)
-{
-}
+ROOT::Internal::RRawFileUnix::RRawFileUnix(std::string_view url, ROptions options) : RRawFile(url, options) {}
 
 ROOT::Internal::RRawFileUnix::~RRawFileUnix()
 {

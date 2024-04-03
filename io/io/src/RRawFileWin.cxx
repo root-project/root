@@ -26,10 +26,7 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // Read files in 4k pages unless told otherwise
 } // anonymous namespace
 
-ROOT::Internal::RRawFileWin::RRawFileWin(std::string_view url, ROptions options)
-   : RRawFile(url, options), fFilePtr(nullptr)
-{
-}
+ROOT::Internal::RRawFileWin::RRawFileWin(std::string_view url, ROptions options) : RRawFile(url, options) {}
 
 ROOT::Internal::RRawFileWin::~RRawFileWin()
 {
