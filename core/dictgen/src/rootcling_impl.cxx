@@ -4291,7 +4291,7 @@ int RootClingMain(int argc,
 
       clingArgsInterpreter.push_back("-fmodule-map-file=" +
                                      std::string(gDriverConfig->fTROOT__GetIncludeDir()) +
-                                     "/module.modulemap");
+                                     "/ROOT.modulemap");
       std::string ModuleMapCWD = ROOT::FoundationUtils::GetCurrentDir() + "/module.modulemap";
       if (llvm::sys::fs::exists(ModuleMapCWD))
          clingArgsInterpreter.push_back("-fmodule-map-file=" + ModuleMapCWD);

@@ -771,6 +771,7 @@ int test1DObjects(vector< vector<algoType> >& listH,
       for (int i = 1; i <= h1->GetNbinsX() + 1; ++i)
          h1->SetBinContent(i, rndm.Poisson(func->Eval(h1->GetBinCenter(i))));
 
+      h1->Sumw2(); // make as a weighted histo to test weighted fits
       gTestIndex++;
       if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          // fill equal bin 1D  histogram
@@ -803,7 +804,7 @@ int test1DObjects(vector< vector<algoType> >& listH,
                                              h2->GetXaxis()->GetBinUpEdge(i));
             h2->SetBinContent(i,rndm.Poisson(expValue));
          }
-
+         h2->Sumw2(); // make as a weighted histo to test weighted fits
          if (c0 && !__DRAW__) delete c0;
          c0 = new TCanvas(TString::Format("c%d_H1D", gTestIndex), "Histogram1D Variable");
          ObjectWrapper<TH1D *> owh2(h2);
@@ -1219,6 +1220,7 @@ void init_structures()
    noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "EX", CompareResult()) );
    noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "L", CompareResult(defCmpOpt,3,0.1)) );  // normal binned likelihood fit
    noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "L", CompareResult(defCmpOpt,3,0.1)) );
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "WL", CompareResult(defCmpOpt,3,0.1)) );
    noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "G", CompareResult()) ); // gradient chi2 fit
    //noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "G", CompareResult()) );   // skip TMinuit with G
    noGraphAlgos.push_back( algoType( "Minuit2",     "Minimize",    "G", CompareResult()) );

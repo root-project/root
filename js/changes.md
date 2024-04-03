@@ -1,6 +1,30 @@
 # JSROOT changelog
 
-## Change in 7.5.2
+## Changes in 7.5.5
+1. Fix - abort tree draw operation faster
+2. Fix - support plain TRI option for TGraph2D
+3. Fix - use latest npm "gl" module
+
+
+## Changes in 7.5.4
+1. Fix - catch exception when parsing TF1 formula
+2. Fix - properly check THStack histograms axes when doing sum
+3. Fix - correctly handle negative offset on time axis
+4. Fix - do not use `inset` because of old Chrome browsers
+5. Fix - properly provide object hints
+
+
+## Changes in 7.5.3
+1. Fix - draw histograms with negative bins #276
+2. Fix - correctly read TLeaf with fixed-size array
+3. Fix - bug in options handling in startGUI
+4. Fix - greyscale support in TLegend drawing
+5. Fix - correctly use text font for TGaxis title
+6. Fix - preserve auto colors in THStack #277
+7. Fix - correctly set pave name #278
+
+
+## Changes in 7.5.2
 1. Fix - proper fit pars display in stats, proper #chi^{2}
 2. Fix - several bugs in TFormula parsing
 3. Fix - correctly use saved buffer in TF1/TF2

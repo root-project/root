@@ -686,6 +686,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
             << node->GetName() << endl ;
       }
       _allOwnedNodes.addOwned(std::unique_ptr<RooAbsArg>{node});
+      node->setWorkspace(*this);
       if (_openTrans) {
         _sandboxNodes.add(*node) ;
       } else {

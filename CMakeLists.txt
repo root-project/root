@@ -448,16 +448,16 @@ else()
   set(_os_cat "cat")
 endif()
 file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap" _to_native)
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
 
-add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
+add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
-                  OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
+		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
                   DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
+		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
                   COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
 )
-install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
 add_dependencies(move_headers copymodulemap)
 

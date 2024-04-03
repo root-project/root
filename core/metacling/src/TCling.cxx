@@ -1459,7 +1459,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    if (fCxxModulesEnabled && !fromRootCling) {
       // For now we prefer rootcling to enumerate explicitly its modulemaps.
       std::vector<std::string> ModuleMaps;
-      std::string ModuleMapSuffix = ROOT::FoundationUtils::GetPathSeparator() + "module.modulemap";
+      std::string ModuleMapSuffix = ROOT::FoundationUtils::GetPathSeparator() + "ROOT.modulemap";
       ModuleMaps.push_back(TROOT::GetIncludeDir().Data() + ModuleMapSuffix);
       GetEnvVarPath("CLING_MODULEMAP_FILES", ModuleMaps);
 

@@ -181,7 +181,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       else {
          d3_select('html').style('height', '100%');
          d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
+         myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
       }
    }
 

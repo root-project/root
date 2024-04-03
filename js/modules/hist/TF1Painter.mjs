@@ -95,7 +95,7 @@ function produceTAxisLogScale(axis, num, min, max) {
       lmin = min > 0 ? Math.log(min) : lmax - 5;
    } else {
       lmax = -10;
-      lmax = -15;
+      lmin = -15;
    }
 
    axis.fNbins = num;
@@ -183,8 +183,14 @@ class TF1Painter extends TH1Painter {
          const np = Math.max(tf1.fNpx, 100);
          let iserror = false;
 
-         if (!tf1.evalPar && !proivdeEvalPar(tf1))
-            iserror = true;
+         if (!tf1.evalPar) {
+            try {
+               if (!proivdeEvalPar(tf1))
+                  iserror = true;
+            } catch {
+               iserror = true;
+            }
+         }
 
          ensureBins(np);
 

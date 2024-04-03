@@ -1313,7 +1313,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          const pr = this.expandItem(this.itemFullName(hitem));
-         if (isPromise(pr))
+         if (isPromise(pr) && isObject(promises))
             promises.push(pr);
          if (hitem._childs !== undefined) hitem._isopen = true;
          return hitem._isopen;
@@ -2488,7 +2488,8 @@ class HierarchyPainter extends BasePainter {
          if (!isFunc(_item._expand)) {
             let handle = getDrawHandle(_item._kind, '::expand');
 
-            if (handle?.expand_item) {
+            // in inspector show all memebers
+            if (handle?.expand_item && !hpainter._inspector) {
                _obj = _obj[handle.expand_item];
                _item.expand_item = handle.expand_item; // remember that was exapnd item
                handle = _obj?._typename ? getDrawHandle(prROOT + _obj._typename, '::expand') : null;
@@ -3411,7 +3412,7 @@ class HierarchyPainter extends BasePainter {
             promise = this.loadScripts(load, prereq); load = ''; prereq = '';
          } else if (inject) {
             promise = this.loadScripts(inject, '', true); inject = '';
-         } if (browser_kind) {
+         } else if (browser_kind) {
             promise = this.createBrowser(browser_kind); browser_kind = '';
          } else if (status !== null) {
             promise = this.createStatusLine(statush, status); status = null;

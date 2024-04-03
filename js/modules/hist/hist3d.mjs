@@ -140,7 +140,7 @@ function createTextGeometry(painter, lbl, size) {
 
    produceLatex(painter, node, arg);
 
-   if (!geoms)
+   if (!geoms.length)
       return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
 
    node.translate(); // apply translate attributes
@@ -1449,7 +1449,7 @@ function drawBinsLego(painter, is_v7 = false) {
          test_cutg = painter.options.cutg,
          i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2,
          histo = painter.getHisto(),
-         basehisto = histo ? histo.$baseh : null,
+         basehisto = histo.$baseh,
          split_faces = (painter.options.Lego === 11) || (painter.options.Lego === 13), // split each layer on two parts
          use16indx = (histo.getBin(i2, j2) < 0xFFFF); // if bin ID fit into 16 bit, use smaller arrays for intersect indexes
 

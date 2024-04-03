@@ -710,8 +710,32 @@ The memory footprint of the plugin manager has been reduced. Moreover, the mecha
 * [[#14376](https://github.com/root-project/root/issues/14376)] - build failure with mysql 8.3 
 * [[#14416](https://github.com/root-project/root/issues/14416)] - [6.30] rootls and rootprint broken on Ubuntu 22.04 binary release
 
+## Release 6.30.06
+
+Published on April 3, 2024
+
+### Bugs and Issues fixed in this release
+
+This release offers a few minor bug fixes. On macOS, it also adapts ROOT for the new C++ modules structures that comes with XCode 15.3.
+
+* [[ROOT-9000](https://its.cern.ch/jira/browse/ROOT-9000)] - Fix memory leak when reassigning static TSpline3 with new data.
+* [[#6535](https://github.com/root-project/root/issues/6535)] - TDataMember::SetterMethod()
+* [[#7952](https://github.com/root-project/root/issues/7952)] - Template with result_of only works in same cell in which it's defined
+* [[#7960](https://github.com/root-project/root/issues/7960)] - Warnings about Missing std::pair dictionaries with 6.24
+* [[#8435](https://github.com/root-project/root/issues/8435)] - thisroot.fish does not set properly JUPYTER* env vars with gnuinstall=ON
+* [[#9594](https://github.com/root-project/root/issues/9594)] - Systematic build failure of ROOT master in the LCG DEBUG builds since Jan 15th
+* [[#13130](https://github.com/root-project/root/issues/13130)] - Valgrind reports leak when constructing TChain
+* [[#14113](https://github.com/root-project/root/issues/14113)] - The find_package(root) command fails when using Root installed via Homebrew.
+* [[#14247](https://github.com/root-project/root/issues/14247)] - [gui] TGSpeedo class broken in 6.30 binary release Ubu22.04
+* [[#14458](https://github.com/root-project/root/issues/14458)] - Crash when doing Weighted Likelihood fit
+* [[#14508](https://github.com/root-project/root/issues/14508)] - Using LZMA compression with RNTupleWriter leads to memory corruption
+* [[#14634](https://github.com/root-project/root/issues/14634)] - conflict with installed nlohman/json
+* [[#14769](https://github.com/root-project/root/issues/14769)] - Build error with "nlohmann/json.hpp: No such file or directory" in spack (unit tests build, with --test=root option)
+* [[#14793](https://github.com/root-project/root/issues/14793)] - 6.26 cannot read file written with 6.30.4
+* [[#14964](https://github.com/root-project/root/issues/14964)] - ROOT-HEAD fails with "cling interactive line includer >>>: fatal error: module file '[snip]/Vc.pcm' not found: module file not found"
+
 ## HEAD of the v6-30-00-patches branch
 
-These changes will be part of a future 6.30.06.
+These changes will be part of a future 6.30.08.
 
 - None so far.

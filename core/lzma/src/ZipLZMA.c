@@ -68,7 +68,7 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    stream.avail_in  = (size_t)(*srcsize);
 
    stream.next_out  = (uint8_t *)(&tgt[kHeaderSize]);
-   stream.avail_out = (size_t)(*tgtsize);
+   stream.avail_out = (size_t)(*tgtsize) - kHeaderSize;
 
    returnStatus = lzma_code(&stream, LZMA_FINISH);
    if (returnStatus != LZMA_STREAM_END) {
@@ -117,7 +117,7 @@ void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
    }
 
    stream.next_in   = (const uint8_t *)(&src[kHeaderSize]);
-   stream.avail_in  = (size_t)(*srcsize);
+   stream.avail_in  = (size_t)(*srcsize) - kHeaderSize;
    stream.next_out  = (uint8_t *)tgt;
    stream.avail_out = (size_t)(*tgtsize);
 
