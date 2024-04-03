@@ -58,11 +58,7 @@ size_t ROOT::Internal::RRawFile::RBlockBuffer::CopyTo(void *buffer, size_t nbyte
    return copiedBytes;
 }
 
-ROOT::Internal::RRawFile::RRawFile(std::string_view url, ROptions options)
-   : fBlockBufferIdx(0), fFileSize(kUnknownFileSize), fIsOpen(false), fUrl(url),
-     fOptions(options), fFilePos(0)
-{
-}
+ROOT::Internal::RRawFile::RRawFile(std::string_view url, ROptions options) : fUrl(url), fOptions(options) {}
 
 std::unique_ptr<ROOT::Internal::RRawFile>
 ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)

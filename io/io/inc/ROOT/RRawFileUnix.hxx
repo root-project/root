@@ -30,7 +30,7 @@ namespace Internal {
  */
 class RRawFileUnix : public RRawFile {
 private:
-   int fFileDes;
+   int fFileDes = -1;
 
 protected:
    void OpenImpl() final;
