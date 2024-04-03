@@ -50,8 +50,6 @@ public:
    // Combination of flags provided by derived classes about the nature of the file
    /// GetSize() does not return kUnknownFileSize
    static constexpr int kFeatureHasSize = 0x01;
-   /// Map() and Unmap() are implemented
-   static constexpr int kFeatureHasMmap = 0x02;
 
    /// On construction, an ROptions parameter can customize the RRawFile behavior
    struct ROptions {
@@ -145,12 +143,6 @@ protected:
    /// Derived classes should return the file size or kUnknownFileSize
    virtual std::uint64_t GetSizeImpl() = 0;
 
-   /// If a derived class supports mmap, the MapImpl and UnmapImpl calls are supposed to be implemented, too
-   /// The default implementation throws an error
-   virtual void *MapImpl(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset);
-   /// Derived classes with mmap support must be able to unmap the memory area handed out by Map()
-   virtual void UnmapImpl(void *region, size_t nbytes);
-
    /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
@@ -193,13 +185,6 @@ public:
    void ReadV(RIOVec *ioVec, unsigned int nReq);
    /// Returns the limits regarding the ioVec input to ReadV for this specific file; may open the file as a side-effect.
    virtual RIOVecLimits GetReadVLimits() { return RIOVecLimits(); }
-
-   /// Memory mapping according to POSIX standard; in particular, new mappings of the same range replace older ones.
-   /// Mappings need to be aligned at page boundaries, therefore the real offset can be smaller than the desired value.
-   /// Users become owner of the address returned by Map() and are responsible for calling Unmap() with the full length.
-   void *Map(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset);
-   /// Receives a pointer returned by Map() and should have nbytes set to the full length of the mapping
-   void Unmap(void *region, size_t nbytes);
 
    /// Derived classes shall inform the user about the supported functionality, which can possibly depend
    /// on the file at hand
