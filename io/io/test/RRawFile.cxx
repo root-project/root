@@ -39,8 +39,6 @@ public:
    }
 
    std::uint64_t GetSizeImpl() final { return fContent.size(); }
-
-   int GetFeatures() const final { return kFeatureHasSize; }
 };
 
 } // anonymous namespace
@@ -51,7 +49,6 @@ TEST(RRawFile, Empty)
    FileRaii emptyGuard("test_rrawfile_empty", "");
    auto f = RRawFile::Create(emptyGuard.GetPath());
    EXPECT_FALSE(f->IsOpen());
-   EXPECT_TRUE(f->GetFeatures() & RRawFile::kFeatureHasSize);
    EXPECT_EQ(0u, f->GetSize());
    EXPECT_EQ(0u, f->GetFilePos());
    EXPECT_EQ(0u, f->Read(nullptr, 0));
