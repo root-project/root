@@ -121,7 +121,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
@@ -402,7 +402,7 @@ jobs:
               '
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
