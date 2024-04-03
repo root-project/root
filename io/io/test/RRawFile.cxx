@@ -56,6 +56,12 @@ TEST(RRawFile, Empty)
    std::string line;
    EXPECT_FALSE(f->Readln(line));
    EXPECT_TRUE(f->IsOpen());
+
+   RRawFile::ROptions options;
+   options.fBlockSize = 0;
+   f = RRawFile::Create(emptyGuard.GetPath(), options);
+   EXPECT_EQ(0u, f->Read(nullptr, 0));
+   EXPECT_EQ(0u, f->ReadAt(nullptr, 0, 1));
 }
 
 
