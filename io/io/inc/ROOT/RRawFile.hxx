@@ -47,10 +47,6 @@ public:
    /// kAuto detects the line break from the first line, kSystem picks the system's default
    enum class ELineBreaks { kAuto, kSystem, kUnix, kWindows };
 
-   // Combination of flags provided by derived classes about the nature of the file
-   /// GetSize() does not return kUnknownFileSize
-   static constexpr int kFeatureHasSize = 0x01;
-
    /// On construction, an ROptions parameter can customize the RRawFile behavior
    struct ROptions {
       ELineBreaks fLineBreak;
@@ -140,7 +136,7 @@ protected:
     * therefore derived classes should return nbytes bytes if available.
     */
    virtual size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
-   /// Derived classes should return the file size or kUnknownFileSize
+   /// Derived classes should return the file size
    virtual std::uint64_t GetSizeImpl() = 0;
 
    /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
@@ -185,10 +181,6 @@ public:
    void ReadV(RIOVec *ioVec, unsigned int nReq);
    /// Returns the limits regarding the ioVec input to ReadV for this specific file; may open the file as a side-effect.
    virtual RIOVecLimits GetReadVLimits() { return RIOVecLimits(); }
-
-   /// Derived classes shall inform the user about the supported functionality, which can possibly depend
-   /// on the file at hand
-   virtual int GetFeatures() const = 0;
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
    bool Readln(std::string &line);
