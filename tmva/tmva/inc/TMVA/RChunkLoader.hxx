@@ -125,7 +125,7 @@ private:
    std::vector<std::size_t> fVecSizes;
    std::size_t fVecPadding;
 
-   ROOT::RDataFrame f_rdf;
+   ROOT::RDF::RNode f_rdf;
 
 public:
    /// \brief Constructor for the RChunkLoader
@@ -137,7 +137,7 @@ public:
    /// \param vecSizes
    /// \param vecPadding
    RChunkLoader(/*const std::string &treeName, const std::vector<std::string> &fileNames,*/
-                const ROOT::RDataFrame &rdf, const std::size_t chunkSize,
+                ROOT::RDF::RNode rdf, const std::size_t chunkSize,
                 const std::vector<std::string> &cols, const std::string &filters = "",
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
       : /*fTreeName(treeName),
@@ -185,7 +185,7 @@ private:
    /// \param x_rdf
    /// \param func
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadFiltered(ROOT::RDataFrame &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
+   std::pair<std::size_t, std::size_t> loadFiltered(ROOT::RDF::RNode &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {
       // Add the given filters to the RDataFrame
       auto x_filter = x_rdf.Filter(fFilters, "RBatchGenerator_Filter");
@@ -211,7 +211,7 @@ private:
    /// \param x_rdf
    /// \param func
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadNonFiltered(ROOT::RDataFrame &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
+   std::pair<std::size_t, std::size_t> loadNonFiltered(ROOT::RDF::RNode &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {
       // add range
       auto x_ranged = x_rdf.Range(currentRow, currentRow + fChunkSize);

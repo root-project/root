@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import Any, Callable, Tuple, TYPE_CHECKING
 import atexit
 
-#from ROOT import RDataFrame
-
 if TYPE_CHECKING:
     import numpy as np
     import tensorflow as tf
@@ -16,7 +14,7 @@ class BaseGenerator:
         self,
         # tree_name: str,
         # file_names: list[str],
-        x_rdf: RDataFrame,
+        x_rdf: RNode,
         columns: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
     ) -> Tuple[str, list[int]]:
@@ -48,6 +46,7 @@ class BaseGenerator:
             "Float_t": "float&",
             "Float16_t": "float&",
             "Int_t": "int&",
+            "int":"int&",
             "UInt_t": "unsigned int&",
             "Long_t": "long&",
             "ULong_t": "unsigned long&",
@@ -113,7 +112,7 @@ class BaseGenerator:
         self,
         # tree_name: str,
         # file_names: str|list[str],
-        rdataframe: RDataFrame,
+        rdataframe: RNode,
         batch_size: int,
         chunk_size: int,
         columns: list[str] = list(),
@@ -228,7 +227,7 @@ class BaseGenerator:
 
         self.train_columns = [c for c in self.all_columns if c not in [target, weights]]
 
-        from ROOT import TMVA, EnableThreadSafety
+        from ROOT import TMVA, EnableThreadSafety, RDF
 
         # The RBatchGenerator will create a separate C++ thread for I/O.
         # Enable thread safety in ROOT from here, to make sure there is no
@@ -239,7 +238,7 @@ class BaseGenerator:
         expanded_filter = " && ".join(["(" + fltr + ")" for fltr in filters])
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
-            rdataframe,
+            RDF.AsRNode(rdataframe),
             chunk_size,
             batch_size,
             self.given_columns,
