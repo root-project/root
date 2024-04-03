@@ -27,7 +27,6 @@
 #include <vector>
 
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -52,7 +51,7 @@ std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::Clone() 
 }
 
 int ROOT::Internal::RRawFileUnix::GetFeatures() const {
-   return kFeatureHasSize | kFeatureHasMmap;
+   return kFeatureHasSize;
 }
 
 std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
@@ -67,18 +66,6 @@ std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
    if (res != 0)
       throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
    return info.st_size;
-}
-
-void *ROOT::Internal::RRawFileUnix::MapImpl(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
-{
-   static std::uint64_t szPageBitmap = sysconf(_SC_PAGESIZE) - 1;
-   mapdOffset = offset & ~szPageBitmap;
-   nbytes += offset & szPageBitmap;
-
-   void *result = mmap(nullptr, nbytes, PROT_READ, MAP_PRIVATE, fFileDes, mapdOffset);
-   if (result == MAP_FAILED)
-      throw std::runtime_error(std::string("Cannot perform memory mapping: ") + strerror(errno));
-   return result;
 }
 
 void ROOT::Internal::RRawFileUnix::OpenImpl()
@@ -169,11 +156,4 @@ size_t ROOT::Internal::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std
       offset += res;
    }
    return total_bytes;
-}
-
-void ROOT::Internal::RRawFileUnix::UnmapImpl(void *region, size_t nbytes)
-{
-   int rv = munmap(region, nbytes);
-   if (rv != 0)
-      throw std::runtime_error(std::string("Cannot remove memory mapping: ") + strerror(errno));
 }

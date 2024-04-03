@@ -214,28 +214,6 @@ TEST(RRawFile, ReadBuffered)
    EXPECT_EQ(1u, f->fNumReadAt); f->fNumReadAt = 0;
 }
 
-
-TEST(RRawFile, Mmap)
-{
-   std::uint64_t mapdOffset;
-   std::unique_ptr<RRawFileMock> m(new RRawFileMock("", RRawFile::ROptions()));
-   EXPECT_FALSE(m->GetFeatures() & RRawFile::kFeatureHasMmap);
-   EXPECT_THROW(m->Map(1, 0, mapdOffset), std::runtime_error);
-   EXPECT_THROW(m->Unmap(this, 1), std::runtime_error);
-
-   void *region;
-   FileRaii mmapGuard("test_rawfile_mmap", "foo");
-   auto f = RRawFile::Create(mmapGuard.GetPath());
-   if (!(f->GetFeatures() & RRawFile::kFeatureHasMmap))
-      return;
-   region = f->Map(2, 1, mapdOffset);
-   auto innerOffset = 1 - mapdOffset;
-   ASSERT_NE(region, nullptr);
-   EXPECT_EQ("oo", std::string(reinterpret_cast<char *>(region) + innerOffset, 2));
-   auto mapdLength = 2 + innerOffset;
-   f->Unmap(region, mapdLength);
-}
-
 TEST(RRawFileTFile, TFile)
 {
    FileRaii tfileGuard("test_rawfile_tfile.root", "");
