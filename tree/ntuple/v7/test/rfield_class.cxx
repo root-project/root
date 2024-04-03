@@ -16,6 +16,9 @@ TEST(RNTuple, TClass) {
 
    auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
+   model->Freeze();
+   const auto &fieldA = model->GetField("klass.a");
+   EXPECT_EQ(std::string("The most important member of this struct."), fieldA.GetDescription());
 
    // TDatime would be a supported class layout but it is unsplittable due to its custom streamer
    EXPECT_THROW(model->MakeField<TDatime>("datime"), RException);
