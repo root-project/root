@@ -105,22 +105,11 @@ void ROOT::Internal::RRawFile::EnsureOpen()
    fIsOpen = true;
 }
 
-void *ROOT::Internal::RRawFile::MapImpl(size_t /* nbytes */, std::uint64_t /* offset */,
-   std::uint64_t& /* mapdOffset */)
-{
-   throw std::runtime_error("Memory mapping unsupported");
-}
-
 void ROOT::Internal::RRawFile::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
    for (unsigned i = 0; i < nReq; ++i) {
       ioVec[i].fOutBytes = ReadAt(ioVec[i].fBuffer, ioVec[i].fSize, ioVec[i].fOffset);
    }
-}
-
-void ROOT::Internal::RRawFile::UnmapImpl(void * /* region */, size_t /* nbytes */)
-{
-   throw std::runtime_error("Memory mapping unsupported");
 }
 
 std::string ROOT::Internal::RRawFile::GetLocation(std::string_view url)
@@ -153,12 +142,6 @@ std::string ROOT::Internal::RRawFile::GetTransport(std::string_view url)
    std::string transport(url.substr(0, idx));
    std::transform(transport.begin(), transport.end(), transport.begin(), ::tolower);
    return transport;
-}
-
-void *ROOT::Internal::RRawFile::Map(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
-{
-   EnsureOpen();
-   return MapImpl(nbytes, offset, mapdOffset);
 }
 
 size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
@@ -254,11 +237,4 @@ bool ROOT::Internal::RRawFile::Readln(std::string &line)
 void ROOT::Internal::RRawFile::Seek(std::uint64_t offset)
 {
    fFilePos = offset;
-}
-
-void ROOT::Internal::RRawFile::Unmap(void *region, size_t nbytes)
-{
-   if (!fIsOpen)
-      throw std::runtime_error("Cannot unmap, file not open");
-   UnmapImpl(region, nbytes);
 }
