@@ -25,9 +25,6 @@ class RBatchGenerator {
 private:
    TMVA::RandomGenerator<TRandom3> fRng = TMVA::RandomGenerator<TRandom3>(0);
 
-   std::vector<std::string> fFileNames;
-   std::string fTreeName;
-
    std::vector<std::string> fCols;
    std::string fFilters;
 
@@ -70,15 +67,12 @@ private:
    float fVecPadding;
 
 public:
-   RBatchGenerator(/*const std::string &treeName, const std::vector<std::string> &fileNames,*/
-                   ROOT::RDF::RNode rdf, const std::size_t chunkSize,
+   RBatchGenerator(ROOT::RDF::RNode rdf, const std::size_t chunkSize,
                    const std::size_t batchSize, const std::vector<std::string> &cols, const std::string &filters = "",
                    const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0,
                    const float validationSplit = 0.0, const std::size_t maxChunks = 0, const std::size_t numColumns = 0,
                    bool shuffle = true, bool dropRemainder = true)
-      : /*fTreeName(treeName),
-        fFileNames(fileNames),*/
-        f_rdf(rdf),
+      : f_rdf(rdf),
         fChunkSize(chunkSize),
         fBatchSize(batchSize),
         fCols(cols),
@@ -95,18 +89,10 @@ public:
       // limits the number of batches that can be contained in the batchqueue based on the chunksize
       fMaxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
 
-      // get the number of fNumEntries in the dataframe
-      // fNumEntries = 0;
-      // for (int i=0; i<fFileNames.size(); i++){
-      //    std::unique_ptr<TFile> f{TFile::Open(fFileNames[i].c_str())};
-      //    std::unique_ptr<TTree> t{f->Get<TTree>(fTreeName.c_str())};
-      //    fNumEntries += t->GetEntries();
-      // }
-
       fNumEntries = f_rdf.Count().GetValue();
 
       fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
-         /*fTreeName, fFileNames,*/ f_rdf, fChunkSize, fCols, fFilters, fVecSizes, fVecPadding);
+         f_rdf, fChunkSize, fCols, fFilters, fVecSizes, fVecPadding);
       fBatchLoader = std::make_unique<TMVA::Experimental::Internal::RBatchLoader>(fBatchSize, fNumColumns, fMaxBatches);
 
       // Create tensor to load the chunk into

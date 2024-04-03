@@ -136,13 +136,10 @@ public:
    /// \param filters
    /// \param vecSizes
    /// \param vecPadding
-   RChunkLoader(/*const std::string &treeName, const std::vector<std::string> &fileNames,*/
-                ROOT::RDF::RNode rdf, const std::size_t chunkSize,
+   RChunkLoader(ROOT::RDF::RNode rdf, const std::size_t chunkSize,
                 const std::vector<std::string> &cols, const std::string &filters = "",
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
-      : /*fTreeName(treeName),
-        fFileNames(fileNames),*/
-        f_rdf(rdf),
+      : f_rdf(rdf),
         fChunkSize(chunkSize),
         fCols(cols),
         fFilters(filters),
@@ -160,16 +157,6 @@ public:
    LoadChunk(TMVA::Experimental::RTensor<float> &chunkTensor, const std::size_t currentRow)
    {
       RChunkLoaderFunctor<Args...> func(chunkTensor, fVecSizes, fVecPadding);
-
-      // Create TDataFrame of the chunk
-      // Use RDatasetSpec to start reading at the current row
-      /*long long start_l = currentRow;
-      ROOT::RDF::Experimental::RDatasetSpec x_spec =
-         ROOT::RDF::Experimental::RDatasetSpec()
-            .AddSample({"", fTreeName, fFileNames})
-            .WithGlobalRange({start_l, std::numeric_limits<Long64_t>::max()});
-            
-      ROOT::RDataFrame x_rdf(x_spec);*/
 
       // Load events if filters are given
       if (fFilters.size() > 0) {
