@@ -31,7 +31,7 @@ namespace Internal {
  */
 class RRawFileWin : public RRawFile {
 private:
-   FILE *fFilePtr;
+   FILE *fFilePtr = nullptr;
    void Seek(long offset, int whence);
 
 protected:

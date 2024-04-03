@@ -49,13 +49,14 @@ public:
 
    /// On construction, an ROptions parameter can customize the RRawFile behavior
    struct ROptions {
-      ELineBreaks fLineBreak;
+      ELineBreaks fLineBreak = ELineBreaks::kAuto;
       /**
        * Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering. A negative value indicates
        * that the protocol-dependent default block size should be used.
        */
-      int fBlockSize;
-      ROptions() : fLineBreak(ELineBreaks::kAuto), fBlockSize(-1) {}
+      int fBlockSize = -1;
+      // Define an empty constructor to work around a bug in Clang: https://github.com/llvm/llvm-project/issues/36032
+      ROptions() {}
    };
 
    /// Used for vector reads from multiple offsets into multiple buffers. This is unlike readv(), which scatters a
@@ -94,13 +95,13 @@ private:
    static constexpr unsigned int kNumBlockBuffers = 2;
    struct RBlockBuffer {
       /// Where in the open file does fBuffer start
-      std::uint64_t fBufferOffset;
+      std::uint64_t fBufferOffset = 0;
       /// The number of currently buffered bytes in fBuffer
-      size_t fBufferSize;
+      size_t fBufferSize = 0;
       /// Points into the I/O buffer with data from the file, not owned.
-      unsigned char *fBuffer;
+      unsigned char *fBuffer = nullptr;
 
-      RBlockBuffer() : fBufferOffset(0), fBufferSize(0), fBuffer(nullptr) {}
+      RBlockBuffer() = default;
       RBlockBuffer(const RBlockBuffer &) = delete;
       RBlockBuffer &operator=(const RBlockBuffer &) = delete;
       ~RBlockBuffer() = default;
@@ -109,21 +110,21 @@ private:
       size_t CopyTo(void *buffer, size_t nbytes, std::uint64_t offset);
    };
    /// To be used modulo kNumBlockBuffers, points to the last used block buffer in fBlockBuffers
-   unsigned int fBlockBufferIdx;
+   unsigned int fBlockBufferIdx = 0;
    /// An active buffer and a shadow buffer, which supports "jumping back" to a previously used location in the file
    RBlockBuffer fBlockBuffers[kNumBlockBuffers];
    /// Memory block containing the block buffers consecutively
    std::unique_ptr<unsigned char[]> fBufferSpace;
    /// The cached file size
-   std::uint64_t fFileSize;
+   std::uint64_t fFileSize = kUnknownFileSize;
    /// Files are opened lazily and only when required; the open state is kept by this flag
-   bool fIsOpen;
+   bool fIsOpen = false;
 
 protected:
    std::string fUrl;
    ROptions fOptions;
    /// The current position in the file, which can be changed by Seek, Read, and Readln
-   std::uint64_t fFilePos;
+   std::uint64_t fFilePos = 0;
 
    /**
     * OpenImpl() is called at most once and before any call to either DoReadAt or DoGetSize. If fOptions.fBlocksize
