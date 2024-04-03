@@ -9,36 +9,34 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
     tree_name = "mytree"
 
     # Helpers
-    def create_10_entries_file(self):
-        df2 = ROOT.RDataFrame(10)\
+    def define_rdf(self, num_of_entries=10):
+        df = ROOT.RDataFrame(num_of_entries)\
             .Define("b1", "(int) rdfentry_")\
-            .Define("b2", "(double) b1*b1")\
-            .Snapshot(self.tree_name, self.file_name1)
-    
-    # def create_20_entries_file(self):
-    #     df1 = ROOT.RDataFrame(20)\
-    #         .Define("b1", "(int) rdfentry_ + 10")\
-    #         .Define("b2", "(double) rdfentry_ * rdfentry_")\
-    #         .Snapshot(self.tree_name, self.file_name2)
+            .Define("b2", "(double) b1*b1")
         
-        #print(df1.Describe())
-        #print(df2.Describe())
+        return df
 
-        #df2.Display("",).Print()
-
+    def create_file(self, num_of_entries=10):
+        self.define_rdf(num_of_entries).Snapshot(self.tree_name, self.file_name1)
+    
+    def create_5_entries_file(self):
+        df1 = ROOT.RDataFrame(5)\
+            .Define("b1", "(int) rdfentry_ + 10")\
+            .Define("b2", "(double) b1 * b1")\
+            .Snapshot(self.tree_name, self.file_name2)
 
     def teardown_file(self, file):
         os.remove(file)
 
 
     def test01_each_element_is_generated_unshuffled(self):
-        self.create_10_entries_file()
+        self.create_file()
 
         gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-        tree_name=self.tree_name,
-        file_name=self.file_name1,
         batch_size=3,
         chunk_size=5,
+        tree_name=self.tree_name,
+        file_names=self.file_name1,
         target="b2",
         validation_split=0.3,
         shuffle=False,
@@ -76,13 +74,12 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         self.teardown_file(self.file_name1)
 
     def test02_each_element_is_generated_shuffled(self):
-        self.create_10_entries_file()
+        df = self.define_rdf()
 
         gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-        tree_name=self.tree_name,
-        file_name=self.file_name1,
         batch_size=3,
         chunk_size=5,
+        rdataframe=df,
         target="b2",
         validation_split=0.3,
         shuffle=True,
@@ -112,16 +109,13 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         self.assertEqual(len(flat_y_train),6)
         self.assertEqual(len(flat_y_val),4)
 
-        self.teardown_file(self.file_name1)
-
     def test03_next_iteration(self):
-        self.create_10_entries_file()
+        df = self.define_rdf()
 
         gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-        tree_name=self.tree_name,
-        file_name=self.file_name1,
         batch_size=3,
         chunk_size=5,
+        rdataframe=df,
         target="b2",
         validation_split=0.3,
         shuffle=False,
@@ -166,17 +160,14 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         self.assertEqual(results_x_val, flat_x_val)
         self.assertEqual(results_y_train, flat_y_train)
         self.assertEqual(results_y_val, flat_y_val)
-
-        self.teardown_file(self.file_name1)
     
     def test04_chunk_input_smaller_than_batch_size(self):
-        self.create_10_entries_file()
+        df = self.define_rdf()
 
         gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-        tree_name=self.tree_name,
-        file_name=self.file_name1,
         batch_size=3,
         chunk_size=3,
+        rdataframe=df,
         target="b2",
         validation_split=0.3,
         shuffle=False,
@@ -188,17 +179,14 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
         for x, y in gen_validation:
             pass
-
-        self.teardown_file(self.file_name1)
     
     def test05_dropping_remainder(self):
-        self.create_10_entries_file()
+        df = self.define_rdf()
 
         gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-        tree_name=self.tree_name,
-        file_name=self.file_name1,
         batch_size=3,
         chunk_size=5,
+        rdataframe=df,
         target="b2",
         validation_split=0.3,
         shuffle=False,
@@ -221,9 +209,52 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         
         self.assertEqual(len(collected_x), 3)
         self.assertEqual(len(collected_y), 3)
+    
+    def test06_more_than_one_file(self):
+        self.create_file()
+        self.create_5_entries_file()
+
+        gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+        batch_size=3,
+        chunk_size=5,
+        tree_name=self.tree_name,
+        file_names=[self.file_name1, self.file_name2],
+        target="b2",
+        validation_split=0.3,
+        shuffle=False,
+        drop_remainder=False
+        )
+
+        results_x_train = [2.0, 3.0, 4.0, 7.0, 8.0, 9.0, 12.0, 13.0, 14.0]
+        results_x_val = [0.0, 1.0, 5.0, 6.0, 10.0, 11.0]
+        results_y_train = [4.0, 9.0, 16.0, 49.0, 64.0, 81.0, 144.0, 169.0, 196.0]
+        results_y_val = [0.0, 1.0, 25.0, 36.0, 100.0, 121.0]
+        
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        for x, y in gen_train:
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+        
+        for x, y in gen_validation:
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        
+        self.assertEqual(results_x_train, flat_x_train)
+        self.assertEqual(results_x_val, flat_x_val)
+        self.assertEqual(results_y_train, flat_y_train)
+        self.assertEqual(results_y_val, flat_y_val)
 
         self.teardown_file(self.file_name1)
-
+        self.teardown_file(self.file_name2)
 
 if __name__ == 'main':
     unittest.main()
