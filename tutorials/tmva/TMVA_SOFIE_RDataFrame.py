@@ -27,14 +27,14 @@ model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
 
 # generating inference code
 model.Generate()
-model.OutputGenerated("Higgs_trained_model.hxx")
+model.OutputGenerated("Higgs_generated_Sofie_model.hxx")
 model.PrintGenerated()
 
 # compile using ROOT JIT trained model
 print("compiling SOFIE model and functor....")
-ROOT.gInterpreter.Declare('#include "Higgs_trained_model.hxx"')
+ROOT.gInterpreter.Declare('#include "Higgs_generated_Sofie_model.hxx"')
 modelName = "Higgs_trained_model"
-ROOT.gInterpreter.Declare('auto sofie_functor = TMVA::Experimental::SofieFunctor<7,TMVA_SOFIE_'+modelName+'::Session>(0);')
+ROOT.gInterpreter.Declare('auto sofie_functor = TMVA::Experimental::SofieFunctor<7,TMVA_SOFIE_'+modelName+'::Session>(0,"Higgs_generated_Sofie_model.dat");')
 
 # run inference over input data
 inputFile = "http://root.cern/files/Higgs_data.root"

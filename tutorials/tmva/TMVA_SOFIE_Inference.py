@@ -31,7 +31,7 @@ if (ROOT.gSystem.AccessPathName(modelFile)) :
 # parse the input Keras model into RModel object
 model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
 
-generatedHeaderFile = modelFile.replace(".h5",".hxx")
+generatedHeaderFile = "generatedSofieHiggsModel.hxx" #modelFile.replace(".h5",".hxx")
 print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
 #Generating inference code
 model.Generate()
@@ -44,7 +44,6 @@ print("compiling SOFIE model ", modelName)
 ROOT.gInterpreter.Declare('#include "' + generatedHeaderFile + '"')
 
 
-generatedHeaderFile = modelFile.replace(".h5",".hxx")
 print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
 #Generating inference
 
@@ -67,7 +66,7 @@ dataset_size = xsig.shape[0]
 print("size of data", dataset_size)
 
 #instantiate SOFIE session class 
-session = ROOT.TMVA_SOFIE_Higgs_trained_model.Session()
+session = ROOT.TMVA_SOFIE_Higgs_trained_model.Session("generatedSofieHiggsModel.dat")
 
 hs = ROOT.TH1D("hs","Signal result",100,0,1)
 for i in range(0,dataset_size):
