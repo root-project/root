@@ -358,6 +358,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
       const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
       QualType QT = Ty.getCanonicalType();
+      CXXRecordDecl* rtdecl = QT->getAsCXXRecordDecl();
       string type_name;
       EReferenceType refType = kNotReference;
       bool isPointer = false;
@@ -383,9 +384,24 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
          callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
       } else {
-         // pointer falls back to non-pointer case; the argument preserves
-         // the "pointerness" (i.e. doesn't reference the value).
-         callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+         // By-value construction; this may either copy or move, but there is no
+         // information here in terms of intent. Thus, simply assume that the intent
+         // is to move if there is no viable copy constructor (ie. if the code would
+         // otherwise fail to even compile).
+
+         // Note: function pointers arguments are by-value.
+
+         // There does not appear to be a simple way of determining whether a viable
+         // copy constructor exists, so check for the most common case: the trivial
+         // one, but not uniquely available, while there is a move constructor.
+         if (rtdecl && (rtdecl->hasTrivialCopyConstructor() && !rtdecl->hasSimpleCopyConstructor()) \
+               && rtdecl->hasMoveConstructor()) {
+            // move construction as needed for classes (note that this is implicit)
+            callbuf << "std::move(*(" << type_name.c_str() << "*)args[" << i << "])";
+         } else {
+            // otherwise, and for builtins, use copy construction of temporary*/
+            callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+         }
       }
    }
    callbuf << ")";
