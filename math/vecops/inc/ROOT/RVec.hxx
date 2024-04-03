@@ -2872,7 +2872,7 @@ RVec<Common_t> Concatenate(const RVec<T0> &v0, const RVec<T1> &v1)
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T0, typename T1, typename Common_t = std::common_type_t<T0, T1>>
+template <typename T0, typename T1 = T0, typename Common_t = std::common_type_t<T0, T1>>
 Common_t DeltaPhi(T0 v1, T1 v2, const Common_t c = M_PI)
 {
    static_assert(std::is_floating_point<T0>::value && std::is_floating_point<T1>::value,
@@ -2893,7 +2893,7 @@ Common_t DeltaPhi(T0 v1, T1 v2, const Common_t c = M_PI)
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T0, typename T1, typename Common_t = typename std::common_type_t<T0, T1>>
+template <typename T0, typename T1 = T0, typename Common_t = typename std::common_type_t<T0, T1>>
 RVec<Common_t> DeltaPhi(const RVec<T0>& v1, const RVec<T1>& v2, const Common_t c = M_PI)
 {
    using size_type = typename RVec<T0>::size_type;
@@ -2911,7 +2911,7 @@ RVec<Common_t> DeltaPhi(const RVec<T0>& v1, const RVec<T1>& v2, const Common_t c
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T0, typename T1, typename Common_t = typename std::common_type_t<T0, T1>>
+template <typename T0, typename T1 = T0, typename Common_t = typename std::common_type_t<T0, T1>>
 RVec<Common_t> DeltaPhi(const RVec<T0>& v1, T1 v2, const Common_t c = M_PI)
 {
    using size_type = typename RVec<T0>::size_type;
@@ -2929,7 +2929,7 @@ RVec<Common_t> DeltaPhi(const RVec<T0>& v1, T1 v2, const Common_t c = M_PI)
 /// therefore in the range \f$[-\pi, \pi]\f$.
 /// The computation is done per default in radians \f$c = \pi\f$ but can be switched
 /// to degrees \f$c = 180\f$.
-template <typename T0, typename T1, typename Common_t = typename std::common_type_t<T0, T1>>
+template <typename T0, typename T1 = T0, typename Common_t = typename std::common_type_t<T0, T1>>
 RVec<Common_t> DeltaPhi(T0 v1, const RVec<T1>& v2, const Common_t c = M_PI)
 {
    using size_type = typename RVec<T1>::size_type;
@@ -2948,7 +2948,7 @@ RVec<Common_t> DeltaPhi(T0 v1, const RVec<T1>& v2, const Common_t c = M_PI)
 /// of the given collections eta1, eta2, phi1 and phi2. The angle \f$\phi\f$ can
 /// be set to radian or degrees using the optional argument c, see the documentation
 /// of the DeltaPhi helper.
-template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
 RVec<Common_t> DeltaR2(const RVec<T0>& eta1, const RVec<T1>& eta2, const RVec<T2>& phi1, const RVec<T3>& phi2, const Common_t c = M_PI)
 {
    const auto dphi = DeltaPhi(phi1, phi2, c);
@@ -2962,7 +2962,7 @@ RVec<Common_t> DeltaR2(const RVec<T0>& eta1, const RVec<T1>& eta2, const RVec<T2
 /// of the given collections eta1, eta2, phi1 and phi2. The angle \f$\phi\f$ can
 /// be set to radian or degrees using the optional argument c, see the documentation
 /// of the DeltaPhi helper.
-template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
 RVec<Common_t> DeltaR(const RVec<T0>& eta1, const RVec<T1>& eta2, const RVec<T2>& phi1, const RVec<T3>& phi2, const Common_t c = M_PI)
 {
    return sqrt(DeltaR2(eta1, eta2, phi1, phi2, c));
@@ -2975,7 +2975,7 @@ RVec<Common_t> DeltaR(const RVec<T0>& eta1, const RVec<T1>& eta2, const RVec<T2>
 /// of the given scalars eta1, eta2, phi1 and phi2. The angle \f$\phi\f$ can
 /// be set to radian or degrees using the optional argument c, see the documentation
 /// of the DeltaPhi helper.
-template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
 Common_t DeltaR(T0 eta1, T1 eta2, T2 phi1, T3 phi2, const Common_t c = M_PI)
 {
    const auto dphi = DeltaPhi(phi1, phi2, c);
@@ -2987,8 +2987,8 @@ Common_t DeltaR(T0 eta1, T1 eta2, T2 phi1, T3 phi2, const Common_t c = M_PI)
 ///
 /// The function computes the invariant mass of two particles with the four-vectors
 /// (pt1, eta2, phi1, mass1) and (pt2, eta2, phi2, mass2).
-template <typename T0, typename T1, typename T2, typename T3, typename T4,
-          typename T5, typename T6, typename T7, typename Common_t = std::common_type_t<T0, T1, T2, T3, T4, T5, T6, T7>>
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename T4 = T0,
+          typename T5 = T0, typename T6 = T0, typename T7 = T0, typename Common_t = std::common_type_t<T0, T1, T2, T3, T4, T5, T6, T7>>
 RVec<Common_t> InvariantMasses(
    const RVec<T0>& pt1, const RVec<T1>& eta1, const RVec<T2>& phi1, const RVec<T3>& mass1,
    const RVec<T4>& pt2, const RVec<T5>& eta2, const RVec<T6>& phi2, const RVec<T7>& mass2)
@@ -3030,7 +3030,7 @@ RVec<Common_t> InvariantMasses(
 ///
 /// The function computes the invariant mass of multiple particles with the
 /// four-vectors (pt, eta, phi, mass).
-template <typename T0, typename T1, typename T2, typename T3, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename Common_t = std::common_type_t<T0, T1, T2, T3>>
 Common_t InvariantMass(const RVec<T0>& pt, const RVec<T1>& eta, const RVec<T2>& phi, const RVec<T3>& mass)
 {
    const std::size_t size = pt.size();
