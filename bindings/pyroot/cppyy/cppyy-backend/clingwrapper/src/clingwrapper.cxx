@@ -115,7 +115,10 @@ static inline CallWrapper* new_CallWrapper(CallWrapper::DeclId_t fid, const std:
 }
 
 typedef std::vector<TGlobal*> GlobalVars_t;
+typedef std::map<TGlobal*, GlobalVars_t::size_type> GlobalVarsIndices_t;
+
 static GlobalVars_t g_globalvars;
+static GlobalVarsIndices_t g_globalidx;
 
 static std::set<std::string> gSTLNames;
 
@@ -918,7 +921,8 @@ Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_
 {
     if (check_enabled && !gEnableFastPath) return (TCppFuncAddr_t)nullptr;
     TFunction* f = m2f(method);
-    TCppFuncAddr_t pf = gInterpreter->FindSym(f->GetMangledName());
+
+    TCppFuncAddr_t pf = (TCppFuncAddr_t)gInterpreter->FindSym(f->GetMangledName());
     if (pf) return pf;
 
     int ierr = 0;
@@ -934,25 +938,32 @@ Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_
         sig << "template " << fn << ";";
         gInterpreter->ProcessLine(sig.str().c_str());
     } else {
-        std::string sfn(fn);
-        std::string addrstr;
-        addrstr.reserve(128);
-        addrstr.push_back('(');
-        addrstr.append(Cppyy::GetMethodResultType(method));
-        addrstr.append(" (");
+        std::ostringstream sig;
 
-        if (gInterpreter->FunctionDeclId_IsMethod(m2d(method))) {
-            std::string::size_type colon = sfn.rfind("::");
-            if (colon != std::string::npos) addrstr.append(sfn.substr(0, colon+2));
+        std::string sfn = fn;
+        std::string::size_type pos = sfn.find('(');
+        if (pos != std::string::npos) sfn = sfn.substr(0, pos);
+
+    // start cast
+        sig << '(' << f->GetReturnTypeName() << " (";
+
+    // add scope for methods
+        pos = sfn.rfind(':');
+        if (pos != std::string::npos) {
+            std::string scope_name = sfn.substr(0, pos-1);
+            TCppScope_t scope = GetScope(scope_name);
+            if (scope && !IsNamespace(scope))
+                sig << scope_name << "::";
         }
 
-        addrstr.append("*)");
-        addrstr.append(Cppyy::GetMethodSignature(method, false));
-        addrstr.append(") &");
+    // finalize cast
+        sig << "*)" << GetMethodSignature(method, false)
+                    << ((f->Property() & kIsConstMethod) ? " const" : "")
+            << ')';
 
-        addrstr.append(sfn.substr(0, sfn.find('(')));
-
-        gInterpreter->Calc(addrstr.c_str());
+    // load address
+        sig << '&' << sfn;
+        gInterpreter->Calc(sig.str().c_str());
     }
 
     return (TCppFuncAddr_t)gInterpreter->FindSym(f->GetMangledName());
@@ -2115,6 +2126,21 @@ intptr_t Cppyy::GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata)
     return (intptr_t)-1;
 }
 
+static inline
+Cppyy::TCppIndex_t gb2idx(TGlobal* gb)
+{
+    if (!gb) return (Cppyy::TCppIndex_t)-1;
+
+    auto pidx = g_globalidx.find(gb);
+    if (pidx == g_globalidx.end()) {
+        auto idx = g_globalvars.size();
+        g_globalvars.push_back(gb);
+        g_globalidx[gb] = idx;
+        return (Cppyy::TCppIndex_t)idx;
+    }
+    return (Cppyy::TCppIndex_t)pidx->second;
+}
+
 Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::string& name)
 {
     if (scope == GLOBAL_HANDLE) {
@@ -2146,11 +2172,7 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::strin
             if (wrap && wrap->GetAddress()) gb = wrap;
         }
 
-        if (gb) {
-        // TODO: do we ever need a reverse lookup?
-            g_globalvars.push_back(gb);
-            return TCppIndex_t(g_globalvars.size() - 1);
-        }
+        return gb2idx(gb);
 
     } else {
         TClassRef& cr = type_from_handle(scope);
@@ -2159,10 +2181,6 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::strin
                 (TDataMember*)cr->GetListOfDataMembers()->FindObject(name.c_str());
             // TODO: turning this into an index is silly ...
             if (dm) return (TCppIndex_t)cr->GetListOfDataMembers()->IndexOf(dm);
-            dm = (TDataMember*)cr->GetListOfUsingDataMembers()->FindObject(name.c_str());
-            if (dm)
-                return (TCppIndex_t)cr->GetListOfDataMembers()->IndexOf(dm)
-                    + cr->GetListOfDataMembers()->GetSize();
         }
     }
 
