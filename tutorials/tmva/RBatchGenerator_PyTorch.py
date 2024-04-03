@@ -23,10 +23,10 @@ target = "Type"
 # Returns two generators that return training and validation batches
 # as PyTorch tensors.
 gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
-    tree_name,
-    file_name,
     batch_size,
     chunk_size,
+    tree_name,
+    file_name,
     target=target,
     validation_split=0.3,
 )

@@ -114,8 +114,6 @@ template <typename... Args>
 class RChunkLoader {
 
 private:
-   std::string fTreeName;
-   std::vector<std::string> fFileNames;
    std::size_t fChunkSize;
    std::size_t fNumColumns;
 
@@ -129,8 +127,7 @@ private:
 
 public:
    /// \brief Constructor for the RChunkLoader
-   /// \param treeName
-   /// \param fileName
+   /// \param rdf
    /// \param chunkSize
    /// \param cols
    /// \param filters
@@ -171,6 +168,7 @@ private:
    /// \brief Add filters to the RDataFrame and load a chunk of data
    /// \param x_rdf
    /// \param func
+   /// \param currentRow
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
    std::pair<std::size_t, std::size_t> loadFiltered(ROOT::RDF::RNode &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {
@@ -197,6 +195,7 @@ private:
    /// is reached, or a full chunk is loaded
    /// \param x_rdf
    /// \param func
+   /// \param currentRow
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
    std::pair<std::size_t, std::size_t> loadNonFiltered(ROOT::RDF::RNode &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {

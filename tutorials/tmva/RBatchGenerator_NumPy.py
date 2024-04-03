@@ -14,14 +14,15 @@ import ROOT
 tree_name = "sig_tree"
 file_name = "http://root.cern/files/Higgs_data.root"
 
+rdf = ROOT.RDataFrame(tree_name, file_name)
+
 batch_size = 128
 chunk_size = 5_000
 
 ds_train, ds_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-    tree_name,
-    file_name,
     batch_size,
     chunk_size,
+    rdataframe=rdf,
     validation_split=0.3,
     shuffle=True,
 )

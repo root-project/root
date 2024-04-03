@@ -22,10 +22,10 @@ target = "Type"
 
 # Returns two TF.Dataset for training and validation batches.
 ds_train, ds_valid = ROOT.TMVA.Experimental.CreateTFGenerators(
-    tree_name,
-    file_name,
     batch_size,
     chunk_size,
+    tree_name,
+    file_name,
     validation_split=0.3,
     target=target,
 )

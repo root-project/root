@@ -20,10 +20,10 @@ filters = ["f1 > 30", "f2 < 70", "f3 == true"]
 max_vec_sizes = {"f4": 3, "f5": 2, "f6": 1}
 
 ds_train, ds_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-    tree_name,
-    file_name,
     batch_size,
     chunk_size,
+    tree_name,
+    file_name,
     validation_split=0.3,
     filters=filters,
     max_vec_sizes=max_vec_sizes,
