@@ -10,7 +10,7 @@
 #---------------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------------
-# Package up needed system libraries - only for WIN32?
+# Package up needed system libraries - except for WIN32
 #
 if(NOT WIN32)
   include(InstallRequiredSystemLibraries)
