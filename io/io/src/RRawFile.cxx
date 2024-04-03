@@ -59,14 +59,9 @@ size_t ROOT::Internal::RRawFile::RBlockBuffer::CopyTo(void *buffer, size_t nbyte
 }
 
 ROOT::Internal::RRawFile::RRawFile(std::string_view url, ROptions options)
-   : fBlockBufferIdx(0), fBufferSpace(nullptr), fFileSize(kUnknownFileSize), fIsOpen(false), fUrl(url),
+   : fBlockBufferIdx(0), fFileSize(kUnknownFileSize), fIsOpen(false), fUrl(url),
      fOptions(options), fFilePos(0)
 {
-}
-
-ROOT::Internal::RRawFile::~RRawFile()
-{
-   delete[] fBufferSpace;
 }
 
 std::unique_ptr<ROOT::Internal::RRawFile>
@@ -160,10 +155,10 @@ size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64
    if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
       return ReadAtImpl(buffer, nbytes, offset);
 
-   if (fBufferSpace == nullptr) {
-      fBufferSpace = new unsigned char[kNumBlockBuffers * fOptions.fBlockSize];
+   if (!fBufferSpace) {
+      fBufferSpace.reset(new unsigned char[kNumBlockBuffers * fOptions.fBlockSize]);
       for (unsigned int i = 0; i < kNumBlockBuffers; ++i)
-         fBlockBuffers[i].fBuffer = fBufferSpace + i * fOptions.fBlockSize;
+         fBlockBuffers[i].fBuffer = fBufferSpace.get() + i * fOptions.fBlockSize;
    }
 
    size_t totalBytes = 0;
