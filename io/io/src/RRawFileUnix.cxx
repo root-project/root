@@ -50,10 +50,6 @@ std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::Clone() 
    return std::make_unique<RRawFileUnix>(fUrl, fOptions);
 }
 
-int ROOT::Internal::RRawFileUnix::GetFeatures() const {
-   return kFeatureHasSize;
-}
-
 std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
 {
 #ifdef R__SEEK64
