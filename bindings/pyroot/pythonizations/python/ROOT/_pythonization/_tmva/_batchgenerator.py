@@ -36,19 +36,23 @@ class BaseGenerator:
 
         template_dict = {
             "Bool_t": "bool&",
+            "bool":"bool&",
             "Double_t": "double&",
             "double": "double&",
             "Double32_t": "double&",
             "Float_t": "float&",
             "Float16_t": "float&",
+            "float": "float&",
             "Int_t": "int&",
             "int":"int&",
             "UInt_t": "unsigned int&",
+            "unsigned int": "unsigned int&",
             "Long_t": "long&",
             "ULong_t": "unsigned long&",
             "Long64_t": "long long&",
             "ULong64_t": "unsigned long long&",
             "Short_t": "short&",
+            "short": "short&",
             "UShort_t": "unsigned short&",
             
             "ROOT::VecOps::RVec<bool>": "ROOT::RVec<bool>",
