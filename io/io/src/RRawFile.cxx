@@ -147,9 +147,15 @@ size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64
    EnsureOpen();
    R__ASSERT(fOptions.fBlockSize >= 0);
 
-   // "Large" reads are served directly, bypassing the cache
+   // Early return for empty requests
+   if (nbytes == 0)
+      return 0;
+
+   // "Large" reads are served directly, bypassing the cache; since nbytes > 0, fBlockSize == 0 is also handled here
    if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
       return ReadAtImpl(buffer, nbytes, offset);
+
+   R__ASSERT(fOptions.fBlockSize > 0);
 
    if (!fBufferSpace) {
       fBufferSpace.reset(new unsigned char[kNumBlockBuffers * fOptions.fBlockSize]);
