@@ -39,6 +39,10 @@
 #include <string>
 #include <chrono>
 
+#ifdef R__LINUX
+#include <fcntl.h>
+#endif
+
 #ifndef R__LITTLE_ENDIAN
 #ifdef R__BYTESWAP
 // `R__BYTESWAP` is defined in RConfig.hxx for little-endian architectures; undefined otherwise
@@ -1503,10 +1507,20 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    if (idxDirSep != std::string::npos) {
       fileName.erase(0, idxDirSep + 1);
    }
+#ifdef R__LINUX
+   int flags = O_WRONLY | O_CREAT | O_TRUNC;
+#ifdef O_LARGEFILE
+   // Add the equivalent flag that is passed by fopen64.
+   flags |= O_LARGEFILE;
+#endif
+   int fd = open(std::string(path).c_str(), flags, 0666);
+   FILE *fileStream = fdopen(fd, "wb");
+#else
 #ifdef R__SEEK64
    FILE *fileStream = fopen64(std::string(path.data(), path.size()).c_str(), "wb");
 #else
    FILE *fileStream = fopen(std::string(path.data(), path.size()).c_str(), "wb");
+#endif
 #endif
    R__ASSERT(fileStream);
    // RNTupleFileWriter::RFileSimple does its own buffering, turn off additional buffering from C stdio.
