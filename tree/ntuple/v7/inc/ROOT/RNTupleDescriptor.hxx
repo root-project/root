@@ -775,6 +775,8 @@ public:
    NTupleSize_t GetNEntries() const { return fNEntries; }
    NTupleSize_t GetNElements(DescriptorId_t physicalColumnId) const;
 
+   std::vector<std::pair<NTupleSize_t, NTupleSize_t>> GetClusterBoundaries() const;
+
    /// Returns the logical parent of all top-level NTuple data fields.
    DescriptorId_t GetFieldZeroId() const;
    const RFieldDescriptor &GetFieldZero() const { return GetFieldDescriptor(GetFieldZeroId()); }
