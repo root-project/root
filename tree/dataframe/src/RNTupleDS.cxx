@@ -398,6 +398,13 @@ RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string>
    fFileNames = fileNames;
 }
 
+RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                     const std::pair<ULong64_t, ULong64_t> &range)
+   : RNTupleDS(ntupleName, fileNames)
+{
+   fGlobalRange = range;
+}
+
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
 {
    // This datasource uses the newer GetColumnReaders() API
@@ -431,6 +438,53 @@ bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
    return true;
 }
 
+void RNTupleDS::PrepareNextRangesAccordingToGlobalRange()
+{
+   // We consider only the case of 1 process (fNSlots == 1) and 1 or more files to process
+   // This RNTupleDS instance needs to compute the ranges for the file(s) it is assigned
+   // at construction time, respecting the user-provided global range boundaries.
+   auto nFiles = fFileNames.empty() ? 1 : fFileNames.size();
+   if (fNextFileIndex >= nFiles)
+      return;
+
+   REntryRangeDS range;
+
+   if (fPrincipalSource) {
+      // Avoid reopening the first file, which has been opened already to read the schema
+      assert(fNextFileIndex == 0);
+      std::swap(fPrincipalSource, range.fSource);
+   } else {
+      range.fSource = Internal::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+      range.fSource->Attach();
+   }
+
+   auto nEntries = range.fSource->GetNEntries();
+   if (nEntries == 0)
+      return;
+
+   // Every file spans [offset, offset + nEntries)
+   // Skip a file if:
+   // * The beginning of the range is beyond the entries the file spans
+   // * The end of the range is lower than the current offset, i.e. the first entry of the current file
+   if (fGlobalRange->first > (fCurrentFileOffset + nEntries) || fGlobalRange->second <= fCurrentFileOffset)
+      return;
+
+   // Get the local entry corresponding to the beginning of the global range
+   // Or just start from the beginning of the file if it doesn't fit
+   auto localBegin = fGlobalRange->first < fCurrentFileOffset ? 0 : fGlobalRange->first - fCurrentFileOffset;
+   auto localEnd = std::min(fGlobalRange->second - fCurrentFileOffset, nEntries);
+
+   range.fFirstEntry = localBegin;
+   range.fLastEntry = localEnd;
+   range.fOffset = fCurrentFileOffset;
+
+   range.fSource->SetEntryRange({localBegin, localEnd - localBegin});
+   fNextRanges.emplace_back(std::move(range));
+
+   fCurrentFileOffset += nEntries;
+   fNextFileIndex++;
+}
+
 void RNTupleDS::PrepareNextRanges()
 {
    assert(fNextRanges.empty());
@@ -438,6 +492,11 @@ void RNTupleDS::PrepareNextRanges()
    auto nRemainingFiles = nFiles - fNextFileIndex;
    if (nRemainingFiles == 0)
       return;
+
+   if (fGlobalRange.has_value()) {
+      PrepareNextRangesAccordingToGlobalRange();
+      return;
+   }
 
    // Easy work scheduling: one file per slot. We skip empty files (files without entries).
    if (nRemainingFiles >= fNSlots) {
@@ -554,6 +613,13 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    fFirstEntry2RangeIdx.clear();
    ULong64_t nEntriesPerSource = 0;
    for (std::size_t i = 0; i < fCurrentRanges.size(); ++i) {
+      if (fGlobalRange.has_value()) {
+         // The ranges were pre-computed with the correct loca/global convention
+         // so we can use those directly.
+         ranges.emplace_back(fCurrentRanges[i].fFirstEntry + fCurrentRanges[i].fOffset,
+                             fCurrentRanges[i].fLastEntry + fCurrentRanges[i].fOffset);
+         continue;
+      }
       // Several consecutive ranges may operate on the same file (each with their own page source clone).
       // We can detect a change of file when the first entry number jumps back to 0.
       if (fCurrentRanges[i].fFirstEntry == 0) {
@@ -572,7 +638,15 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 
    if ((fNSlots == 1) && (fCurrentRanges[0].fSource)) {
       for (auto r : fActiveColumnReaders[0]) {
-         r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
+         // The original logic expected `ranges[0].first` to always report the
+         // correct entry offset of this file in a chain of files.
+         // That value is created a few lines above, but the logic is broken
+         // in case the range(s) refer to local ranges of one (or more) files
+         // being scheduled in the current process. For this reason, for now
+         // there is an extra data member in the current range object
+         // which reports the entry offset of this file in the chain.
+         const auto offset = fGlobalRange.has_value() ? fCurrentRanges[0].fOffset : ranges[0].first;
+         r->Connect(*fCurrentRanges[0].fSource, offset);
       }
    }
 
@@ -657,4 +731,22 @@ ROOT::RDF::Experimental::FromRNTuple(std::string_view ntupleName, const std::vec
 ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::Experimental::RNTuple *ntuple)
 {
    return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple));
+}
+
+ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
+                                                  const ROOT::RDF::ColumnNames_t &fileNames,
+                                                  const std::pair<ULong64_t, ULong64_t> &range)
+{
+   std::unique_ptr<ROOT::Experimental::RNTupleDS> ds{new ROOT::Experimental::RNTupleDS(ntupleName, fileNames, range)};
+   return ROOT::RDataFrame(std::move(ds));
+}
+
+std::pair<std::vector<std::pair<ROOT::Experimental::NTupleSize_t, ROOT::Experimental::NTupleSize_t>>,
+          ROOT::Experimental::NTupleSize_t>
+ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::string_view location)
+{
+   auto source = ROOT::Experimental::Internal::RPageSource::Create(ntupleName, location);
+   source->Attach();
+   const auto descGuard = source->GetSharedDescriptorGuard();
+   return std::make_pair(descGuard->GetClusterBoundaries(), descGuard->GetNEntries());
 }

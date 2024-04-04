@@ -127,23 +127,6 @@ class TaskTreeEntries:
     processed_entries: int = 0
     trees_with_entries: Dict[str, int] = field(default_factory=dict)
 
-@dataclass
-class RNTupleFileRange(DataRange):
-    ntuplename: str
-    filenames: List[str] = field(default_factory=list)
-
-def split_equal_size(filenames: Iterable[str], npartitions: int):
-    """Function to split the list of filenames into exactly N chunks of approximately equal size."""
-    quotient, remainder = divmod(len(filenames), npartitions)
-    return (filenames[i*quotient+min(i, remainder):(i+1)*quotient+min(i+1, remainder)] for i in range(npartitions))
-
-def get_ntuple_ranges(ntuplename, filenames, npartitions, exec_id):
-
-    files_by_partition = split_equal_size(filenames, npartitions)
-    return [
-        RNTupleFileRange(exec_id, range_id, ntuplename, files_in_partition)
-        for range_id, files_in_partition in enumerate(files_by_partition)
-    ]
 
 def get_balanced_ranges(nentries, npartitions, exec_id: ExecutionIdentifier):
     """
@@ -188,8 +171,7 @@ def get_balanced_ranges(nentries, npartitions, exec_id: ExecutionIdentifier):
 
     return ranges
 
-
-def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], int]:
+def get_ttree_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], int]:
     """
     Retrieve cluster boundaries and number of entries of a TTree.
     """
@@ -208,6 +190,26 @@ def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], i
             clusters.append(cluster_startentry)
 
     return clusters, entries
+
+
+def get_rntuple_clusters_and_entries(ntuplename: str, filename: str) -> Tuple[List[int], int]:
+    """
+    Retrieve cluster boundaries and number of entries of an RNTuple.
+    """
+    clusters_and_entries = ROOT.Internal.RDF.GetClustersAndEntries(
+        ntuplename, filename)
+    boundaries = (
+        [0] +
+        [cluster.second for cluster in clusters_and_entries.first]
+    )
+    return boundaries, clusters_and_entries.second
+
+
+def get_clusters_and_entries(rdf_uuid: str, datasetname: str, filename: str) -> Tuple[List[int], int]:
+    if rdf_uuid == "RNTuple":
+        return get_rntuple_clusters_and_entries(datasetname, filename)
+    else:
+        return get_ttree_clusters_and_entries(datasetname, filename)
 
 
 def get_percentage_ranges(treenames: List[str], filenames: List[str], npartitions: int,
@@ -360,7 +362,7 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[T
     # are friends, all files in the dataset are opened and their number of
     # entries are retrieved in order to ensure friend alignment.
     all_clusters_entries = (
-        get_clusters_and_entries(treename, filename)
+        get_clusters_and_entries(percrange.exec_id.rdf_uuid, treename, filename)
         for treename, filename in zip(percrange.treenames, percrange.filenames)
     )
     all_clusters, all_entries = zip(*all_clusters_entries)

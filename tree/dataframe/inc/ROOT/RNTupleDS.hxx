@@ -27,6 +27,31 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <optional>
+
+// Follow RDF namespace convention
+namespace ROOT::Internal::RDF {
+/**
+ * \brief Internal overload of the function that allows passing a range of entries
+ *
+ * The event range will be respected when processing this RNTuple. It is assumed
+ * that processing happens within one thread only.
+ */
+ROOT::RDataFrame FromRNTuple(std::string_view ntupleName, const ROOT::RDF::ColumnNames_t &fileNames,
+                             const std::pair<ULong64_t, ULong64_t> &range);
+/**
+ * \brief Retrieves the cluster boundaries and the number of entries for the input RNTuple
+ *
+ * \param[in] ntupleName The name of the RNTuple dataset
+ * \param[in] location The location of the RNTuple dataset (e.g. a path to a file)
+ *
+ * \note This function is a helper for the Python side to avoid having to deal
+ *       with the shared descriptor guard.
+ */
+std::pair<std::vector<std::pair<ROOT::Experimental::NTupleSize_t, ROOT::Experimental::NTupleSize_t>>,
+          ROOT::Experimental::NTupleSize_t>
+GetClustersAndEntries(std::string_view ntupleName, std::string_view location);
+} // namespace ROOT::Internal::RDF
 
 namespace ROOT {
 namespace Experimental {
@@ -51,6 +76,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
       ULong64_t fFirstEntry = 0; ///< First entry index in fSource
       /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
       ULong64_t fLastEntry = 0;
+      ROOT::Experimental::NTupleSize_t fOffset = 0; ///< Offset of the file this range spans.
    };
 
    /// The first source is used to extract the schema and build the prototype fields. The page source
@@ -84,6 +110,10 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ULong64_t fSeenEntries = 0;                ///< The number of entries so far returned by GetEntryRanges()
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
+   /// Optional range of entries to restrict the processing of the dataset
+   std::optional<std::pair<ROOT::Experimental::NTupleSize_t, ROOT::Experimental::NTupleSize_t>> fGlobalRange;
+   /// Reports the offset of the current file in a chain of files
+   ROOT::Experimental::NTupleSize_t fCurrentFileOffset{0};
    /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
    /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
@@ -114,8 +144,15 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// Upon return, the fNextRanges list is ordered.  It has usually fNSlots elements; fewer if there
    /// is not enough work to give at least one cluster to every slot.
    void PrepareNextRanges();
+   void PrepareNextRangesAccordingToGlobalRange();
 
    explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource);
+
+   friend ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
+                                                            const ROOT::RDF::ColumnNames_t &fileNames,
+                                                            const std::pair<ULong64_t, ULong64_t> &range);
+   explicit RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                      const std::pair<ULong64_t, ULong64_t> &range);
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
@@ -153,7 +190,6 @@ RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::strin
 RDataFrame FromRNTuple(ROOT::Experimental::RNTuple *ntuple);
 } // namespace Experimental
 } // namespace RDF
-
-} // ns ROOT
+} // namespace ROOT
 
 #endif
