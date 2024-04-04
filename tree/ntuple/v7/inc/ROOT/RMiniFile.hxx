@@ -130,6 +130,8 @@ private:
 
       /// For the simplest cases, a C file stream can be used for writing
       FILE *fFile = nullptr;
+      /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
+      bool fDirectIO = false;
       /// Keeps track of the seek offset
       std::uint64_t fFilePos = 0;
       /// Keeps track of the next key offset
