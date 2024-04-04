@@ -92,7 +92,7 @@ def _get_cpp_type_from_numpy_type(dtype):
 
 
 def _AsRVec(arr):
-    """
+    r"""
     Adopt memory of a Python object with array interface using an RVec.
 
     \param[in] self self object

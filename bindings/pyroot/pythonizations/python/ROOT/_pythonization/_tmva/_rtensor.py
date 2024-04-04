@@ -14,7 +14,7 @@ import sys
 
 
 def _AsRTensor(arr):
-    """
+    r"""
     Adopt memory of a Python object with array interface using an RTensor.
 
     \param[in] self Always null, since this is a module function.
