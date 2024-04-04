@@ -182,14 +182,14 @@ ROOTTEST_ADD_TEST(tprofile
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 # Re-Enabled Disable test: see ROOT-7158
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(tsenums tsenums.h  SELECTION tsenums_selection.xml)
-
-ROOTTEST_ADD_TEST(tsenums
-                  MACRO  exectsenums.C
-                  OUTREF exectsenums.ref
-                  DEPENDS ${GENERATE_REFLEX_TEST})
-
 if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_GENERATE_REFLEX_DICTIONARY(tsenums tsenums.h  SELECTION tsenums_selection.xml)
+
+  ROOTTEST_ADD_TEST(tsenums
+                    MACRO  exectsenums.C
+                    OUTREF exectsenums.ref
+                    DEPENDS ${GENERATE_REFLEX_TEST})
+
   ROOTTEST_GENERATE_EXECUTABLE(fork fork.cpp LIBRARIES Core)
 endif()
 
