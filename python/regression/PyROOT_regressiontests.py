@@ -922,6 +922,58 @@ class Regression26OverloadedOperator( MyTestCase ):
       foo = ROOT.Regression26.DenseBase
 
 
+class Regression27ImplicitSmartPtrOverload(MyTestCase):
+    def test1CheckImplicitSmartPtrOverload(self):
+        """Implicit smart pointer conversion should not cause wrong overload choice.
+
+        Test that if there are both smart pointer and rvalue reference overloads,
+        the smart pointer overload is not chosen by accident.
+
+        Covers GitHub issue https://github.com/root-project/root/issues/15117."""
+
+        ROOT.gInterpreter.LoadText(
+            """
+        namespace regression27 {
+
+        struct Base {
+           virtual ~Base() = default;
+           virtual int func() const = 0;
+        };
+
+        struct Derived : public Base {
+           Derived(int i) : m_i(i) {}
+           ~Derived() = default;
+           Derived(const Derived &) = delete;
+           Derived &operator=(const Derived &) = delete;
+           Derived(Derived &&) = default;
+           Derived &operator=(Derived &&) = default;
+
+           int func() const final { return m_i; }
+
+        private:
+           int m_i{42};
+        };
+
+        int foo(std::unique_ptr<Base> basePtr)
+        {
+           return 1;
+        }
+
+        template <typename T,
+                  typename = std::enable_if_t<std::is_base_of_v<Base, T> && !std::is_lvalue_reference_v<T>>>
+        int foo(T &&t)
+        {
+           return 2;
+        }
+
+        } // namespace regression27
+        """
+        )
+
+        c = ROOT.regression27.Derived(123)
+        self.assertEqual(ROOT.regression27.foo(ROOT.std.move(c)), 2)  # we expect the second overload
+
+
 ## actual test run
 if __name__ == '__main__':
    from MyTextTestRunner import MyTextTestRunner
