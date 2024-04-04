@@ -121,6 +121,8 @@ TEST(MiniFile, SimpleKeys)
    FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
 
    RNTupleWriteOptions options;
+   // We check the file size at the end, so Direct I/O alignment requirements must not introduce padding.
+   options.SetUseDirectIO(false);
    auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kTFile, options);
 
    char blob1 = '1';
