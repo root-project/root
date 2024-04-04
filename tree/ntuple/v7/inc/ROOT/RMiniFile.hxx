@@ -110,6 +110,22 @@ private:
    };
 
    struct RFileSimple {
+      /// Direct I/O requires that all buffers and write lengths are aligned. It seems 512 byte alignment is the minimum
+      /// for Direct I/O to work, but further testing showed that it results in worse performance than 4kB.
+      static constexpr int kBlockAlign = 4096;
+      /// During commit, WriteTFileKeysList() updates fNBytesKeys and fSeekKeys of the RTFFile located at
+      /// fSeekFileRecord. Given that the TFile key starts at offset 100 and the file name, which is written twice,
+      /// is shorter than 255 characters, we should need at most ~600 bytes. However, the header also needs to be
+      /// aligned to kBlockAlign...
+      static constexpr std::size_t kHeaderBlockSize = 4096;
+      /// Testing suggests that 4MiB gives best performance at a reasonable memory consumption.
+      static constexpr std::size_t kBlockSize = 4 * 1024 * 1024;
+
+      // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
+      unsigned char *fHeaderBlock;
+      std::uint64_t fBlockOffset = 0;
+      unsigned char *fBlock;
+
       /// For the simplest cases, a C file stream can be used for writing
       FILE *fFile = nullptr;
       /// Keeps track of the seek offset
@@ -119,12 +135,14 @@ private:
       /// Keeps track of TFile control structures, which need to be updated on committing the data set
       std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
 
-      RFileSimple() = default;
+      RFileSimple();
       RFileSimple(const RFileSimple &other) = delete;
       RFileSimple(RFileSimple &&other) = delete;
       RFileSimple &operator=(const RFileSimple &other) = delete;
       RFileSimple &operator=(RFileSimple &&other) = delete;
       ~RFileSimple();
+
+      void Flush();
 
       /// Writes bytes in the open stream, either at fFilePos or at the given offset
       void Write(const void *buffer, size_t nbytes, std::int64_t offset = -1);
