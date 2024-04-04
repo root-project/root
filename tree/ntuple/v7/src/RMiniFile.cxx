@@ -1508,6 +1508,8 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    FILE *fileStream = fopen(std::string(path.data(), path.size()).c_str(), "wb");
 #endif
    R__ASSERT(fileStream);
+   // RNTupleFileWriter::RFileSimple does its own buffering, turn off additional buffering from C stdio.
+   std::setvbuf(fileStream, nullptr, _IONBF, 0);
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
    writer->fFileSimple.fFile = fileStream;
