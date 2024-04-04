@@ -123,7 +123,7 @@ private:
    std::vector<std::size_t> fVecSizes;
    std::size_t fVecPadding;
 
-   ROOT::RDF::RNode f_rdf;
+   ROOT::RDF::RNode & f_rdf;
 
 public:
    /// \brief Constructor for the RChunkLoader
@@ -133,7 +133,7 @@ public:
    /// \param filters
    /// \param vecSizes
    /// \param vecPadding
-   RChunkLoader(ROOT::RDF::RNode rdf, const std::size_t chunkSize,
+   RChunkLoader(ROOT::RDF::RNode &rdf, const std::size_t chunkSize,
                 const std::vector<std::string> &cols, const std::string &filters = "",
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
       : f_rdf(rdf),
@@ -157,23 +157,22 @@ public:
 
       // Load events if filters are given
       if (fFilters.size() > 0) {
-         return loadFiltered(f_rdf, func, currentRow);
+         return loadFiltered(func, currentRow);
       }
 
       // load events if no filters are given
-      return loadNonFiltered(f_rdf, func, currentRow);
+      return loadNonFiltered(func, currentRow);
    }
 
 private:
    /// \brief Add filters to the RDataFrame and load a chunk of data
-   /// \param x_rdf
    /// \param func
    /// \param currentRow
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadFiltered(ROOT::RDF::RNode &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
+   std::pair<std::size_t, std::size_t> loadFiltered(RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {
       // Add the given filters to the RDataFrame
-      auto x_filter = x_rdf.Filter(fFilters, "RBatchGenerator_Filter");
+      auto x_filter = f_rdf.Filter(fFilters, "RBatchGenerator_Filter");
 
       // add range to the DataFrame
       auto x_ranged = x_filter.Range(currentRow, currentRow + fChunkSize);
@@ -193,14 +192,13 @@ private:
 
    /// \brief Loop over the events in the dataframe untill either the end of the dataframe
    /// is reached, or a full chunk is loaded
-   /// \param x_rdf
    /// \param func
    /// \param currentRow
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadNonFiltered(ROOT::RDF::RNode &x_rdf, RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
+   std::pair<std::size_t, std::size_t> loadNonFiltered(RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
    {
       // add range
-      auto x_ranged = x_rdf.Range(currentRow, currentRow + fChunkSize);
+      auto x_ranged = f_rdf.Range(currentRow, currentRow + fChunkSize);
       // auto x_ranged = x_rdf.Range(currentRow, currentRow + fChunkSize);
       auto myCount = x_ranged.Count();
 
