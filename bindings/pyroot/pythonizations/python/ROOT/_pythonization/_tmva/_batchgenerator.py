@@ -275,8 +275,10 @@ class BaseGenerator:
 
         expanded_filter = " && ".join(["(" + fltr + ")" for fltr in filters])
 
+        self.noded_rdf = RDF.AsRNode(rdataframe)
+
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
-            RDF.AsRNode(rdataframe),
+            self.noded_rdf,
             chunk_size,
             batch_size,
             self.given_columns,

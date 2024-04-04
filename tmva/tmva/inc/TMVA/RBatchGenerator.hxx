@@ -51,7 +51,7 @@ private:
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fTrainingRemainder;
    std::unique_ptr<TMVA::Experimental::RTensor<float>> fValidationRemainder;
    
-   ROOT::RDF::RNode f_rdf;
+   ROOT::RDF::RNode &f_rdf;
 
    std::vector<std::vector<std::size_t>> fTrainingIdxs;
    std::vector<std::vector<std::size_t>> fValidationIdxs;
@@ -67,7 +67,7 @@ private:
    float fVecPadding;
 
 public:
-   RBatchGenerator(ROOT::RDF::RNode rdf, const std::size_t chunkSize,
+   RBatchGenerator(ROOT::RDF::RNode &rdf, const std::size_t chunkSize,
                    const std::size_t batchSize, const std::vector<std::string> &cols, const std::string &filters = "",
                    const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0,
                    const float validationSplit = 0.0, const std::size_t maxChunks = 0, const std::size_t numColumns = 0,
