@@ -1299,10 +1299,23 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::RFileSimple()
+{
+   static_assert(kHeaderBlockSize % kBlockAlign == 0, "invalid header block size");
+   static_assert(kBlockSize % kBlockAlign == 0, "invalid block size");
+   std::align_val_t blockAlign{kBlockAlign};
+   fHeaderBlock = static_cast<unsigned char *>(::operator new[](kHeaderBlockSize, blockAlign));
+   fBlock = static_cast<unsigned char *>(::operator new[](kBlockSize, blockAlign));
+}
+
 ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::~RFileSimple()
 {
    if (fFile)
       fclose(fFile);
+
+   std::align_val_t blockAlign{kBlockAlign};
+   ::operator delete[](fHeaderBlock, blockAlign);
+   ::operator delete[](fBlock, blockAlign);
 }
 
 namespace {
@@ -1316,21 +1329,88 @@ int FSeek64(FILE *stream, std::int64_t offset, int origin)
 }
 } // namespace
 
+void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Flush()
+{
+   // Write the last partially filled block.
+   // If it is the first block, get the updated header block.
+   if (fBlockOffset == 0) {
+      std::size_t headerBlockSize = kHeaderBlockSize;
+      if (headerBlockSize > fFilePos) {
+         headerBlockSize = fFilePos;
+      }
+      memcpy(fBlock, fHeaderBlock, headerBlockSize);
+   }
+
+   std::size_t retval = FSeek64(fFile, fBlockOffset, SEEK_SET);
+   if (retval)
+      throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
+
+   std::size_t lastBlockSize = fFilePos - fBlockOffset;
+   R__ASSERT(lastBlockSize <= kBlockSize);
+   retval = fwrite(fBlock, 1, lastBlockSize, fFile);
+   if (retval != lastBlockSize)
+      throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
+
+   // Write the (updated) header block, unless it was part of the write above.
+   if (fBlockOffset > 0) {
+      retval = FSeek64(fFile, 0, SEEK_SET);
+      if (retval)
+         throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
+
+      retval = fwrite(fHeaderBlock, 1, kHeaderBlockSize, fFile);
+      if (retval != RFileSimple::kHeaderBlockSize)
+         throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
+   }
+
+   fflush(fFile);
+}
+
 void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(const void *buffer, size_t nbytes,
                                                                          std::int64_t offset)
 {
    R__ASSERT(fFile);
    size_t retval;
    if ((offset >= 0) && (static_cast<std::uint64_t>(offset) != fFilePos)) {
-      retval = FSeek64(fFile, offset, SEEK_SET);
-      if (retval)
-         throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
       fFilePos = offset;
    }
-   retval = fwrite(buffer, 1, nbytes, fFile);
-   if (retval != nbytes)
-      throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
-   fFilePos += nbytes;
+
+   // Keep header block to overwrite on commit.
+   if (fFilePos < kHeaderBlockSize) {
+      std::size_t headerBytes = nbytes;
+      if (fFilePos + headerBytes > kHeaderBlockSize) {
+         headerBytes = kHeaderBlockSize - fFilePos;
+      }
+      memcpy(fHeaderBlock + fFilePos, buffer, headerBytes);
+   }
+
+   R__ASSERT(fFilePos >= fBlockOffset);
+
+   while (nbytes > 0) {
+      std::uint64_t posInBlock = fFilePos % kBlockSize;
+      std::uint64_t blockOffset = fFilePos - posInBlock;
+      if (blockOffset != fBlockOffset) {
+         // Write the block.
+         retval = FSeek64(fFile, fBlockOffset, SEEK_SET);
+         if (retval)
+            throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
+
+         retval = fwrite(fBlock, 1, kBlockSize, fFile);
+         if (retval != kBlockSize)
+            throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
+
+         // TODO: do we want to null the buffer contents?
+      }
+
+      fBlockOffset = blockOffset;
+      std::size_t blockSize = nbytes;
+      if (blockSize > kBlockSize - posInBlock) {
+         blockSize = kBlockSize - posInBlock;
+      }
+      memcpy(fBlock + posInBlock, buffer, blockSize);
+      buffer = static_cast<const unsigned char *>(buffer) + blockSize;
+      nbytes -= blockSize;
+      fFilePos += blockSize;
+   }
 }
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::WriteKey(
@@ -1468,11 +1548,12 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 
    if (fIsBare) {
       RTFNTuple ntupleOnDisk(fNTupleAnchor);
-      fFileSimple.Write(&ntupleOnDisk, ntupleOnDisk.GetSize(), fFileSimple.fControlBlock->fSeekNTuple);
-      // Append the checksum
+      // Compute the checksum
       std::uint64_t checksum = XXH3_64bits(ntupleOnDisk.GetPtrCkData(), ntupleOnDisk.GetSizeCkData());
-      fFileSimple.Write(&checksum, sizeof(checksum));
-      fflush(fFileSimple.fFile);
+      memcpy(fFileSimple.fHeaderBlock + fFileSimple.fControlBlock->fSeekNTuple, &ntupleOnDisk, ntupleOnDisk.GetSize());
+      memcpy(fFileSimple.fHeaderBlock + fFileSimple.fControlBlock->fSeekNTuple + ntupleOnDisk.GetSize(), &checksum,
+             sizeof(checksum));
+      fFileSimple.Flush();
       return;
    }
 
@@ -1482,10 +1563,13 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
    WriteTFileFreeList();
 
    // Update header and TFile record
-   fFileSimple.Write(&fFileSimple.fControlBlock->fHeader, fFileSimple.fControlBlock->fHeader.GetSize(), 0);
-   fFileSimple.Write(&fFileSimple.fControlBlock->fFileRecord, fFileSimple.fControlBlock->fFileRecord.GetSize(),
-                     fFileSimple.fControlBlock->fSeekFileRecord);
-   fflush(fFileSimple.fFile);
+   memcpy(fFileSimple.fHeaderBlock, &fFileSimple.fControlBlock->fHeader, fFileSimple.fControlBlock->fHeader.GetSize());
+   R__ASSERT(fFileSimple.fControlBlock->fSeekFileRecord + fFileSimple.fControlBlock->fFileRecord.GetSize() <
+             RFileSimple::kHeaderBlockSize);
+   memcpy(fFileSimple.fHeaderBlock + fFileSimple.fControlBlock->fSeekFileRecord,
+          &fFileSimple.fControlBlock->fFileRecord, fFileSimple.fControlBlock->fFileRecord.GetSize());
+
+   fFileSimple.Flush();
 }
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const void *data, size_t nbytes, size_t len)
