@@ -119,7 +119,7 @@ class BaseGenerator:
         filters: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
         vec_padding: int = 0,
-        target: str = "",
+        target: str|list[str] = list(),
         weights: str = "",
         validation_split: float = 0.0,
         max_chunks: int = 0,
@@ -153,7 +153,8 @@ class BaseGenerator:
             vec_padding (int):
                 Value to pad vectors with if the vector is smaller
                 than the given max vector length. Defaults is 0
-            target (str, optional): Column that is used as target.
+            target (str|list[str], optional):
+                Column(s) used as target.
             weights (str, optional):
                 Column used to weight events.
                 Can only be used when a target is given.
@@ -213,12 +214,15 @@ class BaseGenerator:
 
         if file_names:
             rdataframe = RDataFrame(tree_name, file_names)
+        
+        if isinstance(target, str):
+            target = [target]
 
         # TODO: better linking when importing into ROOT
         # ROOT.gInterpreter.ProcessLine(
         #     f'#include "{main_folder}Cpp_files/RBatchGenerator.cpp"')
 
-        self.target_column = target
+        self.target_columns = target
         self.weights_column = weights
 
         template, max_vec_sizes_list = self.get_template(
@@ -229,30 +233,37 @@ class BaseGenerator:
         self.batch_size = batch_size
 
         # Handle target
-        self.target_given = len(self.target_column) > 0
-        if self.target_given:
-            if target in self.all_columns:
-                self.target_index = self.all_columns.index(self.target_column)
-            else:
-                raise ValueError(
-                    f"Provided target not in given columns: \ntarget => \
-                        {target}\ncolumns => {self.all_columns}"
-                )
-
-        # Handle weights
+        self.target_given = len(self.target_columns) > 0
         self.weights_given = len(self.weights_column) > 0
-        if self.weights_given and not self.target_given:
-            raise ValueError("Weights can only be used when a target is provided")
-        if self.weights_given:
-            if weights in self.all_columns:
-                self.weights_index = self.all_columns.index(self.weights_column)
-            else:
-                raise ValueError(
-                    f"Provided weights not in given columns: \nweights => \
-                        {weights}\ncolumns => {self.all_columns}"
-                )
+        if self.target_given:
+            for target in self.target_columns:
+                if target not in self.all_columns:
+                    raise ValueError(
+                        f"Provided target not in given columns: \ntarget => \
+                            {target}\ncolumns => {self.all_columns}")
+            
+            self.target_indices = [self.all_columns.index(target) for target in self.target_columns]
 
-        self.train_columns = [c for c in self.all_columns if c not in [target, weights]]
+            # Handle weights
+            if self.weights_given:
+                if weights in self.all_columns:
+                    self.weights_index = self.all_columns.index(self.weights_column)
+                    self.train_indices = [c for c in range(len(self.all_columns)) if c not in self.target_indices+[self.weights_index]]
+                else:
+                    raise ValueError(
+                        f"Provided weights not in given columns: \nweights => \
+                            {weights}\ncolumns => {self.all_columns}"
+                    )
+            else:
+                self.train_indices = [c for c in range(len(self.all_columns)) if c not in self.target_indices]
+                
+        elif self.weights_given:
+            raise ValueError("Weights can only be used when a target is provided")
+        else:
+            self.train_indices = [c for c in range(len(self.all_columns))]
+
+        self.train_columns = [c for c in self.all_columns if c not in self.target_columns+[self.weights_column]]
+
 
         from ROOT import TMVA, EnableThreadSafety, RDF
 
@@ -315,14 +326,25 @@ class BaseGenerator:
             return np.zeros((self.batch_size, self.num_columns))
 
         if not self.weights_given:
+            if len(self.target_indices) == 1:
+                return np.zeros((self.batch_size, self.num_columns - 1)), np.zeros(
+                (self.batch_size)).reshape(-1,1)
+
             return np.zeros((self.batch_size, self.num_columns - 1)), np.zeros(
-                (self.batch_size)
+                (self.batch_size,len(self.target_indices))
             )
+
+        if len(self.target_indices) == 1:
+            return (
+            np.zeros((self.batch_size, self.num_columns - 2)),
+            np.zeros((self.batch_size)).reshape(-1,1),
+            np.zeros((self.batch_size)).reshape(-1,1),
+        )
 
         return (
             np.zeros((self.batch_size, self.num_columns - 2)),
-            np.zeros((self.batch_size)),
-            np.zeros((self.batch_size)),
+            np.zeros((self.batch_size,len(self.target_indices))),
+            np.zeros((self.batch_size)).reshape(-1,1),
         )
 
     def ConvertBatchToNumpy(self, batch: "RTensor") -> np.ndarray:
@@ -351,22 +373,24 @@ class BaseGenerator:
 
         return_data = np.array(data).reshape(batch_size, num_columns)
 
-        # Splice target column from the data if weight is given
+        # Splice target column from the data if target is given
         if self.target_given:
-            target_data = return_data[:, self.target_index]
-            return_data = np.column_stack((return_data[:, : self.target_index], return_data[:, self.target_index + 1 :])
-            )
+            train_data = return_data[:, self.train_indices]
+            target_data = return_data[:, self.target_indices]
 
-            # Splice weights column from the data if weight is given
+            #Splice weight column from the data if weight is given
             if self.weights_given:
-                if self.target_index < self.weights_index:
-                    self.weights_index -= 1
-
                 weights_data = return_data[:, self.weights_index]
-                return_data = np.column_stack((return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]))
-                return return_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
 
-            return return_data, target_data.reshape(-1,1)
+                if len(self.target_indices) == 1:
+                    return train_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
+                
+                return train_data, target_data, weights_data.reshape(-1,1)
+
+            if len(self.target_indices) == 1:
+                    return train_data, target_data.reshape(-1,1)
+
+            return train_data, target_data
 
         return return_data
 
@@ -393,22 +417,24 @@ class BaseGenerator:
 
         return_data = torch.Tensor(data).reshape(batch_size, num_columns)
 
-        # Splice target column from the data if weight is given
+        # Splice target column from the data if target is given
         if self.target_given:
-            target_data = return_data[:, self.target_index]
-            return_data = torch.column_stack((return_data[:, : self.target_index], return_data[:, self.target_index + 1 :]))
+            train_data = return_data[:, self.train_indices]
+            target_data = return_data[:, self.target_indices]
 
-            # Splice weights column from the data if weight is given
+            #Splice weight column from the data if weight is given
             if self.weights_given:
-                if self.target_index < self.weights_index:
-                    self.weights_index -= 1
-
                 weights_data = return_data[:, self.weights_index]
-                return_data = torch.column_stack((return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]))
 
-                return return_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
+                if len(self.target_indices) == 1:
+                    return train_data, target_data.reshape(-1,1), weights_data.reshape(-1,1)
+                
+                return train_data, target_data, weights_data.reshape(-1,1)
 
-            return return_data, target_data.reshape(-1,1)
+            if len(self.target_indices) == 1:
+                    return train_data, target_data.reshape(-1,1)
+
+            return train_data, target_data
 
         return return_data
 
@@ -438,21 +464,17 @@ class BaseGenerator:
 
         # Splice target column from the data if weight is given
         if self.target_given:
-            target_data = return_data[:, self.target_index]
-            return_data = tf.concat([return_data[:, : self.target_index], return_data[:, self.target_index + 1 :]], axis=1)
+            train_data = tf.gather(return_data, indices=self.train_indices, axis=1)
+            target_data = tf.gather(return_data, indices=self.target_indices, axis=1)
 
-            # Splice weights column from the data if weight is given
+            #Splice weight column from the data if weight is given
             if self.weights_given:
-                if self.target_index < self.weights_index:
-                    self.weights_index -= 1
+                weights_data = tf.gather(return_data, indices=[self.weights_index], axis=1)
 
-                weights_data = return_data[:, self.weights_index]
-                return_data = tf.concat([return_data[:, : self.weights_index], return_data[:, self.weights_index + 1 :]], axis=1)
+                return train_data, target_data, weights_data
 
-                return return_data, tf.expand_dims(target_data,axis=1), tf.expand_dims(weights_data,axis=1)
-
-            return return_data, tf.expand_dims(target_data,axis=1)
-
+            return train_data, target_data
+            
         return return_data
 
     # Return a batch when available
@@ -652,7 +674,7 @@ def CreateNumPyGenerators(
     filters: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
-    target: str = "",
+    target: str|list[str] = list(),
     weights: str = "",
     validation_split: float = 0.0,
     max_chunks: int = 0,
@@ -685,8 +707,8 @@ def CreateNumPyGenerators(
         max_vec_sizes (list[int], optional):
             Size of each column that consists of vectors.
             Required when using vector based columns
-        target (str, optional):
-            Column that is used as target.
+        target (str|list[str], optional):
+            Column(s) used as target.
         weights (str, optional):
             Column used to weight events.
             Can only be used when a target is given
@@ -748,7 +770,7 @@ def CreateTFGenerators(
     filters: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
-    target: str = "",
+    target: str|list[str] = list(),
     weights: str = "",
     validation_split: float = 0.0,
     max_chunks: int = 0,
@@ -781,8 +803,8 @@ def CreateTFGenerators(
         max_vec_sizes (list[int], optional):
             Size of each column that consists of vectors.
             Required when using vector based columns
-        target (str, optional):
-            Column that is used as target.
+        target (str|list[str], optional):
+            Column(s) used as target.
         weights (str, optional):
             Column used to weight events.
             Can only be used when a target is given
@@ -844,7 +866,7 @@ def CreatePyTorchGenerators(
     filters: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
-    target: str = "",
+    target: str|list[str] = list(),
     weights: str = "",
     validation_split: float = 0.0,
     max_chunks: int = 0,
@@ -877,8 +899,8 @@ def CreatePyTorchGenerators(
         max_vec_sizes (list[int], optional):
             Size of each column that consists of vectors.
             Required when using vector based columns
-        target (str, optional):
-            Column that is used as target.
+        target (str|list[str], optional):
+            Column(s) used as target.
         weights (str, optional):
             Column used to weight events.
             Can only be used when a target is given
