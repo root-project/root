@@ -122,7 +122,7 @@ endif()
 if(builtin_freetype)
   set(freetype_version 2.12.1)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
-  set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(FREETYPE_LIBRARY ${ROOT_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     set(freetypebuild "Release")
     set(freetypelib freetype.lib)
@@ -132,9 +132,9 @@ if(builtin_freetype)
     endif()
     ExternalProject_Add(
       FREETYPE
-      URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
+      URL ${ROOT_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      INSTALL_DIR ${ROOT_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/${freetypelib} ${FREETYPE_LIBRARY}
@@ -154,7 +154,7 @@ if(builtin_freetype)
     endif()
     ExternalProject_Add(
       FREETYPE
-      URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
+      URL ${ROOT_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
                          --disable-shared --with-png=no --with-bzip2=no
@@ -166,7 +166,7 @@ if(builtin_freetype)
       TIMEOUT 600
     )
   endif()
-  set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/include)
+  set(FREETYPE_INCLUDE_DIR ${ROOT_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
   set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY})
   set(FREETYPE_TARGET FREETYPE)
@@ -216,12 +216,12 @@ if(builtin_lzma)
   set(LZMA_TARGET LZMA)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
-    set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
+    set(LIBLZMA_LIBRARIES ${ROOT_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win64.tar.gz)
+      set(LZMA_URL ${ROOT_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win64.tar.gz)
       set(LZMA_URL_HASH SHA256=76ba7cdff547141f6d6810c8600a9d782feca343debde378fc8f6a307cbfd1d2)
     else()
-      set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz)
+      set(LZMA_URL ${ROOT_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz)
       set(LZMA_URL_HASH SHA256=a923ee68d836de5492d8de0fec467b9536f2543c8579ca11f4b5e6f46a8cda8c)
     endif()
     ExternalProject_Add(
@@ -229,14 +229,14 @@ if(builtin_lzma)
       URL ${LZMA_URL}
       URL_HASH ${LZMA_URL_HASH}
       PREFIX LZMA
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      INSTALL_DIR ${ROOT_BINARY_DIR}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1
       TIMEOUT 600
     )
-    set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
+    set(LIBLZMA_INCLUDE_DIR ${ROOT_BINARY_DIR}/LZMA/src/LZMA/include)
   else()
     if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
       set(LIBLZMA_CFLAGS "-Wno-format-nonliteral")
@@ -247,13 +247,13 @@ if(builtin_lzma)
     if(CMAKE_OSX_SYSROOT)
       set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
-    set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(LIBLZMA_LIBRARIES ${ROOT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -O3")
     ExternalProject_Add(
       LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
+      URL ${ROOT_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
       URL_HASH SHA256=b512f3b726d3b37b6dc4c8570e137b9311e7552e8ccbab4d39d47ce5f4177145
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      INSTALL_DIR ${ROOT_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
                         --disable-scripts --disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-lzma-links
@@ -262,7 +262,7 @@ if(builtin_lzma)
       BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
       TIMEOUT 600
     )
-    set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    set(LIBLZMA_INCLUDE_DIR ${ROOT_BINARY_DIR}/include)
   endif()
 endif()
 
@@ -423,7 +423,7 @@ if(asimage AND NOT builtin_afterimage)
 endif()
 
 if(builtin_afterimage)
-  set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(AFTERIMAGE_LIBRARIES ${ROOT_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
       set(astepbld "Debug")
@@ -432,8 +432,8 @@ if(builtin_afterimage)
     endif()
     ExternalProject_Add(
       AFTERIMAGE
-      DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${ROOT_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
+      INSTALL_DIR ${ROOT_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_VERBOSE_MAKEFILE=ON -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${astepbld}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${astepbld}/libAfterImage.lib <INSTALL_DIR>/lib/
@@ -441,7 +441,7 @@ if(builtin_afterimage)
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
       TIMEOUT 600
     )
-    set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
+    set(AFTERIMAGE_INCLUDE_DIR ${ROOT_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
     message(STATUS "Building AfterImage library included in ROOT itself")
     if(JPEG_FOUND)
@@ -473,8 +473,8 @@ if(builtin_afterimage)
     endif()
     ExternalProject_Add(
       AFTERIMAGE
-      DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${ROOT_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
+      INSTALL_DIR ${ROOT_BINARY_DIR}
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
                         --with-ttf ${_ttf_include} --with-afterbase=no
@@ -486,7 +486,7 @@ if(builtin_afterimage)
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
       TIMEOUT 600
     )
-    set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libAfterImage)
+    set(AFTERIMAGE_INCLUDE_DIR ${ROOT_BINARY_DIR}/include/libAfterImage)
   endif()
   if(builtin_freetype)
     add_dependencies(AFTERIMAGE FREETYPE)
@@ -522,9 +522,9 @@ if(mathmore OR builtin_gsl)
     set(gsl_version 2.5)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     foreach(l gsl gslcblas)
-      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+      list(APPEND GSL_LIBRARIES ${ROOT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
-    set(GSL_CBLAS_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gslcblas${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(GSL_CBLAS_LIBRARY ${ROOT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gslcblas${CMAKE_STATIC_LIBRARY_SUFFIX})
     if(CMAKE_OSX_SYSROOT)
       set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
       set(_gsl_ldflags  "-isysroot ${CMAKE_OSX_SYSROOT}")
@@ -535,7 +535,7 @@ if(mathmore OR builtin_gsl)
       URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
       URL_HASH SHA256=0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d
       SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      INSTALL_DIR ${ROOT_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
                         --enable-shared=no --with-pic
@@ -549,7 +549,7 @@ if(mathmore OR builtin_gsl)
     )
     set(GSL_TARGET GSL)
     # FIXME: one need to find better way to extract path with GSL include files
-    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
+    set(GSL_INCLUDE_DIR ${ROOT_BINARY_DIR}/GSL-prefix/src/GSL-build)
     set(GSL_FOUND ON)
     set(mathmore ON CACHE BOOL "Enabled because builtin_gls requested (${mathmore_description})" FORCE)
   endif()
@@ -825,12 +825,12 @@ endif()
 if(builtin_fftw3)
   set(FFTW_VERSION 3.3.8)
   message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
-  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
+  set(FFTW_LIBRARIES ${ROOT_BINARY_DIR}/lib/libfftw3.a)
   ExternalProject_Add(
     FFTW3
     URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
     URL_HASH SHA256=6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    INSTALL_DIR ${ROOT_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -838,7 +838,7 @@ if(builtin_fftw3)
     BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
     TIMEOUT 600
   )
-  set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(FFTW_INCLUDE_DIR ${ROOT_BINARY_DIR}/include)
   set(FFTW3_TARGET FFTW3)
   set(fftw3 ON CACHE BOOL "Enabled because builtin_fftw3 requested (${fftw3_description})" FORCE)
 endif()
@@ -857,7 +857,7 @@ if(fitsio OR builtin_cfitsio)
     set(cfitsio_version 3.450)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
-    set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(CFITSIO_LIBRARIES ${ROOT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
     if(WIN32)
       if(winrtdebug)
         set(cfitsiobuild "Debug")
@@ -869,7 +869,7 @@ if(fitsio OR builtin_cfitsio)
         # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfit3450.zip
         URL_HASH SHA256=1d13073967654a48d47535ff33392656f252511ddf29059d7c7dc3ce8f2a1041
-        INSTALL_DIR ${CMAKE_BINARY_DIR}
+        INSTALL_DIR ${ROOT_BINARY_DIR}
         CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
         BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${cfitsiobuild}
         INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.dll <INSTALL_DIR>/bin
@@ -878,15 +878,15 @@ if(fitsio OR builtin_cfitsio)
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
         TIMEOUT 600
       )
-      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
-      install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "cfitsio*.dll")
+      set(CFITSIO_INCLUDE_DIR ${ROOT_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
+      install(DIRECTORY ${ROOT_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "cfitsio*.dll")
     else()
       ExternalProject_Add(
         CFITSIO
         # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL_HASH SHA256=bf6012dbe668ecb22c399c4b7b2814557ee282c74a7d5dc704eb17c30d9fb92e
-        INSTALL_DIR ${CMAKE_BINARY_DIR}
+        INSTALL_DIR ${ROOT_BINARY_DIR}
         CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
         BUILD_IN_SOURCE 1
@@ -900,7 +900,7 @@ if(fitsio OR builtin_cfitsio)
       if(CURL_FOUND)
         set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARIES} ${CURL_LIBRARIES})
       endif()
-      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+      set(CFITSIO_INCLUDE_DIR ${ROOT_BINARY_DIR}/include)
     endif()
     set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
     set(CFITSIO_TARGET CFITSIO)
@@ -1055,8 +1055,8 @@ if(builtin_ftgl)
     unset(${var})
     unset(${var} CACHE)
   endforeach()
-  set(FTGL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/graf3d/ftgl/inc)
-  set(FTGL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/graf3d/ftgl/inc)
+  set(FTGL_INCLUDE_DIR ${ROOT_SOURCE_DIR}/graf3d/ftgl/inc)
+  set(FTGL_INCLUDE_DIRS ${ROOT_SOURCE_DIR}/graf3d/ftgl/inc)
   set(FTGL_CFLAGS -DBUILTIN_FTGL)
   set(FTGL_LIBRARIES FTGL)
 endif()
@@ -1264,43 +1264,43 @@ if(builtin_tbb)
       set(tbb_build Debug)
       set(tbbsuffix "_debug")
     endif()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
+    set(TBB_LIBRARIES ${ROOT_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
     ExternalProject_Add(
       TBB
       URL ${tbb_url}
       URL_HASH SHA256=${tbb_sha256}
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
+      INSTALL_DIR ${ROOT_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${ROOT_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${ROOT_BINARY_DIR}/include"
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${tbb_build}
       INSTALL_COMMAND ${CMAKE_COMMAND}  --install . --config ${tbb_build}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
       TIMEOUT 600
     )
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
+    install(DIRECTORY ${ROOT_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
+    install(DIRECTORY ${ROOT_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
   else()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(TBB_LIBRARIES ${ROOT_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       TBB
       URL ${tbb_url}
       URL_HASH SHA256=${tbb_sha256}
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
+      INSTALL_DIR ${ROOT_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${ROOT_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${ROOT_BINARY_DIR}/include"
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
       TIMEOUT 600
     )
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
+    install(DIRECTORY ${ROOT_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
 
   ExternalProject_Add_Step(
      TBB tbb2externals
-     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/tbb ${CMAKE_BINARY_DIR}/ginclude/tbb
-     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/oneapi ${CMAKE_BINARY_DIR}/ginclude/oneapi
+     COMMAND ${CMAKE_COMMAND} -E copy_directory ${ROOT_BINARY_DIR}/include/tbb ${ROOT_BINARY_DIR}/ginclude/tbb
+     COMMAND ${CMAKE_COMMAND} -E copy_directory ${ROOT_BINARY_DIR}/include/oneapi ${ROOT_BINARY_DIR}/ginclude/oneapi
      DEPENDEES install
   )
-  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
+  set(TBB_INCLUDE_DIRS ${ROOT_BINARY_DIR}/ginclude)
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
   # The following line is needed to generate the proper dependency with: BUILTINS TBB (in Imt)
   # and generated with this syntax: add_dependencies(${library} ${${arg1}_TARGET})
@@ -1341,7 +1341,7 @@ if(vc AND NOT Vc_FOUND)
   set(Vc_VERSION "1.4.4")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
-  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
+  set(Vc_DESTDIR "${ROOT_BINARY_DIR}/externals")
   set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(Vc_LIBRARY "${Vc_ROOTDIR}/lib/${Vc_LIBNAME}")
@@ -1384,12 +1384,12 @@ if(vc AND NOT Vc_FOUND)
   # FIXME: This is a workaround to let ROOT find the headers at runtime if
   # they are in the build directory. This is necessary until we decide how to
   # treat externals with headers used by ROOT
-  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/Vc)
-    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+  if(NOT EXISTS ${ROOT_BINARY_DIR}/include/Vc)
+    if (NOT EXISTS ${ROOT_BINARY_DIR}/include)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${ROOT_BINARY_DIR}/include)
     endif()
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
+      ${Vc_INCLUDE_DIR}/Vc ${ROOT_BINARY_DIR}/include/Vc)
   endif()
   # end of workaround
 
@@ -1442,7 +1442,7 @@ if(builtin_veccore)
   set(VecCore_VERSION "0.7.0")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
-  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
+  set(VecCore_DESTDIR "${ROOT_BINARY_DIR}/externals")
   set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
 
   ExternalProject_Add(VECCORE
@@ -1490,12 +1490,12 @@ if(builtin_veccore)
   # FIXME: This is a workaround to let ROOT find the headers at runtime if
   # they are in the build directory. This is necessary until we decide how to
   # treat externals with headers used by ROOT
-  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/VecCore)
-    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+  if(NOT EXISTS ${ROOT_BINARY_DIR}/include/VecCore)
+    if (NOT EXISTS ${ROOT_BINARY_DIR}/include)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${ROOT_BINARY_DIR}/include)
     endif()
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
+      ${VecCore_ROOTDIR}/include/VecCore ${ROOT_BINARY_DIR}/include/VecCore)
   endif()
   # end of workaround
 
@@ -1533,12 +1533,12 @@ if(vdt OR builtin_vdt)
   if(builtin_vdt)
     set(vdt_version 0.4.4)
     set(VDT_FOUND True)
-    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(VDT_LIBRARIES ${ROOT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       URL_HASH SHA256=8b1664b45ec82042152f89d171dd962aea9bb35ac53c8eebb35df1cb9c34e498
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      INSTALL_DIR ${ROOT_BINARY_DIR}
       CMAKE_ARGS
         -DSSE=OFF # breaks on ARM without this
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -1553,14 +1553,14 @@ if(vdt OR builtin_vdt)
     )
     ExternalProject_Add_Step(
        VDT copy2externals
-       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
+       COMMAND ${CMAKE_COMMAND} -E copy_directory ${ROOT_BINARY_DIR}/include/vdt ${ROOT_BINARY_DIR}/ginclude/vdt
        DEPENDEES install
     )
-    set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
-    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
+    set(VDT_INCLUDE_DIR ${ROOT_BINARY_DIR}/ginclude)
+    set(VDT_INCLUDE_DIRS ${ROOT_BINARY_DIR}/ginclude)
+    install(FILES ${ROOT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
+    install(DIRECTORY ${ROOT_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
     set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
@@ -1953,19 +1953,19 @@ if(webgui)
      # should be used only for debug purposes to be able try different openui5 version
      # cannot be used for installation purposes
      message(STATUS "openui5 - use from $ENV{OPENUI5DIR}, only for debug purposes")
-     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui5)
+     file(MAKE_DIRECTORY ${ROOT_BINARY_DIR}/ui5)
      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
+        $ENV{OPENUI5DIR} ${ROOT_BINARY_DIR}/ui5/distribution)
   else()
     if(builtin_openui5)
       ExternalProject_Add(
         OPENUI5
-        URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
+        URL ${ROOT_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
         URL_HASH SHA256=cc6791ac9c064c3e3f8281870063c549fa5e3f1252095ccc5d542c33db9cf8b2
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
+        SOURCE_DIR ${ROOT_BINARY_DIR}/ui5/distribution
         TIMEOUT 600
       )
     else()
@@ -1976,33 +1976,33 @@ if(webgui)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
+        SOURCE_DIR ${ROOT_BINARY_DIR}/ui5/distribution
         TIMEOUT 600
       )
     endif()
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+    install(DIRECTORY ${ROOT_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
   endif()
   ExternalProject_Add(
     RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.2.tar.gz
+    URL ${ROOT_SOURCE_DIR}/builtins/rendercore/RenderCore-1.2.tar.gz
     URL_HASH SHA256=a02bafaf2fa84977f70622370be6b37c36dcf4811cd20ffddad2e686220a1e85
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
+    SOURCE_DIR ${ROOT_BINARY_DIR}/ui5/eve7/rcore
     TIMEOUT 600
   )
   ExternalProject_Add(
      MATHJAX
-     URL ${CMAKE_SOURCE_DIR}/documentation/doxygen/mathjax.tar.gz
+     URL ${ROOT_SOURCE_DIR}/documentation/doxygen/mathjax.tar.gz
      URL_HASH SHA256=c5e22e60430a65963a87ab4dcc8856b9be5bd434d3b3871f27ee65b584c3c3ea
      CONFIGURE_COMMAND ""
      BUILD_COMMAND ""
      INSTALL_COMMAND ""
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
+     SOURCE_DIR ${ROOT_BINARY_DIR}/js/mathjax/
      TIMEOUT 600
   )
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+  install(DIRECTORY ${ROOT_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()
 
 #------------------------------------------------------------------------------------

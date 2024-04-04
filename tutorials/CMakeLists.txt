@@ -17,13 +17,13 @@ find_package(ROOT REQUIRED)
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
   if(NOT MSVC)  # Ignore environment on Windows
-    set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                     ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
-                     ROOTSYS=${CMAKE_BINARY_DIR}
-                     PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+    set(ROOT_environ PATH=${ROOT_BINARY_DIR}/bin:$ENV{PATH}
+                     ${ld_library_path}=${ROOT_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                     ROOTSYS=${ROOT_BINARY_DIR}
+                     PYTHONPATH=${ROOT_BINARY_DIR}/lib:$ENV{PYTHONPATH})
   else()
-    set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
-                     PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
+    set(ROOT_environ ROOTSYS=${ROOT_BINARY_DIR}
+                     PYTHONPATH=${ROOT_BINARY_DIR}/bin;$ENV{PYTHONPATH})
   endif()
 else()                       # testing using an installation
   include(${ROOT_USE_FILE})
@@ -311,7 +311,7 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
   else()
     #copy ONNX file needed for the tutorial
-    configure_file(${CMAKE_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/tmva/Linear_16.onnx COPYONLY)
+    configure_file(${ROOT_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${ROOT_BINARY_DIR}/tutorials/tmva/Linear_16.onnx COPYONLY)
   endif()
 
 endif()

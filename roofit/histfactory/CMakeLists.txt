@@ -100,7 +100,7 @@ if(xml)
   #---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
   generateHeader(hist2workspace
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py
-    ${CMAKE_BINARY_DIR}/ginclude/hist2workspaceCommandLineOptionsHelp.h
+    ${ROOT_BINARY_DIR}/ginclude/hist2workspaceCommandLineOptionsHelp.h
   )
 endif()
 
