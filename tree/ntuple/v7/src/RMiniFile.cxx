@@ -1336,7 +1336,7 @@ int FSeek64(FILE *stream, std::int64_t offset, int origin)
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Flush()
 {
-   // Write the last partially filled block.
+   // Write the last partially filled block, which may still need appropriate alignment for Direct I/O.
    // If it is the first block, get the updated header block.
    if (fBlockOffset == 0) {
       std::size_t headerBlockSize = kHeaderBlockSize;
@@ -1352,6 +1352,12 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Flush()
 
    std::size_t lastBlockSize = fFilePos - fBlockOffset;
    R__ASSERT(lastBlockSize <= kBlockSize);
+   if (fDirectIO) {
+      // Round up to a multiple of kBlockAlign.
+      lastBlockSize += kBlockAlign - 1;
+      lastBlockSize = (lastBlockSize / kBlockAlign) * kBlockAlign;
+      R__ASSERT(lastBlockSize <= kBlockSize);
+   }
    retval = fwrite(fBlock, 1, lastBlockSize, fFile);
    if (retval != lastBlockSize)
       throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
@@ -1513,6 +1519,9 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    // Add the equivalent flag that is passed by fopen64.
    flags |= O_LARGEFILE;
 #endif
+   if (options.GetUseDirectIO()) {
+      flags |= O_DIRECT;
+   }
    int fd = open(std::string(path).c_str(), flags, 0666);
    FILE *fileStream = fdopen(fd, "wb");
 #else
@@ -1528,6 +1537,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize()));
    writer->fFileSimple.fFile = fileStream;
+   writer->fFileSimple.fDirectIO = options.GetUseDirectIO();
    writer->fFileName = fileName;
 
    int defaultCompression = options.GetCompression();

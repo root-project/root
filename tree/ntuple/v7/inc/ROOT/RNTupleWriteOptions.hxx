@@ -76,6 +76,9 @@ protected:
    /// Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
    /// to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
    bool fUseBufferedWrite = true;
+   /// Whether to use Direct I/O for writing. Note that this introduces alignment requirements that may very between
+   /// filesystems and platforms.
+   bool fUseDirectIO = false;
    /// Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
@@ -117,6 +120,9 @@ public:
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
+
+   bool GetUseDirectIO() const { return fUseDirectIO; }
+   void SetUseDirectIO(bool val) { fUseDirectIO = val; }
 
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
