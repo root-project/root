@@ -94,6 +94,11 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #   include <sys/types.h>
 #endif
 
+#if __cplusplus >= 201703L
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
+
 #include "Bytes.h"
 #include "Compression.h"
 #include "RConfigure.h"
@@ -519,6 +524,16 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    // Connect to file system stream
    if (create || update) {
+#if __cplusplus >= 201703L
+       const auto dir = fs::path(fname.Data()).parent_path();
+       if (not fs::exists(dir)) {
+           if (not fs::create_directories(dir)) {
+               fD = -1;
+               zombify();
+               return;
+           }
+       }
+#endif
 #ifndef WIN32
       fD = TFile::SysOpen(fname.Data(), O_RDWR | O_CREAT, 0644);
 #else
