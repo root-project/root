@@ -2834,6 +2834,14 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
         return true;
     }
 
+// The automatic conversion of ordinary obejcts to smart pointers is disabled
+// for PyROOT because it can cause trouble with overload resolution. If a
+// function has overloads for both ordinary objects and smart pointers, then
+// the implicit conversion to smart pointers can result in the smart pointer
+// overload being hit, even though there would be an overload for the regular
+// object. Since PyROOT didn't have this feature before 6.32 anyway, disabling
+// it was the safest option.
+#if 0
 // for the case where we have an ordinary object to convert
     if (!pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
     // create the relevant smart pointer and make the pyobject "smart"
@@ -2852,6 +2860,7 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
 
         return true;
     }
+#endif
 
 // final option, try mapping pointer types held (TODO: do not allow for non-const ref)
     if (pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
