@@ -255,6 +255,63 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
         self.teardown_file(self.file_name1)
         self.teardown_file(self.file_name2)
+    
+    def test07_multiple_target_columns(self):
+        df = ROOT.RDataFrame(10)\
+            .Define("b1", "(Short_t) rdfentry_")\
+            .Define("b2", "(UShort_t) b1 * b1")\
+            .Define("b3", "(double) rdfentry_ * 10")\
+            .Define("b4", "(double) b3 * 10")
+        
+        gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+        batch_size=3,
+        chunk_size=5,
+        rdataframe=df,
+        target=["b2","b4"],
+        weights="b3",
+        validation_split=0.3,
+        shuffle=False,
+        drop_remainder=False
+        )
+        
+        results_x_train = [2.0, 3.0, 4.0, 7.0, 8.0, 9.0]
+        results_x_val = [0.0, 1.0, 5.0, 6.0]
+        results_y_train = [4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
+        results_y_val = [0.0, 0.0, 1.0, 100.0, 25.0, 500.0, 36.0, 600.0]
+        results_z_train = [20.0, 30.0, 40.0, 70.0, 80.0, 90.0]
+        results_z_val = [0.0, 10.0, 50.0, 60.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
+
+        for x, y, z in gen_train:
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+            collected_z_train.append(z.tolist())
+        
+        for x, y, z in gen_validation:
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+            collected_z_val.append(z.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+
+        self.assertEqual(results_x_train, flat_x_train)
+        self.assertEqual(results_x_val, flat_x_val)
+        self.assertEqual(results_y_train, flat_y_train)
+        self.assertEqual(results_y_val, flat_y_val)
+        self.assertEqual(results_z_train, flat_z_train)
+        self.assertEqual(results_z_val, flat_z_val)    
+
 
 if __name__ == 'main':
     unittest.main()
