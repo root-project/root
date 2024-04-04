@@ -114,12 +114,11 @@ double RooJohnson::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of the Johnson distribution.
-void RooJohnson::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooJohnson::doEval(RooFit::EvalContext &ctx) const
 {
-  std::array<double, 1> extraArgs{_massThreshold};
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Johnson, output, nEvents,
-          {dataMap.at(_mass), dataMap.at(_mu), dataMap.at(_lambda), dataMap.at(_gamma), dataMap.at(_delta)},
-          extraArgs);
+   std::array<double, 1> extraArgs{_massThreshold};
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Johnson, ctx.output(),
+                            {ctx.at(_mass), ctx.at(_mu), ctx.at(_lambda), ctx.at(_gamma), ctx.at(_delta)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -15,7 +15,7 @@
 #ifndef RooFit_BatchModeDataHelpers_h
 #define RooFit_BatchModeDataHelpers_h
 
-#include <RooFit/Detail/DataMap.h>
+#include <RooFit/EvalContext.h>
 
 #include <ROOT/RSpan.hxx>
 #include <string_view>

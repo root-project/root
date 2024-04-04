@@ -50,11 +50,11 @@ gSigBkg.setConstant()
 
 # Create an example dataset with 160 observed events
 obs.setVal(160.0)
-data = ROOT.RooDataSet("exampleData", "exampleData", {obs})
-data.add(obs)
+dataOrig = ROOT.RooDataSet("exampleData", "exampleData", {obs})
+dataOrig.add(obs)
 
 # not necessary
-modelWithConstraints.fitTo(data, Constrain=constrainedParams, PrintLevel=-1)
+modelWithConstraints.fitTo(dataOrig, Constrain=constrainedParams, PrintLevel=-1)
 
 # Now let's make some confidence intervals for s, our parameter of interest
 modelConfig = ROOT.RooStats.ModelConfig(wspace)
@@ -65,9 +65,12 @@ modelConfig.SetObservables(obs)
 modelConfig.SetGlobalObservables({gSigEff, gSigBkg})
 modelConfig.SetName("ModelConfig")
 wspace.Import(modelConfig)
-wspace.Import(data)
+wspace.Import(dataOrig)
 wspace.SetName("w")
 wspace.writeToFile("rs101_ws.root")
+
+# Make sure we reference the data in the workspace from now on
+data = wspace[dataOrig.GetName()]
 
 # First, let's use a Calculator based on the Profile Likelihood Ratio
 plc = ROOT.RooStats.ProfileLikelihoodCalculator(data, modelConfig)
@@ -175,10 +178,3 @@ t.Stop()
 t.Print()
 
 dataCanvas.SaveAs("rs101_limitexample.png")
-
-# TODO: The MCMCCalculator has to be destructed first. Otherwise, we can get
-# segmentation faults depending on the destruction order, which is random in
-# Python. Probably the issue is that some object has a non-owning pointer to
-# another object, which it uses in its destructor. This should be fixed either
-# in the design of RooStats in C++, or with phythonizations.
-del mc

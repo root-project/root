@@ -79,9 +79,12 @@ public:
    }
    TObject *clone(const char *newname) const override { return new RooOffsetPdf(*this, newname); }
 
-   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const override
+   void doEval(RooFit::EvalContext &ctx) const override
    {
-      std::span<const double> weights = dataMap.at(_weightVar);
+      std::span<double> output = ctx.output();
+      std::size_t nEvents = output.size();
+
+      std::span<const double> weights = ctx.at(_weightVar);
 
       // Create the template histogram from the data. This operation is very
       // expensive, but since the offset only depends on the observables it
@@ -91,7 +94,7 @@ public:
       // Loop over events to fill the histogram
       for (std::size_t i = 0; i < nEvents; ++i) {
          for (auto *var : static_range_cast<RooRealVar *>(_observables)) {
-            var->setVal(dataMap.at(var)[i]);
+            var->setVal(ctx.at(var)[i]);
          }
          dataHist.add(_observables, weights[weights.size() == 1 ? 0 : i]);
       }
@@ -100,7 +103,7 @@ public:
       RooHistPdf pdf{"offsetPdf", "offsetPdf", _observables, dataHist};
       for (std::size_t i = 0; i < nEvents; ++i) {
          for (auto *var : static_range_cast<RooRealVar *>(_observables)) {
-            var->setVal(dataMap.at(var)[i]);
+            var->setVal(ctx.at(var)[i]);
          }
          output[i] = pdf.getVal(_observables);
       }
@@ -205,7 +208,8 @@ void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgS
    }
 }
 
-double RooNLLVarNew::computeBatchBinnedL(std::span<const double> preds, std::span<const double> weights) const
+void RooNLLVarNew::doEvalBinnedL(RooFit::EvalContext &ctx, std::span<const double> preds,
+                                 std::span<const double> weights) const
 {
    ROOT::Math::KahanSum<double> result{0.0};
    ROOT::Math::KahanSum<double> sumWeightKahanSum{0.0};
@@ -230,29 +234,21 @@ double RooNLLVarNew::computeBatchBinnedL(std::span<const double> preds, std::spa
       }
    }
 
-   return finalizeResult(result, sumWeightKahanSum.Sum());
+   finalizeResult(ctx, result, sumWeightKahanSum.Sum());
 }
 
-/** Compute multiple negative logs of probabilities.
-
-\param output An array of doubles where the computation results will be stored
-\param nOut not used
-\note nEvents is the number of events to be processed (the dataMap size)
-\param dataMap A map containing spans with the input data for the computation
-**/
-void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail::DataMap const &dataMap) const
+void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
 {
-   std::span<const double> weights = dataMap.at(_weightVar);
-   std::span<const double> weightsSumW2 = dataMap.at(_weightSquaredVar);
+   std::span<const double> weights = ctx.at(_weightVar);
+   std::span<const double> weightsSumW2 = ctx.at(_weightSquaredVar);
 
    if (_binnedL) {
-      output[0] = computeBatchBinnedL(dataMap.at(&*_pdf), _weightSquared ? weightsSumW2 : weights);
-      return;
+      return doEvalBinnedL(ctx, ctx.at(&*_pdf), _weightSquared ? weightsSumW2 : weights);
    }
 
-   auto config = dataMap.config(this);
+   auto config = ctx.config(this);
 
-   auto probas = dataMap.at(_pdf);
+   auto probas = ctx.at(_pdf);
 
    _sumWeight = weights.size() == 1 ? weights[0] * probas.size()
                                     : RooBatchCompute::reduceSum(config, weights.data(), weights.size());
@@ -262,7 +258,7 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
    }
 
    auto nllOut = RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights,
-                                            _doBinOffset ? dataMap.at(*_offsetPdf) : std::span<const double>{});
+                                            _doBinOffset ? ctx.at(*_offsetPdf) : std::span<const double>{});
 
    if (nllOut.nLargeValues > 0) {
       oocoutW(&*_pdf, Eval) << "RooAbsPdf::getLogVal(" << _pdf->GetName()
@@ -276,17 +272,11 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
    }
 
    if (_expectedEvents) {
-      std::span<const double> expected = dataMap.at(*_expectedEvents);
+      std::span<const double> expected = ctx.at(*_expectedEvents);
       nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected[0], _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
    }
 
-   output[0] = finalizeResult({nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
-}
-
-void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
-{
-   // strip away the special variables
-   params->remove(RooArgList{*_weightVar, *_weightSquaredVar}, true, true);
+   finalizeResult(ctx, {nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -322,7 +312,7 @@ void RooNLLVarNew::enableOffsetting(bool flag)
    _offset = ROOT::Math::KahanSum<double>{};
 }
 
-double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const
+void RooNLLVarNew::finalizeResult(RooFit::EvalContext &ctx, ROOT::Math::KahanSum<double> result, double weightSum) const
 {
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
@@ -338,13 +328,8 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
       if (_offset.Sum() == 0 && _offset.Carry() == 0 && (result.Sum() != 0 || result.Carry() != 0)) {
          _offset = result;
       }
-
-      // Subtract offset
-      if (!RooAbsReal::hideOffset()) {
-         result -= _offset;
-      }
    }
-   return result.Sum();
+   ctx.setOutputWithOffset(this, result, _offset);
 }
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const

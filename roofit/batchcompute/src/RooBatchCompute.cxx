@@ -45,7 +45,7 @@ namespace RF_ARCH {
 
 namespace {
 
-void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, ArgSpan extraArgs)
+void fillBatches(Batches &batches, double *output, size_t nEvents, std::size_t nBatches, ArgSpan extraArgs)
 {
    batches.extra = extraArgs.data();
    batches.nEvents = nEvents;
@@ -99,24 +99,24 @@ public:
       return out;
    };
 
-   void compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
-                ArgSpan extraArgs) override;
+   void compute(Config const &, Computer computer, std::span<double> output, VarSpan vars, ArgSpan extraArgs) override;
    double reduceSum(Config const &, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
                              std::span<const double> offsetProbas) override;
 
 private:
 #ifdef ROOBATCHCOMPUTE_USE_IMT
-   void computeIMT(Computer computer, RestrictArr output, size_t nEvents, VarSpan vars, ArgSpan extraArgs);
+   void computeIMT(Computer computer, std::span<double> output, VarSpan vars, ArgSpan extraArgs);
 #endif
 
    const std::vector<void (*)(Batches &)> _computeFunctions;
 };
 
 #ifdef ROOBATCHCOMPUTE_USE_IMT
-void RooBatchComputeClass::computeIMT(Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
-                                      ArgSpan extraArgs)
+void RooBatchComputeClass::computeIMT(Computer computer, std::span<double> output, VarSpan vars, ArgSpan extraArgs)
 {
+   std::size_t nEvents = output.size();
+
    if (nEvents == 0)
       return;
    ROOT::Internal::TExecutor ex;
@@ -132,7 +132,7 @@ void RooBatchComputeClass::computeIMT(Computer computer, RestrictArr output, siz
       // Then advance every object but the first to split the work between threads
       Batches batches;
       std::vector<Batch> arrays(vars.size());
-      fillBatches(batches, output, nEventsPerThread, vars.size(), extraArgs);
+      fillBatches(batches, output.data(), nEventsPerThread, vars.size(), extraArgs);
       fillArrays(arrays, vars, nEvents);
       batches.args = arrays.data();
       advance(batches, batches.nEvents * idx);
@@ -168,10 +168,9 @@ In case Implicit Multithreading is enabled, the events to be processed are equal
 divided among the tasks to be generated and computed in parallel.
 \param computer An enum specifying the compute function to be used.
 \param output The array where the computation results are stored.
-\param nEvents The number of events to be processed.
 \param vars A std::span containing pointers to the variables involved in the computation.
 \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
-void RooBatchComputeClass::compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
+void RooBatchComputeClass::compute(Config const &, Computer computer, std::span<double> output, VarSpan vars,
                                    ArgSpan extraArgs)
 {
    // In the original implementation of this library, the evaluation was done
@@ -194,15 +193,17 @@ void RooBatchComputeClass::compute(Config const &, Computer computer, RestrictAr
    // already, even if the latter uses multi-threading.
 #ifdef ROOBATCHCOMPUTE_USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
-      computeIMT(computer, output, nEvents, vars, extraArgs);
+      computeIMT(computer, output, vars, extraArgs);
    }
 #endif
+
+   std::size_t nEvents = output.size();
 
    // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
    // Then advance every object but the first to split the work between threads
    Batches batches;
    std::vector<Batch> arrays(vars.size());
-   fillBatches(batches, output, nEvents, vars.size(), extraArgs);
+   fillBatches(batches, output.data(), nEvents, vars.size(), extraArgs);
    fillArrays(arrays, vars, nEvents);
    batches.args = arrays.data();
 

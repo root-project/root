@@ -412,6 +412,9 @@ Zigzag + split
 : Used on signed integers only; it maps $x$ to $2x$ if $x$ is positive and to $-(2x+1)$ if $x$ is negative.
   Followed by split encoding.
 
+**Note**: these encodings always happen within each page, thus decoding should be done page-wise,
+not cluster-wise.
+
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
 Old readers need to ignore these columns and fields constructed from such columns.
@@ -839,11 +842,12 @@ The behavior depends on whether the class has an associated collection proxy.
 User defined C++ classes are supported with the following limitations
   - The class must have a dictionary
   - All persistent members and base classes must be themselves types with RNTuple I/O support
-  - Transient members must be marked by a `//!` comment
+  - Transient members must be marked, e.g. by a `//!` comment
   - The class must not be in the `std` namespace
   - The class must be empty or splittable (e.g., the class must not provide a custom streamer)
   - There is no support for polymorphism,
     i.e. a field of class `A` cannot store class `B` that derives from `A`
+  - Virtual inheritance is unsupported
 
 User classes are stored as a record mother field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.

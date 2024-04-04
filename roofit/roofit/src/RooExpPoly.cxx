@@ -127,20 +127,20 @@ double RooExpPoly::evaluateLog() const
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Compute multiple values of ExpPoly distribution.
-void RooExpPoly::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooExpPoly::doEval(RooFit::EvalContext &ctx) const
 {
    std::vector<std::span<const double>> vars;
    vars.reserve(_coefList.size() + 1);
-   vars.push_back(dataMap.at(_x));
+   vars.push_back(ctx.at(_x));
 
    std::vector<double> coefVals;
    for (RooAbsArg *coef : _coefList) {
-      vars.push_back(dataMap.at(coef));
+      vars.push_back(ctx.at(coef));
    }
 
    std::array<double, 2> args{static_cast<double>(_lowestOrder), static_cast<double>(_coefList.size())};
 
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ExpPoly, output, nEvents, vars, args);
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::ExpPoly, ctx.output(), vars, args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

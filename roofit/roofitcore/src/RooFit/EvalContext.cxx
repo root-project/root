@@ -11,12 +11,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/Detail/DataMap.h>
+#include <RooFit/EvalContext.h>
 
 #include <RooBatchCompute.h>
 #include <RooRealVar.h>
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace {
 
@@ -30,9 +31,8 @@ void assignSpan(std::span<T> &to, std::span<T> const &from)
 } // namespace
 
 namespace RooFit {
-namespace Detail {
 
-std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*caller*/)
+std::span<const double> EvalContext::at(RooAbsArg const *arg, RooAbsArg const * /*caller*/)
 {
    std::span<const double> out;
 
@@ -41,7 +41,7 @@ std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*ca
       assignSpan(out, {&var->_value, 1});
    } else {
       std::size_t idx = arg->dataToken();
-      out = _dataMap[idx];
+      out = _ctx[idx];
    }
 
    if (!_enableVectorBuffers || out.size() != 1) {
@@ -62,7 +62,7 @@ std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*ca
    return out;
 }
 
-void DataMap::setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config)
+void EvalContext::setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config)
 {
    if (!arg->hasDataToken())
       return;
@@ -70,7 +70,7 @@ void DataMap::setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &con
    _cfgs[idx] = config;
 }
 
-RooBatchCompute::Config DataMap::config(RooAbsArg const *arg) const
+RooBatchCompute::Config EvalContext::config(RooAbsArg const *arg) const
 {
    if (!arg->hasDataToken()) {
       return {};
@@ -79,11 +79,36 @@ RooBatchCompute::Config DataMap::config(RooAbsArg const *arg) const
    return _cfgs[idx];
 }
 
-void DataMap::resize(std::size_t n)
+void EvalContext::resize(std::size_t n)
 {
    _cfgs.resize(n);
-   _dataMap.resize(n);
+   _ctx.resize(n);
 }
 
-} // namespace Detail
+/// \brief Sets the output value with an offset.
+///
+/// This function sets the output value with an offset for the given argument.
+/// It should only be used in reducer nodes. Depending on the current
+/// OffsetMode, the result will either be just the value, the value minus the
+/// offset, of just the offset.
+///
+/// \param arg Pointer to the RooAbsArg object.
+/// \param val The value to be set.
+/// \param offset The offset value.
+///
+/// \throws std::runtime_error if the argument is not a reducer node.
+void EvalContext::setOutputWithOffset(RooAbsArg const *arg, ROOT::Math::KahanSum<double> val,
+                                      ROOT::Math::KahanSum<double> const &offset)
+{
+   if (!arg->isReducerNode()) {
+      throw std::runtime_error("You can only use setOutputWithOffset() in reducer nodes!");
+   }
+   if (_offsetMode == OffsetMode::WithOffset) {
+      val -= offset;
+   } else if (_offsetMode == OffsetMode::OnlyOffset) {
+      val = offset;
+   }
+   const_cast<double *>(_ctx[arg->dataToken()].data())[0] = val.Sum();
+}
+
 } // namespace RooFit

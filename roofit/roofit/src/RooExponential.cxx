@@ -68,10 +68,10 @@ double RooExponential::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Exponential distribution.
-void RooExponential::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooExponential::doEval(RooFit::EvalContext &ctx) const
 {
    auto computer = _negateCoefficient ? RooBatchCompute::ExponentialNeg : RooBatchCompute::Exponential;
-   RooBatchCompute::compute(dataMap.config(this), computer, output, nEvents, {dataMap.at(x), dataMap.at(c)});
+   RooBatchCompute::compute(ctx.config(this), computer, ctx.output(), {ctx.at(x), ctx.at(c)});
 }
 
 Int_t RooExponential::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const

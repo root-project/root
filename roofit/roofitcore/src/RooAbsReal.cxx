@@ -4413,12 +4413,13 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 }
 
 
-/** Base function for computing multiple values of a RooAbsReal
-\param output The array where the results are stored
-\param nEvents The number of events to be processed
-\param dataMap A std::map containing the input data for the computations
+/** Base function for computing multiple values of a RooAbsReal.
+\param ctx An evaluation context object
 **/
-void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooAbsReal::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> output = ctx.output();
+
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.
   struct ServerData {
@@ -4433,7 +4434,7 @@ void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::Da
   ourServers.reserve(servers().size());
 
   for (auto server : servers()) {
-    auto serverValues = dataMap.at(server);
+    auto serverValues = ctx.at(server);
     if(serverValues.empty()) continue;
 
     // maybe we are still missing inhibit dirty here
@@ -4472,7 +4473,7 @@ void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::Da
 
   // Advising to implement the batch interface makes only sense if the batch was not a scalar.
   // Otherwise, there would be no speedup benefit.
-  if(nEvents > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+  if(output.size() > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
     coutI(FastEvaluations) << "The class " << ClassName() << " does not implement the faster batch evaluation interface."
         << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
   }
@@ -4480,7 +4481,7 @@ void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::Da
 
   // For each event, write temporary values into our servers' caches, and run a single-value computation.
 
-  for (std::size_t i=0; i < nEvents; ++i) {
+  for (std::size_t i=0; i < output.size(); ++i) {
     for (auto& serv : ourServers) {
       serv.server->setCachedValue(serv.batch[std::min(i, serv.batch.size()-1)], false);
     }

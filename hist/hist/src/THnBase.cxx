@@ -24,6 +24,8 @@
 #include "TMath.h"
 #include "TRandom.h"
 #include "TVirtualPad.h"
+#include "THashList.h"
+#include "TObjString.h"
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -195,12 +197,19 @@ void THnBase::Init(const char* name, const char* title,
                    Int_t chunkSize /*= 1024 * 16*/)
 {
    SetNameTitle(name, title);
-
+   if (!axes) {
+      ::Error("THnBase::Init", "Input parameter `axes` is null, no axes were provided at initialization");
+      return;
+   }
    TIter iAxis(axes);
    const TAxis* axis = nullptr;
    Int_t pos = 0;
    Int_t *nbins = new Int_t[axes->GetEntriesFast()];
    while ((axis = (TAxis*)iAxis())) {
+      if (!axis) {
+         ::Error("THnBase::Init", "Input parameter `axes` has a null element in the array, cannot create new axis");
+         continue;
+      }
       TAxis* reqaxis = new TAxis(*axis);
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = axis->GetFirst();
@@ -243,6 +252,10 @@ void THnBase::Init(const char* name, const char* title,
 TH1* THnBase::CreateHist(const char* name, const char* title,
                          const TObjArray* axes,
                          Bool_t keepTargetAxis ) const {
+   if (!axes) {
+      ::Error("THnBase::CreateHist", "Input parameter `axes` is null, no axes were provided at creation");
+      return nullptr;
+   }
    const int ndim = axes->GetSize();
 
    TH1* hist = nullptr;
@@ -261,6 +274,10 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
    TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
    for (Int_t d = 0; d < ndim; ++d) {
       TAxis* reqaxis = (TAxis*)(*axes)[d];
+      if (!reqaxis) {
+         ::Error("THnBase::CreateHist", "Input parameter `axes` has a null element in the position %d of the array, cannot create new axis", d);
+         continue;
+      }
       hax[d]->SetTitle(reqaxis->GetTitle());
       if (!keepTargetAxis && reqaxis->TestBit(TAxis::kAxisRange)) {
          // axis cannot extend to underflow/overflows (fix ROOT-8781)
@@ -282,6 +299,16 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
             // uniform bins:
             hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXmin(), reqaxis->GetXmax());
          }
+         // Copy the axis labels if needed.
+         THashList* labels = reqaxis->GetLabels();
+         if (labels) {
+            TIter iL(labels);
+            Int_t i = 1;
+            while (auto lb = static_cast<TObjString *>(iL())) {
+               hax[d]->SetBinLabel(i,lb->String().Data());
+               i++;
+            }
+         }
       }
    }
 
@@ -296,6 +323,10 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
 THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const TH1* h, Bool_t sparse, Int_t chunkSize)
 {
+   if (!h) {
+      ::Error("THnBase::CreateHnAny", "Input parameter `h` is null, no histogram was provided upon creation");
+      return nullptr;
+   }
    // Get the dimension of the TH1
    int ndim = h->GetDimension();
 
@@ -373,6 +404,10 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const THnBase* hn, Bool_t sparse,
                               Int_t chunkSize /*= 1024 * 16*/)
 {
+   if (!hn) {
+      ::Error("THnBase::CreateHnAny", "Input parameter `hn` is null, no histogram was provided upon creation");
+      return nullptr;
+   }
    TClass* type = nullptr;
    if (hn->InheritsFrom(THnSparse::Class())) {
       if (sparse) type = hn->IsA();
@@ -431,6 +466,10 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 
 void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 {
+   if (!hist) {
+      ::Error("THnBase::Add", "Input parameter `hist` is null, no histogram was provided");
+      return;
+   }
    Long64_t nbins = hist->GetNcells();
    int x[3] = {0,0,0};
    for (int i = 0; i < nbins; ++i) {
@@ -1274,7 +1313,13 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate the integral of the histogram
+///  Compute integral (normalized cumulative sum of bins) w/o under/overflows
+///  The result is stored in fIntegral and used by the GetRandom functions.
+///  This function is automatically called by GetRandom when the fIntegral
+///  array does not exist or when the number of entries in the histogram
+///  has changed since the previous call to GetRandom.
+///  The resulting integral is normalized to 1.
+///  \return 1 if success, 0 if integral is zero
 
 Double_t THnBase::ComputeIntegral()
 {
@@ -1310,7 +1355,7 @@ Double_t THnBase::ComputeIntegral()
          }
       }
 
-      // if outlayer, count it with zero weight
+      // if outlier, count it with zero weight
       if (!regularBin) v = 0.;
 
       fIntegral[i + 1] = fIntegral[i] + v;
@@ -1319,14 +1364,14 @@ Double_t THnBase::ComputeIntegral()
 
    // check sum of weights
    if (fIntegral[GetNbins()] == 0.) {
-      Error("ComputeIntegral", "No hits in regular bins (non over/underflow).");
+      Error("ComputeIntegral", "Integral = 0, no hits in histogram bins (excluding over/underflow).");
       fIntegral.clear();
       return 0.;
    }
 
    // normalize the integral array
    for (Long64_t j = 0; j <= GetNbins(); ++j)
-      fIntegral[j] = fIntegral[j] / fIntegral[GetNbins()];
+      fIntegral[j] /= fIntegral[GetNbins()];
 
    // set status to valid
    fIntegralStatus = kValidInt;

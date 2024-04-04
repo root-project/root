@@ -77,12 +77,11 @@ void RooPoisson::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of the Poisson distribution.
-void RooPoisson::computeBatch(double *output, size_t nEvents,
-                              RooFit::Detail::DataMap const &dataMap) const
+void RooPoisson::doEval(RooFit::EvalContext &ctx) const
 {
    std::array<double, 2> extraArgs{static_cast<double>(_protectNegative), static_cast<double>(_noRounding)};
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Poisson, output, nEvents,
-                            {dataMap.at(x), dataMap.at(mean)}, extraArgs);
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Poisson, ctx.output(), {ctx.at(x), ctx.at(mean)},
+                            extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
