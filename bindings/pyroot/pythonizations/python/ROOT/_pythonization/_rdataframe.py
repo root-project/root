@@ -462,7 +462,7 @@ _numpy_data = {}
 
 
 def _MakeNumpyDataFrame(np_dict):
-    """
+    r"""
     Make an RDataFrame from a dictionary of numpy arrays
 
     \param[in] self Always null, since this is a module function.
