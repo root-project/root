@@ -24,6 +24,8 @@
 #include <TFile.h>
 #include <TKey.h>
 
+#include <deque>
+
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 {
    // Check the inputs
@@ -193,6 +195,12 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
          auto &cluster = descriptor->GetClusterDescriptor(clusterId);
 
+         std::vector<std::unique_ptr<unsigned char[]>> buffers;
+         // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are never
+         // invalidated.
+         std::deque<RPageStorage::SealedPageSequence_t> sealedPagesV;
+         std::vector<RPageStorage::RSealedPageGroup> sealedPageGroups;
+
          for (const auto &column : columns) {
 
             // See if this cluster contains this column
@@ -205,6 +213,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             // Now get the pages for this column in this cluster
             const auto &pages = cluster.GetPageRange(columnId);
             size_t idx{0};
+
+            RPageStorage::SealedPageSequence_t sealedPages;
 
             // Loop over the pages
             for (const auto &pageInfo : pages.fPageInfos) {
@@ -222,16 +232,22 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                sealedPage.fBuffer = buffer.get();
                source->LoadSealedPage(columnId, clusterIndex, sealedPage);
 
-               // Now commit this page to the output
-               // Can we do this w/ a CommitSealedPageV
-               destination.CommitSealedPage(column.fColumnOutputId, sealedPage);
+               buffers.push_back(std::move(buffer));
+               sealedPages.push_back(std::move(sealedPage));
 
                // Move on to the next index
                idx += pageInfo.fNElements;
 
             } // end of loop over pages
 
+            sealedPagesV.push_back(std::move(sealedPages));
+            sealedPageGroups.emplace_back(column.fColumnOutputId, sealedPagesV.back().cbegin(),
+                                          sealedPagesV.back().cend());
+
          } // end of loop over columns
+
+         // Now commit all pages to the output
+         destination.CommitSealedPageV(sealedPageGroups);
 
          // Commit the clusters
          destination.CommitCluster(cluster.GetNEntries());
