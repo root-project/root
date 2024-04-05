@@ -192,3 +192,33 @@ class TestAPI:
         assert a4
         assert type(a4) == cppyy.gbl.APICheck4
         assert not a4.wasExecutorCalled();
+
+    def test06_custom_executor(self):
+        """Custom type executor"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        #include "CPyCppyy/API.h"
+
+        namespace ArrayLike {
+        class MyClass{};
+        MyClass* my = nullptr;
+        MyClass  myA[5];
+
+        class MyArray {
+        public:
+            int operator[](int) { return 42; }
+        }; }""")
+
+        ns = cppyy.gbl.ArrayLike;
+        Sequence_Check = cppyy.gbl.CPyCppyy.Sequence_Check
+
+        assert not Sequence_Check(ns.my)
+        assert     Sequence_Check(ns.myA)
+        assert not Sequence_Check(ns.MyClass())
+        assert     Sequence_Check(ns.MyArray())
+        assert     Sequence_Check(tuple())
+        assert     Sequence_Check(cppyy.gbl.std.vector[ns.MyClass]())
+        assert not Sequence_Check(cppyy.gbl.std.list[ns.MyClass]())
+
