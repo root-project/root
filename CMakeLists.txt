@@ -53,6 +53,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Set permissions for installed folders and subfolders that come from the source tree in case
+# the permissions in the source tree are wrong since the install command will preserve them
+set(DIR_PERMISSIONS DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
 # Before setting ROOTSYS, make sure that the environment isn't polluted by a different
 # ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
 # of a different ROOT build available / visible / reachable.
@@ -642,20 +646,21 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
     list(APPEND ETC_PATT_EXCL PATTERN RooFitHS3_wsfactoryexpressions.json EXCLUDE)
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
+                         ${DIR_PERMISSIONS}
                          ${ETC_PATT_EXCL}
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE
                          PATTERN "root.mimes" EXCLUDE
                          PATTERN "*.in" EXCLUDE)
-  install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
-  install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
-  install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
+  install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR} ${DIR_PERMISSIONS})
+  install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR} ${DIR_PERMISSIONS})
+  install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR} ${DIR_PERMISSIONS})
   if(http)
-     install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR})
+     install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR} ${DIR_PERMISSIONS})
   endif()
   if(webgui)
-     install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR})
+     install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR} ${DIR_PERMISSIONS})
   endif()
   set(MAN_PATT_EXCL)
   if(NOT fortran OR NOT CMAKE_Fortran_COMPILER)
@@ -665,8 +670,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   if(NOT roofit)
     list(APPEND MAN_PATT_EXCL PATTERN prepareHistFactory.1 EXCLUDE)
   endif()
-  install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} ${MAN_PATT_EXCL})
-  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+  install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} ${DIR_PERMISSIONS} ${MAN_PATT_EXCL})
+  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} ${DIR_PERMISSIONS} COMPONENT tests)
   install(FILES
     cmake/modules/RootMacros.cmake
     cmake/modules/RootTestDriver.cmake
