@@ -50,10 +50,8 @@ public:
    /// On construction, an ROptions parameter can customize the RRawFile behavior
    struct ROptions {
       ELineBreaks fLineBreak = ELineBreaks::kAuto;
-      /**
-       * Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering. A negative value indicates
-       * that the protocol-dependent default block size should be used.
-       */
+      /// Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering. A negative value indicates
+      /// that the protocol-dependent default block size should be used.
       int fBlockSize = -1;
       // Define an empty constructor to work around a bug in Clang: https://github.com/llvm/llvm-project/issues/36032
       ROptions() {}
@@ -126,16 +124,12 @@ protected:
    /// The current position in the file, which can be changed by Seek, Read, and Readln
    std::uint64_t fFilePos = 0;
 
-   /**
-    * OpenImpl() is called at most once and before any call to either DoReadAt or DoGetSize. If fOptions.fBlocksize
-    * is negative, derived classes are responsible to set a sensible value. After a call to OpenImpl(),
-    * fOptions.fBlocksize must be larger or equal to zero.
-    */
+   /// OpenImpl() is called at most once and before any call to either DoReadAt or DoGetSize. If fOptions.fBlocksize
+   /// is negative, derived classes are responsible to set a sensible value. After a call to OpenImpl(),
+   /// fOptions.fBlocksize must be larger or equal to zero.
    virtual void OpenImpl() = 0;
-   /**
-    * Derived classes should implement low-level reading without buffering. Short reads indicate the end of the file,
-    * therefore derived classes should return nbytes bytes if available.
-    */
+   /// Derived classes should implement low-level reading without buffering. Short reads indicate the end of the file,
+   /// therefore derived classes should return nbytes bytes if available.
    virtual size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
    /// Derived classes should return the file size
    virtual std::uint64_t GetSizeImpl() = 0;
@@ -162,10 +156,8 @@ public:
    /// Returns only the transport protocol in lower case, e.g. "http" for HTTP://server/file
    static std::string GetTransport(std::string_view url);
 
-   /**
-    * Buffered read from a random position. Returns the actual number of bytes read.
-    * Short reads indicate the end of the file
-    */
+   /// Buffered read from a random position. Returns the actual number of bytes read.
+   /// Short reads indicate the end of the file
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
    /// Read from fFilePos offset. Returns the actual number of bytes read.
    size_t Read(void *buffer, size_t nbytes);
