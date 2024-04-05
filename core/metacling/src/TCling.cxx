@@ -4546,9 +4546,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
    }
    R__LOCKGUARD(gInterpreterMutex);
    TClass *cl = new TClass(classname, version, silent);
-   if (emulation) {
-      // cl->SetBit(TClass::kIsEmulation);
-   } else {
+   if (!emulation) {
       // Set the class version if the class is versioned.
       // Note that we cannot just call CLASS::Class_Version() as we might not have
       // an execution engine (when invoked from rootcling).
