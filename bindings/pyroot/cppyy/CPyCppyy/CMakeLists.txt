@@ -55,7 +55,7 @@ add_library(${libname} SHARED ${headers} ${sources})
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
 if(MSVC)
-  target_link_libraries(${libname} PUBLIC cppyy_backend ${PYTHON_LIBRARIES})
+  target_link_libraries(${libname} PUBLIC cppyy_backend Python3::Python)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES PREFIX "lib")
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
