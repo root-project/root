@@ -21,7 +21,7 @@ cppflags=$(shell cling-config --cppflags) $(genreflex_flags) -O3 -fPIC -I$(shell
 
 PLATFORM := $(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
-  cppflags+=-dynamiclib -single_module -undefined dynamic_lookup -Wno-delete-non-virtual-dtor
+  cppflags+=-dynamiclib -undefined dynamic_lookup -Wno-delete-non-virtual-dtor
 endif
 
 %Dict.so: %_rflx.cpp %.cxx

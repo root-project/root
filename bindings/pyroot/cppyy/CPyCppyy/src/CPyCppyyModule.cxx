@@ -887,9 +887,11 @@ static PyObject* SetMemoryPolicy(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, const_cast<char*>("O!"), &PyInt_Type, &policy))
         return nullptr;
 
+    long old = (long)CallContext::sMemoryPolicy;
+
     long l = PyInt_AS_LONG(policy);
     if (CallContext::SetMemoryPolicy((CallContext::ECallFlags)l)) {
-        Py_RETURN_NONE;
+        return PyInt_FromLong(old);
     }
 
     PyErr_Format(PyExc_ValueError, "Unknown policy %ld", l);

@@ -473,6 +473,9 @@ class TestFRAGILE:
     def test20_capture_output(self):
         """Capture cerr into a string"""
 
+        if IS_MAC_ARM:
+            skip("crashes in clang::Sema::FindInstantiatedDecl for rdbuf()")
+
         import cppyy
 
         cppyy.cppdef(r"""\
@@ -611,6 +614,45 @@ class TestFRAGILE:
 
         cppyy.cppdef('#define SOME_INT 42')
         assert cppyy.macro("SOME_INT") == 42
+
+    def test27_pickle_enums(self):
+        """Pickling of enum types"""
+
+        import cppyy
+        import pickle
+
+        cppyy.cppdef("""
+        enum MyPickleEnum { PickleFoo, PickleBar };
+        namespace MyPickleNamespace {
+          enum MyPickleEnum { PickleFoo, PickleBar };
+        }""")
+
+        e1 = cppyy.gbl.MyPickleEnum
+        assert e1.__module__ == 'cppyy.gbl'
+        assert pickle.dumps(e1.PickleFoo)
+
+        e2 = cppyy.gbl.MyPickleNamespace.MyPickleEnum
+        assert e2.__module__ == 'cppyy.gbl.MyPickleNamespace'
+        assert pickle.dumps(e2.PickleBar)
+
+    def test28_memoryview_of_empty(self):
+        """memoryview of an empty array"""
+
+        import cppyy, array
+
+        cppyy.cppdef("void f(unsigned char const *buf) {}")
+        try:
+            cppyy.gbl.f(memoryview(array.array('B', [])))
+        except TypeError:
+            pass        # used to crash in PyObject_CheckBuffer on Linux
+
+    def test29_vector_datamember(self):
+        """Offset calculation of vector datamember"""
+
+        import cppyy
+
+        cppyy.cppdef("struct VectorDatamember { std::vector<unsigned> v; };")
+        cppyy.gbl.VectorDatamember     # used to crash on Mac arm64
 
 
 class TestSIGNALS:
