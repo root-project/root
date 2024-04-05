@@ -221,7 +221,6 @@ set(arrowlib ${ARROW_LIBRARY})
 set(arrowincdir ${ARROW_INCLUDE_DIR})
 
 set(buildasimage ${value${asimage}})
-set(builtinafterimage ${builtin_afterimage})
 set(asextralib ${ASEXTRA_LIBRARIES})
 set(asextralibdir)
 set(asjpegincdir ${JPEG_INCLUDE_DIR})

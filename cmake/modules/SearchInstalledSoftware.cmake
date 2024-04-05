@@ -408,21 +408,8 @@ if(asimage)
   endif()
 endif()
 
-#---Check for AfterImage---------------------------------------------------------------
-if(asimage AND NOT builtin_afterimage)
-  message(STATUS "Looking for AfterImage")
-  if(fail-on-missing)
-    find_package(AfterImage REQUIRED)
-  else()
-    find_package(AfterImage)
-    if(NOT AFTERIMAGE_FOUND)
-      message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
-      set(builtin_afterimage ON CACHE BOOL "Enabled because asimage requested and AfterImage not found (${builtin_afterimage_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-if(builtin_afterimage)
+#---AfterImage---------------------------------------------------------------
+if(TRUE)
   set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
