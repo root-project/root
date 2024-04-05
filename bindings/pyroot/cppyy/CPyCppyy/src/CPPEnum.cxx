@@ -2,6 +2,7 @@
 #include "CPyCppyy.h"
 #include "CPPEnum.h"
 #include "PyStrings.h"
+#include "TypeManip.h"
 #include "Utility.h"
 
 
@@ -166,6 +167,14 @@ CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppSco
         PyObject* pyresolved = CPyCppyy_PyText_FromString(resolved.c_str());
         PyDict_SetItem(dct, PyStrings::gUnderlying, pyresolved);
         Py_DECREF(pyresolved);
+
+    // add the __module__ to allow pickling
+        std::string modname = TypeManip::extract_namespace(ename);
+        TypeManip::cppscope_to_pyscope(modname);      // :: -> .
+        if (!modname.empty()) modname = "."+modname;
+        PyObject* pymodname = CPyCppyy_PyText_FromString(("cppyy.gbl"+modname).c_str());
+        PyDict_SetItem(dct, PyStrings::gModule, pymodname);
+        Py_DECREF(pymodname);
 
     // create the actual enum class
         args = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);

@@ -358,7 +358,7 @@ static bool FillVector(PyObject* vecin, PyObject* args, ItemGetter* getter)
                         eb_args = PyTuple_New(1);
                         PyTuple_SET_ITEM(eb_args, 0, item);
                     } else if (PyTuple_CheckExact(item)) {
-                            eb_args = item;
+                        eb_args = item;
                     } else if (PyList_CheckExact(item)) {
                         Py_ssize_t isz = PyList_GET_SIZE(item);
                         eb_args = PyTuple_New(isz);
@@ -1411,7 +1411,6 @@ PyObject* StringViewInit(PyObject* self, PyObject* args, PyObject* /* kwds */)
     }
     return nullptr;
 }
-
 
 
 //- STL iterator behavior ----------------------------------------------------

@@ -227,6 +227,14 @@ class TestOVERLOADS:
             MyClass1(const MyClass1& other) {}
         };
 
+        class MyClass1a {
+        public:
+            MyClass1a() {}
+            void initialize(const std::string& configfilename) {
+                throw ConfigFileNotFoundError{configfilename};
+            }
+        };
+
         class MyClass2 {
         public:
             MyClass2(const std::string& configfilename) {
@@ -235,25 +243,81 @@ class TestOVERLOADS:
             MyClass2(const char* configfilename) {
                 throw ConfigFileNotFoundError{configfilename};
             }
-            MyClass2(const MyClass2& other) {}
+        };
+
+        class MyClass2a {
+        public:
+            MyClass2a() {}
+            void initialize(const std::string& configfilename) {
+                throw ConfigFileNotFoundError{configfilename};
+            }
+            void initialize(const char* configfilename) {
+                throw ConfigFileNotFoundError{configfilename};
+            }
         };
 
         class MyClass3 {
         public:
-            MyClass3(int) {}
-            MyClass3(const MyClass3& other) {}
+            MyClass3(const std::string& configfilename) {
+                throw ConfigFileNotFoundError{configfilename};
+            }
+            MyClass3(const char* configfilename) {
+                throw ConfigFileNotFoundError{configfilename};
+            }
+            MyClass3(const MyClass3& other) = delete;
+            MyClass3(const MyClass3&& other) = delete;
+        };
+
+        class MyClass4 {
+        public:
+            MyClass4(int) {}
+            MyClass4(const MyClass3& other) {}
+        };
+
+        class MyClass4a {
+        public:
+            MyClass4a() {}
+            void initialize(const std::string& configfilename) {
+                throw ConfigFileNotFoundError{configfilename};
+            }
+            void initialize(const char* configfilename) {
+                throw ConfigFileNotFoundError{configfilename};
+            }
+            void initialize(int) {}
         }; }""")
 
         ns = cppyy.gbl.ExceptionTypeTest
 
+        # single C++ exception during overload selection: assumes this is a logic
+        # error and prioritizes the C++ exception
         with raises(ns.ConfigFileNotFoundError):
             ns.MyClass1("some_file")
 
-        with raises(TypeError):
+        with raises(ns.ConfigFileNotFoundError):
+            m = ns.MyClass1a()
+            m.initialize("some_file")
+
+        with raises(TypeError):   # special case b/c of copy constructor
             ns.MyClass2("some_file")
 
+        # multiple C++ exceptions are considered argument conversion errors and
+        # only result in the same exception type if they are all the same
+        with raises(ns.ConfigFileNotFoundError):
+            m = ns.MyClass2a()
+            m.initialize("some_file")
+
+            ns.MyClass2("some_file")   # special case b/c of copy constructor
+
+        with raises(ns.ConfigFileNotFoundError):
+            ns.MyClass3("some_file")   # copy constructor deleted
+
+        # a mix of exceptions becomes a TypeError
         with raises(TypeError):
-            ns.MyClass3("some_file")
+            ns.MyClass4("some_file")
+
+        with raises(TypeError):
+            m = ns.MyClass4a()
+            m.initialize("some_file")
 
     def test11_deep_inheritance(self):
         """Prioritize expected most derived class"""
