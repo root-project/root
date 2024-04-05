@@ -89,7 +89,7 @@ if(PY_TORCH_FOUND)
          ROOTTMVASofie
          TMVA
          blas
-         ${PYTHON_LIBRARIES}
+         Python3::Python
          INCLUDE_DIRS
          SYSTEM
          ${PYTHON_INCLUDE_DIRS}
@@ -137,7 +137,7 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
     ROOTTMVASofie
     PyMVA
     blas
-    ${PYTHON_LIBRARIES}
+    Python3::Python
     INCLUDE_DIRS
     SYSTEM
     ${PYTHON_INCLUDE_DIRS}
