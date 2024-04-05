@@ -32,7 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     src/RModelParser_PyTorch.cxx
     src/PyMethodBase.cxx
   LIBRARIES
-  ${PYTHON_LIBRARIES}
+    Python3::Python
   DEPENDENCIES
     Core
     Matrix
