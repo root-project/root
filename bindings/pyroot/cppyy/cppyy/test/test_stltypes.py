@@ -746,7 +746,34 @@ class TestSTLVECTOR:
         assert mv.itemsize == cppyy.sizeof(cppyy.gbl.ArrayLike.Vector3f)
         assert mv.nbytes   == cppyy.sizeof(cppyy.gbl.ArrayLike.Vector3f) * len(v)
 
-    def test22_copy_conversion(self):
+    def test22_polymorphic(self):
+        """Vector of polymorphic types should auto-cast"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace Polymorphic {
+        class vertex {
+        public:
+          virtual ~vertex() {}
+        };
+
+        class Mvertex : public vertex {};
+
+        class vCont {
+        public:
+          virtual ~vCont() { for (auto& v: verts) delete v; }
+          std::vector<vertex*> verts { new vertex(), new Mvertex() };
+          const std::vector<vertex*>& vertices() { return verts; }
+        }; }""")
+
+        ns = cppyy.gbl.Polymorphic
+        cont = ns.vCont()
+        verts = cont.vertices()
+
+        assert len([x for x in verts if isinstance(x, ns.Mvertex)]) == 1
+
+    def test23_copy_conversion(self):
         """Vector given an array of different type should copy convert"""
 
         import cppyy

@@ -919,9 +919,6 @@ PyTypeObject TemplateProxy_Type = {
 #if PY_VERSION_HEX >= 0x03080000
         | Py_TPFLAGS_HAVE_VECTORCALL | Py_TPFLAGS_METHOD_DESCRIPTOR
 #endif
-#if PY_VERSION_HEX >= 0x03120000
-        | Py_TPFLAGS_MANAGED_WEAKREF
-#endif
         ,                              // tp_flags
     (char*)"cppyy template proxy (internal)",     // tp_doc
     (traverseproc)tpp_traverse,        // tp_traverse
