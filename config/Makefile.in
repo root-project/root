@@ -200,7 +200,6 @@ SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
 BUILDASIMAGE   := @buildasimage@
-BUILTINASIMAGE := @builtinafterimage@
 ASEXTRALIB     := @asextralib@
 ASEXTRALIBDIR  := @asextralibdir@
 ASJPEGINCDIR   := $(filter-out /usr/include, @asjpegincdir@)

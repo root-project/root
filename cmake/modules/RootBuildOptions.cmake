@@ -80,7 +80,6 @@ endfunction()
 ROOT_BUILD_OPTION(arrow OFF "Enable support for Apache Arrow")
 ROOT_BUILD_OPTION(asimage ON "Enable support for image processing via libAfterImage")
 ROOT_BUILD_OPTION(asserts OFF "Enable asserts (defaults to ON for CMAKE_BUILD_TYPE=Debug and/or dev=ON)")
-ROOT_BUILD_OPTION(builtin_afterimage ON "Build bundled copy of libAfterImage (flag is deprecated, this should be always enabled)")
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Build CFITSIO internally (requires network)")
 ROOT_BUILD_OPTION(builtin_clang ON "Build bundled copy of Clang")
 ROOT_BUILD_OPTION(builtin_cling ON "Build bundled copy of Cling. Only build with an external cling if you know what you are doing: associating ROOT commits with cling commits is tricky.")
@@ -269,7 +268,6 @@ endif()
 
 #--- The 'builtin_all' option switches ON all the built in options but GPL-------------------------------
 if(builtin_all)
-  set(builtin_afterimage_defvalue ON)
   set(builtin_cfitsio_defvalue ON)
   set(builtin_clang_defvalue ON)
   set(builtin_cling_defvalue ON)
@@ -411,10 +409,6 @@ foreach(opt cxxmodules)
   endif()
 endforeach()
 
-
-if(cocoa OR x11 AND  NOT builtin_afterimage)
-  message(DEPRECATION ">>> Option builtin_afterimage is deprecated: in the future it will always be set to ON. In the next release of ROOT, you will no longer be able to disable this feature. Please contact root-dev@cern.ch should you still need disabling it.")
-endif()
 
 foreach(opt minuit2_omp minuit2_mpi)
   if(${opt})

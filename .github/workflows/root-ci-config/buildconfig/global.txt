@@ -4,7 +4,6 @@ arrow=OFF
 asan=OFF
 asimage=ON
 asserts=OFF
-builtin_afterimage=ON
 builtin_cfitsio=OFF
 builtin_clang=ON
 builtin_cling=ON
