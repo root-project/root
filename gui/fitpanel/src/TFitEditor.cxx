@@ -2495,7 +2495,7 @@ void TFitEditor::DoFunction(Int_t selected)
    }
    else if (fConv->GetState() == kButtonDown)
    {
-      // If the normadd button is down don't replace the fEnteredFunc text
+      // If the conv button is down don't replace the fEnteredFunc text
       Int_t np = 0;
       TString s = "";
       if (!strcmp(fEnteredFunc->GetText(), ""))
@@ -2536,8 +2536,12 @@ void TFitEditor::DoFunction(Int_t selected)
    TF1* fitFunc = GetFitFunction();
    //std::cout << "TFitEditor::DoFunction - using function " << fitFunc->GetName() << "  " << fitFunc << std::endl;
 
-   if ( fitFunc && (unsigned int) fitFunc->GetNpar() != fFuncPars.size() )
-      fFuncPars.clear();
+   if ( fitFunc && (unsigned int) fitFunc->GetNpar() != fFuncPars.size() ) {
+      if (fAdd->GetState() == kButtonDown || fNormAdd->GetState() == kButtonDown || fConv->GetState() == kButtonDown)
+         fFuncPars.resize(fitFunc->GetNpar());
+      else
+         fFuncPars.clear();
+   }
    if ( fitFunc ) {
       //std::cout << "TFitEditor::DoFunction - deleting function " << fitFunc->GetName() << "  " << fitFunc << std::endl;
       delete fitFunc;
