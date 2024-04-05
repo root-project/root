@@ -943,31 +943,6 @@ void THnSparse::AddBinError2(Long64_t bin, Double_t e2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Scale contents and errors of this histogram by c:
-/// this = this * c
-/// It does not modify the histogram's number of entries.
-
-void THnSparse::Scale(Double_t c)
-{
-
-   Double_t nEntries = GetEntries();
-   // Scale the contents & errors
-   Bool_t haveErrors = GetCalculateErrors();
-   Long64_t i = 0;
-   THnSparseBinIter iter(kFALSE, this);
-   while ((i = iter.Next()) >= 0) {
-      // Get the content of the bin from the current histogram
-      Double_t v = GetBinContent(i);
-      SetBinContent(i, c * v);
-      if (haveErrors) {
-         Double_t err2 = GetBinError2(i);
-         SetBinError2(i, c * c * err2);
-      }
-   }
-   SetEntries(nEntries);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Enable calculation of errors
 
 void THnSparse::Sumw2()

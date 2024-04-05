@@ -162,7 +162,6 @@ class THnSparse: public THnBase {
       return (THnSparse*) RebinBase(group);
    }
 
-   void Scale(Double_t c) override;
    void Reset(Option_t* option = "") override;
    void Sumw2() override;
 

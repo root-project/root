@@ -259,7 +259,7 @@ protected:
 
    Long64_t   Merge(TCollection* list);
 
-   virtual void Scale(Double_t c);
+   void Scale(Double_t c);
    void Add(const THnBase* h, Double_t c=1.);
    void Add(const TH1* hist, Double_t c=1.);
    void Multiply(const THnBase* h);
