@@ -1634,6 +1634,21 @@ if(tmva-sofie)
   endif()
 endif()
 
+### Look for the CUDA Toolkit.
+if (cuda)
+  if (fail-on-missing)
+    find_package(CUDAToolkit REQUIRED)
+  else()
+    find_package(CUDAToolkit)
+  endif()
+  if (CUDAToolkit_FOUND)
+    message(STATUS "CUDA Toolkit found: Version " ${CUDAToolkit_VERSION})
+  else()
+    message(STATUS "CUDA Toolkit not found")
+    set(cuda OFF CACHE BOOL "Disabled because CUDA Toolkit is not found" FORCE)
+  endif()
+endif(cuda)
+
 ### Look for package CuDNN. If both cudnn and tmva-gpu are set and cudnn was
 ### found, it implies the tmva-cudnn flag.
 if (cudnn)
