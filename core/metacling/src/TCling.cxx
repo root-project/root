@@ -2556,7 +2556,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             }
          }
       } else if (cling::DynamicLibraryManager::isSharedLibrary(fname.Data()) &&
-                 strncmp(sLine.Data(), ".L", 2) != 0) { // .x macro_C.so
+                 strncmp(sLine.Data(), ".L", 2) != 0) { // .x *.so or *.dll
          if (gSystem->Load(fname) < 0) {
             // Loading failed.
             compRes = cling::Interpreter::kFailure;
@@ -2564,22 +2564,28 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             if (arguments.Length() == 0) {
                arguments = "()";
             }
-            // We need to remove the extension. (macro_C.so or macro_C.dll)
+            // We need to remove the extension. (*.so or *.dll)
             Ssiz_t ext = fname.Last('.');
             if (ext != kNPOS) {
                fname.Remove(ext);
             }
-            // We need to remove the automatically appended _ extension when compiling (macro_C from macro.C)
-            ext = fname.Last('_');
-            if (ext != kNPOS) {
-               fname.Remove(ext);
+            // Now we try to find the 'main' function to run within this shared library
+            // We distinguish two cases: a library.so with a function library(args),
+            // or a precompiled ACLiC macro (macro_C.so) with a function macro(args).
+            // Only in the second case, we need to strip the suffix _C or _cpp from fname.
+            if (!gInterpreter->GetFunction(nullptr, gSystem->BaseName(fname))) { // AcLiC macro
+               // We need to remove the automatically appended _ extension when compiling (macro_C from macro.C)
+               ext = fname.Last('_');
+               if (ext != kNPOS) {
+                  fname.Remove(ext);
+               }
             }
             const char *function = gSystem->BaseName(fname);
             mod_line = function + arguments + io;
             indent = HandleInterpreterException(GetMetaProcessorImpl(), mod_line, compRes, &result);
          }
       } else {
-         // not ACLiC
+         // neither ACLiC nor run shared-library (.x)
          size_t unnamedMacroOpenCurly;
          {
             std::string code;
