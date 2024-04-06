@@ -102,42 +102,9 @@ struct InitializedTensor{
       fPersistentData=(char*)fData.get();
    }
    void CastPersistentToShared(){
-      switch (fType) {
-      case ETensorType::FLOAT: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(float)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(float));
-          fData = tData;
-          break;
-      }
-      case ETensorType::DOUBLE: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(double)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(double));
-          fData = tData;
-          break;
-      }
-      case ETensorType::INT32: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(int32_t)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int32_t));
-          fData = tData;
-          break;
-      }
-      case ETensorType::INT64: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(int64_t)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int64_t));
-          fData = tData;
-          break;
-      }
-      case ETensorType::BOOL: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(bool)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(bool));
-          fData = tData;
-          break;
-      }
-      default: {
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " +
-                                   ConvertTypeToString(fType));
-      }
-      }
+      std::shared_ptr<void> tData(malloc(fSize ), free);
+      std::memcpy(tData.get(), fPersistentData, fSize);
+      fData = tData;
    }
 };
 
