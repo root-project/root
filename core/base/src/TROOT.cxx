@@ -182,7 +182,7 @@ void **(*gThreadTsd)(void*,Int_t) = nullptr;
 static Int_t IVERSQ()
 {
    Int_t maj, min, cycle;
-   sscanf(ROOT_RELEASE, "%d.%d/%d", &maj, &min, &cycle);
+   sscanf(ROOT_RELEASE, "%d.%d.%d", &maj, &min, &cycle);
    return 10000*maj + 100*min + cycle;
 }
 
