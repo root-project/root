@@ -7,6 +7,7 @@
 #include <memory>
 #include <cmath>
 #include <mutex>
+#include <iostream>
 
 #include "TMVA/RTensor.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
@@ -209,6 +210,8 @@ public:
       } else {
          // Create the Validation batches if this is not the first epoch
          createIdxs(processedEvents);
+         std::cout << "Training indices size: " << fTrainingIdxs[currentChunk].size() << "\n";
+         std::cout << "Validation indices size: " << fValidationIdxs[currentChunk].size() << "\n";
          fTrainingRemainderRow = fBatchLoader->CreateTrainingBatches(*fChunkTensor, *fTrainingRemainder, fTrainingRemainderRow, fTrainingIdxs[currentChunk]);
          fValidationRemainderRow = fBatchLoader->CreateValidationBatches(*fChunkTensor, *fValidationRemainder, fValidationRemainderRow, fValidationIdxs[currentChunk]);
       }
@@ -217,7 +220,9 @@ public:
    /// \brief plit the events of the current chunk into validation and training events
    /// \param processedEvents
    void createIdxs(std::size_t processedEvents)
-   {
+   {  
+      std::cout << "Processed events: " << processedEvents << "\n";
+      std::cout << "Validation split: " << fValidationSplit << "\n";
       // Create a vector of number 1..processedEvents
       std::vector<std::size_t> row_order = std::vector<std::size_t>(processedEvents);
       std::iota(row_order.begin(), row_order.end(), 0);
@@ -228,6 +233,8 @@ public:
 
       // calculate the number of events used for validation
       std::size_t num_validation = ceil(processedEvents * fValidationSplit);
+
+      std::cout << "Num validation: " << num_validation << "\n";
 
       // Devide the vector into training and validation
       std::vector<std::size_t> valid_idx({row_order.begin(), row_order.begin() + num_validation});

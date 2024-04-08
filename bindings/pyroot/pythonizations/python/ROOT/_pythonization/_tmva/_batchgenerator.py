@@ -375,6 +375,8 @@ class BaseGenerator:
 
         return_data = np.array(data).reshape(batch_size, num_columns)
 
+        print(return_data.shape)
+
         # Splice target column from the data if target is given
         if self.target_given:
             train_data = return_data[:, self.train_indices]

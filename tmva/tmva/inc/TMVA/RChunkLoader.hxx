@@ -199,7 +199,6 @@ private:
    {
       // add range
       auto x_ranged = f_rdf.Range(currentRow, currentRow + fChunkSize);
-      // auto x_ranged = x_rdf.Range(currentRow, currentRow + fChunkSize);
       auto myCount = x_ranged.Count();
 
       // load data
