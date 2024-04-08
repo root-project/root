@@ -33,7 +33,7 @@ enum class WeightFileType {None, RootBinary, Text};
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
 std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
 
-class RModel_Base: public TObject {
+class RModel_Base {
 
 protected:
     std::string fFileName; //file name of original model file for identification
@@ -55,7 +55,11 @@ protected:
     bool fIsGNNComponent = false;
 
 public:
-    RModel_Base() {}
+    /**
+        Default constructor. Needed to allow serialization of ROOT objects. See
+        https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
+    */
+    RModel_Base() = default;
 
     RModel_Base(std::string name, std::string parsedtime);
 
@@ -91,8 +95,6 @@ public:
         return fName;
     }
 
-    ClassDef(RModel_Base,1);
-
 };
 
 enum class GraphType {
@@ -114,8 +116,13 @@ enum class FunctionRelation {
 
 class RModel_GNNBase: public RModel_Base {
 public:
-    RModel_GNNBase() {}
+    /**
+        Default constructor. Needed to allow serialization of ROOT objects. See
+        https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
+    */
+    RModel_GNNBase() = default;
     virtual void Generate() = 0;
+    virtual ~RModel_GNNBase() = default;
 };
 
 }//SOFIE
