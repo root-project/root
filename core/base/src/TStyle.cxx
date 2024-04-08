@@ -156,6 +156,7 @@ TStyle::TStyle() :TNamed()
 ///   - `Bold`
 ///   - `Video`
 ///   - `Pub`
+///   - `Auto` Produce plots "as they should be" automatically.
 ///   - `Modern`: Used when ROOT starts
 ///   - `ATLAS`: style used by the ATLAS experiment
 ///   - `BELLE2`: style used by the BELLE II experiment
@@ -212,6 +213,47 @@ TStyle::TStyle(const char *name, const char *title)
       gROOT->GetListOfStyles()->Add(this);
    }
 
+   if (strcmp(style_name,"Auto") == 0) {
+      // Auto style
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetTitleFont(42,"");
+      SetLabelFont(42,"x");
+      SetTitleFont(42,"x");
+      SetLabelFont(42,"y");
+      SetTitleFont(42,"y");
+      SetLabelFont(42,"z");
+      SetTitleFont(42,"z");
+      SetStatFont(42);
+      SetLabelSize(0.035,"x");
+      SetTitleSize(0.035,"x");
+      SetLabelSize(0.035,"y");
+      SetTitleSize(0.035,"y");
+      SetLabelSize(0.035,"z");
+      SetTitleSize(0.035,"z");
+      SetTitleSize(0.050,"");
+      SetTitleAlign(23);
+      SetTitleX(0.5);
+      SetTitleBorderSize(0);
+      SetTitleFillColor(0);
+      SetTitleStyle(0);
+      SetTitleOffset(0.,"Y");
+      SetStatBorderSize(1);
+      SetOptStat(1111);
+      SetStatY(0.935);
+      SetHistLineColor(kBlue+2);
+      SetLegendBorderSize(1);
+      SetLegendFillColor(0);
+      SetLegendFont(42);
+      SetLegendTextSize(0.);
+      SetFuncWidth(2);
+      SetFuncColor(2);
+   }
    if (strcmp(style_name,"Modern") == 0) {
       // Modern style
       SetFrameBorderMode(0);
@@ -530,6 +572,7 @@ void TStyle::BuildStyles()
    new TStyle("Pub",    "Style for Publications");
    new TStyle("Classic","Classic Style");
    new TStyle("Default","Equivalent to Classic");
+   new TStyle("Auto",    "Auto Style");
    new TStyle("Modern", "Modern Style");
    new TStyle("ATLAS",  "ATLAS Style");
    new TStyle("BELLE2", "Belle II Style");
@@ -838,6 +881,46 @@ void TStyle::Reset(Option_t *opt)
 
    TString style_name = opt;
 
+   if (strcmp(style_name,"Auto") == 0) {
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetTitleFont(42,"");
+      SetLabelFont(42,"x");
+      SetTitleFont(42,"x");
+      SetLabelFont(42,"y");
+      SetTitleFont(42,"y");
+      SetLabelFont(42,"z");
+      SetTitleFont(42,"z");
+      SetStatFont(42);
+      SetLabelSize(0.035,"x");
+      SetTitleSize(0.035,"x");
+      SetLabelSize(0.035,"y");
+      SetTitleSize(0.035,"y");
+      SetLabelSize(0.035,"z");
+      SetTitleSize(0.035,"z");
+      SetTitleSize(0.050,"");
+      SetTitleAlign(23);
+      SetTitleX(0.5);
+      SetTitleBorderSize(0);
+      SetTitleFillColor(0);
+      SetTitleStyle(0);
+      SetTitleOffset(0.,"Y");
+      SetStatBorderSize(1);
+      SetOptStat(1111);
+      SetStatY(0.935);
+      SetHistLineColor(kBlue+2);
+      SetLegendBorderSize(1);
+      SetLegendFillColor(0);
+      SetLegendFont(42);
+      SetLegendTextSize(0.);
+      SetFuncWidth(2);
+      SetFuncColor(2);
+   }
    if (strcmp(style_name,"Modern") == 0) {
       // Modern style
       SetFrameBorderMode(0);
