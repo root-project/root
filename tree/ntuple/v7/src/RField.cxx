@@ -1836,12 +1836,6 @@ void ROOT::Experimental::RField<TObject>::ConstructValue(void *where) const
    new (where) TObject();
 }
 
-void ROOT::Experimental::RField<TObject>::RTObjectDeleter::operator()(void *objPtr, bool dtorOnly)
-{
-   static_cast<TObject *>(objPtr)->~TObject();
-   RDeleter::operator()(objPtr, dtorOnly);
-}
-
 std::vector<ROOT::Experimental::RFieldBase::RValue>
 ROOT::Experimental::RField<TObject>::SplitValue(const RValue &value) const
 {
