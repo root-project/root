@@ -9,7 +9,7 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-class RModel: public RModel_Base {
+class RModel final: public RModel_Base {
 
 private:
 
@@ -28,16 +28,18 @@ private:
 
 public:
 
-    //explicit move ctor/assn
+    // Rule of five: explicitly define move semantics, disallow copy
     RModel(RModel&& other);
-
     RModel& operator=(RModel&& other);
-
-    //disallow copy
     RModel(const RModel& other) = delete;
     RModel& operator=(const RModel& other) = delete;
+    ~RModel() = default;
 
-    RModel() {}
+    /**
+        Default constructor. Needed to allow serialization of ROOT objects. See
+        https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
+    */
+    RModel() = default;
     RModel(std::string name, std::string parsedtime): RModel_Base(name, parsedtime) {}
 
     // For GNN Functions usage
@@ -137,9 +139,8 @@ public:
         return fUseSession;
     }
 
-    ~RModel() {}
-
-    ClassDef(RModel,1);
+    // Use the ClassDef macro to allow definition of custom streaming
+    ClassDefNV(RModel, 2);
 };
 
 }//SOFIE
