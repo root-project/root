@@ -2428,11 +2428,6 @@ public:
 /// TObject requires special handling of the fBits and fUniqueID members
 template <>
 class RField<TObject> final : public RFieldBase {
-   class RTObjectDeleter : public RDeleter {
-   public:
-      void operator()(void *objPtr, bool dtorOnly) final;
-   };
-
    static std::size_t GetOffsetOfMember(const char *name);
    static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
    static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
@@ -2443,7 +2438,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTObjectDeleter>(); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
