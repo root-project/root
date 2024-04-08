@@ -46,7 +46,7 @@ set(Python3_FIND_FRAMEWORK LAST)
 
 # - Look for Python3 and set the deprecated variables to the ones set
 # automatically by find_package(Python3 ...)
-find_package(Python3 COMPONENTS Interpreter Development NumPy)
+find_package(Python3 3.8 COMPONENTS Interpreter Development NumPy)
 if(Python3_Interpreter_FOUND)
   set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
   set(PYTHON_VERSION_STRING "${Python3_VERSION}" CACHE INTERNAL "" FORCE)

@@ -1687,12 +1687,7 @@ if(pyroot)
     endif()
   endif()
 
-  if(Python3_Development_FOUND)
-    if(PYTHON_VERSION_STRING VERSION_LESS 3.8)
-      message(FATAL_ERROR "PyROOT: minimum Python version required is 3.8. The current Python version is ${PYTHON_VERSION_STRING}")
-    endif()
-    message(STATUS "PyROOT: development package found. Building for version ${PYTHON_VERSION_STRING}")
-  endif()
+  message(STATUS "PyROOT: development package found. Building for version ${PYTHON_VERSION_STRING}")
 
 endif()
 
