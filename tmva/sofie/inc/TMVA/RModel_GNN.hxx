@@ -88,7 +88,7 @@ struct GNN_Init {
 
 };
 
-class RModel_GNN: public RModel_GNNBase {
+class RModel_GNN final: public RModel_GNNBase {
 
 private:
 
@@ -110,23 +110,21 @@ private:
     std::size_t num_global_features;
 
 public:
+    /**
+        Default constructor. Needed to allow serialization of ROOT objects. See
+        https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
+    */
+    RModel_GNN() = default;
+    RModel_GNN(GNN_Init& graph_input_struct);
 
-    //explicit move ctor/assn
+    // Rule of five: explicitly define move semantics, disallow copy
     RModel_GNN(RModel_GNN&& other);
-
     RModel_GNN& operator=(RModel_GNN&& other);
-
-    //disallow copy
     RModel_GNN(const RModel_GNN& other) = delete;
     RModel_GNN& operator=(const RModel_GNN& other) = delete;
+    ~RModel_GNN() final = default;
 
-    RModel_GNN(GNN_Init& graph_input_struct);
-    RModel_GNN() {}
-
-    void Generate();
-
-    ~RModel_GNN() {}
-//    ClassDef(RModel_GNN,1);
+    void Generate() final;
 };
 
 }//SOFIE
