@@ -80,6 +80,6 @@
 #pragma link C++ class DuplicateBaseD + ;
 
 #pragma link C++ class Left + ;
-#pragma link C++ class DerivedFromLeftAndTObject + ;
+#pragma link C++ class DerivedFromLeftAndTObject+;
 
 #endif
