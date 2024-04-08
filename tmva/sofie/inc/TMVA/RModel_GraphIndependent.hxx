@@ -56,7 +56,7 @@ struct GraphIndependent_Init {
     }
 };
 
-class RModel_GraphIndependent: public RModel_GNNBase {
+class RModel_GraphIndependent final: public RModel_GNNBase {
 
 private:
 
@@ -73,23 +73,21 @@ private:
     std::size_t num_global_features;
 
 public:
+    /**
+        Default constructor. Needed to allow serialization of ROOT objects. See
+        https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
+    */
+    RModel_GraphIndependent() = default;
+    RModel_GraphIndependent(GraphIndependent_Init& graph_input_struct);
 
-    //explicit move ctor/assn
+    // Rule of five: explicitly define move semantics, disallow copy
     RModel_GraphIndependent(RModel_GraphIndependent&& other);
-
     RModel_GraphIndependent& operator=(RModel_GraphIndependent&& other);
-
-    //disallow copy
     RModel_GraphIndependent(const RModel_GraphIndependent& other) = delete;
     RModel_GraphIndependent& operator=(const RModel_GraphIndependent& other) = delete;
+    ~RModel_GraphIndependent() final = default;
 
-    RModel_GraphIndependent(GraphIndependent_Init& graph_input_struct);
-    RModel_GraphIndependent() {}
-
-    void Generate();
-
-    ~RModel_GraphIndependent() {}
-//    ClassDef(RModel_GNN,1);
+    void Generate() final;
 };
 
 }//SOFIE
