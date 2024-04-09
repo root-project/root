@@ -437,7 +437,7 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
 ///    nor that the real TTree entries matches with the input argument.
 ///    This second mode is interesting in case the number of entries in
 ///    the file is already stored in a run database for example.
-///    BEWARE: if you pass an incorrect nentries, this may lead to silent
+///    BEWARE: if you pass `nentries` > `tree_entries`, this may lead to silent
 ///    data corruption in your analysis or undefined behavior in your program.
 ///    Use the other options if unsure.
 ///
