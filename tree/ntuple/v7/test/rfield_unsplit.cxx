@@ -60,6 +60,7 @@ TEST(RField, UnsplitMember)
 TEST(RField, ForceSplitMode)
 {
    auto cl = TClass::GetClass("CustomStreamer");
+   ASSERT_TRUE(cl != nullptr);
 
    EXPECT_FALSE(cl->CanSplit());
    EXPECT_THROW(RFieldBase::Create("f", "CustomStreamer").Unwrap(), RException);
@@ -72,24 +73,28 @@ TEST(RField, ForceSplitMode)
 
    // "Force Split" attribute set by Linkdef
    cl = TClass::GetClass("CustomStreamerForceSplit");
+   ASSERT_TRUE(cl != nullptr);
    EXPECT_FALSE(cl->CanSplit());
    // No exception
    RFieldBase::Create("f", "CustomStreamerForceSplit");
 
    // "Force Split" attribute set by selection XML
    cl = TClass::GetClass("ForceSplitXML");
+   ASSERT_TRUE(cl != nullptr);
    EXPECT_FALSE(cl->CanSplit());
    // No exception
    RFieldBase::Create("f", "ForceSplitXML");
 
    // "Force Unsplit" attribute set by Linkdef
    cl = TClass::GetClass("CustomStreamerForceUnsplit");
+   ASSERT_TRUE(cl != nullptr);
    EXPECT_TRUE(cl->CanSplit());
    auto f = RFieldBase::Create("f", "CustomStreamerForceUnsplit").Unwrap();
    EXPECT_TRUE(dynamic_cast<ROOT::Experimental::RUnsplitField *>(f.get()) != nullptr);
 
    // "Force Unsplit" attribute set by selection XML
    cl = TClass::GetClass("ForceUnsplitXML");
+   ASSERT_TRUE(cl != nullptr);
    EXPECT_TRUE(cl->CanSplit());
    f = RFieldBase::Create("f", "ForceUnsplitXML").Unwrap();
    EXPECT_TRUE(dynamic_cast<ROOT::Experimental::RUnsplitField *>(f.get()) != nullptr);
