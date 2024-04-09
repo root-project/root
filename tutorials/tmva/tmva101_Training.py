@@ -12,9 +12,13 @@
 ## \date August 2019
 ## \author Stefan Wunsch
 
+# XGBoost has to be imported before ROOT to avoid crashes because of clashing
+# std::regexp symbols that are exported by cppyy.
+# See also: https://github.com/wlav/cppyy/issues/227
+from xgboost import XGBClassifier
+
 import ROOT
 import numpy as np
-import pickle
 
 variables = ["Muon_pt_1", "Muon_pt_2", "Electron_pt_1", "Electron_pt_2"]
 
@@ -45,7 +49,6 @@ if __name__ == "__main__":
     x, y, w = load_data("train_signal.root", "train_background.root")
 
     # Fit xgboost model
-    from xgboost import XGBClassifier
     bdt = XGBClassifier(max_depth=3, n_estimators=500)
     bdt.fit(x, y, sample_weight=w)
 
