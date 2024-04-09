@@ -70,8 +70,8 @@ private:
 
 public:
    ~TH2() override;
-   virtual void     AddBinContent(Int_t bin) override;
-   virtual void     AddBinContent(Int_t bin, Double_t w) override;
+           void     AddBinContent(Int_t bin) override;
+           void     AddBinContent(Int_t bin, Double_t w) override;
    virtual void     AddBinContent(Int_t binx, Int_t biny);
    virtual void     AddBinContent(Int_t binx, Int_t biny, Double_t w);
            Int_t    BufferEmpty(Int_t action=0) override;
