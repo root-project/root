@@ -17,6 +17,16 @@ void ROOT::Internal::RDF::ChangeEmptyEntryRange(const ROOT::RDF::RNode &node,
    node.GetLoopManager()->SetEmptyEntryRange(std::move(newRange));
 }
 
+/// @brief Changes entry range of rdataframe defined from TTree
+/// @param node 
+/// @param start 
+/// @param end 
+void ROOT::Internal::RDF::ChangeEntryRange(const ROOT::RDF::RNode &node,
+                                           const ULong64_t start, const ULong64_t end)
+{
+   node.GetLoopManager()->SetEntryRange(start, end);
+}
+
 /**
  * \brief Changes the input dataset specification of an RDataFrame.
  *
