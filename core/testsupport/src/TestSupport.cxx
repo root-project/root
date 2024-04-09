@@ -50,12 +50,6 @@ static struct ForbidDiagnostics {
          ::abort();
       }
 
-      // FIXME: Windows has problem finding PCMs.
-      if (level == kError && strcmp(location, "TCling::LoadPCM") == 0 && strstr(msg, "file does not exist") != nullptr) {
-        std::cerr << "Error in " << location << " " << msg << std::endl;
-        return;
-      }
-
       // FIXME: RNTuple warns that it's in beta stage.
       if (level == kWarning
           && strstr(msg, "The RNTuple file format will change. Do not store real data with this version of RNTuple!") != nullptr) {
