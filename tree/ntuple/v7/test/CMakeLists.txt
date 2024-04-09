@@ -36,7 +36,7 @@ if(MSVC)
                                      ${CMAKE_CURRENT_BINARY_DIR}/libUnsplit.dll)
 endif()
 
-if(MSV)
+if(MSVC)
   set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex.exe)
   set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${genreflex})
 else()
@@ -54,6 +54,11 @@ add_library(UnsplitXML SHARED UnsplitXMLDict.cxx UnsplitXML.cxx)
 set_target_properties(UnsplitXML PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
 ROOT_ADD_INCLUDE_DIRECTORIES(UnsplitXML)
 target_link_libraries(UnsplitXML PUBLIC RIO)
+if(MSVC)
+  add_custom_command(TARGET UnsplitXML POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libUnsplitXML.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libUnsplitXML.dll)
+endif()
 
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
