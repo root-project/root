@@ -280,7 +280,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
       }
    }
 
-   // Create a list of uniques branches to load.
+   // Create a list of unique branches to load.
    for(k=0; k<fNcodes ; k++) {
       TLeaf *leaf = k <= fLeaves.GetLast() ? (TLeaf*)fLeaves.UncheckedAt(k) : nullptr;
       TBranch *branch = nullptr;
@@ -5362,7 +5362,7 @@ bool TTreeFormula::LoadCurrentDim() {
    for (Int_t i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
 
-      // NOTE: Currently only the leafcount can indicates a dimension that
+      // NOTE: Currently only the leafcount can indicate a dimension that
       // is physically variable.  So only the left-most dimension is variable.
       // When an API is introduced to be able to determine a variable inside dimensions
       // one would need to add a way to recalculate the values of fCumulSizes for this
@@ -5373,7 +5373,7 @@ bool TTreeFormula::LoadCurrentDim() {
       // variable (expected for the first one) can NOT be done via negative values of
       // fCumulSizes.
 
-      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      TLeaf *leaf = i <= fLeaves.GetLast() ? (TLeaf *)fLeaves.UncheckedAt(i) : nullptr;
       if (!leaf) {
          switch(fLookupType[i]) {
             case kDirect:
