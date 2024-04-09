@@ -75,8 +75,8 @@ private:
 
 public:
    ~TH3() override;
-   virtual void     AddBinContent(Int_t bin) override;
-   virtual void     AddBinContent(Int_t bin, Double_t w) override;
+           void     AddBinContent(Int_t bin) override;
+           void     AddBinContent(Int_t bin, Double_t w) override;
    virtual void     AddBinContent(Int_t binx, Int_t biny, Int_t binz);
    virtual void     AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w);
            Int_t    BufferEmpty(Int_t action = 0) override;
