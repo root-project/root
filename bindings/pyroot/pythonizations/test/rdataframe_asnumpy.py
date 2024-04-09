@@ -333,6 +333,18 @@ class RDataFrameAsNumpy(unittest.TestCase):
             self.assertSequenceEqual(
                 asnumpyres.GetValue()["x"].tolist(), np.arange(begin, end).tolist())
 
+    def test_bool_column(self):
+        """
+        Testing converting bool columns to NumPy arrays.
+        """
+        name = "bool_branch"
+        n_events = 100
+        cut = 50
+        df = ROOT.RDataFrame(n_events).Define(name, f"(int)rdfentry_ > {cut}")
+        arr = df.AsNumpy([name])[name]
+        ref = np.arange(0, n_events) > cut
+        self.assertTrue(all(arr == ref)) # test values
+        self.assertEqual(arr.dtype, ref.dtype) # test type
 
 if __name__ == '__main__':
     unittest.main()
