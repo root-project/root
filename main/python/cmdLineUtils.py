@@ -1173,6 +1173,15 @@ def _rootLsPrintSimpleLs(keyList, indent, oneColumn, recursiveListing):
             if sum( col_widths ) <= term_width: break
             else: ncol -= 1
 
+    def print_simple_ls_recursive(recursiveListing, key, indent, oneColumn):
+        if recursiveListing and len(ROOT.gDirectory.Get(key.GetName()).GetListOfKeys()):
+            subDir = ROOT.gDirectory.Get(key.GetName())
+            subkeyList = subDir.GetListOfKeys()
+            subDir.cd()
+            write('\n')
+            _rootLsPrintSimpleLs(subkeyList, indent + 2, oneColumn, recursiveListing)
+            subDir.cd('../')
+
     for i, key in enumerate(keyList):
         if i%ncol == 0: write("",indent) # indentation
         # Don't add spaces after the last element of the line or of the list
@@ -1183,13 +1192,7 @@ def _rootLsPrintSimpleLs(keyList, indent, oneColumn, recursiveListing):
                 write( \
                 isSpecial(ANSI_BLUE,key.GetName()).ljust( \
                     col_widths[i%ncol] + ANSI_BLUE_LENGTH))
-                if recursiveListing and len(ROOT.gDirectory.Get(key.GetName()).GetListOfKeys()):
-                    subDir = ROOT.gDirectory.Get(key.GetName())
-                    subkeyList = subDir.GetListOfKeys()
-                    subDir.cd()
-                    write('\n')
-                    _rootLsPrintSimpleLs(subkeyList, indent + 2, oneColumn, recursiveListing)
-                    subDir.cd('../')
+                print_simple_ls_recursive(recursiveListing, key, indent, oneColumn)
             elif isTreeKey(key): write( \
                 isSpecial(ANSI_GREEN,key.GetName()).ljust( \
                     col_widths[i%ncol] + ANSI_GREEN_LENGTH))
@@ -1198,13 +1201,7 @@ def _rootLsPrintSimpleLs(keyList, indent, oneColumn, recursiveListing):
             if not IS_TERMINAL: write(key.GetName())
             elif isDirectoryKey(key):
                 write(isSpecial(ANSI_BLUE, key.GetName()))
-                if recursiveListing and len(ROOT.gDirectory.Get(key.GetName()).GetListOfKeys()):
-                    subDir = ROOT.gDirectory.Get(key.GetName())
-                    subkeyList = subDir.GetListOfKeys()
-                    subDir.cd()
-                    write('\n')
-                    _rootLsPrintSimpleLs(subkeyList, indent + 2, oneColumn, recursiveListing)
-                    subDir.cd('../')
+                print_simple_ls_recursive(recursiveListing, key, indent, oneColumn)
             elif isTreeKey(key):
                 write(isSpecial(ANSI_GREEN, key.GetName()))
             else: write(key.GetName())
