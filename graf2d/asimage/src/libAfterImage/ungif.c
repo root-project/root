@@ -186,10 +186,7 @@ get_gif_saved_images( GifFileType *gif, int subimage, SavedImage **ret, int *ret
 {
     GifRecordType RecordType;
     GifByteType *ExtData;
-#if (GIFLIB_MAJOR>=5)
     int ExtCode;
-    size_t Len;
-#endif
     SavedImage temp_save;
 	int curr_image = 0, ret_count = *ret_images ;
 	int status = GIF_OK;
@@ -221,24 +218,19 @@ get_gif_saved_images( GifFileType *gif, int subimage, SavedImage **ret, int *ret
 				break;
 
 	    	case EXTENSION_RECORD_TYPE:
-#if (GIFLIB_MAJOR>=5)
 				status = DGifGetExtension(gif,&ExtCode,&ExtData);
-#else
-				status = DGifGetExtension(gif,&temp_save.Function,&ExtData);
-#endif
-				while (ExtData != NULL && status == GIF_OK )
+				while ( ExtData != NULL && status == GIF_OK )
 				{
 					/* Create an extension block with our data */
 #if (GIFLIB_MAJOR>=5)
-					Len = EGifGCBToExtension(gif, ExtData);
-					if ((status = GifAddExtensionBlock(&temp_save.ExtensionBlockCount, &temp_save.ExtensionBlocks,
-									   ExtCode, Len, ExtData)) == GIF_OK)
-						status = DGifGetExtensionNext(gif, &ExtData);
+					status = GifAddExtensionBlock(&temp_save.ExtensionBlockCount, &temp_save.ExtensionBlocks,
+								      ExtCode, ExtData[0], &(ExtData[1]));
 #else
-					if ((status = AddExtensionBlock(&temp_save, ExtData[0], (char*)&(ExtData[1]))) == GIF_OK)
-						status = DGifGetExtensionNext(gif, &ExtData);
-					temp_save.Function = 0;
+					temp_save.Function = ExtCode;
+					status = AddExtensionBlock(&temp_save, ExtData[0], (char*)&(ExtData[1]));
 #endif
+					if (status == GIF_OK)
+						status = DGifGetExtensionNext(gif, &ExtData);
 				}
 				break;
 
