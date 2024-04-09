@@ -242,7 +242,7 @@ public:
    void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
 
    void SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange);
-   void SetEntryRange(ULong64_t start, ULong64_t end);
+   void ChangeBeginAndEndEntries(ULong64_t start, ULong64_t end);
    void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
 };
 
