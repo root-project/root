@@ -39,8 +39,7 @@ Computes the integral over a binned distribution by summing the bin contents of 
 #include <memory>
 
 
-
-using namespace std;
+using std::endl, std::list;
 
 
 // Register this class with RooNumIntConfig

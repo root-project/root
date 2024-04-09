@@ -15,8 +15,9 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
 
 #include <atomic>
@@ -185,9 +186,8 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
       nameValid.Throw();
    }
    auto fieldNameStr = std::string(fieldName);
-   if (fFieldNames.insert(fieldNameStr).second == false) {
+   if (fFieldNames.count(fieldNameStr) > 0)
       throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists in NTuple model"));
-   }
 }
 
 void ROOT::Experimental::RNTupleModel::EnsureNotFrozen() const
@@ -280,6 +280,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<RFieldBase> fiel
 
    if (fDefaultEntry)
       fDefaultEntry->AddValue(field->CreateValue());
+   fFieldNames.insert(field->GetFieldName());
    fFieldZero->Attach(std::move(field));
 }
 
@@ -307,14 +308,15 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    EnsureValidFieldName(fieldName);
    auto result = fProjectedFields->Add(std::move(field), fieldMap);
    if (!result) {
-      fFieldNames.erase(fieldName);
       return R__FORWARD_ERROR(result);
    }
+   fFieldNames.insert(fieldName);
    return RResult<void>::Success();
 }
 
-std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
-   std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
+std::shared_ptr<ROOT::Experimental::RNTupleCollectionWriter>
+ROOT::Experimental::RNTupleModel::MakeCollection(std::string_view fieldName,
+                                                 std::unique_ptr<RNTupleModel> collectionModel)
 {
    EnsureNotFrozen();
    EnsureValidFieldName(fieldName);
@@ -322,7 +324,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
       throw RException(R__FAIL("null collectionModel"));
    }
 
-   auto collectionWriter = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
+   auto collectionWriter = std::make_shared<RNTupleCollectionWriter>(std::move(collectionModel->fDefaultEntry));
 
    auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
    field->SetDescription(collectionModel->GetDescription());
@@ -330,6 +332,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    if (fDefaultEntry)
       fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(collectionWriter->GetOffsetPtr(), [](void *) {})));
 
+   fFieldNames.insert(field->GetFieldName());
    fFieldZero->Attach(std::move(field));
    return collectionWriter;
 }
@@ -386,6 +389,21 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
       entry->AddValue(f->BindValue(nullptr));
    }
    return entry;
+}
+
+ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetToken(std::string_view fieldName) const
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get field token of unfrozen model"));
+
+   const auto &topLevelFields = fFieldZero->GetSubFields();
+   auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
+                          [&fieldName](const RFieldBase *f) { return f->GetFieldName() == fieldName; });
+
+   if (it == topLevelFields.end()) {
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   }
+   return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fModelId);
 }
 
 ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const

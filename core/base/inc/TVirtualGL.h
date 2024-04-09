@@ -156,9 +156,7 @@ private:
    ClassDef(TGLPaintDevice, 0) // Base class for GL widgets and GL off-screen rendering
 };
 
-#ifndef __CINT__
 #define gGLManager (TGLManager::Instance())
 R__EXTERN TGLManager *(*gPtr2GLManager)();
-#endif
 
 #endif

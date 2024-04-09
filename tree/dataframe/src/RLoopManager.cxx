@@ -37,7 +37,6 @@
 
 #ifdef R__HAS_ROOT7
 #include "ROOT/RNTuple.hxx"
-#include "ROOT/RPageStorage.hxx"
 #include "ROOT/RNTupleDS.hxx"
 #endif
 
@@ -1111,6 +1110,12 @@ void RLoopManager::AddSampleCallback(void *nodePtr, SampleCallback_t &&callback)
 void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange)
 {
    fEmptyEntryRange = std::move(newRange);
+}
+
+void RLoopManager::SetEntryRange(const ULong64_t start, const ULong64_t end)
+{
+   fBeginEntry = start;
+   fEndEntry = end;
 }
 
 /**

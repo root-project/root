@@ -7,13 +7,32 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+/// @brief  Convert shape from integer format to dynamic one (based on Dim)
+/// @param shape
+/// @return shape based on Dim
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape){
-   std::vector<Dim> fshape(shape.size());
+   std::vector<Dim> ret_shape(shape.size());
    for (size_t i =0; i < shape.size(); i++){
-      fshape[i].dim = shape[i];
+      ret_shape[i].dim = shape[i];
    }
-   return fshape;
+   return ret_shape;
 }
+
+/// @brief Convert shape based on Dim to integer format
+/// @param shape
+/// @return shape based on integer. Return an empty shape in case shape is dynamic (has a parameter)
+std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape){
+   std::vector<size_t> ret_shape(shape.size());
+   for (size_t i =0; i < shape.size(); i++){
+      if (shape[i].isParam) {
+         ret_shape.clear();
+         break;
+      }
+      ret_shape[i] = shape[i].dim;
+   }
+   return ret_shape;
+}
+
 
 std::size_t ConvertShapeToLength(std::vector<size_t> shape){
    // Empty shape represent scalar values, so we return a length=1
@@ -61,7 +80,7 @@ ETensorType ConvertStringToType(std::string type){
    if(type == "float32" || type == "float" || type == "Float"){
      return ETensorType::FLOAT;
    }
-   else if(type == "int64"){
+   else if(type == "int64" || type == "int64_t"){
      return ETensorType::INT64;
    }
    else if (type == "double" || type == "float64"){
@@ -84,6 +103,41 @@ std::string ConvertShapeToString(std::vector<size_t> shape) {
    }
    out << " }";
    return out.str();
+}
+
+std::string ConvertDynamicShapeToString(std::vector<Dim> shape) {
+   std::stringstream out;
+   out << "{ ";
+   for (size_t i = 0; i < shape.size(); i++) {
+      out << shape[i].GetVal();
+      if (i < shape.size()-1) out << " , ";
+   }
+   out << " }";
+   return out.str();
+}
+
+std::string ConvertDynamicShapeToLength(std::vector<Dim> shape) {
+   // convert generic shape to a string
+   // multiply all the integer specified dimensions of the shape
+   std::string length;
+   size_t int_length = 0;
+   for (size_t i = 0; i < shape.size(); i++) {
+      if (shape[i].isParam) {
+         if (!length.empty()) length += " * ";
+         length += shape[i].param;
+      } else {
+         if (int_length == 0)
+            int_length = shape[i].dim;
+         else
+            int_length *= shape[i].dim;
+      }
+   }
+   // multiply the integer components to the parametric one
+   if (int_length > 0) {
+      if (!length.empty()) length += " * ";
+      length += std::to_string(int_length);
+   }
+   return length;
 }
 
 namespace{
@@ -109,6 +163,29 @@ bool UTILITY::AreSameShape(const std::vector<size_t>& shapeA, const std::vector<
    }
    for (size_t dim = 0; dim < shapeA.size(); dim++) {
       if (shapeA[dim] != shapeB[dim]) {
+         return false;
+      }
+   }
+   return true;
+}
+bool UTILITY::AreSameShape(const std::vector<size_t>& shapeA, const std::vector<Dim>& shapeB) {
+   if (shapeA.size() != shapeB.size()) {
+      return false;
+   }
+   for (size_t dim = 0; dim < shapeA.size(); dim++) {
+      if (shapeB[dim].isParam) return false;
+      if (shapeA[dim] != shapeB[dim].dim) {
+         return false;
+      }
+   }
+   return true;
+}
+bool UTILITY::AreSameShape(const std::vector<Dim>& shapeA, const std::vector<Dim>& shapeB) {
+   if (shapeA.size() != shapeB.size()) {
+      return false;
+   }
+   for (size_t dim = 0; dim < shapeA.size(); dim++) {
+      if (shapeA[dim].GetVal() != shapeB[dim].GetVal()) {
          return false;
       }
    }
@@ -296,7 +373,21 @@ std::vector<size_t> UTILITY::ComputeStrideFromShape(const std::vector<size_t> & 
    const auto size = shape.size();
    std::vector<size_t> strides(size,1);
    for (std::size_t i = 1; i < size; i++) {
-      strides[size - 1 - i] = strides[size - 1 - i + 1] * shape[size - 1 - i + 1];
+      strides[size - 1 - i] = strides[size - i ] * shape[size - i];
+   }
+   return strides;
+}
+
+std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape) {
+   // assume row major layout
+   const auto size = shape.size();
+   std::vector<Dim> strides(size);
+   strides[size-1] = Dim{1};
+   for (std::size_t i = 1; i < size; i++) {
+      if (!shape[size-i].isParam && !strides[size-i].isParam)
+         strides[size - 1 - i] = Dim{strides[size-i].dim * shape[size-i].dim};
+      else
+         strides[size - 1 - i] = Dim{std::string(strides[size-i].GetVal() + "*" + shape[size-i].GetVal())};
    }
    return strides;
 }

@@ -80,7 +80,12 @@ void CodeSquashContext::addToGlobalScope(std::string const &str)
 /// @return The final body of the function.
 std::string CodeSquashContext::assembleCode(std::string const &returnExpr)
 {
-   return _globalScope + _code + "\n return " + returnExpr + ";\n";
+   std::string arrDecl;
+   if(!_xlArr.empty()) {
+      arrDecl += "double auxArr[" + std::to_string(_xlArr.size()) + "];\n";
+      arrDecl += "for (int i = 0; i < " + std::to_string(_xlArr.size()) + "; i++) auxArr[i] = xlArr[i];\n";
+   }
+   return arrDecl + _globalScope + _code + "\n return " + returnExpr + ";\n";
 }
 
 /// @brief Since the squashed code represents all observables as a single flattened array, it is important
@@ -180,9 +185,9 @@ void CodeSquashContext::endLoop(LoopScope const &scope)
 }
 
 /// @brief Get a unique variable name to be used in the generated code.
-std::string CodeSquashContext::getTmpVarName()
+std::string CodeSquashContext::getTmpVarName() const
 {
-   return "tmpVar" + std::to_string(_tmpVarIdx++);
+   return "t" + std::to_string(_tmpVarIdx++);
 }
 
 /// @brief A function to save an expression that includes/depends on the result of the input node.
@@ -190,7 +195,8 @@ std::string CodeSquashContext::getTmpVarName()
 /// @param valueToSave The actual string value to save as a temporary.
 void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   //std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   std::string savedName = getTmpVarName();
 
    // Only save values if they contain operations.
    bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
@@ -239,16 +245,12 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 std::string CodeSquashContext::buildArg(std::span<const double> arr)
 {
    unsigned int n = arr.size();
-   std::string arrName = getTmpVarName();
-   std::string arrDecl = "double " + arrName + "[" + std::to_string(n) + "] = {";
+   std::string offset = std::to_string(_xlArr.size());
+   _xlArr.reserve(_xlArr.size() + n);
    for (unsigned int i = 0; i < n; i++) {
-      arrDecl += " " + std::to_string(arr[i]) + ",";
+      _xlArr.push_back(arr[i]);
    }
-   arrDecl.back() = '}';
-   arrDecl += ";\n";
-   addToCodeBody(arrDecl, true);
-
-   return arrName;
+   return "auxArr + " + offset;
 }
 
 bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const

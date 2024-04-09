@@ -1,5 +1,10 @@
 #include "ntuple_test.hxx"
 #include <TRandom3.h>
+#include <TMemFile.h>
+
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#endif
 
 #include <ROOT/RPageNullSink.hxx>
 using ROOT::Experimental::Internal::RPageNullSink;
@@ -277,6 +282,33 @@ TEST(RNTuple, PageFillingString) {
    EXPECT_EQ(10u, pr4.fPageInfos[1].fNElements);
 }
 
+#ifdef R__HAS_DAVIX
+TEST(RNTuple, OpenHTTP)
+{
+  std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root"));
+  auto reader = RNTupleReader::Open(file->Get<RNTuple>("Events"));
+  reader->LoadEntry(0);
+}
+#endif
+
+TEST(RNTuple, TMemFile)
+{
+   TMemFile file("memfile.root", "RECREATE");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pt = model->MakeField<float>("pt", 42.0);
+
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", file);
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open(file.Get<RNTuple>("ntpl"));
+   auto pt = reader->GetModel().GetDefaultEntry().GetPtr<float>("pt");
+   reader->LoadEntry(0);
+   EXPECT_EQ(*pt, 42.0);
+}
+
 TEST(RPageSinkBuf, Basics)
 {
    struct TestModel {
@@ -421,16 +453,55 @@ TEST(RPageSinkBuf, ParallelZip) {
       EXPECT_EQ((std::vector<float>(3, fi)), viewKlassVec(i).at(0).v2.at(0));
       EXPECT_EQ("hi" + std::to_string(i), viewKlassVec(i).at(0).s);
    }
+
+#ifdef R__USE_IMT
+   ROOT::DisableImplicitMT();
+#endif
 }
+
+#ifdef R__USE_IMT
+TEST(RPageSinkBuf, ParallelZipIMT)
+{
+   ROOT::EnableImplicitMT(2);
+
+   ROOT::TThreadExecutor ex(2);
+   ex.Foreach(
+      [&](int i) {
+         std::string filename = "test_ntuple_sinkbuf_pzip.";
+         filename += std::to_string(i);
+         filename += ".root";
+         FileRaii fileGuard(filename);
+
+         auto model = ROOT::Experimental::RNTupleModel::Create();
+         auto wrPt = model->MakeField<float>("pt", 42.0);
+
+         RNTupleWriteOptions options;
+         options.SetApproxUnzippedPageSize(8);
+         options.SetUseBufferedWrite(true);
+         auto writer =
+            ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
+         for (int c = 0; c < 2; c++) {
+            writer->Fill();
+            writer->Fill();
+            // The first page is full now.
+            writer->Fill();
+            writer->Fill();
+            // The second page is full now.
+            writer->Fill();
+            writer->CommitCluster();
+         }
+      },
+      {1, 2});
+
+   ROOT::DisableImplicitMT();
+}
+#endif
 
 TEST(RPageSinkBuf, CommitSealedPageV)
 {
    RNTupleWriteOptions options;
    options.SetApproxUnzippedPageSize(16);
 
-#ifdef R__USE_IMT
-   ROOT::DisableImplicitMT();
-#endif
    {
       std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
@@ -471,6 +542,10 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       EXPECT_EQ(0, counters.fNCommitSealedPage);
       EXPECT_EQ(1, counters.fNCommitSealedPageV);
    }
+
+#ifdef R__USE_IMT
+   ROOT::DisableImplicitMT();
+#endif
 }
 
 TEST(RPageSink, Empty)

@@ -241,6 +241,12 @@ if(builtin_llvm)
   get_directory_property(LLVM_TARGET_TRIPLE DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGET_TRIPLE)
   #---Get back the potentially updated LLVM_TARGETS_TO_BUILD (expanding all/host/Native)---------------
   get_directory_property(LLVM_TARGETS_TO_BUILD DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGETS_TO_BUILD)
+
+  if(MSVC)
+      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/$<CONFIG>/bin/llvm-tblgen.exe")
+  else()
+      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
+  endif()
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)

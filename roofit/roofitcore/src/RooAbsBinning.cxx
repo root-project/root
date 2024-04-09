@@ -31,7 +31,7 @@ This class defines the interface to retrieve bin boundaries, ranges etc.
 
 #include "Riostream.h"
 
-using namespace std;
+using std::ostream;
 
 ClassImp(RooAbsBinning);
 

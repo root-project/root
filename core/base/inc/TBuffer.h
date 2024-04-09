@@ -247,24 +247,24 @@ public:
    virtual   void     WriteArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) = 0;
    virtual   void     WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) = 0;
 
-   virtual   void     WriteFastArray(const Bool_t    *b, Int_t n) = 0;
-   virtual   void     WriteFastArray(const Char_t    *c, Int_t n) = 0;
-   virtual   void     WriteFastArrayString(const Char_t    *c, Int_t n) = 0;
-   virtual   void     WriteFastArray(const UChar_t   *c, Int_t n) = 0;
-   virtual   void     WriteFastArray(const Short_t   *h, Int_t n) = 0;
-   virtual   void     WriteFastArray(const UShort_t  *h, Int_t n) = 0;
-   virtual   void     WriteFastArray(const Int_t     *i, Int_t n) = 0;
-   virtual   void     WriteFastArray(const UInt_t    *i, Int_t n) = 0;
-   virtual   void     WriteFastArray(const Long_t    *l, Int_t n) = 0;
-   virtual   void     WriteFastArray(const ULong_t   *l, Int_t n) = 0;
-   virtual   void     WriteFastArray(const Long64_t  *l, Int_t n) = 0;
-   virtual   void     WriteFastArray(const ULong64_t *l, Int_t n) = 0;
-   virtual   void     WriteFastArray(const Float_t   *f, Int_t n) = 0;
-   virtual   void     WriteFastArray(const Double_t  *d, Int_t n) = 0;
-   virtual   void     WriteFastArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) = 0;
-   virtual   void     WriteFastArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) = 0;
-   virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s = nullptr) = 0;
-   virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc = kFALSE, TMemberStreamer *s = nullptr) = 0;
+   virtual   void     WriteFastArray(const Bool_t    *b, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const Char_t    *c, Long64_t n) = 0;
+   virtual   void     WriteFastArrayString(const Char_t    *c, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const UChar_t   *c, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const Short_t   *h, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const UShort_t  *h, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const Int_t     *i, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const UInt_t    *i, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const Long_t    *l, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const ULong_t   *l, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const Long64_t  *l, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const ULong64_t *l, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const Float_t   *f, Long64_t n) = 0;
+   virtual   void     WriteFastArray(const Double_t  *d, Long64_t n) = 0;
+   virtual   void     WriteFastArrayFloat16(const Float_t  *f, Long64_t n, TStreamerElement *ele = nullptr) = 0;
+   virtual   void     WriteFastArrayDouble32(const Double_t  *d, Long64_t n, TStreamerElement *ele = nullptr) = 0;
+   virtual   void     WriteFastArray(void  *start,  const TClass *cl, Long64_t n=1, TMemberStreamer *s = nullptr) = 0;
+   virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Long64_t n=1, Bool_t isPreAlloc = kFALSE, TMemberStreamer *s = nullptr) = 0;
 
    virtual   void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = nullptr) = 0;
    virtual   void     StreamObject(void *obj, const char *className, const TClass* onFileClass = nullptr) = 0;
@@ -374,8 +374,6 @@ inline TBuffer &operator<<(TBuffer &buf, Double_t d) { buf.WriteDouble(d); retur
 inline TBuffer &operator<<(TBuffer &buf, const Char_t *c)  { buf.WriteCharP(c);  return buf; }
 inline TBuffer &operator<<(TBuffer &buf, const TString &s) { buf.WriteTString(s);return buf; }
 
-#ifndef __CINT__
-
 #if defined(R__SOLARIS) && defined(R__GNU)
 #include <typeinfo>
 #endif
@@ -402,10 +400,6 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
    buf.WriteObjectAny(obj, cl);
    return buf;
 }
-#else
-template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
-template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
-#endif
 
 template <class T>
 inline Int_t TBuffer::WriteObject(const T *objptr, Bool_t cacheReuse)

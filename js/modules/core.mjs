@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/01/2024',
+version_date = '18/03/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -215,7 +215,7 @@ settings = {
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
-   /** @summary Show progress box */
+   /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
    ToolBar: nodejs ? false : 'popup',
@@ -290,7 +290,15 @@ settings = {
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
    StripAxisLabels: true,
    /** @summary Draw TF1 by default as curve or line */
-   FuncAsCurve: false
+   FuncAsCurve: false,
+   /** @summary Time zone used for date/time display of file time */
+   TimeZone: '',
+   /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
+   NewTabUrl: '',
+   /** @summary Extra parameters which will be append to the url when item shown in new tab */
+   NewTabUrlPars: '',
+   /** @summary Export different settings in output URL */
+   NewTabUrlExportSettings: false
 },
 
 /** @namespace

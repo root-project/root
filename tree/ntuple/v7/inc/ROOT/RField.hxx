@@ -41,6 +41,7 @@
 #include <new>
 #include <set>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <typeinfo>
 #include <variant>
@@ -49,6 +50,7 @@
 
 class TClass;
 class TEnum;
+class TObject;
 
 namespace ROOT {
 
@@ -58,7 +60,7 @@ class RFieldBase;
 namespace Experimental {
 
 class RCollectionField;
-class RCollectionNTupleWriter;
+class RNTupleCollectionWriter;
 class REntry;
 
 namespace Internal {
@@ -532,8 +534,8 @@ protected:
    /// normalized type name and type alias
    /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
    /// single type name
-   static RResult<std::unique_ptr<RFieldBase>>
-   Create(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias);
+   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &canonicalType,
+                                                      const std::string &typeAlias, bool fContinueOnError = false);
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
@@ -600,6 +602,13 @@ public:
       using deleter = std::default_delete<T>;
    };
 
+   /// Used in the return value of the Check() method
+   struct RCheckResult {
+      std::string fFieldName; ///< Qualified field name causing the error
+      std::string fTypeName;  ///< Type name corresponding to the (sub) field
+      std::string fErrMsg;    ///< Cause of the failure, e.g. unsupported type
+   };
+
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
    /// If `isSimple` is `true`, the trait `kTraitMappable` is automatically set on construction. However, the
    /// field might be demoted to non-simple if a post-read callback is set.
@@ -617,6 +626,9 @@ public:
    /// Factory method to resurrect a field from the stored on-disk type information
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &typeName);
+   /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
+   /// Otherwise there is an error record for each failing sub field (sub type).
+   static std::vector<RCheckResult> Check(const std::string &fieldName, const std::string &typeName);
    /// Check whether a given string is a valid field name
    static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 
@@ -718,6 +730,31 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
+
+/// Used in RFieldBase::Check() to record field creation failures.
+class RInvalidField final : public RFieldBase {
+   std::string fError;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RInvalidField>(newName, GetTypeName(), fError);
+   }
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+   void ConstructValue(void *) const final {}
+
+public:
+   RInvalidField(std::string_view name, std::string_view type, std::string_view error)
+      : RFieldBase(name, type, ENTupleStructure::kLeaf, false /* isSimple */), fError(error)
+   {
+   }
+
+   std::string GetError() const { return fError; }
+
+   size_t GetValueSize() const final { return 0; }
+   size_t GetAlignment() const final { return 0; }
+}; // RInvalidField
 
 /// The field for a class with dictionary
 class RClassField : public RFieldBase {
@@ -1582,7 +1619,7 @@ public:
 class RCollectionField final : public ROOT::Experimental::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RCollectionNTupleWriter> fCollectionWriter;
+   std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -1598,7 +1635,7 @@ protected:
 
 public:
    static std::string TypeName() { return ""; }
-   RCollectionField(std::string_view name, std::shared_ptr<RCollectionNTupleWriter> collectionWriter,
+   RCollectionField(std::string_view name, std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
                     std::unique_ptr<RFieldZero> collectionParent);
    RCollectionField(RCollectionField&& other) = default;
    RCollectionField& operator =(RCollectionField&& other) = default;
@@ -2385,6 +2422,41 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+/// TObject requires special handling of the fBits and fUniqueID members
+template <>
+class RField<TObject> final : public RFieldBase {
+   static std::size_t GetOffsetOfMember(const char *name);
+   static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
+   static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
+   void ConstructValue(void *where) const override;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+   void OnConnectPageSource() final;
+
+public:
+   static std::string TypeName() { return "TObject"; }
+
+   RField(std::string_view fieldName);
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   std::uint32_t GetTypeVersion() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 

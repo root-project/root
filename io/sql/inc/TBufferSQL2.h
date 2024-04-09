@@ -119,7 +119,7 @@ protected:
    R__ALWAYS_INLINE void SqlReadFastArray(T *arr, Int_t arrsize);
 
    template <typename T>
-   R__ALWAYS_INLINE void SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize = kFALSE);
+   R__ALWAYS_INLINE void SqlWriteArray(T *arr, Long64_t arrsize, Bool_t withsize = kFALSE);
 
 public:
    TBufferSQL2(TBuffer::EMode mode, TSQLFile *file = nullptr);
@@ -219,22 +219,22 @@ public:
    void WriteArray(const Float_t *f, Int_t n) final;
    void WriteArray(const Double_t *d, Int_t n) final;
 
-   void WriteFastArray(const Bool_t *b, Int_t n) final;
-   void WriteFastArray(const Char_t *c, Int_t n) final;
-   void WriteFastArray(const UChar_t *c, Int_t n) final;
-   void WriteFastArray(const Short_t *h, Int_t n) final;
-   void WriteFastArray(const UShort_t *h, Int_t n) final;
-   void WriteFastArray(const Int_t *i, Int_t n) final;
-   void WriteFastArray(const UInt_t *i, Int_t n) final;
-   void WriteFastArray(const Long_t *l, Int_t n) final;
-   void WriteFastArray(const ULong_t *l, Int_t n) final;
-   void WriteFastArray(const Long64_t *l, Int_t n) final;
-   void WriteFastArray(const ULong64_t *l, Int_t n) final;
-   void WriteFastArray(const Float_t *f, Int_t n) final;
-   void WriteFastArray(const Double_t *d, Int_t n) final;
-   void WriteFastArrayString(const Char_t *c, Int_t n) final;
-   void WriteFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr) final;
-   Int_t WriteFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
+   void WriteFastArray(const Bool_t *b, Long64_t n) final;
+   void WriteFastArray(const Char_t *c, Long64_t n) final;
+   void WriteFastArray(const UChar_t *c, Long64_t n) final;
+   void WriteFastArray(const Short_t *h, Long64_t n) final;
+   void WriteFastArray(const UShort_t *h, Long64_t n) final;
+   void WriteFastArray(const Int_t *i, Long64_t n) final;
+   void WriteFastArray(const UInt_t *i, Long64_t n) final;
+   void WriteFastArray(const Long_t *l, Long64_t n) final;
+   void WriteFastArray(const ULong_t *l, Long64_t n) final;
+   void WriteFastArray(const Long64_t *l, Long64_t n) final;
+   void WriteFastArray(const ULong64_t *l, Long64_t n) final;
+   void WriteFastArray(const Float_t *f, Long64_t n) final;
+   void WriteFastArray(const Double_t *d, Long64_t n) final;
+   void WriteFastArrayString(const Char_t *c, Long64_t n) final;
+   void WriteFastArray(void *start, const TClass *cl, Long64_t n = 1, TMemberStreamer *s = nullptr) final;
+   Int_t WriteFastArray(void **startp, const TClass *cl, Long64_t n = 1, Bool_t isPreAlloc = kFALSE,
                         TMemberStreamer *s = nullptr) final;
 
    void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = nullptr) final;

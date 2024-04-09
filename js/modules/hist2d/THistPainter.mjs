@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, constants, create, isObject, isFunc, isStr, getPromise,
-         clTList, clTPaveText, clTPaveStats, clTPaletteAxis, clTProfile2D, clTProfile3D,
+         clTList, clTPaveText, clTPaveStats, clTPaletteAxis, clTProfile2D, clTProfile3D, clTPad,
          clTAxis, clTF1, clTF2, clTProfile, kNoZoom, clTCutG, kNoStats } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
@@ -194,30 +194,18 @@ class THistDrawOptions {
       if (d.check('GRAYSCALE'))
          pp?.setGrayscale(true);
 
-      d.getColor = function() {
-         this.color = this.partAsInt(1) - 1;
-         if (this.color >= 0) return true;
-         for (let col = 0; col < 8; ++col) {
-            if (getColor(col).toUpperCase() === this.part) {
-               this.color = col;
-               return true;
-            }
-         }
-         return false;
-      };
-
-      if (d.check('FILL_', true) && d.getColor()) {
+      if (d.check('FILL_', 'color')) {
          this.histoFillColor = d.color;
          this.histoFillPattern = 1001;
       }
 
-      if (d.check('LINE_', true) && d.getColor())
+      if (d.check('LINE_', 'color'))
          this.histoLineColor = getColor(d.color);
 
-      if (d.check('XAXIS_', true) && d.getColor())
+      if (d.check('XAXIS_', 'color'))
          histo.fXaxis.fAxisColor = histo.fXaxis.fLabelColor = histo.fXaxis.fTitleColor = d.color;
 
-      if (d.check('YAXIS_', true) && d.getColor())
+      if (d.check('YAXIS_', 'color'))
          histo.fYaxis.fAxisColor = histo.fYaxis.fLabelColor = histo.fYaxis.fTitleColor = d.color;
 
       const has_main = painter ? !!painter.getMainPainter() : false;
@@ -384,10 +372,26 @@ class THistDrawOptions {
       if (d.check('PMC') && !this._pmc)
          this._pmc = 2;
 
-      if (d.check('L')) { this.Line = true; this.Hist = false; this.Error = false; }
+      if (d.check('L')) { this.Line = true; this.Hist = false; }
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
 
       if (d.check('A')) this.Axis = -1;
+      if (pad?.$ratio_pad === 'up') {
+         if (!this.Same) this.Axis = 0; // draw both axes
+         histo.fXaxis.fLabelSize = 0;
+         histo.fXaxis.fTitle = '';
+         histo.fYaxis.$use_top_pad = true;
+      } else if (pad?.$ratio_pad === 'low') {
+         if (!this.Same) this.Axis = 0; // draw both axes
+         histo.fXaxis.$use_top_pad = true;
+         histo.fYaxis.$use_top_pad = true;
+         histo.fXaxis.fTitle = 'x';
+         const fp = painter?.getCanvPainter().findPainterFor(null, 'upper_pad', clTPad)?.getFramePainter();
+         if (fp) {
+            painter.zoom_xmin = fp.scale_xmin;
+            painter.zoom_xmax = fp.scale_xmax;
+         }
+      }
 
       if (d.check('RX') || pad?.$RX) this.RevX = true;
       if (d.check('RY') || pad?.$RY) this.RevY = true;
@@ -499,7 +503,8 @@ class THistDrawOptions {
          } else if (this.Line) {
             res += 'L';
             if (this.Fill) res += 'F';
-         }
+         } else if (this.Off)
+            res = '][';
 
          if (this.Cjust) res += ' CJUST';
 
@@ -509,8 +514,9 @@ class THistDrawOptions {
             res += this.TextKind;
          }
       }
-
-      if (is_main_hist && res) {
+      if (this.Same)
+         res += this.ForceStat ? 'SAMES' : 'SAME';
+      else if (is_main_hist && res) {
          if (this.ForceStat || (this.StatEnabled === true))
             res += '_STAT';
          else if (this.NoStat || (this.StatEnabled === false))
@@ -912,10 +918,12 @@ class THistPainter extends ObjectPainter {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
    }
 
-   /** @summary Check pad ranges when drawing of frame axes will be performed */
-   checkPadRange(use_pad) {
+   /** @summary Check pad ranges when drawing of frame axes will be performed
+     * @desc Only if histogram is main painter and drawn with SAME option, pad range can be used
+     * In all other cases configured range must be derived from histogram itself */
+   checkPadRange() {
       if (this.isMainPainter())
-         this.check_pad_range = use_pad ? 'pad_range' : true;
+         this.check_pad_range = this.options.Same ? 'pad_range' : true;
    }
 
    /** @summary Create necessary histogram draw attributes */
@@ -1071,7 +1079,7 @@ class THistPainter extends ObjectPainter {
       if (!o.omaximum)
          o.maximum = histo.fMaximum;
 
-      if (this.snapid || !fp || !fp.zoomChangedInteractive())
+      if (!fp || !fp.zoomChangedInteractive())
          this.checkPadRange();
 
       this.scanContent();
@@ -1087,7 +1095,6 @@ class THistPainter extends ObjectPainter {
    extractAxesProperties(ndim) {
       const assignTAxisFuncs = axis => {
          if (axis.fXbins.length >= axis.fNbins) {
-            axis.regular = false;
             axis.GetBinCoord = function(bin) {
                const indx = Math.round(bin);
                if (indx <= 0) return this.fXmin;
@@ -1102,10 +1109,9 @@ class THistPainter extends ObjectPainter {
                return this.fNbins;
             };
          } else {
-            axis.regular = true;
-            axis.binwidth = (axis.fXmax - axis.fXmin) / (axis.fNbins || 1);
-            axis.GetBinCoord = function(bin) { return this.fXmin + bin*this.binwidth; };
-            axis.FindBin = function(x, add) { return Math.floor((x - this.fXmin) / this.binwidth + add); };
+            axis.$binwidth = (axis.fXmax - axis.fXmin) / (axis.fNbins || 1);
+            axis.GetBinCoord = function(bin) { return this.fXmin + bin*this.$binwidth; };
+            axis.FindBin = function(x, add) { return Math.floor((x - this.fXmin) / this.$binwidth + add); };
          }
       };
 
@@ -1121,7 +1127,9 @@ class THistPainter extends ObjectPainter {
       this.ymin = histo.fYaxis.fXmin;
       this.ymax = histo.fYaxis.fXmax;
 
-      if ((ndim === 1) && this.options.ohmin && this.options.ohmax) {
+      this._exact_y_range = (ndim === 1) && this.options.ohmin && this.options.ohmax;
+
+      if (this._exact_y_range) {
          this.ymin = this.options.hmin;
          this.ymax = this.options.hmax;
       }
@@ -1205,6 +1213,8 @@ class THistPainter extends ObjectPainter {
 
       fp.createXY({ ndim: this.getDimension(),
                     check_pad_range: this.check_pad_range,
+                    zoom_xmin: this.zoom_xmin,
+                    zoom_xmax: this.zoom_xmax,
                     zoom_ymin: this.zoom_ymin,
                     zoom_ymax: this.zoom_ymax,
                     ymin_nz: this.ymin_nz,
@@ -1217,6 +1227,8 @@ class THistPainter extends ObjectPainter {
                     extra_y_space: this.options.Text && (this.options.BarStyle > 0),
                     hist_painter: this });
       delete this.check_pad_range;
+      delete this.zoom_xmin;
+      delete this.zoom_xmax;
 
       if (this.options.Same)
          return false;
@@ -2341,11 +2353,9 @@ class THistPainter extends ObjectPainter {
          if (painter.isTH2Poly()) {
             if (painter.options.Mode3D)
                painter.options.Lego = 12; // lego always 12
-            else if (!painter.options.Color)
-               painter.options.Color = true; // default is color
          }
 
-         painter.checkPadRange(/* !painter.options.Mode3D && */ (painter.options.Contour !== 14));
+         painter.checkPadRange();
 
          painter.scanContent();
 

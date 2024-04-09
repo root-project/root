@@ -51,19 +51,18 @@ struct BasisFunction {
    const Func * fFunc;
 };
 
-
-//______________________________________________________________________________
-//
-//  TLinearMinimizer, simple class implementing the ROOT::Math::Minimizer interface using
-//  TLinearFitter.
-//  This class uses TLinearFitter to find directly (by solving a system of linear equations)
-//  the minimum of a
-//  least-square function which has a linear dependence in the fit parameters.
-//  This class is not used directly, but via the ROOT::Fitter class, when calling the
-//  LinearFit method. It is instantiates using the plug-in manager (plug-in name is "Linear")
-//
-//__________________________________________________________________________________________
-
+////////////////////////////////////////////////////////////////////////////////
+/// \class TLinearMinimizer
+/// \see Minuit2 for a newer version of this class
+///
+/// TLinearMinimizer, simple class implementing the ROOT::Math::Minimizer
+/// interface usingTLinearFitter. This class uses TLinearFitter to find directly
+/// (by solving a system of linear equations) the minimum of a least-square
+/// function which has a linear dependence in the fit parameters. This class is
+/// not used directly, but via the ROOT::Fitter class, when calling the
+/// LinearFit method. It is instantiates using the plug-in manager
+/// (plug-in name is "Linear").
+////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(TLinearMinimizer);
 

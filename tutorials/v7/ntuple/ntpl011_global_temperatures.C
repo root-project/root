@@ -20,10 +20,9 @@
 // `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RColor.hxx>
 #include <ROOT/RHistDrawable.hxx>
@@ -88,11 +87,13 @@ void Ingest()
 
    // Hand-over the data model to a newly created ntuple of name "globalTempData", stored in kNTupleFileName.
    // In return, get a unique pointer to a fillable ntuple (first compress the file).
-   RNTupleWriteOptions options;
-   options.SetCompression(ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName, options);
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName);
 
-   auto file = RRawFile::Create(kRawDataUrl);
+   // Download data in 4MB blocks
+   RRawFile::ROptions options;
+   options.fBlockSize = 4'000'000;
+
+   auto file = RRawFile::Create(kRawDataUrl, options);
    std::string record;
    constexpr int kMaxCharsPerLine = 128;
    while (file->Readln(record)) {

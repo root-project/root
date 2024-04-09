@@ -181,6 +181,13 @@ private:
 public:
    /// TFile status bits. BIT(13) is taken up by TObject
    enum EStatusBits {
+      // Produce files forward compatible with (unpatched) version older than
+      // v6.30 by recording the internal bits kIsOnHeap and kNotDeleted; Older
+      // releases were not explicitly setting those bits to the correct value
+      // but instead used verbatim the value stored in the file.
+      // Note that to avoid a circular dependency, this value is used
+      // hard coded in TObject.cxx.
+      k630forwardCompatibility = BIT(2),
       kRecovered     = BIT(10),
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),
@@ -337,13 +344,7 @@ public:
    ClassDefOverride(TFile,8)  //ROOT file
 };
 
-#ifndef __CINT__
 #define gFile (TFile::CurrentFile())
-
-#elif defined(__MAKECINT__)
-// To properly handle the use of gFile in header files (in static declarations)
-R__EXTERN TFile   *gFile;
-#endif
 
 /**
 \class TFileOpenHandle

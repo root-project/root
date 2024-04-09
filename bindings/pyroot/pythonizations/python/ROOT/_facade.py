@@ -279,9 +279,9 @@ class ROOTFacade(types.ModuleType):
     def VecOps(self):
         ns = self._fallback_getattr("VecOps")
         try:
-            from libROOTPythonizations import AsRVec
+            from ._pythonization._rvec import _AsRVec
 
-            ns.AsRVec = AsRVec
+            ns.AsRVec = _AsRVec
         except:
             raise Exception("Failed to pythonize the namespace VecOps")
         del type(self).VecOps
@@ -292,8 +292,7 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         ns = self._fallback_getattr("RDF")
         try:
-            # Inject FromNumpy function
-            from libROOTPythonizations import MakeNumpyDataFrame
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
             # Make a copy of the arrays that have strides to make sure we read the correct values
             # TODO a cleaner fix
@@ -303,9 +302,18 @@ class ROOTFacade(types.ModuleType):
                 for key in np_dict.keys():
                     if (np_dict[key].__array_interface__["strides"]) is not None:
                         np_dict[key] = numpy.copy(np_dict[key])
-                return MakeNumpyDataFrame(np_dict)
+                return _MakeNumpyDataFrame(np_dict)
 
             ns.FromNumpy = MakeNumpyDataFrameCopy
+
+            # make a RDataFrame from a Pandas dataframe
+            def MakePandasDataFrame(df):
+                np_dict = {}
+                for key in df.columns:
+                    np_dict[key] = df[key].to_numpy()
+                return _MakeNumpyDataFrame(np_dict)
+            ns.FromPandas = MakePandasDataFrame
+
             try:
                 # Inject Experimental.Distributed package into namespace RDF if available
                 ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
@@ -339,12 +347,10 @@ class ROOTFacade(types.ModuleType):
         hasRDF = "dataframe" in gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator
+                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor
 
                 inject_rbatchgenerator(ns)
-                from libROOTPythonizations import AsRTensor
-
-                ns.Experimental.AsRTensor = AsRTensor
+                ns.Experimental.AsRTensor = _AsRTensor
             except:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA

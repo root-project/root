@@ -17,7 +17,6 @@
 #include "../../cppyy/CPyCppyy/src/Utility.h"
 
 #include "PyROOTPythonize.h"
-#include "PyzCppHelpers.hxx"
 
 // ROOT
 #include "TClass.h"
@@ -51,15 +50,11 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
       Utility::GetBuffer(pyobject, '*', 1, address, false);
    }
 
-   // Now use binding to return a usable class
-   TClass *klass = nullptr;
-   if (up) {
-      // Upcast: result is a base
-      klass = (TClass *)GetTClass(pyclass)->DynamicCast(TClass::Class(), CPyCppyy::Instance_AsVoidPtr(pyclass));
-   } else {
-      // Downcast: result is a derived
-      klass = (TClass *)GetTClass(self)->DynamicCast(TClass::Class(), cl1);
-   }
+   // Now use binding to return a usable class. Upcast: result is a base.
+   // Downcast: result is a derived.
+   Cppyy::TCppType_t cpptype = ((CPyCppyy::CPPInstance*)(up ? pyclass : self))->ObjectIsA();
+   TClass *tcl = TClass::GetClass(Cppyy::GetScopedFinalName(cpptype).c_str());
+   TClass *klass = (TClass *)tcl->DynamicCast(TClass::Class(), up ? CPyCppyy::Instance_AsVoidPtr(pyclass) : cl1);
 
    return CPyCppyy::Instance_FromVoidPtr(address, klass->GetName());
 }

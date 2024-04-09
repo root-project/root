@@ -1978,6 +1978,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       }
    }
 
+   PrintStr("@");
    PrintFast(7,"</text>");
 
    if (fTextAngle != 0.) {

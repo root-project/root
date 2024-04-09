@@ -39,11 +39,12 @@ Quadratic interpolation of TGraph
 ClassImp(TMVA::TSpline2);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor from TGraph
+/// constructor from TGraph pointer (not owned by TSpline2)
 /// TSpline is a TNamed object
 
-TMVA::TSpline2::TSpline2( const TString& title, TGraph* theGraph )
-: fGraph( theGraph ) // not owned by TSpline2
+TMVA::TSpline2::TSpline2(const TString &title, const TGraph *theGraph)
+: fX(theGraph->GetX(), theGraph->GetX() + theGraph->GetN()),
+  fY(theGraph->GetY(), theGraph->GetY() + theGraph->GetN())
 {
    SetNameTitle( title, title );
 }
@@ -51,10 +52,7 @@ TMVA::TSpline2::TSpline2( const TString& title, TGraph* theGraph )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::TSpline2::~TSpline2( void )
-{
-   if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
-}
+TMVA::TSpline2::~TSpline2(void) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns quadratically interpolated TGraph entry around x
@@ -62,55 +60,54 @@ TMVA::TSpline2::~TSpline2( void )
 Double_t TMVA::TSpline2::Eval( const Double_t x ) const
 {
    Double_t retval=0;
-
-   Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
-                                     fGraph->GetX(),
-                                     x );
+   Int_t N = fX.size();
+   Int_t ibin = std::distance(fX.begin(), TMath::BinarySearch( fX.begin(), fX.end(), x ));
 
    // sanity checks
-   if (ibin < 0               ) ibin = 0;
-   if (ibin >= fGraph->GetN()) ibin =  fGraph->GetN() - 1;
+   if (ibin < 0 ) ibin = 0;
+   if (ibin >= N) ibin = N - 1;
 
    Float_t dx = 0; // should be zero
+   if (N < 3) { // if the graph does not have enough points
+      Warning("Eval", "Graph has less than 3 points, returning value of the closest");
+      retval = fY[ibin];
+   } else if (ibin == 0) {
 
-   if (ibin == 0 ) {
+      retval = Quadrax(x,
+                       fX[ibin] + dx,
+                       fX[ibin + 1] + dx,
+                       fX[ibin + 2] + dx,
+                       fY[ibin],
+                       fY[ibin + 1],
+                       fY[ibin + 2]);
 
-      retval = Quadrax(  x,
-                         fGraph->GetX()[ibin]   + dx,
-                         fGraph->GetX()[ibin+1] + dx,
-                         fGraph->GetX()[ibin+2] + dx,
-                         fGraph->GetY()[ibin],
-                         fGraph->GetY()[ibin+1],
-                         fGraph->GetY()[ibin+2]);
+   } else if (ibin >= (N - 2)) {
+      ibin = N - 1; // always fixed to last bin
 
-   }
-   else if (ibin >= (fGraph->GetN()-2)) {
-      ibin = fGraph->GetN() - 1; // always fixed to last bin
-
-      retval = Quadrax( x,
-                        fGraph->GetX()[ibin-2] + dx,
-                        fGraph->GetX()[ibin-1] + dx,
-                        fGraph->GetX()[ibin]   + dx,
-                        fGraph->GetY()[ibin-2],
-                        fGraph->GetY()[ibin-1],
-                        fGraph->GetY()[ibin]);
-   }
-   else {
+      retval = Quadrax(x,
+                       fX[ibin - 2] + dx,
+                       fX[ibin - 1] + dx,
+                       fX[ibin] + dx,
+                       fY[ibin - 2],
+                       fY[ibin - 1],
+                       fY[ibin]);
+   } else {
 
       retval = ( Quadrax( x,
-                          fGraph->GetX()[ibin-1] + dx,
-                          fGraph->GetX()[ibin]   + dx,
-                          fGraph->GetX()[ibin+1] + dx,
-                          fGraph->GetY()[ibin-1],
-                          fGraph->GetY()[ibin],
-                          fGraph->GetY()[ibin+1])
+                          fX[ibin-1] + dx,
+                          fX[ibin]   + dx,
+                          fX[ibin+1] + dx,
+                          fY[ibin-1],
+                          fY[ibin],
+                          fY[ibin+1])
                  +
-                 Quadrax( x, fGraph->GetX()[ibin] + dx,
-                          fGraph->GetX()[ibin+1]  + dx,
-                          fGraph->GetX()[ibin+2]  + dx,
-                          fGraph->GetY()[ibin],
-                          fGraph->GetY()[ibin+1],
-                          fGraph->GetY()[ibin+2]) )*0.5;
+                 Quadrax( x,
+                          fX[ibin] + dx,
+                          fX[ibin+1]  + dx,
+                          fX[ibin+2]  + dx,
+                          fY[ibin],
+                          fY[ibin+1],
+                          fY[ibin+2]) )*0.5;
    }
 
    return retval;

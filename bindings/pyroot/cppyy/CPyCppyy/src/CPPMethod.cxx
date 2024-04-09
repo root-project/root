@@ -14,9 +14,11 @@
 #include "CPyCppyy/PyException.h"
 
 // Standard
+#include <algorithm>
 #include <assert.h>
 #include <string.h>
 #include <exception>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <typeinfo>
@@ -33,7 +35,56 @@ namespace CPyCppyy {
 }
 
 
+//- public helper ------------------------------------------------------------
+CPyCppyy::PyCallArgs::~PyCallArgs() {
+    if (fFlags & kSelfSwap)            // if self swap, fArgs has been offset by -1
+        std::swap((PyObject*&)fSelf, ((PyObject**)fArgs)[0]);
+
+#if PY_VERSION_HEX >= 0x03080000
+    if (fFlags & kIsOffset) fArgs -= 1;
+
+    if (fFlags & kDoItemDecref) {
+        for (Py_ssize_t iarg = 0; iarg < CPyCppyy_PyArgs_GET_SIZE(fArgs, fNArgsf); ++iarg)
+            Py_DECREF(fArgs[iarg]);
+    }
+
+    if (fFlags & kDoFree)
+        PyMem_Free((void*)fArgs);
+    else if (fFlags & kArgsSwap) {
+    // if self swap, fArgs has been offset by -1
+        int offset = (fFlags & kSelfSwap) ? 1 : 0;
+        std::swap(((PyObject**)fArgs+offset)[0], ((PyObject**)fArgs+offset)[1]);
+    }
+#else
+    if (fFlags & kDoDecref)
+        Py_DECREF((PyObject*)fArgs);
+    else if (fFlags & kArgsSwap)
+        std::swap(PyTuple_GET_ITEM(fArgs, 0), PyTuple_GET_ITEM(fArgs, 1));
+#endif
+}
+
+
 //- private helpers ----------------------------------------------------------
+inline bool CPyCppyy::CPPMethod::VerifyArgCount_(Py_ssize_t actual)
+{
+// actual number of arguments must be between required and max args
+    Py_ssize_t maxargs = (Py_ssize_t)fConverters.size();
+
+    if (maxargs != actual) {
+        if (actual < (Py_ssize_t)fArgsRequired) {
+            SetPyError_(CPyCppyy_PyText_FromFormat(
+                "takes at least %d arguments (%zd given)", fArgsRequired, actual));
+            return false;
+        } else if (maxargs < actual) {
+            SetPyError_(CPyCppyy_PyText_FromFormat(
+                "takes at most %zd arguments (%zd given)", maxargs, actual));
+            return false;
+        }
+    }
+    return true;
+}
+
+//----------------------------------------------------------------------------
 inline void CPyCppyy::CPPMethod::Copy_(const CPPMethod& /* other */)
 {
 // fScope and fMethod handled separately
@@ -49,16 +100,14 @@ inline void CPyCppyy::CPPMethod::Destroy_()
 {
 // destroy executor and argument converters
     if (fExecutor && fExecutor->HasState()) delete fExecutor;
+    fExecutor = nullptr;
 
     for (auto p : fConverters) {
         if (p && p->HasState()) delete p;
     }
-
-    delete fArgIndices;
-
-    fExecutor = nullptr;
-    fArgIndices = nullptr;
     fConverters.clear();
+
+    delete fArgIndices; fArgIndices = nullptr;
     fArgsRequired = -1;
 }
 
@@ -73,10 +122,13 @@ inline PyObject* CPyCppyy::CPPMethod::ExecuteFast(
     try {       // C++ try block
         result = fExecutor->Execute(fMethod, (Cppyy::TCppObject_t)((intptr_t)self+offset), ctxt);
     } catch (PyException&) {
+        ctxt->fFlags |= CallContext::kPyException;
         result = nullptr;           // error already set
     } catch (std::exception& e) {
     // attempt to set the exception to the actual type, to allow catching with the Python C++ type
         static Cppyy::TCppType_t exc_type = (Cppyy::TCppType_t)Cppyy::GetScope("std::exception");
+
+        ctxt->fFlags |= CallContext::kCppException;
 
         PyObject* pyexc_type = nullptr;
         PyObject* pyexc_obj  = nullptr;
@@ -120,6 +172,8 @@ inline PyObject* CPyCppyy::CPPMethod::ExecuteFast(
 
         result = nullptr;
     } catch (...) {
+    // don't set the kCppException flag here, as there is basically no useful
+    // extra information to be had and caller has to catch Exception either way
         PyErr_SetString(PyExc_Exception, "unhandled, unknown C++ exception");
         result = nullptr;
     }
@@ -145,10 +199,17 @@ inline PyObject* CPyCppyy::CPPMethod::ExecuteProtected(
 // fatal signal
     PyObject* result = 0;
 
-    TRY {     // copy call environment to be able to jump back on signal
+    CLING_EXCEPTION_TRY {    // copy call environment to be able to jump back on signal
         result = ExecuteFast(self, offset, ctxt);
-    } CATCH(excode) {
-    // Unfortunately, the excodes are not the ones from signal.h, but enums from TSysEvtHandler.h
+    } CLING_EXCEPTION_CATCH(excode) {
+    // report any outstanding Python exceptions first
+        if (PyErr_Occurred()) {
+            std::cerr << "Python exception outstanding during C++ longjmp:" << std::endl;
+            PyErr_Print();
+            std::cerr << std::endl;
+        }
+
+    // unfortunately, the excodes are not the ones from signal.h, but enums from TSysEvtHandler.h
         if (excode == 0)
             PyErr_SetString(gBusException, "bus error in C++; program state was reset");
         else if (excode == 1)
@@ -162,7 +223,7 @@ inline PyObject* CPyCppyy::CPPMethod::ExecuteProtected(
         else
             PyErr_SetString(PyExc_SystemError, "problem in C++; program state was reset");
         result = 0;
-    } ENDTRY;
+    } CLING_EXCEPTION_ENDTRY;
 
     return result;
 }
@@ -207,27 +268,7 @@ bool CPyCppyy::CPPMethod::InitExecutor_(Executor*& executor, CallContext* /* ctx
 std::string CPyCppyy::CPPMethod::GetSignatureString(bool fa)
 {
 // built a signature representation (used for doc strings)
-    std::stringstream sig; sig << "(";
-    int count = 0;
-    const size_t nArgs = Cppyy::GetMethodNumArgs(fMethod);
-    for (int iarg = 0; iarg < (int)nArgs; ++iarg) {
-        if (count) sig << (fa ? ", " : ",");
-
-        sig << Cppyy::GetMethodArgType(fMethod, iarg);
-
-        if (fa) {
-            const std::string& parname = Cppyy::GetMethodArgName(fMethod, iarg);
-            if (!parname.empty())
-                sig << " " << parname;
-
-            const std::string& defvalue = Cppyy::GetMethodArgDefault(fMethod, iarg);
-            if (!defvalue.empty())
-                sig << " = " << defvalue;
-        }
-        count++;
-    }
-    sig << ")";
-    return sig.str();
+    return Cppyy::GetMethodSignature(fMethod, fa);
 }
 
 //----------------------------------------------------------------------------
@@ -272,7 +313,7 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
             PyErr_Format(errtype, "%s =>\n    %s: %s",
                 CPyCppyy_PyText_AsString(doc), cname, details.c_str());
         }
-    } else if (evalue) {
+    } else {
         Py_XDECREF(((CPPExcInstance*)evalue)->fTopMessage);
         if (msg) {
             ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
@@ -328,15 +369,52 @@ CPyCppyy::CPPMethod::~CPPMethod()
 
 
 //- public members -----------------------------------------------------------
+/**
+ * @brief Construct a Python string from the method's prototype
+ * 
+ * @param fa Show formal arguments of the method
+ * @return PyObject* A Python string with the full method prototype, namespaces included.
+ * 
+ * For example, given:
+ * 
+ * int foo(int x);
+ * 
+ * namespace a {
+ * namespace b {
+ * namespace c {
+ * int foo(int x);
+ * }}}
+ * 
+ * This function returns:
+ * 
+ * 'int foo(int x)'
+ * 'int a::b::c::foo(int x)'
+ */
 PyObject* CPyCppyy::CPPMethod::GetPrototype(bool fa)
 {
-// construct python string from the method's prototype
-    return CPyCppyy_PyText_FromFormat("%s%s %s::%s%s",
+    // Gather the fully qualified final scope of the method. This includes
+    // all namespaces up to the one where the method is declared, for example:
+    // namespace a { namespace b { void foo(); }}
+    // gives
+    // a::b
+    std::string finalscope = Cppyy::GetScopedFinalName(fScope);
+    return CPyCppyy_PyText_FromFormat("%s%s %s%s%s%s",
         (Cppyy::IsStaticMethod(fMethod) ? "static " : ""),
         Cppyy::GetMethodResultType(fMethod).c_str(),
-        Cppyy::GetScopedFinalName(fScope).c_str(), Cppyy::GetMethodName(fMethod).c_str(),
+        finalscope.c_str(),
+        (finalscope.empty() ? "" : "::"), // Add final set of '::' if the method is scoped in namespace(s)
+        Cppyy::GetMethodName(fMethod).c_str(),
         GetSignatureString(fa).c_str());
 }
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPMethod::GetTypeName()
+{
+    PyObject* cppname = CPyCppyy_PyText_FromString((GetReturnTypeName() + " (*)").c_str());
+    CPyCppyy_PyText_AppendAndDel(&cppname, GetSignature(false /* show_formalargs */));
+    return cppname;
+}
+
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::CPPMethod::Reflex(Cppyy::Reflex::RequestId_t request, Cppyy::Reflex::FormatId_t format)
 {
@@ -390,6 +468,10 @@ int CPyCppyy::CPPMethod::GetPriority()
         const std::string aname = Cppyy::GetMethodArgType(fMethod, iarg);
 
         if (Cppyy::IsBuiltin(aname)) {
+        // complex type (note: double penalty: for complex and the template type)
+            if (strstr(aname.c_str(), "std::complex"))
+                priority -=   10;      // prefer double, float, etc. over conversion
+
         // integer types
             if (strstr(aname.c_str(), "bool"))
                 priority +=    1;      // bool over int (does accept 1 and 0)
@@ -440,7 +522,7 @@ int CPyCppyy::CPPMethod::GetPriority()
                 priority +=   150;     // needed for proper implicit conversion rules
             } else if (aname.rfind("&&", aname.size()-2) != std::string::npos) {
                 priority +=   100;     // prefer moves over other ref/ptr
-            } else if (!aname.empty() && !Cppyy::IsComplete(aname)) {
+            } else if (scope && !Cppyy::IsComplete(clean_name)) {
             // class is known, but no dictionary available, 2 more cases: * and &
                 if (aname[aname.size() - 1] == '&')
                     priority += -5000;
@@ -511,32 +593,77 @@ PyObject* CPyCppyy::CPPMethod::GetCoVarNames()
     return co_varnames;
 }
 
-PyObject* CPyCppyy::CPPMethod::GetArgDefault(int iarg)
+PyObject* CPyCppyy::CPPMethod::GetArgDefault(int iarg, bool silent)
 {
-// get the default value (if any) of argument iarg of this method
+// get and evaluate the default value (if any) of argument iarg of this method
     if (iarg >= (int)GetMaxArgs())
         return nullptr;
 
-    const std::string& defvalue = Cppyy::GetMethodArgDefault(fMethod, iarg);
-    if (!defvalue.empty()) {
+// borrowed reference to cppyy.gbl module to use its dictionary to eval in
+    static PyObject* gbl = PyDict_GetItemString(PySys_GetObject((char*)"modules"), "cppyy.gbl");
 
-    // attempt to evaluate the string representation (will work for all builtin types)
-        PyObject* pyval = (PyObject*)PyRun_String(
-            (char*)defvalue.c_str(), Py_eval_input, gThisModule, gThisModule);
-        if (!pyval && PyErr_Occurred()) {
-            PyErr_Clear();
-            return CPyCppyy_PyText_FromString(defvalue.c_str());
+    std::string defvalue = Cppyy::GetMethodArgDefault(fMethod, iarg);
+    if (!defvalue.empty()) {
+        PyObject** dctptr = _PyObject_GetDictPtr(gbl);
+        if (!(dctptr && *dctptr))
+            return nullptr;
+
+        PyObject* gdct = *dctptr;
+        PyObject* scope = nullptr;
+
+        if (defvalue.find("::") != std::string::npos) {
+        // try to tickle scope creation, just in case
+            scope = CreateScopeProxy(defvalue.substr(0, defvalue.rfind('(')));
+            if (!scope) PyErr_Clear();
+
+        // rename '::' -> '.'
+            TypeManip::cppscope_to_pyscope(defvalue);
         }
 
-        return pyval;
+        if (!scope) {
+        // a couple of common cases that python doesn't like (technically, 'L' is okay with older
+        // pythons, but C long will always fit in Python int, so no need to bother)
+            char c = defvalue.back();
+            if (c == 'F' || c == 'D' || c == 'L') {
+                int offset = 1;
+                if (2 < defvalue.size() && defvalue[defvalue.size()-2] == 'U')
+                    offset = 2;
+                defvalue = defvalue.substr(0, defvalue.size()-offset);
+            }
+        }
+
+    // attempt to evaluate the string representation (compilation is first to code to allow
+    // the error message to indicate where it's coming from)
+        PyObject* pyval = nullptr;
+
+        PyObject* pycode = Py_CompileString((char*)defvalue.c_str(), "cppyy_default_compiler", Py_eval_input);
+        if (pycode) {
+            pyval = PyEval_EvalCode(
+#if PY_VERSION_HEX < 0x03000000
+                (PyCodeObject*)
+#endif
+                pycode, gdct, gdct);
+            Py_DECREF(pycode);
+        }
+
+        if (!pyval && PyErr_Occurred() && silent) {
+            PyErr_Clear();
+            pyval = CPyCppyy_PyText_FromString(defvalue.c_str());    // allows continuation, but is likely to fail
+        }
+
+        Py_XDECREF(scope);
+        return pyval;        // may be nullptr
     }
 
+    PyErr_Format(PyExc_TypeError, "Could not construct default value for: %s", Cppyy::GetMethodArgName(fMethod, iarg).c_str());
     return nullptr;
 }
+
 
 bool CPyCppyy::CPPMethod::IsConst() {
     return Cppyy::IsConstMethod(GetMethod());
 }
+
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::CPPMethod::GetScopeProxy()
@@ -607,17 +734,24 @@ bool CPyCppyy::CPPMethod::Initialize(CallContext* ctxt)
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CPPMethod::ProcessKeywords(PyObject* self, PyObject* args, PyObject* kwds)
+bool CPyCppyy::CPPMethod::ProcessKwds(PyObject* self_in, PyCallArgs& cargs)
 {
-    if (!PyDict_CheckExact(kwds)) {
+#if PY_VERSION_HEX >= 0x03080000
+    if (!PyTuple_CheckExact(cargs.fKwds)) {
+        SetPyError_(CPyCppyy_PyText_FromString("received unknown keyword names object"));
+        return false;
+    }
+    Py_ssize_t nKeys = PyTuple_GET_SIZE(cargs.fKwds);
+#else
+    if (!PyDict_CheckExact(cargs.fKwds)) {
         SetPyError_(CPyCppyy_PyText_FromString("received unknown keyword arguments object"));
-        return nullptr;
+        return false;
     }
+    Py_ssize_t nKeys = PyDict_Size(cargs.fKwds);
+#endif
 
-    if (PyDict_Size(kwds) == 0 && !self) {
-        Py_INCREF(args);
-        return args;
-    }
+    if (nKeys == 0 && !self_in)
+        return true;
 
     if (!fArgIndices) {
         fArgIndices = new std::map<std::string, int>{};
@@ -625,102 +759,150 @@ PyObject* CPyCppyy::CPPMethod::ProcessKeywords(PyObject* self, PyObject* args, P
             (*fArgIndices)[Cppyy::GetMethodArgName(fMethod, iarg)] = iarg;
     }
 
-    Py_ssize_t nKeys = PyDict_Size(kwds);
-    Py_ssize_t nArgs = PyTuple_GET_SIZE(args) + (self ? 1 : 0);
-    if (nKeys+nArgs < fArgsRequired) {
-        SetPyError_(CPyCppyy_PyText_FromFormat(
-            "takes at least %d arguments (%zd given)", fArgsRequired, nKeys+nArgs));
-        return nullptr;
-    }
+    Py_ssize_t nArgs = CPyCppyy_PyArgs_GET_SIZE(cargs.fArgs, cargs.fNArgsf) + (self_in ? 1 : 0);
+    if (!VerifyArgCount_(nArgs+nKeys))
+        return false;
 
-    PyObject* newArgs = PyTuple_New(nArgs+nKeys);
-
-// set all values to zero to be able to check them later (this also guarantees normal
-// cleanup by the tuple deallocation)
-    for (Py_ssize_t i = 0; i < nArgs+nKeys; ++i)
-        PyTuple_SET_ITEM(newArgs, i, static_cast<PyObject*>(nullptr));
+    std::vector<PyObject*> vArgs{fConverters.size()};
 
 // next, insert the keyword values
     PyObject *key, *value;
-    Py_ssize_t pos = 0;
+    Py_ssize_t maxpos = -1;
 
-    while (PyDict_Next(kwds, &pos, &key, &value)) {
+#if PY_VERSION_HEX >= 0x03080000
+    Py_ssize_t npos_args = CPyCppyy_PyArgs_GET_SIZE(cargs.fArgs, cargs.fNArgsf);
+    for (Py_ssize_t ikey = 0; ikey < nKeys; ++ikey) {
+        key = PyTuple_GET_ITEM(cargs.fKwds, ikey);
+        value = cargs.fArgs[npos_args+ikey];
+#else
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(cargs.fKwds, &pos, &key, &value)) {
+#endif
         const char* ckey = CPyCppyy_PyText_AsStringChecked(key);
-        if (!ckey) {
-            Py_DECREF(newArgs);
-            return nullptr;
-        }
+        if (!ckey)
+            return false;
+
         auto p = fArgIndices->find(ckey);
         if (p == fArgIndices->end()) {
             SetPyError_(CPyCppyy_PyText_FromFormat("%s::%s got an unexpected keyword argument \'%s\'",
                 Cppyy::GetFinalName(fScope).c_str(), Cppyy::GetMethodName(fMethod).c_str(), ckey));
-            Py_DECREF(newArgs);
-            return nullptr;
+            return false;
         }
-        Py_INCREF(value);
-        PyTuple_SetItem(newArgs, (*fArgIndices)[ckey], value);
+
+        maxpos = p->second > maxpos ? p->second : maxpos;
+        vArgs[p->second] = value;      // no INCREF yet for simple cleanup in case of error
     }
 
-// fill out the rest of the arguments
+// if maxpos < nArgs, it will be detected & reported as a duplicate below
+    Py_ssize_t maxargs = maxpos + 1;
+    CPyCppyy_PyArgs_t newArgs = CPyCppyy_PyArgs_New(maxargs);
+
+// set all values to zero to be able to check them later (this also guarantees normal
+// cleanup by the tuple deallocation)
+    for (Py_ssize_t i = 0; i < maxargs; ++i)
+        CPyCppyy_PyArgs_SET_ITEM(newArgs, i, nullptr);
+
+// fill out the positional arguments
     Py_ssize_t start = 0;
-    if (self) {
-        Py_INCREF(self);
-        PyTuple_SET_ITEM(newArgs, 0, self);
+    if (self_in) {
+        Py_INCREF(self_in);
+        CPyCppyy_PyArgs_SET_ITEM(newArgs, 0, self_in);
         start = 1;
     }
 
     for (Py_ssize_t i = start; i < nArgs; ++i) {
-        if (PyTuple_GET_ITEM(newArgs, i)) {
+        if (vArgs[i]) {
             SetPyError_(CPyCppyy_PyText_FromFormat("%s::%s got multiple values for argument %d",
                 Cppyy::GetFinalName(fScope).c_str(), Cppyy::GetMethodName(fMethod).c_str(), (int)i+1));
-            Py_DECREF(newArgs);
-            return nullptr;
+            CPyCppyy_PyArgs_DEL(newArgs);
+            return false;
         }
 
-        PyObject* item = PyTuple_GET_ITEM(args, i);
+        PyObject* item = CPyCppyy_PyArgs_GET_ITEM(cargs.fArgs, i);
         Py_INCREF(item);
-        PyTuple_SET_ITEM(newArgs, i, item);
+        CPyCppyy_PyArgs_SET_ITEM(newArgs, i, item);
     }
 
-    return newArgs;
+// fill out the keyword arguments
+    for (Py_ssize_t i = nArgs; i < maxargs; ++i) {
+        PyObject* item = vArgs[i];
+        if (item) {
+            Py_INCREF(item);
+            CPyCppyy_PyArgs_SET_ITEM(newArgs, i, item);
+        } else {
+        // try retrieving the default
+            item = GetArgDefault((int)i, false /* i.e. not silent */);
+            if (!item) {
+                CPyCppyy_PyArgs_DEL(newArgs);
+                return false;
+            }
+            CPyCppyy_PyArgs_SET_ITEM(newArgs, i, item);
+        }
+    }
+
+#if PY_VERSION_HEX >= 0x03080000
+    if (cargs.fFlags & PyCallArgs::kDoFree) {
+        if (cargs.fFlags & PyCallArgs::kIsOffset)
+            cargs.fArgs -= 1;
+#else
+    if (cargs.fFlags & PyCallArgs::kDoDecref) {
+#endif
+       CPyCppyy_PyArgs_DEL(cargs.fArgs);
+    }
+
+    cargs.fArgs = newArgs;
+    cargs.fNArgsf = maxargs;
+#if PY_VERSION_HEX >= 0x03080000
+    cargs.fFlags = PyCallArgs::kDoFree | PyCallArgs::kDoItemDecref;
+#else
+    cargs.fFlags = PyCallArgs::kDoDecref;
+#endif
+
+    return true;
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CPPMethod::PreProcessArgs(
-    CPPInstance*& self, PyObject* args, PyObject* kwds)
+bool CPyCppyy::CPPMethod::ProcessArgs(PyCallArgs& cargs)
 {
 // verify existence of self, return if ok
-    if (self) {
-        if (kwds) return ProcessKeywords(nullptr, args, kwds);
-        Py_INCREF(args);
-        return args;
+    if (cargs.fSelf) {
+        if (cargs.fKwds) { return ProcessKwds(nullptr, cargs); }
+        return true;
     }
 
 // otherwise, check for a suitable 'self' in args and update accordingly
-    if (PyTuple_GET_SIZE(args) != 0) {
-        CPPInstance* pyobj = (CPPInstance*)PyTuple_GET_ITEM(args, 0);
+    if (CPyCppyy_PyArgs_GET_SIZE(cargs.fArgs, cargs.fNArgsf) != 0) {
+        CPPInstance* pyobj = (CPPInstance*)CPyCppyy_PyArgs_GET_ITEM(cargs.fArgs, 0);
 
     // demand CPyCppyy object, and an argument that may match down the road
-        if (CPPInstance_Check(pyobj) &&
-             (fScope == Cppyy::gGlobalScope ||                  // free global
-             (pyobj->ObjectIsA() == 0)     ||                   // null pointer or ctor call
-             (Cppyy::IsSubtype(pyobj->ObjectIsA(), fScope)))) { // matching types
+        if (CPPInstance_Check(pyobj)) {
+            Cppyy::TCppType_t oisa = pyobj->ObjectIsA();
+            if (fScope == Cppyy::gGlobalScope ||                // free global
+                oisa == 0 ||                                    // null pointer or ctor call
+                oisa == fScope ||                               // matching types
+                Cppyy::IsSubtype(oisa, fScope)) {               // id.
 
-        // reset self
-            Py_INCREF(pyobj);      // corresponding Py_DECREF is in CPPOverload
-            self = pyobj;
+            // reset self
+                Py_INCREF(pyobj);      // corresponding Py_DECREF is in CPPOverload
+                cargs.fSelf = pyobj;
 
-        // offset args by 1 (new ref)
-            PyObject* newArgs = PyTuple_GetSlice(args, 1, PyTuple_GET_SIZE(args));
+            // offset args by 1
+#if PY_VERSION_HEX >= 0x03080000
+                cargs.fArgs += 1;
+                cargs.fFlags |= PyCallArgs::kIsOffset;
+#else
+                if (cargs.fFlags & PyCallArgs::kDoDecref)
+                    Py_DECREF((PyObject*)cargs.fArgs);
+                cargs.fArgs = PyTuple_GetSlice(cargs.fArgs, 1, PyTuple_GET_SIZE(cargs.fArgs));
+                cargs.fFlags |= PyCallArgs::kDoDecref;
+#endif
+                cargs.fNArgsf -= 1;
 
-        // put the keywords, if any, in their places in the arguments array
-            if (kwds) {
-                args = ProcessKeywords(nullptr, newArgs, kwds);
-                Py_DECREF(newArgs);
-                newArgs = args;
+            // put the keywords, if any, in their places in the arguments array
+                if (cargs.fKwds)
+                    return ProcessKwds(nullptr, cargs);
+                return true;
             }
-
-            return newArgs;  // may be nullptr if kwds insertion failed
         }
     }
 
@@ -729,39 +911,27 @@ PyObject* CPyCppyy::CPPMethod::PreProcessArgs(
         "unbound method %s::%s must be called with a %s instance as first argument",
         Cppyy::GetFinalName(fScope).c_str(), Cppyy::GetMethodName(fMethod).c_str(),
         Cppyy::GetFinalName(fScope).c_str()));
-    return nullptr;
+    return false;
 }
 
 //----------------------------------------------------------------------------
-bool CPyCppyy::CPPMethod::ConvertAndSetArgs(PyObject* args, CallContext* ctxt)
+bool CPyCppyy::CPPMethod::ConvertAndSetArgs(CPyCppyy_PyArgs_t args, size_t nargsf, CallContext* ctxt)
 {
-    Py_ssize_t argc = PyTuple_GET_SIZE(args);
-    Py_ssize_t argMax = (Py_ssize_t)fConverters.size();
-
-    if (argMax != argc) {
-    // argc must be between min and max number of arguments
-        if (argc < (Py_ssize_t)fArgsRequired) {
-            SetPyError_(CPyCppyy_PyText_FromFormat(
-                "takes at least %d arguments (%zd given)", fArgsRequired, argc));
-            return false;
-        } else if (argMax < argc) {
-            SetPyError_(CPyCppyy_PyText_FromFormat(
-                "takes at most %zd arguments (%zd given)", argMax, argc));
-            return false;
-        }
-    }
-
-    if (argc == 0)
-        return true;
+    Py_ssize_t argc = CPyCppyy_PyArgs_GET_SIZE(args, nargsf);
+    if (!VerifyArgCount_(argc))
+        return false;
 
 // pass current scope for which the call is made
     ctxt->fCurScope = fScope;
+
+    if (argc == 0)
+        return true;
 
 // convert the arguments to the method call array
     bool isOK = true;
     Parameter* cppArgs = ctxt->GetArgs(argc);
     for (int i = 0; i < (int)argc; ++i) {
-        if (!fConverters[i]->SetArg(PyTuple_GET_ITEM(args, i), cppArgs[i], ctxt)) {
+        if (!fConverters[i]->SetArg(CPyCppyy_PyArgs_GET_ITEM(args, i), cppArgs[i], ctxt)) {
             SetPyError_(CPyCppyy_PyText_FromFormat("could not convert argument %d", i+1));
             isOK = false;
             break;
@@ -800,23 +970,26 @@ PyObject* CPyCppyy::CPPMethod::Execute(void* self, ptrdiff_t offset, CallContext
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CPPMethod::Call(
-    CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
+PyObject* CPyCppyy::CPPMethod::Call(CPPInstance*& self,
+    CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt)
 {
 // setup as necessary
     if (fArgsRequired == -1 && !Initialize(ctxt))
         return nullptr;
 
 // fetch self, verify, and put the arguments in usable order
-    if (!(args = PreProcessArgs(self, args, kwds)))
+    PyCallArgs cargs{self, args, nargsf, kwds};
+    if (!ProcessArgs(cargs))
         return nullptr;
 
+// self provides the python context for lifelines
+    if (!ctxt->fPyContext)
+        ctxt->fPyContext = (PyObject*)cargs.fSelf;    // no Py_INCREF as no ownership
+
 // translate the arguments
-    if (fArgsRequired || PyTuple_GET_SIZE(args)) {
-        if (!ConvertAndSetArgs(args, ctxt)) {
-            Py_DECREF(args);
+    if (fArgsRequired || CPyCppyy_PyArgs_GET_SIZE(args, nargsf)) {
+        if (!ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
             return nullptr;
-        }
     }
 
 // get the C++ object that this object proxy is a handle for
@@ -825,7 +998,6 @@ PyObject* CPyCppyy::CPPMethod::Call(
 // validity check that should not fail
     if (!object) {
         PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
-        Py_DECREF(args);
         return nullptr;
     }
 
@@ -839,8 +1011,6 @@ PyObject* CPyCppyy::CPPMethod::Call(
 
 // actual call; recycle self instead of returning new object for same address objects
     CPPInstance* pyobj = (CPPInstance*)Execute(object, offset, ctxt);
-    Py_DECREF(args);
-
     if (CPPInstance_Check(pyobj) &&
             derived && pyobj->ObjectIsA() == derived &&
             pyobj->GetObject() == object) {

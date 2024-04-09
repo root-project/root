@@ -22,7 +22,7 @@ const int ARRAYSIZE = (int) (( MAX - MIN ) / INCREMENT) + 1;
 bool showGraphics = false;
 bool verbose = false;
 
-using namespace std;
+using std::vector, std::cout, std::cerr, std::endl;
 
 TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
 {

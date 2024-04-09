@@ -30,28 +30,25 @@ class TSpline : public TNamed, public TAttLine,
                 public TAttFill, public TAttMarker
 {
 protected:
-   Double_t  fDelta;     ///< Distance between equidistant knots
-   Double_t  fXmin;      ///< Minimum value of abscissa
-   Double_t  fXmax;      ///< Maximum value of abscissa
-   Int_t     fNp;        ///< Number of knots
-   Bool_t    fKstep;     ///< True of equidistant knots
-   TH1F     *fHistogram; ///< Temporary histogram
-   TGraph   *fGraph;     ///< Graph for drawing the knots
-   Int_t     fNpx;       ///< Number of points used for graphical representation
+   Double_t fDelta = -1.;      ///< Distance between equidistant knots
+   Double_t fXmin = 0.;        ///< Minimum value of abscissa
+   Double_t fXmax = 0.;        ///< Maximum value of abscissa
+   Int_t fNp = 0;              ///< Number of knots
+   Bool_t fKstep = kFALSE;     ///< True of equidistant knots
+   TH1F *fHistogram = nullptr; ///< Temporary histogram
+   TGraph *fGraph = nullptr;   ///< Graph for drawing the knots
+   Int_t fNpx = 100;           ///< Number of points used for graphical representation
 
-   TSpline(const TSpline&);
-   TSpline& operator=(const TSpline&);
-   virtual void     BuildCoeff()=0;
+   TSpline(const TSpline &);
+   TSpline &operator=(const TSpline &);
+   virtual void BuildCoeff() = 0;
 
 public:
-   TSpline() : fDelta(-1), fXmin(0), fXmax(0),
-      fNp(0), fKstep(kFALSE), fHistogram(nullptr), fGraph(nullptr), fNpx(100) {}
-   TSpline(const char *title, Double_t delta, Double_t xmin,
-      Double_t xmax, Int_t np, Bool_t step) :
-      TNamed("Spline",title), TAttFill(0,1),
-      fDelta(delta), fXmin(xmin),
-      fXmax(xmax), fNp(np), fKstep(step),
-      fHistogram(nullptr), fGraph(nullptr), fNpx(100) {}
+   TSpline() {}
+   TSpline(const char *title, Double_t delta, Double_t xmin, Double_t xmax, Int_t np, Bool_t step)
+      : TNamed("Spline", title), TAttFill(0, 1), fDelta(delta), fXmin(xmin), fXmax(xmax), fNp(np), fKstep(step)
+   {
+   }
    ~TSpline() override;
 
    virtual void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
@@ -66,7 +63,7 @@ public:
    virtual Double_t GetXmax()  const {return fXmax;}
    void     Paint(Option_t *option="") override;
    virtual Double_t Eval(Double_t x) const=0;
-   void     SaveAs(const char * /*filename*/,Option_t * /*option*/) const override {}
+   void     SaveAs(const char * /*filename*/ = "",Option_t * /*option*/ = "") const override {}
    void             SetNpx(Int_t n) {fNpx=n;}
 
    ClassDefOverride(TSpline,2) // Spline base class
@@ -77,63 +74,59 @@ public:
 class TSplinePoly : public TObject
 {
 protected:
-   Double_t fX;     ///< Abscissa
-   Double_t fY;     ///< Constant term
+   Double_t fX = 0.;     ///< Abscissa
+   Double_t fY = 0.;     ///< Constant term
 
 public:
-   TSplinePoly() :
-      fX(0), fY(0) {}
-   TSplinePoly(Double_t x, Double_t y) :
-      fX(x), fY(y) {}
-   TSplinePoly(TSplinePoly const &other);
+   TSplinePoly() {}
+   TSplinePoly(Double_t x, Double_t y) : fX(x), fY(y) {}
+   TSplinePoly(TSplinePoly const &other) : TObject(other), fX(0), fY(0) { CopyPoly(other); }
+
    TSplinePoly &operator=(TSplinePoly const &other);
 
-   Double_t &X() {return fX;}
-   Double_t &Y() {return fY;}
-   void GetKnot(Double_t &x, Double_t &y) const {x=fX; y=fY;}
+   Double_t &X() { return fX; }
+   Double_t &Y() { return fY; }
+   void GetKnot(Double_t &x, Double_t &y) const
+   {
+      x = fX;
+      y = fY;
+   }
 
-   virtual Double_t Eval(Double_t) const {return fY;}
+   virtual Double_t Eval(Double_t) const { return fY; }
 
-   private:
+private:
    void CopyPoly(TSplinePoly const &other);
 
    ClassDefOverride(TSplinePoly,2) // Spline polynomial terms
 };
 
-inline TSplinePoly::TSplinePoly(TSplinePoly const &other)
-:
-   TObject(other), fX(0), fY(0)
-{
-  CopyPoly(other);
-}
-
-
 //______________________________________________________________________________
 class TSplinePoly3 : public TSplinePoly
 {
 private:
-   Double_t fB; ///< First order expansion coefficient :  fB*1! is the first derivative at x
-   Double_t fC; ///< Second order expansion coefficient : fC*2! is the second derivative at x
-   Double_t fD; ///< Third order expansion coefficient :  fD*3! is the third derivative at x
+   Double_t fB = 0.; ///< First order expansion coefficient :  fB*1! is the first derivative at x
+   Double_t fC = 0.; ///< Second order expansion coefficient : fC*2! is the second derivative at x
+   Double_t fD = 0.; ///< Third order expansion coefficient :  fD*3! is the third derivative at x
 
 public:
-   TSplinePoly3() :
-      fB(0), fC(0), fD(0) {}
-   TSplinePoly3(Double_t x, Double_t y, Double_t b, Double_t c, Double_t d) :
-      TSplinePoly(x,y), fB(b), fC(c), fD(d) {}
-   TSplinePoly3(TSplinePoly3 const &other);
+   TSplinePoly3() {}
+   TSplinePoly3(Double_t x, Double_t y, Double_t b, Double_t c, Double_t d) : TSplinePoly(x, y), fB(b), fC(c), fD(d) {}
+   TSplinePoly3(TSplinePoly3 const &other) : TSplinePoly(other) { CopyPoly(other); }
+
    TSplinePoly3 &operator=(TSplinePoly3 const &other);
 
-   Double_t &B() {return fB;}
-   Double_t &C() {return fC;}
-   Double_t &D() {return fD;}
-   Double_t Eval(Double_t x) const override {
-      Double_t dx=x-fX;
-      return (fY+dx*(fB+dx*(fC+dx*fD)));
+   Double_t &B() { return fB; }
+   Double_t &C() { return fC; }
+   Double_t &D() { return fD; }
+   Double_t Eval(Double_t x) const override
+   {
+      Double_t dx = x - fX;
+      return (fY + dx * (fB + dx * (fC + dx * fD)));
    }
-   Double_t Derivative(Double_t x) const {
-      Double_t dx=x-fX;
-      return (fB+dx*(2*fC+3*fD*dx));
+   Double_t Derivative(Double_t x) const
+   {
+      Double_t dx = x - fX;
+      return (fB + dx * (2 * fC + 3 * fD * dx));
    }
 
 private:
@@ -142,38 +135,33 @@ private:
    ClassDefOverride(TSplinePoly3,1)  // Third spline polynomial terms
 };
 
-inline TSplinePoly3::TSplinePoly3(TSplinePoly3 const &other)
-   :
-  TSplinePoly(other), fB(0), fC(0), fD(0)
-{
-   CopyPoly(other);
-}
-
 //______________________________________________________________________________
 class TSplinePoly5 : public TSplinePoly
 {
 private:
-   Double_t fB; ///< First order expansion coefficient :  fB*1! is the first derivative at x
-   Double_t fC; ///< Second order expansion coefficient : fC*2! is the second derivative at x
-   Double_t fD; ///< Third order expansion coefficient :  fD*3! is the third derivative at x
-   Double_t fE; ///< Fourth order expansion coefficient : fE*4! is the fourth derivative at x
-   Double_t fF; ///< Fifth order expansion coefficient :  fF*5! is the fifth derivative at x
+   Double_t fB = 0.; ///< First order expansion coefficient :  fB*1! is the first derivative at x
+   Double_t fC = 0.; ///< Second order expansion coefficient : fC*2! is the second derivative at x
+   Double_t fD = 0.; ///< Third order expansion coefficient :  fD*3! is the third derivative at x
+   Double_t fE = 0.; ///< Fourth order expansion coefficient : fE*4! is the fourth derivative at x
+   Double_t fF = 0.; ///< Fifth order expansion coefficient :  fF*5! is the fifth derivative at x
 
 public:
-   TSplinePoly5() :
-      fB(0), fC(0), fD(0), fE(0), fF(0) {}
-   TSplinePoly5(Double_t x, Double_t y, Double_t b, Double_t c,
-      Double_t d, Double_t e, Double_t f) :
-      TSplinePoly(x,y), fB(b), fC(c), fD(d), fE(e), fF(f) {}
-   TSplinePoly5(TSplinePoly5 const &other);
+   TSplinePoly5() {}
+   TSplinePoly5(Double_t x, Double_t y, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f)
+      : TSplinePoly(x, y), fB(b), fC(c), fD(d), fE(e), fF(f)
+   {
+   }
+   TSplinePoly5(TSplinePoly5 const &other) : TSplinePoly(other) { CopyPoly(other); }
+
    TSplinePoly5 &operator=(TSplinePoly5 const &other);
 
-   Double_t &B() {return fB;}
-   Double_t &C() {return fC;}
-   Double_t &D() {return fD;}
-   Double_t &E() {return fE;}
-   Double_t &F() {return fF;}
-   Double_t Eval(Double_t x) const override {
+   Double_t &B() { return fB; }
+   Double_t &C() { return fC; }
+   Double_t &D() { return fD; }
+   Double_t &E() { return fE; }
+   Double_t &F() { return fF; }
+   Double_t Eval(Double_t x) const override
+   {
       Double_t dx=x-fX;
       return (fY+dx*(fB+dx*(fC+dx*(fD+dx*(fE+dx*fF)))));
    }
@@ -188,30 +176,22 @@ private:
    ClassDefOverride(TSplinePoly5,1)  // Quintic spline polynomial terms
 };
 
-inline TSplinePoly5::TSplinePoly5(TSplinePoly5 const &other)
-:
-    TSplinePoly(other), fB(0), fC(0), fD(0), fE(0), fF(0)
-{
-  CopyPoly(other);
-}
-
 
 //______________________________________________________________________________
 class TSpline3 : public TSpline
 {
 protected:
-   TSplinePoly3  *fPoly;       ///<[fNp] Array of polynomial terms
-   Double_t       fValBeg;     ///< Initial value of first or second derivative
-   Double_t       fValEnd;     ///< End value of first or second derivative
-   Int_t          fBegCond;    ///< 0=no beg cond, 1=first derivative, 2=second derivative
-   Int_t          fEndCond;    ///< 0=no end cond, 1=first derivative, 2=second derivative
+   TSplinePoly3 *fPoly = nullptr; ///<[fNp] Array of polynomial terms
+   Double_t fValBeg = 0.;         ///< Initial value of first or second derivative
+   Double_t fValEnd = 0.;         ///< End value of first or second derivative
+   Int_t fBegCond = -1;           ///< 0=no beg cond, 1=first derivative, 2=second derivative
+   Int_t fEndCond = -1;           ///< 0=no end cond, 1=first derivative, 2=second derivative
 
    void   BuildCoeff() override;
    void   SetCond(const char *opt);
 
 public:
-   TSpline3() : TSpline() , fPoly(nullptr), fValBeg(0), fValEnd(0),
-      fBegCond(-1), fEndCond(-1) {}
+   TSpline3() {}
    TSpline3(const char *title,
             Double_t x[], Double_t y[], Int_t n, const char *opt=nullptr,
             Double_t valbeg=0, Double_t valend=0);
@@ -243,7 +223,7 @@ public:
       b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
       {x=fPoly[i].X(); y=fPoly[i].Y();}
-    void     SaveAs(const char *filename,Option_t *option="") const override;
+    void     SaveAs(const char *filename="",Option_t *option="") const override;
     void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    virtual  void     SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d);
@@ -257,7 +237,7 @@ public:
 class TSpline5 : public TSpline
 {
 protected:
-   TSplinePoly5  *fPoly;     ///<[fNp] Array of polynomial terms
+   TSplinePoly5  *fPoly = nullptr;     ///<[fNp] Array of polynomial terms
 
    void BuildCoeff() override;
    void BoundaryConditions(const char *opt, Int_t &beg, Int_t &end,
@@ -267,7 +247,7 @@ protected:
                       const char *cb1, const char *ce1, const char *cb2,
                       const char *ce2);
 public:
-   TSpline5() : TSpline() , fPoly(nullptr) {}
+   TSpline5() {}
    TSpline5(const char *title,
             Double_t x[], Double_t y[], Int_t n,
             const char *opt=nullptr, Double_t b1=0, Double_t e1=0,
@@ -306,7 +286,7 @@ public:
       e=fPoly[i].E();f=fPoly[i].F();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
       {x=fPoly[i].X(); y=fPoly[i].Y();}
-    void     SaveAs(const char *filename,Option_t *option="") const override;
+    void     SaveAs(const char *filename="",Option_t *option="") const override;
     void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    virtual  void     SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,

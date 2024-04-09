@@ -1,6 +1,6 @@
-import py, os, sys
-from pytest import raises
-from .support import setup_make, pylong, maxvalue
+import py
+from pytest import raises, skip
+from .support import setup_make, pylong, maxvalue, IS_WINDOWS
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("operatorsDict"))
@@ -14,7 +14,6 @@ class TestOPERATORS:
         cls.test_dct = test_dct
         import cppyy
         cls.operators = cppyy.load_reflection_info(cls.test_dct)
-        cls.N = cppyy.gbl.N
 
     def teardown_method(self, meth):
         import gc
@@ -24,6 +23,7 @@ class TestOPERATORS:
         """Test overloading of math operators"""
 
         import cppyy
+
         number = cppyy.gbl.number
 
         assert (number(20) + number(10)) == number(30)
@@ -46,6 +46,7 @@ class TestOPERATORS:
         """Test overloading of unary math operators"""
 
         import cppyy
+
         number = cppyy.gbl.number
 
         n  = number(20)
@@ -62,6 +63,7 @@ class TestOPERATORS:
         """Test overloading of comparison operators"""
 
         import cppyy
+
         number = cppyy.gbl.number
 
         assert (number(20) >  number(10)) == True
@@ -75,6 +77,7 @@ class TestOPERATORS:
         """Test implementation of operator bool"""
 
         import cppyy
+
         number = cppyy.gbl.number
 
         n = number(20)
@@ -87,6 +90,7 @@ class TestOPERATORS:
         """Test converter operators of exact types"""
 
         import cppyy
+
         gbl = cppyy.gbl
 
         o = gbl.operator_char_star()
@@ -113,6 +117,7 @@ class TestOPERATORS:
         """Test converter operators of approximate types"""
 
         import cppyy, sys
+
         gbl = cppyy.gbl
 
         o = gbl.operator_short(); o.m_short = 256
@@ -170,7 +175,7 @@ class TestOPERATORS:
         assert d1 == b1
         assert not b1 == d2
         assert not d2 == b1
-        
+
     def test08_call_to_getsetitem_mapping(self):
         """Map () to []"""
 
@@ -308,3 +313,74 @@ class TestOPERATORS:
 
         c = cppyy.gbl.CommaOperator(1)
         assert c.__comma__(2).__comma__(3).fInt == 6
+
+    def test14_single_argument_call(self):
+        """Non-reference, single-argument, call not mapped to getitem"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace IndexingOperators {
+        struct Foo {
+            float operator[] (float x) { return x; }
+        };
+
+        struct Bar : public Foo {
+            float operator() (float x) { return 5.f; }
+        }; }""")
+
+        ns = cppyy.gbl.IndexingOperators
+
+        f = ns.Foo()
+        assert f[42] == 42
+        b = ns.Bar()
+        assert b[42] == 42
+
+    def test15_class_and_global_mix(self):
+        """Iterator methods have both class and global overloads"""
+
+        if IS_WINDOWS:
+            skip("missing symbol __std_max_element_4")
+
+        from cppyy.gbl import std
+
+        x = std.vector[int]([1,2,3])
+        assert (x.end() - 1).__deref__() == 3
+        assert std.max_element(x.begin(), x.end())-x.begin() == 2
+        assert (x.end() - 3).__deref__() == 1
+
+    def test16_global_ordered_operators(self):
+        """Globally defined ordered oeprators"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace FriendOperator {
+
+        struct ALt { ALt(int d) : data(d) {} int data; };
+        bool operator< (const ALt& a1, const ALt& a2) { return a1.data <  a2.data; }
+
+        struct ALe { ALe(int d) : data(d) {} int data; };
+        bool operator<=(const ALe& a1, const ALe& a2) { return a1.data <= a2.data; }
+
+        struct AGt { AGt(int d) : data(d) {} int data; };
+        bool operator> (const AGt& a1, const AGt& a2) { return a1.data >  a2.data; }
+
+        struct AGe { AGe(int d) : data(d) {} int data; };
+        bool operator>=(const AGe& a1, const AGe& a2) { return a1.data >= a2.data; }
+
+        }""")
+
+        ns = cppyy.gbl.FriendOperator
+
+        assert     ns.ALt(4) <  ns.ALt(5)
+        assert not ns.ALt(5) <  ns.ALt(4)
+
+        assert     ns.ALe(4) <= ns.ALe(5)
+        assert not ns.ALe(5) <= ns.ALe(4)
+
+        assert     ns.AGt(5) >  ns.AGt(4)
+        assert not ns.AGt(4) >  ns.AGt(5)
+
+        assert     ns.AGe(5) >= ns.AGe(4)
+        assert not ns.AGe(4) >= ns.AGe(5)

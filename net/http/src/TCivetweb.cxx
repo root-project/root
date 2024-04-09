@@ -269,14 +269,14 @@ static int log_message_handler(const struct mg_connection *conn, const char *mes
       return engine->ProcessLog(message);
 
    // provide debug output
-   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
+   if ((gDebug > 0) || strstr(message, "cannot bind to"))
       fprintf(stderr, "Error in <TCivetweb::Log> %s\n", message);
 
    return 0;
 }
 
 struct TEngineHolder {
-   TCivetweb *fEngine;
+   TCivetweb *fEngine{nullptr};
    TEngineHolder(TCivetweb *engine)
    {
       fEngine = engine;

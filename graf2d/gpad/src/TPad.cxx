@@ -3427,6 +3427,18 @@ void TPad::DrawCollideGrid()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Short cut to call Modified() and Update() in a single call.
+/// On Mac with Cocoa, it performs an additional ProcessEvents().
+
+void TPad::ModifiedUpdate()
+{
+   Modified();
+   Update();
+#ifdef R__HAS_COCOA
+   gSystem->ProcessEvents();
+#endif
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert x from pad to X.
@@ -5538,7 +5550,7 @@ void TPad::ResizePad(Option_t *option)
    Double_t pyrange = -fAbsHNDC*wh;
 
    // Linear X axis
-   Double_t rounding = 0.00005;
+   Double_t rounding = 0.; // was used before to adjust somehow wrong int trunctation by coordiantes transformation
    Double_t xrange  = fX2 - fX1;
    fXtoAbsPixelk = rounding + pxlow - pxrange*fX1/xrange;      //origin at left
    fXtoPixelk = rounding +  -pxrange*fX1/xrange;
@@ -7234,4 +7246,159 @@ void TPad::SetBBoxY2(const Int_t y)
    fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
    fHNDC = fYUpNDC - fYlowNDC;
    ResizePad();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Mark pad modified
+/// Will be repainted when TCanvas::Update() will be called next time
+
+void TPad::Modified(Bool_t flag)
+{
+   if (!fModified && flag) Emit("Modified()");
+   fModified = flag;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert absolute pixel into X/Y coordinates
+
+void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
+{
+   x = AbsPixeltoX(xpixel);
+   y = AbsPixeltoY(ypixel);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert pixel to X coordinate
+
+Double_t TPad::PixeltoX(Int_t px)
+{
+   if (fAbsCoord) return fAbsPixeltoXk + px*fPixeltoX;
+   else           return fPixeltoXk    + px*fPixeltoX;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert pixel to Y coordinate
+
+Double_t TPad::PixeltoY(Int_t py)
+{
+   if (fAbsCoord) return fAbsPixeltoYk + py*fPixeltoY;
+   else           return fPixeltoYk    + py*fPixeltoY;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert pixel to X/Y coordinates
+
+void TPad::PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
+{
+   x = PixeltoX(xpixel);
+   y = PixeltoY(ypixel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into absolute pixel coordinates
+
+void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
+{
+   xpixel = XtoAbsPixel(x);
+   ypixel = YtoAbsPixel(y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into pixel coordinates
+
+void TPad::XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
+{
+   xpixel = XtoPixel(x);
+   ypixel = YtoPixel(y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X NDC to pixel
+
+Int_t TPad::UtoPixel(Double_t u) const
+{
+   Double_t val;
+   if (fAbsCoord) val = fUtoAbsPixelk + u*fUtoPixel;
+   else           val = u*fUtoPixel;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
+   return TMath::Nint(val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert Y NDC to pixel
+
+Int_t TPad::VtoPixel(Double_t v) const
+{
+   Double_t val;
+   if (fAbsCoord) val = fVtoAbsPixelk + v*fVtoPixel;
+   else           val = fVtoPixelk    + v*fVtoPixel;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
+   return TMath::Nint(val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X NDC to absolute pixel
+
+Int_t TPad::UtoAbsPixel(Double_t u) const
+{
+   return TMath::Nint(fUtoAbsPixelk + u*fUtoPixel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert Y NDC to absolute pixel
+
+Int_t TPad::VtoAbsPixel(Double_t v) const
+{
+   return TMath::Nint(fVtoAbsPixelk + v*fVtoPixel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X coordinate to absolute pixel
+
+Int_t TPad::XtoAbsPixel(Double_t x) const
+{
+   Double_t val = fXtoAbsPixelk + x*fXtoPixel;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
+   return TMath::Nint(val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X coordinate to pixel
+
+Int_t TPad::XtoPixel(Double_t x) const
+{
+   Double_t val;
+   if (fAbsCoord) val = fXtoAbsPixelk + x*fXtoPixel;
+   else           val = fXtoPixelk    + x*fXtoPixel;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
+   return TMath::Nint(val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert Y coordinate to absolute pixel
+
+Int_t TPad::YtoAbsPixel(Double_t y) const
+{
+   Double_t val = fYtoAbsPixelk + y*fYtoPixel;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
+   return TMath::Nint(val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert Y coordinate to pixel
+
+Int_t TPad::YtoPixel(Double_t y) const
+{
+   Double_t val;
+   if (fAbsCoord) val = fYtoAbsPixelk + y*fYtoPixel;
+   else           val = fYtoPixelk    + y*fYtoPixel;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
+   return TMath::Nint(val);
 }

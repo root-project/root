@@ -13,9 +13,9 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleImporter.hxx>
+#include <ROOT/RNTupleReader.hxx>
 
 #include <TFile.h>
 #include <TROOT.h>
@@ -55,6 +55,6 @@ void ntpl008_import()
    auto reader = RNTupleReader::Open(ntpl);
    reader->PrintInfo();
 
-   auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
+   ROOT::RDataFrame df("Events", kNTupleFileName);
    df.Histo1D({"Jet_pt", "Jet_pt", 100, 0, 0}, "Jet_pt")->DrawCopy();
 }

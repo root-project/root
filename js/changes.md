@@ -1,6 +1,20 @@
 # JSROOT changelog
 
 ## Changes in dev
+1. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
+2. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
+3. Let define date and file name position with `&datex=0.03&datey=0.03` URL parameters
+4. Improve TRatioPlot axis and lines drawing
+5. Use localStorage to preserve custom settings and gStyle
+6. Let configure custom storage prefix with `&storage_prefix=name` URL #290
+7. Let customize URL for "Show in new tab" menu command
+8. Support both new and old TRatioPlot drawings
+9. Fully integrate svg2pdf.js into jsroot repo
+10. Synchronize X/Y range selection with native ROOT
+11. Proper handle attributes from TH2Poly bins, support "p" for markers drawing
+
+
+## Changes in 7.6.0
 1. Implement "tickz" draw option, used for color palette ticks
 2. Implement skewness and kurtosis calculations for histogram stats box
 3. Introduce "logv" draw option for `TH3`, configures logarithmic scale for box volume
@@ -18,12 +32,29 @@
 15. Support PDF creation using jsPDF and svg2pdf.js - in browser and node.js
 16. Implement custom fonts support in TWebCanvas
 17. List of ROOT/JSON files on server with `&dir=<path>` URL parameter #283
-18. Fix - do not add `THStack` and `TMultiGraph` to legend
-19. Fix - correctly use margin in `TPaveText` class
-20. Fix - correctly draw endcaps in legend errors
-21. Fix - vertical position of up elements like {M}^{2} in TLatex
-22. Fix - catch exception when evaluate faulty TF1
-23. Fix - let draw THStack with diff binning hists
+18. Load TGaxis function from the file #282
+19. Let display progress messages in modal element #285
+20. Fix - do not add `THStack` and `TMultiGraph` to legend
+21. Fix - correctly use margin in `TPaveText` class
+22. Fix - correctly draw endcaps in legend errors
+23. Fix - vertical position of up elements like {M}^{2} in TLatex
+24. Fix - let draw THStack with diff binning hists
+25. Fix - better tooltip name for the items
+26. Fix - better logy scale selection
+
+
+## Changes in 7.5.5
+1. Fix - abort tree draw operation faster
+2. Fix - support plain TRI option for TGraph2D
+3. Fix - use latest npm "gl" module
+
+
+## Changes in 7.5.4
+1. Fix - catch exception when parsing TF1 formula
+2. Fix - properly check THStack histograms axes when doing sum
+3. Fix - correctly handle negative offset on time axis
+4. Fix - do not use `inset` because of old Chrome browsers
+5. Fix - properly provide object hints
 
 
 ## Changes in 7.5.3

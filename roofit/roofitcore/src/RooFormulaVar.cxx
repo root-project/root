@@ -58,7 +58,7 @@
 #include "RooChi2Var.h"
 #endif
 
-using namespace std;
+using std::cout,std::endl, std::ostream, std::istream, std::list;
 
 ClassImp(RooFormulaVar);
 
@@ -161,9 +161,9 @@ double RooFormulaVar::evaluate() const
 }
 
 
-void RooFormulaVar::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooFormulaVar::doEval(RooFit::EvalContext &ctx) const
 {
-  getFormula().computeBatch(output, nEvents, dataMap);
+   getFormula().doEval(ctx);
 }
 
 

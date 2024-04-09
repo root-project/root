@@ -535,16 +535,12 @@ TSpline3::TSpline3(const TH1 *h, const char *opt,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TSpline3::TSpline3(const TSpline3& sp3) :
-  TSpline(sp3),
-  fPoly(nullptr),
-  fValBeg(sp3.fValBeg),
-  fValEnd(sp3.fValEnd),
-  fBegCond(sp3.fBegCond),
-  fEndCond(sp3.fEndCond)
+TSpline3::TSpline3(const TSpline3 &sp3)
+   : TSpline(sp3), fValBeg(sp3.fValBeg), fValEnd(sp3.fValEnd), fBegCond(sp3.fBegCond), fEndCond(sp3.fEndCond)
 {
-   if (fNp > 0) fPoly = new TSplinePoly3[fNp];
-   for (Int_t i=0; i<fNp; ++i)
+   if (fNp > 0)
+      fPoly = new TSplinePoly3[fNp];
+   for (Int_t i = 0; i < fNp; ++i)
       fPoly[i] = sp3.fPoly[i];
 }
 
@@ -555,8 +551,12 @@ TSpline3& TSpline3::operator=(const TSpline3& sp3)
 {
    if(this!=&sp3) {
       TSpline::operator=(sp3);
-      fPoly= nullptr;
-      if (fNp > 0) fPoly = new TSplinePoly3[fNp];
+      if (fPoly) {
+         delete[] fPoly;
+         fPoly = nullptr;
+      }
+      if (fNp > 0)
+         fPoly = new TSplinePoly3[fNp];
       for (Int_t i=0; i<fNp; ++i)
          fPoly[i] = sp3.fPoly[i];
 
@@ -823,7 +823,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"   const int fNp = %d, fKstep = %d;\n",fNp,fKstep);
    nch = strlen(buffer); f->write(buffer,nch);
-   snprintf(buffer,512,"   const double fDelta = %g, fXmin = %g, fXmax = %g;\n",fDelta,fXmin,fXmax);
+   snprintf(buffer,512,"   const double fDelta = %.17g, fXmin = %.17g, fXmax = %.17g;\n",fDelta,fXmin,fXmax);
    nch = strlen(buffer); f->write(buffer,nch);
 
    //write the spline coefficients
@@ -832,9 +832,9 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    Int_t i;
-   char numb[20];
+   char numb[30];
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].X());
+      snprintf(numb,30," %.17g,",fPoly[i].X());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -850,7 +850,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].Y());
+      snprintf(numb,30," %.17g,",fPoly[i].Y());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -866,7 +866,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].B());
+      snprintf(numb,30," %.17g,",fPoly[i].B());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -882,7 +882,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].C());
+      snprintf(numb,30," %.17g,",fPoly[i].C());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -898,7 +898,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].D());
+      snprintf(numb,30," %.17g,",fPoly[i].D());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -928,7 +928,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"       klow = int((x-fXmin)/fDelta);\n");
    nch = strlen(buffer); f->write(buffer,nch);
-   snprintf(buffer,512,"       if (klow < fNp-1) klow = fNp-1;\n");
+   snprintf(buffer,512,"       if (klow > fNp-1) klow = fNp-1;\n");
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"     } else {\n");
    nch = strlen(buffer); f->write(buffer,nch);
@@ -1413,28 +1413,29 @@ TSpline5::TSpline5(const TH1 *h,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TSpline5::TSpline5(const TSpline5& sp5) :
-  TSpline(sp5),
-  fPoly(nullptr)
+TSpline5::TSpline5(const TSpline5 &sp5) : TSpline(sp5)
 {
-   if (fNp > 0) fPoly = new TSplinePoly5[fNp];
-   for (Int_t i=0; i<fNp; ++i) {
+   if (fNp > 0)
+      fPoly = new TSplinePoly5[fNp];
+   for (Int_t i = 0; i < fNp; ++i)
       fPoly[i] = sp5.fPoly[i];
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
 
-TSpline5& TSpline5::operator=(const TSpline5& sp5)
+TSpline5 &TSpline5::operator=(const TSpline5 &sp5)
 {
-   if(this!=&sp5) {
+   if (this != &sp5) {
       TSpline::operator=(sp5);
-      fPoly=nullptr;
-      if (fNp > 0) fPoly = new TSplinePoly5[fNp];
-      for (Int_t i=0; i<fNp; ++i) {
-         fPoly[i] = sp5.fPoly[i];
+      if (fPoly) {
+         delete[] fPoly;
+         fPoly = nullptr;
       }
+      if (fNp > 0)
+         fPoly = new TSplinePoly5[fNp];
+      for (Int_t i = 0; i < fNp; ++i)
+         fPoly[i] = sp5.fPoly[i];
    }
    return *this;
 }
@@ -1597,7 +1598,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"   const int fNp = %d, fKstep = %d;\n",fNp,fKstep);
    nch = strlen(buffer); f->write(buffer,nch);
-   snprintf(buffer,512,"   const double fDelta = %g, fXmin = %g, fXmax = %g;\n",fDelta,fXmin,fXmax);
+   snprintf(buffer,512,"   const double fDelta = %.17g, fXmin = %.17g, fXmax = %.17g;\n",fDelta,fXmin,fXmax);
    nch = strlen(buffer); f->write(buffer,nch);
 
    //write the spline coefficients
@@ -1606,9 +1607,9 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    Int_t i;
-   char numb[20];
+   char numb[30];
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].X());
+      snprintf(numb,30," %.17g,",fPoly[i].X());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -1624,7 +1625,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].Y());
+      snprintf(numb,30," %.17g,",fPoly[i].Y());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -1640,7 +1641,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].B());
+      snprintf(numb,30," %.17g,",fPoly[i].B());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -1656,7 +1657,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].C());
+      snprintf(numb,30," %.17g,",fPoly[i].C());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -1672,7 +1673,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].D());
+      snprintf(numb,30," %.17g,",fPoly[i].D());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -1688,7 +1689,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].E());
+      snprintf(numb,30," %.17g,",fPoly[i].E());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -1704,7 +1705,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
-      snprintf(numb,20," %g,",fPoly[i].F());
+      snprintf(numb,30," %.17g,",fPoly[i].F());
       nch = strlen(numb);
       if (i == fNp-1) numb[nch-1]=0;
       strlcat(buffer,numb,512);
@@ -1734,7 +1735,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"       klow = int((x-fXmin)/fDelta);\n");
    nch = strlen(buffer); f->write(buffer,nch);
-   snprintf(buffer,512,"       if (klow < fNp-1) klow = fNp-1;\n");
+   snprintf(buffer,512,"       if (klow > fNp-1) klow = fNp-1;\n");
    nch = strlen(buffer); f->write(buffer,nch);
    snprintf(buffer,512,"     } else {\n");
    nch = strlen(buffer); f->write(buffer,nch);

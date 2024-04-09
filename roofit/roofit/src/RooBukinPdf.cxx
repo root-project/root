@@ -33,7 +33,6 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 #include "RooBatchCompute.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooBukinPdf);
 
@@ -147,8 +146,8 @@ double RooBukinPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Bukin distribution.
-void RooBukinPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooBukinPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Bukin, output, nEvents,
-          {dataMap.at(x), dataMap.at(Xp), dataMap.at(sigp), dataMap.at(xi), dataMap.at(rho1), dataMap.at(rho2)});
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Bukin, ctx.output(),
+          {ctx.at(x), ctx.at(Xp), ctx.at(sigp), ctx.at(xi), ctx.at(rho1), ctx.at(rho2)});
 }

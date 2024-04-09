@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <functional>
 
-using namespace std;
+using std::cout, std::cerr, std::endl, std::ostream, std::ostream_iterator, std::vector;
 
 
 double minRange[3] = { -5., -5., -5.};

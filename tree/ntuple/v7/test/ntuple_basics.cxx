@@ -351,15 +351,7 @@ TEST(RNTupleModel, EnforceValidFieldNames)
 {
    auto model = RNTupleModel::Create();
 
-   auto field = model->MakeField<float>("pt", 42.0);
-
    // MakeField
-   try {
-      auto field2 = model->MakeField<float>("pt", 42.0);
-      FAIL() << "repeated field names should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
-   }
    try {
       auto field3 = model->MakeField<float>("", 42.0);
       FAIL() << "empty string as field name should throw";
@@ -373,9 +365,19 @@ TEST(RNTupleModel, EnforceValidFieldNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain dot characters '.'"));
    }
 
+   // Previous failures to create 'pt' should not block the name
+   auto field = model->MakeField<float>("pt", 42.0);
+
+   try {
+      auto field2 = model->MakeField<float>("pt", 42.0);
+      FAIL() << "repeated field names should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
+   }
+
    // AddField
    try {
-      model->AddField(std::make_unique<RField<float>>(RField<float>("pt")));
+      model->AddField(std::make_unique<RField<float>>("pt"));
       FAIL() << "repeated field names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
@@ -786,6 +788,7 @@ TEST(REntry, Basics)
 
    EXPECT_THROW(e->GetToken(""), ROOT::Experimental::RException);
    EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
+   EXPECT_THROW(model->GetToken("eta"), ROOT::Experimental::RException);
 
    std::shared_ptr<float> ptrPt;
    e->BindValue("pt", ptrPt);
@@ -800,7 +803,7 @@ TEST(REntry, Basics)
    e->BindRawPtr("pt", &pt);
    EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
 
-   e->EmplaceNewValue("pt");
+   e->EmplaceNewValue(model->GetToken("pt"));
    EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
 }
 

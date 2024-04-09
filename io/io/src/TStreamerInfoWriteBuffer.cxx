@@ -404,7 +404,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
          // special case for TObject::fBits in case of a referenced object
          case TStreamerInfo::kBits: { DOLOOP {
-            UInt_t *x=(UInt_t*)(arr[k]+ioffset); b << (*x & (~kIsOnHeap & ~kNotDeleted));
+            UInt_t *x=(UInt_t*)(arr[k]+ioffset);
+            const auto parent = b.GetParent();
+            if (R__unlikely(parent && parent->TestBit(TFile::k630forwardCompatibility)))
+               b << *x;
+            else
+               b << (*x & (~kIsOnHeap & ~kNotDeleted));
             if ((*x & kIsReferenced) != 0) {
                TObject *obj = (TObject*)(arr[k]+eoffset);
                TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID(),obj);

@@ -23,9 +23,7 @@
 
 #include "TThreadImp.h"
 
-#ifndef __CINT__
 #include <pthread.h>
-#endif
 
 R__EXTERN "C" unsigned int sleep(unsigned int seconds);
 

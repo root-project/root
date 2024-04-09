@@ -89,8 +89,6 @@ credible interval from the given function.
 
 ClassImp(RooStats::BayesianCalculator);
 
-using namespace std;
-
 namespace RooStats {
 
 
@@ -330,8 +328,8 @@ private:
    mutable ROOT::Math::IntegratorMultiDim  fIntegrator; // integrator  (mutable because Integral() is not const
    mutable std::vector<double> fXmin;    // min value of parameters (poi+nuis) -
    mutable std::vector<double> fXmax;   // max value of parameters (poi+nuis) - max poi changes so it is mutable
-   double fNorm = 1.0;                  // normalization value (computed in ctor)
-   mutable double fNormErr = 0.0;       // normalization error value (computed in ctor)
+   double fNorm = 1.0;                  // normalization value (computed in constructor)
+   mutable double fNormErr = 0.0;       // normalization error value (computed in constructor)
    double fOffset = 0;                  // offset for computing the root
    double fMaxPOI = 0;                  // maximum value of POI
    bool fHasNorm = false;               // flag to control first call to the function

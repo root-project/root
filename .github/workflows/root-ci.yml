@@ -2,9 +2,6 @@
 name: 'ROOT CI'
 
 on:
-  schedule:
-    - cron: '0 1 * * *'
-
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
   pull_request:
     branches:
@@ -24,11 +21,12 @@ on:
     inputs:
       head_ref:
         type: string
-        required: true
         default: master
       base_ref:
         type: string
-        required: true
+        default: master
+      ref_name:
+        type: string
         default: master
 
   # Enables manual start of workflow
@@ -95,7 +93,6 @@ jobs:
       matrix:
         # Specify platform + arch + (optional) build option overrides
         #
-        # Available platforms: mac14, mac-beta
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
@@ -107,9 +104,9 @@ jobs:
           - platform: mac14
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-#          - platform: mac-beta
-#            arch: X64
-#            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - platform: mac-beta
+            arch: ARM64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -124,7 +121,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
@@ -186,7 +183,7 @@ jobs:
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ github.ref_name }}
+                    --base_ref       ${{ inputs.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
@@ -297,7 +294,7 @@ jobs:
                     --platform     windows10
                     --incremental  false
                     --binaries     true
-                    --base_ref     ${{ github.ref_name }}
+                    --base_ref     ${{ inputs.ref_name }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}"
 
@@ -361,8 +358,6 @@ jobs:
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: ubuntu22
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2304
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: ubuntu2310
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
 
@@ -407,7 +402,7 @@ jobs:
               '
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
@@ -473,7 +468,7 @@ jobs:
                     --platform       ${{ matrix.image }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ github.ref_name }}
+                    --base_ref       ${{ inputs.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 

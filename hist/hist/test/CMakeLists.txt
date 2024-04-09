@@ -19,6 +19,7 @@ ROOT_ADD_GTEST(test_TF123_Moments test_TF123_Moments.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(test_THBinIterator test_THBinIterator.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTMultiGraphGetHistogram test_TMultiGraph_GetHistogram.cxx LIBRARIES Hist Gpad)
 ROOT_ADD_GTEST(testTGraphSorting test_TGraph_sorting.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testSpline test_spline.cxx LIBRARIES Hist)
 
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
@@ -26,6 +27,8 @@ endif()
 
 ROOT_ADD_GTEST(testTF2 test_tf2.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF3 test_tf3.cxx LIBRARIES Hist)
+
+ROOT_ADD_GTEST(testTH1sa test_TH1_SaveAs.cxx LIBRARIES Hist)
 
 if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
@@ -40,3 +43,6 @@ endif()
 #   for details.
 ROOT_EXECUTABLE(tdirectoryfile_destructor_segfault tdirectoryfile_destructor_segfault.cxx LIBRARIES RIO Hist)
 ROOT_ADD_TEST(test-tdirectoryfile_destructor_segfault COMMAND tdirectoryfile_destructor_segfault)
+
+# Test for https://github.com/root-project/root/issues/6658
+ROOT_ADD_GTEST(test_projections test_projections.cxx LIBRARIES Hist)

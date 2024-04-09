@@ -27,6 +27,8 @@ and kept inside this chain index.
 #include "TFile.h"
 #include "TError.h"
 
+#include <cstring> // std::strlen
+
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TChainIndex::TChainIndexEntry
 /// Holds a description of indices of trees in the chain.
@@ -37,6 +39,24 @@ void TChainIndex::TChainIndexEntry::SetMinMaxFrom(const TTreeIndex *index )
    fMinIndexValMinor = index->GetIndexValuesMinor()[0];
    fMaxIndexValue    = index->GetIndexValues()[index->GetN() - 1];
    fMaxIndexValMinor = index->GetIndexValuesMinor()[index->GetN() - 1];
+}
+
+void TChainIndex::TChainIndexEntry::Swap(TChainIndex::TChainIndexEntry &other)
+{
+   std::swap(fMinIndexValue, other.fMinIndexValue);
+   std::swap(fMinIndexValMinor, other.fMinIndexValMinor);
+   std::swap(fMaxIndexValue, other.fMaxIndexValue);
+   std::swap(fMaxIndexValMinor, other.fMaxIndexValMinor);
+   std::swap(fTreeIndex, other.fTreeIndex);
+}
+
+TChainIndex::TChainIndexEntry::TChainIndexEntry(const TChainIndex::TChainIndexEntry &other)
+{
+   fMinIndexValue = other.fMinIndexValue;
+   fMinIndexValMinor = other.fMinIndexValMinor;
+   fMaxIndexValue = other.fMaxIndexValue;
+   fMaxIndexValMinor = other.fMaxIndexValMinor;
+   fTreeIndex = (other.fTreeIndex ? static_cast<TVirtualIndex *>(other.fTreeIndex->Clone()) : nullptr);
 }
 
 ClassImp(TChainIndex);
@@ -197,7 +217,7 @@ TChainIndex::~TChainIndex()
 
 std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Long64_t minor) const
 {
-   using namespace std;
+   using std::make_pair;
    if (fEntries.empty()) {
       Warning("GetSubTreeIndex", "No subindices in the chain. The chain is probably empty");
       return make_pair(static_cast<TVirtualIndex*>(nullptr), 0);
@@ -407,3 +427,25 @@ void TChainIndex::SetTree(TTree *T)
    fTree = T;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Create a deep copy of the TChainIndex
+/// \param[in] newname A new name for the index
+///
+/// The new index is allocated on the heap without being managed. Also, it is
+/// not attached to any tree. It is the responsibility of the caller to manage
+/// its lifetime and attach it to a tree if necessary.
+TObject *TChainIndex::Clone(const char *newname) const
+{
+   auto index = new TChainIndex();
+   index->SetName(newname && std::strlen(newname) ? newname : GetName());
+   index->SetTitle(GetTitle());
+
+   // Note that the TTreeFormula * data members are not cloned since they would
+   // need the attached tree data member to function properly.
+   index->fMajorName = fMajorName;
+   index->fMinorName = fMinorName;
+
+   index->fEntries = fEntries;
+
+   return index;
+}

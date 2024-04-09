@@ -62,8 +62,8 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooNLLVar.h"
 #endif
 
-using namespace RooFit ;
-using namespace std ;
+using namespace RooFit;
+using std::string, std::map, std::list, std::pair, std::endl, std::vector;
 
 #define BUFFER_SIZE 64000
 

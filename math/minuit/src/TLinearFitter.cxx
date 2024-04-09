@@ -37,6 +37,8 @@ std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
 
 \class TLinearFitter
 
+\note An alternative to this class is to use ROOT::Fit::Fitter, calling the LinearFit() method.
+
 \ingroup MinuitOld
 
 The Linear Fitter - For fitting functions that are LINEAR IN PARAMETERS

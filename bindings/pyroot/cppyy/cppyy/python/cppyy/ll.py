@@ -2,6 +2,9 @@
 """
 
 import cppyy
+import ctypes
+import sys
+import warnings
 
 try:
     import __pypy__
@@ -11,6 +14,8 @@ except ImportError:
     ispypy = False
 
 __all__ = [
+    'argv',
+    'argc',
     'cast',
     'static_cast',
     'reinterpret_cast',
@@ -18,10 +23,10 @@ __all__ = [
     'malloc',
     'free',
     'array_new',
-    'array_detele',
+    'array_delete',
     'signals_as_exception',
-    'set_signals_as_exception'
-    'FatalError'
+    'set_signals_as_exception',
+    'FatalError',
     'BusError',
     'SegmentationViolation',
     'IllegalInstruction',
@@ -29,8 +34,17 @@ __all__ = [
     ]
 
 
+# convenience functions to create C-style argv/argc
+def argv():
+    argc = len(sys.argv)
+    cargsv = (ctypes.c_char_p * len(sys.argv))(*(x.encode() for x in sys.argv))
+    return ctypes.POINTER(ctypes.c_char_p)(cargsv)
+
+def argc():
+    return len(sys.argv)
+
 # import low-level python converters
-for _name in ['addressof', 'as_cobject', 'as_capsule', 'as_ctypes']:
+for _name in ['addressof', 'as_cobject', 'as_capsule', 'as_ctypes', 'as_memoryview']:
     try:
         exec('%s = cppyy._backend.%s' % (_name, _name))
         __all__.append(_name)
@@ -73,10 +87,23 @@ class ArraySizer(object):
     def __getitem__(self, t):
         self.array_type = t
         return self
-    def __call__(self, size):
+    def __call__(self, size, managed=False):
         res = self.func[self.array_type](size)
-        res.reshape((size,))
+        try:
+            res.reshape((size,)+res.shape[1:])
+            if managed: res.__python_owns__ = True
+        except AttributeError:
+            res.__reshape__((size,))
+            if managed:
+                warnings.warn("managed low-level arrays of instances not supported")
         return res
+
+class CArraySizer(ArraySizer):
+    def __call__(self, size, managed=False):
+        res = ArraySizer.__call__(self, size, managed)
+        res.__cpp_array__ = False
+        return res
+
 
 # import casting helpers
 cast             = cppyy.gbl.__cppyy_internal.cppyy_cast
@@ -85,7 +112,7 @@ reinterpret_cast = cppyy.gbl.__cppyy_internal.cppyy_reinterpret_cast
 dynamic_cast     = cppyy.gbl.__cppyy_internal.cppyy_dynamic_cast
 
 # import memory allocation/free-ing helpers
-malloc           = ArraySizer(cppyy.gbl.__cppyy_internal.cppyy_malloc)
+malloc           = CArraySizer(cppyy.gbl.__cppyy_internal.cppyy_malloc)
 free             = cppyy.gbl.free      # for symmetry
 array_new        = ArraySizer(cppyy.gbl.__cppyy_internal.cppyy_array_new)
 array_delete     = cppyy.gbl.__cppyy_internal.cppyy_array_delete

@@ -49,7 +49,7 @@ the names of the arguments are not hard coded.
 #include "RooArgList.h"
 #include "RooFormula.h"
 
-using namespace std;
+using std::istream, std::ostream, std::endl;
 
 ClassImp(RooGenericPdf);
 
@@ -135,9 +135,9 @@ double RooGenericPdf::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void RooGenericPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooGenericPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  formula().computeBatch(output, nEvents, dataMap);
+  formula().doEval(ctx);
 }
 
 

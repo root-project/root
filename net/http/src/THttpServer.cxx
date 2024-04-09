@@ -195,11 +195,12 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
    TRootSniffer *sniff = nullptr;
    if (basic_sniffer) {
-      sniff = new TRootSniffer("sniff");
+      sniff = new TRootSniffer();
       sniff->SetScanGlobalDir(kFALSE);
       sniff->CreateOwnTopFolder(); // use dedicated folder
    } else {
-      sniff = (TRootSniffer *)gROOT->ProcessLineSync("new TRootSnifferFull(\"sniff\");");
+      static const TClass *snifferClass = TClass::GetClass("TRootSnifferFull");
+      sniff = (TRootSniffer *)snifferClass->New();
    }
 
    SetSniffer(sniff);
@@ -563,7 +564,7 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
 
    Int_t level = 0;
 
-   while (*fname != 0) {
+   while (*fname) {
 
       // find next slash or backslash
       const char *next = strpbrk(fname, "/\\");
@@ -819,7 +820,7 @@ std::string THttpServer::BuildWSEntryPage()
          if (arr.length() > 1)
             arr.append(", ");
 
-         arr.append(Form("{ name: \"%s\", title: \"%s\" }", ws->GetName(), ws->GetTitle()));
+         arr.append(TString::Format("{ name: \"%s\", title: \"%s\" }", ws->GetName(), ws->GetTitle()).Data());
       }
    }
 
@@ -926,7 +927,11 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       }
 
       if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
-         arg->SetContent("refused"); //  BuildWSEntryPage();
+         // Creating page with list of available widgets is disabled now for security reasons
+         // Later one can provide functionality back only if explicitely desired by the user
+         //  BuildWSEntryPage();
+
+         arg->SetContent("refused");
          arg->Set404();
       }
 
@@ -1122,7 +1127,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       // only for binary data master version is important
       // it allows to detect if streamer info was modified
       const char *parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
-      arg->AddHeader(parname, Form("%u", (unsigned)fSniffer->GetStreamerInfoHash()));
+      arg->AddHeader(parname, TString::Format("%u", (unsigned)fSniffer->GetStreamerInfoHash()).Data());
    }
 
    // try to avoid caching on the browser

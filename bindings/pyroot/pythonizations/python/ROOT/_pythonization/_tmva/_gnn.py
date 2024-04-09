@@ -257,6 +257,8 @@ class RModel_GNN:
         blas_routines.push_back("Axpy")
         blas_routines.push_back("Gemv")
         gnn_model.AddBlasRoutines(blas_routines)
+        gnn_model.AddNeededStdLib("algorithm")
+        gnn_model.AddNeededStdLib("cmath")
         return gnn_model
 
 
@@ -323,6 +325,8 @@ class RModel_GraphIndependent:
         blas_routines = gbl_namespace.std.vector['std::string']()
         blas_routines.push_back("Gemm")
         graph_independent_model.AddBlasRoutines(blas_routines)
+        graph_independent_model.AddNeededStdLib("algorithm")
+        graph_independent_model.AddNeededStdLib("cmath")
         return graph_independent_model
 
 

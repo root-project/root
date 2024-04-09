@@ -19,9 +19,10 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <string_view>
 
 #include <TFile.h>
@@ -114,9 +115,6 @@ public:
    };
 
 private:
-   /// By default, compress RNTuple with zstd, level 5
-   static constexpr int kDefaultCompressionSettings = 505;
-
    struct RImportBranch {
       RImportBranch() = default;
       RImportBranch(const RImportBranch &other) = delete;
@@ -179,7 +177,7 @@ private:
       RImportLeafCountCollection &operator=(const RImportLeafCountCollection &other) = delete;
       RImportLeafCountCollection &operator=(RImportLeafCountCollection &&other) = default;
       std::unique_ptr<RNTupleModel> fCollectionModel;             ///< The model for the collection itself
-      std::shared_ptr<RCollectionNTupleWriter> fCollectionWriter; ///< Used to fill the collection elements per event
+      std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter; ///< Used to fill the collection elements per event
       std::unique_ptr<REntry> fCollectionEntry; ///< Keeps the memory location of the collection members
       /// The number of elements for the collection for a particular event. Used as a destination for SetBranchAddress()
       /// of the count leaf

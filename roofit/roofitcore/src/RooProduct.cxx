@@ -22,6 +22,7 @@
 Represents the product of a given set of RooAbsReal objects.
 **/
 
+#include "RooConstVar.h"
 #include "RooProduct.h"
 
 #include "RooNameReg.h"
@@ -370,15 +371,18 @@ double RooProduct::evaluate() const
 }
 
 
-void RooProduct::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProduct::doEval(RooFit::EvalContext & ctx) const
 {
+  std::span<double> output = ctx.output();
+  std::size_t nEvents = output.size();
+
   for (unsigned int i = 0; i < nEvents; ++i) {
     output[i] = 1.;
   }
 
   for (const auto item : _compRSet) {
     auto rcomp = static_cast<const RooAbsReal*>(item);
-    auto componentValues = dataMap.at(rcomp);
+    auto componentValues = ctx.at(rcomp);
 
     for (unsigned int i = 0; i < nEvents; ++i) {
       output[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];
@@ -492,6 +496,9 @@ void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // Build a (node1 * node2 * node3 * ...) like expression.
    result = '(';
    for (RooAbsArg* item : _compRSet) {
+      RooConstVar *constItem = dynamic_cast<RooConstVar *>(item);
+      if (constItem && constItem->getValV(nullptr) == 1)
+         continue;
       result += ctx.getResult(*item) + "*";
    }
    result.back() = ')';

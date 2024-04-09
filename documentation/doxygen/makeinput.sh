@@ -48,7 +48,6 @@ echo "        ../../hist/                      \\" >> Doxyfile_INPUT
 echo "        ../../html/                      \\" >> Doxyfile_INPUT
 echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
 echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
-echo "        ../../io/gfal/                   \\" >> Doxyfile_INPUT
 echo "        ../../io/io/                     \\" >> Doxyfile_INPUT
 echo "        ../../io/sql/                    \\" >> Doxyfile_INPUT
 echo "        ../../io/xml/                    \\" >> Doxyfile_INPUT

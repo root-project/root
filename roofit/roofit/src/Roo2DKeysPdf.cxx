@@ -31,7 +31,7 @@ Two-dimensional kernel estimation PDF.
 
 //#include <math.h>
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(Roo2DKeysPdf);
 

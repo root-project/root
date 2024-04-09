@@ -132,7 +132,7 @@ TEST_F(TClingTests, GetClassSharedLibs)
 {
    // Shortens the invocation.
    auto GetLibs = [](const char *cls) -> std::string {
-      if (const char *val = gInterpreter->GetClassSharedLibs(cls))
+      if (const char *val = gInterpreter->GetClassSharedLibs(cls,false))
          return val;
       return "";
    };
@@ -238,6 +238,19 @@ TEST_F(TClingTests, GetSharedLibDeps)
                      "Cannot find library '   '");
 }
 #endif
+
+// Check that a warning message is generated when using auto-injection.
+TEST_F(TClingTests, WarningAutoInjection)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "cling", "declaration without the 'auto' keyword is deprecated",
+                      /*matchFullMessage=*/false);
+
+   gInterpreter->ProcessLine("/* no auto */ t = new int;");
+
+   auto t = gInterpreter->GetDataMember(nullptr, "t");
+   EXPECT_TRUE(t != nullptr);
+}
 
 // Check the interface which interacts with the cling::LookupHelper.
 TEST_F(TClingTests, ClingLookupHelper) {

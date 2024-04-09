@@ -201,7 +201,7 @@ protected:
    THnT<Char_t>   |       THnC    |     Char_t
    THnT<Short_t>  |       THnS    |     Short_t
    THnT<Int_t>    |       THnI    |     Int_t
-   THnT<Long_t>   |       THnL    |     Long_t
+   THnT<Long64_t> |       THnL    |     Long64_t
    THnT<Float_t>  |       THnF    |     Float_t
    THnT<Double_t> |       THnD    |     Double_t
 
@@ -245,7 +245,7 @@ typedef THnT<Double_t> THnD;
 typedef THnT<Char_t>   THnC;
 typedef THnT<Short_t>  THnS;
 typedef THnT<Int_t>    THnI;
-typedef THnT<Long_t>   THnL;
+typedef THnT<Long64_t> THnL;
 typedef THnT<Long64_t> THnL64;
 
 #endif // ROOT_THN

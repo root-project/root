@@ -1,9 +1,5 @@
 #ifdef __CINT__
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
-
 #pragma link C++ enum CustomEnum;
 #pragma link C++ enum CustomEnumInt8;
 #pragma link C++ enum CustomEnumUInt8;
@@ -70,5 +66,20 @@
 
 #pragma read sourceClass = "StructWithIORules" source = "float a;float b" version = "[1-]" targetClass = \
    "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"
+
+#pragma link C++ class Cyclic + ;
+#pragma link C++ class CyclicCollectionProxy + ;
+#pragma link C++ class Unsupported + ;
+
+#pragma link C++ class BaseA + ;
+#pragma link C++ class DiamondVirtualB + ;
+#pragma link C++ class DiamondVirtualC + ;
+#pragma link C++ class DiamondVirtualD + ;
+#pragma link C++ class DuplicateBaseB + ;
+#pragma link C++ class DuplicateBaseC + ;
+#pragma link C++ class DuplicateBaseD + ;
+
+#pragma link C++ class Left + ;
+#pragma link C++ class DerivedFromLeftAndTObject+;
 
 #endif

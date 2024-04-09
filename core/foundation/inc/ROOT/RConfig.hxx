@@ -290,9 +290,7 @@
 
 #if defined(__APPLE__)       /* MacOS X support, initially following FreeBSD */
 #   include <AvailabilityMacros.h>
-#   ifndef __CINT__
 #   include <TargetConditionals.h>
-#   endif
 #   define R__MACOSX
 #   define R__UNIX
 #   if defined(__xlC__) || defined(__xlc__)
@@ -475,16 +473,10 @@
 #endif
 
 /* produce an identifier that is almost unique inside a file */
-#ifndef __CINT__
 #   define _R__JOIN_(X,Y) _NAME2_(X,Y)
 #   define _R__JOIN3_(F,X,Y) _NAME3_(F,X,Y)
 #   define _R__UNIQUE_DICT_(X) _R__JOIN3_(R__DICTIONARY_FILENAME,X,__LINE__)
 #   define _R__UNIQUE_(X) _R__JOIN_(X,__LINE__)
-#else
-    /* Currently CINT does not really mind to have duplicates and     */
-    /* does not work correctly as far as merging tokens is concerned. */
-#   define _R__UNIQUE_(X) X
-#endif
 
 /*---- deprecation -----------------------------------------------------------*/
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
@@ -510,7 +502,7 @@
 
 /* USE AS `R__DEPRECATED(6,34, "Not threadsafe; use TFoo::Bar().")`
    To be removed by 6.34 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,33,0)
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,33,2)
 # define _R__DEPRECATED_634(REASON) _R__DEPRECATED_LATER(REASON)
 #else
 # define _R__DEPRECATED_634(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)

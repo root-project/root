@@ -45,6 +45,7 @@ The following people have contributed to this new version:
   Please use the RooDataSet constructors that take RooFit command arguments instead
 - ROOT does not longer support Python 2. The minimum required Python version to build ROOT is 3.8.
 - Support for wildcard imports like `from ROOT import *` is dropped from PyROOT
+- Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
 
 ## Core Libraries
 
@@ -71,6 +72,8 @@ This grabs all the root files in subdirectories that have a name starting with `
 
 ## Math Libraries
 
+## Parallelism
+  - The ROOT::Experimental::TFuture template has been removed.
 
 ## RooFit Libraries
 
@@ -220,6 +223,79 @@ Please use the higher-level functions `RooAbsPdf::createNLL()` and `RooAbsPdf::c
 
 ## PROOF Libraries
 
+
+## PyROOT
+
+
+### Rebase of PyROOT on the current cppyy
+
+PyROOT was rebased on the latest version of the [cppyy library](https://cppyy.readthedocs.io/en/latest/).
+This means PyROOT benefits from many upstream improvements and fixes, for example related to the conversion of NumPy arrays to vectors, implicit conversion from nested Python tuples to nested initializer lists, and improved overload resolution.
+
+Related to this cppyy upgrade, there is one change in PyROOT behavior.
+A static size character buffer of type `char[n]` is not converted to a Python string anymore. 
+The reason for this: since it was previously assumed the string was
+null-terminated, there was no way to get the bytes after a `null`, even if you
+wanted to.
+
+```
+import ROOT
+
+ROOT.gInterpreter.Declare("""
+struct Struct { char char_buffer[5] {}; }; // struct with char[n]
+void fill_char_buffer(Struct & st) {
+    std::string foo{"foo"};
+    std::memcpy(st.char_buffer, foo.data(), foo.size());
+}
+""")
+
+struct = ROOT.Struct()
+ROOT.fill_char_buffer(struct)
+char_buffer = struct.char_buffer
+
+# With thew new cppyy, you get access to the lower level buffer instead of a
+# Python string:
+print("struct.char_buffer            : ", char_buffer)
+
+# However, you can turn the buffer into a string very easily with as_string():
+print("struct.char_buffer.as_string(): ", char_buffer.as_string())
+```
+The output of this script with ROOT 6.32:
+```
+struct.char_buffer            :  <cppyy.LowLevelView object at 0x74c7a2682fb0>
+struct.char_buffer.as_string():  foo
+```
+
+### Deprecate the attribute pythonization of `TDirectory` in favor of item-getting syntax
+
+The new recommended way to get objects from a `TFile` or any `TDirectory` in general is now via `__getitem__`:
+
+```python
+tree = my_file["my_tree"] # instead of my_file.my_tree
+```
+
+This is more consistent with other Python collections (like dictionaries), makes sure that member functions can't be confused with branch names, and easily allows you to use string variables as keys.
+
+With the new dictionary-like syntax, you can also get objects with names that don't qualify as a Python variable. Here is a short demo:
+```python
+import ROOT
+
+with ROOT.TFile.Open("my_file.root", "RECREATE") as my_file:
+
+    # Populate the TFile with simple objects.
+    my_file.WriteObject(ROOT.std.string("hello world"), "my_string")
+    my_file.WriteObject(ROOT.vector["int"]([1, 2, 3]), "my vector")
+
+    print(my_file["my_string"])  # new syntax
+    print(my_file.my_string)  # old deprecated syntax
+
+    # With the dictionary syntax, you can also use names that don't qualify as
+    # a Python variable:
+    print(my_file["my vector"])
+    # print(my_file.my vector) # the old syntax would not work here!
+```
+
+The old pythonization with the `__getattr__` syntax still works, but emits a deprecation warning and will be removed from ROOT 6.34.
 
 ## Language Bindings
 

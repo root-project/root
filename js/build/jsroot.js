@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.5.99
+// https://root.cern/js/ v7.6.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/01/2024',
+version_date = '18/03/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -221,7 +221,7 @@ settings = {
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
-   /** @summary Show progress box */
+   /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
    ToolBar: nodejs ? false : 'popup',
@@ -296,7 +296,15 @@ settings = {
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
    StripAxisLabels: true,
    /** @summary Draw TF1 by default as curve or line */
-   FuncAsCurve: false
+   FuncAsCurve: false,
+   /** @summary Time zone used for date/time display of file time */
+   TimeZone: '',
+   /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
+   NewTabUrl: '',
+   /** @summary Extra parameters which will be append to the url when item shown in new tab */
+   NewTabUrlPars: '',
+   /** @summary Export different settings in output URL */
+   NewTabUrlExportSettings: false
 },
 
 /** @namespace
@@ -9599,6 +9607,440 @@ async function typesetMathjax(node) {
    return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
 }
 
+const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient',
+      kWhite = 0, kBlack = 1;
+
+/** @summary Covert value between 0 and 1 into hex, used for colors coding
+  * @private */
+function toHex(num, scale = 255) {
+   const s = Math.round(num * scale).toString(16);
+   return s.length === 1 ? '0'+s : s;
+}
+
+/** @summary list of global root colors
+  * @private */
+let gbl_colors_list = [];
+
+/** @summary Generates all root colors, used also in jstests to reset colors
+  * @private */
+function createRootColors() {
+   const colorMap = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan', '#59d454', '#5954d9', 'white'];
+   colorMap[110] = 'white';
+
+   const moreCol = [
+      { n: 11, s: 'c1b7ad4d4d4d6666668080809a9a9ab3b3b3cdcdcde6e6e6f3f3f3cdc8accdc8acc3c0a9bbb6a4b3a697b8a49cae9a8d9c8f83886657b1cfc885c3a48aa9a1839f8daebdc87b8f9a768a926983976e7b857d9ad280809caca6c0d4cf88dfbb88bd9f83c89a7dc08378cf5f61ac8f94a6787b946971d45a549300ff7b00ff6300ff4b00ff3300ff1b00ff0300ff0014ff002cff0044ff005cff0074ff008cff00a4ff00bcff00d4ff00ecff00fffd00ffe500ffcd00ffb500ff9d00ff8500ff6d00ff5500ff3d00ff2600ff0e0aff0022ff003aff0052ff006aff0082ff009aff00b1ff00c9ff00e1ff00f9ff00ffef00ffd700ffbf00ffa700ff8f00ff7700ff6000ff4800ff3000ff1800ff0000' },
+      { n: 201, s: '5c5c5c7b7b7bb8b8b8d7d7d78a0f0fb81414ec4848f176760f8a0f14b81448ec4876f1760f0f8a1414b84848ec7676f18a8a0fb8b814ecec48f1f1768a0f8ab814b8ec48ecf176f10f8a8a14b8b848ecec76f1f1' },
+      { n: 390, s: 'ffffcdffff9acdcd9affff66cdcd669a9a66ffff33cdcd339a9a33666633ffff00cdcd009a9a00666600333300' },
+      { n: 406, s: 'cdffcd9aff9a9acd9a66ff6666cd66669a6633ff3333cd33339a3333663300ff0000cd00009a00006600003300' },
+      { n: 422, s: 'cdffff9affff9acdcd66ffff66cdcd669a9a33ffff33cdcd339a9a33666600ffff00cdcd009a9a006666003333' },
+      { n: 590, s: 'cdcdff9a9aff9a9acd6666ff6666cd66669a3333ff3333cd33339a3333660000ff0000cd00009a000066000033' },
+      { n: 606, s: 'ffcdffff9affcd9acdff66ffcd66cd9a669aff33ffcd33cd9a339a663366ff00ffcd00cd9a009a660066330033' },
+      { n: 622, s: 'ffcdcdff9a9acd9a9aff6666cd66669a6666ff3333cd33339a3333663333ff0000cd00009a0000660000330000' },
+      { n: 791, s: 'ffcd9acd9a669a66339a6600cd9a33ffcd66ff9a00ffcd33cd9a00ffcd00ff9a33cd66006633009a3300cd6633ff9a66ff6600ff6633cd3300ff33009aff3366cd00336600339a0066cd339aff6666ff0066ff3333cd0033ff00cdff9a9acd66669a33669a009acd33cdff669aff00cdff339acd00cdff009affcd66cd9a339a66009a6633cd9a66ffcd00ff6633ffcd00cd9a00ffcd33ff9a00cd66006633009a3333cd6666ff9a00ff9a33ff6600cd3300ff339acdff669acd33669a00339a3366cd669aff0066ff3366ff0033cd0033ff339aff0066cd00336600669a339acd66cdff009aff33cdff009acd00cdffcd9aff9a66cd66339a66009a9a33cdcd66ff9a00ffcd33ff9a00cdcd00ff9a33ff6600cd33006633009a6633cd9a66ff6600ff6633ff3300cd3300ffff339acd00666600339a0033cd3366ff669aff0066ff3366cd0033ff0033ff9acdcd669a9a33669a0066cd339aff66cdff009acd009aff33cdff009a' },
+      { n: 920, s: 'cdcdcd9a9a9a666666333333' }];
+
+   moreCol.forEach(entry => {
+      const s = entry.s;
+      for (let n = 0; n < s.length; n += 6) {
+         const num = entry.n + n / 6;
+         colorMap[num] = '#' + s.slice(n, n+6);
+      }
+   });
+
+   gbl_colors_list = colorMap;
+}
+
+/** @summary Get list of colors
+  * @private */
+function getRootColors() {
+   return gbl_colors_list;
+}
+
+/** @summary Produces rgb code for TColor object
+  * @private */
+function getRGBfromTColor(col) {
+   if (col?._typename !== clTColor) return null;
+
+   let rgb = '#' + toHex(col.fRed) + toHex(col.fGreen) + toHex(col.fBlue);
+   if ((col.fAlpha !== undefined) && (col.fAlpha !== 1))
+      rgb += toHex(col.fAlpha);
+
+   switch (rgb) {
+      case '#ffffff': return 'white';
+      case '#000000': return 'black';
+      case '#ff0000': return 'red';
+      case '#00ff00': return 'green';
+      case '#0000ff': return 'blue';
+      case '#ffff00': return 'yellow';
+      case '#ff00ff': return 'magenta';
+      case '#00ffff': return 'cyan';
+   }
+   return rgb;
+}
+
+/** @ummary Return list of grey colors for the original array
+  * @private */
+function getGrayColors(rgb_array) {
+   const gray_colors = [];
+
+   if (!rgb_array) rgb_array = getRootColors();
+
+   for (let n = 0; n < rgb_array.length; ++n) {
+      if (!rgb_array[n]) continue;
+      const rgb = color(rgb_array[n]),
+            gray = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
+      rgb.r = rgb.g = rgb.b = gray;
+      gray_colors[n] = rgb.hex();
+   }
+
+   return gray_colors;
+}
+
+/** @summary Add new colors from object array
+  * @private */
+function extendRootColors(jsarr, objarr, grayscale) {
+   if (!jsarr) {
+      jsarr = [];
+      for (let n = 0; n < gbl_colors_list.length; ++n)
+         jsarr[n] = gbl_colors_list[n];
+   }
+
+   if (!objarr) return jsarr;
+
+   let rgb_array = objarr;
+   if (objarr._typename && objarr.arr) {
+      rgb_array = [];
+      for (let n = 0; n < objarr.arr.length; ++n) {
+         const col = objarr.arr[n];
+         if ((col?._typename === clTLinearGradient) || (col?._typename === clTRadialGradient)) {
+            rgb_array[col.fNumber] = col;
+            col.toString = () => 'white';
+            continue;
+         }
+
+         if (col?._typename !== clTColor)
+            continue;
+
+         if ((col.fNumber >= 0) && (col.fNumber <= 10000))
+            rgb_array[col.fNumber] = getRGBfromTColor(col);
+      }
+   }
+
+   for (let n = 0; n < rgb_array.length; ++n) {
+      if (rgb_array[n] && (jsarr[n] !== rgb_array[n]))
+         jsarr[n] = rgb_array[n];
+   }
+
+   return grayscale ? getGrayColors(jsarr) : jsarr;
+}
+
+/** @ummary Set global list of colors.
+  * @desc Either TObjArray of TColor instances or just plain array with rgb() code.
+  * List of colors typically stored together with TCanvas primitives
+  * @private */
+function adoptRootColors(objarr) {
+   extendRootColors(gbl_colors_list, objarr);
+}
+
+/** @summary Return ROOT color by index
+  * @desc Color numbering corresponds typical ROOT colors
+  * @return {String} with RGB color code or existing color name like 'cyan'
+  * @private */
+function getColor(indx) {
+   return gbl_colors_list[indx];
+}
+
+/** @summary Search for specified color in the list of colors
+  * @return Color index or -1 if fails
+  * @private */
+function findColor(name) {
+   if (!name) return -1;
+   for (let indx = 0; indx < gbl_colors_list.length; ++indx) {
+      if (gbl_colors_list[indx] === name)
+         return indx;
+   }
+   return -1;
+}
+
+/** @summary Add new color
+  * @param {string} rgb - color name or just string with rgb value
+  * @param {array} [lst] - optional colors list, to which add colors
+  * @return {number} index of new color
+  * @private */
+function addColor(rgb, lst) {
+   if (!lst) lst = gbl_colors_list;
+   const indx = lst.indexOf(rgb);
+   if (indx >= 0) return indx;
+   lst.push(rgb);
+   return lst.length-1;
+}
+
+/**
+ * @summary Color palette handle
+ *
+ * @private
+ */
+
+class ColorPalette {
+
+   /** @summary constructor */
+   constructor(arr, grayscale) {
+      this.palette = grayscale ? getGrayColors(arr) : arr;
+   }
+
+   /** @summary Returns color index which correspond to contour index of provided length */
+   calcColorIndex(i, len) {
+      const plen = this.palette.length, theColor = Math.floor((i + 0.99) * plen / (len - 1));
+      return (theColor > plen - 1) ? plen - 1 : theColor;
+    }
+
+   /** @summary Returns color with provided index */
+   getColor(indx) { return this.palette[indx]; }
+
+   /** @summary Returns number of colors in the palette */
+   getLength() { return this.palette.length; }
+
+   /** @summary Calculate color for given i and len */
+   calcColor(i, len) { return this.getColor(this.calcColorIndex(i, len)); }
+
+} // class ColorPalette
+
+function createDefaultPalette(grayscale) {
+   const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+   }, HLStoRGB = (h, l, s) => {
+      const q = (l < 0.5) ? l * (1 + s) : l + s - l * s,
+            p = 2 * l - q,
+            r = hue2rgb(p, q, h + 1/3),
+            g = hue2rgb(p, q, h),
+            b = hue2rgb(p, q, h - 1/3);
+      return '#' + toHex(r) + toHex(g) + toHex(b);
+   }, minHue = 0, maxHue = 280, maxPretty = 50, palette = [];
+   for (let i = 0; i < maxPretty; ++i) {
+      const hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360;
+      palette.push(HLStoRGB(hue, 0.5, 1));
+   }
+   return new ColorPalette(palette, grayscale);
+}
+
+function createGrayPalette() {
+   const palette = [];
+   for (let i = 0; i < 50; ++i) {
+      const code = toHex((i+2)/60);
+      palette.push('#'+code+code+code);
+   }
+   return new ColorPalette(palette);
+}
+
+/* eslint-disable comma-spacing */
+
+
+/** @summary Create color palette
+  * @private */
+function getColorPalette(id, grayscale) {
+   id = id || settings.Palette;
+   if ((id > 0) && (id < 10)) return createGrayPalette();
+   if (id < 51) return createDefaultPalette(grayscale);
+   if (id > 113) id = 57;
+   const stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
+   let rgb;
+   switch (id) {
+      // Deep Sea
+      case 51: rgb = [[0,9,13,17,24,32,27,25,29],[0,0,0,2,37,74,113,160,221],[28,42,59,78,98,129,154,184,221]]; break;
+      // Grey Scale
+      case 52: rgb = [[0,32,64,96,128,160,192,224,255],[0,32,64,96,128,160,192,224,255],[0,32,64,96,128,160,192,224,255]]; break;
+      // Dark Body Radiator
+      case 53: rgb = [[0,45,99,156,212,230,237,234,242],[0,0,0,45,101,168,238,238,243],[0,1,1,3,9,8,11,95,230]]; break;
+      // Two-color hue (dark blue through neutral gray to bright yellow)
+      case 54: rgb = [[0,22,44,68,93,124,160,192,237],[0,16,41,67,93,125,162,194,241],[97,100,99,99,93,68,44,26,74]]; break;
+      // Rain Bow
+      case 55: rgb = [[0,5,15,35,102,196,208,199,110],[0,48,124,192,206,226,97,16,0],[99,142,198,201,90,22,13,8,2]]; break;
+      // Inverted Dark Body Radiator
+      case 56: rgb = [[242,234,237,230,212,156,99,45,0],[243,238,238,168,101,45,0,0,0],[230,95,11,8,9,3,1,1,0]]; break;
+      // Bird (default, keep float for backward compatibility)
+      case 57: rgb = [[53.091,15.096,19.89,5.916,45.951,135.1755,208.743,253.878,248.982],[42.432,91.7745,128.5455,163.6845,183.039,191.046,186.864,200.481,250.716],[134.9715,221.442,213.8175,201.807,163.8375,118.881,89.2245,50.184,13.7445]]; break;
+      // Cubehelix
+      case 58: rgb = [[0,24,2,54,176,236,202,194,255],[0,29,92,129,117,120,176,236,255],[0,68,80,34,57,172,252,245,255]]; break;
+      // Green Red Violet
+      case 59: rgb = [[13,23,25,63,76,104,137,161,206],[95,67,37,21,0,12,35,52,79],[4,3,2,6,11,22,49,98,208]]; break;
+      // Blue Red Yellow
+      case 60: rgb = [[0,61,89,122,143,160,185,204,231],[0,0,0,0,14,37,72,132,235],[0,140,224,144,4,5,6,9,13]]; break;
+      // Ocean
+      case 61: rgb = [[14,7,2,0,5,11,55,131,229],[105,56,26,1,42,74,131,171,229],[2,21,35,60,92,113,160,185,229]]; break;
+      // Color Printable On Grey
+      case 62: rgb = [[0,0,0,70,148,231,235,237,244],[0,0,0,0,0,69,67,216,244],[0,102,228,231,177,124,137,20,244]]; break;
+      // Alpine
+      case 63: rgb = [[50,56,63,68,93,121,165,192,241],[66,81,91,96,111,128,155,189,241],[97,91,75,65,77,103,143,167,217]]; break;
+      // Aquamarine
+      case 64: rgb = [[145,166,167,156,131,114,101,112,132],[158,178,179,181,163,154,144,152,159],[190,199,201,192,176,169,160,166,190]]; break;
+      // Army
+      case 65: rgb = [[93,91,99,108,130,125,132,155,174],[126,124,128,129,131,121,119,153,173],[103,94,87,85,80,85,107,120,146]]; break;
+      // Atlantic
+      case 66: rgb = [[24,40,69,90,104,114,120,132,103],[29,52,94,127,150,162,159,151,101],[29,52,96,132,162,181,184,186,131]]; break;
+      // Aurora
+      case 67: rgb = [[46,38,61,92,113,121,132,150,191],[46,36,40,69,110,135,131,92,34],[46,80,74,70,81,105,165,211,225]]; break;
+      // Avocado
+      case 68: rgb = [[0,4,12,30,52,101,142,190,237],[0,40,86,121,140,172,187,213,240],[0,9,14,18,21,23,27,35,101]]; break;
+      // Beach
+      case 69: rgb = [[198,206,206,211,198,181,161,171,244],[103,133,150,172,178,174,163,175,244],[49,54,55,66,91,130,184,224,244]]; break;
+      // Black Body
+      case 70: rgb = [[243,243,240,240,241,239,186,151,129],[0,46,99,149,194,220,183,166,147],[6,8,36,91,169,235,246,240,233]]; break;
+      // Blue Green Yellow
+      case 71: rgb = [[22,19,19,25,35,53,88,139,210],[0,32,69,108,135,159,183,198,215],[77,96,110,116,110,100,90,78,70]]; break;
+      // Brown Cyan
+      case 72: rgb = [[68,116,165,182,189,180,145,111,71],[37,82,135,178,204,225,221,202,147],[16,55,105,147,196,226,232,224,178]]; break;
+      // CMYK
+      case 73: rgb = [[61,99,136,181,213,225,198,136,24],[149,140,96,83,132,178,190,135,22],[214,203,168,135,110,100,111,113,22]]; break;
+      // Candy
+      case 74: rgb = [[76,120,156,183,197,180,162,154,140],[34,35,42,69,102,137,164,188,197],[64,69,78,105,142,177,205,217,198]]; break;
+      // Cherry
+      case 75: rgb = [[37,102,157,188,196,214,223,235,251],[37,29,25,37,67,91,132,185,251],[37,32,33,45,66,98,137,187,251]]; break;
+      // Coffee
+      case 76: rgb = [[79,100,119,137,153,172,192,205,250],[63,79,93,103,115,135,167,196,250],[51,59,66,61,62,70,110,160,250]]; break;
+      // Dark Rain Bow
+      case 77: rgb = [[43,44,50,66,125,172,178,155,157],[63,63,85,101,138,163,122,51,39],[121,101,58,44,47,55,57,44,43]]; break;
+      // Dark Terrain
+      case 78: rgb = [[0,41,62,79,90,87,99,140,228],[0,57,81,93,85,70,71,125,228],[95,91,91,82,60,43,44,112,228]]; break;
+      // Fall
+      case 79: rgb = [[49,59,72,88,114,141,176,205,222],[78,72,66,57,59,75,106,142,173],[78,55,46,40,39,39,40,41,47]]; break;
+      // Fruit Punch
+      case 80: rgb = [[243,222,201,185,165,158,166,187,219],[94,108,132,135,125,96,68,51,61],[7,9,12,19,45,89,118,146,118]]; break;
+      // Fuchsia
+      case 81: rgb = [[19,44,74,105,137,166,194,206,220],[19,28,40,55,82,110,159,181,220],[19,42,68,96,129,157,188,203,220]]; break;
+      // Grey Yellow
+      case 82: rgb = [[33,44,70,99,140,165,199,211,216],[38,50,76,105,140,165,191,189,167],[55,67,97,124,140,166,163,129,52]]; break;
+      // Green Brown Terrain
+      case 83: rgb = [[0,33,73,124,136,152,159,171,223],[0,43,92,124,134,126,121,144,223],[0,43,68,76,73,64,72,114,223]]; break;
+      // Green Pink
+      case 84: rgb = [[5,18,45,124,193,223,205,128,49],[48,134,207,230,193,113,28,0,7],[6,15,41,121,193,226,208,130,49]]; break;
+      // Island
+      case 85: rgb = [[180,106,104,135,164,188,189,165,144],[72,126,154,184,198,207,205,190,179],[41,120,158,188,194,181,145,100,62]]; break;
+      // Lake
+      case 86: rgb = [[57,72,94,117,136,154,174,192,215],[0,33,68,109,140,171,192,196,209],[116,137,173,201,200,201,203,190,187]]; break;
+      // Light Temperature
+      case 87: rgb = [[31,71,123,160,210,222,214,199,183],[40,117,171,211,231,220,190,132,65],[234,214,228,222,210,160,105,60,34]]; break;
+      // Light Terrain
+      case 88: rgb = [[123,108,109,126,154,172,188,196,218],[184,138,130,133,154,175,188,196,218],[208,130,109,99,110,122,150,171,218]]; break;
+      // Mint
+      case 89: rgb = [[105,106,122,143,159,172,176,181,207],[252,197,194,187,174,162,153,136,125],[146,133,144,155,163,167,166,162,174]]; break;
+      // Neon
+      case 90: rgb = [[171,141,145,152,154,159,163,158,177],[236,143,100,63,53,55,44,31,6],[59,48,46,44,42,54,82,112,179]]; break;
+      // Pastel
+      case 91: rgb = [[180,190,209,223,204,228,205,152,91],[93,125,147,172,181,224,233,198,158],[236,218,160,133,114,132,162,220,218]]; break;
+      // Pearl
+      case 92: rgb = [[225,183,162,135,115,111,119,145,211],[205,177,166,135,124,117,117,132,172],[186,165,155,135,126,130,150,178,226]]; break;
+      // Pigeon
+      case 93: rgb = [[39,43,59,63,80,116,153,177,223],[39,43,59,74,91,114,139,165,223],[39,50,59,70,85,115,151,176,223]]; break;
+      // Plum
+      case 94: rgb = [[0,38,60,76,84,89,101,128,204],[0,10,15,23,35,57,83,123,199],[0,11,22,40,63,86,97,94,85]]; break;
+      // Red Blue
+      case 95: rgb = [[94,112,141,165,167,140,91,49,27],[27,46,88,135,166,161,135,97,58],[42,52,81,106,139,158,155,137,116]]; break;
+      // Rose
+      case 96: rgb = [[30,49,79,117,135,151,146,138,147],[63,60,72,90,94,94,68,46,16],[18,28,41,56,62,63,50,36,21]]; break;
+      // Rust
+      case 97: rgb = [[0,30,63,101,143,152,169,187,230],[0,14,28,42,58,61,67,74,91],[39,26,21,18,15,14,14,13,13]]; break;
+      // Sandy Terrain
+      case 98: rgb = [[149,140,164,179,182,181,131,87,61],[62,70,107,136,144,138,117,87,74],[40,38,45,49,49,49,38,32,34]]; break;
+      // Sienna
+      case 99: rgb = [[99,112,148,165,179,182,183,183,208],[39,40,57,79,104,127,148,161,198],[15,16,18,33,51,79,103,129,177]]; break;
+      // Solar
+      case 100: rgb = [[99,116,154,174,200,196,201,201,230],[0,0,8,32,58,83,119,136,173],[5,6,7,9,9,14,17,19,24]]; break;
+      // South West
+      case 101: rgb = [[82,106,126,141,155,163,142,107,66],[62,44,69,107,135,152,149,132,119],[39,25,31,60,73,68,49,72,188]]; break;
+      // Starry Night
+      case 102: rgb = [[18,29,44,72,116,158,184,208,221],[27,46,71,105,146,177,189,190,183],[39,55,80,108,130,133,124,100,76]]; break;
+      // Sunset
+      case 103: rgb = [[0,48,119,173,212,224,228,228,245],[0,13,30,47,79,127,167,205,245],[0,68,75,43,16,22,55,128,245]]; break;
+      // Temperature Map
+      case 104: rgb = [[34,70,129,187,225,226,216,193,179],[48,91,147,194,226,229,196,110,12],[234,212,216,224,206,110,53,40,29]]; break;
+      // Thermometer
+      case 105: rgb = [[30,55,103,147,174,203,188,151,105],[0,65,138,182,187,175,121,53,9],[191,202,212,208,171,140,97,57,30]]; break;
+      // Valentine
+      case 106: rgb = [[112,97,113,125,138,159,178,188,225],[16,17,24,37,56,81,110,136,189],[38,35,46,59,78,103,130,152,201]]; break;
+      // Visible Spectrum
+      case 107: rgb = [[18,72,5,23,29,201,200,98,29],[0,0,43,167,211,117,0,0,0],[51,203,177,26,10,9,8,3,0]]; break;
+      // Water Melon
+      case 108: rgb = [[19,42,64,88,118,147,175,187,205],[19,55,89,125,154,169,161,129,70],[19,32,47,70,100,128,145,130,75]]; break;
+      // Cool
+      case 109: rgb = [[33,31,42,68,86,111,141,172,227],[255,175,145,106,88,55,15,0,0],[255,205,202,203,208,205,203,206,231]]; break;
+      // Copper
+      case 110: rgb = [[0,25,50,79,110,145,181,201,254],[0,16,30,46,63,82,101,124,179],[0,12,21,29,39,49,61,74,103]]; break;
+      // Gist Earth
+      case 111: rgb = [[0,13,30,44,72,120,156,200,247],[0,36,84,117,141,153,151,158,247],[0,94,100,82,56,66,76,131,247]]; break;
+      // Viridis
+      case 112: rgb = [[26,51,43,33,28,35,74,144,246],[9,24,55,87,118,150,180,200,222],[30,96,112,114,112,101,72,35,0]]; break;
+      // Cividis
+      case 113: rgb = [[0,5,65,97,124,156,189,224,255],[32,54,77,100,123,148,175,203,234],[77,110,107,111,120,119,111,94,70]]; break;
+      default: return createDefaultPalette();
+   }
+
+   const NColors = 255, Red = rgb[0], Green = rgb[1], Blue = rgb[2], palette = [];
+
+   for (let g = 1; g < stops.length; g++) {
+       // create the colors...
+       const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
+       for (let c = 0; c < nColorsGradient; c++) {
+          const col = '#' + toHex(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) +
+                            toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
+                            toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
+          palette.push(col);
+       }
+    }
+
+    return new ColorPalette(palette, grayscale);
+}
+
+
+/** @summary Decode list of ROOT colors coded by TWebCanvas
+  * @private */
+function decodeWebCanvasColors(oper) {
+   const colors = [], arr = oper.split(';');
+   for (let n = 0; n < arr.length; ++n) {
+      const name = arr[n];
+      let p = name.indexOf(':');
+      if (p > 0) {
+         colors[parseInt(name.slice(0, p))] = color(`rgb(${name.slice(p+1)})`).formatHex();
+         continue;
+      }
+      p = name.indexOf('=');
+      if (p > 0) {
+         colors[parseInt(name.slice(0, p))] = color(`rgba(${name.slice(p+1)})`).formatHex8();
+         continue;
+      }
+      p = name.indexOf('#');
+      if (p < 0) continue;
+
+      const colindx = parseInt(name.slice(0, p)),
+            data = JSON.parse(name.slice(p+1)),
+            grad = { _typename: data[0] === 10 ? clTLinearGradient : clTRadialGradient, fNumber: colindx, fType: data[0] };
+
+      let cnt = 1;
+
+      grad.fCoordinateMode = Math.round(data[cnt++]);
+      const nsteps = Math.round(data[cnt++]);
+      grad.fColorPositions = data.slice(cnt, cnt + nsteps); cnt += nsteps;
+      grad.fColors = data.slice(cnt, cnt + 4*nsteps); cnt += 4*nsteps;
+      grad.fStart = { fX: data[cnt++], fY: data[cnt++] };
+      grad.fEnd = { fX: data[cnt++], fY: data[cnt++] };
+      if (grad._typename === clTRadialGradient && cnt < data.length) {
+         grad.fR1 = data[cnt++];
+         grad.fR2 = data[cnt++];
+      }
+
+      colors[colindx] = grad;
+   }
+
+   return colors;
+}
+
+
+createRootColors();
+
 /** @summary Returns visible rect of element
   * @param {object} elem - d3.select object with element
   * @param {string} [kind] - which size method is used
@@ -9764,7 +10206,19 @@ class DrawOptions {
          this.part = this.opt.slice(pos, pos2);
          this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
       }
-      return true;
+
+      if (postpart !== 'color')
+         return true;
+
+      this.color = this.partAsInt(1) - 1;
+      if (this.color >= 0) return true;
+      for (let col = 0; col < 8; ++col) {
+         if (getColor(col).toUpperCase() === this.part) {
+            this.color = col;
+            return true;
+         }
+      }
+      return false;
    }
 
    /** @summary Returns remaining part of found option as integer. */
@@ -10209,7 +10663,7 @@ class BasePainter {
          enlarge = select(doc.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; top: 1px; bottom: 1px; right: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          const rect1 = getElementRect(main),
                rect2 = getElementRect(enlarge);
@@ -10317,7 +10771,7 @@ async function svgToPDF(args, as_buffer) {
    let _jspdf, _svg2pdf, need_symbols = false;
 
    const pr = nodejs
-      ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(h => { _jspdf = h; return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }); }).then(h => { _svg2pdf = h.default; })
+      ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(h1 => { _jspdf = h1; return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }); }).then(h2 => { _svg2pdf = h2; })
       : loadScript(exports.source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(exports.source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
         restore_fonts = [], restore_dominant = [], restore_text = [],
         node_transform = args.node.getAttribute('transform'), custom_fonts = {};
@@ -10506,439 +10960,19 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
-const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient',
-      kWhite = 0, kBlack = 1;
-
-/** @summary Covert value between 0 and 1 into hex, used for colors coding
-  * @private */
-function toHex(num, scale = 255) {
-   const s = Math.round(num * scale).toString(16);
-   return s.length === 1 ? '0'+s : s;
-}
-
-/** @summary list of global root colors
-  * @private */
-let gbl_colors_list = [];
-
-/** @summary Generates all root colors, used also in jstests to reset colors
-  * @private */
-function createRootColors() {
-   const colorMap = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan', '#59d454', '#5954d9', 'white'];
-   colorMap[110] = 'white';
-
-   const moreCol = [
-      { n: 11, s: 'c1b7ad4d4d4d6666668080809a9a9ab3b3b3cdcdcde6e6e6f3f3f3cdc8accdc8acc3c0a9bbb6a4b3a697b8a49cae9a8d9c8f83886657b1cfc885c3a48aa9a1839f8daebdc87b8f9a768a926983976e7b857d9ad280809caca6c0d4cf88dfbb88bd9f83c89a7dc08378cf5f61ac8f94a6787b946971d45a549300ff7b00ff6300ff4b00ff3300ff1b00ff0300ff0014ff002cff0044ff005cff0074ff008cff00a4ff00bcff00d4ff00ecff00fffd00ffe500ffcd00ffb500ff9d00ff8500ff6d00ff5500ff3d00ff2600ff0e0aff0022ff003aff0052ff006aff0082ff009aff00b1ff00c9ff00e1ff00f9ff00ffef00ffd700ffbf00ffa700ff8f00ff7700ff6000ff4800ff3000ff1800ff0000' },
-      { n: 201, s: '5c5c5c7b7b7bb8b8b8d7d7d78a0f0fb81414ec4848f176760f8a0f14b81448ec4876f1760f0f8a1414b84848ec7676f18a8a0fb8b814ecec48f1f1768a0f8ab814b8ec48ecf176f10f8a8a14b8b848ecec76f1f1' },
-      { n: 390, s: 'ffffcdffff9acdcd9affff66cdcd669a9a66ffff33cdcd339a9a33666633ffff00cdcd009a9a00666600333300' },
-      { n: 406, s: 'cdffcd9aff9a9acd9a66ff6666cd66669a6633ff3333cd33339a3333663300ff0000cd00009a00006600003300' },
-      { n: 422, s: 'cdffff9affff9acdcd66ffff66cdcd669a9a33ffff33cdcd339a9a33666600ffff00cdcd009a9a006666003333' },
-      { n: 590, s: 'cdcdff9a9aff9a9acd6666ff6666cd66669a3333ff3333cd33339a3333660000ff0000cd00009a000066000033' },
-      { n: 606, s: 'ffcdffff9affcd9acdff66ffcd66cd9a669aff33ffcd33cd9a339a663366ff00ffcd00cd9a009a660066330033' },
-      { n: 622, s: 'ffcdcdff9a9acd9a9aff6666cd66669a6666ff3333cd33339a3333663333ff0000cd00009a0000660000330000' },
-      { n: 791, s: 'ffcd9acd9a669a66339a6600cd9a33ffcd66ff9a00ffcd33cd9a00ffcd00ff9a33cd66006633009a3300cd6633ff9a66ff6600ff6633cd3300ff33009aff3366cd00336600339a0066cd339aff6666ff0066ff3333cd0033ff00cdff9a9acd66669a33669a009acd33cdff669aff00cdff339acd00cdff009affcd66cd9a339a66009a6633cd9a66ffcd00ff6633ffcd00cd9a00ffcd33ff9a00cd66006633009a3333cd6666ff9a00ff9a33ff6600cd3300ff339acdff669acd33669a00339a3366cd669aff0066ff3366ff0033cd0033ff339aff0066cd00336600669a339acd66cdff009aff33cdff009acd00cdffcd9aff9a66cd66339a66009a9a33cdcd66ff9a00ffcd33ff9a00cdcd00ff9a33ff6600cd33006633009a6633cd9a66ff6600ff6633ff3300cd3300ffff339acd00666600339a0033cd3366ff669aff0066ff3366cd0033ff0033ff9acdcd669a9a33669a0066cd339aff66cdff009acd009aff33cdff009a' },
-      { n: 920, s: 'cdcdcd9a9a9a666666333333' }];
-
-   moreCol.forEach(entry => {
-      const s = entry.s;
-      for (let n = 0; n < s.length; n += 6) {
-         const num = entry.n + n / 6;
-         colorMap[num] = '#' + s.slice(n, n+6);
-      }
-   });
-
-   gbl_colors_list = colorMap;
-}
-
-/** @summary Get list of colors
-  * @private */
-function getRootColors() {
-   return gbl_colors_list;
-}
-
-/** @summary Produces rgb code for TColor object
-  * @private */
-function getRGBfromTColor(col) {
-   if (col?._typename !== clTColor) return null;
-
-   let rgb = '#' + toHex(col.fRed) + toHex(col.fGreen) + toHex(col.fBlue);
-   if ((col.fAlpha !== undefined) && (col.fAlpha !== 1))
-      rgb += toHex(col.fAlpha);
-
-   switch (rgb) {
-      case '#ffffff': return 'white';
-      case '#000000': return 'black';
-      case '#ff0000': return 'red';
-      case '#00ff00': return 'green';
-      case '#0000ff': return 'blue';
-      case '#ffff00': return 'yellow';
-      case '#ff00ff': return 'magenta';
-      case '#00ffff': return 'cyan';
+/** @summary Convert Date object into string used preconfigured time zone
+ * @desc Time zone stored in settings.TimeZone */
+function convertDate(dt) {
+   let res = '';
+   if (settings.TimeZone && isStr(settings.TimeZone)) {
+     try {
+        res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
+     } catch (err) {
+        res = '';
+     }
    }
-   return rgb;
+   return res || dt.toLocaleString('en-GB');
 }
-
-/** @ummary Return list of grey colors for the original array
-  * @private */
-function getGrayColors(rgb_array) {
-   const gray_colors = [];
-
-   if (!rgb_array) rgb_array = getRootColors();
-
-   for (let n = 0; n < rgb_array.length; ++n) {
-      if (!rgb_array[n]) continue;
-      const rgb = color(rgb_array[n]),
-            gray = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
-      rgb.r = rgb.g = rgb.b = gray;
-      gray_colors[n] = rgb.hex();
-   }
-
-   return gray_colors;
-}
-
-/** @summary Add new colors from object array
-  * @private */
-function extendRootColors(jsarr, objarr, grayscale) {
-   if (!jsarr) {
-      jsarr = [];
-      for (let n = 0; n < gbl_colors_list.length; ++n)
-         jsarr[n] = gbl_colors_list[n];
-   }
-
-   if (!objarr) return jsarr;
-
-   let rgb_array = objarr;
-   if (objarr._typename && objarr.arr) {
-      rgb_array = [];
-      for (let n = 0; n < objarr.arr.length; ++n) {
-         const col = objarr.arr[n];
-         if ((col?._typename === clTLinearGradient) || (col?._typename === clTRadialGradient)) {
-            rgb_array[col.fNumber] = col;
-            col.toString = () => 'white';
-            continue;
-         }
-
-         if (col?._typename !== clTColor)
-            continue;
-
-         if ((col.fNumber >= 0) && (col.fNumber <= 10000))
-            rgb_array[col.fNumber] = getRGBfromTColor(col);
-      }
-   }
-
-   for (let n = 0; n < rgb_array.length; ++n) {
-      if (rgb_array[n] && (jsarr[n] !== rgb_array[n]))
-         jsarr[n] = rgb_array[n];
-   }
-
-   return grayscale ? getGrayColors(jsarr) : jsarr;
-}
-
-/** @ummary Set global list of colors.
-  * @desc Either TObjArray of TColor instances or just plain array with rgb() code.
-  * List of colors typically stored together with TCanvas primitives
-  * @private */
-function adoptRootColors(objarr) {
-   extendRootColors(gbl_colors_list, objarr);
-}
-
-/** @summary Return ROOT color by index
-  * @desc Color numbering corresponds typical ROOT colors
-  * @return {String} with RGB color code or existing color name like 'cyan'
-  * @private */
-function getColor(indx) {
-   return gbl_colors_list[indx];
-}
-
-/** @summary Search for specified color in the list of colors
-  * @return Color index or -1 if fails
-  * @private */
-function findColor(name) {
-   if (!name) return -1;
-   for (let indx = 0; indx < gbl_colors_list.length; ++indx) {
-      if (gbl_colors_list[indx] === name)
-         return indx;
-   }
-   return -1;
-}
-
-/** @summary Add new color
-  * @param {string} rgb - color name or just string with rgb value
-  * @param {array} [lst] - optional colors list, to which add colors
-  * @return {number} index of new color
-  * @private */
-function addColor(rgb, lst) {
-   if (!lst) lst = gbl_colors_list;
-   const indx = lst.indexOf(rgb);
-   if (indx >= 0) return indx;
-   lst.push(rgb);
-   return lst.length-1;
-}
-
-/**
- * @summary Color palette handle
- *
- * @private
- */
-
-class ColorPalette {
-
-   /** @summary constructor */
-   constructor(arr, grayscale) {
-      this.palette = grayscale ? getGrayColors(arr) : arr;
-   }
-
-   /** @summary Returns color index which correspond to contour index of provided length */
-   calcColorIndex(i, len) {
-      const plen = this.palette.length, theColor = Math.floor((i + 0.99) * plen / (len - 1));
-      return (theColor > plen - 1) ? plen - 1 : theColor;
-    }
-
-   /** @summary Returns color with provided index */
-   getColor(indx) { return this.palette[indx]; }
-
-   /** @summary Returns number of colors in the palette */
-   getLength() { return this.palette.length; }
-
-   /** @summary Calculate color for given i and len */
-   calcColor(i, len) { return this.getColor(this.calcColorIndex(i, len)); }
-
-} // class ColorPalette
-
-function createDefaultPalette(grayscale) {
-   const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-   }, HLStoRGB = (h, l, s) => {
-      const q = (l < 0.5) ? l * (1 + s) : l + s - l * s,
-            p = 2 * l - q,
-            r = hue2rgb(p, q, h + 1/3),
-            g = hue2rgb(p, q, h),
-            b = hue2rgb(p, q, h - 1/3);
-      return '#' + toHex(r) + toHex(g) + toHex(b);
-   }, minHue = 0, maxHue = 280, maxPretty = 50, palette = [];
-   for (let i = 0; i < maxPretty; ++i) {
-      const hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360;
-      palette.push(HLStoRGB(hue, 0.5, 1));
-   }
-   return new ColorPalette(palette, grayscale);
-}
-
-function createGrayPalette() {
-   const palette = [];
-   for (let i = 0; i < 50; ++i) {
-      const code = toHex((i+2)/60);
-      palette.push('#'+code+code+code);
-   }
-   return new ColorPalette(palette);
-}
-
-/* eslint-disable comma-spacing */
-
-
-/** @summary Create color palette
-  * @private */
-function getColorPalette(id, grayscale) {
-   id = id || settings.Palette;
-   if ((id > 0) && (id < 10)) return createGrayPalette();
-   if (id < 51) return createDefaultPalette(grayscale);
-   if (id > 113) id = 57;
-   const stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
-   let rgb;
-   switch (id) {
-      // Deep Sea
-      case 51: rgb = [[0,9,13,17,24,32,27,25,29],[0,0,0,2,37,74,113,160,221],[28,42,59,78,98,129,154,184,221]]; break;
-      // Grey Scale
-      case 52: rgb = [[0,32,64,96,128,160,192,224,255],[0,32,64,96,128,160,192,224,255],[0,32,64,96,128,160,192,224,255]]; break;
-      // Dark Body Radiator
-      case 53: rgb = [[0,45,99,156,212,230,237,234,242],[0,0,0,45,101,168,238,238,243],[0,1,1,3,9,8,11,95,230]]; break;
-      // Two-color hue (dark blue through neutral gray to bright yellow)
-      case 54: rgb = [[0,22,44,68,93,124,160,192,237],[0,16,41,67,93,125,162,194,241],[97,100,99,99,93,68,44,26,74]]; break;
-      // Rain Bow
-      case 55: rgb = [[0,5,15,35,102,196,208,199,110],[0,48,124,192,206,226,97,16,0],[99,142,198,201,90,22,13,8,2]]; break;
-      // Inverted Dark Body Radiator
-      case 56: rgb = [[242,234,237,230,212,156,99,45,0],[243,238,238,168,101,45,0,0,0],[230,95,11,8,9,3,1,1,0]]; break;
-      // Bird (default, keep float for backward compatibility)
-      case 57: rgb = [[53.091,15.096,19.89,5.916,45.951,135.1755,208.743,253.878,248.982],[42.432,91.7745,128.5455,163.6845,183.039,191.046,186.864,200.481,250.716],[134.9715,221.442,213.8175,201.807,163.8375,118.881,89.2245,50.184,13.7445]]; break;
-      // Cubehelix
-      case 58: rgb = [[0,24,2,54,176,236,202,194,255],[0,29,92,129,117,120,176,236,255],[0,68,80,34,57,172,252,245,255]]; break;
-      // Green Red Violet
-      case 59: rgb = [[13,23,25,63,76,104,137,161,206],[95,67,37,21,0,12,35,52,79],[4,3,2,6,11,22,49,98,208]]; break;
-      // Blue Red Yellow
-      case 60: rgb = [[0,61,89,122,143,160,185,204,231],[0,0,0,0,14,37,72,132,235],[0,140,224,144,4,5,6,9,13]]; break;
-      // Ocean
-      case 61: rgb = [[14,7,2,0,5,11,55,131,229],[105,56,26,1,42,74,131,171,229],[2,21,35,60,92,113,160,185,229]]; break;
-      // Color Printable On Grey
-      case 62: rgb = [[0,0,0,70,148,231,235,237,244],[0,0,0,0,0,69,67,216,244],[0,102,228,231,177,124,137,20,244]]; break;
-      // Alpine
-      case 63: rgb = [[50,56,63,68,93,121,165,192,241],[66,81,91,96,111,128,155,189,241],[97,91,75,65,77,103,143,167,217]]; break;
-      // Aquamarine
-      case 64: rgb = [[145,166,167,156,131,114,101,112,132],[158,178,179,181,163,154,144,152,159],[190,199,201,192,176,169,160,166,190]]; break;
-      // Army
-      case 65: rgb = [[93,91,99,108,130,125,132,155,174],[126,124,128,129,131,121,119,153,173],[103,94,87,85,80,85,107,120,146]]; break;
-      // Atlantic
-      case 66: rgb = [[24,40,69,90,104,114,120,132,103],[29,52,94,127,150,162,159,151,101],[29,52,96,132,162,181,184,186,131]]; break;
-      // Aurora
-      case 67: rgb = [[46,38,61,92,113,121,132,150,191],[46,36,40,69,110,135,131,92,34],[46,80,74,70,81,105,165,211,225]]; break;
-      // Avocado
-      case 68: rgb = [[0,4,12,30,52,101,142,190,237],[0,40,86,121,140,172,187,213,240],[0,9,14,18,21,23,27,35,101]]; break;
-      // Beach
-      case 69: rgb = [[198,206,206,211,198,181,161,171,244],[103,133,150,172,178,174,163,175,244],[49,54,55,66,91,130,184,224,244]]; break;
-      // Black Body
-      case 70: rgb = [[243,243,240,240,241,239,186,151,129],[0,46,99,149,194,220,183,166,147],[6,8,36,91,169,235,246,240,233]]; break;
-      // Blue Green Yellow
-      case 71: rgb = [[22,19,19,25,35,53,88,139,210],[0,32,69,108,135,159,183,198,215],[77,96,110,116,110,100,90,78,70]]; break;
-      // Brown Cyan
-      case 72: rgb = [[68,116,165,182,189,180,145,111,71],[37,82,135,178,204,225,221,202,147],[16,55,105,147,196,226,232,224,178]]; break;
-      // CMYK
-      case 73: rgb = [[61,99,136,181,213,225,198,136,24],[149,140,96,83,132,178,190,135,22],[214,203,168,135,110,100,111,113,22]]; break;
-      // Candy
-      case 74: rgb = [[76,120,156,183,197,180,162,154,140],[34,35,42,69,102,137,164,188,197],[64,69,78,105,142,177,205,217,198]]; break;
-      // Cherry
-      case 75: rgb = [[37,102,157,188,196,214,223,235,251],[37,29,25,37,67,91,132,185,251],[37,32,33,45,66,98,137,187,251]]; break;
-      // Coffee
-      case 76: rgb = [[79,100,119,137,153,172,192,205,250],[63,79,93,103,115,135,167,196,250],[51,59,66,61,62,70,110,160,250]]; break;
-      // Dark Rain Bow
-      case 77: rgb = [[43,44,50,66,125,172,178,155,157],[63,63,85,101,138,163,122,51,39],[121,101,58,44,47,55,57,44,43]]; break;
-      // Dark Terrain
-      case 78: rgb = [[0,41,62,79,90,87,99,140,228],[0,57,81,93,85,70,71,125,228],[95,91,91,82,60,43,44,112,228]]; break;
-      // Fall
-      case 79: rgb = [[49,59,72,88,114,141,176,205,222],[78,72,66,57,59,75,106,142,173],[78,55,46,40,39,39,40,41,47]]; break;
-      // Fruit Punch
-      case 80: rgb = [[243,222,201,185,165,158,166,187,219],[94,108,132,135,125,96,68,51,61],[7,9,12,19,45,89,118,146,118]]; break;
-      // Fuchsia
-      case 81: rgb = [[19,44,74,105,137,166,194,206,220],[19,28,40,55,82,110,159,181,220],[19,42,68,96,129,157,188,203,220]]; break;
-      // Grey Yellow
-      case 82: rgb = [[33,44,70,99,140,165,199,211,216],[38,50,76,105,140,165,191,189,167],[55,67,97,124,140,166,163,129,52]]; break;
-      // Green Brown Terrain
-      case 83: rgb = [[0,33,73,124,136,152,159,171,223],[0,43,92,124,134,126,121,144,223],[0,43,68,76,73,64,72,114,223]]; break;
-      // Green Pink
-      case 84: rgb = [[5,18,45,124,193,223,205,128,49],[48,134,207,230,193,113,28,0,7],[6,15,41,121,193,226,208,130,49]]; break;
-      // Island
-      case 85: rgb = [[180,106,104,135,164,188,189,165,144],[72,126,154,184,198,207,205,190,179],[41,120,158,188,194,181,145,100,62]]; break;
-      // Lake
-      case 86: rgb = [[57,72,94,117,136,154,174,192,215],[0,33,68,109,140,171,192,196,209],[116,137,173,201,200,201,203,190,187]]; break;
-      // Light Temperature
-      case 87: rgb = [[31,71,123,160,210,222,214,199,183],[40,117,171,211,231,220,190,132,65],[234,214,228,222,210,160,105,60,34]]; break;
-      // Light Terrain
-      case 88: rgb = [[123,108,109,126,154,172,188,196,218],[184,138,130,133,154,175,188,196,218],[208,130,109,99,110,122,150,171,218]]; break;
-      // Mint
-      case 89: rgb = [[105,106,122,143,159,172,176,181,207],[252,197,194,187,174,162,153,136,125],[146,133,144,155,163,167,166,162,174]]; break;
-      // Neon
-      case 90: rgb = [[171,141,145,152,154,159,163,158,177],[236,143,100,63,53,55,44,31,6],[59,48,46,44,42,54,82,112,179]]; break;
-      // Pastel
-      case 91: rgb = [[180,190,209,223,204,228,205,152,91],[93,125,147,172,181,224,233,198,158],[236,218,160,133,114,132,162,220,218]]; break;
-      // Pearl
-      case 92: rgb = [[225,183,162,135,115,111,119,145,211],[205,177,166,135,124,117,117,132,172],[186,165,155,135,126,130,150,178,226]]; break;
-      // Pigeon
-      case 93: rgb = [[39,43,59,63,80,116,153,177,223],[39,43,59,74,91,114,139,165,223],[39,50,59,70,85,115,151,176,223]]; break;
-      // Plum
-      case 94: rgb = [[0,38,60,76,84,89,101,128,204],[0,10,15,23,35,57,83,123,199],[0,11,22,40,63,86,97,94,85]]; break;
-      // Red Blue
-      case 95: rgb = [[94,112,141,165,167,140,91,49,27],[27,46,88,135,166,161,135,97,58],[42,52,81,106,139,158,155,137,116]]; break;
-      // Rose
-      case 96: rgb = [[30,49,79,117,135,151,146,138,147],[63,60,72,90,94,94,68,46,16],[18,28,41,56,62,63,50,36,21]]; break;
-      // Rust
-      case 97: rgb = [[0,30,63,101,143,152,169,187,230],[0,14,28,42,58,61,67,74,91],[39,26,21,18,15,14,14,13,13]]; break;
-      // Sandy Terrain
-      case 98: rgb = [[149,140,164,179,182,181,131,87,61],[62,70,107,136,144,138,117,87,74],[40,38,45,49,49,49,38,32,34]]; break;
-      // Sienna
-      case 99: rgb = [[99,112,148,165,179,182,183,183,208],[39,40,57,79,104,127,148,161,198],[15,16,18,33,51,79,103,129,177]]; break;
-      // Solar
-      case 100: rgb = [[99,116,154,174,200,196,201,201,230],[0,0,8,32,58,83,119,136,173],[5,6,7,9,9,14,17,19,24]]; break;
-      // South West
-      case 101: rgb = [[82,106,126,141,155,163,142,107,66],[62,44,69,107,135,152,149,132,119],[39,25,31,60,73,68,49,72,188]]; break;
-      // Starry Night
-      case 102: rgb = [[18,29,44,72,116,158,184,208,221],[27,46,71,105,146,177,189,190,183],[39,55,80,108,130,133,124,100,76]]; break;
-      // Sunset
-      case 103: rgb = [[0,48,119,173,212,224,228,228,245],[0,13,30,47,79,127,167,205,245],[0,68,75,43,16,22,55,128,245]]; break;
-      // Temperature Map
-      case 104: rgb = [[34,70,129,187,225,226,216,193,179],[48,91,147,194,226,229,196,110,12],[234,212,216,224,206,110,53,40,29]]; break;
-      // Thermometer
-      case 105: rgb = [[30,55,103,147,174,203,188,151,105],[0,65,138,182,187,175,121,53,9],[191,202,212,208,171,140,97,57,30]]; break;
-      // Valentine
-      case 106: rgb = [[112,97,113,125,138,159,178,188,225],[16,17,24,37,56,81,110,136,189],[38,35,46,59,78,103,130,152,201]]; break;
-      // Visible Spectrum
-      case 107: rgb = [[18,72,5,23,29,201,200,98,29],[0,0,43,167,211,117,0,0,0],[51,203,177,26,10,9,8,3,0]]; break;
-      // Water Melon
-      case 108: rgb = [[19,42,64,88,118,147,175,187,205],[19,55,89,125,154,169,161,129,70],[19,32,47,70,100,128,145,130,75]]; break;
-      // Cool
-      case 109: rgb = [[33,31,42,68,86,111,141,172,227],[255,175,145,106,88,55,15,0,0],[255,205,202,203,208,205,203,206,231]]; break;
-      // Copper
-      case 110: rgb = [[0,25,50,79,110,145,181,201,254],[0,16,30,46,63,82,101,124,179],[0,12,21,29,39,49,61,74,103]]; break;
-      // Gist Earth
-      case 111: rgb = [[0,13,30,44,72,120,156,200,247],[0,36,84,117,141,153,151,158,247],[0,94,100,82,56,66,76,131,247]]; break;
-      // Viridis
-      case 112: rgb = [[26,51,43,33,28,35,74,144,246],[9,24,55,87,118,150,180,200,222],[30,96,112,114,112,101,72,35,0]]; break;
-      // Cividis
-      case 113: rgb = [[0,5,65,97,124,156,189,224,255],[32,54,77,100,123,148,175,203,234],[77,110,107,111,120,119,111,94,70]]; break;
-      default: return createDefaultPalette();
-   }
-
-   const NColors = 255, Red = rgb[0], Green = rgb[1], Blue = rgb[2], palette = [];
-
-   for (let g = 1; g < stops.length; g++) {
-       // create the colors...
-       const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
-       for (let c = 0; c < nColorsGradient; c++) {
-          const col = '#' + toHex(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) +
-                            toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
-                            toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
-          palette.push(col);
-       }
-    }
-
-    return new ColorPalette(palette, grayscale);
-}
-
-
-/** @summary Decode list of ROOT colors coded by TWebCanvas
-  * @private */
-function decodeWebCanvasColors(oper) {
-   const colors = [], arr = oper.split(';');
-   for (let n = 0; n < arr.length; ++n) {
-      const name = arr[n];
-      let p = name.indexOf(':');
-      if (p > 0) {
-         colors[parseInt(name.slice(0, p))] = color(`rgb(${name.slice(p+1)})`).formatHex();
-         continue;
-      }
-      p = name.indexOf('=');
-      if (p > 0) {
-         colors[parseInt(name.slice(0, p))] = color(`rgba(${name.slice(p+1)})`).formatHex8();
-         continue;
-      }
-      p = name.indexOf('#');
-      if (p < 0) continue;
-
-      const colindx = parseInt(name.slice(0, p)),
-            data = JSON.parse(name.slice(p+1)),
-            grad = { _typename: data[0] === 10 ? clTLinearGradient : clTRadialGradient, fNumber: colindx, fType: data[0] };
-
-      let cnt = 1;
-
-      grad.fCoordinateMode = Math.round(data[cnt++]);
-      const nsteps = Math.round(data[cnt++]);
-      grad.fColorPositions = data.slice(cnt, cnt + nsteps); cnt += nsteps;
-      grad.fColors = data.slice(cnt, cnt + 4*nsteps); cnt += 4*nsteps;
-      grad.fStart = { fX: data[cnt++], fY: data[cnt++] };
-      grad.fEnd = { fX: data[cnt++], fY: data[cnt++] };
-      if (grad._typename === clTRadialGradient && cnt < data.length) {
-         grad.fR1 = data[cnt++];
-         grad.fR2 = data[cnt++];
-      }
-
-      colors[colindx] = grad;
-   }
-
-   return colors;
-}
-
-
-createRootColors();
 
 const root_markers = [
       0, 1, 2, 3, 4,           //  0..4
@@ -12182,8 +12216,10 @@ class ObjectPainter extends BasePainter {
      * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    getObjectHint() {
-      const hint = this.getItemName() || this.getObjectName() || this.getClassName() || '';
-      return (hint.length <= 20) ? hint : hint.slice(0, 17) + '...';
+      const iname = this.getItemName();
+      if (iname)
+         return (iname.length > 20) ? '...' + iname.slice(iname.length - 17) : iname;
+      return this.getObjectName() || this.getClassName() || '';
    }
 
    /** @summary returns color from current list of colors
@@ -12415,18 +12451,22 @@ class ObjectPainter extends BasePainter {
      * Only can be used for painting in the pad, means CreateG() should be called without arguments
      * @param {boolean} isndc - if NDC coordinates will be used
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
+     * @param {boolean} [use_frame_coordinates] - use frame coordinates even when drawing on the pad
      * @protected */
-   getAxisToSvgFunc(isndc, nornd) {
+   getAxisToSvgFunc(isndc, nornd, use_frame_coordinates) {
       const func = { isndc, nornd },
             use_frame = this.draw_g?.property('in_frame');
-      if (use_frame) func.main = this.getFramePainter();
+      if (use_frame || (use_frame_coordinates && !isndc))
+         func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
+         func.x0 = (use_frame_coordinates && !isndc) ? func.main.getFrameX() : 0;
+         func.y0 = (use_frame_coordinates && !isndc) ? func.main.getFrameY() : 0;
          if (nornd) {
-            func.x = function(x) { return this.main.grx(x); };
-            func.y = function(y) { return this.main.gry(y); };
+            func.x = function(x) { return this.x0 + this.main.grx(x); };
+            func.y = function(y) { return this.y0 + this.main.gry(y); };
          } else {
-            func.x = function(x) { return Math.round(this.main.grx(x)); };
-            func.y = function(y) { return Math.round(this.main.gry(y)); };
+            func.x = function(x) { return this.x0 + Math.round(this.main.grx(x)); };
+            func.y = function(y) { return this.y0 + Math.round(this.main.gry(y)); };
          }
       } else if (!use_frame) {
          const pp = this.getPadPainter();
@@ -58574,42 +58614,54 @@ tgamma: gamma
   * @desc Previous message will be overwritten
   * if no argument specified, any shown messages will be removed
   * @param {string} msg - message to display
-  * @param {number} tmout - optional timeout in milliseconds, after message will disappear
+  * @param {number} [tmout] - optional timeout in milliseconds, after message will disappear
+  * @param {function} [click_handle] - optional handle to process click events
   * @private */
-function showProgress(msg, tmout) {
+function showProgress(msg, tmout, click_handle) {
    if (isBatchMode() || (typeof document === 'undefined'))
       return;
-   const id = 'jsroot_progressbox';
+
+   const id = 'jsroot_progressbox', modal = (settings.ProgressBox === 'modal') && isFunc(internals._modalProgress) ? internals._modalProgress : null;
    let box = select('#' + id);
 
-   if (!settings.ProgressBox)
+   if (!settings.ProgressBox) {
+      if (modal) modal();
       return box.remove();
+   }
 
    if ((arguments.length === 0) || !msg) {
       if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
+      if (modal) modal();
       return;
    }
 
-   if (box.empty()) {
-      box = select(document.body)
-              .append('div').attr('id', id)
-              .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
-      box.append('p');
+   if (modal) {
+      box.remove();
+      modal(msg, click_handle);
+   } else {
+      if (box.empty()) {
+         box = select(document.body)
+               .append('div').attr('id', id)
+               .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
+         box.append('p');
+      }
+
+      box.property('with_timeout', false);
+
+      const p = box.select('p');
+
+      if (isStr(msg)) {
+         p.html(msg)
+          .on('click', isFunc(click_handle) ? click_handle : null)
+          .attr('title', isFunc(click_handle) ? 'Click element to abort current operation' : '');
+      }
+
+      p.attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
    }
-
-   box.property('with_timeout', false);
-
-   if (isStr(msg))
-      box.select('p').html(msg);
-    else {
-      box.html('');
-      box.node().appendChild(msg);
-   }
-
-   box.select('p').attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
-      box.property('with_timeout', true);
+      if (!box.empty())
+         box.property('with_timeout', true);
       setTimeout(() => showProgress('', -1), tmout);
    }
 }
@@ -58980,51 +59032,49 @@ function selectgStyle(name) {
    }
 }
 
-/** @summary Save object as a cookie
+let _storage_prefix = 'jsroot_';
+
+/** @summary Set custom prefix for the local storage
   * @private */
-function saveCookie(obj, expires, name) {
-   const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-         d = new Date();
-   d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   if (typeof document !== 'undefined')
-      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+function setStoragePrefix(prefix) {
+   _storage_prefix = prefix || 'jsroot_';
+}
+
+/** @summary Save object in local storage
+  * @private */
+function saveLocalStorage(obj, expires, name) {
+   if (typeof localStorage === 'undefined')
+      return;
+   if (Number.isFinite(expires) && (expires < 0))
+      localStorage.removeItem(_storage_prefix + name);
+   else
+      localStorage.setItem(_storage_prefix + name, btoa_func(JSON.stringify(obj)));
 }
 
 /** @summary Read cookie with specified name
   * @private */
-function readCookie(name) {
-   if (typeof document === 'undefined')
+function readLocalStorage(name) {
+   if (typeof localStorage === 'undefined')
       return null;
-   const decodedCookie = decodeURIComponent(document.cookie),
-         ca = decodedCookie.split(';');
-   name += '=';
-   for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === ' ')
-        c = c.substring(1);
-      if (c.indexOf(name) === 0) {
-         const s = JSON.parse(atob_func(c.substring(name.length, c.length)));
-
-         return isObject(s) ? s : null;
-      }
-   }
-   return null;
+   const v = localStorage.getItem(_storage_prefix + name),
+         s = v ? JSON.parse(atob_func(v)) : null;
+   return isObject(s) ? s : null;
 }
 
 /** @summary Save JSROOT settings as specified cookie parameter
   * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
   * @param {String} name - cookie parameter name
   * @private */
-function saveSettings(expires = 365, name = 'jsroot_settings') {
-   saveCookie(settings, expires, name);
+function saveSettings(expires = 365, name = 'settings') {
+   saveLocalStorage(settings, expires, name);
 }
 
 /** @summary Read JSROOT settings from specified cookie parameter
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
   * @param {String} name - cookie parameter name
   * @private */
-function readSettings(only_check = false, name = 'jsroot_settings') {
-   const s = readCookie(name);
+function readSettings(only_check = false, name = 'settings') {
+   const s = readLocalStorage(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(settings, s);
@@ -59035,16 +59085,16 @@ function readSettings(only_check = false, name = 'jsroot_settings') {
   * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
   * @param {String} name - cookie parameter name
   * @private */
-function saveStyle(expires = 365, name = 'jsroot_style') {
-   saveCookie(gStyle, expires, name);
+function saveStyle(expires = 365, name = 'style') {
+   saveLocalStorage(gStyle, expires, name);
 }
 
 /** @summary Read JSROOT gStyle object specified cookie parameter
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
   * @param {String} name - cookie parameter name
   * @private */
-function readStyle(only_check = false, name = 'jsroot_style') {
-   const s = readCookie(name);
+function readStyle(only_check = false, name = 'style') {
+   const s = readLocalStorage(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(gStyle, s);
@@ -59837,7 +59887,9 @@ class JSRootMenu {
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
-      this.addchk(settings.ProgressBox, 'Progress box', flag => { settings.ProgressBox = flag; });
+      this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
+         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+      });
       this.add('endsub:');
 
       this.add('sub:Drawing');
@@ -59876,8 +59928,9 @@ class JSRootMenu {
       const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
             addStyleIntField = (name, field, arr) => {
          this.add('sub:' + name);
+         const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
          for (let v = 0; v < arr.length; ++v)
-            this.addchk(gStyle[field] === v, arr[v], `${v}${field}`, setStyleField);
+            this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
          this.add('endsub:');
       };
 
@@ -59885,8 +59938,9 @@ class JSRootMenu {
 
       this.add('sub:Canvas');
       this.addColorMenu('Color', gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
-      this.addchk(gStyle.fOptDate, 'Draw date', flag => { gStyle.fOptDate = flag ? 1 : 0; });
-      this.addchk(gStyle.fOptFile, 'Draw item', flag => { gStyle.fOptFile = flag ? 1 : 0; });
+      addStyleIntField('Draw date', 'fOptDate', ['Off', 'Current time', 'File create time', 'File modify time']);
+      this.add(`Time zone: ${settings.TimeZone}`, () => this.input('Input time zone like UTC. empty string - local timezone', settings.TimeZone, 'string').then(val => { settings.TimeZone = val; }));
+      addStyleIntField('Draw file', 'fOptFile', ['Off', 'File name', 'Full file URL', 'Item name']);
       this.addSizeMenu('Date X', 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, 'configure gStyle.fDateX for date/item name drawings');
       this.addSizeMenu('Date Y', 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, 'configure gStyle.fDateY for date/item name drawings');
       this.add('endsub:');
@@ -59983,10 +60037,10 @@ class JSRootMenu {
       this.add('separator');
 
       this.add('Save settings', () => {
-         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agreess that JSROOT will store settings as browser cookies');
+         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agreess that JSROOT will store settings in browser local storage');
          promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
-      }, 'Store settings and gStyle as cookies');
-      this.add('Delete settings', () => { saveSettings(-1); saveStyle(-1); }, 'Delete settings and gStyle from cookies');
+      }, 'Store settings and gStyle in browser local storage');
+      this.add('Delete settings', () => { saveSettings(-1); saveStyle(-1); }, 'Delete settings and gStyle from browser local storage');
 
       if (!alone) this.add('endsub:');
    }
@@ -60449,18 +60503,21 @@ class StandaloneMenu extends JSRootMenu {
    }
 
    /** @summary Run modal elements with standalone code */
-   async runModal(title, main_content, args) {
+   createModal(title, main_content, args) {
       if (!args) args = {};
-      const dlg_id = this.menuname + '_dialog';
+
+      if (!args.Ok) args.Ok = 'Ok';
+
+      const modal = { args }, dlg_id = (this?.menuname ?? 'root_modal') + '_dialog';
       select(`#${dlg_id}`).remove();
       select(`#${dlg_id}_block`).remove();
 
-      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth)),
-          block = select('body').append('div')
+      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth));
+      modal.block = select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
-          element = select('body')
+                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
+      modal.element = select('body')
                       .append('div')
                       .attr('id', dlg_id)
                       .attr('class', 'jsroot_dialog')
@@ -60475,37 +60532,60 @@ class StandaloneMenu extends JSRootMenu {
            `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
            '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>'+
-              '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Ok</button>'+
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>`+
               (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
          '</div></div>');
 
-      return new Promise(resolveFunc => {
-         element.on('keyup', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-               resolveFunc(evnt.code === 'Enter' ? element.node() : null);
-               element.remove();
-               block.remove();
-            }
-         });
-         element.on('keydown', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-            }
-         });
-         element.selectAll('.jsroot_dialog_button').on('click', evnt => {
-            resolveFunc(args.btns && (select(evnt.target).text() === 'Ok') ? element.node() : null);
-            element.remove();
-            block.remove();
-         });
+      modal.done = function(res) {
+         if (this._done) return;
+         this._done = true;
+         if (isFunc(this.call_back))
+            this.call_back(res);
+         this.element.remove();
+         this.block.remove();
+      };
 
-         let f = element.select('.jsroot_dialog_content').select('input');
-         if (f.empty()) f = element.select('.jsroot_dialog_footer').select('button');
-         if (!f.empty()) f.node().focus();
+      modal.setContent = function(content, btn_text) {
+         if (!this._done) {
+            this.element.select('.jsroot_dialog_content').html(content);
+            if (btn_text) {
+               this.args.Ok = btn_text;
+               this.element.select('.jsroot_dialog_button').text(btn_text);
+            }
+         }
+      };
+
+      modal.element.on('keyup', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            modal.done(evnt.code === 'Enter' ? modal.element.node() : null);
+         }
+      });
+      modal.element.on('keydown', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+         }
+      });
+      modal.element.selectAll('.jsroot_dialog_button').on('click', evnt => {
+         modal.done(args.btns && (select(evnt.target).text() === args.Ok) ? modal.element.node() : null);
+      });
+
+      let f = modal.element.select('.jsroot_dialog_content').select('input');
+      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
+      if (!f.empty()) f.node().focus();
+      return modal;
+   }
+
+   /** @summary Run modal elements with standalone code */
+   async runModal(title, main_content, args) {
+      const modal = this.createModal(title, main_content, args);
+      return new Promise(resolveFunc => {
+         modal.call_back = resolveFunc;
       });
    }
+
 
 } // class StandaloneMenu
 
@@ -60551,6 +60631,23 @@ function showPainterMenu(evnt, painter, kind) {
       return painter.fillObjectExecMenu(menu, kind);
    }).then(menu => menu.show());
 }
+
+/** @summary Internal method to implement modal progress
+  * @private */
+internals._modalProgress = function(msg, click_handle) {
+   if (!msg || !isStr(msg)) {
+      internals.modal?.done();
+      delete internals.modal;
+      return;
+   }
+
+   if (!internals.modal)
+      internals.modal = StandaloneMenu.prototype.createModal('Progress', msg);
+
+   internals.modal.setContent(msg, click_handle ? 'Abort' : 'Ok');
+
+   internals.modal.call_back = click_handle;
+};
 
 /** @summary Assign handler for context menu for painter draw element
   * @private */
@@ -61389,29 +61486,29 @@ class TAxisPainter extends ObjectPainter {
          title_g.property('shift_x', new_x)
                 .property('shift_y', new_y);
 
-         const axis = this.getObject(), abits = EAxisBits,
-               axis2 = this.source_axis,
-               set_bit = (bit, on) => {
-                  if (axis.TestBit(bit) !== on) axis.InvertBit(bit);
+         const axis = this.getObject(), axis2 = this.source_axis,
+               setBit = (bit, on) => {
+                  if (axis && axis.TestBit(bit) !== on) axis.InvertBit(bit);
                   if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
                };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
-         axis.fTitleOffset = this.titleOffset / this.offsetScaling / this.titleSize;
-         if (axis2) axis2.fTitleOffset = axis.fTitleOffset;
+         const offset = this.titleOffset / this.offsetScaling / this.titleSize;
+         if (axis) axis.fTitleOffset = offset;
+         if (axis2) axis2.fTitleOffset = offset;
 
          if (curr_indx === 1) {
-            set_bit(abits.kCenterTitle, true); this.titleCenter = true;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, true); this.titleCenter = true;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          } else if (curr_indx === 0) {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, true); this.titleOpposite = true;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, true); this.titleOpposite = true;
          } else {
-            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+            setBit(EAxisBits.kCenterTitle, false); this.titleCenter = false;
+            setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          }
 
-         this.submitAxisExec(`SetTitleOffset(${axis.fTitleOffset});;SetBit(${abits.kCenterTitle},${this.titleCenter?1:0})`);
+         this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
 
          drag_rect.remove();
          drag_rect = null;
@@ -61606,9 +61703,10 @@ class TAxisPainter extends ObjectPainter {
 
             this.drawText(arg);
 
-            if (lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
+            // workaround for symlog where labels can be compressed to close
+            if (this.symlog && lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
                const axis_step = Math.abs(pos - lastpos);
-               textscale = Math.min(textscale, 0.9*axis_step/labelsFont.size);
+               textscale = Math.min(textscale, 1.1*axis_step/labelsFont.size);
             }
 
             lastpos = pos;
@@ -61660,9 +61758,11 @@ class TAxisPainter extends ObjectPainter {
    /** @summary Extract major draw attributes, which are also used in interactive operations
      * @private  */
    extractDrawAttributes(scalingSize, w, h) {
-      const axis = this.getObject(),
-            pp = this.getPadPainter(),
-            pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
+      const axis = this.getObject();
+      let pp = this.getPadPainter();
+      if (axis.$use_top_pad)
+         pp = pp?.getPadPainter(); // workaround for ratio plot
+      const pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
             pad_h = pp?.getPadHeight() || scalingSize || h/0.8;
       let tickSize = 0, tickScalingSize = 0, titleColor, titleFontId, offset;
 
@@ -61862,12 +61962,12 @@ class TAxisPainter extends ObjectPainter {
 
             title_shift_x = Math.round(title_offest_k * this.titleOffset);
 
-            if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
-               // special handling for color palette labels - draw them always on right side
-               const rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.width - this.ticksSize)
-                  title_shift_x = Math.round(rect.width - this.ticksSize);
-            }
+            // if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
+            //    // special handling for color palette labels - draw them always on right side
+            //   const rect = axis_g.node().getBoundingClientRect();
+            //   if (title_shift_x < rect.width - this.ticksSize)
+            //      title_shift_x = Math.round(rect.width - this.ticksSize);
+            // }
 
             title_shift_y = Math.round(this.titleCenter ? h/2 : (xor_reverse ? h : 0));
 
@@ -62341,6 +62441,19 @@ const TooltipHandler = {
          }
       }
 
+      let path_name = null, same_path = hints.length > 1;
+      for (let n = 0; n < hints.length; ++n) {
+         const hint = hints[n], p = hint?.lines ? hint.lines[0]?.lastIndexOf('/') : -1;
+         if (p > 0) {
+            const path = hint.lines[0].slice(0, p + 1);
+            if (path_name === null)
+               path_name = path;
+            else if (path_name !== path)
+               same_path = false;
+         } else
+            same_path = false;
+      }
+
       const layer = this.hints_layer(),
             show_only_best = nhints > 15,
             coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
@@ -62435,24 +62548,14 @@ const TooltipHandler = {
           gapminx = -1111, gapmaxx = -1111;
       const minhinty = -frame_shift.y,
             cp = this.getCanvPainter(),
-            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y,
-      FindPosInGap = y => {
-         for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
-            const hint = hints[n];
-            if (!hint) continue;
-            if ((hint.y >= y - 5) && (hint.y <= y + hint.height + 5)) {
-               y = hint.y + 10;
-               n = -1;
-            }
-         }
-         return y;
-      };
+            maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y;
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n],
-            group = hintsg.selectChild(`.painter_hint_${n}`);
+             group = hintsg.selectChild(`.painter_hint_${n}`);
 
-         if (show_only_best && (hint !== best_hint)) hint = null;
+         if (show_only_best && (hint !== best_hint))
+            hint = null;
 
          if (hint === null) {
             group.remove();
@@ -62472,16 +62575,23 @@ const TooltipHandler = {
          if (viewmode === 'single')
             curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
           else {
-            gapy = FindPosInGap(gapy);
+            for (let n = 0; (n < hints.length) && (gapy < maxhinty); ++n) {
+               const hint = hints[n];
+               if (!hint) continue;
+               if ((hint.y >= gapy - 5) && (hint.y <= gapy + hint.height + 5)) {
+                  gapy = hint.y + 10;
+                  n = -1;
+               }
+            }
             if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
             gapmaxx = Math.min(gapmaxx, hint.x);
          }
 
          group.attr('x', posx)
-            .attr('y', curry)
-            .property('curry', curry)
-            .property('gapy', gapy);
+              .attr('y', curry)
+              .property('curry', curry)
+              .property('gapy', gapy);
 
          curry += hint.height + 5;
          gapy += hint.height + 5;
@@ -62490,7 +62600,7 @@ const TooltipHandler = {
             group.selectAll('*').remove();
 
          group.attr('width', 60)
-            .attr('height', hint.height);
+              .attr('height', hint.height);
 
          const r = group.append('rect')
             .attr('x', 0)
@@ -62507,8 +62617,11 @@ const TooltipHandler = {
          }
          r.attr('stroke-width', hint.exact ? 3 : 1);
 
-         for (let l = 0; l < (hint.lines ? hint.lines.length : 0); l++) {
-            if (hint.lines[l] !== null) {
+         for (let l = 0; l < (hint.lines?.length ?? 0); l++) {
+            let line = hint.lines[l];
+            if (l === 0 && path_name && same_path)
+               line = line.slice(path_name.length);
+            if (line) {
                const txt = group.append('svg:text')
                   .attr('text-anchor', 'start')
                   .attr('x', wmargin)
@@ -62517,9 +62630,8 @@ const TooltipHandler = {
                   .style('fill', 'black')
                   .style('pointer-events', 'none')
                   .call(font.func)
-                  .text(hint.lines[l]),
-
-                box = getElementRect(txt, 'bbox');
+                  .text(line),
+               box = getElementRect(txt, 'bbox');
 
                actualw = Math.max(actualw, box.width);
             }
@@ -63688,7 +63800,7 @@ class TFramePainter extends ObjectPainter {
           umax = pad[`fU${name}max`],
           eps = 1e-7;
 
-      if (name === 'x') {
+            if (name === 'x') {
          if ((Math.abs(pad.fX1) > eps) || (Math.abs(pad.fX2 - 1) > eps)) {
             const dx = pad.fX2 - pad.fX1;
             umin = pad.fX1 + dx*pad.fLeftMargin;
@@ -63711,12 +63823,12 @@ class TFramePainter extends ObjectPainter {
 
       let aname = name;
       if (this.swap_xy) aname = (name === 'x') ? 'y' : 'x';
-      const smin = `scale_${aname}min`,
-          smax = `scale_${aname}max`;
+      const smin = this[`scale_${aname}min`],
+            smax = this[`scale_${aname}max`];
 
-      eps = (this[smax] - this[smin]) * 1e-7;
+      eps = (smax - smin) * 1e-7;
 
-      if ((Math.abs(umin - this[smin]) > eps) || (Math.abs(umax - this[smax]) > eps)) {
+      if ((Math.abs(umin - smin) > eps) || (Math.abs(umax - smax) > eps)) {
          this[`zoom_${aname}min`] = umin;
          this[`zoom_${aname}max`] = umax;
       }
@@ -63785,14 +63897,16 @@ class TFramePainter extends ObjectPainter {
          if (opts.ndim > 1) this.applyAxisZoom('y');
          if (opts.ndim > 2) this.applyAxisZoom('z');
 
+         // Use configured pad range - only when main histogram drawn with SAME draw option
          if (opts.check_pad_range === 'pad_range') {
-            const canp = this.getCanvPainter();
-            // ignore range set in the online canvas
-            if (!canp || !canp.online_canvas) {
-               this.applyPadUserRange(pad, 'x');
-               this.applyPadUserRange(pad, 'y');
-            }
+            this.applyPadUserRange(pad, 'x');
+            this.applyPadUserRange(pad, 'y');
          }
+      }
+
+      if ((opts.zoom_xmin !== opts.zoom_xmax) && ((this.zoom_xmin === this.zoom_xmax) || !this.zoomChangedInteractive('x'))) {
+         this.zoom_xmin = opts.zoom_xmin;
+         this.zoom_xmax = opts.zoom_xmax;
       }
 
       if ((opts.zoom_ymin !== opts.zoom_ymax) && ((this.zoom_ymin === this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
@@ -63841,7 +63955,7 @@ class TFramePainter extends ObjectPainter {
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
-                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
+                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz <= this.ymax) ? 0.5*opts.ymin_nz : 0,
                                         logminfactor: logminfactorY });
 
       this.y_handle.assignFrameMembers(this, 'y');
@@ -63916,7 +64030,7 @@ class TFramePainter extends ObjectPainter {
                                            log: this.swap_xy ? pad.fLogx : pad.fLogy,
                                            noexp_changed: this.y2_noexp_changed,
                                            logcheckmin: (opts.ndim < 2) || this.swap_xy,
-                                           log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.y2max) ? 0.3 * opts.ymin_nz : 0,
+                                           log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.y2max) ? 0.5 * opts.ymin_nz : 0,
                                            logminfactor: logminfactorY });
 
          this.y2_handle.assignFrameMembers(this, 'y2');
@@ -65526,7 +65640,7 @@ class TabsDisplay extends MDIDisplay {
 
       if (top.empty()) {
          top = dom.append('div').attr('class', 'jsroot_tabs')
-                  .attr('style', 'display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px');
+                  .attr('style', 'display: flex; flex-direction: column; position: absolute; overflow: hidden; left: 0px; top: 0px; bottom: 0px; right: 0px;');
          labels = top.append('div').attr('class', 'jsroot_tabs_labels')
                      .attr('style', 'white-space: nowrap; position: relative; overflow-x: auto');
          main = top.append('div').attr('class', 'jsroot_tabs_main')
@@ -65573,7 +65687,7 @@ class TabsDisplay extends MDIDisplay {
       const draw_frame = main.append('div')
                            .attr('frame_title', title)
                            .attr('class', 'jsroot_tabs_draw')
-                           .attr('style', 'overflow: hidden; position: absolute; inset: 0px')
+                           .attr('style', 'overflow: hidden; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px;')
                            .property('frame_id', frame_id);
 
       this.modifyTabsFrame(frame_id, 'activate');
@@ -66140,7 +66254,7 @@ class BrowserLayout {
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
       injectStyle(
-         '.jsroot_browser { pointer-events: none; position: absolute; inset: 0px; margin: 0px; border: 0px; overflow: hidden; }'+
+         '.jsroot_browser { pointer-events: none; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; margin: 0px; border: 0px; overflow: hidden; }'+
          `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }`+
          `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }`+
          `.jsroot_browser_area input { ${input_style} }`+
@@ -66162,7 +66276,7 @@ class BrowserLayout {
       main.append('div').attr('id', this.drawing_divid())
                         .classed('jsroot_draw_area', true)
                         .style('position', 'absolute')
-                        .style('inset', '0px');
+                        .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
 
       if (with_browser)
          main.append('div').classed('jsroot_browser', true);
@@ -66943,14 +67057,24 @@ class TPadPainter extends ObjectPainter {
       };
    }
 
+   /** @summary return pad log state x or y are allowed */
+   getPadLog(name) {
+      const pad = this.getRootPad();
+      if (name === 'x')
+         return pad?.fLogx;
+      if (name === 'y')
+         return pad?.fLogv ?? pad?.fLogy;
+      return false;
+   }
+
    /** @summary Returns frame coordiantes - also when frame is not drawn */
    getFrameRect() {
       const fp = this.getFramePainter();
       if (fp) return fp.getFrameRect();
 
       const w = this.getPadWidth(),
-          h = this.getPadHeight(),
-          rect = {};
+            h = this.getPadHeight(),
+            rect = {};
 
       if (this.pad) {
          rect.szx = Math.round(Math.max(0, 0.5 - Math.max(this.pad.fLeftMargin, this.pad.fRightMargin))*w);
@@ -67265,7 +67389,7 @@ class TPadPainter extends ObjectPainter {
       if (this._fixed_size)
          svg.attr('width', rect.width).attr('height', rect.height);
       else
-         svg.style('width', '100%').style('height', '100%').style('inset', '0px');
+         svg.style('width', '100%').style('height', '100%').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
 
       svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 
@@ -67297,21 +67421,26 @@ class TPadPainter extends ObjectPainter {
       if (!gStyle.fOptDate)
          dt.remove();
        else {
-         if (dt.empty()) dt = info.append('text').attr('class', 'canvas_date');
-         const date = new Date(),
-               posy = Math.round(rect.height * (1 - gStyle.fDateY));
+         if (dt.empty())
+             dt = info.append('text').attr('class', 'canvas_date');
+         const posy = Math.round(rect.height * (1 - gStyle.fDateY)),
+               date = new Date();
          let posx = Math.round(rect.width * gStyle.fDateX);
-         if (!is_batch && (posx < 25)) posx = 25;
-         if (gStyle.fOptDate > 1) date.setTime(gStyle.fOptDate*1000);
+         if (!is_batch && (posx < 25))
+            posx = 25;
+         if (gStyle.fOptDate > 3)
+            date.setTime(gStyle.fOptDate*1000);
+
          makeTranslate(dt, posx, posy)
             .style('text-anchor', 'start')
-            .text(date.toLocaleString('en-GB'));
+            .text(convertDate(date));
       }
 
-      if (!gStyle.fOptFile || !this.getItemName())
+      const iname = this.getItemName();
+      if (iname)
+         this.drawItemNameOnCanvas(iname);
+      else if (!gStyle.fOptFile)
          info.selectChild('.canvas_item').remove();
-      else
-         this.drawItemNameOnCanvas(this.getItemName());
 
       return true;
    }
@@ -67321,14 +67450,22 @@ class TPadPainter extends ObjectPainter {
    drawItemNameOnCanvas(item_name) {
       const info = this.getLayerSvg('info_layer', this.this_pad_name);
       let df = info.selectChild('.canvas_item');
-      if (!gStyle.fOptFile || !item_name)
+      const fitem = getHPainter().findRootFileForItem(item_name),
+            fname = (gStyle.fOptFile === 3) ? item_name : ((gStyle.fOptFile === 2) ? fitem?._fullurl : fitem?._name);
+
+      if (!gStyle.fOptFile || !fname)
          df.remove();
        else {
-         if (df.empty()) df = info.append('text').attr('class', 'canvas_item');
+         if (df.empty())
+            df = info.append('text').attr('class', 'canvas_item');
          const rect = this.getPadRect();
          makeTranslate(df, Math.round(rect.width * (1 - gStyle.fDateX)), Math.round(rect.height * (1 - gStyle.fDateY)))
             .style('text-anchor', 'end')
-            .text(item_name);
+            .text(fname);
+      }
+      if (((gStyle.fOptDate === 2) || (gStyle.fOptDate === 3)) && fitem?._file) {
+         info.selectChild('.canvas_date')
+             .text(convertDate(gStyle.fOptDate === 2 ? fitem._file.fDatimeC.getDate() : fitem._file.fDatimeM.getDate()));
       }
    }
 
@@ -67498,7 +67635,12 @@ class TPadPainter extends ObjectPainter {
    /** @summary Add pad interactive features like dragging and resize
      * @private */
    addPadInteractive(cleanup = false) {
-      if (this.iscan || this.isBatchMode())
+      if (isFunc(this.$userInteractive)) {
+         this.$userInteractive();
+         delete this.$userInteractive;
+      }
+
+      if (this.isBatchMode() || this.iscan)
          return;
 
       const svg_can = this.getCanvSvg(),
@@ -68282,6 +68424,9 @@ class TPadPainter extends ObjectPainter {
          padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
          padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
 
+         if (subpad.$disable_drawing)
+            padpainter.pad_draw_disabled = true;
+
          padpainter.processSpecialSnaps(snap.fPrimitives); // need to process style and colors before creating graph elements
 
          padpainter.createPadSvg();
@@ -69041,6 +69186,9 @@ class TPadPainter extends ObjectPainter {
          painter.addToPadPrimitives(painter.pad_name);
       }
 
+      if (pad?.$disable_drawing)
+         painter.pad_draw_disabled = true;
+
       painter.createPadSvg();
 
       if (painter.matchObjectType(clTPad) && (!painter.has_canvas || painter.hasObjectsToDraw()))
@@ -69674,6 +69822,8 @@ class TCanvasPainter extends TPadPainter {
    completeCanvasSnapDrawing() {
       if (!this.pad) return;
 
+      this.addPadInteractive();
+
       if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
          document.title = this.pad.fTitle;
 
@@ -69880,6 +70030,7 @@ class TCanvasPainter extends TPadPainter {
       selectActivePad({ pp: painter, active: true });
 
       return painter.drawPrimitives().then(() => {
+         painter.addPadInteractive();
          painter.showPadButtons();
          return painter;
       });
@@ -70438,8 +70589,9 @@ class TPavePainter extends ObjectPainter {
                   // individual positioning
                   const align = entry.fTextAlign || this.textatt.align,
                         halign = Math.floor(align/10),
+                        valign = align % 10,
                         x = entry.fX ? entry.fX*width : (halign === 1 ? margin_x : (halign === 2 ? width / 2 : width - margin_x)),
-                        y = entry.fY ? (1 - entry.fY)*height : texty,
+                        y = entry.fY ? (1 - entry.fY)*height : (texty + (valign === 2 ? stepy / 2 : (valign === 3 ? stepy : 0))),
                         sub_g = text_g.append('svg:g');
 
                   this.startTextDrawing(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pad_height), sub_g);
@@ -70451,7 +70603,7 @@ class TPavePainter extends ObjectPainter {
                } else {
                   // default position
                   if (num_default++ === 0)
-                     this.startTextDrawing(this.textatt.font, height/(nlines * 1.2), text_g, max_font_size);
+                     this.startTextDrawing(this.textatt.font, 0.85*height/nlines, text_g, max_font_size);
 
                   this.drawText({ x: margin_x, y: texty, width: width - 2*margin_x, height: stepy,
                                   align: entry.fTextAlign || this.textatt.align,
@@ -70781,11 +70933,12 @@ class TPavePainter extends ObjectPainter {
          axis.fTitle = zaxis.fTitle;
          axis.fTitleSize = zaxis.fTitleSize;
          axis.fTitleOffset = zaxis.fTitleOffset;
-         axis.fTitleColor = zaxis.fTitleColor;
+         axis.fTextColor = zaxis.fTitleColor;
+         axis.fTextFont = zaxis.fTitleFont;
          axis.fLineColor = zaxis.fAxisColor;
-         axis.fTextSize = zaxis.fLabelSize;
-         axis.fTextColor = zaxis.fLabelColor;
-         axis.fTextFont = zaxis.fLabelFont;
+         axis.fLabelSize = zaxis.fLabelSize;
+         axis.fLabelColor = zaxis.fLabelColor;
+         axis.fLabelFont = zaxis.fLabelFont;
          axis.fLabelOffset = zaxis.fLabelOffset;
          this.z_handle.setHistPainter(main, 'z');
          this.z_handle.source_axis = zaxis;
@@ -71563,30 +71716,18 @@ class THistDrawOptions {
       if (d.check('GRAYSCALE'))
          pp?.setGrayscale(true);
 
-      d.getColor = function() {
-         this.color = this.partAsInt(1) - 1;
-         if (this.color >= 0) return true;
-         for (let col = 0; col < 8; ++col) {
-            if (getColor(col).toUpperCase() === this.part) {
-               this.color = col;
-               return true;
-            }
-         }
-         return false;
-      };
-
-      if (d.check('FILL_', true) && d.getColor()) {
+      if (d.check('FILL_', 'color')) {
          this.histoFillColor = d.color;
          this.histoFillPattern = 1001;
       }
 
-      if (d.check('LINE_', true) && d.getColor())
+      if (d.check('LINE_', 'color'))
          this.histoLineColor = getColor(d.color);
 
-      if (d.check('XAXIS_', true) && d.getColor())
+      if (d.check('XAXIS_', 'color'))
          histo.fXaxis.fAxisColor = histo.fXaxis.fLabelColor = histo.fXaxis.fTitleColor = d.color;
 
-      if (d.check('YAXIS_', true) && d.getColor())
+      if (d.check('YAXIS_', 'color'))
          histo.fYaxis.fAxisColor = histo.fYaxis.fLabelColor = histo.fYaxis.fTitleColor = d.color;
 
       const has_main = painter ? !!painter.getMainPainter() : false;
@@ -71753,10 +71894,26 @@ class THistDrawOptions {
       if (d.check('PMC') && !this._pmc)
          this._pmc = 2;
 
-      if (d.check('L')) { this.Line = true; this.Hist = false; this.Error = false; }
+      if (d.check('L')) { this.Line = true; this.Hist = false; }
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
 
       if (d.check('A')) this.Axis = -1;
+      if (pad?.$ratio_pad === 'up') {
+         if (!this.Same) this.Axis = 0; // draw both axes
+         histo.fXaxis.fLabelSize = 0;
+         histo.fXaxis.fTitle = '';
+         histo.fYaxis.$use_top_pad = true;
+      } else if (pad?.$ratio_pad === 'low') {
+         if (!this.Same) this.Axis = 0; // draw both axes
+         histo.fXaxis.$use_top_pad = true;
+         histo.fYaxis.$use_top_pad = true;
+         histo.fXaxis.fTitle = 'x';
+         const fp = painter?.getCanvPainter().findPainterFor(null, 'upper_pad', clTPad)?.getFramePainter();
+         if (fp) {
+            painter.zoom_xmin = fp.scale_xmin;
+            painter.zoom_xmax = fp.scale_xmax;
+         }
+      }
 
       if (d.check('RX') || pad?.$RX) this.RevX = true;
       if (d.check('RY') || pad?.$RY) this.RevY = true;
@@ -71868,7 +72025,8 @@ class THistDrawOptions {
          } else if (this.Line) {
             res += 'L';
             if (this.Fill) res += 'F';
-         }
+         } else if (this.Off)
+            res = '][';
 
          if (this.Cjust) res += ' CJUST';
 
@@ -71878,8 +72036,9 @@ class THistDrawOptions {
             res += this.TextKind;
          }
       }
-
-      if (is_main_hist && res) {
+      if (this.Same)
+         res += this.ForceStat ? 'SAMES' : 'SAME';
+      else if (is_main_hist && res) {
          if (this.ForceStat || (this.StatEnabled === true))
             res += '_STAT';
          else if (this.NoStat || (this.StatEnabled === false))
@@ -72281,10 +72440,12 @@ class THistPainter extends ObjectPainter {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
    }
 
-   /** @summary Check pad ranges when drawing of frame axes will be performed */
-   checkPadRange(use_pad) {
+   /** @summary Check pad ranges when drawing of frame axes will be performed
+     * @desc Only if histogram is main painter and drawn with SAME option, pad range can be used
+     * In all other cases configured range must be derived from histogram itself */
+   checkPadRange() {
       if (this.isMainPainter())
-         this.check_pad_range = use_pad ? 'pad_range' : true;
+         this.check_pad_range = this.options.Same ? 'pad_range' : true;
    }
 
    /** @summary Create necessary histogram draw attributes */
@@ -72440,7 +72601,7 @@ class THistPainter extends ObjectPainter {
       if (!o.omaximum)
          o.maximum = histo.fMaximum;
 
-      if (this.snapid || !fp || !fp.zoomChangedInteractive())
+      if (!fp || !fp.zoomChangedInteractive())
          this.checkPadRange();
 
       this.scanContent();
@@ -72456,7 +72617,6 @@ class THistPainter extends ObjectPainter {
    extractAxesProperties(ndim) {
       const assignTAxisFuncs = axis => {
          if (axis.fXbins.length >= axis.fNbins) {
-            axis.regular = false;
             axis.GetBinCoord = function(bin) {
                const indx = Math.round(bin);
                if (indx <= 0) return this.fXmin;
@@ -72471,10 +72631,9 @@ class THistPainter extends ObjectPainter {
                return this.fNbins;
             };
          } else {
-            axis.regular = true;
-            axis.binwidth = (axis.fXmax - axis.fXmin) / (axis.fNbins || 1);
-            axis.GetBinCoord = function(bin) { return this.fXmin + bin*this.binwidth; };
-            axis.FindBin = function(x, add) { return Math.floor((x - this.fXmin) / this.binwidth + add); };
+            axis.$binwidth = (axis.fXmax - axis.fXmin) / (axis.fNbins || 1);
+            axis.GetBinCoord = function(bin) { return this.fXmin + bin*this.$binwidth; };
+            axis.FindBin = function(x, add) { return Math.floor((x - this.fXmin) / this.$binwidth + add); };
          }
       };
 
@@ -72490,7 +72649,9 @@ class THistPainter extends ObjectPainter {
       this.ymin = histo.fYaxis.fXmin;
       this.ymax = histo.fYaxis.fXmax;
 
-      if ((ndim === 1) && this.options.ohmin && this.options.ohmax) {
+      this._exact_y_range = (ndim === 1) && this.options.ohmin && this.options.ohmax;
+
+      if (this._exact_y_range) {
          this.ymin = this.options.hmin;
          this.ymax = this.options.hmax;
       }
@@ -72574,6 +72735,8 @@ class THistPainter extends ObjectPainter {
 
       fp.createXY({ ndim: this.getDimension(),
                     check_pad_range: this.check_pad_range,
+                    zoom_xmin: this.zoom_xmin,
+                    zoom_xmax: this.zoom_xmax,
                     zoom_ymin: this.zoom_ymin,
                     zoom_ymax: this.zoom_ymax,
                     ymin_nz: this.ymin_nz,
@@ -72586,6 +72749,8 @@ class THistPainter extends ObjectPainter {
                     extra_y_space: this.options.Text && (this.options.BarStyle > 0),
                     hist_painter: this });
       delete this.check_pad_range;
+      delete this.zoom_xmin;
+      delete this.zoom_xmax;
 
       if (this.options.Same)
          return false;
@@ -73710,11 +73875,9 @@ class THistPainter extends ObjectPainter {
          if (painter.isTH2Poly()) {
             if (painter.options.Mode3D)
                painter.options.Lego = 12; // lego always 12
-            else if (!painter.options.Color)
-               painter.options.Color = true; // default is color
          }
 
-         painter.checkPadRange(/* !painter.options.Mode3D && */ (painter.options.Contour !== 14));
+         painter.checkPadRange();
 
          painter.scanContent();
 
@@ -74634,16 +74797,19 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
+      const is_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
+
       if (this.options.Axis > 0) {
          // Paint histogram axis only
          this.draw_content = false;
-      } else {
-         this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
-         if (!this.draw_content && this.options.Zero && this.isTH2Poly()) {
+      } else if (this.isTH2Poly()) {
+         this.draw_content = is_content || this.options.Line || this.options.Fill || this.options.Mark;
+         if (!this.draw_content && this.options.Zero) {
             this.draw_content = true;
             this.options.Line = 1;
          }
-      }
+      } else
+         this.draw_content = is_content;
    }
 
    /** @summary Count TH2 histogram statistic
@@ -75171,95 +75337,92 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       return handle;
    }
 
-   /** @summary Create poly bin */
-   createPolyBin(funcs, bin, text_pos) {
-      let cmd = '', grcmd = '', acc_x = 0, acc_y = 0, ngr, ngraphs = 1, gr = null;
+   getGrNPoints(gr) {
+      const x = gr.fX, y = gr.fY;
+      let npnts = gr.fNpoints;
+      if ((npnts > 2) && (x[0] === x[npnts-1]) && (y[0] === y[npnts-1]))
+         npnts--;
+      return npnts;
+   }
 
-      if (bin.fPoly._typename === clTMultiGraph)
-         ngraphs = bin.fPoly.fGraphs.arr.length;
-      else
-         gr = bin.fPoly;
+   /** @summary Create single graph path from TH2PolyBin */
+   createPolyGr(funcs, gr, textbin) {
+      let grcmd = '', acc_x = 0, acc_y = 0;
 
-      if (text_pos)
-         bin._sumx = bin._sumy = bin._suml = 0;
+      const x = gr.fX, y = gr.fY,
+         flush = () => {
+            if (acc_x) { grcmd += 'h' + acc_x; acc_x = 0; }
+            if (acc_y) { grcmd += 'v' + acc_y; acc_y = 0; }
+         }, addPoint = (x1, y1, x2, y2) => {
+            const len = Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
+            textbin.sumx += (x1 + x2) * len / 2;
+            textbin.sumy += (y1 + y2) * len / 2;
+            textbin.sum += len;
+         }, npnts = this.getGrNPoints(gr);
 
-      const addPoint = (x1, y1, x2, y2) => {
-         const len = Math.sqrt((x1-x2)**2 + (y1-y2)**2);
-         bin._sumx += (x1+x2)*len/2;
-         bin._sumy += (y1+y2)*len/2;
-         bin._suml += len;
-      },
+      if (npnts < 2)
+         return '';
 
-       flush = () => {
-         if (acc_x) { grcmd += 'h' + acc_x; acc_x = 0; }
-         if (acc_y) { grcmd += 'v' + acc_y; acc_y = 0; }
-      };
+      const grx0 = Math.round(funcs.grx(x[0])),
+            gry0 = Math.round(funcs.gry(y[0]));
+      let grx = grx0, gry = gry0;
 
-      for (ngr = 0; ngr < ngraphs; ++ngr) {
-         if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
+      for (let n = 1; n < npnts; ++n) {
+         const nextx = Math.round(funcs.grx(x[n])),
+               nexty = Math.round(funcs.gry(y[n])),
+               dx = nextx - grx,
+               dy = nexty - gry;
 
-         const x = gr.fX, y = gr.fY;
-         let n, nextx, nexty, npnts = gr.fNpoints, dx, dy,
-             grx = Math.round(funcs.grx(x[0])),
-             gry = Math.round(funcs.gry(y[0]));
-
-         if ((npnts > 2) && (x[0] === x[npnts-1]) && (y[0] === y[npnts-1])) npnts--;
-
-         const poscmd = `M${grx},${gry}`;
-
-         grcmd = '';
-
-         for (n = 1; n < npnts; ++n) {
-            nextx = Math.round(funcs.grx(x[n]));
-            nexty = Math.round(funcs.gry(y[n]));
-            if (text_pos) addPoint(grx, gry, nextx, nexty);
-            dx = nextx - grx;
-            dy = nexty - gry;
-            if (dx || dy) {
-               if (dx === 0) {
-                  if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
-                  acc_y += dy;
-               } else if (dy === 0) {
-                  if ((acc_x === 0) || ((dx < 0) !== (acc_x < 0))) flush();
-                  acc_x += dx;
-               } else {
-                  flush();
-                  grcmd += 'l' + dx + ',' + dy;
-               }
-
-               grx = nextx; gry = nexty;
+         if (textbin) addPoint(grx, gry, nextx, nexty);
+         if (dx || dy) {
+            if (dx === 0) {
+               if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
+               acc_y += dy;
+            } else if (dy === 0) {
+               if ((acc_x === 0) || ((dx < 0) !== (acc_x < 0))) flush();
+               acc_x += dx;
+            } else {
+               flush();
+               grcmd += `l${dx},${dy}`;
             }
-         }
 
-         if (text_pos) addPoint(grx, gry, Math.round(funcs.grx(x[0])), Math.round(funcs.gry(y[0])));
-         flush();
-
-         if (grcmd)
-            cmd += poscmd + grcmd + 'z';
-      }
-
-      if (text_pos) {
-         if (bin._suml > 0) {
-            bin._midx = Math.round(bin._sumx / bin._suml);
-            bin._midy = Math.round(bin._sumy / bin._suml);
-         } else {
-            bin._midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
-            bin._midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
+            grx = nextx; gry = nexty;
          }
       }
 
+      if (textbin) addPoint(grx, gry, grx0, gry0);
+      flush();
+
+      return grcmd ? `M${grx0},${gry0}` + grcmd + 'z' : '';
+   }
+
+   /** @summary Create path for complete TH2PolyBin */
+   createPolyBin(funcs, bin) {
+      const arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+      let cmd = '';
+      for (let k = 0; k < arr.length; ++k)
+         cmd += this.createPolyGr(funcs, arr[k]);
       return cmd;
    }
 
-   /** @summary draw TH2Poly as color */
-   async drawPolyBinsColor() {
+   /** @summary draw TH2Poly bins */
+   async drawPolyBins() {
       const histo = this.getObject(),
             pmain = this.getFramePainter(),
             funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            draw_colors = this.options.Color || (!this.options.Line && !this.options.Fill && !this.options.Text && !this.options.Mark),
+            draw_lines = this.options.Line || (this.options.Text && !draw_colors),
+            draw_fill = this.options.Fill && !draw_colors,
+            draw_mark = this.options.Mark,
             h = pmain.getFrameHeight(),
-            colPaths = [], textbins = [],
+            textbins = [],
             len = histo.fBins.arr.length;
-       let colindx, cmd, bin, item, i;
+       let colindx, cmd,
+           full_cmd = '', allmarkers_cmd = '',
+           bin, item, i, gr0 = null,
+           lineatt_match = draw_lines,
+           fillatt_match = draw_fill,
+           markatt_match = draw_mark;
 
       // force recalculations of contours
       // use global coordinates
@@ -75267,43 +75430,120 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       this.minbin = this.gminbin;
       this.minposbin = this.gminposbin;
 
-      const cntr = this.getContour(true), palette = this.getHistPalette(),
-            draw_lines = this.options.Line || this.options.Text;
+      const cntr = draw_colors ? this.getContour(true) : null,
+            palette = cntr ? this.getHistPalette() : null,
+            rejectBin = bin => {
+               // check if bin outside visible range
+               return ((bin.fXmin > funcs.scale_xmax) || (bin.fXmax < funcs.scale_xmin) ||
+                       (bin.fYmin > funcs.scale_ymax) || (bin.fYmax < funcs.scale_ymin));
+            };
 
+      // check if similar fill attributes
       for (i = 0; i < len; ++i) {
          bin = histo.fBins.arr[i];
-         colindx = cntr.getPaletteIndex(palette, bin.fContent);
-         if (colindx === null) {
-            if (!draw_lines) continue;
-            colindx = 0;
+         if (rejectBin(bin)) continue;
+
+         const arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+         for (let k = 0; k < arr.length; ++k) {
+            const gr = arr[k];
+            if (!gr0) { gr0 = gr; continue; }
+            if (lineatt_match && ((gr0.fLineColor !== gr.fLineColor) || (gr0.fLineWidth !== gr.fLineWidth) || (gr0.fLineStyle !== gr.fLineStyle)))
+               lineatt_match = false;
+            if (fillatt_match && ((gr0.fFillColor !== gr.fFillColor) || (gr0.fFillStyle !== gr.fFillStyle)))
+               fillatt_match = false;
+            if (markatt_match && ((gr0.fMarkerColor !== gr.fMarkerColor) || (gr0.fMarkerStyle !== gr.fMarkerStyle) || (gr0.fMarkerSize !== gr.fMarkerSize)))
+               markatt_match = false;
          }
-         // contrary to TH2 col drawing always, empty bins not drawn only when Zero option is specified
-         if ((bin.fContent === 0) && !this.options.Zero) continue;
-
-         // check if bin outside visible range
-         if ((bin.fXmin > funcs.scale_xmax) || (bin.fXmax < funcs.scale_xmin) ||
-             (bin.fYmin > funcs.scale_ymax) || (bin.fYmax < funcs.scale_ymin)) continue;
-
-         cmd = this.createPolyBin(funcs, bin, this.options.Text && bin.fContent);
-
-         if (colPaths[colindx] === undefined)
-            colPaths[colindx] = cmd;
-         else
-            colPaths[colindx] += cmd;
-
-         if (this.options.Text && bin.fContent)
-            textbins.push(bin);
+         if (!lineatt_match && !fillatt_match && !markatt_match)
+            break;
       }
 
-      for (colindx = 0; colindx < colPaths.length; ++colindx) {
-         if (colPaths[colindx]) {
-            item = this.draw_g
-                     .append('svg:path')
-                     .style('fill', colindx ? this._color_palette.getColor(colindx) : 'none')
-                     .attr('d', colPaths[colindx]);
-            if (draw_lines)
-               item.call(this.lineatt.func);
-         }
+      // do not try color draw optimization as with plain th2 while
+      // bins are not rectangular and drawings artefacts are nasty
+      // therefore draw each bin separately when doing color draw
+      const lineatt0 = lineatt_match && gr0 ? this.createAttLine(gr0) : null,
+            fillatt0 = fillatt_match && gr0 ? this.createAttFill(gr0) : null,
+            markeratt0 = markatt_match && gr0 ? this.createAttMarker({ attr: gr0, style: this.options.MarkStyle, std: false }) : null,
+            optimize_draw = !draw_colors && (draw_lines ? lineatt_match : true) && (draw_fill ? fillatt_match : true);
+
+      // draw bins
+      for (i = 0; i < len; ++i) {
+         bin = histo.fBins.arr[i];
+         if (rejectBin(bin)) continue;
+
+         const draw_bin = bin.fContent || this.options.Zero,
+               arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+
+         colindx = draw_colors && draw_bin ? cntr.getPaletteIndex(palette, bin.fContent) : null;
+
+         const textbin = this.options.Text && draw_bin ? { bin, sumx: 0, sumy: 0, sum: 0 } : null;
+
+         for (let k = 0; k < arr.length; ++k) {
+            const gr = arr[k];
+            if (markeratt0) {
+               const npnts = this.getGrNPoints(gr);
+               for (let n = 0; n < npnts; ++n)
+                  allmarkers_cmd += markeratt0.create(funcs.grx(gr.fX[n]), funcs.gry(gr.fY[n]));
+            }
+
+            cmd = this.createPolyGr(funcs, gr, textbin);
+            if (!cmd) continue;
+
+            if (optimize_draw)
+               full_cmd += cmd;
+            else if ((colindx !== null) || draw_fill || draw_lines) {
+               item = this.draw_g.append('svg:path').attr('d', cmd);
+               if (draw_colors && (colindx !== null))
+                  item.style('fill', this._color_palette.getColor(colindx));
+               else if (draw_fill)
+                  item.call('fill', this.createAttFill(gr).func);
+               else
+                  item.style('fill', 'none');
+               if (draw_lines)
+                  item.call(this.createAttLine(gr).func);
+            }
+         } // loop over graphs
+
+         if (textbin?.sum)
+            textbins.push(textbin);
+      } // loop over bins
+
+      if (optimize_draw) {
+         item = this.draw_g.append('svg:path').attr('d', full_cmd);
+         if (draw_fill && fillatt0)
+            item.call(fillatt0.func);
+         else
+            item.style('fill', 'none');
+         if (draw_lines && lineatt0)
+            item.call(lineatt0.func);
+      }
+
+      if (markeratt0 && !markeratt0.empty() && allmarkers_cmd) {
+         this.draw_g.append('svg:path')
+                    .attr('d', allmarkers_cmd)
+                    .call(markeratt0.func);
+      } else if (draw_mark) {
+         for (i = 0; i < len; ++i) {
+            bin = histo.fBins.arr[i];
+            if (rejectBin(bin)) continue;
+
+            const arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+
+            for (let k = 0; k < arr.length; ++k) {
+               const gr = arr[k], npnts = this.getGrNPoints(gr),
+                     markeratt = this.createAttMarker({ attr: gr, style: this.options.MarkStyle, std: false });
+               if (!npnts || markeratt.empty())
+                  continue;
+               let cmd = '';
+
+               for (let n = 0; n < npnts; ++n)
+                  cmd += markeratt.create(funcs.grx(gr.fX[n]), funcs.gry(gr.fY[n]));
+
+               this.draw_g.append('svg:path')
+                   .attr('d', cmd)
+                   .call(markeratt.func);
+            } // loop over graphs
+         } // loop over bins
       }
 
       let pr = Promise.resolve(true);
@@ -75317,7 +75557,17 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          this.startTextDrawing(42, text_size, text_g, text_size);
 
          for (i = 0; i < textbins.length; ++i) {
-            bin = textbins[i];
+            const textbin = textbins[i];
+
+            bin = textbin.bin;
+
+            if (textbin.sum > 0) {
+               textbin.midx = Math.round(textbin.sumx / textbin.sum);
+               textbin.midy = Math.round(textbin.sumy / textbin.sum);
+            } else {
+               textbin.midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
+               textbin.midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
+            }
 
             let text;
 
@@ -75329,7 +75579,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                   text = bin.fNumber.toString();
             }
 
-            this.drawText({ align: 22, x: bin._midx, y: bin._midy, rotate, text, color, latex: 0, draw_g: text_g });
+            this.drawText({ align: 22, x: textbin.midx, y: textbin.midy, rotate, text, color, latex: 0, draw_g: text_g });
          }
 
          pr = this.finishTextDrawing(text_g, true);
@@ -76210,7 +76460,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       let handle, pr;
 
       if (this.isTH2Poly())
-         pr = this.drawPolyBinsColor();
+         pr = this.drawPolyBins();
        else {
          if (this.options.Scat)
             handle = this.drawBinsScatter();
@@ -76589,7 +76839,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                    (realy < bin.fYmin) || (realy > bin.fYmax)) continue;
 
                // ignore empty bins with col0 option
-               if ((bin.fContent === 0) && !this.options.Zero) continue;
+               if (!bin.fContent && !this.options.Zero) continue;
 
                let gr = bin.fPoly, numgraphs = 1;
                if (gr._typename === clTMultiGraph) { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
@@ -79061,6 +79311,169 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    }
 }
 
+/** @summary Assign `evalPar` function for TF1 object
+  * @private */
+
+function proivdeEvalPar(obj, check_save) {
+   obj.$math = jsroot_math;
+
+   let _func = obj.fTitle, isformula = false, pprefix = '[';
+   if (_func === 'gaus') _func = 'gaus(0)';
+   if (isStr(obj.fFormula?.fFormula)) {
+     if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') === 0) {
+        isformula = true; pprefix = 'p[';
+        _func = obj.fFormula.fFormula.slice(21);
+     } else {
+        _func = obj.fFormula.fFormula;
+        pprefix = '[p';
+     }
+
+     if (obj.fFormula.fClingParameters && obj.fFormula.fParams) {
+        obj.fFormula.fParams.forEach(pair => {
+           const regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
+               parvalue = obj.fFormula.fClingParameters[pair.second];
+           _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
+        });
+      }
+   }
+
+   if (!_func)
+      return !check_save || (obj.fSave?.length > 2);
+
+   obj.formulas?.forEach(entry => {
+      _func = _func.replaceAll(entry.fName, entry.fTitle);
+   });
+
+   _func = _func.replace(/\b(TMath::SinH)\b/g, 'Math.sinh')
+                .replace(/\b(TMath::CosH)\b/g, 'Math.cosh')
+                .replace(/\b(TMath::TanH)\b/g, 'Math.tanh')
+                .replace(/\b(TMath::ASinH)\b/g, 'Math.asinh')
+                .replace(/\b(TMath::ACosH)\b/g, 'Math.acosh')
+                .replace(/\b(TMath::ATanH)\b/g, 'Math.atanh')
+                .replace(/\b(TMath::ASin)\b/g, 'Math.asin')
+                .replace(/\b(TMath::ACos)\b/g, 'Math.acos')
+                .replace(/\b(TMath::Atan)\b/g, 'Math.atan')
+                .replace(/\b(TMath::ATan2)\b/g, 'Math.atan2')
+                .replace(/\b(sin|SIN|TMath::Sin)\b/g, 'Math.sin')
+                .replace(/\b(cos|COS|TMath::Cos)\b/g, 'Math.cos')
+                .replace(/\b(tan|TAN|TMath::Tan)\b/g, 'Math.tan')
+                .replace(/\b(exp|EXP|TMath::Exp)\b/g, 'Math.exp')
+                .replace(/\b(log|LOG|TMath::Log)\b/g, 'Math.log')
+                .replace(/\b(log10|LOG10|TMath::Log10)\b/g, 'Math.log10')
+                .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
+                .replace(/\b(pi|PI)\b/g, 'Math.PI')
+                .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
+                .replace(/\bsqrt\(/g, 'Math.sqrt(')
+                .replace(/\bxygaus\(/g, 'this.$math.gausxy(this, x, y, ')
+                .replace(/\bgaus\(/g, 'this.$math.gaus(this, x, ')
+                .replace(/\bgausn\(/g, 'this.$math.gausn(this, x, ')
+                .replace(/\bexpo\(/g, 'this.$math.expo(this, x, ')
+                .replace(/\blandau\(/g, 'this.$math.landau(this, x, ')
+                .replace(/\blandaun\(/g, 'this.$math.landaun(this, x, ')
+                .replace(/\b(TMath::|ROOT::Math::)/g, 'this.$math.');
+
+   if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
+      _func = '[0]';
+      for (let k = 1; k < obj.fNpar; ++k)
+         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
+   }
+
+   if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
+      _func = `this.$math.ChebyshevN(${obj.fNpar-1}, x, `;
+      for (let k = 0; k < obj.fNpar; ++k)
+         _func += (k === 0 ? '[' : ', ') + `[${k}]`;
+      _func += '])';
+   }
+
+   for (let i = 0; i < obj.fNpar; ++i)
+      _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
+
+   for (let n = 2; n < 10; ++n)
+      _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
+
+   if (isformula) {
+      _func = _func.replace(/x\[0\]/g, 'x');
+      if (obj._typename === clTF3) {
+         _func = _func.replace(/x\[1\]/g, 'y');
+         _func = _func.replace(/x\[2\]/g, 'z');
+         obj.evalPar = new Function('x', 'y', 'z', _func).bind(obj);
+      } else if (obj._typename === clTF2) {
+         _func = _func.replace(/x\[1\]/g, 'y');
+         obj.evalPar = new Function('x', 'y', _func).bind(obj);
+      } else
+         obj.evalPar = new Function('x', _func).bind(obj);
+   } else if (obj._typename === clTF3)
+      obj.evalPar = new Function('x', 'y', 'z', 'return ' + _func).bind(obj);
+   else if (obj._typename === clTF2)
+      obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
+   else
+      obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
+
+   return true;
+}
+
+
+/** @summary Get interpolation in saved buffer
+  * @desc Several checks must be done before function can be used
+  * @private */
+function _getTF1Save(func, x) {
+   const np = func.fSave.length - 3,
+         xmin = func.fSave[np + 1],
+        xmax = func.fSave[np + 2],
+        dx = (xmax - xmin) / np;
+    if (x < xmin)
+       return func.fSave[0];
+    if (x > xmax)
+       return func.fSave[np];
+
+    const bin = Math.min(np - 1, Math.floor((x - xmin) / dx));
+    let xlow = xmin + bin * dx,
+        xup = xlow + dx,
+        ylow = func.fSave[bin],
+        yup = func.fSave[bin + 1];
+
+    if (!Number.isFinite(ylow) && (bin < np - 1)) {
+       xlow += dx; xup += dx;
+       ylow = yup; yup = func.fSave[bin + 2];
+    } else if (!Number.isFinite(yup) && (bin > 0)) {
+       xup -= dx; xlow -= dx;
+       yup = ylow; ylow = func.fSave[bin - 1];
+    }
+
+    return ((xup * ylow - xlow * yup) + x * (yup - ylow)) / dx;
+}
+
+/** @summary Provide TF1 value
+  * @desc First try evaluate, if not possible - check saved buffer
+  * @private */
+function getTF1Value(func, x, skip_eval = undefined) {
+   let y = 0, iserr = false;
+   if (!func)
+      return 0;
+
+   if (!skip_eval && !func.evalPar) {
+      try {
+         if (!proivdeEvalPar(func))
+            iserr = true;
+      } catch {
+         iserr = true;
+      }
+   }
+
+   if (func.evalPar && !iserr) {
+      try {
+         y = func.evalPar(x);
+         return y;
+      } catch {
+         y = 0;
+      }
+   }
+
+   const np = func.fSave.length - 3;
+   if ((np < 2) || (func.fSave[np + 1] === func.fSave[np + 2])) return 0;
+   return _getTF1Save(func, x);
+}
+
 const PadDrawOptions = ['LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOGV', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
                         'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'TICKZ', 'FB', 'GRAYSCALE'];
 
@@ -79101,7 +79514,9 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          this.extractAxesProperties(1);
 
       const left = this.getSelectIndex('x', 'left'),
-            right = this.getSelectIndex('x', 'right');
+            right = this.getSelectIndex('x', 'right'),
+            pad_logy = this.getPadPainter()?.getPadLog(this.options.BarStyle >= 20 ? 'x' : 'y'),
+            f1 = this.options.Func ? this.findFunction(clTF1) : null;
 
       if (when_axis_changed && (left === this.scan_xleft) && (right === this.scan_xright))
          return;
@@ -79134,6 +79549,17 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
          hmin = Math.min(hmin, value - err);
          hmax = Math.max(hmax, value + err);
+
+         if (f1) {
+            // similar code as in THistPainter, line 7196
+            const x = histo.fXaxis.GetBinCenter(i + 1),
+                  v = getTF1Value(f1, x);
+            if (v !== undefined) {
+               hmax = Math.max(hmax, v);
+               if (pad_logy && (value > 0) && (v > 0.3 * value))
+                  hmin_nz = Math.min(hmin_nz, v);
+            }
+         }
       }
 
       // account overflow/underflow bins
@@ -79142,13 +79568,12 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
-      this.stat_entries = hsum;
-      if (histo.fEntries > 1) this.stat_entries = histo.fEntries;
+      this.stat_entries = (histo.fEntries > 1) ? histo.fEntries : hsum;
 
       this.hmin = hmin;
       this.hmax = hmax;
 
-      this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
+      // this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
 
       if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300) && (Math.abs(hmax) < 1e-300)))
          this.draw_content = false;
@@ -79165,11 +79590,27 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                this.ymin = 0; this.ymax = hmin * 2;
             }
          } else {
-            const dy = (hmax - hmin) * gStyle.fHistTopMargin;
-            this.ymin = hmin - dy;
-            if ((this.ymin < 0) && (hmin >= 0)) this.ymin = 0;
-            this.ymax = hmax + dy;
+            if (pad_logy) {
+               this.ymin = (hmin_nz || hmin) * 0.5;
+               this.ymax = hmax*2*(0.9/0.95);
+            } else {
+               this.ymin = hmin;
+               this.ymax = hmax;
+            }
          }
+      }
+
+      // final adjustment like in THistPainter.cxx line 7309
+      if (!this._exact_y_range && !pad_logy) {
+         if ((this.options.BaseLine !== false) && (this.ymin >= 0))
+            this.ymin = 0;
+         else {
+            const positive = (this.ymin >= 0);
+            this.ymin -= gStyle.fHistTopMargin*(this.ymax-this.ymin);
+            if (positive && (this.ymin < 0))
+               this.ymin = 0;
+         }
+         this.ymax += gStyle.fHistTopMargin*(this.ymax-this.ymin);
       }
 
       hmin = this.options.minimum;
@@ -79482,27 +79923,25 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
    /** @summary Draw histogram as filled errors */
    drawFilledErrors(funcs) {
-      const left = this.getSelectIndex('x', 'left', -1),
-            right = this.getSelectIndex('x', 'right', 1),
-            histo = this.getHisto(), xaxis = histo.fXaxis,
-            bins1 = [], bins2 = [];
-      let i, x, grx, y, yerr;
+      const left = this.getSelectIndex('x', 'left', 0),
+            right = this.getSelectIndex('x', 'right', 0),
+            histo = this.getHisto(), bins1 = [], bins2 = [];
 
-      for (i = left; i < right; ++i) {
-         x = xaxis.GetBinCoord(i+0.5);
+      for (let i = left; i < right; ++i) {
+         const x = histo.fXaxis.GetBinCoord(i+0.5);
          if (funcs.logx && (x <= 0)) continue;
-         grx = Math.round(funcs.grx(x));
-
-         y = histo.getBinContent(i+1);
-         yerr = histo.getBinError(i+1);
+         const grx = Math.round(funcs.grx(x)),
+               y = histo.getBinContent(i+1),
+               yerr = histo.getBinError(i+1);
          if (funcs.logy && (y-yerr < funcs.scale_ymin)) continue;
 
          bins1.push({ grx, gry: Math.round(funcs.gry(y + yerr)) });
          bins2.unshift({ grx, gry: Math.round(funcs.gry(y - yerr)) });
       }
 
-      const path1 = buildSvgCurve(bins1, { line: this.options.ErrorKind !== 4 }),
-            path2 = buildSvgCurve(bins2, { line: this.options.ErrorKind !== 4, cmd: 'L' });
+      const line = this.options.ErrorKind !== 4,
+            path1 = buildSvgCurve(bins1, { line }),
+            path2 = buildSvgCurve(bins2, { line, cmd: 'L' });
 
       this.draw_g.append('svg:path')
                  .attr('d', path1 + path2 + 'Z')
@@ -79519,13 +79958,13 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             xaxis = histo.fXaxis,
             exclude_zero = !this.options.Zero,
             show_errors = this.options.Error,
-            show_line = this.options.Line,
             show_curve = this.options.Curve,
             show_text = this.options.Text,
             text_profile = show_text && (this.options.TextKind === 'E') && this.isTProfile() && histo.fBinEntries,
             grpnts = [];
       let res = '', lastbin = false,
           show_markers = this.options.Mark,
+          show_line = this.options.Line,
           startx, startmidx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           path_fill = null, path_err = null, path_marker = null, path_line = '',
           hints_err = null, hints_marker = null, hsz = 5,
@@ -79539,7 +79978,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       if (this.options.ErrorKind === 2) {
          if (this.fillatt.empty()) show_markers = true;
                               else path_fill = '';
-      } else if (this.options.Error) {
+      } else if (show_errors) {
+         show_line = false;
          path_err = '';
          hints_err = want_tooltip ? '' : null;
          do_err = true;
@@ -80645,515 +81085,6 @@ class TH2Painter extends TH2Painter$2 {
 var TH2Painter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TH2Painter: TH2Painter
-});
-
-/** @summary Assign `evalPar` function for TF1 object
-  * @private */
-
-function proivdeEvalPar(obj, check_save) {
-   obj.$math = jsroot_math;
-
-   let _func = obj.fTitle, isformula = false, pprefix = '[';
-   if (_func === 'gaus') _func = 'gaus(0)';
-   if (isStr(obj.fFormula?.fFormula)) {
-     if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') === 0) {
-        isformula = true; pprefix = 'p[';
-        _func = obj.fFormula.fFormula.slice(21);
-     } else {
-        _func = obj.fFormula.fFormula;
-        pprefix = '[p';
-     }
-
-     if (obj.fFormula.fClingParameters && obj.fFormula.fParams) {
-        obj.fFormula.fParams.forEach(pair => {
-           const regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
-               parvalue = obj.fFormula.fClingParameters[pair.second];
-           _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
-        });
-      }
-   }
-
-   if (!_func)
-      return !check_save || (obj.fSave?.length > 2);
-
-   obj.formulas?.forEach(entry => {
-      _func = _func.replaceAll(entry.fName, entry.fTitle);
-   });
-
-   _func = _func.replace(/\b(TMath::SinH)\b/g, 'Math.sinh')
-                .replace(/\b(TMath::CosH)\b/g, 'Math.cosh')
-                .replace(/\b(TMath::TanH)\b/g, 'Math.tanh')
-                .replace(/\b(TMath::ASinH)\b/g, 'Math.asinh')
-                .replace(/\b(TMath::ACosH)\b/g, 'Math.acosh')
-                .replace(/\b(TMath::ATanH)\b/g, 'Math.atanh')
-                .replace(/\b(TMath::ASin)\b/g, 'Math.asin')
-                .replace(/\b(TMath::ACos)\b/g, 'Math.acos')
-                .replace(/\b(TMath::Atan)\b/g, 'Math.atan')
-                .replace(/\b(TMath::ATan2)\b/g, 'Math.atan2')
-                .replace(/\b(sin|SIN|TMath::Sin)\b/g, 'Math.sin')
-                .replace(/\b(cos|COS|TMath::Cos)\b/g, 'Math.cos')
-                .replace(/\b(tan|TAN|TMath::Tan)\b/g, 'Math.tan')
-                .replace(/\b(exp|EXP|TMath::Exp)\b/g, 'Math.exp')
-                .replace(/\b(log|LOG|TMath::Log)\b/g, 'Math.log')
-                .replace(/\b(log10|LOG10|TMath::Log10)\b/g, 'Math.log10')
-                .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
-                .replace(/\b(pi|PI)\b/g, 'Math.PI')
-                .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
-                .replace(/\bxygaus\(/g, 'this.$math.gausxy(this, x, y, ')
-                .replace(/\bgaus\(/g, 'this.$math.gaus(this, x, ')
-                .replace(/\bgausn\(/g, 'this.$math.gausn(this, x, ')
-                .replace(/\bexpo\(/g, 'this.$math.expo(this, x, ')
-                .replace(/\blandau\(/g, 'this.$math.landau(this, x, ')
-                .replace(/\blandaun\(/g, 'this.$math.landaun(this, x, ')
-                .replace(/\b(TMath::|ROOT::Math::)/g, 'this.$math.');
-
-   if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
-      _func = '[0]';
-      for (let k = 1; k < obj.fNpar; ++k)
-         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
-   }
-
-   if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
-      _func = `this.$math.ChebyshevN(${obj.fNpar-1}, x, `;
-      for (let k = 0; k < obj.fNpar; ++k)
-         _func += (k === 0 ? '[' : ', ') + `[${k}]`;
-      _func += '])';
-   }
-
-   for (let i = 0; i < obj.fNpar; ++i)
-      _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
-
-   for (let n = 2; n < 10; ++n)
-      _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
-
-   if (isformula) {
-      _func = _func.replace(/x\[0\]/g, 'x');
-      if (obj._typename === clTF3) {
-         _func = _func.replace(/x\[1\]/g, 'y');
-         _func = _func.replace(/x\[2\]/g, 'z');
-         obj.evalPar = new Function('x', 'y', 'z', _func).bind(obj);
-      } else if (obj._typename === clTF2) {
-         _func = _func.replace(/x\[1\]/g, 'y');
-         obj.evalPar = new Function('x', 'y', _func).bind(obj);
-      } else
-         obj.evalPar = new Function('x', _func).bind(obj);
-   } else if (obj._typename === clTF3)
-      obj.evalPar = new Function('x', 'y', 'z', 'return ' + _func).bind(obj);
-   else if (obj._typename === clTF2)
-      obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
-   else
-      obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
-
-   return true;
-}
-
-
-/** @summary Get interpolation in saved buffer
-  * @desc Several checks must be done before function can be used
-  * @private */
-function _getTF1Save(func, x) {
-   const np = func.fSave.length - 3,
-         xmin = func.fSave[np + 1],
-        xmax = func.fSave[np + 2],
-        dx = (xmax - xmin) / np;
-    if (x < xmin)
-       return func.fSave[0];
-    if (x > xmax)
-       return func.fSave[np];
-
-    const bin = Math.min(np - 1, Math.floor((x - xmin) / dx));
-    let xlow = xmin + bin * dx,
-        xup = xlow + dx,
-        ylow = func.fSave[bin],
-        yup = func.fSave[bin + 1];
-
-    if (!Number.isFinite(ylow) && (bin < np - 1)) {
-       xlow += dx; xup += dx;
-       ylow = yup; yup = func.fSave[bin + 2];
-    } else if (!Number.isFinite(yup) && (bin > 0)) {
-       xup -= dx; xlow -= dx;
-       yup = ylow; ylow = func.fSave[bin - 1];
-    }
-
-    return ((xup * ylow - xlow * yup) + x * (yup - ylow)) / dx;
-}
-
-/** @summary Provide TF1 value
-  * @desc First try evaluate, if not possible - check saved buffer
-  * @private */
-function getTF1Value(func, x, skip_eval = undefined) {
-   let y = 0, iserr = false;
-   if (!func)
-      return 0;
-
-   if (!skip_eval && !func.evalPar) {
-      try {
-         if (!proivdeEvalPar(func))
-            iserr = true;
-      } catch {
-         iserr = true;
-      }
-   }
-
-   if (func.evalPar && !iserr) {
-      try {
-         y = func.evalPar(x);
-         return y;
-      } catch {
-         y = 0;
-      }
-   }
-
-   const np = func.fSave.length - 3;
-   if ((np < 2) || (func.fSave[np + 1] === func.fSave[np + 2])) return 0;
-   return _getTF1Save(func, x);
-}
-
-/** @summary Create log scale for axis bins
-  * @private */
-function produceTAxisLogScale(axis, num, min, max) {
-   let lmin, lmax;
-
-   if (max > 0) {
-      lmax = Math.log(max);
-      lmin = min > 0 ? Math.log(min) : lmax - 5;
-   } else {
-      lmax = -10;
-      lmin = -15;
-   }
-
-   axis.fNbins = num;
-   axis.fXbins = new Array(num + 1);
-   for (let i = 0; i <= num; ++i)
-      axis.fXbins[i] = Math.exp(lmin + i / num * (lmax - lmin));
-   axis.fXmin = Math.exp(lmin);
-   axis.fXmax = Math.exp(lmax);
-}
-
-/**
-  * @summary Painter for TF1 object
-  *
-  * @private
-  */
-
-class TF1Painter extends TH1Painter$2 {
-
-   /** @summary Returns drawn object name */
-   getObjectName() { return this.$func?.fName ?? 'func'; }
-
-   /** @summary Returns drawn object class name */
-   getClassName() { return this.$func?._typename ?? clTF1; }
-
-   /** @summary Returns true while function is drawn */
-   isTF1() { return true; }
-
-   /** @summary Returns primary function which was then drawn as histogram */
-   getPrimaryObject() { return this.$func; }
-
-   /** @summary Update function */
-   updateObject(obj /*, opt */) {
-      if (!obj || (this.getClassName() !== obj._typename)) return false;
-      delete obj.evalPar;
-      const histo = this.getHisto();
-
-      if (this.webcanv_hist) {
-         const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH1D);
-         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
-      }
-
-      this.$func = obj;
-      this.createTF1Histogram(obj, histo);
-      this.scanContent();
-      return true;
-   }
-
-   /** @summary Redraw TF1
-     * @private */
-   redraw(reason) {
-      if (!this._use_saved_points && (reason === 'logx' || reason === 'zoom')) {
-         this.createTF1Histogram(this.$func, this.getHisto());
-         this.scanContent();
-      }
-
-      return super.redraw(reason);
-   }
-
-   /** @summary Create histogram for TF1 drawing
-     * @private */
-   createTF1Histogram(tf1, hist) {
-      const fp = this.getFramePainter(),
-            pad = this.getPadPainter()?.getRootPad(true),
-            logx = pad?.fLogx,
-            gr = fp?.getGrFuncs(this.second_x, this.second_y);
-      let xmin = tf1.fXmin, xmax = tf1.fXmax;
-
-      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
-         xmin = Math.min(xmin, gr.zoom_xmin);
-         xmax = Math.max(xmax, gr.zoom_xmax);
-      }
-
-      this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || this.force_saved);
-
-      const ensureBins = num => {
-         if (hist.fNcells !== num + 2) {
-            hist.fNcells = num + 2;
-            hist.fArray = new Float32Array(hist.fNcells);
-         }
-         hist.fArray.fill(0);
-         hist.fXaxis.fNbins = num;
-         hist.fXaxis.fXbins = [];
-      };
-
-      delete this._fail_eval;
-
-      // this._use_saved_points = true;
-
-      if (!this._use_saved_points) {
-         const np = Math.max(tf1.fNpx, 100);
-         let iserror = false;
-
-         if (!tf1.evalPar) {
-            try {
-               if (!proivdeEvalPar(tf1))
-                  iserror = true;
-            } catch {
-               iserror = true;
-            }
-         }
-
-         ensureBins(np);
-
-         if (logx)
-            produceTAxisLogScale(hist.fXaxis, np, xmin, xmax);
-          else {
-            hist.fXaxis.fXmin = xmin;
-            hist.fXaxis.fXmax = xmax;
-         }
-
-         for (let n = 0; (n < np) && !iserror; n++) {
-            const x = hist.fXaxis.GetBinCenter(n + 1);
-            let y = 0;
-            try {
-               y = tf1.evalPar(x);
-            } catch (err) {
-               iserror = true;
-            }
-
-            if (!iserror)
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
-         }
-
-         if (iserror)
-            this._fail_eval = true;
-
-         if (iserror && (tf1.fSave.length > 3))
-            this._use_saved_points = true;
-      }
-
-      // in the case there were points have saved and we cannot calculate function
-      // if we don't have the user's function
-      if (this._use_saved_points) {
-         const np = tf1.fSave.length - 3;
-         let custom_xaxis = null;
-         xmin = tf1.fSave[np + 1];
-         xmax = tf1.fSave[np + 2];
-
-         if (xmin === xmax) {
-            // xmin = tf1.fSave[np];
-            const mp = this.getMainPainter();
-            if (isFunc(mp?.getHisto))
-               custom_xaxis = mp?.getHisto()?.fXaxis;
-         }
-
-         if (custom_xaxis) {
-            ensureBins(hist.fXaxis.fNbins);
-            Object.assign(hist.fXaxis, custom_xaxis);
-            // TODO: find first bin
-
-            for (let n = 0; n < np; ++n) {
-               const y = tf1.fSave[n];
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
-            }
-         } else {
-            ensureBins(tf1.fNpx);
-            hist.fXaxis.fXmin = tf1.fXmin;
-            hist.fXaxis.fXmax = tf1.fXmax;
-
-            for (let n = 0; n < tf1.fNpx; ++n) {
-               const y = _getTF1Save(tf1, hist.fXaxis.GetBinCenter(n + 1));
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
-            }
-         }
-      }
-
-      hist.fName = 'Func';
-      setHistogramTitle(hist, tf1.fTitle);
-      hist.fMinimum = tf1.fMinimum;
-      hist.fMaximum = tf1.fMaximum;
-      hist.fLineColor = tf1.fLineColor;
-      hist.fLineStyle = tf1.fLineStyle;
-      hist.fLineWidth = tf1.fLineWidth;
-      hist.fFillColor = tf1.fFillColor;
-      hist.fFillStyle = tf1.fFillStyle;
-      hist.fMarkerColor = tf1.fMarkerColor;
-      hist.fMarkerStyle = tf1.fMarkerStyle;
-      hist.fMarkerSize = tf1.fMarkerSize;
-      hist.fBits |= kNoStats;
-   }
-
-   /** @summary Extract function ranges */
-   extractAxesProperties(ndim) {
-      super.extractAxesProperties(ndim);
-
-      const func = this.$func, nsave = func?.fSave.length ?? 0;
-
-      if (nsave > 3 && this._use_saved_points) {
-         this.xmin = Math.min(this.xmin, func.fSave[nsave - 2]);
-         this.xmax = Math.max(this.xmax, func.fSave[nsave - 1]);
-      }
-      if (func) {
-         this.xmin = Math.min(this.xmin, func.fXmin);
-         this.xmax = Math.max(this.xmax, func.fXmax);
-      }
-   }
-
-   /** @summary Checks if it makes sense to zoom inside specified axis range */
-   canZoomInside(axis, min, max) {
-      if ((this.$func?.fSave.length > 0) && this._use_saved_points && (axis === 'x')) {
-         // in the case where the points have been saved, useful for example
-         // if we don't have the user's function
-         const nb_points = this.$func.fNpx,
-             xmin = this.$func.fSave[nb_points + 1],
-             xmax = this.$func.fSave[nb_points + 2];
-
-         return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
-      }
-
-      // if function calculated, one always could zoom inside
-      return (axis === 'x') || (axis === 'y');
-   }
-
-      /** @summary retrurn tooltips for TF2 */
-   getTF1Tooltips(pnt) {
-      delete this.$tmp_tooltip;
-      const lines = [this.getObjectHint()],
-            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
-
-      if (!funcs || !isFunc(this.$func?.evalPar)) {
-         lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
-         return lines;
-      }
-
-      const x = funcs.revertAxis('x', pnt.x);
-      let y = 0, gry = 0, iserror = false;
-
-       try {
-          y = this.$func.evalPar(x);
-          gry = Math.round(funcs.gry(y));
-       } catch {
-          iserror = true;
-       }
-
-      lines.push('x = ' + funcs.axisAsText('x', x),
-                 'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
-
-      if (!iserror)
-         this.$tmp_tooltip = { y, gry };
-      return lines;
-   }
-
-   /** @summary process tooltip event for TF1 object */
-   processTooltipEvent(pnt) {
-      if (this._use_saved_points)
-         return super.processTooltipEvent(pnt);
-
-      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
-
-      if (!this.draw_g || !pnt) {
-         ttrect?.remove();
-         return null;
-      }
-
-      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
-                    x: pnt.x, y: pnt.y,
-                    color1: this.lineatt?.color ?? 'green',
-                    color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                    lines: this.getTF1Tooltips(pnt), exact: true, menu: true };
-
-      if (pnt.disabled)
-         ttrect.remove();
-      else {
-         if (ttrect.empty()) {
-            ttrect = this.draw_g.append('svg:circle')
-                             .attr('class', 'tooltip_bin')
-                             .style('pointer-events', 'none')
-                             .style('fill', 'none')
-                             .attr('r', (this.lineatt?.width ?? 1) + 4);
-         }
-
-         ttrect.attr('cx', pnt.x)
-               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
-               .call(this.lineatt?.func);
-      }
-
-      return res;
-   }
-
-   /** @summary fill information for TWebCanvas
-     * @private */
-   fillWebObjectOptions(opt) {
-      // mark that saved points are used or evaluation failed
-      opt.fcust = this._fail_eval ? 'func_fail' : '';
-   }
-
-   /** @summary draw TF1 object */
-   static async draw(dom, tf1, opt) {
-     if (!isStr(opt)) opt = '';
-      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
-      if (p >= 0) {
-         webcanv_hist = true;
-         opt = opt.slice(0, p);
-      }
-      p = opt.indexOf(';force_saved');
-      if (p >= 0) {
-         force_saved = true;
-         opt = opt.slice(0, p);
-      }
-
-      let hist;
-
-      if (webcanv_hist) {
-         const dummy = new ObjectPainter(dom);
-         hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
-      }
-
-      if (!hist) {
-         hist = createHistogram(clTH1D, 100);
-         hist.fBits |= kNoStats;
-      }
-
-      if (!opt && getElementMainPainter(dom))
-         opt = 'same';
-
-      const painter = new TF1Painter(dom, hist);
-
-      painter.$func = tf1;
-      painter.webcanv_hist = webcanv_hist;
-      painter.force_saved = force_saved;
-
-      painter.createTF1Histogram(tf1, hist);
-
-      return THistPainter._drawHist(painter, opt);
-   }
-
-} // class TF1Painter
-
-var TF1Painter$1 = /*#__PURE__*/Object.freeze({
-__proto__: null,
-TF1Painter: TF1Painter,
-getTF1Value: getTF1Value,
-produceTAxisLogScale: produceTAxisLogScale,
-proivdeEvalPar: proivdeEvalPar
 });
 
 /**
@@ -95642,6 +95573,18 @@ function addUserStreamer(type, user_streamer) {
    CustomStreamers[type] = user_streamer;
 }
 
+function getTDatimeDate() {
+   const res = new Date();
+   res.setFullYear((this.fDatime >>> 26) + 1995);
+   res.setMonth(((this.fDatime << 6) >>> 28) - 1);
+   res.setDate((this.fDatime << 10) >>> 27);
+   res.setHours((this.fDatime << 15) >>> 27);
+   res.setMinutes((this.fDatime << 20) >>> 26);
+   res.setSeconds((this.fDatime << 26) >>> 26);
+   res.setMilliseconds(0);
+   return res;
+}
+
 
 /** @summary these are streamers which do not handle version regularly
   * @desc used for special classes like TRef or TBasket
@@ -95655,17 +95598,7 @@ const DirectStreamers = {
 
    TDatime(buf, obj) {
       obj.fDatime = buf.ntou4();
-      //  obj.GetDate = function() {
-      //  let res = new Date();
-      //  res.setFullYear((this.fDatime >>> 26) + 1995);
-      //  res.setMonth((this.fDatime << 6) >>> 28);
-      //  res.setDate((this.fDatime << 10) >>> 27);
-      //  res.setHours((this.fDatime << 15) >>> 27);
-      //  res.setMinutes((this.fDatime << 20) >>> 26);
-      //  res.setSeconds((this.fDatime << 26) >>> 26);
-      //  res.setMilliseconds(0);
-      //  return res;
-      //  }
+      obj.getDate = getTDatimeDate;
    },
 
    TKey(buf, key) {
@@ -97900,8 +97833,10 @@ class TFile {
 
                const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
                xhr.addEventListener('progress', oEvent => {
-                  if (oEvent.lengthComputable)
-                     progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
+                  if (oEvent.lengthComputable) {
+                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
+                        xhr.abort();
+                  }
                });
             } else if (first_block_retry && isFunc(xhr.addEventListener)) {
                xhr.addEventListener('progress', oEvent => {
@@ -100341,7 +100276,7 @@ class TDrawSelector extends TSelector {
          const now = new Date().getTime();
          if (now - this.lasttm > this.monitoring) {
             this.lasttm = now;
-            if (this.progress_callback)
+            if (isFunc(this.progress_callback))
                this.progress_callback(this.hist);
          }
       }
@@ -101162,7 +101097,7 @@ async function treeProcess(tree, selector, args) {
 
          const portion = (handle.staged_prev + value * (handle.staged_now - handle.staged_prev)) /
                          (handle.process_max - handle.process_min);
-         handle.selector.ShowProgress(portion);
+        return handle.selector.ShowProgress(portion);
       }
 
       function ProcessBlobs(blobs, places) {
@@ -101321,7 +101256,10 @@ async function treeProcess(tree, selector, args) {
       if (handle.process_max > handle.process_min)
          portion = (handle.staged_prev - handle.process_min) / (handle.process_max - handle.process_min);
 
-      handle.selector.ShowProgress(portion);
+      if (handle.selector.ShowProgress(portion) === 'break') {
+         handle.selector.Terminate(true);
+         return resolveFunc(handle.selector);
+      }
 
       handle.progress_showtm = new Date().getTime();
 
@@ -102075,7 +102013,10 @@ async function draw(dom, obj, opt) {
          promise = getPromise(handle.func(dom, obj, opt));
 
       return promise.then(p => {
-         if (!painter) painter = p;
+         if (!painter)
+            painter = p;
+         if (painter === false)
+            return null;
          if (!painter)
              throw Error(`Fail to draw object ${type_info}`);
          if (isObject(painter) && !painter.options)
@@ -103168,7 +103109,7 @@ class HierarchyPainter extends BasePainter {
       if (!folder) folder = {};
 
       folder._name = file.fFileName;
-      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(file.fDatimeM.getDate())}`;
       folder._kind = kindTFile;
       folder._file = file;
       folder._fullurl = file.fFullURL;
@@ -104229,9 +104170,10 @@ class HierarchyPainter extends BasePainter {
             }
 
             if (fileprop && sett.opts && !fileprop.localfile) {
+               const url = settings.NewTabUrl || exports.source_dir;
                let filepath = qualifyURL(fileprop.fileurl);
-               if (filepath.indexOf(exports.source_dir) === 0)
-                  filepath = filepath.slice(exports.source_dir.length);
+               if (filepath.indexOf(url) === 0)
+                  filepath = filepath.slice(url.length);
                filepath = `${fileprop.kind}=${filepath}`;
                if (fileprop.itemname) {
                   let name = fileprop.itemname;
@@ -104242,9 +104184,49 @@ class HierarchyPainter extends BasePainter {
                let arg0 = 'nobrowser';
                if (settings.WithCredentials)
                   arg0 += '&with_credentials';
+               if (settings.NewTabUrlPars)
+                  arg0 += '&' + settings.NewTabUrlPars;
+               if (settings.NewTabUrlExportSettings) {
+                  if (gStyle.fOptStat !== 1111)
+                     arg0 += `&optstat=${gStyle.fOptStat}`;
+                  if (gStyle.fOptFit !== 0)
+                     arg0 += `&optfit=${gStyle.fOptFit}`;
+                  if (gStyle.fOptDate !== 0)
+                     arg0 += `&optdate=${gStyle.fOptDate}`;
+                  if (gStyle.fOptFile !== 0)
+                     arg0 += `&optfile=${gStyle.fOptFile}`;
+                  if (gStyle.fOptTitle !== 1)
+                     arg0 += `&opttitle=${gStyle.fOptTitle}`;
+                  if (settings.TimeZone === 'UTC')
+                     arg0 += '&utc';
+                  else if (settings.TimeZone)
+                     arg0 += `&timezone='${settings.TimeZone}'`;
+                  if (Math.abs(gStyle.fDateX - 0.01) > 1e-3)
+                     arg0 += `&datex=${gStyle.fDateX.toFixed(3)}`;
+                  if (Math.abs(gStyle.fDateY - 0.01) > 1e-3)
+                     arg0 += `&datey=${gStyle.fDateY.toFixed(3)}`;
+                  if (gStyle.fHistMinimumZero)
+                     arg0 += '&histzero';
+                  if (settings.DarkMode)
+                     arg0 += '&dark=on';
+                  if (!settings.UseStamp)
+                     arg0 += '&usestamp=off';
+                  if (settings.OnlyLastCycle)
+                     arg0 += '&lastcycle';
+                  if (settings.OptimizeDraw !== 1)
+                     arg0 += `&optimize=${settings.OptimizeDraw}`;
+                  if (settings.MaxRanges !== 200)
+                     arg0 += `&maxranges=${settings.MaxRanges}`;
+                  if (settings.FuncAsCurve)
+                     arg0 += '&tf1=curve';
+                  if (!settings.ToolBar && !settings.Tooltip && !settings.ContextMenu && !settings.Zooming && !settings.MoveResize && !settings.DragAndDrop)
+                     arg0 += '&interactive=0';
+                  else if (!settings.ContextMenu)
+                     arg0 += '&nomenu';
+               }
 
                menu.addDrawMenu('Draw in new tab', sett.opts,
-                                arg => window.open(`${exports.source_dir}?${arg0}&${filepath}&opt=${arg}`),
+                                arg => window.open(`${url}?${arg0}&${filepath}&opt=${arg}`),
                                 'Draw item in the new browser tab or window');
             }
 
@@ -105041,6 +105023,18 @@ class HierarchyPainter extends BasePainter {
                func(item);
          }
       }
+   }
+
+   /** @summary Find ROOT file which corresponds to provided item name
+     * @private */
+   findRootFileForItem(itemname) {
+      let item = this.findItem(itemname);
+      while (item) {
+         if ((item._kind === kindTFile) && item._fullurl && item._file)
+            return item;
+         item = item?._parent;
+      }
+      return null;
    }
 
    /** @summary Open ROOT file
@@ -106321,15 +106315,22 @@ taskHierarchy: taskHierarchy
   * @private */
 function readStyleFromURL(url) {
    // first try to read settings from coockies
+   const d = decodeUrl(url),
+         prefix = d.get('storage_prefix');
+
+   if (isStr(prefix) && prefix)
+      setStoragePrefix(prefix);
+
    readSettings();
    readStyle();
 
-   const d = decodeUrl(url);
-
-   function get_bool(name, field) {
+   function get_bool(name, field, special) {
       if (d.has(name)) {
          const val = d.get(name);
-         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
+         if (special && (val === special))
+            settings[field] = special;
+         else
+            settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -106403,11 +106404,16 @@ function readStyleFromURL(url) {
       settings.Latex = constants$1.Latex.fromString(latex);
 
    if (d.has('nomenu')) settings.ContextMenu = false;
-   if (d.has('noprogress')) settings.ProgressBox = false;
+   if (d.has('noprogress'))
+      settings.ProgressBox = false;
+   else
+      get_bool('progress', 'ProgressBox', 'modal');
+
    if (d.has('notouch')) browser.touches = false;
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
-   if (d.has('toolbar')) {
+   const has_toolbar = d.has('toolbar');
+   if (has_toolbar) {
       const toolbar = d.get('toolbar', '');
       let val = null;
       if (toolbar.indexOf('popup') >= 0) val = 'popup';
@@ -106446,15 +106452,36 @@ function readStyleFromURL(url) {
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
+      return gStyle[field] !== 0;
+   }
+   function get_float_style(name, field) {
+      if (!d.has(name)) return;
+      const val = d.get(name),
+            flt = Number.parseFloat(val);
+      if (Number.isFinite(flt))
+         gStyle[field] = flt;
    }
 
    if (d.has('histzero')) gStyle.fHistMinimumZero = true;
    if (d.has('histmargin')) gStyle.fHistTopMargin = parseFloat(d.get('histmargin'));
    get_int_style('optstat', 'fOptStat', 1111);
    get_int_style('optfit', 'fOptFit', 0);
-   get_int_style('optdate', 'fOptDate', 1);
-   get_int_style('optfile', 'fOptFile', 1);
+   const has_date = get_int_style('optdate', 'fOptDate', 1),
+         has_file = get_int_style('optfile', 'fOptFile', 1);
+   if ((has_date || has_file) && !has_toolbar)
+      settings.ToolBarVert = true;
+   get_float_style('datex', 'fDateX');
+   get_float_style('datey', 'fDateY');
+
    get_int_style('opttitle', 'fOptTitle', 1);
+   if (d.has('utc'))
+      settings.TimeZone = 'UTC';
+   else if (d.has('timezone')) {
+      settings.TimeZone = d.get('timezone');
+      if ((settings.TimeZone === 'default') || (settings.TimeZone === 'dflt'))
+         settings.TimeZone = '';
+   }
+
    gStyle.fStatFormat = d.get('statfmt', gStyle.fStatFormat);
    gStyle.fFitFormat = d.get('fitfmt', gStyle.fFitFormat);
 }
@@ -106500,7 +106527,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       else {
          select('html').style('height', '100%');
          select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
+         myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
       }
    }
 
@@ -107357,10 +107384,12 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
           minimum = ymin - dy, maximum = ymax + dy;
 
       if (!this._not_adjust_hrange) {
+         const pad_logx = this.getPadPainter()?.getPadLog('x');
+
          if ((uxmin < 0) && (xmin >= 0))
-            uxmin = xmin * (1 - margin);
+            uxmin = pad_logx ? xmin * (1 - margin) : 0;
          if ((uxmax > 0) && (xmax <= 0))
-            uxmax = 0;
+            uxmax = pad_logx ? (1 + margin) * xmax : 0;
       }
 
       const minimum0 = minimum, maximum0 = maximum;
@@ -108758,60 +108787,38 @@ async function drawPolyMarker3D$1() {
    });
 }
 
-function treeShowProgress(handle, str) {
-   if (isBatchMode() || (typeof document === 'undefined')) return;
-
-   if (!str)
-      return showProgress();
-
-   const main_box = document.createElement('p'),
-         text_node = document.createTextNode(str);
-
-   main_box.appendChild(text_node);
-   main_box.title = 'Click on element to break';
-
-   main_box.onclick = () => {
-      if (!handle._break) handle._break = 0;
-
-      if (++handle._break < 3) {
-         main_box.title = 'Will break after next I/O operation';
-         text_node.nodeValue = 'Breaking ... ';
-         return;
-      }
-      if (isFunc(handle.Abort))
-         handle.Abort();
-      showProgress();
-   };
-
-   showProgress(main_box);
-}
-
-
 /** @summary Show TTree::Draw progress during processing
   * @private */
 TDrawSelector.prototype.ShowProgress = function(value) {
+   let msg, ret;
    if ((value === undefined) || !Number.isFinite(value))
-      return showProgress();
+      msg = ret = '';
+   else if (this._break) {
+      msg = 'Breaking ... ';
+      ret = 'break';
+   } else {
+      if (this.last_progress !== value) {
+         const diff = value - this.last_progress;
+         if (!this.aver_diff) this.aver_diff = diff;
+         this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      }
 
-   if (this.last_progress !== value) {
-      const diff = value - this.last_progress;
-      if (!this.aver_diff) this.aver_diff = diff;
-      this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      this.last_progress = value;
+
+      let ndig = 0;
+      if (this.aver_diff <= 0)
+         ndig = 0;
+      else if (this.aver_diff < 0.0001)
+         ndig = 3;
+      else if (this.aver_diff < 0.001)
+         ndig = 2;
+      else if (this.aver_diff < 0.01)
+         ndig = 1;
+      msg = `TTree draw ${(value * 100).toFixed(ndig)} % `;
    }
 
-   this.last_progress = value;
-
-   let ndig = 0;
-   if (this.aver_diff <= 0)
-      ndig = 0;
-   else if (this.aver_diff < 0.0001)
-      ndig = 3;
-   else if (this.aver_diff < 0.001)
-      ndig = 2;
-   else if (this.aver_diff < 0.01)
-      ndig = 1;
-
-   treeShowProgress(this, `TTree draw ${(value * 100).toFixed(ndig)} % `);
+   showProgress(msg, -1, () => { this._break = 1; });
+   return ret;
 };
 
 /** @summary Draw result of tree drawing
@@ -108872,18 +108879,21 @@ async function treeDrawProgress(obj, final) {
 
    if (!this.last_pr) this.last_pr = Promise.resolve(true);
 
-    return this.last_pr.then(() => {
-       if (this.obj_painter)
-          this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
-       else {
-          this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
-             this.obj_painter = p;
-             if (!final) this.last_pr = null;
-             return p; // return painter for histogram
-          });
-       }
+   return this.last_pr.then(() => {
+      if (this.obj_painter)
+         this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
+      else if (!obj) {
+         if (final) console.log('no result after tree drawing');
+         this.last_pr = false; // return false indicating no drawing is done
+      } else {
+         this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
+            this.obj_painter = p;
+            if (!final) this.last_pr = null;
+            return p; // return painter for histogram
+         });
+      }
 
-       return final ? this.last_pr : null;
+      return final ? this.last_pr : null;
    });
 }
 
@@ -109216,7 +109226,7 @@ async function drawTree(dom, obj, opt) {
    let pr;
    if (args.expr === 'testio') {
       args.testio = true;
-      args.showProgress = msg => treeShowProgress(args, msg);
+      args.showProgress = msg => showProgress(msg, -1, () => { args._break = 1; });
       pr = treeIOTest(tree, args);
    } else if (args.expr || args.branch)
       pr = treeDraw(tree, args);
@@ -110833,15 +110843,23 @@ class TGraph2DPainter extends ObjectPainter {
       if (!this.options)
          this.options = {};
 
-      const res = this.options;
+      const res = this.options, gr2d = this.getObject();
+
+      if (d.check('FILL_', 'color') && gr2d)
+         gr2d.fFillColor = d.color;
+
+      if (d.check('LINE_', 'color') && gr2d)
+         gr2d.fLineColor = d.color;
 
       d.check('SAME');
       if (d.check('TRI1'))
          res.Triangles = 11; // wireframe and colors
       else if (d.check('TRI2'))
          res.Triangles = 10; // only color triangles
-      else if (d.check('TRIW') || d.check('TRI'))
+      else if (d.check('TRIW'))
          res.Triangles = 1;
+      else if (d.check('TRI'))
+         res.Triangles = 2;
       else
          res.Triangles = 0;
       res.Line = d.check('LINE');
@@ -110973,8 +110991,9 @@ class TGraph2DPainter extends ObjectPainter {
       if (!dulaunay) return;
 
       const main_grz = !fp.logz ? fp.grz : value => (value < fp.scale_zmin) ? -0.1 : fp.grz(value),
-            do_faces = this.options.Triangles >= 10,
-            do_lines = this.options.Triangles % 10 === 1,
+            plain_mode = this.options.Triangles === 2,
+            do_faces = (this.options.Triangles >= 10) || plain_mode,
+            do_lines = (this.options.Triangles % 10 === 1) || (plain_mode && (graph.fLineColor !== graph.fFillColor)),
             triangles = new Triangles3DHandler(levels, main_grz, 0, 2*fp.size_z3d, do_lines);
 
       for (triangles.loop = 0; triangles.loop < 2; ++triangles.loop) {
@@ -111008,8 +111027,8 @@ class TGraph2DPainter extends ObjectPainter {
 
       triangles.callFuncs((lvl, pos) => {
          const geometry = createLegoGeom(this.getMainPainter(), pos, null, 100, 100),
-             color = palette.calcColor(lvl, levels.length),
-             material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false })),
+               color = plain_mode ? this.getColor(graph.fFillColor) : palette.calcColor(lvl, levels.length),
+               material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false })),
 
           mesh = new Mesh(geometry, material);
 
@@ -111120,7 +111139,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
-      if (this.options.Color || this.options.Triangles) {
+      if (this.options.Color || (this.options.Triangles >= 10)) {
          levels = main.getContourLevels(true);
          palette = main.getHistPalette();
       }
@@ -111836,6 +111855,351 @@ TGraphPolarPainter: TGraphPolarPainter,
 TGraphPolargramPainter: TGraphPolargramPainter
 });
 
+/** @summary Create log scale for axis bins
+  * @private */
+function produceTAxisLogScale(axis, num, min, max) {
+   let lmin, lmax;
+
+   if (max > 0) {
+      lmax = Math.log(max);
+      lmin = min > 0 ? Math.log(min) : lmax - 5;
+   } else {
+      lmax = -10;
+      lmin = -15;
+   }
+
+   axis.fNbins = num;
+   axis.fXbins = new Array(num + 1);
+   for (let i = 0; i <= num; ++i)
+      axis.fXbins[i] = Math.exp(lmin + i / num * (lmax - lmin));
+   axis.fXmin = Math.exp(lmin);
+   axis.fXmax = Math.exp(lmax);
+}
+
+/**
+  * @summary Painter for TF1 object
+  *
+  * @private
+  */
+
+class TF1Painter extends TH1Painter$2 {
+
+   /** @summary Returns drawn object name */
+   getObjectName() { return this.$func?.fName ?? 'func'; }
+
+   /** @summary Returns drawn object class name */
+   getClassName() { return this.$func?._typename ?? clTF1; }
+
+   /** @summary Returns true while function is drawn */
+   isTF1() { return true; }
+
+   /** @summary Returns primary function which was then drawn as histogram */
+   getPrimaryObject() { return this.$func; }
+
+   /** @summary Update function */
+   updateObject(obj /*, opt */) {
+      if (!obj || (this.getClassName() !== obj._typename)) return false;
+      delete obj.evalPar;
+      const histo = this.getHisto();
+
+      if (this.webcanv_hist) {
+         const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH1D);
+         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
+      }
+
+      this.$func = obj;
+      this.createTF1Histogram(obj, histo);
+      this.scanContent();
+      return true;
+   }
+
+   /** @summary Redraw TF1
+     * @private */
+   redraw(reason) {
+      if (!this._use_saved_points && (reason === 'logx' || reason === 'zoom')) {
+         this.createTF1Histogram(this.$func, this.getHisto());
+         this.scanContent();
+      }
+
+      return super.redraw(reason);
+   }
+
+   /** @summary Create histogram for TF1 drawing
+     * @private */
+   createTF1Histogram(tf1, hist) {
+      const fp = this.getFramePainter(),
+            pad = this.getPadPainter()?.getRootPad(true),
+            logx = pad?.fLogx,
+            gr = fp?.getGrFuncs(this.second_x, this.second_y);
+      let xmin = tf1.fXmin, xmax = tf1.fXmax;
+
+      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
+         xmin = Math.min(xmin, gr.zoom_xmin);
+         xmax = Math.max(xmax, gr.zoom_xmax);
+      }
+
+      this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || this.force_saved);
+
+      const ensureBins = num => {
+         if (hist.fNcells !== num + 2) {
+            hist.fNcells = num + 2;
+            hist.fArray = new Float32Array(hist.fNcells);
+         }
+         hist.fArray.fill(0);
+         hist.fXaxis.fNbins = num;
+         hist.fXaxis.fXbins = [];
+      };
+
+      delete this._fail_eval;
+
+      // this._use_saved_points = true;
+
+      if (!this._use_saved_points) {
+         const np = Math.max(tf1.fNpx, 100);
+         let iserror = false;
+
+         if (!tf1.evalPar) {
+            try {
+               if (!proivdeEvalPar(tf1))
+                  iserror = true;
+            } catch {
+               iserror = true;
+            }
+         }
+
+         ensureBins(np);
+
+         if (logx)
+            produceTAxisLogScale(hist.fXaxis, np, xmin, xmax);
+          else {
+            hist.fXaxis.fXmin = xmin;
+            hist.fXaxis.fXmax = xmax;
+         }
+
+         for (let n = 0; (n < np) && !iserror; n++) {
+            const x = hist.fXaxis.GetBinCenter(n + 1);
+            let y = 0;
+            try {
+               y = tf1.evalPar(x);
+            } catch (err) {
+               iserror = true;
+            }
+
+            if (!iserror)
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+         }
+
+         if (iserror)
+            this._fail_eval = true;
+
+         if (iserror && (tf1.fSave.length > 3))
+            this._use_saved_points = true;
+      }
+
+      // in the case there were points have saved and we cannot calculate function
+      // if we don't have the user's function
+      if (this._use_saved_points) {
+         const np = tf1.fSave.length - 3;
+         let custom_xaxis = null;
+         xmin = tf1.fSave[np + 1];
+         xmax = tf1.fSave[np + 2];
+
+         if (xmin === xmax) {
+            // xmin = tf1.fSave[np];
+            const mp = this.getMainPainter();
+            if (isFunc(mp?.getHisto))
+               custom_xaxis = mp?.getHisto()?.fXaxis;
+         }
+
+         if (custom_xaxis) {
+            ensureBins(hist.fXaxis.fNbins);
+            Object.assign(hist.fXaxis, custom_xaxis);
+            // TODO: find first bin
+
+            for (let n = 0; n < np; ++n) {
+               const y = tf1.fSave[n];
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+            }
+         } else {
+            ensureBins(tf1.fNpx);
+            hist.fXaxis.fXmin = tf1.fXmin;
+            hist.fXaxis.fXmax = tf1.fXmax;
+
+            for (let n = 0; n < tf1.fNpx; ++n) {
+               const y = _getTF1Save(tf1, hist.fXaxis.GetBinCenter(n + 1));
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+            }
+         }
+      }
+
+      hist.fName = 'Func';
+      setHistogramTitle(hist, tf1.fTitle);
+      hist.fMinimum = tf1.fMinimum;
+      hist.fMaximum = tf1.fMaximum;
+      hist.fLineColor = tf1.fLineColor;
+      hist.fLineStyle = tf1.fLineStyle;
+      hist.fLineWidth = tf1.fLineWidth;
+      hist.fFillColor = tf1.fFillColor;
+      hist.fFillStyle = tf1.fFillStyle;
+      hist.fMarkerColor = tf1.fMarkerColor;
+      hist.fMarkerStyle = tf1.fMarkerStyle;
+      hist.fMarkerSize = tf1.fMarkerSize;
+      hist.fBits |= kNoStats;
+   }
+
+   /** @summary Extract function ranges */
+   extractAxesProperties(ndim) {
+      super.extractAxesProperties(ndim);
+
+      const func = this.$func, nsave = func?.fSave.length ?? 0;
+
+      if (nsave > 3 && this._use_saved_points) {
+         this.xmin = Math.min(this.xmin, func.fSave[nsave - 2]);
+         this.xmax = Math.max(this.xmax, func.fSave[nsave - 1]);
+      }
+      if (func) {
+         this.xmin = Math.min(this.xmin, func.fXmin);
+         this.xmax = Math.max(this.xmax, func.fXmax);
+      }
+   }
+
+   /** @summary Checks if it makes sense to zoom inside specified axis range */
+   canZoomInside(axis, min, max) {
+      if ((this.$func?.fSave.length > 0) && this._use_saved_points && (axis === 'x')) {
+         // in the case where the points have been saved, useful for example
+         // if we don't have the user's function
+         const nb_points = this.$func.fNpx,
+             xmin = this.$func.fSave[nb_points + 1],
+             xmax = this.$func.fSave[nb_points + 2];
+
+         return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
+      }
+
+      // if function calculated, one always could zoom inside
+      return (axis === 'x') || (axis === 'y');
+   }
+
+      /** @summary retrurn tooltips for TF2 */
+   getTF1Tooltips(pnt) {
+      delete this.$tmp_tooltip;
+      const lines = [this.getObjectHint()],
+            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
+
+      if (!funcs || !isFunc(this.$func?.evalPar)) {
+         lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
+         return lines;
+      }
+
+      const x = funcs.revertAxis('x', pnt.x);
+      let y = 0, gry = 0, iserror = false;
+
+       try {
+          y = this.$func.evalPar(x);
+          gry = Math.round(funcs.gry(y));
+       } catch {
+          iserror = true;
+       }
+
+      lines.push('x = ' + funcs.axisAsText('x', x),
+                 'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
+
+      if (!iserror)
+         this.$tmp_tooltip = { y, gry };
+      return lines;
+   }
+
+   /** @summary process tooltip event for TF1 object */
+   processTooltipEvent(pnt) {
+      if (this._use_saved_points)
+         return super.processTooltipEvent(pnt);
+
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!this.draw_g || !pnt) {
+         ttrect?.remove();
+         return null;
+      }
+
+      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
+                    x: pnt.x, y: pnt.y,
+                    color1: this.lineatt?.color ?? 'green',
+                    color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+                    lines: this.getTF1Tooltips(pnt), exact: true, menu: true };
+
+      if (pnt.disabled)
+         ttrect.remove();
+      else {
+         if (ttrect.empty()) {
+            ttrect = this.draw_g.append('svg:circle')
+                             .attr('class', 'tooltip_bin')
+                             .style('pointer-events', 'none')
+                             .style('fill', 'none')
+                             .attr('r', (this.lineatt?.width ?? 1) + 4);
+         }
+
+         ttrect.attr('cx', pnt.x)
+               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
+               .call(this.lineatt?.func);
+      }
+
+      return res;
+   }
+
+   /** @summary fill information for TWebCanvas
+     * @private */
+   fillWebObjectOptions(opt) {
+      // mark that saved points are used or evaluation failed
+      opt.fcust = this._fail_eval ? 'func_fail' : '';
+   }
+
+   /** @summary draw TF1 object */
+   static async draw(dom, tf1, opt) {
+     if (!isStr(opt)) opt = '';
+      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
+      if (p >= 0) {
+         webcanv_hist = true;
+         opt = opt.slice(0, p);
+      }
+      p = opt.indexOf(';force_saved');
+      if (p >= 0) {
+         force_saved = true;
+         opt = opt.slice(0, p);
+      }
+
+      let hist;
+
+      if (webcanv_hist) {
+         const dummy = new ObjectPainter(dom);
+         hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
+      }
+
+      if (!hist) {
+         hist = createHistogram(clTH1D, 100);
+         hist.fBits |= kNoStats;
+      }
+
+      if (!opt && getElementMainPainter(dom))
+         opt = 'same';
+
+      const painter = new TF1Painter(dom, hist);
+
+      painter.$func = tf1;
+      painter.webcanv_hist = webcanv_hist;
+      painter.force_saved = force_saved;
+
+      painter.createTF1Histogram(tf1, hist);
+
+      return THistPainter._drawHist(painter, opt);
+   }
+
+} // class TF1Painter
+
+var TF1Painter$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
+TF1Painter: TF1Painter,
+produceTAxisLogScale: produceTAxisLogScale
+});
+
 const kIsBayesian = BIT(14),  // Bayesian statistics are used
       kPosteriorMode = BIT(15),  // Use posterior mean for best estimate (Bayesian statistics)
  //   kShortestInterval = BIT(16),  // Use shortest interval, not implemented - too complicated
@@ -112187,6 +112551,8 @@ __proto__: null,
 TScatterPainter: TScatterPainter
 });
 
+const kLineNDC = BIT(14);
+
 class TLinePainter extends ObjectPainter {
 
    /** @summary Start interactive moving */
@@ -112225,14 +112591,16 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Calculate line coordinates */
    prepareDraw() {
-      const line = this.getObject(), kLineNDC = BIT(14);
+      const line = this.getObject();
 
       this.isndc = line.TestBit(kLineNDC);
 
-      this.x1 = this.axisToSvg('x', line.fX1, this.isndc, true);
-      this.y1 = this.axisToSvg('y', line.fY1, this.isndc, true);
-      this.x2 = this.axisToSvg('x', line.fX2, this.isndc, true);
-      this.y2 = this.axisToSvg('y', line.fY2, this.isndc, true);
+      const func = this.getAxisToSvgFunc(this.isndc, true, true);
+
+      this.x1 = func.x(line.fX1);
+      this.y1 = func.y(line.fY1);
+      this.x2 = func.x(line.fX2);
+      this.y2 = func.y(line.fY2);
 
       this.createAttLine({ attr: line });
    }
@@ -112248,18 +112616,21 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Redraw line */
    redraw() {
-      this.prepareDraw();
-
       this.createG();
+
+      this.prepareDraw();
 
       const elem = this.draw_g.append('svg:path')
                        .attr('d', this.createPath())
                        .call(this.lineatt.func);
 
-      this.addExtras(elem);
-
-      addMoveHandler(this);
-      assignContextMenu(this, kToFront);
+      if (this.getObject()?.$do_not_draw)
+         elem.remove();
+      else {
+         this.addExtras(elem);
+         addMoveHandler(this);
+         assignContextMenu(this, kToFront);
+      }
 
       return this;
    }
@@ -112286,27 +112657,118 @@ TLinePainter: TLinePainter
 class TRatioPlotPainter extends ObjectPainter {
 
    /** @summary Set grids range */
-   setGridsRange(xmin, xmax) {
+   setGridsRange(xmin, xmax, ymin, ymax, low_p) {
       const ratio = this.getObject();
       if (xmin === xmax) {
          const x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad)?.getFramePainter()?.x_handle;
          if (!x_handle) return;
-         xmin = x_handle.full_min;
-         xmax = x_handle.full_max;
+         if (xmin === 0) {
+            // in case of unzoom full range should be used
+            xmin = x_handle.full_min;
+            xmax = x_handle.full_max;
+         } else {
+            // in case of y-scale zooming actual range has to be used
+            xmin = x_handle.scale_min;
+            xmax = x_handle.scale_max;
+         }
       }
-
       ratio.fGridlines.forEach(line => {
          line.fX1 = xmin;
          line.fX2 = xmax;
       });
+      const nlines = Math.min(ratio.fGridlines.length, ratio.fGridlinePositions.length);
+      for (let i = 0; i < nlines; ++i) {
+         const y = ratio.fGridlinePositions[i],
+               line = ratio.fGridlines[i];
+         if (ymin !== 'ignorey') {
+            line.$do_not_draw = (ymin !== ymax) && ((y < ymin) || (y > ymax));
+            line.fY1 = line.fY2 = y;
+         }
+         low_p?.findPainterFor(line)?.redraw();
+      }
    }
 
-   /** @summary Redraw TRatioPlot */
-   async redraw() {
+   /** @summary Configure custom interactive handlers for ratio plot
+    * @desc Should work for both new and old code */
+   configureInteractive() {
       const ratio = this.getObject(),
             pp = this.getPadPainter(),
-            top_p = pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad);
-      if (top_p) top_p.disablePadDrawing();
+            up_p = pp.findPainterFor(ratio.fUpperPad, 'upper_pad', clTPad),
+            up_fp = up_p?.getFramePainter(),
+            low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
+            low_fp = low_p?.getFramePainter();
+
+      if (!up_p || !low_p)
+         return;
+
+      low_p.forEachPainterInPad(objp => {
+         if (isFunc(objp?.testEditable))
+            objp.testEditable(false);
+      });
+
+      this.setGridsRange(low_fp.scale_xmin, low_fp.scale_xmax, low_fp.scale_ymin, low_fp.scale_ymax, low_p);
+
+      if (up_p._ratio_interactive && low_p._ratio_interactive)
+         return;
+
+      up_p._ratio_interactive = true;
+      low_p._ratio_interactive = true;
+
+      up_fp.o_zoom = up_fp.zoom;
+      up_fp._ratio_low_fp = low_fp;
+      up_fp._ratio_painter = this;
+
+      up_fp.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
+         return this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax).then(res => {
+            this._ratio_painter.setGridsRange(up_fp.scale_xmin, up_fp.scale_xmax, 'ignory');
+            return this._ratio_low_fp.o_zoom(up_fp.scale_xmin, up_fp.scale_xmax).then(() => res);
+         });
+      };
+
+      up_fp.o_sizeChanged = up_fp.sizeChanged;
+      up_fp.sizeChanged = function() {
+         this.o_sizeChanged();
+         this._ratio_low_fp.fX1NDC = this.fX1NDC;
+         this._ratio_low_fp.fX2NDC = this.fX2NDC;
+         this._ratio_low_fp.o_sizeChanged();
+      };
+
+      low_fp.o_zoom = low_fp.zoom;
+      low_fp._ratio_up_fp = up_fp;
+      low_fp._ratio_painter = this;
+
+      low_fp.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
+         if (xmin === xmax) {
+            xmin = up_fp.xmin;
+            xmax = up_fp.xmax;
+         } else {
+            if (xmin < up_fp.xmin) xmin = up_fp.xmin;
+            if (xmax > up_fp.xmax) xmax = up_fp.xmax;
+         }
+         this._ratio_painter.setGridsRange(xmin, xmax, ymin, ymax);
+         return this._ratio_up_fp.o_zoom(xmin, xmax).then(() => this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax));
+      };
+
+      low_fp.o_sizeChanged = low_fp.sizeChanged;
+      low_fp.sizeChanged = function() {
+         this.o_sizeChanged();
+         this._ratio_up_fp.fX1NDC = this.fX1NDC;
+         this._ratio_up_fp.fX2NDC = this.fX2NDC;
+         this._ratio_up_fp.o_sizeChanged();
+      };
+   }
+
+   /** @summary Redraw old TRatioPlot where object was in very end of list of primitives */
+   async redrawOld() {
+      const ratio = this.getObject(),
+            pp = this.getPadPainter(),
+            top_p = pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad),
+            pad = pp.getRootPad(),
+            mirrow_axis = (pad.fFrameFillStyle === 0) ? 1 : 0,
+            tick_x = pad.fTickx || mirrow_axis,
+            tick_y = pad.fTicky || mirrow_axis;
+
+      top_p?.disablePadDrawing();
 
       const up_p = pp.findPainterFor(ratio.fUpperPad, 'upper_pad', clTPad),
             up_main = up_p?.getMainPainter(),
@@ -112314,45 +112776,23 @@ class TRatioPlotPainter extends ObjectPainter {
             low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
             low_main = low_p?.getMainPainter(),
             low_fp = low_p?.getFramePainter();
-      let lbl_size = 20, promise_up = Promise.resolve(true);
+      let promise_up = Promise.resolve(true);
 
       if (up_p && up_main && up_fp && low_fp && !up_p._ratio_configured) {
          up_p._ratio_configured = true;
+
          up_main.options.Axis = 0; // draw both axes
 
-         lbl_size = up_main.getHisto().fYaxis.fLabelSize;
-         if (lbl_size < 1) lbl_size = Math.round(lbl_size*Math.min(up_p.getPadWidth(), up_p.getPadHeight()));
-
          const h = up_main.getHisto();
+
+         h.fYaxis.$use_top_pad = true; // workaround to use same scaling
          h.fXaxis.fLabelSize = 0; // do not draw X axis labels
          h.fXaxis.fTitle = ''; // do not draw X axis title
-         h.fYaxis.fLabelSize = lbl_size;
-         h.fYaxis.fTitleSize = lbl_size;
 
-         up_p.getRootPad().fTicky = 1;
+         up_p.getRootPad().fTickx = tick_x;
+         up_p.getRootPad().fTicky = tick_y;
 
-         promise_up = up_p.redrawPad().then(() => {
-            up_fp.o_zoom = up_fp.zoom;
-            up_fp._ratio_low_fp = low_fp;
-            up_fp._ratio_painter = this;
-
-            up_fp.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
-               return this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax).then(res => {
-                  this._ratio_painter.setGridsRange(up_fp.scale_xmin, up_fp.scale_xmax);
-                  this._ratio_low_fp.o_zoom(up_fp.scale_xmin, up_fp.scale_xmax);
-                  return res;
-               });
-            };
-
-            up_fp.o_sizeChanged = up_fp.sizeChanged;
-            up_fp.sizeChanged = function() {
-               this.o_sizeChanged();
-               this._ratio_low_fp.fX1NDC = this.fX1NDC;
-               this._ratio_low_fp.fX2NDC = this.fX2NDC;
-               this._ratio_low_fp.o_sizeChanged();
-            };
-            return true;
-         });
+         promise_up = up_p.redrawPad();
       }
 
       return promise_up.then(() => {
@@ -112363,20 +112803,16 @@ class TRatioPlotPainter extends ObjectPainter {
          low_main.options.Axis = 0; // draw both axes
          const h = low_main.getHisto();
          h.fXaxis.fTitle = 'x';
-         h.fXaxis.fLabelSize = lbl_size;
-         h.fXaxis.fTitleSize = lbl_size;
-         h.fYaxis.fLabelSize = lbl_size;
-         h.fYaxis.fTitleSize = lbl_size;
-         low_p.getRootPad().fTicky = 1;
 
-         low_p.forEachPainterInPad(objp => {
-            if (isFunc(objp?.testEditable))
-               objp.testEditable(false);
-         });
+         h.fXaxis.$use_top_pad = true;
+         h.fYaxis.$use_top_pad = true;
+         low_p.getRootPad().fTickx = tick_x;
+         low_p.getRootPad().fTicky = tick_y;
 
          const arr = [];
          let currpad;
 
+         // add missing lines in old ratio painter
          if ((ratio.fGridlinePositions.length > 0) && (ratio.fGridlines.length < ratio.fGridlinePositions.length)) {
             ratio.fGridlinePositions.forEach(gridy => {
                let found = false;
@@ -112397,27 +112833,45 @@ class TRatioPlotPainter extends ObjectPainter {
             });
          }
 
-         return Promise.all(arr).then(() => low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax)).then(() => {
-            low_fp.o_zoom = low_fp.zoom;
-            low_fp._ratio_up_fp = up_fp;
-            low_fp._ratio_painter = this;
-
-            low_fp.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
-               this._ratio_painter.setGridsRange(xmin, xmax);
-               this._ratio_up_fp.o_zoom(xmin, xmax);
-               return this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax);
-            };
-
-            low_fp.o_sizeChanged = low_fp.sizeChanged;
-            low_fp.sizeChanged = function() {
-               this.o_sizeChanged();
-               this._ratio_up_fp.fX1NDC = this.fX1NDC;
-               this._ratio_up_fp.fX2NDC = this.fX2NDC;
-               this._ratio_up_fp.o_sizeChanged();
-            };
-            return this;
+         return Promise.all(arr).then(() => {
+            if (currpad !== undefined)
+               this.selectCurrentPad(currpad);
+            return low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax);
          });
       });
+   }
+
+   /** @summary Redraw TRatioPlot */
+   async redraw() {
+      const ratio = this.getObject(),
+            pp = this.getPadPainter();
+
+      if (this.$oldratio === undefined)
+         this.$oldratio = !!pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad);
+
+      // configure ratio interactive at the end
+      pp.$userInteractive = () => this.configureInteractive();
+
+      if (this.$oldratio)
+         return this.redrawOld();
+
+      const pad = pp.getRootPad(),
+            mirrow_axis = (pad.fFrameFillStyle === 0) ? 1 : 0,
+            tick_x = pad.fTickx || mirrow_axis,
+            tick_y = pad.fTicky || mirrow_axis;
+
+      // do not draw primitives and pad itself
+      ratio.fTopPad.$disable_drawing = true;
+
+      ratio.fUpperPad.$ratio_pad = 'up'; // indicate drawing of the axes for main painter
+      ratio.fUpperPad.fTickx = tick_x;
+      ratio.fUpperPad.fTicky = tick_y;
+
+      ratio.fLowerPad.$ratio_pad = 'low'; // indicate drawing of the axes for main painter
+      ratio.fLowerPad.fTickx = tick_x;
+      ratio.fLowerPad.fTicky = tick_y;
+
+      return this;
    }
 
    /** @summary Draw TRatioPlot */
@@ -114098,15 +114552,30 @@ class TGaxisPainter extends TAxisPainter {
    }
 
    /** @summary Check if there is function for TGaxis can be found */
-   checkFuncion() {
+   async checkFuncion() {
       const gaxis = this.getObject();
-      if (!gaxis.fFunctionName)
+      if (!gaxis.fFunctionName) {
          this.axis_func = null;
-      else
-         this.axis_func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
+         return;
+      }
+      const func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
 
-      if (this.axis_func)
-         proivdeEvalPar(this.axis_func);
+      let promise = Promise.resolve(func);
+      if (!func) {
+         const h = getHPainter(),
+               item = h?.findItem({ name: gaxis.fFunctionName, check_keys: true });
+         if (item) {
+            promise = h.getObject({ item }).then(res => {
+               return res?.obj?._typename === clTF1 ? res.obj : null;
+            });
+         }
+      }
+
+      return promise.then(f => {
+         this.axis_func = f;
+         if (f)
+            proivdeEvalPar(f);
+      });
    }
 
    /** @summary Create handle for custom function in the axis */
@@ -114163,9 +114632,8 @@ class TGaxisPainter extends TAxisPainter {
 
       return ensureTCanvas(painter, false).then(() => {
          if (opt) painter.convertTo(opt);
-         painter.checkFuncion();
-         return painter.redraw();
-      });
+         return painter.checkFuncion();
+      }).then(() => painter.redraw());
    }
 
 } // class TGaxisPainter
@@ -116291,9 +116759,10 @@ class RFramePainter extends RObjectPainter {
             this.scale_ymax += (this.scale_ymax - this.scale_ymin)*0.1;
       }
 
-      // if (opts.check_pad_range) {
-         // take zooming out of pad or axis attributes - skip!
-      // }
+      if ((opts.zoom_xmin !== opts.zoom_xmax) && ((this.zoom_xmin === this.zoom_xmax) || !this.zoomChangedInteractive('x'))) {
+         this.zoom_xmin = opts.zoom_xmin;
+         this.zoom_xmax = opts.zoom_xmax;
+      }
 
       if ((opts.zoom_ymin !== opts.zoom_ymax) && ((this.zoom_ymin === this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;
@@ -116336,7 +116805,7 @@ class RFramePainter extends RObjectPainter {
                                         log: this.swap_xy ? this.logx : this.logy,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
-                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
+                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.ymax) ? 0.5 * opts.ymin_nz : 0,
                                         logminfactor: 3e-4 });
 
       this.y_handle.assignFrameMembers(this, 'y');
@@ -117293,6 +117762,9 @@ class RPadPainter extends RObjectPainter {
    /** @summary get pad height */
    getPadHeight() { return this._pad_height || 0; }
 
+   /** @summary return pad log state x or y are allowed */
+   getPadLog(name) { return false; }
+
    /** @summary get pad rect */
    getPadRect() {
       return {
@@ -117589,7 +118061,7 @@ class RPadPainter extends RObjectPainter {
            .style('width', '100%')
            .style('height', '100%')
            .style('position', 'absolute')
-           .style('inset', '0px');
+           .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
       }
 
       svg.style('filter', settings.DarkMode ? 'invert(100%)' : null);
@@ -117694,6 +118166,7 @@ class RPadPainter extends RObjectPainter {
          svg_rect = svg_pad.selectChild('.root_pad_border');
          if (!this.isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
+         this.addPadInteractive(true);
       } else {
          svg_pad = svg_parent.selectChild('.primitives_layer')
              .append('svg:svg') // here was g before, svg used to blend all drawin outside
@@ -117761,6 +118234,17 @@ class RPadPainter extends RObjectPainter {
       if (this.alignButtons && btns) this.alignButtons(btns, w, h);
 
       return pad_visible;
+   }
+
+   /** @summary Add pad interactive features like dragging and resize
+    * @private */
+   addPadInteractive(cleanup = false) {
+      if (isFunc(this.$userInteractive)) {
+         this.$userInteractive();
+         delete this.$userInteractive;
+      }
+      // if (this.isBatchMode())
+      //   return;
    }
 
    /** @summary returns true if any objects beside sub-pads exists in the pad */
@@ -117958,6 +118442,7 @@ class RPadPainter extends RObjectPainter {
 
          return redrawNext(0);
       }).then(() => {
+         this.addPadInteractive();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
          this.confirmDraw();
@@ -118197,6 +118682,7 @@ class RPadPainter extends RObjectPainter {
          const prev_name = padpainter.selectCurrentPad(padpainter.this_pad_name);
 
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
+            padpainter.addPadInteractive();
             padpainter.selectCurrentPad(prev_name);
             return this.drawNextSnap(lst, indx);
          });
@@ -118364,9 +118850,9 @@ class RPadPainter extends RObjectPainter {
          // cannot preserve ROOT6 frame - it must be recreated
          if (fp?.is_root6()) fp = null;
          for (let k = 0; k < this.painters.length; ++k) {
- if (fp !== this.painters[k])
+            if (fp !== this.painters[k])
                this.painters[k].cleanup();
-}
+         }
          this.painters = [];
          delete this.main_painter_ref;
          if (fp) {
@@ -118374,13 +118860,15 @@ class RPadPainter extends RObjectPainter {
             fp.cleanFrameDrawings();
             fp.redraw(); // need to create all layers again
          }
-         if (this.removePadButtons) this.removePadButtons();
+         if (isFunc(this.removePadButtons))
+            this.removePadButtons();
          this.addPadButtons(true);
       }
 
       const prev_name = this.selectCurrentPad(this.this_pad_name);
 
       return this.drawNextSnap(snap.fPrimitives).then(() => {
+         this.addPadInteractive();
          this.selectCurrentPad(prev_name);
 
          if (getActivePad() === this)
@@ -118786,6 +119274,7 @@ class RPadPainter extends RObjectPainter {
 
       // flag used to prevent immediate pad redraw during first draw
       return painter.drawPrimitives().then(() => {
+         painter.addPadInteractive();
          painter.showPadButtons();
          // we restore previous pad name
          painter.selectCurrentPad(prev_name);
@@ -120101,6 +120590,7 @@ class RCanvasPainter extends RPadPainter {
                    this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
              }).then(() => this.redrawPadSnap(snap))
              .then(() => {
+                 this.addPadInteractive();
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
               });
@@ -120491,6 +120981,7 @@ class RCanvasPainter extends RPadPainter {
       selectActivePad({ pp: painter, active: false });
 
       return painter.drawPrimitives().then(() => {
+         painter.addPadInteractive();
          painter.addPadButtons();
          painter.showPadButtons();
          return painter;
@@ -125654,6 +126145,7 @@ exports.cleanup = cleanup;
 exports.clone = clone;
 exports.compressSVG = compressSVG;
 exports.constants = constants$1;
+exports.convertDate = convertDate;
 exports.create = create$1;
 exports.createGeoPainter = createGeoPainter;
 exports.createHistogram = createHistogram;

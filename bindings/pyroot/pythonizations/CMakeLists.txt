@@ -15,11 +15,6 @@ if(dataframe)
         ROOT/_pythonization/_rdfdescription.py
         ROOT/_pythonization/_rdf_conversion_maps.py
         ROOT/_pythonization/_rdf_pyz.py)
-    list(APPEND PYROOT_EXTRA_CPP_SOURCES
-        src/RDataFramePyz.cxx
-        src/RTensorPyz.cxx)
-    list(APPEND PYROOT_EXTRA_HEADERS
-        inc/RNumpyDS.hxx)
 endif()
 
 if(roofit)
@@ -113,17 +108,13 @@ set(cpp_sources
     src/PyROOTWrapper.cxx
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx
-    src/RVecPyz.cxx
     src/TClassPyz.cxx
     src/TMemoryRegulator.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
-    src/PyzCppHelpers.cxx
-    src/PyzPythonHelpers.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx
     inc/TPyDispatcher.h
-    ${PYROOT_EXTRA_CPP_SOURCES}
 )
 
 set(ROOTPySrcDir python/ROOT)
@@ -149,7 +140,7 @@ add_custom_target(ROOTPythonizationsPySources ALL DEPENDS ${py_sources_in_localr
 # Copy headers inside build_dir/include/ROOT
 file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
-set(libname ROOTPythonizations${PYTHON_UNDER_VERSION_STRING})
+set(libname ROOTPythonizations)
 
 add_library(${libname} SHARED ${cpp_sources})
 
@@ -161,11 +152,11 @@ set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
-  target_link_libraries(${libname} PUBLIC Core Tree cppyy${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC Core Tree cppyy)
 elseif(APPLE)
-  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy)
 else()
-  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy)
 endif()
 
 target_include_directories(${libname}
@@ -191,8 +182,8 @@ endforeach()
 
 # Create meta-target PyROOT3 (INTERFACE library)
 # Export of targets are not supported for custom targets(add_custom_targets())
-add_library(PyROOT${PYTHON_UNDER_VERSION_STRING} INTERFACE)
-target_link_libraries(PyROOT${PYTHON_UNDER_VERSION_STRING} INTERFACE cppyy_backend${PYTHON_UNDER_VERSION_STRING} cppyy${PYTHON_UNDER_VERSION_STRING} ROOTPythonizations${PYTHON_UNDER_VERSION_STRING})
+add_library(PyROOT INTERFACE)
+target_link_libraries(PyROOT INTERFACE cppyy_backend cppyy ROOTPythonizations)
 
 # Install library
 install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
@@ -202,7 +193,7 @@ install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
 
 # Install meta-target PyROOT3 (INTERFACE library)
 # Install library
-install(TARGETS PyROOT${PYTHON_UNDER_VERSION_STRING} EXPORT ${CMAKE_PROJECT_NAME}Exports
+install(TARGETS PyROOT EXPORT ${CMAKE_PROJECT_NAME}Exports
                             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                             LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
                             ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)

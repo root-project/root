@@ -1,5 +1,8 @@
 #include "ntuple_test.hxx"
 
+#include <TFileMerger.h>
+#include <ROOT/TBufferMerger.hxx>
+
 namespace {
 
 // Reads an integer from a little-endian 4 byte buffer
@@ -460,4 +463,120 @@ TEST(RNTupleMerger, MergeInconsistentTypes)
       RNTupleMerger merger;
       EXPECT_THROW(merger.Merge(sourcePtrs, *destination), ROOT::Experimental::RException);
    }
+}
+
+TEST(RNTupleMerger, MergeThroughTFileMerger)
+{
+   // Write two test ntuples to be merged
+   // These files are practically identical except that filed indices are interchanged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 123;
+         *fieldBar = i * 321;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 567;
+         *fieldBar = i * 765;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Now Merge the inputs through TFileMerger
+      TFileMerger merger;
+      merger.AddFile(fileGuard1.GetPath().c_str());
+      merger.AddFile(fileGuard2.GetPath().c_str());
+      merger.OutputFile(fileGuard3.GetPath().c_str());
+      merger.PartialMerge(); // Merge closes and deletes the output
+   }
+
+   // Now check some information
+   // ntuple1 has 10 entries
+   // ntuple2 has 10 entries
+   // ntuple3 has 20 entries, first 10 identical w/ ntuple1, second 10 identical w/ ntuple2
+   {
+      auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
+      auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard2.GetPath());
+      auto ntuple3 = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
+      ASSERT_EQ(ntuple1->GetNEntries() + ntuple2->GetNEntries(), ntuple3->GetNEntries());
+
+      auto foo1 = ntuple1->GetModel().GetDefaultEntry().GetPtr<int>("foo");
+      auto foo2 = ntuple2->GetModel().GetDefaultEntry().GetPtr<int>("foo");
+      auto foo3 = ntuple3->GetModel().GetDefaultEntry().GetPtr<int>("foo");
+
+      auto bar1 = ntuple1->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+      auto bar2 = ntuple2->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+      auto bar3 = ntuple3->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+
+      ntuple1->LoadEntry(1);
+      ntuple2->LoadEntry(1);
+      ntuple3->LoadEntry(1);
+      ASSERT_NE(*foo1, *foo2);
+      ASSERT_EQ(*foo1, *foo3);
+      ASSERT_NE(*bar1, *bar2);
+      ASSERT_EQ(*bar1, *bar3);
+
+      ntuple3->LoadEntry(11);
+      ASSERT_EQ(*foo2, *foo3);
+      ASSERT_EQ(*bar2, *bar3);
+
+      ntuple1->LoadEntry(9);
+      ntuple2->LoadEntry(9);
+      ntuple3->LoadEntry(9);
+      ASSERT_NE(*foo1, *foo2);
+      ASSERT_EQ(*foo1, *foo3);
+      ASSERT_NE(*bar1, *bar2);
+      ASSERT_EQ(*bar1, *bar3);
+
+      ntuple3->LoadEntry(19);
+      ASSERT_EQ(*foo2, *foo3);
+      ASSERT_EQ(*bar2, *bar3);
+   }
+}
+
+TEST(RNTupleMerger, MergeThroughTBufferMerger)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.optionalDiag(kWarning, "RPageSinkFile", "The RNTuple file format will change.", false);
+   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
+   diags.requiredDiag(kWarning, "TFileMerger", "Merging RNTuples is experimental");
+   diags.requiredDiag(kWarning, "TBufferMergerFile", "not attached to the directory", false);
+
+   FileRaii fileGuard("test_ntuple_merge_TBufferMerger.root");
+
+   static constexpr int NumFiles = 10;
+   {
+      ROOT::TBufferMerger merger(fileGuard.GetPath().c_str());
+
+      for (int i = 0; i < NumFiles; i++) {
+         auto file1 = merger.GetFile();
+
+         auto model = RNTupleModel::Create();
+         auto pt = model->MakeField<float>("pt", 42.0);
+         auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file1);
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   // FIXME: The merged file is incomplete and only references the entries from the last TBufferMergerFile; it should
+   // have more than one cluster with one entry!
+   EXPECT_EQ(reader->GetDescriptor().GetNClusters(), 1);
+   EXPECT_EQ(reader->GetNEntries(), 1);
 }

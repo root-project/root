@@ -43,7 +43,7 @@ public:
    typedef  typename FunctionType::BaseFunc BaseFunction;
 
    /// enumeration specifying the possible fit method types
-   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood, kPoissonLikelihood };
+   enum Type_t { kUndefined  = 0, kLeastSquare, kLogLikelihood, kPoissonLikelihood };
 
 
    BasicFitMethodFunction(int dim, int npoint) :

@@ -1,4 +1,4 @@
-import py, os, sys
+import py, sys
 from pytest import raises
 from .support import setup_make, pylong
 
@@ -46,20 +46,21 @@ class TestClassPYTHONIZATION:
                 klass.test = 2
         cppyy.py.add_pythonization(pythonizor, 'pyzables')
 
+      # global pythonizors are still run even if namespaced ones available
         def pythonizor(klass, name):
             if name == 'pyzables::SomeDummy2':
                 klass.test = 3
         cppyy.py.add_pythonization(pythonizor)
 
-        assert cppyy.gbl.pyzables.SomeDummy2.test == 2
+        assert cppyy.gbl.pyzables.SomeDummy2.test == 3
 
         def root_pythonizor(klass, name):
-            if name == 'TString':
-                klass.__len__ = klass.Length
+            if name == 'CppyyLegacy::TObjString':
+                klass.__len__ = klass.Sizeof
 
         cppyy.py.add_pythonization(root_pythonizor)
 
-        assert len(cppyy.gbl.TString("aap")) == 3
+        assert len(cppyy.gbl.CppyyLegacy.TObjString("aap")) == 4     # include '\0'
 
     def test01_size_mapping(self):
         """Use composites to map GetSize() onto buffer returns"""
@@ -205,7 +206,7 @@ class TestClassPYTHONIZATION:
             cnt = pz.gime_naked_countable()
             gc.collect()
             assert Countable.sInstances == oldcount + 1
-        del cnt
+            del cnt
         gc.collect()
 
         assert Countable.sInstances == oldcount

@@ -28,16 +28,7 @@ PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
 
-PyObject *AsRVec(PyObject *self, PyObject *obj);
-PyObject *AsRTensor(PyObject *self, PyObject *obj);
-
 PyObject *CPPInstanceExpand(PyObject *self, PyObject *args);
-
-PyObject *GetEndianess(PyObject *self, PyObject *args);
-PyObject *GetDataPointer(PyObject *self, PyObject *args);
-PyObject *GetSizeOfType(PyObject *self, PyObject *args);
-
-PyObject *MakeNumpyDataFrameImpl(PyObject *self, PyObject *obj);
 
 } // namespace PyROOT
 

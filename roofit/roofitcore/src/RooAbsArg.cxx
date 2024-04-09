@@ -96,7 +96,7 @@ for single nodes.
 #include <fstream>
 #include <sstream>
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::string, std::set, std::map, std::istream, std::pair, std::ofstream, std::make_pair;
 
 ClassImp(RooAbsArg);
 
@@ -651,7 +651,7 @@ std::size_t RooAbsArg::getParametersSizeEstimate(const RooArgSet* nset) const
 /// ourself as top node that don't match any of the names the args in the
 /// supplied argset. Returns `true` only if something went wrong.
 /// The complement of this function is getObservables().
-/// \param[in] observables Set of leafs to ignore because they are observables and not parameters.
+/// \param[in] observables Set of leaves to ignore because they are observables and not parameters.
 /// \param[out] outputSet Output set.
 /// \param[in] stripDisconnected Allow pdf to strip parameters from list before adding it.
 
@@ -745,7 +745,7 @@ RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooArgSet* dataList
 /// The complement of this function is getParameters().
 /// \param[in] dataList Set of leaf nodes to match.
 /// \param[out] outputSet Output set.
-/// \param[in] valueOnly If this parameter is true, we only match leafs that
+/// \param[in] valueOnly If this parameter is true, we only match leaves that
 ///                      depend on the value of any arg in `dataList`.
 
 bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outputSet, bool valueOnly) const

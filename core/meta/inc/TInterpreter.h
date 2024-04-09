@@ -157,7 +157,7 @@ public:
    virtual Int_t    GenerateDictionary(const char *classes, const char *includes = nullptr, const char *options = nullptr) = 0;
    virtual char    *GetPrompt() = 0;
    virtual const char *GetSharedLibs() = 0;
-   virtual const char *GetClassSharedLibs(const char *cls) = 0;
+   virtual const char *GetClassSharedLibs(const char *cls, bool skipCore = true) = 0;
    virtual const char *GetSharedLibDeps(const char *lib, bool tryDyld = false) = 0;
    virtual const char *GetIncludePath() = 0;
    virtual const char *GetSTLIncludePath() const { return ""; }
@@ -570,10 +570,8 @@ public:
 typedef TInterpreter *CreateInterpreter_t(void* shlibHandle, const char* argv[]);
 typedef void *DestroyInterpreter_t(TInterpreter*);
 
-#ifndef __CINT__
 #define gInterpreter (TInterpreter::Instance())
 R__EXTERN TInterpreter* gCling;
-#endif
 
 inline ROOT::Internal::InterpreterMutexRegistrationRAII::InterpreterMutexRegistrationRAII(TVirtualMutex* mutex):
    fLockGuard(mutex)

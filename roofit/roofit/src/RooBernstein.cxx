@@ -40,7 +40,6 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 #include "TMath.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooBernstein);
 
@@ -126,7 +125,7 @@ double RooBernstein::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Bernstein distribution.
-void RooBernstein::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooBernstein::doEval(RooFit::EvalContext & ctx) const
 {
   const int nCoef = _coefList.size();
   std::vector<double> extraArgs(nCoef+2);
@@ -135,7 +134,7 @@ void RooBernstein::computeBatch(double* output, size_t nEvents, RooFit::Detail::
   extraArgs[nCoef] = _x.min();
   extraArgs[nCoef+1] = _x.max();
 
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Bernstein, output, nEvents, {dataMap.at(_x)}, extraArgs);
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Bernstein, ctx.output(), {ctx.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

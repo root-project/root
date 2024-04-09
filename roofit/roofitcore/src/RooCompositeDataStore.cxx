@@ -39,7 +39,7 @@ When iterated from start to finish, datasets will be traversed in the order of t
 #include <iomanip>
 #include <iostream>
 
-using namespace std;
+using std::cout, std::endl, std::map, std::list, std::string;
 
 ClassImp(RooCompositeDataStore);
 
@@ -271,7 +271,7 @@ bool RooCompositeDataStore::isWeighted() const
   for (auto const& item : _dataMap) {
     if (item.second->isWeighted()) return true ;
   }
-  return false ; ;
+  return false ;
 }
 
 

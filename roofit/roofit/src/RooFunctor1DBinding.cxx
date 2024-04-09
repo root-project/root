@@ -29,7 +29,7 @@ pointer first using RooCFunction1Binding<T1,T2>::register().
 #include "Riostream.h"
 #include "RooFunctor1DBinding.h"
 
-using namespace std ;
+using std::ostream;
 
 ClassImp(RooFunctor1DBinding);
 ClassImp(RooFunctor1DPdfBinding);

@@ -28,7 +28,7 @@ index value which define the state
 #include <iostream>
 
 
-using namespace std;
+using std::ostream;
 
 ClassImp(RooCatType);
 

@@ -140,8 +140,14 @@ public:
       <A href="http://statmath.wu-wien.ac.at/unuran/doc/unuran.html#Methods_005ffor_005fCVEC">UnuRan doc</A>
       A re-initialization is needed whenever distribution parameters have been changed.
 
+      The default method used for multi-dimensional distributions is "vnrou"
+      Note that some of the multi-dimensional continuous distribution methods like "hitro" are based on Markov-CHain sampler and
+      they are much faster for sampling but require more time to converge. Furthermore, since they are Markov-Chain methods their
+      generated sample values are correlated and cannot be used as i.i.d., one can instead use the obtained sample distribution.
+      (see also the ROOT issue: #10222 ).
+
    */
-   bool Init(const TUnuranMultiContDist & distr, const std::string & method = "hitro");
+   bool Init(const TUnuranMultiContDist & distr, const std::string & method = "vnrou");
 
 
    /**

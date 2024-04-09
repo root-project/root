@@ -35,12 +35,10 @@ public:
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
-   void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
-
    /// Return default level for MINUIT error analysis.
    double defaultErrorLevel() const override { return 0.5; }
 
-   void computeBatch(double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
+   void doEval(RooFit::EvalContext &) const override;
    bool canComputeBatchWithCuda() const override { return !_binnedL; }
    bool isReducerNode() const override { return true; }
 
@@ -59,9 +57,9 @@ public:
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
-   double finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const;
+   void finalizeResult(RooFit::EvalContext &, ROOT::Math::KahanSum<double> result, double weightSum) const;
    void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables);
-   double computeBatchBinnedL(std::span<const double> preds, std::span<const double> weights) const;
+   void doEvalBinnedL(RooFit::EvalContext &, std::span<const double> preds, std::span<const double> weights) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooTemplateProxy<RooAbsReal> _weightVar;

@@ -2,6 +2,7 @@
 // Author: Rene Brun , Valerio Filippini  06/09/2000
 
 /** \class TGenPhaseSpace
+    \legacy{TGenPhaseSpace, No alternative classes are currently available.}
     \ingroup Physics
 
  Utility class to generate n-body event,
@@ -90,7 +91,7 @@ TGenPhaseSpace& TGenPhaseSpace::operator=(const TGenPhaseSpace &gen)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Generate a random final state.
-///  The function returns the weight of the current event.
+///  The function returns the un-normalized weight of the current event.
 ///  The TLorentzVector of each decay product can be obtained using GetDecay(n).
 ///
 /// Note that Momentum, Energy units are Gev/C, GeV
@@ -113,7 +114,7 @@ Double_t TGenPhaseSpace::Generate()
    }
 
    //
-   //-----> compute the weight of the current event
+   //-----> compute the un-normalized weight of the current event
    //
    Double_t wt=fWtMax;
    Double_t pd[kMAXP];
@@ -162,7 +163,7 @@ Double_t TGenPhaseSpace::Generate()
    for (n=0;n<fNt;n++) fDecPro[n].Boost(fBeta[0],fBeta[1],fBeta[2]);
 
    //
-   //---> return the weight of event
+   //---> return the un-normalized weight of event
    //
    return wt;
 }

@@ -52,8 +52,7 @@ ROOT::Experimental::Internal::RClusterPool::RClusterPool(RPageSource &pageSource
    : fPageSource(pageSource),
      fClusterBunchSize(clusterBunchSize),
      fPool(2 * clusterBunchSize),
-     fThreadIo(&RClusterPool::ExecReadClusters, this),
-     fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
+     fThreadIo(&RClusterPool::ExecReadClusters, this)
 {
    R__ASSERT(clusterBunchSize > 0);
 }
@@ -67,41 +66,6 @@ ROOT::Experimental::Internal::RClusterPool::~RClusterPool()
       fCvHasReadWork.notify_one();
    }
    fThreadIo.join();
-
-   {
-      // Controlled shutdown of the unzip thread
-      std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-      fUnzipQueue.emplace_back(RUnzipItem());
-      fCvHasUnzipWork.notify_one();
-   }
-   fThreadUnzip.join();
-}
-
-void ROOT::Experimental::Internal::RClusterPool::ExecUnzipClusters()
-{
-   // The thread keeps its local buffer of elements to be processed. On wakeup, the local copy is swapped with
-   // `fUnzipQueue`, which not only reduces contention but also reduces the overall number of allocations, as the
-   // internal storage of both copies is reused. The local copy should be cleared before the `std::swap()` in the next
-   // iteration.
-   std::deque<RUnzipItem> unzipItems;
-   while (true) {
-      {
-         std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-         fCvHasUnzipWork.wait(lock, [&]{ return !fUnzipQueue.empty(); });
-         std::swap(unzipItems, fUnzipQueue);
-      }
-
-      for (auto &item : unzipItems) {
-         if (!item.fCluster)
-            return;
-
-         fPageSource.UnzipCluster(item.fCluster.get());
-
-         // Afterwards the GetCluster() method in the main thread can pick-up the cluster
-         item.fPromise.set_value(std::move(item.fCluster));
-      }
-      unzipItems.clear();
-   } // while (true)
 }
 
 void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
@@ -132,7 +96,6 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
          }
 
          auto clusters = fPageSource.LoadClusters(clusterKeys);
-         bool unzipQueueDirty = false;
          for (std::size_t i = 0; i < clusters.size(); ++i) {
             // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
             // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
@@ -146,17 +109,10 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
             }
             if (discard) {
                clusters[i].reset();
-               readItems[i].fPromise.set_value(std::move(clusters[i]));
-            } else {
-               // Hand-over the loaded cluster pages to the unzip thread
-               std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-               fUnzipQueue.emplace_back(RUnzipItem{std::move(clusters[i]), std::move(readItems[i].fPromise)});
-               unzipQueueDirty = true;
             }
+            readItems[i].fPromise.set_value(std::move(clusters[i]));
          }
          readItems.erase(readItems.begin(), readItems.begin() + clusters.size());
-         if (unzipQueueDirty)
-            fCvHasUnzipWork.notify_one();
       }
    } // while (true)
 }
@@ -419,6 +375,8 @@ ROOT::Experimental::Internal::RClusterPool::WaitFor(DescriptorId_t clusterId,
 
       auto cptr = itr->fFuture.get();
       if (result) {
+         // Noop unless the page source has a task scheduler
+         fPageSource.UnzipCluster(cptr.get());
          result->Adopt(std::move(*cptr));
       } else {
          auto idxFreeSlot = FindFreeSlot();

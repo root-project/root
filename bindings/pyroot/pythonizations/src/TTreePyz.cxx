@@ -24,7 +24,6 @@
 #include "CPyCppyy/API.h"
 
 #include "PyROOTPythonize.h"
-#include "PyzCppHelpers.hxx"
 
 // ROOT
 #include "TClass.h"
@@ -37,6 +36,16 @@
 #include "TLeafObject.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+
+namespace {
+
+// Get the TClass of the C++ object proxied by pyobj
+TClass *GetTClass(const PyObject *pyobj)
+{
+   return TClass::GetClass(Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance*)pyobj)->ObjectIsA()).c_str());
+}
+
+} // namespace
 
 using namespace CPyCppyy;
 
@@ -95,6 +104,7 @@ static PyObject *BindBranchToProxy(TTree *tree, const char *name, TBranch *branc
 static PyObject *WrapLeaf(TLeaf *leaf)
 {
    if (1 < leaf->GetLenStatic() || leaf->GetLeafCount()) {
+      bool isStatic = 1 < leaf->GetLenStatic();
       // array types
       std::string typeName = leaf->GetTypeName();
 #ifdef CPYCPPYY_VERSION_HEX
@@ -103,7 +113,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
 #else
       dim_t dims[]{ 1, leaf->GetNdata() }; // first entry is the number of dims
 #endif
-      Converter *pcnv = CreateConverter(typeName + '*', dims);
+      Converter *pcnv = CreateConverter(typeName + (isStatic ? "[]" : "*"), dims);
 
       void *address = 0;
       if (leaf->GetBranch())

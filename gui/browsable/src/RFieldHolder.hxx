@@ -11,7 +11,7 @@
 
 #include <ROOT/Browsable/RHolder.hxx>
 
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RMiniFile.hxx>
 
 #include "TClass.h"

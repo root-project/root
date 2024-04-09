@@ -1055,7 +1055,7 @@ void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
    auto &intVar = static_cast<RooAbsRealLValue &>(*_intList[0]);
 
-   RooFuncWrapper wrapper{GetName(), GetTitle(), *_function, {}, nullptr, nullptr, false};
+   RooFuncWrapper wrapper{GetName(), GetTitle(), *_function, nullptr, nullptr, false};
 
    RooArgSet params;
    _function->getParameters(nullptr, params);
@@ -1097,7 +1097,7 @@ void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
       << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * i;\n"
       // TODO: the second "paramsName" should be nullptr, but until Clad issue
       // 636 is fixed, we have to pass a non-nullptr dummy.
-      << "      " << resName << " += " << " + " << ctx.buildCall(wrapper.funcName(), paramsName, paramsName) << ";\n"
+      << "      " << resName << " += " << " + " << ctx.buildCall(wrapper.funcName(), paramsName, paramsName, paramsName) << ";\n"
       << "   }\n"
       << "   " << resName << " *= " << " d / n;\n"
       << "}\n";

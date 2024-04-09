@@ -250,17 +250,16 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
    // these are secret parameters, hide them in temp file
    if ((url.find("token=") || url.find("key=")) && !args.IsBatchMode() && !args.IsHeadless()) {
-      gRandom->SetSeed(0);
+      TString filebase = "root_start_";
 
-      tmpfile = gSystem->TempDirectory();
+      auto f = gSystem->TempFileName(filebase, nullptr, ".html");
 
-      if (tmpfile.back() != std::filesystem::path::preferred_separator)
-         tmpfile += std::filesystem::path::preferred_separator;
-      tmpfile += "root_start_"s + std::to_string(gRandom->Integer(0x100000)) + ".html";
+      bool ferr = false;
 
-      std::ofstream os(tmpfile);
-      if (os) {
-         os << std::regex_replace(
+      if (!f) {
+         ferr = true;
+      } else {
+         std::string content = std::regex_replace(
             "<!DOCTYPE html>\n"
             "<html lang=\"en\">\n"
             "<head>\n"
@@ -275,11 +274,21 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
             "</p>\n"
             "</body>\n"
             "</html>\n", std::regex("\\$url"), url);
-         url = "file://"s + tmpfile;
 
-         os.close();
-         gSystem->Chmod(tmpfile.c_str(), 0400); // only read for user itself
-      } else {
+         if (fwrite(content.c_str(), 1, content.length(), f) != content.length())
+            ferr = true;
+
+         if (fclose(f) != 0)
+            ferr = true;
+
+         tmpfile = filebase.Data();
+
+         url = "file://"s + tmpfile;
+      }
+
+      if (ferr) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fail to create temporary HTML file to startup widget";
          return nullptr;
       }
@@ -294,6 +303,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
    if (exec.compare(0,5,"fork:") == 0) {
       if (fProg.empty()) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fork instruction without executable";
          return nullptr;
       }
@@ -304,6 +315,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
       std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
       if (!fargs || (fargs->GetLast()<=0)) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fork instruction is empty";
          return nullptr;
       }
@@ -319,6 +332,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
       pid_t pid;
       int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
       if (status != 0) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fail to launch " << argv[0];
          return nullptr;
       }
@@ -330,6 +345,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 #else
 
       if (fProg.empty()) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "No Web browser found";
          return nullptr;
       }
@@ -344,6 +361,8 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
       ss >> tmp >> c >> pid;
 
       if (pid <= 0) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
          R__LOG_ERROR(WebGUILog()) << "Fail to launch " << fProg;
          return nullptr;
       }
@@ -426,6 +445,9 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 
    TestProg(gEnv->GetValue(fEnvPrefix.c_str(), ""));
 
+   if (!fProg.empty() && !fEdge)
+      fChromeVersion = gEnv->GetValue("WebGui.ChromeVersion", -1);
+
 #ifdef _MSC_VER
    if (fEdge)
       TestProg("\\Microsoft\\Edge\\Application\\msedge.exe", true);
@@ -448,8 +470,20 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
    fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --disable-gpu $geometry \"$url\" --dump-dom &");
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
-   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' --dump-dom >/dev/null &");
+#ifdef R__MACOSX
+   bool use_normal = true; // mac does not like new flag
+#else
+   bool use_normal = fChromeVersion < 119;
+#endif
+   if (use_normal) {
+      // old browser with standard headless mode
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' --dump-dom >/dev/null &");
+   } else {
+      // newer version with headless=new mode
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' &");
+   }
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' &");
 #endif
 }

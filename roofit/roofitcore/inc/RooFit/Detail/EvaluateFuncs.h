@@ -46,6 +46,17 @@ inline double bifurGaussEvaluate(double x, double mean, double sigmaL, double si
    return gaussianEvaluate(x, mean, sigmaR);
 }
 
+inline double efficiencyEvaluate(double effFuncVal, int catIndex, int sigCatIndex)
+{
+   // Truncate efficiency function in range 0.0-1.0
+   effFuncVal = std::clamp(effFuncVal, 0.0, 1.0);
+
+   if (catIndex == sigCatIndex)
+      return effFuncVal; // Accept case
+   else
+      return 1 - effFuncVal; // Reject case
+}
+
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
 template <bool pdfMode = false>
 inline double polynomialEvaluate(double const *coeffs, int nCoeffs, int lowestOrder, double x)
@@ -223,6 +234,28 @@ flexibleInterp(unsigned int code, double low, double high, double boundary, doub
    return 0.0;
 }
 
+inline double flexibleInterpEvaluate(unsigned int code, double *params, unsigned int n, double *low, double *high,
+                                     double boundary, double nominal)
+{
+   double total = nominal;
+   for (std::size_t i = 0; i < n; ++i) {
+      total += flexibleInterp(code, low[i], high[i], boundary, nominal, params[i], total);
+   }
+
+   return total <= 0 ? TMath::Limits<double>::Min() : total;
+}
+
+inline double piecewiseInterpolationEvaluate(unsigned int code, double *low, double *high, double nominal,
+                                             double *params, unsigned int n)
+{
+   double total = nominal;
+   for (std::size_t i = 0; i < n; ++i) {
+      total += flexibleInterp(code, low[i], high[i], 1.0, nominal, params[i], total);
+   }
+
+   return total;
+}
+
 inline double logNormalEvaluate(double x, double k, double m0)
 {
    return ROOT::Math::lognormal_pdf(x, std::log(m0), std::abs(std::log(k)));
@@ -235,6 +268,24 @@ inline double logNormalEvaluateStandard(double x, double sigma, double mu)
 
 inline double effProdEvaluate(double eff, double pdf) {
    return eff * pdf;
+}
+
+inline double nllEvaluate(double pdf, double weight, int binnedL, int doBinOffset)
+{
+   if (binnedL) {
+      // Special handling of this case since log(Poisson(0,0)=0 but can't be
+      // calculated with usual log-formula since log(mu)=0. No update of result
+      // is required since term=0.
+      if (std::abs(pdf) < 1e-10 && std::abs(weight) < 1e-10) {
+         return 0.0;
+      }
+      if (doBinOffset) {
+         return pdf - weight - weight * (std::log(pdf) - std::log(weight));
+      }
+      return pdf - weight * std::log(pdf) + TMath::LnGamma(weight + 1);
+   } else {
+      return -weight * std::log(pdf);
+   }
 }
 
 } // namespace EvaluateFuncs

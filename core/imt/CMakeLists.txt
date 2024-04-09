@@ -27,7 +27,6 @@ target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 
 if(imt)
   ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
-    ROOT/TFuture.hxx
     ROOT/TTaskGroup.hxx
     ROOT/RTaskArena.hxx
     ROOT/RSlotStack.hxx

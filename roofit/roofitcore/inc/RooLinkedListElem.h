@@ -33,7 +33,7 @@ namespace RooLinkedListImplDetails {
 
 class RooLinkedListElem {
 public:
-  // Initial element ctor
+  // Initial element constructor
   RooLinkedListElem() = default;
 
   void init(TObject* arg, RooLinkedListElem* after=nullptr) {

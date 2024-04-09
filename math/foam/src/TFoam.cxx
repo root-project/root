@@ -1222,17 +1222,19 @@ void TFoam::GetIntegMC(Double_t &mcResult, Double_t &mcError)
 /// and content of the histograms in order to get proper absolute normalization
 /// of the integrand and distributions.
 /// It can be called after initialization, before or during the MC run.
+/// \param IntNorm variable where the integral will be stored
+/// \param ErrInt variable where the absolute error of the integral will be stored if internal rejection is active, otherwise set to 0.
 
-void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& Errel )
+void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& ErrInt )
 {
    if(fOptRej == 1) {    // Wt=1 events, internal rejection
       Double_t intMC,errMC;
       GetIntegMC(intMC,errMC);
       IntNorm = intMC;
-      Errel   = errMC;
+      ErrInt  = errMC;
    } else {                // Wted events, NO internal rejection
       IntNorm = fPrime;
-      Errel   = 0;
+      ErrInt  = 0;
    }
 }
 

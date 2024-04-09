@@ -5,7 +5,7 @@ import { version, gStyle, httpRequest, create, createHttpRequest, loadScript, de
 import { select as d3_select } from '../d3.mjs';
 import { openFile, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, addUserStreamer } from '../io.mjs';
 import { getRGBfromTColor } from '../base/colors.mjs';
-import { BasePainter, getElementRect, _loadJSDOM } from '../base/BasePainter.mjs';
+import { BasePainter, getElementRect, _loadJSDOM, convertDate } from '../base/BasePainter.mjs';
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
@@ -784,7 +784,7 @@ class HierarchyPainter extends BasePainter {
       if (!folder) folder = {};
 
       folder._name = file.fFileName;
-      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(file.fDatimeM.getDate())}`;
       folder._kind = kindTFile;
       folder._file = file;
       folder._fullurl = file.fFullURL;
@@ -1847,9 +1847,10 @@ class HierarchyPainter extends BasePainter {
             }
 
             if (fileprop && sett.opts && !fileprop.localfile) {
+               const url = settings.NewTabUrl || source_dir;
                let filepath = qualifyURL(fileprop.fileurl);
-               if (filepath.indexOf(source_dir) === 0)
-                  filepath = filepath.slice(source_dir.length);
+               if (filepath.indexOf(url) === 0)
+                  filepath = filepath.slice(url.length);
                filepath = `${fileprop.kind}=${filepath}`;
                if (fileprop.itemname) {
                   let name = fileprop.itemname;
@@ -1860,9 +1861,49 @@ class HierarchyPainter extends BasePainter {
                let arg0 = 'nobrowser';
                if (settings.WithCredentials)
                   arg0 += '&with_credentials';
+               if (settings.NewTabUrlPars)
+                  arg0 += '&' + settings.NewTabUrlPars;
+               if (settings.NewTabUrlExportSettings) {
+                  if (gStyle.fOptStat !== 1111)
+                     arg0 += `&optstat=${gStyle.fOptStat}`;
+                  if (gStyle.fOptFit !== 0)
+                     arg0 += `&optfit=${gStyle.fOptFit}`;
+                  if (gStyle.fOptDate !== 0)
+                     arg0 += `&optdate=${gStyle.fOptDate}`;
+                  if (gStyle.fOptFile !== 0)
+                     arg0 += `&optfile=${gStyle.fOptFile}`;
+                  if (gStyle.fOptTitle !== 1)
+                     arg0 += `&opttitle=${gStyle.fOptTitle}`;
+                  if (settings.TimeZone === 'UTC')
+                     arg0 += '&utc';
+                  else if (settings.TimeZone)
+                     arg0 += `&timezone='${settings.TimeZone}'`;
+                  if (Math.abs(gStyle.fDateX - 0.01) > 1e-3)
+                     arg0 += `&datex=${gStyle.fDateX.toFixed(3)}`;
+                  if (Math.abs(gStyle.fDateY - 0.01) > 1e-3)
+                     arg0 += `&datey=${gStyle.fDateY.toFixed(3)}`;
+                  if (gStyle.fHistMinimumZero)
+                     arg0 += '&histzero';
+                  if (settings.DarkMode)
+                     arg0 += '&dark=on';
+                  if (!settings.UseStamp)
+                     arg0 += '&usestamp=off';
+                  if (settings.OnlyLastCycle)
+                     arg0 += '&lastcycle';
+                  if (settings.OptimizeDraw !== 1)
+                     arg0 += `&optimize=${settings.OptimizeDraw}`;
+                  if (settings.MaxRanges !== 200)
+                     arg0 += `&maxranges=${settings.MaxRanges}`;
+                  if (settings.FuncAsCurve)
+                     arg0 += '&tf1=curve';
+                  if (!settings.ToolBar && !settings.Tooltip && !settings.ContextMenu && !settings.Zooming && !settings.MoveResize && !settings.DragAndDrop)
+                     arg0 += '&interactive=0';
+                  else if (!settings.ContextMenu)
+                     arg0 += '&nomenu';
+               }
 
                menu.addDrawMenu('Draw in new tab', sett.opts,
-                                arg => window.open(`${source_dir}?${arg0}&${filepath}&opt=${arg}`),
+                                arg => window.open(`${url}?${arg0}&${filepath}&opt=${arg}`),
                                 'Draw item in the new browser tab or window');
             }
 
@@ -2659,6 +2700,18 @@ class HierarchyPainter extends BasePainter {
                func(item);
          }
       }
+   }
+
+   /** @summary Find ROOT file which corresponds to provided item name
+     * @private */
+   findRootFileForItem(itemname) {
+      let item = this.findItem(itemname);
+      while (item) {
+         if ((item._kind === kindTFile) && item._fullurl && item._file)
+            return item;
+         item = item?._parent;
+      }
+      return null;
    }
 
    /** @summary Open ROOT file

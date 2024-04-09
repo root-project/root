@@ -41,7 +41,6 @@ TConfidenceLevel.
 #include <TMath.h>
 
 /// ClassImp for building the THtml documentation of the class
-using namespace std;
 
 ClassImp(RooStats::HybridResult);
 

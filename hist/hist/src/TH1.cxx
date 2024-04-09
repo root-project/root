@@ -18,6 +18,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -61,11 +62,13 @@
 \class TH1S
 \brief 1-D histogram with a short per channel (see TH1 documentation)
 \class TH1I
-\brief 1-D histogram with an int per channel (see TH1 documentation)}
+\brief 1-D histogram with an int per channel (see TH1 documentation)
+\class TH1L
+\brief 1-D histogram with a long64 per channel (see TH1 documentation)
 \class TH1F
-\brief 1-D histogram with a float per channel (see TH1 documentation)}
+\brief 1-D histogram with a float per channel (see TH1 documentation)
 \class TH1D
-\brief 1-D histogram with a double per channel (see TH1 documentation)}
+\brief 1-D histogram with a double per channel (see TH1 documentation)
 @}
 */
 
@@ -106,18 +109,21 @@ ROOT supports the following histogram types:
       - TH1C : histograms with one byte per channel.   Maximum bin content = 127
       - TH1S : histograms with one short per channel.  Maximum bin content = 32767
       - TH1I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
+      - TH1L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "*")
       - TH1F : histograms with one float per channel.  Maximum precision 7 digits
       - TH1D : histograms with one double per channel. Maximum precision 14 digits
   - 2-D histograms:
       - TH2C : histograms with one byte per channel.   Maximum bin content = 127
       - TH2S : histograms with one short per channel.  Maximum bin content = 32767
       - TH2I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
+      - TH2L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "*")
       - TH2F : histograms with one float per channel.  Maximum precision 7 digits
       - TH2D : histograms with one double per channel. Maximum precision 14 digits
   - 3-D histograms:
       - TH3C : histograms with one byte per channel.   Maximum bin content = 127
       - TH3S : histograms with one short per channel.  Maximum bin content = 32767
       - TH3I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
+      - TH3L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "*")
       - TH3F : histograms with one float per channel.  Maximum precision 7 digits
       - TH3D : histograms with one double per channel. Maximum precision 14 digits
   - Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
@@ -131,6 +137,7 @@ ROOT supports the following histogram types:
 
 <sup>
 \anchor intmax (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)
+\anchor llongmax (*) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)
 </sup>
 
 The inheritance hierarchy looks as follows:
@@ -2517,14 +2524,15 @@ void TH1::ClearUnderflowAndOverflow()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Compute integral (cumulative sum of bins)
-///  The result stored in fIntegral is used by the GetRandom functions.
+///  Compute integral (normalized cumulative sum of bins) w/o under/overflows
+///  The result is stored in fIntegral and used by the GetRandom functions.
 ///  This function is automatically called by GetRandom when the fIntegral
 ///  array does not exist or when the number of entries in the histogram
 ///  has changed since the previous call to GetRandom.
-///  The resulting integral is normalized to 1
+///  The resulting integral is normalized to 1.
 ///  If the routine is called with the onlyPositive flag set an error will
 ///  be produced in case of negative bin content and a NaN value returned
+///  \return 1 if success, 0 if integral is zero, NAN if onlyPositive-test fails
 
 Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
 {
@@ -2559,7 +2567,8 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
 
    //   - Normalize integral to 1
    if (fIntegral[nbins] == 0 ) {
-      Error("ComputeIntegral", "Integral = zero"); return 0;
+      Error("ComputeIntegral", "Integral = 0, no hits in histogram bins (excluding over/underflow).");
+      return 0;
    }
    for (Int_t bin=1; bin <= nbins; ++bin)  fIntegral[bin] /= fIntegral[nbins];
    fIntegral[nbins+1] = fEntries;
@@ -7113,6 +7122,84 @@ void TH1::Reset(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Save the histogram as .csv, .tsv or .txt. In case of any other extension, fall
+/// back to TObject::SaveAs, which saves as a .C macro (but with the file name
+/// extension specified by the user)
+///
+/// The Under/Overflow bins are also exported (as first and last lines)
+/// The fist 2 columns are the lower and upper edges of the bins
+/// Column 3 contains the bin contents
+/// The last column contains the error in y. If errors are not present, the column
+/// is left empty
+///
+/// The result can be immediately imported into Excel, gnuplot, Python or whatever,
+/// without the needing to install pyroot, etc.
+///
+/// \param filename the name of the file where to store the histogram
+/// \param option some tuning options
+///
+/// The file extension defines the delimiter used:
+///  - `.csv` : comma
+///  - `.tsv` : tab
+///  - `.txt` : space
+///
+/// If option = "title" a title line is generated. If the y-axis has a title,
+/// this title is displayed as column 3 name, otherwise, it shows "BinContent"
+
+void TH1::SaveAs(const char *filename, Option_t *option) const
+{
+   char del = '\0';
+   TString ext = "";
+   TString fname = filename;
+   TString opt = option;
+
+   if (filename) {
+      if (fname.EndsWith(".csv")) {
+         del = ',';
+         ext = "csv";
+      } else if (fname.EndsWith(".tsv")) {
+         del = '\t';
+         ext = "tsv";
+      } else if (fname.EndsWith(".txt")) {
+         del = ' ';
+         ext = "txt";
+      }
+   }
+   if (!del) {
+      TObject::SaveAs(filename, option);
+      return;
+   }
+   std::ofstream out;
+   out.open(filename, std::ios::out);
+   if (!out.good()) {
+      Error("SaveAs", "cannot open file: %s", filename);
+      return;
+   }
+   if (opt.Contains("title")) {
+      if (std::strcmp(GetYaxis()->GetTitle(), "") == 0) {
+         out << "#\tBinLowEdge\tBinUpEdge\t"
+             << "BinContent"
+             << "\tey" << std::endl;
+      } else {
+         out << "#\tBinLowEdge\tBinUpEdge\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
+      }
+   }
+   if (fSumw2.fN) {
+      for (Int_t i = 0; i < fNcells; ++i) { // loop on cells (bins including underflow / overflow)
+         out << GetXaxis()->GetBinLowEdge(i) << del << GetXaxis()->GetBinUpEdge(i) << del << GetBinContent(i) << del
+             << GetBinError(i) << std::endl;
+      }
+   } else {
+      for (Int_t i = 0; i < fNcells; ++i) { // loop on cells (bins including underflow / overflow)
+         out << GetXaxis()->GetBinLowEdge(i) << del << GetXaxis()->GetBinUpEdge(i) << del << GetBinContent(i) << del
+             << std::endl;
+      }
+   }
+   out.close();
+   Info("SaveAs", "%s file: %s has been generated", ext.Data(), filename);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
@@ -9893,6 +9980,193 @@ TH1I operator*(const TH1I &h1, const TH1I &h2)
 TH1I operator/(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
+   hnew.Divide(&h2);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+//______________________________________________________________________________
+//                     TH1L methods
+// TH1L : histograms with one long64 per channel.    Maximum bin content = 9223372036854775807
+// 9223372036854775807 = LLONG_MAX
+//______________________________________________________________________________
+
+ClassImp(TH1L);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+TH1L::TH1L(): TH1(), TArrayL64()
+{
+   fDimension = 1;
+   SetBinsLength(3);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 1-Dim histogram with fix bins of type long64
+/// (see TH1::TH1 for explanation of parameters)
+
+TH1L::TH1L(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
+: TH1(name,title,nbins,xlow,xup)
+{
+   fDimension = 1;
+   TArrayL64::Set(fNcells);
+
+   if (xlow >= xup) SetBuffer(fgBufferSize);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 1-Dim histogram with variable bins of type long64
+/// (see TH1::TH1 for explanation of parameters)
+
+TH1L::TH1L(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
+: TH1(name,title,nbins,xbins)
+{
+   fDimension = 1;
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 1-Dim histogram with variable bins of type long64
+/// (see TH1::TH1 for explanation of parameters)
+
+TH1L::TH1L(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
+: TH1(name,title,nbins,xbins)
+{
+   fDimension = 1;
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
+TH1L::~TH1L()
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
+
+TH1L::TH1L(const TH1L &h1l) : TH1(), TArrayL64()
+{
+   h1l.TH1L::Copy(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH1L::AddBinContent(Int_t bin)
+{
+   if (fArray[bin] < LLONG_MAX) fArray[bin]++;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by w
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH1L::AddBinContent(Int_t bin, Double_t w)
+{
+   Long64_t newval = fArray[bin] + Long64_t(w);
+   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = newval; return;}
+   if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
+   if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this to newth1
+
+void TH1L::Copy(TObject &newth1) const
+{
+   TH1::Copy(newth1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset.
+
+void TH1L::Reset(Option_t *option)
+{
+   TH1::Reset(option);
+   TArrayL64::Reset();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
+void TH1L::SetBinsLength(Int_t n)
+{
+   if (n < 0) n = fXaxis.GetNbins() + 2;
+   fNcells = n;
+   TArrayL64::Set(n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
+TH1L& TH1L::operator=(const TH1L &h1)
+{
+   if (this != &h1)
+      h1.TH1L::Copy(*this);
+   return *this;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
+TH1L operator*(Double_t c1, const TH1L &h1)
+{
+   TH1L hnew = h1;
+   hnew.Scale(c1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
+TH1L operator+(const TH1L &h1, const TH1L &h2)
+{
+   TH1L hnew = h1;
+   hnew.Add(&h2,1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
+
+TH1L operator-(const TH1L &h1, const TH1L &h2)
+{
+   TH1L hnew = h1;
+   hnew.Add(&h2,-1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
+TH1L operator*(const TH1L &h1, const TH1L &h2)
+{
+   TH1L hnew = h1;
+   hnew.Multiply(&h2);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
+TH1L operator/(const TH1L &h1, const TH1L &h2)
+{
+   TH1L hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(nullptr);
    return hnew;

@@ -80,7 +80,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
@@ -135,7 +135,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
@@ -181,16 +181,18 @@ RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
    return _dataHist;
 }
 
-void RooHistPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistPdf::doEval(RooFit::EvalContext &ctx) const
+{
+   std::span<double> output = ctx.output();
 
-  // For interpolation and histograms of higher dimension, use base function
-  if(_pdfObsList.size() > 1) {
-      RooAbsReal::computeBatch(output, nEvents, dataMap);
+   // For interpolation and histograms of higher dimension, use base function
+   if (_pdfObsList.size() > 1) {
+      RooAbsReal::doEval(ctx);
       return;
-  }
+   }
 
-  auto xVals = dataMap.at(_pdfObsList[0]);
-  _dataHist->weights(output, xVals, _intOrder, true, _cdfBoundaries);
+   auto xVals = ctx.at(_pdfObsList[0]);
+   _dataHist->weights(output.data(), xVals, _intOrder, true, _cdfBoundaries);
 }
 
 
@@ -232,7 +234,10 @@ void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::Co
 
    std::string const &idxName = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
    std::string const &weightName = dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize);
-   ctx.addResult(klass, weightName + "[" + idxName + "]");
+   std::string res = weightName;
+   if (weightName[0] == '_')
+      res += "[" + idxName + "]";
+   ctx.addResult(klass, res);
 }
 
 void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const

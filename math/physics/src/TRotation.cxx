@@ -2,6 +2,7 @@
 // Author: Peter Malzacher   19/06/99
 
 /** \class TRotation
+    \legacy{TRotation, Consider using instead ROOT::Math::Rotation3D.}
     \ingroup Physics
 
 The TRotation class describes a rotation of objects of the TVector3 class.

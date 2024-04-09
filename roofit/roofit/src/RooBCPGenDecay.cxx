@@ -29,8 +29,6 @@ Suitably stolen and modified from RooBCPEffDecay
 #include "RooBCPGenDecay.h"
 #include "RooRealIntegral.h"
 
-using namespace std;
-
 ClassImp(RooBCPGenDecay);
 
 /// \brief Constructor for RooBCPGenDecay.

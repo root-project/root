@@ -33,6 +33,7 @@
 #include "clang/Sema/Scope.h"
 #include "clang/Serialization/ASTReader.h"
 #include "clang/Serialization/GlobalModuleIndex.h"
+#include "clang/Basic/DiagnosticSema.h"
 
 #include "llvm/ExecutionEngine/Orc/Core.h"
 
@@ -1004,6 +1005,12 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    Result->addAttr(AnnotateAttr::CreateImplicit(C, "__Auto"));
 
    R.addDecl(Result);
+
+   // Raise a warning when trying to use implicit auto injection feature.
+   SemaRef.getDiagnostics().setSeverity(diag::warn_deprecated_message, diag::Severity::Warning, SourceLocation());
+   SemaRef.Diag(Loc, diag::warn_deprecated_message)
+      << "declaration without the 'auto' keyword" << DC << Loc << FixItHint::CreateInsertion(Loc, "auto ");
+
    // Say that we can handle the situation. Clang should try to recover
    return true;
 }

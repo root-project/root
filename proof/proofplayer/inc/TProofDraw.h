@@ -301,7 +301,6 @@ public:
    ClassDefOverride(TProofDrawListOfPolyMarkers3D,0)  //Tree drawing selector for PROOF
 };
 
-#ifndef __CINT__
 template <typename T>
 Long64_t TProofVectorContainer<T>::Merge(TCollection* li)
 {
@@ -323,6 +322,5 @@ Long64_t TProofVectorContainer<T>::Merge(TCollection* li)
    }
    return fVector->size();
 }
-#endif
 
 #endif

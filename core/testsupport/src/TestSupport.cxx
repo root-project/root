@@ -1,3 +1,4 @@
+/// \file
 /// \brief This file contains a specialised ROOT message handler to test for diagnostic in unit tests.
 ///
 /// \author Stephan Hageboeck <stephan.hageboeck@cern.ch>
@@ -65,6 +66,10 @@ static struct ForbidDiagnostics {
           && strstr(msg, "Pre-release format version: RC ") != nullptr) {
         std::cerr << "Warning in " << location << " " << msg << std::endl;
         return;
+      }
+      if (level == kWarning && strstr(msg, "Merging RNTuples is experimental") != nullptr) {
+         std::cerr << "Warning in " << location << " " << msg << std::endl;
+         return;
       }
 
       // FIXME: DOAS backend is exprimental.

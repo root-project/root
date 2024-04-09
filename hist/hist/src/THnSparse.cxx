@@ -505,7 +505,7 @@ To construct a THnSparse object you must use one of its templated, derived
 classes:
 - THnSparseD (typedef for THnSparseT<ArrayD>): bin content held by a Double_t,
 - THnSparseF (typedef for THnSparseT<ArrayF>): bin content held by a Float_t,
-- THnSparseL (typedef for THnSparseT<ArrayL>): bin content held by a Long_t,
+- THnSparseL (typedef for THnSparseT<ArrayL64>): bin content held by a Long64_t,
 - THnSparseI (typedef for THnSparseT<ArrayI>): bin content held by an Int_t,
 - THnSparseS (typedef for THnSparseT<ArrayS>): bin content held by a Short_t,
 - THnSparseC (typedef for THnSparseT<ArrayC>): bin content held by a Char_t,

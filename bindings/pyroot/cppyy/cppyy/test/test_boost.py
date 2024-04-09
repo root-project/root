@@ -1,5 +1,5 @@
-import py, os, sys
-from pytest import mark, raises
+import os
+from pytest import mark, raises, skip
 from .support import setup_make
 
 noboost = False
@@ -12,23 +12,26 @@ if not (os.path.exists(os.path.join(os.path.sep, 'usr', 'include', 'boost')) or 
 class TestBOOSTANY:
     def setup_class(cls):
         import cppyy
+
         cppyy.include('boost/any.hpp')
 
     def test01_any_class(self):
         """Availability of boost::any"""
 
         import cppyy
+
         assert cppyy.gbl.boost.any
 
         from cppyy.gbl import std
         from cppyy.gbl.boost import any
 
-        assert std.list(any)
+        assert std.list[any]
 
     def test02_any_usage(self):
         """boost::any assignment and casting"""
 
         import cppyy
+
         assert cppyy.gbl.boost
 
         from cppyy.gbl import std, boost
@@ -67,6 +70,7 @@ class TestBOOSTANY:
 class TestBOOSTOPERATORS:
     def setup_class(cls):
         import cppyy
+
         cppyy.include('boost/operators.hpp')
 
     def test01_ordered(self):
@@ -74,7 +78,10 @@ class TestBOOSTOPERATORS:
 
         import cppyy
 
-        cppyy.include("gmpxx.h")
+        try:
+            cppyy.include("gmpxx.h")
+        except ImportError:
+            skip("gmpxx not installed")
         cppyy.cppdef("""
             namespace boost_test {
                class Derived : boost::ordered_field_operators<Derived>, boost::ordered_field_operators<Derived, mpq_class> {};
@@ -88,6 +95,7 @@ class TestBOOSTOPERATORS:
 class TestBOOSTVARIANT:
     def setup_class(cls):
         import cppyy
+
         cppyy.include("boost/variant/variant.hpp")
         cppyy.include("boost/variant/get.hpp")
 
@@ -124,3 +132,36 @@ class TestBOOSTVARIANT:
         assert type(boost.get['BV::C'](v[2])) == cpp.BV.C
 
 
+@mark.skipif(noboost == True, reason="boost not found")
+class TestBOOSTERASURE:
+    def setup_class(cls):
+        import cppyy
+
+        cppyy.include("boost/type_erasure/any.hpp")
+        cppyy.include("boost/type_erasure/member.hpp")
+        cppyy.include("boost/mpl/vector.hpp")
+
+    def test01_erasure_usage(self):
+        """boost::type_erasure usage"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            BOOST_TYPE_ERASURE_MEMBER((has_member_f), f, 0)
+
+            using LengthsInterface = boost::mpl::vector<
+                boost::type_erasure::copy_constructible<>,
+                has_member_f<std::vector<int>() const>>;
+
+            using Lengths = boost::type_erasure::any<LengthsInterface>;
+
+            struct Unerased {
+                std::vector<int> f() const { return std::vector<int>{}; }
+            };
+
+            Lengths lengths() {
+                return Unerased{};
+            }
+        """)
+
+        assert cppyy.gbl.lengths() is not None

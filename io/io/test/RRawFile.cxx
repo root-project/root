@@ -1,5 +1,10 @@
 #include "io_test.hxx"
 
+#include "TFile.h"
+
+#include "ROOT/RRawFileTFile.hxx"
+using ROOT::Internal::RRawFileTFile;
+
 namespace {
 
 /**
@@ -229,4 +234,27 @@ TEST(RRawFile, Mmap)
    EXPECT_EQ("oo", std::string(reinterpret_cast<char *>(region) + innerOffset, 2));
    auto mapdLength = 2 + innerOffset;
    f->Unmap(region, mapdLength);
+}
+
+TEST(RRawFileTFile, TFile)
+{
+   FileRaii tfileGuard("test_rawfile_tfile.root", "");
+
+   std::unique_ptr<TFile> file(TFile::Open(tfileGuard.GetPath().c_str(), "RECREATE"));
+   file->Write();
+
+   auto rawFile = std::make_unique<RRawFileTFile>(file.get());
+
+   // The first four bytes should be 'root'.
+   char root[5] = {};
+   rawFile->ReadAt(root, 4, 0);
+   EXPECT_STREQ(root, "root");
+
+   // fBEGIN = 100, and its seek key should be 100.
+   unsigned char seek[4] = {};
+   rawFile->ReadAt(seek, 4, 100 + 18);
+   EXPECT_EQ(seek[0], 0);
+   EXPECT_EQ(seek[1], 0);
+   EXPECT_EQ(seek[2], 0);
+   EXPECT_EQ(seek[3], 100);
 }

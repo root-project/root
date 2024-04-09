@@ -19,13 +19,16 @@ template instantiation, automatic object downcasting, exception mapping, and
 interactive exploration of C++ libraries.
 cppyy delivers this without any language extensions, intermediate languages,
 or the need for boiler-plate hand-written code.
-For design and performance, see this `PyHPC paper`_, albeit that the
-CPython/cppyy performance has been vastly improved since.
+For design and performance, see this `PyHPC'16 paper`_, albeit that the
+CPython/cppyy performance has been vastly improved since, as well as this
+`CAAS presentation`_.
+For a quick teaser, see `Jason Turner's`_ introduction video.
 
 cppyy is based on `Cling`_, the C++ interpreter, to match Python's dynamism,
 interactivity, and run-time behavior.
 Consider this session, showing dynamic, interactive, mixing of C++ and Python
-features (more examples are in the `tutorial`_):
+features (there are more examples throughout the documentation and in the
+`tutorial`_):
 
 .. code-block:: python
 
@@ -73,7 +76,7 @@ and heavy use of templates:
 .. code-block:: python
 
    >>> import cppyy
-   >>> cppyy.include('boost/any.hpp')
+   >>> cppyy.include('boost/any.hpp')       # assumes you have boost installed
    >>> from cppyy.gbl import std, boost
    >>> val = boost.any()                    # the capsule 
    >>> val.__assign__(std.vector[int]())    # assign it a std::vector<int>
@@ -113,9 +116,11 @@ code and many thousands of classes.
 cppyy minimizes dependencies to allow its use in distributed, heterogeneous,
 development environments.
 
-.. _Cling: https://root.cern.ch/cling
-.. _tutorial: https://bitbucket.org/wlav/cppyy/src/master/doc/tutorial/CppyyTutorial.ipynb?viewer=nbviewer&fileviewer=notebook-viewer%3Anbviewer
-.. _`PyHPC paper`: http://wlav.web.cern.ch/wlav/Cppyy_LavrijsenDutta_PyHPC16.pdf
+.. _Cling: https://github.com/vgvassilev/cling
+.. _tutorial: https://github.com/wlav/cppyy/blob/master/doc/tutorial/CppyyTutorial.ipynb
+.. _`PyHPC'16 paper`: http://wlav.web.cern.ch/wlav/Cppyy_LavrijsenDutta_PyHPC16.pdf
+.. _`CAAS presentation`: https://www.youtube.com/watch?v=stMD7VDWlVU
+.. _`Jason Turner's`: https://www.youtube.com/watch?v=TL83P77vZ1k
 .. _`Boost`: http://www.boost.org/
 .. _`CPython`: http://python.org
 .. _`PyPy`: http://pypy.org
@@ -126,6 +131,7 @@ development environments.
    Contents:
 
 .. toctree::
+   :maxdepth: 1
 
    changelog
    license
@@ -143,13 +149,17 @@ development environments.
    :caption: Features
    :maxdepth: 1
 
+   toplevel
    basic_types
+   strings
    classes
    functions
    type_conversions
    stl
    exceptions
    python
+   numba
+   cuda
    lowlevel
    misc
    debugging
@@ -170,10 +180,18 @@ development environments.
    repositories
    testing
 
+.. toctree::
+   :caption: Background
+   :maxdepth: 1
+
+   history
+   philosophy
+
 
 Bugs and feedback
 -----------------
 
 Please report bugs or requests for improvement on the `issue tracker`_.
 
-.. _`issue tracker`: https://bitbucket.org/wlav/cppyy/issues
+
+.. _`issue tracker`: https://github.com/wlav/cppyy/issues

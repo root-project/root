@@ -13,9 +13,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RColumnElement.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleInspector.hxx>
 #include <ROOT/RError.hxx>
@@ -47,6 +47,9 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
    fUncompressedSize = 0;
 
    for (const auto &colDesc : fDescriptor->GetColumnIterable()) {
+      if (colDesc.IsAliasColumn())
+         continue;
+
       auto colId = colDesc.GetPhysicalId();
 
       // We generate the default memory representation for the given column type in order

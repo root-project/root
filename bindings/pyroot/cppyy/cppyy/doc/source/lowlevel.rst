@@ -29,6 +29,22 @@ It needs to be imported explicitly:
     >>>
 
 
+`LowLevelView`
+--------------
+
+Python has an elaborate array interface (buffer) specification, but no
+standard library array type that completely implements it; instead, the
+canonical Python array type is the NumPy one.
+cppyy introduces the basic ``LowLevelView`` array class to avoid having a
+direct dependency on NumPy and to guarantee zero copy.
+The ``LowLevelView`` type gives access to array details such as the size,
+type, etc. and allows reading/writing of array elements, both for interactive
+use and through the buffer interface to allow NumPy to interface with them.
+For more complex operations, it's recommended to copy from the
+``LowLevelView`` inta a NumPy array, or to create a NumPy view (see below,
+under :ref:`NumPy Casts <npcasts>`).
+
+
 `C/C++ casts`
 -------------
 
@@ -116,6 +132,8 @@ is required to turn it into something usable.
   The syntax is "template-style", just like for the C-style cast above.
 
 
+.. _npcasts:
+
 `NumPy casts`
 -------------
 
@@ -183,7 +201,7 @@ above for cppyy) the result of at least one of the following:
   Takes an optional ``byref`` parameter and if set to true, returns a pointer
   to the address instead.
 
-* **as_ctypes**: Takes a cppyy bound C++ object and returns its address as
+* **ll.as_ctypes**: Takes a cppyy bound C++ object and returns its address as
   a ``ctypes.c_void_p`` object.
   Takes an optional ``byref`` parameter and if set to true, returns a pointer
   to the address instead.
@@ -235,9 +253,9 @@ C++ has three ways of allocating heap memory (``malloc``, ``new``, and
 ``new[]``) and three corresponding ways of deallocation (``free``,
 ``delete``, and ``delete[]``).
 Direct use of ``malloc`` and ``new`` should be avoided for C++ classes, as
-these may override ``operator new`` to control their allocation own.
+these may override ``operator new`` to control their own allocation.
 However these low-level allocators can be necessary for builtin types on
-occassion if the C++ side takes ownership (otherwise, prefer either
+occasion if the C++ side takes ownership (otherwise, prefer either
 ``array`` from the builtin module ``array`` or ``ndarray`` from Numpy).
 
 The low-level module adds the following functions:
@@ -290,6 +308,20 @@ The low-level module adds the following functions:
 
     >>> cppyy.ll.array_delete(arr)
     >>>
+
+
+`argc/argv`
+-----------
+
+C/C++'s ``main`` function can take the number of command line arguments
+(``argc``) and their values (``argv``) as function arguments.
+A common idiom has these values subsequently passed on to the entry point of
+e.g. a framework or library.
+Since the type of ``argv`` in particular (``char*[]``) is clunky to work with
+in Python, the low level module contains two convenient helper functions,
+``ll.argc()`` and ``ll.argv()``, that convert the command line arguments as
+provided by Python's ``sys`` module, into typed values that are can be passed
+to by C/C++.
 
 
 .. _`ctypes module`: https://docs.python.org/3/library/ctypes.html

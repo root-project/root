@@ -1193,7 +1193,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
 /// Check illegal overlaps for volume VOL within a limit OVLP by sampling npoints
 /// inside the volume shape.
 
-void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, Int_t npoints) const
+void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t npoints) const
 {
    Int_t nd = vol->GetNdaughters();
    if (nd < 2)
@@ -1268,7 +1268,7 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
          }
          // The point is inside 2 or more daughters, check safety
          safe = shape->Safety(local, kTRUE);
-         //         if (safe < ovlp) continue;
+         if (safe < ovlp) continue;
          // We really have found an overlap -> store the point in a container
          iovlp++;
          if (!novlps) {
@@ -1689,7 +1689,7 @@ void TGeoChecker::PrintOverlaps() const
 /// Generates a report regarding the path to the node containing this point and the distance to
 /// the closest boundary.
 
-void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
+void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *, Double_t safety)
 {
    Double_t point[3];
    Double_t local[3];
@@ -1712,7 +1712,7 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
    if (node)
       vol = node->GetVolume();
    // compute safety distance (distance to boundary ignored)
-   Double_t close = fGeoManager->Safety();
+   Double_t close = (safety > 0.) ? safety : fGeoManager->Safety();
    printf("Safety radius : %f\n", close);
    if (close > 1E-4) {
       TGeoVolume *sph = fGeoManager->MakeSphere("SAFETY", vol->GetMedium(), 0, close, 0, 180, 0, 360);

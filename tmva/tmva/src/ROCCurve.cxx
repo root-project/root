@@ -37,8 +37,6 @@
 #include <vector>
 #include <cassert>
 
-using namespace std;
-
 auto tupleSort = [](std::tuple<Float_t, Float_t, Bool_t> _a, std::tuple<Float_t, Float_t, Bool_t> _b) {
    return std::get<0>(_a) < std::get<0>(_b);
 };

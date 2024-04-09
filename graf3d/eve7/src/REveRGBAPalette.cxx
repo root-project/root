@@ -14,6 +14,7 @@
 #include "TColor.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include <nlohmann/json.hpp>
 
 
 using namespace ROOT::Experimental;
@@ -34,6 +35,7 @@ ClassImp(REveRGBAPalette);
 /// Constructor.
 
 REveRGBAPalette::REveRGBAPalette() :
+   REveElement("RGBAPalette", "Palette"),
    REveRefCnt(),
 
    fUIf(1), fUIc(0),
@@ -66,6 +68,7 @@ REveRGBAPalette::REveRGBAPalette() :
 
 REveRGBAPalette::REveRGBAPalette(Int_t min, Int_t max, Bool_t interp,
                                  Bool_t showdef, Bool_t fixcolrng) :
+   REveElement("RGBAPalette", "Palette"),
    REveRefCnt(),
 
    fUIf(1), fUIc(0),
@@ -157,6 +160,8 @@ void REveRGBAPalette::ClearColorArray()
       fColorArray = nullptr;
       fNBins = fCAMin = fCAMax = 0;
    }
+
+   StampNieces();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,6 +317,8 @@ void REveRGBAPalette::SetUnderColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t
    fUnderRGBA[1] = g;
    fUnderRGBA[2] = b;
    fUnderRGBA[3] = a;
+   StampNieces();
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -341,4 +348,38 @@ void REveRGBAPalette::SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t 
    fOverRGBA[1] = g;
    fOverRGBA[2] = b;
    fOverRGBA[3] = a;
+   StampNieces();
+   StampObjProps();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Prepare streaming information
+//
+Int_t REveRGBAPalette::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+   j["oAction"] = fOverflowAction;
+   j["uAction"] = fUnderflowAction;
+   j["oColor"] = fOverColor;
+   j["uColor"] = fUnderColor;
+   j["fixRng"] = fFixColorRange;
+   j["lowLimit"] = fLowLimit;
+   j["highLimit"] = fHighLimit;
+   j["interpolate"] = fInterpolate;
+   j["min"] = fMinVal;
+   j["max"] = fMaxVal;
+   return ret;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Notifiy dependent
+//
+void  REveRGBAPalette::StampNieces()
+{
+   for (auto &c : fNieces)
+   {
+      c->AddStamp(REveElement::kCBObjProps);
+   }
 }

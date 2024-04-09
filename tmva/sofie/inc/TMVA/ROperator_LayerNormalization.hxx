@@ -29,22 +29,23 @@ private:
    std::string fNNormalizedX;
    std::string fNBroadcastedB;
 
-   std::vector<size_t> fShapeX;
-   std::vector<size_t> fShapeScale;
-   std::vector<size_t> fShapeB;
-   std::vector<size_t> fShapeY;
-   std::vector<size_t> fShapeMean;
-   std::vector<size_t> fShapeInvStdDev;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeScale;
+   std::vector<size_t> fShapeB;  // shape of input Bias (B) is assumed to be fully defined
+   std::vector<Dim> fShapeY;
+   std::vector<Dim> fShapeMean;
+   std::vector<Dim> fShapeInvStdDev;
 
    size_t fAxis; // axis in [0, size)
    size_t fSize; // Size of the input
    // size_t fAxisDim;
-   size_t fLength; // Length of the input X
 
-   std::vector<size_t> fNormalizedShape;
-   std::vector<size_t> fAxesShape;
-   size_t fNormalizedLength;
-   size_t fAxesLength;
+   std::vector<Dim> fNormalizedShape;
+   std::vector<Dim> fAxesShape;
+   // lengths in string format
+   std::string fLength; // Length of the input
+   std::string fNormalizedLength;
+   std::string fAxesLength;
 
    std::string fType;
 
@@ -69,7 +70,8 @@ public:
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }
-      fShapeX = model.GetTensorShape(fNX);
+      bool isDynamic = model.IsDynamicTensor(fNX);
+      fShapeX = model.GetDynamicTensorShape(fNX);
       fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       // Type of the output
@@ -79,26 +81,34 @@ public:
       // Axis in [0, size)
       fAxis = (fAttrAxis < 0) ? fSize + fAttrAxis : fAttrAxis;
       // Shape of fShapeX[0, ..., fAxis)
-      fAxesShape = std::vector<size_t>(fShapeX.begin(), fShapeX.begin() + fAxis);
+      fAxesShape = std::vector<Dim>(fShapeX.begin(), fShapeX.begin() + fAxis);
       // Length of the axes
-      fAxesLength = ConvertShapeToLength(fAxesShape);
+      fAxesLength = ConvertDynamicShapeToLength(fAxesShape);
       // Shape of fShapeX[fAxis, ..., fSize)
-      fNormalizedShape = std::vector<size_t>(fShapeX.begin() + fAxis, fShapeX.end());
+      fNormalizedShape = std::vector<Dim>(fShapeX.begin() + fAxis, fShapeX.end());
       // Length of the normalized axis
-      fNormalizedLength = ConvertShapeToLength(fNormalizedShape);
+      fNormalizedLength = ConvertDynamicShapeToLength(fNormalizedShape);
       // length of the input
-      fLength = ConvertShapeToLength(fShapeX);
+      fLength = ConvertDynamicShapeToLength(fShapeX);
       // Type of mean and std
       ETensorType type = (fAttrStashType == 1) ? ETensorType::FLOAT : model.GetTensorType(fNX);
       // Mean
       if (fNMean.empty()) {
          fNMean = "Mean" + fNX;
-         model.AddIntermediateTensor(fNMean, type, {fAxesLength});
+         // cannot use initializer list with one element since it is ambiguous
+         if (isDynamic)
+            // add size_t(-1) to indicate that shape is an expression
+            model.AddIntermediateTensor(fNMean, type, std::vector<Dim>(1,Dim{fAxesLength,std::size_t(-1)}));
+         else
+            model.AddIntermediateTensor(fNMean, type, std::vector<size_t>(1,std::stoi(fAxesLength)));
       }
       // Inverse Standard Deviation
       if (fNInvStdDev.empty()) {
          fNInvStdDev = "InvStdDev" + fNX;
-         model.AddIntermediateTensor(fNInvStdDev, type, {fAxesLength});
+         if (isDynamic)
+            model.AddIntermediateTensor(fNInvStdDev, type, std::vector<Dim>(1,Dim{fAxesLength,std::size_t(-1)}));
+         else
+            model.AddIntermediateTensor(fNInvStdDev, type, std::vector<size_t>(1,std::stoi(fAxesLength)));
       }
       // Cast X to float
       if (fAttrStashType == 1 && model.GetTensorType(fNX) != ETensorType::FLOAT) {
@@ -111,21 +121,22 @@ public:
       if (!fNB.empty()) {
          fShapeB = model.GetTensorShape(fNB);
          size_t lengthB = ConvertShapeToLength(fShapeB);
-         if (lengthB < fLength) {
+         if (isDynamic || lengthB < static_cast<size_t>(std::stoi(fLength))) {
             fNBroadcastedB = "Broadcasted" + fNB;
             model.AddIntermediateTensor(fNBroadcastedB, ConvertStringToType(fType), fShapeX);
          }
       }
+      model.AddNeededStdLib("cmath");
    }
 
    std::string GenerateInitCode() override
    {
       std::stringstream out;
       if (!fNBroadcastedB.empty()) {
-         out << SP << "// Broadcasting the bias of LayerNormlization op\n";
+         out << SP << "// Broadcasting the bias of LayerNormalization op\n";
          out << SP << "{\n";
          out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_";
-         out << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeX) << ");\n";
+         out << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertDynamicShapeToString(fShapeX) << ");\n";
          out << SP << "std::copy(data, data + " << fLength << ", tensor_" << fNBroadcastedB << ");\n";
          out << SP << "delete[] data;\n";
          out << SP << "}\n";
@@ -138,7 +149,7 @@ public:
       OpName = "op_" + OpName;
       if (fShapeX.empty()) {
          throw std::runtime_error("TMVA::SOFIE LayerNormalization operator " + OpName +
-                                  " called to generate without beging initialized first.");
+                                  " called to generate without being initialized first.");
       }
       if (fShapeX.size() > 5) {
          throw std::runtime_error("TMVA::SOFIE LayerNormalization operator not "
@@ -147,12 +158,12 @@ public:
 
       std::stringstream out;
 
-      out << SP << "// Operator " << OpName << "\n";
+      out << "//---- Layer Normalization  operator " << OpName << "\n";
 
       // Loop over all the normalized axes i.e. [axis, ..., size)
       out << SP << "std::vector<size_t> " << OpName << "_InputShape ({";
       for (size_t i = 0; i < fSize; i++) {
-         out << fShapeX[i];
+         out << fShapeX[i].GetVal();
          if (i + 1 < fSize) {
             out << ",";
          }
@@ -161,21 +172,21 @@ public:
       std::string inputShape = OpName + "_InputShape";
 
       auto strides = UTILITY::ComputeStrideFromShape(fShapeX);
-      std::string InputIndex = "axis_0 * " + std::to_string(strides[0]);
+      std::string InputIndex = "axis_0 * " + strides[0].GetVal();
       for (size_t i = 1; i < fSize; i++) {
-         InputIndex += " + axis_" + std::to_string(i) + " * " + std::to_string(strides[i]);
+         InputIndex += " + axis_" + std::to_string(i) + " * " + strides[i].GetVal();
       }
 
       auto axesStrides = UTILITY::ComputeStrideFromShape(fAxesShape);
-      std::string axesIndex = "axis_" + std::to_string(0) + " * " + std::to_string(axesStrides[0]);
+      std::string axesIndex = "axis_" + std::to_string(0) + " * " + axesStrides[0].GetVal();
       for (size_t i = 1; i < fAxis; i++) {
-         axesIndex += " + axis_" + std::to_string(i) + " * " + std::to_string(axesStrides[i]);
+         axesIndex += " + axis_" + std::to_string(i) + " * " + axesStrides[i].GetVal();
       }
 
       auto normalizedStrides = UTILITY::ComputeStrideFromShape(fNormalizedShape);
-      std::string normalizedIndex = "axis_" + std::to_string(fAxis) + " * " + std::to_string(normalizedStrides[0]);
+      std::string normalizedIndex = "axis_" + std::to_string(fAxis) + " * " + normalizedStrides[0].GetVal();
       for (size_t i = fAxis + 1; i < fSize; i++) {
-         normalizedIndex += " + axis_" + std::to_string(i) + " * " + std::to_string(normalizedStrides[i - fAxis]);
+         normalizedIndex += " + axis_" + std::to_string(i) + " * " + normalizedStrides[i - fAxis].GetVal();
       }
 
       if (!fNCastedX.empty()) {

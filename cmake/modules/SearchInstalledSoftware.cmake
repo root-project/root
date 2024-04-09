@@ -408,21 +408,8 @@ if(asimage)
   endif()
 endif()
 
-#---Check for AfterImage---------------------------------------------------------------
-if(asimage AND NOT builtin_afterimage)
-  message(STATUS "Looking for AfterImage")
-  if(fail-on-missing)
-    find_package(AfterImage REQUIRED)
-  else()
-    find_package(AfterImage)
-    if(NOT AFTERIMAGE_FOUND)
-      message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
-      set(builtin_afterimage ON CACHE BOOL "Enabled because asimage requested and AfterImage not found (${builtin_afterimage_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-if(builtin_afterimage)
+#---AfterImage---------------------------------------------------------------
+if(TRUE)
   set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
@@ -726,20 +713,6 @@ if(fcgi)
 endif()
 
 
-#---Check for Oracle-------------------------------------------------------------------
-if(oracle)
-  message(STATUS "Looking for Oracle")
-  find_package(Oracle)
-  if(NOT ORACLE_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Oracle libraries not found and they are required (orable option enabled)")
-    else()
-      message(STATUS "Oracle not found. Switching off oracle option")
-      set(oracle OFF CACHE BOOL "Disabled because Oracle not found (${oracle_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for ODBC-------------------------------------------------------------------
 if(odbc)
   message(STATUS "Looking for ODBC")
@@ -778,20 +751,6 @@ if(sqlite)
     else()
       message(STATUS "SQLite not found. Switching off sqlite option")
       set(sqlite OFF CACHE BOOL "Disabled because SQLite not found (${sqlite_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-#---Check for Pythia6-------------------------------------------------------------------
-if(pythia6)
-  message(STATUS "Looking for Pythia6")
-  find_package(Pythia6 QUIET)
-  if(NOT PYTHIA6_FOUND AND NOT pythia6_nolink)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Pythia6 libraries not found and they are required (pythia6 option enabled)")
-    else()
-      message(STATUS "Pythia6 not found. Switching off pythia6 option")
-      set(pythia6 OFF CACHE BOOL "Disabled because Pythia6 not found (${pythia6_description})" FORCE)
     endif()
   endif()
 endif()
@@ -1035,22 +994,6 @@ if(arrow)
 
 endif()
 
-#---Check for gfal-------------------------------------------------------------------
-if(gfal)
-  find_package(GFAL)
-  if(NOT GFAL_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Gfal library not found and is required (gfal option enabled)")
-    else()
-      message(STATUS "GFAL library not found. Set variable GFAL_DIR to point to your gfal installation
-                      and the variable SRM_IFCE_DIR to the srm_ifce installation")
-      message(STATUS "For the time being switching OFF 'gfal' option")
-      set(gfal OFF CACHE BOOL "Disabled because GFAL not found (${gfal_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-
 #---Check for dCache-------------------------------------------------------------------
 if(dcache)
   find_package(DCAP)
@@ -1242,9 +1185,9 @@ endif()
 if(imt AND NOT builtin_tbb)
   message(STATUS "Looking for TBB")
   if(fail-on-missing)
-    find_package(TBB 2018 REQUIRED)
+    find_package(TBB 2020 REQUIRED)
   else()
-    find_package(TBB 2018)
+    find_package(TBB 2020)
     if(NOT TBB_FOUND)
       message(STATUS "TBB not found, enabling 'builtin_tbb' option")
       set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
@@ -1744,19 +1687,8 @@ if(pyroot)
     endif()
   endif()
 
-  if(Python3_Development_FOUND)
-    if(PYTHON_VERSION_STRING VERSION_LESS 3.8)
-      message(FATAL_ERROR "PyROOT: minimum Python version required is 3.8. The current Python version is ${PYTHON_VERSION_STRING}")
-    endif()
-    message(STATUS "PyROOT: development package found. Building for version ${PYTHON_VERSION_STRING}")
-  endif()
+  message(STATUS "PyROOT: development package found. Building for version ${PYTHON_VERSION_STRING}")
 
-endif()
-
-#---Check for deprecated PyROOT experimental ---------------------------------------------
-if(pyroot_experimental)
-  message(WARNING "pyroot_experimental is a deprecated flag from 6.22.00."
-                  "To build the new PyROOT, just configure with -Dpyroot=ON -Dpyroot_experimental=OFF.")
 endif()
 
 #---Check for MPI---------------------------------------------------------------------
@@ -2020,8 +1952,8 @@ if(webgui)
   endif()
   ExternalProject_Add(
     RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.1.tar.gz
-    URL_HASH SHA256=2cb8c722193ae0ddffde3b1c4b24fc877c9bb2c9ebacdaa6f3860b81991e8737
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.2.tar.gz
+    URL_HASH SHA256=a02bafaf2fa84977f70622370be6b37c36dcf4811cd20ffddad2e686220a1e85
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""

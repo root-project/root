@@ -37,10 +37,9 @@ prototype data etc..
 #include "Riostream.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(RooAbsGenContext);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////

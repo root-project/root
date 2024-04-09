@@ -25,10 +25,6 @@
 
 #include "Windows4Root.h"
 
-#ifdef __CINT__
-struct CRITICAL_SECTION;
-#endif
-
 class TWin32Mutex : public TMutexImp {
 
 friend class TWin32Condition;
