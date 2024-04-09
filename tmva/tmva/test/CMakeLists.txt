@@ -31,12 +31,14 @@ if(dataframe)
     ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
 endif()
 
-if(dataframe)
-  find_python_module(xgboost QUIET)
-  if (PY_XGBOOST_FOUND)
-    ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
-  endif()
-endif()
+# Disabled because RBDT doesn't support the imbalanced tree structure of
+# XGBoost models.
+# if(dataframe)
+#   find_python_module(xgboost QUIET)
+#   if (PY_XGBOOST_FOUND)
+#     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
+#   endif()
+# endif()
 
 #--stressTMVA--------------------------------------------------------------------------------------
 
