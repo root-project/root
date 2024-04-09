@@ -840,7 +840,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       TMatrixDSym d;
       d.ResizeTo(parsList.size(), parsList.size());
       result->setCovarianceMatrix(d);
-      result->setCovQual(-1);
+      result->setCovQual(floatPars->empty() ? 3 : -1);
       result->setMinNLL(_nll->getVal());
       result->setEDM(0);
       result->setStatus(floatPars->empty() ? 0 : 1);
