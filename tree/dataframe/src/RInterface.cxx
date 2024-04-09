@@ -17,6 +17,13 @@ void ROOT::Internal::RDF::ChangeEmptyEntryRange(const ROOT::RDF::RNode &node,
    node.GetLoopManager()->SetEmptyEntryRange(std::move(newRange));
 }
 
+void ROOT::Internal::RDF::ChangeEntryRange(const ROOT::RDF::RNode &node,
+                                           const ULong64_t start, const ULong64_t end)
+{
+   R__ASSERT(end >= start && "end is less than start in the passed entry range!");
+   node.GetLoopManager()->SetEntryRange(start, end);
+}
+
 /**
  * \brief Changes the input dataset specification of an RDataFrame.
  *
