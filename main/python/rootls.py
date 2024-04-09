@@ -47,14 +47,15 @@ EPILOG = """Examples:
   Display contents of the ROOT file 'example.root', traversing recursively any TDirectory.
 """
 
+
 def get_argparse():
     parser = cmdLineUtils.getParserFile(description, EPILOG)
-    parser.prog = 'rootls'
+    parser.prog = "rootls"
 
-    parser.add_argument("-1", "--oneColumn", help=ONE_HELP, action= "store_true")
-    parser.add_argument("-l", "--longListing", help=LONG_PRINT_HELP, action= "store_true")
-    parser.add_argument("-t", "--treeListing", help=TREE_PRINT_HELP, action= "store_true")
-    parser.add_argument("-r", "--recursiveListing", help=RECURSIVE_PRINT_HELP, action= "store_true")
+    parser.add_argument("-1", "--oneColumn", help=ONE_HELP, action="store_true")
+    parser.add_argument("-l", "--longListing", help=LONG_PRINT_HELP, action="store_true")
+    parser.add_argument("-t", "--treeListing", help=TREE_PRINT_HELP, action="store_true")
+    parser.add_argument("-r", "--recursiveListing", help=RECURSIVE_PRINT_HELP, action="store_true")
     return parser
 
 
@@ -64,7 +65,14 @@ def execute():
     sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
 
     # Process rootLs
-    return cmdLineUtils.rootLs(sourceList, oneColumn=optDict["oneColumn"],
-                            longListing=optDict["longListing"], treeListing=optDict["treeListing"], recursiveListing=optDict["recursiveListing"])
+    return cmdLineUtils.rootLs(
+        sourceList,
+        oneColumn=optDict["oneColumn"],
+        longListing=optDict["longListing"],
+        treeListing=optDict["treeListing"],
+        recursiveListing=optDict["recursiveListing"],
+    )
+
+
 if __name__ == "__main__":
     sys.exit(execute())
