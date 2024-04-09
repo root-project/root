@@ -434,10 +434,10 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
 /// B. If nentries > 0, the file is not opened, and nentries is assumed
 ///    to be the number of entries in the file. In this case, no check
 ///    is made that the file exists nor that the tree exists in the file,
-///    nor that the real TTree entries matches with the input argument.
+///    nor that the real TTree entries match with the input argument.
 ///    This second mode is interesting in case the number of entries in
 ///    the file is already stored in a run database for example.
-///    BEWARE: if you pass `nentries` > `tree_entries`, this may lead to silent
+///    \warning If you pass `nentries` > `tree_entries`, this may lead to silent
 ///    data corruption in your analysis or undefined behavior in your program.
 ///    Use the other options if unsure.
 ///
