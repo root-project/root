@@ -436,6 +436,11 @@ if(asimage)
     else()
       set(_jpeginclude --with-builtin-jpeg)
     endif()
+    if(GIF_FOUND)
+       set(_gifinclude  --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
+    else()
+       set(_gifinclude)
+    endif()
     if(PNG_FOUND)
       set(_pnginclude  --with-png-includes=${PNG_INCLUDE_DIR})
     else()
@@ -469,7 +474,7 @@ if(asimage)
                         --libdir=<INSTALL_DIR>/lib
                         --with-ttf ${_ttf_include} --with-afterbase=no
                         --without-svg --disable-glx ${_after_mmx}
-                        --with-builtin-ungif  --with-jpeg ${_jpeginclude}
+                        ${_gifinclude} --with-jpeg ${_jpeginclude}
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
