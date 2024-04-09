@@ -76,9 +76,9 @@ free_gif_saved_image( SavedImage *sp, Bool reusable )
 	{
 		if (sp->ImageDesc.ColorMap)
 #if (GIFLIB_MAJOR>=5)
-	    	GifFreeMapObject(sp->ImageDesc.ColorMap);
+			GifFreeMapObject(sp->ImageDesc.ColorMap);
 #else
-	    	FreeMapObject(sp->ImageDesc.ColorMap);
+			FreeMapObject(sp->ImageDesc.ColorMap);
 #endif
 
 		if (sp->RasterBits)
@@ -86,9 +86,9 @@ free_gif_saved_image( SavedImage *sp, Bool reusable )
 
 		if (sp->ExtensionBlocks)
 #if (GIFLIB_MAJOR>=5)
-		    GifFreeExtensions(&sp->ExtensionBlockCount, &sp->ExtensionBlocks);
+			GifFreeExtensions(&sp->ExtensionBlockCount, &sp->ExtensionBlocks);
 #else
-		    FreeExtension(sp);
+			FreeExtension(sp);
 #endif
 
 		if( !reusable )
@@ -176,7 +176,7 @@ get_gif_image_desc( GifFileType *gif, SavedImage *im )
 			if(fread( im->ImageDesc.ColorMap->Colors, 1, gif->Image.ColorMap->ColorCount*3, gif->UserData)){;};
 			fseek( gif->UserData, end_pos, SEEK_SET );
 			gif->Image.ColorMap = NULL ;
- 		}
+		}
 	}
 	return status;
 }
@@ -228,16 +228,16 @@ get_gif_saved_images( GifFileType *gif, int subimage, SavedImage **ret, int *ret
 #endif
 				while (ExtData != NULL && status == GIF_OK )
 				{
-            		/* Create an extension block with our data */
+					/* Create an extension block with our data */
 #if (GIFLIB_MAJOR>=5)
-                  Len = EGifGCBToExtension(gif, ExtData);
-                  if ((status = GifAddExtensionBlock(&temp_save.ExtensionBlockCount, &temp_save.ExtensionBlocks,
-                                                     ExtCode, Len, ExtData)) == GIF_OK)
-                     status = DGifGetExtensionNext(gif, &ExtData);
+					Len = EGifGCBToExtension(gif, ExtData);
+					if ((status = GifAddExtensionBlock(&temp_save.ExtensionBlockCount, &temp_save.ExtensionBlocks,
+									   ExtCode, Len, ExtData)) == GIF_OK)
+						status = DGifGetExtensionNext(gif, &ExtData);
 #else
-            		if ((status = AddExtensionBlock(&temp_save, ExtData[0], (char*)&(ExtData[1]))) == GIF_OK)
-				    	status = DGifGetExtensionNext(gif, &ExtData);
-            		temp_save.Function = 0;
+					if ((status = AddExtensionBlock(&temp_save, ExtData[0], (char*)&(ExtData[1]))) == GIF_OK)
+						status = DGifGetExtensionNext(gif, &ExtData);
+					temp_save.Function = 0;
 #endif
 				}
 				break;
