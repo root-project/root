@@ -87,7 +87,7 @@ namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
 void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
-void ChangeEntryRange(const RNode &node, const ULong64_t start, const ULong64_t end);
+void ChangeBeginAndEndEntries(const RNode &node, ULong64_t start, ULong64_t end);
 void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 void TriggerRun(ROOT::RDF::RNode node);
 } // namespace RDF
@@ -121,7 +121,7 @@ class RInterface : public RInterfaceBase {
 
    friend void RDFInternal::TriggerRun(RNode node);
    friend void RDFInternal::ChangeEmptyEntryRange(const RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
-   friend void RDFInternal::ChangeEntryRange(const RNode &node, const ULong64_t start, const ULong64_t end);
+   friend void RDFInternal::ChangeBeginAndEndEntries(const RNode &node, ULong64_t start, ULong64_t end);
    friend void RDFInternal::ChangeSpec(const RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
