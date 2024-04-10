@@ -35,11 +35,24 @@ def Compute(self, x):
     # As fall-through we go to the original compute function and use the error-handling from cppyy
     return self._OriginalCompute(x)
 
+def RBDTInit(self, *args, **kwargs):
+    import warnings
+    warnings.warn(
+        ("Usage of xgboost models through RBDT is known to be limited and may "
+         "lead to unexpected behaviour. Proceed with caution if the input model "
+         "was obtained via `SaveXGBoost`. See https://github.com/root-project/root/issues/15197 "
+         "for more details."), UserWarning, stacklevel=2)
+    
+    return self._original_init(*args, **kwargs)
+    
 
 @pythonization("RBDT", ns="TMVA::Experimental", is_prefix=True)
 def pythonize_rbdt(klass):
     # Parameters:
     # klass: class to be pythonized
+
+    klass._original_init = klass.__init__
+    klass.__init__ = RBDTInit
 
     klass._OriginalCompute = klass.Compute
     klass.Compute = Compute
