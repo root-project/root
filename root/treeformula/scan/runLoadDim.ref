@@ -1,0 +1,4 @@
+
+Processing runLoadDim.C...
+Warning in <TClass::Init>: no dictionary for class TChannelInfo is available
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
