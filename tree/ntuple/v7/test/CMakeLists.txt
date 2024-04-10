@@ -23,43 +23,6 @@ if(MSVC)
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
 endif()
 
-ROOT_STANDARD_LIBRARY_PACKAGE(Unsplit
-                              NO_INSTALL_HEADERS
-                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Unsplit.hxx
-                              SOURCES Unsplit.cxx
-                              LINKDEF UnsplitLinkDef.h
-                              DEPENDENCIES RIO)
-configure_file(Unsplit.hxx . COPYONLY)
-if(MSVC)
-  add_custom_command(TARGET Unsplit POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libUnsplit.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libUnsplit.dll)
-endif()
-
-if(MSVC)
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex.exe)
-  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${genreflex})
-else()
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex)
-  set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-              "ROOTIGNOREPREFIX=1" ${genreflex})
-endif()
-
-configure_file(UnsplitXML.h . COPYONLY)
-configure_file(UnsplitSelection.xml . COPYONLY)
-add_custom_command(OUTPUT UnsplitXMLDict.cxx UnsplitXMLDict_rdict.pcm
-                   COMMAND ${command} UnsplitXML.h -o UnsplitXMLDict.cxx -s UnsplitSelection.xml
-                   DEPENDS rootcling ${genreflex} UnsplitXML.h UnsplitSelection.xml)
-add_library(UnsplitXML SHARED UnsplitXMLDict.cxx UnsplitXML.cxx)
-set_target_properties(UnsplitXML PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
-ROOT_ADD_INCLUDE_DIRECTORIES(UnsplitXML)
-target_link_libraries(UnsplitXML PUBLIC RIO)
-if(MSVC)
-  add_custom_command(TARGET UnsplitXML POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libUnsplitXML.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libUnsplitXML.dll)
-endif()
-
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
@@ -90,7 +53,6 @@ ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_check rfield_check.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_class rfield_class.cxx LIBRARIES ROOTNTuple CustomStruct Physics)
 ROOT_ADD_GTEST(rfield_string rfield_string.cxx LIBRARIES ROOTNTuple CustomStruct)
-ROOT_ADD_GTEST(rfield_unsplit rfield_unsplit.cxx LIBRARIES ROOTNTuple Unsplit UnsplitXML)
 ROOT_ADD_GTEST(rfield_variant rfield_variant.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
@@ -102,6 +64,33 @@ ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore
 ROOT_ADD_GTEST(ntuple_parallel_writer ntuple_parallel_writer.cxx LIBRARIES ROOTNTuple)
 
 ROOT_ADD_GTEST(ntuple_limits ntuple_limits.cxx LIBRARIES ROOTNTuple)
+
+ROOT_ADD_GTEST(rfield_unsplit rfield_unsplit.cxx Unsplit.cxx UnsplitXML.cxx LIBRARIES ROOTNTuple)
+ROOT_GENERATE_DICTIONARY(UnsplitDict ${CMAKE_CURRENT_SOURCE_DIR}/Unsplit.hxx
+                         MODULE rfield_unsplit LINKDEF UnsplitLinkDef.h OPTIONS -inlineInputHeader
+                         DEPENDENCIES RIO)
+
+if(MSVC)
+  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex.exe)
+  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${genreflex})
+else()
+  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex)
+  set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
+              "ROOTIGNOREPREFIX=1" ${genreflex})
+endif()
+
+configure_file(UnsplitXML.h . COPYONLY)
+configure_file(UnsplitSelection.xml . COPYONLY)
+add_custom_command(OUTPUT UnsplitXMLDict.cxx UnsplitXMLDict_rdict.pcm
+                   COMMAND ${command} UnsplitXML.h -o UnsplitXMLDict.cxx -s UnsplitSelection.xml
+                   DEPENDS rootcling UnsplitXML.h UnsplitSelection.xml)
+add_library(UnsplitXMLDict OBJECT UnsplitXMLDict.cxx)
+set_target_properties(UnsplitXMLDict PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+target_sources(rfield_unsplit PRIVATE $<TARGET_OBJECTS:UnsplitXMLDict>)
+target_compile_options(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,COMPILE_OPTIONS>)
+target_compile_definitions(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,COMPILE_DEFINITIONS>)
+target_compile_features(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,COMPILE_FEATURES>)
+target_include_directories(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,INCLUDE_DIRECTORIES>)
 
 if(daos OR daos_mock)
   # Label of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
