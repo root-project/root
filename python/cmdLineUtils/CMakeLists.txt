@@ -78,6 +78,14 @@ ROOTTEST_ADD_TEST(NameCyclesRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -t multipleNameCycles.root:tree
                   OUTREF MultipleNameCyclesRootls.ref)
 
+ROOTTEST_COMPILE_MACRO(subdirs.C)
+
+ROOTTEST_ADD_TEST(RecursiveRootls
+                  COMMAND ${TOOLS_PREFIX}/rootls${pyext} -lr ${CMAKE_CURRENT_BINARY_DIR}/subdirs.root
+                  OUTREF RecursiveRootls.ref
+                  DEPENDS ${COMPILE_MACRO_TEST})
+)
+
 #########################################################################
 
 
