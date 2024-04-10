@@ -12,7 +12,7 @@ void subdirs() {
     aFile->mkdir("sub/s3/t1");
     aFile->cd("sub/s3/t1");
     TCanvas* c = new TCanvas("c", "c");
-    c->Write()
+    c->Write();
     aFile->Close();
     delete aFile;
 }
