@@ -526,6 +526,26 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief THnBase::GetBinCenter
+/// \param idx an array of bin index in each dimension.
+/// \return vector of bin centers in each dimension; empty in case of error.
+/// \note Throws error if size is different from nDimensions.
+/// \sa GetAxis(dim)::GetBinCenter(idx) as an alternative
+std::vector<double> THnBase::GetBinCenter(std::vector<Int_t> idx) const
+{
+   std::vector<double> centers;
+   if (Int_t(idx.size()) != fNdimensions) {
+      Error("THnBase::GetBinCenter", "Mismatched number of dimensions %d with bin index vector size %zu", fNdimensions,
+            idx.size());
+   } else {
+      for (Int_t i = 0; i < fNdimensions; ++i) {
+         centers.emplace_back(GetAxis(i)->GetBinCenter(idx[i]));
+      }
+   }
+   return centers;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Generate an n-dimensional random tuple based on the histogrammed
 /// distribution. If subBinRandom, the returned tuple will be additionally
 /// randomly distributed within the randomized bin, using a flat
@@ -1310,6 +1330,22 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
       fIntegral.clear();
       fIntegralStatus = kNoInt;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Compute integral (sum of counts) of histogram in all dimensions
+/// \param respectAxisRange if false, count all bins including under/overflows,
+///                         if true, restrict sum to the user-set axis range
+/// \sa Projection(0)::Integral() as alternative
+Double_t THnBase::Integral(const Bool_t respectAxisRange) const
+{
+   Long64_t myLinBin = 0;
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(respectAxisRange)};
+   double sum = 0.;
+   while ((myLinBin = iter->Next()) >= 0) {
+      sum += GetBinContent(myLinBin);
+   }
+   return sum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
