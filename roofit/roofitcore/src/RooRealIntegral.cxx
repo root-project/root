@@ -1055,7 +1055,7 @@ void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
    auto &intVar = static_cast<RooAbsRealLValue &>(*_intList[0]);
 
-   RooFuncWrapper wrapper{GetName(), GetTitle(), *_function, nullptr, nullptr, false};
+   RooFit::Experimental::RooFuncWrapper wrapper{GetName(), GetTitle(), *_function};
 
    RooArgSet params;
    _function->getParameters(nullptr, params);
