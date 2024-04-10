@@ -84,7 +84,6 @@ ROOTTEST_ADD_TEST(RecursiveRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -lr ${CMAKE_CURRENT_BINARY_DIR}/subdirs.root
                   OUTREF RecursiveRootls.ref
                   DEPENDS ${COMPILE_MACRO_TEST})
-)
 
 #########################################################################
 
