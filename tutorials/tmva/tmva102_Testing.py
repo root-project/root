@@ -11,10 +11,31 @@
 ## \author Stefan Wunsch
 
 import ROOT
-import pickle
+import numpy as np
 
-from tmva100_DataPreparation import variables
-from tmva101_Training import load_data
+variables = ["Muon_pt_1", "Muon_pt_2", "Electron_pt_1", "Electron_pt_2"]
+
+
+def load_data(signal_filename, background_filename):
+    # Read data from ROOT files
+    data_sig = ROOT.RDataFrame("Events", signal_filename).AsNumpy()
+    data_bkg = ROOT.RDataFrame("Events", background_filename).AsNumpy()
+
+    # Convert inputs to format readable by machine learning tools
+    x_sig = np.vstack([data_sig[var] for var in variables]).T
+    x_bkg = np.vstack([data_bkg[var] for var in variables]).T
+    x = np.vstack([x_sig, x_bkg])
+
+    # Create labels
+    num_sig = x_sig.shape[0]
+    num_bkg = x_bkg.shape[0]
+    y = np.hstack([np.ones(num_sig), np.zeros(num_bkg)])
+
+    # Compute weights balancing both classes
+    num_all = num_sig + num_bkg
+    w = np.hstack([np.ones(num_sig) * num_all / num_sig, np.ones(num_bkg) * num_all / num_bkg])
+
+    return x, y, w
 
 
 # Load data

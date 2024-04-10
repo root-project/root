@@ -16,7 +16,7 @@ import ROOT
 import numpy as np
 import pickle
 
-from tmva100_DataPreparation import variables
+variables = ["Muon_pt_1", "Muon_pt_2", "Electron_pt_1", "Electron_pt_2"]
 
 
 def load_data(signal_filename, background_filename):
