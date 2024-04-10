@@ -103,7 +103,7 @@ TEST(RooFuncWrapper, GaussianNormalized)
    RooArgSet normSet{x};
    std::unique_ptr<RooAbsReal> gaussNormalized = RooFit::Detail::compileForNormSet(gauss, normSet);
 
-   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", *gaussNormalized, nullptr, nullptr, false);
+   RooFit::Experimental::RooFuncWrapper gaussFunc("myGauss3", "myGauss3", *gaussNormalized, nullptr, nullptr, false);
    gaussFunc.createGradient();
 
    RooArgSet paramsGauss;
@@ -146,7 +146,8 @@ TEST(RooFuncWrapper, Exponential)
 
       std::unique_ptr<RooAbsReal> expoNormalized = RooFit::Detail::compileForNormSet(expo, normSet);
 
-      RooFuncWrapper expoFunc(name.c_str(), name.c_str(), *expoNormalized, nullptr, nullptr, false);
+      RooFit::Experimental::RooFuncWrapper expoFunc(name.c_str(), name.c_str(), *expoNormalized, nullptr, nullptr,
+                                                    false);
       expoFunc.createGradient();
 
       RooArgSet params;
@@ -569,26 +570,26 @@ FactoryTestParams param12{"BifurGauss",
                           /*randomizeParameters=*/false};
 
 FactoryTestParams param13{"RooFormulaVar",
-                         [](RooWorkspace &ws) {
-                            ws.factory("expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0, -10, 10]})");
-                            ws.factory("expr::sigma_scaled('sigma*1.5',{sigma[3.0, 0.01, 10]})");
-                            ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
+                          [](RooWorkspace &ws) {
+                             ws.factory("expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0, -10, 10]})");
+                             ws.factory("expr::sigma_scaled('sigma*1.5',{sigma[3.0, 0.01, 10]})");
+                             ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
 
-                            ws.defineSet("observables", "x");
-                         },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
-                            using namespace RooFit;
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
-                         },
-                         1e-4,
-                         /*randomizeParameters=*/false};
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          1e-4,
+                          /*randomizeParameters=*/false};
 
-auto testValues = testing::Values(param1, param2,
+auto testValues =
+   testing::Values(param1, param2,
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-                                         param3,
+                   param3,
 #endif
-                              param4, param5, param6, param7, param8, param8p1,
-                              param9, param10, param11, param12, param13);
+                   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13);
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
