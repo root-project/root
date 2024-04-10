@@ -4,6 +4,7 @@ configure_file(test.root . COPYONLY)
 configure_file(simpleTree.root . COPYONLY)
 configure_file(multipleNameCycles.root . COPYONLY)
 configure_file(MakeNameCyclesRootmvInput.C . COPYONLY)
+configure_file(subdirs.root . COPYONLY)
 
 ############################## PATTERN TESTS ############################
 set (TESTPATTERN_EXE ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
@@ -78,12 +79,9 @@ ROOTTEST_ADD_TEST(NameCyclesRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -t multipleNameCycles.root:tree
                   OUTREF MultipleNameCyclesRootls.ref)
 
-ROOTTEST_COMPILE_MACRO(subdirs.C)
-
 ROOTTEST_ADD_TEST(RecursiveRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -lr subdirs.root
-                  OUTREF RecursiveRootls.ref
-                  DEPENDS ${COMPILE_MACRO_TEST})
+                  OUTREF RecursiveRootls.ref)
 
 #########################################################################
 
