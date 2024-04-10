@@ -13,6 +13,11 @@ import cppyy
 
 
 def SaveXGBoost(self, xgb_model, key_name, output_path, num_inputs, tmp_path="/tmp", threshold_dtype="float"):
+    import warnings
+    warnings.warn(
+        ("Usage of xgboost models through RBDT is known to be limited and may "
+         "lead to unexpected behaviour. See https://github.com/root-project/root/issues/15197 "
+         "for more details."), UserWarning, stacklevel=2)
     # Extract objective
     objective_map = {
         "multi:softprob": "softmax",  # Naming the objective softmax is more common today
