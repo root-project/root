@@ -14,4 +14,5 @@ void subdirs() {
     TCanvas* c = new TCanvas("c", "c");
     c->Write()
     aFile->Close();
+    delete aFile;
 }
