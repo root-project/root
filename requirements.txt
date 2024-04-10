@@ -1,12 +1,18 @@
 # ROOT requirements for third-party Python packages
 
 # PyROOT: Interoperability with numpy arrays
-# TMVA: PyMVA interfaces
 numpy>=1.4.1
+
+# TMVA: SOFIE
+# graph_nets
+onnx
+# sonnet # used for GNNs
+
+# TMVA: PyMVA interfaces
 scikit-learn
-xgboost
 tensorflow<2.16
 torch
+xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
 numba>=0.47.0 ; python_version < "3.11" # See https://github.com/numba/numba/issues/8304
