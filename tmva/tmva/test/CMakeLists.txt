@@ -32,7 +32,8 @@ if(dataframe)
 endif()
 
 # Disabled because RBDT doesn't support the imbalanced tree structure of
-# XGBoost models.
+# XGBoost models. See https://github.com/root-project/root/issues/15197
+# TODO: Re-enable once fixed
 # if(dataframe)
 #   find_python_module(xgboost QUIET)
 #   if (PY_XGBOOST_FOUND)
