@@ -208,11 +208,14 @@ private:
 
 public:
    enum ERootFlag {
-      kNoStreamer      = 0x01,
+      kNoStreamer = 0x01,
       kNoInputOperator = 0x02,
-      kUseByteCount    = 0x04,
-      kStreamerInfo    = 0x04,
-      kHasVersion      = 0x08
+      kUseByteCount = 0x04,
+      kStreamerInfo = 0x04,
+      kHasVersion = 0x08,
+      // kHasCustomStreamerMember = 0x10 (see TClingUtils.cxx and TClassTable.h)
+      kNtplForceSplit = 0x20,
+      kNtplForceUnsplit = 0x40
    };
 
    // clang-format off
@@ -297,6 +300,12 @@ public:
       if (fRequestNoInputOperator) result |= kNoInputOperator;
       if (fRequestStreamerInfo) result |= kStreamerInfo;
       if (fRequestedVersionNumber > -1) result |= kHasVersion;
+      switch (fRequestedRNTupleSplitMode) {
+      case 0: break;
+      case 1: result |= kNtplForceSplit; break;
+      case -1: result |= kNtplForceUnsplit; break;
+      default: assert(false && "invalid setting of fRequestedRNTupleSplitMode");
+      }
       return result;
    }
    const clang::RecordDecl* GetRecordDecl() const { return fDecl; }

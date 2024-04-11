@@ -1988,17 +1988,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
       needCollectionProxy = true;
    }
-   if (cl.RequestedRNTupleSplitMode() != 0) {
-      finalString << "      instance.GetClass()->CreateAttributeMap();\n";
-      if (cl.RequestedRNTupleSplitMode() == 1) {
-         finalString << "      instance.GetClass()->GetAttributeMap()->AddProperty(\"rntuple.split\", \"true\");\n";
-      } else if (cl.RequestedRNTupleSplitMode() == -1) {
-         finalString << "      instance.GetClass()->GetAttributeMap()->AddProperty(\"rntuple.split\", \"false\");\n";
-      } else {
-         // invalid RNTuple split mode
-         assert(false);
-      }
-   }
 
    //---------------------------------------------------------------------------
    // Register Alternate spelling of the class name.
