@@ -642,6 +642,11 @@ public:
    virtual void            SetObject(const char* name, const char* title);
    virtual void            SetParallelUnzip(bool opt=true, Float_t RelSize=-1);
    virtual void            SetPerfStats(TVirtualPerfStats* perf);
+   /**
+    * \brief Sets the maximum number of rows to be shown before <CR> when calling Scan.
+    * \param n the maximum number of rows. Default=50, if 0, all rows of the Tree are shown
+    * \see TTreePlayer::Scan for more details on how to redirect the output to an ASCII file
+    */
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    void SetTargetMemoryRatio(Float_t ratio) { fTargetMemoryRatio = ratio; }
    virtual void            SetTimerInterval(Int_t msec = 333) { fTimerInterval=msec; }
