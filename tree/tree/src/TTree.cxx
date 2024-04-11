@@ -8091,7 +8091,9 @@ void TTree::ResetBranchAddresses()
 ///
 /// Otherwise a columns selection can be made using "var1:var2:var3".
 ///
-/// \see TTree::SetScanField for controlling how many rows are printed
+/// \param firstentry first entry to scan
+/// \param nentries total number of entries to scan (starting from firstentry). Defaults to all entries.
+/// \see TTree::SetScanField to control how many rows are printed / iteration.
 /// \see TTreePlayer::Scan for more information
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
