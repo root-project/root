@@ -8090,6 +8090,8 @@ void TTree::ResetBranchAddresses()
 /// - If varexp = "*" print all columns.
 ///
 /// Otherwise a columns selection can be made using "var1:var2:var3".
+///
+/// \see TTree::SetScanField for controlling how many rows are printed
 /// \see TTreePlayer::Scan for more information
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
