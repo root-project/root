@@ -531,17 +531,20 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
 /// \return vector of bin centers in each dimension; empty in case of error.
 /// \note Throws error if size is different from nDimensions.
 /// \sa GetAxis(dim)::GetBinCenter(idx) as an alternative
-std::vector<double> THnBase::GetBinCenter(std::vector<Int_t> idx) const
+std::vector<Double_t> THnBase::GetBinCenter(const std::vector<Int_t> &idx) const
 {
-   std::vector<double> centers;
-   if (Int_t(idx.size()) != fNdimensions) {
-      Error("THnBase::GetBinCenter", "Mismatched number of dimensions %d with bin index vector size %zu", fNdimensions,
-            idx.size());
-   } else {
-      for (Int_t i = 0; i < fNdimensions; ++i) {
-         centers.emplace_back(GetAxis(i)->GetBinCenter(idx[i]));
-      }
+   if (idx.size() != static_cast<decltype(idx.size())>(fNdimensions)) {
+      Error("THnBase::GetBinCenter",
+            "Mismatched number of dimensions %d with bin index vector size %zu, returning an empty vector.",
+            fNdimensions, idx.size());
+      return {};
    }
+   std::vector<Double_t> centers(fNdimensions);
+   std::generate(centers.begin(), centers.end(), [i = 0, &idx, this]() mutable {
+      auto bincenter = GetAxis(i)->GetBinCenter(idx[i]);
+      i++;
+      return bincenter;
+   });
    return centers;
 }
 
@@ -1337,11 +1340,13 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
 /// \param respectAxisRange if false, count all bins including under/overflows,
 ///                         if true, restrict sum to the user-set axis range
 /// \sa Projection(0)::Integral() as alternative
-Double_t THnBase::Integral(const Bool_t respectAxisRange) const
+/// \note this function is different from ComputeIntegral, that is a normalized
+/// cumulative sum
+Double_t THnBase::Integral(Bool_t respectAxisRange) const
 {
    Long64_t myLinBin = 0;
    std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(respectAxisRange)};
-   double sum = 0.;
+   Double_t sum = 0.;
    while ((myLinBin = iter->Next()) >= 0) {
       sum += GetBinContent(myLinBin);
    }
