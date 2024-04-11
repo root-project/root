@@ -206,10 +206,11 @@ int TMVAClassification( TString myMethodList = "" )
    // The second argument is the output file for the training results
    // All TMVA output can be suppressed by removing the "!" (not) in
    // front of the "Silent" argument in the option string
-   TMVA::Factory *factory = new TMVA::Factory( "TMVAClassification", outputFile,
-                                               "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
-
-   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+   auto factory = std::make_unique<TMVA::Factory>(
+      "TMVAClassification", outputFile,
+      "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
+   auto dataloader_raii = std::make_unique<TMVA::DataLoader>("dataset");
+   auto *dataloader = dataloader_raii.get();
    // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //
@@ -542,8 +543,6 @@ int TMVAClassification( TString myMethodList = "" )
    std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
    std::cout << "==> TMVAClassification is done!" << std::endl;
 
-   delete factory;
-   delete dataloader;
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
 
