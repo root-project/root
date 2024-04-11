@@ -26,6 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
         Gui
         Ged
         RooFitCore
+        FitPanel
         LINKDEF
         inc/LinkDef.h
         )
