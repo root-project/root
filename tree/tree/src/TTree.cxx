@@ -8093,7 +8093,7 @@ void TTree::ResetBranchAddresses()
 ///
 /// \param firstentry first entry to scan
 /// \param nentries total number of entries to scan (starting from firstentry). Defaults to all entries.
-/// \see TTree::SetScanField to control how many lines are printed / iteration.
+/// \see TTree::SetScanField to control how many lines are printed between pagination breaks (Use 0 to disable pagination)
 /// \see TTreePlayer::Scan for more information
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
