@@ -392,13 +392,13 @@ if(NOT webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17
+foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
         exceptions geocad gfal glite globus gsl_shared hdfs ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi rfio ruby sapdb srp table
         tcmalloc vmc xproofd)
   if(${opt})
-    message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
+    message(FATAL_ERROR ">>> '${opt}' is no longer part of ROOT ${ROOT_VERSION} build options.")
   endif()
 endforeach()
 
