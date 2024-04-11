@@ -959,7 +959,7 @@ Begin_Macro(source)
 End_Macro
 
 When the option `SAME` (or "SAMES") is used with the option `BOX`,
-the boxes' sizes are computing taking the previous plots into account. The range
+the boxes' sizes are computed taking the previous plots into account. The range
 along the Z axis is imposed by the first plot (the one without option
 `SAME`); therefore the order in which the plots are done is relevant.
 
@@ -1134,7 +1134,7 @@ End_Macro
 \since **ROOT version 6.09/01:**
 
 When the option SAME (or "SAMES") is used with the option COL, the boxes' color
-are computing taking the previous plots into account. The range along the Z axis
+are computed taking the previous plots into account. The range along the Z axis
 is imposed by the first plot (the one without option SAME); therefore the order
 in which the plots are done is relevant. Same as [in the `BOX` option](\ref HP13), one can use
 `SAME0` (or `SAMES0`) to opt out of this imposition.
@@ -2604,7 +2604,7 @@ Begin_Macro(source)
       z = x*x + y*y;
       h3scat->Fill(x,y,z);
    }
-   h3scat->Draw();
+   h3scat->Draw("SCAT");
 }
 End_Macro
 
