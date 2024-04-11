@@ -201,7 +201,7 @@ public:
          //  old way ... now doing like in pCLs_asymp by calculating the two variations ... but this is pessimistic
          //  assumes p-values are anticorrelated!
          //  so reverting to old
-         return std::make_pair(nom, (alt.first - alt.second <= 0)
+         return std::pair<double,double>(nom, (alt.first - alt.second <= 0)
                                        ? std::numeric_limits<double>::infinity()
                                        : (sqrt(pow(null.second, 2) + pow(alt.second * nom, 2)) / alt.first));
          // return std::pair(nom,std::max(std::abs(up - nom), std::abs(down - nom)));

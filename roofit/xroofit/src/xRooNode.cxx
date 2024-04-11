@@ -7630,6 +7630,12 @@ xRooNode xRooNode::histo(const xRooNode &vars, const xRooNode &fr, bool content,
                   *dynamic_cast<TAttFill *>(ll->At(i)) = *_style;
                   *dynamic_cast<TAttMarker *>(ll->At(i)) = *_style;
                }
+               // for stacks, fill color of white should be color 10 unless fill style is 0
+               if(dynamic_cast<TAttFill *>(ll->At(i))->GetFillColor()==kWhite && dynamic_cast<TAttFill *>(ll->At(i))->GetFillStyle()!=0) {
+                  // kWhite means 'transparent' in ROOT ... should really use a FillStyle of 0 for that
+                  // so assume user wanted actual white, which is color 10
+                  dynamic_cast<TAttFill *>(ll->At(i))->SetFillColor(10);
+               }
             }
          }
          h->GetListOfFunctions()->Add(stack, "noclearsame");
@@ -10161,6 +10167,7 @@ void xRooNode::Draw(Option_t *opt)
          bool titleMatchName = true;
          std::map<std::string, TH1 *> histGroups;
          std::vector<TH1 *> hhs;
+         std::set<TH1*> histsWithBadTitles; // these histograms will have their titles autoFormatted
 
          // support for CMS model case where has single component containing many coeffs
          // will build stack by setting each coeff equal to 0 in turn, rebuilding the histogram
@@ -10186,10 +10193,15 @@ void xRooNode::Draw(Option_t *opt)
                // zero.setAttribute(Form("ORIGNAME:%s",c->GetName()),false); (commented out so that on next iteration
                // will still replace all prev)
                auto hh = xRooNode(*f, *this).BuildHistogram(v);
+               hh->SetName(c->GetName());
                if (sf)
                   hh->Scale(sf->getVal());
-               if (strlen(hh->GetTitle()) == 0)
+               if (strlen(hh->GetTitle()) == 0) {
                   hh->SetTitle(c->GetName()); // ensure all hists has titles
+                  histsWithBadTitles.insert(hh);
+               } else if(strcmp(hh->GetName(),hh->GetTitle())==0) {
+                  histsWithBadTitles.insert(hh);
+               }
                titleMatchName &= (TString(c->GetName()) == hh->GetTitle() ||
                                   TString(hh->GetTitle()).BeginsWith(TString(c->GetName()) + "_"));
                std::shared_ptr<TH1> nextHist(static_cast<TH1 *>(hh->Clone()));
@@ -10211,6 +10223,9 @@ void xRooNode::Draw(Option_t *opt)
                   hh->SetTitle(samp->GetTitle());
                   if (strlen(hh->GetTitle()) == 0) {
                      hh->SetTitle(samp->GetName());
+                     histsWithBadTitles.insert(hh);
+                  } else if(strcmp(hh->GetName(),hh->GetTitle())==0) {
+                     histsWithBadTitles.insert(hh);
                   }
                   hh->SetTitle(TString(hh->GetTitle())
                                   .ReplaceAll(TString(chan->get()->GetName()) + "_",
@@ -10227,8 +10242,12 @@ void xRooNode::Draw(Option_t *opt)
                if (sf)
                   hh->Scale(sf->getVal());
                hhs.push_back(hh);
-               if (strlen(hh->GetTitle()) == 0)
+               if (strlen(hh->GetTitle()) == 0) {
                   hh->SetTitle(samp->GetName()); // ensure all hists has titles
+                  histsWithBadTitles.insert(hh);
+               } else if(strcmp(hh->GetName(),hh->GetTitle())==0) {
+                  histsWithBadTitles.insert(hh);
+               }
                titleMatchName &= (TString(samp->GetName()) == hh->GetTitle() ||
                                   TString(hh->GetTitle()).BeginsWith(TString(samp->GetName()) + "_"));
             }
@@ -10294,6 +10313,9 @@ void xRooNode::Draw(Option_t *opt)
 
             // strip common prefix and suffix before adding
             for (auto ritr = hhs.rbegin(); ritr != hhs.rend(); ++ritr) { // go in reverse order
+               if(!histsWithBadTitles.count((*ritr))) {
+                  continue;
+               }
                auto _title = (hhs.size() > 5) ? reducedTitles[(*ritr)->GetTitle()] : (*ritr)->GetTitle();
                _title = _title.substr(ii < _title.size() ? ii : 0);
                if (!commonSuffix.empty() && TString(_title).EndsWith(commonSuffix.c_str()))
@@ -10375,6 +10397,12 @@ void xRooNode::Draw(Option_t *opt)
                   *dynamic_cast<TAttLine *>(hh) = *_style;
                   *dynamic_cast<TAttFill *>(hh) = *_style;
                   *dynamic_cast<TAttMarker *>(hh) = *_style;
+               }
+               // for stacks, fill color of white should be color 10 unless fill style is 0
+               if(hh->GetFillColor()==kWhite && hh->GetFillStyle()!=0) {
+                  // kWhite means 'transparent' in ROOT ... should really use a FillStyle of 0 for that
+                  // so assume user wanted actual white, which is color 10
+                  hh->SetFillColor(10);
                }
                addLegendEntry(hh, hh->GetTitle(), "f");
             }
