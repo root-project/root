@@ -295,7 +295,7 @@ namespace Internal {
          if (fPragmaBits & (TClassTable::kNtplForceSplit | TClassTable::kNtplForceUnsplit)) {
             fClass->CreateAttributeMap();
             // The force-split and force-unsplit flags are mutually exclusive
-            assert(fPragmaBits & (TClassTable::kNtplForceSplit ^ ^TClassTable::kNtplForceUnsplit));
+            assert(!((fPragmaBits & TClassTable::kNtplForceSplit) && (fPragmaBits & TClassTable::kNtplForceUnsplit)));
             if (fPragmaBits & TClassTable::kNtplForceSplit) {
                fClass->GetAttributeMap()->AddProperty("rntuple.split", "true");
             } else if (fPragmaBits & TClassTable::kNtplForceUnsplit) {
