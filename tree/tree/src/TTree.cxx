@@ -8084,7 +8084,7 @@ void TTree::ResetBranchAddresses()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop over tree entries and print entries passing selection.
+/// Loop interactively over tree entries and print entries passing selection.
 ///
 /// - If varexp is 0 (or "") then print only first 8 columns.
 /// - If varexp = "*" print all columns.
