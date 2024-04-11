@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TDictAttributeMap.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
@@ -290,6 +291,17 @@ namespace Internal {
 
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
+
+         if (fPragmaBits & (TClassTable::kNtplForceSplit | TClassTable::kNtplForceUnsplit)) {
+            fClass->CreateAttributeMap();
+            // The force-split and force-unsplit flags are mutually exclusive
+            assert(fPragmaBits & (TClassTable::kNtplForceSplit ^ ^TClassTable::kNtplForceUnsplit));
+            if (fPragmaBits & TClassTable::kNtplForceSplit) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.split", "true");
+            } else if (fPragmaBits & TClassTable::kNtplForceUnsplit) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.split", "false");
+            }
+         }
       }
       return fClass;
    }
