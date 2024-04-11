@@ -2356,7 +2356,8 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 ///
 /// You can change the default number of rows to be shown before `<CR>`
 /// via  mytree->SetScanField(maxrows) where maxrows is 50 by default.
-/// if maxrows is set to 0 all rows of the Tree are shown.
+/// if maxrows is set to 0 all rows of the Tree are shown, and you are
+/// not prompted to press `<CR>` or `q` to end the loop.
 ///
 /// This option is interesting when dumping the contents of a Tree to
 /// an ascii file, eg from the command line.
