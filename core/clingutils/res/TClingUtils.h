@@ -207,6 +207,7 @@ private:
    // clang-format on
 
 public:
+   // clang-format off
    enum ERootFlag {
       kNoStreamer = 0x01,
       kNoInputOperator = 0x02,
@@ -217,6 +218,7 @@ public:
       kNtplForceSplit = 0x20,
       kNtplForceUnsplit = 0x40
    };
+   // clang-format on
 
    // clang-format off
    AnnotatedRecordDecl(long index,
