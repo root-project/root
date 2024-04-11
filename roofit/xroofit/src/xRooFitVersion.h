@@ -12,5 +12,5 @@
 
 #pragma once
 
-#define GIT_COMMIT_HASH "b752c67-dirty"
+#define GIT_COMMIT_HASH "b752c67"
 #define GIT_COMMIT_DATE "2024-04-11 14:09:41 +0200"
