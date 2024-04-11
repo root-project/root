@@ -2346,7 +2346,8 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Loop on Tree and print entries passing selection.
+/// \brief Loop on Tree and print entries passing selection. Interactive 
+/// pagination break is on by default.
 /// \param varexp If varexp is 0 (or "") then print only first 8 columns.
 /// If varexp = "*" print all columns. Otherwise a columns selection can
 /// be made using "var1:var2:var3".
