@@ -374,10 +374,17 @@ std::string AnnotatedRecordDecl::BuildDemangledTypeInfo(const clang::RecordDecl 
 /// There is no requested type name.
 /// Still let's normalized the actual name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo,
-                                         bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass,
-                                         int rRequestedVersionNumber, int rRequestedRNTupleSplitMode,
-                                         const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
+// clang-format off
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
+                                         const clang::RecordDecl *decl,
+                                         bool rStreamerInfo,
+                                         bool rNoStreamer,
+                                         bool rRequestNoInputOperator,
+                                         bool rRequestOnlyTClass,
+                                         int rRequestedVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
+                                         const cling::Interpreter &interpreter,
+                                         const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
      fDecl(decl),
      fRequestStreamerInfo(rStreamerInfo),
@@ -386,6 +393,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *de
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestedVersionNumber),
      fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
    fDemangledTypeInfo = BuildDemangledTypeInfo(decl, fNormalizedName);
@@ -394,11 +402,20 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *de
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl,
-                                         const char *requestName, unsigned int nTemplateArgsToSkip, bool rStreamerInfo,
-                                         bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass,
-                                         int rRequestVersionNumber, int rRequestedRNTupleSplitMode,
-                                         const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
+// clang-format off
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
+                                         const clang::Type *requestedType,
+                                         const clang::RecordDecl *decl,
+                                         const char *requestName,
+                                         unsigned int nTemplateArgsToSkip,
+                                         bool rStreamerInfo,
+                                         bool rNoStreamer,
+                                         bool rRequestNoInputOperator,
+                                         bool rRequestOnlyTClass,
+                                         int rRequestVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
+                                         const cling::Interpreter &interpreter,
+                                         const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
      fDecl(decl),
      fRequestedName(""),
@@ -408,6 +425,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requeste
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
      fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -424,11 +442,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requeste
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl,
-                                         const char *requestName, bool rStreamerInfo, bool rNoStreamer,
-                                         bool rRequestNoInputOperator, bool rRequestOnlyTClass,
-                                         int rRequestVersionNumber, int rRequestedRNTupleSplitMode,
-                                         const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
+// clang-format off
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
+                                         const clang::Type *requestedType,
+                                         const clang::RecordDecl *decl,
+                                         const char *requestName,
+                                         bool rStreamerInfo,
+                                         bool rNoStreamer,
+                                         bool rRequestNoInputOperator,
+                                         bool rRequestOnlyTClass,
+                                         int rRequestVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
+                                         const cling::Interpreter &interpreter,
+                                         const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
      fDecl(decl),
      fRequestedName(""),
@@ -438,6 +464,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requeste
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
      fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -450,10 +477,17 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requeste
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested name.
 
-AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName,
-                                         bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator,
-                                         bool rRequestOnlyTClass, int rRequestVersionNumber,
-                                         int rRequestedRNTupleSplitMode, const cling::Interpreter &interpreter,
+// clang-format off
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
+                                         const clang::RecordDecl *decl,
+                                         const char *requestName,
+                                         bool rStreamerInfo,
+                                         bool rNoStreamer,
+                                         bool rRequestNoInputOperator,
+                                         bool rRequestOnlyTClass,
+                                         int rRequestVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
+                                         const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
      fDecl(decl),
@@ -464,6 +498,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *de
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
      fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
    // if (tmplt_specialization) {
