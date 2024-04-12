@@ -392,6 +392,7 @@ if(NOT webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
+# Please notify SPI when adding to this list
 foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
         exceptions geocad gfal glite globus gsl_shared hdfs ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
