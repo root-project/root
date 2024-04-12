@@ -91,6 +91,13 @@ target_compile_options(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,C
 target_compile_definitions(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,COMPILE_DEFINITIONS>)
 target_compile_features(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,COMPILE_FEATURES>)
 target_include_directories(UnsplitXMLDict PRIVATE $<TARGET_PROPERTY:rfield_unsplit,INCLUDE_DIRECTORIES>)
+if(MSVC)
+  add_custom_command(TARGET rfield_unsplit POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/librfield_unsplit_rdict.pcm
+                             ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/librfield_unsplit_rdict.pcm
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/UnsplitXMLDict_rdict.pcm
+                             ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/UnsplitXMLDict_rdict.pcm)
+endif()
 
 if(daos OR daos_mock)
   # Label of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
