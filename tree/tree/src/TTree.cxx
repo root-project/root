@@ -8084,7 +8084,8 @@ void TTree::ResetBranchAddresses()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop over tree entries and print entries passing selection. Interactive pagination break are on by default.
+/// Loop over tree entries and print entries passing selection. Interactive
+/// pagination break is on by default.
 ///
 /// - If varexp is 0 (or "") then print only first 8 columns.
 /// - If varexp = "*" print all columns.
