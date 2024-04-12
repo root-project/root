@@ -42,8 +42,6 @@ namespace Internal {
  */
 class RRawFile {
 public:
-   /// Derived classes do not necessarily need to provide file size information but they can return "not known" instead
-   static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
    /// kAuto detects the line break from the first line, kSystem picks the system's default
    enum class ELineBreaks { kAuto, kSystem, kUnix, kWindows };
 
@@ -113,6 +111,8 @@ private:
    RBlockBuffer fBlockBuffers[kNumBlockBuffers];
    /// Memory block containing the block buffers consecutively
    std::unique_ptr<unsigned char[]> fBufferSpace;
+   /// Used as a marker that the file size was not yet queried
+   static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
    /// The cached file size
    std::uint64_t fFileSize = kUnknownFileSize;
    /// Files are opened lazily and only when required; the open state is kept by this flag
