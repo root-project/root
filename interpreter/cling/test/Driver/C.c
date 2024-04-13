@@ -15,7 +15,7 @@ int printf(const char*,...);
 printf("CHECK 123 %p\n", gCling); // CHECK: CHECK 123
 
 int i = 1 // CHECK: (int) 1
-sizeof(int) // CHECK: 4
+sizeof(int) // CHECK: (unsigned long) 4
 int x = sizeof(int);
 printf("CHECK %d\n", x); // CHECK: CHECK 4
 
