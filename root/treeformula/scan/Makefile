@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog testScanIn.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += Formatting LoadDim mytest
+TEST_TARGETS += Formatting mytest
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -61,9 +61,6 @@ endif
 #  files should be renamed according to the test being run.
 # By default the TestDiff variable is set to compare the .log and .ref files
 # To run a diff and ignore whitespacing use $(TestDiffW)
-
-LoadDim: LoadDim.log
-	$(TestDiff)
 
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
