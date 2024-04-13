@@ -1,5 +1,5 @@
 
-Processing runLoadDim.C...
+Processing execLoadDim.C...
 Warning in <TClass::Init>: no dictionary for class TChannelInfo is available
 ***********************************
 *    Row   * Instance * ((llll_ty *
@@ -78,3 +78,4 @@ Warning in <TClass::Init>: no dictionary for class TChannelInfo is available
 *        8 *        0 *           *
 *        9 *        0 *           *
 ***********************************
+(int) 0
