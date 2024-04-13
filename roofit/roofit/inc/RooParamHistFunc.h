@@ -24,9 +24,8 @@
 class RooParamHistFunc : public RooAbsReal {
 public:
   RooParamHistFunc() {} ;
-  RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, bool paramRelative=true);
-  RooParamHistFunc(const char *name, const char *title, const RooAbsArg& x, RooDataHist& dh, bool paramRelative=true);
-  RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, bool paramRelative=true) ;
+  RooParamHistFunc(const char *name, const char *title, RooDataHist &dh, const RooAbsArg &x,
+                   const RooParamHistFunc *paramSource = nullptr, bool paramRelative = true);
   RooParamHistFunc(const RooParamHistFunc& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooParamHistFunc(*this,newname); }
 

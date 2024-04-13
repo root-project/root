@@ -59,8 +59,8 @@ model0 = ROOT.RooRealSumPdf("model0", "model0", [p_h_sig, p_h_bkg], [Asig0, Abkg
 #  Case 1 - 'Barlow Beeston'
 
 # Construct parameterized histogram shapes for signal and background
-p_ph_sig1 = ROOT.RooParamHistFunc("p_ph_sig", "p_ph_sig", dh_sig)
-p_ph_bkg1 = ROOT.RooParamHistFunc("p_ph_bkg", "p_ph_bkg", dh_bkg)
+p_ph_sig1 = ROOT.RooParamHistFunc("p_ph_sig", "p_ph_sig", dh_sig, x)
+p_ph_bkg1 = ROOT.RooParamHistFunc("p_ph_bkg", "p_ph_bkg", dh_bkg, x)
 
 Asig1 = ROOT.RooRealVar("Asig", "Asig", 1, 0.01, 5000)
 Abkg1 = ROOT.RooRealVar("Abkg", "Abkg", 1, 0.01, 5000)
@@ -87,8 +87,8 @@ model1 = ROOT.RooProdPdf("model1", "model1", {hc_sig, hc_bkg}, Conditional=(mode
 # This allows bin 0 to fluctuate up and down.
 # Then, the SAME parameters are connected to the background histogram, so the bins fluctuate
 # synchronously. This reduces the number of parameters.
-p_ph_sig2 = ROOT.RooParamHistFunc("p_ph_sig2", "p_ph_sig2", dh_sig)
-p_ph_bkg2 = ROOT.RooParamHistFunc("p_ph_bkg2", "p_ph_bkg2", dh_bkg, p_ph_sig2, True)
+p_ph_sig2 = ROOT.RooParamHistFunc("p_ph_sig2", "p_ph_sig2", dh_sig, x)
+p_ph_bkg2 = ROOT.RooParamHistFunc("p_ph_bkg2", "p_ph_bkg2", dh_bkg, x, p_ph_sig2, True)
 
 Asig2 = ROOT.RooRealVar("Asig", "Asig", 1, 0.01, 5000)
 Abkg2 = ROOT.RooRealVar("Abkg", "Abkg", 1, 0.01, 5000)
