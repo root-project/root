@@ -19,7 +19,6 @@ builtin_vdt=ON
 builtin_veccore=ON
 builtin_xrootd=ON
 builtin_xxhash=ON
-builtin_zeromq=ON
 builtin_zstd=ON
 ccache=ON
 cocoa=ON
