@@ -196,6 +196,23 @@ Instantiating the following classes and even including their header files is dep
 
 Please use the higher-level functions `RooAbsPdf::createNLL()` and `RooAbsPdf::createChi2()` if you want to create objects that represent test statistics.
 
+### Change of RooParamHistFunc
+
+The `RooParamHistFunc` didn't take any observable `RooRealVar` as constructor
+argument. It assumes as observable the internal variables in the passed
+RooDataHist. This means it was in most contexts unusable, because the input
+can't be changed, other than loading a different bin in the dataset.
+
+Furthermore, there was actually a constructor that took a `RooAbsArg x`, but it
+was simply ignored.
+
+To fix all these problems, the existing constructors were replaced by a new one
+that takes the observable explicitly.
+
+Since the old constructors resulted in wrong computation graphs that caused
+trouble with the new CPU evaluation backend, they had to be removed without
+deprecation. Please adapt your code if necessary.
+
 ## RDataFrame
 
 * The RDataFrame constructors that take in input one or more file names (or globs thereof) will now infer the format of the dataset, either TTree or RNTuple, that is stored in the first input file. When multiple files are specified, it is assumed that all other files contain a coherent dataset of the same format and with the same schema, exactly as it used to happen with TChain. This automatic inference further contributes towards a zero-code-change experience when moving from processing a TTree to processing an RNTuple dataset while using an RDataFrame. It also introduces a backwards-incompatible behaviour, i.e. now the constructor needs to open one file in order to infer the dataset type. This means that if the file does not exist, the constructor will throw an exception. Previously, an exception would be thrown only at a JIT-ting time, before the start of the computations.
